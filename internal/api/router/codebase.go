@@ -1,9 +1,9 @@
 package router
 
 import (
-	"github.com/easysoft/dev-gitfox/internal/api/handler/codebase"
-	"github.com/easysoft/dev-gitfox/internal/di"
-	"github.com/easysoft/dev-gitfox/internal/service/codebase/branch"
+	"github.com/easysoft/gitfox-pms/internal/api/handler/codebase"
+	"github.com/easysoft/gitfox-pms/internal/di"
+	"github.com/easysoft/gitfox-pms/internal/service/codebase/branch"
 
 	"github.com/gin-gonic/gin"
 )

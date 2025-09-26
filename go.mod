@@ -1,18 +1,14 @@
-module github.com/easysoft/dev-gitfox
+module github.com/easysoft/gitfox-pms
 
 go 1.25.1
 
 require (
 	github.com/gin-gonic/gin v1.11.0
 	github.com/golang-jwt/jwt/v4 v4.5.2
-)
-
-require (
-	github.com/jinzhu/inflection v1.0.0 // indirect
-	github.com/jinzhu/now v1.1.5 // indirect
-	github.com/konsorten/go-windows-terminal-sequences v1.0.1 // indirect
-	github.com/sirupsen/logrus v1.4.2 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
+	github.com/sirupsen/logrus v1.9.3
+	gopkg.in/natefinch/lumberjack.v2 v2.2.1
+	gopkg.in/yaml.v3 v3.0.1
+	gorm.io/gorm v1.31.0
 )
 
 require (
@@ -26,6 +22,8 @@ require (
 	github.com/go-playground/validator/v10 v10.27.0 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
 	github.com/goccy/go-yaml v1.18.0 // indirect
+	github.com/jinzhu/inflection v1.0.0 // indirect
+	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
@@ -47,6 +45,4 @@ require (
 	golang.org/x/text v0.27.0 // indirect
 	golang.org/x/tools v0.34.0 // indirect
 	google.golang.org/protobuf v1.36.9 // indirect
-	gopkg.in/natefinch/lumberjack.v2 v2.2.1
-	gorm.io/gorm v1.31.0
 )

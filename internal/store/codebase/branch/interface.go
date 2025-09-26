@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/easysoft/dev-gitfox/internal/domain/codebase"
+	"github.com/easysoft/gitfox-pms/internal/domain/codebase"
 )
 
 // Repository 分支数据访问层接口

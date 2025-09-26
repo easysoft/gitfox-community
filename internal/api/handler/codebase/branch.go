@@ -3,10 +3,10 @@ package codebase
 import (
 	"net/http"
 
-	"github.com/easysoft/dev-gitfox/internal/api/middleware"
-	"github.com/easysoft/dev-gitfox/internal/constants"
-	"github.com/easysoft/dev-gitfox/internal/service/codebase/branch"
-	"github.com/easysoft/dev-gitfox/pkg/logger"
+	"github.com/easysoft/gitfox-pms/internal/api/middleware"
+	"github.com/easysoft/gitfox-pms/internal/constants"
+	"github.com/easysoft/gitfox-pms/internal/service/codebase/branch"
+	"github.com/easysoft/gitfox-pms/pkg/logger"
 
 	"github.com/gin-gonic/gin"
 )

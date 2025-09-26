@@ -7,7 +7,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
-	"github.com/easysoft/dev-gitfox/internal/domain/codebase"
+	"github.com/easysoft/gitfox-pms/internal/domain/codebase"
 )
 
 // MySQLRepository 基于GORM的分支数据访问实现

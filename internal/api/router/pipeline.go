@@ -1,12 +1,10 @@
 package router
 
-import (
-// 	"github.com/easysoft/dev-gitfox/internal/api/handler/pipeline"
-// 	"github.com/easysoft/dev-gitfox/internal/di"
-// 	"github.com/easysoft/dev-gitfox/internal/service/pipeline"
+// 	"github.com/easysoft/gitfox-pms/internal/api/handler/pipeline"
+// 	"github.com/easysoft/gitfox-pms/internal/di"
+// 	"github.com/easysoft/gitfox-pms/internal/service/pipeline"
 
 // "github.com/gin-gonic/gin"
-)
 
 // registerPipelineRoutes 注册流水线相关路由
 // func registerPipelineRoutes(r *gin.RouterGroup, container *di.Container) {
