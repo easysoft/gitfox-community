@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/easysoft/gitfox-pms/internal/store/codebase/branch"
-	"github.com/easysoft/gitfox-pms/pkg/logger"
+	"gitfox.zcorp.cc/easysoft/gitfox-pms/internal/store/codebase/branch"
+	"gitfox.zcorp.cc/easysoft/gitfox-pms/pkg/logger"
 )
 
 // CreateBranchRequest 分支创建请求参数

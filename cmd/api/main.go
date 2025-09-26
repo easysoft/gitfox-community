@@ -7,10 +7,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/easysoft/gitfox-pms/internal/api/router"
-	"github.com/easysoft/gitfox-pms/internal/constants"
-	"github.com/easysoft/gitfox-pms/internal/di"
-	"github.com/easysoft/gitfox-pms/pkg/config"
+	"gitfox.zcorp.cc/easysoft/gitfox-pms/internal/api/router"
+	"gitfox.zcorp.cc/easysoft/gitfox-pms/internal/constants"
+	"gitfox.zcorp.cc/easysoft/gitfox-pms/internal/di"
+	"gitfox.zcorp.cc/easysoft/gitfox-pms/pkg/config"
 	"github.com/sirupsen/logrus"
 )
 

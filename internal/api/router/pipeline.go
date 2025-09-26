@@ -1,8 +1,8 @@
 package router
 
-// 	"github.com/easysoft/gitfox-pms/internal/api/handler/pipeline"
-// 	"github.com/easysoft/gitfox-pms/internal/di"
-// 	"github.com/easysoft/gitfox-pms/internal/service/pipeline"
+// 	"gitfox.zcorp.cc/easysoft/gitfox-pms/internal/api/handler/pipeline"
+// 	"gitfox.zcorp.cc/easysoft/gitfox-pms/internal/di"
+// 	"gitfox.zcorp.cc/easysoft/gitfox-pms/internal/service/pipeline"
 
 // "github.com/gin-gonic/gin"
 
