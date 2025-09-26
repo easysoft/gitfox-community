@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"gitfox.zcorp.cc/demo/gitfox-pms/pkg/jwt"
+	"gitfox.zcorp.cc/git/demo/gitfox-pms/pkg/jwt"
 
 	"github.com/gin-gonic/gin"
 )

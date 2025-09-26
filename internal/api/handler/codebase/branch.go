@@ -3,10 +3,10 @@ package codebase
 import (
 	"net/http"
 
-	"gitfox.zcorp.cc/demo/gitfox-pms/internal/api/middleware"
-	"gitfox.zcorp.cc/demo/gitfox-pms/internal/constants"
-	"gitfox.zcorp.cc/demo/gitfox-pms/internal/service/codebase/branch"
-	"gitfox.zcorp.cc/demo/gitfox-pms/pkg/logger"
+	"gitfox.zcorp.cc/git/demo/gitfox-pms/internal/api/middleware"
+	"gitfox.zcorp.cc/git/demo/gitfox-pms/internal/constants"
+	"gitfox.zcorp.cc/git/demo/gitfox-pms/internal/service/codebase/branch"
+	"gitfox.zcorp.cc/git/demo/gitfox-pms/pkg/logger"
 
 	"github.com/gin-gonic/gin"
 )
