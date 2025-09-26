@@ -1,8 +1,8 @@
 package router
 
-// 	"gitfox.zcorp.cc/git/demo/gitfox-pms/internal/api/handler/pipeline"
-// 	"gitfox.zcorp.cc/git/demo/gitfox-pms/internal/di"
-// 	"gitfox.zcorp.cc/git/demo/gitfox-pms/internal/service/pipeline"
+// 	"gitfox.zcorp.cc/git/demo/gitfox-pms/app/api/handler/pipeline"
+// 	"gitfox.zcorp.cc/git/demo/gitfox-pms/app/di"
+// 	"gitfox.zcorp.cc/git/demo/gitfox-pms/app/service/pipeline"
 
 // "github.com/gin-gonic/gin"
 

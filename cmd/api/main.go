@@ -4,14 +4,14 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"strconv"
 	"strings"
 
-	"gitfox.zcorp.cc/git/demo/gitfox-pms/internal/api/router"
-	"gitfox.zcorp.cc/git/demo/gitfox-pms/internal/constants"
-	"gitfox.zcorp.cc/git/demo/gitfox-pms/internal/di"
+	"gitfox.zcorp.cc/git/demo/gitfox-pms/app/api/router"
+	"gitfox.zcorp.cc/git/demo/gitfox-pms/app/constants"
+	"gitfox.zcorp.cc/git/demo/gitfox-pms/app/di"
 	"gitfox.zcorp.cc/git/demo/gitfox-pms/pkg/config"
-	"github.com/sirupsen/logrus"
 )
 
 func main() {
@@ -64,8 +64,8 @@ func main() {
 
 	// 6. 启动服务
 	port := strconv.Itoa(baseCfg.Server.Port)
-	logrus.Infof("API服务启动，版本：%s，端口：%s", version, port)
+	fmt.Printf("API服务启动，版本：%s，端口：%s", version, port)
 	if err := r.Run(":" + port); err != nil {
-		logrus.Fatal("服务启动失败：" + err.Error())
+		fmt.Printf("服务启动失败：" + err.Error())
 	}
 }

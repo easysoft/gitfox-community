@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"gitfox.zcorp.cc/git/demo/gitfox-pms/internal/store/codebase/branch"
+	"gitfox.zcorp.cc/git/demo/gitfox-pms/app/store/codebase/branch"
 	"gitfox.zcorp.cc/git/demo/gitfox-pms/pkg/logger"
 )
 

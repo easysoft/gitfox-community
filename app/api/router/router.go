@@ -1,8 +1,8 @@
 package router
 
 import (
-	"gitfox.zcorp.cc/git/demo/gitfox-pms/internal/api/middleware"
-	"gitfox.zcorp.cc/git/demo/gitfox-pms/internal/di"
+	"gitfox.zcorp.cc/git/demo/gitfox-pms/app/api/middleware"
+	"gitfox.zcorp.cc/git/demo/gitfox-pms/app/di"
 
 	"github.com/gin-gonic/gin"
 )
