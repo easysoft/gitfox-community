@@ -1,4 +1,4 @@
-module gitfox.zcorp.cc/easysoft/gitfox-pms
+module gitfox.zcorp.cc/demo/gitfox-pms
 
 go 1.25.1
 

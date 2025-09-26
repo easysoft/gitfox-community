@@ -1,9 +1,9 @@
 package router
 
 import (
-	"gitfox.zcorp.cc/easysoft/gitfox-pms/internal/api/handler/codebase"
-	"gitfox.zcorp.cc/easysoft/gitfox-pms/internal/di"
-	"gitfox.zcorp.cc/easysoft/gitfox-pms/internal/service/codebase/branch"
+	"gitfox.zcorp.cc/demo/gitfox-pms/internal/api/handler/codebase"
+	"gitfox.zcorp.cc/demo/gitfox-pms/internal/di"
+	"gitfox.zcorp.cc/demo/gitfox-pms/internal/service/codebase/branch"
 
 	"github.com/gin-gonic/gin"
 )

@@ -1,7 +1,7 @@
 
 以下是基于需求设计的完整代码目录结构，包含各目录职责边界及分支创建功能在不同版本的实现示例：
 ```plaintext
-gitfox.zcorp.cc/easysoft/gitfox-pms/
+gitfox.zcorp.cc/demo/gitfox-pms/
 ├── cmd/                     # 应用程序入口点
 │   ├── api/                 # API服务入口
 │   │   └── main.go          # 启动API服务，初始化依赖注入
