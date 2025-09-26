@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"gitfox.zcorp.cc/git/demo/gitfox-pms/internal/domain/codebase"
+	"gitfox.zcorp.cc/demo/gitfox-pms/internal/domain/codebase"
 )
 
 // Repository 分支数据访问层接口
