@@ -2,26 +2,19 @@ package router
 
 import (
 	"gitfox.zcorp.cc/git/demo/gitfox-pms/app/api/handler/codebase"
-	"gitfox.zcorp.cc/git/demo/gitfox-pms/app/di"
-	"gitfox.zcorp.cc/git/demo/gitfox-pms/app/service/codebase/branch"
 
 	"github.com/gin-gonic/gin"
 )
 
 // registerCodebaseRoutes 注册代码库相关路由
-func registerCodebaseRoutes(r *gin.RouterGroup, container *di.Container) {
+func registerCodebaseRoutes(r *gin.RouterGroup, container *ServiceContainer) {
 	// 1. 从容器获取代码库相关模块实例
-	branchSvc, err := container.Get("codebase.branch")
-	if err != nil {
-		panic("代码库分支模块初始化失败: " + err.Error())
-	}
+	
+	branchSvc := container.BranchService
 
-	// 2. 类型断言（确保模块实例实现了对应的服务接口）
-	branchService := branchSvc.(branch.BranchService)
-	// repoService := repoSvc.(repository.Service)
 
 	// 3. 初始化处理器
-	branchHandler := codebase.NewBranchHandler(branchService)
+	branchHandler := codebase.NewBranchHandler(branchSvc)
 
 	// 4. 注册代码库路由
 	codebaseGroup := r.Group("/repos")

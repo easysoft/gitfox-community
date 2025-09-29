@@ -10,9 +10,7 @@ import (
 type Version string
 
 const (
-	VersionBase       Version = "base"       // 免费版
-	VersionEnterprise Version = "enterprise" // 企业版
-	VersionUltimate   Version = "ultimate"   // 旗舰版
+	VersionBase       Version = "pms"       // 免费版
 )
 
 // Module 版本化模块接口：所有需要版本差异化的模块必须实现此接口

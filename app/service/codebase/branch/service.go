@@ -34,12 +34,9 @@ type BranchService interface {
 	Create(ctx context.Context, req CreateBranchRequest) (*CreateBranchResponse, error)
 	// 获取分支信息
 	Get(ctx context.Context, branchID string) (*CreateBranchResponse, error)
-	// // 列出代码库的所有分支
-	ListByRepo(ctx context.Context, repoID string) ([]*CreateBranchResponse, error)
-	// 删除分支
-	Delete(ctx context.Context, branchID, userID string) error
 }
 
+var _ BranchService = (*BaseBranchService)(nil)
 // 基础服务结构体，包含通用依赖
 type BaseBranchService struct {
 	repo branch.Repository
