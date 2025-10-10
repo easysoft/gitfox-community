@@ -1,0 +1,51 @@
+2025-10-10 16:03:54.095	INFO	同步日志消息	{"mode": "sync"}
+2025-10-10 16:03:54.095	INFO	异步日志消息	{"mode": "async"}
+2025-10-10 16:03:54.095	INFO	user-service	用户服务日志	{"action": "login"}
+2025-10-10 16:03:54.095	INFO	user-service	处理用户请求1	{"request_id": "req-123", "user_id": "user-456"}
+2025-10-10 16:03:54.095	INFO	user-service	处理用户请求2	{"request_id": "req-123", "user_id": "user-456"}
+2025-10-10 16:03:54.095	INFO	user-service	处理用户请求3	{"request_id": "req-123", "user_id": "user-456"}
+2025-10-10 16:03:54.095	INFO	Sugar 简单日志
+2025-10-10 16:03:54.095	INFO	用户 张三 在 2025-10-10 16:03:54 登录
+2025-10-10 16:03:54.095	INFO	payment-service	支付处理	{"service": "payment", "version": "v1.0", "amount": 199.99}
+2025-10-10 16:03:54.095	INFO	payment-service	支付结果	{"service": "payment", "version": "v1.0", "status": "success"}
+2025-10-10 16:03:54.095	INFO	用户操作详情	{"action": "purchase", "user_id": "user-789", "product_id": "prod-101", "amount": 99.99, "timestamp": "2025-10-10 16:03:54.095"}
+2025-10-10 16:03:54.095	DEBUG	调试信息 - 仅在开发环境显示
+2025-10-10 16:03:54.095	INFO	一般信息 - 正常运行信息
+2025-10-10 16:03:54.095	WARN	警告信息 - 需要注意但不影响运行
+2025-10-10 16:03:54.095	ERROR	错误信息 - 发生了错误但程序可以继续
+gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger.(*ZapMateLogger).write
+	/root/repo/gitfox-community/pkg/logger/write.go:11
+gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger.(*SugaredMateLogger).asynclog
+	/root/repo/gitfox-community/pkg/logger/suger.go:157
+gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger.(*SugaredMateLogger).Error
+	/root/repo/gitfox-community/pkg/logger/suger.go:62
+main.main
+	/root/repo/gitfox-community/pkg/demo/logger/main.go:63
+runtime.main
+	/usr/local/go/src/runtime/proc.go:285
+2025-10-10 16:07:22.572	INFO	同步日志消息	{"mode": "sync"}
+2025-10-10 16:07:22.572	INFO	异步日志消息	{"mode": "async"}
+2025-10-10 16:07:22.572	INFO	user-service	用户服务日志	{"action": "login"}
+2025-10-10 16:07:22.572	INFO	user-service	处理用户请求1	{"request_id": "req-123", "user_id": "user-456"}
+2025-10-10 16:07:22.572	INFO	user-service	处理用户请求2	{"request_id": "req-123", "user_id": "user-456"}
+2025-10-10 16:07:22.572	INFO	user-service	处理用户请求3	{"request_id": "req-123", "user_id": "user-456"}
+2025-10-10 16:07:22.572	INFO	Sugar 简单日志
+2025-10-10 16:07:22.572	INFO	用户 张三 在 2025-10-10 16:07:22 登录
+2025-10-10 16:07:22.572	INFO	用户操作详情	{"action": "purchase", "user_id": "user-789", "product_id": "prod-101", "amount": 99.99, "timestamp": "2025-10-10 16:07:22.572"}
+2025-10-10 16:07:22.572	INFO	payment-service	用户 张三 在 2025-10-10 16:07:22 准备支付	{"service": "payment", "version": "v1.0"}
+2025-10-10 16:07:22.572	INFO	payment-service	支付处理	{"service": "payment", "version": "v1.0", "amount": 199.99}
+2025-10-10 16:07:22.572	INFO	payment-service	支付结果	{"service": "payment", "version": "v1.0", "status": "success"}
+2025-10-10 16:07:22.572	DEBUG	调试信息 - 仅在开发环境显示
+2025-10-10 16:07:22.572	INFO	一般信息 - 正常运行信息
+2025-10-10 16:07:22.572	WARN	警告信息 - 需要注意但不影响运行
+2025-10-10 16:07:22.572	ERROR	错误信息 - 发生了错误但程序可以继续
+gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger.(*ZapMateLogger).write
+	/root/repo/gitfox-community/pkg/logger/write.go:11
+gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger.(*SugaredMateLogger).asynclog
+	/root/repo/gitfox-community/pkg/logger/suger.go:157
+gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger.(*SugaredMateLogger).Error
+	/root/repo/gitfox-community/pkg/logger/suger.go:62
+main.main
+	/root/repo/gitfox-community/pkg/demo/logger/main.go:64
+runtime.main
+	/usr/local/go/src/runtime/proc.go:285
