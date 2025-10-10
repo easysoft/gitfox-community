@@ -1,4 +1,4 @@
-module gitfox.zcorp.cc/git/demo/gitfox-pms
+module gitfox.zcorp.cc/git/Pangu/gitfox-community
 
 go 1.25.1
 

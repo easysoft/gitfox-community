@@ -25,25 +25,5 @@ jwt:
   expires_hours: 24
 
 # 核心模块配置
-core:
-  branch:
-    max_count: 100  # 免费版最大分支数量限制
 
-# 企业版配置(仅企业版生效)
-biz:
-  branch:
-    auto_create_rules:
-      - pattern: "release/*"
-        enabled: true
-      - pattern: "hotfix/*"
-        enabled: true
-
-# 旗舰版配置(仅旗舰版生效)
-ipd:
-  webhook:
-    secret: your-webhook-secret
-    max_retries: 3
-  tttt:
-
-ABC:
   

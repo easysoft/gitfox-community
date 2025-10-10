@@ -8,10 +8,9 @@ import (
 	"strconv"
 	"strings"
 
-	"gitfox.zcorp.cc/git/demo/gitfox-pms/app/api/router"
-	"gitfox.zcorp.cc/git/demo/gitfox-pms/app/constants"
-	"gitfox.zcorp.cc/git/demo/gitfox-pms/app/di"
-	"gitfox.zcorp.cc/git/demo/gitfox-pms/pkg/config"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/router"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constants"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -36,13 +35,11 @@ func main() {
 		panic("不支持的版本，可选版本：" + strings.Join(constants.SupportedVersions, ","))
 	}
 
-	// 根据版本加载配置（使用常量替代硬编码）
 	var cfg interface{}
-	version := di.VersionBase
+	version := versionStr
 	cfg = config.LoadBaseConfig(*configPath)
 
 	db, err := gorm.Open(mysql.Open("root:123456@tcp(localhost:3306)/gitfox_free?charset=utf8mb4&parseTime=True&loc=Local"), &gorm.Config{})
-
 
 	// 3. 使用Wire初始化所有服务
 	ctx := context.Background()

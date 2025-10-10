@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"gitfox.zcorp.cc/git/demo/gitfox-pms/app/store/codebase/branch"
-	"gitfox.zcorp.cc/git/demo/gitfox-pms/pkg/logger"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/codebase/branch"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 )
 
 // CreateBranchRequest 分支创建请求参数
@@ -37,6 +37,7 @@ type BranchService interface {
 }
 
 var _ BranchService = (*BaseBranchService)(nil)
+
 // 基础服务结构体，包含通用依赖
 type BaseBranchService struct {
 	repo branch.Repository

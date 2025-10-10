@@ -1,7 +1,7 @@
 package router
 
 import (
-	"gitfox.zcorp.cc/git/demo/gitfox-pms/app/api/handler/codebase"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/handler/codebase"
 
 	"github.com/gin-gonic/gin"
 )
@@ -9,9 +9,8 @@ import (
 // registerCodebaseRoutes 注册代码库相关路由
 func registerCodebaseRoutes(r *gin.RouterGroup, container *ServiceContainer) {
 	// 1. 从容器获取代码库相关模块实例
-	
-	branchSvc := container.BranchService
 
+	branchSvc := container.BranchService
 
 	// 3. 初始化处理器
 	branchHandler := codebase.NewBranchHandler(branchSvc)

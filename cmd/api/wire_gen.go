@@ -8,8 +8,9 @@ package main
 
 import (
 	"context"
-	"gitfox.zcorp.cc/git/demo/gitfox-pms/app/service/codebase/branch"
-	branch2 "gitfox.zcorp.cc/git/demo/gitfox-pms/app/store/codebase/branch"
+
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/codebase/branch"
+	branch2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/codebase/branch"
 	"github.com/google/wire"
 	"gorm.io/gorm"
 )
