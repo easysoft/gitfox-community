@@ -1,0 +1,104 @@
+version: '3'
+
+vars:
+  LOCALES_DIR: locales
+  GO_MODULE: gitfox.zcorp.cc/git/Pangu/gitfox-community
+
+tasks:
+  # 默认任务
+  default:
+    desc: 显示所有可用任务
+    cmds:
+      - task --list
+      
+  # 测试相关任务
+  test:
+    desc: 运行所有测试
+    cmds:
+      - go test ./...
+
+  test:verbose:
+    desc: 运行测试（详细输出）
+    cmds:
+      - go test -v ./...
+
+  test:coverage:
+    desc: 运行测试并生成覆盖率报告
+    cmds:
+      - go test -coverprofile=coverage.out ./...
+      - go tool cover -html=coverage.out -o coverage.html
+      - echo "覆盖率报告已生成 coverage.html"
+
+  # 代码质量检查
+  lint:
+    desc: 运行代码检查
+    cmds:
+      - golangci-lint run
+
+  fmt:
+    desc: 格式化代码
+    cmds:
+      - go fmt ./...
+
+  vet:
+    desc: 运行 go vet
+    cmds:
+      - go vet ./...
+
+  # 多语言相关任务
+  i18n:check:
+    desc: 检查多语言文件键值一致性
+    cmds:
+      - go run cmd/i18n-check/main.go {{.LOCALES_DIR}}
+
+  i18n:validate:
+    desc: 验证翻译文件格式
+    cmds:
+      - |
+        echo "🔍 验证翻译文件格式..."
+        for file in {{.LOCALES_DIR}}/*/*.json; do
+          echo "检查: $file"
+          if ! jq empty "$file" 2>/dev/null; then
+            echo "❌ JSON 格式错误: $file"
+            exit 1
+          fi
+        done
+        echo "✅ 所有翻译文件格式正确"
+
+  i18n:stats:
+    desc: 显示翻译统计信息
+    cmds:
+      - |
+        echo "📊 翻译文件统计:"
+        for locale_dir in {{.LOCALES_DIR}}/*/; do
+          locale=$(basename "$locale_dir")
+          echo "语言环境: $locale"
+          for file in "$locale_dir"*.json; do
+            if [ -f "$file" ]; then
+              filename=$(basename "$file")
+              count=$(jq -r 'paths(scalars) as $p | $p | join(".")' "$file" | wc -l)
+              echo "  $filename: $count 个翻译键"
+            fi
+          done
+        done
+
+  # 清理任务
+  clean:
+    desc: 清理构建文件
+    cmds:
+      - rm -rf bin/
+      - rm -f coverage.out coverage.html
+
+  # 完整的检查流程
+  check:
+    desc: 运行完整的代码检查流程
+    deps: [fmt, vet, i18n:check, test]
+    cmds:
+      - echo "✅ 所有检查通过！"
+
+  # 发布前检查
+  pre-commit:
+    desc: 提交前检查
+    deps: [check]
+    cmds:
+      - echo "🚀 代码已准备好提交！"

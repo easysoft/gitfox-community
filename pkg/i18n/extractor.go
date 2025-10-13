@@ -141,7 +141,7 @@ func (e *Extractor) extractFromCallExpr(fset *token.FileSet, filePath string, ca
 func (e *Extractor) extractFromBasicLit(fset *token.FileSet, filePath string, lit *ast.BasicLit) *ExtractedString {
 	// 解析字符串值
 	value := strings.Trim(lit.Value, `"`)
-	
+
 	// 检查长度限制
 	if len(value) < e.config.MinLength || len(value) > e.config.MaxLength {
 		return nil
@@ -173,10 +173,10 @@ func generateKey(value string) string {
 	key := strings.ToLower(value)
 	key = regexp.MustCompile(`[^a-z0-9]+`).ReplaceAllString(key, "_")
 	key = strings.Trim(key, "_")
-	
+
 	if len(key) > 50 {
 		key = key[:50]
 	}
-	
+
 	return key
 }
