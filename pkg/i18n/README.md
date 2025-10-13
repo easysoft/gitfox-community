@@ -1,5 +1,3 @@
-好的，已为您修复并优化了 README 文档的格式。
-
 # I18n Package
 
 一个功能完整的 Go 语言国际化（i18n）包，提供字符串翻译、多语言支持、中间件集成等功能。
@@ -18,6 +16,8 @@
 - 🔧 灵活的配置选项
 - 📂 嵌套JSON结构支持
 - 🔍 自动语言环境检测
+- 🔒 键一致性校验
+- 📦 外部项目翻译数据获取
 
 ## 快速开始
 
@@ -82,6 +82,51 @@ fmt.Println(i18n.TWithContext(ctx, "hello"))        // 你好
 fmt.Println(i18n.TfWithContext(ctx, "user_info", data)) // 用户：Alice，年龄：25
 ```
 
+### 获取项目翻译数据（外部项目使用）
+
+```go
+package main
+
+import (
+    "fmt"
+    "log"
+    "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
+)
+
+func main() {
+    // 获取所有翻译数据
+    entries, err := i18n.GetProjectTranslations()
+    if err != nil {
+        log.Fatal("获取翻译失败:", err)
+    }
+    
+    fmt.Printf("共获取到 %d 条翻译\n", len(entries))
+    for _, entry := range entries {
+        fmt.Printf("语言: %s, 键: %s, 值: %s\n", 
+            entry.Locale, entry.Key, entry.Value)
+    }
+    
+    // 只获取中文翻译
+    zhTranslations, err := i18n.GetProjectTranslationsByLocale("zh-CN")
+    if err != nil {
+        log.Fatal("获取中文翻译失败:", err)
+    }
+    
+    fmt.Println("\n中文翻译:")
+    for key, value := range zhTranslations {
+        fmt.Printf("%s: %s\n", key, value)
+    }
+    
+    // 获取支持的语言列表
+    locales, err := i18n.GetProjectAvailableLocales()
+    if err != nil {
+        log.Fatal("获取语言列表失败:", err)
+    }
+    
+    fmt.Printf("\n支持的语言: %v\n", locales)
+}
+```
+
 ### Gin 中间件
 
 ```go
@@ -138,20 +183,19 @@ func main() {
 ```json
 {
   "space": {
-    "profile": {
-      "title": {
-        "description": "Code repository user profile page title",
-        "other": "Repository Profile"
+    "secrets": {
+      "add": {
+        "error": "添加密钥失败，请检查名称是否重复或格式是否正确。",
+        "success": "密钥已成功添加。"
       },
-      "saveButton": {
-        "description": "Code repository profile page save button",
-        "other": "Save Changes"
+      "list": {
+        "error": "无法加载密钥列表，请稍后重试。",
+        "success": "仓库密钥"
       }
     },
-    "settings": {
+    "artifacts": {
       "title": {
-        "description": "Code repository user settings page title",
-        "other": "Repository Settings"
+        "success": "仓库设置"
       }
     }
   }
@@ -162,8 +206,8 @@ func main() {
 
 ```go
 // 访问嵌套的翻译键
-fmt.Println(i18n.T("space.profile.title"))      // Repository Profile
-fmt.Println(i18n.T("space.profile.saveButton")) // Save Changes
+fmt.Println(i18n.T("space.secrets.add.success"))    // 密钥已成功添加。
+fmt.Println(i18n.T("space.artifacts.title.success")) // 仓库设置
 ```
 
 ### 简单 JSON 格式
@@ -182,11 +226,9 @@ fmt.Println(i18n.T("space.profile.saveButton")) // Save Changes
 
 支持以下文件命名格式：
 
--   `en_US.json` - 美式英文翻译
--   `zh_CN.json` - 简体中文翻译
--   `zh_TW.json` - 繁体中文翻译
--   `messages.en_US.json` - 带前缀的美式英文翻译
--   `app.zh_CN.json` - 带前缀的简体中文翻译
+- `en-US.json` - 美式英文翻译
+- `zh-CN.json` - 简体中文翻译
+- `zh-TW.json` - 繁体中文翻译
 
 ## 目录结构
 
@@ -194,39 +236,79 @@ fmt.Println(i18n.T("space.profile.saveButton")) // Save Changes
 
 ```
 locales/
-├── en_US/
+├── en-US/
 │   ├── space.json
 │   └── repo.json
-└── zh_CN/
+└── zh-CN/
     ├── space.json
     └── repo.json
+```
+
+## 键一致性校验
+
+包内置了键一致性校验功能，在加载翻译文件时自动检查所有语言环境的键是否一致：
+
+```go
+manager := i18n.NewManager(&i18n.ManagerConfig{
+    DefaultLocale:  "zh-CN",
+    FallbackLocale: "en-US",
+})
+
+// 如果中英文的键不一致，这里会返回详细的错误信息
+err := manager.LoadTranslationsFromDir("locales")
+if err != nil {
+    fmt.Printf("加载翻译文件失败: %v\n", err)
+    // 输出示例：
+    // translation key consistency validation failed: translation key inconsistencies found:
+    //   - key 'space.secrets.new.title' missing in: en-US
+    //   - key 'repo.settings.advanced' missing in: zh-CN
+    return
+}
 ```
 
 ## API 参考
 
 ### 全局函数
 
--   `InitGlobal(config *ManagerConfig)` - 初始化全局管理器
--   `GetGlobalManager() *Manager` - 获取全局管理器
--   `T(key string, args ...interface{}) string` - 全局翻译函数
--   `Tf(key string, data interface{}) string` - 全局格式化翻译函数
--   `TWithLocale(locale, key string, args ...interface{}) string` - 指定语言环境的翻译函数
--   `SetGlobalLocale(locale string) error` - 设置全局语言环境
+- `InitGlobal(config *ManagerConfig)` - 初始化全局管理器
+- `GetGlobalManager() *Manager` - 获取全局管理器
+- `T(key string, args ...interface{}) string` - 全局翻译函数
+- `Tf(key string, data interface{}) string` - 全局格式化翻译函数
+- `TWithLocale(locale, key string, args ...interface{}) string` - 指定语言环境的翻译函数
+- `SetGlobalLocale(locale string) error` - 设置全局语言环境
+
+### 项目翻译数据获取函数
+
+- `GetProjectTranslations() ([]TranslationEntry, error)` - 获取项目内置的所有翻译数据
+- `GetProjectTranslationsByLocale(locale string) (map[string]string, error)` - 按语言环境获取翻译数据
+- `GetProjectAvailableLocales() ([]string, error)` - 获取项目支持的语言环境列表
 
 ### Context 函数
 
--   `WithLocale(ctx context.Context, locale string) context.Context` - 在context中设置语言环境
--   `GetLocaleFromContext(ctx context.Context) string` - 从context中获取语言环境
--   `TWithContext(ctx context.Context, key string, args ...interface{}) string` - 使用context中的语言环境进行翻译
--   `TfWithContext(ctx context.Context, key string, data interface{}) string` - 使用context中的语言环境进行格式化翻译
+- `WithLocale(ctx context.Context, locale string) context.Context` - 在context中设置语言环境
+- `GetLocaleFromContext(ctx context.Context) string` - 从context中获取语言环境
+- `TWithContext(ctx context.Context, key string, args ...interface{}) string` - 使用context中的语言环境进行翻译
+- `TfWithContext(ctx context.Context, key string, data interface{}) string` - 使用context中的语言环境进行格式化翻译
 
 ### Gin 辅助函数
 
--   `GetLocaleFromGin(c *gin.Context) string` - 从Gin context获取语言环境
--   `TGin(c *gin.Context, key string, args ...interface{}) string` - Gin翻译函数
--   `TfGin(c *gin.Context, key string, data interface{}) string` - Gin格式化翻译函数
+- `GetLocaleFromGin(c *gin.Context) string` - 从Gin context获取语言环境
+- `TGin(c *gin.Context, key string, args ...interface{}) string` - Gin翻译函数
+- `TfGin(c *gin.Context, key string, data interface{}) string` - Gin格式化翻译函数
 
-### 管理器配置
+### 数据结构
+
+#### TranslationEntry
+
+```go
+type TranslationEntry struct {
+    Locale string `json:"locale"` // 语言环境
+    Key    string `json:"key"`    // 翻译键
+    Value  string `json:"value"`  // 翻译值
+}
+```
+
+#### 管理器配置
 
 ```go
 type ManagerConfig struct {
@@ -238,7 +320,7 @@ type ManagerConfig struct {
 }
 ```
 
-### 中间件配置
+#### 中间件配置
 
 ```go
 type MiddlewareConfig struct {
@@ -257,8 +339,8 @@ type MiddlewareConfig struct {
 
 ```go
 // 验证翻译完整性
-result, err := i18n.ValidateTranslations("locales/en_US.json", []string{
-    "locales/zh_CN.json",
+result, err := i18n.ValidateTranslations("locales/en-US.json", []string{
+    "locales/zh-CN.json",
     "locales/ja.json",
 })
 
@@ -297,25 +379,68 @@ if err != nil {
 
 包内置支持以下语言环境：
 
--   `en` - English
--   `zh-CN` - Simplified Chinese
--   `zh-TW` - Traditional Chinese
--   `ja` - Japanese
--   `ko` - Korean
--   `fr` - French
--   `de` - German
--   `es` - Spanish
--   `pt` - Portuguese
--   `ru` - Russian
+- `en-US` - English (United States)
+- `zh-CN` - Simplified Chinese
+- `zh-TW` - Traditional Chinese
+- `ja` - Japanese
+- `ko` - Korean
+- `fr` - French
+- `de` - German
+- `es` - Spanish
+- `pt` - Portuguese
+- `ru` - Russian
+
+## 外部项目集成
+
+### 在其他项目中使用 gitfox-community 的翻译
+
+如果你有一个外部项目（如 `gitfox-dazu`），想要使用 `gitfox-community` 项目中的翻译数据，可以这样做：
+
+1.  **导入包**：
+    ```go
+    import "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
+    ```
+
+2.  **获取翻译数据**：
+    ```go
+    // 获取所有翻译
+    entries, err := i18n.GetProjectTranslations()
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    // 按语言获取翻译
+    zhTranslations, err := i18n.GetProjectTranslationsByLocale("zh-CN")
+    enTranslations, err := i18n.GetProjectTranslationsByLocale("en-US")
+    ```
+
+3.  **在自己的项目中使用**：
+    ```go
+    // 创建自己的翻译管理器
+    myManager := i18n.NewManager(&i18n.ManagerConfig{
+        DefaultLocale: "zh-CN",
+    })
+
+    // 加载 gitfox-community 的翻译数据
+    entries, _ := i18n.GetProjectTranslations()
+    for _, entry := range entries {
+        myManager.AddTranslation(entry.Locale, entry.Key, entry.Value)
+    }
+
+    // 现在可以使用这些翻译了
+    translator, _ := myManager.GetTranslator("zh-CN")
+    fmt.Println(translator.T("space.secrets.add.success")) // 密钥已成功添加。
+    ```
 
 ## 最佳实践
 
-1.  **使用嵌套结构组织翻译**：将相关的翻译键组织在一起，便于管理
-2.  **提供描述信息**：在翻译对象中添加`description`字段，帮助翻译人员理解上下文
-3.  **设置回退语言**：确保在缺失翻译时有合适的回退选项
-4.  **使用语言环境检测**：在Web应用中使用中间件自动检测用户的语言偏好
-5.  **验证翻译完整性**：定期使用验证工具检查翻译文件的完整性
-6.  **合理的目录结构**：按语言环境和功能模块组织翻译文件
+1.  **使用嵌套结构组织翻译**：将相关的翻译键组织在一起，便于管理。
+2.  **保持键一致性**：确保所有语言环境的翻译文件包含相同的键。
+3.  **设置回退语言**：确保在缺失翻译时有合适的回退选项。
+4.  **使用语言环境检测**：在Web应用中使用中间件自动检测用户的语言偏好。
+5.  **验证翻译完整性**：定期使用验证工具检查翻译文件的完整性。
+6.  **合理的目录结构**：按语言环境和功能模块组织翻译文件。
+7.  **外部项目集成**：使用公共API获取项目翻译数据，避免直接访问文件。
 
 ## Demo
 

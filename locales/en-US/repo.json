@@ -1,19 +1,24 @@
 {
   "repo": {
-    "profile": {
-      "title": {
-        "description": "Repository profile page title",
-        "other": "Repository Profile"
+    "branches": {
+      "list": {
+        "error": "Failed to load branch list. Please refresh the page and try again."
       },
-      "saveButton": {
-        "description": "Repository profile page save button",
-        "other": "Save Changes"
+      "delete": {
+        "success": "Branch deleted successfully.",
+        "error": "Failed to delete. This branch may be protected or the default branch."
       }
     },
-    "settings": {
-      "title": {
-        "description": "Repository settings page title",
-        "other": "Repository Settings"
+    "tags": {
+      "create": {
+        "success": "Tag created successfully.",
+        "error": "Failed to create tag. The tag name may already exist."
+      }
+    },
+    "pullRequests": {
+      "merge": {
+        "success": "Merge successful!",
+        "error": "Merge failed. Conflicts exist or checks have not passed."
       }
     }
   }

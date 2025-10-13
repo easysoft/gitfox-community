@@ -1,19 +1,25 @@
 {
   "space": {
-    "profile": {
-      "title": {
-        "description": "Code repository user profile page title",
-        "other": "Repository Profile"
+    "secrets": {
+      "add": {
+        "error": "Failed to add secret. Please check if the name is duplicated or the format is correct.",
+        "success": "Secret added successfully." 
       },
-      "saveButton": {
-        "description": "Code repository profile page save button",
-        "other": "Save Changes"
+      "list": {
+        "error": "Failed to load the list of secrets. Please try again later.",
+        "success": "Repository Secrets List Loaded Successfully."
+      },
+      "delete": {
+        "error": {
+          "error1": "Failed to delete: This secret may be in use by one or more services.",
+          "error2": "Failed to delete: You do not have permission to delete this secret."
+        },
+        "success": "Secret deleted successfully."
       }
     },
-    "settings": {
+    "artifacts": {
       "title": {
-        "description": "Code repository user settings page title",
-        "other": "Repository Settings"
+        "success": "Repository Settings Saved Successfully."
       }
     }
   }

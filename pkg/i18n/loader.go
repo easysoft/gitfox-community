@@ -219,31 +219,9 @@ func flattenMap(data map[string]interface{}, prefix string, result map[string]st
 
 		switch v := value.(type) {
 		case map[string]interface{}:
-			// 检查是否是翻译对象（包含 description, one, other 等字段）
-			if isTranslationObject(v) {
-				// 提取翻译值，优先使用 other，然后是 one
-				if other, ok := v["other"].(string); ok {
-					result[newKey] = other
-				} else if one, ok := v["one"].(string); ok {
-					result[newKey] = one
-				}
-				// 跳过 description 字段
-			} else {
-				// 递归处理嵌套对象
-				flattenMap(v, newKey, result)
-			}
+			flattenMap(v, newKey, result)
 		case string:
 			result[newKey] = v
 		}
 	}
-}
-
-// isTranslationObject 检查是否是翻译对象
-func isTranslationObject(data map[string]interface{}) bool {
-	// 如果包含 description, one, other 等字段，认为是翻译对象
-	_, hasDescription := data["description"]
-	_, hasOne := data["one"]
-	_, hasOther := data["other"]
-
-	return hasDescription || hasOne || hasOther
 }

@@ -19,27 +19,27 @@ func main() {
 	fmt.Println("\n2. 管理器模式:")
 	managerDemo()
 
-	// // 3. 从文件加载翻译
+	// 3. 从文件加载翻译
 	fmt.Println("\n3. 从文件加载翻译:")
 	fileLoadingDemo()
 
-	// // 4. 全局翻译器
+	// 4. 全局翻译器
 	fmt.Println("\n4. 全局翻译器:")
 	globalTranslatorDemo()
 
-	// // 5. 上下文翻译
+	// 5. 上下文翻译
 	fmt.Println("\n5. 上下文翻译:")
 	contextTranslationDemo()
 
-	// // 6. 模板翻译
+	// 6. 模板翻译
 	fmt.Println("\n6. 模板翻译:")
 	templateTranslationDemo()
 
-	// // 7. 缺失翻译处理
+	// 7. 缺失翻译处理
 	fmt.Println("\n7. 缺失翻译处理:")
 	missingTranslationDemo()
 
-	// // 8. 多语言切换
+	// 8. 多语言切换
 	fmt.Println("\n8. 多语言切换:")
 	languageSwitchDemo()
 }
@@ -123,10 +123,12 @@ func fileLoadingDemo() {
 	zhTranslator, _ := manager.GetTranslator("zh-CN")
 	enTranslator, _ := manager.GetTranslator("en-US")
 
-	fmt.Printf("   中文 - 项目标题: %s\n", zhTranslator.T("space.profile.title"))
-	fmt.Printf("   中文 - 仓库标题: %s\n", zhTranslator.T("repo.profile.title"))
-	fmt.Printf("   英文 - 项目标题: %s\n", enTranslator.T("space.profile.title"))
-	fmt.Printf("   英文 - 仓库标题: %s\n", enTranslator.T("repo.profile.title"))
+	fmt.Printf("   中文 - 密钥列表: %s\n", zhTranslator.T("space.secrets.list.success"))
+	fmt.Printf("   中文 - 成功删除分支: %s\n", zhTranslator.T("repo.branches.delete.success"))
+	fmt.Printf("   中文 - 删除密钥失败1: %s\n", zhTranslator.T("space.secrets.delete.error.error1"))
+	fmt.Printf("   英文 - 密钥列表: %s\n", enTranslator.T("space.secrets.list.success"))
+	fmt.Printf("   英文 - 成功删除分支: %s\n", enTranslator.T("repo.branches.delete.success"))
+	fmt.Printf("   英文 - 删除密钥失败1: %s\n", enTranslator.T("space.secrets.delete.error.error1"))
 }
 
 func globalTranslatorDemo() {

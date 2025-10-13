@@ -2,6 +2,8 @@ package i18n
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"sync"
 
 	"github.com/pkg/errors"
@@ -82,6 +84,11 @@ func (m *Manager) LoadTranslationsFromDir(dirPath string) error {
 		return errors.Wrapf(err, "failed to load translations from directory: %s", dirPath)
 	}
 
+	// 校验键一致性
+	if err := m.validateKeyConsistency(translations); err != nil {
+		return errors.Wrap(err, "translation key consistency validation failed")
+	}
+
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -90,6 +97,55 @@ func (m *Manager) LoadTranslationsFromDir(dirPath string) error {
 		if err := translator.LoadTranslations(locale, localeTranslations); err != nil {
 			return errors.Wrapf(err, "failed to load translations for locale: %s", locale)
 		}
+	}
+
+	return nil
+}
+
+// validateKeyConsistency 校验所有语言环境的键一致性
+func (m *Manager) validateKeyConsistency(translations map[string]map[string]string) error {
+	if len(translations) <= 1 {
+		return nil // 只有一个或没有语言环境，无需校验
+	}
+
+	// 收集所有键和对应的语言环境
+	keyToLocales := make(map[string][]string)
+	allLocales := make([]string, 0, len(translations))
+
+	for locale, trans := range translations {
+		allLocales = append(allLocales, locale)
+		for key := range trans {
+			keyToLocales[key] = append(keyToLocales[key], locale)
+		}
+	}
+
+	var missingKeys []string
+	totalLocales := len(allLocales)
+
+	// 检查每个键是否在所有语言环境中都存在
+	for key, locales := range keyToLocales {
+		if len(locales) != totalLocales {
+			// 找出缺失该键的语言环境
+			localeSet := make(map[string]bool)
+			for _, locale := range locales {
+				localeSet[locale] = true
+			}
+
+			var missingLocales []string
+			for _, locale := range allLocales {
+				if !localeSet[locale] {
+					missingLocales = append(missingLocales, locale)
+				}
+			}
+
+			missingKeys = append(missingKeys,
+				fmt.Sprintf("key '%s' missing in: %s", key, strings.Join(missingLocales, ", ")))
+		}
+	}
+
+	if len(missingKeys) > 0 {
+		return errors.New("translation key inconsistencies found:\n  - " +
+			strings.Join(missingKeys, "\n  - "))
 	}
 
 	return nil
