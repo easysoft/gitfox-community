@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
@@ -37,7 +38,7 @@ func main() {
 	// 4. 错误包装
 	fmt.Println("4. 错误包装:")
 	originalErr := fmt.Errorf("原始错误: 网络连接超时")
-	wrappedErr := pkg_errors.Wrap(originalErr, "处理用户请求时发生错误")
+	wrappedErr := pkg_errors.Wrap(originalErr, "处理用户请求时发生错误:")
 	fmt.Printf("   原始错误: %v\n", originalErr)
 	fmt.Printf("   包装错误: %v\n", wrappedErr)
 	fmt.Printf("   获取原因: %v\n\n", pkg_errors.Cause(wrappedErr))
@@ -50,6 +51,7 @@ func main() {
 	fmt.Printf("   类型化包装: %v (类型: %v)\n", typedWrappedErr, pkg_errors.GetType(typedWrappedErr))
 	fmt.Printf("   获取原因: %v\n\n", pkg_errors.Cause(typedWrappedErr))
 
+	testMultipleWrap()
 	// 6. 格式化包装
 	fmt.Println("6. 格式化包装:")
 	baseErr := fmt.Errorf("权限不足")
@@ -157,4 +159,46 @@ func simulateFileOperation() error {
 	}
 
 	return nil
+}
+
+func testMultipleWrap() {
+	fmt.Println("   === 多次包装测试 ===")
+
+	// 1. 创建原始错误
+	originalErr := errors.New("原始网络错误")
+	fmt.Printf("   原始错误: %v\n", originalErr)
+
+	// 2. 第一次包装
+	firstWrap := pkg_errors.DBError.Wrap(originalErr, "数据库连接失败")
+	fmt.Printf("   第一次包装: %v\n", firstWrap)
+	fmt.Printf("   第一次包装的 Cause: %v\n", pkg_errors.Cause(firstWrap))
+
+	// 3. 第二次包装
+	secondWrap := pkg_errors.SystemErr.Wrap(firstWrap, "系统服务不可用")
+	fmt.Printf("   第二次包装: %v\n", secondWrap)
+	fmt.Printf("   第二次包装的 Cause: %v\n", pkg_errors.Cause(secondWrap))
+
+	// 4. 第三次包装
+	thirdWrap := pkg_errors.BadRequest.Wrap(secondWrap, "用户请求处理失败")
+	fmt.Printf("   第三次包装: %v\n", thirdWrap)
+	fmt.Printf("   第三次包装的 Cause: %v\n", pkg_errors.Cause(thirdWrap))
+
+	// 5. 验证 Cause 是否返回原始错误
+	cause := pkg_errors.Cause(thirdWrap)
+	fmt.Printf("\n   验证结果:\n")
+	fmt.Printf("   原始错误: %v\n", originalErr)
+	fmt.Printf("   最终 Cause: %v\n", cause)
+	fmt.Printf("   是否相等: %v\n", cause.Error() == originalErr.Error())
+	fmt.Printf("   Is 检查: %v\n", pkg_errors.Is(thirdWrap, originalErr))
+
+	// 6. 混合包装（使用不同的包装函数）
+	fmt.Printf("\n   === 混合包装测试 ===\n")
+	mixedWrap1 := pkg_errors.Wrap(originalErr, "第一层包装")
+	mixedWrap2 := pkg_errors.WithMessage(mixedWrap1, "第二层消息")
+	mixedWrap3 := pkg_errors.NotFound.Wrapf(mixedWrap2, "第三层格式化: %s", "资源不存在")
+
+	fmt.Printf("   混合包装结果: %v\n", mixedWrap3)
+	fmt.Printf("   混合包装的 Cause: %v\n", pkg_errors.Cause(mixedWrap3))
+	fmt.Printf("   混合包装 Is 检查: %v\n", pkg_errors.Is(mixedWrap3, originalErr))
+	fmt.Printf("\n")
 }

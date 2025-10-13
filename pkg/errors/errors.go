@@ -8,11 +8,10 @@ import (
 
 // ErrorType is the type of an error
 type ErrorType uint
-type ErrorCode uint
 
 type customError struct {
 	errorType     ErrorType
-	errorCodes    []ErrorCode
+	i18nKey       string
 	originalError error
 	context       errorContext
 }
@@ -122,6 +121,22 @@ func WithMessage(err error, msg string) error {
 	}
 
 	return customError{errorType: NoType, originalError: errors.WithMessage(err, msg)}
+}
+
+func WithI18nKey(err error, i18nKey string) error {
+	if customErr, ok := err.(customError); ok {
+		return customError{errorType: customErr.errorType, i18nKey: i18nKey, originalError: customErr.originalError}
+	}
+
+	return customError{errorType: NoType, i18nKey: i18nKey, originalError: err}
+}
+
+func GetI18nKey(err error) string {
+	if customErr, ok := err.(customError); ok {
+		return customErr.i18nKey
+	}
+
+	return ""
 }
 
 // WithMessagef adds a message to an error

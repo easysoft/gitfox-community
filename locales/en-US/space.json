@@ -1,0 +1,20 @@
+{
+  "space": {
+    "profile": {
+      "title": {
+        "description": "Code repository user profile page title",
+        "other": "Repository Profile"
+      },
+      "saveButton": {
+        "description": "Code repository profile page save button",
+        "other": "Save Changes"
+      }
+    },
+    "settings": {
+      "title": {
+        "description": "Code repository user settings page title",
+        "other": "Repository Settings"
+      }
+    }
+  }
+}

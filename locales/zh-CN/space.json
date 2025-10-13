@@ -1,0 +1,20 @@
+{
+  "space": {
+    "profile": {
+      "title": {
+        "description": "项目集合用户资料页标题",
+        "other": "项目资料"
+      },
+      "saveButton": {
+        "description": "项目集合资料页保存按钮",
+        "other": "保存修改"
+      }
+    },
+    "settings": {
+      "title": {
+        "description": "项目集合用户设置页标题",
+        "other": "项目设置"
+      }
+    }
+  }
+}

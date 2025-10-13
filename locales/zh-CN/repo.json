@@ -1,0 +1,20 @@
+{
+  "repo": {
+    "profile": {
+      "title": {
+        "description": "代码仓库用户资料页标题",
+        "other": "仓库资料"
+      },
+      "saveButton": {
+        "description": "代码仓库资料页保存按钮",
+        "other": "保存修改"
+      }
+    },
+    "settings": {
+      "title": {
+        "description": "代码仓库用户设置页标题",
+        "other": "仓库设置"
+      }
+    }
+  }
+}

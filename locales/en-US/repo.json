@@ -1,0 +1,20 @@
+{
+  "repo": {
+    "profile": {
+      "title": {
+        "description": "Repository profile page title",
+        "other": "Repository Profile"
+      },
+      "saveButton": {
+        "description": "Repository profile page save button",
+        "other": "Save Changes"
+      }
+    },
+    "settings": {
+      "title": {
+        "description": "Repository settings page title",
+        "other": "Repository Settings"
+      }
+    }
+  }
+}
