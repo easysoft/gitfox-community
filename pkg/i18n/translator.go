@@ -36,7 +36,6 @@ type translator struct {
 	defaultLocale   string
 	fallbackLocale  string
 	translations    map[string]map[string]string // locale -> key -> value
-	pluralRules     map[string]PluralRule
 	missingHandler  MissingTranslationHandler
 	templateFuncMap template.FuncMap
 }
@@ -83,7 +82,6 @@ func NewTranslator(config *TranslatorConfig) Translator {
 		defaultLocale:   config.DefaultLocale,
 		fallbackLocale:  config.FallbackLocale,
 		translations:    make(map[string]map[string]string),
-		pluralRules:     getDefaultPluralRules(),
 		missingHandler:  config.MissingHandler,
 		templateFuncMap: config.TemplateFuncMap,
 	}
@@ -242,25 +240,4 @@ func (t *translator) executeTemplate(translation string, data interface{}) strin
 // defaultMissingHandler 默认的缺失翻译处理器
 func defaultMissingHandler(locale, key string) string {
 	return fmt.Sprintf("[%s:%s]", locale, key)
-}
-
-// getDefaultPluralRules 获取默认的复数规则
-func getDefaultPluralRules() map[string]PluralRule {
-	return map[string]PluralRule{
-		"en": func(n int) int {
-			if n == 1 {
-				return 0 // singular
-			}
-			return 1 // plural
-		},
-		"zh": func(n int) int {
-			return 0 // 中文没有复数形式
-		},
-		"zh-CN": func(n int) int {
-			return 0 // 简体中文没有复数形式
-		},
-		"zh-TW": func(n int) int {
-			return 0 // 繁体中文没有复数形式
-		},
-	}
 }
