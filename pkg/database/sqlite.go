@@ -22,10 +22,11 @@ type SQLiteConfig struct {
 	IsNotPanic      bool          // 是否不panic，而是返回nil
 	ConnMaxLifeTime time.Duration // 连接最大生存时间
 	// SQLite 特有配置
-	WALMode         bool   // 是否启用 WAL 模式
-	CacheMode       string // 缓存模式: shared, private
-	JournalMode     string // 日志模式: DELETE, TRUNCATE, PERSIST, MEMORY, WAL, OFF
-	SynchronousMode string // 同步模式: OFF, NORMAL, FULL, EXTRA
+	WALMode         bool            // 是否启用 WAL 模式
+	CacheMode       string          // 缓存模式: shared, private
+	JournalMode     string          // 日志模式: DELETE, TRUNCATE, PERSIST, MEMORY, WAL, OFF
+	SynchronousMode string          // 同步模式: OFF, NORMAL, FULL, EXTRA
+	LogLevel        logger.LogLevel // 日志级别
 }
 
 // NewSQLiteDB 创建 SQLite 数据库连接
@@ -59,6 +60,11 @@ func NewSQLiteDB(conf SQLiteConfig) *DB {
 	dsn := buildSQLiteDSN(conf)
 
 	// 配置 GORM
+	logLevel := logger.Info
+	if conf.LogLevel != 0 {
+		logLevel = conf.LogLevel
+	}
+
 	gormConfig := &gorm.Config{
 		NamingStrategy: schema.NamingStrategy{
 			SingularTable: true,  // 使用单数表名
@@ -68,7 +74,7 @@ func NewSQLiteDB(conf SQLiteConfig) *DB {
 			log.New(os.Stdout, "\r\n", log.LstdFlags),
 			logger.Config{
 				SlowThreshold:             time.Second,
-				LogLevel:                  logger.Info,
+				LogLevel:                  logLevel,
 				Colorful:                  false,
 				IgnoreRecordNotFoundError: false,
 			},
