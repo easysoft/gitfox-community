@@ -17,3 +17,5 @@ const (
 	DBError
 	SystemErr
 )
+
+const defaultI18nKey = "error.default"

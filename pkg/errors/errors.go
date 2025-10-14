@@ -23,17 +23,17 @@ type errorContext struct {
 
 func Is(err, target error) bool { return errors.Is(err, target) }
 
-// New creates a new customError
+// New 创建一个新的customError
 func (errorType ErrorType) New(msg string) error {
 	return customError{errorType: errorType, originalError: errors.New(msg)}
 }
 
-// Newf creates a new customError with formatted message
+// Newf 使用格式化消息创建新的customError
 func (errorType ErrorType) Newf(msg string, args ...interface{}) error {
 	return customError{errorType: errorType, originalError: errors.Errorf(msg, args...)}
 }
 
-// Wrap creates a new wrapped error
+// Wrap 创建一个新的包装错误
 func (errorType ErrorType) Wrap(err error, msg string) error {
 	if err == nil {
 		return nil
@@ -41,7 +41,7 @@ func (errorType ErrorType) Wrap(err error, msg string) error {
 	return errorType.Wrapf(err, "%s", msg)
 }
 
-// Wrapf creates a new wrapped error with formatted message
+// Wrapf 创建新的包装错误，格式化消息
 func (errorType ErrorType) Wrapf(err error, msg string, args ...interface{}) error {
 	if err == nil {
 		return nil
@@ -49,17 +49,17 @@ func (errorType ErrorType) Wrapf(err error, msg string, args ...interface{}) err
 	return customError{errorType: errorType, originalError: errors.Wrapf(err, msg, args...)}
 }
 
-// Error returns the mssage of a customError
+// Error 返回自定义错误的消息
 func (error customError) Error() string {
 	return error.originalError.Error()
 }
 
-// Unwrap returns the wrapped error for Go 1.13+ error handling
+// Unwrap 返回Go 1.13错误处理的包装错误
 func (error customError) Unwrap() error {
 	return error.originalError
 }
 
-// Is reports whether any error in error's chain matches target
+// Is 报告错误链中是否有匹配目标的错误
 func (error customError) Is(target error) bool {
 	if targetCustom, ok := target.(customError); ok {
 		return error.errorType == targetCustom.errorType && errors.Is(error.originalError, targetCustom.originalError)
@@ -67,17 +67,17 @@ func (error customError) Is(target error) bool {
 	return errors.Is(error.originalError, target)
 }
 
-// New creates a no type error
+// New 创建无类型错误
 func New(msg string) error {
 	return customError{errorType: NoType, originalError: errors.New(msg)}
 }
 
-// Newf creates a no type error with formatted message
+// Newf 创建无类型错误，格式化消息
 func Newf(msg string, args ...interface{}) error {
 	return customError{errorType: NoType, originalError: errors.New(fmt.Sprintf(msg, args...))}
 }
 
-// Wrap an error with a string
+// Wrap 包装字符串错误
 func Wrap(err error, msg string) error {
 	if err == nil {
 		return nil
@@ -85,15 +85,7 @@ func Wrap(err error, msg string) error {
 	return Wrapf(err, "%s", msg)
 }
 
-// Cause gives the original error
-func Cause(err error) error {
-	if customErr, ok := err.(customError); ok {
-		return errors.Cause(customErr.originalError)
-	}
-	return errors.Cause(err)
-}
-
-// Wrapf an error with format string
+// Wrapf 包装格式字符串错误
 func Wrapf(err error, msg string, args ...interface{}) error {
 	if err == nil {
 		return nil
@@ -110,7 +102,15 @@ func Wrapf(err error, msg string, args ...interface{}) error {
 	return customError{errorType: NoType, originalError: wrappedError}
 }
 
-// WithMessage adds a message to an error
+// Cause 提供原始错误
+func Cause(err error) error {
+	if customErr, ok := err.(customError); ok {
+		return errors.Cause(customErr.originalError)
+	}
+	return errors.Cause(err)
+}
+
+// WithMessage 添加错误消息
 func WithMessage(err error, msg string) error {
 	if err == nil {
 		return nil
@@ -136,10 +136,10 @@ func GetI18nKey(err error) string {
 		return customErr.i18nKey
 	}
 
-	return ""
+	return defaultI18nKey
 }
 
-// WithMessagef adds a message to an error
+// WithMessagef 添加错误消息
 func WithMessagef(err error, msg string, args ...interface{}) error {
 	if err == nil {
 		return nil
@@ -152,7 +152,7 @@ func WithMessagef(err error, msg string, args ...interface{}) error {
 	return customError{errorType: NoType, originalError: errors.WithMessagef(err, msg, args...)}
 }
 
-// AddErrorContext adds a context to an error
+// AddErrorContext 添加错误上下文
 func AddErrorContext(err error, field, message string) error {
 	if err == nil {
 		return nil
@@ -165,7 +165,7 @@ func AddErrorContext(err error, field, message string) error {
 	return customError{errorType: NoType, originalError: err, context: context}
 }
 
-// GetErrorContext returns the error context
+// GetErrorContext 返回错误上下文
 func GetErrorContext(err error) map[string]string {
 	emptyContext := errorContext{}
 	if customErr, ok := err.(customError); ok || customErr.context != emptyContext {
@@ -175,7 +175,7 @@ func GetErrorContext(err error) map[string]string {
 	return nil
 }
 
-// GetType returns the error type
+// GetType 返回错误类型
 func GetType(err error) ErrorType {
 	if customErr, ok := err.(customError); ok {
 		return customErr.errorType

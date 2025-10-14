@@ -38,10 +38,13 @@ func main() {
 	// 4. 错误包装
 	fmt.Println("4. 错误包装:")
 	originalErr := fmt.Errorf("原始错误: 网络连接超时")
-	wrappedErr := pkg_errors.Wrap(originalErr, "处理用户请求时发生错误:")
+	wrappedErr := pkg_errors.Wrap(originalErr, "处理用户请求时发生错误")
+	wrappe2dErr := pkg_errors.Wrap(wrappedErr, "处理用户请求时发生错误1222")
 	fmt.Printf("   原始错误: %v\n", originalErr)
 	fmt.Printf("   包装错误: %v\n", wrappedErr)
-	fmt.Printf("   获取原因: %v\n\n", pkg_errors.Cause(wrappedErr))
+	fmt.Printf("   包装错误: %v\n", wrappe2dErr)
+	fmt.Printf("   获取原因: %v\n\n", pkg_errors.Cause(wrappe2dErr))
+	fmt.Printf("   获取原因: %v\n\n", pkg_errors.Cause(pkg_errors.Cause(wrappe2dErr)))
 
 	// 5. 类型化错误包装
 	fmt.Println("5. 类型化错误包装:")

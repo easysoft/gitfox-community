@@ -39,6 +39,11 @@ tasks:
     desc: 格式化代码
     cmds:
       - go fmt ./...
+      
+  tidy:
+    desc: 清理未使用的依赖
+    cmds:
+      - go mod tidy
 
   vet:
     desc: 运行 go vet

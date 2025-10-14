@@ -10,10 +10,8 @@
         "success": "Repository Secrets List Loaded Successfully."
       },
       "delete": {
-        "error": {
-          "error1": "Failed to delete: This secret may be in use by one or more services.",
-          "error2": "Failed to delete: You do not have permission to delete this secret."
-        },
+        "used": "Failed to delete: This secret may be in use by one or more services.",
+        "permission": "Failed to delete: You do not have permission to delete this secret.",
         "success": "Secret deleted successfully."
       }
     },
