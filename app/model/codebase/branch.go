@@ -5,6 +5,17 @@ import (
 	"time"
 )
 
+// Branch Query
+type BranchQuery struct {
+	Name   string `json:"name"`    // 分支名称
+	RepoID string `json:"repo_id"` // 所属代码库ID
+}
+
+// Validate 验证分支查询参数合法性
+func (bq *BranchQuery) Validate() error {
+	return nil
+}
+
 // Branch 代码库分支领域模型
 type Branch struct {
 	ID         string    `json:"id"`         // 分支唯一标识
@@ -34,13 +45,4 @@ func (b *Branch) Validate() error {
 // IsProtected 判断分支是否受保护
 func (b *Branch) IsProtected() bool {
 	return b.Protection
-}
-
-// Update 更新分支信息
-func (b *Branch) Update(name string, protection bool) {
-	if name != "" {
-		b.Name = name
-	}
-	b.Protection = protection
-	b.UpdatedAt = time.Now()
 }
