@@ -13,6 +13,7 @@ import (
 	"gorm.io/gorm/schema"
 )
 
+// TODO: 数据库的配置之后从 config 结构体读取
 type Config struct {
 	Username        string
 	Password        string
@@ -41,9 +42,9 @@ func NewMysqlDB(conf Config) *DB {
 	// 参考 https://github.com/go-sql-driver/mysql#system-variables
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
 		NamingStrategy: schema.NamingStrategy{
-			//TablePrefix: "t_",   // 表名前缀，“user” 的表应为 “t_users”
-			SingularTable: true,  // 使用单数表名，启用此选项时，“user” 的表将为 “user”
-			NoLowerCase:   false, //跳过名称的 snake_casing 格式
+			TablePrefix:   "ops_", // 表名前缀，“repo” 的表应为 “ops_repo”
+			SingularTable: true,   // 使用单数表名，启用此选项时，“repo” 的表将为 “repo”
+			NoLowerCase:   false,  // 跳过名称的 snake_casing 格式
 		},
 		Logger: logger.New(
 			log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
@@ -95,4 +96,22 @@ func NewMysqlDB(conf Config) *DB {
 		db,
 	}
 
+}
+
+// CloseMysqlDB 关闭 MySQL 数据库连接
+func CloseMysqlDB(db *DB) error {
+	if db == nil {
+		return fmt.Errorf("database instance is nil")
+	}
+
+	sqlDB, err := db.DB.DB()
+	if err != nil {
+		return fmt.Errorf("failed to get underlying sql.DB: %w", err)
+	}
+
+	if err := sqlDB.Close(); err != nil {
+		return fmt.Errorf("failed to close database connection: %w", err)
+	}
+
+	return nil
 }

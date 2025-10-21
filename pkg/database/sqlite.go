@@ -241,3 +241,21 @@ func InMemorySQLiteConfig() SQLiteConfig {
 		SynchronousMode: "OFF", // 内存数据库可以关闭同步以提高性能
 	}
 }
+
+// CloseSQLiteDB 关闭 SQLite 数据库连接
+func CloseSQLiteDB(db *DB) error {
+	if db == nil {
+		return fmt.Errorf("database instance is nil")
+	}
+
+	sqlDB, err := db.DB.DB()
+	if err != nil {
+		return fmt.Errorf("failed to get underlying sql.DB: %w", err)
+	}
+
+	if err := sqlDB.Close(); err != nil {
+		return fmt.Errorf("failed to close database connection: %w", err)
+	}
+
+	return nil
+}
