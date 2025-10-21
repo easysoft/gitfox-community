@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/codebase/branch"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 )
 
 // CreateBranchRequest 分支创建请求参数
@@ -54,7 +53,7 @@ func NewBaseBranchService(repo branch.Repository) *BaseBranchService {
 func (s *BaseBranchService) Get(ctx context.Context, branchID string) (*CreateBranchResponse, error) {
 	branch, err := s.repo.GetByID(ctx, branchID)
 	if err != nil {
-		logger.Error("获取分支失败: %v", err)
+		// logger.Error("获取分支失败: %v", err)
 		return nil, err
 	}
 

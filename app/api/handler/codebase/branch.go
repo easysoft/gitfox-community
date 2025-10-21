@@ -6,7 +6,6 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/middleware"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constants"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/codebase/branch"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 
 	"github.com/gin-gonic/gin"
 )
@@ -14,7 +13,7 @@ import (
 // BranchHandler 分支API处理器
 type BranchHandler struct {
 	branchService branch.BranchService
-	logger        logger.Logger
+	// logger        logger.Logger
 }
 
 // NewBranchHandler 创建分支处理器实例
@@ -31,7 +30,7 @@ func (h *BranchHandler) Create(c *gin.Context) {
 
 	// 解析请求体
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Error("参数解析失败: %v", err)
+		// logger.Error("参数解析失败: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的请求参数: " + err.Error()})
 		return
 	}
@@ -44,7 +43,7 @@ func (h *BranchHandler) Create(c *gin.Context) {
 	// 调用服务层创建分支
 	branch, err := h.branchService.Create(c.Request.Context(), req)
 	if err != nil {
-		logger.Error("创建分支失败: %v", err)
+		// logger.Error("创建分支失败: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -58,7 +57,7 @@ func (h *BranchHandler) Get(c *gin.Context) {
 
 	branch, err := h.branchService.Get(c.Request.Context(), branchID)
 	if err != nil {
-		logger.Error("获取分支失败: %v", err)
+		// logger.Error("获取分支失败: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
