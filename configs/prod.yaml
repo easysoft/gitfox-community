@@ -1,0 +1,63 @@
+# GitFox 生产环境配置示例文件
+
+# HTTP 服务配置
+server:
+  port: 8080
+
+# 数据库配置
+database:
+  driver: mysql
+  datasource: root:pass4GitFox@tcp(mysql:3306)/gitfox
+
+# Docker配置
+docker:
+  apiVersion: 1.41
+
+# git 配置
+git:
+  trace: true
+  defaultBranch: master
+  root: /tmp/gitfox/git
+
+# webhook 配置
+webhook:
+  allowLoopback: true
+  allowPrivateNetwork: true
+
+# SSH 服务配置
+ssh:
+  enable: true
+  host: localhost
+  port: 3322
+  hostKeysDir: /tmp/gitfox/ssh
+
+# 监控配置
+metric:
+  enabled: true
+
+ci:
+  pluginsZipUrl: https://pkg.zentao.net/gitfox/20240513/plugins.zip
+
+gitspace:
+  enable: true
+
+
+registry:
+  http:
+    secret: changeit
+  storage:
+    storageType: filesystem
+    filesystemStorage:
+      rootDirectory: /tmp/gitfox/registry
+
+# 日志配置
+logging:
+  fileEnabled: true
+  path: /tmp/gitfox/logs
+  separateByLevel: true
+  maxSize: 1
+  maxBackups: 5
+  maxAge: 7
+  compress: true
+  jsonFormat: true
+  debug: true
