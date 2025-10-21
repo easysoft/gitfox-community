@@ -54,7 +54,7 @@ tasks:
   i18n:check:
     desc: 检查多语言文件键值一致性
     cmds:
-      - go run cmd/i18n-check/main.go {{.LOCALES_DIR}}
+      - go run pkg/i18n/i18n-check/main.go {{.LOCALES_DIR}}
 
   i18n:validate:
     desc: 验证翻译文件格式
