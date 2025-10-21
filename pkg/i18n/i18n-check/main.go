@@ -9,8 +9,8 @@ import (
 
 func main() {
 	if len(os.Args) < 2 {
-		fmt.Println("Usage: go run cmd/i18n-check/main.go <locales-dir>")
-		fmt.Println("Example: go run cmd/i18n-check/main.go locales")
+		fmt.Println("Usage: go run pkg/i18n/i18n-check/main.go <locales-dir>")
+		fmt.Println("Example: go run pkg/i18n/i18n-check/main.go locales")
 		os.Exit(1)
 	}
 

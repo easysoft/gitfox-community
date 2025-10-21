@@ -110,7 +110,7 @@ func fileLoadingDemo() {
 	})
 
 	// 尝试从真实的 locales 目录加载翻译
-	localesDir := "../../../locales"
+	localesDir := "./locales"
 	err := manager.LoadTranslationsFromDir(localesDir)
 	if err != nil {
 		fmt.Printf("   加载翻译文件失败: %v\n", err)

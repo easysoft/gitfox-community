@@ -1,0 +1,8 @@
+repo:
+  branches_list_error: "Failed to load branch list. Please refresh the page and try again."
+  branches_delete_success: "Branch deleted successfully."
+  branches_delete_error: "Failed to delete. This branch may be protected or the default branch."
+  tags_create_success: "Tag created successfully."
+  tags_create_error: "Failed to create tag. The tag name may already exist."
+  pullRequests_merge_success: "Merge successful!"
+  pullRequests_merge_error: "Merge failed. Conflicts exist or checks have not passed."
