@@ -123,12 +123,10 @@ func fileLoadingDemo() {
 	zhTranslator, _ := manager.GetTranslator("zh-CN")
 	enTranslator, _ := manager.GetTranslator("en-US")
 
-	fmt.Printf("   中文 - 密钥列表: %s\n", zhTranslator.T("space.secrets.list.success"))
-	fmt.Printf("   中文 - 成功删除分支: %s\n", zhTranslator.T("repo.branches.delete.success"))
-	fmt.Printf("   中文 - 删除密钥失败1: %s\n", zhTranslator.T("space.secrets.delete.error.error1"))
-	fmt.Printf("   英文 - 密钥列表: %s\n", enTranslator.T("space.secrets.list.success"))
-	fmt.Printf("   英文 - 成功删除分支: %s\n", enTranslator.T("repo.branches.delete.success"))
-	fmt.Printf("   英文 - 删除密钥失败1: %s\n", enTranslator.T("space.secrets.delete.error.error1"))
+	fmt.Printf("   中文 - 密钥列表: %s\n", zhTranslator.T("space.secrets_list_success"))
+	fmt.Printf("   中文 - 成功删除分支: %s\n", zhTranslator.T("repo.branches_delete_success"))
+	fmt.Printf("   英文 - 密钥列表: %s\n", enTranslator.T("space.secrets_list_success"))
+	fmt.Printf("   英文 - 成功删除分支: %s\n", enTranslator.T("repo.branches_delete_success"))
 }
 
 func globalTranslatorDemo() {

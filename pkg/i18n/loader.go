@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/goccy/go-yaml"
 	"github.com/pkg/errors"
 )
 
@@ -32,6 +33,7 @@ func NewFileLoader() Loader {
 	return &FileLoader{
 		supportedFormats: map[string]FormatParser{
 			".json": parseJSON,
+			".yaml": parseYAML,
 		},
 	}
 }
@@ -201,6 +203,19 @@ func parseJSON(data []byte) (map[string]string, error) {
 	var nested map[string]interface{}
 	if err := json.Unmarshal(data, &nested); err != nil {
 		return nil, errors.Wrap(err, "failed to parse JSON")
+	}
+
+	// 扁平化嵌套结构
+	result := make(map[string]string)
+	flattenMap(nested, "", result)
+	return result, nil
+}
+
+// parseYAML 解析 YAML 格式（支持嵌套结构）
+func parseYAML(data []byte) (map[string]string, error) {
+	var nested map[string]interface{}
+	if err := yaml.Unmarshal(data, &nested); err != nil {
+		return nil, errors.Wrap(err, "failed to parse YAML")
 	}
 
 	// 扁平化嵌套结构

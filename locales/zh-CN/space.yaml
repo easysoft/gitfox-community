@@ -1,0 +1,10 @@
+# 空间相关翻译
+space:
+  secrets_add_error: "添加密钥失败，请检查名称是否重复或格式是否正确。"
+  secrets_add_success: "密钥已成功添加。"
+  secrets_list_error: "无法加载密钥列表，请稍后重试。"
+  secrets_list_success: "仓库密钥列表成功。"
+  secrets_delete_used: "删除失败：此密钥可能正在被一个或多个服务使用。"
+  secrets_delete_permission: "删除失败：权限不足，您无法删除此密钥。"
+  secrets_delete_success: "密钥已成功删除。"
+  artifacts_title_success: "仓库设置保存成功"

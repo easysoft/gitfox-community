@@ -22,10 +22,45 @@
 - **Loader**: 文件加载器，负责从文件系统加载翻译文件
 - **Extractor**: 字符串提取器，用于从代码中提取需要翻译的字符串
 
-### 支持的文件格式
+## 翻译文件格式
 
-- JSON 格式（推荐）
-- 嵌套结构支持
+### YAML 格式（推荐）
+
+本包支持 YAML 格式的翻译文件，支持嵌套结构并自动扁平化为点分隔的键：
+
+```yaml
+# locales/zh-CN/common.yaml
+common:
+  welcome: "欢迎"
+  goodbye: "再见"
+  
+user:
+  login_success: "登录成功"
+  logout_success: "退出成功"
+```
+
+上述 YAML 文件会被解析为以下键值对：
+- `common.welcome` → "欢迎"
+- `common.goodbye` → "再见"
+- `user.login_success` → "登录成功"
+- `user.logout_success` → "退出成功"
+
+### JSON 格式（兼容）
+
+同样支持 JSON 格式的翻译文件：
+
+```json
+{
+  "common": {
+    "welcome": "欢迎",
+    "goodbye": "再见"
+  },
+  "user": {
+    "login_success": "登录成功",
+    "logout_success": "退出成功"
+  }
+}
+```
 
 ## 从文件中加载多语言
 
@@ -35,69 +70,41 @@
 ```
 locales/
 ├── zh-CN/
-│   ├── common.json
-│   └── user.json
+│   ├── common.yaml
+│   └── user.yaml
 └── en-US/
-    ├── common.json
-    └── user.json
+    ├── common.yaml
+    └── user.yaml
 ```
 
 ### 2. 编写翻译文件
 
-**locales/zh-CN/space.json**:
-```json
-{
-  "space": {
-    "secrets": {
-      "add": {
-        "error": "添加密钥失败，请检查名称是否重复或格式是否正确。",
-        "success": "密钥已成功添加。"
-      },
-      "list": {
-        "error": "无法加载密钥列表，请稍后重试。",
-        "success": "仓库密钥列表成功。"
-      },
-      "delete": {
-        "used": "删除失败：此密钥可能正在被一个或多个服务使用。",
-        "permission": "删除失败：权限不足，您无法删除此密钥。",
-        "success": "密钥已成功删除。"
-      }
-    },
-    "artifacts": {
-      "title": {
-        "success": "仓库设置保存成功"
-      }
-    }
-  }
-}
+**locales/zh-CN/space.yaml**:
+```yaml
+# 空间相关翻译
+space:
+  secrets_add_error: "添加密钥失败，请检查名称是否重复或格式是否正确。"
+  secrets_add_success: "密钥已成功添加。"
+  secrets_list_error: "无法加载密钥列表，请稍后重试。"
+  secrets_list_success: "仓库密钥列表成功。"
+  secrets_delete_used: "删除失败：此密钥可能正在被一个或多个服务使用。"
+  secrets_delete_permission: "删除失败：权限不足，您无法删除此密钥。"
+  secrets_delete_success: "密钥已成功删除。"
+  artifacts_title_success: "仓库设置保存成功"
 ```
 
-**locales/en-US/space.json**:
-```json
-{
-  "space": {
-    "secrets": {
-      "add": {
-        "error": "Failed to add secret. Please check if the name is duplicated or the format is correct.",
-        "success": "Secret added successfully." 
-      },
-      "list": {
-        "error": "Failed to load the list of secrets. Please try again later.",
-        "success": "Repository Secrets List Loaded Successfully."
-      },
-      "delete": {
-        "used": "Failed to delete: This secret may be in use by one or more services.",
-        "permission": "Failed to delete: You do not have permission to delete this secret.",
-        "success": "Secret deleted successfully."
-      }
-    },
-    "artifacts": {
-      "title": {
-        "success": "Repository Settings Saved Successfully."
-      }
-    }
-  }
-}
+**locales/en-US/space.yaml**:
+```yaml
+# Space related translations
+space:
+  secrets_add_error: "Failed to add secret. Please check if the name is duplicated or the format is correct."
+  secrets_add_success: "Secret added successfully."
+  secrets_list_error: "Failed to load the list of secrets. Please try again later."
+  secrets_list_success: "Repository Secrets List Loaded Successfully."
+  secrets_delete_used: "Failed to delete: This secret may be in use by one or more services."
+  secrets_delete_permission: "Failed to delete: You do not have permission to delete this secret."
+  secrets_delete_success: "Secret deleted successfully."
+  artifacts_title_success: "Repository Settings Saved Successfully."
 ```
 
 ### 3. 初始化管理器并加载文件
@@ -141,8 +148,7 @@ func main() {
 
 ```go
 // 使用默认语言环境嵌套键翻译
-// 
-loginText := i18n.T("space.secrets.add.success")
+loginText := i18n.T("space.secrets_add_success")
 fmt.Println(loginText) // 输出: 密钥已成功添加。
 ```
 
@@ -150,10 +156,10 @@ fmt.Println(loginText) // 输出: 密钥已成功添加。
 
 ```go
 // 指定语言环境翻译
-welcomeEn := i18n.TWithLocale("en-US", "space.secrets.add.success")
+welcomeEn := i18n.TWithLocale("en-US", "space.secrets_add_success")
 fmt.Println(welcomeEn) // 输出: Secret added successfully.
 
-welcomeZh := i18n.TWithLocale("zh-CN", "space.secrets.add.success")
+welcomeZh := i18n.TWithLocale("zh-CN", "space.secrets_add_success")
 fmt.Println(welcomeZh) // 输出: 密钥已成功添加。
 ```
 
@@ -183,12 +189,12 @@ if err != nil {
 }
 
 // 使用翻译器
-text := translator.T("space.secrets.add.success")
+text := translator.T("space.secrets_add_success")
 fmt.Println(text) // 输出: 密钥已成功添加。
 
 // 切换语言环境
 translator.SetLocale("en-US")
-text = translator.T("space.secrets.add.success")
+text = translator.T("space.secrets_add_success")
 fmt.Println(text) // 输出: Secret added successfully.
 ```
 
@@ -196,32 +202,32 @@ fmt.Println(text) // 输出: Secret added successfully.
 
 ### 1. 带参数的翻译
 
-**locales/zh-CN/user.json**:
-```json
-{
-  "greeting": "你好，%s！",
-  "user_count": "共有 %d 个用户",
-  "user_info": "用户：{{.Name}}，年龄：{{.Age}}"
-}
+**locales/zh-CN/user.yaml**:
+```yaml
+# 用户相关翻译
+user:
+  greeting: "你好，%s！"
+  user_count: "共有 %d 个用户"
+  user_info: "用户：{{.Name}}，年龄：{{.Age}}"
 ```
 
-**locales/en-US/user.json**:
-```json
-{
-  "greeting": "Hello, %s!",
-  "user_count": "There are %d users",
-  "user_info": "User: {{.Name}}, Age: {{.Age}}"
-}
+**locales/en-US/user.yaml**:
+```yaml
+# User related translations
+user:
+  greeting: "Hello, %s!"
+  user_count: "There are %d users"
+  user_info: "User: {{.Name}}, Age: {{.Age}}"
 ```
 
 ### 2. 使用参数翻译
 
 ```go
 // 使用 fmt.Sprintf 风格的参数
-greeting := i18n.T("greeting", "张三")
+greeting := i18n.T("user.greeting", "张三")
 fmt.Println(greeting) // 输出: 你好，张三！
 
-userCount := i18n.T("user_count", 100)
+userCount := i18n.T("user.user_count", 100)
 fmt.Println(userCount) // 输出: 共有 100 个用户
 ```
 
@@ -234,7 +240,7 @@ userData := map[string]interface{}{
     "Age":  25,
 }
 
-userInfo := i18n.Tf("user_info", userData)
+userInfo := i18n.Tf("user.user_info", userData)
 fmt.Println(userInfo) // 输出: 用户：李四，年龄：25
 
 // 或者使用结构体
@@ -244,7 +250,7 @@ type User struct {
 }
 
 user := User{Name: "王五", Age: 30}
-userInfo = i18n.Tf("user_info", user)
+userInfo = i18n.Tf("user.user_info", user)
 fmt.Println(userInfo) // 输出: 用户：王五，年龄：30
 ```
 
@@ -252,7 +258,7 @@ fmt.Println(userInfo) // 输出: 用户：王五，年龄：30
 
 ```go
 func handleUserInfo(ctx context.Context, user User) {
-    userInfo := i18n.TfWithContext(ctx, "user_info", user)
+    userInfo := i18n.TfWithContext(ctx, "user.user_info", user)
     fmt.Println(userInfo)
 }
 
@@ -347,7 +353,7 @@ func main() {
     translator, _ := manager.GetTranslator("zh-CN")
     
     // 使用开源版的翻译
-    fmt.Println(translator.T("space.secrets.add.success")) // 密钥已成功添加。
+    fmt.Println(translator.T("space.secrets_add_success")) // 密钥已成功添加。
     
     // 使用自定义的翻译
     fmt.Println(translator.T("my_project.welcome")) // 欢迎使用我的项目
