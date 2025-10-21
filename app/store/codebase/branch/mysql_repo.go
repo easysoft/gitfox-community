@@ -7,7 +7,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/domain/codebase"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/dao/codebase"
 )
 
 // MySQLRepository 基于GORM的分支数据访问实现
