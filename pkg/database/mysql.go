@@ -69,14 +69,14 @@ func NewMysqlDB(conf config.DatabaseConfig) (*DB, func() error, error) {
 
 	// 返回清理函数
 	cleanup := func() error {
-		return mysqlDB.CloseMysqlDB()
+		return mysqlDB.CloseDB()
 	}
 
 	return mysqlDB, cleanup, nil
 }
 
-// CloseMysqlDB 关闭 MySQL 数据库连接
-func (s *DB) CloseMysqlDB() error {
+// CloselDB 关闭数据库连接
+func (s *DB) CloseDB() error {
 
 	sqlDB, err := s.DB.DB()
 	if err != nil {

@@ -68,3 +68,8 @@ logging:
   compress: true
   jsonFormat: true
   debug: true
+
+middleware:
+  logRequestBody: true
+  logResponseBody: true
+  maxLoggedBodyBytes: 2048

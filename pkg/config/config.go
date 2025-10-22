@@ -4,18 +4,19 @@ import "time"
 
 // Config 顶级配置结构体，对应整个YAML文件
 type Config struct {
-	Server   ServerConfig   `yaml:"server"`
-	Database DatabaseConfig `yaml:"database"`
-	SQLite   SQLiteConfig   `yaml:"sqlite"`
-	Docker   DockerConfig   `yaml:"docker"`
-	Git      GitConfig      `yaml:"git"`
-	Webhook  WebhookConfig  `yaml:"webhook"`
-	Ssh      SshConfig      `yaml:"ssh"`
-	Metric   MetricConfig   `yaml:"metric"`
-	Ci       CiConfig       `yaml:"ci"`
-	Gitspace GitspaceConfig `yaml:"gitspace"`
-	Registry RegistryConfig `yaml:"registry"`
-	Logging  LoggingConfig  `yaml:"logging"`
+	Server     ServerConfig     `yaml:"server"`
+	Database   DatabaseConfig   `yaml:"database"`
+	SQLite     SQLiteConfig     `yaml:"sqlite"`
+	Docker     DockerConfig     `yaml:"docker"`
+	Git        GitConfig        `yaml:"git"`
+	Webhook    WebhookConfig    `yaml:"webhook"`
+	Ssh        SshConfig        `yaml:"ssh"`
+	Metric     MetricConfig     `yaml:"metric"`
+	Ci         CiConfig         `yaml:"ci"`
+	Gitspace   GitspaceConfig   `yaml:"gitspace"`
+	Registry   RegistryConfig   `yaml:"registry"`
+	Logging    LoggingConfig    `yaml:"logging"`
+	Middleware MiddlewareConfig `yaml:"middleware"`
 }
 
 // ServerConfig HTTP服务配置
@@ -112,4 +113,11 @@ type LoggingConfig struct {
 	Compress        bool   `yaml:"compress"`
 	JsonFormat      bool   `yaml:"jsonFormat"`
 	Debug           bool   `yaml:"debug"`
+}
+
+// Middleware Config 中间件配置
+type MiddlewareConfig struct {
+	LogRequestBody     bool `yaml:"logRequestBody"`     // 如需记录请求体，改为 true
+	LogResponseBody    bool `yaml:"logResponseBody"`    // 如需记录响应体，改为 true
+	MaxLoggedBodyBytes int  `yaml:"maxLoggedBodyBytes"` // 体积上限，超过将截断
 }

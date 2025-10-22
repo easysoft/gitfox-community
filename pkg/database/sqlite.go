@@ -1,7 +1,6 @@
 package database
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 	"os"
@@ -16,7 +15,7 @@ import (
 )
 
 // NewSQLiteDB 创建 SQLite 数据库连接
-func NewSQLiteDB(conf config.SQLiteConfig) (*sql.DB, func() error, error) {
+func NewSQLiteDB(conf config.SQLiteConfig) (*DB, func() error, error) {
 	// 确保数据库目录存在
 	dir := filepath.Dir(conf.Path)
 	// 检查目录是否可以创建
@@ -82,11 +81,13 @@ func NewSQLiteDB(conf config.SQLiteConfig) (*sql.DB, func() error, error) {
 		panic(fmt.Errorf("failed to configure SQLite: %w", err))
 	}
 
+	sqliteDB := &DB{db}
+
 	// 返回清理函数
 	cleanup := func() error {
-		return CloseSQLiteDB(sqlDB)
+		return sqliteDB.CloseDB()
 	}
-	return sqlDB, cleanup, nil
+	return sqliteDB, cleanup, nil
 }
 
 // buildSQLiteDSN 构建 SQLite DSN
@@ -134,19 +135,6 @@ func configureSQLite(db *gorm.DB, conf config.SQLiteConfig) error {
 		if err := db.Exec(pragma).Error; err != nil {
 			return fmt.Errorf("failed to execute pragma '%s': %w", pragma, err)
 		}
-	}
-
-	return nil
-}
-
-// CloseSQLiteDB 关闭 SQLite 数据库连接
-func CloseSQLiteDB(db *sql.DB) error {
-	if db == nil {
-		return fmt.Errorf("sqlite database instance is nil")
-	}
-
-	if err := db.Close(); err != nil {
-		return fmt.Errorf("failed to close sqlite database connection: %w", err)
 	}
 
 	return nil
