@@ -10,13 +10,13 @@ import (
 )
 
 const (
-	Debug string = "debug"
-	Local string = "local"
-	Dev   string = "dev"
-	Prod  string = "prod"
-	LocalConfigFileName = "local.yaml"
-	DevConfigFileName   = "dev.yaml"
-	ProdConfigFileName  = "prod.yaml"
+	Debug               string = "debug"
+	Local               string = "local"
+	Dev                 string = "dev"
+	Prod                string = "prod"
+	LocalConfigFileName string = "local.yaml"
+	DevConfigFileName   string = "dev.yaml"
+	ProdConfigFileName  string = "prod.yaml"
 )
 
 // LoadConfig loads the configuration based on the provided mode.
@@ -33,22 +33,22 @@ func LoadConfig(mode string) (*Config, error) {
 	// 根据模式确定配置文件名
 	var fileName string
 	switch mode {
-		case Debug:
-			exeDir = filepath.Join(filepath.Dir(filepath.Dir(exeDir)), "configs")
-			fileName = LocalConfigFileName
-		case Local:
-			fileName = LocalConfigFileName
-		case Dev:
-			fileName = DevConfigFileName
-		case Prod:
-			fileName = ProdConfigFileName
-		default:
-			fileName = DevConfigFileName
+	case Debug:
+		exeDir = filepath.Join(filepath.Dir(filepath.Dir(exeDir)), "configs")
+		fileName = LocalConfigFileName
+	case Local:
+		fileName = LocalConfigFileName
+	case Dev:
+		fileName = DevConfigFileName
+	case Prod:
+		fileName = ProdConfigFileName
+	default:
+		fileName = DevConfigFileName
 	}
 
 	configPaths, err := file.FindFilesRecursive(exeDir, fileName)
 	if err != nil {
-		return nil, errors.Wrapf(err,"查找配置文件失败")
+		return nil, errors.Wrapf(err, "查找配置文件失败")
 	}
 	if len(configPaths) == 0 {
 		return nil, errors.Newf("未找到配置文件: %s", fileName)

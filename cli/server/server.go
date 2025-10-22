@@ -2,11 +2,11 @@ package server
 
 import (
 	"fmt"
-	
+
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
-	"github.com/quicklyon/kingpin/v2"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
+	"github.com/quicklyon/kingpin/v2"
 )
 
 type command struct {
@@ -14,10 +14,9 @@ type command struct {
 	logger *logger.ZapMateLogger
 }
 
-
 func (c *command) run(*kingpin.ParseContext) error {
 	var err error
-	config,err := config.LoadConfig(c.mode)
+	config, err := config.LoadConfig(c.mode)
 	if err != nil {
 		return errors.Wrap(err, "加载配置失败")
 	}
@@ -36,6 +35,4 @@ func Register(app *kingpin.Application) {
 	cmd.Arg("mode", "set the server mode").
 		Default("dev").
 		StringVar(&c.mode)
-
 }
-
