@@ -1,19 +1,22 @@
 package config
 
+import "time"
 
 // Config 顶级配置结构体，对应整个YAML文件
 type Config struct {
-	Server   ServerConfig   `yaml:"server"`
-	Database DatabaseConfig `yaml:"database"`
-	Docker   DockerConfig   `yaml:"docker"`
-	Git      GitConfig      `yaml:"git"`
-	Webhook  WebhookConfig  `yaml:"webhook"`
-	Ssh      SshConfig      `yaml:"ssh"`
-	Metric   MetricConfig   `yaml:"metric"`
-	Ci       CiConfig       `yaml:"ci"`
-	Gitspace GitspaceConfig `yaml:"gitspace"`
-	Registry RegistryConfig `yaml:"registry"`
-	Logging  LoggingConfig  `yaml:"logging"`
+	Server     ServerConfig     `yaml:"server"`
+	Database   DatabaseConfig   `yaml:"database"`
+	SQLite     SQLiteConfig     `yaml:"sqlite"`
+	Docker     DockerConfig     `yaml:"docker"`
+	Git        GitConfig        `yaml:"git"`
+	Webhook    WebhookConfig    `yaml:"webhook"`
+	Ssh        SshConfig        `yaml:"ssh"`
+	Metric     MetricConfig     `yaml:"metric"`
+	Ci         CiConfig         `yaml:"ci"`
+	Gitspace   GitspaceConfig   `yaml:"gitspace"`
+	Registry   RegistryConfig   `yaml:"registry"`
+	Logging    LoggingConfig    `yaml:"logging"`
+	Middleware MiddlewareConfig `yaml:"middleware"`
 }
 
 // ServerConfig HTTP服务配置
@@ -23,10 +26,18 @@ type ServerConfig struct {
 
 // DatabaseConfig 数据库配置
 type DatabaseConfig struct {
-	Driver     string `yaml:"driver"`
-	Datasource string `yaml:"datasource"`
+	Driver          string        `yaml:"driver"`
+	Datasource      string        `yaml:"datasource"`
+	PrintSQL        bool          `yaml:"printSQL"`
+	MaxIdleConn     int           `yaml:"maxIdleConn"`
+	MaxOpenConn     int           `yaml:"maxOpenConn"`
+	ConnMaxLifeTime time.Duration `yaml:"connMaxLifeTime"`
 }
 
+// SQLiteConfig 缓存数据库配置
+type SQLiteConfig struct {
+	Path string `yaml:"path"`
+}
 
 // DockerConfig Docker配置
 type DockerConfig struct {
@@ -42,7 +53,7 @@ type GitConfig struct {
 
 // WebhookConfig Webhook配置
 type WebhookConfig struct {
-	AllowLoopback      bool `yaml:"allowLoopback"`
+	AllowLoopback       bool `yaml:"allowLoopback"`
 	AllowPrivateNetwork bool `yaml:"allowPrivateNetwork"`
 }
 
@@ -82,7 +93,7 @@ type RegistryHttpConfig struct {
 
 // RegistryStorageConfig 注册中心存储配置
 type RegistryStorageConfig struct {
-	StorageType        string               `yaml:"storageType"`
+	StorageType       string                  `yaml:"storageType"`
 	FilesystemStorage FilesystemStorageConfig `yaml:"filesystemStorage"`
 }
 
@@ -93,14 +104,20 @@ type FilesystemStorageConfig struct {
 
 // LoggingConfig 日志配置
 type LoggingConfig struct {
-	FileEnabled      bool   `yaml:"fileEnabled"`
-	Path             string `yaml:"path"`
-	SeparateByLevel  bool   `yaml:"separateByLevel"`
-	MaxSize          int    `yaml:"maxSize"`
-	MaxBackups       int    `yaml:"maxBackups"`
-	MaxAge           int    `yaml:"maxAge"`
-	Compress         bool   `yaml:"compress"`
-	JsonFormat       bool   `yaml:"jsonFormat"`
-	Debug            bool   `yaml:"debug"`
+	FileEnabled     bool   `yaml:"fileEnabled"`
+	Path            string `yaml:"path"`
+	SeparateByLevel bool   `yaml:"separateByLevel"`
+	MaxSize         int    `yaml:"maxSize"`
+	MaxBackups      int    `yaml:"maxBackups"`
+	MaxAge          int    `yaml:"maxAge"`
+	Compress        bool   `yaml:"compress"`
+	JsonFormat      bool   `yaml:"jsonFormat"`
+	Debug           bool   `yaml:"debug"`
 }
 
+// Middleware Config 中间件配置
+type MiddlewareConfig struct {
+	LogRequestBody     bool `yaml:"logRequestBody"`     // 如需记录请求体，改为 true
+	LogResponseBody    bool `yaml:"logResponseBody"`    // 如需记录响应体，改为 true
+	MaxLoggedBodyBytes int  `yaml:"maxLoggedBodyBytes"` // 体积上限，超过将截断
+}

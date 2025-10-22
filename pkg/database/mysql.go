@@ -2,7 +2,6 @@ package database
 
 import (
 	"fmt"
-
 	"log"
 	"os"
 	"time"
@@ -11,36 +10,18 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 	"gorm.io/gorm/schema"
-)
 
-// TODO: 数据库的配置之后从 config 结构体读取
-type Config struct {
-	Username        string
-	Password        string
-	Address         string
-	DBName          string
-	DatabaseTZ      string
-	Debug           bool
-	MaxIdleConn     int
-	MaxOpenConn     int
-	IsNotPanic      bool
-	ConnMaxLifeTime time.Duration
-}
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
+)
 
 type DB struct {
 	*gorm.DB
 }
 
-func NewMysqlDB(conf Config) *DB {
-	dsn := fmt.Sprintf(
-		"%s:%s@tcp(%s)/%s?charset=utf8&parseTime=True&loc=%s",
-		conf.Username,
-		conf.Password,
-		conf.Address,
-		conf.DBName, conf.DatabaseTZ) // todo
-	// 参考 https://github.com/go-sql-driver/mysql#loc
-	// 参考 https://github.com/go-sql-driver/mysql#system-variables
-	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
+// 参考 https://github.com/go-sql-driver/mysql#loc
+// 参考 https://github.com/go-sql-driver/mysql#system-variables
+func NewMysqlDB(conf config.DatabaseConfig) (*DB, func() error, error) {
+	db, err := gorm.Open(mysql.Open(conf.Datasource), &gorm.Config{
 		NamingStrategy: schema.NamingStrategy{
 			TablePrefix:   "ops_", // 表名前缀，“repo” 的表应为 “ops_repo”
 			SingularTable: true,   // 使用单数表名，启用此选项时，“repo” 的表将为 “repo”
@@ -56,30 +37,21 @@ func NewMysqlDB(conf Config) *DB {
 			},
 		),
 	})
-	if err != nil && conf.IsNotPanic {
-		return nil
-	}
 
 	if err != nil {
-		panic(err)
+		return nil, nil, err
 	}
 
-	if conf.Debug {
+	if conf.PrintSQL {
 		db = db.Debug()
 	}
 
 	sqlDB, err := db.DB()
-	if err != nil && conf.IsNotPanic {
-		return nil
-	}
 	if err != nil {
-		panic(err)
+		return nil, nil, err
 	}
-	if err = sqlDB.Ping(); err != nil && conf.IsNotPanic {
-		return nil
-	}
-	if err != nil {
-		panic(err)
+	if err = sqlDB.Ping(); err != nil {
+		return nil, nil, err
 	}
 	// SetMaxIdleConns 用于设置连接池中空闲连接的最大数量。
 	sqlDB.SetMaxIdleConns(conf.MaxIdleConn)
@@ -88,23 +60,25 @@ func NewMysqlDB(conf Config) *DB {
 	sqlDB.SetMaxOpenConns(conf.MaxOpenConn)
 
 	// SetConnMaxLifetime 设置了连接可复用的最大时间。
-	sqlDB.SetConnMaxLifetime(conf.ConnMaxLifeTime)
+	sqlDB.SetConnMaxLifetime(time.Second * conf.ConnMaxLifeTime)
 
 	// SetConnMaxIdleTime 设置连接最长空闲时间。
 	//sqlDB.SetConnMaxIdleTime(time.Duration(conf.ConnMaxLifeTime) * time.Second)
-	return &DB{
-		db,
+
+	mysqlDB := &DB{db}
+
+	// 返回清理函数
+	cleanup := func() error {
+		return mysqlDB.CloseDB()
 	}
 
+	return mysqlDB, cleanup, nil
 }
 
-// CloseMysqlDB 关闭 MySQL 数据库连接
-func CloseMysqlDB(db *DB) error {
-	if db == nil {
-		return fmt.Errorf("database instance is nil")
-	}
+// CloselDB 关闭数据库连接
+func (s *DB) CloseDB() error {
 
-	sqlDB, err := db.DB.DB()
+	sqlDB, err := s.DB.DB()
 	if err != nil {
 		return fmt.Errorf("failed to get underlying sql.DB: %w", err)
 	}

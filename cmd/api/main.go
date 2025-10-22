@@ -18,7 +18,7 @@ import (
 
 func main() {
 	// 1. 解析启动参数（配置文件+版本）
-	configPath := flag.String("config", "../../configs/default.yaml", "配置文件路径")
+	// configPath := flag.String("config", "../../configs/default.yaml", "配置文件路径")
 	versionStr := flag.String("version", constants.VersionBase,
 		"版本标识，支持："+strings.Join(constants.SupportedVersions, ","))
 	flag.Parse()
@@ -37,7 +37,7 @@ func main() {
 
 	var cfg interface{}
 	version := versionStr
-	cfg = config.LoadBaseConfig(*configPath)
+	// cfg = config.LoadBaseConfig(*configPath)
 
 	db, err := gorm.Open(mysql.Open("root:123456@tcp(localhost:3306)/gitfox_free?charset=utf8mb4&parseTime=True&loc=Local"), &gorm.Config{})
 
@@ -49,7 +49,7 @@ func main() {
 	}
 
 	// 4. 初始化日志（基础配置）
-	baseCfg := cfg.(config.BaseConfig)
+	baseCfg := cfg.(config.Config)
 	// logger.Init(baseCfg.Logger)
 
 	// 5. 创建服务容器（统一管理服务实例）

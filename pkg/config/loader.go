@@ -1,9 +1,5 @@
 package config
 
-import (
-	
-)
-
 const (
 	Local string = "local"
 	Dev   string = "dev"
@@ -15,14 +11,14 @@ func LoadConfig(mode string) {
 	// 根据不同的模式加载相应的配置文件
 	var configPath string
 	switch mode {
-		case Local:
-			configPath = "../configs/local.yaml"
-		case Dev:
-			configPath = "../configs/dev.yaml"
-		case Prod:
-			configPath = "../configs/prod.yaml"
-		default:
-			configPath = "../configs/dev.yaml"
+	case Local:
+		configPath = "../configs/local.yaml"
+	case Dev:
+		configPath = "../configs/dev.yaml"
+	case Prod:
+		configPath = "../configs/prod.yaml"
+	default:
+		configPath = "../configs/dev.yaml"
 	}
 	loadConfigFromFile(configPath)
 
