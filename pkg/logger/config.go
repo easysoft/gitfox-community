@@ -15,6 +15,7 @@ const (
 	LogTypeRunner    = "runner"
 	LogTypeSSH       = "ssh"
 	LogTypeScan      = "scan"
+	LogTypeSystem    = "system"
 )
 
 func getLogPath(c config.LoggingConfig, logType string) string {

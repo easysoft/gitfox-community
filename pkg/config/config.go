@@ -118,6 +118,7 @@ type LoggingConfig struct {
 	LogRunnerConf    LogRunnerConfig    `yaml:"logRunnerConf"`
 	LogSSHConf       LogSSHConfig       `yaml:"logSSHConf"`
 	LogScanConf      LogScanConfig      `yaml:"logScanConf"`
+	LogSystemConf    LogSystemConfig    `yaml:"logSystemConf"`
 }
 
 // LogAPIServerConfig
@@ -137,6 +138,11 @@ type LogSSHConfig struct {
 
 // LogScanConfig
 type LogScanConfig struct {
+	Path string `yaml:"path"`
+}
+
+// LogSystemConfig
+type LogSystemConfig struct {
 	Path string `yaml:"path"`
 }
 

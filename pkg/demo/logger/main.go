@@ -13,7 +13,7 @@ func main() {
 	syncLog.Info("同步日志消息", zap.String("mode", "sync"))
 
 	// 2. 异步模式
-	asyncLog := logger.NewZapMateLogger("./demo_log.yaml", "gitfox").SetAsyncer(1000)
+	asyncLog := logger.NewZapMateLogger("./demo_log.yaml", "gitfox").SetAsyncer(1000).Sugar()
 	asyncLog.Info("异步日志消息", zap.String("mode", "async"))
 	asyncLog.Flush() // 确保异步日志写入完成
 

@@ -10,13 +10,14 @@ import (
 )
 
 type command struct {
-	mode   string
-	logger *logger.ZapMateLogger
+	mode string
 }
 
 func (c *command) run(*kingpin.ParseContext) error {
 	var err error
 	config, err := config.LoadConfig(c.mode)
+	logger := logger.NewZapMateLogger(config.Logging, logger.LogTypeSystem).SetAsyncer(1000).Sugar()
+	logger.Info("调试日志内容")
 	if err != nil {
 		return errors.Wrap(err, "加载配置失败")
 	}
