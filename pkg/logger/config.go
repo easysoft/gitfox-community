@@ -2,6 +2,7 @@ package logger
 
 import (
 	"os"
+	"path/filepath"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -28,14 +29,33 @@ func getLogPath(c config.LoggingConfig, logType string) string {
 		return c.LogSSHConf.Path
 	case LogTypeScan:
 		return c.LogScanConf.Path
+	case LogTypeSystem:
+		return c.LogSystemConf.Path
 	default:
-		return ""
+		// 如果传入未知类型，默认使用 system 日志
+		return c.LogSystemConf.Path
 	}
+}
+
+// ensureLogDir 确保日志目录存在，只在初始化时调用一次
+func ensureLogDir(logPath string) error {
+	if logPath == "" {
+		return nil
+	}
+	logDir := filepath.Dir(logPath)
+	return os.MkdirAll(logDir, 0755)
 }
 
 // filepath : zap config file path
 // section  : Config options
 func NewZapLogger(config config.LoggingConfig, logType string) *zap.Logger {
+	// 获取日志路径
+	logPath := getLogPath(config, logType)
+
+	// 确保日志目录存在（只在初始化时执行一次）
+	if err := ensureLogDir(logPath); err != nil {
+		panic("failed to create log directory: " + err.Error())
+	}
 	return zap.New(
 		zapcore.NewCore(
 			func() zapcore.Encoder {
@@ -74,7 +94,7 @@ func NewZapLogger(config config.LoggingConfig, logType string) *zap.Logger {
 					writer = append(writer,
 						zapcore.AddSync(
 							&lumberjack.Logger{
-								Filename:   getLogPath(config, logType),
+								Filename:   logPath,
 								MaxSize:    config.MaxSize,
 								MaxBackups: config.MaxCount,
 								MaxAge:     config.MaxAge,

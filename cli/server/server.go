@@ -14,16 +14,20 @@ type command struct {
 }
 
 func (c *command) run(*kingpin.ParseContext) error {
-	var err error
-	config, err := config.LoadConfig(c.mode)
-	logger := logger.NewZapMateLogger(config.Logging, logger.LogTypeSystem).SetAsyncer(1000).Sugar()
-	logger.Info("调试日志内容")
+	// 先加载配置
+	cfg, err := config.LoadConfig(c.mode)
 	if err != nil {
 		return errors.Wrap(err, "加载配置失败")
 	}
-	fmt.Println(config)
 
-	return err
+	// 使用加载的配置初始化 logger
+	log := logger.NewZapMateLogger(cfg.Logging, logger.LogTypeSystem).SetAsyncer(1000).Sugar()
+	defer log.Flush() // 确保异步日志在程序退出前写入
+
+	log.Info("调试日志内容")
+	fmt.Println(cfg)
+
+	return nil
 }
 
 // Register the server command.

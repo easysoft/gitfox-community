@@ -70,15 +70,15 @@ logging:
   timeFormat: "2006-01-02 15:04:05.999"  # 时间格式字符串
   stackTraceLevel: 2                     # 打印堆栈跟踪的最低级别
   logAPIServerConf:
-    path: ./logs/api.log
+    path: /tmp/gitfox-community/logs/api.log
   logRunnerConf:
-    path: ./logs/runner.log
+    path: /tmp/gitfox-community/logs/runner.log
   logSSHConf:
-    path: ./logs/ssh.log
+    path: /tmp/gitfox-community/logs/ssh.log
   logScanConf:
-    path: ./logs/scan.log
+    path: /tmp/gitfox-community/logs/scan.log
   logSystemConf:
-    path: ./logs/system.log
+    path: /tmp/gitfox-community/logs/system.log
 
 middleware:
   logRequestBody: true
