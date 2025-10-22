@@ -27,3 +27,4 @@ go.work
 *.db-wal
 *.sqlite
 *.sqlite3
+configs/local.yaml
