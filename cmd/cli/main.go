@@ -12,7 +12,6 @@ const (
 	description = "Gitfox"
 )
 
-
 func main() {
 	// 解析命令行参数
 	args := cli.GetArguments()

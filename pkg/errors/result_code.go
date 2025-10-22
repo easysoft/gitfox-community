@@ -1,4 +1,4 @@
-package pkg_errors
+package errors
 
 const (
 	NoType ErrorType = iota
