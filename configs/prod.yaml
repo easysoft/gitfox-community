@@ -11,7 +11,7 @@ database:
   printSQL: false
   maxIdleConn: 10
   maxOpenConn: 100
-  connMaxLifeTime: 3600 # 3600s
+  connMaxLifeTime: 3600s # 3600s
 
 sqlite:
   path: "./gitfox_sqlite.db"
@@ -77,6 +77,8 @@ logging:
     path: ./logs/ssh.log
   logScanConf:
     path: ./logs/scan.log
+  logSystemConf:
+    path: ./logs/system.log
 
 middleware:
   logRequestBody: true
