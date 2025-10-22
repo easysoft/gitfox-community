@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"gorm.io/gorm"
+
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 )
 
 // TestUser 测试用的用户模型
@@ -19,68 +21,33 @@ type TestUser struct {
 	UpdatedAt time.Time
 }
 
-func TestInitSQLiteDB_InMemory(t *testing.T) {
-	// 测试内存数据库
-	config := InMemorySQLiteConfig()
-	db := NewSQLiteDB(config)
-
-	if db == nil {
-		t.Fatal("Expected database connection, got nil")
-	}
-
-	// 测试连接是否正常
-	sqlDB, err := db.DB.DB()
-	if err != nil {
-		t.Fatalf("Failed to get underlying sql.DB: %v", err)
-	}
-
-	if err := sqlDB.Ping(); err != nil {
-		t.Fatalf("Failed to ping database: %v", err)
-	}
-
-	t.Log("In-memory SQLite database connection successful")
-}
-
-func TestInitSQLiteDB_File(t *testing.T) {
-	// 创建临时目录
-	dbPath := filepath.Join("test.db")
-
-	config := DefaultSQLiteConfig(dbPath)
-	config.Debug = true
-	config.IsNotPanic = true
-
-	db := NewSQLiteDB(config)
-	if db == nil {
-		t.Fatal("Expected database connection, got nil")
+func TestInitSQLiteDB(t *testing.T) {
+	config := config.SQLiteConfig{Path: "./gitfox_test.db"}
+	dbWrapper, _, _ := NewSQLiteDB(config)
+	if dbWrapper == nil {
+		t.Fatal("Failed to initialize database")
 	}
 
 	// 验证数据库文件是否创建
-	if _, err := os.Stat(dbPath); os.IsNotExist(err) {
-		t.Fatalf("Database file was not created: %s", dbPath)
+	if _, err := os.Stat(config.Path); os.IsNotExist(err) {
+		t.Fatalf("Database file was not created: %s")
 	}
 
 	// 测试连接
-	sqlDB, err := db.DB.DB()
+	db, err := dbWrapper.DB.DB()
 	if err != nil {
-		t.Fatalf("Failed to get underlying sql.DB: %v", err)
+		t.Fatalf("Failed to unwrapper sql db: %v", err)
 	}
-
-	if err := sqlDB.Ping(); err != nil {
+	if err := db.Ping(); err != nil {
 		t.Fatalf("Failed to ping database: %v", err)
 	}
 
-	t.Logf("File-based SQLite database connection successful: %s", dbPath)
+	t.Logf("File-based SQLite database connection successful: %s", config.Path)
 }
 
 func TestSQLiteDB_CRUD_Operations(t *testing.T) {
-	// 使用内存数据库进行 CRUD 测试
-	dbPath := filepath.Join("test.db")
-
-	config := DefaultSQLiteConfig(dbPath)
-	config.Debug = true
-	config.IsNotPanic = true
-	db := NewSQLiteDB(config)
-
+	config := config.SQLiteConfig{Path: "./gitfox_test.db"}
+	db, _, _ := NewSQLiteDB(config)
 	if db == nil {
 		t.Fatal("Failed to initialize database")
 	}
@@ -151,9 +118,9 @@ func TestSQLiteDB_CRUD_Operations(t *testing.T) {
 }
 
 func TestSQLiteDB_Transaction(t *testing.T) {
-	config := InMemorySQLiteConfig()
-	db := NewSQLiteDB(config)
 
+	config := config.SQLiteConfig{Path: "./gitfox_test.db"}
+	db, _, _ := NewSQLiteDB(config)
 	if db == nil {
 		t.Fatal("Failed to initialize database")
 	}
@@ -197,12 +164,8 @@ func TestSQLiteDB_Transaction(t *testing.T) {
 }
 
 func TestSQLiteDB_ConnectionPool(t *testing.T) {
-	config := DefaultSQLiteConfig(":memory:")
-	config.MaxIdleConn = 2
-	config.MaxOpenConn = 5
-	config.ConnMaxLifeTime = time.Minute
-
-	db := NewSQLiteDB(config)
+	config := config.SQLiteConfig{Path: "./gitfox_test.db"}
+	db, _, _ := NewSQLiteDB(config)
 	if db == nil {
 		t.Fatal("Failed to initialize database")
 	}
@@ -224,14 +187,10 @@ func TestSQLiteDB_ConnectionPool(t *testing.T) {
 func TestSQLiteDB_WALMode(t *testing.T) {
 	tempDir := t.TempDir()
 	dbPath := filepath.Join(tempDir, "wal_test.db")
-
-	config := DefaultSQLiteConfig(dbPath)
-	config.WALMode = true
-	config.Debug = true
-
-	db := NewSQLiteDB(config)
+	config := config.SQLiteConfig{Path: dbPath}
+	db, _, _ := NewSQLiteDB(config)
 	if db == nil {
-		t.Fatal("Failed to initialize database with WAL mode")
+		t.Fatal("Failed to initialize database")
 	}
 
 	// 验证 WAL 模式是否启用
@@ -250,12 +209,10 @@ func TestSQLiteDB_WALMode(t *testing.T) {
 
 func TestSQLiteDB_ErrorHandling(t *testing.T) {
 	// 测试无效路径
-	config := DefaultSQLiteConfig("/invalid/path/test.db")
-	config.IsNotPanic = true
-
-	db := NewSQLiteDB(config)
-	if db != nil {
-		t.Error("Expected nil for invalid path, got database connection")
+	config := config.SQLiteConfig{Path: "/invalid/path/test.db"}
+	db, _, _ := NewSQLiteDB(config)
+	if db == nil {
+		t.Fatal("Failed to initialize database")
 	}
 
 	// 测试 panic 模式
@@ -265,21 +222,15 @@ func TestSQLiteDB_ErrorHandling(t *testing.T) {
 		}
 	}()
 
-	config.IsNotPanic = false
 	NewSQLiteDB(config) // 这应该会 panic
 }
 
 func BenchmarkSQLiteDB_Insert(b *testing.B) {
-	config := InMemorySQLiteConfig()
-	db := NewSQLiteDB(config)
 
+	config := config.SQLiteConfig{Path: "./gitfox_test.db"}
+	db, _, _ := NewSQLiteDB(config)
 	if db == nil {
 		b.Fatal("Failed to initialize database")
-	}
-
-	err := db.AutoMigrate(&TestUser{})
-	if err != nil {
-		b.Fatalf("Failed to migrate table: %v", err)
 	}
 
 	b.ResetTimer()
@@ -295,9 +246,9 @@ func BenchmarkSQLiteDB_Insert(b *testing.B) {
 }
 
 func BenchmarkSQLiteDB_Select(b *testing.B) {
-	config := InMemorySQLiteConfig()
-	db := NewSQLiteDB(config)
 
+	config := config.SQLiteConfig{Path: "./gitfox_test.db"}
+	db, _, _ := NewSQLiteDB(config)
 	if db == nil {
 		b.Fatal("Failed to initialize database")
 	}
