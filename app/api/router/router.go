@@ -16,9 +16,9 @@ func NewRouter(container *ServiceContainer, logger *logger.SugaredMateLogger) *g
 	r.Use(
 		middleware.RequestID(),       // 生成trace_id并透传
 		middleware.AccessLog(logger), // 统一访问日志输出
-	// middleware.Logger(),   // 日志中间件
-	// middleware.Recovery(), // 异常恢复中间件
-	// middleware.CORS(),     // 跨域处理中间件
+		// middleware.Logger(),   // 日志中间件
+		// middleware.Recovery(), // 异常恢复中间件
+		middleware.CORS(middleware.DefaultCORSConfig()), // 跨域处理中间件
 	)
 
 	// 注册无需认证的公共路由
