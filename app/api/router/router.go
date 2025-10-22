@@ -1,16 +1,21 @@
 package router
 
 import (
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/handler/test"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/middleware"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	"github.com/gin-gonic/gin"
 )
 
 // NewRouter 创建路由实例并注册所有业务模块的路由
-func NewRouter(container *ServiceContainer) *gin.Engine {
+func NewRouter(container *ServiceContainer, logger *logger.SugaredMateLogger) *gin.Engine {
 	// 初始化Gin引擎
 	r := gin.New()
 
 	// 注册全局中间件
 	r.Use(
+		middleware.RequestID(),       // 生成trace_id并透传
+		middleware.AccessLog(logger), // 统一访问日志输出
 	// middleware.Logger(),   // 日志中间件
 	// middleware.Recovery(), // 异常恢复中间件
 	// middleware.CORS(),     // 跨域处理中间件
@@ -42,5 +47,7 @@ func registerPublicRoutes(r *gin.Engine) {
 		public.GET("/version", func(c *gin.Context) {
 			c.JSON(200, gin.H{"version": "v1.0.0"})
 		})
+
+		public.GET("/test_accessLog", test.AccessLogTest)
 	}
 }
