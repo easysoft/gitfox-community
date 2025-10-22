@@ -4,6 +4,8 @@ import (
 	"sync"
 
 	"go.uber.org/zap"
+
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 )
 
 type ZapMateLogger struct {
@@ -15,11 +17,11 @@ type ZapMateLogger struct {
 	*zap.Logger
 }
 
-func NewZapMateLogger(filename, section string) *ZapMateLogger {
+func NewZapMateLogger(config config.LoggingConfig, logType string) *ZapMateLogger {
 	return &ZapMateLogger{
 		isAsync:   false,
 		lock:      new(sync.Mutex),
-		Logger:    NewZapLogger(filename, section),
+		Logger:    NewZapLogger(config, logType),
 		entryChan: make(chan *logEntry, 1),
 		wg:        new(sync.WaitGroup),
 	}

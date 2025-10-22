@@ -102,17 +102,42 @@ type FilesystemStorageConfig struct {
 	RootDirectory string `yaml:"rootDirectory"`
 }
 
-// LoggingConfig 日志配置
+// LoggingiConfig 日志配置
 type LoggingConfig struct {
-	FileEnabled     bool   `yaml:"fileEnabled"`
-	Path            string `yaml:"path"`
-	SeparateByLevel bool   `yaml:"separateByLevel"`
-	MaxSize         int    `yaml:"maxSize"`
-	MaxBackups      int    `yaml:"maxBackups"`
-	MaxAge          int    `yaml:"maxAge"`
-	Compress        bool   `yaml:"compress"`
-	JsonFormat      bool   `yaml:"jsonFormat"`
-	Debug           bool   `yaml:"debug"`
+	Level            int                `yaml:"level"`
+	Stdout           bool               `yaml:"stdout"`
+	Caller           bool               `yaml:"caller"`
+	Encoder          string             `yaml:"encoder"`
+	MaxAge           int                `yaml:"maxAge"`
+	MaxCount         int                `yaml:"maxCount"`
+	MaxSize          int                `yaml:"maxSize"`
+	LevelColor       bool               `yaml:"levelColor"`
+	TimeFormat       string             `yaml:"timeFormat"`
+	StackTraceLevel  int                `yaml:"stackTraceLevel"`
+	LogAPIServerConf LogAPIServerConfig `yaml:"logAPIServerConf"`
+	LogRunnerConf    LogRunnerConfig    `yaml:"logRunnerConf"`
+	LogSSHConf       LogSSHConfig       `yaml:"logSSHConf"`
+	LogScanConf      LogScanConfig      `yaml:"logScanConf"`
+}
+
+// LogAPIServerConfig
+type LogAPIServerConfig struct {
+	Path string `yaml:"path"`
+}
+
+// LogRunnerConfig
+type LogRunnerConfig struct {
+	Path string `yaml:"path"`
+}
+
+// LogSSHConfig
+type LogSSHConfig struct {
+	Path string `yaml:"path"`
+}
+
+// LogScanConfig
+type LogScanConfig struct {
+	Path string `yaml:"path"`
 }
 
 // Middleware Config 中间件配置

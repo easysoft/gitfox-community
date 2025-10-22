@@ -3,44 +3,59 @@ package logger
 import (
 	"os"
 
-	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"
+
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 )
+
+const (
+	LogTypeAPIServer = "apiserver"
+	LogTypeRunner    = "runner"
+	LogTypeSSH       = "ssh"
+	LogTypeScan      = "scan"
+)
+
+func getLogPath(c config.LoggingConfig, logType string) string {
+	switch logType {
+	case LogTypeAPIServer:
+		return c.LogAPIServerConf.Path
+	case LogTypeRunner:
+		return c.LogRunnerConf.Path
+	case LogTypeSSH:
+		return c.LogSSHConf.Path
+	case LogTypeScan:
+		return c.LogScanConf.Path
+	default:
+		return ""
+	}
+}
 
 // filepath : zap config file path
 // section  : Config options
-func NewZapLogger(filepath, section string) *zap.Logger {
-
-	config := viper.New()
-	config.SetConfigFile(filepath)
-	if err := config.ReadInConfig(); err != nil {
-		panic(err)
-	}
-	logSec := config.Sub(section)
-
+func NewZapLogger(config config.LoggingConfig, logType string) *zap.Logger {
 	return zap.New(
 		zapcore.NewCore(
 			func() zapcore.Encoder {
 				encoderConfig := zapcore.EncoderConfig{
-					MessageKey:     "msg",                                                        // 日志消息字段名
-					LevelKey:       "level",                                                      // 日志级别字段名
-					TimeKey:        "time",                                                       // 时间字段名
-					NameKey:        "logger",                                                     // 日志器名称字段名
-					CallerKey:      "file",                                                       // 调用者文件字段名
-					FunctionKey:    "func",                                                       // 函数名字段名
-					StacktraceKey:  "stacktrace",                                                 // 堆栈跟踪字段名
-					LineEnding:     zapcore.DefaultLineEnding,                                    // 行结束符
-					EncodeLevel:    zapcore.CapitalLevelEncoder,                                  // 日志级别编码 ：  大写级别（INFO、ERROR等）
-					EncodeTime:     zapcore.TimeEncoderOfLayout(logSec.GetString("time-format")), // 时间编码 ： 自定义时间格式
-					EncodeDuration: zapcore.SecondsDurationEncoder,                               // 持续时间编码 ：  以秒为单位
-					EncodeCaller:   zapcore.ShortCallerEncoder,                                   // 调用者编码 ：短文件名格式（如 main.go:123 ）
+					MessageKey:     "msg",                                          // 日志消息字段名
+					LevelKey:       "level",                                        // 日志级别字段名
+					TimeKey:        "time",                                         // 时间字段名
+					NameKey:        "logger",                                       // 日志器名称字段名
+					CallerKey:      "file",                                         // 调用者文件字段名
+					FunctionKey:    "func",                                         // 函数名字段名
+					StacktraceKey:  "stacktrace",                                   // 堆栈跟踪字段名
+					LineEnding:     zapcore.DefaultLineEnding,                      // 行结束符
+					EncodeLevel:    zapcore.CapitalLevelEncoder,                    // 日志级别编码 ：  大写级别（INFO、ERROR等）
+					EncodeTime:     zapcore.TimeEncoderOfLayout(config.TimeFormat), // 时间编码 ： 自定义时间格式
+					EncodeDuration: zapcore.SecondsDurationEncoder,                 // 持续时间编码 ：  以秒为单位
+					EncodeCaller:   zapcore.ShortCallerEncoder,                     // 调用者编码 ：短文件名格式（如 main.go:123 ）
 				}
-				if logSec.GetBool("level-color") {
+				if config.LevelColor {
 					encoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
 				}
-				if logSec.GetString("encoder") == "json" {
+				if config.Encoder == "json" {
 					return zapcore.NewJSONEncoder(encoderConfig)
 				}
 				return zapcore.NewConsoleEncoder(encoderConfig)
@@ -58,15 +73,15 @@ func NewZapLogger(filepath, section string) *zap.Logger {
 					writer = append(writer,
 						zapcore.AddSync(
 							&lumberjack.Logger{
-								Filename:   logSec.GetString("file-name"),
-								MaxSize:    logSec.GetInt("max-size"),
-								MaxBackups: logSec.GetInt("max-count"),
-								MaxAge:     logSec.GetInt("max-age"),
+								Filename:   getLogPath(config, logType),
+								MaxSize:    config.MaxSize,
+								MaxBackups: config.MaxCount,
+								MaxAge:     config.MaxAge,
 								Compress:   false,
 								LocalTime:  true,
 							}),
 					)
-					if logSec.GetBool("stdout") {
+					if config.Stdout {
 						writer = append(writer, zapcore.AddSync(os.Stdout))
 					}
 					return writer
@@ -101,12 +116,12 @@ func NewZapLogger(filepath, section string) *zap.Logger {
 			// 		return writes
 			// 	}()...,
 			// ),
-			zapcore.Level(logSec.GetInt("level")),
+			zapcore.Level(config.Level),
 		),
 
-		zap.AddStacktrace(zapcore.Level(logSec.GetInt("stack-trace-level"))),
+		zap.AddStacktrace(zapcore.Level(config.StackTraceLevel)),
 
-		zap.WithCaller(logSec.GetBool("caller")),
+		zap.WithCaller(config.Caller),
 	)
 
 }
