@@ -6,6 +6,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 	"github.com/quicklyon/kingpin/v2"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 )
 
 type command struct {
@@ -16,9 +17,12 @@ type command struct {
 
 func (c *command) run(*kingpin.ParseContext) error {
 	var err error
-	config.LoadConfig(c.mode)
+	config,err := config.LoadConfig(c.mode)
+	if err != nil {
+		return errors.Wrap(err, "加载配置失败")
+	}
+	fmt.Println(config)
 
-	fmt.Println("Starting server in mode:", c.mode)
 	return err
 }
 

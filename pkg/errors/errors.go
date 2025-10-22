@@ -1,4 +1,4 @@
-package pkg_errors
+package errors
 
 import (
 	"fmt"
