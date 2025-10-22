@@ -8,6 +8,13 @@ server:
 database:
   driver: mysql
   datasource: root:pass4GitFox@tcp(mysql:3306)/gitfox
+  printSQL: true
+  maxIdleConn: 10
+  maxOpenConn: 100
+  connMaxLifeTime: 3600 # 3600s
+
+sqlite:
+  path: "./gitfox_sqlite.db"
 
 # Docker配置
 docker:
