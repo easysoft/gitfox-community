@@ -11,8 +11,8 @@ import (
 )
 
 const (
-	application = "gitfox"
-	description = "Gitfox"
+	application = "GitFox"
+	description = "GitFox"
 )
 
 func main() {
