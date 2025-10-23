@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/queue"
 )
@@ -14,17 +15,20 @@ func main() {
 	log := slog.Default()
 
 	// 使用 pkg/database 创建内存 SQLite 连接
-	config := database.InMemorySQLiteConfig()
-	config.WALMode = true
-	config.MaxOpenConn = 1
-	config.MaxIdleConn = 1
-	config.IsNotPanic = true
+	cfg := config.SQLiteConfig{
+		Path: ":memory:", // 使用内存数据库
+	}
 
-	dbWrapper := database.NewSQLiteDB(config)
-	if dbWrapper == nil {
-		log.Error("数据库连接失败")
+	dbWrapper, cleanup, err := database.NewSQLiteDB(cfg)
+	if err != nil {
+		log.Error("数据库连接失败", "error", err)
 		return
 	}
+	defer func() {
+		if err := cleanup(); err != nil {
+			log.Error("关闭数据库连接失败", "error", err)
+		}
+	}()
 
 	// 获取原生 sql.DB 用于队列系统
 	db, err := dbWrapper.DB.DB()
@@ -32,7 +36,6 @@ func main() {
 		log.Error("获取原生数据库连接失败", "error", err)
 		return
 	}
-	defer db.Close()
 
 	// 设置数据库架构
 	schema, err := os.ReadFile("schema_sqlite.sql")
