@@ -17,7 +17,7 @@ func (c *command) run(*kingpin.ParseContext) error {
 	// 先加载配置
 	cfg, err := config.LoadConfig(c.mode)
 	if err != nil {
-		return errors.Wrap(err, "加载配置失败")
+		panic(fmt.Sprintf("加载配置失败,%v", err))
 	}
 
 	// 使用加载的配置初始化 logger

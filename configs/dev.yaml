@@ -25,8 +25,7 @@ docker:
 # git 配置
 git:
   trace: true
-  defaultBranch: master
-  root: /tmp/gitfox/git
+  root: /data
 
 # webhook 配置
 webhook:
@@ -63,7 +62,6 @@ registry:
 logging:
   level: -1                              # 日志输出的最低级别  -1~5：debug,info,warn,error,dpanic,panic,fatal
   stdout: false                          # 是否输出到终端？  true=是，false=否
-  caller: false                          # 文件详细信息，true=显示，false=不显示 
   encoder: console                       # 日志编码格式，json 或 console，默认为 console
   maxAge: 90                             # 日志文件最大保存时间，单位：天，-1：禁用此选项
   maxCount: 20                           # 日志文件最大保存数量
@@ -86,3 +84,6 @@ middleware:
   logRequestBody: true
   logResponseBody: true
   maxLoggedBodyBytes: 2048
+
+# 环境变量
+enviroment:

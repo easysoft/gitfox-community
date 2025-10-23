@@ -38,16 +38,13 @@ const (
 
 // LoadConfig loads the configuration based on the provided mode.
 func LoadConfig(mode string) (*Config, error) {
+	// 首先从 YAML 文件加载配置
 	config, err := loadFromYaml(mode)
 	if err != nil {
 		return nil, err
 	}
 
-	err = envconfig.Process("", config)
-	if err != nil {
-		return nil, err
-	}
-
+	// 使用默认值覆盖配置
 	config.InstanceID, err = getSanitizedMachineName()
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to ensure that instance ID is set in config")
@@ -56,6 +53,32 @@ func LoadConfig(mode string) (*Config, error) {
 	err = backfillURLs(config)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to backfill urls")
+	}
+
+	if config.Git.HookPath == "" {
+		executablePath, err := os.Executable()
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to get path of current executable: %w", err)
+		}
+
+		config.Git.HookPath = executablePath
+	}
+
+	if config.Git.Root == "" {
+		homedir, err := os.UserHomeDir()
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to get user home directory")
+		}
+
+		newPath := filepath.Join(homedir, gitfoxHomeDir)
+		config.Git.Root = newPath
+
+		oldPath := filepath.Join(homedir, ".gitrpc")
+		if _, err := os.Stat(oldPath); err == nil {
+			if err := os.Rename(oldPath, newPath); err != nil {
+				config.Git.Root = oldPath
+			}
+		}
 	}
 
 	return config, nil

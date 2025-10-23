@@ -53,6 +53,7 @@ type GitConfig struct {
 	Trace         bool   `yaml:"trace"`
 	DefaultBranch string `yaml:"defaultBranch"`
 	Root          string `yaml:"root"`
+	HookPath      string `yaml:"-"`
 }
 
 // WebhookConfig Webhook配置
