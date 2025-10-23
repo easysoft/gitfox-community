@@ -74,7 +74,7 @@ func Request(ctx context.Context, method string, url string, headers, cookies ma
 		}
 		// 只为有请求体的方法设置 Content-Type
 		req.Header.Set("Content-Type", "application/json")
-	case "GET", "DELETE", "HEAD":
+	case "GET", "DELETE":
 		req, err = http.NewRequestWithContext(ctx, strings.ToUpper(method), url, nil)
 		if err != nil {
 			return fmt.Errorf("failed to create %s request: %w", method, err)
