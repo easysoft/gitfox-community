@@ -18,8 +18,8 @@ gitfox.zcorp.cc/git/Pangu/gitfox-community/
 │      └─codebase
 │          └─branch
 ├─cmd
-│  ├─api
-│  └─worker
+│  └─cli                    # server服务入口
+│      └─operations         # cli相关操作
 ├─configs                   # 配置文件           
 ├─scripts                   # 部署脚本
 ├─deploy                    # dockerfile等镜像构建脚本
