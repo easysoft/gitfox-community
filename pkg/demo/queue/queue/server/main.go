@@ -8,9 +8,9 @@ import (
 	"os"
 	"time"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/queue"
-	"gorm.io/gorm/logger"
 )
 
 func main() {
@@ -24,28 +24,26 @@ func main() {
 
 	log.Info("生产者启动", "database", dbPath)
 
-	config := database.SQLiteConfig{
-		DBPath:          dbPath,
-		WALMode:         true,
-		MaxOpenConn:     10,
-		MaxIdleConn:     5,
-		IsNotPanic:      true,
-		ConnMaxLifeTime: time.Hour,
-		LogLevel:        logger.Silent,
+	cfg := config.SQLiteConfig{
+		Path: dbPath,
 	}
 
-	dbWrapper := database.NewSQLiteDB(config)
-	if dbWrapper == nil {
-		log.Error("数据库连接失败")
+	dbWrapper, cleanup, err := database.NewSQLiteDB(cfg)
+	if err != nil {
+		log.Error("数据库连接失败", "error", err)
 		return
 	}
+	defer func() {
+		if err := cleanup(); err != nil {
+			log.Error("关闭数据库连接失败", "error", err)
+		}
+	}()
 
 	db, err := dbWrapper.DB.DB()
 	if err != nil {
 		log.Error("获取原生数据库连接失败", "error", err)
 		return
 	}
-	defer db.Close()
 
 	// 初始化数据库表结构（如果不存在）
 	if err := initDatabase(db); err != nil {

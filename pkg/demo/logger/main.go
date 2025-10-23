@@ -3,17 +3,47 @@ package main
 import (
 	"time"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	"go.uber.org/zap"
 )
 
 func main() {
+	// 创建日志配置
+	logConfig := config.LoggingConfig{
+		Level:           -1, // Debug level
+		Stdout:          true,
+		Caller:          true,
+		Encoder:         "console",
+		MaxAge:          90,
+		MaxCount:        20,
+		MaxSize:         500,
+		LevelColor:      true,
+		TimeFormat:      "2006-01-02 15:04:05.999",
+		StackTraceLevel: 2,
+		LogAPIServerConf: config.LogAPIServerConfig{
+			Path: "./logs/demo_api.log",
+		},
+		LogRunnerConf: config.LogRunnerConfig{
+			Path: "./logs/demo_runner.log",
+		},
+		LogSSHConf: config.LogSSHConfig{
+			Path: "./logs/demo_ssh.log",
+		},
+		LogScanConf: config.LogScanConfig{
+			Path: "./logs/demo_scan.log",
+		},
+		LogSystemConf: config.LogSystemConfig{
+			Path: "./logs/demo_system.log",
+		},
+	}
+
 	// 1. 基础同步模式
-	syncLog := logger.NewZapMateLogger("./demo_log.yaml", "gitfox")
+	syncLog := logger.NewZapMateLogger(logConfig, "apiserver")
 	syncLog.Info("同步日志消息", zap.String("mode", "sync"))
 
 	// 2. 异步模式
-	asyncLog := logger.NewZapMateLogger("./demo_log.yaml", "gitfox").SetAsyncer(1000).Sugar()
+	asyncLog := logger.NewZapMateLogger(logConfig, "apiserver").SetAsyncer(1000)
 	asyncLog.Info("异步日志消息", zap.String("mode", "async"))
 	asyncLog.Flush() // 确保异步日志写入完成
 

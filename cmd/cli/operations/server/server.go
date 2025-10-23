@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"time"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
@@ -22,9 +23,12 @@ func (c *command) run(*kingpin.ParseContext) error {
 
 	// 使用加载的配置初始化 logger
 	log := logger.NewZapMateLogger(cfg.Logging, logger.LogTypeSystem).SetAsyncer(1000).Sugar()
+	time.Sleep(3 * time.Second)
 	defer log.Flush() // 确保异步日志在程序退出前写入
 
 	log.Info("调试日志内容")
+	log.Debug("调试日志内容1")
+	log.Warn("调试日志内容2")
 	fmt.Println(cfg)
 
 	return nil

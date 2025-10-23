@@ -24,27 +24,37 @@ func (zml *ZapMateLogger) write(lvl zapcore.Level, msg string, fields ...zap.Fie
 
 // asyncWrite 异步写入日志
 func (zml *ZapMateLogger) asyncWrite() {
-	for {
-		select {
-		case le := <-zml.entryChan:
-			le.entry.Write(le.fields...)
-			// There must used Sync.Put,to avoid a lot of GC 必须使用Sync.Put，以避免大量的GC
-			logMsgPool.Put(le) //
-			zml.wg.Done()
-		}
+	for le := range zml.entryChan {
+		// 写入日志
+		le.entry.Write(le.fields...)
+		// 清理 fields 切片，避免内存泄漏
+		le.fields = nil
+		// 将 logEntry 放回对象池，减少 GC 压力
+		logMsgPool.Put(le)
+		// 标记此日志条目已处理完成
+		zml.wg.Done()
 	}
 }
 
-// Flush 刷新异步写入的日志
+// flushWrite 刷新异步写入的日志
 func (zml *ZapMateLogger) flushWrite() {
 	for {
 		select {
-		case le := <-zml.entryChan:
+		case le, ok := <-zml.entryChan:
+			if !ok {
+				// Channel 已关闭，退出
+				return
+			}
+			// 写入日志
 			le.entry.Write(le.fields...)
-			// There must used Sync.Put,to avoid a lot of GC 必须使用Sync.Put，以避免大量的GC
+			// 清理 fields 切片，避免内存泄漏
+			le.fields = nil
+			// 将 logEntry 放回对象池，减少 GC 压力
 			logMsgPool.Put(le)
+			// 标记此日志条目已处理完成
 			zml.wg.Done()
-		default: // if there is no data in the channel,so finsh sync flush and exit  如果通道中没有数据，那么就完成同步刷新并退出
+		default:
+			// 如果通道中没有数据，完成同步刷新并退出
 			return
 		}
 	}
