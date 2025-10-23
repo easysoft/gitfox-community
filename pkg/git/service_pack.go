@@ -19,9 +19,9 @@ import (
 	"fmt"
 	"io"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/enum"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/api"
 	"github.com/easysoft/gitfox/errors"
-	"github.com/easysoft/gitfox/types/enum"
 
 	"github.com/rs/zerolog/log"
 )

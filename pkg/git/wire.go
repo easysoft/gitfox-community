@@ -26,11 +26,11 @@ import (
 
 // WireSet provides a wire set for this package.
 var WireSet = wire.NewSet(
-	ProvideGITAdapter,
-	ProvideService,
+	ProvideGitAdapter,
+	ProvideGitService,
 )
 
-func ProvideGITAdapter(
+func ProvideGitAdapter(
 	config types.Config,
 	lastCommitCache cache.Cache[api.CommitEntryKey, *api.Commit],
 	githookFactory hook.ClientFactory,
@@ -42,7 +42,7 @@ func ProvideGITAdapter(
 	)
 }
 
-func ProvideService(
+func ProvideGitService(
 	config types.Config,
 	adapter *api.Git,
 	hookClientFactory hook.ClientFactory,
