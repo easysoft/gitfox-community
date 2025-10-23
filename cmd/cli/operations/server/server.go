@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	"github.com/quicklyon/kingpin/v2"
 )
