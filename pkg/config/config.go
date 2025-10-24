@@ -23,9 +23,10 @@ type Config struct {
 
 // ServerConfig HTTP服务配置
 type ServerConfig struct {
-	Port  int    `yaml:"port"`
-	Host  string `yaml:"host"`
-	Proto string `yaml:"proto"`
+	Port            int           `yaml:"port"`
+	Host            string        `yaml:"host"`
+	Proto           string        `yaml:"proto"`
+	ShutdownTimeout time.Duration `yaml:"shutdownTimeout"` // 优雅关闭超时时间，默认 5s
 }
 
 // DatabaseConfig 数据库配置

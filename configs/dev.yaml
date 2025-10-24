@@ -5,6 +5,7 @@ server:
   port: 3000
   host: localhost
   proto: http
+  shutdownTimeout: 5s  # 优雅关闭超时时间
 
 # 数据库配置
 database:

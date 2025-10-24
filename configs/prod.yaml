@@ -2,7 +2,10 @@
 
 # HTTP 服务配置
 server:
-  port: 8080
+  port: 3000
+  host: localhost
+  proto: http
+  shutdownTimeout: 10s  # 优雅关闭超时时间（生产环境建议更长）
 
 # 数据库配置
 database:

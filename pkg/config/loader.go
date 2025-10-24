@@ -57,7 +57,7 @@ func LoadConfig(mode string) (*Config, error) {
 	if config.Git.HookPath == "" {
 		executablePath, err := os.Executable()
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to get path of current executable: %w", err)
+			return nil, errors.Wrapf(err, "failed to get path of current executable: %v", err)
 		}
 
 		config.Git.HookPath = executablePath

@@ -13,7 +13,10 @@ type CronManager struct {
 	cron     *cron.Cron
 	jobMap   sync.Map // jobID -> EntryID 映射
 	stopChan chan struct{}
+	stopOnce sync.Once
 }
+
+var managerRegistry sync.Map
 
 // getDefaultOptions 获取默认的cron选项
 func (c *CronManager) getDefaultOptions() []cron.Option {
@@ -33,6 +36,7 @@ func NewCronManager() *CronManager {
 	}
 
 	c.cron = cron.New(c.getDefaultOptions()...)
+	managerRegistry.Store(c, struct{}{})
 	c.cron.Start()
 	return c
 }
@@ -68,8 +72,11 @@ func (c *CronManager) RemoveJob(jobID string) bool {
 
 // Stop 停止所有定时任务
 func (c *CronManager) Stop() {
-	c.cron.Stop()
-	close(c.stopChan)
+	c.stopOnce.Do(func() {
+		c.cron.Stop()
+		close(c.stopChan)
+		managerRegistry.Delete(c)
+	})
 }
 
 // GetEntries 获取所有定时任务
@@ -96,4 +103,13 @@ func (c *CronManager) Clear() {
 	c.cron.Stop()
 	c.cron = cron.New(c.getDefaultOptions()...)
 	c.cron.Start()
+}
+
+func StopAll() {
+	managerRegistry.Range(func(key, _ interface{}) bool {
+		if cm, ok := key.(*CronManager); ok && cm != nil {
+			cm.Stop()
+		}
+		return true
+	})
 }

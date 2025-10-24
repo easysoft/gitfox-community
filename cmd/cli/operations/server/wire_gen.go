@@ -8,6 +8,7 @@ package server
 
 import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/handler/codebase"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/router"
 	branch2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/codebase/branch"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/codebase/branch"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/cmd/cli/operations/provider"
@@ -37,13 +38,14 @@ func NewAppServer(mode string) (*App, func(), error) {
 	mySQLRepository := branch.NewMySQLRepository(mysqlDB)
 	baseBranchService := branch2.NewBaseBranchService(mySQLRepository)
 	branchHandler := codebase.NewBranchHandler(baseBranchService)
+	handlers := provider.NewHandlers(branchHandler)
 	app := &App{
 		SystemConfig: config,
 		SystemLog:    systemLog,
 		APILog:       apiLog,
 		MysqlDB:      mysqlDB,
 		SqliteDB:     sqliteDB,
-		hHandler:     branchHandler,
+		Handlers:     handlers,
 	}
 	return app, func() {
 		cleanup2()
@@ -59,5 +61,5 @@ type App struct {
 	APILog       provider.APILog
 	MysqlDB      *database.MysqlDB
 	SqliteDB     *database.SqliteDB
-	hHandler     *codebase.BranchHandler
+	Handlers     *router.Handlers
 }
