@@ -47,7 +47,7 @@ func (c *command) run(*kingpin.ParseContext) error {
 	addr := fmt.Sprintf("%s:%d", app.SystemConfig.Server.Host, app.SystemConfig.Server.Port)
 	srv := &http.Server{
 		Addr:    addr,
-		Handler: router.NewRouter(c.mode, app.APILog, app.Handlers),
+		Handler: router.NewRouter(c.mode, app.APILog, app.Controller),
 	}
 
 	// 创建错误通道用于捕获服务器启动错误

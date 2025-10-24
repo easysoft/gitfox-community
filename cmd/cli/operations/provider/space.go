@@ -10,9 +10,9 @@ import (
 
 var SpaceWireSet = wire.NewSet(
 	space.NewSpaceController,
-	// wire.Bind(new(space.SpaceService), new(*space.BaseSpaceService)),
+	wire.Bind(new(spaceSvc.SpaceService), new(*spaceSvc.SpaceSvc)),
 	// 提供创建实现类实例的方法（关键修复）
 	spaceSvc.NewSpaceSvc,
-	// wire.Bind(new(spaced.Repository), new(*spaced.MySQLRepository)),
+	wire.Bind(new(spaceStore.SpaceInterface), new(*spaceStore.MySQLSpace)),
 	spaceStore.NewMySQLSpace,
 )

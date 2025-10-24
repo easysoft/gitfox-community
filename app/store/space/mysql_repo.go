@@ -4,14 +4,14 @@ import (
 	"context"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/dao/space"
-	"gorm.io/gorm"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
 )
 
 type MySQLSpace struct {
-	db *gorm.DB // GORM数据库实例
+	db *database.MysqlDB // GORM数据库实例
 }
 
-func NewMySQLSpace(db *gorm.DB) *MySQLSpace {
+func NewMySQLSpace(db *database.MysqlDB) *MySQLSpace {
 	return &MySQLSpace{db: db}
 }
 
