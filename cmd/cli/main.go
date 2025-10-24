@@ -8,12 +8,29 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/hook"
 
 	"github.com/quicklyon/kingpin/v2"
+
+	_ "gitfox.zcorp.cc/git/Pangu/gitfox-community/docs" // 导入生成的 Swagger 文档
 )
 
 const (
 	application = "GitFox"
 	description = "GitFox"
 )
+
+// @title           GitFox API
+// @version         1.0
+// @description     GitFox 代码托管平台 API 文档
+// @termsOfService  http://swagger.io/terms/
+
+// @license.name  Apache 2.0
+// @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host      localhost:3000
+// @BasePath  /api/v1
+
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name Authorization
 
 func main() {
 	// 解析命令行参数
