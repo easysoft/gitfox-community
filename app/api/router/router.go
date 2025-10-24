@@ -6,13 +6,12 @@ import (
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/handler/test"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/middleware"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 )
 
 // NewRouter 创建路由实例并注册所有业务模块的路由
-func NewRouter(mode string, logger *logger.SugaredMateLogger, handlers *Handlers) *gin.Engine {
+func NewRouter(mode string, logger *logger.SugaredMateLogger, controller *Controller) *gin.Engine {
 	// 根据 mode 设置 Gin 运行模式
 	switch mode {
 	case "prod", "production", "release":
@@ -28,8 +27,6 @@ func NewRouter(mode string, logger *logger.SugaredMateLogger, handlers *Handlers
 	r.Use(
 		middleware.RequestID(),       // 生成trace_id并透传
 		middleware.AccessLog(logger), // 统一访问日志输出
-		// middleware.Logger(),   // 日志中间件
-		// middleware.Recovery(), // 异常恢复中间件
 		middleware.CORS(middleware.DefaultCORSConfig()), // 跨域处理中间件
 	)
 
@@ -46,13 +43,7 @@ func NewRouter(mode string, logger *logger.SugaredMateLogger, handlers *Handlers
 
 	// 创建需要认证的路由组（应用鉴权中间件）
 	authGroup := r.Group("/api/v1")
-	// authGroup.Use(middleware.Auth()) // 所有/api/*路由需要先通过认证
-
-	// 按业务模块注册路由（使用传入的 handlers）
-	registerCodebaseRoutes(authGroup, handlers) // 代码库相关路由
-	// registerPipelineRoutes(authGroup, handlers) // 流水线相关路由
-	// registerArtifactRoutes(authGroup, handlers) // 制品库相关路由
-	// registerSecurityRoutes(authGroup, handlers) // 安全扫描相关路由
+	registerSpaceRoutes(authGroup, controller) // 代码库相关路由
 
 	return r
 }
@@ -67,7 +58,5 @@ func registerPublicRoutes(r *gin.Engine) {
 		public.GET("/version", func(c *gin.Context) {
 			c.JSON(200, gin.H{"version": "v1.0.0"})
 		})
-
-		public.GET("/test_accessLog", test.AccessLogTest)
 	}
 }

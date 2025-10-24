@@ -18,7 +18,7 @@ type App struct {
 	APILog       provider.APILog
 	MysqlDB      *database.MysqlDB
 	SqliteDB     *database.SqliteDB
-	Handlers     *router.Handlers
+	Controller   *router.Controller
 }
 
 func NewAppServer(mode string) (*App, func(), error) {
@@ -26,8 +26,8 @@ func NewAppServer(mode string) (*App, func(), error) {
 		provider.ConfigWireSet,
 		provider.LogWireSet,
 		provider.DBWireSet,
-		provider.BranchWireSet,
-		provider.HandlersWireSet,
+		provider.SpaceWireSet,
+		provider.ControllersWireSet,
 		wire.Struct(new(App), "*")),
 	)
 }

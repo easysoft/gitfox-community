@@ -18,3 +18,4 @@ type Space struct {
 func (Space) TableName() string {
 	return "ops_space"
 }
+
