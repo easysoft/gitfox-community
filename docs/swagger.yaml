@@ -1,0 +1,128 @@
+basePath: /api/v1
+definitions:
+  branch.CreateBranchRequest:
+    properties:
+      autoCreateRule:
+        description: 企业版和旗舰版可能用到的扩展字段
+        type: string
+      branchName:
+        description: 分支名称
+        type: string
+      repoID:
+        description: 代码库ID
+        type: string
+      userID:
+        description: 请求用户ID
+        type: string
+      webhookEvent:
+        description: Webhook事件数据
+    type: object
+  branch.CreateBranchResponse:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      repo_id:
+        type: string
+      source:
+        type: string
+    type: object
+host: localhost:3000
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: GitFox 代码托管平台 API 文档
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: GitFox API
+  version: "1.0"
+paths:
+  /branches/{branch_id}:
+    get:
+      consumes:
+      - application/json
+      description: 根据分支ID获取分支的详细信息
+      parameters:
+      - description: 分支ID
+        in: path
+        name: branch_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            $ref: '#/definitions/branch.CreateBranchResponse'
+        "404":
+          description: 分支不存在
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: 服务器内部错误
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 获取分支详情
+      tags:
+      - 分支管理
+  /repos/{repo_id}/branches:
+    post:
+      consumes:
+      - application/json
+      description: 在指定代码库中创建新分支
+      parameters:
+      - description: 代码库ID
+        in: path
+        name: repo_id
+        required: true
+        type: string
+      - description: 创建分支请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/branch.CreateBranchRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: 创建成功
+          schema:
+            $ref: '#/definitions/branch.CreateBranchResponse'
+        "400":
+          description: 请求参数错误
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: 服务器内部错误
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 创建分支
+      tags:
+      - 分支管理
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

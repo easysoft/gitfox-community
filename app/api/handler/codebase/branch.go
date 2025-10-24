@@ -23,6 +23,18 @@ func NewBranchHandler(branchService branch.BranchService) *BranchHandler {
 }
 
 // Create 处理创建分支请求
+// @Summary      创建分支
+// @Description  在指定代码库中创建新分支
+// @Tags         分支管理
+// @Accept       json
+// @Produce      json
+// @Param        repo_id   path      string  true  "代码库ID"
+// @Param        request   body      branch.CreateBranchRequest true  "创建分支请求"
+// @Success      201       {object}  branch.CreateBranchResponse "创建成功"
+// @Failure      400       {object}  map[string]string          "请求参数错误"
+// @Failure      500       {object}  map[string]string          "服务器内部错误"
+// @Router       /repos/{repo_id}/branches [post]
+// @Security     ApiKeyAuth
 func (h *BranchHandler) Create(c *gin.Context) {
 	var req branch.CreateBranchRequest
 
@@ -50,6 +62,17 @@ func (h *BranchHandler) Create(c *gin.Context) {
 }
 
 // Get 处理获取分支详情请求
+// @Summary      获取分支详情
+// @Description  根据分支ID获取分支的详细信息
+// @Tags         分支管理
+// @Accept       json
+// @Produce      json
+// @Param        branch_id path      string  true  "分支ID"
+// @Success      200       {object}  branch.CreateBranchResponse "获取成功"
+// @Failure      404       {object}  map[string]string           "分支不存在"
+// @Failure      500       {object}  map[string]string           "服务器内部错误"
+// @Router       /branches/{branch_id} [get]
+// @Security     ApiKeyAuth
 func (h *BranchHandler) Get(c *gin.Context) {
 	branchID := c.Param("branch_id")
 
