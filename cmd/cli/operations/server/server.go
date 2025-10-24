@@ -2,11 +2,7 @@ package server
 
 import (
 	"fmt"
-	"time"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	"github.com/quicklyon/kingpin/v2"
 )
 
@@ -15,21 +11,24 @@ type command struct {
 }
 
 func (c *command) run(*kingpin.ParseContext) error {
-	// 先加载配置
-	cfg, err := config.LoadConfig(c.mode)
+	app, cleanup, err := NewAppServer(c.mode)
 	if err != nil {
-		return errors.Wrap(err, "加载配置失败")
+		return fmt.Errorf("failed to initialize app server: %w", err)
 	}
+	defer cleanup()
 
-	// 使用加载的配置初始化 logger
-	log := logger.NewZapMateLogger(cfg.Logging, logger.LogTypeSystem).SetAsyncer(1000).Sugar()
-	time.Sleep(3 * time.Second)
-	defer log.Flush() // 确保异步日志在程序退出前写入
-
-	log.Info("调试日志内容")
-	log.Debug("调试日志内容1")
-	log.Warn("调试日志内容2")
-	fmt.Println(cfg)
+	// TODO: 数据清理/整合
+	// TODO: 启动 http server
+	fmt.Printf("%s:%d\n", app.SystemConfig.Server.Host, app.SystemConfig.Server.Port)
+	// srv := &http.Server{
+	// 	Addr:    fmt.Sprintf("%s:%d", app.SystemConfig.Server.Host, app.SystemConfig.Server.Port),
+	// 	Handler: router.NewRouter(c.mode, app.APILog),
+	// }
+	// go func() {
+	// 	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+	// 	}
+	// }()
+	// TODO: 优雅关停
 
 	return nil
 }
