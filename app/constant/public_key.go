@@ -1,4 +1,4 @@
-package enum
+package constant
 
 // PublicKeyUsage represents usage type of public key.
 type PublicKeyUsage string

@@ -1,6 +1,6 @@
 package publicKey
 
-import "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/enum"
+import "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 
 type PublicKey struct {
 	ID          int64               `db:"id" gorm:"column:id;primaryKey"`
@@ -8,7 +8,7 @@ type PublicKey struct {
 	Created     int64               `db:"created" gorm:"column:created"`
 	Verified    *int64              `db:"verified" gorm:"column:verified"`
 	Identifier  string              `db:"identifier" gorm:"column:identifier"`
-	Usage       enum.PublicKeyUsage `db:"usage" gorm:"column:usage"`
+	Usage       constant.PublicKeyUsage `db:"usage" gorm:"column:usage"`
 	Fingerprint string              `db:"fingerprint" gorm:"column:fingerprint"`
 	Content     string              `db:"content" gorm:"column:content"`
 	Comment     string              `db:"comment" gorm:"column:comment"`

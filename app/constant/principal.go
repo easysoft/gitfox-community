@@ -1,4 +1,4 @@
-package enum
+package constant
 
 // PrincipalType defines the supported types of principals.
 type PrincipalType string

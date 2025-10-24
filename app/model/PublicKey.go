@@ -1,6 +1,6 @@
 package model
 
-import "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/enum"
+import "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 
 type PublicKey struct {
 	ID          int64               `json:"-"` // frontend doesn't need it
@@ -8,7 +8,7 @@ type PublicKey struct {
 	Created     int64               `json:"created"`
 	Verified    *int64              `json:"verified"`
 	Identifier  string              `json:"identifier"`
-	Usage       enum.PublicKeyUsage `json:"usage"`
+	Usage       constant.PublicKeyUsage `json:"usage"`
 	Fingerprint string              `json:"fingerprint"`
 	Content     string              `json:"-"`
 	Comment     string              `json:"comment"`

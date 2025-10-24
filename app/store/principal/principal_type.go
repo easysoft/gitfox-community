@@ -2,7 +2,7 @@ package principal
 
 import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/enum"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 )
 
 type Principal struct {
@@ -10,7 +10,7 @@ type Principal struct {
 	UID          string               `db:"uid" gorm:"column:uid"`
 	UIDUnique    string               `db:"uid_unique" gorm:"column:uid_unique"`
 	Email        string               `db:"email" gorm:"column:email"`
-	Type         enum.PrincipalType   `db:"type" gorm:"column:type"`
+	Type         constant.PrincipalType   `db:"type" gorm:"column:type"`
 	DisplayName  string               `db:"display_name" gorm:"column:display_name"`
 	Admin        bool                 `db:"admin" gorm:"column:admin"`
 	Blocked      bool                 `db:"blocked" gorm:"column:blocked"`
@@ -20,7 +20,7 @@ type Principal struct {
 	UserPassword string               `db:"user_password" gorm:"column:user_password"`
 	SAParentType string               `db:"sa_parent_type" gorm:"column:sa_parent_type"`
 	SAParentID   int                  `db:"sa_parent_id" gorm:"column:sa_parent_id"`
-	UserSource   enum.PrincipalSource `db:"user_source" gorm:"column:user_source"`
+	UserSource   constant.PrincipalSource `db:"user_source" gorm:"column:user_source"`
 	DeletedAt    int64                `db:"deleted_at" gorm:"column:deleted_at"`
 }
 
