@@ -1,14 +1,15 @@
 package router
 
 import (
+	"github.com/gin-gonic/gin"
+
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/handler/test"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/middleware"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
-	"github.com/gin-gonic/gin"
 )
 
 // NewRouter 创建路由实例并注册所有业务模块的路由
-func NewRouter(container *ServiceContainer, logger *logger.SugaredMateLogger) *gin.Engine {
+func NewRouter(mode string, logger *logger.SugaredMateLogger) *gin.Engine {
 	// 初始化Gin引擎
 	r := gin.New()
 
@@ -29,10 +30,10 @@ func NewRouter(container *ServiceContainer, logger *logger.SugaredMateLogger) *g
 	// authGroup.Use(middleware.Auth()) // 所有/api/*路由需要先通过认证
 
 	// 按业务模块注册路由（从容器获取模块实例）
-	registerCodebaseRoutes(authGroup, container) // 代码库相关路由
-	// registerPipelineRoutes(authGroup, container) // 流水线相关路由
-	// registerArtifactRoutes(authGroup, container) // 制品库相关路由
-	// registerSecurityRoutes(authGroup, container) // 安全扫描相关路由
+	registerCodebaseRoutes(authGroup) // 代码库相关路由
+	// registerPipelineRoutes(authGroup) // 流水线相关路由
+	// registerArtifactRoutes(authGroup) // 制品库相关路由
+	// registerSecurityRoutes(authGroup) // 安全扫描相关路由
 
 	return r
 }

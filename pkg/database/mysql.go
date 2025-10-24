@@ -14,13 +14,13 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 )
 
-type DB struct {
+type MysqlDB struct {
 	*gorm.DB
 }
 
 // 参考 https://github.com/go-sql-driver/mysql#loc
 // 参考 https://github.com/go-sql-driver/mysql#system-variables
-func NewMysqlDB(conf config.DatabaseConfig) (*DB, func() error, error) {
+func NewMysqlDB(conf config.DatabaseConfig) (*MysqlDB, func() error, error) {
 	db, err := gorm.Open(mysql.Open(conf.Datasource), &gorm.Config{
 		NamingStrategy: schema.NamingStrategy{
 			TablePrefix:   "ops_", // 表名前缀，“repo” 的表应为 “ops_repo”
@@ -65,7 +65,7 @@ func NewMysqlDB(conf config.DatabaseConfig) (*DB, func() error, error) {
 	// SetConnMaxIdleTime 设置连接最长空闲时间。
 	//sqlDB.SetConnMaxIdleTime(time.Duration(conf.ConnMaxLifeTime) * time.Second)
 
-	mysqlDB := &DB{db}
+	mysqlDB := &MysqlDB{db}
 
 	// 返回清理函数
 	cleanup := func() error {
@@ -76,7 +76,7 @@ func NewMysqlDB(conf config.DatabaseConfig) (*DB, func() error, error) {
 }
 
 // CloselDB 关闭数据库连接
-func (s *DB) CloseDB() error {
+func (s *MysqlDB) CloseDB() error {
 
 	sqlDB, err := s.DB.DB()
 	if err != nil {

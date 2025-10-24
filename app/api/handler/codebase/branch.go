@@ -3,11 +3,11 @@ package codebase
 import (
 	"net/http"
 
+	"github.com/gin-gonic/gin"
+
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/middleware"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constants"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/codebase/branch"
-
-	"github.com/gin-gonic/gin"
 )
 
 // BranchHandler 分支API处理器

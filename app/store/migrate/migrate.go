@@ -6,9 +6,9 @@ import (
 	"embed"
 	"fmt"
 	"io/fs"
+	"log"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/migrate"
-	// "github.com/rs/zerolog/log"
 )
 
 //go:embed sqlite/*.sql
@@ -18,7 +18,7 @@ var sqlite embed.FS
 var mysql embed.FS
 
 const (
-	tableName = "migrations"
+	tableName = "ops_migrations"
 
 	sqliteDriverName = "sqlite3"
 	sqliteSourceDir  = "sqlite"
@@ -29,11 +29,37 @@ const (
 
 // Migrate performs the database migration.
 func Migrate(ctx context.Context, db *sql.DB, driverName string) error {
+	log.Printf("[Migrate] Starting database migration for driver: %s", driverName)
+
+	// 获取当前版本
+	currentVersion, err := Current(ctx, db, driverName)
+	if err != nil {
+		log.Printf("[Migrate] Failed to get current version: %v", err)
+	} else {
+		log.Printf("[Migrate] Current database version: %s", currentVersion)
+	}
+
 	opts, err := getMigrator(db, driverName)
 	if err != nil {
+		log.Printf("[Migrate] Failed to get migrator: %v", err)
 		return fmt.Errorf("failed to get migrator: %w", err)
 	}
-	return migrate.New(opts).MigrateUp(ctx)
+
+	log.Printf("[Migrate] Executing migration...")
+	if err := migrate.New(opts).MigrateUp(ctx); err != nil {
+		log.Printf("[Migrate] Migration failed: %v", err)
+		return err
+	}
+
+	// 获取迁移后的版本
+	newVersion, err := Current(ctx, db, driverName)
+	if err != nil {
+		log.Printf("[Migrate] Failed to get new version: %v", err)
+	} else {
+		log.Printf("[Migrate] Migration completed successfully. New version: %s", newVersion)
+	}
+
+	return nil
 }
 
 // To performs the database migration to the specific version.
@@ -87,33 +113,12 @@ func Current(ctx context.Context, db *sql.DB, driverName string) (string, error)
 
 func getMigrator(db *sql.DB, driverName string) (migrate.Options, error) {
 	before := func(ctx context.Context, _ *sql.Tx, version string) error {
-		// TODO: Add logging back later
-		// ctx = log.Ctx(ctx).With().
-		// 	Str("migrate.version", version).
-		// 	Str("migrate.phase", "before").
-		// 	Logger().WithContext(ctx)
-		// log := log.Ctx(ctx)
-		//
-		// log.Info().Msg("[START]")
-		// defer log.Info().Msg("[DONE]")
-		_ = ctx
-		_ = version
-
+		log.Printf("[Migrate][Before] Starting migration for version: %s", version)
 		return nil
 	}
 
 	after := func(ctx context.Context, dbtx *sql.Tx, version string) error {
-		// TODO: Add logging back later
-		// ctx = log.Ctx(ctx).With().
-		// 	Str("migrate.version", version).
-		// 	Str("migrate.phase", "after").
-		// 	Logger().WithContext(ctx)
-		// log := log.Ctx(ctx)
-		//
-		// log.Info().Msg("[START]")
-		// defer log.Info().Msg("[DONE]")
-		_ = ctx
-		_ = dbtx
+		log.Printf("[Migrate][After] Completed migration for version: %s", version)
 
 		// TODO: Add version-specific migration hooks
 		switch version {

@@ -226,7 +226,7 @@ func backfillURLs(config *Config) error {
 	if config.URL.Base != "" {
 		u, err := url.Parse(config.URL.Base)
 		if err != nil {
-			return errors.Newf("failed to parse base url '%s': %w", config.URL.Base, err)
+			return errors.Newf("failed to parse base url '%s': %v", config.URL.Base, err)
 		}
 		if u.Scheme != schemeHTTP && u.Scheme != schemeHTTPS {
 			return errors.Newf(
@@ -262,7 +262,7 @@ func backfillURLs(config *Config) error {
 	baseURLRaw := combineToRawURL(scheme, host, port, path)
 	baseURL, err := url.Parse(baseURLRaw)
 	if err != nil {
-		return errors.Newf("failed to parse derived base url '%s': %w", baseURLRaw, err)
+		return errors.Newf("failed to parse derived base url '%s': %v", baseURLRaw, err)
 	}
 
 	// backfill all external URLs that weren't explicitly overwritten
