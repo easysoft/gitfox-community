@@ -5,6 +5,7 @@ import (
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/sqlbuilder"
 	"github.com/Masterminds/squirrel"
 	"gorm.io/gorm"
 )
@@ -12,15 +13,16 @@ import (
 var _ store.IPrincipalStore = (*PrincipalStore)(nil)
 
 func NewPrincipalStore(db *gorm.DB) store.IPrincipalStore {
+	factory := sqlbuilder.NewBuilderFactory(sqlbuilder.MySQL)
 	return &PrincipalStore{
 		db: db,
-		sb: squirrel.StatementBuilder.PlaceholderFormat(squirrel.Question),
+		sb: factory.CreateQueryBuilder(),
 	}
 }
 
 type PrincipalStore struct {
 	db *gorm.DB
-	sb squirrel.StatementBuilderType
+	sb sqlbuilder.QueryBuilder
 }
 
 func (s *PrincipalStore) FindUserByID(ctx context.Context, id int64) (*model.User, error) {
@@ -31,15 +33,16 @@ func (s *PrincipalStore) FindUserByID(ctx context.Context, id int64) (*model.Use
 	}
 
 	// 执行查询
-	var user model.User
+	var user Principal
 	err = s.db.WithContext(ctx).Raw(sql, args...).Scan(&user).Error
 	if err != nil {
 		return nil, err
 	}
-	return &user, nil
+
+	return toUser(&user), nil
 }
 
-func (s *PrincipalStore) FindUserByIDBuilder(ctx context.Context, id int64) squirrel.SelectBuilder {
+func (s *PrincipalStore) FindUserByIDBuilder(ctx context.Context, id int64) sqlbuilder.SelectBuilder {
 	return s.sb.
 		Select("*").
 		From("users").

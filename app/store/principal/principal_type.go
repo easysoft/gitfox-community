@@ -1,6 +1,9 @@
 package principal
 
-import "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/enum"
+import (
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/enum"
+)
 
 type Principal struct {
 	ID           int64                `db:"id" gorm:"column:id;primaryKey"`
@@ -23,4 +26,19 @@ type Principal struct {
 
 func (p *Principal) TableName() string {
 	return "principals"
+}
+
+func toUser(p *Principal) *model.User {
+	return &model.User{
+		ID:          p.ID,
+		UID:         p.UID,
+		Email:       p.Email,
+		DisplayName: p.DisplayName,
+		Admin:       p.Admin,
+		Blocked:     p.Blocked,
+		Salt:        p.Salt,
+		Created:     p.Created,
+		Updated:     p.Updated,
+		DeletedAt:   p.DeletedAt,
+	}
 }

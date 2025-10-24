@@ -5,6 +5,7 @@ import (
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/sqlbuilder"
 	"github.com/Masterminds/squirrel"
 
 	"gorm.io/gorm"
@@ -13,15 +14,16 @@ import (
 var _ store.IPublicKeyStore = (*PublicKeyStore)(nil)
 
 func NewPublicKeyStore(db *gorm.DB) store.IPublicKeyStore {
+	factory := sqlbuilder.NewBuilderFactory(sqlbuilder.MySQL)
 	return &PublicKeyStore{
 		db: db,
-		sb: squirrel.StatementBuilder.PlaceholderFormat(squirrel.Question),
+		sb: factory.CreateQueryBuilder(),
 	}
 }
 
 type PublicKeyStore struct {
 	db *gorm.DB
-	sb squirrel.StatementBuilderType
+	sb sqlbuilder.QueryBuilder
 }
 
 // ListByFingerprint 根据指纹查询公钥列表
@@ -42,7 +44,7 @@ func (s *PublicKeyStore) ListByFingerprint(ctx context.Context, fingerprint stri
 }
 
 // ListByFingerprintBuilder 构建根据指纹查询的SQL
-func (s *PublicKeyStore) ListByFingerprintBuilder(ctx context.Context, fingerprint string) squirrel.SelectBuilder {
+func (s *PublicKeyStore) ListByFingerprintBuilder(ctx context.Context, fingerprint string) sqlbuilder.SelectBuilder {
 	return s.sb.
 		Select("*").
 		From("public_keys").

@@ -49,6 +49,9 @@ type Principal struct {
 type PrincipalInfo struct {
 	ID          int64              `json:"id"`
 	UID         string             `json:"uid"`
+	Password    string             `json:"-"`
+	Token       string             `json:"-"`
+	Expiration  int64              `json:"-"`
 	DisplayName string             `json:"display_name"`
 	Email       string             `json:"email"`
 	Type        enum.PrincipalType `json:"type"`

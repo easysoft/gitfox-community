@@ -6,6 +6,7 @@ import (
 )
 
 type (
-	// PrincipalInfoCache caches principal IDs to principal info.
+	// PrincipalInfoCache caches principal IDs to principalInfo.
+	// PrincipalInfoCache 缓存 principalInfo
 	PrincipalInfoCache cache.ExtendedCache[int64, *model.PrincipalInfo]
 )
