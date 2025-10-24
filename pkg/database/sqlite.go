@@ -14,8 +14,12 @@ import (
 	"gorm.io/gorm/schema"
 )
 
+type SqliteDB struct {
+	*gorm.DB
+}
+
 // NewSQLiteDB 创建 SQLite 数据库连接
-func NewSQLiteDB(conf config.SQLiteConfig) (*DB, func() error, error) {
+func NewSQLiteDB(conf config.SQLiteConfig) (*SqliteDB, func() error, error) {
 	// 确保数据库目录存在
 	dir := filepath.Dir(conf.Path)
 	// 检查目录是否可以创建
@@ -81,7 +85,7 @@ func NewSQLiteDB(conf config.SQLiteConfig) (*DB, func() error, error) {
 		panic(fmt.Errorf("failed to configure SQLite: %w", err))
 	}
 
-	sqliteDB := &DB{db}
+	sqliteDB := &SqliteDB{db}
 
 	// 返回清理函数
 	cleanup := func() error {
@@ -130,11 +134,27 @@ func configureSQLite(db *gorm.DB, conf config.SQLiteConfig) error {
 		"PRAGMA synchronous = NORMAL",      // 在 WAL 模式下足够安全, 推荐用于 WAL 模式
 	}
 
-	// 执行所有 PRAGMA 语句
+	// 执行所有 PRAGMA 语句（使用 Silent 模式避免打印日志）
+	silentDB := db.Session(&gorm.Session{Logger: logger.Default.LogMode(logger.Silent)})
 	for _, pragma := range pragmas {
-		if err := db.Exec(pragma).Error; err != nil {
+		if err := silentDB.Exec(pragma).Error; err != nil {
 			return fmt.Errorf("failed to execute pragma '%s': %w", pragma, err)
 		}
+	}
+
+	return nil
+}
+
+// CloselDB 关闭数据库连接
+func (s *SqliteDB) CloseDB() error {
+
+	sqlDB, err := s.DB.DB()
+	if err != nil {
+		return fmt.Errorf("failed to get underlying sql.DB: %w", err)
+	}
+
+	if err := sqlDB.Close(); err != nil {
+		return fmt.Errorf("failed to close database connection: %w", err)
 	}
 
 	return nil

@@ -8,6 +8,7 @@ import (
 	"gorm.io/gorm/clause"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/dao/codebase"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
 )
 
 // MySQLRepository 基于GORM的分支数据访问实现
@@ -19,9 +20,9 @@ type MySQLRepository struct {
 var _ Repository = (*MySQLRepository)(nil)
 
 // NewMySQLRepository 创建MySQL仓库实例
-func NewMySQLRepository(db *gorm.DB) *MySQLRepository {
+func NewMySQLRepository(db *database.MysqlDB) *MySQLRepository {
 	return &MySQLRepository{
-		db: db,
+		db: db.DB,
 	}
 }
 
