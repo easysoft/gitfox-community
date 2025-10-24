@@ -1,7 +1,10 @@
 package router
 
 import (
+	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
+	swaggerfiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/handler/test"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/middleware"
@@ -10,6 +13,14 @@ import (
 
 // NewRouter 创建路由实例并注册所有业务模块的路由
 func NewRouter(mode string, logger *logger.SugaredMateLogger, handlers *Handlers) *gin.Engine {
+	// 根据 mode 设置 Gin 运行模式
+	switch mode {
+	case "prod", "production", "release":
+		gin.SetMode(gin.ReleaseMode)
+	default: // dev, debug, local 等都使用 debug 模式
+		gin.SetMode(gin.DebugMode)
+	}
+
 	// 初始化Gin引擎
 	r := gin.New()
 
@@ -21,6 +32,14 @@ func NewRouter(mode string, logger *logger.SugaredMateLogger, handlers *Handlers
 		// middleware.Recovery(), // 异常恢复中间件
 		middleware.CORS(middleware.DefaultCORSConfig()), // 跨域处理中间件
 	)
+
+	// debug 模式下开启 API 文档和性能分析
+	if gin.Mode() != gin.ReleaseMode {
+		// 注册 pprof 性能分析路由
+		pprof.Register(r)
+		// 注册 Swagger API 文档路由（使用独立路径避免与业务路由冲突）
+		r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
+	}
 
 	// 注册无需认证的公共路由
 	registerPublicRoutes(r)
