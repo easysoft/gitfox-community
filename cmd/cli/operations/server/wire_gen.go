@@ -18,7 +18,7 @@ import (
 
 // Injectors from wire.go:
 
-func NewAppServer(mode string) (*App, func(), error) {
+func NewApp(mode string) (*App, func(), error) {
 	modeName := provider.NewSystemMode(mode)
 	config, err := provider.NewSystemConfig(modeName)
 	if err != nil {

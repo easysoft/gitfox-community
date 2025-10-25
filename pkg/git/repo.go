@@ -550,7 +550,7 @@ func (s *Service) createDelegateHooks(repoPath string) (err error) {
 			return fmt.Errorf("write old hook file '%s': %v", oldHookPath, err)
 		}
 		if err = util.EnsureExecutable(oldHookPath); err != nil {
-			return fmt.Errorf("Unable to set %s executable. Error %v", oldHookPath, err)
+			return fmt.Errorf("unable to set %s executable: %w", oldHookPath, err)
 		}
 		if err = util.Remove(newHookPath); err != nil && !os.IsNotExist(err) {
 			return fmt.Errorf("unable to pre-remove new hook file '%s' prior to rewriting: %v", newHookPath, err)
@@ -559,7 +559,7 @@ func (s *Service) createDelegateHooks(repoPath string) (err error) {
 			return fmt.Errorf("write new hook file '%s': %v", newHookPath, err)
 		}
 		if err = util.EnsureExecutable(newHookPath); err != nil {
-			return fmt.Errorf("Unable to set %s executable. Error %v", oldHookPath, err)
+			return fmt.Errorf("unable to set %s executable: %w", newHookPath, err)
 		}
 	}
 	return nil
@@ -610,7 +610,7 @@ func (s *Service) UpdateDefaultBranch(
 		return err
 	}
 	if err := check.BranchName(params.BranchName); err != nil {
-		return errors.InvalidArgument(err.Error())
+		return errors.InvalidArgument("invalid branch name: %s", err.Error())
 	}
 
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)

@@ -22,7 +22,7 @@ import (
 	"strconv"
 	"strings"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/enum"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/command"
 	"github.com/easysoft/gitfox/errors"
 
@@ -58,7 +58,7 @@ func (g *Git) InfoRefs(
 	if _, err := w.Write([]byte("0000")); err != nil {
 		return errors.Internal(err, "failed to flush data in InfoRefs %s service", service)
 	}
-	log.Ctx(ctx).Debug().Msg(string(stdout.Bytes()))
+	log.Ctx(ctx).Debug().Msg(stdout.String())
 	if _, err := io.Copy(w, stdout); err != nil {
 		return errors.Internal(err, "streaming InfoRefs %s service failed", service)
 	}
@@ -70,7 +70,7 @@ type ServicePackConfig struct {
 }
 
 type ServicePackOptions struct {
-	Service      enum.GitServiceType
+	Service      constant.GitServiceType
 	Timeout      int // seconds
 	StatelessRPC bool
 	Stdout       io.Writer

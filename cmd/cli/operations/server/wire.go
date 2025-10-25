@@ -21,7 +21,7 @@ type App struct {
 	Controller   *router.Controller
 }
 
-func NewAppServer(mode string) (*App, func(), error) {
+func NewApp(mode string) (*App, func(), error) {
 	panic(wire.Build(
 		provider.ConfigWireSet,
 		provider.LogWireSet,

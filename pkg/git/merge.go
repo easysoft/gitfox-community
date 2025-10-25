@@ -137,7 +137,7 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 
 	mergeMethod, ok := params.Method.Sanitize()
 	if !ok && params.Method != "" {
-		return MergeOutput{}, errors.InvalidArgument("Unsupported merge method: %s", params.Method)
+		return MergeOutput{}, errors.InvalidArgument("unsupported merge method: %s", params.Method)
 	}
 
 	var mergeFunc merge.Func

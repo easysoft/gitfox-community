@@ -41,7 +41,7 @@ type WriteParams struct {
 
 func (p *WriteParams) Validate() error {
 	if p.RepoUID == "" {
-		return errors.InvalidArgument("RepoUID is mandatory field")
+		return errors.InvalidArgument("repoUID is mandatory field")
 	}
 
 	return p.Actor.Validate()
