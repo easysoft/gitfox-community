@@ -6,18 +6,29 @@ import (
 	"github.com/google/wire"
 )
 
-type SystemLog *logger.SugaredMateLogger
-type APILog *logger.SugaredMateLogger
+// SystemLog 系统日志
+type SystemLog struct {
+	*logger.SugaredMateLogger
+}
+
+// APILog API日志
+type APILog struct {
+	*logger.SugaredMateLogger
+}
 
 var LogWireSet = wire.NewSet(
 	NewSystemLogger,
 	NewAPILogger,
 )
 
-func NewSystemLogger(config *config.Config) SystemLog {
-	return logger.NewZapMateLogger(config.Logging, logger.LogTypeSystem).SetAsyncer(1000).Sugar()
+func NewSystemLogger(config *config.Config) *SystemLog {
+	return &SystemLog{
+		logger.NewZapMateLogger(config.Logging, logger.LogTypeSystem).SetAsyncer(1000).Sugar(),
+	}
 }
 
-func NewAPILogger(config *config.Config) APILog {
-	return logger.NewZapMateLogger(config.Logging, logger.LogTypeAPIServer).SetAsyncer(1000).Sugar()
+func NewAPILogger(config *config.Config) *APILog {
+	return &APILog{
+		logger.NewZapMateLogger(config.Logging, logger.LogTypeAPIServer).SetAsyncer(1000).Sugar(),
+	}
 }

@@ -1,7 +1,7 @@
 package store
 
 import (
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model"
+	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/principal"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/cache"
 )
 

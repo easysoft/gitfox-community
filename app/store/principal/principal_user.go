@@ -3,7 +3,7 @@ package principal
 import (
 	"context"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/principal"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/sqlbuilder"
 	"github.com/Masterminds/squirrel"
@@ -25,7 +25,7 @@ type PrincipalStore struct {
 	sb sqlbuilder.QueryBuilder
 }
 
-func (s *PrincipalStore) FindUserByID(ctx context.Context, id int64) (*model.User, error) {
+func (s *PrincipalStore) FindUserByID(ctx context.Context, id int64) (*principal.User, error) {
 	// 使用 Builder 生成 SQL 语句
 	sql, args, err := s.FindUserByIDBuilder(ctx, id).ToSql()
 	if err != nil {

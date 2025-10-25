@@ -14,8 +14,8 @@ import (
 
 type App struct {
 	SystemConfig *config.Config
-	SystemLog    provider.SystemLog
-	APILog       provider.APILog
+	SystemLog    *provider.SystemLog
+	APILog       *provider.APILog
 	MysqlDB      *database.MysqlDB
 	SqliteDB     *database.SqliteDB
 	Controller   *router.Controller

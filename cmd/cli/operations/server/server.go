@@ -3,7 +3,6 @@ package server
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -23,11 +22,15 @@ type command struct {
 func (c *command) run(*kingpin.ParseContext) error {
 	app, cleanup, err := NewApp(c.mode)
 	if err != nil {
-		log.Fatalf("[Server] Failed to initialize app server: %v", err)
+		// 这里无法使用 app.SystemLog 因为 app 初始化失败，只能使用 fmt.Printf
+		fmt.Printf("[Server] Failed to initialize app server: %v\n", err)
+		os.Exit(1)
 	}
 	defer func() {
-		log.Println("[Server] Cleaning up resources...")
+		app.SystemLog.Info("[Server] Cleaning up resources...")
 		cleanup()
+		// Flush 日志确保所有异步日志都被写入
+		_ = app.SystemLog.Flush()
 	}()
 
 	// 启动定时任务管理器
@@ -35,19 +38,19 @@ func (c *command) run(*kingpin.ParseContext) error {
 
 	// 示例：添加系统健康检查定时任务：每一分钟打印一条系统日志
 	_, err = cronManager.AddJob("system-health-check", "0 * * * * *", func() {
-		(*app.SystemLog).Infow("System health check", "status", "running")
+		app.SystemLog.Infow("System health check", "status", "running")
 	})
 	if err != nil {
-		log.Printf("[Server] Failed to add cron job: %v", err)
+		app.SystemLog.Errorw("[Server] Failed to add cron job", "error", err)
 	} else {
-		log.Println("[Server] System health check cron job started (runs every minute)")
+		app.SystemLog.Info("[Server] System health check cron job started (runs every minute)")
 	}
 
 	// 启动 HTTP 服务器
 	addr := fmt.Sprintf("%s:%d", app.SystemConfig.Server.Host, app.SystemConfig.Server.Port)
 	srv := &http.Server{
 		Addr:    addr,
-		Handler: router.NewRouter(c.mode, app.APILog, app.Controller),
+		Handler: router.NewRouter(c.mode, app.APILog.SugaredMateLogger, app.Controller),
 	}
 
 	// 创建错误通道用于捕获服务器启动错误
@@ -55,9 +58,9 @@ func (c *command) run(*kingpin.ParseContext) error {
 
 	// 在 goroutine 中启动服务器
 	go func() {
-		log.Printf("[Server] Starting HTTP server on %s", addr)
+		app.SystemLog.Infow("[Server] Starting HTTP server", "address", addr)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Printf("[Server] HTTP server error: %v", err)
+			app.SystemLog.Errorw("[Server] HTTP server error", "error", err)
 			serverErrors <- err
 		}
 	}()
@@ -72,9 +75,9 @@ func (c *command) run(*kingpin.ParseContext) error {
 	// 等待信号或服务器错误
 	select {
 	case <-quit:
-		log.Println("[Server] Received shutdown signal, shutting down server...")
+		app.SystemLog.Info("[Server] Received shutdown signal, shutting down server...")
 	case err := <-serverErrors:
-		log.Printf("[Server] Server error occurred: %v", err)
+		app.SystemLog.Errorw("[Server] Server error occurred", "error", err)
 		return err
 	}
 
@@ -91,16 +94,16 @@ func (c *command) run(*kingpin.ParseContext) error {
 	ctx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
 	defer cancel()
 
-	log.Printf("[Server] Gracefully shutting down (timeout: %v)...", shutdownTimeout)
+	app.SystemLog.Infow("[Server] Gracefully shutting down", "timeout", shutdownTimeout)
 	if err := srv.Shutdown(ctx); err != nil {
-		log.Printf("[Server] Server forced to shutdown: %v", err)
+		app.SystemLog.Errorw("[Server] Server forced to shutdown", "error", err)
 		// 不直接返回,继续清理其他资源
 	} else {
-		log.Println("[Server] HTTP server shutdown completed")
+		app.SystemLog.Info("[Server] HTTP server shutdown completed")
 	}
 
 	// 停止所有定时任务
-	log.Println("[Server] Stopping cron jobs...")
+	app.SystemLog.Info("[Server] Stopping cron jobs...")
 	cron.StopAll()
 	return nil
 }
