@@ -21,7 +21,7 @@ type command struct {
 }
 
 func (c *command) run(*kingpin.ParseContext) error {
-	app, cleanup, err := NewAppServer(c.mode)
+	app, cleanup, err := NewApp(c.mode)
 	if err != nil {
 		log.Fatalf("[Server] Failed to initialize app server: %v", err)
 	}

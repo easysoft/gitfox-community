@@ -98,7 +98,7 @@ func (s *Service) CreateBranch(ctx context.Context, params *CreateBranchParams) 
 		return nil, err
 	}
 	if err := check.BranchName(params.BranchName); err != nil {
-		return nil, errors.InvalidArgument(err.Error())
+		return nil, errors.InvalidArgument("invalid branch name: %s", err.Error())
 	}
 
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)

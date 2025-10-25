@@ -227,7 +227,7 @@ func FastForward(
 ) (mergeSHA sha.SHA, conflicts []string, err error) {
 	if targetSHA != mergeBaseSHA {
 		return sha.None, nil,
-			errors.Conflict("Target branch has diverged from the source branch. Fast-forward not possible.")
+			errors.Conflict("target branch has diverged from the source branch, fast-forward not possible")
 	}
 
 	err = sharedrepo.Run(ctx, refUpdater, tmpDir, repoPath, func(*sharedrepo.SharedRepo) error {

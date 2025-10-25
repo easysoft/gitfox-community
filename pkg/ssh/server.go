@@ -23,10 +23,10 @@ import (
 	"strings"
 	"time"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/handler/repo"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/auth"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/enum"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/publickey"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/api"
 
@@ -154,7 +154,7 @@ func (s *Server) publicKeyHandler(ctx ssh.Context, key ssh.PublicKey) bool {
 		return false
 	}
 
-	principal, err := s.Verifier.ValidateKey(ctx, key, enum.PublicKeyUsageAuth)
+	principal, err := s.Verifier.ValidateKey(ctx, key, constant.PublicKeyUsageAuth)
 	if errors.IsNotFound(err) {
 		log.Debug().Err(err).Msg("public key is unknown")
 		return false
@@ -217,7 +217,7 @@ func (s *Server) sessionHandler(session ssh.Session) {
 	}
 
 	gitServicePack := strings.TrimPrefix(gitCommand, "git-")
-	service, err := enum.ParseGitServiceType(gitServicePack)
+	service, err := constant.ParseGitServiceType(gitServicePack)
 	if err != nil {
 		_, _ = fmt.Fprintf(session.Stderr(), "failed to parse service pack: %q\n", gitServicePack)
 		return

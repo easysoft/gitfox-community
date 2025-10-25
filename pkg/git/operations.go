@@ -191,7 +191,7 @@ func (s *Service) CommitFiles(ctx context.Context, params *CommitFilesParams) (C
 		}
 
 		if oldTreeSHA.Equal(treeSHA) {
-			return errors.InvalidArgument("No effective changes.")
+			return errors.InvalidArgument("no effective changes")
 		}
 
 		authorSig := &api.Signature{
@@ -275,7 +275,7 @@ func (s *Service) prepareTree(
 		}
 
 		if modifiedPaths[modifiedPath] {
-			return errors.InvalidArgument("More than one conflicting actions are modifying file %q.", modifiedPath)
+			return errors.InvalidArgument("more than one conflicting actions are modifying file %q", modifiedPath)
 		}
 		modifiedPaths[modifiedPath] = true
 	}
@@ -307,7 +307,7 @@ func (s *Service) prepareTree(
 		}
 
 		if modifiedPaths[filePath] {
-			return errors.InvalidArgument("More than one conflicting action are modifying file %q.", filePath)
+			return errors.InvalidArgument("more than one conflicting action are modifying file %q", filePath)
 		}
 		modifiedPaths[filePath] = true
 	}

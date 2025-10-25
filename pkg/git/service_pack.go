@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"io"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/enum"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/api"
 	"github.com/easysoft/gitfox/errors"
 
@@ -71,12 +71,12 @@ func (s *Service) ServicePack(ctx context.Context, params *ServicePackParams) er
 	}
 	var repoPath string
 	switch params.Service {
-	case enum.GitServiceTypeUploadPack:
+	case constant.GitServiceTypeUploadPack:
 		if err := params.ReadParams.Validate(); err != nil {
 			return errors.InvalidArgument("upload-pack requires ReadParams")
 		}
 		repoPath = getFullPathForRepo(s.reposRoot, params.ReadParams.RepoUID)
-	case enum.GitServiceTypeReceivePack:
+	case constant.GitServiceTypeReceivePack:
 		if err := params.WriteParams.Validate(); err != nil {
 			return errors.InvalidArgument("receive-pack requires WriteParams")
 		}

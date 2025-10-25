@@ -1059,26 +1059,26 @@ func parsePatchTextFilePayloads(payloadsRaw [][]byte) ([]patchTextFileReplacemen
 func parsePatchTextFilePayload(payloadRaw []byte) (patchTextFileReplacement, error) {
 	lineInfo, replacement, ok := bytes.Cut(payloadRaw, []byte{0})
 	if !ok {
-		return patchTextFileReplacement{}, errors.InvalidArgument("Payload format is missing the content separator.")
+		return patchTextFileReplacement{}, errors.InvalidArgument("payload format is missing the content separator")
 	}
 
 	startBytes, endBytes, ok := bytes.Cut(lineInfo, []byte{':'})
 	if !ok {
 		return patchTextFileReplacement{}, errors.InvalidArgument(
-			"Payload is missing the line number separator.")
+			"payload is missing the line number separator")
 	}
 
 	start, err := parseLineNumber(startBytes)
 	if err != nil {
-		return patchTextFileReplacement{}, errors.InvalidArgument("Payload start line number is invalid: %s", err)
+		return patchTextFileReplacement{}, errors.InvalidArgument("payload start line number is invalid: %s", err)
 	}
 	end, err := parseLineNumber(endBytes)
 	if err != nil {
-		return patchTextFileReplacement{}, errors.InvalidArgument("Payload end line number is invalid: %s", err)
+		return patchTextFileReplacement{}, errors.InvalidArgument("payload end line number is invalid: %s", err)
 	}
 
 	if end < start {
-		return patchTextFileReplacement{}, errors.InvalidArgument("Payload end line has to be at least as big as start line.")
+		return patchTextFileReplacement{}, errors.InvalidArgument("payload end line has to be at least as big as start line")
 	}
 
 	return patchTextFileReplacement{
