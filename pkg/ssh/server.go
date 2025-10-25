@@ -24,9 +24,9 @@ import (
 	"time"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/repo"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/auth"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/principal"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/publickey"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/api"
 
@@ -197,7 +197,7 @@ func (s *Server) sessionHandler(session ssh.Session) {
 	// eg.git-receive-pack 'space/repo.git'
 	command := session.RawCommand()
 
-	principal, ok := session.Context().Value(principalKey).(*model.PrincipalInfo)
+	principalInfo, ok := session.Context().Value(principalKey).(*principal.PrincipalInfo)
 	if !ok {
 		_, _ = fmt.Fprintf(session.Stderr(), "principal not found or empty")
 		return
@@ -250,14 +250,14 @@ func (s *Server) sessionHandler(session ssh.Session) {
 	err = s.RepoCtrl.GitServicePack(
 		WithContext(ctx, session),
 		&auth.Session{
-			Principal: model.Principal{
-				ID:          principal.ID,
-				UID:         principal.UID,
-				Email:       principal.Email,
-				Type:        principal.Type,
-				DisplayName: principal.DisplayName,
-				Created:     principal.Created,
-				Updated:     principal.Updated,
+			Principal: principal.Principal{
+				ID:          principalInfo.ID,
+				UID:         principalInfo.UID,
+				Email:       principalInfo.Email,
+				Type:        principalInfo.Type,
+				DisplayName: principalInfo.DisplayName,
+				Created:     principalInfo.Created,
+				Updated:     principalInfo.Updated,
 			},
 		},
 		repoRef,

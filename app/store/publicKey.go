@@ -3,7 +3,7 @@ package store
 import (
 	"context"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model"
+	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/publicKey"
 )
 
 type IPublicKeyStore interface {

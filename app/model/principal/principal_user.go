@@ -1,4 +1,4 @@
-package model
+package principal
 
 import "github.com/easysoft/gitfox/types/enum"
 

@@ -26,11 +26,11 @@ func NewApp(mode string) (*App, func(), error) {
 	}
 	systemLog := provider.NewSystemLogger(config)
 	apiLog := provider.NewAPILogger(config)
-	mysqlDB, cleanup, err := provider.NewMysqlDB(config)
+	mysqlDB, cleanup, err := provider.NewMysqlDB(config, systemLog)
 	if err != nil {
 		return nil, nil, err
 	}
-	sqliteDB, cleanup2, err := provider.NewSqliteDB(config)
+	sqliteDB, cleanup2, err := provider.NewSqliteDB(config, systemLog)
 	if err != nil {
 		cleanup()
 		return nil, nil, err
@@ -57,8 +57,8 @@ func NewApp(mode string) (*App, func(), error) {
 
 type App struct {
 	SystemConfig *config.Config
-	SystemLog    provider.SystemLog
-	APILog       provider.APILog
+	SystemLog    *provider.SystemLog
+	APILog       *provider.APILog
 	MysqlDB      *database.MysqlDB
 	SqliteDB     *database.SqliteDB
 	Controller   *router.Controller

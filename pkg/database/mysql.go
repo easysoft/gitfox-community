@@ -87,7 +87,5 @@ func (s *MysqlDB) CloseDB() error {
 		return fmt.Errorf("failed to close database connection: %w", err)
 	}
 
-	log.Println("[Server] database mysql connections closed")
-
 	return nil
 }

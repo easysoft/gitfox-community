@@ -6,8 +6,8 @@ import (
 	"embed"
 	"fmt"
 	"io/fs"
-	"log"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/migrate"
 )
 
@@ -28,43 +28,43 @@ const (
 )
 
 // Migrate performs the database migration.
-func Migrate(ctx context.Context, db *sql.DB, driverName string) error {
-	log.Printf("[Migrate] Starting database migration for driver: %s", driverName)
+func Migrate(ctx context.Context, db *sql.DB, driverName string, log *logger.SugaredMateLogger) error {
+	log.Infow("[Migrate] Starting database migration", "driver", driverName)
 
 	// 获取当前版本
 	currentVersion, err := Current(ctx, db, driverName)
 	if err != nil {
-		log.Printf("[Migrate] Failed to get current version: %v", err)
+		log.Errorw("[Migrate] Failed to get current version", "error", err)
 	} else {
-		log.Printf("[Migrate] Current database version: %s", currentVersion)
+		log.Infow("[Migrate] Current database version", "version", currentVersion)
 	}
 
-	opts, err := getMigrator(db, driverName)
+	opts, err := getMigrator(db, driverName, log)
 	if err != nil {
-		log.Printf("[Migrate] Failed to get migrator: %v", err)
+		log.Errorw("[Migrate] Failed to get migrator", "error", err)
 		return fmt.Errorf("failed to get migrator: %w", err)
 	}
 
-	log.Printf("[Migrate] Executing migration...")
+	log.Info("[Migrate] Executing migration...")
 	if err := migrate.New(opts).MigrateUp(ctx); err != nil {
-		log.Printf("[Migrate] Migration failed: %v", err)
+		log.Errorw("[Migrate] Migration failed", "error", err)
 		return err
 	}
 
 	// 获取迁移后的版本
 	newVersion, err := Current(ctx, db, driverName)
 	if err != nil {
-		log.Printf("[Migrate] Failed to get new version: %v", err)
+		log.Errorw("[Migrate] Failed to get new version", "error", err)
 	} else {
-		log.Printf("[Migrate] Migration completed successfully. New version: %s", newVersion)
+		log.Infow("[Migrate] Migration completed successfully", "version", newVersion)
 	}
 
 	return nil
 }
 
 // To performs the database migration to the specific version.
-func To(ctx context.Context, db *sql.DB, driverName string, version string) error {
-	opts, err := getMigrator(db, driverName)
+func To(ctx context.Context, db *sql.DB, driverName string, version string, log *logger.SugaredMateLogger) error {
+	opts, err := getMigrator(db, driverName, log)
 	if err != nil {
 		return fmt.Errorf("failed to get migrator: %w", err)
 	}
@@ -111,14 +111,14 @@ func Current(ctx context.Context, db *sql.DB, driverName string) (string, error)
 	return version, nil
 }
 
-func getMigrator(db *sql.DB, driverName string) (migrate.Options, error) {
+func getMigrator(db *sql.DB, driverName string, log *logger.SugaredMateLogger) (migrate.Options, error) {
 	before := func(ctx context.Context, _ *sql.Tx, version string) error {
-		log.Printf("[Migrate][Before] Starting migration for version: %s", version)
+		log.Infow("[Migrate][Before] Starting migration for version", "version", version)
 		return nil
 	}
 
 	after := func(ctx context.Context, dbtx *sql.Tx, version string) error {
-		log.Printf("[Migrate][After] Completed migration for version: %s", version)
+		log.Infow("[Migrate][After] Completed migration for version", "version", version)
 
 		// TODO: Add version-specific migration hooks
 		switch version {

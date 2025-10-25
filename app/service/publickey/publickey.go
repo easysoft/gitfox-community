@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/principal"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store"
 	"github.com/easysoft/gitfox/errors"
@@ -15,7 +15,7 @@ import (
 )
 
 type Service interface {
-	ValidateKey(ctx context.Context, publicKey ssh.PublicKey, usage constant.PublicKeyUsage) (*model.PrincipalInfo, error)
+	ValidateKey(ctx context.Context, publicKey ssh.PublicKey, usage constant.PublicKeyUsage) (*principal.PrincipalInfo, error)
 }
 
 func NewService(
@@ -39,7 +39,7 @@ func (s LocalService) ValidateKey(
 	ctx context.Context,
 	publicKey ssh.PublicKey,
 	usage constant.PublicKeyUsage,
-) (*model.PrincipalInfo, error) {
+) (*principal.PrincipalInfo, error) {
 	key := From(publicKey)
 	fingerprint := key.Fingerprint()
 

@@ -3,7 +3,7 @@ package publicKey
 import (
 	"context"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model"
+	publickey "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/publicKey"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/sqlbuilder"
 	"github.com/Masterminds/squirrel"
@@ -27,7 +27,7 @@ type PublicKeyStore struct {
 }
 
 // ListByFingerprint 根据指纹查询公钥列表
-func (s *PublicKeyStore) ListByFingerprint(ctx context.Context, fingerprint string) ([]model.PublicKey, error) {
+func (s *PublicKeyStore) ListByFingerprint(ctx context.Context, fingerprint string) ([]publickey.PublicKey, error) {
 	// 使用 Builder 生成 SQL 语句
 	sql, args, err := s.ListByFingerprintBuilder(ctx, fingerprint).ToSql()
 	if err != nil {
@@ -35,7 +35,7 @@ func (s *PublicKeyStore) ListByFingerprint(ctx context.Context, fingerprint stri
 	}
 
 	// 执行查询
-	var publicKeys []model.PublicKey
+	var publicKeys []publickey.PublicKey
 	err = s.db.WithContext(ctx).Raw(sql, args...).Scan(&publicKeys).Error
 	if err != nil {
 		return nil, err
