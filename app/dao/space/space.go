@@ -6,6 +6,7 @@ import "time"
 type Space struct {
 	ID          int64     `gorm:"column:id;type:bigint;primaryKey;autoIncrement;comment:ID"` // 主键ID，自增
 	Version     int       `gorm:"column:version;type:int;not null;default:0;comment:版本"`    // 版本号，默认0
+	Permission  int       `gorm:"column:permission;type:int;not null;default:0;comment:权限"` // 权限，默认0
 	Name        string    `gorm:"column:name;type:varchar(255);not null;comment:名称"`       // 名称，非空
 	Description string    `gorm:"column:description;type:text;default:null;comment:描述"`    // 描述，可空
 	CreatedBy   string    `gorm:"column:createdBy;type:varchar(255);not null;comment:创建者"` // 创建者，非空

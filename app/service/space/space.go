@@ -51,3 +51,24 @@ func (s *SpaceSvc) Create(ctx context.Context, req spaceModel.CreateSpaceRequest
 		Description: req.Description,
 	}, nil
 }
+
+
+func (s *SpaceSvc) List(ctx context.Context, filter spaceModel.ListSpaceFilter) ([]spaceModel.SpaceResponse, error) {
+	// Implementation logic here
+	return nil, nil
+}
+
+func (s *SpaceSvc) Get(ctx context.Context, id string) (*spaceModel.SpaceResponse, error) {
+	// Implementation logic here
+	return nil, nil
+}
+
+func (s *SpaceSvc) Update(ctx context.Context, id string, req spaceModel.UpdateSpaceRequest) (*spaceModel.SpaceResponse, error) {
+	// Implementation logic here
+	return nil, nil
+}
+
+func (s *SpaceSvc) Delete(ctx context.Context, id string) error {
+	// Implementation logic here
+	return nil
+}

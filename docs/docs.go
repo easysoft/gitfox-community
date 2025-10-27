@@ -21,13 +21,8 @@ const docTemplate = `{
     "basePath": "{{.BasePath}}",
     "paths": {
         "/spaces": {
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "创建新的空间",
+            "get": {
+                "description": "分页查询空间列表，支持按名称、权限、负责人筛选",
                 "consumes": [
                     "application/json"
                 ],
@@ -35,12 +30,101 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "空间管理"
+                    "spaces"
+                ],
+                "summary": "查询空间列表",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "空间名称（模糊查询）",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            0,
+                            1
+                        ],
+                        "type": "integer",
+                        "description": "空间权限（0-私有，1-公开）",
+                        "name": "permission",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "负责人",
+                        "name": "owner",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "default": 1,
+                        "description": "页码（默认1）",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer",
+                        "default": 20,
+                        "description": "每页条数（默认20）",
+                        "name": "pageSize",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "查询成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/resp.ListResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/space.SpaceResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/resp.ListResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "$ref": "#/definitions/resp.ListResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "新增一个空间，需保证未删除空间中名称唯一，负责人默认为当前用户",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "spaces"
                 ],
                 "summary": "创建空间",
                 "parameters": [
                     {
-                        "description": "创建空间请求",
+                        "description": "创建空间请求参数",
                         "name": "request",
                         "in": "body",
                         "required": true,
@@ -50,28 +134,216 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "201": {
+                    "200": {
                         "description": "创建成功",
                         "schema": {
-                            "$ref": "#/definitions/space.CreateSpaceResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/resp.ObjectResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/space.SpaceResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
-                        "description": "请求参数错误",
+                        "description": "参数错误（如名称重复）",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/resp.ObjectResponse"
                         }
                     },
                     "500": {
-                        "description": "服务器内部错误",
+                        "description": "服务器错误",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/spaces/{id}": {
+            "get": {
+                "description": "根据ID查询单个空间详情",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "spaces"
+                ],
+                "summary": "查询单个空间",
+                "parameters": [
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "description": "空间ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "查询成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/resp.ObjectResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/space.SpaceResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "ID格式错误",
+                        "schema": {
+                            "$ref": "#/definitions/resp.ObjectResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "空间不存在或已删除",
+                        "schema": {
+                            "$ref": "#/definitions/resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "$ref": "#/definitions/resp.ObjectResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "根据ID更新空间信息，未传入字段保持原值，名称更新需重新校验唯一性",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "spaces"
+                ],
+                "summary": "更新空间",
+                "parameters": [
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "description": "空间ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "更新空间请求参数（字段可选）",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/space.UpdateSpaceRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "更新成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/resp.ObjectResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/space.SpaceResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误（如名称重复）",
+                        "schema": {
+                            "$ref": "#/definitions/resp.ObjectResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "空间不存在或已删除",
+                        "schema": {
+                            "$ref": "#/definitions/resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "$ref": "#/definitions/resp.ObjectResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "逻辑删除空间，删除前需校验空间下无代码库和制品库",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "spaces"
+                ],
+                "summary": "删除空间",
+                "parameters": [
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "description": "空间ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "删除成功",
+                        "schema": {
+                            "$ref": "#/definitions/resp.ObjectResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "ID格式错误",
+                        "schema": {
+                            "$ref": "#/definitions/resp.ObjectResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "空间不存在或已删除",
+                        "schema": {
+                            "$ref": "#/definitions/resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "删除失败（如存在关联资源）",
+                        "schema": {
+                            "$ref": "#/definitions/resp.ObjectResponse"
                         }
                     }
                 }
@@ -79,10 +351,45 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "resp.ListResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "data": {},
+                "message": {
+                    "type": "string"
+                },
+                "total": {
+                    "type": "integer"
+                },
+                "traceID": {
+                    "type": "string"
+                }
+            }
+        },
+        "resp.ObjectResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "data": {},
+                "message": {
+                    "type": "string"
+                },
+                "traceID": {
+                    "type": "string"
+                }
+            }
+        },
         "space.CreateSpaceRequest": {
             "type": "object",
             "required": [
-                "name"
+                "name",
+                "owner",
+                "permission"
             ],
             "properties": {
                 "description": {
@@ -90,20 +397,49 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
+                },
+                "owner": {
+                    "type": "string"
+                },
+                "permission": {
+                    "type": "integer"
                 }
             }
         },
-        "space.CreateSpaceResponse": {
+        "space.SpaceResponse": {
             "type": "object",
             "properties": {
                 "description": {
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "name": {
                     "type": "string"
+                },
+                "owner": {
+                    "type": "string"
+                },
+                "permission": {
+                    "type": "integer"
+                }
+            }
+        },
+        "space.UpdateSpaceRequest": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "owner": {
+                    "type": "string"
+                },
+                "permission": {
+                    "type": "integer"
                 }
             }
         }
@@ -121,10 +457,10 @@ const docTemplate = `{
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
 	Host:             "localhost:3000",
-	BasePath:         "/api/v1",
+	BasePath:         "/api/v2",
 	Schemes:          []string{},
 	Title:            "GitFox API",
-	Description:      "GitFox 代码托管平台 API 文档",
+	Description:      "GitFox 平台 API 文档",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

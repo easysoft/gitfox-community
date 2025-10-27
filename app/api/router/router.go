@@ -34,17 +34,15 @@ func NewRouter(mode string, logger *logger.SugaredMateLogger, controller *Contro
 	if gin.Mode() != gin.ReleaseMode {
 		// 注册 pprof 性能分析路由
 		pprof.Register(r)
-		// 注册 Swagger API 文档路由（使用独立路径避免与业务路由冲突）
-		r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 	}
-
+	// 注册 Swagger API 文档路由（使用独立路径避免与业务路由冲突）
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 	// 注册无需认证的公共路由
 	registerPublicRoutes(r)
 
 	// 创建需要认证的路由组（应用鉴权中间件）
-	authGroup := r.Group("/api/v1")
-	registerSpaceRoutes(authGroup, controller) // 代码库相关路由
-
+	authGroup := r.Group("/api/v2")
+	registerSpaceRoutes(authGroup, controller) // 空间相关路由
 	return r
 }
 
