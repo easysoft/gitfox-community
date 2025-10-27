@@ -30,7 +30,7 @@ func TestInitSQLiteDB(t *testing.T) {
 
 	// 验证数据库文件是否创建
 	if _, err := os.Stat(config.Path); os.IsNotExist(err) {
-		t.Fatalf("Database file was not created: %s")
+		t.Fatalf("Database file was not created")
 	}
 
 	// 测试连接

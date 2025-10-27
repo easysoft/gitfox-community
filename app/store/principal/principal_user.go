@@ -4,15 +4,14 @@ import (
 	"context"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/principal"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/sqlbuilder"
 	"github.com/Masterminds/squirrel"
 	"gorm.io/gorm"
 )
 
-var _ store.IPrincipalStore = (*PrincipalStore)(nil)
+var _ IPrincipalStore = (*PrincipalStore)(nil)
 
-func NewPrincipalStore(db *gorm.DB) store.IPrincipalStore {
+func NewPrincipalStore(db *gorm.DB) IPrincipalStore {
 	factory := sqlbuilder.NewBuilderFactory(sqlbuilder.MySQL)
 	return &PrincipalStore{
 		db: db,
