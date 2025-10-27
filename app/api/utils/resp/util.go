@@ -1,4 +1,4 @@
-package render
+package resp
 
 import (
 	"net/http"

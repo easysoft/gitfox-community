@@ -10,11 +10,7 @@ const docTemplate = `{
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
         "termsOfService": "http://swagger.io/terms/",
-        "contact": {
-            "name": "API Support",
-            "url": "http://www.swagger.io/support",
-            "email": "support@swagger.io"
-        },
+        "contact": {},
         "license": {
             "name": "Apache 2.0",
             "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
@@ -24,69 +20,14 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/branches/{branch_id}": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "根据分支ID获取分支的详细信息",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "分支管理"
-                ],
-                "summary": "获取分支详情",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "分支ID",
-                        "name": "branch_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "获取成功",
-                        "schema": {
-                            "$ref": "#/definitions/branch.CreateBranchResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "分支不存在",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "服务器内部错误",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/repos/{repo_id}/branches": {
+        "/spaces": {
             "post": {
                 "security": [
                     {
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "在指定代码库中创建新分支",
+                "description": "创建新的空间",
                 "consumes": [
                     "application/json"
                 ],
@@ -94,24 +35,17 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "分支管理"
+                    "空间管理"
                 ],
-                "summary": "创建分支",
+                "summary": "创建空间",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "代码库ID",
-                        "name": "repo_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "创建分支请求",
+                        "description": "创建空间请求",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/branch.CreateBranchRequest"
+                            "$ref": "#/definitions/space.CreateSpaceRequest"
                         }
                     }
                 ],
@@ -119,7 +53,7 @@ const docTemplate = `{
                     "201": {
                         "description": "创建成功",
                         "schema": {
-                            "$ref": "#/definitions/branch.CreateBranchResponse"
+                            "$ref": "#/definitions/space.CreateSpaceResponse"
                         }
                     },
                     "400": {
@@ -145,46 +79,30 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "branch.CreateBranchRequest": {
+        "space.CreateSpaceRequest": {
             "type": "object",
+            "required": [
+                "name"
+            ],
             "properties": {
-                "autoCreateRule": {
-                    "description": "企业版和旗舰版可能用到的扩展字段",
-                    "type": "string"
-                },
-                "branchName": {
-                    "description": "分支名称",
-                    "type": "string"
-                },
-                "repoID": {
-                    "description": "代码库ID",
-                    "type": "string"
-                },
-                "userID": {
-                    "description": "请求用户ID",
-                    "type": "string"
-                },
-                "webhookEvent": {
-                    "description": "Webhook事件数据"
-                }
-            }
-        },
-        "branch.CreateBranchResponse": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "id": {
+                "description": {
                     "type": "string"
                 },
                 "name": {
                     "type": "string"
-                },
-                "repo_id": {
+                }
+            }
+        },
+        "space.CreateSpaceResponse": {
+            "type": "object",
+            "properties": {
+                "description": {
                     "type": "string"
                 },
-                "source": {
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
                     "type": "string"
                 }
             }

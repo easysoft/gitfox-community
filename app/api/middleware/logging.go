@@ -14,12 +14,17 @@ import (
 // 统一日志前缀
 const AccessLogPrefix = "api.access"
 
-// RequestID 生成并注入 trace_id 到 Gin Context 和响应头
-func RequestID() gin.HandlerFunc {
+// RequestID 生成并注入 trace_id 到 Gin Context 和响应头，同时注入带有 trace_id 的 logger 到上下文
+func RequestID(log *logger.SugaredMateLogger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID, _ := gonanoid.Generate("1234567890abcdefghijklmnopqrstuvwxyz", 16)
 		c.Set("trace_id", traceID)
 		c.Writer.Header().Set("X-Trace-ID", traceID)
+
+		// 将 trace_id 附加到 logger 并注入到上下文中，方便后续层级调用
+		requestLogger := log.With("trace_id", traceID)
+		c.Set(logger.ContextLogger, requestLogger)
+
 		c.Next()
 	}
 }
