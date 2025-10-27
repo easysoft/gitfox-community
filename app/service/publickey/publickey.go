@@ -7,8 +7,8 @@ import (
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/principal"
-
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/publickey"
 	"github.com/easysoft/gitfox/errors"
 
 	"github.com/gliderlabs/ssh"
@@ -19,7 +19,7 @@ type Service interface {
 }
 
 func NewService(
-	publicKeyStore store.IPublicKeyStore,
+	publicKeyStore publickey.IPublicKeyStore,
 	pCache store.PrincipalInfoCache,
 ) LocalService {
 	return LocalService{
@@ -29,7 +29,7 @@ func NewService(
 }
 
 type LocalService struct {
-	publicKeyStore store.IPublicKeyStore
+	publicKeyStore publickey.IPublicKeyStore
 	pCache         store.PrincipalInfoCache
 }
 

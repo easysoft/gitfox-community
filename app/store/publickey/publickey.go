@@ -1,19 +1,18 @@
-package publicKey
+package publickey
 
 import (
 	"context"
 
-	publickey "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/publicKey"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/publickey"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/sqlbuilder"
 	"github.com/Masterminds/squirrel"
 
 	"gorm.io/gorm"
 )
 
-var _ store.IPublicKeyStore = (*PublicKeyStore)(nil)
+var _ IPublicKeyStore = (*PublicKeyStore)(nil)
 
-func NewPublicKeyStore(db *gorm.DB) store.IPublicKeyStore {
+func NewPublicKeyStore(db *gorm.DB) IPublicKeyStore {
 	factory := sqlbuilder.NewBuilderFactory(sqlbuilder.MySQL)
 	return &PublicKeyStore{
 		db: db,

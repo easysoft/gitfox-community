@@ -8,7 +8,6 @@ import (
 func registerSpaceRoutes(r *gin.RouterGroup, controller *Controller) {
 	spaceGroup := r.Group("/spaces")
 	{
-
 		spaceGroup.POST("/", controller.SpaceController.Create)
 	}
 }
