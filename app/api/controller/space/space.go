@@ -4,6 +4,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/space"
 	spaceSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/space"
+	pkg_errors "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	"github.com/gin-gonic/gin"
 )
@@ -31,16 +32,16 @@ func NewSpaceController(spaceService spaceSvc.SpaceService) *SpaceController {
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
 // @Router /spaces [post]
 func (ctl *SpaceController) Create(c *gin.Context) {
-	// 从 gin.Context 中获取带有 trace_id 的 logger
 	log := logger.GetLoggerFromGin(c)
 	log.Debugf("[Controller] 开始处理创建空间请求")
-
 	var req space.CreateSpaceRequest
+	var err error
 
 	// 解析请求体
-	if err := c.ShouldBindJSON(&req); err != nil {
+	if err = c.ShouldBindJSON(&req); err != nil {
 		log.Errorf("[Controller] 参数解析失败: %v", err)
-		resp.ObjectBadRequest(c, "space.create_param_error", nil)
+		err = pkg_errors.WithI18nKey(err, "space.create_param_error")
+		resp.BadRequest(c, err)
 		return
 	}
 
@@ -51,12 +52,13 @@ func (ctl *SpaceController) Create(c *gin.Context) {
 	spaceObj, err := ctl.spaceSvc.Create(logger.GetContextWithLogger(c), req)
 	if err != nil {
 		log.Errorf("[Controller] 创建空间失败: %v", err)
-		resp.ObjectInternalError(c, "space.create_error", nil)
+		err = pkg_errors.WithI18nKey(err, "space.create_error")
+		resp.InternalError(c, err)
 		return
 	}
 
 	log.Debugf("[Controller] 空间创建成功, space_id=%s", spaceObj.ID)
-	resp.ObjectCreated(c, "space.create_success", spaceObj)
+	resp.Created(c, "space.create_success", spaceObj)
 }
 
 // @Summary 查询空间列表
@@ -74,7 +76,8 @@ func (ctl *SpaceController) Create(c *gin.Context) {
 // @Failure 500 {object} resp.ListResponse "服务器错误"
 // @Router /spaces [get]
 func (ctl *SpaceController) List(c *gin.Context) {
-	resp.ListSuccess(c, "space.list_success", nil, 0)
+	resp.ListSuccess(c, "space.list_success",
+		resp.ListArgs{}, "0")
 }
 
 // @Summary 查询单个空间
@@ -89,7 +92,7 @@ func (ctl *SpaceController) List(c *gin.Context) {
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
 // @Router /spaces/{id} [get]
 func (ctl *SpaceController) Get(c *gin.Context) {
-	resp.ObjectOK(c, "space.get_success", nil)
+	resp.OK(c, "space.get_success", nil)
 }
 
 // @Summary 更新空间
@@ -105,7 +108,7 @@ func (ctl *SpaceController) Get(c *gin.Context) {
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
 // @Router /spaces/{id} [put]
 func (ctl *SpaceController) Update(c *gin.Context) {
-	resp.ObjectOK(c, "space.update_success", nil)
+	resp.OK(c, "space.update_success", nil)
 }
 
 // @Summary 删除空间
@@ -120,9 +123,8 @@ func (ctl *SpaceController) Update(c *gin.Context) {
 // @Failure 500 {object} resp.ObjectResponse "删除失败（如存在关联资源）"
 // @Router /spaces/{id} [delete]
 func (ctl *SpaceController) Delete(c *gin.Context) {
-	resp.ObjectOK(c, "space.delete_success", nil)
+	resp.OK(c, "space.delete_success", nil)
 }
-
 
 // @Summary 恢复已删除空间
 // @Description 恢复已逻辑删除的空间
@@ -136,5 +138,5 @@ func (ctl *SpaceController) Delete(c *gin.Context) {
 // @Failure 500 {object} resp.ObjectResponse "恢复失败"
 // @Router /spaces/undelete [post]
 func (ctl *SpaceController) Undelete(c *gin.Context) {
-	resp.ObjectOK(c, "space.undelete_success", nil)
+	resp.OK(c, "space.undelete_success", nil)
 }
