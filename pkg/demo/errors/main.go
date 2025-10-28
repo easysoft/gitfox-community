@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"net/http"
 	"os"
 
 	pkg_errors "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
@@ -10,6 +11,10 @@ import (
 
 func main() {
 	fmt.Println("=== GitFox Errors Demo ===\n")
+
+	// 0. 错误属性操作
+	fmt.Println("0. 错误属性操作:")
+	errorAttributesDemo()
 
 	// 1. 基本错误创建
 	fmt.Println("1. 基本错误创建:")
@@ -204,4 +209,26 @@ func testMultipleWrap() {
 	fmt.Printf("   混合包装的 Cause: %v\n", pkg_errors.Cause(mixedWrap3))
 	fmt.Printf("   混合包装 Is 检查: %v\n", pkg_errors.Is(mixedWrap3, originalErr))
 	fmt.Printf("\n")
+}
+
+func errorAttributesDemo() {
+	var err error
+
+	if err != nil {
+		fmt.Printf("   错误类型: %v\n\n", pkg_errors.GetType(err))
+	}
+
+	err = pkg_errors.WithHttpStatus(err, http.StatusBadRequest)
+	if err != nil {
+		fmt.Printf("   HTTP 状态码: %v\n\n", pkg_errors.GetHttpStatus(err))
+	}
+	err = pkg_errors.WithI18nKey(err, "error.bad_request")
+	if err != nil {
+		fmt.Printf("   国际化键: %v\n\n", pkg_errors.GetI18nKey(err))
+	}
+
+	err1 := pkg_errors.Cause(err)
+	if err1 != nil {
+		fmt.Printf("   原始错误: %v\n\n", err1)
+	}
 }

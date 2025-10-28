@@ -1,5 +1,7 @@
 package errors
 
+import "net/http"
+
 const (
 	NoType ErrorType = iota
 	BadRequest
@@ -9,3 +11,5 @@ const (
 )
 
 const defaultI18nKey = "error.default"
+
+const defaultHttpStatus = http.StatusOK

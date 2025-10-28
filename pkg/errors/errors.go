@@ -12,6 +12,7 @@ type ErrorType uint
 type customError struct {
 	errorType     ErrorType
 	i18nKey       string
+	httpStatus    int
 	originalError error
 	context       errorContext
 }
@@ -123,6 +124,7 @@ func WithMessage(err error, msg string) error {
 	return customError{errorType: NoType, originalError: errors.WithMessage(err, msg)}
 }
 
+// WithI18nKey 添加国际化键
 func WithI18nKey(err error, i18nKey string) error {
 	if customErr, ok := err.(customError); ok {
 		return customError{errorType: customErr.errorType, i18nKey: i18nKey, originalError: customErr.originalError}
@@ -131,6 +133,25 @@ func WithI18nKey(err error, i18nKey string) error {
 	return customError{errorType: NoType, i18nKey: i18nKey, originalError: err}
 }
 
+// WithHttpStatus 添加HTTP状态码
+func WithHttpStatus(err error, httpStatus int) error {
+	if customErr, ok := err.(customError); ok {
+		return customError{errorType: customErr.errorType, httpStatus: httpStatus, originalError: customErr.originalError}
+	}
+
+	return customError{errorType: NoType, httpStatus: httpStatus, originalError: err}
+}
+
+// GetHttpStatus 返回HTTP状态码
+func GetHttpStatus(err error) int {
+	if customErr, ok := err.(customError); ok {
+		return customErr.httpStatus
+	}
+
+	return defaultHttpStatus
+}
+
+// GetI18nKey 返回国际化键
 func GetI18nKey(err error) string {
 	if customErr, ok := err.(customError); ok {
 		return customErr.i18nKey
