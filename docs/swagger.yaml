@@ -67,6 +67,24 @@ definitions:
       owner:
         type: string
     type: object
+  space.UndeleteSpaceRequest:
+    properties:
+      editedBy:
+        example: admin
+        type: string
+      ids:
+        example:
+        - 1
+        - 2
+        - 3
+        items:
+          type: integer
+        minItems: 1
+        type: array
+    required:
+    - editedBy
+    - ids
+    type: object
   space.UpdateSpaceRequest:
     properties:
       acl:
@@ -298,6 +316,40 @@ paths:
           schema:
             $ref: '#/definitions/resp.ObjectResponse'
       summary: 更新空间
+      tags:
+      - spaces
+  /spaces/undelete:
+    post:
+      consumes:
+      - application/json
+      description: 恢复已逻辑删除的空间
+      parameters:
+      - description: 恢复空间请求参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/space.UndeleteSpaceRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 恢复成功
+          schema:
+            $ref: '#/definitions/resp.ObjectResponse'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/resp.ObjectResponse'
+        "404":
+          description: 空间不存在或未删除
+          schema:
+            $ref: '#/definitions/resp.ObjectResponse'
+        "500":
+          description: 恢复失败
+          schema:
+            $ref: '#/definitions/resp.ObjectResponse'
+      summary: 恢复已删除空间
       tags:
       - spaces
 securityDefinitions:

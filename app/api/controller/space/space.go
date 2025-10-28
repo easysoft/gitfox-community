@@ -122,3 +122,19 @@ func (ctl *SpaceController) Update(c *gin.Context) {
 func (ctl *SpaceController) Delete(c *gin.Context) {
 	resp.ObjectOK(c, "space.delete_success", nil)
 }
+
+
+// @Summary 恢复已删除空间
+// @Description 恢复已逻辑删除的空间
+// @Tags spaces
+// @Accept application/json
+// @Produce application/json
+// @Param request body space.UndeleteSpaceRequest true "恢复空间请求参数"
+// @Success 200 {object} resp.ObjectResponse "恢复成功"
+// @Failure 400 {object} resp.ObjectResponse "参数错误"
+// @Failure 404 {object} resp.ObjectResponse "空间不存在或未删除"
+// @Failure 500 {object} resp.ObjectResponse "恢复失败"
+// @Router /spaces/undelete [post]
+func (ctl *SpaceController) Undelete(c *gin.Context) {
+	resp.ObjectOK(c, "space.undelete_success", nil)
+}
