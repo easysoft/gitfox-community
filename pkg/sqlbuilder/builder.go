@@ -25,6 +25,8 @@ type QueryBuilder interface {
 
 // SelectBuilder 查询构建器接口
 type SelectBuilder interface {
+	BeginIF(condition bool) SelectBuilder
+	Fi() SelectBuilder
 	From(table string) SelectBuilder
 	Where(pred interface{}, args ...interface{}) SelectBuilder
 	OrderBy(orderBys ...string) SelectBuilder
@@ -42,6 +44,8 @@ type SelectBuilder interface {
 
 // InsertBuilder 插入构建器接口
 type InsertBuilder interface {
+	BeginIF(condition bool) InsertBuilder
+	Fi() InsertBuilder
 	Columns(columns ...string) InsertBuilder
 	Values(values ...interface{}) InsertBuilder
 	SetMap(clauses map[string]interface{}) InsertBuilder
@@ -50,6 +54,8 @@ type InsertBuilder interface {
 
 // UpdateBuilder 更新构建器接口
 type UpdateBuilder interface {
+	BeginIF(condition bool) UpdateBuilder
+	Fi() UpdateBuilder
 	Set(column string, value interface{}) UpdateBuilder
 	SetMap(clauses map[string]interface{}) UpdateBuilder
 	Where(pred interface{}, args ...interface{}) UpdateBuilder

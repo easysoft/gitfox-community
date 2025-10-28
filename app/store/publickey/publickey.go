@@ -50,6 +50,7 @@ func (s *PublicKeyStore) ListByFingerprintBuilder(ctx context.Context, fingerpri
 		Where(squirrel.Eq{"public_key_fingerprint": fingerprint})
 }
 
+// todo
 // MarkAsVerified updates the public key to mark it as verified.
 func (s PublicKeyStore) MarkAsVerified(ctx context.Context, id int64, verified int64) error {
 	// if err := s.db.Model(&PublicKey{}).Where("id = ?", id).Update("verified", verified).Error; err != nil {

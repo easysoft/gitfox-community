@@ -46,24 +46,27 @@ func (u *UniversalQueryBuilder) GetPlaceholderFormat() squirrel.PlaceholderForma
 // Select 创建查询构建器
 func (u *UniversalQueryBuilder) Select(columns ...string) SelectBuilder {
 	return &UniversalSelectBuilder{
-		dbType:  u.dbType,
-		builder: u.base.Select(columns...),
+		dbType:          u.dbType,
+		builder:         u.base.Select(columns...),
+		conditionActive: true,
 	}
 }
 
 // Insert 创建插入构建器
 func (u *UniversalQueryBuilder) Insert(table string) InsertBuilder {
 	return &UniversalInsertBuilder{
-		dbType:  u.dbType,
-		builder: u.base.Insert(table),
+		dbType:          u.dbType,
+		builder:         u.base.Insert(table),
+		conditionActive: true,
 	}
 }
 
 // Update 创建更新构建器
 func (u *UniversalQueryBuilder) Update(table string) UpdateBuilder {
 	return &UniversalUpdateBuilder{
-		dbType:  u.dbType,
-		builder: u.base.Update(table),
+		dbType:          u.dbType,
+		builder:         u.base.Update(table),
+		conditionActive: true,
 	}
 }
 
