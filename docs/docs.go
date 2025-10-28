@@ -42,11 +42,11 @@ const docTemplate = `{
                     },
                     {
                         "enum": [
-                            0,
-                            1
+                            "open",
+                            "private"
                         ],
-                        "type": "integer",
-                        "description": "空间权限（0-私有，1-公开）",
+                        "type": "string",
+                        "description": "空间权限（open-私有，private-公开）",
                         "name": "permission",
                         "in": "query"
                     },
@@ -387,49 +387,78 @@ const docTemplate = `{
         "space.CreateSpaceRequest": {
             "type": "object",
             "required": [
+                "acl",
+                "createdBy",
                 "name",
-                "owner",
-                "permission"
+                "owner"
             ],
             "properties": {
-                "description": {
+                "acl": {
+                    "type": "string",
+                    "enum": [
+                        "open",
+                        "private"
+                    ],
+                    "example": "open"
+                },
+                "createdBy": {
+                    "type": "string"
+                },
+                "desc": {
                     "type": "string"
                 },
                 "name": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 200,
+                    "example": "测试空间01"
                 },
                 "owner": {
                     "type": "string"
-                },
-                "permission": {
-                    "type": "integer"
                 }
             }
         },
         "space.SpaceResponse": {
             "type": "object",
             "properties": {
-                "description": {
+                "acl": {
+                    "type": "string"
+                },
+                "createdBy": {
+                    "type": "string"
+                },
+                "createdDate": {
+                    "type": "string"
+                },
+                "desc": {
+                    "type": "string"
+                },
+                "editedBy": {
+                    "type": "string"
+                },
+                "editedDate": {
                     "type": "string"
                 },
                 "id": {
-                    "type": "string"
+                    "type": "integer"
                 },
                 "name": {
                     "type": "string"
                 },
                 "owner": {
                     "type": "string"
-                },
-                "permission": {
-                    "type": "integer"
                 }
             }
         },
         "space.UpdateSpaceRequest": {
             "type": "object",
             "properties": {
-                "description": {
+                "acl": {
+                    "type": "string"
+                },
+                "desc": {
+                    "type": "string"
+                },
+                "editedBy": {
                     "type": "string"
                 },
                 "name": {
@@ -437,9 +466,6 @@ const docTemplate = `{
                 },
                 "owner": {
                     "type": "string"
-                },
-                "permission": {
-                    "type": "integer"
                 }
             }
         }

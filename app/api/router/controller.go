@@ -7,5 +7,4 @@ import (
 // Controller 聚合所有的 HTTP 处理器
 type Controller struct {
 	Space *space.SpaceController
-
 }

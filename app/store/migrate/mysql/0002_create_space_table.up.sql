@@ -1,12 +1,14 @@
 CREATE TABLE IF NOT EXISTS `ops_space` (
-	`id` SMALLINT UNSIGNED NOT NULL  COMMENT 'ID' AUTO_INCREMENT,
-	`name` VARCHAR(200) NOT NULL COMMENT '名称',
-	`permission` TINYINT NOT NULL DEFAULT '0' COMMENT '权限:0-私有,1-公开',
-	`desc` TEXT NULL DEFAULT NULL COMMENT '描述',
-	`owner` VARCHAR(255) NOT NULL COMMENT '负责人',
-	`created` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-	`updated` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-	`deleted` TINYINT(1) NOT NULL DEFAULT '0' COMMENT '删除标识',
-	PRIMARY KEY (`id`),
-	KEY `idx_name` (`name`)
+  `id` smallint UNSIGNED NOT NULL  COMMENT 'ID' AUTO_INCREMENT,
+  `name` varchar(200) NOT NULL COMMENT '名称',
+  `owner` varchar(30) NOT NULL DEFAULT '' COMMENT '负责人',
+  `acl` varchar(30) NOT NULL DEFAULT 'open' COMMENT '权限:private,open',
+  `desc` TEXT NULL DEFAULT NULL COMMENT '描述',
+  `createdBy` varchar(30) NOT NULL DEFAULT '' COMMENT '创建人',
+  `createdDate` datetime NULL COMMENT '创建时间',
+  `editedBy` varchar(30) NOT NULL DEFAULT '',
+  `editedDate` datetime NULL COMMENT '更新时间',
+  `deleted` tinyint NOT NULL DEFAULT 0 COMMENT '删除标识，0-未删除，1-已删除',
+  PRIMARY KEY (`id`),
+  KEY `idx_name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='空间表';

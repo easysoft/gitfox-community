@@ -1,38 +1,39 @@
 package space
 
+import "time"
+
 type CreateSpaceRequest struct {
-	Name        string `json:"name" binding:"required"`
+	Name       string `json:"name" binding:"required,max=200" example:"测试空间01"`
 	Owner      string `json:"owner" binding:"required"`
-	Permission  int    `json:"permission" binding:"required"`
-	Description string `json:"description"`
-}
-
-type CreateSpaceResponse struct {
-	ID          int    `json:"id"`
-	Name        string `json:"name"`
-	Owner      string `json:"owner"`
-	Permission  int    `json:"permission"`
-	Description string `json:"description"`
-}
-
-
-type ListSpaceFilter struct {
-	Name       string
-	Permission int
-	Owner      string
+	Permission string `json:"acl" binding:"required,oneof=open private" example:"open"`
+	Desc       string `json:"desc"`
+	CreatedBy  string `json:"createdBy" binding:"required"`
 }
 
 type SpaceResponse struct {
-	ID          string `json:"id"`
-	Name        string `json:"name"`
-	Owner      string `json:"owner"`
-	Permission  int    `json:"permission"`
-	Description string `json:"description"`
-}
-type UpdateSpaceRequest struct {
-	Name        *string `json:"name"`
-	Owner      *string `json:"owner"`
-	Permission  *int    `json:"permission"`
-	Description *string `json:"description"`
+	ID          uint16     `json:"id"`
+	Name        string     `json:"name"`
+	Owner       string     `json:"owner"`
+	Permission  string     `json:"acl"`
+	Desc        string     `json:"desc"`
+	CreatedBy   string     `json:"createdBy"`
+	CreatedDate *time.Time `json:"createdDate"`
+	EditedBy    string     `json:"editedBy"`
+	EditedDate  *time.Time `json:"editedDate"`
 }
 
+type ListSpaceFilter struct {
+	Name       string
+	Permission string `json:"acl"`
+	Owner      string
+	Page       int
+	PageSize   int
+}
+
+type UpdateSpaceRequest struct {
+	Name       string
+	Owner      string
+	Permission string `json:"acl"`
+	Desc       string
+	EditedBy   string
+}

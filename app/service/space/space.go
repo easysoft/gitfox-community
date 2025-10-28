@@ -2,7 +2,6 @@ package space
 
 import (
 	"context"
-	"time"
 
 	spaceDao "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/dao/space"
 	spaceModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/space"
@@ -22,17 +21,15 @@ func NewSpaceSvc(spaceStore space.SpaceInterface) *SpaceSvc {
 	}
 }
 
-func (s *SpaceSvc) Create(ctx context.Context, req spaceModel.CreateSpaceRequest) (*spaceModel.CreateSpaceResponse, error) {
+func (s *SpaceSvc) Create(ctx context.Context, req spaceModel.CreateSpaceRequest) (*spaceModel.SpaceResponse, error) {
 	// 从 context 中获取 logger
 	log := logger.GetLogger(ctx)
 	log.Debugf("[Service] 开始处理创建空间业务逻辑, space_name=%s", req.Name)
 
 	in := spaceDao.Space{
-		Name:        req.Name,
-		Description: req.Description,
-		CreatedBy:   "testUser",
-		Created:     time.Now(),
-		Updated:     time.Now(),
+		Name:      req.Name,
+		Desc:      req.Desc,
+		CreatedBy: "testUser",
 	}
 
 	log.Debugf("[Service] 准备调用 Store 层创建空间")
@@ -45,13 +42,18 @@ func (s *SpaceSvc) Create(ctx context.Context, req spaceModel.CreateSpaceRequest
 
 	log.Debugf("[Service] 空间创建成功, space_name=%s", out.Name)
 
-	return &spaceModel.CreateSpaceResponse{
-		ID:          int(out.ID),
+	return &spaceModel.SpaceResponse{
+		ID:          out.ID,
 		Name:        req.Name,
-		Description: req.Description,
+		Owner:       req.Owner,
+		Permission:  req.Permission,
+		Desc:        req.Desc,
+		CreatedBy:   req.CreatedBy,
+		CreatedDate: out.CreatedDate,
+		EditedBy:    out.EditedBy,
+		EditedDate:  out.EditedDate,
 	}, nil
 }
-
 
 func (s *SpaceSvc) List(ctx context.Context, filter spaceModel.ListSpaceFilter) ([]spaceModel.SpaceResponse, error) {
 	// Implementation logic here

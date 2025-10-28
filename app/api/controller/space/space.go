@@ -65,7 +65,7 @@ func (ctl *SpaceController) Create(c *gin.Context) {
 // @Accept application/json
 // @Produce application/json
 // @Param name query string false "空间名称（模糊查询）"
-// @Param permission query int false "空间权限（0-私有，1-公开）" Enums(0, 1)
+// @Param permission query string false "空间权限（open-私有，private-公开）" Enums(open, private)
 // @Param owner query string false "负责人"
 // @Param page query int false "页码（默认1）" default(1) minimum(1)
 // @Param pageSize query int false "每页条数（默认20）" default(20) minimum(1) maximum(100)

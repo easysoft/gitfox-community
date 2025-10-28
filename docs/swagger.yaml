@@ -24,42 +24,61 @@ definitions:
     type: object
   space.CreateSpaceRequest:
     properties:
-      description:
+      acl:
+        enum:
+        - open
+        - private
+        example: open
+        type: string
+      createdBy:
+        type: string
+      desc:
         type: string
       name:
+        example: 测试空间01
+        maxLength: 200
         type: string
       owner:
         type: string
-      permission:
-        type: integer
     required:
+    - acl
+    - createdBy
     - name
     - owner
-    - permission
     type: object
   space.SpaceResponse:
     properties:
-      description:
+      acl:
+        type: string
+      createdBy:
+        type: string
+      createdDate:
+        type: string
+      desc:
+        type: string
+      editedBy:
+        type: string
+      editedDate:
         type: string
       id:
-        type: string
+        type: integer
       name:
         type: string
       owner:
         type: string
-      permission:
-        type: integer
     type: object
   space.UpdateSpaceRequest:
     properties:
-      description:
+      acl:
+        type: string
+      desc:
+        type: string
+      editedBy:
         type: string
       name:
         type: string
       owner:
         type: string
-      permission:
-        type: integer
     type: object
 host: localhost:3000
 info:
@@ -82,13 +101,13 @@ paths:
         in: query
         name: name
         type: string
-      - description: 空间权限（0-私有，1-公开）
+      - description: 空间权限（open-私有，private-公开）
         enum:
-        - 0
-        - 1
+        - open
+        - private
         in: query
         name: permission
-        type: integer
+        type: string
       - description: 负责人
         in: query
         name: owner
