@@ -20,6 +20,39 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/public/test_accessLog": {
+            "get": {
+                "description": "用于测试访问日志中间件功能，返回固定响应并包含 trace_id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "test"
+                ],
+                "summary": "访问日志测试接口",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "fixed-req",
+                        "description": "请求参数",
+                        "name": "req",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "测试成功",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/spaces": {
             "get": {
                 "description": "分页查询空间列表，支持按名称、权限、负责人筛选",
@@ -80,7 +113,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/resp.ListResponse"
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse"
                                 },
                                 {
                                     "type": "object",
@@ -88,7 +121,7 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/space.SpaceResponse"
+                                                "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.SpaceResponse"
                                             }
                                         }
                                     }
@@ -99,13 +132,13 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/resp.ListResponse"
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse"
                         }
                     },
                     "500": {
                         "description": "服务器错误",
                         "schema": {
-                            "$ref": "#/definitions/resp.ListResponse"
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse"
                         }
                     }
                 }
@@ -129,7 +162,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/space.CreateSpaceRequest"
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.CreateSpaceRequest"
                         }
                     }
                 ],
@@ -139,13 +172,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/resp.ObjectResponse"
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/space.SpaceResponse"
+                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.SpaceResponse"
                                         }
                                     }
                                 }
@@ -155,13 +188,13 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误（如名称重复）",
                         "schema": {
-                            "$ref": "#/definitions/resp.ObjectResponse"
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
                         }
                     },
                     "500": {
                         "description": "服务器错误",
                         "schema": {
-                            "$ref": "#/definitions/resp.ObjectResponse"
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
                         }
                     }
                 }
@@ -187,7 +220,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/space.UndeleteSpaceRequest"
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.UndeleteSpaceRequest"
                         }
                     }
                 ],
@@ -195,25 +228,25 @@ const docTemplate = `{
                     "200": {
                         "description": "恢复成功",
                         "schema": {
-                            "$ref": "#/definitions/resp.ObjectResponse"
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
                         }
                     },
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/resp.ObjectResponse"
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
                         }
                     },
                     "404": {
                         "description": "空间不存在或未删除",
                         "schema": {
-                            "$ref": "#/definitions/resp.ObjectResponse"
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
                         }
                     },
                     "500": {
                         "description": "恢复失败",
                         "schema": {
-                            "$ref": "#/definitions/resp.ObjectResponse"
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
                         }
                     }
                 }
@@ -248,13 +281,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/resp.ObjectResponse"
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/space.SpaceResponse"
+                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.SpaceResponse"
                                         }
                                     }
                                 }
@@ -264,19 +297,19 @@ const docTemplate = `{
                     "400": {
                         "description": "ID格式错误",
                         "schema": {
-                            "$ref": "#/definitions/resp.ObjectResponse"
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
                         }
                     },
                     "404": {
                         "description": "空间不存在或已删除",
                         "schema": {
-                            "$ref": "#/definitions/resp.ObjectResponse"
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
                         }
                     },
                     "500": {
                         "description": "服务器错误",
                         "schema": {
-                            "$ref": "#/definitions/resp.ObjectResponse"
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
                         }
                     }
                 }
@@ -308,7 +341,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/space.UpdateSpaceRequest"
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.UpdateSpaceRequest"
                         }
                     }
                 ],
@@ -318,13 +351,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/resp.ObjectResponse"
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/space.SpaceResponse"
+                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.SpaceResponse"
                                         }
                                     }
                                 }
@@ -334,19 +367,19 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误（如名称重复）",
                         "schema": {
-                            "$ref": "#/definitions/resp.ObjectResponse"
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
                         }
                     },
                     "404": {
                         "description": "空间不存在或已删除",
                         "schema": {
-                            "$ref": "#/definitions/resp.ObjectResponse"
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
                         }
                     },
                     "500": {
                         "description": "服务器错误",
                         "schema": {
-                            "$ref": "#/definitions/resp.ObjectResponse"
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
                         }
                     }
                 }
@@ -377,25 +410,25 @@ const docTemplate = `{
                     "200": {
                         "description": "删除成功",
                         "schema": {
-                            "$ref": "#/definitions/resp.ObjectResponse"
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
                         }
                     },
                     "400": {
                         "description": "ID格式错误",
                         "schema": {
-                            "$ref": "#/definitions/resp.ObjectResponse"
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
                         }
                     },
                     "404": {
                         "description": "空间不存在或已删除",
                         "schema": {
-                            "$ref": "#/definitions/resp.ObjectResponse"
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
                         }
                     },
                     "500": {
                         "description": "删除失败（如存在关联资源）",
                         "schema": {
-                            "$ref": "#/definitions/resp.ObjectResponse"
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
                         }
                     }
                 }
@@ -403,7 +436,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "resp.ListResponse": {
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse": {
             "type": "object",
             "properties": {
                 "code": {
@@ -412,6 +445,12 @@ const docTemplate = `{
                 "data": {},
                 "message": {
                     "type": "string"
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "pageSize": {
+                    "type": "integer"
                 },
                 "total": {
                     "type": "integer"
@@ -421,7 +460,7 @@ const docTemplate = `{
                 }
             }
         },
-        "resp.ObjectResponse": {
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse": {
             "type": "object",
             "properties": {
                 "code": {
@@ -436,7 +475,7 @@ const docTemplate = `{
                 }
             }
         },
-        "space.CreateSpaceRequest": {
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.CreateSpaceRequest": {
             "type": "object",
             "required": [
                 "acl",
@@ -469,7 +508,7 @@ const docTemplate = `{
                 }
             }
         },
-        "space.SpaceResponse": {
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.SpaceResponse": {
             "type": "object",
             "properties": {
                 "acl": {
@@ -501,7 +540,7 @@ const docTemplate = `{
                 }
             }
         },
-        "space.UndeleteSpaceRequest": {
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.UndeleteSpaceRequest": {
             "type": "object",
             "required": [
                 "editedBy",
@@ -526,7 +565,7 @@ const docTemplate = `{
                 }
             }
         },
-        "space.UpdateSpaceRequest": {
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.UpdateSpaceRequest": {
             "type": "object",
             "properties": {
                 "acl": {

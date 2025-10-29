@@ -13,13 +13,13 @@ func main() {
 	fmt.Println("=== SQLBuilder 链式编程演示 ===\n")
 
 	// 演示各种常用SQL场景的链式编程
-	demoBasicSelect()
-	demoComplexSelect()
-	demoInsertOperations()
+	// demoBasicSelect()
+	// demoComplexSelect()
+	// demoInsertOperations()
 	demoUpdateOperations()
-	demoDeleteOperations()
-	demoPaginationDifferences()
-	demoAdvancedFeatures()
+	// demoDeleteOperations()
+	// demoPaginationDifferences()
+	// demoAdvancedFeatures()
 }
 
 // 基础查询演示
@@ -199,6 +199,44 @@ func demoUpdateOperations() {
 		ToSql()
 
 	fmt.Printf("Map更新: %s\n", sql)
+	fmt.Printf("参数: %v\n", args)
+
+	// 测试 EditedDate 和 EditedBy 方法
+	fmt.Println("\n📝 EditedDate 和 EditedBy 方法测试:")
+
+	// 使用 EditedDate 方法
+	updateBuilder := factory.CreateQueryBuilder()
+	sql, args, _ = updateBuilder.
+		Update("users").
+		Set("name", "新用户名").
+		EditedDate().
+		Where(squirrel.Eq{"id": 789}).
+		ToSql()
+
+	fmt.Printf("EditedDate方法: %s\n", sql)
+	fmt.Printf("参数: %v\n", args)
+
+	// 使用 EditedBy 方法
+	sql, args, _ = updateBuilder.
+		Update("users").
+		Set("status", "updated").
+		EditedBy("admin_user").
+		Where(squirrel.Eq{"id": 101}).
+		ToSql()
+
+	fmt.Printf("EditedBy方法: %s\n", sql)
+	fmt.Printf("参数: %v\n", args)
+
+	// 同时使用 EditedDate 和 EditedBy 方法
+	sql, args, _ = updateBuilder.
+		Update("users").
+		Set("email", "new@example.com").
+		EditedDate().
+		EditedBy("system_admin").
+		Where(squirrel.Eq{"id": 202}).
+		ToSql()
+
+	fmt.Printf("同时使用EditedDate和EditedBy: %s\n", sql)
 	fmt.Printf("参数: %v\n\n", args)
 }
 

@@ -39,6 +39,12 @@ func NewApp(mode string) (*App, func(), error) {
 	spaceSvc := space2.NewSpaceSvc(mySQLSpace)
 	spaceController := space3.NewSpaceController(spaceSvc)
 	controller := provider.NewControllers(spaceController)
+	i18nManager, err := provider.NewI18nManager(config)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
 	app := &App{
 		SystemConfig: config,
 		SystemLog:    systemLog,
@@ -46,6 +52,7 @@ func NewApp(mode string) (*App, func(), error) {
 		MysqlDB:      mysqlDB,
 		SqliteDB:     sqliteDB,
 		Controller:   controller,
+		I18nManager:  i18nManager,
 	}
 	return app, func() {
 		cleanup2()
@@ -62,4 +69,5 @@ type App struct {
 	MysqlDB      *database.MysqlDB
 	SqliteDB     *database.SqliteDB
 	Controller   *router.Controller
+	I18nManager  *provider.I18nManager
 }

@@ -1,18 +1,22 @@
 basePath: /api/v2
 definitions:
-  resp.ListResponse:
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse:
     properties:
       code:
         type: string
       data: {}
       message:
         type: string
+      page:
+        type: integer
+      pageSize:
+        type: integer
       total:
         type: integer
       traceID:
         type: string
     type: object
-  resp.ObjectResponse:
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse:
     properties:
       code:
         type: string
@@ -22,7 +26,7 @@ definitions:
       traceID:
         type: string
     type: object
-  space.CreateSpaceRequest:
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.CreateSpaceRequest:
     properties:
       acl:
         enum:
@@ -46,7 +50,7 @@ definitions:
     - name
     - owner
     type: object
-  space.SpaceResponse:
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.SpaceResponse:
     properties:
       acl:
         type: string
@@ -67,7 +71,7 @@ definitions:
       owner:
         type: string
     type: object
-  space.UndeleteSpaceRequest:
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.UndeleteSpaceRequest:
     properties:
       editedBy:
         example: admin
@@ -85,7 +89,7 @@ definitions:
     - editedBy
     - ids
     type: object
-  space.UpdateSpaceRequest:
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.UpdateSpaceRequest:
     properties:
       acl:
         type: string
@@ -109,6 +113,28 @@ info:
   title: GitFox API
   version: "1.0"
 paths:
+  /public/test_accessLog:
+    get:
+      consumes:
+      - application/json
+      description: 用于测试访问日志中间件功能，返回固定响应并包含 trace_id
+      parameters:
+      - default: fixed-req
+        description: 请求参数
+        in: query
+        name: req
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 测试成功
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 访问日志测试接口
+      tags:
+      - test
   /spaces:
     get:
       consumes:
@@ -150,21 +176,21 @@ paths:
           description: 查询成功
           schema:
             allOf:
-            - $ref: '#/definitions/resp.ListResponse'
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse'
             - properties:
                 data:
                   items:
-                    $ref: '#/definitions/space.SpaceResponse'
+                    $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.SpaceResponse'
                   type: array
               type: object
         "400":
           description: 参数错误
           schema:
-            $ref: '#/definitions/resp.ListResponse'
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse'
         "500":
           description: 服务器错误
           schema:
-            $ref: '#/definitions/resp.ListResponse'
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse'
       summary: 查询空间列表
       tags:
       - spaces
@@ -178,7 +204,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/space.CreateSpaceRequest'
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.CreateSpaceRequest'
       produces:
       - application/json
       responses:
@@ -186,19 +212,19 @@ paths:
           description: 创建成功
           schema:
             allOf:
-            - $ref: '#/definitions/resp.ObjectResponse'
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/space.SpaceResponse'
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.SpaceResponse'
               type: object
         "400":
           description: 参数错误（如名称重复）
           schema:
-            $ref: '#/definitions/resp.ObjectResponse'
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
         "500":
           description: 服务器错误
           schema:
-            $ref: '#/definitions/resp.ObjectResponse'
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
       summary: 创建空间
       tags:
       - spaces
@@ -220,19 +246,19 @@ paths:
         "200":
           description: 删除成功
           schema:
-            $ref: '#/definitions/resp.ObjectResponse'
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
         "400":
           description: ID格式错误
           schema:
-            $ref: '#/definitions/resp.ObjectResponse'
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
         "404":
           description: 空间不存在或已删除
           schema:
-            $ref: '#/definitions/resp.ObjectResponse'
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
         "500":
           description: 删除失败（如存在关联资源）
           schema:
-            $ref: '#/definitions/resp.ObjectResponse'
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
       summary: 删除空间
       tags:
       - spaces
@@ -254,23 +280,23 @@ paths:
           description: 查询成功
           schema:
             allOf:
-            - $ref: '#/definitions/resp.ObjectResponse'
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/space.SpaceResponse'
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.SpaceResponse'
               type: object
         "400":
           description: ID格式错误
           schema:
-            $ref: '#/definitions/resp.ObjectResponse'
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
         "404":
           description: 空间不存在或已删除
           schema:
-            $ref: '#/definitions/resp.ObjectResponse'
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
         "500":
           description: 服务器错误
           schema:
-            $ref: '#/definitions/resp.ObjectResponse'
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
       summary: 查询单个空间
       tags:
       - spaces
@@ -290,7 +316,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/space.UpdateSpaceRequest'
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.UpdateSpaceRequest'
       produces:
       - application/json
       responses:
@@ -298,23 +324,23 @@ paths:
           description: 更新成功
           schema:
             allOf:
-            - $ref: '#/definitions/resp.ObjectResponse'
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/space.SpaceResponse'
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.SpaceResponse'
               type: object
         "400":
           description: 参数错误（如名称重复）
           schema:
-            $ref: '#/definitions/resp.ObjectResponse'
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
         "404":
           description: 空间不存在或已删除
           schema:
-            $ref: '#/definitions/resp.ObjectResponse'
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
         "500":
           description: 服务器错误
           schema:
-            $ref: '#/definitions/resp.ObjectResponse'
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
       summary: 更新空间
       tags:
       - spaces
@@ -329,26 +355,26 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/space.UndeleteSpaceRequest'
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.UndeleteSpaceRequest'
       produces:
       - application/json
       responses:
         "200":
           description: 恢复成功
           schema:
-            $ref: '#/definitions/resp.ObjectResponse'
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
         "400":
           description: 参数错误
           schema:
-            $ref: '#/definitions/resp.ObjectResponse'
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
         "404":
           description: 空间不存在或未删除
           schema:
-            $ref: '#/definitions/resp.ObjectResponse'
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
         "500":
           description: 恢复失败
           schema:
-            $ref: '#/definitions/resp.ObjectResponse'
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
       summary: 恢复已删除空间
       tags:
       - spaces
