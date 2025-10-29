@@ -38,7 +38,7 @@ func (ctl *SpaceController) Create(c *gin.Context) {
 
 	// 解析请求体
 	if err = c.ShouldBindJSON(&reqData); err != nil {
-		err = pkg_errors.WithI18nKey(err, "space.create_param_error")
+		err = pkg_errors.WithI18nKey(err, "space.body_param_error")
 		resp.BadRequest(c, err)
 		return
 	}
@@ -108,14 +108,14 @@ func (ctl *SpaceController) Update(c *gin.Context) {
 	// 解析 path id
 	objID, err := req.PathParamAsPositiveUint16(c, "id")
 	if err != nil {
-		err = pkg_errors.WithI18nKey(err, "space.update_param_error")
+		err = pkg_errors.WithI18nKey(err, "space.path_param_error")
 		resp.BadRequest(c, err)
 		return
 	}
 
 	// 解析请求体
 	if err = c.ShouldBindJSON(&reqData); err != nil {
-		err = pkg_errors.WithI18nKey(err, "space.update_param_error")
+		err = pkg_errors.WithI18nKey(err, "space.body_param_error")
 		resp.BadRequest(c, err)
 		return
 	}
