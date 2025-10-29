@@ -1,0 +1,13 @@
+db:
+  notfound: "资源未找到。"
+  duplicate: "资源已存在。"
+  foreign_key_violation: "外键约束冲突。"
+  invalid_transaction: "无效的事务。"
+  invalid_data: "无效的数据。"
+  connection_failed: "数据库连接失败。"
+  deadlock: "检测到数据库死锁。"
+  lock_wait_timeout: "锁等待超时。"
+  check_constraint_violation: "检查约束冲突。"
+  not_null_violation: "非空约束冲突。"
+  data_too_long: "字段数据过长。"
+  invalid_data_type: "数据类型无效。"

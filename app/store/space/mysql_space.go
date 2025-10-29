@@ -2,6 +2,7 @@ package space
 
 import (
 	"context"
+	"time"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/dao/space"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
@@ -23,28 +24,22 @@ func (r *MySQLSpace) Create(ctx context.Context, data space.Space) (space.Space,
 	var out space.Space
 
 	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		// 1) 插入
+		// 插入
 		insSQL, insArgs, err := r.CreateBuilder(ctx, data).ToSql()
 		if err != nil {
-			return database.ProcessSQLErrorf(ctx, err, "create sql err")
+			return database.ProcessSQLErrorf(ctx, err)
 		}
 		if err := tx.Exec(insSQL, insArgs...).Error; err != nil {
-			return database.ProcessSQLErrorf(ctx, err, "exec sql err: sql=[%s], args=[%s]", insSQL, insArgs)
+			return database.ProcessSQLErrorf(ctx, err)
 		}
 
-		// 2) 获取自增ID（与插入同一连接，保证 LAST_INSERT_ID 正确）
-		var lastID uint64
-		if err := tx.Raw("SELECT LAST_INSERT_ID() AS id").Scan(&lastID).Error; err != nil {
-			return err
-		}
-
-		// 3) 查询新创建的数据
-		selSQL, selArgs, err := r.GetBuilder(ctx, uint16(lastID)).ToSql()
+		// 查询新创建的数据
+		selSQL, selArgs, err := r.GetBuilder(ctx).ToSql()
 		if err != nil {
-			return database.ProcessSQLErrorf(ctx, err, "create sql err")
+			return database.ProcessSQLErrorf(ctx, err)
 		}
 		if err := tx.Raw(selSQL, selArgs...).Scan(&out).Error; err != nil {
-			return database.ProcessSQLErrorf(ctx, err, "exec sql err: sql=[%s], args=[%s]", selSQL, selArgs)
+			return database.ProcessSQLErrorf(ctx, err)
 		}
 		return nil
 	})
@@ -58,22 +53,22 @@ func (r *MySQLSpace) Update(ctx context.Context, id uint16, data map[string]inte
 	var out space.Space
 
 	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		// 1) 构建并执行更新
+		// 构建并执行更新
 		updateSQL, updateArgs, err := r.UpdateBuilder(ctx, id, data).ToSql()
 		if err != nil {
-			return database.ProcessSQLErrorf(ctx, err, "create sql err")
+			return database.ProcessSQLErrorf(ctx, err)
 		}
 		if err := tx.Exec(updateSQL, updateArgs...).Error; err != nil {
-			return database.ProcessSQLErrorf(ctx, err, "exec sql err: sql=[%s], args=[%s]", updateSQL, updateArgs)
+			return database.ProcessSQLErrorf(ctx, err)
 		}
 
-		// 2) 查询更新后的数据
-		selSQL, selArgs, err := r.GetBuilder(ctx, id).ToSql()
+		// 查询更新后的数据
+		selSQL, selArgs, err := r.GetBuilderWithID(ctx, id).ToSql()
 		if err != nil {
-			return database.ProcessSQLErrorf(ctx, err, "create sql err")
+			return database.ProcessSQLErrorf(ctx, err)
 		}
 		if err := tx.Raw(selSQL, selArgs...).Scan(&out).Error; err != nil {
-			return database.ProcessSQLErrorf(ctx, err, "exec sql err: sql=[%s], args=[%s]", selSQL, selArgs)
+			return database.ProcessSQLErrorf(ctx, err)
 		}
 		return nil
 	})
@@ -83,31 +78,27 @@ func (r *MySQLSpace) Update(ctx context.Context, id uint16, data map[string]inte
 	return out, nil
 }
 
-// GetBuilder 构建根据主键 ID 查询 Space 的 SQL
-func (r *MySQLSpace) GetBuilder(ctx context.Context, id uint16) sqlbuilder.SelectBuilder {
-	// 显式列，避免与关键字冲突，并保持字段映射稳定
-	return r.sb.Select(
-		"`id`",
-		"`name`",
-		"`owner`",
-		"`acl`",
-		"`desc`",
-		"`createdBy`",
-		"`createdDate`",
-		"`editedBy`",
-		"`editedDate`",
-		"`deleted`",
-	).
-		From(space.Space{}.TableName()).
-		Where("`id` = ?", id).
-		Where("`deleted` = 0").
-		Limit(1)
+// GetBuilder 查询新增 Space 的 SQL
+func (r *MySQLSpace) GetBuilder(ctx context.Context) sqlbuilder.SelectBuilder {
+	return r.sb.Select("*").From(space.Space{}.TableName()).LastInsert()
+}
+
+// GetBuilderWithID 查询指定 ID 的 Space 的 SQL
+func (r *MySQLSpace) GetBuilderWithID(ctx context.Context, id uint16) sqlbuilder.SelectBuilder {
+	return r.sb.Select("*").From(space.Space{}.TableName()).Where(`id = ?`, id)
 }
 
 func (r *MySQLSpace) CreateBuilder(ctx context.Context, data space.Space) sqlbuilder.InsertBuilder {
-	return r.sb.Insert(data.TableName()).
-		Columns("`name`", "`desc`", "`owner`", "`acl`", "`createdBy`", "`editedBy`").
-		Values(data.Name, data.Desc, data.Owner, data.Permission, data.CreatedBy, data.EditedBy)
+	return r.sb.Insert(data.TableName()).SetMap(map[string]interface{}{
+		"`name`":        data.Name,
+		"`desc`":        data.Desc,
+		"`owner`":       data.Owner,
+		"`acl`":         data.Permission,
+		"`createdBy`":   data.CreatedBy,
+		"`createdDate`": time.Now(),
+		"`editedBy`":    data.EditedBy,
+		"`editedDate`":  time.Now(),
+	})
 }
 
 func (r *MySQLSpace) UpdateBuilder(ctx context.Context, id uint16, data map[string]interface{}) sqlbuilder.UpdateBuilder {

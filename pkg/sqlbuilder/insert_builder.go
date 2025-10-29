@@ -71,6 +71,6 @@ func (u *UniversalInsertBuilder) GetLastInsertIDSql() string {
 
 // ToSql 生成SQL语句
 func (u *UniversalInsertBuilder) ToSql() (string, []interface{}, error) {
-	u.CreatedDate()
+	// u.CreatedDate()
 	return u.builder.ToSql()
 }

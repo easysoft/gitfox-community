@@ -53,7 +53,7 @@ func GormOffset(page, size int) int {
 }
 
 // ProcessSQLErrorf 处理 SQL 错误（包括 GORM 错误）并转换为应用层 DBError 类型错误
-func ProcessSQLErrorf(ctx context.Context, err error, format string, args ...any) error {
+func ProcessSQLErrorf(ctx context.Context, err error) error {
 	if err == nil {
 		return nil
 	}
@@ -113,8 +113,7 @@ func ProcessSQLErrorf(ctx context.Context, err error, format string, args ...any
 		translatedError = err
 	}
 
-	// 统一包装为 DBError 类型
-	return errors.DBError.Wrapf(translatedError, format, args...)
+	return translatedError
 }
 
 // isSQLUniqueConstraintError 检查是否是唯一约束错误

@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	fmt.Println("=== SQLBuilder 链式编程演示 ===\n")
+	fmt.Println("=== SQLBuilder 链式编程演示 ===")
 
 	// 演示各种常用SQL场景的链式编程
 	// demoBasicSelect()
@@ -209,7 +209,6 @@ func demoUpdateOperations() {
 	sql, args, _ = updateBuilder.
 		Update("users").
 		Set("name", "新用户名").
-		EditedDate().
 		Where(squirrel.Eq{"id": 789}).
 		ToSql()
 
@@ -231,7 +230,6 @@ func demoUpdateOperations() {
 	sql, args, _ = updateBuilder.
 		Update("users").
 		Set("email", "new@example.com").
-		EditedDate().
 		EditedBy("system_admin").
 		Where(squirrel.Eq{"id": 202}).
 		ToSql()
@@ -330,7 +328,7 @@ func demoPaginationDifferences() {
 	fmt.Println("   MySQL/SQLite: LIMIT 10 OFFSET 10")
 	fmt.Println("   PostgreSQL:   LIMIT 10 OFFSET 10")
 	fmt.Println("   达梦:         LIMIT 10, 10")
-	fmt.Println("   说明: 达梦使用 MySQL 风格的 LIMIT offset, count 语法\n")
+	fmt.Println("   说明: 达梦使用 MySQL 风格的 LIMIT offset, count 语法")
 }
 
 // 高级特性演示
