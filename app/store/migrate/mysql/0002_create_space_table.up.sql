@@ -10,5 +10,5 @@ CREATE TABLE IF NOT EXISTS `ops_space` (
   `editedDate` datetime NULL COMMENT '更新时间',
   `deleted` tinyint NOT NULL DEFAULT 0 COMMENT '删除标识，0-未删除，1-已删除',
   PRIMARY KEY (`id`),
-  KEY `idx_name` (`name`)
+  UNIQUE KEY `uk_name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='空间表';

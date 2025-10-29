@@ -11,7 +11,7 @@ const (
 // Space 空间模型
 type Space struct {
 	ID          uint16     `gorm:"column:id;type:smallint unsigned;primaryKey;autoIncrement;comment:'ID'" json:"id"`
-	Name        string     `gorm:"column:name;type:varchar(200);not null;comment:'名称'" json:"name"`
+	Name        string     `gorm:"column:name;type:varchar(200);not null;uniqueIndex:uk_name;comment:'名称'" json:"name"`
 	Owner       string     `gorm:"column:owner;type:varchar(30);not null;default:'';comment:'负责人'" json:"owner"`
 	Permission  string     `gorm:"column:acl;type:varchar(30);not null;default:'open';comment:'权限:private-私有,open-公开'" json:"acl"`
 	Desc        string     `gorm:"column:desc;type:text;null;default:null;comment:'描述'" json:"desc,omitempty"` // 允许为null
