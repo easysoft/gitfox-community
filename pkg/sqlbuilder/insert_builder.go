@@ -50,6 +50,20 @@ func (u *UniversalInsertBuilder) SetMap(clauses map[string]interface{}) InsertBu
 	return u
 }
 
+func (u *UniversalInsertBuilder) CreatedDate() InsertBuilder {
+	u.builder = u.builder.SetMap(map[string]interface{}{
+		FieldCreatedDate: squirrel.Expr("NOW()"),
+	})
+	return u
+}
+
+func (u *UniversalInsertBuilder) CreatedBy(createdBy string) InsertBuilder {
+	u.builder = u.builder.SetMap(map[string]interface{}{
+		FieldCreatedBy: createdBy,
+	})
+	return u
+}
+
 // ToSql 生成SQL语句
 func (u *UniversalInsertBuilder) ToSql() (string, []interface{}, error) {
 	return u.builder.ToSql()

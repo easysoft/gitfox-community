@@ -19,6 +19,7 @@ type Config struct {
 	Registry   RegistryConfig   `yaml:"registry"`
 	Logging    LoggingConfig    `yaml:"logging"`
 	Middleware MiddlewareConfig `yaml:"middleware"`
+	I18n       I18nConfig       `yaml:"i18n"`
 }
 
 // ServerConfig HTTP服务配置
@@ -69,6 +70,17 @@ type SSHConfig struct {
 	Host        string `yaml:"host"`
 	Port        int    `yaml:"port"`
 	HostKeysDir string `yaml:"hostKeysDir"`
+}
+type I18nConfig struct {
+	DefaultLocale    string   `yaml:"defaultLocale"`
+	FallbackLocale   string   `yaml:"fallbackLocale"`
+	SupportedLocales []string `yaml:"supportedLocales"`
+	TranslationsDir  string   `yaml:"translationsDir"`
+	AutoLoad         bool     `yaml:"autoLoad"`
+	QueryParam       string   `yaml:"queryParam,omitempty"`
+	CookieName       string   `yaml:"cookieName,omitempty"`
+	HeaderName       string   `yaml:"headerName,omitempty"`
+	SessionKey       string   `yaml:"sessionKey,omitempty"`
 }
 
 // MetricConfig 监控配置
