@@ -31,15 +31,14 @@ type ListSpaceFilter struct {
 }
 
 type UpdateSpaceRequest struct {
-	Name       string
-	Owner      string
+	Name       string `json:"name"`
+	Owner      string `json:"owner"`
 	Permission string `json:"acl"`
-	Desc       string
-	EditedBy   string
+	Desc       string `json:"desc"`
+	EditedBy   string `json:"editedBy" binding:"required"`
 }
 
-
 type UndeleteSpaceRequest struct {
-	IDs       []uint16 `json:"ids" binding:"required,min=1,dive,gt=0" example:"1,2,3"`
-	EditedBy  string   `json:"editedBy" binding:"required" example:"admin"`
+	IDs      []uint16 `json:"ids" binding:"required,min=1,dive,gt=0" example:"1,2,3"`
+	EditedBy string   `json:"editedBy" binding:"required" example:"admin"`
 }
