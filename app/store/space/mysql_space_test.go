@@ -8,7 +8,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/sqlbuilder"
 )
 
-func TestPublicKeyStore_ListByFingerprintBuilder_SQL(t *testing.T) {
+func TestMysqlSpaceStore_Create_SQL(t *testing.T) {
 	factory := sqlbuilder.NewBuilderFactory(sqlbuilder.MySQL)
 	store := &MySQLSpace{
 		db: nil,
@@ -16,7 +16,14 @@ func TestPublicKeyStore_ListByFingerprintBuilder_SQL(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	data := space.Space{}
+	data := space.Space{
+		Name:       "test-space",
+		Desc:       "",
+		Owner:      "mzy",
+		Permission: "private",
+		CreatedBy:  "mzy",
+		EditedBy:   "mzy",
+	}
 	builder := store.CreateBuilder(ctx, data)
 
 	sql, args, err := builder.ToSql()

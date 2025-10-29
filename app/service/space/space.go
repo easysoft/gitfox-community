@@ -6,7 +6,6 @@ import (
 	spaceDao "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/dao/space"
 	spaceModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/space"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/space"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 )
 
 type SpaceSvc struct {
@@ -22,33 +21,27 @@ func NewSpaceSvc(spaceStore space.SpaceInterface) *SpaceSvc {
 }
 
 func (s *SpaceSvc) Create(ctx context.Context, req spaceModel.CreateSpaceRequest) (*spaceModel.SpaceResponse, error) {
-	// 从 context 中获取 logger
-	log := logger.GetLogger(ctx)
-	log.Debugf("[Service] 开始处理创建空间业务逻辑, space_name=%s", req.Name)
-
 	in := spaceDao.Space{
-		Name:      req.Name,
-		Desc:      req.Desc,
-		CreatedBy: "testUser",
+		Name:       req.Name,
+		Desc:       req.Desc,
+		Owner:      req.Owner,
+		Permission: req.Permission,
+		CreatedBy:  req.CreatedBy,
+		EditedBy:   req.CreatedBy,
 	}
-
-	log.Debugf("[Service] 准备调用 Store 层创建空间")
 
 	out, err := s.spaceStore.Create(ctx, in)
 	if err != nil {
-		log.Errorf("[Service] Store 层创建空间失败: %v", err)
 		return nil, err
 	}
 
-	log.Debugf("[Service] 空间创建成功, space_name=%s", out.Name)
-
 	return &spaceModel.SpaceResponse{
 		ID:          out.ID,
-		Name:        req.Name,
-		Owner:       req.Owner,
-		Permission:  req.Permission,
-		Desc:        req.Desc,
-		CreatedBy:   req.CreatedBy,
+		Name:        out.Name,
+		Owner:       out.Owner,
+		Permission:  out.Permission,
+		Desc:        out.Desc,
+		CreatedBy:   out.CreatedBy,
 		CreatedDate: out.CreatedDate,
 		EditedBy:    out.EditedBy,
 		EditedDate:  out.EditedDate,

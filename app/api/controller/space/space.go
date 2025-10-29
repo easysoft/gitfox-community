@@ -32,32 +32,25 @@ func NewSpaceController(spaceService spaceSvc.SpaceService) *SpaceController {
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
 // @Router /spaces [post]
 func (ctl *SpaceController) Create(c *gin.Context) {
-	log := logger.GetLoggerFromGin(c)
-	log.Debugf("[Controller] 开始处理创建空间请求")
 	var req space.CreateSpaceRequest
 	var err error
 
 	// 解析请求体
 	if err = c.ShouldBindJSON(&req); err != nil {
-		log.Errorf("[Controller] 参数解析失败: %v", err)
 		err = pkg_errors.WithI18nKey(err, "space.create_param_error")
 		resp.BadRequest(c, err)
 		return
 	}
 
-	log.Debugf("[Controller] 参数解析成功，准备调用 Service 层, space_name=%s", req.Name)
-
 	// 获取包含 logger 和其他上下文信息的 context 传递给 Service 层
 	// 调用服务层创建空间
 	spaceObj, err := ctl.spaceSvc.Create(logger.GetContextWithLogger(c), req)
 	if err != nil {
-		log.Errorf("[Controller] 创建空间失败: %v", err)
 		err = pkg_errors.WithI18nKey(err, "space.create_error")
 		resp.InternalError(c, err)
 		return
 	}
 
-	log.Debugf("[Controller] 空间创建成功, space_id=%s", spaceObj.ID)
 	resp.Created(c, "space.create_success", spaceObj)
 }
 
