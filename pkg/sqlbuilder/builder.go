@@ -43,6 +43,7 @@ type SelectBuilder interface {
 	Fi() SelectBuilder
 	From(table string) SelectBuilder
 	Where(pred interface{}, args ...interface{}) SelectBuilder
+	LastInsert() SelectBuilder
 	OrderBy(orderBys ...string) SelectBuilder
 	GroupBy(groupBys ...string) SelectBuilder
 	Having(pred interface{}, args ...interface{}) SelectBuilder
@@ -63,8 +64,8 @@ type InsertBuilder interface {
 	Columns(columns ...string) InsertBuilder
 	Values(values ...interface{}) InsertBuilder
 	SetMap(clauses map[string]interface{}) InsertBuilder
-	CreatedDate() InsertBuilder
 	CreatedBy(createdBy string) InsertBuilder
+	GetLastInsertIDSql() string
 	ToSql() (string, []interface{}, error)
 }
 
@@ -75,7 +76,6 @@ type UpdateBuilder interface {
 	Set(column string, value interface{}) UpdateBuilder
 	SetMap(clauses map[string]interface{}) UpdateBuilder
 	Where(pred interface{}, args ...interface{}) UpdateBuilder
-	EditedDate() UpdateBuilder
 	EditedBy(editedBy string) UpdateBuilder
 	ToSql() (string, []interface{}, error)
 }

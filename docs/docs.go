@@ -567,6 +567,9 @@ const docTemplate = `{
         },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.UpdateSpaceRequest": {
             "type": "object",
+            "required": [
+                "editedBy"
+            ],
             "properties": {
                 "acl": {
                     "type": "string"

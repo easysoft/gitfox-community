@@ -73,5 +73,6 @@ func (u *UniversalUpdateBuilder) Delete(table string) UpdateBuilder {
 
 // ToSql 生成SQL语句
 func (u *UniversalUpdateBuilder) ToSql() (string, []interface{}, error) {
+	u.EditedDate()
 	return u.builder.ToSql()
 }
