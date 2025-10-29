@@ -1,5 +1,15 @@
 # 构建阶段
-FROM golang:1.20-alpine AS builder
+FROM golang:1.25-alpine AS builder
+
+ARG TZ="Asia/Shanghai"
+
+ENV TZ ${TZ}
+
+ENV GOPROXY=https://goproxy.cn,direct
+
+ENV GO111MODULE=on
+
+RUN apk --no-cache add git bash musl tzdata curl
 
 WORKDIR /app
 

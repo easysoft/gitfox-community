@@ -3,6 +3,26 @@ version: '3'
 vars:
   LOCALES_DIR: locales
   GO_MODULE: gitfox.zcorp.cc/git/Pangu/gitfox-community
+  GOPROXY: 'https://goproxy.cn,direct'
+  GOSUMDB: sum.golang.google.cn
+  BIN_DIR: $(pwd)/bin
+  GOOS: $(go env GOOS)
+  GOARCH: $(go env GOARCH)
+
+  VERSION_PKG: github.com/easysoft/gitfox/pkg/util/common
+  LDFLAGS: "-w -s \
+    -X '{{.VERSION_PKG}}.Version={{.BUILD_RELEASE}}' \
+    -X '{{.VERSION_PKG}}.BuildDate={{.BUILD_DATE}}' \
+    -X '{{.VERSION_PKG}}.GitBranch={{.GIT_BRANCH}}' \
+    -X '{{.VERSION_PKG}}.GitCommitHash={{.GIT_COMMIT}}'"
+  
+  PLATFORMS_ARCHS:
+  - os: linux
+    arches: [amd64, arm64]  # Linux支持的架构
+  - os: darwin
+    arches: [amd64, arm64]       # macOS支持的架构（Intel和M系列）
+  - os: windows
+    arches: [amd64, arm64]       # Windows支持的架构
 
 tasks:
   # 默认任务
@@ -49,6 +69,51 @@ tasks:
     desc: 运行 go vet
     cmds:
       - go vet ./...
+ 
+  # 清理任务
+  clean:
+    desc: 清理构建文件
+    cmds:
+      - rm -rf {{.BIN_DIR}}/*
+      - rm -f coverage.out coverage.html
+
+  # 完整的检查流程
+  check:
+    desc: 运行完整的代码检查流程
+    deps: [fmt, vet, i18n:check, test]
+    cmds:
+      - echo "✅ 所有检查通过！"
+
+  # 发布前检查
+  pre-commit:
+    desc: 提交前检查
+    deps: [check]
+    cmds:
+      - echo "🚀 代码已准备好提交！"
+
+  build:
+    desc: 构建应用
+    deps: [clean]  # 先执行清理
+    cmds:
+      - go build -o "{{.BIN_DIR}}/gitfox" -ldflags "{{.LDFLAGS}}" ./cmd/cli/main.go
+      - echo "本地构建完成，二进制文件位于 {{.BIN_DIR}}/gitfox"
+
+  cross-build:
+    desc: 交叉编译应用
+    deps: [clean]  # 先执行清理
+    cmds:
+      - for: { var: PLATFORMS_ARCHS, as: item }
+        cmd: |
+          GOOS={{.item.os}}
+          {{range .item.arches}}
+            GOARCH={{.}}          
+            # 执行交叉编译
+            echo "编译: $GOOS/$GOARCH"
+            CGO_ENABLED=1 GOOS=$GOOS GOARCH=$GOARCH \
+            go build -o "{{$.BIN_DIR}}/gitfox-$GOOS-$GOARCH" -ldflags "{{$.LDFLAGS}}" \
+            ./cmd/cli/main.go
+          {{end}}
+    parallel: true
 
   # 代码生成任务
   wire:
@@ -60,6 +125,7 @@ tasks:
       - cmd/cli/operations/provider/*.go
     generates:
       - cmd/cli/operations/server/wire_gen.go
+
 
   swagger:
     desc: 生成 Swagger API 文档
@@ -80,7 +146,8 @@ tasks:
       - docs/swagger.json
       - docs/swagger.yaml
 
-  # 多语言相关任务
+
+ # 多语言相关任务
   i18n:check:
     desc: 检查多语言文件键值一致性
     cmds:
@@ -116,24 +183,3 @@ tasks:
             fi
           done
         done
-
-  # 清理任务
-  clean:
-    desc: 清理构建文件
-    cmds:
-      - rm -rf bin/
-      - rm -f coverage.out coverage.html
-
-  # 完整的检查流程
-  check:
-    desc: 运行完整的代码检查流程
-    deps: [fmt, vet, i18n:check, test]
-    cmds:
-      - echo "✅ 所有检查通过！"
-
-  # 发布前检查
-  pre-commit:
-    desc: 提交前检查
-    deps: [check]
-    cmds:
-      - echo "🚀 代码已准备好提交！"
