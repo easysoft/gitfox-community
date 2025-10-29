@@ -53,6 +53,7 @@ func (u *UniversalInsertBuilder) SetMap(clauses map[string]interface{}) InsertBu
 func (u *UniversalInsertBuilder) CreatedDate() InsertBuilder {
 	u.builder = u.builder.SetMap(map[string]interface{}{
 		FieldCreatedDate: squirrel.Expr("NOW()"),
+		FieldEditedDate:  squirrel.Expr("NOW()"),
 	})
 	return u
 }
@@ -64,7 +65,12 @@ func (u *UniversalInsertBuilder) CreatedBy(createdBy string) InsertBuilder {
 	return u
 }
 
+func (u *UniversalInsertBuilder) GetLastInsertIDSql() string {
+	return "SELECT LAST_INSERT_ID()"
+}
+
 // ToSql 生成SQL语句
 func (u *UniversalInsertBuilder) ToSql() (string, []interface{}, error) {
+	u.CreatedDate()
 	return u.builder.ToSql()
 }

@@ -37,6 +37,15 @@ func (u *UniversalSelectBuilder) Where(pred interface{}, args ...interface{}) Se
 	return u
 }
 
+// LastInsertID 添加WHERE条件
+func (u *UniversalSelectBuilder) LastInsert() SelectBuilder {
+	if !u.conditionActive {
+		return u
+	}
+	u.builder = u.builder.Where("id = LAST_INSERT_ID()")
+	return u
+}
+
 // OrderBy 添加排序
 func (u *UniversalSelectBuilder) OrderBy(orderBys ...string) SelectBuilder {
 	if !u.conditionActive {

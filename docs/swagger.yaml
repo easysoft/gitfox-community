@@ -101,6 +101,8 @@ definitions:
         type: string
       owner:
         type: string
+    required:
+    - editedBy
     type: object
 host: localhost:3000
 info:
