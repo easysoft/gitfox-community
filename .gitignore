@@ -8,6 +8,7 @@
 *.so
 *.dylib
 .vscode/
+.task/
 
 # Test binary, built with `go test -c`
 *.test
@@ -27,6 +28,7 @@ go.work
 *.db-wal
 *.sqlite
 *.sqlite3
+__debug_*
 
 # 本地配置文件
 configs/local.yaml

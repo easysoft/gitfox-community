@@ -50,6 +50,36 @@ tasks:
     cmds:
       - go vet ./...
 
+  # 代码生成任务
+  wire:
+    desc: 生成 Wire 依赖注入代码
+    cmds:
+      - /bin/zsh cmd/cli/operations/server/wire.sh
+    sources:
+      - cmd/cli/operations/server/wire.go
+      - cmd/cli/operations/provider/*.go
+    generates:
+      - cmd/cli/operations/server/wire_gen.go
+
+  swagger:
+    desc: 生成 Swagger API 文档
+    cmds:
+      - |
+        if ! command -v swag &> /dev/null; then
+          echo "安装 swag 工具..."
+          go install github.com/swaggo/swag/cmd/swag@latest
+        fi
+      - swag init -g cmd/cli/main.go -o docs --parseDependency --parseInternal
+      - echo "✅ Swagger 文档已生成到 docs/ 目录"
+    sources:
+      - cmd/cli/main.go
+      - app/api/controller/**/*.go
+      - app/model/**/*.go
+    generates:
+      - docs/docs.go
+      - docs/swagger.json
+      - docs/swagger.yaml
+
   # 多语言相关任务
   i18n:check:
     desc: 检查多语言文件键值一致性
