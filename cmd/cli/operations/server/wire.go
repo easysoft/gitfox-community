@@ -19,6 +19,7 @@ type App struct {
 	MysqlDB      *database.MysqlDB
 	SqliteDB     *database.SqliteDB
 	Controller   *router.Controller
+	I18nManager  *provider.I18nManager
 }
 
 func NewApp(mode string) (*App, func(), error) {
@@ -28,6 +29,7 @@ func NewApp(mode string) (*App, func(), error) {
 		provider.DBWireSet,
 		provider.SpaceWireSet,
 		provider.ControllersWireSet,
+		provider.I18nWireSet,
 		wire.Struct(new(App), "*")),
 	)
 }

@@ -50,6 +50,27 @@ func (u *UniversalUpdateBuilder) Where(pred interface{}, args ...interface{}) Up
 	return u
 }
 
+func (u *UniversalUpdateBuilder) EditedDate() UpdateBuilder {
+	u.builder = u.builder.SetMap(map[string]interface{}{
+		FieldEditedDate: squirrel.Expr("NOW()"),
+	})
+	return u
+}
+
+func (u *UniversalUpdateBuilder) EditedBy(editedBy string) UpdateBuilder {
+	u.builder = u.builder.SetMap(map[string]interface{}{
+		FieldEditedBy: editedBy,
+	})
+	return u
+}
+
+func (u *UniversalUpdateBuilder) Delete(table string) UpdateBuilder {
+	u.builder = u.builder.SetMap(map[string]interface{}{
+		FieldDeleted: ValueDeleted,
+	})
+	return u
+}
+
 // ToSql 生成SQL语句
 func (u *UniversalUpdateBuilder) ToSql() (string, []interface{}, error) {
 	return u.builder.ToSql()

@@ -7,14 +7,18 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// X-Locale 自定义 Header 名称
+const XLocaleHeader = "X-Locale"
+
 // GinMiddleware Gin 中间件
 func GinMiddleware(config *MiddlewareConfig) gin.HandlerFunc {
+
 	if config == nil {
-		config = &MiddlewareConfig{}
+		config = GetGlobalManager().ToMiddlewareConfig()
 	}
 
 	if config.DefaultLocale == "" {
-		config.DefaultLocale = "en"
+		config.DefaultLocale = "zh"
 	}
 
 	return func(c *gin.Context) {
@@ -25,7 +29,7 @@ func GinMiddleware(config *MiddlewareConfig) gin.HandlerFunc {
 		c.Request = c.Request.WithContext(ctx)
 
 		// 设置到 Gin context 中
-		c.Set("locale", locale)
+		c.Set(XLocaleHeader, locale)
 
 		c.Next()
 	}
@@ -143,7 +147,7 @@ func parseAcceptLanguage(acceptLang string, acceptedLocales []string) string {
 
 // GetLocaleFromGin 从 Gin context 获取语言环境
 func GetLocaleFromGin(c *gin.Context) string {
-	if locale, exists := c.Get("locale"); exists {
+	if locale, exists := c.Get(XLocaleHeader); exists {
 		if localeStr, ok := locale.(string); ok {
 			return localeStr
 		}

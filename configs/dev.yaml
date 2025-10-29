@@ -40,6 +40,14 @@ ssh:
   port: 3322
   hostKeysDir: /tmp/gitfox/ssh
 
+i18n:
+  defaultLocale: zh-CN
+  fallbackLocale: en-US
+  translationsDir: locales
+  supportedLocales: ["zh-CN", "en-US"]
+  headerName: X-Locale
+  autoLoad: true
+
 # 监控配置
 metric:
   enabled: true

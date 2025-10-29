@@ -7,11 +7,13 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/middleware"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 )
 
 // NewRouter 创建路由实例并注册所有业务模块的路由
 func NewRouter(mode string, logger *logger.SugaredMateLogger, controller *Controller) *gin.Engine {
+
 	// 根据 mode 设置 Gin 运行模式
 	switch mode {
 	case "prod", "production", "release":
@@ -25,9 +27,10 @@ func NewRouter(mode string, logger *logger.SugaredMateLogger, controller *Contro
 
 	// 注册全局中间件
 	r.Use(
-		middleware.RequestID(logger), // 生成trace_id并透传，同时注入logger到上下文
-		middleware.AccessLog(logger), // 统一访问日志输出
+		middleware.RequestID(logger),                    // 生成trace_id并透传，同时注入logger到上下文
+		middleware.AccessLog(logger),                    // 统一访问日志输出
 		middleware.CORS(middleware.DefaultCORSConfig()), // 跨域处理中间件
+		i18n.GinMiddleware(nil),                         // 国际化中间件 使用初始化配置
 	)
 
 	// debug 模式下开启 API 文档和性能分析

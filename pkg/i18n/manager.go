@@ -24,6 +24,12 @@ type ManagerConfig struct {
 	TranslationsDir string
 	AutoLoad        bool
 	MissingHandler  MissingTranslationHandler
+
+	SupportedLocales []string
+	HeaderName       string
+	QueryParam       string
+	CookieName       string
+	SessionKey       string
 }
 
 // NewManager 创建 i18n 管理器
@@ -56,6 +62,17 @@ func NewManager(config *ManagerConfig) *Manager {
 	}
 
 	return m
+}
+
+func (m *Manager) ToMiddlewareConfig() *MiddlewareConfig {
+	return &MiddlewareConfig{
+		DefaultLocale:   m.config.DefaultLocale,
+		AcceptedLocales: m.config.SupportedLocales,
+		HeaderName:      m.config.HeaderName,
+		QueryParam:      m.config.QueryParam,
+		CookieName:      m.config.CookieName,
+		SessionKey:      m.config.SessionKey,
+	}
 }
 
 // GetTranslator 获取指定语言环境的翻译器
