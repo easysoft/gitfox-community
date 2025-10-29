@@ -1,0 +1,2 @@
+test:
+  fixed-resp: "The fixed response value you passed is %s"

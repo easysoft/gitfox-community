@@ -8,6 +8,7 @@ package server
 
 import (
 	space3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/space"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/test"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/router"
 	space2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/space"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/space"
@@ -38,7 +39,8 @@ func NewApp(mode string) (*App, func(), error) {
 	mySQLSpace := space.NewMySQLSpace(mysqlDB)
 	spaceSvc := space2.NewSpaceSvc(mySQLSpace)
 	spaceController := space3.NewSpaceController(spaceSvc)
-	controller := provider.NewControllers(spaceController)
+	testController := test.NewTestController()
+	controller := provider.NewControllers(spaceController, testController)
 	i18nManager, err := provider.NewI18nManager(config)
 	if err != nil {
 		cleanup2()
