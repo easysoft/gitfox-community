@@ -1,10 +1,11 @@
 space:
+  path_param_error: "Path param parsing failed"
+  query_param_error: "Query param parsing failed"
+  body_param_error: "Body param parsing failed"
   create_success: "Space created successfully"
   create_error: "Failed to create space"
-  create_param_error: "Invalid request parameters"
   update_success: "Space updated successfully"
   update_error: "Failed to update space"
-  update_param_error: "Invalid request parameters"
   secrets_add_error: "Failed to add secret. Please check if the name is duplicated or the format is correct."
   secrets_add_success: "Secret added successfully."
   secrets_list_error: "Failed to load the list of secrets. Please try again later."

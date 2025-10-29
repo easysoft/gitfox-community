@@ -26,10 +26,10 @@ func (r *MySQLSpace) Create(ctx context.Context, data space.Space) (space.Space,
 		// 1) 插入
 		insSQL, insArgs, err := r.CreateBuilder(ctx, data).ToSql()
 		if err != nil {
-			return err
+			return database.ProcessSQLErrorf(ctx, err, "create sql err")
 		}
 		if err := tx.Exec(insSQL, insArgs...).Error; err != nil {
-			return err
+			return database.ProcessSQLErrorf(ctx, err, "exec sql err: sql=[%s], args=[%s]", insSQL, insArgs)
 		}
 
 		// 2) 获取自增ID（与插入同一连接，保证 LAST_INSERT_ID 正确）
@@ -41,10 +41,10 @@ func (r *MySQLSpace) Create(ctx context.Context, data space.Space) (space.Space,
 		// 3) 查询新创建的数据
 		selSQL, selArgs, err := r.GetBuilder(ctx, uint16(lastID)).ToSql()
 		if err != nil {
-			return err
+			return database.ProcessSQLErrorf(ctx, err, "create sql err")
 		}
 		if err := tx.Raw(selSQL, selArgs...).Scan(&out).Error; err != nil {
-			return err
+			return database.ProcessSQLErrorf(ctx, err, "exec sql err: sql=[%s], args=[%s]", selSQL, selArgs)
 		}
 		return nil
 	})
@@ -61,19 +61,19 @@ func (r *MySQLSpace) Update(ctx context.Context, id uint16, data map[string]inte
 		// 1) 构建并执行更新
 		updateSQL, updateArgs, err := r.UpdateBuilder(ctx, id, data).ToSql()
 		if err != nil {
-			return err
+			return database.ProcessSQLErrorf(ctx, err, "create sql err")
 		}
 		if err := tx.Exec(updateSQL, updateArgs...).Error; err != nil {
-			return err
+			return database.ProcessSQLErrorf(ctx, err, "exec sql err: sql=[%s], args=[%s]", updateSQL, updateArgs)
 		}
 
 		// 2) 查询更新后的数据
 		selSQL, selArgs, err := r.GetBuilder(ctx, id).ToSql()
 		if err != nil {
-			return err
+			return database.ProcessSQLErrorf(ctx, err, "create sql err")
 		}
 		if err := tx.Raw(selSQL, selArgs...).Scan(&out).Error; err != nil {
-			return err
+			return database.ProcessSQLErrorf(ctx, err, "exec sql err: sql=[%s], args=[%s]", selSQL, selArgs)
 		}
 		return nil
 	})
