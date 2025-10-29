@@ -1,6 +1,7 @@
 package space
 
 import (
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/space"
 	spaceSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/space"
@@ -32,11 +33,11 @@ func NewSpaceController(spaceService spaceSvc.SpaceService) *SpaceController {
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
 // @Router /spaces [post]
 func (ctl *SpaceController) Create(c *gin.Context) {
-	var req space.CreateSpaceRequest
+	var reqData space.CreateSpaceRequest
 	var err error
 
 	// 解析请求体
-	if err = c.ShouldBindJSON(&req); err != nil {
+	if err = c.ShouldBindJSON(&reqData); err != nil {
 		err = pkg_errors.WithI18nKey(err, "space.create_param_error")
 		resp.BadRequest(c, err)
 		return
@@ -44,7 +45,7 @@ func (ctl *SpaceController) Create(c *gin.Context) {
 
 	// 获取包含 logger 和其他上下文信息的 context 传递给 Service 层
 	// 调用服务层创建空间
-	spaceObj, err := ctl.spaceSvc.Create(logger.GetContextWithLogger(c), req)
+	spaceObj, err := ctl.spaceSvc.Create(logger.GetContextWithLogger(c), reqData)
 	if err != nil {
 		err = pkg_errors.WithI18nKey(err, "space.create_error")
 		resp.InternalError(c, err)
@@ -101,7 +102,33 @@ func (ctl *SpaceController) Get(c *gin.Context) {
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
 // @Router /spaces/{id} [put]
 func (ctl *SpaceController) Update(c *gin.Context) {
-	resp.OK(c, "space.update_success", nil)
+	var reqData space.UpdateSpaceRequest
+	var err error
+
+	// 解析 path id
+	objID, err := req.PathParamAsPositiveUint16(c, "id")
+	if err != nil {
+		err = pkg_errors.WithI18nKey(err, "space.update_param_error")
+		resp.BadRequest(c, err)
+		return
+	}
+
+	// 解析请求体
+	if err = c.ShouldBindJSON(&reqData); err != nil {
+		err = pkg_errors.WithI18nKey(err, "space.update_param_error")
+		resp.BadRequest(c, err)
+		return
+	}
+
+	// 调用服务层更新空间
+	spaceObj, err := ctl.spaceSvc.Update(logger.GetContextWithLogger(c), objID, reqData)
+	if err != nil {
+		err = pkg_errors.WithI18nKey(err, "space.update_error")
+		resp.InternalError(c, err)
+		return
+	}
+
+	resp.OK(c, "space.update_success", spaceObj)
 }
 
 // @Summary 删除空间

@@ -54,10 +54,33 @@ func (r *MySQLSpace) Create(ctx context.Context, data space.Space) (space.Space,
 	return out, nil
 }
 
-func (r *MySQLSpace) CreateBuilder(ctx context.Context, data space.Space) sqlbuilder.InsertBuilder {
-	return r.sb.Insert(data.TableName()).
-		Columns("`name`", "`desc`", "`owner`", "`acl`", "`createdBy`", "`editedBy`").
-		Values(data.Name, data.Desc, data.Owner, data.Permission, data.CreatedBy, data.EditedBy)
+func (r *MySQLSpace) Update(ctx context.Context, id uint16, data map[string]interface{}) (space.Space, error) {
+	var out space.Space
+
+	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		// 1) 构建并执行更新
+		updateSQL, updateArgs, err := r.UpdateBuilder(ctx, id, data).ToSql()
+		if err != nil {
+			return err
+		}
+		if err := tx.Exec(updateSQL, updateArgs...).Error; err != nil {
+			return err
+		}
+
+		// 2) 查询更新后的数据
+		selSQL, selArgs, err := r.GetBuilder(ctx, id).ToSql()
+		if err != nil {
+			return err
+		}
+		if err := tx.Raw(selSQL, selArgs...).Scan(&out).Error; err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		return space.Space{}, err
+	}
+	return out, nil
 }
 
 // GetBuilder 构建根据主键 ID 查询 Space 的 SQL
@@ -77,5 +100,16 @@ func (r *MySQLSpace) GetBuilder(ctx context.Context, id uint16) sqlbuilder.Selec
 	).
 		From(space.Space{}.TableName()).
 		Where("`id` = ?", id).
+		Where("`deleted` = 0").
 		Limit(1)
+}
+
+func (r *MySQLSpace) CreateBuilder(ctx context.Context, data space.Space) sqlbuilder.InsertBuilder {
+	return r.sb.Insert(data.TableName()).
+		Columns("`name`", "`desc`", "`owner`", "`acl`", "`createdBy`", "`editedBy`").
+		Values(data.Name, data.Desc, data.Owner, data.Permission, data.CreatedBy, data.EditedBy)
+}
+
+func (r *MySQLSpace) UpdateBuilder(ctx context.Context, id uint16, data map[string]interface{}) sqlbuilder.UpdateBuilder {
+	return r.sb.Update(space.Space{}.TableName()).Where("`id` = ?", id).SetMap(data)
 }
