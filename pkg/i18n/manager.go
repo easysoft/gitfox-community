@@ -58,7 +58,10 @@ func NewManager(config *ManagerConfig) *Manager {
 
 	// 自动加载翻译文件
 	if config.AutoLoad && config.TranslationsDir != "" {
-		_ = m.LoadTranslationsFromDir(config.TranslationsDir)
+		err := m.LoadTranslationsFromDir(config.TranslationsDir)
+		if err != nil {
+			panic("failed to load translations from directory: " + config.TranslationsDir)
+		}
 	}
 
 	return m

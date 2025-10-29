@@ -40,8 +40,9 @@ func NewRouter(mode string, logger *logger.SugaredMateLogger, controller *Contro
 	}
 	// 注册 Swagger API 文档路由（使用独立路径避免与业务路由冲突）
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
+
 	// 注册无需认证的公共路由
-	registerPublicRoutes(r)
+	registerPublicRoutes(r, controller)
 
 	// 创建需要认证的路由组（应用鉴权中间件）
 	authGroup := r.Group("/api/v2")
@@ -50,7 +51,7 @@ func NewRouter(mode string, logger *logger.SugaredMateLogger, controller *Contro
 }
 
 // registerPublicRoutes 注册无需认证的公共路由（如健康检查、版本信息）
-func registerPublicRoutes(r *gin.Engine) {
+func registerPublicRoutes(r *gin.Engine, controller *Controller) {
 	public := r.Group("/public")
 	{
 		public.GET("/health", func(c *gin.Context) {
@@ -59,5 +60,7 @@ func registerPublicRoutes(r *gin.Engine) {
 		public.GET("/version", func(c *gin.Context) {
 			c.JSON(200, gin.H{"version": "v1.0.0"})
 		})
+		// 测试相关路由
+		public.GET("/test_accessLog", controller.Test.AccessLogTest)
 	}
 }
