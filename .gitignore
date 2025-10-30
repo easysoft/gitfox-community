@@ -33,5 +33,5 @@ __debug_*
 # 本地配置文件
 configs/local.yaml
 
-# 二进制文件目录
-bin/
+# build 输出目录
+bin/*
