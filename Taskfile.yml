@@ -148,38 +148,12 @@ tasks:
 
 
  # 多语言相关任务
+  i18n:generate:
+    desc: 检查多语言文件键值一致性,生成多语言键值常量
+    cmds:
+      - go run pkg/i18n/i18n-keygen/main.go -o pkg/i18n/i18n_keys.go {{.LOCALES_DIR}}
+  
   i18n:check:
-    desc: 检查多语言文件键值一致性
+    desc: 仅检查多语言文件键值一致性
     cmds:
-      - go run pkg/i18n/i18n-check/main.go {{.LOCALES_DIR}}
-
-  i18n:validate:
-    desc: 验证翻译文件格式
-    cmds:
-      - |
-        echo "🔍 验证翻译文件格式..."
-        for file in {{.LOCALES_DIR}}/*/*.json; do
-          echo "检查: $file"
-          if ! jq empty "$file" 2>/dev/null; then
-            echo "❌ JSON 格式错误: $file"
-            exit 1
-          fi
-        done
-        echo "✅ 所有翻译文件格式正确"
-
-  i18n:stats:
-    desc: 显示翻译统计信息
-    cmds:
-      - |
-        echo "📊 翻译文件统计:"
-        for locale_dir in {{.LOCALES_DIR}}/*/; do
-          locale=$(basename "$locale_dir")
-          echo "语言环境: $locale"
-          for file in "$locale_dir"*.json; do
-            if [ -f "$file" ]; then
-              filename=$(basename "$file")
-              count=$(jq -r 'paths(scalars) as $p | $p | join(".")' "$file" | wc -l)
-              echo "  $filename: $count 个翻译键"
-            fi
-          done
-        done
+      - go run pkg/i18n/i18n-keygen/main.go -c {{.LOCALES_DIR}}
