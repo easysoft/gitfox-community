@@ -164,14 +164,14 @@ func collectAllKeys(localesDir string) ([]KeyInfo, error) {
 		}
 
 		// // 如果没有中文翻译，则使用第一个可用的翻译
-		// if description == "" {
-		// 	for _, translations := range allTranslations {
-		// 		if desc, exists := translations[fullKey]; exists {
-		// 			description = desc
-		// 			break
-		// 		}
-		// 	}
-		// }
+		if description == "" {
+			for _, translations := range allTranslations {
+				if desc, exists := translations[fullKey]; exists {
+					description = desc
+					break
+				}
+			}
+		}
 
 		parts := strings.Split(fullKey, ".")
 		key := parts[len(parts)-1]
