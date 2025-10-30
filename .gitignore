@@ -32,3 +32,6 @@ __debug_*
 
 # 本地配置文件
 configs/local.yaml
+
+# build 输出目录
+bin/*
