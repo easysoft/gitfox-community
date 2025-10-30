@@ -1,9 +1,0 @@
-space:
-  secrets_add_error: "Failed to add secret. Please check if the name is duplicated or the format is correct."
-  secrets_add_success: "Secret added successfully."
-  secrets_list_error: "Failed to load the list of secrets. Please try again later."
-  secrets_list_success: "Repository Secrets List Loaded Successfully."
-  secrets_delete_used: "Failed to delete: This secret may be in use by one or more services."
-  secrets_delete_permission: "Failed to delete: You do not have permission to delete this secret."
-  secrets_delete_success: "Secret deleted successfully."
-  artifacts_title_success: "Repository Settings Saved Successfully."
