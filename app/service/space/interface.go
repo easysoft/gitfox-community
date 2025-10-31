@@ -6,7 +6,7 @@ import (
 	spaceModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/space"
 )
 
-type SpaceService interface {
+type SpaceInterface interface {
 	Create(ctx context.Context, req spaceModel.CreateSpaceRequest) (*spaceModel.SpaceResponse, error)
 	List(ctx context.Context, filter spaceModel.ListSpaceFilter) ([]spaceModel.SpaceResponse, error)
 	Get(ctx context.Context, id uint16) (*spaceModel.SpaceResponse, error)

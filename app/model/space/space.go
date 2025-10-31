@@ -10,6 +10,14 @@ type CreateSpaceRequest struct {
 	CreatedBy  string `json:"createdBy" binding:"required"`
 }
 
+type UpdateSpaceRequest struct {
+	Name       string `json:"name"`
+	Owner      string `json:"owner"`
+	Permission string `json:"acl"`
+	Desc       string `json:"desc"`
+	EditedBy   string `json:"editedBy" binding:"required"`
+}
+
 type SpaceResponse struct {
 	ID          uint16     `json:"id"`
 	Name        string     `json:"name"`
@@ -28,14 +36,6 @@ type ListSpaceFilter struct {
 	Owner      string
 	Page       int
 	PageSize   int
-}
-
-type UpdateSpaceRequest struct {
-	Name       string `json:"name"`
-	Owner      string `json:"owner"`
-	Permission string `json:"acl"`
-	Desc       string `json:"desc"`
-	EditedBy   string `json:"editedBy" binding:"required"`
 }
 
 type UndeleteSpaceRequest struct {

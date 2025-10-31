@@ -34,7 +34,7 @@ func TestInitSQLiteDB(t *testing.T) {
 	}
 
 	// 测试连接
-	db, err := dbWrapper.DB.DB()
+	db, err := dbWrapper.DB().DB()
 	if err != nil {
 		t.Fatalf("Failed to unwrapper sql db: %v", err)
 	}
@@ -47,10 +47,11 @@ func TestInitSQLiteDB(t *testing.T) {
 
 func TestSQLiteDB_CRUD_Operations(t *testing.T) {
 	config := config.SQLiteConfig{Path: "./gitfox_test.db"}
-	db, _, _ := NewSQLiteDB(config)
-	if db == nil {
+	dbWrapper, _, _ := NewSQLiteDB(config)
+	if dbWrapper == nil {
 		t.Fatal("Failed to initialize database")
 	}
+	db := dbWrapper.DB()
 
 	// 自动迁移表结构
 	err := db.AutoMigrate(&TestUser{})
@@ -120,10 +121,11 @@ func TestSQLiteDB_CRUD_Operations(t *testing.T) {
 func TestSQLiteDB_Transaction(t *testing.T) {
 
 	config := config.SQLiteConfig{Path: "./gitfox_test.db"}
-	db, _, _ := NewSQLiteDB(config)
-	if db == nil {
+	dbWrapper, _, _ := NewSQLiteDB(config)
+	if dbWrapper == nil {
 		t.Fatal("Failed to initialize database")
 	}
+	db := dbWrapper.DB()
 
 	// 迁移表结构
 	err := db.AutoMigrate(&TestUser{})
@@ -165,12 +167,12 @@ func TestSQLiteDB_Transaction(t *testing.T) {
 
 func TestSQLiteDB_ConnectionPool(t *testing.T) {
 	config := config.SQLiteConfig{Path: "./gitfox_test.db"}
-	db, _, _ := NewSQLiteDB(config)
-	if db == nil {
+	dbWrapper, _, _ := NewSQLiteDB(config)
+	if dbWrapper == nil {
 		t.Fatal("Failed to initialize database")
 	}
 
-	sqlDB, err := db.DB.DB()
+	sqlDB, err := dbWrapper.DB().DB()
 	if err != nil {
 		t.Fatalf("Failed to get underlying sql.DB: %v", err)
 	}
@@ -188,10 +190,11 @@ func TestSQLiteDB_WALMode(t *testing.T) {
 	tempDir := t.TempDir()
 	dbPath := filepath.Join(tempDir, "wal_test.db")
 	config := config.SQLiteConfig{Path: dbPath}
-	db, _, _ := NewSQLiteDB(config)
-	if db == nil {
+	dbWrapper, _, _ := NewSQLiteDB(config)
+	if dbWrapper == nil {
 		t.Fatal("Failed to initialize database")
 	}
+	db := dbWrapper.DB()
 
 	// 验证 WAL 模式是否启用
 	var journalMode string
@@ -228,10 +231,11 @@ func TestSQLiteDB_ErrorHandling(t *testing.T) {
 func BenchmarkSQLiteDB_Insert(b *testing.B) {
 
 	config := config.SQLiteConfig{Path: "./gitfox_test.db"}
-	db, _, _ := NewSQLiteDB(config)
-	if db == nil {
+	dbWrapper, _, _ := NewSQLiteDB(config)
+	if dbWrapper == nil {
 		b.Fatal("Failed to initialize database")
 	}
+	db := dbWrapper.DB()
 
 	b.ResetTimer()
 
@@ -248,10 +252,11 @@ func BenchmarkSQLiteDB_Insert(b *testing.B) {
 func BenchmarkSQLiteDB_Select(b *testing.B) {
 
 	config := config.SQLiteConfig{Path: "./gitfox_test.db"}
-	db, _, _ := NewSQLiteDB(config)
-	if db == nil {
+	dbWrapper, _, _ := NewSQLiteDB(config)
+	if dbWrapper == nil {
 		b.Fatal("Failed to initialize database")
 	}
+	db := dbWrapper.DB()
 
 	err := db.AutoMigrate(&TestUser{})
 	if err != nil {

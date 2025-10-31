@@ -3,11 +3,11 @@ package space
 import (
 	"context"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/dao/space"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/space"
 )
 
-// Space 空间数据存储接口
+// SpaceInterface 空间数据存储接口
 type SpaceInterface interface {
-	Create(ctx context.Context, req space.Space) (space.Space, error)
-	Update(ctx context.Context, id uint16, req map[string]interface{}) (space.Space, error)
+	Create(ctx context.Context, req space.CreateSpaceRequest) (*space.SpaceResponse, error)
+	Update(ctx context.Context, id uint16, req space.UpdateSpaceRequest) (*space.SpaceResponse, error)
 }

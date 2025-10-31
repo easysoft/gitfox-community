@@ -14,6 +14,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/cmd/cli/operations/provider"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
+	"gorm.io/gorm"
 )
 
 // Injectors from wire.go:
@@ -26,7 +27,7 @@ func NewApp(mode string) (*App, func(), error) {
 	}
 	systemLog := provider.NewSystemLogger(config)
 	apiLog := provider.NewAPILogger(config)
-	mysqlDB, cleanup, err := provider.NewMysqlDB(config, systemLog)
+	db, cleanup, err := provider.NewDB(config, systemLog)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -35,8 +36,8 @@ func NewApp(mode string) (*App, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	mySQLSpace := space.NewMySQLSpace(mysqlDB)
-	spaceSvc := space2.NewSpaceSvc(mySQLSpace)
+	spaceStore := space.NewSpaceStore(db)
+	spaceSvc := space2.NewSpaceSvc(spaceStore)
 	spaceController := space3.NewSpaceController(spaceSvc)
 	controller := provider.NewControllers(spaceController)
 	i18nManager, err := provider.NewI18nManager(config)
@@ -49,7 +50,7 @@ func NewApp(mode string) (*App, func(), error) {
 		SystemConfig: config,
 		SystemLog:    systemLog,
 		APILog:       apiLog,
-		MysqlDB:      mysqlDB,
+		DB:           db,
 		SqliteDB:     sqliteDB,
 		Controller:   controller,
 		I18nManager:  i18nManager,
@@ -66,7 +67,7 @@ type App struct {
 	SystemConfig *config.Config
 	SystemLog    *provider.SystemLog
 	APILog       *provider.APILog
-	MysqlDB      *database.MysqlDB
+	DB           *gorm.DB
 	SqliteDB     *database.SqliteDB
 	Controller   *router.Controller
 	I18nManager  *provider.I18nManager

@@ -259,7 +259,7 @@ func (m *Migrator) apply(ctx context.Context, name, version string) error {
 			return fmt.Errorf("error updating version to %v: %w", version, err)
 		}
 
-		if m.driverName == "mysql" {
+		if m.driverName == "mysql" || m.driverName == "dm" {
 			for _, query := range bytes.Split(content, []byte(";")) {
 				query = removeComments(query)
 				if len(query) == 0 {

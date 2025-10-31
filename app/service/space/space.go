@@ -3,7 +3,6 @@ package space
 import (
 	"context"
 
-	spaceDao "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/dao/space"
 	spaceModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/space"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/space"
 )
@@ -21,31 +20,8 @@ func NewSpaceSvc(spaceStore space.SpaceInterface) *SpaceSvc {
 }
 
 func (s *SpaceSvc) Create(ctx context.Context, req spaceModel.CreateSpaceRequest) (*spaceModel.SpaceResponse, error) {
-	in := spaceDao.Space{
-		Name:       req.Name,
-		Desc:       req.Desc,
-		Owner:      req.Owner,
-		Permission: req.Permission,
-		CreatedBy:  req.CreatedBy,
-		EditedBy:   req.CreatedBy,
-	}
-
-	out, err := s.spaceStore.Create(ctx, in)
-	if err != nil {
-		return nil, err
-	}
-
-	return &spaceModel.SpaceResponse{
-		ID:          out.ID,
-		Name:        out.Name,
-		Owner:       out.Owner,
-		Permission:  out.Permission,
-		Desc:        out.Desc,
-		CreatedBy:   out.CreatedBy,
-		CreatedDate: out.CreatedDate,
-		EditedBy:    out.EditedBy,
-		EditedDate:  out.EditedDate,
-	}, nil
+	// 直接将 CreateSpaceRequest 传递给 store 层，由 store 层进行数据转换并返回 SpaceResponse
+	return s.spaceStore.Create(ctx, req)
 }
 
 func (s *SpaceSvc) List(ctx context.Context, filter spaceModel.ListSpaceFilter) ([]spaceModel.SpaceResponse, error) {
@@ -59,45 +35,11 @@ func (s *SpaceSvc) Get(ctx context.Context, id uint16) (*spaceModel.SpaceRespons
 }
 
 func (s *SpaceSvc) Update(ctx context.Context, id uint16, req spaceModel.UpdateSpaceRequest) (*spaceModel.SpaceResponse, error) {
-
-	out, err := s.spaceStore.Update(ctx, id, toUpdateMap(req))
-	if err != nil {
-		return nil, err
-	}
-
-	return &spaceModel.SpaceResponse{
-		ID:          out.ID,
-		Name:        out.Name,
-		Owner:       out.Owner,
-		Permission:  out.Permission,
-		Desc:        out.Desc,
-		CreatedBy:   out.CreatedBy,
-		CreatedDate: out.CreatedDate,
-		EditedBy:    out.EditedBy,
-		EditedDate:  out.EditedDate,
-	}, nil
+	// 直接将 UpdateSpaceRequest 传递给 store 层，由 store 层进行数据转换并返回 SpaceResponse
+	return s.spaceStore.Update(ctx, id, req)
 }
 
 func (s *SpaceSvc) Delete(ctx context.Context, id uint16) error {
 	// Implementation logic here
 	return nil
-}
-
-func toUpdateMap(req spaceModel.UpdateSpaceRequest) map[string]interface{} {
-	m := map[string]interface{}{
-		"`editedBy`": req.EditedBy, // 必填，始终包含
-	}
-	if req.Name != "" {
-		m["`name`"] = req.Name
-	}
-	if req.Owner != "" {
-		m["`owner`"] = req.Owner
-	}
-	if req.Permission != "" {
-		m["`acl`"] = req.Permission
-	}
-	if req.Desc != "" {
-		m["`desc`"] = req.Desc
-	}
-	return m
 }

@@ -14,9 +14,9 @@ import (
 	"gorm.io/gorm/schema"
 )
 
-type SqliteDB struct {
-	*gorm.DB
-}
+// SqliteDB 是 gorm.DB 的命名类型，用于 SQLite 数据库
+// 使用命名类型而非类型别名，以便 wire 可以区分不同的数据库类型
+type SqliteDB gorm.DB
 
 // NewSQLiteDB 创建 SQLite 数据库连接
 func NewSQLiteDB(conf config.SQLiteConfig) (*SqliteDB, func() error, error) {
@@ -85,13 +85,26 @@ func NewSQLiteDB(conf config.SQLiteConfig) (*SqliteDB, func() error, error) {
 		panic(fmt.Errorf("failed to configure SQLite: %w", err))
 	}
 
-	sqliteDB := &SqliteDB{db}
-
 	// 返回清理函数
 	cleanup := func() error {
-		return sqliteDB.CloseDB()
+		sqlDB, err := db.DB()
+		if err != nil {
+			return fmt.Errorf("failed to get underlying sql.DB: %w", err)
+		}
+
+		if err := sqlDB.Close(); err != nil {
+			return fmt.Errorf("failed to close database connection: %w", err)
+		}
+
+		return nil
 	}
-	return sqliteDB, cleanup, nil
+
+	return (*SqliteDB)(db), cleanup, nil
+}
+
+// DB 返回底层的 *gorm.DB 实例
+func (s *SqliteDB) DB() *gorm.DB {
+	return (*gorm.DB)(s)
 }
 
 // buildSQLiteDSN 构建 SQLite DSN
@@ -140,21 +153,6 @@ func configureSQLite(db *gorm.DB, conf config.SQLiteConfig) error {
 		if err := silentDB.Exec(pragma).Error; err != nil {
 			return fmt.Errorf("failed to execute pragma '%s': %w", pragma, err)
 		}
-	}
-
-	return nil
-}
-
-// CloselDB 关闭数据库连接
-func (s *SqliteDB) CloseDB() error {
-
-	sqlDB, err := s.DB.DB()
-	if err != nil {
-		return fmt.Errorf("failed to get underlying sql.DB: %w", err)
-	}
-
-	if err := sqlDB.Close(); err != nil {
-		return fmt.Errorf("failed to close database connection: %w", err)
 	}
 
 	return nil

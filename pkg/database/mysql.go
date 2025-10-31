@@ -14,17 +14,17 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 )
 
-type MysqlDB struct {
-	*gorm.DB
-}
+// MysqlDB 是 gorm.DB 的命名类型，用于 MySQL 数据库
+// 使用命名类型而非类型别名，以便 wire 可以区分不同的数据库类型
+type MysqlDB gorm.DB
 
 // 参考 https://github.com/go-sql-driver/mysql#loc
 // 参考 https://github.com/go-sql-driver/mysql#system-variables
 func NewMysqlDB(conf config.DatabaseConfig) (*MysqlDB, func() error, error) {
 	db, err := gorm.Open(mysql.Open(conf.Datasource), &gorm.Config{
 		NamingStrategy: schema.NamingStrategy{
-			TablePrefix:   "ops_", // 表名前缀，“repo” 的表应为 “ops_repo”
-			SingularTable: true,   // 使用单数表名，启用此选项时，“repo” 的表将为 “repo”
+			TablePrefix:   "ops_", // 表名前缀，"repo" 的表应为 "ops_repo"
+			SingularTable: true,   // 使用单数表名，启用此选项时，"repo" 的表将为 "repo"
 			NoLowerCase:   false,  // 跳过名称的 snake_casing 格式
 		},
 		Logger: logger.New(
@@ -65,27 +65,24 @@ func NewMysqlDB(conf config.DatabaseConfig) (*MysqlDB, func() error, error) {
 	// SetConnMaxIdleTime 设置连接最长空闲时间。
 	//sqlDB.SetConnMaxIdleTime(time.Duration(conf.ConnMaxLifeTime) * time.Second)
 
-	mysqlDB := &MysqlDB{db}
-
 	// 返回清理函数
 	cleanup := func() error {
-		return mysqlDB.CloseDB()
+		sqlDB, err := db.DB()
+		if err != nil {
+			return fmt.Errorf("failed to get underlying sql.DB: %w", err)
+		}
+
+		if err := sqlDB.Close(); err != nil {
+			return fmt.Errorf("failed to close database connection: %w", err)
+		}
+
+		return nil
 	}
 
-	return mysqlDB, cleanup, nil
+	return (*MysqlDB)(db), cleanup, nil
 }
 
-// CloselDB 关闭数据库连接
-func (s *MysqlDB) CloseDB() error {
-
-	sqlDB, err := s.DB.DB()
-	if err != nil {
-		return fmt.Errorf("failed to get underlying sql.DB: %w", err)
-	}
-
-	if err := sqlDB.Close(); err != nil {
-		return fmt.Errorf("failed to close database connection: %w", err)
-	}
-
-	return nil
+// DB 返回底层的 *gorm.DB 实例
+func (m *MysqlDB) DB() *gorm.DB {
+	return (*gorm.DB)(m)
 }

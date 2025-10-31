@@ -17,6 +17,9 @@ var sqlite embed.FS
 //go:embed mysql/*.sql
 var mysql embed.FS
 
+//go:embed dm/*.sql
+var dm embed.FS
+
 const (
 	tableName = "ops_migrations"
 
@@ -25,6 +28,9 @@ const (
 
 	mysqlDriverName = "mysql"
 	mysqlSourceDir  = "mysql"
+
+	dmDriverName = "dm"
+	dmSourceDir  = "dm"
 )
 
 // Migrate performs the database migration.
@@ -76,7 +82,13 @@ func Current(ctx context.Context, db *sql.DB, driverName string) (string, error)
 	var (
 		query               string
 		migrationTableCount int
+		queryTableName      = tableName
 	)
+
+	// 达梦数据库表名需要大写
+	if driverName == dmDriverName {
+		queryTableName = "OPS_MIGRATIONS"
+	}
 
 	switch driverName {
 	case sqliteDriverName:
@@ -89,11 +101,16 @@ func Current(ctx context.Context, db *sql.DB, driverName string) (string, error)
 			SELECT count(*)
 			FROM information_schema.TABLES
 			WHERE TABLE_NAME= ?`
+	case dmDriverName:
+		query = `
+			SELECT count(*)
+			FROM ALL_TABLES
+			WHERE TABLE_NAME= ?`
 	default:
 		return "", fmt.Errorf("unsupported driver '%s'", driverName)
 	}
 
-	if err := db.QueryRowContext(ctx, query, tableName).Scan(&migrationTableCount); err != nil {
+	if err := db.QueryRowContext(ctx, query, queryTableName).Scan(&migrationTableCount); err != nil {
 		return "", fmt.Errorf("failed to check migration table existence: %w", err)
 	}
 
@@ -105,6 +122,10 @@ func Current(ctx context.Context, db *sql.DB, driverName string) (string, error)
 
 	query = "select version from " + tableName + " limit 1"
 	if err := db.QueryRowContext(ctx, query).Scan(&version); err != nil {
+		// 如果表存在但没有记录，返回空版本
+		if err == sql.ErrNoRows {
+			return "", nil
+		}
 		return "", fmt.Errorf("failed to read current DB version from migration table: %w", err)
 	}
 
@@ -147,7 +168,9 @@ func getMigrator(db *sql.DB, driverName string, log *logger.SugaredMateLogger) (
 	case mysqlDriverName:
 		folder, _ := fs.Sub(mysql, mysqlSourceDir)
 		opts.FS = folder
-
+	case dmDriverName:
+		folder, _ := fs.Sub(dm, dmSourceDir)
+		opts.FS = folder
 	default:
 		return migrate.Options{}, fmt.Errorf("unsupported driver '%s'", driverName)
 	}

@@ -14,16 +14,16 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 )
 
-type DaMengDB struct {
-	*gorm.DB
-}
+// DaMengDB 是 gorm.DB 的命名类型，用于达梦数据库
+// 使用命名类型而非类型别名，以便 wire 可以区分不同的数据库类型
+type DaMengDB gorm.DB
 
 // https://gitee.com/chunanyong/dm#https://gitee.com/link?target=https%3A%2F%2Fpackage.dameng.com%2Feco%2Fadapter
 func NewDaMengDB(conf config.DatabaseConfig) (*DaMengDB, func() error, error) {
-	db, err := gorm.Open(dm.Open(conf.Datasource), &gorm.Config{
+	db, err := gorm.Open(dm.Open("dm://SYSDBA:0831will.DB@127.0.0.1:9906"), &gorm.Config{
 		NamingStrategy: schema.NamingStrategy{
-			TablePrefix:   "ops_", // 表名前缀，“repo” 的表应为 “ops_repo”
-			SingularTable: true,   // 使用单数表名，启用此选项时，“repo” 的表将为 “repo”
+			TablePrefix:   "ops_", // 表名前缀，"repo" 的表应为 "ops_repo"
+			SingularTable: true,   // 使用单数表名，启用此选项时，"repo" 的表将为 "repo"
 			NoLowerCase:   false,  // 跳过名称的 snake_casing 格式
 		},
 		Logger: logger.New(
@@ -64,27 +64,24 @@ func NewDaMengDB(conf config.DatabaseConfig) (*DaMengDB, func() error, error) {
 	// SetConnMaxIdleTime 设置连接最长空闲时间。
 	//sqlDB.SetConnMaxIdleTime(time.Duration(conf.ConnMaxLifeTime) * time.Second)
 
-	dmDB := &DaMengDB{db}
-
 	// 返回清理函数
 	cleanup := func() error {
-		return dmDB.CloseDB()
+		sqlDB, err := db.DB()
+		if err != nil {
+			return fmt.Errorf("failed to get underlying sql.DB: %w", err)
+		}
+
+		if err := sqlDB.Close(); err != nil {
+			return fmt.Errorf("failed to close database connection: %w", err)
+		}
+
+		return nil
 	}
 
-	return dmDB, cleanup, nil
+	return (*DaMengDB)(db), cleanup, nil
 }
 
-// CloselDB 关闭数据库连接
-func (s *DaMengDB) CloseDB() error {
-
-	sqlDB, err := s.DB.DB()
-	if err != nil {
-		return fmt.Errorf("failed to get underlying sql.DB: %w", err)
-	}
-
-	if err := sqlDB.Close(); err != nil {
-		return fmt.Errorf("failed to close database connection: %w", err)
-	}
-
-	return nil
+// DB 返回底层的 *gorm.DB 实例
+func (d *DaMengDB) DB() *gorm.DB {
+	return (*gorm.DB)(d)
 }
