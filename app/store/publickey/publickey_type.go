@@ -1,6 +1,8 @@
 package publickey
 
-import "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
+import (
+    "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
+)
 
 type PublicKey struct {
 	ID          int64                   `db:"id" gorm:"column:id;primaryKey"`
@@ -16,5 +18,5 @@ type PublicKey struct {
 }
 
 func (pk *PublicKey) TableName() string {
-	return "public_keys"
+    return "public_keys"
 }

@@ -1,6 +1,8 @@
 package space
 
-import "time"
+import (
+    "time"
+)
 
 // 定义 Acl 字段的可选值常量（规范业务使用）
 const (
@@ -24,6 +26,5 @@ type Space struct {
 
 // TableName 显式指定结构体对应的数据表名为 ops_space
 func (Space) TableName() string {
-	return "ops_space"
+    return "ops_space"
 }
-

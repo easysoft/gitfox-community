@@ -24,7 +24,6 @@ func NewDaMengDB(conf config.DatabaseConfig) (*DaMengDB, func() error, error) {
 		NamingStrategy: schema.NamingStrategy{
 			TablePrefix:   "ops_", // 表名前缀，"repo" 的表应为 "ops_repo"
 			SingularTable: true,   // 使用单数表名，启用此选项时，"repo" 的表将为 "repo"
-			NoLowerCase:   false,  // 跳过名称的 snake_casing 格式
 		},
 		Logger: logger.New(
 			log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer

@@ -23,7 +23,9 @@ type PublicKeyStore struct {
 func (s *PublicKeyStore) ListByFingerprint(ctx context.Context, fingerprint string) ([]publickey.PublicKey, error) {
 	// 使用 gorm 查询
 	var publicKeys []PublicKey
-	if err := s.db.WithContext(ctx).Where("fingerprint = ?", fingerprint).Find(&publicKeys).Error; err != nil {
+	var query PublicKey
+	query.Fingerprint = fingerprint
+	if err := s.db.WithContext(ctx).Where(&query).Find(&publicKeys).Error; err != nil {
 		return nil, err
 	}
 
@@ -40,9 +42,11 @@ func (s *PublicKeyStore) ListByFingerprint(ctx context.Context, fingerprint stri
 // MarkAsVerified updates the public key to mark it as verified.
 func (s *PublicKeyStore) MarkAsVerified(ctx context.Context, id int64, verified int64) error {
 	// 使用 gorm 更新 verified 字段
+	var query PublicKey
+	query.ID = id
 	if err := s.db.WithContext(ctx).
 		Model(&PublicKey{}).
-		Where("id = ?", id).
+		Where(&query).
 		Update("verified", verified).Error; err != nil {
 		return err
 	}

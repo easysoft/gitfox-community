@@ -253,9 +253,18 @@ func (m *Migrator) apply(ctx context.Context, name, version string) error {
 			}
 		}
 
+		tableName := m.table
+		versionColumn := "version"
+
+		// For DM database, add quotes to preserve case
+		if m.driverName == "dm" {
+			tableName = `"` + m.table + `"`
+			versionColumn = `"version"`
+		}
+
 		// Normally we wouldn't just string interpolate the version like this,
 		// but because we know the version has been matched against the regexes, we know it's safe.
-		if _, err := tx.ExecContext(ctx, `update `+m.table+` set version = '`+version+`'`); err != nil {
+		if _, err := tx.ExecContext(ctx, `update `+tableName+` set `+versionColumn+` = '`+version+`'`); err != nil {
 			return fmt.Errorf("error updating version to %v: %w", version, err)
 		}
 
@@ -306,17 +315,41 @@ func (m *Migrator) getFilenames(matcher *regexp.Regexp) ([]string, error) {
 // createMigrationsTable if it does not exist already, and insert the empty version if it's empty.
 func (m *Migrator) createMigrationsTable(ctx context.Context) error {
 	return m.inTransaction(ctx, func(tx *sql.Tx) error {
-		if _, err := tx.ExecContext(ctx, `create table if not exists `+m.table+` (version text not null)`); err != nil {
-			return fmt.Errorf("error creating migrations table %v: %w", m.table, err)
+		tableName := m.table
+		versionColumn := "version"
+
+		// For DM database, add quotes to preserve case
+		if m.driverName == "dm" {
+			tableName = `"` + m.table + `"`
+			versionColumn = `"version"`
 		}
 
-		var exists bool
-		if err := tx.QueryRowContext(ctx, `select exists (select * from `+m.table+`)`).Scan(&exists); err != nil {
-			return err
+		if _, err := tx.ExecContext(ctx, `create table if not exists `+tableName+` (`+versionColumn+` text not null)`); err != nil {
+			return fmt.Errorf("error creating migrations table %v: %w", tableName, err)
 		}
 
-		if !exists {
-			if _, err := tx.ExecContext(ctx, `insert into `+m.table+` values ('')`); err != nil {
+		// Check if the table has any rows
+		// Note: DM (达梦) database doesn't support "SELECT EXISTS (...)" syntax
+		// We use "SELECT COUNT(*)" instead for compatibility
+		var count int
+		if m.driverName == "dm" {
+			// For DM database, use COUNT(*) approach
+			if err := tx.QueryRowContext(ctx, `select count(*) from `+tableName).Scan(&count); err != nil {
+				return err
+			}
+		} else {
+			// For other databases (SQLite, MySQL, PostgreSQL), use EXISTS
+			var exists bool
+			if err := tx.QueryRowContext(ctx, `select exists (select * from `+m.table+`)`).Scan(&exists); err != nil {
+				return err
+			}
+			if exists {
+				count = 1
+			}
+		}
+
+		if count == 0 {
+			if _, err := tx.ExecContext(ctx, `insert into `+tableName+` values ('')`); err != nil {
 				return err
 			}
 		}
@@ -326,8 +359,17 @@ func (m *Migrator) createMigrationsTable(ctx context.Context) error {
 
 // getCurrentVersion from the migrations table.
 func (m *Migrator) getCurrentVersion(ctx context.Context) (string, error) {
+	tableName := m.table
+	versionColumn := "version"
+
+	// For DM database, add quotes to preserve case
+	if m.driverName == "dm" {
+		tableName = `"` + m.table + `"`
+		versionColumn = `"version"`
+	}
+
 	var version string
-	if err := m.db.QueryRowContext(ctx, `select version from `+m.table+``).Scan(&version); err != nil {
+	if err := m.db.QueryRowContext(ctx, `select `+versionColumn+` from `+tableName+``).Scan(&version); err != nil {
 		return "", fmt.Errorf("error getting current migration version: %w", err)
 	}
 	return version, nil

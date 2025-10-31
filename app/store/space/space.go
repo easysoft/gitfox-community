@@ -40,6 +40,7 @@ func (r *SpaceStore) Create(ctx context.Context, req modelSpace.CreateSpaceReque
 
 func (r *SpaceStore) Update(ctx context.Context, id uint16, req modelSpace.UpdateSpaceRequest) (*modelSpace.SpaceResponse, error) {
 	var out Space
+	out.ID = id
 
 	now := time.Now()
 	updateData := make(map[string]any)
@@ -65,7 +66,7 @@ func (r *SpaceStore) Update(ctx context.Context, id uint16, req modelSpace.Updat
 	// 使用事务确保查询和更新的原子性
 	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		// 先查询出要更新的记录
-		if err := tx.Where("id = ?", id).First(&out).Error; err != nil {
+		if err := tx.First(&out).Error; err != nil {
 			return database.ProcessSQLErrorf(ctx, err)
 		}
 
