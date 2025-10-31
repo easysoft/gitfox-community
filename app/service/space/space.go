@@ -29,17 +29,17 @@ func (s *SpaceSvc) List(ctx context.Context, filter spaceModel.ListSpaceFilter) 
 	return nil, nil
 }
 
-func (s *SpaceSvc) Get(ctx context.Context, id uint16) (*spaceModel.SpaceResponse, error) {
+func (s *SpaceSvc) Get(ctx context.Context, id uint) (*spaceModel.SpaceResponse, error) {
 	// Implementation logic here
 	return nil, nil
 }
 
-func (s *SpaceSvc) Update(ctx context.Context, id uint16, req spaceModel.UpdateSpaceRequest) (*spaceModel.SpaceResponse, error) {
+func (s *SpaceSvc) Update(ctx context.Context, id uint, req spaceModel.UpdateSpaceRequest) (*spaceModel.SpaceResponse, error) {
 	// 直接将 UpdateSpaceRequest 传递给 store 层，由 store 层进行数据转换并返回 SpaceResponse
 	return s.spaceStore.Update(ctx, id, req)
 }
 
-func (s *SpaceSvc) Delete(ctx context.Context, id uint16) error {
+func (s *SpaceSvc) Delete(ctx context.Context, id uint) error {
 	// Implementation logic here
 	return nil
 }

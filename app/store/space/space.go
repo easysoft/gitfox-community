@@ -2,7 +2,6 @@ package space
 
 import (
 	"context"
-	"time"
 
 	modelSpace "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/space"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
@@ -19,16 +18,13 @@ func NewSpaceStore(db *gorm.DB) *SpaceStore {
 
 func (r *SpaceStore) Create(ctx context.Context, req modelSpace.CreateSpaceRequest) (*modelSpace.SpaceResponse, error) {
 
-	now := time.Now()
 	data := Space{
 		Name:        req.Name,
 		Owner:       req.Owner,
 		Permission:  req.Permission,
 		Desc:        req.Desc,
 		CreatedBy:   req.CreatedBy,
-		CreatedDate: &now,
 		EditedBy:    req.CreatedBy,
-		EditedDate:  &now,
 	}
 
 	if err := r.db.WithContext(ctx).Create(&data).Error; err != nil {
@@ -38,16 +34,14 @@ func (r *SpaceStore) Create(ctx context.Context, req modelSpace.CreateSpaceReque
 	return mapToModel(data), nil
 }
 
-func (r *SpaceStore) Update(ctx context.Context, id uint16, req modelSpace.UpdateSpaceRequest) (*modelSpace.SpaceResponse, error) {
+func (r *SpaceStore) Update(ctx context.Context, id uint, req modelSpace.UpdateSpaceRequest) (*modelSpace.SpaceResponse, error) {
 	var out Space
 	out.ID = id
 
-	now := time.Now()
 	updateData := make(map[string]any)
 
 	// EditedBy 和 EditedDate 是必填字段
 	updateData["editedBy"] = req.EditedBy
-	updateData["editedDate"] = &now
 
 	// 只更新非空字段
 	if req.Name != "" {

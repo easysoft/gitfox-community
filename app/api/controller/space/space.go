@@ -106,7 +106,7 @@ func (ctl *SpaceController) Update(c *gin.Context) {
 	var err error
 
 	// 解析 path id
-	objID, err := req.PathParamAsPositiveUint16(c, "id")
+	objID, err := req.PathParamAsPositiveUint(c, "id")
 	if err != nil {
 		err = pkg_errors.WithI18nKey(err, "space.path_param_error")
 		resp.BadRequest(c, err)

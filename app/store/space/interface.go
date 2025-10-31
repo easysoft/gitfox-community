@@ -9,5 +9,5 @@ import (
 // SpaceInterface 空间数据存储接口
 type SpaceInterface interface {
 	Create(ctx context.Context, req space.CreateSpaceRequest) (*space.SpaceResponse, error)
-	Update(ctx context.Context, id uint16, req space.UpdateSpaceRequest) (*space.SpaceResponse, error)
+	Update(ctx context.Context, id uint, req space.UpdateSpaceRequest) (*space.SpaceResponse, error)
 }

@@ -19,7 +19,7 @@ type UpdateSpaceRequest struct {
 }
 
 type SpaceResponse struct {
-	ID          uint16     `json:"id"`
+	ID          uint     `json:"id"`
 	Name        string     `json:"name"`
 	Owner       string     `json:"owner"`
 	Permission  string     `json:"acl"`

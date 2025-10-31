@@ -195,6 +195,21 @@ func PathParamAsPositiveUint16(c *gin.Context, paramName string) (uint16, error)
 	return uint16(valueInt), nil
 }
 
+// PathParamAsPositiveUint extracts an integer parameter from the request path.
+func PathParamAsPositiveUint(c *gin.Context, paramName string) (uint, error) {
+	rawValue, err := PathParamOrError(c, paramName)
+	if err != nil {
+		return 0, err
+	}
+
+	valueUint, err := strconv.ParseUint(rawValue, 10, 0)
+	if err != nil || valueUint <= 0 {
+		return 0, errors.BadRequest.Newf("Parameter '%s' must be a positive integer.", paramName)
+	}
+
+	return uint(valueUint), nil
+}
+
 // QueryParamAsBoolOrDefault tries to retrieve the parameter from the query and parse it to bool.
 func QueryParamAsBoolOrDefault(c *gin.Context, paramName string, deflt bool) (bool, error) {
 	rawValue, ok := QueryParam(c, paramName)

@@ -9,7 +9,7 @@ import (
 type SpaceInterface interface {
 	Create(ctx context.Context, req spaceModel.CreateSpaceRequest) (*spaceModel.SpaceResponse, error)
 	List(ctx context.Context, filter spaceModel.ListSpaceFilter) ([]spaceModel.SpaceResponse, error)
-	Get(ctx context.Context, id uint16) (*spaceModel.SpaceResponse, error)
-	Update(ctx context.Context, id uint16, req spaceModel.UpdateSpaceRequest) (*spaceModel.SpaceResponse, error)
-	Delete(ctx context.Context, id uint16) error
+	Get(ctx context.Context, id uint) (*spaceModel.SpaceResponse, error)
+	Update(ctx context.Context, id uint, req spaceModel.UpdateSpaceRequest) (*spaceModel.SpaceResponse, error)
+	Delete(ctx context.Context, id uint) error
 }
