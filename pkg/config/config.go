@@ -82,6 +82,17 @@ type I18nConfig struct {
 	HeaderName       string   `yaml:"headerName,omitempty"`
 	SessionKey       string   `yaml:"sessionKey,omitempty"`
 }
+type I18nConfig struct {
+	DefaultLocale    string   `yaml:"defaultLocale"`
+	FallbackLocale   string   `yaml:"fallbackLocale"`
+	SupportedLocales []string `yaml:"supportedLocales"`
+	TranslationsDir  string   `yaml:"translationsDir"`
+	AutoLoad         bool     `yaml:"autoLoad"`
+	QueryParam       string   `yaml:"queryParam,omitempty"`
+	CookieName       string   `yaml:"cookieName,omitempty"`
+	HeaderName       string   `yaml:"headerName,omitempty"`
+	SessionKey       string   `yaml:"sessionKey,omitempty"`
+}
 
 // MetricConfig 监控配置
 type MetricConfig struct {
