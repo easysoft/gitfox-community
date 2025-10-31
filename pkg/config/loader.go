@@ -94,7 +94,7 @@ func loadFromYaml(mode string, config *Config) (error) {
 	if err != nil {
 		return err
 	}
-	config, err = loadFromFile(configPaths[0])
+	err = loadFromFile(configPaths[0],config)
 	if err != nil {
 		return err
 	}
@@ -102,18 +102,17 @@ func loadFromYaml(mode string, config *Config) (error) {
 }
 
 // loadFromFile loads the configuration from a file.
-func loadFromFile(filePath string) (*Config, error) {
+func loadFromFile(filePath string, config *Config) (error) {
 	data, err := os.ReadFile(filePath)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	var config Config
-	if err := yaml.Unmarshal(data, &config); err != nil {
-		return nil, err
+	if err := yaml.Unmarshal(data, config); err != nil {
+		return err
 	}
 
-	return &config, nil
+	return nil
 }
 
 // loadFromEnvVars 从gitfox.env文件中加载并设置为环境变量
@@ -313,12 +312,16 @@ func findConfigFilePaths(mode, ext string) ([]string, error) {
 
 	// 获取可执行文件所在目录（配置文件与二进制同目录）
 	exeDir := filepath.Dir(exePath)
+	var fileName string
 	// 根据模式确定配置文件名
 	if mode == Debug {
 		exeDir = filepath.Join(filepath.Dir(filepath.Dir(exeDir)), "configs")
+		fileName = fmt.Sprintf("%s.%s", Local, ext)
+	} else {
+		fileName = fmt.Sprintf("%s.%s", mode, ext)
 	}
 
-	fileName := fmt.Sprintf("%s.%s", mode, ext)
+	
 
 	configPaths, err := file.FindFilesRecursive(exeDir, fileName)
 	if err != nil {

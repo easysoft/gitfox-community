@@ -71,17 +71,7 @@ type SSHConfig struct {
 	Port        int    `yaml:"port"`
 	HostKeysDir string `envconfig:"GITFOX_SSH_HOST_KEYS_DIR" default:"/data/gitfox/ssh"`
 }
-type I18nConfig struct {
-	DefaultLocale    string   `yaml:"defaultLocale"`
-	FallbackLocale   string   `yaml:"fallbackLocale"`
-	SupportedLocales []string `yaml:"supportedLocales"`
-	TranslationsDir  string   `yaml:"translationsDir"`
-	AutoLoad         bool     `yaml:"autoLoad"`
-	QueryParam       string   `yaml:"queryParam,omitempty"`
-	CookieName       string   `yaml:"cookieName,omitempty"`
-	HeaderName       string   `yaml:"headerName,omitempty"`
-	SessionKey       string   `yaml:"sessionKey,omitempty"`
-}
+
 type I18nConfig struct {
 	DefaultLocale    string   `yaml:"defaultLocale"`
 	FallbackLocale   string   `yaml:"fallbackLocale"`
@@ -153,27 +143,27 @@ type LoggingConfig struct {
 
 // LogAPIServerConfig
 type LogAPIServerConfig struct {
-	Path string `yaml:"path"`
+	Filename string `yaml:"filename"`
 }
 
 // LogRunnerConfig
 type LogRunnerConfig struct {
-	Path string `yaml:"path"`
+	Filename string `yaml:"filename"`
 }
 
 // LogSSHConfig
 type LogSSHConfig struct {
-	Path string `yaml:"path"`
+	Filename string `yaml:"filename"`
 }
 
 // LogScanConfig
 type LogScanConfig struct {
-	Path string `yaml:"path"`
+	Filename string `yaml:"filename"`
 }
 
 // LogSystemConfig
 type LogSystemConfig struct {
-	Path string `yaml:"path"`
+	Filename string `yaml:"filename"`
 }
 
 // Middleware Config 中间件配置

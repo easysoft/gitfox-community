@@ -32,6 +32,7 @@ __debug_*
 
 # 本地配置文件
 configs/local.yaml
+configs/local.env
 
 # 二进制文件目录
 bin/
