@@ -24,7 +24,7 @@ func (c *command) run(*kingpin.ParseContext) error {
 	if err != nil {
 		// 这里无法使用 app.SystemLog 因为 app 初始化失败，只能使用 fmt.Printf
 		fmt.Printf("[Server] Failed to initialize app server: %v\n", err)
-		os.Exit(1)
+		panic(err)
 	}
 	defer func() {
 		app.SystemLog.Info("[Server] Cleaning up resources...")

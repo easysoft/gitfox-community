@@ -31,7 +31,7 @@ go.work
 __debug_*
 
 # 本地配置文件
-configs/local.yaml
+configs/*local.*
 
 # 二进制文件目录
-bin/
+bin/*

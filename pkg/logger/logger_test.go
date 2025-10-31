@@ -13,9 +13,9 @@ import (
 
 // createTestLoggingConfig 创建测试日志配置
 func createTestLoggingConfig(t *testing.T) config.LoggingConfig {
-	tmpDir := t.TempDir()
 
 	return config.LoggingConfig{
+		LogDir: t.TempDir(),
 		Level:           -1, // Debug level
 		Stdout:          false,
 		Caller:          true,
@@ -27,19 +27,19 @@ func createTestLoggingConfig(t *testing.T) config.LoggingConfig {
 		TimeFormat:      "2006-01-02 15:04:05.999",
 		StackTraceLevel: 2,
 		LogAPIServerConf: config.LogAPIServerConfig{
-			Path: tmpDir + "/test_api.log",
+			Filename: "/test_api.log",
 		},
 		LogRunnerConf: config.LogRunnerConfig{
-			Path: tmpDir + "/test_runner.log",
+			Filename: "/test_runner.log",
 		},
 		LogSSHConf: config.LogSSHConfig{
-			Path: tmpDir + "/test_ssh.log",
+			Filename: "/test_ssh.log",
 		},
 		LogScanConf: config.LogScanConfig{
-			Path: tmpDir + "/test_scan.log",
+			Filename: "/test_scan.log",
 		},
 		LogSystemConf: config.LogSystemConfig{
-			Path: tmpDir + "/test_system.log",
+			Filename: "/test_system.log",
 		},
 	}
 }

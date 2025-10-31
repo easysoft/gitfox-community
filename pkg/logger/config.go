@@ -22,18 +22,18 @@ const (
 func getLogPath(c config.LoggingConfig, logType string) string {
 	switch logType {
 	case LogTypeAPIServer:
-		return c.LogAPIServerConf.Path
+		return filepath.Join(c.LogDir,c.LogAPIServerConf.Filename)
 	case LogTypeRunner:
-		return c.LogRunnerConf.Path
+		return filepath.Join(c.LogDir, c.LogRunnerConf.Filename)
 	case LogTypeSSH:
-		return c.LogSSHConf.Path
+		return filepath.Join(c.LogDir, c.LogSSHConf.Filename)
 	case LogTypeScan:
-		return c.LogScanConf.Path
+		return filepath.Join(c.LogDir, c.LogScanConf.Filename)
 	case LogTypeSystem:
-		return c.LogSystemConf.Path
+		return filepath.Join(c.LogDir, c.LogSystemConf.Filename)
 	default:
 		// 如果传入未知类型，默认使用 system 日志
-		return c.LogSystemConf.Path
+		return filepath.Join(c.LogDir, c.LogSystemConf.Filename)
 	}
 }
 
