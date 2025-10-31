@@ -95,8 +95,8 @@ tasks:
     desc: 构建应用
     deps: [clean]  # 先执行清理
     cmds:
-      - go build -o "{{.BIN_DIR}}/gitfox" -ldflags "{{.LDFLAGS}}" ./cmd/cli/main.go
-      - echo "本地构建完成，二进制文件位于 {{.BIN_DIR}}/gitfox"
+      - go build -o "{{.BIN_DIR}}/gitfox_linux" -ldflags "{{.LDFLAGS}}" ./cmd/cli/main.go
+      - echo "本地构建完成，二进制文件位于 {{.BIN_DIR}}/gitfox_linux"
 
   cross-build:
     desc: 交叉编译应用

@@ -1,43 +1,76 @@
-# 构建阶段
-FROM golang:1.25-alpine AS builder
+FROM hub.zentao.net/ci/golang:1.25-alpine3.22 AS build
 
 ARG TZ="Asia/Shanghai"
 
-ENV TZ ${TZ}
+ENV TZ=${TZ}
 
 ENV GOPROXY=https://goproxy.cn,direct
 
 ENV GO111MODULE=on
+ENV CGO_ENABLED=1
 
-RUN apk --no-cache add git bash musl tzdata curl
+# 安装 C 编译依赖（gcc、musl-dev、sqlite-dev），用于编译 go-sqlite3
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apk/repositories \
+    && apk --no-cache add git bash musl tzdata curl \
+    # 安装 C 依赖（关键：gcc 是编译 CGO 必需，sqlite-dev 是 SQLite 库文件）
+    && apk --no-cache add gcc musl-dev sqlite-dev
 
 WORKDIR /app
 
-# 复制依赖文件
-COPY go.mod go.sum ./
-RUN go mod download
-
-# 复制源代码
 COPY . .
 
-# 构建应用
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o devops-api ./cmd/api
+RUN go install github.com/go-task/task/v3/cmd/task@latest \
+  && task build
 
-# 运行阶段
-FROM alpine:3.17
+### Pull CA Certs
+FROM hub.zentao.net/ci/alpine:3.19 AS cert-image
 
+RUN apk --update add ca-certificates
+
+FROM hub.zentao.net/ci/alpine:3.19
+
+ARG TZ="Asia/Shanghai"
+
+ENV TZ=${TZ}
+
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apk/repositories \
+    && apk --no-cache add git bash musl tzdata curl \
+    && ln -sf /usr/share/zoneinfo/${TZ} /etc/localtime \
+    && echo ${TZ} > /etc/timezone \
+    && date \
+    # && apk del --no-cache tzdata \
+    && rm -rf /var/cache/apk/*
+
+# setup app dir and its content
 WORKDIR /app
 
-# 复制构建产物
-COPY --from=builder /app/devops-api .
-COPY --from=builder /app/configs ./configs
-COPY --from=builder /app/api ./api
+VOLUME /data
 
-# 安装CA证书(用于HTTPS)
-RUN apk --no-cache add ca-certificates
 
-# 暴露端口
-EXPOSE 8080
+ENV GITFOX_LOG_DIR=/data/logs/gitfox
+ENV GITFOX_GIT_ROOT_DIR=/data/gitfox/git
+ENV GITFOX_SSH_HOST_KEYS_DIR=/data/gitfox/ssh
+ENV GITFOX_XDG_CACHE_HOME=/data/gitfox/cache
+ENV GITFOX_REGISTRY_FS_ROOT_DIR=/data/gitfox/registry
+ENV GITFOX_SQLITE_FILE=/data/gitfox/sqlite/sqlite.db
+# 日志输出的最低级别  -1~5：debug,info,warn,error,dpanic,panic,fatal
+ENV GITFOX_LOG_LEVEL=-1
+ENV GITFOX_DB_DRIVER=mysql
+ENV GITFOX_DB_DATASOURCE=root:pass4GitFox@tcp(mysql:3306)/gitfox
+ENV GITFOX_DOCKER_HOST=unix:///var/run/docker.sock
+ENV GITFOX_DOCKER_API_VERSION=1.40
 
-# 运行应用
-ENTRYPOINT ["./devops-api", "--config", "configs/default.yaml"]
+COPY --from=build /app/bin/gitfox_linux /app/gitfox
+COPY --from=build /app/configs/dev.env /app/dev.env
+COPY --from=build /app/configs/dev.yaml /app/dev.yaml
+
+## 临时增加
+COPY --from=build /app/locales /app/locales
+
+
+COPY --from=cert-image /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
+
+EXPOSE 3000
+EXPOSE 22
+
+CMD [ "/app/gitfox", "server", "dev" ]
