@@ -15,6 +15,9 @@ import (
 	"golang.org/x/text/transform"
 	"golang.org/x/text/unicode/norm"
 	"gopkg.in/yaml.v3"
+	"github.com/joho/godotenv"
+	"github.com/kelseyhightower/envconfig"
+
 )
 
 const (
@@ -22,9 +25,6 @@ const (
 	Local               = "local"
 	Dev                 = "dev"
 	Prod                = "prod"
-	LocalConfigFileName = "local.yaml"
-	DevConfigFileName   = "dev.yaml"
-	ProdConfigFileName  = "prod.yaml"
 )
 
 const (
@@ -37,8 +37,13 @@ const (
 
 // LoadConfig loads the configuration based on the provided mode.
 func LoadConfig(mode string) (*Config, error) {
+	// 从环境变量加载配置
+	config, err := loadFromEnvVars(mode)
+	if err != nil {
+		return nil, err
+	}
 	// 首先从 YAML 文件加载配置
-	config, err := loadFromYaml(mode)
+	err = loadFromYaml(mode, config)
 	if err != nil {
 		return nil, err
 	}
@@ -84,44 +89,16 @@ func LoadConfig(mode string) (*Config, error) {
 }
 
 // loadFromYaml loads the configuration from a YAML file based on the mode.
-func loadFromYaml(mode string) (*Config, error) {
-	// 获取当前可执行文件的绝对路径
-	exePath, err := os.Executable()
+func loadFromYaml(mode string, config *Config) (error) {
+	configPaths, err := findConfigFilePaths(mode, "yaml")
 	if err != nil {
-		return nil, errors.New("获取可执行文件路径失败: " + err.Error())
+		return err
 	}
-
-	// 获取可执行文件所在目录（配置文件与二进制同目录）
-	exeDir := filepath.Dir(exePath)
-
-	// 根据模式确定配置文件名
-	var fileName string
-	switch mode {
-	case Debug:
-		exeDir = filepath.Join(filepath.Dir(filepath.Dir(exeDir)), "configs")
-		fileName = LocalConfigFileName
-	case Local:
-		fileName = LocalConfigFileName
-	case Dev:
-		fileName = DevConfigFileName
-	case Prod:
-		fileName = ProdConfigFileName
-	default:
-		fileName = DevConfigFileName
-	}
-
-	configPaths, err := file.FindFilesRecursive(exeDir, fileName)
+	config, err = loadFromFile(configPaths[0])
 	if err != nil {
-		return nil, errors.Wrapf(err, "查找配置文件失败")
+		return err
 	}
-	if len(configPaths) == 0 {
-		return nil, errors.Newf("未找到配置文件: %s", fileName)
-	}
-	config, err := loadFromFile(configPaths[0])
-	if err != nil {
-		return nil, err
-	}
-	return config, nil
+	return nil
 }
 
 // loadFromFile loads the configuration from a file.
@@ -138,6 +115,30 @@ func loadFromFile(filePath string) (*Config, error) {
 
 	return &config, nil
 }
+
+// loadFromEnvVars 从gitfox.env文件中加载并设置为环境变量
+func loadFromEnvVars(mode string) (*Config, error) {	
+	configPaths, err := findConfigFilePaths(mode, "env")
+	if err != nil {
+		return nil, err
+	}
+	//加载.env文件中配置至环境变量，若环境变量已存在则不覆盖
+	err = godotenv.Load(configPaths[0])
+	if err != nil {
+		return nil, fmt.Errorf("failed to load env file: %w", err)
+	}
+	
+	//将环境变量映射到配置结构体
+	config := new(Config)
+	err = envconfig.Process("", config)
+	if err != nil {
+		return nil, err
+	}
+	return config, nil
+
+}
+
+
 
 // getSanitizedMachineName gets the name of the machine and returns it in sanitized format.
 func getSanitizedMachineName() (string, error) {
@@ -300,4 +301,31 @@ func combineToRawURL(scheme, host, port, path string) string {
 	}
 
 	return urlRAW
+}
+
+// findConfigFilePaths finds configuration file paths based on the mode and extension.
+func findConfigFilePaths(mode, ext string) ([]string, error) {
+	// 获取当前可执行文件的绝对路径
+	exePath, err := os.Executable()
+	if err != nil {
+		return nil, errors.New("获取可执行文件路径失败: " + err.Error())
+	}
+
+	// 获取可执行文件所在目录（配置文件与二进制同目录）
+	exeDir := filepath.Dir(exePath)
+	// 根据模式确定配置文件名
+	if mode == Debug {
+		exeDir = filepath.Join(filepath.Dir(filepath.Dir(exeDir)), "configs")
+	}
+
+	fileName := fmt.Sprintf("%s.%s", mode, ext)
+
+	configPaths, err := file.FindFilesRecursive(exeDir, fileName)
+	if err != nil {
+		return nil, errors.Wrapf(err, "查找 %s 配置文件失败", fileName)
+	}
+	if len(configPaths) == 0 {
+		return nil, errors.Newf("未找到配置文件: %s", fileName)
+	}
+	return configPaths, nil
 }

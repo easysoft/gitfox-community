@@ -32,8 +32,8 @@ type ServerConfig struct {
 
 // DatabaseConfig 数据库配置
 type DatabaseConfig struct {
-	Driver          string        `yaml:"driver"`
-	Datasource      string        `yaml:"datasource"`
+	Driver          string        `envconfig:"GITFOX_DB_DRIVER" default:"mysql"`
+	Datasource      string        `envconfig:"GITFOX_DB_DATASOURCE" required:"true"`
 	PrintSQL        bool          `yaml:"printSQL"`
 	MaxIdleConn     int           `yaml:"maxIdleConn"`
 	MaxOpenConn     int           `yaml:"maxOpenConn"`
@@ -42,7 +42,7 @@ type DatabaseConfig struct {
 
 // SQLiteConfig 缓存数据库配置
 type SQLiteConfig struct {
-	Path string `yaml:"path"`
+	Path string `envconfig:"GITFOX_SQLITE_PATH" default:"/data/gitfox/sqlite/sqlite.db"`
 }
 
 // DockerConfig Docker配置
@@ -54,7 +54,7 @@ type DockerConfig struct {
 type GitConfig struct {
 	Trace         bool   `yaml:"trace"`
 	DefaultBranch string `yaml:"defaultBranch"`
-	Root          string `yaml:"root"`
+	Root          string `envconfig:"GITFOX_GIT_ROOT_DIR" default:"/data/gitfox/git"`
 	HookPath      string `yaml:"-"`
 }
 
@@ -69,7 +69,7 @@ type SSHConfig struct {
 	Enable      bool   `yaml:"enable"`
 	Host        string `yaml:"host"`
 	Port        int    `yaml:"port"`
-	HostKeysDir string `yaml:"hostKeysDir"`
+	HostKeysDir string `envconfig:"GITFOX_SSH_HOST_KEYS_DIR" default:"/data/gitfox/ssh"`
 }
 type I18nConfig struct {
 	DefaultLocale    string   `yaml:"defaultLocale"`
@@ -117,12 +117,13 @@ type RegistryStorageConfig struct {
 
 // FilesystemStorageConfig 文件系统存储配置
 type FilesystemStorageConfig struct {
-	RootDirectory string `yaml:"rootDirectory"`
+	RootDirectory string `envconfig:"GITFOX_REGISTRY_FS_ROOT_DIR" default:"/data/gitfox/registry"`
 }
 
-// LoggingiConfig 日志配置
+// LoggingConfig 日志配置
 type LoggingConfig struct {
-	Level            int                `yaml:"level"`
+	Level            int                `envconfig:"GITFOX_LOG_LEVEL" default:"-1"`
+	LogDir           string             `envconfig:"GITFOX_LOG_DIR" default:"/data/gitfox/logs"`
 	Stdout           bool               `yaml:"stdout"`
 	Caller           bool               `yaml:"caller"`
 	Encoder          string             `yaml:"encoder"`
