@@ -12,4 +12,5 @@ type SpaceInterface interface {
 	Get(ctx context.Context, id uint) (*spaceModel.SpaceResponse, error)
 	Update(ctx context.Context, id uint, req spaceModel.UpdateSpaceRequest) (*spaceModel.SpaceResponse, error)
 	Delete(ctx context.Context, id uint) error
+	Undelete(ctx context.Context, req spaceModel.UndeleteSpaceRequest) error
 }

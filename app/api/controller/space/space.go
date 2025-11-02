@@ -143,6 +143,29 @@ func (ctl *SpaceController) Update(c *gin.Context) {
 // @Failure 500 {object} resp.ObjectResponse "删除失败（如存在关联资源）"
 // @Router /spaces/{id} [delete]
 func (ctl *SpaceController) Delete(c *gin.Context) {
+	var err error
+
+	// 解析 path id
+	objID, err := req.PathParamAsPositiveUint(c, "id")
+	if err != nil {
+		err = pkg_errors.WithI18nKey(err, "space.path_param_error")
+		resp.BadRequest(c, err)
+		return
+	}
+
+	// 调用服务层删除空间
+	if err = ctl.spaceSvc.Delete(logger.GetContextWithLogger(c), objID); err != nil {
+		// 判断错误类型，返回相应的HTTP状态码
+		if pkg_errors.IsNotFound(err) {
+			err = pkg_errors.WithI18nKey(err, "space.not_found")
+			resp.NotFound(c, err)
+			return
+		}
+		// 关联资源错误或其他业务错误
+		err = pkg_errors.WithI18nKey(err, "space.delete_error")
+		resp.InternalError(c, err)
+		return
+	}
 	resp.OK(c, "space.delete_success", nil)
 }
 
@@ -158,5 +181,29 @@ func (ctl *SpaceController) Delete(c *gin.Context) {
 // @Failure 500 {object} resp.ObjectResponse "恢复失败"
 // @Router /spaces/undelete [post]
 func (ctl *SpaceController) Undelete(c *gin.Context) {
+	var reqData space.UndeleteSpaceRequest
+	var err error
+
+	// 解析请求体
+	if err = c.ShouldBindJSON(&reqData); err != nil {
+		err = pkg_errors.WithI18nKey(err, "space.body_param_error")
+		resp.BadRequest(c, err)
+		return
+	}
+
+	// 调用服务层恢复空间
+	if err = ctl.spaceSvc.Undelete(logger.GetContextWithLogger(c), reqData); err != nil {
+		// 判断错误类型，返回相应的HTTP状态码
+		if pkg_errors.IsNotFound(err) {
+			err = pkg_errors.WithI18nKey(err, "space.not_found")
+			resp.NotFound(c, err)
+			return
+		}
+		// 如果是名称冲突或其他业务错误
+		err = pkg_errors.WithI18nKey(err, "space.undelete_error")
+		resp.InternalError(c, err)
+		return
+	}
+
 	resp.OK(c, "space.undelete_success", nil)
 }

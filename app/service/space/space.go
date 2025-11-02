@@ -2,9 +2,12 @@ package space
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	spaceModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/space"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/space"
+	pkg_errors "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 )
 
 type SpaceSvc struct {
@@ -40,6 +43,59 @@ func (s *SpaceSvc) Update(ctx context.Context, id uint, req spaceModel.UpdateSpa
 }
 
 func (s *SpaceSvc) Delete(ctx context.Context, id uint) error {
-	// Implementation logic here
+
+	// 1. 检查空间是否存在且未删除
+	spaceObj, err := s.spaceStore.GetByID(ctx, id)
+	if err != nil {
+		return err
+	}
+	if spaceObj.Deleted == 1 {
+		return pkg_errors.NotFound.Newf("space %d has been deleted", id)
+	}
+
+	// 2. 检查空间是否有关联的代码库
+	hasRepos, err := s.spaceStore.HasRepositories(ctx, id)
+	if err != nil {
+		return fmt.Errorf("failed to check repositories: %w", err)
+	}
+	if hasRepos {
+		return pkg_errors.BadRequest.Newf("space %d has associated repositories, cannot delete", id)
+	}
+
+	// 3. 检查空间是否有关联的制品库
+	hasArtifacts, err := s.spaceStore.HasArtifacts(ctx, id)
+	if err != nil {
+		return fmt.Errorf("failed to check artifacts: %w", err)
+	}
+	if hasArtifacts {
+		return pkg_errors.BadRequest.Newf("space %d has associated artifacts, cannot delete", id)
+	}
+
+	// 4. 执行逻辑删除
+	return s.spaceStore.Delete(ctx, id)
+}
+
+func (s *SpaceSvc) Undelete(ctx context.Context, req spaceModel.UndeleteSpaceRequest) error {
+	// 将 []uint16 转换为 []uint
+	ids := make([]uint, len(req.IDs))
+	for i, id := range req.IDs {
+		ids[i] = uint(id)
+	}
+
+	if len(ids) == 0 {
+		return pkg_errors.BadRequest.New("no space IDs provided")
+	}
+
+	// 调用 Store 层恢复空间
+	err := s.spaceStore.Undelete(ctx, ids, req.EditedBy)
+	if err != nil {
+		// 检查是否是名称冲突错误
+		errMsg := err.Error()
+		if strings.Contains(errMsg, "already exists") {
+			return pkg_errors.BadRequest.Wrapf(err, "cannot undelete spaces: name conflict")
+		}
+		return err
+	}
+
 	return nil
 }

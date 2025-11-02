@@ -19,12 +19,12 @@ func NewSpaceStore(db *gorm.DB) *SpaceStore {
 func (r *SpaceStore) Create(ctx context.Context, req modelSpace.CreateSpaceRequest) (*modelSpace.SpaceResponse, error) {
 
 	data := Space{
-		Name:        req.Name,
-		Owner:       req.Owner,
-		Permission:  req.Permission,
-		Desc:        req.Desc,
-		CreatedBy:   req.CreatedBy,
-		EditedBy:    req.CreatedBy,
+		Name:       req.Name,
+		Owner:      req.Owner,
+		Permission: req.Permission,
+		Desc:       req.Desc,
+		CreatedBy:  req.CreatedBy,
+		EditedBy:   req.CreatedBy,
 	}
 
 	if err := r.db.WithContext(ctx).Create(&data).Error; err != nil {
@@ -86,6 +86,100 @@ func (r *SpaceStore) Update(ctx context.Context, id uint, req modelSpace.UpdateS
 
 	// 将 Space 转换为 SpaceResponse
 	return mapToModel(out), nil
+}
+
+// GetByID 根据ID查询单个空间（包括已删除的）
+func (r *SpaceStore) GetByID(ctx context.Context, id uint) (*Space, error) {
+	var out Space
+	out.ID = id
+
+	if err := r.db.WithContext(ctx).First(&out).Error; err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
+	}
+
+	// GORM 会自动将 DATETIME 类型映射为 *time.Time，通常无需手动转换
+	// 如果遇到类型问题，请检查 GORM 配置或数据库驱动设置
+	return &out, nil
+}
+
+// HasRepositories 检查空间是否有关联的代码库
+func (r *SpaceStore) HasRepositories(ctx context.Context, spaceID uint) (bool, error) {
+	var count int64
+	// TODO: 根据实际的代码库表结构修改此查询
+	// 示例：如果代码库表有 space_id 字段
+	// err := r.db.WithContext(ctx).Table("ops_repo").
+	//     Where("space_id = ? AND deleted = 0", spaceID).
+	//     Count(&count).Error
+
+	// 暂时返回 false，表示没有关联代码库，待实现
+	// 实际实现时需要检查代码库表
+	count = 0
+	return count > 0, nil
+}
+
+// HasArtifacts 检查空间是否有关联的制品库
+func (r *SpaceStore) HasArtifacts(ctx context.Context, spaceID uint) (bool, error) {
+	var count int64
+	// TODO: 根据实际的制品库表结构修改此查询
+	// 示例：如果制品库表有 space_id 字段
+	// err := r.db.WithContext(ctx).Table("ops_artifact").
+	//     Where("space_id = ? AND deleted = 0", spaceID).
+	//     Count(&count).Error
+
+	// 暂时返回 false，表示没有关联制品库，待实现
+	// 实际实现时需要检查制品库表
+	count = 0
+	return count > 0, nil
+}
+
+// Delete 逻辑删除空间
+func (r *SpaceStore) Delete(ctx context.Context, id uint) error {
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+
+		// 查询是否删除.
+		var space Space
+		if err := tx.Where("id = ?", id).Where("deleted = ?", 0).First(&space).Error; err != nil {
+			return database.ProcessSQLErrorf(ctx, err)
+		}
+
+		// 删除操作.
+		if err := tx.Model(&space).UpdateColumns(map[string]interface{}{
+			"deleted":    1,
+			"editedDate": tx.NowFunc(),
+		}).Error; err != nil {
+			return database.ProcessSQLErrorf(ctx, err)
+		}
+		return nil
+	})
+}
+
+// Undelete 批量恢复已删除的空间
+func (r *SpaceStore) Undelete(ctx context.Context, ids []uint, editedBy string) error {
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		// 状态校验
+		var spaces []Space
+		if err := tx.Where("id IN ?", ids).Where("deleted = ?", 1).Find(&spaces).Error; err != nil {
+			return database.ProcessSQLErrorf(ctx, err)
+		}
+
+		if len(spaces) == 0 {
+			return database.ProcessSQLErrorf(ctx, gorm.ErrRecordNotFound)
+		}
+
+		// 恢复空间
+		updateData := map[string]interface{}{
+			"deleted":    0,
+			"editedBy":   editedBy,
+			"editedDate": tx.NowFunc(),
+		}
+		if err := tx.Model(&Space{}).
+			Where("id IN ?", ids).
+			Where("deleted = ?", 1).
+			Updates(updateData).Error; err != nil {
+			return database.ProcessSQLErrorf(ctx, err)
+		}
+		return nil
+	})
 }
 
 // mapToModel 将 Space 转换为 SpaceResponse
