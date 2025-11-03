@@ -2,8 +2,10 @@ package space
 
 import (
 	"context"
+	"fmt"
 
-	modelSpace "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/space"
+	spaceModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/space"
+
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
 	"gorm.io/gorm"
 )
@@ -16,7 +18,7 @@ func NewSpaceStore(db *gorm.DB) *SpaceStore {
 	return &SpaceStore{db: db}
 }
 
-func (r *SpaceStore) Create(ctx context.Context, req modelSpace.CreateSpaceRequest) (*modelSpace.SpaceResponse, error) {
+func (s *SpaceStore) Create(ctx context.Context, req spaceModel.CreateSpaceRequest) (*spaceModel.SpaceResponse, error) {
 
 	data := Space{
 		Name:       req.Name,
@@ -27,14 +29,14 @@ func (r *SpaceStore) Create(ctx context.Context, req modelSpace.CreateSpaceReque
 		EditedBy:   req.CreatedBy,
 	}
 
-	if err := r.db.WithContext(ctx).Create(&data).Error; err != nil {
+	if err := s.db.WithContext(ctx).Create(&data).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
 
 	return mapToModel(data), nil
 }
 
-func (r *SpaceStore) Update(ctx context.Context, id uint, req modelSpace.UpdateSpaceRequest) (*modelSpace.SpaceResponse, error) {
+func (s *SpaceStore) Update(ctx context.Context, id uint, req spaceModel.UpdateSpaceRequest) (*spaceModel.SpaceResponse, error) {
 	var out Space
 	out.ID = id
 
@@ -58,7 +60,7 @@ func (r *SpaceStore) Update(ctx context.Context, id uint, req modelSpace.UpdateS
 	}
 
 	// 使用事务确保查询和更新的原子性
-	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		// 先查询出要更新的记录
 		if err := tx.First(&out).Error; err != nil {
 			return database.ProcessSQLErrorf(ctx, err)
@@ -86,6 +88,31 @@ func (r *SpaceStore) Update(ctx context.Context, id uint, req modelSpace.UpdateS
 
 	// 将 Space 转换为 SpaceResponse
 	return mapToModel(out), nil
+}
+
+func (s *SpaceStore) List(ctx context.Context, filter spaceModel.ListSpaceFilter) (*database.PageResult[*Space], error) {
+	tx := s.db.WithContext(ctx).Model(&Space{}).Where("deleted = ?", 0)
+
+	if filter.Name != "" {
+		// 用LOWER函数实现不区分大小写匹配，避免数据库大小写敏感问题
+		tx = tx.Where("LOWER(name) LIKE LOWER(?)", "%"+filter.Name+"%")
+	}
+	if filter.Permission != "" {
+		tx = tx.Where("acl = ?", filter.Permission)
+	}
+	if filter.Owner != "" {
+		tx = tx.Where("owner = ?", filter.Owner)
+	}
+
+	// 2. 调用通用分页工具（NeedTotal默认true，自动统计总条数）
+	var spaces []*Space
+	pageResult, err := database.PaginateDefault(ctx, tx, filter.Page, filter.PageSize, &spaces)	
+	fmt.Println(pageResult)
+	if err != nil {
+		return nil,  database.ProcessSQLErrorf(ctx, err)
+	}
+
+	return pageResult, nil
 }
 
 // GetByID 根据ID查询单个空间（包括已删除的）
@@ -183,8 +210,8 @@ func (r *SpaceStore) Undelete(ctx context.Context, ids []uint, editedBy string) 
 }
 
 // mapToModel 将 Space 转换为 SpaceResponse
-func mapToModel(data Space) *modelSpace.SpaceResponse {
-	return &modelSpace.SpaceResponse{
+func mapToModel(data Space) *spaceModel.SpaceResponse {
+	return &spaceModel.SpaceResponse{
 		ID:          data.ID,
 		Name:        data.Name,
 		Owner:       data.Owner,

@@ -5,8 +5,9 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/space"
 	spaceSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/space"
-	pkg_errors "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	"github.com/gin-gonic/gin"
 )
 
@@ -38,7 +39,7 @@ func (ctl *SpaceController) Create(c *gin.Context) {
 
 	// 解析请求体
 	if err = c.ShouldBindJSON(&reqData); err != nil {
-		err = pkg_errors.WithI18nKey(err, "space.body_param_error")
+		err = errors.WithI18nKey(err, i18n.SpaceBodyParamError)
 		resp.BadRequest(c, err)
 		return
 	}
@@ -47,12 +48,12 @@ func (ctl *SpaceController) Create(c *gin.Context) {
 	// 调用服务层创建空间
 	spaceObj, err := ctl.spaceSvc.Create(logger.GetContextWithLogger(c), reqData)
 	if err != nil {
-		err = pkg_errors.WithI18nKey(err, "space.create_error")
+		err = errors.WithI18nKey(err, i18n.SpaceCreateError)
 		resp.InternalError(c, err)
 		return
 	}
 
-	resp.Created(c, "space.create_success", spaceObj)
+	resp.Created(c, i18n.SpaceCreateSuccess, spaceObj)
 }
 
 // @Summary 查询空间列表
@@ -70,8 +71,25 @@ func (ctl *SpaceController) Create(c *gin.Context) {
 // @Failure 500 {object} resp.ListResponse "服务器错误"
 // @Router /spaces [get]
 func (ctl *SpaceController) List(c *gin.Context) {
-	resp.ListSuccess(c, "space.list_success",
-		resp.ListArgs{}, "0")
+	var req space.ListSpaceFilter
+	var err error
+	if err = c.ShouldBindQuery(&req); err != nil {
+		err = errors.WithI18nKey(err, i18n.SpaceBodyParamError)
+		resp.BadRequest(c, err)
+		return
+	}
+
+	spaceObj,err := ctl.spaceSvc.List(logger.GetContextWithLogger(c), req)
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.SpaceListError)
+		resp.InternalError(c, err)
+	}
+	resp.ListSuccess(c, spaceObj.Data,
+		resp.ListArgs{
+			Total: spaceObj.Total,
+			Page: int64(spaceObj.Page),
+			PageSize: int64(spaceObj.PageSize),
+		}, i18n.SpaceListSuccess, nil)
 }
 
 // @Summary 查询单个空间
@@ -108,14 +126,14 @@ func (ctl *SpaceController) Update(c *gin.Context) {
 	// 解析 path id
 	objID, err := req.PathParamAsPositiveUint(c, "id")
 	if err != nil {
-		err = pkg_errors.WithI18nKey(err, "space.path_param_error")
+		err = errors.WithI18nKey(err, i18n.SpacePathParamError)
 		resp.BadRequest(c, err)
 		return
 	}
 
 	// 解析请求体
 	if err = c.ShouldBindJSON(&reqData); err != nil {
-		err = pkg_errors.WithI18nKey(err, "space.body_param_error")
+		err = errors.WithI18nKey(err, i18n.SpaceBodyParamError)
 		resp.BadRequest(c, err)
 		return
 	}
@@ -123,12 +141,12 @@ func (ctl *SpaceController) Update(c *gin.Context) {
 	// 调用服务层更新空间
 	spaceObj, err := ctl.spaceSvc.Update(logger.GetContextWithLogger(c), objID, reqData)
 	if err != nil {
-		err = pkg_errors.WithI18nKey(err, "space.update_error")
+		err = errors.WithI18nKey(err, i18n.SpaceUpdateError)
 		resp.InternalError(c, err)
 		return
 	}
 
-	resp.OK(c, "space.update_success", spaceObj)
+	resp.OK(c, i18n.SpaceUpdateSuccess, spaceObj)
 }
 
 // @Summary 删除空间
@@ -148,7 +166,7 @@ func (ctl *SpaceController) Delete(c *gin.Context) {
 	// 解析 path id
 	objID, err := req.PathParamAsPositiveUint(c, "id")
 	if err != nil {
-		err = pkg_errors.WithI18nKey(err, "space.path_param_error")
+		err = errors.WithI18nKey(err, i18n.SpacePathParamError)
 		resp.BadRequest(c, err)
 		return
 	}
@@ -156,13 +174,13 @@ func (ctl *SpaceController) Delete(c *gin.Context) {
 	// 调用服务层删除空间
 	if err = ctl.spaceSvc.Delete(logger.GetContextWithLogger(c), objID); err != nil {
 		// 判断错误类型，返回相应的HTTP状态码
-		if pkg_errors.IsNotFound(err) {
-			err = pkg_errors.WithI18nKey(err, "space.not_found")
+		if errors.IsNotFound(err) {
+			err = errors.WithI18nKey(err, "space.not_found")
 			resp.NotFound(c, err)
 			return
 		}
 		// 关联资源错误或其他业务错误
-		err = pkg_errors.WithI18nKey(err, "space.delete_error")
+		err = errors.WithI18nKey(err, "space.delete_error")
 		resp.InternalError(c, err)
 		return
 	}
@@ -186,7 +204,7 @@ func (ctl *SpaceController) Undelete(c *gin.Context) {
 
 	// 解析请求体
 	if err = c.ShouldBindJSON(&reqData); err != nil {
-		err = pkg_errors.WithI18nKey(err, "space.body_param_error")
+		err = errors.WithI18nKey(err, i18n.SpaceBodyParamError)
 		resp.BadRequest(c, err)
 		return
 	}
@@ -194,13 +212,13 @@ func (ctl *SpaceController) Undelete(c *gin.Context) {
 	// 调用服务层恢复空间
 	if err = ctl.spaceSvc.Undelete(logger.GetContextWithLogger(c), reqData); err != nil {
 		// 判断错误类型，返回相应的HTTP状态码
-		if pkg_errors.IsNotFound(err) {
-			err = pkg_errors.WithI18nKey(err, "space.not_found")
+		if errors.IsNotFound(err) {
+			err = errors.WithI18nKey(err, "space.not_found")
 			resp.NotFound(c, err)
 			return
 		}
 		// 如果是名称冲突或其他业务错误
-		err = pkg_errors.WithI18nKey(err, "space.undelete_error")
+		err = errors.WithI18nKey(err, "space.undelete_error")
 		resp.InternalError(c, err)
 		return
 	}

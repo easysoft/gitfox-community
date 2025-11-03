@@ -19,7 +19,7 @@ type UpdateSpaceRequest struct {
 }
 
 type SpaceResponse struct {
-	ID          uint     `json:"id"`
+	ID          uint       `json:"id"`
 	Name        string     `json:"name"`
 	Owner       string     `json:"owner"`
 	Permission  string     `json:"acl"`
@@ -31,11 +31,13 @@ type SpaceResponse struct {
 }
 
 type ListSpaceFilter struct {
-	Name       string
-	Permission string `json:"acl"`
-	Owner      string
-	Page       int
-	PageSize   int
+	Name       string `form:"name" binding:"omitempty"` // 非必填，omitempty 允许空值
+	Permission string `json:"name" form:"permission" binding:"omitempty,oneof=open private"` // 枚举校验：仅允许 open/private
+	Owner      string `form:"owner" binding:"omitempty"`
+
+	// 分页参数（对应 pagination.PageParam）
+	Page     int `form:"page" binding:"omitempty,min=1"` // 最小1
+	PageSize int `form:"pageSize" binding:"omitempty,min=1,max=100"` // 1-100
 }
 
 type UndeleteSpaceRequest struct {

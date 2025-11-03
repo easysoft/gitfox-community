@@ -48,6 +48,8 @@ const (
 	SpaceBodyParamError          = "space.body_param_error"          // Body 参数解析失败
 	SpaceCreateError             = "space.create_error"              // 空间创建失败
 	SpaceCreateSuccess           = "space.create_success"            // 空间创建成功
+	SpaceListError               = "space.list_error"                // 查询空间列表失败
+	SpaceListSuccess             = "space.list_success"              // 查询空间列表成功
 	SpacePathParamError          = "space.path_param_error"          // Path 参数解析失败
 	SpaceQueryParamError         = "space.query_param_error"         // Query 参数解析失败
 	SpaceSecretsAddError         = "space.secrets_add_error"         // 添加密钥失败,请检查名称是否重复或格式是否正确.
