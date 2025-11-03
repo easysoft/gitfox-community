@@ -16,3 +16,5 @@ space:
   artifacts_title_success: "Repository Settings Saved Successfully."
   list_error: "Failed to query space list"
   list_success: "Query the space list successfully"
+  query_error: "Failed to query space"
+  query_success: "Query the space successfully"

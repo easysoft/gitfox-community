@@ -103,8 +103,21 @@ func (ctl *SpaceController) List(c *gin.Context) {
 // @Failure 404 {object} resp.ObjectResponse "空间不存在或已删除"
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
 // @Router /spaces/{id} [get]
-func (ctl *SpaceController) Get(c *gin.Context) {
-	resp.OK(c, "space.get_success", nil)
+func (ctl *SpaceController) GetByID(c *gin.Context) {
+	spaceID, err := req.PathParamAsPositiveUint(c, "id")
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.SpacePathParamError)
+		resp.BadRequest(c, err)
+		return
+	}
+
+	obj,err := ctl.spaceSvc.GetByID(logger.GetContextWithLogger(c),spaceID)
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.SpaceQueryError)
+		resp.InternalError(c, err)
+		return
+	}
+	resp.OK(c, i18n.SpaceQuerySuccess, obj)
 }
 
 // @Summary 更新空间

@@ -11,7 +11,7 @@ import (
 type SpaceInterface interface {
 	Create(ctx context.Context, req spaceModel.CreateSpaceRequest) (*spaceModel.SpaceResponse, error)
 	List(ctx context.Context, filter spaceModel.ListSpaceFilter) (*database.PageResult[*space.Space], error)
-	Get(ctx context.Context, id uint) (*spaceModel.SpaceResponse, error)
+	GetByID(ctx context.Context, id uint) (*space.Space, error)
 	Update(ctx context.Context, id uint, req spaceModel.UpdateSpaceRequest) (*spaceModel.SpaceResponse, error)
 	Delete(ctx context.Context, id uint) error
 	Undelete(ctx context.Context, req spaceModel.UndeleteSpaceRequest) error

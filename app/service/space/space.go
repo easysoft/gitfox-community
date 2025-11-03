@@ -33,9 +33,13 @@ func (s *SpaceSvc) List(ctx context.Context, filter spaceModel.ListSpaceFilter) 
 }
 
 
-func (s *SpaceSvc) Get(ctx context.Context, id uint) (*spaceModel.SpaceResponse, error) {
-	// Implementation logic here
-	return nil, nil
+func (s *SpaceSvc) GetByID(ctx context.Context, id uint) (*space.Space, error) {
+		spaceEntity, err := s.spaceStore.GetByID(ctx, id)
+	if err != nil {
+		// 传递Store层错误（如“space not found”）
+		return nil, err
+	}
+	return spaceEntity, nil
 }
 
 func (s *SpaceSvc) Update(ctx context.Context, id uint, req spaceModel.UpdateSpaceRequest) (*spaceModel.SpaceResponse, error) {

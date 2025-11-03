@@ -17,3 +17,5 @@ space:
   artifacts_title_success: "仓库设置保存成功"
   list_error: "查询空间列表失败"
   list_success: "查询空间列表成功"
+  query_error: "查询空间失败"
+  query_success: "查询空间成功"
