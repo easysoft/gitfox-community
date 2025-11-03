@@ -1,9 +1,10 @@
 package resp
 
 import (
+	"fmt"
 	"net/http"
 
-	pkg_errors "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	"github.com/gin-gonic/gin"
 )
@@ -30,37 +31,33 @@ type ObjectResponse struct {
 
 // ObjectOK renders a successful object response (200 OK)
 func OK(c *gin.Context, code string, data interface{}) {
-	object(c, code, http.StatusOK, data)
+	objectOk(c, code, http.StatusOK, data)
 }
 
 // Created renders an object created response (201 Created)
 func Created(c *gin.Context, code string, data interface{}) {
-	object(c, code, http.StatusCreated, data)
+	objectOk(c, code, http.StatusCreated, data)
 }
 
 // ObjectError renders an object error response (400 Bad Request or 500 Internal Server Error)
 func Error(c *gin.Context, err error, args ...interface{}) {
-	code := pkg_errors.GetI18nKey(err)
-	httpStatus := pkg_errors.GetHttpStatus(err)
-	object(c, code, httpStatus)
+	httpStatus := errors.GetHttpStatus(err)
+	objectErr(c, err, httpStatus)
 }
 
 // BadRequest renders an object bad request response (400 Bad Request)
 func BadRequest(c *gin.Context, err error, args ...interface{}) {
-	code := pkg_errors.GetI18nKey(err)
-	object(c, code, http.StatusBadRequest)
+	objectErr(c, err, http.StatusBadRequest)
 }
 
 // NotFound renders an object not found response (404 Not Found)
 func NotFound(c *gin.Context, err error, args ...interface{}) {
-	code := pkg_errors.GetI18nKey(err)
-	object(c, code, http.StatusNotFound)
+	objectErr(c, err, http.StatusNotFound)
 }
 
 // InternalError renders an object internal server error response (500 Internal Server Error)
 func InternalError(c *gin.Context, err error, args ...interface{}) {
-	code := pkg_errors.GetI18nKey(err)
-	object(c, code, http.StatusInternalServerError)
+	objectErr(c, err, http.StatusInternalServerError)
 }
 
 // ListSuccess renders a successful list response (200 OK)
@@ -93,10 +90,10 @@ func list(c *gin.Context, data interface{}, listArgs ListArgs, code string, args
 // code: i18n key, e.g. "repo.branch.create.success"
 // httpStatus: HTTP status code
 // data: object data
-func object(c *gin.Context, code string, httpStatus int, data ...interface{}) {
-	message := i18n.TGin(c, code)
+func objectErr(c *gin.Context, err error, httpStatus int, data ...interface{}) {
+	code := errors.GetI18nKey(err)
+	message := i18n.TGin(c, code) + fmt.Sprintf(";%s", err.Error())
 	traceID := getTraceID(c)
-
 	c.JSON(httpStatus, ObjectResponse{
 		Code:    code,
 		Message: message,
@@ -104,6 +101,18 @@ func object(c *gin.Context, code string, httpStatus int, data ...interface{}) {
 		Data:    data,
 	})
 }
+
+func objectOk(c *gin.Context, code string, httpStatus int, data ...interface{}) {
+	message := i18n.TGin(c, code)
+	traceID := getTraceID(c)
+	c.JSON(httpStatus, ObjectResponse{
+		Code:    code,
+		Message: message,
+		TraceID: traceID,
+		Data:    data,
+	})
+}
+
 
 // getTraceID retrieves traceID from Gin Context
 func getTraceID(c *gin.Context) string {

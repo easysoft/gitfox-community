@@ -7,7 +7,8 @@ import (
 
 	spaceModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/space"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/space"
-	pkg_errors "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 )
 
 type SpaceSvc struct {
@@ -27,10 +28,10 @@ func (s *SpaceSvc) Create(ctx context.Context, req spaceModel.CreateSpaceRequest
 	return s.spaceStore.Create(ctx, req)
 }
 
-func (s *SpaceSvc) List(ctx context.Context, filter spaceModel.ListSpaceFilter) ([]spaceModel.SpaceResponse, error) {
-	// Implementation logic here
-	return nil, nil
+func (s *SpaceSvc) List(ctx context.Context, filter spaceModel.ListSpaceFilter) (*database.PageResult[*space.Space], error) {
+	return s.spaceStore.List(ctx, filter)
 }
+
 
 func (s *SpaceSvc) Get(ctx context.Context, id uint) (*spaceModel.SpaceResponse, error) {
 	// Implementation logic here
@@ -50,7 +51,7 @@ func (s *SpaceSvc) Delete(ctx context.Context, id uint) error {
 		return err
 	}
 	if spaceObj.Deleted == 1 {
-		return pkg_errors.NotFound.Newf("space %d has been deleted", id)
+		return errors.NotFound.Newf("space %d has been deleted", id)
 	}
 
 	// 2. 检查空间是否有关联的代码库
@@ -59,7 +60,7 @@ func (s *SpaceSvc) Delete(ctx context.Context, id uint) error {
 		return fmt.Errorf("failed to check repositories: %w", err)
 	}
 	if hasRepos {
-		return pkg_errors.BadRequest.Newf("space %d has associated repositories, cannot delete", id)
+		return errors.BadRequest.Newf("space %d has associated repositories, cannot delete", id)
 	}
 
 	// 3. 检查空间是否有关联的制品库
@@ -68,7 +69,7 @@ func (s *SpaceSvc) Delete(ctx context.Context, id uint) error {
 		return fmt.Errorf("failed to check artifacts: %w", err)
 	}
 	if hasArtifacts {
-		return pkg_errors.BadRequest.Newf("space %d has associated artifacts, cannot delete", id)
+		return errors.BadRequest.Newf("space %d has associated artifacts, cannot delete", id)
 	}
 
 	// 4. 执行逻辑删除
@@ -83,7 +84,7 @@ func (s *SpaceSvc) Undelete(ctx context.Context, req spaceModel.UndeleteSpaceReq
 	}
 
 	if len(ids) == 0 {
-		return pkg_errors.BadRequest.New("no space IDs provided")
+		return errors.BadRequest.New("no space IDs provided")
 	}
 
 	// 调用 Store 层恢复空间
@@ -92,10 +93,15 @@ func (s *SpaceSvc) Undelete(ctx context.Context, req spaceModel.UndeleteSpaceReq
 		// 检查是否是名称冲突错误
 		errMsg := err.Error()
 		if strings.Contains(errMsg, "already exists") {
-			return pkg_errors.BadRequest.Wrapf(err, "cannot undelete spaces: name conflict")
+			return errors.BadRequest.Wrapf(err, "cannot undelete spaces: name conflict")
 		}
 		return err
 	}
 
 	return nil
+}
+
+
+func (s *SpaceSvc) CheckPermission() {
+	// TODO: implement permission checks for spaces; placeholder to satisfy compilation.
 }

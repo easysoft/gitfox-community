@@ -14,3 +14,5 @@ space:
   secrets_delete_permission: "Failed to delete: You do not have permission to delete this secret."
   secrets_delete_success: "Secret deleted successfully."
   artifacts_title_success: "Repository Settings Saved Successfully."
+  list_error: "Failed to query space list"
+  list_success: "Query the space list successfully"

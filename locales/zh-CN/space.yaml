@@ -15,3 +15,5 @@ space:
   secrets_delete_permission: "删除失败：权限不足，您无法删除此密钥。"
   secrets_delete_success: "密钥已成功删除。"
   artifacts_title_success: "仓库设置保存成功"
+  list_error: "查询空间列表失败"
+  list_success: "查询空间列表成功"
