@@ -41,9 +41,9 @@ func Migrate(ctx context.Context, db *sql.DB, driverName string, log *logger.Sug
 	currentVersion, err := Current(ctx, db, driverName)
 	if err != nil {
 		log.Errorw("[Migrate] Failed to get current version", "error", err)
-	} else {
-		log.Infow("[Migrate] Current database version", "version", currentVersion)
+		return fmt.Errorf("failed to get current version: %w", err)
 	}
+	log.Infow("[Migrate] Current database version", "version", currentVersion)
 
 	opts, err := getMigrator(db, driverName, log)
 	if err != nil {
@@ -85,11 +85,6 @@ func Current(ctx context.Context, db *sql.DB, driverName string) (string, error)
 		queryTableName      = tableName
 	)
 
-	// 达梦数据库表名需要大写
-	if driverName == dmDriverName {
-		queryTableName = "OPS_MIGRATIONS"
-	}
-
 	switch driverName {
 	case sqliteDriverName:
 		query = `
@@ -102,31 +97,40 @@ func Current(ctx context.Context, db *sql.DB, driverName string) (string, error)
 			FROM information_schema.TABLES
 			WHERE TABLE_NAME= ?`
 	case dmDriverName:
+		// 达梦数据库：由于建表时使用了双引号 "ops_migrations"，
+		// 在 ALL_TABLES 中 TABLE_NAME 存储的是小写，但是需要区分 OWNER
 		query = `
 			SELECT count(*)
-			FROM ALL_TABLES
+			FROM USER_TABLES
 			WHERE TABLE_NAME= ?`
 	default:
 		return "", fmt.Errorf("unsupported driver '%s'", driverName)
 	}
 
 	if err := db.QueryRowContext(ctx, query, queryTableName).Scan(&migrationTableCount); err != nil {
-		return "", fmt.Errorf("failed to check migration table existence: %w", err)
+		return "", fmt.Errorf("failed to check migration table existence (table=%s, query=%s): %w", queryTableName, query, err)
 	}
 
+	// 表不存在，返回空版本（这是正常情况，表示首次初始化）
 	if migrationTableCount == 0 {
 		return "", nil
 	}
 
 	var version string
 
-	query = "select version from " + tableName + " limit 1"
+	// 达梦数据库需要使用双引号括起来保持大小写
+	if driverName == dmDriverName {
+		query = `select "version" from "` + tableName + `"`
+	} else {
+		query = "select version from " + tableName + " limit 1"
+	}
+
 	if err := db.QueryRowContext(ctx, query).Scan(&version); err != nil {
 		// 如果表存在但没有记录，返回空版本
 		if err == sql.ErrNoRows {
-			return "", nil
+			return "", fmt.Errorf("migration table exists but has no rows, database may be corrupted")
 		}
-		return "", fmt.Errorf("failed to read current DB version from migration table: %w", err)
+		return "", fmt.Errorf("failed to read current DB version from migration table (query=%s): %w", query, err)
 	}
 
 	return version, nil

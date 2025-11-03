@@ -5,12 +5,12 @@ CREATE TABLE "ops_space" (
   "name" VARCHAR(200) NOT NULL,
   "owner" VARCHAR(30) NOT NULL DEFAULT '',
   "acl" VARCHAR(30) NOT NULL DEFAULT 'open',
-  "desc" CLOB DEFAULT NULL,
+  "desc" VARCHAR(500) NOT NULL DEFAULT '',
   "createdBy" VARCHAR(30) NOT NULL DEFAULT '',
   "createdDate" DATETIME DEFAULT NULL,
   "editedBy" VARCHAR(30) NOT NULL DEFAULT '',
   "editedDate" DATETIME DEFAULT NULL,
-  "deleted" INT NOT NULL DEFAULT 0,
+  "deleted" TINYINT NOT NULL DEFAULT 0,
   CONSTRAINT "uk_name" UNIQUE ("name")
 );
 

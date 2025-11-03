@@ -1,40 +1,42 @@
 package errors
 
+import "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
+
 // Database related errors
 var (
-    // ErrResourceNotFound 表示资源未找到
-    ErrResourceNotFound = WithI18nKey(DBError.New("resource not found"), "db.notfound")
+	// ErrResourceNotFound 表示资源未找到
+	ErrResourceNotFound = WithI18nKey(DBError.New("resource not found"), i18n.DbNotfound)
 
-    // ErrDuplicate 表示违反唯一性约束（重复记录）
-    ErrDuplicate = WithI18nKey(DBError.New("resource already exists"), "db.duplicate")
+	// ErrDuplicate 表示违反唯一性约束（重复记录）
+	ErrDuplicate = WithI18nKey(DBError.New("resource already exists"), i18n.DbDuplicate)
 
-    // ErrForeignKeyViolation 表示违反外键约束
-    ErrForeignKeyViolation = WithI18nKey(DBError.New("foreign key constraint violation"), "db.foreign_key_violation")
+	// ErrForeignKeyViolation 表示违反外键约束
+	ErrForeignKeyViolation = WithI18nKey(DBError.New("foreign key constraint violation"), i18n.DbForeignKeyViolation)
 
-    // ErrInvalidTransaction 表示无效的事务操作
-    ErrInvalidTransaction = WithI18nKey(DBError.New("invalid transaction"), "db.invalid_transaction")
+	// ErrInvalidTransaction 表示无效的事务操作
+	ErrInvalidTransaction = WithI18nKey(DBError.New("invalid transaction"), i18n.DbInvalidTransaction)
 
-    // ErrInvalidData 表示无效的数据
-    ErrInvalidData = WithI18nKey(DBError.New("invalid data"), "db.invalid_data")
+	// ErrInvalidData 表示无效的数据
+	ErrInvalidData = WithI18nKey(DBError.New("invalid data"), i18n.DbInvalidData)
 
-    // ErrConnectionFailed 表示数据库连接失败
-    ErrConnectionFailed = WithI18nKey(DBError.New("database connection failed"), "db.connection_failed")
+	// ErrConnectionFailed 表示数据库连接失败
+	ErrConnectionFailed = WithI18nKey(DBError.New("database connection failed"), i18n.DbConnectionFailed)
 
-    // ErrDeadlock 表示发生死锁
-    ErrDeadlock = WithI18nKey(DBError.New("database deadlock detected"), "db.deadlock")
+	// ErrDeadlock 表示发生死锁
+	ErrDeadlock = WithI18nKey(DBError.New("database deadlock detected"), i18n.DbDeadlock)
 
-    // ErrLockWaitTimeout 表示锁等待超时
-    ErrLockWaitTimeout = WithI18nKey(DBError.New("lock wait timeout exceeded"), "db.lock_wait_timeout")
+	// ErrLockWaitTimeout 表示锁等待超时
+	ErrLockWaitTimeout = WithI18nKey(DBError.New("lock wait timeout exceeded"), i18n.DbLockWaitTimeout)
 
-    // ErrCheckConstraintViolation 表示违反检查约束
-    ErrCheckConstraintViolation = WithI18nKey(DBError.New("check constraint violation"), "db.check_constraint_violation")
+	// ErrCheckConstraintViolation 表示违反检查约束
+	ErrCheckConstraintViolation = WithI18nKey(DBError.New("check constraint violation"), i18n.DbCheckConstraintViolation)
 
-    // ErrNotNullViolation 表示违反非空约束
-    ErrNotNullViolation = WithI18nKey(DBError.New("not null constraint violation"), "db.not_null_violation")
+	// ErrNotNullViolation 表示违反非空约束
+	ErrNotNullViolation = WithI18nKey(DBError.New("not null constraint violation"), i18n.DbNotNullViolation)
 
-    // ErrDataTooLong 表示数据过长
-    ErrDataTooLong = WithI18nKey(DBError.New("data too long for column"), "db.data_too_long")
+	// ErrDataTooLong 表示数据过长
+	ErrDataTooLong = WithI18nKey(DBError.New("data too long for column"), i18n.DbDataTooLong)
 
-    // ErrInvalidDataType 表示数据类型不匹配
-    ErrInvalidDataType = WithI18nKey(DBError.New("invalid data type"), "db.invalid_data_type")
+	// ErrInvalidDataType 表示数据类型不匹配
+	ErrInvalidDataType = WithI18nKey(DBError.New("invalid data type"), i18n.DbInvalidDataType)
 )
