@@ -124,8 +124,6 @@ func (r *SpaceStore) GetByID(ctx context.Context, id uint) (*Space, error) {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
 
-	// GORM 会自动将 DATETIME 类型映射为 *time.Time，通常无需手动转换
-	// 如果遇到类型问题，请检查 GORM 配置或数据库驱动设置
 	return &out, nil
 }
 

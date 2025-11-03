@@ -51,7 +51,9 @@ const (
 	SpaceListError               = "space.list_error"                // 查询空间列表失败
 	SpaceListSuccess             = "space.list_success"              // 查询空间列表成功
 	SpacePathParamError          = "space.path_param_error"          // Path 参数解析失败
+	SpaceQueryError              = "space.query_error"               // 查询空间失败
 	SpaceQueryParamError         = "space.query_param_error"         // Query 参数解析失败
+	SpaceQuerySuccess            = "space.query_success"             // 查询空间成功
 	SpaceSecretsAddError         = "space.secrets_add_error"         // 添加密钥失败,请检查名称是否重复或格式是否正确.
 	SpaceSecretsAddSuccess       = "space.secrets_add_success"       // 密钥已成功添加.
 	SpaceSecretsDeletePermission = "space.secrets_delete_permission" // 删除失败:权限不足,您无法删除此密钥.
