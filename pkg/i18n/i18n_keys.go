@@ -6,6 +6,13 @@ package i18n
 type I18nKey string
 
 const (
+	// Branch 相关常量
+	BranchBodyParamError  I18nKey = "branch.body_param_error"  // Body 参数解析失败.
+	BranchCreateError     I18nKey = "branch.create_error"      // 分支创建失败.
+	BranchCreateSuccess   I18nKey = "branch.create_success"    // 分支创建成功.
+	BranchPathParamError  I18nKey = "branch.path_param_error"  // Path 参数解析失败.
+	BranchQueryParamError I18nKey = "branch.query_param_error" // Query 参数解析失败.
+
 	// Db 相关常量
 	DbCheckConstraintViolation I18nKey = "db.check_constraint_violation" // 检查约束冲突.
 	DbConnectionFailed         I18nKey = "db.connection_failed"          // 数据库连接失败.
@@ -27,14 +34,14 @@ const (
 	ErrorEmbedFailedToReadFile  I18nKey = "error.embed_failed_to_read_file"  // embed 读取文件失败
 	ErrorEmbedFailedToWriteFile I18nKey = "error.embed_failed_to_write_file" // embed 写入文件失败
 
+	// Git 相关常量
+	GitCreateExecParamError I18nKey = "git.create_exec_param_error" // 创建败 git 命令参数失败.
+	GitExecError            I18nKey = "git.exec_error"              // 执行 git 命令失败.
+	GitMapOutputError       I18nKey = "git.map_output_error"        // 无法将 git 命令结果映射到响应结构体.
+
 	// Repo 相关常量
-	RepoBranchesDeleteError      I18nKey = "repo.branches_delete_error"      // 删除失败,此分支可能受保护或为默认分支.
-	RepoBranchesDeleteSuccess    I18nKey = "repo.branches_delete_success"    // 分支已成功删除.
-	RepoBranchesListError        I18nKey = "repo.branches_list_error"        // 加载分支列表失败,请刷新页面重试.
 	RepoPullRequestsMergeError   I18nKey = "repo.pullRequests_merge_error"   // 合并失败,存在冲突或检查未通过.
 	RepoPullRequestsMergeSuccess I18nKey = "repo.pullRequests_merge_success" // 合并成功!
-	RepoTagsCreateError          I18nKey = "repo.tags_create_error"          // 创建标签失败,标签名可能已存在.
-	RepoTagsCreateSuccess        I18nKey = "repo.tags_create_success"        // 标签创建成功.
 
 	// Request 相关常量
 	RequestInvalidBooleanParameter         I18nKey = "request.invalid_boolean_parameter"          // 参数必须为布尔值.
@@ -54,14 +61,14 @@ const (
 
 	// Space 相关常量
 	SpaceArtifactsTitleSuccess   I18nKey = "space.artifacts_title_success"   // 仓库设置保存成功
-	SpaceBodyParamError          I18nKey = "space.body_param_error"          // Body 参数解析失败
-	SpaceCreateError             I18nKey = "space.create_error"              // 空间创建失败
-	SpaceCreateSuccess           I18nKey = "space.create_success"            // 空间创建成功
+	SpaceBodyParamError          I18nKey = "space.body_param_error"          // Body 参数解析失败.
+	SpaceCreateError             I18nKey = "space.create_error"              // 空间创建失败.
+	SpaceCreateSuccess           I18nKey = "space.create_success"            // 空间创建成功.
 	SpaceListError               I18nKey = "space.list_error"                // 查询空间列表失败
 	SpaceListSuccess             I18nKey = "space.list_success"              // 查询空间列表成功
-	SpacePathParamError          I18nKey = "space.path_param_error"          // Path 参数解析失败
+	SpacePathParamError          I18nKey = "space.path_param_error"          // Path 参数解析失败.
 	SpaceQueryError              I18nKey = "space.query_error"               // 查询空间失败
-	SpaceQueryParamError         I18nKey = "space.query_param_error"         // Query 参数解析失败
+	SpaceQueryParamError         I18nKey = "space.query_param_error"         // Query 参数解析失败.
 	SpaceQuerySuccess            I18nKey = "space.query_success"             // 查询空间成功
 	SpaceSecretsAddError         I18nKey = "space.secrets_add_error"         // 添加密钥失败,请检查名称是否重复或格式是否正确.
 	SpaceSecretsAddSuccess       I18nKey = "space.secrets_add_success"       // 密钥已成功添加.
@@ -70,6 +77,6 @@ const (
 	SpaceSecretsDeleteUsed       I18nKey = "space.secrets_delete_used"       // 删除失败:此密钥可能正在被一个或多个服务使用.
 	SpaceSecretsListError        I18nKey = "space.secrets_list_error"        // 无法加载密钥列表,请稍后重试.
 	SpaceSecretsListSuccess      I18nKey = "space.secrets_list_success"      // 仓库密钥列表成功.
-	SpaceUpdateError             I18nKey = "space.update_error"              // 空间更新失败
-	SpaceUpdateSuccess           I18nKey = "space.update_success"            // 空间更新成功
+	SpaceUpdateError             I18nKey = "space.update_error"              // 空间更新失败.
+	SpaceUpdateSuccess           I18nKey = "space.update_success"            // 空间更新成功.
 )

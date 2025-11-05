@@ -53,9 +53,10 @@ type DockerConfig struct {
 // GitConfig Git配置
 type GitConfig struct {
 	Trace         bool   `yaml:"trace"`
+	TmpDir        string `yaml:"tmpDir"`
 	DefaultBranch string `yaml:"defaultBranch"`
 	Root          string `envconfig:"GITFOX_GIT_ROOT_DIR" default:"/data/gitfox/git"`
-	HookPath      string `yaml:"-"`
+	HookPath      string `yaml:"hookPath"`
 }
 
 // WebhookConfig Webhook配置
@@ -69,6 +70,7 @@ type SSHConfig struct {
 	Enable      bool   `yaml:"enable"`
 	Host        string `yaml:"host"`
 	Port        int    `yaml:"port"`
+	DefaultUser string `yaml:"defaultUser"`
 	HostKeysDir string `envconfig:"GITFOX_SSH_HOST_KEYS_DIR" default:"/data/gitfox/ssh"`
 }
 

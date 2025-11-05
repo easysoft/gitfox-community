@@ -1,0 +1,4 @@
+git:
+  exec_error: "Failed to execute git command."
+  create_exec_param_error: "Failed to create git exec param."
+  map_output_error: "Failed to map git output to response struct."

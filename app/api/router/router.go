@@ -46,7 +46,8 @@ func NewRouter(mode string, logger *logger.SugaredMateLogger, controller *Contro
 
 	// 创建需要认证的路由组（应用鉴权中间件）
 	authGroup := r.Group("/api/v2")
-	registerSpaceRoutes(authGroup, controller) // 空间相关路由
+	registerSpaceRoutes(authGroup, controller)  // 空间相关路由
+	registerBranchRoutes(authGroup, controller) // 空间相关路由
 	return r
 }
 
