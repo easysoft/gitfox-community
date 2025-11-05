@@ -1,0 +1,6 @@
+error:
+  default: "default error"
+  embed_failed_to_mkdir: "embed failed to mkdir"
+  embed_failed_to_read_dir: "embed failed to read dir"
+  embed_failed_to_write_file: "embed failed to write file"
+  embed_failed_to_read_file: "embed failed to read file"

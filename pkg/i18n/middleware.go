@@ -156,9 +156,9 @@ func GetLocaleFromGin(c *gin.Context) string {
 }
 
 // TGin Gin 翻译函数
-func TGin(c *gin.Context, key string, args ...interface{}) string {
+func TGin(c *gin.Context, key I18nKey, args ...interface{}) string {
 	locale := GetLocaleFromGin(c)
-	return TWithLocale(locale, key, args...)
+	return TWithLocale(locale, string(key), args...)
 }
 
 // TfGin Gin 格式化翻译函数

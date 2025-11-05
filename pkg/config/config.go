@@ -77,7 +77,6 @@ type I18nConfig struct {
 	FallbackLocale   string   `yaml:"fallbackLocale"`
 	SupportedLocales []string `yaml:"supportedLocales"`
 	TranslationsDir  string   `yaml:"translationsDir"`
-	AutoLoad         bool     `yaml:"autoLoad"`
 	QueryParam       string   `yaml:"queryParam,omitempty"`
 	CookieName       string   `yaml:"cookieName,omitempty"`
 	HeaderName       string   `yaml:"headerName,omitempty"`

@@ -3,6 +3,7 @@ package errors
 import (
 	"fmt"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	"github.com/pkg/errors"
 )
 
@@ -11,7 +12,7 @@ type ErrorType uint
 
 type customError struct {
 	errorType     ErrorType
-	i18nKey       string
+	i18nKey       i18n.I18nKey
 	httpStatus    int
 	originalError error
 	context       errorContext
@@ -79,7 +80,7 @@ func Newf(msg string, args ...interface{}) error {
 }
 
 // Wrap 包装字符串错误
-func Wrap(err error, msg string) error {
+func Wrap(err error, msg i18n.I18nKey) error {
 	if err == nil {
 		return nil
 	}
@@ -125,7 +126,7 @@ func WithMessage(err error, msg string) error {
 }
 
 // WithI18nKey 添加国际化键
-func WithI18nKey(err error, i18nKey string) error {
+func WithI18nKey(err error, i18nKey i18n.I18nKey) error {
 	if customErr, ok := err.(customError); ok {
 		return customError{errorType: customErr.errorType, i18nKey: i18nKey, originalError: customErr.originalError}
 	}
@@ -152,7 +153,7 @@ func GetHttpStatus(err error) int {
 }
 
 // GetI18nKey 返回国际化键
-func GetI18nKey(err error) string {
+func GetI18nKey(err error) i18n.I18nKey {
 	if customErr, ok := err.(customError); ok {
 		return customErr.i18nKey
 	}

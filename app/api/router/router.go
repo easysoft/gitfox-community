@@ -60,5 +60,7 @@ func registerPublicRoutes(r *gin.Engine, controller *Controller) {
 		public.GET("/version", func(c *gin.Context) {
 			c.JSON(200, gin.H{"version": "v1.0.0"})
 		})
+
+		public.GET("/test", controller.Test.Test)
 	}
 }
