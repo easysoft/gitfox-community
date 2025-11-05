@@ -1,0 +1,2 @@
+auth:
+  no_data: "the request doesn't contain any auth data that can be used by the Authorizer"

@@ -1,6 +1,10 @@
 package errors
 
-import "net/http"
+import (
+	"net/http"
+
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
+)
 
 const (
 	NoType ErrorType = iota
@@ -8,8 +12,9 @@ const (
 	NotFound
 	DBError
 	SystemErr
+	InternalError
 )
 
-const defaultI18nKey = "error.default"
+const defaultI18nKey = i18n.ErrorDefault
 
 const defaultHttpStatus = http.StatusOK

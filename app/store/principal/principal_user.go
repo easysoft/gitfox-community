@@ -20,12 +20,19 @@ type PrincipalStore struct {
 }
 
 func (s *PrincipalStore) FindUserByID(ctx context.Context, id int64) (*principal.User, error) {
-	// 使用 gorm 查询
 	var user Principal
 	user.ID = id
 	if err := s.db.WithContext(ctx).Where(&user).First(&user).Error; err != nil {
 		return nil, err
 	}
 
+	return toUser(&user), nil
+}
+
+func (s *PrincipalStore) FindUserByUID(ctx context.Context, uid string) (*principal.User, error) {
+	var user Principal
+	if err := s.db.WithContext(ctx).Where("uid = ?", uid).First(&user).Error; err != nil {
+		return nil, err
+	}
 	return toUser(&user), nil
 }

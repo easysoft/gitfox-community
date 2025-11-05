@@ -2,6 +2,7 @@ package router
 
 import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/branch"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/git"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/space"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/test"
 )
@@ -10,5 +11,6 @@ import (
 type Controller struct {
 	Branch *branch.BranchController
 	Space  *space.SpaceController
+	Git    *git.GitController
 	Test   *test.TestController
 }
