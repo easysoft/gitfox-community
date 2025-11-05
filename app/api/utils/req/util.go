@@ -1,13 +1,28 @@
 package req
 
 import (
+	"context"
 	"net/url"
 	"strconv"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 
 	"github.com/gin-gonic/gin"
 )
+
+// SetAuthSession returns a copy of parent in which the principal
+// value is set.
+func SetAuthSession(parent context.Context, v *auth.Session) context.Context {
+	return context.WithValue(parent, authSessionKey, v)
+}
+
+// GetAuthSession returns the value of the principal key on the
+// context.
+func GetAuthSession(ctx context.Context) (*auth.Session, bool) {
+	v, ok := ctx.Value(authSessionKey).(*auth.Session)
+	return v, ok && v != nil
+}
 
 // GetCookie tries to retrieve the cookie from the request or returns false if it doesn't exist.
 func GetCookie(c *gin.Context, cookieName string) (string, bool) {

@@ -7,7 +7,8 @@ type I18nKey string
 
 const (
 	// Auth 相关常量
-	AuthNoData I18nKey = "auth.no_data" // 请求不包含任何可用于 Authorizer 的认证数据
+	AuthNoData    I18nKey = "auth.no_data"    // 请求不包含任何可用于 Authorizer 的认证数据
+	AuthNoSession I18nKey = "auth.no_session" // 请求不包含任何会话数据,无法进行授权
 
 	// Branch 相关常量
 	BranchBodyParamError  I18nKey = "branch.body_param_error"  // Body 参数解析失败.
@@ -31,11 +32,13 @@ const (
 	DbNotfound                 I18nKey = "db.notfound"                   // 资源未找到.
 
 	// Error 相关常量
-	ErrorDefault                I18nKey = "error.default"                    // 默认错误, %s!
-	ErrorEmbedFailedToMkdir     I18nKey = "error.embed_failed_to_mkdir"      // embed 创建目录失败
-	ErrorEmbedFailedToReadDir   I18nKey = "error.embed_failed_to_read_dir"   // embed 读取目录失败
-	ErrorEmbedFailedToReadFile  I18nKey = "error.embed_failed_to_read_file"  // embed 读取文件失败
-	ErrorEmbedFailedToWriteFile I18nKey = "error.embed_failed_to_write_file" // embed 写入文件失败
+	ErrorDefault                  I18nKey = "error.default"                      // 默认错误, %s!
+	ErrorEmbedFailedToMkdir       I18nKey = "error.embed_failed_to_mkdir"        // embed 创建目录失败
+	ErrorEmbedFailedToReadDir     I18nKey = "error.embed_failed_to_read_dir"     // embed 读取目录失败
+	ErrorEmbedFailedToReadFile    I18nKey = "error.embed_failed_to_read_file"    // embed 读取文件失败
+	ErrorEmbedFailedToWriteFile   I18nKey = "error.embed_failed_to_write_file"   // embed 写入文件失败
+	ErrorGzipFailedToCloseReader  I18nKey = "error.gzip_failed_to_close_reader"  // gzip 关闭解压流失败
+	ErrorGzipFailedToCreateReader I18nKey = "error.gzip_failed_to_create_reader" // gzip 解压失败
 
 	// Git 相关常量
 	GitCreateExecParamError I18nKey = "git.create_exec_param_error" // 创建败 git 命令参数失败.
