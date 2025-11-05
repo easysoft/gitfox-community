@@ -28,8 +28,11 @@ func NewApp(mode string) (*App, func(), error) {
 		provider.ConfigWireSet,
 		provider.LogWireSet,
 		provider.DBWireSet,
+		provider.GitWireSet,
 		provider.SpaceWireSet,
+		provider.BranchWireSet,
 		provider.ControllersWireSet,
+		provider.URLWireSet,
 		provider.I18nWireSet,
 		wire.Struct(new(App), "*")),
 	)

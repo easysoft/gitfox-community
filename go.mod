@@ -9,11 +9,11 @@ require (
 	github.com/djherbis/nio/v3 v3.0.1
 	github.com/drone/go-generate v1.1.0
 	github.com/easysoft/gitfox v0.0.0-20250729070057-4c964c413416
+	github.com/fatih/color v1.17.0
 	github.com/gin-contrib/pprof v1.5.3
 	github.com/gin-gonic/gin v1.11.0
 	github.com/gliderlabs/ssh v0.3.7
 	github.com/go-redis/redis/v8 v8.11.5
-	github.com/golang-jwt/jwt/v4 v4.5.2
 	github.com/golang-module/carbon/v2 v2.3.10
 	github.com/google/go-cmp v0.7.0
 	github.com/google/wire v0.7.0
@@ -80,6 +80,7 @@ require (
 	github.com/go-openapi/swag/typeutils v0.25.1 // indirect
 	github.com/go-openapi/swag/yamlutils v0.25.1 // indirect
 	github.com/go-redsync/redsync/v4 v4.13.0 // indirect
+	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/snappy v1.0.0 // indirect
 	github.com/google/s2a-go v0.1.8 // indirect

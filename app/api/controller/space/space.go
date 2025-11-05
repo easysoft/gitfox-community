@@ -6,8 +6,8 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/space"
 	spaceSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/space"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	"github.com/gin-gonic/gin"
 )
 
@@ -79,15 +79,15 @@ func (ctl *SpaceController) List(c *gin.Context) {
 		return
 	}
 
-	spaceObj,err := ctl.spaceSvc.List(logger.GetContextWithLogger(c), req)
+	spaceObj, err := ctl.spaceSvc.List(logger.GetContextWithLogger(c), req)
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.SpaceListError)
 		resp.InternalError(c, err)
 	}
 	resp.ListSuccess(c, spaceObj.Data,
 		resp.ListArgs{
-			Total: spaceObj.Total,
-			Page: int64(spaceObj.Page),
+			Total:    spaceObj.Total,
+			Page:     int64(spaceObj.Page),
 			PageSize: int64(spaceObj.PageSize),
 		}, i18n.SpaceListSuccess, nil)
 }
@@ -111,7 +111,7 @@ func (ctl *SpaceController) GetByID(c *gin.Context) {
 		return
 	}
 
-	obj,err := ctl.spaceSvc.GetByID(logger.GetContextWithLogger(c),spaceID)
+	obj, err := ctl.spaceSvc.GetByID(logger.GetContextWithLogger(c), spaceID)
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.SpaceQueryError)
 		resp.InternalError(c, err)

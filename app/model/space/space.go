@@ -13,7 +13,7 @@ type CreateSpaceRequest struct {
 type UpdateSpaceRequest struct {
 	Name       string `json:"name"`
 	Owner      string `json:"owner"`
-	Permission string `json:"acl"`
+	Permission string `json:"acl" binding:"oneof=open private"`
 	Desc       string `json:"desc"`
 	EditedBy   string `json:"editedBy" binding:"required"`
 }

@@ -7,8 +7,10 @@
 package server
 
 import (
+	branch2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/branch"
 	space3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/space"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/router"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/branch"
 	space2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/space"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/space"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/cmd/cli/operations/provider"
@@ -39,7 +41,36 @@ func NewApp(mode string) (*App, func(), error) {
 	spaceStore := space.NewSpaceStore(db)
 	spaceSvc := space2.NewSpaceSvc(spaceStore)
 	spaceController := space3.NewSpaceController(spaceSvc)
-	controller := provider.NewControllers(spaceController)
+	urlProvider, err := provider.NewURLProvider(config)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	typesConfig := provider.NewGitConfig(config)
+	cache, err := provider.NewLastCommitCache(typesConfig)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	clientFactory := provider.NewGitClientFactory()
+	git, err := provider.NewGitAdapter(typesConfig, cache, clientFactory)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	store := provider.NewGitLocalStore()
+	service, err := provider.NewGit(typesConfig, git, clientFactory, store)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	branchSvc := branch.NewBranchSvc(urlProvider, service)
+	branchController := branch2.NewBranchController(branchSvc)
+	controller := provider.NewControllers(spaceController, branchController)
 	i18nManager, err := provider.NewI18nManager(config)
 	if err != nil {
 		cleanup2()
