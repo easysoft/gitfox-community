@@ -1,0 +1,8 @@
+error: 
+  default: "默认错误, %s!"
+  embed_failed_to_mkdir: "embed 创建目录失败"
+  embed_failed_to_read_dir: "embed 读取目录失败"
+  embed_failed_to_write_file: "embed 写入文件失败"
+  embed_failed_to_read_file: "embed 读取文件失败"
+  gzip_failed_to_create_reader: "gzip 解压失败"
+  gzip_failed_to_close_reader: "gzip 关闭解压流失败"

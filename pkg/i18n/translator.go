@@ -218,6 +218,11 @@ func (t *translator) formatTranslation(translation string, args ...interface{}) 
 		return translation
 	}
 
+	// 如果翻译中没有格式化占位符，直接返回，避免 %!(EXTRA ...)
+	if !strings.Contains(translation, "%") {
+		return translation
+	}
+
 	// 支持 fmt.Sprintf 风格的格式化
 	return fmt.Sprintf(translation, args...)
 }

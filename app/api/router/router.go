@@ -46,7 +46,9 @@ func NewRouter(mode string, logger *logger.SugaredMateLogger, controller *Contro
 
 	// 创建需要认证的路由组（应用鉴权中间件）
 	authGroup := r.Group("/api/v2")
-	registerSpaceRoutes(authGroup, controller) // 空间相关路由
+	registerSpaceRoutes(authGroup, controller)  // 空间相关路由
+	registerBranchRoutes(authGroup, controller) // 分支相关路由
+	registerGitRoutes(authGroup, controller)    // Git 相关路由
 	return r
 }
 
@@ -60,5 +62,7 @@ func registerPublicRoutes(r *gin.Engine, controller *Controller) {
 		public.GET("/version", func(c *gin.Context) {
 			c.JSON(200, gin.H{"version": "v1.0.0"})
 		})
+
+		public.GET("/test", controller.Test.Test)
 	}
 }

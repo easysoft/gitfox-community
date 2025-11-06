@@ -23,45 +23,45 @@ type ListArgs struct {
 
 // ObjectResponse represents a response structure for single object data
 type ObjectResponse struct {
-	Code    string      `json:"code"`
-	Message string      `json:"message"`
-	TraceID string      `json:"traceID"`
-	Data    interface{} `json:"data"`
+	Code    i18n.I18nKey `json:"code"`
+	Message string       `json:"message"`
+	TraceID string       `json:"traceID"`
+	Data    interface{}  `json:"data"`
 }
 
 // ObjectOK renders a successful object response (200 OK)
-func OK(c *gin.Context, code string, data interface{}) {
+func OK(c *gin.Context, code i18n.I18nKey, data interface{}) {
 	objectOk(c, code, http.StatusOK, data)
 }
 
 // Created renders an object created response (201 Created)
-func Created(c *gin.Context, code string, data interface{}) {
+func Created(c *gin.Context, code i18n.I18nKey, data interface{}) {
 	objectOk(c, code, http.StatusCreated, data)
 }
 
 // ObjectError renders an object error response (400 Bad Request or 500 Internal Server Error)
 func Error(c *gin.Context, err error, args ...interface{}) {
 	httpStatus := errors.GetHttpStatus(err)
-	objectErr(c, err, httpStatus)
+	objectErr(c, err, httpStatus, args...)
 }
 
 // BadRequest renders an object bad request response (400 Bad Request)
 func BadRequest(c *gin.Context, err error, args ...interface{}) {
-	objectErr(c, err, http.StatusBadRequest)
+	objectErr(c, err, http.StatusBadRequest, args...)
 }
 
 // NotFound renders an object not found response (404 Not Found)
 func NotFound(c *gin.Context, err error, args ...interface{}) {
-	objectErr(c, err, http.StatusNotFound)
+	objectErr(c, err, http.StatusNotFound, args...)
 }
 
 // InternalError renders an object internal server error response (500 Internal Server Error)
 func InternalError(c *gin.Context, err error, args ...interface{}) {
-	objectErr(c, err, http.StatusInternalServerError)
+	objectErr(c, err, http.StatusInternalServerError, args...)
 }
 
 // ListSuccess renders a successful list response (200 OK)
-func ListSuccess(c *gin.Context, data interface{}, listArgs ListArgs, code string, args ...interface{}) {
+func ListSuccess(c *gin.Context, data interface{}, listArgs ListArgs, code i18n.I18nKey, args ...interface{}) {
 	list(c, data, listArgs, code, args)
 }
 
@@ -70,7 +70,7 @@ func ListSuccess(c *gin.Context, data interface{}, listArgs ListArgs, code strin
 // data: list data
 // listArgs: list arguments, e.g. total count, page, pageSize
 // code: i18n key, e.g. "repo.branch.list.success"
-func list(c *gin.Context, data interface{}, listArgs ListArgs, code string, args ...interface{}) {
+func list(c *gin.Context, data interface{}, listArgs ListArgs, code i18n.I18nKey, args ...interface{}) {
 	traceID := getTraceID(c)
 	message := i18n.TGin(c, code, args...)
 
@@ -90,19 +90,19 @@ func list(c *gin.Context, data interface{}, listArgs ListArgs, code string, args
 // code: i18n key, e.g. "repo.branch.create.success"
 // httpStatus: HTTP status code
 // data: object data
-func objectErr(c *gin.Context, err error, httpStatus int, data ...interface{}) {
+func objectErr(c *gin.Context, err error, httpStatus int, args ...interface{}) {
 	code := errors.GetI18nKey(err)
-	message := i18n.TGin(c, code) + fmt.Sprintf(";%s", err.Error())
+	message := i18n.TGin(c, code, args...) + fmt.Sprintf(";%s", err.Error())
 	traceID := getTraceID(c)
 	c.JSON(httpStatus, ObjectResponse{
 		Code:    code,
 		Message: message,
 		TraceID: traceID,
-		Data:    data,
+		Data:    nil,
 	})
 }
 
-func objectOk(c *gin.Context, code string, httpStatus int, data ...interface{}) {
+func objectOk(c *gin.Context, code i18n.I18nKey, httpStatus int, data ...interface{}) {
 	message := i18n.TGin(c, code)
 	traceID := getTraceID(c)
 	c.JSON(httpStatus, ObjectResponse{
@@ -112,7 +112,6 @@ func objectOk(c *gin.Context, code string, httpStatus int, data ...interface{}) 
 		Data:    data,
 	})
 }
-
 
 // getTraceID retrieves traceID from Gin Context
 func getTraceID(c *gin.Context) string {

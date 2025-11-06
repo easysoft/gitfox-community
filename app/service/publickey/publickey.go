@@ -14,28 +14,28 @@ import (
 	"github.com/gliderlabs/ssh"
 )
 
-type Service interface {
+type IPublicKey interface {
 	ValidateKey(ctx context.Context, publicKey ssh.PublicKey, usage constant.PublicKeyUsage) (*principal.PrincipalInfo, error)
 }
 
-func NewService(
+func NewPublicKeyService(
 	publicKeyStore publickey.IPublicKeyStore,
 	pCache store.PrincipalInfoCache,
-) LocalService {
-	return LocalService{
+) IPublicKey {
+	return &PublicKeyService{
 		publicKeyStore: publicKeyStore,
 		pCache:         pCache,
 	}
 }
 
-type LocalService struct {
+type PublicKeyService struct {
 	publicKeyStore publickey.IPublicKeyStore
 	pCache         store.PrincipalInfoCache
 }
 
 // ValidateKey tries to match the provided key to one of the keys in the database.
 // It updates the verified timestamp of the matched key to mark it as used.
-func (s LocalService) ValidateKey(
+func (s PublicKeyService) ValidateKey(
 	ctx context.Context,
 	publicKey ssh.PublicKey,
 	usage constant.PublicKeyUsage,

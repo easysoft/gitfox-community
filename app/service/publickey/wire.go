@@ -13,6 +13,6 @@ var WireSet = wire.NewSet(
 func ProviderPublicKey(
 	publicKeyStore publickey.IPublicKeyStore,
 	pCache store.PrincipalInfoCache,
-) Service {
-	return NewService(publicKeyStore, pCache)
+) IPublicKey {
+	return NewPublicKeyService(publicKeyStore, pCache)
 }

@@ -54,7 +54,7 @@ type Server struct {
 	KeepAliveInterval       time.Duration
 	ServerHostKeysDir       string
 
-	Verifier publickey.Service
+	Verifier publickey.IPublicKey
 	RepoCtrl *repo.RepoHandler
 }
 

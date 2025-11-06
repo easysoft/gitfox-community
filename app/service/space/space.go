@@ -32,9 +32,8 @@ func (s *SpaceSvc) List(ctx context.Context, filter spaceModel.ListSpaceFilter) 
 	return s.spaceStore.List(ctx, filter)
 }
 
-
 func (s *SpaceSvc) GetByID(ctx context.Context, id uint) (*space.Space, error) {
-		spaceEntity, err := s.spaceStore.GetByID(ctx, id)
+	spaceEntity, err := s.spaceStore.GetByID(ctx, id)
 	if err != nil {
 		// 传递Store层错误（如“space not found”）
 		return nil, err
@@ -104,7 +103,6 @@ func (s *SpaceSvc) Undelete(ctx context.Context, req spaceModel.UndeleteSpaceReq
 
 	return nil
 }
-
 
 func (s *SpaceSvc) CheckPermission() {
 	// TODO: implement permission checks for spaces; placeholder to satisfy compilation.

@@ -20,6 +20,8 @@ type Config struct {
 	Logging    LoggingConfig    `yaml:"logging"`
 	Middleware MiddlewareConfig `yaml:"middleware"`
 	I18n       I18nConfig       `yaml:"i18n"`
+	LDAP       LDAPConfig       `yaml:"ldap"`
+	Principal  PrincipalConfig  `yaml:"principal"`
 }
 
 // ServerConfig HTTP服务配置
@@ -42,7 +44,7 @@ type DatabaseConfig struct {
 
 // SQLiteConfig 缓存数据库配置
 type SQLiteConfig struct {
-	Path string `envconfig:"GITFOX_SQLITE_PATH" default:"/data/gitfox/sqlite/sqlite.db"`
+	Path string `envconfig:"GITFOX_SQLITE_FILE" default:"/data/gitfox/sqlite/sqlite.db"`
 }
 
 // DockerConfig Docker配置
@@ -53,9 +55,10 @@ type DockerConfig struct {
 // GitConfig Git配置
 type GitConfig struct {
 	Trace         bool   `yaml:"trace"`
+	TmpDir        string `yaml:"tmpDir"`
 	DefaultBranch string `yaml:"defaultBranch"`
 	Root          string `envconfig:"GITFOX_GIT_ROOT_DIR" default:"/data/gitfox/git"`
-	HookPath      string `yaml:"-"`
+	HookPath      string `yaml:"hookPath"`
 }
 
 // WebhookConfig Webhook配置
@@ -69,6 +72,7 @@ type SSHConfig struct {
 	Enable      bool   `yaml:"enable"`
 	Host        string `yaml:"host"`
 	Port        int    `yaml:"port"`
+	DefaultUser string `yaml:"defaultUser"`
 	HostKeysDir string `envconfig:"GITFOX_SSH_HOST_KEYS_DIR" default:"/data/gitfox/ssh"`
 }
 
@@ -77,7 +81,6 @@ type I18nConfig struct {
 	FallbackLocale   string   `yaml:"fallbackLocale"`
 	SupportedLocales []string `yaml:"supportedLocales"`
 	TranslationsDir  string   `yaml:"translationsDir"`
-	AutoLoad         bool     `yaml:"autoLoad"`
 	QueryParam       string   `yaml:"queryParam,omitempty"`
 	CookieName       string   `yaml:"cookieName,omitempty"`
 	HeaderName       string   `yaml:"headerName,omitempty"`
@@ -214,4 +217,31 @@ type URL struct {
 	// Registry is used as a base to generate external facing URLs.
 	// Value is derived from HTTP.Server unless explicitly specified (e.g. http://host.docker.internal:3000).
 	Registry string
+}
+
+type LDAPConfig struct {
+	Enable        bool   `yaml:"enable" default:"false"`                        // 是否启用 LDAP 认证
+	URL           string `yaml:"url"`                                           // LDAP 服务器地址，如 ldap://ldap.example.com:389
+	BaseDN        string `yaml:"baseDN"`                                        // 查询用户时的基准 DN，如 dc=example,dc=com
+	BindDN        string `yaml:"bindDN"`                                        // 用于绑定 LDAP 的管理员 DN
+	BindPassword  string `yaml:"bindPassword"`                                  // 绑定管理员 DN 的密码
+	UserFilter    string `yaml:"userFilter" default:"(uid=%s)"`                 // 查询用户的过滤条件，%s 会被替换为登录名
+	Attributes    string `yaml:"attributes" default:"uid,cn"`                   // 需要获取的用户属性列表，逗号分隔
+	DNField       string `yaml:"dnField" default:"dn"`                          // 存储用户 DN 的字段名
+	DNTemplate    string `yaml:"dnTemplate" default:"uid=%s,dc=example,dc=com"` // 用户 DN 模板，%s 会被替换为登录名
+	UIDAttribute  string `yaml:"uidAttribute" default:"uid"`                    // 作为用户唯一标识的属性名
+	NameAttribute string `yaml:"nameAttribute" default:"name"`                  // 作为用户姓名的属性名
+}
+
+type PrincipalConfig struct {
+
+	// Admin defines the principal information used to create the admin user. 管理员定义了创建管理员用户所使用的主体信息。
+	// NOTE: The admin user is only auto-created in case a password and an email is provided.
+	// 备注：只有在提供密码和电子邮件的情况下，才会自动创建管理员用户。
+	Admin struct {
+		UID         string `yaml:"uid"           default:"admin"`
+		DisplayName string `yaml:"name"  default:"Administrator"`
+		Email       string `yaml:"email"`    // No default email
+		Password    string `yaml:"password"` // No default password
+	}
 }

@@ -23,6 +23,21 @@ type User struct {
 	Source enum.PrincipalSource `db:"user_source" gorm:"column:user_source" json:"-"`
 }
 
+func (u *User) ToPrincipal() *Principal {
+	return &Principal{
+		ID:          u.ID,
+		UID:         u.UID,
+		Email:       u.Email,
+		Type:        enum.PrincipalTypeUser,
+		DisplayName: u.DisplayName,
+		Admin:       u.Admin,
+		Blocked:     u.Blocked,
+		Salt:        u.Salt,
+		Created:     u.Created,
+		Updated:     u.Updated,
+	}
+}
+
 // Principal represents the identity of an acting entity (User, ServiceAccount, Service).
 type Principal struct {
 	// TODO: int64 ID doesn't match DB

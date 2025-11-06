@@ -1,0 +1,4 @@
+git:
+  exec_error: "执行 git 命令失败。"
+  create_exec_param_error: "创建败 git 命令参数失败。"
+  map_output_error: "无法将 git 命令结果映射到响应结构体。"

@@ -1,14 +1,16 @@
 package provider
 
 import (
+	"os"
 	"path/filepath"
-	"runtime"
 
 	"github.com/google/wire"
 
+	gitfoxcommunity "gitfox.zcorp.cc/git/Pangu/gitfox-community"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
-	pkg_errors "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils"
 )
 
 // I18nManager i18n管理器
@@ -23,7 +25,7 @@ var I18nWireSet = wire.NewSet(
 // NewI18nManager 创建并初始化i18n管理器
 func NewI18nManager(config *config.Config) (*I18nManager, error) {
 	if config == nil {
-		return nil, pkg_errors.SystemErr.New("i18n config is nil")
+		return nil, errors.SystemErr.New("i18n config is nil")
 	}
 
 	i18nConfig := config.I18n
@@ -33,27 +35,38 @@ func NewI18nManager(config *config.Config) (*I18nManager, error) {
 		i18nConfig.HeaderName = i18n.XLocaleHeader
 	}
 
-	// todo 临时处理
-	// 处理翻译文件目录路径，如果是相对路径，则相对于项目根目录
-	translationsDir := i18nConfig.TranslationsDir
-	if translationsDir != "" && !filepath.IsAbs(translationsDir) {
-		// 获取项目根目录（相对于当前文件向上3级：cmd/cli/operations/provider -> 项目根目录）
-		_, currentFile, _, _ := runtime.Caller(0)
-		projectRoot := filepath.Dir(filepath.Dir(filepath.Dir(filepath.Dir(filepath.Dir(currentFile)))))
-		translationsDir = filepath.Join(projectRoot, translationsDir)
+	exePath, err := os.Executable()
+	if err != nil {
+		return nil, errors.SystemErr.Wrap(err, "[i18n]failed to get executable path")
+	}
+	exeDir := filepath.Dir(exePath)
+	dstDir := filepath.Join(exeDir, "locales")
+
+	if _, statErr := os.Stat(dstDir); os.IsNotExist(statErr) {
+		if err := utils.CopyEmbeddedDir(gitfoxcommunity.EmbeddedLocales, "locales", dstDir); err != nil {
+			return nil, errors.SystemErr.Wrap(err, "[i18n]failed to copy embedded locales")
+		}
 	}
 
 	i18n.InitGlobal(&i18n.ManagerConfig{
 		DefaultLocale:    i18nConfig.DefaultLocale,
 		FallbackLocale:   i18nConfig.FallbackLocale,
-		TranslationsDir:  translationsDir,
+		TranslationsDir:  "",
 		SupportedLocales: i18nConfig.SupportedLocales,
-		AutoLoad:         i18nConfig.AutoLoad,
+		AutoLoad:         true,
 		HeaderName:       i18nConfig.HeaderName,
 		QueryParam:       i18nConfig.QueryParam,
 		CookieName:       i18nConfig.CookieName,
 		SessionKey:       i18nConfig.SessionKey,
 	})
+
+	if err := os.RemoveAll(dstDir); err != nil {
+		return nil, errors.SystemErr.Wrap(err, "[i18n]failed to remove temporary locales directory")
+	}
+
+	if i18nConfig.TranslationsDir != "" {
+		i18n.GetGlobalManager().LoadTranslationsFromDir(i18nConfig.TranslationsDir)
+	}
 
 	return &I18nManager{i18n.GetGlobalManager()}, nil
 }
