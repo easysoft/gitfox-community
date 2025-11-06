@@ -44,7 +44,7 @@ type DatabaseConfig struct {
 
 // SQLiteConfig 缓存数据库配置
 type SQLiteConfig struct {
-	Path string `envconfig:"GITFOX_SQLITE_PATH" default:"/data/gitfox/sqlite/sqlite.db"`
+	Path string `envconfig:"GITFOX_SQLITE_FILE" default:"/data/gitfox/sqlite/sqlite.db"`
 }
 
 // DockerConfig Docker配置
