@@ -69,6 +69,7 @@ type ServicePackConfig struct {
 	UploadPackHook string
 }
 
+// ServicePackOptions 是git服务打包选项。
 type ServicePackOptions struct {
 	Service      constant.GitServiceType
 	Timeout      int // seconds
@@ -79,6 +80,9 @@ type ServicePackOptions struct {
 	Env          []string
 	Protocol     string
 	Config       ServicePackConfig
+
+	FitClient bool
+	IsWrite   bool
 }
 
 func (g *Git) ServicePack(
