@@ -9,7 +9,7 @@ import (
 
 // Controller 聚合所有的 HTTP 处理器
 type Controller struct {
-	Branch *branch.BranchController
+	Branch *branch.Controller
 	Space  *space.SpaceController
 	Git    *git.GitController
 	Test   *test.TestController

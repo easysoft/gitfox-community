@@ -15,7 +15,7 @@ var ControllersWireSet = wire.NewSet(
 // NewControllers 创建所有 HTTP 处理器的聚合实例
 func NewControllers(
 	spaceController *space.SpaceController,
-	branchController *branch.BranchController,
+	branchController *branch.Controller,
 ) *router.Controller {
 	return &router.Controller{
 		Space:  spaceController,
