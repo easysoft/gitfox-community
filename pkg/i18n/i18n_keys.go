@@ -14,6 +14,8 @@ const (
 	BranchBodyParamError  I18nKey = "branch.body_param_error"  // Body 参数解析失败.
 	BranchCreateError     I18nKey = "branch.create_error"      // 分支创建失败.
 	BranchCreateSuccess   I18nKey = "branch.create_success"    // 分支创建成功.
+	BranchListError       I18nKey = "branch.list_error"        // 查询分支列表失败
+	BranchListSuccess     I18nKey = "branch.list_success"      // 查询分支列表成功
 	BranchPathParamError  I18nKey = "branch.path_param_error"  // Path 参数解析失败.
 	BranchQueryParamError I18nKey = "branch.query_param_error" // Query 参数解析失败.
 

@@ -9,5 +9,6 @@ func registerBranchRoutes(r *gin.RouterGroup, controller *Controller) {
 	branches := r.Group("/branches")
 	{
 		branches.POST("", controller.Branch.Create) // 创建分支
+		branches.GET("", controller.Branch.List)    // 创建分支
 	}
 }
