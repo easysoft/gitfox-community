@@ -17,13 +17,13 @@ import (
 
 type Service struct {
 	gitSvc    git.Interface
-	repoStore repo.RepoInterface
+	repoStore repo.Interface
 }
 
-var _ RepoInterface = (*Service)(nil)
+var _ Interface = (*Service)(nil)
 
 // NewService 创建 SpaceService 实例
-func NewRepoSvc(gitSvc git.Interface, repoStore repo.RepoInterface) *Service {
+func NewRepoSvc(gitSvc git.Interface, repoStore repo.Interface) *Service {
 	return &Service{
 		gitSvc: gitSvc,
 		repoStore: repoStore,
@@ -59,7 +59,7 @@ func (s *Service) GetRepo(ctx context.Context, repo_ref string, allowedStates []
 		return nil, errors.Wrapf(err, "failed to find repository: %s", repo_ref)
 	}
 
-	if len(allowedStates) > 0 && !slice.Contain(allowedStates, repo.State) {
+	if len(allowedStates) > 0 && !slice.Contain(allowedStates, repo.Status) {
 		return nil, errors.BadRequest.New("Repository is not ready to use.")
 	}
 
