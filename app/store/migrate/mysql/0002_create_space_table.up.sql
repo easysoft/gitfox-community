@@ -10,5 +10,5 @@ CREATE TABLE IF NOT EXISTS `ops_space` (
   `editedDate` datetime NULL COMMENT '更新时间',
   `deleted` tinyint NOT NULL DEFAULT 0 COMMENT '删除标识，0-未删除，1-已删除',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='空间表';
+) ENGINE=InnoDB COMMENT='空间表';
 CREATE UNIQUE INDEX `uk_name` ON `ops_space`(`name`); -- 单独创建唯一索引
