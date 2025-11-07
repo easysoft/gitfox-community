@@ -1,9 +1,9 @@
 package repo
 
-type RepoHandler struct {
+type RepoController struct {
 }
 
 // NewRepoHandler 创建代码库处理器实例
-func NewRepoHandler() *RepoHandler {
-	return &RepoHandler{}
+func NewRepoHandler() *RepoController {
+	return &RepoController{}
 }
