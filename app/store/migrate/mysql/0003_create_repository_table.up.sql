@@ -18,6 +18,6 @@ CREATE TABLE IF NOT EXISTS `ops_repository` (
 	`deleted` tinyint NOT NULL DEFAULT 0 COMMENT '删除标识，0-未删除，1-已删除',
 	PRIMARY KEY (`id`) USING BTREE
 ) ENGINE=InnoDB COMMENT='代码库表';
-CREATE UNIQUE INDEX uk_repo ON ops_repository (identifier, spaceID);
-CREATE UNIQUE INDEX uk_uid ON ops_repository (uid);
+CREATE UNIQUE INDEX uk_repo_space_id ON ops_repository (identifier, spaceID);
+CREATE UNIQUE INDEX uk_gituid ON ops_repository (gitUID);
 CREATE INDEX idx_deleted ON ops_repository (deleted);
