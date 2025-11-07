@@ -3,7 +3,6 @@ package repo
 import (
 	"context"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 	"gorm.io/gorm"
 )
 
@@ -19,10 +18,14 @@ func NewRepoStore(db *gorm.DB) Interface {
 	}
 }
 
-func (s *Store) FindByRef(ctx context.Context, ref string) (*repo.Repository, error) {
-	var repo repo.Repository //todo
+func (s *Store) FindByRef(ctx context.Context, ref string) (*Repository, error) {
+	var repo Repository //todo
 	if err := s.db.WithContext(ctx).Where("ref = ?", ref).First(&repo).Error; err != nil {
 		return nil, err
 	}
 	return &repo, nil
+}
+
+func (s *Store) Create(ctx context.Context, repo *Repository) error {
+	return nil
 }

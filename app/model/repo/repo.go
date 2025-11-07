@@ -48,7 +48,7 @@ type Repository struct {
 }
 
 // CreateRemoteRepoRequest 创建远端仓库请求参数
-type CreateRemoteRepoRequest struct {
+type CreateRepoReq struct {
 	SpaceID       uint64 `json:"spaceID" binding:"required"`                // 空间ID（字符串类型，后续转int）
 	Identifier    string `json:"identifier" binding:"required"`             // 仓库唯一标识
 	DefaultBranch string `json:"defaultBranch"`                             // 默认分支（默认main）
@@ -61,7 +61,7 @@ type CreateRemoteRepoRequest struct {
 }
 
 // CreateRemoteRepoResponse 创建仓库响应结果
-type CreateRemoteRepoResponse struct {
+type CreateRepoResp struct {
 	ID            uint       `json:"id"`
 	SpaceID       int        `json:"spaceID"`
 	Identifier    string     `json:"identifier"`
@@ -82,13 +82,13 @@ type CreateRemoteRepoResponse struct {
 }
 
 // 自定义参数校验：Identifier 仅允许字母、数字、下划线、连字符
-func (req *CreateRemoteRepoRequest) Validate() error {
+func (req *CreateRepoReq) Validate() error {
 
 	// 校验Identifier字符规则（符合Git仓库命名规范）
 	if !regexp.MustCompile(`^[a-zA-Z0-9_-]+$`).MatchString(req.Identifier) {
 		return fmt.Errorf("identifier仅支持字母、数字、下划线(_)、连字符(-)")
 	}
-	// 校验Identifier长度（数据库字段varchar(255)，建议限制64字符内）
+
 	if len(req.Identifier) > 64 {
 		return fmt.Errorf("identifier长度不能超过64字符")
 	}
