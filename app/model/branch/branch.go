@@ -22,11 +22,12 @@ type Branch struct {
 // }
 
 type CreateBranchRequest struct {
+	RepoID      uint   `json:"repoID" binding:"required"`
 	Name        string `json:"name" binding:"required,max=100" example:"dev"`
 	Target      string `json:"target"`
 	CreatedBy   string `json:"createdBy" binding:"required"`
-	DryRunRules string `json:"dryRunRules" binding:"required"`
-	ByPassRules string `json:"byPassRules" binding:"required"`
+	DryRunRules bool   `json:"dryRunRules" binding:"required"`
+	ByPassRules bool   `json:"byPassRules" binding:"required"`
 }
 
 type CreateBranchResponse struct {

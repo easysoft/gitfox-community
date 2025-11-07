@@ -198,6 +198,6 @@ type RulesViolations struct {
 }
 
 type DryRunRulesOutput struct {
-	DryRunRules    bool             `json:"dry_run_rules,omitempty"`
-	RuleViolations []RuleViolations `json:"rule_violations,omitempty"`
+	DryRunRules    bool             `json:"dryRunRules,omitempty"`
+	RuleViolations []RuleViolations `json:"ruleViolations,omitempty"`
 }
