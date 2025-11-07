@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	branchModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/branch"
+	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/utils"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
@@ -16,6 +17,8 @@ type Service struct {
 	urlProvider url.Provider
 	gitPkg      git.Interface
 }
+
+var _ Interface = (*Service)(nil)
 
 // NewService 创建 BranchSrv 实例
 func NewService(urlProvider url.Provider, git git.Interface) *Service {
@@ -55,11 +58,11 @@ func (s *Service) Create(ctx context.Context, req branchModel.ReqForCreate) (*br
 	return &branchModel.RespForCreate{Branch: data}, nil
 }
 
-func (s *Service) List(ctx context.Context, filter branchModel.ReqFilter, repo branchModel.Branch) ([]branchModel.Branch, error) {
+func (s *Service) List(ctx context.Context, filter branchModel.ReqFilter, repo repoModel.Repo) ([]branchModel.Branch, error) {
 
 	// 准备 RPC 参数
 	rpcOut, err := s.gitPkg.ListBranchesV2(ctx, &git.ListBranchesParams{
-		// ReadParams:      git.CreateReadParams(repo),
+		ReadParams:      git.ReadParams{RepoUID: repo.GitUID},
 		IncludeCommit:   filter.IncludeCommit,
 		Query:           filter.Query,
 		Label:           filter.Label,
@@ -88,9 +91,9 @@ func (s *Service) List(ctx context.Context, filter branchModel.ReqFilter, repo b
 	return response, nil
 }
 
-func (s *Service) ListLabels(ctx context.Context, repo branchModel.Branch) ([]branchModel.Label, error) {
+func (s *Service) ListLabels(ctx context.Context, repo repoModel.Repo) ([]branchModel.Label, error) {
 	labels, err := s.gitPkg.ListBranchLabelsV2(ctx, &git.ListBranchesParams{
-		// ReadParams: git.CreateReadParams(repo),
+		ReadParams: git.ReadParams{RepoUID: repo.GitUID},
 	})
 	if err != nil {
 		return nil, fmt.Errorf("fail to get the list of branch labels from git: %w", err)

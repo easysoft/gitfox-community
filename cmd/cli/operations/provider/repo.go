@@ -1,6 +1,5 @@
 package provider
 
-
 import (
 	"github.com/google/wire"
 
@@ -11,9 +10,9 @@ import (
 
 var RepoeWireSet = wire.NewSet(
 	repo.NewRepoController,
-	wire.Bind(new(repoSvc.repoInterface), new(*repoSvc.RepoSvc)),
+	wire.Bind(new(repoSvc.Interface), new(*repoSvc.Service)),
 	// 提供创建实现类实例的方法（关键修复）
 	repoSvc.NewRepoSvc,
-	wire.Bind(new(repoStore.RepoInterface), new(*repoStore.RepoStore)),
-	spaceStore.NewRepoStore,
+	wire.Bind(new(repoStore.Interface), new(*repoStore.Store)),
+	repoStore.NewRepoStore,
 )

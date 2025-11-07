@@ -152,7 +152,7 @@ func (c *Controller) ListLabels(ctx *gin.Context) {
 	// 	return nil, err
 	// }
 
-	respData, err := c.branchSvc.ListLables(ctx, repo.Repo{})
+	respData, err := c.branchSvc.ListLabels(ctx, repo.Repo{})
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return
