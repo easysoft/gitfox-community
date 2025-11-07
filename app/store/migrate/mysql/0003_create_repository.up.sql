@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS `ops_repository` (
 	`spaceID` int NOT NULL COMMENT '空间ID',
 	`identifier` varchar(255) NOT NULL COMMENT '代码库唯一标识',
 	`desc` varchar(500) NOT NULL DEFAULT '' COMMENT '代码库描述',
-	`uid` char(42) NOT NULL COMMENT 'Git仓库唯一标识',
+	`gitUid` char(42) NOT NULL COMMENT 'Git仓库唯一标识',
 	`defaultBranch` varchar(255) NOT NULL COMMENT '默认分支名',
 	`forkID` int unsigned NULL DEFAULT NULL COMMENT '派生来源代码库ID',
 	`empty` tinyint(1) NOT NULL DEFAULT 0 COMMENT '是否为空库',
