@@ -2,10 +2,11 @@ package database
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"reflect"
 	"strings"
+
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 
 	"gorm.io/gorm"
 )
@@ -80,7 +81,7 @@ func Paginate[T any](ctx context.Context, db *gorm.DB, param PageParam, dataPtr 
 	var total int64
 	if param.NeedTotal {
 		if err := tx.Count(&total).Error; err != nil {
-			return nil, fmt.Errorf("count total failed: %w", err)
+			return nil, errors.Newf("count total failed: %w", err)
 		}
 	}
 
@@ -93,7 +94,7 @@ func Paginate[T any](ctx context.Context, db *gorm.DB, param PageParam, dataPtr 
 
 	// 7. 执行分页查询（Limit + Offset）
 	if err := tx.Limit(param.PageSize).Offset(offset).Find(dataPtr).Error; err != nil {
-		return nil, fmt.Errorf("query page data failed: %w", err)
+		return nil,  errors.Newf("query page data failed: %w", err)
 	}
 
 	// 8. 计算总页数
