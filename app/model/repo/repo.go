@@ -4,10 +4,51 @@ import (
 	"fmt"
 	"regexp"
 	"time"
+
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 )
 
+// Repository represents a code repository.
+type Repository struct {
+	// TODO: int64 ID doesn't match DB
+	ID          int64  `json:"id" yaml:"id"`
+	Version     int64  `json:"-" yaml:"-"`
+	ParentID    int64  `json:"parent_id" yaml:"parent_id"`
+	Identifier  string `json:"identifier" yaml:"identifier"`
+	Path        string `json:"path" yaml:"path"`
+	Description string `json:"description" yaml:"description"`
+	CreatedBy   int64  `json:"created_by" yaml:"created_by"`
+	Created     int64  `json:"created" yaml:"created"`
+	Updated     int64  `json:"updated" yaml:"updated"`
+	Deleted     *int64 `json:"deleted,omitempty" yaml:"deleted"`
+
+	// Size of the repository in KiB.
+	Size int64 `json:"size" yaml:"size"`
+	// SizeUpdated is the time when the Size was last updated.
+	SizeUpdated int64 `json:"size_updated" yaml:"size_updated"`
+
+	GitUID        string `json:"-" yaml:"-"`
+	DefaultBranch string `json:"default_branch" yaml:"default_branch"`
+	ForkID        int64  `json:"fork_id" yaml:"fork_id"`
+	PullReqSeq    int64  `json:"-" yaml:"-"`
+
+	NumForks       int `json:"num_forks" yaml:"num_forks"`
+	NumPulls       int `json:"num_pulls" yaml:"num_pulls"`
+	NumClosedPulls int `json:"num_closed_pulls" yaml:"num_closed_pulls"`
+	NumOpenPulls   int `json:"num_open_pulls" yaml:"num_open_pulls"`
+	NumMergedPulls int `json:"num_merged_pulls" yaml:"num_merged_pulls"`
+
+	Mirror  bool               `json:"mirror,omitempty" yaml:"mirror"`
+	State   constant.RepoState `json:"state" yaml:"-"`
+	IsEmpty bool               `json:"is_empty,omitempty" yaml:"is_empty"`
+
+	// git urls
+	GitURL    string `json:"git_url" yaml:"-"`
+	GitSSHURL string `json:"git_ssh_url,omitempty" yaml:"-"`
+}
+
 // CreateRemoteRepoRequest 创建远端仓库请求参数
-type CreateRemoteRepoRequest struct {
+type CreateRepoReq struct {
 	SpaceID       uint64 `json:"spaceID" binding:"required"`                // 空间ID（字符串类型，后续转int）
 	Identifier    string `json:"identifier" binding:"required"`             // 仓库唯一标识
 	DefaultBranch string `json:"defaultBranch"`                             // 默认分支（默认main）
@@ -20,7 +61,7 @@ type CreateRemoteRepoRequest struct {
 }
 
 // CreateRemoteRepoResponse 创建仓库响应结果
-type CreateRemoteRepoResponse struct {
+type CreateRepoResp struct {
 	ID            uint       `json:"id"`
 	SpaceID       int        `json:"spaceID"`
 	Identifier    string     `json:"identifier"`
@@ -41,13 +82,13 @@ type CreateRemoteRepoResponse struct {
 }
 
 // 自定义参数校验：Identifier 仅允许字母、数字、下划线、连字符
-func (req *CreateRemoteRepoRequest) Validate() error {
+func (req *CreateRepoReq) Validate() error {
 
 	// 校验Identifier字符规则（符合Git仓库命名规范）
 	if !regexp.MustCompile(`^[a-zA-Z0-9_-]+$`).MatchString(req.Identifier) {
 		return fmt.Errorf("identifier仅支持字母、数字、下划线(_)、连字符(-)")
 	}
-	// 校验Identifier长度（数据库字段varchar(255)，建议限制64字符内）
+
 	if len(req.Identifier) > 64 {
 		return fmt.Errorf("identifier长度不能超过64字符")
 	}
