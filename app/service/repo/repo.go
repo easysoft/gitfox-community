@@ -3,24 +3,37 @@ package repo
 import (
 	"context"
 
+	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
+
+
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/slice"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/git"
-	repoStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 )
 
 type Service struct {
 	gitSvc    git.Interface
-	repoStore repoStore.Interface
+	repoStore repo.RepoInterface
 }
 
-func NewRepoService(gitSvc git.Interface, repoStore repoStore.Interface) Interface {
-	return &Service{gitSvc: gitSvc, repoStore: repoStore}
+var _ RepoInterface = (*Service)(nil)
+
+// NewService 创建 SpaceService 实例
+func NewRepoSvc(gitSvc git.Interface, repoStore repo.RepoInterface) *Service {
+	return &Service{
+		gitSvc: gitSvc,
+		repoStore: repoStore,
+	}
 }
+
+func (r *Service) Create(ctx context.Context, req *repoModel.CreateRepoReq) (*repoModel.CreateRepoResp, error) {
+	return &repoModel.CreateRepoResp{}, nil
+}
+
 
 func (s *Service) GetRepoCheckAccess(ctx context.Context, session *auth.Session, repo_ref string, reqPermission []constant.Permission) (*repo.Repository, error) {
 
