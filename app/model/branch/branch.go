@@ -6,22 +6,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/sha"
 )
 
-type Branch struct {
-	Name   string         `json:"name"`
-	SHA    sha.SHA        `json:"sha"`
-	Commit *commit.Commit `json:"commit,omitempty"`
-}
-
-// type BranchExtended struct {
-// 	Branch
-// 	IsDefault        bool               `json:"is_default"`
-// 	CheckSummary     *CheckCountSummary `json:"check_summary,omitempty"`
-// 	Rules            []RuleInfo         `json:"rules,omitempty"`
-// 	PullRequests     []*PullReq         `json:"pull_requests,omitempty"`
-// 	CommitDivergence *CommitDivergence  `json:"commit_divergence,omitempty"`
-// }
-
-type CreateBranchRequest struct {
+type ReqForCreate struct {
 	RepoID      uint   `json:"repoID" binding:"required"`
 	Name        string `json:"name" binding:"required,max=100" example:"dev"`
 	Target      string `json:"target"`
@@ -30,31 +15,53 @@ type CreateBranchRequest struct {
 	ByPassRules bool   `json:"byPassRules" binding:"required"`
 }
 
-type CreateBranchResponse struct {
+type RespForCreate struct {
 	Branch
 	rule.DryRunRulesOutput
 }
 
-type DeleteBranchResponse struct {
+type RespForDelete struct {
 	rule.DryRunRulesOutput
 }
 
-type BranchMetadataOptions struct {
+// ReqFilter stores branch query parameters.
+type ReqFilter struct {
+	RepoID          uint   `json:"repoID"`
+	Query           string `json:"query"`
+	Label           string `json:"label"`
+	IncludeArchived bool   `json:"include_archived"`
+	IncludeCommit   bool   `json:"include_commit"`
+	Sort            string `json:"sort"`
+	Order           string `json:"order"`
+	Page            int    `json:"page"`
+	Size            int    `json:"size"`
+	// BranchMetadataOptions
+}
+
+type ReqFilterExt struct {
 	IncludeChecks   bool `json:"include_checks"`
 	IncludeRules    bool `json:"include_rules"`
 	IncludePullReqs bool `json:"include_pullreqs"`
 	MaxDivergence   int  `json:"max_divergence"`
 }
 
-// BranchFilter stores branch query parameters.
-type BranchFilter struct {
-	Query           string `json:"query"`
-	Label           string `json:"label"`
-	IncludeArchived bool   `json:"include_archived"`
-	// Sort            enum.Sort             `json:"sort"`
-	// Order           enum.Order            `json:"order"`
-	Page          int  `json:"page"`
-	Size          int  `json:"size"`
-	IncludeCommit bool `json:"include_commit"`
-	BranchMetadataOptions
+type Label struct {
+	Name  string `json:"name"`
+	Total int    `json:"total"`
 }
+
+type Branch struct {
+	Name      string         `json:"name"`
+	SHA       sha.SHA        `json:"sha"`
+	Commit    *commit.Commit `json:"commit,omitempty"`
+	IsDefault bool           `json:"is_default"`
+}
+
+// type BranchExt struct {
+// 	Branch
+// 	IsDefault        bool               `json:"is_default"`
+// 	CheckSummary     *CheckCountSummary `json:"check_summary,omitempty"`
+// 	Rules            []RuleInfo         `json:"rules,omitempty"`
+// 	PullRequests     []*PullReq         `json:"pull_requests,omitempty"`
+// 	CommitDivergence *CommitDivergence  `json:"commit_divergence,omitempty"`
+// }

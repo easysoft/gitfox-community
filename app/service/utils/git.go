@@ -62,21 +62,19 @@ func CreateRPCInternalWriteParams(
 	return createRPCWriteParams(ctx, urlProvider, true)
 }
 
-func MapBranch(b git.Branch) (branch.CreateBranchResponse, error) {
+func MapBranch(b git.Branch) (branch.Branch, error) {
 	var commit *commit.Commit
 	if b.Commit != nil {
 		var err error
 		commit, err = MapCommit(b.Commit)
 		if err != nil {
-			return branch.CreateBranchResponse{}, err
+			return branch.Branch{}, err
 		}
 	}
-	return branch.CreateBranchResponse{
-		Branch: branch.Branch{
-			Name:   b.Name,
-			SHA:    b.SHA,
-			Commit: commit,
-		},
+	return branch.Branch{
+		Name:   b.Name,
+		SHA:    b.SHA,
+		Commit: commit,
 	}, nil
 }
 
@@ -131,5 +129,26 @@ func mapStats(c *git.Commit) *commit.CommitStats {
 			Changes:    insertions + deletions,
 		},
 		// Files: mapFileStats(c),
+	}
+}
+
+func MapSignature(s *git.Signature) (*commit.Signature, error) {
+	return &commit.Signature{
+		Identity: commit.Identity{
+			Name:  s.Identity.Name,
+			Email: s.Identity.Email,
+		},
+		When: s.When,
+	}, nil
+}
+
+func MapToRPCSortOrder(o string) git.SortOrder {
+	switch o {
+	case "asc":
+		return git.SortOrderAsc
+	case "desc":
+		return git.SortOrderDesc
+	default:
+		return git.SortOrderDefault
 	}
 }

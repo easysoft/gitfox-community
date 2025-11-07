@@ -3,9 +3,12 @@ package branch
 import (
 	"context"
 
-	branchModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/branch"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/branch"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 )
 
-type BranchInterface interface {
-	Create(ctx context.Context, req branchModel.CreateBranchRequest) (*branchModel.CreateBranchResponse, error)
+type Interface interface {
+	Create(ctx context.Context, req branch.ReqForCreate) (*branch.RespForCreate, error)
+	List(ctx context.Context, req branch.ReqFilter, repo repo.Repo) ([]branch.Branch, error)
+	ListLables(ctx context.Context, repo repo.Repo) ([]branch.Label, error)
 }

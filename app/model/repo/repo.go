@@ -57,3 +57,23 @@ func (req *CreateRemoteRepoRequest) Validate() error {
 	}
 	return nil
 }
+
+type Repo struct {
+	ID            uint       `json:"id"`
+	SpaceID       int        `json:"spaceID"`
+	Identifier    string     `json:"identifier"`
+	Desc          string     `json:"desc"`
+	GitUID        string     `json:"gitUID"`
+	DefaultBranch string     `json:"defaultBranch"`
+	ForkID        *uint      `json:"forkID"` // 允许 NULL，用指针类型
+	Empty         bool       `json:"empty"`
+	ACL           string     `json:"acl"`
+	Mirror        bool       `json:"mirror"`
+	Status        int        `json:"status"` // 状态码用 int 类型（兼容枚举映射）
+	Mutex         int        `json:"mutex"`
+	CreatedBy     string     `json:"createdBy"`
+	CreatedDate   *time.Time `json:"createdDate"` // 允许 NULL，用指针类型
+	EditedBy      string     `json:"editedBy"`
+	EditedDate    *time.Time `json:"editedDate"` // 允许 NULL，用指针类型
+	Deleted       bool       `json:"deleted"`
+}
