@@ -19,6 +19,8 @@ type Service struct {
 	gitPkg      git.Interface
 }
 
+var _ Interface = (*Service)(nil)
+
 // NewService 创建 TagSrv 实例
 func NewService(urlProvider url.Provider, git git.Interface) *Service {
 	return &Service{
