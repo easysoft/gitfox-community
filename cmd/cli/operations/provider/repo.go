@@ -8,6 +8,7 @@ import (
 	repoSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
 	repoStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
 )
+
 var RepoeWireSet = wire.NewSet(
 	repo.NewRepoController,
 	wire.Bind(new(repoSvc.repoInterface), new(*repoSvc.RepoSvc)),
