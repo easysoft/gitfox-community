@@ -14,7 +14,6 @@ type Controller struct {
 	Tag    *tag.Controller
 	Branch *branch.Controller
 	Space  *space.SpaceController
-	Repo   *repo.RepoController
 	Git    *git.GitController
 	Test   *test.TestController
 	Repo   *repo.Controller
