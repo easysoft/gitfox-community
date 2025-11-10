@@ -1,20 +1,23 @@
 package repo
 
 import (
-	"fmt"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	"github.com/gin-gonic/gin"
 )
 
-type RepoController struct {
+type Controller struct {
 	repoSvc repo.Interface
 }
 
 // NewRepoController 创建代码库处理器实例
-func NewRepoController(repoSvc repo.Interface) *RepoController {
-	return &RepoController{
+func NewRepoController(repoSvc repo.Interface) *Controller {
+	return &Controller{
 		repoSvc: repoSvc,
 	}
 }
@@ -31,8 +34,22 @@ func NewRepoController(repoSvc repo.Interface) *RepoController {
 // @Error 404 {object} resp.ObjectResponse "空间不存在（传入的spaceID对应的空间未找到）"
 // @Error 409 {object} resp.ObjectResponse "仓库标识冲突（同一空间内identifier已存在）"
 // @Error 500 {object} resp.ObjectResponse "服务器内部错误（如Git服务调用失败、数据库异常等）"
-// @Router /api/v1/repos [post]
-func (ctl *RepoController) Create(c *gin.Context) {
-	fmt.Println(repoModel.CreateRepoReq{})
+// @Router /repos [post]
+func (ctl *Controller) Create(c *gin.Context) {
+	reqData := new(repoModel.CreateRepoReq)
+	if err := c.ShouldBindJSON(&reqData); err != nil {
+		err = errors.WithI18nKey(err, i18n.RepoBodyParamError)
+		resp.BadRequest(c, err)
+		return
+	}
 
+	err := reqData.Validate()
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RepoBodyParamError)
+		resp.BadRequest(c, err)
+		return
+	}
+
+
+	ctl.repoSvc.Create(logger.GetContextWithLogger(c), reqData)
 }

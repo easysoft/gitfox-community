@@ -55,7 +55,7 @@ type Server struct {
 	ServerHostKeysDir       string
 
 	Verifier publickey.IPublicKey
-	RepoCtrl *repo.RepoController
+	RepoCtrl *repo.Controller
 }
 
 // - 验证服务器配置参数是否正确

@@ -8,7 +8,7 @@ import (
 )
 
 // GitServicePack executes the service pack part of git's smart http protocol (receive-/upload-pack).
-func (c *RepoController) GitServicePack(
+func (c *Controller) GitServicePack(
 	ctx context.Context,
 	session *auth.Session,
 	repoRef string,
