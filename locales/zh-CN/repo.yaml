@@ -1,3 +1,5 @@
 repo:
   pullRequests_merge_success: "合并成功！"
   pullRequests_merge_error: "合并失败，存在冲突或检查未通过。"
+  push_permission_error: "您没有权限推送此仓库。"
+  pull_permission_error: "您没有权限拉取此仓库。"

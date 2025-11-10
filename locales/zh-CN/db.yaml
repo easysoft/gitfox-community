@@ -1,4 +1,5 @@
 db:
+  error: "数据库错误。"
   notfound: "资源未找到。"
   duplicate: "资源已存在。"
   foreign_key_violation: "外键约束冲突。"

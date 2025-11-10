@@ -1,4 +1,5 @@
 db:
+  error: "Database error."
   notfound: "Resource not found."
   duplicate: "Resource already exists."
   foreign_key_violation: "Foreign key constraint violation."
