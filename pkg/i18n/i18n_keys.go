@@ -25,6 +25,7 @@ const (
 	DbDataTooLong              I18nKey = "db.data_too_long"              // 字段数据过长.
 	DbDeadlock                 I18nKey = "db.deadlock"                   // 检测到数据库死锁.
 	DbDuplicate                I18nKey = "db.duplicate"                  // 资源已存在.
+	DbError                    I18nKey = "db.error"                      // 数据库错误.
 	DbForeignKeyViolation      I18nKey = "db.foreign_key_violation"      // 外键约束冲突.
 	DbInvalidData              I18nKey = "db.invalid_data"               // 无效的数据.
 	DbInvalidDataType          I18nKey = "db.invalid_data_type"          // 数据类型无效.
@@ -50,6 +51,8 @@ const (
 	// Repo 相关常量
 	RepoPullRequestsMergeError   I18nKey = "repo.pullRequests_merge_error"   // 合并失败,存在冲突或检查未通过.
 	RepoPullRequestsMergeSuccess I18nKey = "repo.pullRequests_merge_success" // 合并成功!
+	RepoPullPermissionError      I18nKey = "repo.pull_permission_error"      // 您没有权限拉取此仓库.
+	RepoPushPermissionError      I18nKey = "repo.push_permission_error"      // 您没有权限推送此仓库.
 
 	// Request 相关常量
 	RequestInvalidBooleanParameter         I18nKey = "request.invalid_boolean_parameter"          // 参数必须为布尔值.
