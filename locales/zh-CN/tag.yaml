@@ -1,0 +1,11 @@
+# 标签相关翻译
+tag:
+  path_param_error: "Path 参数解析失败。"
+  query_param_error: "Query 参数解析失败。"
+  body_param_error: "Body 参数解析失败。"
+  create_success: "标签创建成功。"
+  create_error: "标签创建失败。"
+  list_error: "查询标签列表失败。"
+  list_success: "查询标签列表成功。"
+  delete_success: "标签删除成功。"
+  delete_error: "标签删除失败。"

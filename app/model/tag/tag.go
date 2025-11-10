@@ -6,10 +6,10 @@ import (
 
 // ReqForCreate used for tag creation apis.
 type ReqForCreate struct {
-	Name        string `json:"name"`
-	Target      string `json:"target"`
-	Message     string `json:"message"`
-	BypassRules bool   `json:"bypassRules"`
+	Name    string `json:"name" binding:"required"`
+	Source  string `json:"source"`
+	Message string `json:"message"`
+	RepoID  uint   `json:"repoID" binding:"required"`
 }
 
 type ReqFilter struct {
@@ -19,14 +19,13 @@ type ReqFilter struct {
 	Page          int    `json:"page"`
 	Size          int    `json:"size"`
 	IncludeCommit bool   `json:"includeCommit"`
+	RepoID        uint   `json:"repoID" binding:"required"`
 }
 
 type Tag struct {
-	Name        string            `json:"name"`
-	SHA         string            `json:"sha"`
-	IsAnnotated bool              `json:"is_annotated"`
-	Title       string            `json:"title,omitempty"`
-	Message     string            `json:"message,omitempty"`
-	Tagger      *commit.Signature `json:"tagger,omitempty"`
-	Commit      *commit.Commit    `json:"commit,omitempty"`
+	Name      string            `json:"name"`
+	SHA       string            `json:"sha"`
+	Message   string            `json:"message,omitempty"`
+	CreatedBy *commit.Signature `json:"createdBy,omitempty"`
+	Commit    *commit.Commit    `json:"commit,omitempty"`
 }

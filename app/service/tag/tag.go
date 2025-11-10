@@ -43,9 +43,9 @@ func (s *Service) Create(ctx context.Context, req tagModel.ReqForCreate) (*tagMo
 	rpcOut, err := s.gitPkg.CreateCommitTag(ctx, &git.CreateCommitTagParams{
 		WriteParams: writeParams,
 		Name:        req.Name,
-		Target:      req.Target,
+		Target:      req.Source,
 		Message:     req.Message,
-		Tagger:      &git.Identity{Name: "displayName", Email: "email"}, // 从 controller 层传入
+		Tagger:      &git.Identity{Name: "displayName", Email: "email"}, // 从上下文中获取
 		TaggerDate:  &now,
 	})
 	if err != nil {
@@ -91,8 +91,23 @@ func (s *Service) List(ctx context.Context, req tagModel.ReqFilter, repo repoMod
 
 }
 
-func (s *Service) Delete(ctx context.Context, repo repoModel.Repo) ([]tagModel.Tag, error) {
-	return nil, nil
+func (s *Service) Delete(ctx context.Context, name string, repo repoModel.Repo) error {
+	// 准备 RPC 参数
+	// writeParams, err := utils.CreateRPCInternalWriteParams(c, ctl.urlProvider, session, repo)
+	writeParams, err := utils.CreateRPCInternalWriteParams(ctx, s.urlProvider)
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.GitCreateExecParamError)
+		return err
+	}
+	err = s.gitPkg.DeleteTag(ctx, &git.DeleteTagParams{
+		Name:        name,
+		WriteParams: writeParams,
+	})
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.GitExecError)
+		return err
+	}
+	return nil
 }
 
 func mapToRPCTagSortOption(o string) git.TagSortOption {
@@ -126,12 +141,10 @@ func mapCommitTag(t git.CommitTag) (tagModel.Tag, error) {
 	}
 
 	return tagModel.Tag{
-		Name:        t.Name,
-		SHA:         t.SHA.String(),
-		IsAnnotated: t.IsAnnotated,
-		Title:       t.Title,
-		Message:     t.Message,
-		Tagger:      tagger,
-		Commit:      commit,
+		Name:      t.Name,
+		SHA:       t.SHA.String(),
+		Message:   t.Message,
+		CreatedBy: tagger,
+		Commit:    commit,
 	}, nil
 }
