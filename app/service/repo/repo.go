@@ -6,7 +6,6 @@ import (
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
 
-
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/slice"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
@@ -25,7 +24,7 @@ var _ Interface = (*Service)(nil)
 // NewService 创建 SpaceService 实例
 func NewRepoSvc(gitSvc git.Interface, repoStore repo.Interface) *Service {
 	return &Service{
-		gitSvc: gitSvc,
+		gitSvc:    gitSvc,
 		repoStore: repoStore,
 	}
 }
@@ -33,7 +32,6 @@ func NewRepoSvc(gitSvc git.Interface, repoStore repo.Interface) *Service {
 func (r *Service) Create(ctx context.Context, req *repoModel.CreateRepoReq) (*repoModel.CreateRepoResp, error) {
 	return &repoModel.CreateRepoResp{}, nil
 }
-
 
 func (s *Service) GetRepoCheckAccess(ctx context.Context, session *auth.Session, repo_ref string, reqPermission []constant.Permission) (*repo.Repository, error) {
 
@@ -59,7 +57,7 @@ func (s *Service) GetRepo(ctx context.Context, repo_ref string, allowedStates []
 		return nil, errors.Wrapf(err, "failed to find repository: %s", repo_ref)
 	}
 
-	if len(allowedStates) > 0 && !slice.Contain(allowedStates, repo.Status) {
+	if len(allowedStates) > 0 && !slice.Contain(allowedStates, constant.RepoState(repo.Status)) {
 		return nil, errors.BadRequest.New("Repository is not ready to use.")
 	}
 

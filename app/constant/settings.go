@@ -5,11 +5,6 @@ type SettingsKey string
 type SettingsValue string
 
 var (
-	SettingsValueTrue  SettingsValue = "true"
-	SettingsValueFalse SettingsValue = "false"
-)
-
-var (
 	// KeySecretScanningEnabled [bool] enables secret scanning if set to true.
 	KeySecretScanningEnabled     SettingsKey = "secret_scanning_enabled"
 	DefaultSecretScanningEnabled             = false
@@ -52,7 +47,7 @@ var (
 
 	// KeyRequireFitClient [bool] will check the git client
 	KeyRequireFitClient     SettingsKey = "require_fit_client"
-	DefaultRequireFitClient             = false
+	DefaultRequireFitClient             = "false"
 
 	// ContainerReadOnly [bool] disable write operates, used for gc
 	ContainerReadOnly SettingsKey = "container_read_only"
