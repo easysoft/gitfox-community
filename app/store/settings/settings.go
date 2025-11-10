@@ -18,7 +18,7 @@ func NewSettingStore(db *gorm.DB) Interface {
 	return &Store{db: db}
 }
 
-func (s *Store) GetSpaceSettings(ctx context.Context, spaceID int64) ([]*SettingsModel.Setting, error) {
+func (s *Store) GetSpaceSettings(ctx context.Context, spaceID uint) ([]*SettingsModel.Setting, error) {
 	var out []*Settings
 	if err := s.db.WithContext(ctx).
 		Where("setting_space_id = ? AND deleted = 0", spaceID).
@@ -28,7 +28,7 @@ func (s *Store) GetSpaceSettings(ctx context.Context, spaceID int64) ([]*Setting
 	return toSettings(out), nil
 }
 
-func (s *Store) GetRepoSettings(ctx context.Context, repoID int64) ([]*SettingsModel.Setting, error) {
+func (s *Store) GetRepoSettings(ctx context.Context, repoID uint) ([]*SettingsModel.Setting, error) {
 	var out []*Settings
 	if err := s.db.WithContext(ctx).
 		Where("setting_repo_id = ? AND deleted = 0", repoID).
@@ -48,7 +48,7 @@ func (s *Store) GetSystemSettings(ctx context.Context) ([]*SettingsModel.SystemS
 	return toSystemSettings(out), nil
 }
 
-func (s *Store) GetSpaceSettingByKey(ctx context.Context, spaceID int64, key string) (*SettingsModel.Setting, error) {
+func (s *Store) GetSpaceSettingByKey(ctx context.Context, spaceID uint, key string) (*SettingsModel.Setting, error) {
 	var out Settings
 	if err := s.db.WithContext(ctx).
 		Where("setting_space_id = ? AND setting_key = ? AND deleted = 0", spaceID, key).
@@ -58,7 +58,7 @@ func (s *Store) GetSpaceSettingByKey(ctx context.Context, spaceID int64, key str
 	return toSetting(&out), nil
 }
 
-func (s *Store) GetRepoSettingByKey(ctx context.Context, repoID int64, key string) (*SettingsModel.Setting, error) {
+func (s *Store) GetRepoSettingByKey(ctx context.Context, repoID uint, key string) (*SettingsModel.Setting, error) {
 	var out Settings
 	if err := s.db.WithContext(ctx).
 		Where("setting_repo_id = ? AND setting_key = ? AND deleted = 0", repoID, key).

@@ -20,7 +20,7 @@ func NewSpaceSvc(settingsStore settings.Interface) Interface {
 	}
 }
 
-func (s *Service) NeedFitClient(ctx context.Context, repoID int64, key constant.SettingsKey) (bool, error) {
+func (s *Service) NeedFitClient(ctx context.Context, repoID uint, key constant.SettingsKey) (bool, error) {
 	setting, err := s.settingsStore.GetRepoSettingByKey(ctx, repoID, string(key))
 	if err != nil && err != gorm.ErrRecordNotFound { // db error
 		return false, err
@@ -37,11 +37,11 @@ func (s *Service) NeedFitClient(ctx context.Context, repoID int64, key constant.
 	return false, nil
 }
 
-func (s *Service) GetSpaceSettings(ctx context.Context, spaceID int64) ([]*settingsModel.Setting, error) {
+func (s *Service) GetSpaceSettings(ctx context.Context, spaceID uint) ([]*settingsModel.Setting, error) {
 	return s.settingsStore.GetSpaceSettings(ctx, spaceID)
 }
 
-func (s *Service) GetRepoSettings(ctx context.Context, repoID int64) ([]*settingsModel.Setting, error) {
+func (s *Service) GetRepoSettings(ctx context.Context, repoID uint) ([]*settingsModel.Setting, error) {
 	return s.settingsStore.GetRepoSettings(ctx, repoID)
 }
 
@@ -49,11 +49,11 @@ func (s *Service) GetSystemSettings(ctx context.Context) ([]*settingsModel.Syste
 	return s.settingsStore.GetSystemSettings(ctx)
 }
 
-func (s *Service) GetSpaceSettingByKey(ctx context.Context, spaceID int64, key string) (*settingsModel.Setting, error) {
+func (s *Service) GetSpaceSettingByKey(ctx context.Context, spaceID uint, key string) (*settingsModel.Setting, error) {
 	return s.settingsStore.GetSpaceSettingByKey(ctx, spaceID, key)
 }
 
-func (s *Service) GetRepoSettingByKey(ctx context.Context, repoID int64, key string) (*settingsModel.Setting, error) {
+func (s *Service) GetRepoSettingByKey(ctx context.Context, repoID uint, key string) (*settingsModel.Setting, error) {
 	return s.settingsStore.GetRepoSettingByKey(ctx, repoID, key)
 }
 
