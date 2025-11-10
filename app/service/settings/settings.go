@@ -30,11 +30,11 @@ func (s *Service) NeedFitClient(ctx context.Context, repoID uint, key constant.S
 		return true, nil
 	}
 
-	if setting.Value == string(constant.SettingsValueTrue) {
-		return true, nil
+	if setting.Value == string(constant.DefaultRequireFitClient) {
+		return false, nil
 	}
 
-	return false, nil
+	return true, nil
 }
 
 func (s *Service) GetSpaceSettings(ctx context.Context, spaceID uint) ([]*settingsModel.Setting, error) {

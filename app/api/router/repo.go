@@ -8,5 +8,6 @@ import (
 func registerRepoRoutes(r *gin.RouterGroup, controller *Controller) {
 	repos := r.Group("/repos")
 	{
+		_ = repos
 	}
 }

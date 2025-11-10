@@ -30,7 +30,7 @@ type Repository struct {
 	Empty         bool       `gorm:"column:empty;comment:'是否为空库（0=非空，1=空库）'"`
 	ACL           string     `gorm:"column:acl;comment:'权限类型（private=私有，open=公开）'"`
 	Mirror        bool       `gorm:"column:mirror;comment:'是否为镜像库（0=普通库，1=镜像库）'"`
-	Status        RepoState  `gorm:"column:status;comment:'代码库状态（0=正常，1=Git导入中，2=迁移Git推送中，3=迁移数据导入中）'"`
+	Status        int        `gorm:"column:status;comment:'代码库状态（0=正常，1=Git导入中，2=迁移Git推送中，3=迁移数据导入中）'"`
 	Mutex         int        `gorm:"column:mutex;comment:'乐观锁版本号'"`
 	CreatedBy     string     `gorm:"column:createdBy;comment:'创建人'"`
 	CreatedDate   *time.Time `gorm:"column:createdDate;comment:'创建时间'"`
