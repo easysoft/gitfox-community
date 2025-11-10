@@ -9,7 +9,7 @@ func registerBranchRoutes(r *gin.RouterGroup, controller *Controller) {
 	branches := r.Group("/branches")
 	{
 		branches.POST("", controller.Branch.Create)               // 创建分支
-		branches.GET("", controller.Branch.List)                  // 查看分支列表
-		branches.GET("/prefixed", controller.Branch.ListPrefixes) // 查看分支前缀列表
+		branches.POST("/list", controller.Branch.List)            // 查看分支列表
+		branches.GET("/prefixes", controller.Branch.ListPrefixes) // 查看分支前缀列表
 	}
 }
