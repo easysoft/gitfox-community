@@ -28,7 +28,7 @@ func NewService(urlProvider url.Provider, git git.Interface) *Service {
 	}
 }
 
-func (s *Service) Create(ctx context.Context, req branchModel.ReqForCreate) (*branchModel.RespForCreate, error) {
+func (s *Service) Create(ctx context.Context, req branchModel.ReqForCreate) (*branchModel.Branch, error) {
 
 	// 准备 RPC 参数
 	// writeParams, err := utils.CreateRPCInternalWriteParams(c, ctl.urlProvider, session, repo)
@@ -42,20 +42,20 @@ func (s *Service) Create(ctx context.Context, req branchModel.ReqForCreate) (*br
 	rpcOut, err := s.gitPkg.CreateBranch(ctx, &git.CreateBranchParams{
 		WriteParams: writeParams,
 		BranchName:  req.Name,
-		Target:      req.Target,
+		Target:      req.Source,
 	})
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.GitExecError)
-		return &branchModel.RespForCreate{}, err
+		return &branchModel.Branch{}, err
 	}
 
 	// 将返回结果映射为前端对象
 	data, err := utils.MapBranch(rpcOut.Branch)
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.GitMapOutputError)
-		return &branchModel.RespForCreate{}, err
+		return &branchModel.Branch{}, err
 	}
-	return &branchModel.RespForCreate{Branch: data}, nil
+	return &data, nil
 }
 
 func (s *Service) List(ctx context.Context, filter branchModel.ReqFilter, repo repoModel.Repo) ([]branchModel.Branch, error) {
@@ -65,7 +65,7 @@ func (s *Service) List(ctx context.Context, filter branchModel.ReqFilter, repo r
 		ReadParams:      git.ReadParams{RepoUID: repo.GitUID},
 		IncludeCommit:   filter.IncludeCommit,
 		Query:           filter.Query,
-		Label:           filter.Label,
+		Label:           filter.Prefix,
 		IncludeArchived: filter.IncludeArchived,
 		Sort:            mapToRPCBranchSortOption(filter.Sort),
 		Order:           utils.MapToRPCSortOrder(filter.Order),
@@ -91,17 +91,18 @@ func (s *Service) List(ctx context.Context, filter branchModel.ReqFilter, repo r
 	return response, nil
 }
 
-func (s *Service) ListLabels(ctx context.Context, repo repoModel.Repo) ([]branchModel.Label, error) {
+func (s *Service) ListPrefixes(ctx context.Context, repo repoModel.Repo) ([]branchModel.Prefix, error) {
 	labels, err := s.gitPkg.ListBranchLabelsV2(ctx, &git.ListBranchesParams{
 		ReadParams: git.ReadParams{RepoUID: repo.GitUID},
 	})
 	if err != nil {
-		return nil, fmt.Errorf("fail to get the list of branch labels from git: %w", err)
+		err = errors.WithI18nKey(err, i18n.BranchListPrefixError)
+		return nil, err
 	}
 
-	outLabels := make([]branchModel.Label, len(labels))
+	outLabels := make([]branchModel.Prefix, len(labels))
 	for i, label := range labels {
-		outLabels[i] = branchModel.Label{Name: label.Name, Total: label.Total}
+		outLabels[i] = branchModel.Prefix{Name: label.Name, Total: label.Total}
 	}
 	return outLabels, nil
 }

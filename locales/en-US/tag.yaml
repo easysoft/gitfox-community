@@ -1,0 +1,10 @@
+tag:
+  path_param_error: "Path param parsing failed."
+  query_param_error: "Query param parsing failed."
+  body_param_error: "Body param parsing failed."
+  create_success: "Tag created successfully."
+  create_error: "Tag created failed."
+  list_error: "Failed to query tag list."
+  list_success: "Query the tag list successfully."
+  delete_success: "Tag deleted successfully."
+  delete_error: "Tag deletion failed."

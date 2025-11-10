@@ -4,7 +4,6 @@ import (
 	"time"
 
 	gitenum "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/enum"
-	"github.com/easysoft/gitfox/types/enum"
 )
 
 const NilSHA = "0000000000000000000000000000000000000000"
@@ -27,15 +26,6 @@ type CommitFilter struct {
 	Author       string  `json:"author"`
 	AuthorIDs    []int64 `json:"author_ids"`
 	IncludeStats bool    `json:"include_stats"`
-}
-
-// TagFilter stores commit tag query parameters.
-type TagFilter struct {
-	Query string             `json:"query"`
-	Sort  enum.TagSortOption `json:"sort"`
-	Order enum.Order         `json:"order"`
-	Page  int                `json:"page"`
-	Size  int                `json:"size"`
 }
 
 type ChangeStats struct {
@@ -64,6 +54,13 @@ type Commit struct {
 	Author     Signature    `json:"author"`
 	Committer  Signature    `json:"committer"`
 	Stats      *CommitStats `json:"stats,omitempty"`
+}
+
+type CommitDivergence struct {
+	// Ahead is the count of commits the 'From' ref is ahead of the 'To' ref.
+	Ahead int32 `json:"ahead"`
+	// Behind is the count of commits the 'From' ref is behind the 'To' ref.
+	Behind int32 `json:"behind"`
 }
 
 type Signature struct {

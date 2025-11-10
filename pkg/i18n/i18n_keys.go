@@ -11,13 +11,15 @@ const (
 	AuthNoSession I18nKey = "auth.no_session" // 请求不包含任何会话数据,无法进行授权
 
 	// Branch 相关常量
-	BranchBodyParamError  I18nKey = "branch.body_param_error"  // Body 参数解析失败.
-	BranchCreateError     I18nKey = "branch.create_error"      // 分支创建失败.
-	BranchCreateSuccess   I18nKey = "branch.create_success"    // 分支创建成功.
-	BranchListError       I18nKey = "branch.list_error"        // 查询分支列表失败
-	BranchListSuccess     I18nKey = "branch.list_success"      // 查询分支列表成功
-	BranchPathParamError  I18nKey = "branch.path_param_error"  // Path 参数解析失败.
-	BranchQueryParamError I18nKey = "branch.query_param_error" // Query 参数解析失败.
+	BranchBodyParamError    I18nKey = "branch.body_param_error"    // Body 参数解析失败.
+	BranchCreateError       I18nKey = "branch.create_error"        // 分支创建失败.
+	BranchCreateSuccess     I18nKey = "branch.create_success"      // 分支创建成功.
+	BranchListError         I18nKey = "branch.list_error"          // 查询分支列表失败.
+	BranchListPrefixError   I18nKey = "branch.list_prefix_error"   // 查询分支前缀列表失败.
+	BranchListPrefixSuccess I18nKey = "branch.list_prefix_success" // 查询分支前缀列表成功.
+	BranchListSuccess       I18nKey = "branch.list_success"        // 查询分支列表成功.
+	BranchPathParamError    I18nKey = "branch.path_param_error"    // Path 参数解析失败.
+	BranchQueryParamError   I18nKey = "branch.query_param_error"   // Query 参数解析失败.
 
 	// Db 相关常量
 	DbCheckConstraintViolation I18nKey = "db.check_constraint_violation" // 检查约束冲突.
@@ -90,4 +92,15 @@ const (
 	SpaceSecretsListSuccess      I18nKey = "space.secrets_list_success"      // 仓库密钥列表成功.
 	SpaceUpdateError             I18nKey = "space.update_error"              // 空间更新失败.
 	SpaceUpdateSuccess           I18nKey = "space.update_success"            // 空间更新成功.
+
+	// Tag 相关常量
+	TagBodyParamError  I18nKey = "tag.body_param_error"  // Body 参数解析失败.
+	TagCreateError     I18nKey = "tag.create_error"      // 标签创建失败.
+	TagCreateSuccess   I18nKey = "tag.create_success"    // 标签创建成功.
+	TagDeleteError     I18nKey = "tag.delete_error"      // 标签删除失败.
+	TagDeleteSuccess   I18nKey = "tag.delete_success"    // 标签删除成功.
+	TagListError       I18nKey = "tag.list_error"        // 查询标签列表失败.
+	TagListSuccess     I18nKey = "tag.list_success"      // 查询标签列表成功.
+	TagPathParamError  I18nKey = "tag.path_param_error"  // Path 参数解析失败.
+	TagQueryParamError I18nKey = "tag.query_param_error" // Query 参数解析失败.
 )

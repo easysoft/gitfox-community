@@ -73,7 +73,7 @@ func MapBranch(b git.Branch) (branch.Branch, error) {
 	}
 	return branch.Branch{
 		Name:   b.Name,
-		SHA:    b.SHA,
+		SHA:    b.SHA.String(),
 		Commit: commit,
 	}, nil
 }
