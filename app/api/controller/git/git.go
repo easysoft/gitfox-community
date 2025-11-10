@@ -9,7 +9,6 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
-	gitModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/git"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/git"
 	repoSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
 	settingsSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/settings"
@@ -35,11 +34,12 @@ func NewGitController(gitSvc git.Interface, repoSvc repoSvc.Interface, logger *l
 }
 
 func (ctl *GitController) Clone(c *gin.Context) {
-	var uri gitModel.RepoURI
+	ctx := c.Request.Context()
+	var params req.RepoURI
 	var err error
 
 	// 公共解析逻辑
-	session, contentEncoding, gitProtocol, err := ctl.prepareRequest(c, &uri)
+	session, contentEncoding, gitProtocol, err := ctl.prepareRequest(c, &params)
 	if err != nil {
 		resp.BadRequest(c, err)
 		return
@@ -68,7 +68,7 @@ func (ctl *GitController) Clone(c *gin.Context) {
 	// clone 是写操作 只要可读即可
 	// isWriteOperation := false
 	permission := constant.PermissionRepoView
-	repo, err := ctl.repoSvc.GetRepoCheckAccess(c.Request.Context(), session, uri.RepoRef, []constant.Permission{permission})
+	repo, err := ctl.repoSvc.GetRepoCheckAccess(ctx, session, params.RepoRef, []constant.Permission{permission})
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.RepoPullPermissionError)
 		resp.BadRequest(c, err)
@@ -106,12 +106,12 @@ func (ctl *GitController) Clone(c *gin.Context) {
 }
 
 func (ctl *GitController) Push(c *gin.Context) {
-	var uri gitModel.RepoURI
 	ctx := c.Request.Context()
+	var params req.RepoURI
 	var err error
 
 	// 公共解析逻辑
-	session, contentEncoding, gitProtocol, err := ctl.prepareRequest(c, &uri)
+	session, contentEncoding, gitProtocol, err := ctl.prepareRequest(c, &params)
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.RequestInvalidRequestBody)
 		resp.BadRequest(c, err)
@@ -141,7 +141,7 @@ func (ctl *GitController) Push(c *gin.Context) {
 	// clone 是写操作 只要可读即可
 	// isWriteOperation := true
 	permission := constant.PermissionRepoPush
-	repo, err := ctl.repoSvc.GetRepoCheckAccess(ctx, session, uri.RepoRef, []constant.Permission{permission})
+	repo, err := ctl.repoSvc.GetRepoCheckAccess(ctx, session, params.RepoRef, []constant.Permission{permission})
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.RepoPushPermissionError)
 		resp.BadRequest(c, err)
@@ -196,7 +196,7 @@ func (ctl *GitController) InfoRefs(c *gin.Context) {
 }
 
 // 提取公共解析逻辑
-func (ctl *GitController) prepareRequest(c *gin.Context, repoRef *gitModel.RepoURI) (*auth.Session, string, string, error) {
+func (ctl *GitController) prepareRequest(c *gin.Context, params *req.RepoURI) (*auth.Session, string, string, error) {
 	var err error
 
 	session, ok := req.GetAuthSession(c.Request.Context())
@@ -205,12 +205,12 @@ func (ctl *GitController) prepareRequest(c *gin.Context, repoRef *gitModel.RepoU
 		return nil, "", "", err
 	}
 
-	if err = c.ShouldBindUri(repoRef); err != nil || repoRef.RepoRef == "" {
+	if err = c.ShouldBindUri(params); err != nil || params.RepoRef == "" {
 		err = errors.WithI18nKey(err, i18n.RequestPathParameterNotFound)
 		return nil, "", "", err
 	}
 
-	val, err := url.PathUnescape(repoRef.RepoRef)
+	val, err := url.PathUnescape(params.RepoRef)
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.RequestPathParameterNotFound)
 		return nil, "", "", err

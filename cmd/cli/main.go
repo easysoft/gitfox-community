@@ -37,6 +37,7 @@ func main() {
 	args := getArguments()
 	app := kingpin.New(application, description)
 	server.Register(app)
+	hooks.Register(app)
 	kingpin.MustParse(app.Parse(args))
 }
 
