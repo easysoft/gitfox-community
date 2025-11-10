@@ -46,6 +46,29 @@ definitions:
       total:
         type: integer
     type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.ReqFilter:
+    properties:
+      includeArchived:
+        type: boolean
+      includeCommit:
+        type: boolean
+      maxDivergence:
+        type: integer
+      order:
+        type: string
+      page:
+        type: integer
+      prefix:
+        type: string
+      query:
+        type: string
+      repoID:
+        type: integer
+      size:
+        type: integer
+      sort:
+        type: string
+    type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.ReqForCreate:
     properties:
       name:
@@ -296,6 +319,25 @@ definitions:
         type: string
     required:
     - editedBy
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_tag.ReqFilter:
+    properties:
+      includeCommit:
+        type: boolean
+      order:
+        type: string
+      page:
+        type: integer
+      query:
+        type: string
+      repoID:
+        type: integer
+      size:
+        type: integer
+      sort:
+        type: string
+    required:
+    - repoID
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_tag.ReqForCreate:
     properties:
@@ -721,45 +763,17 @@ paths:
       tags:
       - branches
   /branches/list:
-    get:
+    post:
       consumes:
       - application/json
       description: 分页查询分支列表
       parameters:
-      - description: 仓库 ID
-        in: query
-        name: repoID
+      - description: 创建分支请求参数
+        in: body
+        name: request
         required: true
-        type: integer
-      - description: 分支名称（模糊查询）
-        in: query
-        name: query
-        type: string
-      - description: 分支前缀
-        in: query
-        name: prefix
-        type: string
-      - description: 是否包含归档分支
-        in: query
-        name: includeArchived
-        type: boolean
-      - description: 是否包含 commit 信息
-        in: query
-        name: includeCommit
-        type: boolean
-      - default: 1
-        description: 页码（默认1）
-        in: query
-        minimum: 1
-        name: page
-        type: integer
-      - default: 20
-        description: 每页条数（默认20）
-        in: query
-        maximum: 100
-        minimum: 1
-        name: pageSize
-        type: integer
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.ReqFilter'
       produces:
       - application/json
       responses:
@@ -1161,45 +1175,17 @@ paths:
       tags:
       - tags
   /tags/list:
-    get:
+    post:
       consumes:
       - application/json
       description: 分页查询标签列表
       parameters:
-      - description: 仓库 ID
-        in: query
-        name: repoID
+      - description: 查询标签列表参数
+        in: body
+        name: request
         required: true
-        type: integer
-      - description: 标签名称（模糊查询）
-        in: query
-        name: query
-        type: string
-      - description: 排序方式（date/name）
-        in: query
-        name: sort
-        type: string
-      - description: 排序顺序（asc/desc）
-        in: query
-        name: order
-        type: string
-      - description: 是否包含 commit 信息
-        in: query
-        name: includeCommit
-        type: boolean
-      - default: 1
-        description: 页码（默认1）
-        in: query
-        minimum: 1
-        name: page
-        type: integer
-      - default: 20
-        description: 每页条数（默认20）
-        in: query
-        maximum: 100
-        minimum: 1
-        name: size
-        type: integer
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_tag.ReqFilter'
       produces:
       - application/json
       responses:

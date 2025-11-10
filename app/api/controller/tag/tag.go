@@ -72,24 +72,18 @@ func (c *Controller) Create(ctx *gin.Context) {
 // @Tags tags
 // @Accept application/json
 // @Produce application/json
-// @Param repoID query uint true "仓库 ID"
-// @Param query query string false "标签名称（模糊查询）"
-// @Param sort query string false "排序方式（date/name）"
-// @Param order query string false "排序顺序（asc/desc）"
-// @Param includeCommit query bool false "是否包含 commit 信息"
-// @Param page query int false "页码（默认1）" default(1) minimum(1)
-// @Param size query int false "每页条数（默认20）" default(20) minimum(1) maximum(100)
+// @Param request body tagModel.ReqFilter true "查询标签列表参数"
 // @Success 200 {object} resp.ListResponse{data=[]tagModel.Tag} "查询成功"
 // @Failure 400 {object} resp.ListResponse "参数错误"
 // @Failure 500 {object} resp.ListResponse "服务器错误"
-// @Router /tags/list [get]
+// @Router /tags/list [post]
 func (c *Controller) List(ctx *gin.Context) {
 
 	log := logger.GetLogger(ctx.Request.Context())
 
 	var reqQuery tagModel.ReqFilter
 	var err error
-	if err = ctx.ShouldBindQuery(&reqQuery); err != nil {
+	if err = ctx.ShouldBindJSON(&reqQuery); err != nil {
 		err = errors.WithI18nKey(err, i18n.TagQueryParamError)
 		resp.BadRequest(ctx, err)
 		return
