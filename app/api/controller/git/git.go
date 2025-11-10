@@ -12,6 +12,7 @@ import (
 	gitModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/git"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/git"
 	repoSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
+	settingsSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/settings"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/api"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
@@ -22,9 +23,10 @@ import (
 
 // GitController 处理与 Git 相关的 HTTP 请求
 type GitController struct {
-	gitSvc  git.Interface
-	repoSvc repoSvc.Interface
-	logger  *logger.SugaredMateLogger
+	gitSvc      git.Interface
+	repoSvc     repoSvc.Interface
+	settingsSvc settingsSvc.Interface
+	logger      *logger.SugaredMateLogger
 }
 
 // NewGitController 创建 Git 处理器实例
@@ -66,11 +68,12 @@ func (ctl *GitController) Clone(c *gin.Context) {
 	// clone 是写操作 只要可读即可
 	// isWriteOperation := false
 	permission := constant.PermissionRepoView
-	repo, err := ctl.repoSvc.GetRepoCheckAccess(
-		c.Request.Context(),
-		session,
-		uri.RepoRef, []constant.Permission{permission},
-	)
+	repo, err := ctl.repoSvc.GetRepoCheckAccess(c.Request.Context(), session, uri.RepoRef, []constant.Permission{permission})
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RepoPullPermissionError)
+		resp.BadRequest(c, err)
+		return
+	}
 
 	options := api.ServicePackOptions{
 		Service:      constant.GitServiceTypeUploadPack,
@@ -110,6 +113,7 @@ func (ctl *GitController) Push(c *gin.Context) {
 	// 公共解析逻辑
 	session, contentEncoding, gitProtocol, err := ctl.prepareRequest(c, &uri)
 	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RequestInvalidRequestBody)
 		resp.BadRequest(c, err)
 		return
 	}
@@ -139,17 +143,21 @@ func (ctl *GitController) Push(c *gin.Context) {
 	permission := constant.PermissionRepoPush
 	repo, err := ctl.repoSvc.GetRepoCheckAccess(ctx, session, uri.RepoRef, []constant.Permission{permission})
 	if err != nil {
-
+		err = errors.WithI18nKey(err, i18n.RepoPushPermissionError)
+		resp.BadRequest(c, err)
+		return
 	}
 
-	// need, err := ctl.repoSvc.NeedFitClient(ctx, repo, session)
-	// if err != nil {
+	need, err := ctl.settingsSvc.NeedFitClient(ctx, repo.ID, constant.KeyRequireFitClient)
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.DbError)
+		resp.InternalError(c, err)
+		return
+	}
 
-	// }
-
-	// if need {
-	// 	// todo
-	// }
+	if need {
+		// todo
+	}
 
 	options := api.ServicePackOptions{
 		Service:      constant.GitServiceTypeUploadPack,
@@ -193,11 +201,11 @@ func (ctl *GitController) prepareRequest(c *gin.Context, repoRef *gitModel.RepoU
 
 	session, ok := req.GetAuthSession(c.Request.Context())
 	if !ok {
-		err := errors.WithI18nKey(errors.New("get session failed"), i18n.AuthNoSession)
+		err = errors.WithI18nKey(errors.New("get session failed"), i18n.AuthNoSession)
 		return nil, "", "", err
 	}
 
-	if err := c.ShouldBindUri(repoRef); err != nil || repoRef.RepoRef == "" {
+	if err = c.ShouldBindUri(repoRef); err != nil || repoRef.RepoRef == "" {
 		err = errors.WithI18nKey(err, i18n.RequestPathParameterNotFound)
 		return nil, "", "", err
 	}

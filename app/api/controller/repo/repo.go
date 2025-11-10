@@ -9,16 +9,15 @@ import (
 )
 
 type RepoController struct {
-	repoSvc repo.RepoInterface
+	repoSvc repo.Interface
 }
 
 // NewRepoController 创建代码库处理器实例
-func NewRepoController(repoSve repo.RepoInterface) *RepoController {
+func NewRepoController(repoSvc repo.Interface) *RepoController {
 	return &RepoController{
-		repoSvc: repoSve,
+		repoSvc: repoSvc,
 	}
 }
-
 
 // CreateRemoteRepo 创建远端仓库
 // @Summary 创建远端仓库

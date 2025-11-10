@@ -8,8 +8,8 @@ import (
 
 type Settings struct {
 	ID          int        `gorm:"primaryKey"`
-	SpaceID     int        `gorm:"column:setting_space_id"`
-	RepoID      int        `gorm:"column:setting_repo_id"`
+	SpaceID     uint       `gorm:"column:setting_space_id"`
+	RepoID      uint       `gorm:"column:setting_repo_id"`
 	Key         string     `gorm:"column:setting_key"`
 	Value       string     `gorm:"column:setting_value"`
 	CreatedBy   string     `gorm:"column:createdBy"`
