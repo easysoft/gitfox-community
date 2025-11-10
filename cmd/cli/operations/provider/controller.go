@@ -5,6 +5,7 @@ import (
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/branch"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/space"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/tag"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/router"
 )
 
@@ -16,9 +17,11 @@ var ControllersWireSet = wire.NewSet(
 func NewControllers(
 	spaceController *space.SpaceController,
 	branchController *branch.Controller,
+	tagController *tag.Controller,
 ) *router.Controller {
 	return &router.Controller{
 		Space:  spaceController,
 		Branch: branchController,
+		Tag:    tagController,
 	}
 }

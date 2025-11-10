@@ -28,8 +28,8 @@ func NewController(tagService tag.Interface) *Controller {
 // @Tags tags
 // @Accept application/json
 // @Produce application/json
-// @Param request body tag.ReqForCreate true "创建标签请求参数"
-// @Success 200 {object} resp.ObjectResponse{data=tag.Tag} "创建成功"
+// @Param request body tagModel.ReqForCreate true "创建标签请求参数"
+// @Success 200 {object} resp.ObjectResponse{data=tagModel.Tag} "创建成功"
 // @Failure 400 {object} resp.ObjectResponse "参数错误（如名称重复）"
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
 // @Router /tags [post]
@@ -79,7 +79,7 @@ func (c *Controller) Create(ctx *gin.Context) {
 // @Param includeCommit query bool false "是否包含 commit 信息"
 // @Param page query int false "页码（默认1）" default(1) minimum(1)
 // @Param size query int false "每页条数（默认20）" default(20) minimum(1) maximum(100)
-// @Success 200 {object} resp.ListResponse{data=[]tag.Tag} "查询成功"
+// @Success 200 {object} resp.ListResponse{data=[]tagModel.Tag} "查询成功"
 // @Failure 400 {object} resp.ListResponse "参数错误"
 // @Failure 500 {object} resp.ListResponse "服务器错误"
 // @Router /tags/list [get]

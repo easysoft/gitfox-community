@@ -21,6 +21,64 @@ const docTemplate = `{
     "basePath": "{{.BasePath}}",
     "paths": {
         "/branches": {
+            "post": {
+                "description": "新增一个分支",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "branches"
+                ],
+                "summary": "创建分支",
+                "parameters": [
+                    {
+                        "description": "创建分支请求参数",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.ReqForCreate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "创建成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.Branch"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误（如名称重复）",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/branches/list": {
             "get": {
                 "description": "分页查询分支列表",
                 "consumes": [
@@ -44,13 +102,13 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "分支名称（模糊查询）",
-                        "name": "name",
+                        "name": "query",
                         "in": "query"
                     },
                     {
                         "type": "string",
-                        "description": "分支标签",
-                        "name": "label",
+                        "description": "分支前缀",
+                        "name": "prefix",
                         "in": "query"
                     },
                     {
@@ -89,7 +147,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/resp.ListResponse"
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse"
                                 },
                                 {
                                     "type": "object",
@@ -97,7 +155,7 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/branch.Branch"
+                                                "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.Branch"
                                             }
                                         }
                                     }
@@ -108,75 +166,19 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/resp.ListResponse"
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse"
                         }
                     },
                     "500": {
                         "description": "服务器错误",
                         "schema": {
-                            "$ref": "#/definitions/resp.ListResponse"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "description": "新增一个分支",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "branches"
-                ],
-                "summary": "创建分支",
-                "parameters": [
-                    {
-                        "description": "创建分支请求参数",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/branch.ReqForCreate"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "创建成功",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/resp.ObjectResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/branch.ReqForCreate"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误（如名称重复）",
-                        "schema": {
-                            "$ref": "#/definitions/resp.ObjectResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "服务器错误",
-                        "schema": {
-                            "$ref": "#/definitions/resp.ObjectResponse"
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse"
                         }
                     }
                 }
             }
         },
-        "/branches/labels": {
+        "/branches/prefixes": {
             "get": {
                 "description": "查询分支标签",
                 "consumes": [
@@ -204,7 +206,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/resp.ListResponse"
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse"
                                 },
                                 {
                                     "type": "object",
@@ -212,7 +214,7 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/branch.Label"
+                                                "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.Prefix"
                                             }
                                         }
                                     }
@@ -223,13 +225,13 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/resp.ListResponse"
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse"
                         }
                     },
                     "500": {
                         "description": "服务器错误",
                         "schema": {
-                            "$ref": "#/definitions/resp.ListResponse"
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse"
                         }
                     }
                 }
@@ -255,7 +257,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/repo.CreateRepoReq"
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.CreateRepoReq"
                         }
                     }
                 ],
@@ -265,13 +267,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/resp.ObjectResponse"
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/repo.CreateRepoResp"
+                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.CreateRepoResp"
                                         }
                                     }
                                 }
@@ -341,7 +343,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/resp.ListResponse"
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse"
                                 },
                                 {
                                     "type": "object",
@@ -349,7 +351,7 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/space.SpaceResponse"
+                                                "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.SpaceResponse"
                                             }
                                         }
                                     }
@@ -360,13 +362,13 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/resp.ListResponse"
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse"
                         }
                     },
                     "500": {
                         "description": "服务器错误",
                         "schema": {
-                            "$ref": "#/definitions/resp.ListResponse"
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse"
                         }
                     }
                 }
@@ -390,7 +392,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/space.CreateSpaceRequest"
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.CreateSpaceRequest"
                         }
                     }
                 ],
@@ -400,13 +402,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/resp.ObjectResponse"
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/space.SpaceResponse"
+                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.SpaceResponse"
                                         }
                                     }
                                 }
@@ -416,13 +418,13 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误（如名称重复）",
                         "schema": {
-                            "$ref": "#/definitions/resp.ObjectResponse"
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
                         }
                     },
                     "500": {
                         "description": "服务器错误",
                         "schema": {
-                            "$ref": "#/definitions/resp.ObjectResponse"
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
                         }
                     }
                 }
@@ -448,7 +450,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/space.UndeleteSpaceRequest"
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.UndeleteSpaceRequest"
                         }
                     }
                 ],
@@ -456,25 +458,25 @@ const docTemplate = `{
                     "200": {
                         "description": "恢复成功",
                         "schema": {
-                            "$ref": "#/definitions/resp.ObjectResponse"
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
                         }
                     },
                     "400": {
                         "description": "参数错误",
                         "schema": {
-                            "$ref": "#/definitions/resp.ObjectResponse"
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
                         }
                     },
                     "404": {
                         "description": "空间不存在或未删除",
                         "schema": {
-                            "$ref": "#/definitions/resp.ObjectResponse"
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
                         }
                     },
                     "500": {
                         "description": "恢复失败",
                         "schema": {
-                            "$ref": "#/definitions/resp.ObjectResponse"
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
                         }
                     }
                 }
@@ -509,13 +511,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/resp.ObjectResponse"
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/space.SpaceResponse"
+                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.SpaceResponse"
                                         }
                                     }
                                 }
@@ -525,19 +527,19 @@ const docTemplate = `{
                     "400": {
                         "description": "ID格式错误",
                         "schema": {
-                            "$ref": "#/definitions/resp.ObjectResponse"
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
                         }
                     },
                     "404": {
                         "description": "空间不存在或已删除",
                         "schema": {
-                            "$ref": "#/definitions/resp.ObjectResponse"
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
                         }
                     },
                     "500": {
                         "description": "服务器错误",
                         "schema": {
-                            "$ref": "#/definitions/resp.ObjectResponse"
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
                         }
                     }
                 }
@@ -569,7 +571,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/space.UpdateSpaceRequest"
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.UpdateSpaceRequest"
                         }
                     }
                 ],
@@ -579,13 +581,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/resp.ObjectResponse"
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/space.SpaceResponse"
+                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.SpaceResponse"
                                         }
                                     }
                                 }
@@ -595,19 +597,19 @@ const docTemplate = `{
                     "400": {
                         "description": "参数错误（如名称重复）",
                         "schema": {
-                            "$ref": "#/definitions/resp.ObjectResponse"
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
                         }
                     },
                     "404": {
                         "description": "空间不存在或已删除",
                         "schema": {
-                            "$ref": "#/definitions/resp.ObjectResponse"
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
                         }
                     },
                     "500": {
                         "description": "服务器错误",
                         "schema": {
-                            "$ref": "#/definitions/resp.ObjectResponse"
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
                         }
                     }
                 }
@@ -638,25 +640,234 @@ const docTemplate = `{
                     "200": {
                         "description": "删除成功",
                         "schema": {
-                            "$ref": "#/definitions/resp.ObjectResponse"
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
                         }
                     },
                     "400": {
                         "description": "ID格式错误",
                         "schema": {
-                            "$ref": "#/definitions/resp.ObjectResponse"
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
                         }
                     },
                     "404": {
                         "description": "空间不存在或已删除",
                         "schema": {
-                            "$ref": "#/definitions/resp.ObjectResponse"
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
                         }
                     },
                     "500": {
                         "description": "删除失败（如存在关联资源）",
                         "schema": {
-                            "$ref": "#/definitions/resp.ObjectResponse"
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/tags": {
+            "post": {
+                "description": "新增一个标签",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tags"
+                ],
+                "summary": "创建标签",
+                "parameters": [
+                    {
+                        "description": "创建标签请求参数",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_tag.ReqForCreate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "创建成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_tag.Tag"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误（如名称重复）",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/tags/list": {
+            "get": {
+                "description": "分页查询标签列表",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tags"
+                ],
+                "summary": "查询标签列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "仓库 ID",
+                        "name": "repoID",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "标签名称（模糊查询）",
+                        "name": "query",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "排序方式（date/name）",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "排序顺序（asc/desc）",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "是否包含 commit 信息",
+                        "name": "includeCommit",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "default": 1,
+                        "description": "页码（默认1）",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer",
+                        "default": 20,
+                        "description": "每页条数（默认20）",
+                        "name": "size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "查询成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_tag.Tag"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/tags/{name}": {
+            "delete": {
+                "description": "删除指定标签",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tags"
+                ],
+                "summary": "删除标签",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "标签名称",
+                        "name": "name",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "仓库 ID",
+                        "name": "repoID",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "删除成功",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
                         }
                     }
                 }
@@ -664,11 +875,53 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "branch.Branch": {
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_i18n.I18nKey"
+                },
+                "data": {},
+                "message": {
+                    "type": "string"
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "pageSize": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                },
+                "traceID": {
+                    "type": "string"
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_i18n.I18nKey"
+                },
+                "data": {},
+                "message": {
+                    "type": "string"
+                },
+                "traceID": {
+                    "type": "string"
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.Branch": {
             "type": "object",
             "properties": {
                 "commit": {
-                    "$ref": "#/definitions/commit.Commit"
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.Commit"
+                },
+                "commitDivergence": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.CommitDivergence"
                 },
                 "is_default": {
                     "type": "boolean"
@@ -677,11 +930,11 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "sha": {
-                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git_sha.SHA"
+                    "type": "string"
                 }
             }
         },
-        "branch.Label": {
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.Prefix": {
             "type": "object",
             "properties": {
                 "name": {
@@ -692,25 +945,13 @@ const docTemplate = `{
                 }
             }
         },
-        "branch.ReqForCreate": {
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.ReqForCreate": {
             "type": "object",
             "required": [
-                "byPassRules",
-                "createdBy",
-                "dryRunRules",
                 "name",
                 "repoID"
             ],
             "properties": {
-                "byPassRules": {
-                    "type": "boolean"
-                },
-                "createdBy": {
-                    "type": "string"
-                },
-                "dryRunRules": {
-                    "type": "boolean"
-                },
                 "name": {
                     "type": "string",
                     "maxLength": 100,
@@ -719,12 +960,12 @@ const docTemplate = `{
                 "repoID": {
                     "type": "integer"
                 },
-                "target": {
+                "source": {
                     "type": "string"
                 }
             }
         },
-        "commit.ChangeStats": {
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.ChangeStats": {
             "type": "object",
             "properties": {
                 "changes": {
@@ -738,14 +979,14 @@ const docTemplate = `{
                 }
             }
         },
-        "commit.Commit": {
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.Commit": {
             "type": "object",
             "properties": {
                 "author": {
-                    "$ref": "#/definitions/commit.Signature"
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.Signature"
                 },
                 "committer": {
-                    "$ref": "#/definitions/commit.Signature"
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.Signature"
                 },
                 "message": {
                     "type": "string"
@@ -760,14 +1001,27 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "stats": {
-                    "$ref": "#/definitions/commit.CommitStats"
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.CommitStats"
                 },
                 "title": {
                     "type": "string"
                 }
             }
         },
-        "commit.CommitFileStats": {
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.CommitDivergence": {
+            "type": "object",
+            "properties": {
+                "ahead": {
+                    "description": "Ahead is the count of commits the 'From' ref is ahead of the 'To' ref.",
+                    "type": "integer"
+                },
+                "behind": {
+                    "description": "Behind is the count of commits the 'From' ref is behind the 'To' ref.",
+                    "type": "integer"
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.CommitFileStats": {
             "type": "object",
             "properties": {
                 "changes": {
@@ -790,21 +1044,21 @@ const docTemplate = `{
                 }
             }
         },
-        "commit.CommitStats": {
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.CommitStats": {
             "type": "object",
             "properties": {
                 "files": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/commit.CommitFileStats"
+                        "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.CommitFileStats"
                     }
                 },
                 "total": {
-                    "$ref": "#/definitions/commit.ChangeStats"
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.ChangeStats"
                 }
             }
         },
-        "commit.Identity": {
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.Identity": {
             "type": "object",
             "properties": {
                 "email": {
@@ -815,327 +1069,18 @@ const docTemplate = `{
                 }
             }
         },
-        "commit.Signature": {
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.Signature": {
             "type": "object",
             "properties": {
                 "identity": {
-                    "$ref": "#/definitions/commit.Identity"
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.Identity"
                 },
                 "when": {
                     "type": "string"
                 }
             }
         },
-        "gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git_enum.FileDiffStatus": {
-            "type": "string",
-            "enum": [
-                "UNDEFINED",
-                "ADDED",
-                "MODIFIED",
-                "DELETED",
-                "RENAMED",
-                "COPIED"
-            ],
-            "x-enum-varnames": [
-                "FileDiffStatusUndefined",
-                "FileDiffStatusAdded",
-                "FileDiffStatusModified",
-                "FileDiffStatusDeleted",
-                "FileDiffStatusRenamed",
-                "FileDiffStatusCopied"
-            ]
-        },
-        "gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git_sha.SHA": {
-            "type": "object"
-        },
-        "i18n.I18nKey": {
-            "type": "string",
-            "enum": [
-                "auth.no_data",
-                "auth.no_session",
-                "branch.body_param_error",
-                "branch.create_error",
-                "branch.create_success",
-                "branch.list_error",
-                "branch.list_success",
-                "branch.path_param_error",
-                "branch.query_param_error",
-                "db.check_constraint_violation",
-                "db.connection_failed",
-                "db.data_too_long",
-                "db.deadlock",
-                "db.duplicate",
-                "db.error",
-                "db.foreign_key_violation",
-                "db.invalid_data",
-                "db.invalid_data_type",
-                "db.invalid_transaction",
-                "db.lock_wait_timeout",
-                "db.not_null_violation",
-                "db.notfound",
-                "error.default",
-                "error.embed_failed_to_mkdir",
-                "error.embed_failed_to_read_dir",
-                "error.embed_failed_to_read_file",
-                "error.embed_failed_to_write_file",
-                "error.gzip_failed_to_close_reader",
-                "error.gzip_failed_to_create_reader",
-                "git.create_exec_param_error",
-                "git.exec_error",
-                "git.map_output_error",
-                "repo.pullRequests_merge_error",
-                "repo.pullRequests_merge_success",
-                "repo.pull_permission_error",
-                "repo.push_permission_error",
-                "request.invalid_boolean_parameter",
-                "request.invalid_content_type",
-                "request.invalid_integer_parameter",
-                "request.invalid_json_format",
-                "request.invalid_positive_integer_parameter",
-                "request.invalid_request_body",
-                "request.invalid_url_parameter",
-                "request.parameter_decode_failed",
-                "request.parameter_invalid",
-                "request.parameter_missing",
-                "request.parameter_type_mismatch",
-                "request.path_parameter_not_found",
-                "request.query_parameter_not_found",
-                "request.request_body_too_large",
-                "space.artifacts_title_success",
-                "space.body_param_error",
-                "space.create_error",
-                "space.create_success",
-                "space.list_error",
-                "space.list_success",
-                "space.path_param_error",
-                "space.query_error",
-                "space.query_param_error",
-                "space.query_success",
-                "space.secrets_add_error",
-                "space.secrets_add_success",
-                "space.secrets_delete_permission",
-                "space.secrets_delete_success",
-                "space.secrets_delete_used",
-                "space.secrets_list_error",
-                "space.secrets_list_success",
-                "space.update_error",
-                "space.update_success"
-            ],
-            "x-enum-comments": {
-                "AuthNoData": "请求不包含任何可用于 Authorizer 的认证数据",
-                "AuthNoSession": "请求不包含任何会话数据,无法进行授权",
-                "BranchBodyParamError": "Body 参数解析失败.",
-                "BranchCreateError": "分支创建失败.",
-                "BranchCreateSuccess": "分支创建成功.",
-                "BranchListError": "查询分支列表失败",
-                "BranchListSuccess": "查询分支列表成功",
-                "BranchPathParamError": "Path 参数解析失败.",
-                "BranchQueryParamError": "Query 参数解析失败.",
-                "DbCheckConstraintViolation": "检查约束冲突.",
-                "DbConnectionFailed": "数据库连接失败.",
-                "DbDataTooLong": "字段数据过长.",
-                "DbDeadlock": "检测到数据库死锁.",
-                "DbDuplicate": "资源已存在.",
-                "DbError": "数据库错误.",
-                "DbForeignKeyViolation": "外键约束冲突.",
-                "DbInvalidData": "无效的数据.",
-                "DbInvalidDataType": "数据类型无效.",
-                "DbInvalidTransaction": "无效的事务.",
-                "DbLockWaitTimeout": "锁等待超时.",
-                "DbNotNullViolation": "非空约束冲突.",
-                "DbNotfound": "资源未找到.",
-                "ErrorDefault": "默认错误, %s!",
-                "ErrorEmbedFailedToMkdir": "embed 创建目录失败",
-                "ErrorEmbedFailedToReadDir": "embed 读取目录失败",
-                "ErrorEmbedFailedToReadFile": "embed 读取文件失败",
-                "ErrorEmbedFailedToWriteFile": "embed 写入文件失败",
-                "ErrorGzipFailedToCloseReader": "gzip 关闭解压流失败",
-                "ErrorGzipFailedToCreateReader": "gzip 解压失败",
-                "GitCreateExecParamError": "创建败 git 命令参数失败.",
-                "GitExecError": "执行 git 命令失败.",
-                "GitMapOutputError": "无法将 git 命令结果映射到响应结构体.",
-                "RepoPullPermissionError": "您没有权限拉取此仓库.",
-                "RepoPullRequestsMergeError": "合并失败,存在冲突或检查未通过.",
-                "RepoPullRequestsMergeSuccess": "合并成功!",
-                "RepoPushPermissionError": "您没有权限推送此仓库.",
-                "RequestInvalidBooleanParameter": "参数必须为布尔值.",
-                "RequestInvalidContentType": "Content-Type 无效.",
-                "RequestInvalidIntegerParameter": "参数必须为有效的整数.",
-                "RequestInvalidJsonFormat": "JSON 格式无效.",
-                "RequestInvalidPositiveIntegerParameter": "参数必须为正整数.",
-                "RequestInvalidRequestBody": "请求体无效.",
-                "RequestInvalidUrlParameter": "URL 参数无效.",
-                "RequestParameterDecodeFailed": "参数解码失败.",
-                "RequestParameterInvalid": "参数无效.",
-                "RequestParameterMissing": "缺少必须参数.",
-                "RequestParameterTypeMismatch": "参数类型不匹配.",
-                "RequestPathParameterNotFound": "路径参数未找到.",
-                "RequestQueryParameterNotFound": "查询参数未找到.",
-                "RequestRequestBodyTooLarge": "请求体过大.",
-                "SpaceArtifactsTitleSuccess": "仓库设置保存成功",
-                "SpaceBodyParamError": "Body 参数解析失败.",
-                "SpaceCreateError": "空间创建失败.",
-                "SpaceCreateSuccess": "空间创建成功.",
-                "SpaceListError": "查询空间列表失败",
-                "SpaceListSuccess": "查询空间列表成功",
-                "SpacePathParamError": "Path 参数解析失败.",
-                "SpaceQueryError": "查询空间失败",
-                "SpaceQueryParamError": "Query 参数解析失败.",
-                "SpaceQuerySuccess": "查询空间成功",
-                "SpaceSecretsAddError": "添加密钥失败,请检查名称是否重复或格式是否正确.",
-                "SpaceSecretsAddSuccess": "密钥已成功添加.",
-                "SpaceSecretsDeletePermission": "删除失败:权限不足,您无法删除此密钥.",
-                "SpaceSecretsDeleteSuccess": "密钥已成功删除.",
-                "SpaceSecretsDeleteUsed": "删除失败:此密钥可能正在被一个或多个服务使用.",
-                "SpaceSecretsListError": "无法加载密钥列表,请稍后重试.",
-                "SpaceSecretsListSuccess": "仓库密钥列表成功.",
-                "SpaceUpdateError": "空间更新失败.",
-                "SpaceUpdateSuccess": "空间更新成功."
-            },
-            "x-enum-descriptions": [
-                "请求不包含任何可用于 Authorizer 的认证数据",
-                "请求不包含任何会话数据,无法进行授权",
-                "Body 参数解析失败.",
-                "分支创建失败.",
-                "分支创建成功.",
-                "查询分支列表失败",
-                "查询分支列表成功",
-                "Path 参数解析失败.",
-                "Query 参数解析失败.",
-                "检查约束冲突.",
-                "数据库连接失败.",
-                "字段数据过长.",
-                "检测到数据库死锁.",
-                "资源已存在.",
-                "数据库错误.",
-                "外键约束冲突.",
-                "无效的数据.",
-                "数据类型无效.",
-                "无效的事务.",
-                "锁等待超时.",
-                "非空约束冲突.",
-                "资源未找到.",
-                "默认错误, %s!",
-                "embed 创建目录失败",
-                "embed 读取目录失败",
-                "embed 读取文件失败",
-                "embed 写入文件失败",
-                "gzip 关闭解压流失败",
-                "gzip 解压失败",
-                "创建败 git 命令参数失败.",
-                "执行 git 命令失败.",
-                "无法将 git 命令结果映射到响应结构体.",
-                "合并失败,存在冲突或检查未通过.",
-                "合并成功!",
-                "您没有权限拉取此仓库.",
-                "您没有权限推送此仓库.",
-                "参数必须为布尔值.",
-                "Content-Type 无效.",
-                "参数必须为有效的整数.",
-                "JSON 格式无效.",
-                "参数必须为正整数.",
-                "请求体无效.",
-                "URL 参数无效.",
-                "参数解码失败.",
-                "参数无效.",
-                "缺少必须参数.",
-                "参数类型不匹配.",
-                "路径参数未找到.",
-                "查询参数未找到.",
-                "请求体过大.",
-                "仓库设置保存成功",
-                "Body 参数解析失败.",
-                "空间创建失败.",
-                "空间创建成功.",
-                "查询空间列表失败",
-                "查询空间列表成功",
-                "Path 参数解析失败.",
-                "查询空间失败",
-                "Query 参数解析失败.",
-                "查询空间成功",
-                "添加密钥失败,请检查名称是否重复或格式是否正确.",
-                "密钥已成功添加.",
-                "删除失败:权限不足,您无法删除此密钥.",
-                "密钥已成功删除.",
-                "删除失败:此密钥可能正在被一个或多个服务使用.",
-                "无法加载密钥列表,请稍后重试.",
-                "仓库密钥列表成功.",
-                "空间更新失败.",
-                "空间更新成功."
-            ],
-            "x-enum-varnames": [
-                "AuthNoData",
-                "AuthNoSession",
-                "BranchBodyParamError",
-                "BranchCreateError",
-                "BranchCreateSuccess",
-                "BranchListError",
-                "BranchListSuccess",
-                "BranchPathParamError",
-                "BranchQueryParamError",
-                "DbCheckConstraintViolation",
-                "DbConnectionFailed",
-                "DbDataTooLong",
-                "DbDeadlock",
-                "DbDuplicate",
-                "DbError",
-                "DbForeignKeyViolation",
-                "DbInvalidData",
-                "DbInvalidDataType",
-                "DbInvalidTransaction",
-                "DbLockWaitTimeout",
-                "DbNotNullViolation",
-                "DbNotfound",
-                "ErrorDefault",
-                "ErrorEmbedFailedToMkdir",
-                "ErrorEmbedFailedToReadDir",
-                "ErrorEmbedFailedToReadFile",
-                "ErrorEmbedFailedToWriteFile",
-                "ErrorGzipFailedToCloseReader",
-                "ErrorGzipFailedToCreateReader",
-                "GitCreateExecParamError",
-                "GitExecError",
-                "GitMapOutputError",
-                "RepoPullRequestsMergeError",
-                "RepoPullRequestsMergeSuccess",
-                "RepoPullPermissionError",
-                "RepoPushPermissionError",
-                "RequestInvalidBooleanParameter",
-                "RequestInvalidContentType",
-                "RequestInvalidIntegerParameter",
-                "RequestInvalidJsonFormat",
-                "RequestInvalidPositiveIntegerParameter",
-                "RequestInvalidRequestBody",
-                "RequestInvalidUrlParameter",
-                "RequestParameterDecodeFailed",
-                "RequestParameterInvalid",
-                "RequestParameterMissing",
-                "RequestParameterTypeMismatch",
-                "RequestPathParameterNotFound",
-                "RequestQueryParameterNotFound",
-                "RequestRequestBodyTooLarge",
-                "SpaceArtifactsTitleSuccess",
-                "SpaceBodyParamError",
-                "SpaceCreateError",
-                "SpaceCreateSuccess",
-                "SpaceListError",
-                "SpaceListSuccess",
-                "SpacePathParamError",
-                "SpaceQueryError",
-                "SpaceQueryParamError",
-                "SpaceQuerySuccess",
-                "SpaceSecretsAddError",
-                "SpaceSecretsAddSuccess",
-                "SpaceSecretsDeletePermission",
-                "SpaceSecretsDeleteSuccess",
-                "SpaceSecretsDeleteUsed",
-                "SpaceSecretsListError",
-                "SpaceSecretsListSuccess",
-                "SpaceUpdateError",
-                "SpaceUpdateSuccess"
-            ]
-        },
-        "repo.CreateRepoReq": {
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.CreateRepoReq": {
             "type": "object",
             "required": [
                 "acl",
@@ -1186,7 +1131,7 @@ const docTemplate = `{
                 }
             }
         },
-        "repo.CreateRepoResp": {
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.CreateRepoResp": {
             "type": "object",
             "properties": {
                 "acl": {
@@ -1246,46 +1191,7 @@ const docTemplate = `{
                 }
             }
         },
-        "resp.ListResponse": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "$ref": "#/definitions/i18n.I18nKey"
-                },
-                "data": {},
-                "message": {
-                    "type": "string"
-                },
-                "page": {
-                    "type": "integer"
-                },
-                "pageSize": {
-                    "type": "integer"
-                },
-                "total": {
-                    "type": "integer"
-                },
-                "traceID": {
-                    "type": "string"
-                }
-            }
-        },
-        "resp.ObjectResponse": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "$ref": "#/definitions/i18n.I18nKey"
-                },
-                "data": {},
-                "message": {
-                    "type": "string"
-                },
-                "traceID": {
-                    "type": "string"
-                }
-            }
-        },
-        "space.CreateSpaceRequest": {
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.CreateSpaceRequest": {
             "type": "object",
             "required": [
                 "acl",
@@ -1318,7 +1224,7 @@ const docTemplate = `{
                 }
             }
         },
-        "space.SpaceResponse": {
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.SpaceResponse": {
             "type": "object",
             "properties": {
                 "acl": {
@@ -1350,7 +1256,7 @@ const docTemplate = `{
                 }
             }
         },
-        "space.UndeleteSpaceRequest": {
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.UndeleteSpaceRequest": {
             "type": "object",
             "required": [
                 "editedBy",
@@ -1375,7 +1281,7 @@ const docTemplate = `{
                 }
             }
         },
-        "space.UpdateSpaceRequest": {
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.UpdateSpaceRequest": {
             "type": "object",
             "required": [
                 "editedBy"
@@ -1401,6 +1307,405 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_tag.ReqForCreate": {
+            "type": "object",
+            "required": [
+                "name",
+                "repoID"
+            ],
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "repoID": {
+                    "type": "integer"
+                },
+                "source": {
+                    "type": "string"
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_tag.Tag": {
+            "type": "object",
+            "properties": {
+                "commit": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.Commit"
+                },
+                "createdBy": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.Signature"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "sha": {
+                    "type": "string"
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git_enum.FileDiffStatus": {
+            "type": "string",
+            "enum": [
+                "UNDEFINED",
+                "ADDED",
+                "MODIFIED",
+                "DELETED",
+                "RENAMED",
+                "COPIED"
+            ],
+            "x-enum-varnames": [
+                "FileDiffStatusUndefined",
+                "FileDiffStatusAdded",
+                "FileDiffStatusModified",
+                "FileDiffStatusDeleted",
+                "FileDiffStatusRenamed",
+                "FileDiffStatusCopied"
+            ]
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_i18n.I18nKey": {
+            "type": "string",
+            "enum": [
+                "auth.no_data",
+                "auth.no_session",
+                "branch.body_param_error",
+                "branch.create_error",
+                "branch.create_success",
+                "branch.list_error",
+                "branch.list_prefix_error",
+                "branch.list_prefix_success",
+                "branch.list_success",
+                "branch.path_param_error",
+                "branch.query_param_error",
+                "db.check_constraint_violation",
+                "db.connection_failed",
+                "db.data_too_long",
+                "db.deadlock",
+                "db.duplicate",
+                "db.error",
+                "db.foreign_key_violation",
+                "db.invalid_data",
+                "db.invalid_data_type",
+                "db.invalid_transaction",
+                "db.lock_wait_timeout",
+                "db.not_null_violation",
+                "db.notfound",
+                "error.default",
+                "error.embed_failed_to_mkdir",
+                "error.embed_failed_to_read_dir",
+                "error.embed_failed_to_read_file",
+                "error.embed_failed_to_write_file",
+                "error.gzip_failed_to_close_reader",
+                "error.gzip_failed_to_create_reader",
+                "git.create_exec_param_error",
+                "git.exec_error",
+                "git.map_output_error",
+                "repo.body_param_error",
+                "repo.identifier_invalid",
+                "repo.pullRequests_merge_error",
+                "repo.pullRequests_merge_success",
+                "repo.pull_permission_error",
+                "repo.push_permission_error",
+                "request.invalid_boolean_parameter",
+                "request.invalid_content_type",
+                "request.invalid_integer_parameter",
+                "request.invalid_json_format",
+                "request.invalid_positive_integer_parameter",
+                "request.invalid_request_body",
+                "request.invalid_url_parameter",
+                "request.parameter_decode_failed",
+                "request.parameter_invalid",
+                "request.parameter_missing",
+                "request.parameter_type_mismatch",
+                "request.path_parameter_not_found",
+                "request.query_parameter_not_found",
+                "request.request_body_too_large",
+                "space.artifacts_title_success",
+                "space.body_param_error",
+                "space.create_error",
+                "space.create_success",
+                "space.list_error",
+                "space.list_success",
+                "space.path_param_error",
+                "space.query_error",
+                "space.query_param_error",
+                "space.query_success",
+                "space.secrets_add_error",
+                "space.secrets_add_success",
+                "space.secrets_delete_permission",
+                "space.secrets_delete_success",
+                "space.secrets_delete_used",
+                "space.secrets_list_error",
+                "space.secrets_list_success",
+                "space.update_error",
+                "space.update_success",
+                "tag.body_param_error",
+                "tag.create_error",
+                "tag.create_success",
+                "tag.delete_error",
+                "tag.delete_success",
+                "tag.list_error",
+                "tag.list_success",
+                "tag.path_param_error",
+                "tag.query_param_error"
+            ],
+            "x-enum-comments": {
+                "AuthNoData": "请求不包含任何可用于 Authorizer 的认证数据",
+                "AuthNoSession": "请求不包含任何会话数据,无法进行授权",
+                "BranchBodyParamError": "Body 参数解析失败.",
+                "BranchCreateError": "分支创建失败.",
+                "BranchCreateSuccess": "分支创建成功.",
+                "BranchListError": "查询分支列表失败.",
+                "BranchListPrefixError": "查询分支前缀列表失败.",
+                "BranchListPrefixSuccess": "查询分支前缀列表成功.",
+                "BranchListSuccess": "查询分支列表成功.",
+                "BranchPathParamError": "Path 参数解析失败.",
+                "BranchQueryParamError": "Query 参数解析失败.",
+                "DbCheckConstraintViolation": "检查约束冲突.",
+                "DbConnectionFailed": "数据库连接失败.",
+                "DbDataTooLong": "字段数据过长.",
+                "DbDeadlock": "检测到数据库死锁.",
+                "DbDuplicate": "资源已存在.",
+                "DbError": "数据库错误.",
+                "DbForeignKeyViolation": "外键约束冲突.",
+                "DbInvalidData": "无效的数据.",
+                "DbInvalidDataType": "数据类型无效.",
+                "DbInvalidTransaction": "无效的事务.",
+                "DbLockWaitTimeout": "锁等待超时.",
+                "DbNotNullViolation": "非空约束冲突.",
+                "DbNotfound": "资源未找到.",
+                "ErrorDefault": "默认错误, %s!",
+                "ErrorEmbedFailedToMkdir": "embed 创建目录失败",
+                "ErrorEmbedFailedToReadDir": "embed 读取目录失败",
+                "ErrorEmbedFailedToReadFile": "embed 读取文件失败",
+                "ErrorEmbedFailedToWriteFile": "embed 写入文件失败",
+                "ErrorGzipFailedToCloseReader": "gzip 关闭解压流失败",
+                "ErrorGzipFailedToCreateReader": "gzip 解压失败",
+                "GitCreateExecParamError": "创建败 git 命令参数失败.",
+                "GitExecError": "执行 git 命令失败.",
+                "GitMapOutputError": "无法将 git 命令结果映射到响应结构体.",
+                "RepoBodyParamError": "Body 参数解析失败.",
+                "RepoIdentifierInvalid": "仓库名称不合法,identifier仅支持字母、数字、下划线(_)、连字符(-)、点号(.)",
+                "RepoPullPermissionError": "您没有权限拉取此仓库.",
+                "RepoPullRequestsMergeError": "合并失败,存在冲突或检查未通过.",
+                "RepoPullRequestsMergeSuccess": "合并成功!",
+                "RepoPushPermissionError": "您没有权限推送此仓库.",
+                "RequestInvalidBooleanParameter": "参数必须为布尔值.",
+                "RequestInvalidContentType": "Content-Type 无效.",
+                "RequestInvalidIntegerParameter": "参数必须为有效的整数.",
+                "RequestInvalidJsonFormat": "JSON 格式无效.",
+                "RequestInvalidPositiveIntegerParameter": "参数必须为正整数.",
+                "RequestInvalidRequestBody": "请求体无效.",
+                "RequestInvalidUrlParameter": "URL 参数无效.",
+                "RequestParameterDecodeFailed": "参数解码失败.",
+                "RequestParameterInvalid": "参数无效.",
+                "RequestParameterMissing": "缺少必须参数.",
+                "RequestParameterTypeMismatch": "参数类型不匹配.",
+                "RequestPathParameterNotFound": "路径参数未找到.",
+                "RequestQueryParameterNotFound": "查询参数未找到.",
+                "RequestRequestBodyTooLarge": "请求体过大.",
+                "SpaceArtifactsTitleSuccess": "仓库设置保存成功",
+                "SpaceBodyParamError": "Body 参数解析失败.",
+                "SpaceCreateError": "空间创建失败.",
+                "SpaceCreateSuccess": "空间创建成功.",
+                "SpaceListError": "查询空间列表失败",
+                "SpaceListSuccess": "查询空间列表成功",
+                "SpacePathParamError": "Path 参数解析失败.",
+                "SpaceQueryError": "查询空间失败",
+                "SpaceQueryParamError": "Query 参数解析失败.",
+                "SpaceQuerySuccess": "查询空间成功",
+                "SpaceSecretsAddError": "添加密钥失败,请检查名称是否重复或格式是否正确.",
+                "SpaceSecretsAddSuccess": "密钥已成功添加.",
+                "SpaceSecretsDeletePermission": "删除失败:权限不足,您无法删除此密钥.",
+                "SpaceSecretsDeleteSuccess": "密钥已成功删除.",
+                "SpaceSecretsDeleteUsed": "删除失败:此密钥可能正在被一个或多个服务使用.",
+                "SpaceSecretsListError": "无法加载密钥列表,请稍后重试.",
+                "SpaceSecretsListSuccess": "仓库密钥列表成功.",
+                "SpaceUpdateError": "空间更新失败.",
+                "SpaceUpdateSuccess": "空间更新成功.",
+                "TagBodyParamError": "Body 参数解析失败.",
+                "TagCreateError": "标签创建失败.",
+                "TagCreateSuccess": "标签创建成功.",
+                "TagDeleteError": "标签删除失败.",
+                "TagDeleteSuccess": "标签删除成功.",
+                "TagListError": "查询标签列表失败.",
+                "TagListSuccess": "查询标签列表成功.",
+                "TagPathParamError": "Path 参数解析失败.",
+                "TagQueryParamError": "Query 参数解析失败."
+            },
+            "x-enum-descriptions": [
+                "请求不包含任何可用于 Authorizer 的认证数据",
+                "请求不包含任何会话数据,无法进行授权",
+                "Body 参数解析失败.",
+                "分支创建失败.",
+                "分支创建成功.",
+                "查询分支列表失败.",
+                "查询分支前缀列表失败.",
+                "查询分支前缀列表成功.",
+                "查询分支列表成功.",
+                "Path 参数解析失败.",
+                "Query 参数解析失败.",
+                "检查约束冲突.",
+                "数据库连接失败.",
+                "字段数据过长.",
+                "检测到数据库死锁.",
+                "资源已存在.",
+                "数据库错误.",
+                "外键约束冲突.",
+                "无效的数据.",
+                "数据类型无效.",
+                "无效的事务.",
+                "锁等待超时.",
+                "非空约束冲突.",
+                "资源未找到.",
+                "默认错误, %s!",
+                "embed 创建目录失败",
+                "embed 读取目录失败",
+                "embed 读取文件失败",
+                "embed 写入文件失败",
+                "gzip 关闭解压流失败",
+                "gzip 解压失败",
+                "创建败 git 命令参数失败.",
+                "执行 git 命令失败.",
+                "无法将 git 命令结果映射到响应结构体.",
+                "Body 参数解析失败.",
+                "仓库名称不合法,identifier仅支持字母、数字、下划线(_)、连字符(-)、点号(.)",
+                "合并失败,存在冲突或检查未通过.",
+                "合并成功!",
+                "您没有权限拉取此仓库.",
+                "您没有权限推送此仓库.",
+                "参数必须为布尔值.",
+                "Content-Type 无效.",
+                "参数必须为有效的整数.",
+                "JSON 格式无效.",
+                "参数必须为正整数.",
+                "请求体无效.",
+                "URL 参数无效.",
+                "参数解码失败.",
+                "参数无效.",
+                "缺少必须参数.",
+                "参数类型不匹配.",
+                "路径参数未找到.",
+                "查询参数未找到.",
+                "请求体过大.",
+                "仓库设置保存成功",
+                "Body 参数解析失败.",
+                "空间创建失败.",
+                "空间创建成功.",
+                "查询空间列表失败",
+                "查询空间列表成功",
+                "Path 参数解析失败.",
+                "查询空间失败",
+                "Query 参数解析失败.",
+                "查询空间成功",
+                "添加密钥失败,请检查名称是否重复或格式是否正确.",
+                "密钥已成功添加.",
+                "删除失败:权限不足,您无法删除此密钥.",
+                "密钥已成功删除.",
+                "删除失败:此密钥可能正在被一个或多个服务使用.",
+                "无法加载密钥列表,请稍后重试.",
+                "仓库密钥列表成功.",
+                "空间更新失败.",
+                "空间更新成功.",
+                "Body 参数解析失败.",
+                "标签创建失败.",
+                "标签创建成功.",
+                "标签删除失败.",
+                "标签删除成功.",
+                "查询标签列表失败.",
+                "查询标签列表成功.",
+                "Path 参数解析失败.",
+                "Query 参数解析失败."
+            ],
+            "x-enum-varnames": [
+                "AuthNoData",
+                "AuthNoSession",
+                "BranchBodyParamError",
+                "BranchCreateError",
+                "BranchCreateSuccess",
+                "BranchListError",
+                "BranchListPrefixError",
+                "BranchListPrefixSuccess",
+                "BranchListSuccess",
+                "BranchPathParamError",
+                "BranchQueryParamError",
+                "DbCheckConstraintViolation",
+                "DbConnectionFailed",
+                "DbDataTooLong",
+                "DbDeadlock",
+                "DbDuplicate",
+                "DbError",
+                "DbForeignKeyViolation",
+                "DbInvalidData",
+                "DbInvalidDataType",
+                "DbInvalidTransaction",
+                "DbLockWaitTimeout",
+                "DbNotNullViolation",
+                "DbNotfound",
+                "ErrorDefault",
+                "ErrorEmbedFailedToMkdir",
+                "ErrorEmbedFailedToReadDir",
+                "ErrorEmbedFailedToReadFile",
+                "ErrorEmbedFailedToWriteFile",
+                "ErrorGzipFailedToCloseReader",
+                "ErrorGzipFailedToCreateReader",
+                "GitCreateExecParamError",
+                "GitExecError",
+                "GitMapOutputError",
+                "RepoBodyParamError",
+                "RepoIdentifierInvalid",
+                "RepoPullRequestsMergeError",
+                "RepoPullRequestsMergeSuccess",
+                "RepoPullPermissionError",
+                "RepoPushPermissionError",
+                "RequestInvalidBooleanParameter",
+                "RequestInvalidContentType",
+                "RequestInvalidIntegerParameter",
+                "RequestInvalidJsonFormat",
+                "RequestInvalidPositiveIntegerParameter",
+                "RequestInvalidRequestBody",
+                "RequestInvalidUrlParameter",
+                "RequestParameterDecodeFailed",
+                "RequestParameterInvalid",
+                "RequestParameterMissing",
+                "RequestParameterTypeMismatch",
+                "RequestPathParameterNotFound",
+                "RequestQueryParameterNotFound",
+                "RequestRequestBodyTooLarge",
+                "SpaceArtifactsTitleSuccess",
+                "SpaceBodyParamError",
+                "SpaceCreateError",
+                "SpaceCreateSuccess",
+                "SpaceListError",
+                "SpaceListSuccess",
+                "SpacePathParamError",
+                "SpaceQueryError",
+                "SpaceQueryParamError",
+                "SpaceQuerySuccess",
+                "SpaceSecretsAddError",
+                "SpaceSecretsAddSuccess",
+                "SpaceSecretsDeletePermission",
+                "SpaceSecretsDeleteSuccess",
+                "SpaceSecretsDeleteUsed",
+                "SpaceSecretsListError",
+                "SpaceSecretsListSuccess",
+                "SpaceUpdateError",
+                "SpaceUpdateSuccess",
+                "TagBodyParamError",
+                "TagCreateError",
+                "TagCreateSuccess",
+                "TagDeleteError",
+                "TagDeleteSuccess",
+                "TagListError",
+                "TagListSuccess",
+                "TagPathParamError",
+                "TagQueryParamError"
+            ]
         }
     },
     "securityDefinitions": {
