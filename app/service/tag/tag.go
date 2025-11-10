@@ -91,6 +91,10 @@ func (s *Service) List(ctx context.Context, req tagModel.ReqFilter, repo repoMod
 
 }
 
+func (s *Service) Delete(ctx context.Context, repo repoModel.Repo) ([]tagModel.Tag, error) {
+	return nil, nil
+}
+
 func mapToRPCTagSortOption(o string) git.TagSortOption {
 	switch o {
 	case "date":
