@@ -68,9 +68,9 @@ func NewApp(mode string) (*App, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	branchSvc := branch.NewBranchSvc(urlProvider, service)
-	branchController := branch2.NewBranchController(branchSvc)
-	controller := provider.NewControllers(spaceController, branchController)
+	branchService := branch.NewService(urlProvider, service)
+	controller := branch2.NewController(branchService)
+	routerController := provider.NewControllers(spaceController, controller)
 	i18nManager, err := provider.NewI18nManager(config)
 	if err != nil {
 		cleanup2()
@@ -83,7 +83,7 @@ func NewApp(mode string) (*App, func(), error) {
 		APILog:       apiLog,
 		DB:           db,
 		SqliteDB:     sqliteDB,
-		Controller:   controller,
+		Controller:   routerController,
 		I18nManager:  i18nManager,
 	}
 	return app, func() {
