@@ -1,6 +1,9 @@
 package router
 
 import (
+	"fmt"
+
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"github.com/gin-gonic/gin"
 )
 
@@ -8,6 +11,9 @@ import (
 func registerRepoRoutes(r *gin.RouterGroup, controller *Controller) {
 	repos := r.Group("/repos")
 	{
-		_ = repos
+		repos.Group(fmt.Sprintf("{%s}", req.PathParamRepoRef))
+		{
+			repos.GET("/content/*path", controller.Repo.GetContent)
+		}
 	}
 }

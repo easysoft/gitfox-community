@@ -9,3 +9,7 @@ type ContextKey int
 const (
 	authSessionKey ContextKey = iota
 )
+
+type RepoURI struct {
+	RepoRef string `uri:"repo_ref" binding:"required"`
+}
