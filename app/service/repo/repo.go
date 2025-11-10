@@ -1,6 +1,7 @@
 package repo
 
 import (
+	"bytes"
 	"context"
 
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
@@ -10,8 +11,8 @@ import (
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/git"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
 )
 
 type Service struct {
@@ -29,8 +30,20 @@ func NewRepoSvc(gitSvc git.Interface, repoStore repo.Interface) *Service {
 	}
 }
 
-func (r *Service) Create(ctx context.Context, req *repoModel.CreateRepoReq) (*repoModel.CreateRepoResp, error) {
-	return &repoModel.CreateRepoResp{}, nil
+func (s *Service) Create(ctx context.Context, req *repoModel.CreateRepoReq) (*repoModel.CreateRepoResp, error) {
+	var (
+		err     error
+		content []byte
+	)
+	files := make([]git.File, 0, 3) // readme, gitignore, licence
+	if req.Readme {
+		content = s.createReadme(req.Identifier, req.Desc)
+		files = append(files, git.File{
+			Path:    "README.md",
+			Content: content,
+		})
+	}
+	return &repoModel.CreateRepoResp{}, err
 }
 
 func (s *Service) GetRepoCheckAccess(ctx context.Context, session *auth.Session, repo_ref string, reqPermission []constant.Permission) (*repo.Repository, error) {
@@ -62,4 +75,15 @@ func (s *Service) GetRepo(ctx context.Context, repo_ref string, allowedStates []
 	}
 
 	return repo, nil
+}
+
+
+
+func (s *Service) createReadme(name, description string) []byte {
+	content := bytes.Buffer{}
+	content.WriteString("# " + name + "\n")
+	if description != "" {
+		content.WriteString(description)
+	}
+	return content.Bytes()
 }

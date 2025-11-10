@@ -49,6 +49,8 @@ const (
 	GitMapOutputError       I18nKey = "git.map_output_error"        // 无法将 git 命令结果映射到响应结构体.
 
 	// Repo 相关常量
+	RepoBodyParamError           I18nKey = "repo.body_param_error"           // Body 参数解析失败.
+	RepoIdentifierInvalid        I18nKey = "repo.identifier_invalid"         // 仓库名称不合法,identifier仅支持字母、数字、下划线(_)、连字符(-)、点号(.)
 	RepoPullRequestsMergeError   I18nKey = "repo.pullRequests_merge_error"   // 合并失败,存在冲突或检查未通过.
 	RepoPullRequestsMergeSuccess I18nKey = "repo.pullRequests_merge_success" // 合并成功!
 	RepoPullPermissionError      I18nKey = "repo.pull_permission_error"      // 您没有权限拉取此仓库.

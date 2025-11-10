@@ -1,9 +1,495 @@
 basePath: /api/v2
 definitions:
-  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse:
+  branch.Branch:
+    properties:
+      commit:
+        $ref: '#/definitions/commit.Commit'
+      is_default:
+        type: boolean
+      name:
+        type: string
+      sha:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git_sha.SHA'
+    type: object
+  branch.Label:
+    properties:
+      name:
+        type: string
+      total:
+        type: integer
+    type: object
+  branch.ReqForCreate:
+    properties:
+      byPassRules:
+        type: boolean
+      createdBy:
+        type: string
+      dryRunRules:
+        type: boolean
+      name:
+        example: dev
+        maxLength: 100
+        type: string
+      repoID:
+        type: integer
+      target:
+        type: string
+    required:
+    - byPassRules
+    - createdBy
+    - dryRunRules
+    - name
+    - repoID
+    type: object
+  commit.ChangeStats:
+    properties:
+      changes:
+        type: integer
+      deletions:
+        type: integer
+      insertions:
+        type: integer
+    type: object
+  commit.Commit:
+    properties:
+      author:
+        $ref: '#/definitions/commit.Signature'
+      committer:
+        $ref: '#/definitions/commit.Signature'
+      message:
+        type: string
+      parent_shas:
+        items:
+          type: string
+        type: array
+      sha:
+        type: string
+      stats:
+        $ref: '#/definitions/commit.CommitStats'
+      title:
+        type: string
+    type: object
+  commit.CommitFileStats:
+    properties:
+      changes:
+        type: integer
+      deletions:
+        type: integer
+      insertions:
+        type: integer
+      old_path:
+        type: string
+      path:
+        type: string
+      status:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git_enum.FileDiffStatus'
+    type: object
+  commit.CommitStats:
+    properties:
+      files:
+        items:
+          $ref: '#/definitions/commit.CommitFileStats'
+        type: array
+      total:
+        $ref: '#/definitions/commit.ChangeStats'
+    type: object
+  commit.Identity:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+    type: object
+  commit.Signature:
+    properties:
+      identity:
+        $ref: '#/definitions/commit.Identity'
+      when:
+        type: string
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git_enum.FileDiffStatus:
+    enum:
+    - UNDEFINED
+    - ADDED
+    - MODIFIED
+    - DELETED
+    - RENAMED
+    - COPIED
+    type: string
+    x-enum-varnames:
+    - FileDiffStatusUndefined
+    - FileDiffStatusAdded
+    - FileDiffStatusModified
+    - FileDiffStatusDeleted
+    - FileDiffStatusRenamed
+    - FileDiffStatusCopied
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git_sha.SHA:
+    type: object
+  i18n.I18nKey:
+    enum:
+    - auth.no_data
+    - auth.no_session
+    - branch.body_param_error
+    - branch.create_error
+    - branch.create_success
+    - branch.list_error
+    - branch.list_success
+    - branch.path_param_error
+    - branch.query_param_error
+    - db.check_constraint_violation
+    - db.connection_failed
+    - db.data_too_long
+    - db.deadlock
+    - db.duplicate
+    - db.error
+    - db.foreign_key_violation
+    - db.invalid_data
+    - db.invalid_data_type
+    - db.invalid_transaction
+    - db.lock_wait_timeout
+    - db.not_null_violation
+    - db.notfound
+    - error.default
+    - error.embed_failed_to_mkdir
+    - error.embed_failed_to_read_dir
+    - error.embed_failed_to_read_file
+    - error.embed_failed_to_write_file
+    - error.gzip_failed_to_close_reader
+    - error.gzip_failed_to_create_reader
+    - git.create_exec_param_error
+    - git.exec_error
+    - git.map_output_error
+    - repo.pullRequests_merge_error
+    - repo.pullRequests_merge_success
+    - repo.pull_permission_error
+    - repo.push_permission_error
+    - request.invalid_boolean_parameter
+    - request.invalid_content_type
+    - request.invalid_integer_parameter
+    - request.invalid_json_format
+    - request.invalid_positive_integer_parameter
+    - request.invalid_request_body
+    - request.invalid_url_parameter
+    - request.parameter_decode_failed
+    - request.parameter_invalid
+    - request.parameter_missing
+    - request.parameter_type_mismatch
+    - request.path_parameter_not_found
+    - request.query_parameter_not_found
+    - request.request_body_too_large
+    - space.artifacts_title_success
+    - space.body_param_error
+    - space.create_error
+    - space.create_success
+    - space.list_error
+    - space.list_success
+    - space.path_param_error
+    - space.query_error
+    - space.query_param_error
+    - space.query_success
+    - space.secrets_add_error
+    - space.secrets_add_success
+    - space.secrets_delete_permission
+    - space.secrets_delete_success
+    - space.secrets_delete_used
+    - space.secrets_list_error
+    - space.secrets_list_success
+    - space.update_error
+    - space.update_success
+    type: string
+    x-enum-comments:
+      AuthNoData: 请求不包含任何可用于 Authorizer 的认证数据
+      AuthNoSession: 请求不包含任何会话数据,无法进行授权
+      BranchBodyParamError: Body 参数解析失败.
+      BranchCreateError: 分支创建失败.
+      BranchCreateSuccess: 分支创建成功.
+      BranchListError: 查询分支列表失败
+      BranchListSuccess: 查询分支列表成功
+      BranchPathParamError: Path 参数解析失败.
+      BranchQueryParamError: Query 参数解析失败.
+      DbCheckConstraintViolation: 检查约束冲突.
+      DbConnectionFailed: 数据库连接失败.
+      DbDataTooLong: 字段数据过长.
+      DbDeadlock: 检测到数据库死锁.
+      DbDuplicate: 资源已存在.
+      DbError: 数据库错误.
+      DbForeignKeyViolation: 外键约束冲突.
+      DbInvalidData: 无效的数据.
+      DbInvalidDataType: 数据类型无效.
+      DbInvalidTransaction: 无效的事务.
+      DbLockWaitTimeout: 锁等待超时.
+      DbNotNullViolation: 非空约束冲突.
+      DbNotfound: 资源未找到.
+      ErrorDefault: 默认错误, %s!
+      ErrorEmbedFailedToMkdir: embed 创建目录失败
+      ErrorEmbedFailedToReadDir: embed 读取目录失败
+      ErrorEmbedFailedToReadFile: embed 读取文件失败
+      ErrorEmbedFailedToWriteFile: embed 写入文件失败
+      ErrorGzipFailedToCloseReader: gzip 关闭解压流失败
+      ErrorGzipFailedToCreateReader: gzip 解压失败
+      GitCreateExecParamError: 创建败 git 命令参数失败.
+      GitExecError: 执行 git 命令失败.
+      GitMapOutputError: 无法将 git 命令结果映射到响应结构体.
+      RepoPullPermissionError: 您没有权限拉取此仓库.
+      RepoPullRequestsMergeError: 合并失败,存在冲突或检查未通过.
+      RepoPullRequestsMergeSuccess: 合并成功!
+      RepoPushPermissionError: 您没有权限推送此仓库.
+      RequestInvalidBooleanParameter: 参数必须为布尔值.
+      RequestInvalidContentType: Content-Type 无效.
+      RequestInvalidIntegerParameter: 参数必须为有效的整数.
+      RequestInvalidJsonFormat: JSON 格式无效.
+      RequestInvalidPositiveIntegerParameter: 参数必须为正整数.
+      RequestInvalidRequestBody: 请求体无效.
+      RequestInvalidUrlParameter: URL 参数无效.
+      RequestParameterDecodeFailed: 参数解码失败.
+      RequestParameterInvalid: 参数无效.
+      RequestParameterMissing: 缺少必须参数.
+      RequestParameterTypeMismatch: 参数类型不匹配.
+      RequestPathParameterNotFound: 路径参数未找到.
+      RequestQueryParameterNotFound: 查询参数未找到.
+      RequestRequestBodyTooLarge: 请求体过大.
+      SpaceArtifactsTitleSuccess: 仓库设置保存成功
+      SpaceBodyParamError: Body 参数解析失败.
+      SpaceCreateError: 空间创建失败.
+      SpaceCreateSuccess: 空间创建成功.
+      SpaceListError: 查询空间列表失败
+      SpaceListSuccess: 查询空间列表成功
+      SpacePathParamError: Path 参数解析失败.
+      SpaceQueryError: 查询空间失败
+      SpaceQueryParamError: Query 参数解析失败.
+      SpaceQuerySuccess: 查询空间成功
+      SpaceSecretsAddError: 添加密钥失败,请检查名称是否重复或格式是否正确.
+      SpaceSecretsAddSuccess: 密钥已成功添加.
+      SpaceSecretsDeletePermission: 删除失败:权限不足,您无法删除此密钥.
+      SpaceSecretsDeleteSuccess: 密钥已成功删除.
+      SpaceSecretsDeleteUsed: 删除失败:此密钥可能正在被一个或多个服务使用.
+      SpaceSecretsListError: 无法加载密钥列表,请稍后重试.
+      SpaceSecretsListSuccess: 仓库密钥列表成功.
+      SpaceUpdateError: 空间更新失败.
+      SpaceUpdateSuccess: 空间更新成功.
+    x-enum-descriptions:
+    - 请求不包含任何可用于 Authorizer 的认证数据
+    - 请求不包含任何会话数据,无法进行授权
+    - Body 参数解析失败.
+    - 分支创建失败.
+    - 分支创建成功.
+    - 查询分支列表失败
+    - 查询分支列表成功
+    - Path 参数解析失败.
+    - Query 参数解析失败.
+    - 检查约束冲突.
+    - 数据库连接失败.
+    - 字段数据过长.
+    - 检测到数据库死锁.
+    - 资源已存在.
+    - 数据库错误.
+    - 外键约束冲突.
+    - 无效的数据.
+    - 数据类型无效.
+    - 无效的事务.
+    - 锁等待超时.
+    - 非空约束冲突.
+    - 资源未找到.
+    - 默认错误, %s!
+    - embed 创建目录失败
+    - embed 读取目录失败
+    - embed 读取文件失败
+    - embed 写入文件失败
+    - gzip 关闭解压流失败
+    - gzip 解压失败
+    - 创建败 git 命令参数失败.
+    - 执行 git 命令失败.
+    - 无法将 git 命令结果映射到响应结构体.
+    - 合并失败,存在冲突或检查未通过.
+    - 合并成功!
+    - 您没有权限拉取此仓库.
+    - 您没有权限推送此仓库.
+    - 参数必须为布尔值.
+    - Content-Type 无效.
+    - 参数必须为有效的整数.
+    - JSON 格式无效.
+    - 参数必须为正整数.
+    - 请求体无效.
+    - URL 参数无效.
+    - 参数解码失败.
+    - 参数无效.
+    - 缺少必须参数.
+    - 参数类型不匹配.
+    - 路径参数未找到.
+    - 查询参数未找到.
+    - 请求体过大.
+    - 仓库设置保存成功
+    - Body 参数解析失败.
+    - 空间创建失败.
+    - 空间创建成功.
+    - 查询空间列表失败
+    - 查询空间列表成功
+    - Path 参数解析失败.
+    - 查询空间失败
+    - Query 参数解析失败.
+    - 查询空间成功
+    - 添加密钥失败,请检查名称是否重复或格式是否正确.
+    - 密钥已成功添加.
+    - 删除失败:权限不足,您无法删除此密钥.
+    - 密钥已成功删除.
+    - 删除失败:此密钥可能正在被一个或多个服务使用.
+    - 无法加载密钥列表,请稍后重试.
+    - 仓库密钥列表成功.
+    - 空间更新失败.
+    - 空间更新成功.
+    x-enum-varnames:
+    - AuthNoData
+    - AuthNoSession
+    - BranchBodyParamError
+    - BranchCreateError
+    - BranchCreateSuccess
+    - BranchListError
+    - BranchListSuccess
+    - BranchPathParamError
+    - BranchQueryParamError
+    - DbCheckConstraintViolation
+    - DbConnectionFailed
+    - DbDataTooLong
+    - DbDeadlock
+    - DbDuplicate
+    - DbError
+    - DbForeignKeyViolation
+    - DbInvalidData
+    - DbInvalidDataType
+    - DbInvalidTransaction
+    - DbLockWaitTimeout
+    - DbNotNullViolation
+    - DbNotfound
+    - ErrorDefault
+    - ErrorEmbedFailedToMkdir
+    - ErrorEmbedFailedToReadDir
+    - ErrorEmbedFailedToReadFile
+    - ErrorEmbedFailedToWriteFile
+    - ErrorGzipFailedToCloseReader
+    - ErrorGzipFailedToCreateReader
+    - GitCreateExecParamError
+    - GitExecError
+    - GitMapOutputError
+    - RepoPullRequestsMergeError
+    - RepoPullRequestsMergeSuccess
+    - RepoPullPermissionError
+    - RepoPushPermissionError
+    - RequestInvalidBooleanParameter
+    - RequestInvalidContentType
+    - RequestInvalidIntegerParameter
+    - RequestInvalidJsonFormat
+    - RequestInvalidPositiveIntegerParameter
+    - RequestInvalidRequestBody
+    - RequestInvalidUrlParameter
+    - RequestParameterDecodeFailed
+    - RequestParameterInvalid
+    - RequestParameterMissing
+    - RequestParameterTypeMismatch
+    - RequestPathParameterNotFound
+    - RequestQueryParameterNotFound
+    - RequestRequestBodyTooLarge
+    - SpaceArtifactsTitleSuccess
+    - SpaceBodyParamError
+    - SpaceCreateError
+    - SpaceCreateSuccess
+    - SpaceListError
+    - SpaceListSuccess
+    - SpacePathParamError
+    - SpaceQueryError
+    - SpaceQueryParamError
+    - SpaceQuerySuccess
+    - SpaceSecretsAddError
+    - SpaceSecretsAddSuccess
+    - SpaceSecretsDeletePermission
+    - SpaceSecretsDeleteSuccess
+    - SpaceSecretsDeleteUsed
+    - SpaceSecretsListError
+    - SpaceSecretsListSuccess
+    - SpaceUpdateError
+    - SpaceUpdateSuccess
+  repo.CreateRepoReq:
+    properties:
+      acl:
+        description: 权限（仅支持open/private）
+        enum:
+        - open
+        - private
+        type: string
+      defaultBranch:
+        description: 默认分支（默认main）
+        type: string
+      desc:
+        description: 仓库描述（最大500字符）
+        maxLength: 500
+        type: string
+      forkID:
+        description: 派生来源ID（可选）
+        type: integer
+      identifier:
+        description: 仓库唯一标识
+        type: string
+      ignore:
+        description: GitIgnore类型（如go/java）
+        type: string
+      license:
+        description: 许可证类型（如mit/apache）
+        type: string
+      readme:
+        description: 是否生成README.md
+        type: boolean
+      spaceID:
+        description: 空间ID（字符串类型，后续转int）
+        type: integer
+    required:
+    - acl
+    - identifier
+    - spaceID
+    type: object
+  repo.CreateRepoResp:
+    properties:
+      acl:
+        type: string
+      createdBy:
+        type: string
+      createdDate:
+        description: 允许 NULL，用指针类型
+        type: string
+      defaultBranch:
+        type: string
+      deleted:
+        type: boolean
+      desc:
+        type: string
+      editedBy:
+        type: string
+      editedDate:
+        description: 允许 NULL，用指针类型
+        type: string
+      empty:
+        type: boolean
+      forkID:
+        description: 允许 NULL，用指针类型
+        type: integer
+      gitUID:
+        type: string
+      id:
+        type: integer
+      identifier:
+        type: string
+      mirror:
+        type: boolean
+      mutex:
+        type: integer
+      spaceID:
+        type: integer
+      status:
+        description: 状态码用 int 类型（兼容枚举映射）
+        type: integer
+    type: object
+  resp.ListResponse:
     properties:
       code:
-        type: string
+        $ref: '#/definitions/i18n.I18nKey'
       data: {}
       message:
         type: string
@@ -16,17 +502,17 @@ definitions:
       traceID:
         type: string
     type: object
-  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse:
+  resp.ObjectResponse:
     properties:
       code:
-        type: string
+        $ref: '#/definitions/i18n.I18nKey'
       data: {}
       message:
         type: string
       traceID:
         type: string
     type: object
-  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.CreateSpaceRequest:
+  space.CreateSpaceRequest:
     properties:
       acl:
         enum:
@@ -50,7 +536,7 @@ definitions:
     - name
     - owner
     type: object
-  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.SpaceResponse:
+  space.SpaceResponse:
     properties:
       acl:
         type: string
@@ -71,7 +557,7 @@ definitions:
       owner:
         type: string
     type: object
-  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.UndeleteSpaceRequest:
+  space.UndeleteSpaceRequest:
     properties:
       editedBy:
         example: admin
@@ -89,9 +575,12 @@ definitions:
     - editedBy
     - ids
     type: object
-  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.UpdateSpaceRequest:
+  space.UpdateSpaceRequest:
     properties:
       acl:
+        enum:
+        - open
+        - private
         type: string
       desc:
         type: string
@@ -115,28 +604,168 @@ info:
   title: GitFox API
   version: "1.0"
 paths:
-  /public/test_accessLog:
+  /branches:
     get:
       consumes:
       - application/json
-      description: 用于测试访问日志中间件功能，返回固定响应并包含 trace_id
+      description: 分页查询分支列表
       parameters:
-      - default: fixed-req
-        description: 请求参数
+      - description: 仓库 ID
         in: query
-        name: req
+        name: repoID
+        required: true
+        type: integer
+      - description: 分支名称（模糊查询）
+        in: query
+        name: name
         type: string
+      - description: 分支标签
+        in: query
+        name: label
+        type: string
+      - description: 是否包含归档分支
+        in: query
+        name: includeArchived
+        type: boolean
+      - description: 是否包含 commit 信息
+        in: query
+        name: includeCommit
+        type: boolean
+      - default: 1
+        description: 页码（默认1）
+        in: query
+        minimum: 1
+        name: page
+        type: integer
+      - default: 20
+        description: 每页条数（默认20）
+        in: query
+        maximum: 100
+        minimum: 1
+        name: pageSize
+        type: integer
       produces:
       - application/json
       responses:
         "200":
-          description: 测试成功
+          description: 查询成功
           schema:
-            additionalProperties: true
-            type: object
-      summary: 访问日志测试接口
+            allOf:
+            - $ref: '#/definitions/resp.ListResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/branch.Branch'
+                  type: array
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/resp.ListResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/resp.ListResponse'
+      summary: 查询分支列表
       tags:
-      - test
+      - branches
+    post:
+      consumes:
+      - application/json
+      description: 新增一个分支
+      parameters:
+      - description: 创建分支请求参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/branch.ReqForCreate'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 创建成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/resp.ObjectResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/branch.ReqForCreate'
+              type: object
+        "400":
+          description: 参数错误（如名称重复）
+          schema:
+            $ref: '#/definitions/resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/resp.ObjectResponse'
+      summary: 创建分支
+      tags:
+      - branches
+  /branches/labels:
+    get:
+      consumes:
+      - application/json
+      description: 查询分支标签
+      parameters:
+      - description: 仓库 ID
+        in: query
+        name: repoID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 查询成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/resp.ListResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/branch.Label'
+                  type: array
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/resp.ListResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/resp.ListResponse'
+      summary: 查询分支标签
+      tags:
+      - branches
+  /repos:
+    post:
+      consumes:
+      - application/json
+      description: 基于传入参数创建远端Git仓库，自动处理GitIgnore模板、License协议、README文件生成，支持派生仓库配置
+      parameters:
+      - description: 创建仓库请求参数
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/repo.CreateRepoReq'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: 创建成功（返回仓库核心信息）
+          schema:
+            allOf:
+            - $ref: '#/definitions/resp.ObjectResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/repo.CreateRepoResp'
+              type: object
+      summary: 创建远端仓库
+      tags:
+      - repos
   /spaces:
     get:
       consumes:
@@ -178,21 +807,21 @@ paths:
           description: 查询成功
           schema:
             allOf:
-            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse'
+            - $ref: '#/definitions/resp.ListResponse'
             - properties:
                 data:
                   items:
-                    $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.SpaceResponse'
+                    $ref: '#/definitions/space.SpaceResponse'
                   type: array
               type: object
         "400":
           description: 参数错误
           schema:
-            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse'
+            $ref: '#/definitions/resp.ListResponse'
         "500":
           description: 服务器错误
           schema:
-            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse'
+            $ref: '#/definitions/resp.ListResponse'
       summary: 查询空间列表
       tags:
       - spaces
@@ -206,7 +835,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.CreateSpaceRequest'
+          $ref: '#/definitions/space.CreateSpaceRequest'
       produces:
       - application/json
       responses:
@@ -214,19 +843,19 @@ paths:
           description: 创建成功
           schema:
             allOf:
-            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            - $ref: '#/definitions/resp.ObjectResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.SpaceResponse'
+                  $ref: '#/definitions/space.SpaceResponse'
               type: object
         "400":
           description: 参数错误（如名称重复）
           schema:
-            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            $ref: '#/definitions/resp.ObjectResponse'
         "500":
           description: 服务器错误
           schema:
-            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            $ref: '#/definitions/resp.ObjectResponse'
       summary: 创建空间
       tags:
       - spaces
@@ -248,19 +877,19 @@ paths:
         "200":
           description: 删除成功
           schema:
-            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            $ref: '#/definitions/resp.ObjectResponse'
         "400":
           description: ID格式错误
           schema:
-            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            $ref: '#/definitions/resp.ObjectResponse'
         "404":
           description: 空间不存在或已删除
           schema:
-            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            $ref: '#/definitions/resp.ObjectResponse'
         "500":
           description: 删除失败（如存在关联资源）
           schema:
-            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            $ref: '#/definitions/resp.ObjectResponse'
       summary: 删除空间
       tags:
       - spaces
@@ -282,23 +911,23 @@ paths:
           description: 查询成功
           schema:
             allOf:
-            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            - $ref: '#/definitions/resp.ObjectResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.SpaceResponse'
+                  $ref: '#/definitions/space.SpaceResponse'
               type: object
         "400":
           description: ID格式错误
           schema:
-            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            $ref: '#/definitions/resp.ObjectResponse'
         "404":
           description: 空间不存在或已删除
           schema:
-            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            $ref: '#/definitions/resp.ObjectResponse'
         "500":
           description: 服务器错误
           schema:
-            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            $ref: '#/definitions/resp.ObjectResponse'
       summary: 查询单个空间
       tags:
       - spaces
@@ -318,7 +947,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.UpdateSpaceRequest'
+          $ref: '#/definitions/space.UpdateSpaceRequest'
       produces:
       - application/json
       responses:
@@ -326,23 +955,23 @@ paths:
           description: 更新成功
           schema:
             allOf:
-            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            - $ref: '#/definitions/resp.ObjectResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.SpaceResponse'
+                  $ref: '#/definitions/space.SpaceResponse'
               type: object
         "400":
           description: 参数错误（如名称重复）
           schema:
-            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            $ref: '#/definitions/resp.ObjectResponse'
         "404":
           description: 空间不存在或已删除
           schema:
-            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            $ref: '#/definitions/resp.ObjectResponse'
         "500":
           description: 服务器错误
           schema:
-            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            $ref: '#/definitions/resp.ObjectResponse'
       summary: 更新空间
       tags:
       - spaces
@@ -357,26 +986,26 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.UndeleteSpaceRequest'
+          $ref: '#/definitions/space.UndeleteSpaceRequest'
       produces:
       - application/json
       responses:
         "200":
           description: 恢复成功
           schema:
-            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            $ref: '#/definitions/resp.ObjectResponse'
         "400":
           description: 参数错误
           schema:
-            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            $ref: '#/definitions/resp.ObjectResponse'
         "404":
           description: 空间不存在或未删除
           schema:
-            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            $ref: '#/definitions/resp.ObjectResponse'
         "500":
           description: 恢复失败
           schema:
-            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            $ref: '#/definitions/resp.ObjectResponse'
       summary: 恢复已删除空间
       tags:
       - spaces
