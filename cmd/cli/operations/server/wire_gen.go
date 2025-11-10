@@ -9,9 +9,11 @@ package server
 import (
 	branch2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/branch"
 	space3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/space"
+	tag2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/tag"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/router"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/branch"
 	space2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/space"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/tag"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/space"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/cmd/cli/operations/provider"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
@@ -70,7 +72,9 @@ func NewApp(mode string) (*App, func(), error) {
 	}
 	branchService := branch.NewService(urlProvider, service)
 	controller := branch2.NewController(branchService)
-	routerController := provider.NewControllers(spaceController, controller)
+	tagService := tag.NewService(urlProvider, service)
+	tagController := tag2.NewController(tagService)
+	routerController := provider.NewControllers(spaceController, controller, tagController)
 	i18nManager, err := provider.NewI18nManager(config)
 	if err != nil {
 		cleanup2()

@@ -28,8 +28,8 @@ func NewController(branchService branch.Interface) *Controller {
 // @Tags branches
 // @Accept application/json
 // @Produce application/json
-// @Param request body branch.ReqForCreate true "创建分支请求参数"
-// @Success 200 {object} resp.ObjectResponse{data=branch.Branch} "创建成功"
+// @Param request body branchModel.ReqForCreate true "创建分支请求参数"
+// @Success 200 {object} resp.ObjectResponse{data=branchModel.Branch} "创建成功"
 // @Failure 400 {object} resp.ObjectResponse "参数错误（如名称重复）"
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
 // @Router /branches [post]
@@ -80,7 +80,7 @@ func (c *Controller) Create(ctx *gin.Context) {
 // @Param includeCommit query bool false "是否包含 commit 信息"
 // @Param page query int false "页码（默认1）" default(1) minimum(1)
 // @Param pageSize query int false "每页条数（默认20）" default(20) minimum(1) maximum(100)
-// @Success 200 {object} resp.ListResponse{data=[]branch.Branch} "查询成功"
+// @Success 200 {object} resp.ListResponse{data=[]branchModel.Branch} "查询成功"
 // @Failure 400 {object} resp.ListResponse "参数错误"
 // @Failure 500 {object} resp.ListResponse "服务器错误"
 // @Router /branches/list [get]
@@ -123,7 +123,7 @@ func (c *Controller) List(ctx *gin.Context) {
 // @Accept application/json
 // @Produce application/json
 // @Param repoID query uint true "仓库 ID"
-// @Success 200 {object} resp.ListResponse{data=[]branch.Prefix} "查询成功"
+// @Success 200 {object} resp.ListResponse{data=[]branchModel.Prefix} "查询成功"
 // @Failure 400 {object} resp.ListResponse "参数错误"
 // @Failure 500 {object} resp.ListResponse "服务器错误"
 // @Router /branches/prefixes [get]

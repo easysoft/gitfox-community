@@ -14,7 +14,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type RepoController struct {
+type Controller struct {
 	repoSvc repo.Interface
 	logger  *logger.SugaredMateLogger
 }
@@ -39,10 +39,68 @@ func NewRepoController(repoSvc repo.Interface, logger *logger.SugaredMateLogger)
 // @Error 404 {object} resp.ObjectResponse "空间不存在（传入的spaceID对应的空间未找到）"
 // @Error 409 {object} resp.ObjectResponse "仓库标识冲突（同一空间内identifier已存在）"
 // @Error 500 {object} resp.ObjectResponse "服务器内部错误（如Git服务调用失败、数据库异常等）"
-// @Router /api/v1/repos [post]
-func (ctl *RepoController) Create(c *gin.Context) {
-	fmt.Println(repoModel.CreateRepoReq{})
+// @Router /repos [post]
+func (ctl *Controller) Create(c *gin.Context) {
+	reqData := new(repoModel.CreateRepoReq)
+	if err := c.ShouldBindJSON(&reqData); err != nil {
+		err = errors.WithI18nKey(err, i18n.RepoBodyParamError)
+		resp.BadRequest(c, err)
+		return
+	}
 
+	err := reqData.Validate()
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RepoBodyParamError)
+		resp.BadRequest(c, err)
+		return
+	}
+
+	ctl.repoSvc.Create(logger.GetContextWithLogger(c), reqData)
+}
+
+func (ctl *RepoController) GetContent(c *gin.Context) {
+	var params req.RepoURI
+	var err error
+
+	_, ok := req.GetAuthSession(c.Request.Context())
+	if !ok {
+		err = errors.WithI18nKey(errors.New("get session failed"), i18n.AuthNoSession)
+		resp.BadRequest(c, err)
+		return
+	}
+
+	if err = c.ShouldBindUri(&params); err != nil || params.RepoRef == "" {
+		err = errors.WithI18nKey(err, i18n.RequestPathParameterNotFound)
+		resp.BadRequest(c, err)
+		return
+	}
+
+	val, err := url.PathUnescape(params.RepoRef)
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RequestPathParameterNotFound)
+		resp.BadRequest(c, err)
+		return
+	}
+
+	// includeCommit 是否包含提交信息
+	includeCommit, err := req.QueryParamAsBoolOrDefault(c, req.QueryParamIncludeCommit, false)
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RepoPullPermissionError)
+		resp.BadRequest(c, err)
+		return
+	}
+	_ = includeCommit
+
+	// flattenDirectories 是否展平目录结构
+	flattenDirectories, err := req.QueryParamAsBoolOrDefault(c, req.QueryParamFlattenDirectories, false)
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.SpacePathParamError)
+		resp.BadRequest(c, err)
+		return
+	}
+	_ = flattenDirectories
+	ctl.logger.Infof("origin url %s , repoRef: %s", c.Request.URL.String(), val)
+	fmt.Println(c.Param("path"))
 }
 
 func (ctl *RepoController) GetContent(c *gin.Context) {

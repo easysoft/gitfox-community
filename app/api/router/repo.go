@@ -11,6 +11,7 @@ import (
 func registerRepoRoutes(r *gin.RouterGroup, controller *Controller) {
 	repos := r.Group("/repos")
 	{
+		repos.POST("/", controller.Repo.Create)
 		repos.Group(fmt.Sprintf("{%s}", req.PathParamRepoRef))
 		{
 			repos.GET("/content/*path", controller.Repo.GetContent)

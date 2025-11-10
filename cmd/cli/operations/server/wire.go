@@ -31,6 +31,7 @@ func NewApp(mode string) (*App, func(), error) {
 		provider.GitWireSet,
 		provider.SpaceWireSet,
 		provider.BranchWireSet,
+		provider.TagWireSet,
 		provider.ControllersWireSet,
 		provider.URLWireSet,
 		provider.I18nWireSet,

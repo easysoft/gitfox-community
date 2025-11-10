@@ -48,7 +48,9 @@ func NewRouter(mode string, logger *logger.SugaredMateLogger, controller *Contro
 	authGroup := r.Group("/api/v2")
 	registerSpaceRoutes(authGroup, controller)  // 空间相关路由
 	registerBranchRoutes(authGroup, controller) // 分支相关路由
+	registerTagRoutes(authGroup, controller)    // 标签相关路由
 	registerGitRoutes(authGroup, controller)    // Git 相关路由
+	registerRepoRoutes(authGroup, controller)
 	return r
 }
 

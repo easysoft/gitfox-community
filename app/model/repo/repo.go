@@ -1,11 +1,12 @@
 package repo
 
 import (
-	"fmt"
 	"regexp"
+	"strings"
 	"time"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 )
 
 // Repository represents a code repository.
@@ -85,13 +86,25 @@ type CreateRepoResp struct {
 func (req *CreateRepoReq) Validate() error {
 
 	// 校验Identifier字符规则（符合Git仓库命名规范）
-	if !regexp.MustCompile(`^[a-zA-Z0-9_-]+$`).MatchString(req.Identifier) {
-		return fmt.Errorf("identifier仅支持字母、数字、下划线(_)、连字符(-)")
+	if !regexp.MustCompile(`^[a-zA-Z0-9-_.]+$`).MatchString(req.Identifier) {
+		return errors.Newf("identifier仅支持字母、数字、下划线(_)、连字符(-)、点号(.)")
 	}
 
 	if len(req.Identifier) > 64 {
-		return fmt.Errorf("identifier长度不能超过64字符")
+		return errors.Newf("identifier长度不能超过64字符")
 	}
+
+	identifierLower := strings.ToLower(req.Identifier)
+	if strings.HasSuffix(identifierLower, ".git") {
+		return errors.Newf("repository identifiers cannot end with .git")
+	}
+
+
+	if len(req.Desc) > constant.MaxDescByteCountUTF8MB4 {
+		return errors.Newf("Description can be at most %d in length.", constant.MaxDescByteCountUTF8MB4)
+	}
+
+
 	// 默认分支处理（未传则设为main）
 	if req.DefaultBranch == "" {
 		req.DefaultBranch = "main"
