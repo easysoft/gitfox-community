@@ -73,7 +73,7 @@
             }
         },
         "/branches/list": {
-            "get": {
+            "post": {
                 "description": "分页查询分支列表",
                 "consumes": [
                     "application/json"
@@ -87,52 +87,13 @@
                 "summary": "查询分支列表",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "仓库 ID",
-                        "name": "repoID",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "分支名称（模糊查询）",
-                        "name": "query",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "分支前缀",
-                        "name": "prefix",
-                        "in": "query"
-                    },
-                    {
-                        "type": "boolean",
-                        "description": "是否包含归档分支",
-                        "name": "includeArchived",
-                        "in": "query"
-                    },
-                    {
-                        "type": "boolean",
-                        "description": "是否包含 commit 信息",
-                        "name": "includeCommit",
-                        "in": "query"
-                    },
-                    {
-                        "minimum": 1,
-                        "type": "integer",
-                        "default": 1,
-                        "description": "页码（默认1）",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "maximum": 100,
-                        "minimum": 1,
-                        "type": "integer",
-                        "default": 20,
-                        "description": "每页条数（默认20）",
-                        "name": "pageSize",
-                        "in": "query"
+                        "description": "创建分支请求参数",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.ReqFilter"
+                        }
                     }
                 ],
                 "responses": {
@@ -717,7 +678,7 @@
             }
         },
         "/tags/list": {
-            "get": {
+            "post": {
                 "description": "分页查询标签列表",
                 "consumes": [
                     "application/json"
@@ -731,52 +692,13 @@
                 "summary": "查询标签列表",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "仓库 ID",
-                        "name": "repoID",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "标签名称（模糊查询）",
-                        "name": "query",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "排序方式（date/name）",
-                        "name": "sort",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "排序顺序（asc/desc）",
-                        "name": "order",
-                        "in": "query"
-                    },
-                    {
-                        "type": "boolean",
-                        "description": "是否包含 commit 信息",
-                        "name": "includeCommit",
-                        "in": "query"
-                    },
-                    {
-                        "minimum": 1,
-                        "type": "integer",
-                        "default": 1,
-                        "description": "页码（默认1）",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "maximum": 100,
-                        "minimum": 1,
-                        "type": "integer",
-                        "default": 20,
-                        "description": "每页条数（默认20）",
-                        "name": "size",
-                        "in": "query"
+                        "description": "查询标签列表参数",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_tag.ReqFilter"
+                        }
                     }
                 ],
                 "responses": {
@@ -936,6 +858,41 @@
                 },
                 "total": {
                     "type": "integer"
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.ReqFilter": {
+            "type": "object",
+            "properties": {
+                "includeArchived": {
+                    "type": "boolean"
+                },
+                "includeCommit": {
+                    "type": "boolean"
+                },
+                "maxDivergence": {
+                    "type": "integer"
+                },
+                "order": {
+                    "type": "string"
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "prefix": {
+                    "type": "string"
+                },
+                "query": {
+                    "type": "string"
+                },
+                "repoID": {
+                    "type": "integer"
+                },
+                "size": {
+                    "type": "integer"
+                },
+                "sort": {
+                    "type": "string"
                 }
             }
         },
@@ -1298,6 +1255,35 @@
                     "type": "string"
                 },
                 "owner": {
+                    "type": "string"
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_tag.ReqFilter": {
+            "type": "object",
+            "required": [
+                "repoID"
+            ],
+            "properties": {
+                "includeCommit": {
+                    "type": "boolean"
+                },
+                "order": {
+                    "type": "string"
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "query": {
+                    "type": "string"
+                },
+                "repoID": {
+                    "type": "integer"
+                },
+                "size": {
+                    "type": "integer"
+                },
+                "sort": {
                     "type": "string"
                 }
             }
