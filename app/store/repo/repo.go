@@ -16,7 +16,7 @@ type Store struct {
 	db *gorm.DB
 }
 
-func NewRepoStore(db *gorm.DB) Interface {
+func NewRepoStore(db *gorm.DB) *Store {
 	return &Store{
 		db: db,
 	}
