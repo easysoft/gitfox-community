@@ -4,4 +4,7 @@ repo:
   push_permission_error: "您没有权限推送此仓库。"
   pull_permission_error: "您没有权限拉取此仓库。"
   body_param_error: "Body 参数解析失败。"
+  path_param_error: "Path 参数解析失败。"
   identifier_invalid: "仓库名称不合法，identifier仅支持字母、数字、下划线(_)、连字符(-)、点号(.)"
+  query_error: "查询仓库失败"
+  query_success: "查询仓库成功"
