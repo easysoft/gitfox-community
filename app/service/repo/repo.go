@@ -140,10 +140,10 @@ func (s *Service) createGitRepository(ctx context.Context, req *repoModel.Create
 	return resp, len(files) == 0, nil
 }
 
-func (s *Service) GetRepoCheckAccess(ctx context.Context, session *auth.Session, repo_ref string, reqPermission []constant.Permission) (*repo.Repository, error) {
+func (s *Service) GetRepoCheckAccess(ctx context.Context, session *auth.Session, repoRef string, reqPermission []constant.Permission) (*repo.Repository, error) {
 
 	// get repo
-	repo, err := s.GetRepo(ctx, repo_ref, []constant.RepoState{constant.RepoStateActive, constant.RepoStateMigrateGitPush})
+	repo, err := s.GetRepo(ctx, repoRef, []constant.RepoState{constant.RepoStateActive, constant.RepoStateMigrateGitPush})
 	if err != nil {
 		return nil, err
 	}
@@ -154,14 +154,14 @@ func (s *Service) GetRepoCheckAccess(ctx context.Context, session *auth.Session,
 	return repo, nil
 }
 
-func (s *Service) GetRepo(ctx context.Context, repo_ref string, allowedStates []constant.RepoState) (*repo.Repository, error) {
-	if repo_ref == "" {
+func (s *Service) GetRepo(ctx context.Context, repoRef string, allowedStates []constant.RepoState) (*repo.Repository, error) {
+	if repoRef == "" {
 		return nil, errors.BadRequest.New("A valid repository reference must be provided.")
 	}
 
-	repo, err := s.repoStore.FindByRef(ctx, repo_ref)
+	repo, err := s.repoStore.FindByRef(ctx, repoRef)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to find repository: %s", repo_ref)
+		return nil, errors.Wrapf(err, "failed to find repository: %s", repoRef)
 	}
 
 	if len(allowedStates) > 0 && !slice.Contain(allowedStates, constant.RepoState(repo.Status)) {

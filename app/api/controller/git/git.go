@@ -25,45 +25,44 @@ type GitController struct {
 	gitSvc      git.Interface
 	repoSvc     repoSvc.Interface
 	settingsSvc settingsSvc.Interface
-	logger      *logger.SugaredMateLogger
 }
 
 // NewGitController 创建 Git 处理器实例
-func NewGitController(gitSvc git.Interface, repoSvc repoSvc.Interface, logger *logger.SugaredMateLogger) *GitController {
-	return &GitController{gitSvc: gitSvc, repoSvc: repoSvc, logger: logger}
+func NewGitController(gitSvc git.Interface, repoSvc repoSvc.Interface) *GitController {
+	return &GitController{gitSvc: gitSvc, repoSvc: repoSvc}
 }
 
-func (ctl *GitController) Clone(c *gin.Context) {
-	ctx := c.Request.Context()
-	var params req.RepoURI
+func (ctl *GitController) Clone(ctx *gin.Context) {
+	logger := logger.GetLogger(ctx)
+	var params req.RepoRef
 	var err error
 
 	// 公共解析逻辑
-	session, contentEncoding, gitProtocol, err := ctl.prepareRequest(c, &params)
+	session, contentEncoding, gitProtocol, err := ctl.prepareRequest(ctx, &params)
 	if err != nil {
-		resp.BadRequest(c, err)
+		resp.BadRequest(ctx, err)
 		return
 	}
 
-	dataReader := c.Request.Body
+	dataReader := ctx.Request.Body
 	if contentEncoding == "gzip" {
 		gzipReader, gErr := gzip.NewReader(dataReader)
 		if gErr != nil {
 			gErr = errors.WithI18nKey(gErr, i18n.ErrorGzipFailedToCreateReader)
-			resp.InternalError(c, gErr)
+			resp.InternalError(ctx, gErr)
 			return
 		}
 
 		defer func() {
 			if cErr := gzipReader.Close(); cErr != nil {
-				ctl.logger.Warnf("failed to close the gzip reader : %v", cErr)
+				logger.Warnf("failed to close the gzip reader : %v", cErr)
 			}
 		}()
 		dataReader = gzipReader
 	}
 
-	resp.NoCache(c.Writer)
-	c.Writer.Header().Set("Content-Type", fmt.Sprintf("application/x-git-%s-result", constant.GitServiceTypeReceivePack))
+	resp.NoCache(ctx.Writer)
+	ctx.Writer.Header().Set("Content-Type", fmt.Sprintf("application/x-git-%s-result", constant.GitServiceTypeReceivePack))
 
 	// clone 是写操作 只要可读即可
 	// isWriteOperation := false
@@ -71,14 +70,14 @@ func (ctl *GitController) Clone(c *gin.Context) {
 	repo, err := ctl.repoSvc.GetRepoCheckAccess(ctx, session, params.RepoRef, []constant.Permission{permission})
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.RepoPullPermissionError)
-		resp.BadRequest(c, err)
+		resp.BadRequest(ctx, err)
 		return
 	}
 
 	options := api.ServicePackOptions{
 		Service:      constant.GitServiceTypeUploadPack,
 		StatelessRPC: true,
-		Stdout:       c.Writer,
+		Stdout:       ctx.Writer,
 		Stdin:        dataReader,
 		Protocol:     gitProtocol,
 	}
@@ -99,44 +98,44 @@ func (ctl *GitController) Clone(c *gin.Context) {
 
 	if err != nil {
 		// todo
-		ctl.logger.Errorf("repoCtrl.GitServicePack failed: %v", err)
-		resp.NotFound(c, err)
+		logger.Errorf("repoCtrl.GitServicePack failed: %v", err)
+		resp.NotFound(ctx, err)
 		return
 	}
 }
 
-func (ctl *GitController) Push(c *gin.Context) {
-	ctx := c.Request.Context()
-	var params req.RepoURI
+func (ctl *GitController) Push(ctx *gin.Context) {
+	logger := logger.GetLogger(ctx)
+	var params req.RepoRef
 	var err error
 
 	// 公共解析逻辑
-	session, contentEncoding, gitProtocol, err := ctl.prepareRequest(c, &params)
+	session, contentEncoding, gitProtocol, err := ctl.prepareRequest(ctx, &params)
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.RequestInvalidRequestBody)
-		resp.BadRequest(c, err)
+		resp.BadRequest(ctx, err)
 		return
 	}
 
-	dataReader := c.Request.Body
+	dataReader := ctx.Request.Body
 	if contentEncoding == "gzip" {
 		gzipReader, gErr := gzip.NewReader(dataReader)
 		if gErr != nil {
 			gErr = errors.WithI18nKey(gErr, i18n.ErrorGzipFailedToCreateReader)
-			resp.InternalError(c, gErr)
+			resp.InternalError(ctx, gErr)
 			return
 		}
 
 		defer func() {
 			if cErr := gzipReader.Close(); cErr != nil {
-				ctl.logger.Warnf("failed to close the gzip reader : %v", cErr)
+				logger.Warnf("failed to close the gzip reader : %v", cErr)
 			}
 		}()
 		dataReader = gzipReader
 	}
 
-	resp.NoCache(c.Writer)
-	c.Writer.Header().Set("Content-Type", fmt.Sprintf("application/x-git-%s-result", constant.GitServiceTypeReceivePack))
+	resp.NoCache(ctx.Writer)
+	ctx.Writer.Header().Set("Content-Type", fmt.Sprintf("application/x-git-%s-result", constant.GitServiceTypeReceivePack))
 
 	// clone 是写操作 只要可读即可
 	// isWriteOperation := true
@@ -144,14 +143,14 @@ func (ctl *GitController) Push(c *gin.Context) {
 	repo, err := ctl.repoSvc.GetRepoCheckAccess(ctx, session, params.RepoRef, []constant.Permission{permission})
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.RepoPushPermissionError)
-		resp.BadRequest(c, err)
+		resp.BadRequest(ctx, err)
 		return
 	}
 
 	need, err := ctl.settingsSvc.NeedFitClient(ctx, repo.ID, constant.KeyRequireFitClient)
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.DbError)
-		resp.InternalError(c, err)
+		resp.InternalError(ctx, err)
 		return
 	}
 
@@ -162,7 +161,7 @@ func (ctl *GitController) Push(c *gin.Context) {
 	options := api.ServicePackOptions{
 		Service:      constant.GitServiceTypeUploadPack,
 		StatelessRPC: true,
-		Stdout:       c.Writer,
+		Stdout:       ctx.Writer,
 		Stdin:        dataReader,
 		Protocol:     gitProtocol,
 		IsWrite:      true,
@@ -185,8 +184,8 @@ func (ctl *GitController) Push(c *gin.Context) {
 
 	if err != nil {
 		// todo
-		ctl.logger.Errorf("repoCtrl.GitServicePack failed: %v", err)
-		resp.NotFound(c, err)
+		logger.Errorf("repoCtrl.GitServicePack failed: %v", err)
+		resp.NotFound(ctx, err)
 		return
 	}
 }
@@ -196,16 +195,17 @@ func (ctl *GitController) InfoRefs(c *gin.Context) {
 }
 
 // 提取公共解析逻辑
-func (ctl *GitController) prepareRequest(c *gin.Context, params *req.RepoURI) (*auth.Session, string, string, error) {
+func (ctl *GitController) prepareRequest(ctx *gin.Context, params *req.RepoRef) (*auth.Session, string, string, error) {
+	logger := logger.GetLogger(ctx)
 	var err error
 
-	session, ok := req.GetAuthSession(c.Request.Context())
+	session, ok := req.GetAuthSession(ctx.Request.Context())
 	if !ok {
 		err = errors.WithI18nKey(errors.New("get session failed"), i18n.AuthNoSession)
 		return nil, "", "", err
 	}
 
-	if err = c.ShouldBindUri(params); err != nil || params.RepoRef == "" {
+	if err = ctx.ShouldBindUri(params); err != nil || params.RepoRef == "" {
 		err = errors.WithI18nKey(err, i18n.RequestPathParameterNotFound)
 		return nil, "", "", err
 	}
@@ -216,10 +216,10 @@ func (ctl *GitController) prepareRequest(c *gin.Context, params *req.RepoURI) (*
 		return nil, "", "", err
 	}
 
-	ctl.logger.Infof("origin url %s , repoRef: %s", c.Request.URL.String(), val)
+	logger.Infof("origin url %s , repoRef: %s", ctx.Request.URL.String(), val)
 
-	contentEncoding := req.GetHeaderOrDefault(c, req.HeaderContentEncoding, "")
-	gitProtocol := req.GetHeaderOrDefault(c, req.HeaderParamGitProtocol, "")
+	contentEncoding := req.GetHeaderOrDefault(ctx, req.HeaderContentEncoding, "")
+	gitProtocol := req.GetHeaderOrDefault(ctx, req.HeaderParamGitProtocol, "")
 
 	return session, contentEncoding, gitProtocol, nil
 }

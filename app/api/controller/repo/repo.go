@@ -2,7 +2,6 @@ package repo
 
 import (
 	"fmt"
-	"net/url"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
@@ -17,15 +16,13 @@ import (
 
 type Controller struct {
 	repoSvc     repo.Interface
-	logger      *logger.SugaredMateLogger
 	urlProvider urlPkg.Provider
 }
 
 // NewRepoController 创建代码库处理器实例
-func NewRepoController(repoSvc repo.Interface, logger *logger.SugaredMateLogger, urlProvider urlPkg.Provider) *Controller {
+func NewRepoController(repoSvc repo.Interface, urlProvider urlPkg.Provider) *Controller {
 	return &Controller{
 		repoSvc:     repoSvc,
-		logger:      logger,
 		urlProvider: urlProvider,
 	}
 }
@@ -61,47 +58,49 @@ func (ctl *Controller) Create(c *gin.Context) {
 	ctl.repoSvc.Create(logger.GetContextWithLogger(c), reqData)
 }
 
-func (ctl *Controller) GetContent(c *gin.Context) {
-	var params req.RepoURI
+func (ctl *Controller) GetContent(ctx *gin.Context) {
+	logger := logger.GetLogger(ctx)
+	var params req.RepoId
 	var err error
 
-	_, ok := req.GetAuthSession(c.Request.Context())
+	_, ok := req.GetAuthSession(ctx)
 	if !ok {
 		err = errors.WithI18nKey(errors.New("get session failed"), i18n.AuthNoSession)
-		resp.BadRequest(c, err)
+		resp.BadRequest(ctx, err)
 		return
 	}
 
-	if err = c.ShouldBindUri(&params); err != nil || params.RepoRef == "" {
+	if err = ctx.ShouldBindUri(&params); err != nil || params.RepoID == 0 {
 		err = errors.WithI18nKey(err, i18n.RequestPathParameterNotFound)
-		resp.BadRequest(c, err)
+		resp.BadRequest(ctx, err)
 		return
 	}
 
-	val, err := url.PathUnescape(params.RepoRef)
-	if err != nil {
-		err = errors.WithI18nKey(err, i18n.RequestPathParameterNotFound)
-		resp.BadRequest(c, err)
-		return
-	}
+	// gitRef 仓库引用，例如：refs/heads/main
+	gitRef := req.QueryParamOrDefault(ctx, req.QueryParamGitRef, "refs/heads/main")
 
 	// includeCommit 是否包含提交信息
-	includeCommit, err := req.QueryParamAsBoolOrDefault(c, req.QueryParamIncludeCommit, false)
+	includeCommit, err := req.QueryParamAsBoolOrDefault(ctx, req.QueryParamIncludeCommit, false)
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.RepoPullPermissionError)
-		resp.BadRequest(c, err)
+		resp.BadRequest(ctx, err)
 		return
 	}
-	_ = includeCommit
 
 	// flattenDirectories 是否展平目录结构
-	flattenDirectories, err := req.QueryParamAsBoolOrDefault(c, req.QueryParamFlattenDirectories, false)
+	flattenDirectories, err := req.QueryParamAsBoolOrDefault(ctx, req.QueryParamFlattenDirectories, false)
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.SpacePathParamError)
-		resp.BadRequest(c, err)
+		resp.BadRequest(ctx, err)
 		return
 	}
-	_ = flattenDirectories
-	ctl.logger.Infof("origin url %s , repoRef: %s", c.Request.URL.String(), val)
-	fmt.Println(c.Param("path"))
+
+	// 在像 /v1/repos/{repoRef}/contents/* 这样的路由下
+	// * 表示仓库内的文件或目录的相对路径。
+	// 例如请求 /v1/repos/12/contents/src/main.go ，这里的余量就是 src/main.go
+	path := req.PathParamOrEmpty(ctx, req.PathParamRemainder)
+
+	logger.Infof("origin url %s , repoID: %d,gitRef: %s, path: %s,includeCommit: %v,flattenDirectories: %v", ctx.Request.URL.String(), params.RepoID, gitRef, path, includeCommit, flattenDirectories)
+
+	fmt.Println(ctx.Param("path"))
 }
