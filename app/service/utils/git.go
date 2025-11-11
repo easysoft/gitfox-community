@@ -3,6 +3,7 @@ package utils
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/branch"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/commit"
@@ -151,4 +152,24 @@ func MapToRPCSortOrder(o string) git.SortOrder {
 	default:
 		return git.SortOrderDefault
 	}
+}
+
+func MapRenameDetails(c *git.RenameDetails) *commit.RenameDetails {
+	if c == nil {
+		return nil
+	}
+	return &commit.RenameDetails{
+		OldPath:         c.OldPath,
+		NewPath:         c.NewPath,
+		CommitShaBefore: c.CommitShaBefore.String(),
+		CommitShaAfter:  c.CommitShaAfter.String(),
+	}
+}
+
+func GenerateCommitTitle(msg string) string {
+	msgL := strings.Split(msg, "\n")
+	if len(msgL) > 1 {
+		return msgL[0]
+	}
+	return msg
 }
