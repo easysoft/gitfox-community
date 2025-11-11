@@ -58,6 +58,48 @@ func (ctl *Controller) Create(c *gin.Context) {
 	ctl.repoSvc.Create(logger.GetContextWithLogger(c), reqData)
 }
 
+// Get 获取代码库
+// @Summary 获取仓库信息
+// @Description 根据传入的仓库 ID 获取仓库信息
+// @Tags repos
+// @Accept application/json
+// @Produce application/json
+// @Param id path uint true "仓库 ID"
+// @Success 200 {object} resp.ObjectResponse{data=repoModel.Repo} "获取成功（返回仓库核心信息）"
+// @Error 400 {object} resp.ObjectResponse "参数错误（如identifier格式非法、ID为空等）"
+// @Error 404 {object} resp.ObjectResponse "代码库不存在（传入的repoID对应的空间未找到）"
+// @Error 500 {object} resp.ObjectResponse "服务器内部错误（如Git服务调用失败、数据库异常等）"
+// @Router /repos/{id} [get]
+func (ctl *Controller) Get(c *gin.Context) {
+	session, ok := req.GetAuthSession(c.Request.Context())
+	if !ok {
+		err := errors.WithI18nKey(errors.New("get session failed"), i18n.AuthNoSession)
+		resp.BadRequest(c, err)
+		return
+	}
+
+	repoID, err := req.PathParamAsPositiveUint(c, "id")
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RepoPathParamError)
+		resp.BadRequest(c, err)
+		return
+	}
+	if repoID <= 0 {
+		err = errors.WithI18nKey(err, i18n.RepoPathParamError)
+		resp.BadRequest(c, err)
+		return
+	}
+
+	obj, err := ctl.repoSvc.GetByID(c, session, repoID)
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RepoQueryError)
+		resp.InternalError(c, err)
+		return
+	}
+
+	resp.OK(c, i18n.RepoQuerySuccess, obj)
+}
+
 func (ctl *Controller) GetContent(ctx *gin.Context) {
 	logger := logger.GetLogger(ctx)
 	var params req.RepoId
