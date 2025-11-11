@@ -5,9 +5,11 @@ import (
 )
 
 const (
-	PathParamRepoRef  = "repo_ref"
-	QueryParamRepoID  = "repo_id"
-	QueryParamSpaceID = "space_id"
+	PathParamRemainder = "*"
+
+	PathParamRepoRef  = "repoRef"
+	QueryParamRepoID  = "repoId"
+	QueryParamSpaceID = "spaceId"
 )
 
 func GetRepoRefFromPath(r *gin.Context) (string, error) {
