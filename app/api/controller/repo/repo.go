@@ -75,7 +75,7 @@ func (ctl *Controller) Get(c *gin.Context) {
 		return
 	}
 
-	repoID, err := req.PathParamAsPositiveUint(c, "id")
+	repoID, err := req.PathParamAsPositiveUint(c, req.QueryParamRepoID)
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.RepoPathParamError)
 		resp.BadRequest(c, err)
@@ -142,4 +142,8 @@ func (ctl *Controller) GetContent(ctx *gin.Context) {
 	logger.Infof("origin url %s , repoID: %d,gitRef: %s, path: %s,includeCommit: %v,flattenDirectories: %v", ctx.Request.URL.String(), params.RepoID, gitRef, path, includeCommit, flattenDirectories)
 
 	fmt.Println(ctx.Param("path"))
+}
+
+func (ctl *Controller) Blame(c *gin.Context) {
+
 }
