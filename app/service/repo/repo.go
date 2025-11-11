@@ -171,6 +171,20 @@ func (s *Service) GetRepo(ctx context.Context, repoRef string, allowedStates []c
 	return repo, nil
 }
 
+func (s *Service) GetByID(ctx context.Context, session *auth.Session, id uint) (*repo.Repository, error) {
+	if id < 1 {
+		return nil, errors.BadRequest.New("A valid repository id must be provided.")
+	}
+
+	repo, err := s.repoStore.GetByID(ctx, id)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to find repository: %d", id)
+	}
+
+	// _, err = s.GetRepoCheckAccess(ctx, session, repo.Ref, []constant.Permission{constant.PermissionRepoRead})
+	return repo, nil
+}
+
 func (s *Service) createReadme(name, description string) []byte {
 	content := bytes.Buffer{}
 	content.WriteString("# " + name + "\n")
