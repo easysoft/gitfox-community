@@ -16,5 +16,6 @@ func registerRepoRoutes(r *gin.RouterGroup, controller *Controller) {
 		{
 			repos.GET("/content/*", controller.Repo.GetContent)
 		}
+		repos.GET("/:id", controller.Repo.Get)
 	}
 }
