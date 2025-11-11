@@ -22,14 +22,17 @@ const (
 	BranchQueryParamError   I18nKey = "branch.query_param_error"   // Query 参数解析失败.
 
 	// Commit 相关常量
-	CommitActionDecodeError I18nKey = "commit.action_decode_error" // 解码提交文件内容时失败.
-	CommitBodyParamError    I18nKey = "commit.body_param_error"    // Body 参数解析失败.
-	CommitCreateError       I18nKey = "commit.create_error"        // 提交创建失败.
-	CommitCreateSuccess     I18nKey = "commit.create_success"      // 提交创建成功.
-	CommitListError         I18nKey = "commit.list_error"          // 查询提交列表失败.
-	CommitListSuccess       I18nKey = "commit.list_success"        // 查询提交列表成功.
-	CommitPathParamError    I18nKey = "commit.path_param_error"    // Path 参数解析失败.
-	CommitQueryParamError   I18nKey = "commit.query_param_error"   // Query 参数解析失败.
+	CommitActionDecodeError    I18nKey = "commit.action_decode_error"    // 解码提交文件内容时失败.
+	CommitBodyParamError       I18nKey = "commit.body_param_error"       // Body 参数解析失败.
+	CommitCreateError          I18nKey = "commit.create_error"           // 提交创建失败.
+	CommitCreateSuccess        I18nKey = "commit.create_success"         // 提交创建成功.
+	CommitGetDivergenceSuccess I18nKey = "commit.get_divergence_success" // 查询提交分歧度成功.
+	CommitGetError             I18nKey = "commit.get_error"              // 获取提交信息失败.
+	CommitGetSuccess           I18nKey = "commit.get_success"            // 获取提交信息成功.
+	CommitListError            I18nKey = "commit.list_error"             // 查询提交列表失败.
+	CommitListSuccess          I18nKey = "commit.list_success"           // 查询提交列表成功.
+	CommitPathParamError       I18nKey = "commit.path_param_error"       // Path 参数解析失败.
+	CommitQueryParamError      I18nKey = "commit.query_param_error"      // Query 参数解析失败.
 
 	// Db 相关常量
 	DbCheckConstraintViolation I18nKey = "db.check_constraint_violation" // 检查约束冲突.

@@ -133,3 +133,51 @@ func (s *Service) List(ctx context.Context, req commitModel.ReqFilter, repo repo
 		TotalCommits:  rpcOut.TotalCommits,
 	}, nil
 }
+
+func (s *Service) Get(ctx context.Context, commitSHA string, repo repoModel.Repo) (*commitModel.Commit, error) {
+	rpcOut, err := s.gitPkg.GetCommit(ctx, &git.GetCommitParams{
+		ReadParams: git.ReadParams{RepoUID: repo.GitUID},
+		Revision:   commitSHA,
+	})
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.GitExecError)
+		return nil, err
+	}
+
+	commit, err := utils.MapCommit(&rpcOut.Commit)
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.GitMapOutputError)
+		return nil, err
+	}
+	return commit, nil
+}
+
+func (s *Service) GetDivergence(ctx context.Context, req commitModel.ReqForDivergence, repo repoModel.Repo) ([]commitModel.CommitDivergence, error) {
+
+	// map to rpc params
+	options := &git.GetCommitDivergencesParams{
+		ReadParams: git.ReadParams{RepoUID: repo.GitUID},
+		MaxCount:   int32(req.MaxDivergence),
+		Requests:   make([]git.CommitDivergenceRequest, len(req.Requests)),
+	}
+	for i := range req.Requests {
+		options.Requests[i].From = req.Requests[i].From
+		options.Requests[i].To = req.Requests[i].To
+		// backfil default branch if no 'to' was provided
+		if len(options.Requests[i].To) == 0 {
+			options.Requests[i].To = repo.DefaultBranch
+		}
+	}
+
+	rpcOutput, err := s.gitPkg.GetCommitDivergences(ctx, options)
+	if err != nil {
+		return nil, err
+	}
+
+	// map to output type
+	divergences := make([]commitModel.CommitDivergence, len(rpcOutput.Divergences))
+	for i := range rpcOutput.Divergences {
+		divergences[i] = commitModel.CommitDivergence(rpcOutput.Divergences[i])
+	}
+	return divergences, nil
+}

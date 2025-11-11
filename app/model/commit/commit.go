@@ -68,6 +68,11 @@ type RenameDetails struct {
 	CommitShaAfter  string `json:"commitShaAfter"`
 }
 
+type ReqForGet struct {
+	RepoID uint   `json:"repoID"`
+	SHA    string `json:"sha"`
+}
+
 type Commit struct {
 	SHA        string       `json:"sha"`
 	ParentSHAs []string     `json:"parentShas,omitempty"`
@@ -119,9 +124,20 @@ type CommitCountData struct {
 	Changes   int `json:"changes"`
 }
 
+type ReqForDivergence struct {
+	RepoID        uint            `json:"repoID"`
+	MaxDivergence uint            `json:"maxDivergence"`
+	Requests      []CompareGitRef `json:"requests"`
+}
+
 type CommitDivergence struct {
 	// Ahead is the count of commits the 'From' ref is ahead of the 'To' ref.
 	Ahead int32 `json:"ahead"`
 	// Behind is the count of commits the 'From' ref is behind the 'To' ref.
 	Behind int32 `json:"behind"`
+}
+
+type CompareGitRef struct {
+	From string `json:"from"`
+	To   string `json:"to"`
 }

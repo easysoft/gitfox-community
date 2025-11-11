@@ -6,4 +6,7 @@ commit:
   create_error: "Commit created failed."
   list_error: "Failed to query commit list."
   list_success: "Query the commit list successfully."
+  get_error: "Failed to get commit object."
+  get_success: "Get commit object successfully."
+  get_divergence_success: "Get commit divergence successfully."
   action_decode_error: "Decode action file payload failed."
