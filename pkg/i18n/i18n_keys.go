@@ -65,6 +65,9 @@ const (
 
 	// Repo 相关常量
 	RepoBodyParamError           I18nKey = "repo.body_param_error"           // Body 参数解析失败.
+	RepoPathParamError           I18nKey = "repo.path_param_error"           // Path 参数解析失败.
+	RepoQuerySuccess             I18nKey = "repo.query_success"              // 查询成功.
+	RepoQueryError               I18nKey = "repo.query_error"                // Query 参数解析失败.
 	RepoIdentifierInvalid        I18nKey = "repo.identifier_invalid"         // 仓库名称不合法,identifier仅支持字母、数字、下划线(_)、连字符(-)、点号(.)
 	RepoPullRequestsMergeError   I18nKey = "repo.pullRequests_merge_error"   // 合并失败,存在冲突或检查未通过.
 	RepoPullRequestsMergeSuccess I18nKey = "repo.pullRequests_merge_success" // 合并成功!

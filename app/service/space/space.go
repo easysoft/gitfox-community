@@ -11,28 +11,28 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 )
 
-type SpaceSvc struct {
+type Service struct {
 	// 依赖的存储接口等，可以在这里添加
-	spaceStore space.SpaceInterface
+	spaceStore space.Interface
 }
 
 // NewService 创建 SpaceService 实例
-func NewSpaceSvc(spaceStore space.SpaceInterface) *SpaceSvc {
-	return &SpaceSvc{
+func NewSpaceSvc(spaceStore space.Interface) *Service {
+	return &Service{
 		spaceStore: spaceStore,
 	}
 }
 
-func (s *SpaceSvc) Create(ctx context.Context, req spaceModel.CreateSpaceRequest) (*spaceModel.SpaceResponse, error) {
+func (s *Service) Create(ctx context.Context, req spaceModel.CreateSpaceRequest) (*spaceModel.SpaceResponse, error) {
 	// 直接将 CreateSpaceRequest 传递给 store 层，由 store 层进行数据转换并返回 SpaceResponse
 	return s.spaceStore.Create(ctx, req)
 }
 
-func (s *SpaceSvc) List(ctx context.Context, filter spaceModel.ListSpaceFilter) (*database.PageResult[*space.Space], error) {
+func (s *Service) List(ctx context.Context, filter spaceModel.ListSpaceFilter) (*database.PageResult[*space.Space], error) {
 	return s.spaceStore.List(ctx, filter)
 }
 
-func (s *SpaceSvc) GetByID(ctx context.Context, id uint) (*space.Space, error) {
+func (s *Service) GetByID(ctx context.Context, id uint) (*space.Space, error) {
 	spaceEntity, err := s.spaceStore.GetByID(ctx, id)
 	if err != nil {
 		// 传递Store层错误（如“space not found”）
@@ -41,12 +41,12 @@ func (s *SpaceSvc) GetByID(ctx context.Context, id uint) (*space.Space, error) {
 	return spaceEntity, nil
 }
 
-func (s *SpaceSvc) Update(ctx context.Context, id uint, req spaceModel.UpdateSpaceRequest) (*spaceModel.SpaceResponse, error) {
+func (s *Service) Update(ctx context.Context, id uint, req spaceModel.UpdateSpaceRequest) (*spaceModel.SpaceResponse, error) {
 	// 直接将 UpdateSpaceRequest 传递给 store 层，由 store 层进行数据转换并返回 SpaceResponse
 	return s.spaceStore.Update(ctx, id, req)
 }
 
-func (s *SpaceSvc) Delete(ctx context.Context, id uint) error {
+func (s *Service) Delete(ctx context.Context, id uint) error {
 
 	// 1. 检查空间是否存在且未删除
 	spaceObj, err := s.spaceStore.GetByID(ctx, id)
@@ -79,7 +79,7 @@ func (s *SpaceSvc) Delete(ctx context.Context, id uint) error {
 	return s.spaceStore.Delete(ctx, id)
 }
 
-func (s *SpaceSvc) Undelete(ctx context.Context, req spaceModel.UndeleteSpaceRequest) error {
+func (s *Service) Undelete(ctx context.Context, req spaceModel.UndeleteSpaceRequest) error {
 	// 将 []uint16 转换为 []uint
 	ids := make([]uint, len(req.IDs))
 	for i, id := range req.IDs {
@@ -104,6 +104,6 @@ func (s *SpaceSvc) Undelete(ctx context.Context, req spaceModel.UndeleteSpaceReq
 	return nil
 }
 
-func (s *SpaceSvc) CheckPermission() {
+func (s *Service) CheckPermission() {
 	// TODO: implement permission checks for spaces; placeholder to satisfy compilation.
 }

@@ -11,6 +11,7 @@ import (
 
 type Interface interface {
 	Create(ctx context.Context, req *repoModel.CreateRepoReq) (*repoModel.CreateRepoResp, error)
+	GetByID(ctx context.Context, session *auth.Session, id uint) (*repo.Repository, error)
 	GetRepo(ctx context.Context, repoRef string, allowedStates []constant.RepoState) (*repo.Repository, error)
 	GetRepoCheckAccess(ctx context.Context, session *auth.Session, repoRef string, allowedStates []constant.Permission) (*repo.Repository, error)
 }
