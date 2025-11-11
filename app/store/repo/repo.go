@@ -63,7 +63,7 @@ func mapToModel(data Repository) *repoModel.CreateRepoResp {
 func (s *Store) GetByID(ctx context.Context, id uint) (*Repository, error) {
 	var repo Repository
 	repo.ID = id
-	err := s.db.WithContext(ctx).First(&repo).Error
+	err := s.db.WithContext(ctx).First(&repo).Where("deleted = 0").Error
 	if err != nil && errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, errors.NotFound.Wrapf(err, "repository %d not found", id)
 	}
