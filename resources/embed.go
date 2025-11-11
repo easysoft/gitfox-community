@@ -7,8 +7,8 @@ var (
 	EmbeddedLocales embed.FS
 
 	//go:embed license
-	licence embed.FS
+	Licence embed.FS
 
 	//go:embed gitignore
-	gitignore embed.FS
+	Gitignore embed.FS
 )

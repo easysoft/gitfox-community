@@ -10,17 +10,20 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
+	urlPkg "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/url"
 	"github.com/gin-gonic/gin"
 )
 
 type Controller struct {
-	repoSvc repo.Interface
+	repoSvc     repo.Interface
+	urlProvider urlPkg.Provider
 }
 
 // NewRepoController 创建代码库处理器实例
-func NewRepoController(repoSvc repo.Interface) *Controller {
+func NewRepoController(repoSvc repo.Interface, urlProvider urlPkg.Provider) *Controller {
 	return &Controller{
-		repoSvc: repoSvc,
+		repoSvc:     repoSvc,
+		urlProvider: urlProvider,
 	}
 }
 
