@@ -9,13 +9,16 @@ package server
 import (
 	branch2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/branch"
 	commit2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/commit"
+	repo3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/repo"
 	space3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/space"
 	tag2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/tag"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/router"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/branch"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/commit"
+	repo2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
 	space2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/space"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/tag"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/space"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/cmd/cli/operations/provider"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
@@ -43,8 +46,8 @@ func NewApp(mode string) (*App, func(), error) {
 		return nil, nil, err
 	}
 	spaceStore := space.NewSpaceStore(db)
-	spaceSvc := space2.NewSpaceSvc(spaceStore)
-	spaceController := space3.NewSpaceController(spaceSvc)
+	service := space2.NewSpaceSvc(spaceStore)
+	spaceController := space3.NewSpaceController(service)
 	urlProvider, err := provider.NewURLProvider(config)
 	if err != nil {
 		cleanup2()
@@ -66,19 +69,22 @@ func NewApp(mode string) (*App, func(), error) {
 		return nil, nil, err
 	}
 	store := provider.NewGitLocalStore()
-	service, err := provider.NewGit(typesConfig, git, clientFactory, store)
+	gitService, err := provider.NewGit(typesConfig, git, clientFactory, store)
 	if err != nil {
 		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
-	branchService := branch.NewService(urlProvider, service)
+	branchService := branch.NewService(urlProvider, gitService)
 	controller := branch2.NewController(branchService)
-	tagService := tag.NewService(urlProvider, service)
+	tagService := tag.NewService(urlProvider, gitService)
 	tagController := tag2.NewController(tagService)
-	commitService := commit.NewService(urlProvider, service)
+	commitService := commit.NewService(urlProvider, gitService)
 	commitController := commit2.NewController(commitService)
-	routerController := provider.NewControllers(spaceController, controller, tagController, commitController)
+	repoStore := repo.NewRepoStore(db)
+	repoService := repo2.NewRepoSvc(gitService, repoStore, spaceStore, urlProvider)
+	repoController := repo3.NewRepoController(repoService, urlProvider)
+	routerController := provider.NewControllers(spaceController, controller, tagController, commitController, repoController)
 	i18nManager, err := provider.NewI18nManager(config)
 	if err != nil {
 		cleanup2()
