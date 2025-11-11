@@ -13,11 +13,11 @@ import (
 
 // SpaceController 处理与空间相关的 HTTP 请求
 type SpaceController struct {
-	spaceSvc spaceSvc.SpaceInterface
+	spaceSvc spaceSvc.Interface
 }
 
 // NewSpaceController 创建空间处理器实例
-func NewSpaceController(spaceService spaceSvc.SpaceInterface) *SpaceController {
+func NewSpaceController(spaceService spaceSvc.Interface) *SpaceController {
 	return &SpaceController{
 		spaceSvc: spaceService,
 	}

@@ -8,7 +8,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
 )
 
-type SpaceInterface interface {
+type Interface interface {
 	Create(ctx context.Context, req spaceModel.CreateSpaceRequest) (*spaceModel.SpaceResponse, error)
 	List(ctx context.Context, filter spaceModel.ListSpaceFilter) (*database.PageResult[*space.Space], error)
 	GetByID(ctx context.Context, id uint) (*space.Space, error)

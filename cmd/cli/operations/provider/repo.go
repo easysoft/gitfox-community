@@ -6,6 +6,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/repo"
 	repoSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
 	repoStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/space"
 )
 
 var RepoeWireSet = wire.NewSet(
@@ -15,4 +16,5 @@ var RepoeWireSet = wire.NewSet(
 	repoSvc.NewRepoSvc,
 	wire.Bind(new(repoStore.Interface), new(*repoStore.Store)),
 	repoStore.NewRepoStore,
+	space.NewSpaceStore,
 )
