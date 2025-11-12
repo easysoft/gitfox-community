@@ -10,8 +10,8 @@ import (
 
 // registerGitRoutes 注册 Git 相关路由
 func registerGitRoutes(r *gin.RouterGroup, controller *Controller) {
+	r.Use(middleware.BlockSessionToken())
 	git := r.Group(fmt.Sprintf("git/{%s}", req.PathParamRepoRef))
-	git.Use(middleware.BlockSessionToken())
 	{
 		git.POST("/git-upload-pack", controller.Git.Clone)
 		git.POST("/git-receive-pack", controller.Git.Push)

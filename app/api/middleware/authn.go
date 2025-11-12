@@ -4,7 +4,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
 
-	// "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/auth/authn"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/auth/authn"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	"github.com/gin-gonic/gin"
 )
@@ -12,13 +12,13 @@ import (
 // Attempt 返回一个 Gin 中间件，用于认证请求
 // 如果有认证数据则进行认证，否则使用匿名用户会话
 // 使用方式: router.Use(middleware.Attempt(authenticator))
-func Attempt() gin.HandlerFunc {
+func Attempt(authenticator authn.Authenticator) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		log := logger.GetLogger(c)
 		ctx := c.Request.Context()
 
 		// 尝试认证请求
-		session, err := authn.Authenticate(c.Request)
+		session, err := authenticator.Authenticate(c.Request)
 		if err != nil {
 			log.Debugf("authentication failed: %v", err)
 			resp.Unauthorized(c, err)
