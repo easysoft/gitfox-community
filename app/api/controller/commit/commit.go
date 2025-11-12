@@ -2,9 +2,12 @@ package commit
 
 import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
 	commitModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/commit"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/principal"
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/commit"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
@@ -14,12 +17,14 @@ import (
 // Controller 处理与提交相关的 HTTP 请求
 type Controller struct {
 	commitSvc commit.Interface
+	repoSvc   repo.Interface
 }
 
 // NewController 创建提交处理器实例
-func NewController(commitService commit.Interface) *Controller {
+func NewController(commitService commit.Interface, repoService repo.Interface) *Controller {
 	return &Controller{
 		commitSvc: commitService,
+		repoSvc:   repoService,
 	}
 }
 
@@ -35,8 +40,6 @@ func NewController(commitService commit.Interface) *Controller {
 // @Router /commits [post]
 func (c *Controller) Create(ctx *gin.Context) {
 
-	log := logger.GetLogger(ctx.Request.Context())
-
 	var reqBody commitModel.ReqForCreate
 	var err error
 
@@ -48,16 +51,29 @@ func (c *Controller) Create(ctx *gin.Context) {
 	}
 
 	// TODO: 获取操作人
-
+	session := &auth.Session{
+		Principal: principal.Principal{
+			Email: "actor@chandao.com",
+			UID:   "actor",
+		},
+	}
 	// 通过仓库 ID 获取仓库
-	log.Debugln(reqBody.RepoID)
+	repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, reqBody.RepoID)
+	if err != nil {
+		resp.InternalError(ctx, err)
+		return
+	}
 
 	// TODO: 检查是否为镜像仓库
-	// TODO: 校验用户是否有仓库的 Push 权限
+	if repoOut.Mirror {
+		err = errors.WithI18nKey(err, i18n.RepoMirrorReadOnly)
+		resp.InternalError(ctx, err)
+		return
+	}
 	// TODO: 获取保护规则，如果有违规操作直接返回错误
 
 	// 调用 service 层创建提交
-	respData, err := c.commitSvc.Create(ctx.Request.Context(), reqBody)
+	respData, err := c.commitSvc.Create(ctx.Request.Context(), reqBody, session, repoOut)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return
@@ -79,8 +95,6 @@ func (c *Controller) Create(ctx *gin.Context) {
 // @Router /commits/list [post]
 func (c *Controller) List(ctx *gin.Context) {
 
-	log := logger.GetLogger(ctx.Request.Context())
-
 	var reqQuery commitModel.ReqFilter
 	var err error
 	if err = ctx.ShouldBindJSON(&reqQuery); err != nil {
@@ -89,14 +103,21 @@ func (c *Controller) List(ctx *gin.Context) {
 		return
 	}
 
+	// TODO: 获取操作人
+	session := &auth.Session{
+		Principal: principal.Principal{
+			Email: "actor@chandao.com",
+			UID:   "actor",
+		},
+	}
 	// 通过仓库 ID 获取仓库
-	log.Debugln(reqQuery.RepoID)
-	// repo, err := ctl.repoSvc.Get(ctx, session, repoRef, enum.PermissionRepoView)
-	// if err != nil {
-	// 	return nil, err
-	// }
+	repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, reqQuery.RepoID)
+	if err != nil {
+		resp.InternalError(ctx, err)
+		return
+	}
 
-	respData, err := c.commitSvc.List(ctx, reqQuery, repoModel.Repo{}, "")
+	respData, err := c.commitSvc.List(ctx, reqQuery, *repoOut, "")
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return

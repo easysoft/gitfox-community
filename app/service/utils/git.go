@@ -5,8 +5,11 @@ import (
 	"fmt"
 	"strings"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/githook"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/branch"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/commit"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/url"
 )
@@ -16,30 +19,30 @@ import (
 func createRPCWriteParams(
 	ctx context.Context,
 	urlProvider url.Provider,
-	// session *auth.Session,
-	// repo *repo.Repository,
+	session *auth.Session,
+	repo *repo.Repo,
 	isInternal bool,
 ) (git.WriteParams, error) {
 	// generate envars (add everything githook CLI needs for execution)
-	// envVars, err := githook.GenerateEnvironmentVariables(
-	// 	ctx,
-	// 	urlProvider.GetInternalAPIURL(ctx),
-	// 	repo.ID,
-	// 	session.Principal.ID,
-	// 	false,
-	// 	isInternal,
-	// )
-	// if err != nil {
-	// 	return git.WriteParams{}, fmt.Errorf("failed to generate git hook environment variables: %w", err)
-	// }
-	return git.WriteParams{
+	envVars, err := githook.GenerateEnvironmentVariables(
+		ctx,
+		urlProvider.GetInternalAPIURL(ctx),
+		int64(repo.ID),
+		session.Principal.ID,
+		false,
+		isInternal,
+	)
+	if err != nil {
+		return git.WriteParams{}, fmt.Errorf("failed to generate git hook environment variables: %w", err)
+	}
 
+	return git.WriteParams{
 		Actor: git.Identity{
-			Name:  "用户名",
-			Email: "邮箱",
+			Name:  session.Principal.UID,
+			Email: session.Principal.Email,
 		},
-		RepoUID: "repo.GitUID",
-		EnvVars: nil,
+		RepoUID: repo.GitUID,
+		EnvVars: envVars,
 	}, nil
 }
 
@@ -48,10 +51,10 @@ func createRPCWriteParams(
 func CreateRPCExternalWriteParams(
 	ctx context.Context,
 	urlProvider url.Provider,
-	// session *auth.Session,
-	// repo *types.Repository,
+	session *auth.Session,
+	repo *repo.Repo,
 ) (git.WriteParams, error) {
-	return createRPCWriteParams(ctx, urlProvider, false)
+	return createRPCWriteParams(ctx, urlProvider, session, repo, false)
 }
 
 // CreateRPCInternalWriteParams creates base write parameters for git internal write operations.
@@ -59,8 +62,10 @@ func CreateRPCExternalWriteParams(
 func CreateRPCInternalWriteParams(
 	ctx context.Context,
 	urlProvider url.Provider,
+	session *auth.Session,
+	repo *repo.Repo,
 ) (git.WriteParams, error) {
-	return createRPCWriteParams(ctx, urlProvider, true)
+	return createRPCWriteParams(ctx, urlProvider, session, repo, true)
 }
 
 func MapBranch(b git.Branch) (branch.Branch, error) {

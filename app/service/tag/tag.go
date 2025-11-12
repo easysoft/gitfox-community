@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	authModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
 	commitModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/commit"
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 	tagModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/tag"
@@ -29,11 +30,15 @@ func NewService(urlProvider url.Provider, git git.Interface) *Service {
 	}
 }
 
-func (s *Service) Create(ctx context.Context, req tagModel.ReqForCreate) (*tagModel.Tag, error) {
+func (s *Service) Create(
+	ctx context.Context,
+	req tagModel.ReqForCreate,
+	session *authModel.Session,
+	repo *repoModel.Repo,
+) (*tagModel.Tag, error) {
 
 	// 准备 RPC 参数
-	// writeParams, err := utils.CreateRPCInternalWriteParams(c, ctl.urlProvider, session, repo)
-	writeParams, err := utils.CreateRPCInternalWriteParams(ctx, s.urlProvider)
+	writeParams, err := utils.CreateRPCInternalWriteParams(ctx, s.urlProvider, session, repo)
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.GitCreateExecParamError)
 		return nil, err
@@ -45,7 +50,7 @@ func (s *Service) Create(ctx context.Context, req tagModel.ReqForCreate) (*tagMo
 		Name:        req.Name,
 		Target:      req.Source,
 		Message:     req.Message,
-		Tagger:      &git.Identity{Name: "displayName", Email: "email"}, // 从上下文中获取
+		Tagger:      &git.Identity{Name: session.Principal.UID, Email: session.Principal.Email}, // 从上下文中获取
 		TaggerDate:  &now,
 	})
 	if err != nil {
@@ -91,10 +96,9 @@ func (s *Service) List(ctx context.Context, req tagModel.ReqFilter, repo repoMod
 
 }
 
-func (s *Service) Delete(ctx context.Context, name string, repo repoModel.Repo) error {
+func (s *Service) Delete(ctx context.Context, name string, session *authModel.Session, repo *repoModel.Repo) error {
 	// 准备 RPC 参数
-	// writeParams, err := utils.CreateRPCInternalWriteParams(c, ctl.urlProvider, session, repo)
-	writeParams, err := utils.CreateRPCInternalWriteParams(ctx, s.urlProvider)
+	writeParams, err := utils.CreateRPCInternalWriteParams(ctx, s.urlProvider, session, repo)
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.GitCreateExecParamError)
 		return err

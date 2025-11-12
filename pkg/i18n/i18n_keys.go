@@ -68,6 +68,7 @@ const (
 	RepoCreateSuccess            I18nKey = "repo.create_success"             // 创建仓库成功
 	RepoIdentifierInvalid        I18nKey = "repo.identifier_invalid"         // 仓库名称不合法,identifier仅支持字母、数字、下划线(_)、连字符(-)、点号(.)
 	RepoLineNumberError          I18nKey = "repo.line_number_error"          // 行号必须大于0, 且结束行号必须大于起始行号
+	RepoMirrorReadOnly           I18nKey = "repo.mirror_read_only"           // 镜像仓库只读.
 	RepoPathParamError           I18nKey = "repo.path_param_error"           // Path 参数解析失败.
 	RepoPullRequestsMergeError   I18nKey = "repo.pullRequests_merge_error"   // 合并失败,存在冲突或检查未通过.
 	RepoPullRequestsMergeSuccess I18nKey = "repo.pullRequests_merge_success" // 合并成功!

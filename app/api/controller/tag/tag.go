@@ -2,24 +2,27 @@ package tag
 
 import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
-	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/principal"
 	tagModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/tag"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/tag"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	"github.com/gin-gonic/gin"
 )
 
 // Controller 处理与标签相关的 HTTP 请求
 type Controller struct {
-	tagSvc tag.Interface
+	tagSvc  tag.Interface
+	repoSvc repo.Interface
 }
 
 // NewController 创建标签处理器实例
-func NewController(tagService tag.Interface) *Controller {
+func NewController(tagService tag.Interface, repoService repo.Interface) *Controller {
 	return &Controller{
-		tagSvc: tagService,
+		tagSvc:  tagService,
+		repoSvc: repoService,
 	}
 }
 
@@ -35,8 +38,6 @@ func NewController(tagService tag.Interface) *Controller {
 // @Router /tags [post]
 func (c *Controller) Create(ctx *gin.Context) {
 
-	log := logger.GetLogger(ctx.Request.Context())
-
 	var reqBody tagModel.ReqForCreate
 	var err error
 
@@ -48,16 +49,29 @@ func (c *Controller) Create(ctx *gin.Context) {
 	}
 
 	// TODO: 获取操作人
-
+	session := &auth.Session{
+		Principal: principal.Principal{
+			Email: "actor@chandao.com",
+			UID:   "actor",
+		},
+	}
 	// 通过仓库 ID 获取仓库
-	log.Debugln(reqBody.RepoID)
+	repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, reqBody.RepoID)
+	if err != nil {
+		resp.InternalError(ctx, err)
+		return
+	}
 
 	// TODO: 检查是否为镜像仓库
-	// TODO: 校验用户是否有仓库的 Push 权限
+	if repoOut.Mirror {
+		err = errors.WithI18nKey(err, i18n.RepoMirrorReadOnly)
+		resp.InternalError(ctx, err)
+		return
+	}
 	// TODO: 获取保护规则，如果有违规操作直接返回错误
 
 	// 调用 service 层创建标签
-	respData, err := c.tagSvc.Create(ctx.Request.Context(), reqBody)
+	respData, err := c.tagSvc.Create(ctx.Request.Context(), reqBody, session, repoOut)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return
@@ -79,8 +93,6 @@ func (c *Controller) Create(ctx *gin.Context) {
 // @Router /tags/list [post]
 func (c *Controller) List(ctx *gin.Context) {
 
-	log := logger.GetLogger(ctx.Request.Context())
-
 	var reqQuery tagModel.ReqFilter
 	var err error
 	if err = ctx.ShouldBindJSON(&reqQuery); err != nil {
@@ -89,14 +101,21 @@ func (c *Controller) List(ctx *gin.Context) {
 		return
 	}
 
+	// TODO: 获取操作人
+	session := &auth.Session{
+		Principal: principal.Principal{
+			Email: "actor@chandao.com",
+			UID:   "actor",
+		},
+	}
 	// 通过仓库 ID 获取仓库
-	log.Debugln(reqQuery.RepoID)
-	// repo, err := ctl.repoSvc.Get(ctx, session, repoRef, enum.PermissionRepoView)
-	// if err != nil {
-	// 	return nil, err
-	// }
+	repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, reqQuery.RepoID)
+	if err != nil {
+		resp.InternalError(ctx, err)
+		return
+	}
 
-	respData, err := c.tagSvc.List(ctx.Request.Context(), reqQuery, repoModel.Repo{})
+	respData, err := c.tagSvc.List(ctx.Request.Context(), reqQuery, *repoOut)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return
@@ -123,8 +142,6 @@ func (c *Controller) List(ctx *gin.Context) {
 // @Router /tags/{name} [delete]
 func (c *Controller) Delete(ctx *gin.Context) {
 
-	log := logger.GetLogger(ctx.Request.Context())
-
 	name := ctx.Param("name")
 	if name == "" {
 		err := errors.WithI18nKey(nil, i18n.TagPathParamError)
@@ -142,16 +159,29 @@ func (c *Controller) Delete(ctx *gin.Context) {
 	}
 
 	// TODO: 获取操作人
-
+	session := &auth.Session{
+		Principal: principal.Principal{
+			Email: "actor@chandao.com",
+			UID:   "actor",
+		},
+	}
 	// 通过仓库 ID 获取仓库
-	log.Debugln(reqQuery.RepoID)
+	repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, reqQuery.RepoID)
+	if err != nil {
+		resp.InternalError(ctx, err)
+		return
+	}
 
 	// TODO: 检查是否为镜像仓库
-	// TODO: 校验用户是否有仓库的 Push 权限
+	if repoOut.Mirror {
+		err = errors.WithI18nKey(err, i18n.RepoMirrorReadOnly)
+		resp.InternalError(ctx, err)
+		return
+	}
 	// TODO: 获取保护规则，如果有违规操作直接返回错误
 
 	// 调用 service 层删除标签
-	err := c.tagSvc.Delete(ctx.Request.Context(), name, repoModel.Repo{})
+	err = c.tagSvc.Delete(ctx.Request.Context(), name, session, repoOut)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	authModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
 	branchModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/branch"
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/utils"
@@ -28,11 +29,15 @@ func NewService(urlProvider url.Provider, git git.Interface) *Service {
 	}
 }
 
-func (s *Service) Create(ctx context.Context, req branchModel.ReqForCreate) (*branchModel.Branch, error) {
+func (s *Service) Create(
+	ctx context.Context,
+	req branchModel.ReqForCreate,
+	session *authModel.Session,
+	repo *repoModel.Repo,
+) (*branchModel.Branch, error) {
 
 	// 准备 RPC 参数
-	// writeParams, err := utils.CreateRPCInternalWriteParams(c, ctl.urlProvider, session, repo)
-	writeParams, err := utils.CreateRPCInternalWriteParams(ctx, s.urlProvider)
+	writeParams, err := utils.CreateRPCInternalWriteParams(ctx, s.urlProvider, session, repo)
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.GitCreateExecParamError)
 		return nil, err
@@ -58,7 +63,7 @@ func (s *Service) Create(ctx context.Context, req branchModel.ReqForCreate) (*br
 	return &data, nil
 }
 
-func (s *Service) List(ctx context.Context, filter branchModel.ReqFilter, repo repoModel.Repo) ([]branchModel.Branch, error) {
+func (s *Service) List(ctx context.Context, filter branchModel.ReqFilter, repo *repoModel.Repo) ([]branchModel.Branch, error) {
 
 	// 准备 RPC 参数
 	rpcOut, err := s.gitPkg.ListBranchesV2(ctx, &git.ListBranchesParams{
@@ -85,7 +90,7 @@ func (s *Service) List(ctx context.Context, filter branchModel.ReqFilter, repo r
 			return nil, fmt.Errorf("failed to map branch: %w", err)
 		}
 
-		// response[i].IsDefault = repo.DefaultBranch == branches[i].Name
+		response[i].IsDefault = repo.DefaultBranch == branches[i].Name
 	}
 
 	return response, nil
