@@ -65,14 +65,15 @@ const (
 
 	// Repo 相关常量
 	RepoBodyParamError           I18nKey = "repo.body_param_error"           // Body 参数解析失败.
-	RepoPathParamError           I18nKey = "repo.path_param_error"           // Path 参数解析失败.
-	RepoQuerySuccess             I18nKey = "repo.query_success"              // 查询成功.
-	RepoQueryError               I18nKey = "repo.query_error"                // Query 参数解析失败.
 	RepoIdentifierInvalid        I18nKey = "repo.identifier_invalid"         // 仓库名称不合法,identifier仅支持字母、数字、下划线(_)、连字符(-)、点号(.)
+	RepoLineNumberError          I18nKey = "repo.line_number_error"          // 行号必须大于0, 且结束行号必须大于起始行号
+	RepoPathParamError           I18nKey = "repo.path_param_error"           // Path 参数解析失败.
 	RepoPullRequestsMergeError   I18nKey = "repo.pullRequests_merge_error"   // 合并失败,存在冲突或检查未通过.
 	RepoPullRequestsMergeSuccess I18nKey = "repo.pullRequests_merge_success" // 合并成功!
 	RepoPullPermissionError      I18nKey = "repo.pull_permission_error"      // 您没有权限拉取此仓库.
 	RepoPushPermissionError      I18nKey = "repo.push_permission_error"      // 您没有权限推送此仓库.
+	RepoQueryError               I18nKey = "repo.query_error"                // 查询仓库失败
+	RepoQuerySuccess             I18nKey = "repo.query_success"              // 查询仓库成功
 
 	// Request 相关常量
 	RequestInvalidBooleanParameter         I18nKey = "request.invalid_boolean_parameter"          // 参数必须为布尔值.
