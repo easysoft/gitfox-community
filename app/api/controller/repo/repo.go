@@ -168,7 +168,7 @@ func (ctl *Controller) GetContent(ctx *gin.Context) {
 // @Param gitRef query string false "Git 引用" e.g. refs/heads/main
 // @Param lineFrom query int false "起始行号" e.g. 1
 // @Param lineTo query int false "结束行号" e.g. 100
-// @Success 200 {object} resp.ObjectResponse{data=interface{}} "获取成功（返回仓库代码blame流式）"
+// @Success 200 {object} resp.ObjectResponse{data=stream.Reader} "获取成功（返回仓库代码blame流式）"
 // @Error 400 {object} resp.ObjectResponse "参数错误（如identifier格式非法、ID为空等）"
 // @Error 404 {object} resp.ObjectResponse "代码库不存在（传入的repoID对应的空间未找到）"
 // @Error 500 {object} resp.ObjectResponse "服务器内部错误（如Git服务调用失败、数据库异常等）"

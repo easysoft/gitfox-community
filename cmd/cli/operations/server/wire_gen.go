@@ -83,7 +83,7 @@ func NewApp(mode string) (*App, func(), error) {
 	commitController := commit2.NewController(commitService)
 	repoStore := repo.NewRepoStore(db)
 	repoService := repo2.NewRepoSvc(gitService, repoStore, spaceStore, urlProvider)
-	repoController := repo3.NewRepoController(repoService, urlProvider)
+	repoController := repo3.NewRepoController(repoService, urlProvider, gitService)
 	routerController := provider.NewControllers(spaceController, controller, tagController, commitController, repoController)
 	i18nManager, err := provider.NewI18nManager(config)
 	if err != nil {

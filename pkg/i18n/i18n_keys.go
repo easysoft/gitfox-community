@@ -63,7 +63,6 @@ const (
 	GitExecError            I18nKey = "git.exec_error"              // 执行 git 命令失败.
 	GitMapOutputError       I18nKey = "git.map_output_error"        // 无法将 git 命令结果映射到响应结构体.
 
-	// Repo 相关常量
 	RepoBodyParamError           I18nKey = "repo.body_param_error"           // Body 参数解析失败.
 	RepoCreateError              I18nKey = "repo.create_error"               // 创建仓库异常
 	RepoCreateSuccess            I18nKey = "repo.create_success"             // 创建仓库成功
