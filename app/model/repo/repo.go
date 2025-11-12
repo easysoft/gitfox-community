@@ -50,7 +50,7 @@ type Repository struct {
 
 // CreateRemoteRepoRequest 创建远端仓库请求参数
 type CreateRepoReq struct {
-	SpaceID       uint64 `json:"spaceID" binding:"required"`                // 空间ID（字符串类型，后续转int）
+	SpaceID       uint   `json:"spaceID" binding:"required"`                // 空间ID（字符串类型，后续转int）
 	Identifier    string `json:"identifier" binding:"required"`             // 仓库唯一标识
 	DefaultBranch string `json:"defaultBranch"`                             // 默认分支（默认main）
 	Desc          string `json:"desc" binding:"max=500"`                    // 仓库描述（最大500字符）
@@ -64,7 +64,7 @@ type CreateRepoReq struct {
 // CreateRemoteRepoResponse 创建仓库响应结果
 type CreateRepoResp struct {
 	ID            uint       `json:"id"`
-	SpaceID       int        `json:"spaceID"`
+	SpaceID       uint       `json:"spaceID"`
 	Identifier    string     `json:"identifier"`
 	Desc          string     `json:"desc"`
 	GitUID        string     `json:"gitUID"`
@@ -99,11 +99,9 @@ func (req *CreateRepoReq) Validate() error {
 		return errors.Newf("repository identifiers cannot end with .git")
 	}
 
-
 	if len(req.Desc) > constant.MaxDescByteCountUTF8MB4 {
 		return errors.Newf("Description can be at most %d in length.", constant.MaxDescByteCountUTF8MB4)
 	}
-
 
 	// 默认分支处理（未传则设为main）
 	if req.DefaultBranch == "" {

@@ -21,7 +21,7 @@ const (
 // Repository 代码库表（ops_repository）Store层结构体
 type Repository struct {
 	ID            uint       `gorm:"column:id;comment:'代码库ID'"`
-	SpaceID       int        `gorm:"column:spaceID;comment:'空间ID'"`
+	SpaceID       uint       `gorm:"column:spaceID;comment:'空间ID'"`
 	Identifier    string     `gorm:"column:identifier;comment:'代码库唯一标识'"`
 	Desc          string     `gorm:"column:desc;comment:'代码库描述'"` // 关键字兼容：映射数据库 desc 字段
 	GitUID        string     `gorm:"column:gitUID;comment:'Git仓库唯一标识'"`
