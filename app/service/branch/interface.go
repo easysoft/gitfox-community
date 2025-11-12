@@ -10,6 +10,6 @@ import (
 
 type Interface interface {
 	Create(ctx context.Context, req branch.ReqForCreate, session *auth.Session, repo *repo.Repo) (*branch.Branch, error)
-	List(ctx context.Context, req branch.ReqFilter, repo *repo.Repo) ([]branch.Branch, error)
+	List(ctx context.Context, req branch.ReqFilter, repo *repo.Repo) ([]branch.Branch, bool, error)
 	ListPrefixes(ctx context.Context, repo repo.Repo) ([]branch.Prefix, error)
 }

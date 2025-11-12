@@ -115,15 +115,15 @@ func (c *Controller) List(ctx *gin.Context) {
 		return
 	}
 
-	respData, err := c.tagSvc.List(ctx.Request.Context(), reqQuery, *repoOut)
+	respData, isLast, err := c.tagSvc.List(ctx.Request.Context(), reqQuery, *repoOut)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return
 	}
 
 	resp.ListSuccess(ctx, respData,
-		resp.ListArgs{
-			Total:    0,
+		resp.ListNoTotalArgs{
+			IsLast:   isLast,
 			Page:     int64(1),
 			PageSize: int64(1),
 		}, i18n.TagListSuccess, nil)
