@@ -129,3 +129,9 @@ type Repo struct {
 	EditedDate    *time.Time `json:"editedDate"` // 允许 NULL，用指针类型
 	Deleted       bool       `json:"deleted"`
 }
+
+type BlameFilter struct {
+	GitRef   string `json:"gitRef" binding:"omitempty"`   // 非必填，omitempty 允许空值
+	LineFrom int    `json:"lineFrom" binding:"omitempty"` // 非必填，omitempty 允许空值
+	LineTo   int    `json:"lineTo" binding:"omitempty"`   // 非必填，omitempty 允许空值
+}
