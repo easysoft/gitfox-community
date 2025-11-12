@@ -22,6 +22,19 @@ const (
 	BranchPathParamError    I18nKey = "branch.path_param_error"    // Path 参数解析失败.
 	BranchQueryParamError   I18nKey = "branch.query_param_error"   // Query 参数解析失败.
 
+	// Commit 相关常量
+	CommitActionDecodeError    I18nKey = "commit.action_decode_error"    // 解码提交文件内容时失败.
+	CommitBodyParamError       I18nKey = "commit.body_param_error"       // Body 参数解析失败.
+	CommitCreateError          I18nKey = "commit.create_error"           // 提交创建失败.
+	CommitCreateSuccess        I18nKey = "commit.create_success"         // 提交创建成功.
+	CommitGetDivergenceSuccess I18nKey = "commit.get_divergence_success" // 查询提交分歧度成功.
+	CommitGetError             I18nKey = "commit.get_error"              // 获取提交信息失败.
+	CommitGetSuccess           I18nKey = "commit.get_success"            // 获取提交信息成功.
+	CommitListError            I18nKey = "commit.list_error"             // 查询提交列表失败.
+	CommitListSuccess          I18nKey = "commit.list_success"           // 查询提交列表成功.
+	CommitPathParamError       I18nKey = "commit.path_param_error"       // Path 参数解析失败.
+	CommitQueryParamError      I18nKey = "commit.query_param_error"      // Query 参数解析失败.
+
 	// Db 相关常量
 	DbCheckConstraintViolation I18nKey = "db.check_constraint_violation" // 检查约束冲突.
 	DbConnectionFailed         I18nKey = "db.connection_failed"          // 数据库连接失败.
@@ -51,13 +64,19 @@ const (
 	GitExecError            I18nKey = "git.exec_error"              // 执行 git 命令失败.
 	GitMapOutputError       I18nKey = "git.map_output_error"        // 无法将 git 命令结果映射到响应结构体.
 
-	// Repo 相关常量
 	RepoBodyParamError           I18nKey = "repo.body_param_error"           // Body 参数解析失败.
+	RepoCreateError              I18nKey = "repo.create_error"               // 创建仓库异常
+	RepoCreateSuccess            I18nKey = "repo.create_success"             // 创建仓库成功
 	RepoIdentifierInvalid        I18nKey = "repo.identifier_invalid"         // 仓库名称不合法,identifier仅支持字母、数字、下划线(_)、连字符(-)、点号(.)
+	RepoLineNumberError          I18nKey = "repo.line_number_error"          // 行号必须大于0, 且结束行号必须大于起始行号
+	RepoMirrorReadOnly           I18nKey = "repo.mirror_read_only"           // 镜像仓库只读.
+	RepoPathParamError           I18nKey = "repo.path_param_error"           // Path 参数解析失败.
 	RepoPullRequestsMergeError   I18nKey = "repo.pullRequests_merge_error"   // 合并失败,存在冲突或检查未通过.
 	RepoPullRequestsMergeSuccess I18nKey = "repo.pullRequests_merge_success" // 合并成功!
 	RepoPullPermissionError      I18nKey = "repo.pull_permission_error"      // 您没有权限拉取此仓库.
 	RepoPushPermissionError      I18nKey = "repo.push_permission_error"      // 您没有权限推送此仓库.
+	RepoQueryError               I18nKey = "repo.query_error"                // 查询仓库失败
+	RepoQuerySuccess             I18nKey = "repo.query_success"              // 查询仓库成功
 
 	// Request 相关常量
 	RequestInvalidBooleanParameter         I18nKey = "request.invalid_boolean_parameter"          // 参数必须为布尔值.

@@ -12,7 +12,7 @@ type ReqForCreate struct {
 
 // ReqFilter stores branch query parameters.
 type ReqFilter struct {
-	RepoID          uint   `json:"repoID"`
+	RepoID          uint   `json:"repoID" binding:"required"`
 	Query           string `json:"query"`
 	Prefix          string `json:"prefix"`
 	IncludeArchived bool   `json:"includeArchived"`

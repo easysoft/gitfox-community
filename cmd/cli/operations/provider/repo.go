@@ -8,7 +8,7 @@ import (
 	repoStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
 )
 
-var RepoeWireSet = wire.NewSet(
+var RepoWireSet = wire.NewSet(
 	repo.NewRepoController,
 	wire.Bind(new(repoSvc.Interface), new(*repoSvc.Service)),
 	// 提供创建实现类实例的方法（关键修复）

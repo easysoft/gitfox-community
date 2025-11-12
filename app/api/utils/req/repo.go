@@ -9,6 +9,7 @@ const (
 
 	PathParamRepoRef  = "repoRef"
 	PathParamOther    = "otherPath"
+	PathParamFilePath = "filePath"
 	QueryParamRepoID  = "repoId"
 	QueryParamSpaceID = "spaceId"
 )

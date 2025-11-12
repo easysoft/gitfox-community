@@ -34,7 +34,7 @@ func TestSHA_MarshalJSON(t *testing.T) {
 		{
 			name: "happy path - quotes",
 			input: SHA{
-				str: "\"\"",
+				Str: "\"\"",
 			},
 			want: []byte("\"\"\"\""),
 		},

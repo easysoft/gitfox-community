@@ -115,12 +115,12 @@ func (s *SpaceStore) List(ctx context.Context, filter spaceModel.ListSpaceFilter
 	return pageResult, nil
 }
 
-// GetByID 根据ID查询单个空间（包括已删除的）
+// GetByID 根据ID查询单个空间
 func (r *SpaceStore) GetByID(ctx context.Context, id uint) (*Space, error) {
 	var out Space
 	out.ID = id
 
-	if err := r.db.WithContext(ctx).First(&out).Error; err != nil {
+	if err := r.db.WithContext(ctx).Where("deleted = ?", 0).First(&out).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
 

@@ -1,0 +1,12 @@
+commit:
+  path_param_error: "Path param parsing failed."
+  query_param_error: "Query param parsing failed."
+  body_param_error: "Body param parsing failed."
+  create_success: "Commit created successfully."
+  create_error: "Commit created failed."
+  list_error: "Failed to query commit list."
+  list_success: "Query the commit list successfully."
+  get_error: "Failed to get commit object."
+  get_success: "Get commit object successfully."
+  get_divergence_success: "Get commit divergence successfully."
+  action_decode_error: "Decode action file payload failed."

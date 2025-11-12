@@ -50,7 +50,7 @@ type Repository struct {
 
 // CreateRemoteRepoRequest 创建远端仓库请求参数
 type CreateRepoReq struct {
-	SpaceID       uint64 `json:"spaceID" binding:"required"`                // 空间ID（字符串类型，后续转int）
+	SpaceID       uint   `json:"spaceID" binding:"required"`                // 空间ID（字符串类型，后续转int）
 	Identifier    string `json:"identifier" binding:"required"`             // 仓库唯一标识
 	DefaultBranch string `json:"defaultBranch"`                             // 默认分支（默认main）
 	Desc          string `json:"desc" binding:"max=500"`                    // 仓库描述（最大500字符）
@@ -64,7 +64,7 @@ type CreateRepoReq struct {
 // CreateRemoteRepoResponse 创建仓库响应结果
 type CreateRepoResp struct {
 	ID            uint       `json:"id"`
-	SpaceID       int        `json:"spaceID"`
+	SpaceID       uint       `json:"spaceID"`
 	Identifier    string     `json:"identifier"`
 	Desc          string     `json:"desc"`
 	GitUID        string     `json:"gitUID"`
@@ -112,7 +112,7 @@ func (req *CreateRepoReq) Validate() error {
 
 type Repo struct {
 	ID            uint       `json:"id"`
-	SpaceID       int        `json:"spaceID"`
+	SpaceID       uint       `json:"spaceID"`
 	Identifier    string     `json:"identifier"`
 	Desc          string     `json:"desc"`
 	GitUID        string     `json:"gitUID"`
@@ -128,4 +128,21 @@ type Repo struct {
 	EditedBy      string     `json:"editedBy"`
 	EditedDate    *time.Time `json:"editedDate"` // 允许 NULL，用指针类型
 	Deleted       bool       `json:"deleted"`
+}
+
+type ReqForDiff struct {
+	Range string            `json:"range"`
+	Files []FileDiffRequest `json:"files"`
+}
+
+type FileDiffRequest struct {
+	Path      string `json:"path"`
+	StartLine int    `json:"startLine"`
+	EndLine   int    `json:"-"` // warning: changes are possible and this field may not exist in the future
+}
+
+type BlameFilter struct {
+	GitRef   string `json:"gitRef" binding:"omitempty"`   // 非必填，omitempty 允许空值
+	LineFrom int    `json:"lineFrom" binding:"omitempty"` // 非必填，omitempty 允许空值
+	LineTo   int    `json:"lineTo" binding:"omitempty"`   // 非必填，omitempty 允许空值
 }

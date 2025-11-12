@@ -42,7 +42,7 @@ var (
 
 // SHA represents a git sha.
 type SHA struct {
-	str string
+	Str string
 }
 
 // New creates and validates SHA from the value.
@@ -53,7 +53,7 @@ func New(value string) (SHA, error) {
 		return SHA{}, errors.InvalidArgument("the provided commit sha '%s' is of invalid format.", value)
 	}
 	return SHA{
-		str: value,
+		Str: value,
 	}, nil
 }
 
@@ -68,7 +68,7 @@ func NewOrEmpty(value string) (SHA, error) {
 
 func (s SHA) GobEncode() ([]byte, error) {
 	buffer := &bytes.Buffer{}
-	err := gob.NewEncoder(buffer).Encode(s.str)
+	err := gob.NewEncoder(buffer).Encode(s.Str)
 	if err != nil {
 		return nil, fmt.Errorf("failed to pack sha value: %w", err)
 	}
@@ -76,7 +76,7 @@ func (s SHA) GobEncode() ([]byte, error) {
 }
 
 func (s *SHA) GobDecode(v []byte) error {
-	if err := gob.NewDecoder(bytes.NewReader(v)).Decode(&s.str); err != nil {
+	if err := gob.NewDecoder(bytes.NewReader(v)).Decode(&s.Str); err != nil {
 		return fmt.Errorf("failed to unpack sha value: %w", err)
 	}
 	return nil
@@ -96,32 +96,32 @@ func (s *SHA) UnmarshalJSON(content []byte) error {
 	if err != nil {
 		return err
 	}
-	s.str = sha.str
+	s.Str = sha.Str
 	return nil
 }
 
 func (s SHA) MarshalJSON() ([]byte, error) {
-	return []byte("\"" + s.str + "\""), nil
+	return []byte("\"" + s.Str + "\""), nil
 }
 
 // String returns string representation of the SHA.
 func (s SHA) String() string {
-	return s.str
+	return s.Str
 }
 
 // IsNil returns whether this SHA is all zeroes.
 func (s SHA) IsNil() bool {
-	return nilRegex.MatchString(s.str)
+	return nilRegex.MatchString(s.Str)
 }
 
 // IsEmpty returns whether this SHA is empty string.
 func (s SHA) IsEmpty() bool {
-	return s.str == ""
+	return s.Str == ""
 }
 
 // Equal returns true if val has the same SHA.
 func (s SHA) Equal(val SHA) bool {
-	return s.str == val.str
+	return s.Str == val.Str
 }
 
 // Must returns sha if there is an error it will panic.
