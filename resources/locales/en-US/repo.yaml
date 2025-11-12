@@ -8,3 +8,4 @@ repo:
   identifier_invalid: "The repo name is illegal. The identifier only supports letters, numbers, underscores (_), hyphens (-), and dots (.)."
   query_error: "Failed to query repository"
   query_success: "Query the repository successfully"
+  line_number_error: "Line number must be greater than 0， and the end line number must be greater than the start line number"
