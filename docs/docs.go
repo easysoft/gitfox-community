@@ -199,6 +199,73 @@ const docTemplate = `{
             }
         },
         "/commits": {
+            "get": {
+                "description": "根据提交 SHA 获取提交详情",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "commits"
+                ],
+                "summary": "获取单个提交详情",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "提交 SHA",
+                        "name": "sha",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "仓库 ID",
+                        "name": "repoID",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "查询成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.Commit"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "提交未找到",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            },
             "post": {
                 "description": "新增一个提交",
                 "consumes": [
@@ -235,6 +302,119 @@ const docTemplate = `{
                                     "properties": {
                                         "data": {
                                             "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.RespForCreate"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/commits/diff": {
+            "post": {
+                "description": "获取指定提交的 diff 内容(text/plain 格式)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "text/plain"
+                ],
+                "tags": [
+                    "commits"
+                ],
+                "summary": "获取提交 Diff",
+                "parameters": [
+                    {
+                        "description": "获取 diff 请求参数",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.ReqForGet"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "diff 文本",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "提交未找到",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/commits/divergence": {
+            "post": {
+                "description": "获取多个 git 引用之间的提交分歧（ahead/behind）信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "commits"
+                ],
+                "summary": "获取提交分歧信息",
+                "parameters": [
+                    {
+                        "description": "获取分歧信息请求参数",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.ReqForDivergence"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "查询成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.CommitDivergence"
+                                            }
                                         }
                                     }
                                 }
@@ -396,6 +576,73 @@ const docTemplate = `{
                                         "data": {
                                             "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.Repo"
                                         }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/repos/{repoId}/blame/{filePath}": {
+            "get": {
+                "description": "根据传入的仓库 ID、文件路径、Git 引用、行号范围等信息，获取仓库代码blame信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "repos"
+                ],
+                "summary": "仓库代码blame",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "仓库 ID",
+                        "name": "repoId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "文件路径",
+                        "name": "filePath",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Git 引用",
+                        "name": "gitRef",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "起始行号",
+                        "name": "lineFrom",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "结束行号",
+                        "name": "lineTo",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "获取成功（返回仓库代码blame流式）",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {}
                                     }
                                 }
                             ]
@@ -1206,6 +1453,17 @@ const docTemplate = `{
                 }
             }
         },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.CompareGitRef": {
+            "type": "object",
+            "properties": {
+                "from": {
+                    "type": "string"
+                },
+                "to": {
+                    "type": "string"
+                }
+            }
+        },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.Identity": {
             "type": "object",
             "properties": {
@@ -1304,6 +1562,34 @@ const docTemplate = `{
                 },
                 "repoID": {
                     "type": "integer"
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.ReqForDivergence": {
+            "type": "object",
+            "properties": {
+                "maxDivergence": {
+                    "type": "integer"
+                },
+                "repoID": {
+                    "type": "integer"
+                },
+                "requests": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.CompareGitRef"
+                    }
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.ReqForGet": {
+            "type": "object",
+            "properties": {
+                "repoID": {
+                    "type": "integer"
+                },
+                "sha": {
+                    "type": "string"
                 }
             }
         },
@@ -1741,6 +2027,9 @@ const docTemplate = `{
                 "commit.body_param_error",
                 "commit.create_error",
                 "commit.create_success",
+                "commit.get_divergence_success",
+                "commit.get_error",
+                "commit.get_success",
                 "commit.list_error",
                 "commit.list_success",
                 "commit.path_param_error",
@@ -1769,14 +2058,17 @@ const docTemplate = `{
                 "git.exec_error",
                 "git.map_output_error",
                 "repo.body_param_error",
-                "repo.path_param_error",
-                "repo.query_success",
-                "repo.query_error",
+                "repo.create_error",
+                "repo.create_success",
                 "repo.identifier_invalid",
+                "repo.line_number_error",
+                "repo.path_param_error",
                 "repo.pullRequests_merge_error",
                 "repo.pullRequests_merge_success",
                 "repo.pull_permission_error",
                 "repo.push_permission_error",
+                "repo.query_error",
+                "repo.query_success",
                 "request.invalid_boolean_parameter",
                 "request.invalid_content_type",
                 "request.invalid_integer_parameter",
@@ -1836,6 +2128,9 @@ const docTemplate = `{
                 "CommitBodyParamError": "Body 参数解析失败.",
                 "CommitCreateError": "提交创建失败.",
                 "CommitCreateSuccess": "提交创建成功.",
+                "CommitGetDivergenceSuccess": "查询提交分歧度成功.",
+                "CommitGetError": "获取提交信息失败.",
+                "CommitGetSuccess": "获取提交信息成功.",
                 "CommitListError": "查询提交列表失败.",
                 "CommitListSuccess": "查询提交列表成功.",
                 "CommitPathParamError": "Path 参数解析失败.",
@@ -1864,14 +2159,17 @@ const docTemplate = `{
                 "GitExecError": "执行 git 命令失败.",
                 "GitMapOutputError": "无法将 git 命令结果映射到响应结构体.",
                 "RepoBodyParamError": "Body 参数解析失败.",
+                "RepoCreateError": "创建仓库异常",
+                "RepoCreateSuccess": "创建仓库成功",
                 "RepoIdentifierInvalid": "仓库名称不合法,identifier仅支持字母、数字、下划线(_)、连字符(-)、点号(.)",
+                "RepoLineNumberError": "行号必须大于0, 且结束行号必须大于起始行号",
                 "RepoPathParamError": "Path 参数解析失败.",
                 "RepoPullPermissionError": "您没有权限拉取此仓库.",
                 "RepoPullRequestsMergeError": "合并失败,存在冲突或检查未通过.",
                 "RepoPullRequestsMergeSuccess": "合并成功!",
                 "RepoPushPermissionError": "您没有权限推送此仓库.",
-                "RepoQueryError": "Query 参数解析失败.",
-                "RepoQuerySuccess": "查询成功.",
+                "RepoQueryError": "查询仓库失败",
+                "RepoQuerySuccess": "查询仓库成功",
                 "RequestInvalidBooleanParameter": "参数必须为布尔值.",
                 "RequestInvalidContentType": "Content-Type 无效.",
                 "RequestInvalidIntegerParameter": "参数必须为有效的整数.",
@@ -1931,6 +2229,9 @@ const docTemplate = `{
                 "Body 参数解析失败.",
                 "提交创建失败.",
                 "提交创建成功.",
+                "查询提交分歧度成功.",
+                "获取提交信息失败.",
+                "获取提交信息成功.",
                 "查询提交列表失败.",
                 "查询提交列表成功.",
                 "Path 参数解析失败.",
@@ -1959,14 +2260,17 @@ const docTemplate = `{
                 "执行 git 命令失败.",
                 "无法将 git 命令结果映射到响应结构体.",
                 "Body 参数解析失败.",
-                "Path 参数解析失败.",
-                "查询成功.",
-                "Query 参数解析失败.",
+                "创建仓库异常",
+                "创建仓库成功",
                 "仓库名称不合法,identifier仅支持字母、数字、下划线(_)、连字符(-)、点号(.)",
+                "行号必须大于0, 且结束行号必须大于起始行号",
+                "Path 参数解析失败.",
                 "合并失败,存在冲突或检查未通过.",
                 "合并成功!",
                 "您没有权限拉取此仓库.",
                 "您没有权限推送此仓库.",
+                "查询仓库失败",
+                "查询仓库成功",
                 "参数必须为布尔值.",
                 "Content-Type 无效.",
                 "参数必须为有效的整数.",
@@ -2026,6 +2330,9 @@ const docTemplate = `{
                 "CommitBodyParamError",
                 "CommitCreateError",
                 "CommitCreateSuccess",
+                "CommitGetDivergenceSuccess",
+                "CommitGetError",
+                "CommitGetSuccess",
                 "CommitListError",
                 "CommitListSuccess",
                 "CommitPathParamError",
@@ -2054,14 +2361,17 @@ const docTemplate = `{
                 "GitExecError",
                 "GitMapOutputError",
                 "RepoBodyParamError",
-                "RepoPathParamError",
-                "RepoQuerySuccess",
-                "RepoQueryError",
+                "RepoCreateError",
+                "RepoCreateSuccess",
                 "RepoIdentifierInvalid",
+                "RepoLineNumberError",
+                "RepoPathParamError",
                 "RepoPullRequestsMergeError",
                 "RepoPullRequestsMergeSuccess",
                 "RepoPullPermissionError",
                 "RepoPushPermissionError",
+                "RepoQueryError",
+                "RepoQuerySuccess",
                 "RequestInvalidBooleanParameter",
                 "RequestInvalidContentType",
                 "RequestInvalidIntegerParameter",

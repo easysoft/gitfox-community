@@ -3,6 +3,7 @@ package commit
 import (
 	"context"
 	"encoding/base64"
+	"io"
 	"time"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
@@ -180,4 +181,19 @@ func (s *Service) GetDivergence(ctx context.Context, req commitModel.ReqForDiver
 		divergences[i] = commitModel.CommitDivergence(rpcOutput.Divergences[i])
 	}
 	return divergences, nil
+}
+
+// GetDiff returns the raw git diff for a specific commit in text/plain format.
+// The diff is written directly to the provided io.Writer.
+func (s *Service) GetDiff(ctx context.Context, commitSHA string, repo repoModel.Repo, w io.Writer) error {
+	// Call git package's CommitDiff which writes directly to the writer
+	err := s.gitPkg.CommitDiff(ctx, &git.GetCommitParams{
+		ReadParams: git.ReadParams{RepoUID: repo.GitUID},
+		Revision:   commitSHA,
+	}, w)
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.GitExecError)
+		return err
+	}
+	return nil
 }

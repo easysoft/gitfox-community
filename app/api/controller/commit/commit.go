@@ -192,3 +192,51 @@ func (c *Controller) GetDivergence(ctx *gin.Context) {
 
 	resp.OK(ctx, i18n.CommitGetDivergenceSuccess, respData)
 }
+
+// @Summary 获取提交 Diff
+// @Description 获取指定提交的 diff 内容(text/plain 格式)
+// @Tags commits
+// @Accept application/json
+// @Produce text/plain
+// @Param request body commitModel.ReqForGet true "获取 diff 请求参数"
+// @Success 200 {string} string "diff 文本"
+// @Failure 400 {object} resp.ObjectResponse "参数错误"
+// @Failure 404 {object} resp.ObjectResponse "提交未找到"
+// @Failure 500 {object} resp.ObjectResponse "服务器错误"
+// @Router /commits/diff [post]
+func (c *Controller) GetDiff(ctx *gin.Context) {
+	log := logger.GetLogger(ctx.Request.Context())
+
+	var reqBody commitModel.ReqForGet
+	var err error
+
+	// 解析请求体
+	if err = ctx.ShouldBindJSON(&reqBody); err != nil {
+		err = errors.WithI18nKey(err, i18n.CommitBodyParamError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
+	log.Debugln("Getting diff for commit:", reqBody.SHA)
+
+	// 通过仓库 ID 获取仓库
+	// TODO: 实际项目中需要通过 repoID 获取仓库信息并检查权限
+	// repo, err := c.repoSvc.GetRepoCheckAccess(ctx, session, repoRef, []constant.Permission{constant.PermissionRepoView})
+	// if err != nil {
+	//     resp.InternalError(ctx, err)
+	//     return
+	// }
+
+	// 设置响应头为 text/plain
+	ctx.Writer.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	resp.NoCache(ctx.Writer)
+
+	// 调用 service 层,直接将 diff 写入响应流
+	err = c.commitSvc.GetDiff(ctx.Request.Context(), reqBody.SHA, repoModel.Repo{}, ctx.Writer)
+	if err != nil {
+		// 如果已经开始写入响应,则无法再使用标准的错误响应
+		// 只能记录日志
+		log.Errorf("Failed to get commit diff: %v", err)
+		return
+	}
+}

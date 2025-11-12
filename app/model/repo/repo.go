@@ -130,6 +130,17 @@ type Repo struct {
 	Deleted       bool       `json:"deleted"`
 }
 
+type ReqForDiff struct {
+	Range string            `json:"range"`
+	Files []FileDiffRequest `json:"files"`
+}
+
+type FileDiffRequest struct {
+	Path      string `json:"path"`
+	StartLine int    `json:"startLine"`
+	EndLine   int    `json:"-"` // warning: changes are possible and this field may not exist in the future
+}
+
 type BlameFilter struct {
 	GitRef   string `json:"gitRef" binding:"omitempty"`   // 非必填，omitempty 允许空值
 	LineFrom int    `json:"lineFrom" binding:"omitempty"` // 非必填，omitempty 允许空值
