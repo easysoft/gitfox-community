@@ -40,7 +40,7 @@ func NewRepoSvc(gitSvc git.Interface, repoStore repo.Interface, spaceStore space
 	}
 }
 
-func (s *Service) Create(ctx context.Context, req *repoModel.CreateRepoReq) (*repoModel.CreateRepoResp, error) {
+func (s *Service) Create(ctx context.Context, req *repoModel.CreateRepoReq) (*repoModel.Repo, error) {
 	_, err := s.spaceStore.GetByID(ctx, req.SpaceID)
 	if err != nil {
 		return nil, errors.NotFound.Newf("failed to find the parent space: %w", err)
@@ -152,7 +152,7 @@ func (s *Service) createGitRepository(ctx context.Context, req *repoModel.Create
 	return resp, len(files) == 0, nil
 }
 
-func (s *Service) GetRepoCheckAccess(ctx context.Context, session *auth.Session, repoRef string, reqPermission []constant.Permission) (*repo.Repository, error) {
+func (s *Service) GetRepoCheckAccess(ctx context.Context, session *auth.Session, repoRef string, reqPermission []constant.Permission) (*repoModel.Repo, error) {
 
 	// get repo
 	repo, err := s.GetRepo(ctx, repoRef, []constant.RepoState{constant.RepoStateActive, constant.RepoStateMigrateGitPush})
@@ -166,7 +166,7 @@ func (s *Service) GetRepoCheckAccess(ctx context.Context, session *auth.Session,
 	return repo, nil
 }
 
-func (s *Service) GetRepo(ctx context.Context, repoRef string, allowedStates []constant.RepoState) (*repo.Repository, error) {
+func (s *Service) GetRepo(ctx context.Context, repoRef string, allowedStates []constant.RepoState) (*repoModel.Repo, error) {
 	if repoRef == "" {
 		return nil, errors.BadRequest.New("A valid repository reference must be provided.")
 	}
@@ -183,7 +183,7 @@ func (s *Service) GetRepo(ctx context.Context, repoRef string, allowedStates []c
 	return repo, nil
 }
 
-func (s *Service) GetByID(ctx context.Context, session *auth.Session, id uint) (*repo.Repository, error) {
+func (s *Service) GetByID(ctx context.Context, session *auth.Session, id uint) (*repoModel.Repo, error) {
 	if id < 1 {
 		return nil, errors.BadRequest.New("A valid repository id must be provided.")
 	}

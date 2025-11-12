@@ -112,7 +112,7 @@ func (req *CreateRepoReq) Validate() error {
 
 type Repo struct {
 	ID            uint       `json:"id"`
-	SpaceID       int        `json:"spaceID"`
+	SpaceID       uint       `json:"spaceID"`
 	Identifier    string     `json:"identifier"`
 	Desc          string     `json:"desc"`
 	GitUID        string     `json:"gitUID"`
