@@ -12,5 +12,6 @@ func registerCommitRoutes(r *gin.RouterGroup, controller *Controller) {
 		commits.POST("/list", controller.Commit.List)                // 查看提交列表
 		commits.GET("", controller.Commit.Get)                       // 查看单个提交信息
 		commits.POST("/divergence", controller.Commit.GetDivergence) // 查看提交分歧度
+		commits.POST("/diff", controller.Commit.GetDiff)             // 查看提交 diff
 	}
 }

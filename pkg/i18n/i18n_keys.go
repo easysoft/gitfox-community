@@ -63,8 +63,9 @@ const (
 	GitExecError            I18nKey = "git.exec_error"              // 执行 git 命令失败.
 	GitMapOutputError       I18nKey = "git.map_output_error"        // 无法将 git 命令结果映射到响应结构体.
 
-	// Repo 相关常量
 	RepoBodyParamError           I18nKey = "repo.body_param_error"           // Body 参数解析失败.
+	RepoCreateError              I18nKey = "repo.create_error"               // 创建仓库异常
+	RepoCreateSuccess            I18nKey = "repo.create_success"             // 创建仓库成功
 	RepoIdentifierInvalid        I18nKey = "repo.identifier_invalid"         // 仓库名称不合法,identifier仅支持字母、数字、下划线(_)、连字符(-)、点号(.)
 	RepoLineNumberError          I18nKey = "repo.line_number_error"          // 行号必须大于0, 且结束行号必须大于起始行号
 	RepoPathParamError           I18nKey = "repo.path_param_error"           // Path 参数解析失败.

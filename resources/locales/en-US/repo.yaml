@@ -9,3 +9,5 @@ repo:
   query_error: "Failed to query repository"
   query_success: "Query the repository successfully"
   line_number_error: "Line number must be greater than 0， and the end line number must be greater than the start line number"
+  create_error: "Failed to create the repository"
+  create_success: "Successfully to create the repository"
