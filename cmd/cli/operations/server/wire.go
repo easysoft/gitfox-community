@@ -30,13 +30,13 @@ func NewApp(mode string) (*App, func(), error) {
 		provider.DBWireSet,
 		provider.GitWireSet,
 		provider.SpaceWireSet,
+		provider.RepoWireSet, // 必须在 Branch/Tag/Commit 之前，因为它们依赖 repoService
 		provider.BranchWireSet,
 		provider.TagWireSet,
 		provider.CommitWireSet,
 		provider.ControllersWireSet,
 		provider.URLWireSet,
 		provider.I18nWireSet,
-		provider.RepoWireSet,
 		wire.Struct(new(App), "*")),
 	)
 }

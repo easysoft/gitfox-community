@@ -79,7 +79,7 @@ func (c *Controller) Create(ctx *gin.Context) {
 		return
 	}
 
-	// TDOO: 记录审计日志
+	// TODO: 记录审计日志
 	resp.Created(ctx, i18n.CommitCreateSuccess, respData)
 }
 
@@ -117,15 +117,15 @@ func (c *Controller) List(ctx *gin.Context) {
 		return
 	}
 
-	respData, err := c.commitSvc.List(ctx, reqQuery, *repoOut, "")
+	respData, isLast, err := c.commitSvc.List(ctx, reqQuery, *repoOut, reqQuery.GitRef)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return
 	}
 
 	resp.ListSuccess(ctx, respData,
-		resp.ListArgs{
-			Total:    0,
+		resp.ListNoTotalArgs{
+			IsLast:   isLast,
 			Page:     int64(1),
 			PageSize: int64(1),
 		}, i18n.CommitListSuccess, nil)
@@ -145,8 +145,6 @@ func (c *Controller) List(ctx *gin.Context) {
 // @Router /commits [get]
 func (c *Controller) Get(ctx *gin.Context) {
 
-	log := logger.GetLogger(ctx.Request.Context())
-
 	var req commitModel.ReqForGet
 	var err error
 	if err = ctx.ShouldBindQuery(&req); err != nil {
@@ -155,16 +153,22 @@ func (c *Controller) Get(ctx *gin.Context) {
 		return
 	}
 
-	log.Debugln("Getting commit:", req.SHA)
-
+	// TODO: 获取操作人
+	session := &auth.Session{
+		Principal: principal.Principal{
+			Email: "actor@chandao.com",
+			UID:   "actor",
+		},
+	}
 	// 通过仓库 ID 获取仓库
-	// repo, err := ctl.repoSvc.Get(ctx, session, repoRef, enum.PermissionRepoView)
-	// if err != nil {
-	// 	return nil, err
-	// }
+	repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, req.RepoID)
+	if err != nil {
+		resp.InternalError(ctx, err)
+		return
+	}
 
 	// 调用 service 层获取提交详情
-	respData, err := c.commitSvc.Get(ctx.Request.Context(), req.SHA, repoModel.Repo{})
+	respData, err := c.commitSvc.Get(ctx.Request.Context(), req.SHA, *repoOut)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return

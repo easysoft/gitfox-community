@@ -76,13 +76,13 @@ func NewApp(mode string) (*App, func(), error) {
 		return nil, nil, err
 	}
 	branchService := branch.NewService(urlProvider, gitService)
-	controller := branch2.NewController(branchService)
-	tagService := tag.NewService(urlProvider, gitService)
-	tagController := tag2.NewController(tagService)
-	commitService := commit.NewService(urlProvider, gitService)
-	commitController := commit2.NewController(commitService)
 	repoStore := repo.NewRepoStore(db)
 	repoService := repo2.NewRepoSvc(gitService, repoStore, spaceStore, urlProvider)
+	controller := branch2.NewController(branchService, repoService)
+	tagService := tag.NewService(urlProvider, gitService)
+	tagController := tag2.NewController(tagService, repoService)
+	commitService := commit.NewService(urlProvider, gitService)
+	commitController := commit2.NewController(commitService, repoService)
 	repoController := repo3.NewRepoController(repoService, urlProvider, gitService)
 	routerController := provider.NewControllers(spaceController, controller, tagController, commitController, repoController)
 	i18nManager, err := provider.NewI18nManager(config)

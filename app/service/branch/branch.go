@@ -63,7 +63,9 @@ func (s *Service) Create(
 	return &data, nil
 }
 
-func (s *Service) List(ctx context.Context, filter branchModel.ReqFilter, repo *repoModel.Repo) ([]branchModel.Branch, error) {
+func (s *Service) List(ctx context.Context, filter branchModel.ReqFilter, repo *repoModel.Repo) ([]branchModel.Branch, bool, error) {
+
+	var isLast bool
 
 	// 准备 RPC 参数
 	rpcOut, err := s.gitPkg.ListBranchesV2(ctx, &git.ListBranchesParams{
@@ -75,25 +77,26 @@ func (s *Service) List(ctx context.Context, filter branchModel.ReqFilter, repo *
 		Sort:            mapToRPCBranchSortOption(filter.Sort),
 		Order:           utils.MapToRPCSortOrder(filter.Order),
 		Page:            int32(filter.Page),
-		PageSize:        int32(filter.Size),
+		PageSize:        int32(filter.Size + 1),
 	})
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.GitCreateExecParamError)
-		return nil, err
+		return nil, isLast, err
 	}
-	branches := rpcOut.Branches
+	isLast = len(rpcOut.Branches) > filter.Size
+	branches := rpcOut.Branches[:filter.Size]
 
 	response := make([]branchModel.Branch, len(branches))
 	for i := range branches {
 		response[i], err = utils.MapBranch(branches[i])
 		if err != nil {
-			return nil, fmt.Errorf("failed to map branch: %w", err)
+			return nil, isLast, fmt.Errorf("failed to map branch: %w", err)
 		}
 
 		response[i].IsDefault = repo.DefaultBranch == branches[i].Name
 	}
 
-	return response, nil
+	return response, isLast, nil
 }
 
 func (s *Service) ListPrefixes(ctx context.Context, repo repoModel.Repo) ([]branchModel.Prefix, error) {

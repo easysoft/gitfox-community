@@ -53,6 +53,7 @@ type ReqFilter struct {
 	AuthorIDs    []int64 `json:"authorIDs"`
 	IncludeStats bool    `json:"includeStats"`
 	RepoID       uint    `json:"repoID"`
+	GitRef       string  `json:"gitRef"`
 }
 
 type RespForList struct {
