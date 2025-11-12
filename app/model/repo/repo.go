@@ -140,3 +140,9 @@ type FileDiffRequest struct {
 	StartLine int    `json:"startLine"`
 	EndLine   int    `json:"-"` // warning: changes are possible and this field may not exist in the future
 }
+
+type BlameFilter struct {
+	GitRef   string `json:"gitRef" binding:"omitempty"`   // 非必填，omitempty 允许空值
+	LineFrom int    `json:"lineFrom" binding:"omitempty"` // 非必填，omitempty 允许空值
+	LineTo   int    `json:"lineTo" binding:"omitempty"`   // 非必填，omitempty 允许空值
+}

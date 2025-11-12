@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"time"
 
-	reqPkg "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/githook"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/principal"
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/space"
@@ -45,7 +45,19 @@ func (s *Service) Create(ctx context.Context, req *repoModel.CreateRepoReq) (*re
 	if err != nil {
 		return nil, errors.NotFound.Newf("failed to find the parent space: %w", err)
 	}
-	session, _ := reqPkg.GetAuthSession(ctx)
+	// session, ok := reqPkg.GetAuthSession(ctx)
+	// if !ok {
+	// 	return nil, errors.SystemErr.Newf("error getting auth session: %w", err)
+	// }
+
+	//TODO : mock session
+	session := &auth.Session{
+		Principal: principal.Principal{
+			Email: "actor@chandao.com",
+			UID:   "actor",
+		},
+	}
+
 	gitResp, isEmpty, err := s.createGitRepository(ctx, req, session)
 	if err != nil {
 		return nil, errors.SystemErr.Newf("error creating repository on git: %w", err)
