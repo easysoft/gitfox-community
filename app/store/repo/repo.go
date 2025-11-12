@@ -22,15 +22,15 @@ func NewRepoStore(db *gorm.DB) *Store {
 	}
 }
 
-func (s *Store) FindByRef(ctx context.Context, ref string) (*Repository, error) {
+func (s *Store) FindByRef(ctx context.Context, ref string) (*repoModel.Repo, error) {
 	var repo Repository //todo
 	if err := s.db.WithContext(ctx).Where("ref = ?", ref).First(&repo).Error; err != nil {
 		return nil, err
 	}
-	return &repo, nil
+	return mapToModel(repo), nil
 }
 
-func (s *Store) Create(ctx context.Context, repo *Repository) (*repoModel.CreateRepoResp, error) {
+func (s *Store) Create(ctx context.Context, repo *Repository) (*repoModel.Repo, error) {
 	if err := s.db.WithContext(ctx).Create(&repo).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
@@ -38,8 +38,8 @@ func (s *Store) Create(ctx context.Context, repo *Repository) (*repoModel.Create
 }
 
 // mapToModel 将 Space 转换为 SpaceResponse
-func mapToModel(data Repository) *repoModel.CreateRepoResp {
-	return &repoModel.CreateRepoResp{
+func mapToModel(data Repository) *repoModel.Repo {
+	return &repoModel.Repo{
 		ID:            data.ID,
 		Identifier:    data.Identifier,
 		SpaceID:       data.SpaceID,
@@ -60,7 +60,7 @@ func mapToModel(data Repository) *repoModel.CreateRepoResp {
 // GetByID returns a repository by its ID.
 // If no repository is found with the given ID, it returns an error.
 // The repository is not checked for existence before calling this method, so if the repository does not exist, an error will be returned.
-func (s *Store) GetByID(ctx context.Context, id uint) (*Repository, error) {
+func (s *Store) GetByID(ctx context.Context, id uint) (*repoModel.Repo, error) {
 	var repo Repository
 	repo.ID = id
 	err := s.db.WithContext(ctx).First(&repo).Where("deleted = 0").Error
@@ -72,5 +72,5 @@ func (s *Store) GetByID(ctx context.Context, id uint) (*Repository, error) {
 		return nil, err
 	}
 
-	return &repo, nil
+	return mapToModel(repo), nil
 }

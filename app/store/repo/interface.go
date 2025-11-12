@@ -7,7 +7,7 @@ import (
 )
 
 type Interface interface {
-	Create(ctx context.Context, repo *Repository) (*repoModel.CreateRepoResp, error)
-	FindByRef(ctx context.Context, ref string) (*Repository, error)
-	GetByID(ctx context.Context, id uint) (*Repository, error)
+	Create(ctx context.Context, repo *Repository) (*repoModel.Repo, error)
+	FindByRef(ctx context.Context, ref string) (*repoModel.Repo, error)
+	GetByID(ctx context.Context, id uint) (*repoModel.Repo, error)
 }
