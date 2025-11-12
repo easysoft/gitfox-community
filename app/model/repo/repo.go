@@ -129,3 +129,14 @@ type Repo struct {
 	EditedDate    *time.Time `json:"editedDate"` // 允许 NULL，用指针类型
 	Deleted       bool       `json:"deleted"`
 }
+
+type ReqForDiff struct {
+	Range string            `json:"range"`
+	Files []FileDiffRequest `json:"files"`
+}
+
+type FileDiffRequest struct {
+	Path      string `json:"path"`
+	StartLine int    `json:"startLine"`
+	EndLine   int    `json:"-"` // warning: changes are possible and this field may not exist in the future
+}
