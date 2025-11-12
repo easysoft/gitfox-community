@@ -16,6 +16,7 @@ func registerRepoRoutes(r *gin.RouterGroup, controller *Controller) {
 		{
 			repos.GET("/", controller.Repo.Get)
 			repos.GET("/content", controller.Repo.GetContent)
+			repos.GET(fmt.Sprintf("/blame/{%s}", req.PathParamFilePath), controller.Repo.Blame)
 		}
 
 	}
