@@ -58,7 +58,15 @@ func (ctl *Controller) Create(c *gin.Context) {
 		return
 	}
 
-	ctl.repoSvc.Create(logger.GetContextWithLogger(c), reqData)
+	data,err := ctl.repoSvc.Create(logger.GetContextWithLogger(c), reqData)
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RepoCreateError)
+		resp.InternalError(c, err)
+		return
+	}
+
+	resp.Created(c, i18n.RepoCreateSuccess, data)
+	
 }
 
 // Get 获取代码库
