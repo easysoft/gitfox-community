@@ -8,6 +8,7 @@ import (
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+	gitPkg "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	urlPkg "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/url"
@@ -17,13 +18,15 @@ import (
 type Controller struct {
 	repoSvc     repo.Interface
 	urlProvider urlPkg.Provider
+	gitPkg      gitPkg.Interface
 }
 
 // NewRepoController 创建代码库处理器实例
-func NewRepoController(repoSvc repo.Interface, urlProvider urlPkg.Provider) *Controller {
+func NewRepoController(repoSvc repo.Interface, urlProvider urlPkg.Provider, gitPkg gitPkg.Interface) *Controller {
 	return &Controller{
 		repoSvc:     repoSvc,
 		urlProvider: urlProvider,
+		gitPkg:      gitPkg,
 	}
 }
 
@@ -147,6 +150,72 @@ func (ctl *Controller) GetContent(ctx *gin.Context) {
 	fmt.Println(ctx.Param("path"))
 }
 
+// @Summary 仓库代码blame
+// @Description 根据传入的仓库 ID、文件路径、Git 引用、行号范围等信息，获取仓库代码blame信息
+// @Tags repos
+// @Accept application/json
+// @Produce application/json
+// @Param repoId path uint true "仓库 ID"
+// @Param filePath path string true "文件路径" e.g. src/main.go
+// @Param gitRef query string false "Git 引用" e.g. refs/heads/main
+// @Param lineFrom query int false "起始行号" e.g. 1
+// @Param lineTo query int false "结束行号" e.g. 100
+// @Success 200 {object} resp.ObjectResponse{data=stream.Reader} "获取成功（返回仓库代码blame流式）"
+// @Error 400 {object} resp.ObjectResponse "参数错误（如identifier格式非法、ID为空等）"
+// @Error 404 {object} resp.ObjectResponse "代码库不存在（传入的repoID对应的空间未找到）"
+// @Error 500 {object} resp.ObjectResponse "服务器内部错误（如Git服务调用失败、数据库异常等）"
+// @Router /repos/{repoId}/blame/{filePath} [get]
 func (ctl *Controller) Blame(c *gin.Context) {
+	session, ok := req.GetAuthSession(c.Request.Context())
+	if !ok {
+		err := errors.WithI18nKey(errors.New("get session failed"), i18n.AuthNoSession)
+		resp.BadRequest(c, err)
+		return
+	}
 
+	repoID, err := req.PathParamAsPositiveUint(c, req.QueryParamRepoID)
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RepoPathParamError)
+		resp.BadRequest(c, err)
+		return
+	}
+
+	filePath, err := req.PathParamOrError(c, req.PathParamFilePath)
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RepoPathParamError)
+		resp.BadRequest(c, err)
+		return
+	}
+
+	var BlameFilter repoModel.BlameFilter
+	if err = c.ShouldBindJSON(&BlameFilter); err != nil {
+		err = errors.WithI18nKey(err, i18n.RepoQueryError)
+		resp.BadRequest(c, err)
+		return
+	}
+
+	if BlameFilter.LineTo > 0 && BlameFilter.LineFrom > BlameFilter.LineTo {
+		err = errors.WithI18nKey(err, i18n.RepoLineNumberError)
+		resp.BadRequest(c, err)
+		return
+	}
+
+	repoInfo, err := ctl.repoSvc.GetByID(c, session, repoID)
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RepoQueryError)
+		resp.InternalError(c, err)
+		return
+	}
+
+	if BlameFilter.GitRef == "" {
+		BlameFilter.GitRef = repoInfo.DefaultBranch
+	}
+
+	gitPkg.NewStreamReader(ctl.gitPkg.Blame(c, &gitPkg.BlameParams{
+		ReadParams: gitPkg.ReadParams{RepoUID: repoInfo.GitUID},
+		Path:       filePath,
+		GitRef:     BlameFilter.GitRef,
+		LineFrom:   BlameFilter.LineFrom,
+		LineTo:     BlameFilter.LineTo,
+	}))
 }
