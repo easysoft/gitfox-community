@@ -1,5 +1,37 @@
 package constant
 
+// PublicResourceType defines the type of the public resource.
+type PublicResourceType string
+
+const (
+	PublicResourceTypeRepo  PublicResourceType = "repository"
+	PublicResourceTypeSpace PublicResourceType = "space"
+)
+
+// PermissionCheck represents a permission check.
+type PermissionCheck struct {
+	Scope      Scope
+	Permission Permission
+}
+
+// Resource represents the resource of a permission check.
+// Note: Keep the name empty in case access is requested for all resources of that type.
+type Resource struct {
+	Type       ResourceType
+	Identifier string
+}
+
+// Scope represents the scope of a permission check
+// Notes:
+//   - In case the permission check is for resource REPO, keep repo empty (repo is resource, not scope)
+//   - In case the permission check is for resource SPACE, SpacePath is an ancestor of the space (space is
+//     resource, not scope)
+//   - Repo isn't use as of now (will be useful once we add access control for repo child resources, e.g. branches).
+type Scope struct {
+	ResourceType ResourceType
+	ResourceID   uint
+}
+
 // ResourceType represents the different types of resources that can be guarded with permissions.
 type ResourceType string
 

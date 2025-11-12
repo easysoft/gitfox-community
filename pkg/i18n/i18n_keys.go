@@ -7,8 +7,9 @@ type I18nKey string
 
 const (
 	// Auth 相关常量
-	AuthNoData    I18nKey = "auth.no_data"    // 请求不包含任何可用于 Authorizer 的认证数据
-	AuthNoSession I18nKey = "auth.no_session" // 请求不包含任何会话数据,无法进行授权
+	AuthNoData                 I18nKey = "auth.no_data"                   // 请求不包含任何可用于 Authorizer 的认证数据
+	AuthNoSession              I18nKey = "auth.no_session"                // 请求不包含任何会话数据,无法进行授权
+	AuthSessionTokenNotAllowed I18nKey = "auth.session_token_not_allowed" // 会话令牌不允许用于与 Git 交互
 
 	// Branch 相关常量
 	BranchBodyParamError    I18nKey = "branch.body_param_error"    // Body 参数解析失败.

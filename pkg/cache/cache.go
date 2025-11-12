@@ -25,6 +25,7 @@ type Cache[K any, V any] interface {
 }
 
 // ExtendedCache is an extension of the simple cache abstraction that adds mapping functionality.
+// ExtendedCache 是简单缓存抽象的扩展，它增加了映射功能。
 type ExtendedCache[K comparable, V Identifiable[K]] interface {
 	Cache[K, V]
 	Map(ctx context.Context, keys []K) (map[K]V, error)
