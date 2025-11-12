@@ -2,24 +2,27 @@ package branch
 
 import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
 	branchModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/branch"
-	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/principal"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/branch"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	"github.com/gin-gonic/gin"
 )
 
 // Controller 处理与分支相关的 HTTP 请求
 type Controller struct {
 	branchSvc branch.Interface
+	repoSvc   repo.Interface
 }
 
 // NewController 创建分支处理器实例
-func NewController(branchService branch.Interface) *Controller {
+func NewController(branchService branch.Interface, repoService repo.Interface) *Controller {
 	return &Controller{
 		branchSvc: branchService,
+		repoSvc:   repoService,
 	}
 }
 
@@ -35,8 +38,6 @@ func NewController(branchService branch.Interface) *Controller {
 // @Router /branches [post]
 func (c *Controller) Create(ctx *gin.Context) {
 
-	log := logger.GetLogger(ctx.Request.Context())
-
 	var reqBody branchModel.ReqForCreate
 	var err error
 
@@ -46,19 +47,31 @@ func (c *Controller) Create(ctx *gin.Context) {
 		resp.BadRequest(ctx, err)
 		return
 	}
-
 	// TODO: 获取操作人
-
+	session := &auth.Session{
+		Principal: principal.Principal{
+			Email: "actor@chandao.com",
+			UID:   "actor",
+		},
+	}
 	// 通过仓库 ID 获取仓库
-	log.Debugln(reqBody.RepoID)
-
-	// TODO: 检查是否为镜像仓库
-	// TODO: 校验用户是否有仓库的 Push 权限
+	repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, reqBody.RepoID)
+	if err != nil {
+		resp.InternalError(ctx, err)
+		return
+	}
+	if repoOut.Mirror {
+		err = errors.WithI18nKey(err, i18n.RepoMirrorReadOnly)
+		resp.InternalError(ctx, err)
+		return
+	}
 	// TODO: 获取保护规则，如果有违规操作直接返回错误
 
-	// TODO: 如果未指定目标分支，使用仓库默认分支作为新分支的基准分支
 	// 调用 service 层创建分支
-	respData, err := c.branchSvc.Create(ctx.Request.Context(), reqBody)
+	if reqBody.Source == "" {
+		reqBody.Source = repoOut.DefaultBranch
+	}
+	respData, err := c.branchSvc.Create(ctx.Request.Context(), reqBody, session, repoOut)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return
@@ -80,8 +93,6 @@ func (c *Controller) Create(ctx *gin.Context) {
 // @Router /branches/list [post]
 func (c *Controller) List(ctx *gin.Context) {
 
-	log := logger.GetLogger(ctx.Request.Context())
-
 	var reqQuery branchModel.ReqFilter
 	var err error
 	if err = ctx.ShouldBindJSON(&reqQuery); err != nil {
@@ -90,14 +101,21 @@ func (c *Controller) List(ctx *gin.Context) {
 		return
 	}
 
+	// TODO: 获取操作人
+	session := &auth.Session{
+		Principal: principal.Principal{
+			Email: "actor@chandao.com",
+			UID:   "actor",
+		},
+	}
 	// 通过仓库 ID 获取仓库
-	log.Debugln(reqQuery.RepoID)
-	// repo, err := ctl.repoSvc.Get(ctx, session, repoRef, enum.PermissionRepoView)
-	// if err != nil {
-	// 	return nil, err
-	// }
+	repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, reqQuery.RepoID)
+	if err != nil {
+		resp.InternalError(ctx, err)
+		return
+	}
 
-	respData, err := c.branchSvc.List(ctx, reqQuery, repoModel.Repo{})
+	respData, err := c.branchSvc.List(ctx, reqQuery, repoOut)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return
@@ -123,8 +141,6 @@ func (c *Controller) List(ctx *gin.Context) {
 // @Router /branches/prefixes [get]
 func (c *Controller) ListPrefixes(ctx *gin.Context) {
 
-	log := logger.GetLogger(ctx.Request.Context())
-
 	var reqQuery branchModel.ReqFilter
 	var err error
 	if err = ctx.ShouldBindQuery(&reqQuery); err != nil {
@@ -133,14 +149,21 @@ func (c *Controller) ListPrefixes(ctx *gin.Context) {
 		return
 	}
 
+	// TODO: 获取操作人
+	session := &auth.Session{
+		Principal: principal.Principal{
+			Email: "actor@chandao.com",
+			UID:   "actor",
+		},
+	}
 	// 通过仓库 ID 获取仓库
-	log.Debugln(reqQuery.RepoID)
-	// repo, err := ctl.repoSvc.Get(ctx, session, repoRef, enum.PermissionRepoView)
-	// if err != nil {
-	// 	return nil, err
-	// }
+	repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, reqQuery.RepoID)
+	if err != nil {
+		resp.InternalError(ctx, err)
+		return
+	}
 
-	respData, err := c.branchSvc.ListPrefixes(ctx, repoModel.Repo{})
+	respData, err := c.branchSvc.ListPrefixes(ctx, *repoOut)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return

@@ -11,3 +11,4 @@ repo:
   line_number_error: "行号必须大于0, 且结束行号必须大于起始行号"
   create_error: "创建仓库异常"
   create_success: "创建仓库成功"
+  mirror_read_only: "镜像仓库只读。"

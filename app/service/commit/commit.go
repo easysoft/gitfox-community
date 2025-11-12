@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
+	authModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
 	commitModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/commit"
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/utils"
@@ -32,7 +33,12 @@ func NewService(urlProvider url.Provider, git git.Interface) *Service {
 	}
 }
 
-func (s *Service) Create(ctx context.Context, req commitModel.ReqForCreate) (*commitModel.RespForCreate, error) {
+func (s *Service) Create(
+	ctx context.Context,
+	req commitModel.ReqForCreate,
+	session *authModel.Session,
+	repo *repoModel.Repo,
+) (*commitModel.RespForCreate, error) {
 	var err error
 	actions := make([]git.CommitFileAction, len(req.Actions))
 	for i, action := range req.Actions {
@@ -60,8 +66,7 @@ func (s *Service) Create(ctx context.Context, req commitModel.ReqForCreate) (*co
 	}
 
 	// Create internal write params. Note: This will skip the pre-commit protection rules check.
-	// writeParams, err := s.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, repo)
-	writeParams, err := utils.CreateRPCInternalWriteParams(ctx, s.urlProvider)
+	writeParams, err := utils.CreateRPCInternalWriteParams(ctx, s.urlProvider, session, repo)
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.GitCreateExecParamError)
 		return nil, err
@@ -73,7 +78,7 @@ func (s *Service) Create(ctx context.Context, req commitModel.ReqForCreate) (*co
 		Branch:        req.Branch,
 		NewBranch:     req.NewBranch,
 		Actions:       actions,
-		Committer:     &git.Identity{Name: "name", Email: "email"},
+		Committer:     &git.Identity{Name: session.Principal.UID, Email: session.Principal.Email},
 		CommitterDate: &now,
 		Author:        &git.Identity{Name: req.Author.Name, Email: req.Author.Email},
 		AuthorDate:    &now,
