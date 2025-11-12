@@ -8,7 +8,6 @@ const (
 	PathParamRemainder = "*"
 
 	PathParamRepoRef  = "repoRef"
-	PathParamOther    = "otherPath"
 	PathParamFilePath = "filePath"
 	QueryParamRepoID  = "repoId"
 	QueryParamSpaceID = "spaceId"

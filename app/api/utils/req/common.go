@@ -15,6 +15,5 @@ type RepoRef struct {
 }
 
 type RepoId struct {
-	RepoID int64  `uri:"repoId" binding:"required"`
-	Other  string `uri:"otherPath"`
+	RepoID int64 `uri:"repoId" binding:"required"`
 }
