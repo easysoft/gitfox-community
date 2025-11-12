@@ -12,5 +12,6 @@ import (
 type Interface interface {
 	Create(ctx context.Context, req *repoModel.CreateRepoReq) (*repoModel.CreateRepoResp, error)
 	GetRepo(ctx context.Context, repoRef string, allowedStates []constant.RepoState) (*repo.Repository, error)
+	GetContent(ctx context.Context, session *auth.Session, req *repoModel.GetContentReq) (*repoModel.GetContentOutput, error)
 	GetRepoCheckAccess(ctx context.Context, session *auth.Session, repoRef string, allowedStates []constant.Permission) (*repo.Repository, error)
 }

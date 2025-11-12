@@ -17,16 +17,18 @@ import (
 
 type Service struct {
 	gitSvc    git.Interface
+	gitPkgSvc git.Interface
 	repoStore repo.Interface
 }
 
 var _ Interface = (*Service)(nil)
 
 // NewService 创建 SpaceService 实例
-func NewRepoSvc(gitSvc git.Interface, repoStore repo.Interface) *Service {
+func NewRepoSvc(gitSvc git.Interface, repoStore repo.Interface, git git.Interface) *Service {
 	return &Service{
 		gitSvc:    gitSvc,
 		repoStore: repoStore,
+		gitPkgSvc: git,
 	}
 }
 
@@ -76,7 +78,6 @@ func (s *Service) GetRepo(ctx context.Context, repoRef string, allowedStates []c
 
 	return repo, nil
 }
-
 func (s *Service) createReadme(name, description string) []byte {
 	content := bytes.Buffer{}
 	content.WriteString("# " + name + "\n")

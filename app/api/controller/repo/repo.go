@@ -1,8 +1,6 @@
 package repo
 
 import (
-	"fmt"
-
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
@@ -60,7 +58,7 @@ func (ctl *Controller) GetContent(ctx *gin.Context) {
 	var params req.RepoId
 	var err error
 
-	_, ok := req.GetAuthSession(ctx)
+	session, ok := req.GetAuthSession(ctx)
 	if !ok {
 		err = errors.WithI18nKey(errors.New("get session failed"), i18n.AuthNoSession)
 		resp.BadRequest(ctx, err)
@@ -74,7 +72,7 @@ func (ctl *Controller) GetContent(ctx *gin.Context) {
 	}
 
 	// gitRef 仓库引用，例如：refs/heads/main
-	gitRef := req.QueryParamOrDefault(ctx, req.QueryParamGitRef, "refs/heads/main")
+	gitRef := req.QueryParamOrDefault(ctx, req.QueryParamGitRef, "")
 
 	// includeCommit 是否包含提交信息
 	includeCommit, err := req.QueryParamAsBoolOrDefault(ctx, req.QueryParamIncludeCommit, false)
@@ -92,12 +90,27 @@ func (ctl *Controller) GetContent(ctx *gin.Context) {
 		return
 	}
 
-	// 在像 /v1/repos/{repoRef}/contents/* 这样的路由下
+	// 在像 /v1/repos/{repoRef}/contents/{otherPath} 这样的路由下
 	// * 表示仓库内的文件或目录的相对路径。
 	// 例如请求 /v1/repos/12/contents/src/main.go ，这里的余量就是 src/main.go
-	path := req.PathParamOrEmpty(ctx, req.PathParamRemainder)
+	path := req.PathParamOrEmpty(ctx, req.PathParamOther)
 
 	logger.Infof("origin url %s , repoID: %d,gitRef: %s, path: %s,includeCommit: %v,flattenDirectories: %v", ctx.Request.URL.String(), params.RepoID, gitRef, path, includeCommit, flattenDirectories)
 
-	fmt.Println(ctx.Param("path"))
+	req := &repoModel.GetContentReq{
+		RepoId:              params.RepoID,
+		GitRef:              gitRef,
+		RepoPath:            path,
+		IncludeLatestCommit: includeCommit,
+		FlattenDirectories:  flattenDirectories,
+	}
+
+	output, err := ctl.repoSvc.GetContent(ctx, session, req)
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RepoPullPermissionError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
+	resp.OK(ctx, "", output)
 }

@@ -99,11 +99,9 @@ func (req *CreateRepoReq) Validate() error {
 		return errors.Newf("repository identifiers cannot end with .git")
 	}
 
-
 	if len(req.Desc) > constant.MaxDescByteCountUTF8MB4 {
 		return errors.Newf("Description can be at most %d in length.", constant.MaxDescByteCountUTF8MB4)
 	}
-
 
 	// 默认分支处理（未传则设为main）
 	if req.DefaultBranch == "" {

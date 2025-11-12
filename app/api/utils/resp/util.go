@@ -60,6 +60,10 @@ func InternalError(c *gin.Context, err error, args ...interface{}) {
 	objectErr(c, err, http.StatusInternalServerError, args...)
 }
 
+func Unauthorized(c *gin.Context, err error, args ...interface{}) {
+	objectErr(c, err, http.StatusUnauthorized, args...)
+}
+
 // ListSuccess renders a successful list response (200 OK)
 func ListSuccess(c *gin.Context, data interface{}, listArgs ListArgs, code i18n.I18nKey, args ...interface{}) {
 	list(c, data, listArgs, code, args)
