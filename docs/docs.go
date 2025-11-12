@@ -1211,17 +1211,9 @@ const docTemplate = `{
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_i18n.I18nKey"
                 },
                 "data": {},
+                "listArgs": {},
                 "message": {
                     "type": "string"
-                },
-                "page": {
-                    "type": "integer"
-                },
-                "pageSize": {
-                    "type": "integer"
-                },
-                "total": {
-                    "type": "integer"
                 },
                 "traceID": {
                     "type": "string"
@@ -1276,6 +1268,9 @@ const docTemplate = `{
         },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.ReqFilter": {
             "type": "object",
+            "required": [
+                "repoID"
+            ],
             "properties": {
                 "includeArchived": {
                     "type": "boolean"
@@ -1515,6 +1510,9 @@ const docTemplate = `{
                     "items": {
                         "type": "integer"
                     }
+                },
+                "gitRef": {
+                    "type": "string"
                 },
                 "includeStats": {
                     "type": "boolean"
@@ -2014,6 +2012,7 @@ const docTemplate = `{
             "enum": [
                 "auth.no_data",
                 "auth.no_session",
+                "auth.session_token_not_allowed",
                 "branch.body_param_error",
                 "branch.create_error",
                 "branch.create_success",
@@ -2062,6 +2061,7 @@ const docTemplate = `{
                 "repo.create_success",
                 "repo.identifier_invalid",
                 "repo.line_number_error",
+                "repo.mirror_read_only",
                 "repo.path_param_error",
                 "repo.pullRequests_merge_error",
                 "repo.pullRequests_merge_success",
@@ -2115,6 +2115,7 @@ const docTemplate = `{
             "x-enum-comments": {
                 "AuthNoData": "请求不包含任何可用于 Authorizer 的认证数据",
                 "AuthNoSession": "请求不包含任何会话数据,无法进行授权",
+                "AuthSessionTokenNotAllowed": "会话令牌不允许用于与 Git 交互",
                 "BranchBodyParamError": "Body 参数解析失败.",
                 "BranchCreateError": "分支创建失败.",
                 "BranchCreateSuccess": "分支创建成功.",
@@ -2163,6 +2164,7 @@ const docTemplate = `{
                 "RepoCreateSuccess": "创建仓库成功",
                 "RepoIdentifierInvalid": "仓库名称不合法,identifier仅支持字母、数字、下划线(_)、连字符(-)、点号(.)",
                 "RepoLineNumberError": "行号必须大于0, 且结束行号必须大于起始行号",
+                "RepoMirrorReadOnly": "镜像仓库只读.",
                 "RepoPathParamError": "Path 参数解析失败.",
                 "RepoPullPermissionError": "您没有权限拉取此仓库.",
                 "RepoPullRequestsMergeError": "合并失败,存在冲突或检查未通过.",
@@ -2216,6 +2218,7 @@ const docTemplate = `{
             "x-enum-descriptions": [
                 "请求不包含任何可用于 Authorizer 的认证数据",
                 "请求不包含任何会话数据,无法进行授权",
+                "会话令牌不允许用于与 Git 交互",
                 "Body 参数解析失败.",
                 "分支创建失败.",
                 "分支创建成功.",
@@ -2264,6 +2267,7 @@ const docTemplate = `{
                 "创建仓库成功",
                 "仓库名称不合法,identifier仅支持字母、数字、下划线(_)、连字符(-)、点号(.)",
                 "行号必须大于0, 且结束行号必须大于起始行号",
+                "镜像仓库只读.",
                 "Path 参数解析失败.",
                 "合并失败,存在冲突或检查未通过.",
                 "合并成功!",
@@ -2317,6 +2321,7 @@ const docTemplate = `{
             "x-enum-varnames": [
                 "AuthNoData",
                 "AuthNoSession",
+                "AuthSessionTokenNotAllowed",
                 "BranchBodyParamError",
                 "BranchCreateError",
                 "BranchCreateSuccess",
@@ -2365,6 +2370,7 @@ const docTemplate = `{
                 "RepoCreateSuccess",
                 "RepoIdentifierInvalid",
                 "RepoLineNumberError",
+                "RepoMirrorReadOnly",
                 "RepoPathParamError",
                 "RepoPullRequestsMergeError",
                 "RepoPullRequestsMergeSuccess",

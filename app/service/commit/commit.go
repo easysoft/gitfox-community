@@ -91,11 +91,12 @@ func (s *Service) Create(
 	return &commitModel.RespForCreate{SHA: rpcOut.CommitID.String()}, nil
 }
 
-func (s *Service) List(ctx context.Context, req commitModel.ReqFilter, repo repoModel.Repo, gitRef string) (commitModel.RespForList, error) {
-	// set gitRef to default branch in case an empty reference was provided
-	// if gitRef == "" {
-	// 	gitRef = repo.DefaultBranch
-	// }
+func (s *Service) List(ctx context.Context, req commitModel.ReqFilter, repo repoModel.Repo, gitRef string) (commitModel.RespForList, bool, error) {
+
+	var isLast bool
+	if gitRef == "" {
+		gitRef = repo.DefaultBranch
+	}
 
 	rpcOut, err := s.gitPkg.ListCommits(ctx, &git.ListCommitsParams{
 		ReadParams:   git.ReadParams{RepoUID: repo.GitUID},
@@ -111,33 +112,35 @@ func (s *Service) List(ctx context.Context, req commitModel.ReqFilter, repo repo
 	})
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.GitExecError)
-		return commitModel.RespForList{}, err
+		return commitModel.RespForList{}, isLast, err
 	}
 
-	commits := make([]commitModel.Commit, len(rpcOut.Commits))
-	for i := range rpcOut.Commits {
+	isLast = len(rpcOut.Commits) > req.Limit
+	commits := rpcOut.Commits[:req.Limit]
+	response := make([]commitModel.Commit, len(commits))
+	for i := range commits {
 		var commit *commitModel.Commit
-		commit, err = utils.MapCommit(&rpcOut.Commits[i])
+		commit, err = utils.MapCommit(&commits[i])
 		if err != nil {
 			err = errors.WithI18nKey(err, i18n.GitMapOutputError)
-			return commitModel.RespForList{}, err
+			return commitModel.RespForList{}, isLast, err
 		}
-		commits[i] = *commit
+		response[i] = *commit
 	}
 	renameDetailList := make([]commitModel.RenameDetails, len(rpcOut.RenameDetails))
 	for i := range rpcOut.RenameDetails {
 		renameDetails := utils.MapRenameDetails(rpcOut.RenameDetails[i])
 		if renameDetails == nil {
 			err = errors.WithI18nKey(err, i18n.GitMapOutputError)
-			return commitModel.RespForList{}, err
+			return commitModel.RespForList{}, isLast, err
 		}
 		renameDetailList[i] = *renameDetails
 	}
 	return commitModel.RespForList{
-		Commits:       commits,
+		Commits:       response,
 		RenameDetails: renameDetailList,
 		TotalCommits:  rpcOut.TotalCommits,
-	}, nil
+	}, isLast, nil
 }
 
 func (s *Service) Get(ctx context.Context, commitSHA string, repo repoModel.Repo) (*commitModel.Commit, error) {

@@ -77,7 +77,7 @@ func (c *Controller) Create(ctx *gin.Context) {
 		return
 	}
 
-	// TDOO: 记录审计日志
+	// TODO: 记录审计日志
 	resp.Created(ctx, i18n.BranchCreateSuccess, respData)
 }
 
@@ -115,17 +115,17 @@ func (c *Controller) List(ctx *gin.Context) {
 		return
 	}
 
-	respData, err := c.branchSvc.List(ctx, reqQuery, repoOut)
+	respData, isLast, err := c.branchSvc.List(ctx, reqQuery, repoOut)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return
 	}
 
 	resp.ListSuccess(ctx, respData,
-		resp.ListArgs{
-			Total:    0,
-			Page:     int64(1),
-			PageSize: int64(1),
+		resp.ListNoTotalArgs{
+			IsLast:   isLast,
+			Page:     int64(reqQuery.Page),
+			PageSize: int64(reqQuery.Size),
 		}, i18n.BranchListSuccess, nil)
 }
 

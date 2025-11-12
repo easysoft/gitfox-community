@@ -67,7 +67,9 @@ func (s *Service) Create(
 	return &commitTag, nil
 }
 
-func (s *Service) List(ctx context.Context, req tagModel.ReqFilter, repo repoModel.Repo) ([]tagModel.Tag, error) {
+func (s *Service) List(ctx context.Context, req tagModel.ReqFilter, repo repoModel.Repo) ([]tagModel.Tag, bool, error) {
+
+	var isLast bool
 
 	rpcOut, err := s.gitPkg.ListCommitTags(ctx, &git.ListCommitTagsParams{
 		ReadParams:    git.ReadParams{RepoUID: repo.GitUID},
@@ -80,19 +82,21 @@ func (s *Service) List(ctx context.Context, req tagModel.ReqFilter, repo repoMod
 	})
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.GitExecError)
-		return nil, err
+		return nil, isLast, err
 	}
 
-	tags := make([]tagModel.Tag, len(rpcOut.Tags))
-	for i := range rpcOut.Tags {
-		tags[i], err = mapCommitTag(rpcOut.Tags[i])
+	isLast = len(rpcOut.Tags) > req.Size
+	tags := rpcOut.Tags[:req.Size]
+	response := make([]tagModel.Tag, len(tags))
+	for i := range tags {
+		response[i], err = mapCommitTag(tags[i])
 		if err != nil {
 			err = errors.WithI18nKey(err, i18n.GitExecError)
-			return nil, err
+			return nil, isLast, err
 		}
 	}
 
-	return tags, nil
+	return response, isLast, nil
 
 }
 
