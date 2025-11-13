@@ -115,8 +115,12 @@ func (s *Service) List(ctx context.Context, req commitModel.ReqFilter, repo repo
 		return commitModel.RespForList{}, isLast, err
 	}
 
-	isLast = len(rpcOut.Commits) > req.Limit
-	commits := rpcOut.Commits[:req.Limit]
+	isLast = len(rpcOut.Commits) <= req.Limit
+	commits := rpcOut.Commits
+	if len(rpcOut.Commits) > req.Limit {
+		commits = rpcOut.Commits[:req.Limit]
+		isLast = false
+	}
 	response := make([]commitModel.Commit, len(commits))
 	for i := range commits {
 		var commit *commitModel.Commit

@@ -13,13 +13,13 @@ type ReqForCreate struct {
 }
 
 type ReqFilter struct {
-	Query         string `json:"query"`
-	Sort          string `json:"sort"`
-	Order         string `json:"order"`
-	Page          int    `json:"page"`
-	Size          int    `json:"size"`
-	IncludeCommit bool   `json:"includeCommit"`
-	RepoID        uint   `json:"repoID" binding:"required"`
+	Query         string `json:"query" form:"query"`
+	Sort          string `json:"sort" form:"sort" default:"name"`
+	Order         string `json:"order" form:"order" default:"asc"`
+	Page          int    `json:"page" form:"page" default:"1"`
+	Size          int    `json:"size" form:"size" default:"20"`
+	IncludeCommit bool   `json:"includeCommit" form:"includeCommit"`
+	RepoID        uint   `json:"repoID" form:"repoID" binding:"required"`
 }
 
 type Tag struct {

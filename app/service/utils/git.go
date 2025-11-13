@@ -89,15 +89,15 @@ func MapCommit(c *git.Commit) (*commit.Commit, error) {
 		return nil, fmt.Errorf("commit is nil")
 	}
 
-	// author, err := MapSignature(&c.Author)
-	// if err != nil {
-	// 	return nil, fmt.Errorf("failed to map author: %w", err)
-	// }
+	author, err := MapSignature(&c.Author)
+	if err != nil {
+		return nil, fmt.Errorf("failed to map author: %w", err)
+	}
 
-	// committer, err := MapSignature(&c.Committer)
-	// if err != nil {
-	// 	return nil, fmt.Errorf("failed to map committer: %w", err)
-	// }
+	committer, err := MapSignature(&c.Committer)
+	if err != nil {
+		return nil, fmt.Errorf("failed to map committer: %w", err)
+	}
 
 	parentSHAs := make([]string, len(c.ParentSHAs))
 	for i, sha := range c.ParentSHAs {
@@ -109,9 +109,9 @@ func MapCommit(c *git.Commit) (*commit.Commit, error) {
 			ParentSHAs: parentSHAs,
 			Title:      c.Title,
 			Message:    c.Message,
-			// Author:     *author,
-			// Committer:  *committer,
-			Stats: mapStats(c),
+			Author:     *author,
+			Committer:  *committer,
+			Stats:      mapStats(c),
 		},
 		nil
 }

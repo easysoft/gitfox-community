@@ -36,24 +36,24 @@ type Author struct {
 
 // PaginationFilter stores pagination query parameters.
 type PaginationFilter struct {
-	Page  int `json:"page"`
-	Limit int `json:"limit"`
+	Page  int `json:"page" form:"page" default:"1"`
+	Limit int `json:"limit" form:"limit" default:"20"`
 }
 
 // ReqFilter stores commit query parameters.
 type ReqFilter struct {
 	PaginationFilter
-	After        string  `json:"after"`
-	Path         string  `json:"path"`
-	Since        int64   `json:"since"`
-	Until        int64   `json:"until"`
-	Committer    string  `json:"committer"`
-	CommitterIDs []int64 `json:"committerIDs"`
-	Author       string  `json:"author"`
-	AuthorIDs    []int64 `json:"authorIDs"`
-	IncludeStats bool    `json:"includeStats"`
-	RepoID       uint    `json:"repoID"`
-	GitRef       string  `json:"gitRef"`
+	After        string  `json:"after" form:"after"`
+	Path         string  `json:"path" form:"path"`
+	Since        int64   `json:"since" form:"since"`
+	Until        int64   `json:"until" form:"until"`
+	Committer    string  `json:"committer" form:"committer"`
+	CommitterIDs []int64 `json:"committerIDs" form:"committerIDs"`
+	Author       string  `json:"author" form:"author"`
+	AuthorIDs    []int64 `json:"authorIDs" form:"authorIDs"`
+	IncludeStats bool    `json:"includeStats" form:"includeStats"`
+	RepoID       uint    `json:"repoID" form:"repoID"`
+	GitRef       string  `json:"gitRef" form:"gitRef"`
 }
 
 type RespForList struct {
@@ -70,8 +70,8 @@ type RenameDetails struct {
 }
 
 type ReqForGet struct {
-	RepoID uint   `json:"repoID"`
-	SHA    string `json:"sha"`
+	RepoID uint   `json:"repoID" form:"repoID"`
+	SHA    string `json:"sha" form:"sha"`
 }
 
 type Commit struct {
