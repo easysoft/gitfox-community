@@ -1,11 +1,11 @@
 package commit
 
 import (
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
 	commitModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/commit"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/principal"
-	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/commit"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
@@ -53,6 +53,7 @@ func (c *Controller) Create(ctx *gin.Context) {
 	// TODO: 获取操作人
 	session := &auth.Session{
 		Principal: principal.User{
+			ID:    1,
 			Email: "actor@chandao.com",
 			UID:   "actor",
 		},
@@ -102,10 +103,13 @@ func (c *Controller) List(ctx *gin.Context) {
 		resp.BadRequest(ctx, err)
 		return
 	}
+	// 设置默认值
+	req.SetDefaults(&reqQuery)
 
 	// TODO: 获取操作人
 	session := &auth.Session{
 		Principal: principal.User{
+			ID:    1,
 			Email: "actor@chandao.com",
 			UID:   "actor",
 		},
@@ -126,8 +130,8 @@ func (c *Controller) List(ctx *gin.Context) {
 	resp.ListSuccess(ctx, respData,
 		resp.ListNoTotalArgs{
 			IsLast:   isLast,
-			Page:     int64(1),
-			PageSize: int64(1),
+			Page:     int64(reqQuery.Page),
+			PageSize: int64(reqQuery.Limit),
 		}, i18n.CommitListSuccess, nil)
 }
 
@@ -156,6 +160,7 @@ func (c *Controller) Get(ctx *gin.Context) {
 	// TODO: 获取操作人
 	session := &auth.Session{
 		Principal: principal.User{
+			ID:    1,
 			Email: "actor@chandao.com",
 			UID:   "actor",
 		},
@@ -189,8 +194,6 @@ func (c *Controller) Get(ctx *gin.Context) {
 // @Router /commits/divergence [post]
 func (c *Controller) GetDivergence(ctx *gin.Context) {
 
-	log := logger.GetLogger(ctx.Request.Context())
-
 	var reqBody commitModel.ReqForDivergence
 	var err error
 
@@ -201,15 +204,23 @@ func (c *Controller) GetDivergence(ctx *gin.Context) {
 		return
 	}
 
+	// TODO: 获取操作人
+	session := &auth.Session{
+		Principal: principal.User{
+			ID:    1,
+			Email: "actor@chandao.com",
+			UID:   "actor",
+		},
+	}
 	// 通过仓库 ID 获取仓库
-	log.Debugln(reqBody.RepoID)
-	// repo, err := ctl.repoSvc.Get(ctx, session, repoRef, enum.PermissionRepoView)
-	// if err != nil {
-	// 	return nil, err
-	// }
+	repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, reqBody.RepoID)
+	if err != nil {
+		resp.InternalError(ctx, err)
+		return
+	}
 
 	// 调用 service 层获取提交分歧信息
-	respData, err := c.commitSvc.GetDivergence(ctx.Request.Context(), reqBody, repoModel.Repo{})
+	respData, err := c.commitSvc.GetDivergence(ctx.Request.Context(), reqBody, *repoOut)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return
@@ -230,6 +241,7 @@ func (c *Controller) GetDivergence(ctx *gin.Context) {
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
 // @Router /commits/diff [post]
 func (c *Controller) GetDiff(ctx *gin.Context) {
+
 	log := logger.GetLogger(ctx.Request.Context())
 
 	var reqBody commitModel.ReqForGet
@@ -242,22 +254,27 @@ func (c *Controller) GetDiff(ctx *gin.Context) {
 		return
 	}
 
-	log.Debugln("Getting diff for commit:", reqBody.SHA)
-
+	// TODO: 获取操作人
+	session := &auth.Session{
+		Principal: principal.User{
+			ID:    1,
+			Email: "actor@chandao.com",
+			UID:   "actor",
+		},
+	}
 	// 通过仓库 ID 获取仓库
-	// TODO: 实际项目中需要通过 repoID 获取仓库信息并检查权限
-	// repo, err := c.repoSvc.GetRepoCheckAccess(ctx, session, repoRef, []constant.Permission{constant.PermissionRepoView})
-	// if err != nil {
-	//     resp.InternalError(ctx, err)
-	//     return
-	// }
+	repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, reqBody.RepoID)
+	if err != nil {
+		resp.InternalError(ctx, err)
+		return
+	}
 
 	// 设置响应头为 text/plain
 	ctx.Writer.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	resp.NoCache(ctx.Writer)
 
 	// 调用 service 层,直接将 diff 写入响应流
-	err = c.commitSvc.GetDiff(ctx.Request.Context(), reqBody.SHA, repoModel.Repo{}, ctx.Writer)
+	err = c.commitSvc.GetDiff(ctx.Request.Context(), reqBody.SHA, *repoOut, ctx.Writer)
 	if err != nil {
 		// 如果已经开始写入响应,则无法再使用标准的错误响应
 		// 只能记录日志

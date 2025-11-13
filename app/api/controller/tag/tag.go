@@ -1,6 +1,7 @@
 package tag
 
 import (
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/principal"
@@ -48,9 +49,16 @@ func (c *Controller) Create(ctx *gin.Context) {
 		return
 	}
 
-	// TODO: 获取操作人
+	// 获取操作人
+	// session, ok := req.GetAuthSession(ctx.Request.Context())
+	// if !ok {
+	// 	err := errors.WithI18nKey(errors.New("get session failed"), i18n.AuthNoSession)
+	// 	resp.BadRequest(ctx, err)
+	// 	return
+	// }
 	session := &auth.Session{
 		Principal: principal.User{
+			ID:    1,
 			Email: "actor@chandao.com",
 			UID:   "actor",
 		},
@@ -62,7 +70,6 @@ func (c *Controller) Create(ctx *gin.Context) {
 		return
 	}
 
-	// TODO: 检查是否为镜像仓库
 	if repoOut.Mirror {
 		err = errors.WithI18nKey(err, i18n.RepoMirrorReadOnly)
 		resp.InternalError(ctx, err)
@@ -100,10 +107,13 @@ func (c *Controller) List(ctx *gin.Context) {
 		resp.BadRequest(ctx, err)
 		return
 	}
+	// 设置默认值
+	req.SetDefaults(&reqQuery)
 
 	// TODO: 获取操作人
 	session := &auth.Session{
 		Principal: principal.User{
+			ID:    1,
 			Email: "actor@chandao.com",
 			UID:   "actor",
 		},
@@ -124,8 +134,8 @@ func (c *Controller) List(ctx *gin.Context) {
 	resp.ListSuccess(ctx, respData,
 		resp.ListNoTotalArgs{
 			IsLast:   isLast,
-			Page:     int64(1),
-			PageSize: int64(1),
+			Page:     int64(reqQuery.Page),
+			PageSize: int64(reqQuery.Size),
 		}, i18n.TagListSuccess, nil)
 }
 
@@ -161,6 +171,7 @@ func (c *Controller) Delete(ctx *gin.Context) {
 	// TODO: 获取操作人
 	session := &auth.Session{
 		Principal: principal.User{
+			ID:    1,
 			Email: "actor@chandao.com",
 			UID:   "actor",
 		},

@@ -1,6 +1,7 @@
 package branch
 
 import (
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
 	branchModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/branch"
@@ -50,6 +51,7 @@ func (c *Controller) Create(ctx *gin.Context) {
 	// TODO: 获取操作人
 	session := &auth.Session{
 		Principal: principal.User{
+			ID:    1,
 			Email: "actor@chandao.com",
 			UID:   "actor",
 		},
@@ -100,10 +102,13 @@ func (c *Controller) List(ctx *gin.Context) {
 		resp.BadRequest(ctx, err)
 		return
 	}
+	// 设置默认值
+	req.SetDefaults(&reqQuery)
 
 	// TODO: 获取操作人
 	session := &auth.Session{
 		Principal: principal.User{
+			ID:    1,
 			Email: "actor@chandao.com",
 			UID:   "actor",
 		},
@@ -152,6 +157,7 @@ func (c *Controller) ListPrefixes(ctx *gin.Context) {
 	// TODO: 获取操作人
 	session := &auth.Session{
 		Principal: principal.User{
+			ID:    1,
 			Email: "actor@chandao.com",
 			UID:   "actor",
 		},
@@ -168,5 +174,5 @@ func (c *Controller) ListPrefixes(ctx *gin.Context) {
 		resp.InternalError(ctx, err)
 		return
 	}
-	resp.ListSuccess(ctx, respData, resp.ListArgs{}, i18n.BranchListPrefixSuccess, nil)
+	resp.ListSuccess(ctx, respData, nil, i18n.BranchListPrefixSuccess, nil)
 }

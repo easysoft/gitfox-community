@@ -22,6 +22,7 @@ import (
 	githookModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/githook"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/hook"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 
 	"github.com/rs/zerolog/log"
 )
@@ -68,7 +69,9 @@ func (c *ControllerClient) PreReceive(
 	ctx context.Context,
 	in hook.PreReceiveInput,
 ) (hook.Output, error) {
-	log.Ctx(ctx).Debug().Int64("repo_id", c.baseInput.RepoID).Msg("calling pre-receive")
+
+	log := logger.GetLogger(ctx)
+	log.Debugf("[Git]: repoID=%d calling pre-receive", c.baseInput.RepoID)
 
 	out, err := c.githookCtrl.PreReceive(
 		ctx,

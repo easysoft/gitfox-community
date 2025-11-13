@@ -12,7 +12,7 @@ import (
 
 var _ Interface = (*Store)(nil)
 
-func NewPrincipalStore(db *gorm.DB) Interface {
+func NewPrincipalStore(db *gorm.DB) *Store {
 	return &Store{
 		db: db,
 	}

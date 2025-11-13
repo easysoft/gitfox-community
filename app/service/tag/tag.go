@@ -85,8 +85,12 @@ func (s *Service) List(ctx context.Context, req tagModel.ReqFilter, repo repoMod
 		return nil, isLast, err
 	}
 
-	isLast = len(rpcOut.Tags) > req.Size
-	tags := rpcOut.Tags[:req.Size]
+	isLast = len(rpcOut.Tags) <= req.Size
+	tags := rpcOut.Tags
+	if len(rpcOut.Tags) > req.Size {
+		tags = rpcOut.Tags[:req.Size]
+		isLast = false
+	}
 	response := make([]tagModel.Tag, len(tags))
 	for i := range tags {
 		response[i], err = mapCommitTag(tags[i])

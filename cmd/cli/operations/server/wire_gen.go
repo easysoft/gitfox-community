@@ -9,6 +9,7 @@ package server
 import (
 	branch2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/branch"
 	commit2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/commit"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/githook"
 	repo3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/repo"
 	space3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/space"
 	tag2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/tag"
@@ -18,6 +19,7 @@ import (
 	repo2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
 	space2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/space"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/tag"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/principal"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/space"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/cmd/cli/operations/provider"
@@ -91,6 +93,8 @@ func NewApp(mode string) (*App, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
+	principalStore := principal.NewPrincipalStore(db)
+	githookController := provider.NewGitHookController(principalStore, repoStore, gitService, urlProvider, clientFactory)
 	app := &App{
 		SystemConfig: config,
 		SystemLog:    systemLog,
@@ -99,6 +103,7 @@ func NewApp(mode string) (*App, func(), error) {
 		SqliteDB:     sqliteDB,
 		Controller:   routerController,
 		I18nManager:  i18nManager,
+		GithookCtrl:  githookController,
 	}
 	return app, func() {
 		cleanup2()
@@ -116,4 +121,5 @@ type App struct {
 	SqliteDB     *database.SqliteDB
 	Controller   *router.Controller
 	I18nManager  *provider.I18nManager
+	GithookCtrl  *githook.Controller
 }
