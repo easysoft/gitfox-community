@@ -7,6 +7,7 @@ import (
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+	gitTypes "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/api"
 )
 
 // Repository represents a code repository.
@@ -131,18 +132,18 @@ type Repo struct {
 }
 
 type ReqForDiff struct {
-	Range string            `json:"range"`
-	Files []FileDiffRequest `json:"files"`
-}
-
-type FileDiffRequest struct {
-	Path      string `json:"path"`
-	StartLine int    `json:"startLine"`
-	EndLine   int    `json:"-"` // warning: changes are possible and this field may not exist in the future
+	Range string                     `json:"range"`
+	Files []gitTypes.FileDiffRequest `json:"files"`
 }
 
 type BlameFilter struct {
 	GitRef   string `json:"gitRef" binding:"omitempty"`   // 非必填，omitempty 允许空值
 	LineFrom int    `json:"lineFrom" binding:"omitempty"` // 非必填，omitempty 允许空值
 	LineTo   int    `json:"lineTo" binding:"omitempty"`   // 非必填，omitempty 允许空值
+}
+
+type CompareInfo struct {
+	BaseRef   string
+	HeadRef   string
+	MergeBase bool
 }
