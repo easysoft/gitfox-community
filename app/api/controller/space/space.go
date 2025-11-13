@@ -154,7 +154,6 @@ func (ctl *SpaceController) Update(c *gin.Context) {
 	// 调用服务层更新空间
 	spaceObj, err := ctl.spaceSvc.Update(logger.GetContextWithLogger(c), objID, reqData)
 	if err != nil {
-		err = errors.WithI18nKey(err, i18n.SpaceUpdateError)
 		resp.InternalError(c, err)
 		return
 	}

@@ -18,103 +18,50 @@ import (
 	"context"
 	"fmt"
 
+	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/principal"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/hook"
-
-	// "github.com/easysoft/gitfox/app/api/controller/limiter"
-	// "github.com/easysoft/gitfox/app/api/usererror"
-	// "github.com/easysoft/gitfox/app/auth"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/sha"
-	// "github.com/easysoft/gitfox/app/auth/authz"
-	// eventsgit "github.com/easysoft/gitfox/app/events/git"
-	// eventspr "github.com/easysoft/gitfox/app/events/pullreq"
-	// eventsrepo "github.com/easysoft/gitfox/app/events/repo"
-	// "github.com/easysoft/gitfox/app/services/codeowners"
-	// "github.com/easysoft/gitfox/app/services/protection"
-	// "github.com/easysoft/gitfox/app/services/settings"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/api"
-	"github.com/easysoft/gitfox/app/store"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/hook"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/sha"
 	"github.com/easysoft/gitfox/app/url"
-	"github.com/easysoft/gitfox/types"
 )
 
 type Controller struct {
-	// authorizer        authz.Authorizer
-	principalStore store.PrincipalStore
-	repoStore      store.RepoStore
-	// gitReporter       *eventsgit.Reporter
-	// repoReporter      *eventsrepo.Reporter
-	// prReporter        *eventspr.Reporter
-	git git.Interface
-	// pullreqStore      store.PullReqStore
-	urlProvider url.Provider
-	// protectionManager *protection.Manager
-	// limiter             limiter.ResourceLimiter
-	// settings            *settings.Service
-	// codeOwners          *codeowners.Service
-	// reviewerStore       store.PullReqReviewerStore
-	// preReceiveExtender  PreReceiveExtender
-	// updateExtender      UpdateExtender
-	// postReceiveExtender PostReceiveExtender
+	principalStore principal.IPrincipalStore
+	repoStore      repo.Interface
+	git            git.Interface
+	urlProvider    url.Provider
 }
 
 func NewController(
-	// authorizer authz.Authorizer,
-	// principalStore store.PrincipalStore,
-	// repoStore store.RepoStore,
-	// gitReporter *eventsgit.Reporter,
-	// repoReporter *eventsrepo.Reporter,
-	// prReporter *eventspr.Reporter,
+	principalStore principal.IPrincipalStore,
+	repoStore repo.Interface,
 	git git.Interface,
-	// pullreqStore store.PullReqStore,
 	urlProvider url.Provider,
-	// protectionManager *protection.Manager,
-	// limiter limiter.ResourceLimiter,
-	// settings *settings.Service,
-	// preReceiveExtender PreReceiveExtender,
-	// updateExtender UpdateExtender,
-	// postReceiveExtender PostReceiveExtender,
-	// codeOwners *codeowners.Service,
-	// reviewerStore store.PullReqReviewerStore,
 ) *Controller {
 	return &Controller{
-		// authorizer:        authorizer,
-		// principalStore: principalStore,
-		// repoStore:      repoStore,
-		// gitReporter:       gitReporter,
-		// repoReporter:      repoReporter,
-		// prReporter:        prReporter,
-		git: git,
-		// pullreqStore:      pullreqStore,
-		urlProvider: urlProvider,
-		// protectionManager: protectionManager,
-		// limiter:             limiter,
-		// settings:            settings,
-		// preReceiveExtender:  preReceiveExtender,
-		// updateExtender:      updateExtender,
-		// postReceiveExtender: postReceiveExtender,
-		// codeOwners:          codeOwners,
-		// reviewerStore:       reviewerStore,
+		principalStore: principalStore,
+		repoStore:      repoStore,
+		git:            git,
+		urlProvider:    urlProvider,
 	}
 }
 
 func (c *Controller) getRepoCheckAccess(
 	ctx context.Context,
-	// _ *auth.Session,
 	repoID int64,
-	// _ enum.Permission,
-) (*types.Repository, error) {
+) (*repoModel.Repo, error) {
 	if repoID < 1 {
 		return nil, errors.BadRequest.New("A valid repository reference must be provided.")
 	}
 
-	repo, err := c.repoStore.Find(ctx, repoID)
+	repo, err := c.repoStore.GetByID(ctx, uint(repoID))
 	if err != nil {
 		return nil, fmt.Errorf("failed to find repo with id %d: %w", repoID, err)
 	}
-
-	// TODO: execute permission check. block anything but Harness service?
 
 	return repo, nil
 }
@@ -126,7 +73,7 @@ func (c *Controller) getRepoCheckAccess(
 func GetBaseSHAForScanningChanges(
 	ctx context.Context,
 	rgit RestrictedGIT,
-	repo *types.Repository,
+	repo *repoModel.Repo,
 	env hook.Environment,
 	refUpdates []hook.ReferenceUpdate,
 	findBaseFor hook.ReferenceUpdate,

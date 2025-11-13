@@ -83,9 +83,13 @@ func (s *Service) List(ctx context.Context, filter branchModel.ReqFilter, repo *
 		err = errors.WithI18nKey(err, i18n.GitCreateExecParamError)
 		return nil, isLast, err
 	}
-	isLast = len(rpcOut.Branches) > filter.Size
-	branches := rpcOut.Branches[:filter.Size]
 
+	isLast = len(rpcOut.Branches) <= filter.Size
+	branches := rpcOut.Branches
+	if len(rpcOut.Branches) > filter.Size {
+		branches = rpcOut.Branches[:filter.Size]
+		isLast = false
+	}
 	response := make([]branchModel.Branch, len(branches))
 	for i := range branches {
 		response[i], err = utils.MapBranch(branches[i])

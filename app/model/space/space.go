@@ -13,7 +13,7 @@ type CreateSpaceRequest struct {
 type UpdateSpaceRequest struct {
 	Name       string `json:"name"`
 	Owner      string `json:"owner"`
-	Permission string `json:"acl" binding:"oneof=open private"`
+	Permission string `json:"acl" binding:"omitempty,oneof=open private"`
 	Desc       string `json:"desc"`
 	EditedBy   string `json:"editedBy" binding:"required"`
 }
@@ -31,12 +31,12 @@ type SpaceResponse struct {
 }
 
 type ListSpaceFilter struct {
-	Name       string `form:"name" binding:"omitempty"` // 非必填，omitempty 允许空值
+	Name       string `form:"name" binding:"omitempty"`                                      // 非必填，omitempty 允许空值
 	Permission string `json:"name" form:"permission" binding:"omitempty,oneof=open private"` // 枚举校验：仅允许 open/private
 	Owner      string `form:"owner" binding:"omitempty"`
 
 	// 分页参数（对应 pagination.PageParam）
-	Page     int `form:"page" binding:"omitempty,min=1"` // 最小1
+	Page     int `form:"page" binding:"omitempty,min=1"`             // 最小1
 	PageSize int `form:"pageSize" binding:"omitempty,min=1,max=100"` // 1-100
 }
 

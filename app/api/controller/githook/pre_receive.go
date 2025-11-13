@@ -26,12 +26,11 @@ import (
 	// "github.com/easysoft/gitfox/app/services/protection"
 	// "github.com/easysoft/gitfox/app/api/controller/limiter"
 	// "github.com/easysoft/gitfox/app/api/usererror"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/githook"
+	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/hook"
 	gitutil "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/util"
-
-	"github.com/easysoft/gitfox/types"
-	"github.com/easysoft/gitfox/types/enum"
 
 	// "github.com/easysoft/gitfox/types"
 	// "github.com/easysoft/gitfox/types/enum"
@@ -54,7 +53,7 @@ func (c *Controller) PreReceive(
 		return hook.Output{}, err
 	}
 
-	if !in.Internal && repo.State != enum.RepoStateActive && repo.State != enum.RepoStateMigrateGitPush {
+	if !in.Internal && constant.RepoState(repo.Status) != constant.RepoStateActive && constant.RepoState(repo.Status) != constant.RepoStateMigrateGitPush {
 		output.Error = ptr.String("Push not allowed in the current repository state")
 		return output, nil
 	}
@@ -82,28 +81,28 @@ func (c *Controller) PreReceive(
 	}
 
 	// For external calls (git pushes) block modification of pullreq references.
-	if !in.Internal && c.blockPullReqRefUpdate(refUpdates, repo.State) {
+	if !in.Internal && c.blockPullReqRefUpdate(refUpdates, constant.RepoState(repo.Status)) {
 		output.Error = ptr.String("pull reqRefs cantBeModified")
 		return output, nil
 	}
 
 	// For internal calls - through the application interface (API) - no need to verify protection rules.
-	if !in.Internal && repo.State == enum.RepoStateActive {
+	if !in.Internal && constant.RepoState(repo.Status) == constant.RepoStateActive {
 		// TODO: use store.PrincipalInfoCache once we abstracted principals.
-		_, err := c.principalStore.Find(ctx, in.PrincipalID)
+		_, err := c.principalStore.FindUserByID(ctx, in.PrincipalID)
 		if err != nil {
 			return hook.Output{}, fmt.Errorf("failed to find inner principal with id %d: %w", in.PrincipalID, err)
 		}
 
 		// dummySession := &auth.Session{Principal: *principal, Metadata: nil}
 
-		err = c.checkProtectionRules(ctx, repo, refUpdates, &output)
-		if output.Error != nil {
-			return output, nil
-		}
-		if err != nil {
-			return hook.Output{}, fmt.Errorf("failed to check protection rules: %w", err)
-		}
+		// err = c.checkProtectionRules(ctx, repo, refUpdates, &output)
+		// if output.Error != nil {
+		// 	return output, nil
+		// }
+		// if err != nil {
+		// 	return hook.Output{}, fmt.Errorf("failed to check protection rules: %w", err)
+		// }
 	}
 
 	// err = c.ztFlow(ctx, rgit, repo, in, &output)
@@ -136,8 +135,8 @@ func (c *Controller) PreReceive(
 	return output, nil
 }
 
-func (c *Controller) blockPullReqRefUpdate(refUpdates changedRefs, state enum.RepoState) bool {
-	if state == enum.RepoStateMigrateGitPush {
+func (c *Controller) blockPullReqRefUpdate(refUpdates changedRefs, state constant.RepoState) bool {
+	if state == constant.RepoStateMigrateGitPush {
 		return false
 	}
 
@@ -154,7 +153,7 @@ func (c *Controller) blockPullReqRefUpdate(refUpdates changedRefs, state enum.Re
 func (c *Controller) checkProtectionRules(
 	ctx context.Context,
 	// session *auth.Session,
-	repo *types.Repository,
+	repo *repoModel.Repo,
 	refUpdates changedRefs,
 	output *hook.Output,
 ) error {

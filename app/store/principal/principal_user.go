@@ -9,7 +9,7 @@ import (
 
 var _ IPrincipalStore = (*PrincipalStore)(nil)
 
-func NewPrincipalStore(db *gorm.DB) IPrincipalStore {
+func NewPrincipalStore(db *gorm.DB) *PrincipalStore {
 	return &PrincipalStore{
 		db: db,
 	}

@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/githook"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/principal"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/cache"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
@@ -21,9 +23,9 @@ var GitWireSet = wire.NewSet(
 	NewGitConfig,
 	NewLastCommitCache,
 	NewGitLocalStore,
+	NewGitClientFactory,
 	NewGitAdapter,
 	NewGit,
-	NewGitClientFactory,
 	NewGitHookController,
 	wire.Bind(new(git.Interface), new(*git.Service)),
 )
@@ -85,28 +87,29 @@ func NewGit(
 func NewGitClientFactory() hook.ClientFactory {
 	return &githook.ControllerClientFactory{
 		GithookCtrl: nil,
+		Git:         nil,
 	}
 }
 
 func NewGitHookController(
-	// principalStore store.PrincipalStore,
-	// repoStore store.RepoStore,
+	principalStore principal.IPrincipalStore,
+	repoStore repo.Interface,
 	git git.Interface,
 	urlProvider url.Provider,
 	githookFactory hook.ClientFactory,
 ) *githook.Controller {
 	ctrl := githook.NewController(
+		principalStore,
+		repoStore,
 		git,
 		urlProvider,
 	)
-	// TODO: improve wiring if possible
+	// Wire the controller into the factory
 	if fct, ok := githookFactory.(*githook.ControllerClientFactory); ok {
 		fct.GithookCtrl = ctrl
 		fct.Git = git
 	}
-
 	return ctrl
-
 }
 
 func NewGitLocalStore() storage.Store {
