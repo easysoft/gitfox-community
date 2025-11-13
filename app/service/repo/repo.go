@@ -4,11 +4,13 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"time"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/githook"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/principal"
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/utils"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/space"
 
@@ -204,4 +206,17 @@ func (s *Service) createReadme(name, description string) []byte {
 		content.WriteString(description)
 	}
 	return content.Bytes()
+}
+
+func (s *Service) GetDiff(ctx context.Context, req repoModel.ReqForDiff, repo repoModel.Repo, w io.Writer) error {
+	info, err := utils.ParseDiffPath(req.Range)
+	if err != nil {
+		return err
+	}
+	return s.gitSvc.RawDiff(ctx, w, &git.DiffParams{
+		ReadParams: git.ReadParams{RepoUID: repo.GitUID},
+		BaseRef:    info.BaseRef,
+		HeadRef:    info.HeadRef,
+		MergeBase:  info.MergeBase,
+	}, req.Files...)
 }

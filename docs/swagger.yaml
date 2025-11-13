@@ -27,7 +27,7 @@ definitions:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.Commit'
       commitDivergence:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.CommitDivergence'
-      is_default:
+      isDefault:
         type: boolean
       name:
         type: string
@@ -50,8 +50,10 @@ definitions:
       maxDivergence:
         type: integer
       order:
+        default: asc
         type: string
       page:
+        default: 1
         type: integer
       prefix:
         type: string
@@ -60,8 +62,10 @@ definitions:
       repoID:
         type: integer
       size:
+        default: 20
         type: integer
       sort:
+        default: name
         type: string
     required:
     - repoID
@@ -209,8 +213,10 @@ definitions:
       includeStats:
         type: boolean
       limit:
+        default: 20
         type: integer
       page:
+        default: 1
         type: integer
       path:
         type: string
@@ -487,16 +493,20 @@ definitions:
       includeCommit:
         type: boolean
       order:
+        default: asc
         type: string
       page:
+        default: 1
         type: integer
       query:
         type: string
       repoID:
         type: integer
       size:
+        default: 20
         type: integer
       sort:
+        default: name
         type: string
     required:
     - repoID
@@ -1307,6 +1317,32 @@ paths:
                   $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.Repo'
               type: object
       summary: 获取仓库信息
+      tags:
+      - repos
+  /repos/{id}/diff:
+    post:
+      consumes:
+      - application/json
+      description: 获取仓库指定 GitRef Diff
+      parameters:
+      - description: 仓库 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.Repo'
+              type: object
+      summary: 获取仓库指定 GitRef Diff
       tags:
       - repos
   /repos/{repoId}/blame/{filePath}:

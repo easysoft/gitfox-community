@@ -5,6 +5,8 @@ import (
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/principal"
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
@@ -226,4 +228,73 @@ func (ctl *Controller) Blame(c *gin.Context) {
 		LineFrom:   BlameFilter.LineFrom,
 		LineTo:     BlameFilter.LineTo,
 	}))
+}
+
+// GetDiff 获取仓库指定 GitRef Diff
+// @Summary 获取仓库指定 GitRef Diff
+// @Description 获取仓库指定 GitRef Diff
+// @Tags repos
+// @Accept application/json
+// @Produce text/plain
+// @Param id path uint true "仓库 ID"
+// @Success 200 {object} resp.ObjectResponse{data=repoModel.Repo} "获取成功"
+// @Error 400 {object} resp.ObjectResponse "参数错误"
+// @Error 404 {object} resp.ObjectResponse "代码库不存在"
+// @Error 500 {object} resp.ObjectResponse "服务器内部错误"
+// @Router /repos/{id}/diff [post]
+func (c *Controller) GetDiff(ctx *gin.Context) {
+
+	log := logger.GetLogger(ctx.Request.Context())
+
+	var reqBody repoModel.ReqForDiff
+	var err error
+
+	// 解析 path id
+	repoID, err := req.PathParamAsPositiveUint(ctx, "id")
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.SpacePathParamError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
+	// 解析请求体
+	if err = ctx.ShouldBindJSON(&reqBody); err != nil {
+		err = errors.WithI18nKey(err, i18n.CommitBodyParamError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
+	// TODO: 获取操作人
+	session := &auth.Session{
+		Principal: principal.Principal{
+			ID:    1,
+			Email: "actor@chandao.com",
+			UID:   "actor",
+		},
+	}
+	// session, ok := req.GetAuthSession(ctx.Request.Context())
+	// if !ok {
+	// 	err := errors.WithI18nKey(errors.New("get session failed"), i18n.AuthNoSession)
+	// 	resp.BadRequest(ctx, err)
+	// 	return
+	// }
+
+	repoOut, err := c.repoSvc.GetByID(ctx, session, repoID)
+	if err != nil {
+		resp.InternalError(ctx, err)
+		return
+	}
+
+	// 设置响应头为 text/plain
+	ctx.Writer.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	resp.NoCache(ctx.Writer)
+
+	// 调用 service 层,直接将 diff 写入响应流
+	err = c.repoSvc.GetDiff(ctx.Request.Context(), reqBody, *repoOut, ctx.Writer)
+	if err != nil {
+		// 如果已经开始写入响应,则无法再使用标准的错误响应
+		// 只能记录日志
+		log.Errorf("Failed to get diff: %v", err)
+		return
+	}
 }
