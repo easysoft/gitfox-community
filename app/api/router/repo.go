@@ -12,6 +12,7 @@ func registerRepoRoutes(r *gin.RouterGroup, controller *Controller) {
 	repos := r.Group("/repos")
 	{
 		repos.POST("/", controller.Repo.Create)
+		repos.POST(":id/diff", controller.Repo.GetDiff)
 		repos.Group(fmt.Sprintf("{%s}", req.QueryParamRepoID))
 		{
 			repos.GET("/", controller.Repo.Get)

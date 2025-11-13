@@ -178,3 +178,18 @@ func GenerateCommitTitle(msg string) string {
 	}
 	return msg
 }
+
+func ParseDiffPath(path string) (repo.CompareInfo, error) {
+	infos := strings.SplitN(path, "...", 2)
+	if len(infos) != 2 {
+		infos = strings.SplitN(path, "..", 2)
+	}
+	if len(infos) != 2 {
+		return repo.CompareInfo{}, fmt.Errorf("invalid format \"%s\"", path)
+	}
+	return repo.CompareInfo{
+		BaseRef:   infos[0],
+		HeadRef:   infos[1],
+		MergeBase: strings.Contains(path, "..."),
+	}, nil
+}

@@ -584,6 +584,50 @@ const docTemplate = `{
                 }
             }
         },
+        "/repos/{id}/diff": {
+            "post": {
+                "description": "获取仓库指定 GitRef Diff",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "text/plain"
+                ],
+                "tags": [
+                    "repos"
+                ],
+                "summary": "获取仓库指定 GitRef Diff",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "仓库 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "获取成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.Repo"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/repos/{repoId}/blame/{filePath}": {
             "get": {
                 "description": "根据传入的仓库 ID、文件路径、Git 引用、行号范围等信息，获取仓库代码blame信息",
@@ -1244,7 +1288,7 @@ const docTemplate = `{
                 "commitDivergence": {
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.CommitDivergence"
                 },
-                "is_default": {
+                "isDefault": {
                     "type": "boolean"
                 },
                 "name": {
@@ -1282,10 +1326,12 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "order": {
-                    "type": "string"
+                    "type": "string",
+                    "default": "asc"
                 },
                 "page": {
-                    "type": "integer"
+                    "type": "integer",
+                    "default": 1
                 },
                 "prefix": {
                     "type": "string"
@@ -1297,10 +1343,12 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "size": {
-                    "type": "integer"
+                    "type": "integer",
+                    "default": 20
                 },
                 "sort": {
-                    "type": "string"
+                    "type": "string",
+                    "default": "name"
                 }
             }
         },
@@ -1518,10 +1566,12 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "limit": {
-                    "type": "integer"
+                    "type": "integer",
+                    "default": 20
                 },
                 "page": {
-                    "type": "integer"
+                    "type": "integer",
+                    "default": 1
                 },
                 "path": {
                     "type": "string"
@@ -1928,10 +1978,12 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "order": {
-                    "type": "string"
+                    "type": "string",
+                    "default": "asc"
                 },
                 "page": {
-                    "type": "integer"
+                    "type": "integer",
+                    "default": 1
                 },
                 "query": {
                     "type": "string"
@@ -1940,10 +1992,12 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "size": {
-                    "type": "integer"
+                    "type": "integer",
+                    "default": 20
                 },
                 "sort": {
-                    "type": "string"
+                    "type": "string",
+                    "default": "name"
                 }
             }
         },
