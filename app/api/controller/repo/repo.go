@@ -266,7 +266,7 @@ func (c *Controller) GetDiff(ctx *gin.Context) {
 
 	// TODO: 获取操作人
 	session := &auth.Session{
-		Principal: principal.Principal{
+		Principal: principal.User{
 			ID:    1,
 			Email: "actor@chandao.com",
 			UID:   "actor",
