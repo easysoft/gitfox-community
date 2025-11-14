@@ -10,7 +10,6 @@ import (
 )
 
 // Attempt 返回一个 Gin 中间件，用于认证请求
-// 如果有认证数据则进行认证，否则使用匿名用户会话
 // 使用方式: router.Use(middleware.Attempt(authenticator))
 func Attempt(authenticator authn.Authenticator) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -18,7 +17,7 @@ func Attempt(authenticator authn.Authenticator) gin.HandlerFunc {
 		ctx := c.Request.Context()
 
 		// 尝试认证请求
-		session, err := authenticator.Authenticate(c.Request)
+		session, err := authenticator.Authenticate(c)
 		if err != nil {
 			log.Debugf("authentication failed: %v", err)
 			resp.Unauthorized(c, err)
@@ -26,11 +25,7 @@ func Attempt(authenticator authn.Authenticator) gin.HandlerFunc {
 		}
 
 		// 更新日志上下文，注入用户信息
-		log = log.With(
-			"principal_uid", session.Principal.UID,
-			"principal_type", string(session.Principal.Type),
-			"principal_admin", session.Principal.Admin,
-		)
+		log = log.With("principal_uid", session.User.UID)
 		c.Set(logger.ContextLogger, log)
 
 		// 将认证会话注入到 Context 中

@@ -250,11 +250,11 @@ func (s *Server) sessionHandler(session ssh.Session) {
 	err = s.RepoCtrl.GitServicePack(
 		WithContext(ctx, session),
 		&auth.Session{
-			Principal: principal.Principal{
-				ID:          principalInfo.ID,
-				UID:         principalInfo.UID,
-				Email:       principalInfo.Email,
-				Type:        principalInfo.Type,
+			Principal: principal.User{
+				ID:    principalInfo.ID,
+				UID:   principalInfo.UID,
+				Email: principalInfo.Email,
+				//Type:        principalInfo.Type,
 				DisplayName: principalInfo.DisplayName,
 				Created:     principalInfo.Created,
 				Updated:     principalInfo.Updated,

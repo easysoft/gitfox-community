@@ -36,8 +36,7 @@ func (a *MembershipAuthorizer) Check(ctx context.Context, session *auth.Session,
 	}
 
 	log.Debugf(
-		"[MembershipAuthorizer] %s with id '%d' requests %s in scope %#v",
-		session.Principal.Type,
+		"[MembershipAuthorizer]id '%d' requests %s in scope %#v",
 		session.Principal.ID,
 		permission,
 		scope,

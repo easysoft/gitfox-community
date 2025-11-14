@@ -1,8 +1,8 @@
 package principal
 
 import (
-    "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
-    "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/principal"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/principal"
 )
 
 type Principal struct {
@@ -25,10 +25,10 @@ type Principal struct {
 }
 
 func (p *Principal) TableName() string {
-    return "principals"
+	return "principals"
 }
 
-func toUser(p *Principal) *principal.User {
+func (p *Principal) toUser() *principal.User {
 	return &principal.User{
 		ID:          p.ID,
 		UID:         p.UID,

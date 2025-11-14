@@ -6,7 +6,8 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/principal"
 )
 
-type IPrincipalStore interface {
+type Interface interface {
 	FindUserByID(ctx context.Context, id int64) (*principal.User, error)
 	FindUserByUID(ctx context.Context, uid string) (*principal.User, error)
+	FindUserByEmail(ctx context.Context, email string) (*principal.User, error)
 }

@@ -52,7 +52,7 @@ func (s *Service) Create(ctx context.Context, req *repoModel.CreateRepoReq) (*re
 
 	//TODO : mock session
 	session := &auth.Session{
-		Principal: principal.Principal{
+		Principal: principal.User{
 			Email: "actor@chandao.com",
 			UID:   "actor",
 		},

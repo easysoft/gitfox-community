@@ -51,7 +51,8 @@ func NewRouter(mode string, logger *logger.SugaredMateLogger, controller *Contro
 	registerTagRoutes(authGroup, controller)    // 标签相关路由
 	registerCommitRoutes(authGroup, controller) // 提交相关路由
 	registerGitRoutes(authGroup, controller)    // Git 相关路由
-	registerRepoRoutes(authGroup, controller)
+	registerRepoRoutes(authGroup, controller)   // 仓库相关路由
+	registerUserRoutes(authGroup, controller)   // 用户相关路由
 	return r
 }
 
@@ -59,6 +60,8 @@ func NewRouter(mode string, logger *logger.SugaredMateLogger, controller *Contro
 func registerPublicRoutes(r *gin.Engine, controller *Controller) {
 	public := r.Group("/public")
 	{
+		public.POST("/login", controller.User.Login)
+
 		public.GET("/health", func(c *gin.Context) {
 			c.JSON(200, gin.H{"status": "healthy"})
 		})

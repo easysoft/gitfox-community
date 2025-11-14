@@ -10,6 +10,7 @@ const (
 	AuthNoData                 I18nKey = "auth.no_data"                   // 请求不包含任何可用于 Authorizer 的认证数据
 	AuthNoSession              I18nKey = "auth.no_session"                // 请求不包含任何会话数据,无法进行授权
 	AuthSessionTokenNotAllowed I18nKey = "auth.session_token_not_allowed" // 会话令牌不允许用于与 Git 交互
+	AuthUserNotFound           I18nKey = "auth.user_not_found"            // 用户不存在
 
 	// Branch 相关常量
 	BranchBodyParamError    I18nKey = "branch.body_param_error"    // Body 参数解析失败.
@@ -64,6 +65,7 @@ const (
 	GitExecError            I18nKey = "git.exec_error"              // 执行 git 命令失败.
 	GitMapOutputError       I18nKey = "git.map_output_error"        // 无法将 git 命令结果映射到响应结构体.
 
+	// Repo 相关常量
 	RepoBodyParamError           I18nKey = "repo.body_param_error"           // Body 参数解析失败.
 	RepoCreateError              I18nKey = "repo.create_error"               // 创建仓库异常
 	RepoCreateSuccess            I18nKey = "repo.create_success"             // 创建仓库成功

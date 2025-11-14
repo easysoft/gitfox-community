@@ -49,7 +49,7 @@ func (c *Controller) Create(ctx *gin.Context) {
 	}
 	// TODO: 获取操作人
 	session := &auth.Session{
-		Principal: principal.Principal{
+		Principal: principal.User{
 			Email: "actor@chandao.com",
 			UID:   "actor",
 		},
@@ -103,7 +103,7 @@ func (c *Controller) List(ctx *gin.Context) {
 
 	// TODO: 获取操作人
 	session := &auth.Session{
-		Principal: principal.Principal{
+		Principal: principal.User{
 			Email: "actor@chandao.com",
 			UID:   "actor",
 		},
@@ -151,7 +151,7 @@ func (c *Controller) ListPrefixes(ctx *gin.Context) {
 
 	// TODO: 获取操作人
 	session := &auth.Session{
-		Principal: principal.Principal{
+		Principal: principal.User{
 			Email: "actor@chandao.com",
 			UID:   "actor",
 		},
