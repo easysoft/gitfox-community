@@ -10,7 +10,6 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	"github.com/gin-gonic/gin"
-	"golang.org/x/crypto/bcrypt"
 )
 
 var _ Authenticator = (*BasicAuthenticator)(nil)
@@ -44,18 +43,11 @@ func (a *BasicAuthenticator) Authenticate(r *gin.Context) (*auth.Session, error)
 		return nil, constant.ErrUnauthorized
 	}
 
-	if user.Source == constant.PrincipalSourceZentao {
-		hash := md5.Sum([]byte(passwd))
-		hashedPassword := hex.EncodeToString(hash[:])
-		if hashedPassword != user.Password {
-			logger.Debugf("[authn.basic]user %s has invalid zentao password", user.UID)
-			return nil, constant.ErrUnauthorized
-		}
-	} else {
-		if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(passwd)); err != nil {
-			logger.Debugf("[authn.basic]user %s has invalid password", user.UID)
-			return nil, constant.ErrUnauthorized
-		}
+	hash := md5.Sum([]byte(passwd))
+	hashedPassword := hex.EncodeToString(hash[:])
+	if hashedPassword != user.Password {
+		logger.Debugf("[authn.basic]user %s has invalid zentao password", user.UID)
+		return nil, constant.ErrUnauthorized
 	}
 
 	logger.Debugf("[authn.basic]user %s authenticated", user.UID)

@@ -42,11 +42,6 @@ func (a *MembershipAuthorizer) Check(ctx context.Context, session *auth.Session,
 		scope,
 	)
 
-	// 系统管理员可以调用任何API
-	if session.User.Admin {
-		return true, nil
-	}
-
 	if scope.ResourceType == constant.ResourceTypeRepo &&
 		(permission != constant.PermissionRepoView &&
 			permission != constant.PermissionPipelineView) {
@@ -60,7 +55,7 @@ func (a *MembershipAuthorizer) Check(ctx context.Context, session *auth.Session,
 
 	return a.permissionCache.Get(
 		ctx, PermissionCacheKey{
-			Account:    session.User.DisplayName,
+			Account:    session.User.UID,
 			Scope:      scope,
 			Permission: permission,
 		},

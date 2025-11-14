@@ -3,3 +3,7 @@ auth:
   no_session: "请求不包含任何会话数据，无法进行授权"
   session_token_not_allowed: "会话令牌不允许用于与 Git 交互"
   user_not_found: "用户不存在"
+  user_pass_error: "用户密码错误"
+  user_issue_token_error: "用户创建会话令牌失败"
+  user_issue_pat_error: "用户创建访问令牌失败"
+  auth_user_login_success: "用户登录成功"

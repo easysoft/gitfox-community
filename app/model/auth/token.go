@@ -15,3 +15,13 @@ type Token struct {
 
 	CreatedDate *time.Time `json:"created_date"`
 }
+
+type TokenResponse struct {
+	AccessToken string `json:"access_token"`
+	Token       Token  `json:"token"`
+}
+
+type LoginResp struct {
+	Token *TokenResponse `json:"token"`
+	PAT   *TokenResponse `json:"pat"`
+}

@@ -30,15 +30,10 @@ func (p *Principal) TableName() string {
 
 func (p *Principal) toUser() *principal.User {
 	return &principal.User{
-		ID:          p.ID,
-		UID:         p.UID,
-		Email:       p.Email,
-		DisplayName: p.DisplayName,
-		Admin:       p.Admin,
-		Blocked:     p.Blocked,
-		Salt:        p.Salt,
-		Created:     p.Created,
-		Updated:     p.Updated,
-		DeletedAt:   p.DeletedAt,
+		ID:      p.ID,
+		UID:     p.UID,
+		Email:   p.Email,
+		Salt:    p.Salt,
+		IsAdmin: p.Admin,
 	}
 }

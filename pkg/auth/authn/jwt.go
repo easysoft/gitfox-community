@@ -20,6 +20,7 @@ import (
 
 const HeaderAuthorization = "Authorization"
 const CookieName = "token"
+const AdminPATIdentifier = "adminPat"
 
 var _ Authenticator = (*BasicAuthenticator)(nil)
 
@@ -50,9 +51,6 @@ func (a *JWTAuthenticator) Authenticate(r *gin.Context) (*auth.Session, error) {
 			principal, err = a.principalStore.FindUserByID(r.Request.Context(), claims.PrincipalID)
 			if err != nil {
 				return nil, fmt.Errorf("failed to get principal for token: %w", err)
-			}
-			if principal.Blocked {
-				return nil, fmt.Errorf("user is blocked")
 			}
 			return []byte(principal.Salt), nil
 		},

@@ -9,10 +9,4 @@ const (
 
 	// TokenTypePAT is a personal access token.
 	TokenTypePAT TokenType = "pat"
-
-	// TokenTypeSAT is a service account access token.
-	TokenTypeSAT TokenType = "sat"
-
-	// TokenTypeArtifact is an artifact token.
-	TokenTypeArtifact TokenType = "artifact"
 )

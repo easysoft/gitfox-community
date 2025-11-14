@@ -5,42 +5,19 @@ import (
 )
 
 type User struct {
-	ID          int64  `db:"id"             gorm:"column:id;primaryKey" json:"id"`
-	UID         string `db:"uid"            gorm:"column:uid"           json:"uid"`
-	Email       string `db:"email"          gorm:"column:email"         json:"email"`
-	DisplayName string `db:"display_name"   gorm:"column:display_name"  json:"display_name"`
-	Admin       bool   `db:"admin"          gorm:"column:admin"         json:"admin"`
-	Blocked     bool   `db:"blocked"        gorm:"column:blocked"       json:"blocked"`
-	Salt        string `db:"salt"           gorm:"column:salt"          json:"-"`
-	Created     int64  `db:"created"        gorm:"column:created"       json:"created"`
-	Updated     int64  `db:"updated"        gorm:"column:updated"       json:"updated"`
-	DeletedAt   int64  `db:"deleted_at"     gorm:"column:deleted_at"    json:"deleted_at,omitempty"`
+	ID      int64  `db:"id"             gorm:"column:id;primaryKey" json:"id"`
+	UID     string `db:"uid"            gorm:"column:uid"           json:"uid"`
+	Email   string `db:"email"          gorm:"column:email"         json:"email"`
+	Salt    string `db:"salt"           gorm:"column:salt"          json:"-"`
+	IsAdmin bool   `db:"is_admin"        gorm:"column:is_admin"        json:"is_admin"`
 
 	// User specific fields
 	Password   string `db:"user_password"  gorm:"column:user_password"  json:"-"`
 	Token      string `db:"user_token"     gorm:"column:user_token"     json:"-"`
 	Expiration int64  `db:"user_expiration" gorm:"column:user_expiration" json:"-"`
-
-	// Source is the source of the user account.
-	Source constant.PrincipalSource `db:"user_source" gorm:"column:user_source" json:"-"`
 }
 
-func (u *User) ToPrincipal() *Principal {
-	return &Principal{
-		ID:          u.ID,
-		UID:         u.UID,
-		Email:       u.Email,
-		Type:        constant.PrincipalTypeUser,
-		DisplayName: u.DisplayName,
-		Admin:       u.Admin,
-		Blocked:     u.Blocked,
-		Salt:        u.Salt,
-		Created:     u.Created,
-		Updated:     u.Updated,
-	}
-}
-
-// Principal represents the identity of an acting entity (User, ServiceAccount, Service).
+// Principal represents the identity of an acting entity ( ServiceAccount, Service).
 type Principal struct {
 	// TODO: int64 ID doesn't match DB
 	ID          int64                  `db:"principal_id"           gorm:"column:principal_id;primaryKey" json:"-"`
@@ -53,11 +30,6 @@ type Principal struct {
 	// Should be part of principal or not?
 	Blocked bool   `db:"principal_blocked"   gorm:"column:principal_blocked"  json:"blocked"`
 	Salt    string `db:"principal_salt"      gorm:"column:principal_salt"     json:"-"`
-
-	// Other info
-	Created   int64 `db:"principal_created"    gorm:"column:principal_created"  json:"created"`
-	Updated   int64 `db:"principal_updated"    gorm:"column:principal_updated"  json:"updated"`
-	DeletedAt int64 `db:"principal_deleted_at"     gorm:"column:principal_deleted_at"    json:"deleted_at,omitempty"`
 
 	// Source is the source of the user account.
 	Source constant.PrincipalSource `db:"principal_user_source" gorm:"column:principal_user_source" json:"-"`

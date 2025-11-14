@@ -2,6 +2,9 @@ package token
 
 import (
 	"time"
+
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
 )
 
 type Token struct {
@@ -21,4 +24,14 @@ type Token struct {
 
 func (Token) TableName() string {
 	return "tokens"
+}
+
+func (t *Token) ToAuthToken() *auth.Token {
+	return &auth.Token{
+		ID:          t.ID,
+		PrincipalID: t.PrincipalID,
+		Type:        constant.TokenType(t.Type),
+		Identifier:  t.Identifier,
+		ExpiresAt:   t.ExpiresAt,
+	}
 }
