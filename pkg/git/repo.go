@@ -25,12 +25,12 @@ import (
 	"runtime/debug"
 	"time"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/api"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/check"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/hash"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/util"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	gonanoid "github.com/matoous/go-nanoid/v2"
 )
 
@@ -469,7 +469,7 @@ func (s *Service) createRepositoryInternal(
 
 	// Clone repository to temp dir
 	if err = s.git.Clone(ctx, repoPath, tempDir, api.CloneRepoOptions{Mirror: base.Mirror}); err != nil {
-		return errors.Newf("createRepositoryInternal: failed to clone repo: %w", err)
+		return errors.Newf("createRepositoryInternal: failed to clone repo: %v", err)
 	}
 
 	// logic for receiving files

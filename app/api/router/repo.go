@@ -12,12 +12,17 @@ func registerRepoRoutes(r *gin.RouterGroup, controller *Controller) {
 	repos := r.Group("/repos")
 	{
 		repos.POST("/", controller.Repo.Create)
-		repos.POST(":id/diff", controller.Repo.GetDiff)
-		repos.Group(fmt.Sprintf("{%s}", req.QueryParamRepoID))
+		reposWithID := repos.Group(":id")
 		{
-			repos.GET("/", controller.Repo.Get)
-			repos.GET("/content", controller.Repo.GetContent)
-			repos.GET(fmt.Sprintf("/blame/{%s}", req.PathParamFilePath), controller.Repo.Blame)
+			reposWithID.POST("/diff", controller.Repo.GetDiff)
+			reposWithID.GET("/paths", controller.Repo.Paths)
+			reposWithID.POST("/paths/details", controller.Repo.PathsDetails)
+		}
+		reposWithRepoID := repos.Group(fmt.Sprintf("{%s}", req.QueryParamRepoID))
+		{
+			reposWithRepoID.GET("/", controller.Repo.Get)
+			reposWithRepoID.GET("/content", controller.Repo.GetContent)
+			reposWithRepoID.GET(fmt.Sprintf("/blame/{%s}", req.PathParamFilePath), controller.Repo.Blame)
 		}
 
 	}

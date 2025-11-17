@@ -580,7 +580,8 @@ func (g *Git) GetFullCommitID(
 	output := &bytes.Buffer{}
 	err := cmd.Run(ctx, command.WithDir(repoPath), command.WithStdout(output))
 	if err != nil {
-		if command.AsError(err).IsExitCode(128) {
+		cmdErr := command.AsError(err)
+		if cmdErr != nil && cmdErr.IsExitCode(128) {
 			return sha.None, errors.NotFound("commit not found %s", shortID)
 		}
 		return sha.None, err

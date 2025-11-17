@@ -32,7 +32,8 @@ func (g *Git) ResolveRev(ctx context.Context,
 	output := &bytes.Buffer{}
 	err := cmd.Run(ctx, command.WithDir(repoPath), command.WithStdout(output))
 	if err != nil {
-		if command.AsError(err).IsAmbiguousArgErr() {
+		cmdErr := command.AsError(err)
+		if cmdErr != nil && cmdErr.IsAmbiguousArgErr() {
 			return sha.None, errors.InvalidArgument("could not resolve git revision: %s", rev)
 		}
 		return sha.None, fmt.Errorf("failed to resolve git revision: %w", err)
