@@ -265,19 +265,12 @@ func (c *Controller) GetDiff(ctx *gin.Context) {
 	}
 
 	// TODO: 获取操作人
-	session := &auth.Session{
-		Principal: principal.Principal{
-			ID:    1,
-			Email: "actor@chandao.com",
-			UID:   "actor",
-		},
+	session, ok := req.GetAuthSession(ctx.Request.Context())
+	if !ok {
+		err := errors.WithI18nKey(errors.New("get session failed"), i18n.AuthNoSession)
+		resp.BadRequest(ctx, err)
+		return
 	}
-	// session, ok := req.GetAuthSession(ctx.Request.Context())
-	// if !ok {
-	// 	err := errors.WithI18nKey(errors.New("get session failed"), i18n.AuthNoSession)
-	// 	resp.BadRequest(ctx, err)
-	// 	return
-	// }
 
 	repoOut, err := c.repoSvc.GetByID(ctx, session, repoID)
 	if err != nil {
@@ -377,7 +370,7 @@ func (c *Controller) GetPaths(ctx *gin.Context) {
 // @Error 404 {object} resp.ObjectResponse "代码库不存在"
 // @Error 500 {object} resp.ObjectResponse "服务器内部错误"
 // @Router /repos/{id}/paths/details [post]
-func (c *Controller) PathsDetails(ctx *gin.Context) {
+func (c *Controller) GetPathsDetails(ctx *gin.Context) {
 
 	var reqBody repoModel.PathsDetailsInput
 	var err error
