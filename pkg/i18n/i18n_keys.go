@@ -64,9 +64,12 @@ const (
 	GitExecError            I18nKey = "git.exec_error"              // 执行 git 命令失败.
 	GitMapOutputError       I18nKey = "git.map_output_error"        // 无法将 git 命令结果映射到响应结构体.
 
+	// Repo 相关常量
 	RepoBodyParamError           I18nKey = "repo.body_param_error"           // Body 参数解析失败.
 	RepoCreateError              I18nKey = "repo.create_error"               // 创建仓库异常
 	RepoCreateSuccess            I18nKey = "repo.create_success"             // 创建仓库成功
+	RepoGetPathsDetailsSuccess   I18nKey = "repo.get_paths_details_success"  // 获取路径详情成功.
+	RepoGetPathsSuccess          I18nKey = "repo.get_paths_success"          // 获取路径成功.
 	RepoIdentifierInvalid        I18nKey = "repo.identifier_invalid"         // 仓库名称不合法,identifier仅支持字母、数字、下划线(_)、连字符(-)、点号(.)
 	RepoLineNumberError          I18nKey = "repo.line_number_error"          // 行号必须大于0, 且结束行号必须大于起始行号
 	RepoMirrorReadOnly           I18nKey = "repo.mirror_read_only"           // 镜像仓库只读.
@@ -76,6 +79,7 @@ const (
 	RepoPullPermissionError      I18nKey = "repo.pull_permission_error"      // 您没有权限拉取此仓库.
 	RepoPushPermissionError      I18nKey = "repo.push_permission_error"      // 您没有权限推送此仓库.
 	RepoQueryError               I18nKey = "repo.query_error"                // 查询仓库失败
+	RepoQueryParamError          I18nKey = "repo.query_param_error"          // Query 参数解析失败.
 	RepoQuerySuccess             I18nKey = "repo.query_success"              // 查询仓库成功
 
 	// Request 相关常量

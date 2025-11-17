@@ -265,19 +265,12 @@ func (c *Controller) GetDiff(ctx *gin.Context) {
 	}
 
 	// TODO: 获取操作人
-	session := &auth.Session{
-		Principal: principal.Principal{
-			ID:    1,
-			Email: "actor@chandao.com",
-			UID:   "actor",
-		},
+	session, ok := req.GetAuthSession(ctx.Request.Context())
+	if !ok {
+		err := errors.WithI18nKey(errors.New("get session failed"), i18n.AuthNoSession)
+		resp.BadRequest(ctx, err)
+		return
 	}
-	// session, ok := req.GetAuthSession(ctx.Request.Context())
-	// if !ok {
-	// 	err := errors.WithI18nKey(errors.New("get session failed"), i18n.AuthNoSession)
-	// 	resp.BadRequest(ctx, err)
-	// 	return
-	// }
 
 	repoOut, err := c.repoSvc.GetByID(ctx, session, repoID)
 	if err != nil {
@@ -297,4 +290,138 @@ func (c *Controller) GetDiff(ctx *gin.Context) {
 		log.Errorf("Failed to get diff: %v", err)
 		return
 	}
+}
+
+// GetPaths 获取仓库指定 GitRef 路径
+// @Summary 获取仓库指定 GitRef 路径
+// @Description 获取仓库指定 GitRef 路径
+// @Tags repos
+// @Accept application/json
+// @Produce application/json
+// @Param id path uint true "仓库 ID"
+// @Param gitRef query string false "Git 引用"
+// @Param includeDirectories query bool false "包含目录"
+// @Success 200 {object} resp.ObjectResponse{data=repoModel.PathsOutput} "获取成功"
+// @Error 400 {object} resp.ObjectResponse "参数错误"
+// @Error 404 {object} resp.ObjectResponse "代码库不存在"
+// @Error 500 {object} resp.ObjectResponse "服务器内部错误"
+// @Router /repos/{id}/paths [get]
+func (c *Controller) GetPaths(ctx *gin.Context) {
+
+	var reqQuery repoModel.PathsInput
+	var err error
+
+	// 解析 path id
+	repoID, err := req.PathParamAsPositiveUint(ctx, "id")
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RepoPathParamError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
+	// 解析请求体
+	if err = ctx.ShouldBindQuery(&reqQuery); err != nil {
+		err = errors.WithI18nKey(err, i18n.RepoQueryParamError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+	// TODO: 获取操作人
+	// session, ok := req.GetAuthSession(ctx.Request.Context())
+	// if !ok {
+	// 	err := errors.WithI18nKey(errors.New("get session failed"), i18n.AuthNoSession)
+	// 	resp.BadRequest(ctx, err)
+	// 	return
+	// }
+	session := &auth.Session{
+		Principal: principal.Principal{
+			ID:    1,
+			Email: "actor@chandao.com",
+			UID:   "actor",
+		},
+	}
+
+	// 通过仓库 ID 获取仓库
+	repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, repoID)
+	if err != nil {
+		resp.InternalError(ctx, err)
+		return
+	}
+
+	respData, err := c.repoSvc.Paths(ctx, reqQuery, *repoOut)
+	if err != nil {
+		resp.InternalError(ctx, err)
+		return
+	}
+
+	resp.OK(ctx, i18n.RepoGetPathsSuccess, respData)
+
+}
+
+// PathsDetails 获取仓库指定 GitRef 路径详情
+// @Summary 获取仓库指定 GitRef 路径详情
+// @Description 获取仓库指定 GitRef 路径详情
+// @Tags repos
+// @Accept application/json
+// @Produce application/json
+// @Param id path uint true "仓库 ID"
+// @Param body body repoModel.PathsDetailsInput true "查询路径详情的请求参数"
+// @Success 200 {object} resp.ObjectResponse{data=repoModel.PathsDetailsOutput} "获取成功"
+// @Error 400 {object} resp.ObjectResponse "参数错误"
+// @Error 404 {object} resp.ObjectResponse "代码库不存在"
+// @Error 500 {object} resp.ObjectResponse "服务器内部错误"
+// @Router /repos/{id}/paths/details [post]
+func (c *Controller) GetPathsDetails(ctx *gin.Context) {
+
+	var reqBody repoModel.PathsDetailsInput
+	var err error
+
+	// 解析 path id
+	repoID, err := req.PathParamAsPositiveUint(ctx, "id")
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RepoPathParamError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
+	// 解析请求体
+	if err = ctx.ShouldBindJSON(&reqBody); err != nil {
+		err = errors.WithI18nKey(err, i18n.RepoBodyParamError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+	if len(reqBody.Paths) == 0 || len(reqBody.Paths) > 5000 {
+		err = errors.WithI18nKey(err, i18n.RepoBodyParamError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+	// TODO: 获取操作人
+	// session, ok := req.GetAuthSession(ctx.Request.Context())
+	// if !ok {
+	// 	err := errors.WithI18nKey(errors.New("get session failed"), i18n.AuthNoSession)
+	// 	resp.BadRequest(ctx, err)
+	// 	return
+	// }
+	session := &auth.Session{
+		Principal: principal.Principal{
+			ID:    1,
+			Email: "actor@chandao.com",
+			UID:   "actor",
+		},
+	}
+
+	// 通过仓库 ID 获取仓库
+	repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, repoID)
+	if err != nil {
+		resp.InternalError(ctx, err)
+		return
+	}
+
+	respData, err := c.repoSvc.PathsDetails(ctx, reqBody, *repoOut)
+	if err != nil {
+		resp.InternalError(ctx, err)
+		return
+	}
+
+	resp.OK(ctx, i18n.RepoGetPathsDetailsSuccess, respData)
+
 }
