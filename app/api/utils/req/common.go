@@ -25,6 +25,8 @@ const (
 	QueryParamFlattenDirectories = "flatten_directories" // 是否展平目录结构 默认 false
 
 	PathParamTokenIdentifier = "token_identifier" // 令牌标识符
+
+	PathParamPublicKeyIdentifier = "public_key_identifier"
 )
 
 const (

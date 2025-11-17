@@ -10,6 +10,8 @@ const (
 	AuthAuthUserLoginSuccess   I18nKey = "auth.auth_user_login_success"   // 用户登录成功
 	AuthNoData                 I18nKey = "auth.no_data"                   // 请求不包含任何可用于 Authorizer 的认证数据
 	AuthNoSession              I18nKey = "auth.no_session"                // 请求不包含任何会话数据,无法进行授权
+	AuthPubKeyAddError         I18nKey = "auth.pub_key_add_error"         // 公钥添加失败
+	AuthPubKeyAddSuccess       I18nKey = "auth.pub_key_add_success"       // 公钥添加成功
 	AuthSessionTokenNotAllowed I18nKey = "auth.session_token_not_allowed" // 会话令牌不允许用于与 Git 交互
 	AuthUserIssuePatError      I18nKey = "auth.user_issue_pat_error"      // 用户创建访问令牌失败
 	AuthUserIssueTokenError    I18nKey = "auth.user_issue_token_error"    // 用户创建会话令牌失败

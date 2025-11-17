@@ -6,6 +6,7 @@ import (
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/publickey"
 	userSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/user"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
@@ -17,13 +18,15 @@ import (
 
 // Controller 处理与提交相关的 HTTP 请求
 type Controller struct {
-	userSvc userSvc.Interface
+	userSvc      userSvc.Interface
+	publicKeySvc publickey.Interface
 }
 
 // NewController 创建提交处理器实例
-func NewController(userService userSvc.Interface) *Controller {
+func NewController(userService userSvc.Interface, publicKeyService publickey.Interface) *Controller {
 	return &Controller{
-		userSvc: userService,
+		userSvc:      userService,
+		publicKeySvc: publicKeyService,
 	}
 }
 

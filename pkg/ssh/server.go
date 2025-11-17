@@ -54,7 +54,7 @@ type Server struct {
 	KeepAliveInterval       time.Duration
 	ServerHostKeysDir       string
 
-	Verifier publickey.IPublicKey
+	Verifier publickey.Interface
 	RepoCtrl *repo.Controller
 }
 
@@ -154,7 +154,7 @@ func (s *Server) publicKeyHandler(ctx ssh.Context, key ssh.PublicKey) bool {
 		return false
 	}
 
-	principal, err := s.Verifier.ValidateKey(ctx, key, constant.PublicKeyUsageAuth)
+	principal, err := s.Verifier.ValidateKey(ctx, key)
 	if errors.IsNotFound(err) {
 		log.Debug().Err(err).Msg("public key is unknown")
 		return false

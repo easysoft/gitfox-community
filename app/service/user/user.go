@@ -9,7 +9,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/principal"
 	principalStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/principal"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/token"
-	"github.com/easysoft/gitfox/app/jwt"
+	authPkg "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/auth/authn"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -53,7 +53,7 @@ func (s *Service) IssueToken(ctx context.Context, user *principal.User) (*auth.T
 	}
 
 	// create jwt token.
-	jwtToken, err := jwt.GenerateForToken(token, user.Salt)
+	jwtToken, err := authPkg.GenerateForToken(token, user.Salt)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create jwt token: %w", err)
 	}
@@ -68,7 +68,7 @@ func (s *Service) IssuePAT(ctx context.Context, user *principal.User, identifier
 	}
 
 	// create jwt token.
-	jwtToken, err := jwt.GenerateForToken(token, user.Salt)
+	jwtToken, err := authPkg.GenerateForToken(token, user.Salt)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create jwt token: %w", err)
 	}

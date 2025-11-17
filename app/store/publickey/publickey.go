@@ -7,20 +7,20 @@ import (
 	"gorm.io/gorm"
 )
 
-var _ IPublicKeyStore = (*PublicKeyStore)(nil)
+var _ Interface = (*Store)(nil)
 
-func NewPublicKeyStore(db *gorm.DB) IPublicKeyStore {
-	return &PublicKeyStore{
+func NewPublicKeyStore(db *gorm.DB) Interface {
+	return &Store{
 		db: db,
 	}
 }
 
-type PublicKeyStore struct {
+type Store struct {
 	db *gorm.DB
 }
 
 // ListByFingerprint 根据指纹查询公钥列表
-func (s *PublicKeyStore) ListByFingerprint(ctx context.Context, fingerprint string) ([]publickey.PublicKey, error) {
+func (s *Store) ListByFingerprint(ctx context.Context, fingerprint string) ([]publickey.PublicKey, error) {
 	// 使用 gorm 查询
 	var publicKeys []PublicKey
 	var query PublicKey
@@ -40,7 +40,7 @@ func (s *PublicKeyStore) ListByFingerprint(ctx context.Context, fingerprint stri
 }
 
 // MarkAsVerified updates the public key to mark it as verified.
-func (s *PublicKeyStore) MarkAsVerified(ctx context.Context, id int64, verified int64) error {
+func (s *Store) MarkAsVerified(ctx context.Context, id int64, verified int64) error {
 	// 使用 gorm 更新 verified 字段
 	var query PublicKey
 	query.ID = id

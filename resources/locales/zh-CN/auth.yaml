@@ -7,3 +7,5 @@ auth:
   user_issue_token_error: "用户创建会话令牌失败"
   user_issue_pat_error: "用户创建访问令牌失败"
   auth_user_login_success: "用户登录成功"
+  pub_key_add_success: "公钥添加成功"
+  pub_key_add_error: "公钥添加失败"

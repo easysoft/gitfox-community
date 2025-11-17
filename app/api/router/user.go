@@ -1,9 +1,6 @@
 package router
 
 import (
-	"fmt"
-
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"github.com/gin-gonic/gin"
 )
 
@@ -13,16 +10,12 @@ func registerUserRoutes(r *gin.RouterGroup, controller *Controller) {
 	{
 		tokens.GET("/", controller.User.Login)
 		tokens.POST("/", controller.User.Login)
-
-		tokens.Group(fmt.Sprintf("{%s}", req.PathParamTokenIdentifier))
-		{
-			tokens.DELETE("/", controller.User.Login)
-		}
 	}
 
 	keys := r.Group("user/keys")
 	{
-		keys.GET("/", controller.User.Login)
-		keys.POST("/", controller.User.Login)
+		// keys.GET("/", controller.PublicKey.List)
+		keys.POST("/", controller.User.Create)
+		// keys.DELETE(fmt.Sprintf("/{%s}", req.PathParamPublicKeyIdentifier), controller.User.Login)
 	}
 }

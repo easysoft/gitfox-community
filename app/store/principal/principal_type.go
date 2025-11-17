@@ -1,27 +1,26 @@
 package principal
 
 import (
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
+	"time"
+
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/principal"
 )
 
 type Principal struct {
-	ID           int64                    `db:"id" gorm:"column:id;primaryKey"`
-	UID          string                   `db:"uid" gorm:"column:uid"`
-	UIDUnique    string                   `db:"uid_unique" gorm:"column:uid_unique"`
-	Email        string                   `db:"email" gorm:"column:email"`
-	Type         constant.PrincipalType   `db:"type" gorm:"column:type"`
-	DisplayName  string                   `db:"display_name" gorm:"column:display_name"`
-	Admin        bool                     `db:"admin" gorm:"column:admin"`
-	Blocked      bool                     `db:"blocked" gorm:"column:blocked"`
-	Salt         string                   `db:"salt" gorm:"column:salt"`
-	Created      int64                    `db:"created" gorm:"column:created"`
-	Updated      int64                    `db:"updated" gorm:"column:updated"`
-	UserPassword string                   `db:"user_password" gorm:"column:user_password"`
-	SAParentType string                   `db:"sa_parent_type" gorm:"column:sa_parent_type"`
-	SAParentID   int                      `db:"sa_parent_id" gorm:"column:sa_parent_id"`
-	UserSource   constant.PrincipalSource `db:"user_source" gorm:"column:user_source"`
-	DeletedAt    int64                    `db:"deleted_at" gorm:"column:deleted_at"`
+	ID           int64  `db:"id" gorm:"column:id;primaryKey"`
+	UID          string `db:"uid" gorm:"column:uid"`
+	Email        string `db:"email" gorm:"column:email"`
+	Admin        bool   `db:"admin" gorm:"column:admin"`
+	Salt         string `db:"salt" gorm:"column:salt"`
+	Created      int64  `db:"created" gorm:"column:created"`
+	Updated      int64  `db:"updated" gorm:"column:updated"`
+	UserPassword string `db:"user_password" gorm:"column:user_password"`
+
+	CreatedBy   string     `gorm:"column:created_by"`
+	CreatedDate *time.Time `gorm:"column:created_date"`
+	EditedBy    string     `gorm:"column:edited_by"`
+	EditedDate  *time.Time `gorm:"column:edited_date"`
+	Deleted     bool       `gorm:"column:deleted"`
 }
 
 func (p *Principal) TableName() string {

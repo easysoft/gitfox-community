@@ -7,3 +7,5 @@ auth:
   user_issue_token_error: "user issue session token error"
   user_issue_pat_error: "user issue pat error"
   auth_user_login_success: "user login success"
+  pub_key_add_success: "public key add success"
+  pub_key_add_error: "public key add error"

@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/principal"
+	PublicKeyModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/publickey"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/publickey"
 	"github.com/easysoft/gitfox/errors"
@@ -14,31 +15,26 @@ import (
 	"github.com/gliderlabs/ssh"
 )
 
-type IPublicKey interface {
-	ValidateKey(ctx context.Context, publicKey ssh.PublicKey, usage constant.PublicKeyUsage) (*principal.PrincipalInfo, error)
-}
-
 func NewPublicKeyService(
-	publicKeyStore publickey.IPublicKeyStore,
+	publicKeyStore publickey.Store,
 	pCache store.PrincipalInfoCache,
-) IPublicKey {
-	return &PublicKeyService{
+) Interface {
+	return &Service{
 		publicKeyStore: publicKeyStore,
 		pCache:         pCache,
 	}
 }
 
-type PublicKeyService struct {
-	publicKeyStore publickey.IPublicKeyStore
+type Service struct {
+	publicKeyStore publickey.Store
 	pCache         store.PrincipalInfoCache
 }
 
 // ValidateKey tries to match the provided key to one of the keys in the database.
 // It updates the verified timestamp of the matched key to mark it as used.
-func (s PublicKeyService) ValidateKey(
+func (s Service) ValidateKey(
 	ctx context.Context,
 	publicKey ssh.PublicKey,
-	usage constant.PublicKeyUsage,
 ) (*principal.PrincipalInfo, error) {
 	key := From(publicKey)
 	fingerprint := key.Fingerprint()
@@ -52,7 +48,7 @@ func (s PublicKeyService) ValidateKey(
 	var principalID int64
 
 	for _, existingKey := range existingKeys {
-		if !key.Matches(existingKey.Content) || existingKey.Usage != usage {
+		if !key.Matches(existingKey.Content) {
 			continue
 		}
 
@@ -75,4 +71,12 @@ func (s PublicKeyService) ValidateKey(
 	}
 
 	return pInfo, nil
+}
+
+func (s Service) CreatePublicKey(
+	ctx context.Context,
+	session *auth.Session,
+	params *PublicKeyModel.CreatePublicKeyInput,
+) error {
+	return nil
 }
