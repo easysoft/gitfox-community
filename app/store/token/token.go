@@ -8,7 +8,6 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/principal"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
-	"github.com/gotidy/ptr"
 
 	"gorm.io/gorm"
 )
@@ -47,15 +46,15 @@ func (s *tokensStore) CreateUserSession(ctx context.Context, user *principal.Use
 func (s *tokensStore) CreateUserPAT(ctx context.Context, user *principal.User, tokenIdentifier string, lifetime *time.Duration) (*auth.Token, error) {
 	issuedAt := time.Now()
 
-	var expiresAt *int64
+	var expiresAt time.Time
 	if lifetime != nil {
-		expiresAt = ptr.Int64(issuedAt.Add(*lifetime).UnixMilli())
+		expiresAt = issuedAt.Add(*lifetime)
 	}
 	token := &Token{
 		PrincipalID: user.ID,
 		Type:        string(constant.TokenTypePAT),
 		Identifier:  tokenIdentifier,
-		ExpiresAt:   expiresAt,
+		ExpiresAt:   &expiresAt,
 	}
 	if err := s.db.WithContext(ctx).Create(token).Error; err != nil {
 		return nil, errors.DBError.Wrapf(err, "create user pat token for user %d", user.ID)

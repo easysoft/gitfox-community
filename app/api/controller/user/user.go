@@ -2,7 +2,6 @@ package user
 
 import (
 	"net/http"
-	"time"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
@@ -99,8 +98,8 @@ func (c *Controller) Login(ctx *gin.Context) {
 func includeTokenCookie(r *gin.Context, tokenResponse *auth.TokenResponse) {
 	cookie := newEmptyTokenCookie(r.Request, authPkg.CookieName)
 	cookie.Value = tokenResponse.AccessToken
-	if tokenResponse.Token.ExpiresAt != nil {
-		cookie.Expires = time.UnixMilli(*tokenResponse.Token.ExpiresAt)
+	if !tokenResponse.Token.ExpiresAt.IsZero() {
+		cookie.Expires = tokenResponse.Token.ExpiresAt.UTC()
 	}
 
 	r.Writer.Header().Add("Set-Cookie", cookie.String())

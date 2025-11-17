@@ -10,7 +10,7 @@ import (
 	PublicKeyModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/publickey"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/publickey"
-	"github.com/easysoft/gitfox/errors"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 
 	"github.com/gliderlabs/ssh"
 )
@@ -57,7 +57,7 @@ func (s Service) ValidateKey(
 	}
 
 	if keyID == 0 {
-		return nil, errors.NotFound("Unrecognized key")
+		return nil, errors.NotFound.New("Unrecognized key")
 	}
 
 	pInfo, err := s.pCache.Get(ctx, principalID)
@@ -78,5 +78,26 @@ func (s Service) CreatePublicKey(
 	session *auth.Session,
 	params *PublicKeyModel.CreatePublicKeyInput,
 ) error {
+
+	// todo check user
+
+	key, comment, err := ParseString(params.Content)
+	if err != nil {
+		err = errors.Wrap(err, "could not parse public key")
+		return err
+	}
+
+	input := publickey.PublicKey{
+		PrincipalID: session.User.ID,
+		Identifier:  params.Identifier,
+		Fingerprint: key.Fingerprint(), // 根据公钥内容计算的指纹（稳定摘要），用于快速查重与匹配。
+		Content:     params.Content,    // 公钥原始内容（如 ssh-ed25519 AAAA... user@host ），用于精确匹配与验证
+		Comment:     comment,           // 公钥末尾的注释部分（通常是 user@host ），便于展示和识别。
+		Type:        key.Type(),        // 公钥算法类型（如 ssh-ed25519 、 ssh-rsa ），用于展示与后续策略控制。
+	}
+	err = s.publicKeyStore.Create(ctx, input)
+	if err != nil {
+		return errors.Wrap(err, "failed to create public key")
+	}
 	return nil
 }

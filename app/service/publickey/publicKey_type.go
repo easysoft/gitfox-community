@@ -11,6 +11,5 @@ import (
 
 type Interface interface {
 	ValidateKey(ctx context.Context, publicKey ssh.PublicKey) (*principal.PrincipalInfo, error)
-
 	CreatePublicKey(ctx context.Context, session *auth.Session, params *publickey.CreatePublicKeyInput) error
 }

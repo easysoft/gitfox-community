@@ -1,18 +1,43 @@
 package publickey
 
+import (
+	"regexp"
+	"time"
+
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+)
+
 type PublicKey struct {
-	ID          int64  `json:"-"` // frontend doesn't need it
-	PrincipalID int64  `json:"-"` // API always returns keys for the same user
-	Created     int64  `json:"created"`
-	Verified    *int64 `json:"verified"`
-	Identifier  string `json:"identifier"`
-	Fingerprint string `json:"fingerprint"`
-	Content     string `json:"-"`
-	Comment     string `json:"comment"`
-	Type        string `json:"type"`
+	ID          int64      `json:"-"`
+	PrincipalID int64      `json:"-"`
+	Verified    *time.Time `json:"verified"`
+	Identifier  string     `json:"identifier"`
+	Fingerprint string     `json:"fingerprint"`
+	Content     string     `json:"-"`
+	Comment     string     `json:"comment"`
+	Type        string     `json:"type"`
 }
 
 type CreatePublicKeyInput struct {
 	Identifier string `json:"identifier"`
-	Content    string `json:"content"`
+	Content    string `json:"content" binding:"required"`
+}
+
+const (
+	minIdentifierLength = 1
+	MaxIdentifierLength = 100
+	identifierRegex     = "^[a-zA-Z0-9-_.]*$"
+)
+
+func (p *CreatePublicKeyInput) CheckIdentifier() error {
+	l := len(p.Identifier)
+	if l < minIdentifierLength || l > MaxIdentifierLength {
+		return errors.InvalidArgument.Newf("identifier length must be between %d and %d", minIdentifierLength, MaxIdentifierLength)
+	}
+
+	if ok, _ := regexp.Match(identifierRegex, []byte(p.Identifier)); !ok {
+		return errors.InvalidArgument.Newf("identifier must match regex %s", identifierRegex)
+	}
+
+	return nil
 }

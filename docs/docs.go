@@ -1245,6 +1245,46 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/user/public-keys": {
+            "post": {
+                "description": "创建用户公钥",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "用户"
+                ],
+                "summary": "创建用户公钥",
+                "parameters": [
+                    {
+                        "description": "创建用户公钥参数",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_publickey.CreatePublicKeyInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "创建用户公钥成功",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "创建用户公钥失败",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -1680,6 +1720,20 @@ const docTemplate = `{
                 }
             }
         },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_publickey.CreatePublicKeyInput": {
+            "type": "object",
+            "required": [
+                "content"
+            ],
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "identifier": {
+                    "type": "string"
+                }
+            }
+        },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.CreateRepoReq": {
             "type": "object",
             "required": [
@@ -2064,9 +2118,16 @@ const docTemplate = `{
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_i18n.I18nKey": {
             "type": "string",
             "enum": [
+                "auth.auth_user_login_success",
                 "auth.no_data",
                 "auth.no_session",
+                "auth.pub_key_add_error",
+                "auth.pub_key_add_success",
                 "auth.session_token_not_allowed",
+                "auth.user_issue_pat_error",
+                "auth.user_issue_token_error",
+                "auth.user_not_found",
+                "auth.user_pass_error",
                 "branch.body_param_error",
                 "branch.create_error",
                 "branch.create_success",
@@ -2167,9 +2228,16 @@ const docTemplate = `{
                 "tag.query_param_error"
             ],
             "x-enum-comments": {
+                "AuthAuthUserLoginSuccess": "用户登录成功",
                 "AuthNoData": "请求不包含任何可用于 Authorizer 的认证数据",
                 "AuthNoSession": "请求不包含任何会话数据,无法进行授权",
+                "AuthPubKeyAddError": "公钥添加失败",
+                "AuthPubKeyAddSuccess": "公钥添加成功",
                 "AuthSessionTokenNotAllowed": "会话令牌不允许用于与 Git 交互",
+                "AuthUserIssuePatError": "用户创建访问令牌失败",
+                "AuthUserIssueTokenError": "用户创建会话令牌失败",
+                "AuthUserNotFound": "用户不存在",
+                "AuthUserPassError": "用户密码错误",
                 "BranchBodyParamError": "Body 参数解析失败.",
                 "BranchCreateError": "分支创建失败.",
                 "BranchCreateSuccess": "分支创建成功.",
@@ -2270,9 +2338,16 @@ const docTemplate = `{
                 "TagQueryParamError": "Query 参数解析失败."
             },
             "x-enum-descriptions": [
+                "用户登录成功",
                 "请求不包含任何可用于 Authorizer 的认证数据",
                 "请求不包含任何会话数据,无法进行授权",
+                "公钥添加失败",
+                "公钥添加成功",
                 "会话令牌不允许用于与 Git 交互",
+                "用户创建访问令牌失败",
+                "用户创建会话令牌失败",
+                "用户不存在",
+                "用户密码错误",
                 "Body 参数解析失败.",
                 "分支创建失败.",
                 "分支创建成功.",
@@ -2373,9 +2448,16 @@ const docTemplate = `{
                 "Query 参数解析失败."
             ],
             "x-enum-varnames": [
+                "AuthAuthUserLoginSuccess",
                 "AuthNoData",
                 "AuthNoSession",
+                "AuthPubKeyAddError",
+                "AuthPubKeyAddSuccess",
                 "AuthSessionTokenNotAllowed",
+                "AuthUserIssuePatError",
+                "AuthUserIssueTokenError",
+                "AuthUserNotFound",
+                "AuthUserPassError",
                 "BranchBodyParamError",
                 "BranchCreateError",
                 "BranchCreateSuccess",

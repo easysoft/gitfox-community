@@ -61,7 +61,7 @@ type AccessPermissions struct {
 func GenerateForToken(token *auth.Token, secret string) (string, error) {
 	var expiresAt int64
 	if token.ExpiresAt != nil {
-		expiresAt = *token.ExpiresAt
+		expiresAt = token.ExpiresAt.Unix()
 	}
 
 	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, Claims{

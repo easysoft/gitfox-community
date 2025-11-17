@@ -9,3 +9,8 @@ auth:
   auth_user_login_success: "用户登录成功"
   pub_key_add_success: "公钥添加成功"
   pub_key_add_error: "公钥添加失败"
+  pub_key_already_in_use: "公钥已存在"
+  pub_key_not_found_by_fingerprint: "公钥未找到"
+  pub_key_create_error: "公钥创建失败"
+  pub_key_identifier_error: "添加公钥标识符校验错误"
+  pub_key_param_error: "添加公钥参数错误"
