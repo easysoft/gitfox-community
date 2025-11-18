@@ -21,11 +21,11 @@ spec:
             type: run
             spec:
               container:
-                image: hub.zentao.net/ci/docker:24.0.8-cli
+                image: hub.zentao.net/ci/docker-cli:27.3.1
               script:
               - docker login -u ${{ secrets.get("zentao-registry-docker-username") }} -p ${{ secrets.get("zentao-registry-docker-password") }} hub.zentao.net
-              - systemctl status docker
-              - docker build -f deploy/Dockerfile --push --pull -t "${APP_IMAGE}" .
+              - docker buildx build --push --pull --platform linux/amd64
+              - docker build -f deploy/Dockerfile --push --pull -t "${APP_IMAGE}" . | setup-buildx-kubernetes
           - name: 消息通知
             type: plugin
             spec:
