@@ -22,7 +22,7 @@ const (
 func getLogPath(c config.LoggingConfig, logType string) string {
 	switch logType {
 	case LogTypeAPIServer:
-		return filepath.Join(c.LogDir,c.LogAPIServerConf.Filename)
+		return filepath.Join(c.LogDir, c.LogAPIServerConf.Filename)
 	case LogTypeRunner:
 		return filepath.Join(c.LogDir, c.LogRunnerConf.Filename)
 	case LogTypeSSH:

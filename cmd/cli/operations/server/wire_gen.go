@@ -29,6 +29,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/cmd/cli/operations/provider"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/ssh"
 	"gorm.io/gorm"
 )
 
@@ -107,6 +108,7 @@ func NewApp(mode string) (*App, func(), error) {
 		return nil, nil, err
 	}
 	githookController := provider.NewGitHookController(principalStore, repoStore, gitService, urlProvider, clientFactory)
+	server := provider.ProvideSSHServer(config, interface2, repoController)
 	app := &App{
 		SystemConfig: config,
 		SystemLog:    systemLog,
@@ -116,6 +118,7 @@ func NewApp(mode string) (*App, func(), error) {
 		Controller:   routerController,
 		I18nManager:  i18nManager,
 		GithookCtrl:  githookController,
+		SSHServer:    server,
 	}
 	return app, func() {
 		cleanup2()
@@ -134,4 +137,5 @@ type App struct {
 	Controller   *router.Controller
 	I18nManager  *provider.I18nManager
 	GithookCtrl  *githook.Controller
+	SSHServer    *ssh.Server
 }

@@ -11,6 +11,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/cmd/cli/operations/provider"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/ssh"
 	"gorm.io/gorm"
 )
 
@@ -23,6 +24,7 @@ type App struct {
 	Controller   *router.Controller
 	I18nManager  *provider.I18nManager
 	GithookCtrl  *githook.Controller
+	SSHServer    *ssh.Server
 }
 
 func NewApp(mode string) (*App, func(), error) {
@@ -40,6 +42,7 @@ func NewApp(mode string) (*App, func(), error) {
 		provider.ControllersWireSet,
 		provider.URLWireSet,
 		provider.I18nWireSet,
+		provider.SSHWireSet,
 		wire.Struct(new(App), "*")),
 	)
 }

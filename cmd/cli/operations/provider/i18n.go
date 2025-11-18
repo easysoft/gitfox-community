@@ -6,11 +6,11 @@ import (
 
 	"github.com/google/wire"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/resources"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/resources"
 )
 
 // I18nManager i18n管理器

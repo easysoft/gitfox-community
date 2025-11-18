@@ -106,10 +106,10 @@ func (s *SpaceStore) List(ctx context.Context, filter spaceModel.ListSpaceFilter
 
 	// 2. 调用通用分页工具（NeedTotal默认true，自动统计总条数）
 	var spaces []*Space
-	pageResult, err := database.PaginateDefault(ctx, tx, filter.Page, filter.PageSize, &spaces)	
+	pageResult, err := database.PaginateDefault(ctx, tx, filter.Page, filter.PageSize, &spaces)
 	fmt.Println(pageResult)
 	if err != nil {
-		return nil,  database.ProcessSQLErrorf(ctx, err)
+		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
 
 	return pageResult, nil
