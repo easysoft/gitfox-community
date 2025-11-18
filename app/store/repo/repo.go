@@ -37,6 +37,21 @@ func (s *Store) Create(ctx context.Context, repo *Repository) (*repoModel.Repo, 
 	return mapToModel(*repo), nil
 }
 
+func (s *Store) Update(ctx context.Context, repo *Repository, id uint) (*repoModel.Repo, error) {
+	repo.ID = id
+	if err := s.db.WithContext(ctx).Updates(repo).Error; err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
+	}
+
+	// 重新查询完整记录,因为 Updates 只更新指定非零值字段,不会回填其他字段
+	var updated Repository
+	if err := s.db.WithContext(ctx).Where("id = ?", id).First(&updated).Error; err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
+	}
+
+	return mapToModel(updated), nil
+}
+
 // mapToModel 将 Space 转换为 SpaceResponse
 func mapToModel(data Repository) *repoModel.Repo {
 	return &repoModel.Repo{
