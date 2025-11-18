@@ -29,11 +29,12 @@ spec:
                     --driver=kubernetes \
                     --driver-opt=namespace=quickon-ci,replicas=5,nodeselector="node-role.kubernetes.io/ci=true",rootless=true,image=hub.zentao.net/ci/moby-buildkit:buildx-stable-1-rootless,qemu.install=true,qemu.image=hub.zentao.net/ci/binfmt:qemu-v8.1.5
               - docker buildx use kube
-              - docker login -u ${{ secrets.get("zentao-registry-docker-username") }} -p ${{ secrets.get("zentao-registry-docker-password") }} hub.zentao.net || sleep 300
-              - docker buildx build --pull --push --platform linux/amd64 --build-arg MIRROR=true --build-arg BUILD_ENV=internal -t ${APP_IMAGE} -f deploy/Dockerfile . || sleep 300
+              - docker login -u ${{ secrets.get("zentao-registry-docker-username") }} -p ${{ secrets.get("zentao-registry-docker-password") }} hub.zentao.net || sleep 10
+              - docker buildx build --pull --push --platform linux/amd64 --build-arg MIRROR=true --build-arg BUILD_ENV=internal -t ${APP_IMAGE} -f deploy/Dockerfile . || sleep 10
               - sleep 120
           - name: 消息通知
             type: plugin
+            when: failure()
             spec:
               inputs:
                 debug: true
@@ -41,9 +42,10 @@ spec:
                 token: ${{ secrets.get("xuan_token") }}
                 caller: zenci
                 api: https://gw.easycorp.cn
-                title: GitFox 构建完成
-                content: "镜像：{{.APP_IMAGE}}"
+                title: 单元测试
+                content: 单元测试执行失败
                 url: ${GITFOX_BUILD_LINK}
-                groups:
-                  "0": 31a0008b-6e3e-4b7f-9b7b-396a46b1f8f4
+                users:
+                  "0": caiyan
+                  "1": "a509e82a-7484-42c4-91c4-4de68388bb11"
               name: gitfox-xuanim-plugin
