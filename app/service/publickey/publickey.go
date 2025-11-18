@@ -8,7 +8,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/principal"
 	PublicKeyModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/publickey"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store"
+	principalStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/principal"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/publickey"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 
@@ -16,8 +16,8 @@ import (
 )
 
 func NewPublicKeyService(
-	publicKeyStore publickey.Store,
-	pCache store.PrincipalInfoCache,
+	publicKeyStore publickey.Interface,
+	pCache principalStore.PrincipalInfoCache,
 ) Interface {
 	return &Service{
 		publicKeyStore: publicKeyStore,
@@ -26,8 +26,8 @@ func NewPublicKeyService(
 }
 
 type Service struct {
-	publicKeyStore publickey.Store
-	pCache         store.PrincipalInfoCache
+	publicKeyStore publickey.Interface
+	pCache         principalStore.PrincipalInfoCache
 }
 
 // ValidateKey tries to match the provided key to one of the keys in the database.

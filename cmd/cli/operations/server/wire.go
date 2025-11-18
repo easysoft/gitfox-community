@@ -15,14 +15,14 @@ import (
 )
 
 type App struct {
-	SystemConfig    *config.Config
-	SystemLog       *provider.SystemLog
-	APILog          *provider.APILog
-	DB              *gorm.DB
-	SqliteDB        *database.SqliteDB
-	Controller      *router.Controller
-	I18nManager     *provider.I18nManager
-	GithookCtrl     *githook.Controller
+	SystemConfig *config.Config
+	SystemLog    *provider.SystemLog
+	APILog       *provider.APILog
+	DB           *gorm.DB
+	SqliteDB     *database.SqliteDB
+	Controller   *router.Controller
+	I18nManager  *provider.I18nManager
+	GithookCtrl  *githook.Controller
 }
 
 func NewApp(mode string) (*App, func(), error) {
@@ -33,7 +33,7 @@ func NewApp(mode string) (*App, func(), error) {
 		provider.PrincipalWireSet,
 		provider.GitWireSet,
 		provider.SpaceWireSet,
-		provider.RepoWireSet, // 必须在 Branch/Tag/Commit 之前，因为它们依赖 repoService
+		provider.RepoWireSet,
 		provider.BranchWireSet,
 		provider.TagWireSet,
 		provider.CommitWireSet,
