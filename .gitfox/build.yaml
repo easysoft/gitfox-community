@@ -30,7 +30,7 @@ spec:
                     --driver-opt=namespace=quickon-ci,replicas=5,nodeselector="node-role.kubernetes.io/ci=true",rootless=true,image=hub.zentao.net/ci/moby-buildkit:buildx-stable-1-rootless,qemu.install=true,qemu.image=hub.zentao.net/ci/binfmt:qemu-v8.1.5
               - docker buildx use kube
               - docker login -u ${{ secrets.get("zentao-registry-docker-username") }} -p ${{ secrets.get("zentao-registry-docker-password") }} hub.zentao.net || sleep 300
-              - docker buildx build --pull --push --platform linux/amd64 --build-arg MIRROR=true --build-arg BUILD_ENV=internal -t ${APP_IMAGE} .  -f Dockerfile . || sleep 300
+              - docker buildx build --pull --push --platform linux/amd64 --build-arg MIRROR=true --build-arg BUILD_ENV=internal -t ${APP_IMAGE} -f deploy/Dockerfile . || sleep 300
               - sleep 120
           - name: 消息通知
             type: plugin
