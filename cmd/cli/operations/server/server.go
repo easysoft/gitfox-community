@@ -54,9 +54,9 @@ func (c *command) run(*kingpin.ParseContext) error {
 	}
 
 	// 创建错误通道用于捕获服务器启动错误
-	serverErrors := make(chan error, 1)
+	serverErrors := make(chan error, 2) // 增加容量以支持 HTTP 和 SSH 服务器
 
-	// 在 goroutine 中启动服务器
+	// 在 goroutine 中启动 HTTP 服务器
 	go func() {
 		app.SystemLog.Infow("[Server] Starting HTTP server", "address", addr)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
@@ -64,6 +64,20 @@ func (c *command) run(*kingpin.ParseContext) error {
 			serverErrors <- err
 		}
 	}()
+
+	// 在 goroutine 中启动 SSH 服务器(如果配置启用)
+	if app.SystemConfig.SSH.Enable {
+		go func() {
+			sshAddr := fmt.Sprintf("%s:%d", app.SystemConfig.SSH.Host, app.SystemConfig.SSH.Port)
+			app.SystemLog.Infow("[Server] Starting SSH server", "address", sshAddr)
+			if err := app.SSHServer.ListenAndServe(); err != nil {
+				app.SystemLog.Errorw("[Server] SSH server error", "error", err)
+				serverErrors <- err
+			}
+		}()
+	} else {
+		app.SystemLog.Info("[Server] SSH server is disabled in configuration")
+	}
 
 	// 等待中断信号以优雅地关闭服务器
 	quit := make(chan os.Signal, 1)
@@ -95,11 +109,23 @@ func (c *command) run(*kingpin.ParseContext) error {
 	defer cancel()
 
 	app.SystemLog.Infow("[Server] Gracefully shutting down", "timeout", shutdownTimeout)
+
+	// 关闭 HTTP 服务器
 	if err := srv.Shutdown(ctx); err != nil {
-		app.SystemLog.Errorw("[Server] Server forced to shutdown", "error", err)
+		app.SystemLog.Errorw("[Server] HTTP server forced to shutdown", "error", err)
 		// 不直接返回,继续清理其他资源
 	} else {
 		app.SystemLog.Info("[Server] HTTP server shutdown completed")
+	}
+
+	// 关闭 SSH 服务器(如果已启用)
+	if app.SystemConfig.SSH.Enable {
+		app.SystemLog.Info("[Server] Shutting down SSH server...")
+		if err := app.SSHServer.Shutdown(ctx); err != nil {
+			app.SystemLog.Errorw("[Server] SSH server forced to shutdown", "error", err)
+		} else {
+			app.SystemLog.Info("[Server] SSH server shutdown completed")
+		}
 	}
 
 	// 停止所有定时任务

@@ -14,21 +14,21 @@ import (
 // PageParam 分页查询参数（入参）
 // 前端传递时只需指定 Page/PageSize，Sort/Order 可选（有默认值）
 type PageParam struct {
-	Page     int    `json:"page"`      // 页码（默认1）
-	PageSize int    `json:"pageSize"`  // 每页条数（默认20，最大100）
-	Sort     string `json:"sort"`      // 排序字段（默认"createdDate"）
-	Order    string `json:"order"`     // 排序方向（desc/asc，默认"desc"）
-	NeedTotal bool  `json:"needTotal"`// 是否需要总条数（默认true，某些场景可关闭提升性能）
+	Page      int    `json:"page"`      // 页码（默认1）
+	PageSize  int    `json:"pageSize"`  // 每页条数（默认20，最大100）
+	Sort      string `json:"sort"`      // 排序字段（默认"createdDate"）
+	Order     string `json:"order"`     // 排序方向（desc/asc，默认"desc"）
+	NeedTotal bool   `json:"needTotal"` // 是否需要总条数（默认true，某些场景可关闭提升性能）
 }
 
 // PageResult 分页查询结果（出参）
 // 包含数据列表+分页元信息，直接返回给前端
 type PageResult[T any] struct {
-	Data       []T   `json:"data"`       // 当前页数据列表
-	Total      int64 `json:"total"`      // 总条数（NeedTotal=true时返回）
-	Page       int   `json:"page"`       // 当前页码
-	PageSize   int   `json:"pageSize"`   // 每页条数
-	TotalPage  int64 `json:"totalPage"`  // 总页数（Total/PageSize 向上取整）
+	Data      []T   `json:"data"`      // 当前页数据列表
+	Total     int64 `json:"total"`     // 总条数（NeedTotal=true时返回）
+	Page      int   `json:"page"`      // 当前页码
+	PageSize  int   `json:"pageSize"`  // 每页条数
+	TotalPage int64 `json:"totalPage"` // 总页数（Total/PageSize 向上取整）
 }
 
 // 默认配置
@@ -94,7 +94,7 @@ func Paginate[T any](ctx context.Context, db *gorm.DB, param PageParam, dataPtr 
 
 	// 7. 执行分页查询（Limit + Offset）
 	if err := tx.Limit(param.PageSize).Offset(offset).Find(dataPtr).Error; err != nil {
-		return nil,  errors.Newf("query page data failed: %w", err)
+		return nil, errors.Newf("query page data failed: %w", err)
 	}
 
 	// 8. 计算总页数
@@ -172,8 +172,8 @@ func buildSortString(sort, order string) string {
 // PaginateDefault 简化分页查询（使用默认排序：createdDate desc）
 func PaginateDefault[T any](ctx context.Context, db *gorm.DB, page, pageSize int, dataPtr *[]T) (*PageResult[T], error) {
 	return Paginate(ctx, db, PageParam{
-		Page:     page,
-		PageSize: pageSize,
+		Page:      page,
+		PageSize:  pageSize,
 		NeedTotal: true,
 	}, dataPtr)
 }
@@ -181,8 +181,8 @@ func PaginateDefault[T any](ctx context.Context, db *gorm.DB, page, pageSize int
 // PaginateNoTotal 分页查询（不统计总条数，提升性能）
 func PaginateNoTotal[T any](ctx context.Context, db *gorm.DB, page, pageSize int, dataPtr *[]T) (*PageResult[T], error) {
 	return Paginate(ctx, db, PageParam{
-		Page:     page,
-		PageSize: pageSize,
+		Page:      page,
+		PageSize:  pageSize,
 		NeedTotal: false,
 	}, dataPtr)
 }

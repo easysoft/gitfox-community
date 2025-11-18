@@ -15,7 +15,7 @@ import (
 func createTestLoggingConfig(t *testing.T) config.LoggingConfig {
 
 	return config.LoggingConfig{
-		LogDir: t.TempDir(),
+		LogDir:          t.TempDir(),
 		Level:           -1, // Debug level
 		Stdout:          false,
 		Caller:          true,
