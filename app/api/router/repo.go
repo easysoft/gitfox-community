@@ -14,16 +14,13 @@ func registerRepoRoutes(r *gin.RouterGroup, controller *Controller) {
 		repos.POST("/", controller.Repo.Create)
 		reposWithID := repos.Group(":id")
 		{
+			reposWithID.GET("", controller.Repo.Get)
+			reposWithID.PUT("", controller.Repo.Update)
 			reposWithID.POST("/diff", controller.Repo.GetDiff)
 			reposWithID.GET("/paths", controller.Repo.GetPaths)
 			reposWithID.POST("/paths/details", controller.Repo.GetPathsDetails)
+			reposWithID.GET("/content", controller.Repo.GetContent)
+			reposWithID.GET(fmt.Sprintf("/blame/{%s}", req.PathParamFilePath), controller.Repo.Blame)
 		}
-		reposWithRepoID := repos.Group(fmt.Sprintf("{%s}", req.QueryParamRepoID))
-		{
-			reposWithRepoID.GET("/", controller.Repo.Get)
-			reposWithRepoID.GET("/content", controller.Repo.GetContent)
-			reposWithRepoID.GET(fmt.Sprintf("/blame/{%s}", req.PathParamFilePath), controller.Repo.Blame)
-		}
-
 	}
 }

@@ -93,6 +93,7 @@ const (
 	RepoQueryError               I18nKey = "repo.query_error"                // 查询仓库失败
 	RepoQueryParamError          I18nKey = "repo.query_param_error"          // Query 参数解析失败.
 	RepoQuerySuccess             I18nKey = "repo.query_success"              // 查询仓库成功
+	RepoUpdateSuccess            I18nKey = "repo.update_success"             // 更新仓库成功
 
 	// Request 相关常量
 	RequestInvalidBooleanParameter         I18nKey = "request.invalid_boolean_parameter"          // 参数必须为布尔值.
