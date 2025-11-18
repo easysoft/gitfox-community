@@ -46,12 +46,14 @@ func NewRouter(mode string, logger *logger.SugaredMateLogger, controller *Contro
 
 	// 创建需要认证的路由组（应用鉴权中间件）
 	authGroup := r.Group("/api/v2")
+	authGroup.Use(middleware.MockAttempt())     // 模拟认证中间件
 	registerSpaceRoutes(authGroup, controller)  // 空间相关路由
 	registerBranchRoutes(authGroup, controller) // 分支相关路由
 	registerTagRoutes(authGroup, controller)    // 标签相关路由
 	registerCommitRoutes(authGroup, controller) // 提交相关路由
 	registerGitRoutes(authGroup, controller)    // Git 相关路由
-	registerRepoRoutes(authGroup, controller)
+	registerRepoRoutes(authGroup, controller)   // 仓库相关路由
+	registerUserRoutes(authGroup, controller)   // 用户相关路由
 	return r
 }
 
@@ -59,6 +61,8 @@ func NewRouter(mode string, logger *logger.SugaredMateLogger, controller *Contro
 func registerPublicRoutes(r *gin.Engine, controller *Controller) {
 	public := r.Group("/public")
 	{
+		public.POST("/login", controller.User.Login)
+
 		public.GET("/health", func(c *gin.Context) {
 			c.JSON(200, gin.H{"status": "healthy"})
 		})

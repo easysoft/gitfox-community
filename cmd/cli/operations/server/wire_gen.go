@@ -19,6 +19,7 @@ import (
 	repo2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
 	space2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/space"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/tag"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/principal"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/space"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/cmd/cli/operations/provider"
@@ -92,7 +93,7 @@ func NewApp(mode string) (*App, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	principalStore := provider.NewPrincipalStore(db)
+	principalStore := principal.NewPrincipalStore(db)
 	githookController := provider.NewGitHookController(principalStore, repoStore, gitService, urlProvider, clientFactory)
 	app := &App{
 		SystemConfig: config,

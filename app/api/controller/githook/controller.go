@@ -30,14 +30,14 @@ import (
 )
 
 type Controller struct {
-	principalStore principal.IPrincipalStore
+	principalStore principal.Interface
 	repoStore      repo.Interface
 	git            git.Interface
 	urlProvider    url.Provider
 }
 
 func NewController(
-	principalStore principal.IPrincipalStore,
+	principalStore principal.Interface,
 	repoStore repo.Interface,
 	git git.Interface,
 	urlProvider url.Provider,

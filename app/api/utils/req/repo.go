@@ -11,6 +11,8 @@ const (
 	PathParamFilePath = "filePath"
 	QueryParamRepoID  = "repoId"
 	QueryParamSpaceID = "spaceId"
+
+	QueryParamSudoUserID = "sudoUserId"
 )
 
 func GetRepoRefFromPath(r *gin.Context) (string, error) {

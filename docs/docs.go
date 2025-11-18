@@ -628,6 +628,115 @@ const docTemplate = `{
                 }
             }
         },
+        "/repos/{id}/paths": {
+            "get": {
+                "description": "获取仓库指定 GitRef 路径",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "repos"
+                ],
+                "summary": "获取仓库指定 GitRef 路径",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "仓库 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Git 引用",
+                        "name": "gitRef",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "包含目录",
+                        "name": "includeDirectories",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "获取成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.PathsOutput"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/repos/{id}/paths/details": {
+            "post": {
+                "description": "获取仓库指定 GitRef 路径详情",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "repos"
+                ],
+                "summary": "获取仓库指定 GitRef 路径详情",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "仓库 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "查询路径详情的请求参数",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.PathsDetailsInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "获取成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.PathsDetailsOutput"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/repos/{repoId}/blame/{filePath}": {
             "get": {
                 "description": "根据传入的仓库 ID、文件路径、Git 引用、行号范围等信息，获取仓库代码blame信息",
@@ -1245,6 +1354,46 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/user/public-keys": {
+            "post": {
+                "description": "创建用户公钥",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "用户"
+                ],
+                "summary": "创建用户公钥",
+                "parameters": [
+                    {
+                        "description": "创建用户公钥参数",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_publickey.CreatePublicKeyInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "创建用户公钥成功",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "创建用户公钥失败",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -1680,6 +1829,20 @@ const docTemplate = `{
                 }
             }
         },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_publickey.CreatePublicKeyInput": {
+            "type": "object",
+            "required": [
+                "content"
+            ],
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "identifier": {
+                    "type": "string"
+                }
+            }
+        },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.CreateRepoReq": {
             "type": "object",
             "required": [
@@ -1788,6 +1951,48 @@ const docTemplate = `{
                 "status": {
                     "description": "状态码用 int 类型（兼容枚举映射）",
                     "type": "integer"
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.PathsDetailsInput": {
+            "type": "object",
+            "properties": {
+                "gitRef": {
+                    "type": "string"
+                },
+                "paths": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.PathsDetailsOutput": {
+            "type": "object",
+            "properties": {
+                "details": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git.PathDetails"
+                    }
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.PathsOutput": {
+            "type": "object",
+            "properties": {
+                "directories": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "files": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },
@@ -2042,6 +2247,94 @@ const docTemplate = `{
                 }
             }
         },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git.Commit": {
+            "type": "object",
+            "properties": {
+                "author": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git.Signature"
+                },
+                "committer": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git.Signature"
+                },
+                "file_stats": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git.CommitFileStats"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                },
+                "parent_shas": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git_sha.SHA"
+                    }
+                },
+                "sha": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git_sha.SHA"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git.CommitFileStats": {
+            "type": "object",
+            "properties": {
+                "deletions": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "insertions": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "oldPath": {
+                    "description": "populated only in case of renames",
+                    "type": "string"
+                },
+                "path": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git_enum.FileDiffStatus"
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git.Identity": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git.PathDetails": {
+            "type": "object",
+            "properties": {
+                "last_commit": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git.Commit"
+                },
+                "path": {
+                    "type": "string"
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git.Signature": {
+            "type": "object",
+            "properties": {
+                "identity": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git.Identity"
+                },
+                "when": {
+                    "type": "string"
+                }
+            }
+        },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git_enum.FileDiffStatus": {
             "type": "string",
             "enum": [
@@ -2061,12 +2354,32 @@ const docTemplate = `{
                 "FileDiffStatusCopied"
             ]
         },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git_sha.SHA": {
+            "type": "object",
+            "properties": {
+                "str": {
+                    "type": "string"
+                }
+            }
+        },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_i18n.I18nKey": {
             "type": "string",
             "enum": [
+                "auth.auth_user_login_success",
                 "auth.no_data",
                 "auth.no_session",
+                "auth.pub_key_add_error",
+                "auth.pub_key_add_success",
+                "auth.pub_key_already_in_use",
+                "auth.pub_key_create_error",
+                "auth.pub_key_identifier_error",
+                "auth.pub_key_not_found_by_fingerprint",
+                "auth.pub_key_param_error",
                 "auth.session_token_not_allowed",
+                "auth.user_issue_pat_error",
+                "auth.user_issue_token_error",
+                "auth.user_not_found",
+                "auth.user_pass_error",
                 "branch.body_param_error",
                 "branch.create_error",
                 "branch.create_success",
@@ -2113,6 +2426,8 @@ const docTemplate = `{
                 "repo.body_param_error",
                 "repo.create_error",
                 "repo.create_success",
+                "repo.get_paths_details_success",
+                "repo.get_paths_success",
                 "repo.identifier_invalid",
                 "repo.line_number_error",
                 "repo.mirror_read_only",
@@ -2122,6 +2437,7 @@ const docTemplate = `{
                 "repo.pull_permission_error",
                 "repo.push_permission_error",
                 "repo.query_error",
+                "repo.query_param_error",
                 "repo.query_success",
                 "request.invalid_boolean_parameter",
                 "request.invalid_content_type",
@@ -2167,9 +2483,21 @@ const docTemplate = `{
                 "tag.query_param_error"
             ],
             "x-enum-comments": {
+                "AuthAuthUserLoginSuccess": "用户登录成功",
                 "AuthNoData": "请求不包含任何可用于 Authorizer 的认证数据",
                 "AuthNoSession": "请求不包含任何会话数据,无法进行授权",
+                "AuthPubKeyAddError": "公钥添加失败",
+                "AuthPubKeyAddSuccess": "公钥添加成功",
+                "AuthPubKeyAlreadyInUse": "公钥已存在",
+                "AuthPubKeyCreateError": "公钥创建失败",
+                "AuthPubKeyIdentifierError": "添加公钥标识符校验错误",
+                "AuthPubKeyNotFoundByFingerprint": "公钥未找到",
+                "AuthPubKeyParamError": "添加公钥参数错误",
                 "AuthSessionTokenNotAllowed": "会话令牌不允许用于与 Git 交互",
+                "AuthUserIssuePatError": "用户创建访问令牌失败",
+                "AuthUserIssueTokenError": "用户创建会话令牌失败",
+                "AuthUserNotFound": "用户不存在",
+                "AuthUserPassError": "用户密码错误",
                 "BranchBodyParamError": "Body 参数解析失败.",
                 "BranchCreateError": "分支创建失败.",
                 "BranchCreateSuccess": "分支创建成功.",
@@ -2216,6 +2544,8 @@ const docTemplate = `{
                 "RepoBodyParamError": "Body 参数解析失败.",
                 "RepoCreateError": "创建仓库异常",
                 "RepoCreateSuccess": "创建仓库成功",
+                "RepoGetPathsDetailsSuccess": "获取路径详情成功.",
+                "RepoGetPathsSuccess": "获取路径成功.",
                 "RepoIdentifierInvalid": "仓库名称不合法,identifier仅支持字母、数字、下划线(_)、连字符(-)、点号(.)",
                 "RepoLineNumberError": "行号必须大于0, 且结束行号必须大于起始行号",
                 "RepoMirrorReadOnly": "镜像仓库只读.",
@@ -2225,6 +2555,7 @@ const docTemplate = `{
                 "RepoPullRequestsMergeSuccess": "合并成功!",
                 "RepoPushPermissionError": "您没有权限推送此仓库.",
                 "RepoQueryError": "查询仓库失败",
+                "RepoQueryParamError": "Query 参数解析失败.",
                 "RepoQuerySuccess": "查询仓库成功",
                 "RequestInvalidBooleanParameter": "参数必须为布尔值.",
                 "RequestInvalidContentType": "Content-Type 无效.",
@@ -2270,9 +2601,21 @@ const docTemplate = `{
                 "TagQueryParamError": "Query 参数解析失败."
             },
             "x-enum-descriptions": [
+                "用户登录成功",
                 "请求不包含任何可用于 Authorizer 的认证数据",
                 "请求不包含任何会话数据,无法进行授权",
+                "公钥添加失败",
+                "公钥添加成功",
+                "公钥已存在",
+                "公钥创建失败",
+                "添加公钥标识符校验错误",
+                "公钥未找到",
+                "添加公钥参数错误",
                 "会话令牌不允许用于与 Git 交互",
+                "用户创建访问令牌失败",
+                "用户创建会话令牌失败",
+                "用户不存在",
+                "用户密码错误",
                 "Body 参数解析失败.",
                 "分支创建失败.",
                 "分支创建成功.",
@@ -2319,6 +2662,8 @@ const docTemplate = `{
                 "Body 参数解析失败.",
                 "创建仓库异常",
                 "创建仓库成功",
+                "获取路径详情成功.",
+                "获取路径成功.",
                 "仓库名称不合法,identifier仅支持字母、数字、下划线(_)、连字符(-)、点号(.)",
                 "行号必须大于0, 且结束行号必须大于起始行号",
                 "镜像仓库只读.",
@@ -2328,6 +2673,7 @@ const docTemplate = `{
                 "您没有权限拉取此仓库.",
                 "您没有权限推送此仓库.",
                 "查询仓库失败",
+                "Query 参数解析失败.",
                 "查询仓库成功",
                 "参数必须为布尔值.",
                 "Content-Type 无效.",
@@ -2373,9 +2719,21 @@ const docTemplate = `{
                 "Query 参数解析失败."
             ],
             "x-enum-varnames": [
+                "AuthAuthUserLoginSuccess",
                 "AuthNoData",
                 "AuthNoSession",
+                "AuthPubKeyAddError",
+                "AuthPubKeyAddSuccess",
+                "AuthPubKeyAlreadyInUse",
+                "AuthPubKeyCreateError",
+                "AuthPubKeyIdentifierError",
+                "AuthPubKeyNotFoundByFingerprint",
+                "AuthPubKeyParamError",
                 "AuthSessionTokenNotAllowed",
+                "AuthUserIssuePatError",
+                "AuthUserIssueTokenError",
+                "AuthUserNotFound",
+                "AuthUserPassError",
                 "BranchBodyParamError",
                 "BranchCreateError",
                 "BranchCreateSuccess",
@@ -2422,6 +2780,8 @@ const docTemplate = `{
                 "RepoBodyParamError",
                 "RepoCreateError",
                 "RepoCreateSuccess",
+                "RepoGetPathsDetailsSuccess",
+                "RepoGetPathsSuccess",
                 "RepoIdentifierInvalid",
                 "RepoLineNumberError",
                 "RepoMirrorReadOnly",
@@ -2431,6 +2791,7 @@ const docTemplate = `{
                 "RepoPullPermissionError",
                 "RepoPushPermissionError",
                 "RepoQueryError",
+                "RepoQueryParamError",
                 "RepoQuerySuccess",
                 "RequestInvalidBooleanParameter",
                 "RequestInvalidContentType",

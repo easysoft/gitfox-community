@@ -92,7 +92,7 @@ func NewGitClientFactory() hook.ClientFactory {
 }
 
 func NewGitHookController(
-	principalStore principal.IPrincipalStore,
+	principalStore principal.Interface,
 	repoStore repo.Interface,
 	git git.Interface,
 	urlProvider url.Provider,
@@ -104,6 +104,7 @@ func NewGitHookController(
 		git,
 		urlProvider,
 	)
+	// Wire the controller into the factory
 	// Wire the controller into the factory
 	if fct, ok := githookFactory.(*githook.ControllerClientFactory); ok {
 		fct.GithookCtrl = ctrl

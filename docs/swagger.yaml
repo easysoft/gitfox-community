@@ -287,6 +287,15 @@ definitions:
       when:
         type: string
     type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_publickey.CreatePublicKeyInput:
+    properties:
+      content:
+        type: string
+      identifier:
+        type: string
+    required:
+    - content
+    type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.CreateRepoReq:
     properties:
       acl:
@@ -365,6 +374,33 @@ definitions:
       status:
         description: 状态码用 int 类型（兼容枚举映射）
         type: integer
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.PathsDetailsInput:
+    properties:
+      gitRef:
+        type: string
+      paths:
+        items:
+          type: string
+        type: array
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.PathsDetailsOutput:
+    properties:
+      details:
+        items:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git.PathDetails'
+        type: array
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.PathsOutput:
+    properties:
+      directories:
+        items:
+          type: string
+        type: array
+      files:
+        items:
+          type: string
+        type: array
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.Repo:
     properties:
@@ -538,6 +574,64 @@ definitions:
       sha:
         type: string
     type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git.Commit:
+    properties:
+      author:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git.Signature'
+      committer:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git.Signature'
+      file_stats:
+        items:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git.CommitFileStats'
+        type: array
+      message:
+        type: string
+      parent_shas:
+        items:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git_sha.SHA'
+        type: array
+      sha:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git_sha.SHA'
+      title:
+        type: string
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git.CommitFileStats:
+    properties:
+      deletions:
+        format: int64
+        type: integer
+      insertions:
+        format: int64
+        type: integer
+      oldPath:
+        description: populated only in case of renames
+        type: string
+      path:
+        type: string
+      status:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git_enum.FileDiffStatus'
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git.Identity:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git.PathDetails:
+    properties:
+      last_commit:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git.Commit'
+      path:
+        type: string
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git.Signature:
+    properties:
+      identity:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git.Identity'
+      when:
+        type: string
+    type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git_enum.FileDiffStatus:
     enum:
     - UNDEFINED
@@ -554,11 +648,28 @@ definitions:
     - FileDiffStatusDeleted
     - FileDiffStatusRenamed
     - FileDiffStatusCopied
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git_sha.SHA:
+    properties:
+      str:
+        type: string
+    type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_i18n.I18nKey:
     enum:
+    - auth.auth_user_login_success
     - auth.no_data
     - auth.no_session
+    - auth.pub_key_add_error
+    - auth.pub_key_add_success
+    - auth.pub_key_already_in_use
+    - auth.pub_key_create_error
+    - auth.pub_key_identifier_error
+    - auth.pub_key_not_found_by_fingerprint
+    - auth.pub_key_param_error
     - auth.session_token_not_allowed
+    - auth.user_issue_pat_error
+    - auth.user_issue_token_error
+    - auth.user_not_found
+    - auth.user_pass_error
     - branch.body_param_error
     - branch.create_error
     - branch.create_success
@@ -605,6 +716,8 @@ definitions:
     - repo.body_param_error
     - repo.create_error
     - repo.create_success
+    - repo.get_paths_details_success
+    - repo.get_paths_success
     - repo.identifier_invalid
     - repo.line_number_error
     - repo.mirror_read_only
@@ -614,6 +727,7 @@ definitions:
     - repo.pull_permission_error
     - repo.push_permission_error
     - repo.query_error
+    - repo.query_param_error
     - repo.query_success
     - request.invalid_boolean_parameter
     - request.invalid_content_type
@@ -659,9 +773,21 @@ definitions:
     - tag.query_param_error
     type: string
     x-enum-comments:
+      AuthAuthUserLoginSuccess: 用户登录成功
       AuthNoData: 请求不包含任何可用于 Authorizer 的认证数据
       AuthNoSession: 请求不包含任何会话数据,无法进行授权
+      AuthPubKeyAddError: 公钥添加失败
+      AuthPubKeyAddSuccess: 公钥添加成功
+      AuthPubKeyAlreadyInUse: 公钥已存在
+      AuthPubKeyCreateError: 公钥创建失败
+      AuthPubKeyIdentifierError: 添加公钥标识符校验错误
+      AuthPubKeyNotFoundByFingerprint: 公钥未找到
+      AuthPubKeyParamError: 添加公钥参数错误
       AuthSessionTokenNotAllowed: 会话令牌不允许用于与 Git 交互
+      AuthUserIssuePatError: 用户创建访问令牌失败
+      AuthUserIssueTokenError: 用户创建会话令牌失败
+      AuthUserNotFound: 用户不存在
+      AuthUserPassError: 用户密码错误
       BranchBodyParamError: Body 参数解析失败.
       BranchCreateError: 分支创建失败.
       BranchCreateSuccess: 分支创建成功.
@@ -708,6 +834,8 @@ definitions:
       RepoBodyParamError: Body 参数解析失败.
       RepoCreateError: 创建仓库异常
       RepoCreateSuccess: 创建仓库成功
+      RepoGetPathsDetailsSuccess: 获取路径详情成功.
+      RepoGetPathsSuccess: 获取路径成功.
       RepoIdentifierInvalid: 仓库名称不合法,identifier仅支持字母、数字、下划线(_)、连字符(-)、点号(.)
       RepoLineNumberError: 行号必须大于0, 且结束行号必须大于起始行号
       RepoMirrorReadOnly: 镜像仓库只读.
@@ -717,6 +845,7 @@ definitions:
       RepoPullRequestsMergeSuccess: 合并成功!
       RepoPushPermissionError: 您没有权限推送此仓库.
       RepoQueryError: 查询仓库失败
+      RepoQueryParamError: Query 参数解析失败.
       RepoQuerySuccess: 查询仓库成功
       RequestInvalidBooleanParameter: 参数必须为布尔值.
       RequestInvalidContentType: Content-Type 无效.
@@ -761,9 +890,21 @@ definitions:
       TagPathParamError: Path 参数解析失败.
       TagQueryParamError: Query 参数解析失败.
     x-enum-descriptions:
+    - 用户登录成功
     - 请求不包含任何可用于 Authorizer 的认证数据
     - 请求不包含任何会话数据,无法进行授权
+    - 公钥添加失败
+    - 公钥添加成功
+    - 公钥已存在
+    - 公钥创建失败
+    - 添加公钥标识符校验错误
+    - 公钥未找到
+    - 添加公钥参数错误
     - 会话令牌不允许用于与 Git 交互
+    - 用户创建访问令牌失败
+    - 用户创建会话令牌失败
+    - 用户不存在
+    - 用户密码错误
     - Body 参数解析失败.
     - 分支创建失败.
     - 分支创建成功.
@@ -810,6 +951,8 @@ definitions:
     - Body 参数解析失败.
     - 创建仓库异常
     - 创建仓库成功
+    - 获取路径详情成功.
+    - 获取路径成功.
     - 仓库名称不合法,identifier仅支持字母、数字、下划线(_)、连字符(-)、点号(.)
     - 行号必须大于0, 且结束行号必须大于起始行号
     - 镜像仓库只读.
@@ -819,6 +962,7 @@ definitions:
     - 您没有权限拉取此仓库.
     - 您没有权限推送此仓库.
     - 查询仓库失败
+    - Query 参数解析失败.
     - 查询仓库成功
     - 参数必须为布尔值.
     - Content-Type 无效.
@@ -863,9 +1007,21 @@ definitions:
     - Path 参数解析失败.
     - Query 参数解析失败.
     x-enum-varnames:
+    - AuthAuthUserLoginSuccess
     - AuthNoData
     - AuthNoSession
+    - AuthPubKeyAddError
+    - AuthPubKeyAddSuccess
+    - AuthPubKeyAlreadyInUse
+    - AuthPubKeyCreateError
+    - AuthPubKeyIdentifierError
+    - AuthPubKeyNotFoundByFingerprint
+    - AuthPubKeyParamError
     - AuthSessionTokenNotAllowed
+    - AuthUserIssuePatError
+    - AuthUserIssueTokenError
+    - AuthUserNotFound
+    - AuthUserPassError
     - BranchBodyParamError
     - BranchCreateError
     - BranchCreateSuccess
@@ -912,6 +1068,8 @@ definitions:
     - RepoBodyParamError
     - RepoCreateError
     - RepoCreateSuccess
+    - RepoGetPathsDetailsSuccess
+    - RepoGetPathsSuccess
     - RepoIdentifierInvalid
     - RepoLineNumberError
     - RepoMirrorReadOnly
@@ -921,6 +1079,7 @@ definitions:
     - RepoPullPermissionError
     - RepoPushPermissionError
     - RepoQueryError
+    - RepoQueryParamError
     - RepoQuerySuccess
     - RequestInvalidBooleanParameter
     - RequestInvalidContentType
@@ -1345,6 +1504,72 @@ paths:
       summary: 获取仓库指定 GitRef Diff
       tags:
       - repos
+  /repos/{id}/paths:
+    get:
+      consumes:
+      - application/json
+      description: 获取仓库指定 GitRef 路径
+      parameters:
+      - description: 仓库 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Git 引用
+        in: query
+        name: gitRef
+        type: string
+      - description: 包含目录
+        in: query
+        name: includeDirectories
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.PathsOutput'
+              type: object
+      summary: 获取仓库指定 GitRef 路径
+      tags:
+      - repos
+  /repos/{id}/paths/details:
+    post:
+      consumes:
+      - application/json
+      description: 获取仓库指定 GitRef 路径详情
+      parameters:
+      - description: 仓库 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 查询路径详情的请求参数
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.PathsDetailsInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.PathsDetailsOutput'
+              type: object
+      summary: 获取仓库指定 GitRef 路径详情
+      tags:
+      - repos
   /repos/{repoId}/blame/{filePath}:
     get:
       consumes:
@@ -1736,6 +1961,32 @@ paths:
       summary: 查询标签列表
       tags:
       - tags
+  /user/public-keys:
+    post:
+      consumes:
+      - application/json
+      description: 创建用户公钥
+      parameters:
+      - description: 创建用户公钥参数
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_publickey.CreatePublicKeyInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 创建用户公钥成功
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "400":
+          description: 创建用户公钥失败
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 创建用户公钥
+      tags:
+      - 用户
 securityDefinitions:
   ApiKeyAuth:
     in: header

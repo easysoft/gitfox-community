@@ -36,17 +36,11 @@ func (a *MembershipAuthorizer) Check(ctx context.Context, session *auth.Session,
 	}
 
 	log.Debugf(
-		"[MembershipAuthorizer] %s with id '%d' requests %s in scope %#v",
-		session.Principal.Type,
+		"[MembershipAuthorizer]id '%d' requests %s in scope %#v",
 		session.Principal.ID,
 		permission,
 		scope,
 	)
-
-	// 系统管理员可以调用任何API
-	if session.User.Admin {
-		return true, nil
-	}
 
 	if scope.ResourceType == constant.ResourceTypeRepo &&
 		(permission != constant.PermissionRepoView &&
@@ -61,7 +55,7 @@ func (a *MembershipAuthorizer) Check(ctx context.Context, session *auth.Session,
 
 	return a.permissionCache.Get(
 		ctx, PermissionCacheKey{
-			Account:    session.User.DisplayName,
+			Account:    session.User.UID,
 			Scope:      scope,
 			Permission: permission,
 		},

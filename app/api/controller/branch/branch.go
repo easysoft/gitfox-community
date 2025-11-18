@@ -50,7 +50,7 @@ func (c *Controller) Create(ctx *gin.Context) {
 	}
 	// TODO: 获取操作人
 	session := &auth.Session{
-		Principal: principal.Principal{
+		Principal: principal.User{
 			ID:    1,
 			Email: "actor@chandao.com",
 			UID:   "actor",
@@ -80,6 +80,7 @@ func (c *Controller) Create(ctx *gin.Context) {
 	}
 
 	// TODO: 记录审计日志
+	// TODO: 记录审计日志
 	resp.Created(ctx, i18n.BranchCreateSuccess, respData)
 }
 
@@ -104,10 +105,12 @@ func (c *Controller) List(ctx *gin.Context) {
 	}
 	// 设置默认值
 	req.SetDefaults(&reqQuery)
+	// 设置默认值
+	req.SetDefaults(&reqQuery)
 
 	// TODO: 获取操作人
 	session := &auth.Session{
-		Principal: principal.Principal{
+		Principal: principal.User{
 			ID:    1,
 			Email: "actor@chandao.com",
 			UID:   "actor",
@@ -156,7 +159,7 @@ func (c *Controller) ListPrefixes(ctx *gin.Context) {
 
 	// TODO: 获取操作人
 	session := &auth.Session{
-		Principal: principal.Principal{
+		Principal: principal.User{
 			ID:    1,
 			Email: "actor@chandao.com",
 			UID:   "actor",
@@ -174,5 +177,6 @@ func (c *Controller) ListPrefixes(ctx *gin.Context) {
 		resp.InternalError(ctx, err)
 		return
 	}
+	resp.ListSuccess(ctx, respData, nil, i18n.BranchListPrefixSuccess, nil)
 	resp.ListSuccess(ctx, respData, nil, i18n.BranchListPrefixSuccess, nil)
 }

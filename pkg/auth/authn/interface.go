@@ -1,9 +1,8 @@
 package authn
 
 import (
-	"net/http"
-
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
+	"github.com/gin-gonic/gin"
 )
 
 // Authenticator is an abstraction of an entity that's responsible for authenticating principals
@@ -19,7 +18,7 @@ type Authenticator interface {
 	 *		(nil, ErrNoAuthData)	- 请求不包含任何身份验证数据
 	 *		(nil, err)  			- 请求包含身份验证数据但验证失败
 	 */
-	Authenticate(r *http.Request) (*auth.Session, error)
+	Authenticate(r *gin.Context) (*auth.Session, error)
 }
 
 var _ Authenticator = (*BasicAuthenticator)(nil)

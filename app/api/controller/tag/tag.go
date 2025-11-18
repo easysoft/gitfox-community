@@ -56,8 +56,15 @@ func (c *Controller) Create(ctx *gin.Context) {
 	// 	resp.BadRequest(ctx, err)
 	// 	return
 	// }
+	// 获取操作人
+	// session, ok := req.GetAuthSession(ctx.Request.Context())
+	// if !ok {
+	// 	err := errors.WithI18nKey(errors.New("get session failed"), i18n.AuthNoSession)
+	// 	resp.BadRequest(ctx, err)
+	// 	return
+	// }
 	session := &auth.Session{
-		Principal: principal.Principal{
+		Principal: principal.User{
 			ID:    1,
 			Email: "actor@chandao.com",
 			UID:   "actor",
@@ -109,10 +116,12 @@ func (c *Controller) List(ctx *gin.Context) {
 	}
 	// 设置默认值
 	req.SetDefaults(&reqQuery)
+	// 设置默认值
+	req.SetDefaults(&reqQuery)
 
 	// TODO: 获取操作人
 	session := &auth.Session{
-		Principal: principal.Principal{
+		Principal: principal.User{
 			ID:    1,
 			Email: "actor@chandao.com",
 			UID:   "actor",
@@ -170,7 +179,7 @@ func (c *Controller) Delete(ctx *gin.Context) {
 
 	// TODO: 获取操作人
 	session := &auth.Session{
-		Principal: principal.Principal{
+		Principal: principal.User{
 			ID:    1,
 			Email: "actor@chandao.com",
 			UID:   "actor",

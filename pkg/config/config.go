@@ -20,7 +20,6 @@ type Config struct {
 	Logging    LoggingConfig    `yaml:"logging"`
 	Middleware MiddlewareConfig `yaml:"middleware"`
 	I18n       I18nConfig       `yaml:"i18n"`
-	LDAP       LDAPConfig       `yaml:"ldap"`
 	Principal  PrincipalConfig  `yaml:"principal"`
 }
 
@@ -217,20 +216,6 @@ type URL struct {
 	// Registry is used as a base to generate external facing URLs.
 	// Value is derived from HTTP.Server unless explicitly specified (e.g. http://host.docker.internal:3000).
 	Registry string
-}
-
-type LDAPConfig struct {
-	Enable        bool   `yaml:"enable" default:"false"`                        // 是否启用 LDAP 认证
-	URL           string `yaml:"url"`                                           // LDAP 服务器地址，如 ldap://ldap.example.com:389
-	BaseDN        string `yaml:"baseDN"`                                        // 查询用户时的基准 DN，如 dc=example,dc=com
-	BindDN        string `yaml:"bindDN"`                                        // 用于绑定 LDAP 的管理员 DN
-	BindPassword  string `yaml:"bindPassword"`                                  // 绑定管理员 DN 的密码
-	UserFilter    string `yaml:"userFilter" default:"(uid=%s)"`                 // 查询用户的过滤条件，%s 会被替换为登录名
-	Attributes    string `yaml:"attributes" default:"uid,cn"`                   // 需要获取的用户属性列表，逗号分隔
-	DNField       string `yaml:"dnField" default:"dn"`                          // 存储用户 DN 的字段名
-	DNTemplate    string `yaml:"dnTemplate" default:"uid=%s,dc=example,dc=com"` // 用户 DN 模板，%s 会被替换为登录名
-	UIDAttribute  string `yaml:"uidAttribute" default:"uid"`                    // 作为用户唯一标识的属性名
-	NameAttribute string `yaml:"nameAttribute" default:"name"`                  // 作为用户姓名的属性名
 }
 
 type PrincipalConfig struct {

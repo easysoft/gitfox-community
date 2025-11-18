@@ -52,7 +52,7 @@ func (c *Controller) Create(ctx *gin.Context) {
 
 	// TODO: 获取操作人
 	session := &auth.Session{
-		Principal: principal.Principal{
+		Principal: principal.User{
 			ID:    1,
 			Email: "actor@chandao.com",
 			UID:   "actor",
@@ -81,6 +81,7 @@ func (c *Controller) Create(ctx *gin.Context) {
 	}
 
 	// TODO: 记录审计日志
+	// TODO: 记录审计日志
 	resp.Created(ctx, i18n.CommitCreateSuccess, respData)
 }
 
@@ -105,10 +106,12 @@ func (c *Controller) List(ctx *gin.Context) {
 	}
 	// 设置默认值
 	req.SetDefaults(&reqQuery)
+	// 设置默认值
+	req.SetDefaults(&reqQuery)
 
 	// TODO: 获取操作人
 	session := &auth.Session{
-		Principal: principal.Principal{
+		Principal: principal.User{
 			ID:    1,
 			Email: "actor@chandao.com",
 			UID:   "actor",
@@ -159,7 +162,7 @@ func (c *Controller) Get(ctx *gin.Context) {
 
 	// TODO: 获取操作人
 	session := &auth.Session{
-		Principal: principal.Principal{
+		Principal: principal.User{
 			ID:    1,
 			Email: "actor@chandao.com",
 			UID:   "actor",
@@ -206,7 +209,7 @@ func (c *Controller) GetDivergence(ctx *gin.Context) {
 
 	// TODO: 获取操作人
 	session := &auth.Session{
-		Principal: principal.Principal{
+		Principal: principal.User{
 			ID:    1,
 			Email: "actor@chandao.com",
 			UID:   "actor",
@@ -256,7 +259,7 @@ func (c *Controller) GetDiff(ctx *gin.Context) {
 
 	// TODO: 获取操作人
 	session := &auth.Session{
-		Principal: principal.Principal{
+		Principal: principal.User{
 			ID:    1,
 			Email: "actor@chandao.com",
 			UID:   "actor",
@@ -268,7 +271,6 @@ func (c *Controller) GetDiff(ctx *gin.Context) {
 		resp.InternalError(ctx, err)
 		return
 	}
-
 	// 设置响应头为 text/plain
 	ctx.Writer.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	resp.NoCache(ctx.Writer)

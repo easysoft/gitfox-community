@@ -1,16 +1,16 @@
 package provider
 
 import (
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/principal"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/user"
+	userSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/user"
+	principalStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/principal"
 	"github.com/google/wire"
-	"gorm.io/gorm"
 )
 
 var PrincipalWireSet = wire.NewSet(
-	NewPrincipalStore,
-	wire.Bind(new(principal.IPrincipalStore), new(*principal.PrincipalStore)),
+	user.NewController,
+	wire.Bind(new(userSvc.Interface), new(*userSvc.Service)),
+	userSvc.NewService,
+	wire.Bind(new(principalStore.Interface), new(*principalStore.Store)),
+	principalStore.NewPrincipalStore,
 )
-
-func NewPrincipalStore(db *gorm.DB) *principal.PrincipalStore {
-	return principal.NewPrincipalStore(db)
-}

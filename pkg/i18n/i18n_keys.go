@@ -7,9 +7,21 @@ type I18nKey string
 
 const (
 	// Auth 相关常量
-	AuthNoData                 I18nKey = "auth.no_data"                   // 请求不包含任何可用于 Authorizer 的认证数据
-	AuthNoSession              I18nKey = "auth.no_session"                // 请求不包含任何会话数据,无法进行授权
-	AuthSessionTokenNotAllowed I18nKey = "auth.session_token_not_allowed" // 会话令牌不允许用于与 Git 交互
+	AuthAuthUserLoginSuccess        I18nKey = "auth.auth_user_login_success"          // 用户登录成功
+	AuthNoData                      I18nKey = "auth.no_data"                          // 请求不包含任何可用于 Authorizer 的认证数据
+	AuthNoSession                   I18nKey = "auth.no_session"                       // 请求不包含任何会话数据,无法进行授权
+	AuthPubKeyAddError              I18nKey = "auth.pub_key_add_error"                // 公钥添加失败
+	AuthPubKeyAddSuccess            I18nKey = "auth.pub_key_add_success"              // 公钥添加成功
+	AuthPubKeyAlreadyInUse          I18nKey = "auth.pub_key_already_in_use"           // 公钥已存在
+	AuthPubKeyCreateError           I18nKey = "auth.pub_key_create_error"             // 公钥创建失败
+	AuthPubKeyIdentifierError       I18nKey = "auth.pub_key_identifier_error"         // 添加公钥标识符校验错误
+	AuthPubKeyNotFoundByFingerprint I18nKey = "auth.pub_key_not_found_by_fingerprint" // 公钥未找到
+	AuthPubKeyParamError            I18nKey = "auth.pub_key_param_error"              // 添加公钥参数错误
+	AuthSessionTokenNotAllowed      I18nKey = "auth.session_token_not_allowed"        // 会话令牌不允许用于与 Git 交互
+	AuthUserIssuePatError           I18nKey = "auth.user_issue_pat_error"             // 用户创建访问令牌失败
+	AuthUserIssueTokenError         I18nKey = "auth.user_issue_token_error"           // 用户创建会话令牌失败
+	AuthUserNotFound                I18nKey = "auth.user_not_found"                   // 用户不存在
+	AuthUserPassError               I18nKey = "auth.user_pass_error"                  // 用户密码错误
 
 	// Branch 相关常量
 	BranchBodyParamError    I18nKey = "branch.body_param_error"    // Body 参数解析失败.

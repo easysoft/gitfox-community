@@ -333,7 +333,7 @@ func (c *Controller) GetPaths(ctx *gin.Context) {
 	// 	return
 	// }
 	session := &auth.Session{
-		Principal: principal.Principal{
+		Principal: principal.User{
 			ID:    1,
 			Email: "actor@chandao.com",
 			UID:   "actor",
@@ -402,7 +402,7 @@ func (c *Controller) GetPathsDetails(ctx *gin.Context) {
 	// 	return
 	// }
 	session := &auth.Session{
-		Principal: principal.Principal{
+		Principal: principal.User{
 			ID:    1,
 			Email: "actor@chandao.com",
 			UID:   "actor",
