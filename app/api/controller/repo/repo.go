@@ -118,7 +118,7 @@ func (ctl *Controller) GetContent(ctx *gin.Context) {
 	var params req.RepoId
 	var err error
 
-	_, ok := req.GetAuthSession(ctx)
+	_, ok := req.GetAuthSession(ctx.Request.Context())
 	if !ok {
 		err = errors.WithI18nKey(errors.New("get session failed"), i18n.AuthNoSession)
 		resp.BadRequest(ctx, err)

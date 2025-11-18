@@ -19,7 +19,7 @@ type PublicKey struct {
 }
 
 type CreatePublicKeyInput struct {
-	Identifier string `json:"identifier"`
+	Identifier string `json:"identifier" binding:"required"`
 	Content    string `json:"content" binding:"required"`
 }
 
