@@ -56,6 +56,13 @@ func (c *Controller) Create(ctx *gin.Context) {
 	// 	resp.BadRequest(ctx, err)
 	// 	return
 	// }
+	// 获取操作人
+	// session, ok := req.GetAuthSession(ctx.Request.Context())
+	// if !ok {
+	// 	err := errors.WithI18nKey(errors.New("get session failed"), i18n.AuthNoSession)
+	// 	resp.BadRequest(ctx, err)
+	// 	return
+	// }
 	session := &auth.Session{
 		Principal: principal.User{
 			ID:    1,
@@ -107,6 +114,8 @@ func (c *Controller) List(ctx *gin.Context) {
 		resp.BadRequest(ctx, err)
 		return
 	}
+	// 设置默认值
+	req.SetDefaults(&reqQuery)
 	// 设置默认值
 	req.SetDefaults(&reqQuery)
 

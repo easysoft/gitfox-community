@@ -1,6 +1,9 @@
 package repo
 
-import "github.com/easysoft/gitfox/types"
+import (
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
+	"github.com/easysoft/gitfox/types"
+)
 
 // GetContentReq 获取仓库内容请求参
 type GetContentReq struct {
@@ -38,4 +41,23 @@ const (
 // 内容接口，限制API返回的可能类型的内容
 type Content interface {
 	isContent()
+}
+
+type PathsInput struct {
+	IncludeDirectories bool   `json:"includeDirectories"`
+	GitRef             string `json:"gitRef"`
+}
+
+type PathsOutput struct {
+	Files       []string `json:"files"`
+	Directories []string `json:"directories"`
+}
+
+type PathsDetailsInput struct {
+	GitRef string   `json:"gitRef"`
+	Paths  []string `json:"paths"`
+}
+
+type PathsDetailsOutput struct {
+	Details []git.PathDetails `json:"details"`
 }

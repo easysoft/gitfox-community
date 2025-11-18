@@ -81,6 +81,7 @@ func (c *Controller) Create(ctx *gin.Context) {
 	}
 
 	// TODO: 记录审计日志
+	// TODO: 记录审计日志
 	resp.Created(ctx, i18n.CommitCreateSuccess, respData)
 }
 
@@ -103,6 +104,8 @@ func (c *Controller) List(ctx *gin.Context) {
 		resp.BadRequest(ctx, err)
 		return
 	}
+	// 设置默认值
+	req.SetDefaults(&reqQuery)
 	// 设置默认值
 	req.SetDefaults(&reqQuery)
 
@@ -268,7 +271,6 @@ func (c *Controller) GetDiff(ctx *gin.Context) {
 		resp.InternalError(ctx, err)
 		return
 	}
-
 	// 设置响应头为 text/plain
 	ctx.Writer.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	resp.NoCache(ctx.Writer)

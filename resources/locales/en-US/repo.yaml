@@ -4,6 +4,7 @@ repo:
   push_permission_error: "You do not have permission to push to this repository."
   pull_permission_error: "You do not have permission to pull from this repository."
   body_param_error: "Body param parsing failed"
+  query_param_error: "Query param parsing failed"
   path_param_error: "Path param parsing failed"
   identifier_invalid: "The repo name is illegal. The identifier only supports letters, numbers, underscores (_), hyphens (-), and dots (.)."
   query_error: "Failed to query repository"
@@ -12,3 +13,5 @@ repo:
   create_error: "Failed to create the repository"
   create_success: "Successfully to create the repository"
   mirror_read_only: "Mirror repository read-only."
+  get_paths_success: "Get paths successfully."
+  get_paths_details_success: "Get paths details successfully."

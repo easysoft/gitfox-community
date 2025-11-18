@@ -45,7 +45,7 @@ func NewRepoSvc(gitSvc git.Interface, repoStore repo.Interface, spaceStore space
 func (s *Service) Create(ctx context.Context, req *repoModel.CreateRepoReq) (*repoModel.Repo, error) {
 	_, err := s.spaceStore.GetByID(ctx, req.SpaceID)
 	if err != nil {
-		return nil, errors.NotFound.Newf("failed to find the parent space: %w", err)
+		return nil, errors.NotFound.Newf("failed to find the parent space: %v", err)
 	}
 	// session, ok := reqPkg.GetAuthSession(ctx)
 	// if !ok {
@@ -62,7 +62,7 @@ func (s *Service) Create(ctx context.Context, req *repoModel.CreateRepoReq) (*re
 
 	gitResp, isEmpty, err := s.createGitRepository(ctx, req, session)
 	if err != nil {
-		return nil, errors.SystemErr.Newf("error creating repository on git: %w", err)
+		return nil, errors.SystemErr.Newf("error creating repository on git: %v", err)
 	}
 
 	repo := &repo.Repository{
@@ -126,7 +126,7 @@ func (s *Service) createGitRepository(ctx context.Context, req *repoModel.Create
 		true,
 	)
 	if err != nil {
-		return nil, false, errors.SystemErr.Newf("failed to generate git hook environment variables: %w", err)
+		return nil, false, errors.SystemErr.Newf("failed to generate git hook environment variables: %v", err)
 	}
 	now := time.Now()
 	resp, err := s.gitSvc.CreateRepository(ctx, &git.CreateRepositoryParams{
@@ -219,4 +219,45 @@ func (s *Service) GetDiff(ctx context.Context, req repoModel.ReqForDiff, repo re
 		HeadRef:    info.HeadRef,
 		MergeBase:  info.MergeBase,
 	}, req.Files...)
+}
+
+func (s *Service) Paths(ctx context.Context, req repoModel.PathsInput, repo repoModel.Repo) (*repoModel.PathsOutput, error) {
+	var gitRef string
+	if req.GitRef == "" {
+		gitRef = repo.DefaultBranch
+	}
+	rpcOut, err := s.gitSvc.ListPaths(ctx, &git.ListPathsParams{
+		ReadParams:         git.ReadParams{RepoUID: repo.GitUID},
+		GitREF:             gitRef,
+		IncludeDirectories: req.IncludeDirectories,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to list git paths: %w", err)
+	}
+
+	return &repoModel.PathsOutput{
+		Files:       rpcOut.Files,
+		Directories: rpcOut.Directories,
+	}, nil
+}
+
+func (s *Service) PathsDetails(ctx context.Context, req repoModel.PathsDetailsInput, repo repoModel.Repo) (*repoModel.PathsDetailsOutput, error) {
+	var gitRef string
+	if req.GitRef == "" {
+		gitRef = repo.DefaultBranch
+	}
+
+	result, err := s.gitSvc.PathsDetails(ctx, git.PathsDetailsParams{
+		ReadParams: git.ReadParams{RepoUID: repo.GitUID},
+		GitREF:     gitRef,
+		Paths:      req.Paths,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &repoModel.PathsDetailsOutput{
+		Details: result.Details,
+	}, nil
+
 }

@@ -105,6 +105,7 @@ func NewGitHookController(
 		urlProvider,
 	)
 	// Wire the controller into the factory
+	// Wire the controller into the factory
 	if fct, ok := githookFactory.(*githook.ControllerClientFactory); ok {
 		fct.GithookCtrl = ctrl
 		fct.Git = git
