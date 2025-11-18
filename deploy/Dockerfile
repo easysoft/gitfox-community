@@ -56,7 +56,7 @@ ENV GITFOX_SQLITE_FILE=/data/gitfox/sqlite/sqlite.db
 # 日志输出的最低级别  -1~5：debug,info,warn,error,dpanic,panic,fatal
 ENV GITFOX_LOG_LEVEL=-1
 ENV GITFOX_DB_DRIVER=mysql
-ENV GITFOX_DB_DATASOURCE=root:pass4GitFox@tcp(mysql:3306)/gitfox
+ENV GITFOX_DB_DATASOURCE=root:pass4GitFox@tcp(mysql:3306)/gitfox-community?parseTime=true&loc=Local
 ENV GITFOX_DOCKER_HOST=unix:///var/run/docker.sock
 ENV GITFOX_DOCKER_API_VERSION=1.40
 
@@ -64,8 +64,6 @@ COPY --from=build /app/bin/gitfox_linux /app/gitfox
 COPY --from=build /app/configs/dev.env /app/dev.env
 COPY --from=build /app/configs/dev.yaml /app/dev.yaml
 
-## 临时增加
-COPY --from=build /app/locales /app/locales
 
 
 COPY --from=cert-image /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
