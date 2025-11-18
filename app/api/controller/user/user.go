@@ -21,8 +21,8 @@ type Controller struct {
 	publicKeySvc publickey.Interface
 }
 
-// NewController 创建提交处理器实例
-func NewController(userService userSvc.Interface, publicKeyService publickey.Interface) *Controller {
+// NewUserController 创建提交处理器实例
+func NewUserController(userService userSvc.Interface, publicKeyService publickey.Interface) *Controller {
 	return &Controller{
 		userSvc:      userService,
 		publicKeySvc: publicKeyService,

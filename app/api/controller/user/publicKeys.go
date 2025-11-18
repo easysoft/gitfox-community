@@ -3,9 +3,8 @@ package user
 import (
 	"strings"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/principal"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/publickey"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
@@ -24,15 +23,6 @@ import (
 // @Failure 400 {object} resp.ObjectResponse "创建用户公钥失败"
 // @Router /user/public-keys [post]
 func (c *Controller) Create(ctx *gin.Context) {
-	// TODO: 获取操作人
-	session := &auth.Session{
-		Principal: principal.User{
-			ID:    1,
-			Email: "actor@chandao.com",
-			UID:   "actor",
-		},
-	}
-
 	var params publickey.CreatePublicKeyInput
 	var err error
 	if err = ctx.ShouldBindJSON(&params); err != nil {
@@ -41,7 +31,14 @@ func (c *Controller) Create(ctx *gin.Context) {
 		return
 	}
 
-	if err := params.CheckIdentifier(); err != nil {
+	session, ok := req.GetAuthSession(ctx.Request.Context())
+	if !ok {
+		err = errors.WithI18nKey(errors.New("session not found"), i18n.AuthPubKeyAddError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
+	if err = params.CheckIdentifier(); err != nil {
 		err = errors.WithI18nKey(err, i18n.AuthPubKeyIdentifierError)
 		resp.BadRequest(ctx, err)
 		return

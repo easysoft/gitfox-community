@@ -4,12 +4,15 @@ import (
 	"fmt"
 	"time"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/git"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/githook"
+	gitSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/git"
+	repoSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/principal"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/cache"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
+	gitPkg "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/api"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/enum"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/hook"
@@ -27,7 +30,10 @@ var GitWireSet = wire.NewSet(
 	NewGitAdapter,
 	NewGit,
 	NewGitHookController,
-	wire.Bind(new(git.Interface), new(*git.Service)),
+	NewGitService,
+	NewGitController,
+	wire.Bind(new(gitPkg.Interface), new(*gitPkg.Service)),
+	wire.Bind(new(gitSvc.Interface), new(*gitSvc.Service)),
 )
 
 func NewLastCommitCache(config types.Config) (cache.Cache[api.CommitEntryKey, *api.Commit], error) {
@@ -75,8 +81,8 @@ func NewGit(
 	adapter *api.Git,
 	hookClientFactory hook.ClientFactory,
 	storage storage.Store,
-) (*git.Service, error) {
-	return git.New(
+) (*gitPkg.Service, error) {
+	return gitPkg.New(
 		config,
 		adapter,
 		hookClientFactory,
@@ -94,7 +100,7 @@ func NewGitClientFactory() hook.ClientFactory {
 func NewGitHookController(
 	principalStore principal.Interface,
 	repoStore repo.Interface,
-	git git.Interface,
+	git gitPkg.Interface,
 	urlProvider url.Provider,
 	githookFactory hook.ClientFactory,
 ) *githook.Controller {
@@ -115,4 +121,12 @@ func NewGitHookController(
 
 func NewGitLocalStore() storage.Store {
 	return storage.NewLocalStore()
+}
+
+func NewGitService(gitPkg gitPkg.Interface) *gitSvc.Service {
+	return gitSvc.NewGitService(gitPkg).(*gitSvc.Service)
+}
+
+func NewGitController(gitService gitSvc.Interface, repoService repoSvc.Interface) *git.GitController {
+	return git.NewGitController(gitService, repoService)
 }
