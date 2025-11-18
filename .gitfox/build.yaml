@@ -23,7 +23,7 @@ spec:
               container:
                 image: hub.zentao.net/ci/docker:24.0.8-cli
               script:
-              - docker login -u ${{ secrets.get("zentao-registry-docker-username") }} -p ${{ secrets.get("zentao-registry-docker-password") }} hub.zentao.net && docker build -f deploy/Dockerfile --push --pull -t "${APP_IMAGE}" .
+              - docker login -u ${{ secrets.get("zentao-registry-docker-username") }} -p ${{ secrets.get("zentao-registry-docker-password") }} hub.zentao.net && sudo docker build -f deploy/Dockerfile --push --pull -t "${APP_IMAGE}" .
           - name: 消息通知
             type: plugin
             spec:
