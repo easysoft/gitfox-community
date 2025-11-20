@@ -23,27 +23,6 @@ type CreateRepoReq struct {
 	Readme        bool   `json:"readme"`                                    // 是否生成README.md
 }
 
-// CreateRemoteRepoResponse 创建仓库响应结果
-type CreateRepoResp struct {
-	ID            uint       `json:"id"`
-	SpaceID       uint       `json:"spaceID"`
-	Identifier    string     `json:"identifier"`
-	Desc          string     `json:"desc"`
-	GitUID        string     `json:"gitUID"`
-	DefaultBranch string     `json:"defaultBranch"`
-	ForkID        *uint      `json:"forkID"` // 允许 NULL，用指针类型
-	Empty         bool       `json:"empty"`
-	ACL           string     `json:"acl"`
-	Mirror        bool       `json:"mirror"`
-	Status        int        `json:"status"` // 状态码用 int 类型（兼容枚举映射）
-	Mutex         int        `json:"mutex"`
-	CreatedBy     string     `json:"createdBy"`
-	CreatedDate   *time.Time `json:"createdDate"` // 允许 NULL，用指针类型
-	EditedBy      string     `json:"editedBy"`
-	EditedDate    *time.Time `json:"editedDate"` // 允许 NULL，用指针类型
-	Deleted       bool       `json:"deleted"`
-}
-
 // 自定义参数校验：Identifier 仅允许字母、数字、下划线、连字符
 func (req *CreateRepoReq) Validate() error {
 
@@ -82,25 +61,27 @@ type ReqForUpdate struct {
 }
 
 type Repo struct {
-	ID            uint       `json:"id"`
-	SpaceID       uint       `json:"spaceID"`
-	Identifier    string     `json:"identifier"`
-	Desc          string     `json:"desc"`
-	GitUID        string     `json:"gitUID"`
-	DefaultBranch string     `json:"defaultBranch"`
-	ForkID        *uint      `json:"forkID"` // 允许 NULL，用指针类型
-	Empty         bool       `json:"empty"`
-	ACL           string     `json:"acl"`
-	Mirror        bool       `json:"mirror"`
-	Status        int        `json:"status"` // 状态码用 int 类型（兼容枚举映射）
-	Mutex         int        `json:"mutex"`
-	CreatedBy     string     `json:"createdBy"`
-	CreatedDate   *time.Time `json:"createdDate"` // 允许 NULL，用指针类型
-	EditedBy      string     `json:"editedBy"`
-	EditedDate    *time.Time `json:"editedDate"` // 允许 NULL，用指针类型
-	Deleted       bool       `json:"deleted"`
-	GitURL        string     `json:"gitURL"`
-	GitSSHURL     string     `json:"gitSSHURL,omitempty"`
+	ID            uint   `json:"id"`
+	SpaceID       uint   `json:"spaceID"`
+	Identifier    string `json:"identifier"`
+	Desc          string `json:"desc"`
+	GitUID        string `json:"gitUID"`
+	DefaultBranch string `json:"defaultBranch"`
+	ForkID        *uint  `json:"forkID"` // 允许 NULL，用指针类型
+	Empty         bool   `json:"empty"`
+	ACL           string `json:"acl"`
+	Mirror        bool   `json:"mirror"`
+	Status        int    `json:"status"` // 状态码用 int 类型（兼容枚举映射）
+	Mutex         int    `json:"mutex"`
+	// git urls
+	GitURL      string     `json:"gitURL,omitempty"`
+	GitSSHURL   string     `json:"gitSSHURL,omitempty"`
+	Path        string     `json:"path"`
+	CreatedBy   string     `json:"createdBy"`
+	CreatedDate *time.Time `json:"createdDate"` // 允许 NULL，用指针类型
+	EditedBy    string     `json:"editedBy"`
+	EditedDate  *time.Time `json:"editedDate"` // 允许 NULL，用指针类型
+	Deleted     bool       `json:"deleted"`
 }
 
 type ReqForDiff struct {

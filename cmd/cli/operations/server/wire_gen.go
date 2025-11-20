@@ -86,7 +86,7 @@ func NewApp(mode string) (*App, func(), error) {
 		return nil, nil, err
 	}
 	branchService := branch.NewService(urlProvider, gitService)
-	repoStore := repo.NewRepoStore(db)
+	repoStore := repo.NewRepoStore(db, spaceStore)
 	repoService := repo2.NewRepoSvc(gitService, repoStore, spaceStore, urlProvider)
 	controller := branch2.NewController(branchService, repoService)
 	tagService := tag.NewService(urlProvider, gitService)
