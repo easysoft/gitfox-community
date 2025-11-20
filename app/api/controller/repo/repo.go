@@ -60,7 +60,13 @@ func (ctl *Controller) Create(c *gin.Context) {
 		return
 	}
 
-	data, err := ctl.repoSvc.Create(logger.GetContextWithLogger(c), reqData)
+	session, ok := req.GetAuthSession(c.Request.Context())
+	if !ok {
+		resp.Unauthorized(c, errors.WithI18nKey(nil, i18n.AuthNoSession))
+		return
+	}
+
+	data, err := ctl.repoSvc.Create(logger.GetContextWithLogger(c), session, reqData)
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.RepoCreateError)
 		resp.InternalError(c, err)
