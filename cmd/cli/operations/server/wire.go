@@ -38,6 +38,7 @@ func NewApp(mode string) (*App, func(), error) {
 		provider.RepoWireSet,
 		provider.BranchWireSet,
 		provider.TagWireSet,
+		provider.ScanRuleSetWireSet,
 		provider.CommitWireSet,
 		provider.ControllersWireSet,
 		provider.URLWireSet,

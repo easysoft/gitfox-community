@@ -1,0 +1,18 @@
+package router
+
+import (
+	"github.com/gin-gonic/gin"
+)
+
+// registerScanRoutes 注册扫描相关路由
+func registerScanRoutes(r *gin.RouterGroup, controller *Controller) {
+	ruleSets := r.Group("/scans/rulesets")
+	{
+		ruleSets.POST("/", controller.RuleSet.Create)
+		ruleSetsWithID := ruleSets.Group(":id")
+		{
+			ruleSetsWithID.GET("", controller.RuleSet.Get)
+			ruleSetsWithID.PUT("", controller.RuleSet.Update)
+		}
+	}
+}

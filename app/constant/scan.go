@@ -1,82 +1,8 @@
 package constant
 
 import (
-	"regexp"
-	"strconv"
 	"strings"
 )
-
-type ScanLangID int
-
-const (
-	ScanLangIDCustom ScanLangID = iota
-	ScanLangGo
-	ScanLangJava
-	ScanLangJavaScript
-	ScanLangKotlin
-	ScanLangPHP
-	ScanLangPython
-	ScanLangRuby
-	ScanLangRust
-	ScanLangTypeScript
-	ScanLangC
-	ScanLangCsharp
-)
-
-// String 实现 Stringer 接口，返回语言名称字符串
-func (s ScanLangID) String() string {
-	return string(s.ToName())
-}
-
-var scanLangIDs = sortEnum([]ScanLangID{
-	ScanLangIDCustom,
-	ScanLangGo,
-	ScanLangJava,
-	ScanLangJavaScript,
-	ScanLangKotlin,
-	ScanLangPHP,
-	ScanLangPython,
-	ScanLangRuby,
-	ScanLangRust,
-	ScanLangTypeScript,
-	ScanLangC,
-	ScanLangCsharp,
-})
-
-// ToName 将 ScanLangID 转换为对应的语言名称
-func (s ScanLangID) ToName() ScanLangName {
-	switch s {
-	case ScanLangIDCustom:
-		return ScanLangCustomName
-	case ScanLangGo:
-		return ScanLangGoName
-	case ScanLangJava:
-		return ScanLangJavaName
-	case ScanLangJavaScript:
-		return ScanLangJavaScriptName
-	case ScanLangKotlin:
-		return ScanLangKotlinName
-	case ScanLangPHP:
-		return ScanLangPHPName
-	case ScanLangPython:
-		return ScanLangPythonName
-	case ScanLangRuby:
-		return ScanLangRubyName
-	case ScanLangRust:
-		return ScanLangRustName
-	case ScanLangTypeScript:
-		return ScanLangTypeScriptName
-	case ScanLangC:
-		return ScanLangCName
-	case ScanLangCsharp:
-		return ScanLangCsharpName
-	default:
-		return ScanLangCustomName
-	}
-}
-func (ScanLangID) Enum() []interface{}              { return toInterfaceSlice(scanLangIDs) }
-func (s ScanLangID) Sanitize() (ScanLangID, bool)   { return Sanitize(s, GetAllScanLangIDs) }
-func GetAllScanLangIDs() ([]ScanLangID, ScanLangID) { return scanLangIDs, ScanLangIDCustom }
 
 type ScanLangName string
 
@@ -103,37 +29,6 @@ func (s ScanLangName) LowerString() string {
 	return strings.ToLower(string(s))
 }
 
-func (s ScanLangName) ID() ScanLangID {
-	switch s {
-	case ScanLangCustomName:
-		return ScanLangIDCustom
-	case ScanLangGoName:
-		return ScanLangGo
-	case ScanLangJavaName:
-		return ScanLangJava
-	case ScanLangJavaScriptName:
-		return ScanLangJavaScript
-	case ScanLangKotlinName:
-		return ScanLangKotlin
-	case ScanLangPHPName:
-		return ScanLangPHP
-	case ScanLangPythonName:
-		return ScanLangPython
-	case ScanLangRubyName:
-		return ScanLangRuby
-	case ScanLangRustName:
-		return ScanLangRust
-	case ScanLangTypeScriptName:
-		return ScanLangTypeScript
-	case ScanLangCName:
-		return ScanLangC
-	case ScanLangCsharpName:
-		return ScanLangCsharp
-	default:
-		return ScanLangIDCustom
-	}
-}
-
 var scanLangs = sortEnum([]ScanLangName{
 	ScanLangGoName,
 	ScanLangJavaName,
@@ -155,14 +50,6 @@ func GetAllScanLangs() ([]ScanLangName, ScanLangName) { return scanLangs, ScanLa
 
 // ParseLang 解析语言类型
 func ParseLang(v string) ScanLangName {
-	// 尝试将输入解析为数字
-	if matched, _ := regexp.MatchString(`^[0-9]+$`, v); matched {
-		if id, err := strconv.Atoi(v); err == nil {
-			if id >= int(ScanLangIDCustom) && id <= int(ScanLangCsharp) {
-				return ScanLangID(id).ToName()
-			}
-		}
-	}
 	// 按语言名称匹配
 	switch strings.ToLower(v) {
 	case ScanLangGoName.LowerString(), "golang":
@@ -193,13 +80,13 @@ func ParseLang(v string) ScanLangName {
 }
 
 // ScanRulePriority 规则优先级
-type ScanRulePriority string
+type ScanRulePriority int
 
 const (
-	ScanRulePriorityLow    ScanRulePriority = "low"
-	ScanRulePriorityMedium ScanRulePriority = "medium"
-	ScanRulePriorityHigh   ScanRulePriority = "high"
-	scanRulePriorityNone   ScanRulePriority = ""
+	ScanRulePriorityLow ScanRulePriority = iota
+	ScanRulePriorityMedium
+	ScanRulePriorityHigh
+	scanRulePriorityNone
 )
 
 var scanRulePriorities = sortEnum([]ScanRulePriority{
@@ -208,7 +95,6 @@ var scanRulePriorities = sortEnum([]ScanRulePriority{
 	ScanRulePriorityHigh,
 })
 
-func (s ScanRulePriority) String() string    { return string(s) }
 func (ScanRulePriority) Enum() []interface{} { return toInterfaceSlice(scanRulePriorities) }
 func (s ScanRulePriority) Sanitize() (ScanRulePriority, bool) {
 	return Sanitize(s, GetAllScanRulePriorities)

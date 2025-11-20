@@ -111,6 +111,19 @@ const (
 	RequestQueryParameterNotFound          I18nKey = "request.query_parameter_not_found"          // 查询参数未找到.
 	RequestRequestBodyTooLarge             I18nKey = "request.request_body_too_large"             // 请求体过大.
 
+	// RuleSet 相关常量
+	RuleSetBodyParamError  I18nKey = "ruleSet.body_param_error"  // 请求体参数解析失败.
+	RuleSetCreateError     I18nKey = "ruleSet.create_error"      // 规则集创建失败.
+	RuleSetCreateSuccess   I18nKey = "ruleSet.create_success"    // 规则集创建成功.
+	RuleSetListError       I18nKey = "ruleSet.list_error"        // 规则集列表查询失败.
+	RuleSetListSuccess     I18nKey = "ruleSet.list_success"      // 规则集列表查询成功.
+	RuleSetPathParamError  I18nKey = "ruleSet.path_param_error"  // 路径参数解析失败.
+	RuleSetQueryError      I18nKey = "ruleSet.query_error"       // 规则集详情查询失败.
+	RuleSetQueryParamError I18nKey = "ruleSet.query_param_error" // 查询参数解析失败.
+	RuleSetQuerySuccess    I18nKey = "ruleSet.query_success"     // 规则集详情查询成功.
+	RuleSetUpdateError     I18nKey = "ruleSet.update_error"      // 规则集更新失败.
+	RuleSetUpdateSuccess   I18nKey = "ruleSet.update_success"    // 规则集更新成功.
+
 	// Space 相关常量
 	SpaceArtifactsTitleSuccess   I18nKey = "space.artifacts_title_success"   // 仓库设置保存成功
 	SpaceBodyParamError          I18nKey = "space.body_param_error"          // Body 参数解析失败.
