@@ -66,7 +66,14 @@ func (s *Service) Create(ctx context.Context, session *auth.Session, params *rep
 		ACL:           params.ACL,
 	}
 
-	return s.repoStore.Create(ctx, repo)
+	repoData, err := s.repoStore.Create(ctx, repo)
+	if err != nil {
+		return nil, errors.SystemErr.Newf("failed to create repository in store: %v", err)
+	}
+	// backfil GitURL
+	repoData.GitURL = s.urlProvider.GenerateGITCloneURL(ctx, repoData.Path)
+	repoData.GitSSHURL = s.urlProvider.GenerateGITCloneSSHURL(ctx, repoData.Path)
+	return repoData, nil
 }
 
 func (s *Service) createGitRepository(ctx context.Context, req *repoModel.CreateRepoReq, session *auth.Session) (*git.CreateRepositoryOutput, bool, error) {
