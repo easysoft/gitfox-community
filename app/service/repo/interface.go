@@ -10,7 +10,7 @@ import (
 )
 
 type Interface interface {
-	Create(ctx context.Context, req *repoModel.CreateRepoReq) (*repoModel.Repo, error)
+	Create(ctx context.Context, session *auth.Session, req *repoModel.CreateRepoReq) (*repoModel.Repo, error)
 	GetByID(ctx context.Context, session *auth.Session, id uint) (*repoModel.Repo, error)
 	GetRepo(ctx context.Context, repoRef string, allowedStates []constant.RepoState) (*repoModel.Repo, error)
 	GetRepoCheckAccess(ctx context.Context, session *auth.Session, repoRef string, allowedStates []constant.Permission) (*repoModel.Repo, error)
