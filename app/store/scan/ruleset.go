@@ -1,0 +1,81 @@
+package scan
+
+import (
+	"context"
+	"time"
+
+	scanModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
+	"gorm.io/gorm"
+)
+
+var _ IRuleSet = (*RuleSetStore)(nil)
+
+type RuleSetStore struct {
+	db *gorm.DB
+}
+
+func NewRuleSetStore(db *gorm.DB) *RuleSetStore {
+	return &RuleSetStore{
+		db: db,
+	}
+}
+
+func (s *RuleSetStore) Create(ctx context.Context, ruleSet *RuleSet) (*scanModel.RuleSet, error) {
+	if err := s.db.WithContext(ctx).Create(&ruleSet).Error; err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
+	}
+	return mapToModel(*ruleSet), nil
+}
+
+func (s *RuleSetStore) GetByID(ctx context.Context, id uint) (*scanModel.RuleSet, error) {
+	var ruleSet RuleSet
+	if err := s.db.WithContext(ctx).Where("id = ?", id).First(&ruleSet).Error; err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
+	}
+	return mapToModel(ruleSet), nil
+}
+
+func (s *RuleSetStore) Update(ctx context.Context, ruleSet *RuleSet, id uint) (*scanModel.RuleSet, error) {
+	ruleSet.ID = int64(id)
+	if err := s.db.WithContext(ctx).Updates(ruleSet).Error; err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
+	}
+
+	// 重新查询完整记录,因为 Updates 只更新指定非零值字段,不会回填其他字段
+	var updated RuleSet
+	if err := s.db.WithContext(ctx).Where("id = ?", id).First(&updated).Error; err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
+	}
+
+	return mapToModel(updated), nil
+}
+
+// mapToModel 将 RuleSet 转换为 scanModel.RuleSet
+func mapToModel(data RuleSet) *scanModel.RuleSet {
+	return &scanModel.RuleSet{
+		ID:            data.ID,
+		Name:          data.Name,
+		Description:   data.Description,
+		DescriptionEN: data.DescriptionEN,
+		Lang:          data.Lang,
+		LangID:        data.LangID,
+		Tag:           data.Tag,
+		Type:          data.Type,
+		Plugin:        data.Plugin,
+		Status:        data.Status,
+		CreatedBy:     data.CreatedBy,
+		UpdatedBy:     data.UpdatedBy,
+		CreatedAt:     timeToUnix(data.CreatedDate),
+		UpdatedAt:     timeToUnix(data.EditedDate),
+		IsCustom:      data.IsCustom,
+	}
+}
+
+// timeToUnix 将 time.Time 指针转换为 Unix 时间戳（毫秒）
+func timeToUnix(t *time.Time) int64 {
+	if t == nil {
+		return 0
+	}
+	return t.UnixMilli()
+}
