@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
+	authModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
 	scanModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
 	scanStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/scan"
 )
@@ -20,16 +21,19 @@ func NewRuleSetService(ruleSetStore scanStore.IRuleSet) *RuleSetService {
 	}
 }
 
-func (s *RuleSetService) Create(ctx context.Context, req scanModel.RuleSetCreateReq) (*scanModel.RuleSet, error) {
+func (s *RuleSetService) Create(ctx context.Context, session *authModel.Session, req scanModel.RuleSetCreateReq) (*scanModel.RuleSet, error) {
 	// 将请求转换为 store 层的 RuleSet 结构
 	ruleSet := &scanStore.RuleSet{
-		Name:    req.Name,
-		Desc:    req.Desc,
-		DescrEn: req.DescEn,
-		Lang:    constant.ScanLangName(req.Lang),
-		Tag:     req.Tag,
-		Type:    constant.ScanRuleType(req.Type),
-		Plugin:  req.Plugin,
+		Name:      req.Name,
+		Desc:      req.Desc,
+		DescrEn:   req.DescEn,
+		Lang:      constant.ScanLangName(req.Lang),
+		Tag:       req.Tag,
+		Type:      constant.ScanRuleType(req.Type),
+		Plugin:    req.Plugin,
+		Status:    constant.ScanRuleStatusEnabled,
+		CreatedBy: session.User.UID,
+		EditedBy:  session.User.UID,
 	}
 
 	return s.ruleSetStore.Create(ctx, ruleSet)
@@ -39,9 +43,9 @@ func (s *RuleSetService) GetByID(ctx context.Context, id uint) (*scanModel.RuleS
 	return s.ruleSetStore.GetByID(ctx, id)
 }
 
-func (s *RuleSetService) Update(ctx context.Context, id uint, req scanModel.RuleSetUpdateReq) (*scanModel.RuleSet, error) {
+func (s *RuleSetService) Update(ctx context.Context, session *authModel.Session, id uint, req scanModel.RuleSetUpdateReq) (*scanModel.RuleSet, error) {
 	// 将请求转换为 store 层的 RuleSet 结构
-	ruleSet := &scanStore.RuleSet{}
+	ruleSet := &scanStore.RuleSet{EditedBy: session.User.UID}
 
 	if req.Name != "" {
 		ruleSet.Name = req.Name

@@ -7,12 +7,12 @@ import (
 )
 
 type RuleSetCreateReq struct {
-	Name   string `json:"name"`
+	Name   string `json:"name" binding:"required,max=100"`
 	Desc   string `json:"desc"`
 	DescEn string `json:"descEn,omitempty"`
 	Lang   string `json:"lang"`
 	Tag    string `json:"tag"`
-	Type   string `json:"type"`
+	Type   string `json:"type" binding:"required,oneof=defect security compliance optimize"`
 	Plugin string `json:"plugin"`
 }
 
@@ -22,7 +22,7 @@ type RuleSetUpdateReq struct {
 	DescEn string `json:"descEn,omitempty"`
 	Lang   string `json:"lang,omitempty"`
 	Tag    string `json:"tag,omitempty"`
-	Type   string `json:"type,omitempty"`
+	Type   string `json:"type,omitempty" binding:"oneof=defect security compliance optimize"`
 	Plugin string `json:"plugin,omitempty"`
 	Status string `json:"status,omitempty"`
 }

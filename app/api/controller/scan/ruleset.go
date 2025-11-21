@@ -33,22 +33,28 @@ func NewRuleSetController(ruleSetSvc scanService.IRuleSet) *RuleSetController {
 // @Error 400 {object} resp.ObjectResponse "参数错误"
 // @Error 500 {object} resp.ObjectResponse "服务器内部错误"
 // @Router /scan/rulesets [post]
-func (ctl *RuleSetController) Create(c *gin.Context) {
+func (c *RuleSetController) Create(ctx *gin.Context) {
 	reqData := new(scanModel.RuleSetCreateReq)
-	if err := c.ShouldBindJSON(&reqData); err != nil {
+	if err := ctx.ShouldBindJSON(&reqData); err != nil {
 		err = errors.WithI18nKey(err, i18n.RuleSetBodyParamError)
-		resp.BadRequest(c, err)
+		resp.BadRequest(ctx, err)
 		return
 	}
 
-	data, err := ctl.ruleSetSvc.Create(logger.GetContextWithLogger(c), *reqData)
+	session, ok := req.GetAuthSession(ctx.Request.Context())
+	if !ok {
+		resp.Unauthorized(ctx, errors.WithI18nKey(nil, i18n.AuthNoSession))
+		return
+	}
+
+	data, err := c.ruleSetSvc.Create(logger.GetContextWithLogger(ctx), session, *reqData)
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.RuleSetCreateError)
-		resp.InternalError(c, err)
+		resp.InternalError(ctx, err)
 		return
 	}
 
-	resp.Created(c, i18n.RuleSetCreateSuccess, data)
+	resp.Created(ctx, i18n.RuleSetCreateSuccess, data)
 }
 
 // Get 获取规则集
@@ -63,27 +69,22 @@ func (ctl *RuleSetController) Create(c *gin.Context) {
 // @Error 404 {object} resp.ObjectResponse "规则集不存在"
 // @Error 500 {object} resp.ObjectResponse "服务器内部错误"
 // @Router /scan/rulesets/{id} [get]
-func (ctl *RuleSetController) Get(c *gin.Context) {
-	ruleSetID, err := req.PathParamAsPositiveUint(c, "id")
+func (c *RuleSetController) Get(ctx *gin.Context) {
+	ruleSetID, err := req.PathParamAsPositiveUint(ctx, "id")
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.RuleSetPathParamError)
-		resp.BadRequest(c, err)
-		return
-	}
-	if ruleSetID <= 0 {
-		err = errors.WithI18nKey(errors.New("invalid id"), i18n.RuleSetPathParamError)
-		resp.BadRequest(c, err)
+		resp.BadRequest(ctx, err)
 		return
 	}
 
-	obj, err := ctl.ruleSetSvc.GetByID(logger.GetContextWithLogger(c), ruleSetID)
+	obj, err := c.ruleSetSvc.GetByID(logger.GetContextWithLogger(ctx), ruleSetID)
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.RuleSetQueryError)
-		resp.InternalError(c, err)
+		resp.InternalError(ctx, err)
 		return
 	}
 
-	resp.OK(c, i18n.RuleSetQuerySuccess, obj)
+	resp.OK(ctx, i18n.RuleSetQuerySuccess, obj)
 }
 
 // Update 修改规则集信息
@@ -99,7 +100,7 @@ func (ctl *RuleSetController) Get(c *gin.Context) {
 // @Error 404 {object} resp.ObjectResponse "规则集不存在"
 // @Error 500 {object} resp.ObjectResponse "服务器内部错误"
 // @Router /scan/rulesets/{id} [put]
-func (ctl *RuleSetController) Update(ctx *gin.Context) {
+func (c *RuleSetController) Update(ctx *gin.Context) {
 	var reqBody scanModel.RuleSetUpdateReq
 	var err error
 
@@ -118,7 +119,13 @@ func (ctl *RuleSetController) Update(ctx *gin.Context) {
 		return
 	}
 
-	respData, err := ctl.ruleSetSvc.Update(logger.GetContextWithLogger(ctx), ruleSetID, reqBody)
+	session, ok := req.GetAuthSession(ctx.Request.Context())
+	if !ok {
+		resp.Unauthorized(ctx, errors.WithI18nKey(nil, i18n.AuthNoSession))
+		return
+	}
+
+	respData, err := c.ruleSetSvc.Update(logger.GetContextWithLogger(ctx), session, ruleSetID, reqBody)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return
