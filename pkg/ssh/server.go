@@ -26,7 +26,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/principal"
+	principal "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/user"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/publickey"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/api"
 
@@ -154,7 +154,7 @@ func (s *Server) publicKeyHandler(ctx ssh.Context, key ssh.PublicKey) bool {
 		return false
 	}
 
-	principal, err := s.Verifier.ValidateKey(ctx, key)
+	user, err := s.Verifier.ValidateKey(ctx, key)
 	if errors.IsNotFound(err) {
 		log.Debug().Err(err).Msg("public key is unknown")
 		return false
@@ -179,12 +179,12 @@ func (s *Server) publicKeyHandler(ctx ssh.Context, key ssh.PublicKey) bool {
 		}
 
 		certChecker := &gossh.CertChecker{}
-		if err := certChecker.CheckCert(principal.UID, cert); err != nil {
+		if err := certChecker.CheckCert(user.Account, cert); err != nil {
 			return false
 		}
 	}
 
-	ctx.SetValue(principalKey, principal)
+	ctx.SetValue(principalKey, user)
 	return true
 }
 
@@ -197,7 +197,7 @@ func (s *Server) sessionHandler(session ssh.Session) {
 	// eg.git-receive-pack 'space/repo.git'
 	command := session.RawCommand()
 
-	principalInfo, ok := session.Context().Value(principalKey).(*principal.PrincipalInfo)
+	principalInfo, ok := session.Context().Value(principalKey).(*principal.User)
 	if !ok {
 		_, _ = fmt.Fprintf(session.Stderr(), "principal not found or empty")
 		return
@@ -250,10 +250,10 @@ func (s *Server) sessionHandler(session ssh.Session) {
 	err = s.RepoCtrl.GitServicePack(
 		WithContext(ctx, session),
 		&auth.Session{
-			Principal: principal.User{
-				ID:    principalInfo.ID,
-				UID:   principalInfo.UID,
-				Email: principalInfo.Email,
+			User: &principal.User{
+				ID:      principalInfo.ID,
+				Email:   principalInfo.Email,
+				Account: principalInfo.Account,
 			},
 		},
 		repoRef,

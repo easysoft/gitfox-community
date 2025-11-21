@@ -3,8 +3,6 @@ package tag
 import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/principal"
 	tagModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/tag"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/tag"
@@ -49,26 +47,11 @@ func (c *Controller) Create(ctx *gin.Context) {
 		return
 	}
 
-	// 获取操作人
-	// session, ok := req.GetAuthSession(ctx.Request.Context())
-	// if !ok {
-	// 	err := errors.WithI18nKey(errors.New("get session failed"), i18n.AuthNoSession)
-	// 	resp.BadRequest(ctx, err)
-	// 	return
-	// }
-	// 获取操作人
-	// session, ok := req.GetAuthSession(ctx.Request.Context())
-	// if !ok {
-	// 	err := errors.WithI18nKey(errors.New("get session failed"), i18n.AuthNoSession)
-	// 	resp.BadRequest(ctx, err)
-	// 	return
-	// }
-	session := &auth.Session{
-		Principal: principal.User{
-			ID:    1,
-			Email: "actor@chandao.com",
-			UID:   "actor",
-		},
+	session, ok := req.GetAuthSession(ctx.Request.Context())
+	if !ok {
+		err = errors.WithI18nKey(errors.New("session not found"), i18n.AuthNoSession)
+		resp.BadRequest(ctx, err)
+		return
 	}
 	// 通过仓库 ID 获取仓库
 	repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, reqBody.RepoID)
@@ -106,9 +89,16 @@ func (c *Controller) Create(ctx *gin.Context) {
 // @Failure 500 {object} resp.ListResponse "服务器错误"
 // @Router /tags/list [post]
 func (c *Controller) List(ctx *gin.Context) {
-
 	var reqQuery tagModel.ReqFilter
 	var err error
+
+	session, ok := req.GetAuthSession(ctx.Request.Context())
+	if !ok {
+		err = errors.WithI18nKey(errors.New("session not found"), i18n.AuthNoSession)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
 	if err = ctx.ShouldBindJSON(&reqQuery); err != nil {
 		err = errors.WithI18nKey(err, i18n.TagQueryParamError)
 		resp.BadRequest(ctx, err)
@@ -119,14 +109,6 @@ func (c *Controller) List(ctx *gin.Context) {
 	// 设置默认值
 	req.SetDefaults(&reqQuery)
 
-	// TODO: 获取操作人
-	session := &auth.Session{
-		Principal: principal.User{
-			ID:    1,
-			Email: "actor@chandao.com",
-			UID:   "actor",
-		},
-	}
 	// 通过仓库 ID 获取仓库
 	repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, reqQuery.RepoID)
 	if err != nil {
@@ -161,9 +143,17 @@ func (c *Controller) List(ctx *gin.Context) {
 // @Router /tags/{name} [delete]
 func (c *Controller) Delete(ctx *gin.Context) {
 
+	var err error
 	name := ctx.Param("name")
 	if name == "" {
-		err := errors.WithI18nKey(nil, i18n.TagPathParamError)
+		err = errors.WithI18nKey(nil, i18n.TagPathParamError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
+	session, ok := req.GetAuthSession(ctx.Request.Context())
+	if !ok {
+		err = errors.WithI18nKey(errors.New("session not found"), i18n.AuthNoSession)
 		resp.BadRequest(ctx, err)
 		return
 	}
@@ -171,20 +161,12 @@ func (c *Controller) Delete(ctx *gin.Context) {
 	var reqQuery struct {
 		RepoID uint `form:"repoID" binding:"required"`
 	}
-	if err := ctx.ShouldBindQuery(&reqQuery); err != nil {
+	if err = ctx.ShouldBindQuery(&reqQuery); err != nil {
 		err = errors.WithI18nKey(err, i18n.TagQueryParamError)
 		resp.BadRequest(ctx, err)
 		return
 	}
 
-	// TODO: 获取操作人
-	session := &auth.Session{
-		Principal: principal.User{
-			ID:    1,
-			Email: "actor@chandao.com",
-			UID:   "actor",
-		},
-	}
 	// 通过仓库 ID 获取仓库
 	repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, reqQuery.RepoID)
 	if err != nil {

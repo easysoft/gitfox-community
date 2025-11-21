@@ -55,7 +55,7 @@ func (a *MembershipAuthorizer) Check(ctx context.Context, session *auth.Session,
 
 	return a.permissionCache.Get(
 		ctx, PermissionCacheKey{
-			Account:    session.User.UID,
+			Account:    session.User.Account,
 			Scope:      scope,
 			Permission: permission,
 		},

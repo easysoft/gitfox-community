@@ -36,10 +36,12 @@ type publicAccessCacheGetter struct {
 
 // Find implements cache.Getter.
 func (p permissionCacheGetter) Find(ctx context.Context, key PermissionCacheKey) (bool, error) {
-	panic("unimplemented")
+	return true, nil
+	// panic("unimplemented")
 }
 
 // Find implements cache.Getter.
 func (p publicAccessCacheGetter) Find(ctx context.Context, key PublicAccessCacheKey) (bool, error) {
-	panic("unimplemented")
+	return true, nil
+	//panic("unimplemented")
 }

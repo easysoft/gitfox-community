@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/principal"
+	principal "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/user"
 	"github.com/easysoft/gitfox/types/enum"
 
 	"gopkg.in/yaml.v3"
@@ -30,10 +30,10 @@ type Rule struct {
 	Pattern    json.RawMessage `json:"pattern"`
 	Definition json.RawMessage `json:"definition"`
 
-	CreatedByInfo principal.PrincipalInfo `json:"created_by"`
+	CreatedByInfo principal.User `json:"created_by"`
 
-	Buildin bool                               `json:"buildin"`
-	Users   map[int64]*principal.PrincipalInfo `json:"users"`
+	Buildin bool                      `json:"buildin"`
+	Users   map[int64]*principal.User `json:"users"`
 	// UserGroups map[int64]*principal.UserGroupInfo `json:"user_groups"`
 }
 
@@ -103,7 +103,7 @@ func (r Rule) Clone() Rule {
 	copy(definition, r.Definition)
 	r.Definition = definition
 
-	users := make(map[int64]*principal.PrincipalInfo, len(r.Users))
+	users := make(map[int64]*principal.User, len(r.Users))
 	for key, value := range r.Users {
 		cloned := *value
 		users[key] = &cloned

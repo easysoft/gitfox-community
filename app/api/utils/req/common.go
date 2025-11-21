@@ -33,3 +33,9 @@ const (
 	QueryParamAccessToken   = "access_token"
 	QueryParamIncludeCookie = "include_cookie"
 )
+
+type ListFilter struct {
+	// 分页参数（对应 pagination.PageParam）
+	Page     int `form:"page" binding:"omitempty,min=1"`             // 最小1
+	PageSize int `form:"pageSize" binding:"omitempty,min=1,max=100"` // 1-100
+}

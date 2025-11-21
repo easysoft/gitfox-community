@@ -10,13 +10,18 @@ const (
 	AuthAuthUserLoginSuccess        I18nKey = "auth.auth_user_login_success"          // 用户登录成功
 	AuthNoData                      I18nKey = "auth.no_data"                          // 请求不包含任何可用于 Authorizer 的认证数据
 	AuthNoSession                   I18nKey = "auth.no_session"                       // 请求不包含任何会话数据,无法进行授权
+	AuthPubKeyAddAlreadyInUse       I18nKey = "auth.pub_key_add_already_in_use"       // 公钥已存在
 	AuthPubKeyAddError              I18nKey = "auth.pub_key_add_error"                // 公钥添加失败
+	AuthPubKeyAddParamError         I18nKey = "auth.pub_key_add_param_error"          // 公钥参数错误
 	AuthPubKeyAddSuccess            I18nKey = "auth.pub_key_add_success"              // 公钥添加成功
-	AuthPubKeyAlreadyInUse          I18nKey = "auth.pub_key_already_in_use"           // 公钥已存在
-	AuthPubKeyCreateError           I18nKey = "auth.pub_key_create_error"             // 公钥创建失败
-	AuthPubKeyIdentifierError       I18nKey = "auth.pub_key_identifier_error"         // 添加公钥标识符校验错误
+	AuthPubKeyDeleteError           I18nKey = "auth.pub_key_delete_error"             // 公钥删除失败
+	AuthPubKeyDeleteParamError      I18nKey = "auth.pub_key_delete_param_error"       // 公钥删除参数校验错误
+	AuthPubKeyDeleteSuccess         I18nKey = "auth.pub_key_delete_success"           // 公钥删除成功
+	AuthPubKeyIdentifierError       I18nKey = "auth.pub_key_identifier_error"         // 公钥标识符校验错误
+	AuthPubKeyListError             I18nKey = "auth.pub_key_list_error"               // 公钥列表失败
+	AuthPubKeyListParamError        I18nKey = "auth.pub_key_list_param_error"         // 公钥列表参数校验错误
+	AuthPubKeyListSuccess           I18nKey = "auth.pub_key_list_success"             // 公钥列表成功
 	AuthPubKeyNotFoundByFingerprint I18nKey = "auth.pub_key_not_found_by_fingerprint" // 公钥未找到
-	AuthPubKeyParamError            I18nKey = "auth.pub_key_param_error"              // 添加公钥参数错误
 	AuthSessionTokenNotAllowed      I18nKey = "auth.session_token_not_allowed"        // 会话令牌不允许用于与 Git 交互
 	AuthUserIssuePatError           I18nKey = "auth.user_issue_pat_error"             // 用户创建访问令牌失败
 	AuthUserIssueTokenError         I18nKey = "auth.user_issue_token_error"           // 用户创建会话令牌失败
@@ -110,6 +115,19 @@ const (
 	RequestPathParameterNotFound           I18nKey = "request.path_parameter_not_found"           // 路径参数未找到.
 	RequestQueryParameterNotFound          I18nKey = "request.query_parameter_not_found"          // 查询参数未找到.
 	RequestRequestBodyTooLarge             I18nKey = "request.request_body_too_large"             // 请求体过大.
+
+	// RuleSet 相关常量
+	RuleSetBodyParamError  I18nKey = "ruleSet.body_param_error"  // 请求体参数解析失败.
+	RuleSetCreateError     I18nKey = "ruleSet.create_error"      // 规则集创建失败.
+	RuleSetCreateSuccess   I18nKey = "ruleSet.create_success"    // 规则集创建成功.
+	RuleSetListError       I18nKey = "ruleSet.list_error"        // 规则集列表查询失败.
+	RuleSetListSuccess     I18nKey = "ruleSet.list_success"      // 规则集列表查询成功.
+	RuleSetPathParamError  I18nKey = "ruleSet.path_param_error"  // 路径参数解析失败.
+	RuleSetQueryError      I18nKey = "ruleSet.query_error"       // 规则集详情查询失败.
+	RuleSetQueryParamError I18nKey = "ruleSet.query_param_error" // 查询参数解析失败.
+	RuleSetQuerySuccess    I18nKey = "ruleSet.query_success"     // 规则集详情查询成功.
+	RuleSetUpdateError     I18nKey = "ruleSet.update_error"      // 规则集更新失败.
+	RuleSetUpdateSuccess   I18nKey = "ruleSet.update_success"    // 规则集更新成功.
 
 	// Space 相关常量
 	SpaceArtifactsTitleSuccess   I18nKey = "space.artifacts_title_success"   // 仓库设置保存成功
