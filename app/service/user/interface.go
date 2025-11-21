@@ -16,5 +16,6 @@ type Interface interface {
 	CompareHashAndPassword(ctx context.Context, hashedPassword, password []byte) error
 
 	IssueUserPAT(ctx context.Context, user *principal.User, identifier string, lifetime *time.Duration) (*auth.TokenResponse, error)
-	IssueAppPAT(ctx context.Context, user *principal.User, identifier string, isAdmin bool, lifetime *time.Duration) (*auth.TokenResponse, error)
+	IssueAppPAT(ctx context.Context, user *principal.User, identifier string, lifetime *time.Duration) (*auth.TokenResponse, error)
+	IssueAdminPAT() (string, error)
 }

@@ -124,6 +124,7 @@ func NewApp(mode string) (*App, func(), error) {
 		I18nManager:  i18nManager,
 		GithookCtrl:  githookController,
 		SSHServer:    server,
+		UserService:  userService,
 	}
 	return app, func() {
 		cleanup2()
@@ -143,4 +144,5 @@ type App struct {
 	I18nManager  *provider.I18nManager
 	GithookCtrl  *githook.Controller
 	SSHServer    *ssh.Server
+	UserService  user2.Interface
 }
