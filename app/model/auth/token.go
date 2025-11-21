@@ -7,11 +7,11 @@ import (
 )
 
 type Token struct {
-	ID         int64              `json:"id"`
-	Account    string             `json:"account"`
-	Type       constant.TokenType `json:"type"`
-	Identifier string             `json:"identifier"`
-	ExpiresAt  *time.Time         `json:"expires_at"`
+	ID          int64              `json:"id"`
+	Account     string             `json:"account"`
+	Type        constant.TokenType `json:"type"`
+	Identifier  string             `json:"identifier"`
+	ExpiresDate *time.Time         `json:"expires_date"`
 
 	CreatedDate *time.Time `json:"created_date"`
 }

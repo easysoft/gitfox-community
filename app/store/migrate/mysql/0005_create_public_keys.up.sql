@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS `ops_public_keys` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT COMMENT 'ID',
-  `principal_id` bigint unsigned NOT NULL COMMENT '关联用户ID',
+  `account` varchar(30) NOT NULL COMMENT '关联用户账号',
   `verified` datetime NULL COMMENT '公钥验证时间',
   `identifier` varchar(255) NOT NULL COMMENT '公钥唯一标识',
   `fingerprint` varchar(255) NOT NULL COMMENT '公钥指纹',
@@ -15,6 +15,5 @@ CREATE TABLE IF NOT EXISTS `ops_public_keys` (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE KEY `uk_fingerprint` (`fingerprint`),
   UNIQUE KEY `uk_identifier` (`identifier`),
-  KEY `idx_principal_id` (`principal_id`),
   KEY `idx_deleted` (`deleted`)
 ) ENGINE=InnoDB COMMENT='SSH公钥表';
