@@ -152,18 +152,11 @@ func (c *Controller) Update(ctx *gin.Context) {
 		return
 	}
 	// TODO: 获取操作人
-	// session, ok := req.GetAuthSession(ctx.Request.Context())
-	// if !ok {
-	// 	err := errors.WithI18nKey(errors.New("get session failed"), i18n.AuthNoSession)
-	// 	resp.BadRequest(ctx, err)
-	// 	return
-	// }
-	session := &auth.Session{
-		Principal: principal.User{
-			ID:    1,
-			Email: "actor@chandao.com",
-			UID:   "actor",
-		},
+	session, ok := req.GetAuthSession(ctx.Request.Context())
+	if !ok {
+		err := errors.WithI18nKey(errors.New("get session failed"), i18n.AuthNoSession)
+		resp.BadRequest(ctx, err)
+		return
 	}
 
 	// 通过仓库 ID 获取仓库
