@@ -530,7 +530,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.CreateRepoResp"
+                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.Repo"
                                         }
                                     }
                                 }
@@ -1030,6 +1030,12 @@ const docTemplate = `{
                         "type": "string",
                         "description": "负责人",
                         "name": "owner",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "空间ID,逗号分隔",
+                        "name": "ids",
                         "in": "query"
                     },
                     {
@@ -1547,9 +1553,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/user/public-keys": {
-            "post": {
-                "description": "创建用户公钥",
+        "/user/keys": {
+            "get": {
+                "description": "获取用户公钥列表",
                 "consumes": [
                     "application/json"
                 ],
@@ -1559,7 +1565,34 @@ const docTemplate = `{
                 "tags": [
                     "用户"
                 ],
-                "summary": "创建用户公钥",
+                "summary": "获取用户公钥列表",
+                "responses": {
+                    "200": {
+                        "description": "获取用户公钥列表成功",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "获取用户公钥列表失败",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "添加用户公钥",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "用户"
+                ],
+                "summary": "添加用户公钥",
                 "parameters": [
                     {
                         "description": "创建用户公钥参数",
@@ -1567,7 +1600,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_publickey.CreatePublicKeyInput"
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_publickey.AddPublicKeyInput"
                         }
                     }
                 ],
@@ -2110,7 +2143,7 @@ const docTemplate = `{
                 }
             }
         },
-        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_publickey.CreatePublicKeyInput": {
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_publickey.AddPublicKeyInput": {
             "type": "object",
             "required": [
                 "content",
@@ -2118,9 +2151,11 @@ const docTemplate = `{
             ],
             "properties": {
                 "content": {
+                    "description": "公钥内容",
                     "type": "string"
                 },
                 "identifier": {
+                    "description": "公钥标识符",
                     "type": "string"
                 }
             }
@@ -2172,66 +2207,6 @@ const docTemplate = `{
                 },
                 "spaceID": {
                     "description": "空间ID（字符串类型，后续转int）",
-                    "type": "integer"
-                }
-            }
-        },
-        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.CreateRepoResp": {
-            "type": "object",
-            "properties": {
-                "acl": {
-                    "type": "string"
-                },
-                "createdBy": {
-                    "type": "string"
-                },
-                "createdDate": {
-                    "description": "允许 NULL，用指针类型",
-                    "type": "string"
-                },
-                "defaultBranch": {
-                    "type": "string"
-                },
-                "deleted": {
-                    "type": "boolean"
-                },
-                "desc": {
-                    "type": "string"
-                },
-                "editedBy": {
-                    "type": "string"
-                },
-                "editedDate": {
-                    "description": "允许 NULL，用指针类型",
-                    "type": "string"
-                },
-                "empty": {
-                    "type": "boolean"
-                },
-                "forkID": {
-                    "description": "允许 NULL，用指针类型",
-                    "type": "integer"
-                },
-                "gitUID": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "identifier": {
-                    "type": "string"
-                },
-                "mirror": {
-                    "type": "boolean"
-                },
-                "mutex": {
-                    "type": "integer"
-                },
-                "spaceID": {
-                    "type": "integer"
-                },
-                "status": {
-                    "description": "状态码用 int 类型（兼容枚举映射）",
                     "type": "integer"
                 }
             }
@@ -2321,6 +2296,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "gitURL": {
+                    "description": "git urls",
                     "type": "string"
                 },
                 "id": {
@@ -2334,6 +2310,9 @@ const docTemplate = `{
                 },
                 "mutex": {
                     "type": "integer"
+                },
+                "path": {
+                    "type": "string"
                 },
                 "spaceID": {
                     "type": "integer"
@@ -2500,6 +2479,10 @@ const docTemplate = `{
         },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.RuleSetCreateReq": {
             "type": "object",
+            "required": [
+                "name",
+                "type"
+            ],
             "properties": {
                 "desc": {
                     "type": "string"
@@ -2511,7 +2494,8 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "name": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 100
                 },
                 "plugin": {
                     "type": "string"
@@ -2520,7 +2504,13 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "type": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "defect",
+                        "security",
+                        "compliance",
+                        "optimize"
+                    ]
                 }
             }
         },
@@ -2530,7 +2520,7 @@ const docTemplate = `{
                 "desc": {
                     "type": "string"
                 },
-                "descriptionEN": {
+                "descEn": {
                     "type": "string"
                 },
                 "lang": {
@@ -2549,7 +2539,13 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "type": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "defect",
+                        "security",
+                        "compliance",
+                        "optimize"
+                    ]
                 }
             }
         },
@@ -2865,13 +2861,18 @@ const docTemplate = `{
                 "auth.auth_user_login_success",
                 "auth.no_data",
                 "auth.no_session",
+                "auth.pub_key_add_already_in_use",
                 "auth.pub_key_add_error",
+                "auth.pub_key_add_param_error",
                 "auth.pub_key_add_success",
-                "auth.pub_key_already_in_use",
-                "auth.pub_key_create_error",
+                "auth.pub_key_delete_error",
+                "auth.pub_key_delete_param_error",
+                "auth.pub_key_delete_success",
                 "auth.pub_key_identifier_error",
+                "auth.pub_key_list_error",
+                "auth.pub_key_list_param_error",
+                "auth.pub_key_list_success",
                 "auth.pub_key_not_found_by_fingerprint",
-                "auth.pub_key_param_error",
                 "auth.session_token_not_allowed",
                 "auth.user_issue_pat_error",
                 "auth.user_issue_token_error",
@@ -2995,13 +2996,18 @@ const docTemplate = `{
                 "AuthAuthUserLoginSuccess": "用户登录成功",
                 "AuthNoData": "请求不包含任何可用于 Authorizer 的认证数据",
                 "AuthNoSession": "请求不包含任何会话数据,无法进行授权",
+                "AuthPubKeyAddAlreadyInUse": "公钥已存在",
                 "AuthPubKeyAddError": "公钥添加失败",
+                "AuthPubKeyAddParamError": "公钥参数错误",
                 "AuthPubKeyAddSuccess": "公钥添加成功",
-                "AuthPubKeyAlreadyInUse": "公钥已存在",
-                "AuthPubKeyCreateError": "公钥创建失败",
-                "AuthPubKeyIdentifierError": "添加公钥标识符校验错误",
+                "AuthPubKeyDeleteError": "公钥删除失败",
+                "AuthPubKeyDeleteParamError": "公钥删除参数校验错误",
+                "AuthPubKeyDeleteSuccess": "公钥删除成功",
+                "AuthPubKeyIdentifierError": "公钥标识符校验错误",
+                "AuthPubKeyListError": "公钥列表失败",
+                "AuthPubKeyListParamError": "公钥列表参数校验错误",
+                "AuthPubKeyListSuccess": "公钥列表成功",
                 "AuthPubKeyNotFoundByFingerprint": "公钥未找到",
-                "AuthPubKeyParamError": "添加公钥参数错误",
                 "AuthSessionTokenNotAllowed": "会话令牌不允许用于与 Git 交互",
                 "AuthUserIssuePatError": "用户创建访问令牌失败",
                 "AuthUserIssueTokenError": "用户创建会话令牌失败",
@@ -3125,13 +3131,18 @@ const docTemplate = `{
                 "用户登录成功",
                 "请求不包含任何可用于 Authorizer 的认证数据",
                 "请求不包含任何会话数据,无法进行授权",
-                "公钥添加失败",
-                "公钥添加成功",
                 "公钥已存在",
-                "公钥创建失败",
-                "添加公钥标识符校验错误",
+                "公钥添加失败",
+                "公钥参数错误",
+                "公钥添加成功",
+                "公钥删除失败",
+                "公钥删除参数校验错误",
+                "公钥删除成功",
+                "公钥标识符校验错误",
+                "公钥列表失败",
+                "公钥列表参数校验错误",
+                "公钥列表成功",
                 "公钥未找到",
-                "添加公钥参数错误",
                 "会话令牌不允许用于与 Git 交互",
                 "用户创建访问令牌失败",
                 "用户创建会话令牌失败",
@@ -3255,13 +3266,18 @@ const docTemplate = `{
                 "AuthAuthUserLoginSuccess",
                 "AuthNoData",
                 "AuthNoSession",
+                "AuthPubKeyAddAlreadyInUse",
                 "AuthPubKeyAddError",
+                "AuthPubKeyAddParamError",
                 "AuthPubKeyAddSuccess",
-                "AuthPubKeyAlreadyInUse",
-                "AuthPubKeyCreateError",
+                "AuthPubKeyDeleteError",
+                "AuthPubKeyDeleteParamError",
+                "AuthPubKeyDeleteSuccess",
                 "AuthPubKeyIdentifierError",
+                "AuthPubKeyListError",
+                "AuthPubKeyListParamError",
+                "AuthPubKeyListSuccess",
                 "AuthPubKeyNotFoundByFingerprint",
-                "AuthPubKeyParamError",
                 "AuthSessionTokenNotAllowed",
                 "AuthUserIssuePatError",
                 "AuthUserIssueTokenError",

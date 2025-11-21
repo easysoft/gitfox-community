@@ -362,11 +362,13 @@ definitions:
       when:
         type: string
     type: object
-  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_publickey.CreatePublicKeyInput:
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_publickey.AddPublicKeyInput:
     properties:
       content:
+        description: 公钥内容
         type: string
       identifier:
+        description: 公钥标识符
         type: string
     required:
     - content
@@ -409,47 +411,6 @@ definitions:
     - acl
     - identifier
     - spaceID
-    type: object
-  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.CreateRepoResp:
-    properties:
-      acl:
-        type: string
-      createdBy:
-        type: string
-      createdDate:
-        description: 允许 NULL，用指针类型
-        type: string
-      defaultBranch:
-        type: string
-      deleted:
-        type: boolean
-      desc:
-        type: string
-      editedBy:
-        type: string
-      editedDate:
-        description: 允许 NULL，用指针类型
-        type: string
-      empty:
-        type: boolean
-      forkID:
-        description: 允许 NULL，用指针类型
-        type: integer
-      gitUID:
-        type: string
-      id:
-        type: integer
-      identifier:
-        type: string
-      mirror:
-        type: boolean
-      mutex:
-        type: integer
-      spaceID:
-        type: integer
-      status:
-        description: 状态码用 int 类型（兼容枚举映射）
-        type: integer
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.PathsDetailsInput:
     properties:
@@ -508,6 +469,7 @@ definitions:
       gitUID:
         type: string
       gitURL:
+        description: git urls
         type: string
       id:
         type: integer
@@ -517,6 +479,8 @@ definitions:
         type: boolean
       mutex:
         type: integer
+      path:
+        type: string
       spaceID:
         type: integer
       status:
@@ -638,19 +602,28 @@ definitions:
       lang:
         type: string
       name:
+        maxLength: 100
         type: string
       plugin:
         type: string
       tag:
         type: string
       type:
+        enum:
+        - defect
+        - security
+        - compliance
+        - optimize
         type: string
+    required:
+    - name
+    - type
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.RuleSetUpdateReq:
     properties:
       desc:
         type: string
-      descriptionEN:
+      descEn:
         type: string
       lang:
         type: string
@@ -663,6 +636,11 @@ definitions:
       tag:
         type: string
       type:
+        enum:
+        - defect
+        - security
+        - compliance
+        - optimize
         type: string
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.CreateSpaceRequest:
@@ -880,13 +858,18 @@ definitions:
     - auth.auth_user_login_success
     - auth.no_data
     - auth.no_session
+    - auth.pub_key_add_already_in_use
     - auth.pub_key_add_error
+    - auth.pub_key_add_param_error
     - auth.pub_key_add_success
-    - auth.pub_key_already_in_use
-    - auth.pub_key_create_error
+    - auth.pub_key_delete_error
+    - auth.pub_key_delete_param_error
+    - auth.pub_key_delete_success
     - auth.pub_key_identifier_error
+    - auth.pub_key_list_error
+    - auth.pub_key_list_param_error
+    - auth.pub_key_list_success
     - auth.pub_key_not_found_by_fingerprint
-    - auth.pub_key_param_error
     - auth.session_token_not_allowed
     - auth.user_issue_pat_error
     - auth.user_issue_token_error
@@ -1010,13 +993,18 @@ definitions:
       AuthAuthUserLoginSuccess: 用户登录成功
       AuthNoData: 请求不包含任何可用于 Authorizer 的认证数据
       AuthNoSession: 请求不包含任何会话数据,无法进行授权
+      AuthPubKeyAddAlreadyInUse: 公钥已存在
       AuthPubKeyAddError: 公钥添加失败
+      AuthPubKeyAddParamError: 公钥参数错误
       AuthPubKeyAddSuccess: 公钥添加成功
-      AuthPubKeyAlreadyInUse: 公钥已存在
-      AuthPubKeyCreateError: 公钥创建失败
-      AuthPubKeyIdentifierError: 添加公钥标识符校验错误
+      AuthPubKeyDeleteError: 公钥删除失败
+      AuthPubKeyDeleteParamError: 公钥删除参数校验错误
+      AuthPubKeyDeleteSuccess: 公钥删除成功
+      AuthPubKeyIdentifierError: 公钥标识符校验错误
+      AuthPubKeyListError: 公钥列表失败
+      AuthPubKeyListParamError: 公钥列表参数校验错误
+      AuthPubKeyListSuccess: 公钥列表成功
       AuthPubKeyNotFoundByFingerprint: 公钥未找到
-      AuthPubKeyParamError: 添加公钥参数错误
       AuthSessionTokenNotAllowed: 会话令牌不允许用于与 Git 交互
       AuthUserIssuePatError: 用户创建访问令牌失败
       AuthUserIssueTokenError: 用户创建会话令牌失败
@@ -1139,13 +1127,18 @@ definitions:
     - 用户登录成功
     - 请求不包含任何可用于 Authorizer 的认证数据
     - 请求不包含任何会话数据,无法进行授权
-    - 公钥添加失败
-    - 公钥添加成功
     - 公钥已存在
-    - 公钥创建失败
-    - 添加公钥标识符校验错误
+    - 公钥添加失败
+    - 公钥参数错误
+    - 公钥添加成功
+    - 公钥删除失败
+    - 公钥删除参数校验错误
+    - 公钥删除成功
+    - 公钥标识符校验错误
+    - 公钥列表失败
+    - 公钥列表参数校验错误
+    - 公钥列表成功
     - 公钥未找到
-    - 添加公钥参数错误
     - 会话令牌不允许用于与 Git 交互
     - 用户创建访问令牌失败
     - 用户创建会话令牌失败
@@ -1268,13 +1261,18 @@ definitions:
     - AuthAuthUserLoginSuccess
     - AuthNoData
     - AuthNoSession
+    - AuthPubKeyAddAlreadyInUse
     - AuthPubKeyAddError
+    - AuthPubKeyAddParamError
     - AuthPubKeyAddSuccess
-    - AuthPubKeyAlreadyInUse
-    - AuthPubKeyCreateError
+    - AuthPubKeyDeleteError
+    - AuthPubKeyDeleteParamError
+    - AuthPubKeyDeleteSuccess
     - AuthPubKeyIdentifierError
+    - AuthPubKeyListError
+    - AuthPubKeyListParamError
+    - AuthPubKeyListSuccess
     - AuthPubKeyNotFoundByFingerprint
-    - AuthPubKeyParamError
     - AuthSessionTokenNotAllowed
     - AuthUserIssuePatError
     - AuthUserIssueTokenError
@@ -1717,7 +1715,7 @@ paths:
             - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.CreateRepoResp'
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.Repo'
               type: object
       summary: 创建远端仓库
       tags:
@@ -2017,6 +2015,10 @@ paths:
       - description: 负责人
         in: query
         name: owner
+        type: string
+      - description: 空间ID,逗号分隔
+        in: query
+        name: ids
         type: string
       - default: 1
         description: 页码（默认1）
@@ -2346,18 +2348,36 @@ paths:
       summary: 查询标签列表
       tags:
       - tags
-  /user/public-keys:
+  /user/keys:
+    get:
+      consumes:
+      - application/json
+      description: 获取用户公钥列表
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取用户公钥列表成功
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "400":
+          description: 获取用户公钥列表失败
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 获取用户公钥列表
+      tags:
+      - 用户
     post:
       consumes:
       - application/json
-      description: 创建用户公钥
+      description: 添加用户公钥
       parameters:
       - description: 创建用户公钥参数
         in: body
         name: input
         required: true
         schema:
-          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_publickey.CreatePublicKeyInput'
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_publickey.AddPublicKeyInput'
       produces:
       - application/json
       responses:
@@ -2369,7 +2389,7 @@ paths:
           description: 创建用户公钥失败
           schema:
             $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
-      summary: 创建用户公钥
+      summary: 添加用户公钥
       tags:
       - 用户
 securityDefinitions:
