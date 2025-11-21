@@ -12,6 +12,7 @@ type Token struct {
 	Account    string `gorm:"column:account"`
 	Type       string `gorm:"column:type"`
 	Identifier string `gorm:"column:identifier"`
+	Token      string `gorm:"column:token"`
 
 	ExpiresAt   *time.Time `gorm:"column:expires_at"` // ExpiresAt is an optional unix time that if specified restricts the validity of a token.
 	CreatedBy   string     `gorm:"column:created_by"`

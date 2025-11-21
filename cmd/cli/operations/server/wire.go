@@ -8,6 +8,7 @@ import (
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/githook"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/router"
+	userSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/user"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/cmd/cli/operations/provider"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
@@ -25,6 +26,7 @@ type App struct {
 	I18nManager  *provider.I18nManager
 	GithookCtrl  *githook.Controller
 	SSHServer    *ssh.Server
+	UserService  userSvc.Interface
 }
 
 func NewApp(mode string) (*App, func(), error) {

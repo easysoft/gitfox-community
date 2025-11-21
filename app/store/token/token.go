@@ -23,8 +23,11 @@ func NewTokensStore(db *gorm.DB) *tokensStore {
 func (s *tokensStore) GetByID(ctx context.Context, id int64) (*Token, error) {
 	var out Token
 	out.ID = id
-	if err := s.db.WithContext(ctx).First(&out).Error; err != nil {
+	if err := s.db.WithContext(ctx).Find(&out).Error; err != nil {
 		return nil, errors.DBError.Wrapf(err, "get token by id %d", id)
+	}
+	if out.ID == 0 {
+		return nil, errors.NotFound.Newf("token not found by id %d", id)
 	}
 
 	return &out, nil
@@ -64,8 +67,26 @@ func (s *tokensStore) CreateAppPAT(ctx context.Context, user *principal.User, to
 		ExpiresAt:  &expiresAt,
 	}
 	if err := s.db.WithContext(ctx).Create(token).Error; err != nil {
-		return nil, errors.DBError.Wrapf(err, "create user pat token for user %d", user.ID)
+		return nil, errors.DBError.Wrapf(err, "create app pat token for user %s", user.Account)
 	}
 
 	return token.ToAuthToken(), nil
+}
+
+func (s *tokensStore) UpdateToken(ctx context.Context, id int64, token string) error {
+	return s.db.WithContext(ctx).Model(&Token{}).Where("id = ?", id).Update("token", token).Error
+}
+
+func (s *tokensStore) GetByIdentifier(ctx context.Context, identifier string) (*Token, error) {
+	var out Token
+	out.Identifier = identifier
+	if err := s.db.WithContext(ctx).Find(&out).Error; err != nil {
+		return nil, errors.DBError.Wrapf(err, "get token by identifier %s", identifier)
+	}
+
+	if out.ID == 0 {
+		return nil, errors.NotFound.Newf("token not found by identifier %s", identifier)
+	}
+
+	return &out, nil
 }
