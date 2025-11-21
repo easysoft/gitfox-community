@@ -6,7 +6,7 @@ import (
 
 // registerScanRoutes 注册扫描相关路由
 func registerScanRoutes(r *gin.RouterGroup, controller *Controller) {
-	ruleSets := r.Group("/scans/rulesets")
+	ruleSets := r.Group("/scan/rulesets")
 	{
 		ruleSets.POST("/", controller.RuleSet.Create)
 		ruleSetsWithID := ruleSets.Group(":id")

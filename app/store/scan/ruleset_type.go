@@ -27,7 +27,7 @@ type RuleSet struct {
 
 // TableName 指定数据库表名（GORM自动映射时使用）
 func (r *RuleSet) TableName() string {
-	return "ops_ruleset"
+	return "ops_scan_rulesets"
 }
 
 func (r *RuleSet) BeforeCreate(tx *gorm.DB) error {

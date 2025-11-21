@@ -19,7 +19,7 @@ type RuleSetCreateReq struct {
 type RuleSetUpdateReq struct {
 	Name   string `json:"name,omitempty"`
 	Desc   string `json:"desc,omitempty"`
-	DescEn string `json:"descriptionEN,omitempty"`
+	DescEn string `json:"descEn,omitempty"`
 	Lang   string `json:"lang,omitempty"`
 	Tag    string `json:"tag,omitempty"`
 	Type   string `json:"type,omitempty"`
