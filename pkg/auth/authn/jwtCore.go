@@ -61,9 +61,9 @@ type AccessPermissions struct {
 
 // GenerateForToken generates a jwt for a given token.
 func GenerateForToken(token *auth.Token, secret string) (string, error) {
-	var expiresAt int64
-	if token.ExpiresAt != nil {
-		expiresAt = token.ExpiresAt.Unix()
+	var expiresDate int64
+	if token.ExpiresDate != nil {
+		expiresDate = token.ExpiresDate.Unix()
 	}
 
 	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, Claims{
@@ -71,7 +71,7 @@ func GenerateForToken(token *auth.Token, secret string) (string, error) {
 			Issuer: issuer,
 			// times required to be in sec not millisec
 			IssuedAt:  token.CreatedDate.Unix(),
-			ExpiresAt: expiresAt / 1000,
+			ExpiresAt: expiresDate / 1000,
 		},
 		Account: token.Account,
 		Token: &SubClaimsToken{
@@ -90,9 +90,9 @@ func GenerateForToken(token *auth.Token, secret string) (string, error) {
 
 // GenerateForToken generates a jwt for a given token.
 func GenerateForAppToken(token *auth.Token, secret string, isAdmin bool) (string, error) {
-	var expiresAt int64
-	if token.ExpiresAt != nil {
-		expiresAt = token.ExpiresAt.Unix()
+	var expiresDate int64
+	if token.ExpiresDate != nil {
+		expiresDate = token.ExpiresDate.Unix()
 	}
 
 	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, Claims{
@@ -100,7 +100,7 @@ func GenerateForAppToken(token *auth.Token, secret string, isAdmin bool) (string
 			Issuer: issuer,
 			// times required to be in sec not millisec
 			IssuedAt:  token.CreatedDate.Unix(),
-			ExpiresAt: expiresAt / 1000,
+			ExpiresAt: expiresDate / 1000,
 		},
 		App:     token.Account,
 		Admin:   isAdmin,
@@ -122,14 +122,14 @@ func GenerateForAppToken(token *auth.Token, secret string, isAdmin bool) (string
 // GenerateWithMembership generates a jwt with the given ephemeral membership.
 func GenerateWithMembership(account string, spaceID int64, role enum.MembershipRole, lifetime time.Duration, secret string) (string, error) {
 	issuedAt := time.Now()
-	expiresAt := issuedAt.Add(lifetime)
+	expiresDate := issuedAt.Add(lifetime)
 
 	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, Claims{
 		StandardClaims: jwt.StandardClaims{
 			Issuer: issuer,
 			// times required to be in sec
 			IssuedAt:  issuedAt.Unix(),
-			ExpiresAt: expiresAt.Unix(),
+			ExpiresAt: expiresDate.Unix(),
 		},
 		Account: account,
 		Membership: &SubClaimsMembership{
@@ -152,13 +152,13 @@ func GenerateForTokenWithAccessPermissions(account string, lifetime *time.Durati
 	if lifetime == nil {
 		return "", fmt.Errorf("token lifetime is required")
 	}
-	expiresAt := issuedAt.Add(*lifetime)
+	expiresDate := issuedAt.Add(*lifetime)
 
 	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, Claims{
 		StandardClaims: jwt.StandardClaims{
 			Issuer:    issuer,
 			IssuedAt:  issuedAt.Unix(),
-			ExpiresAt: expiresAt.Unix(),
+			ExpiresAt: expiresDate.Unix(),
 		},
 		Account:           account,
 		AccessPermissions: accessPermissions,
