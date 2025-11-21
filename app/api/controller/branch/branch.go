@@ -36,7 +36,6 @@ func NewController(branchService branch.Interface, repoService repo.Interface) *
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
 // @Router /branches [post]
 func (c *Controller) Create(ctx *gin.Context) {
-
 	var reqBody branchModel.ReqForCreate
 	var err error
 
@@ -92,9 +91,9 @@ func (c *Controller) Create(ctx *gin.Context) {
 // @Failure 500 {object} resp.ListResponse "服务器错误"
 // @Router /branches/list [post]
 func (c *Controller) List(ctx *gin.Context) {
-
 	var reqQuery branchModel.ReqFilter
 	var err error
+
 	if err = ctx.ShouldBindJSON(&reqQuery); err != nil {
 		err = errors.WithI18nKey(err, i18n.BranchQueryParamError)
 		resp.BadRequest(ctx, err)
@@ -143,9 +142,9 @@ func (c *Controller) List(ctx *gin.Context) {
 // @Failure 500 {object} resp.ListResponse "服务器错误"
 // @Router /branches/prefixes [get]
 func (c *Controller) ListPrefixes(ctx *gin.Context) {
-
 	var reqQuery branchModel.ReqFilter
 	var err error
+
 	if err = ctx.ShouldBindQuery(&reqQuery); err != nil {
 		err = errors.WithI18nKey(err, i18n.BranchQueryParamError)
 		resp.BadRequest(ctx, err)

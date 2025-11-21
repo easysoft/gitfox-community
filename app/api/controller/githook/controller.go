@@ -19,8 +19,8 @@ import (
 	"fmt"
 
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/principal"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/user"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/api"
@@ -30,23 +30,23 @@ import (
 )
 
 type Controller struct {
-	principalStore principal.Interface
-	repoStore      repo.Interface
-	git            git.Interface
-	urlProvider    url.Provider
+	userStore   user.Interface
+	repoStore   repo.Interface
+	git         git.Interface
+	urlProvider url.Provider
 }
 
 func NewController(
-	principalStore principal.Interface,
+	userStore user.Interface,
 	repoStore repo.Interface,
 	git git.Interface,
 	urlProvider url.Provider,
 ) *Controller {
 	return &Controller{
-		principalStore: principalStore,
-		repoStore:      repoStore,
-		git:            git,
-		urlProvider:    urlProvider,
+		userStore:   userStore,
+		repoStore:   repoStore,
+		git:         git,
+		urlProvider: urlProvider,
 	}
 }
 

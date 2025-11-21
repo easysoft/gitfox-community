@@ -8,7 +8,7 @@ import (
 
 type PublicKey struct {
 	ID          int64      `db:"id" gorm:"column:id;primaryKey"`
-	PrincipalID int64      `db:"principal_id" gorm:"column:principal_id"`
+	Account     string     `db:"account" gorm:"column:account"`
 	Verified    *time.Time `db:"verified" gorm:"column:verified"` // 公钥验证时间（若已验证），用于记录验证成功的时间。
 	Identifier  string     `db:"identifier" gorm:"column:identifier"`
 	Fingerprint string     `db:"fingerprint" gorm:"column:fingerprint"` // 根据公钥内容计算的指纹（稳定摘要），用于快速查重与匹配。
@@ -30,7 +30,7 @@ func (pk *PublicKey) TableName() string {
 func (pk *PublicKey) toModel() publickey.PublicKey {
 	return publickey.PublicKey{
 		ID:          pk.ID,
-		PrincipalID: pk.PrincipalID,
+		Account:     pk.Account,
 		Verified:    pk.Verified,
 		Identifier:  pk.Identifier,
 		Fingerprint: pk.Fingerprint,

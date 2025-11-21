@@ -8,10 +8,11 @@ import (
 )
 
 type Token struct {
-	ID          int64      `gorm:"column:id;primaryKey"`
-	PrincipalID int64      `gorm:"column:principal_id"`
-	Type        string     `gorm:"column:type"`
-	Identifier  string     `gorm:"column:identifier"`
+	ID         int64  `gorm:"column:id;primaryKey"`
+	Account    string `gorm:"column:account"`
+	Type       string `gorm:"column:type"`
+	Identifier string `gorm:"column:identifier"`
+
 	ExpiresAt   *time.Time `gorm:"column:expires_at"` // ExpiresAt is an optional unix time that if specified restricts the validity of a token.
 	CreatedBy   string     `gorm:"column:created_by"`
 	CreatedDate *time.Time `gorm:"column:created_date"`
@@ -21,15 +22,15 @@ type Token struct {
 }
 
 func (Token) TableName() string {
-	return "tokens"
+	return "ops_tokens"
 }
 
 func (t *Token) ToAuthToken() *auth.Token {
 	return &auth.Token{
-		ID:          t.ID,
-		PrincipalID: t.PrincipalID,
-		Type:        constant.TokenType(t.Type),
-		Identifier:  t.Identifier,
-		ExpiresAt:   t.ExpiresAt,
+		ID:         t.ID,
+		Account:    t.Account,
+		Type:       constant.TokenType(t.Type),
+		Identifier: t.Identifier,
+		ExpiresAt:  t.ExpiresAt,
 	}
 }

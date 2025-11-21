@@ -6,7 +6,7 @@ import (
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/principal"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/user"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	"github.com/gin-gonic/gin"
@@ -17,14 +17,14 @@ var _ Authenticator = (*BasicAuthenticator)(nil)
 // BasicAuthenticator uses the provided JWT to authenticate the caller.
 // BasicAuthenticator 使用提供的JWT来验证调用者。
 type BasicAuthenticator struct {
-	principalStore principal.Interface
+	userStore user.Interface
 }
 
 // NewBasicAuthenticator creates a new BasicAuthenticator.
 // NewBasicAuthenticator 创建一个新的BasicAuthenticator。
-func NewBasicAuthenticator(principalStore principal.Interface) *BasicAuthenticator {
+func NewBasicAuthenticator(userStore user.Interface) *BasicAuthenticator {
 	return &BasicAuthenticator{
-		principalStore: principalStore,
+		userStore: userStore,
 	}
 }
 
@@ -38,7 +38,7 @@ func (a *BasicAuthenticator) Authenticate(r *gin.Context) (*auth.Session, error)
 		return nil, constant.ErrAuthNoData
 	}
 
-	user, err := a.principalStore.FindUserByUID(r, userName)
+	user, err := a.userStore.FindUserByAccount(r, userName)
 	if errors.Is(err, errors.ErrResourceNotFound) {
 		return nil, constant.ErrUnauthorized
 	}
@@ -46,11 +46,11 @@ func (a *BasicAuthenticator) Authenticate(r *gin.Context) (*auth.Session, error)
 	hash := md5.Sum([]byte(passwd))
 	hashedPassword := hex.EncodeToString(hash[:])
 	if hashedPassword != user.Password {
-		logger.Debugf("[authn.basic]user %s has invalid zentao password", user.UID)
+		logger.Debugf("[authn.basic]user %s has invalid zentao password", user.Account)
 		return nil, constant.ErrUnauthorized
 	}
 
-	logger.Debugf("[authn.basic]user %s authenticated", user.UID)
+	logger.Debugf("[authn.basic]user %s authenticated", user.Account)
 	return &auth.Session{
 		User: user,
 	}, nil

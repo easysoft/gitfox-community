@@ -32,8 +32,8 @@ func (s *RuleSetService) Create(ctx context.Context, session *authModel.Session,
 		Type:      constant.ScanRuleType(req.Type),
 		Plugin:    req.Plugin,
 		Status:    constant.ScanRuleStatusEnabled,
-		CreatedBy: session.User.UID,
-		EditedBy:  session.User.UID,
+		CreatedBy: session.User.Account,
+		EditedBy:  session.User.Account,
 	}
 
 	return s.ruleSetStore.Create(ctx, ruleSet)
@@ -45,7 +45,7 @@ func (s *RuleSetService) GetByID(ctx context.Context, id uint) (*scanModel.RuleS
 
 func (s *RuleSetService) Update(ctx context.Context, session *authModel.Session, id uint, req scanModel.RuleSetUpdateReq) (*scanModel.RuleSet, error) {
 	// 将请求转换为 store 层的 RuleSet 结构
-	ruleSet := &scanStore.RuleSet{EditedBy: session.User.UID}
+	ruleSet := &scanStore.RuleSet{EditedBy: session.User.Account}
 
 	if req.Name != "" {
 		ruleSet.Name = req.Name

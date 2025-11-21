@@ -14,7 +14,7 @@ import (
 	scan3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/scan"
 	space3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/space"
 	tag2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/tag"
-	user2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/user"
+	user3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/user"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/router"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/branch"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/commit"
@@ -23,12 +23,12 @@ import (
 	scan2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/scan"
 	space2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/space"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/tag"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/user"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/principal"
+	user2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/user"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/publickey"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/scan"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/space"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/user"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/cmd/cli/operations/provider"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
@@ -94,13 +94,12 @@ func NewApp(mode string) (*App, func(), error) {
 	commitService := commit.NewService(urlProvider, gitService)
 	commitController := commit2.NewController(commitService, repoService)
 	repoController := repo3.NewRepoController(repoService, urlProvider, gitService)
-	principalStore := principal.NewPrincipalStore(db)
+	userStore := user.NewUserStore(db)
 	tokenInterface := provider.NewTokenStoreProvider(db)
-	userService := user.NewService(principalStore, tokenInterface)
+	userService := user2.NewService(userStore, tokenInterface)
 	publickeyInterface := publickey.NewPublicKeyStore(db)
-	principalInfoCache := principal.NewPrincipalInfoCache()
-	interface2 := publickey2.NewPublicKeyService(publickeyInterface, principalInfoCache)
-	userController := user2.NewUserController(userService, interface2)
+	interface2 := publickey2.NewPublicKeyService(publickeyInterface, userService)
+	userController := user3.NewUserController(userService, interface2)
 	service2 := provider.NewGitService(gitService)
 	gitController := provider.NewGitController(service2, repoService)
 	ruleSetStore := scan.NewRuleSetStore(db)
@@ -113,7 +112,7 @@ func NewApp(mode string) (*App, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	githookController := provider.NewGitHookController(principalStore, repoStore, gitService, urlProvider, clientFactory)
+	githookController := provider.NewGitHookController(userStore, repoStore, gitService, urlProvider, clientFactory)
 	server := provider.ProvideSSHServer(config, interface2, repoController)
 	app := &App{
 		SystemConfig: config,

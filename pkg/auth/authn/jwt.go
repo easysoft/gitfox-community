@@ -10,9 +10,9 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
-	userModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/principal"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/principal"
+	userModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/user"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/token"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/user"
 	"github.com/gin-gonic/gin"
 
 	gojwt "github.com/golang-jwt/jwt"
@@ -25,14 +25,14 @@ const AdminPATIdentifier = "adminPat"
 var _ Authenticator = (*BasicAuthenticator)(nil)
 
 type JWTAuthenticator struct {
-	principalStore principal.Interface
-	TokenStore     token.Interface
+	userStore  user.Interface
+	TokenStore token.Interface
 }
 
-func NewJWTAuthenticator(principalStore principal.Interface, tokenStore token.Interface) *JWTAuthenticator {
+func NewJWTAuthenticator(userStore user.Interface, tokenStore token.Interface) *JWTAuthenticator {
 	return &JWTAuthenticator{
-		principalStore: principalStore,
-		TokenStore:     tokenStore,
+		userStore:  userStore,
+		TokenStore: tokenStore,
 	}
 }
 
@@ -43,16 +43,24 @@ func (a *JWTAuthenticator) Authenticate(r *gin.Context) (*auth.Session, error) {
 		return nil, constant.ErrAuthNoData
 	}
 
-	var principal *userModel.User
+	var principal *userModel.Principal
+	var user *userModel.User
 	var err error
 	claims := &Claims{}
 	parsed, err := gojwt.ParseWithClaims(
 		token, claims, func(_ *gojwt.Token) (interface{}, error) {
-			principal, err = a.principalStore.FindUserByID(r.Request.Context(), claims.PrincipalID)
-			if err != nil {
-				return nil, fmt.Errorf("failed to get principal for token: %w", err)
+			if claims.App == "" { // 用户令牌
+				temp, err := a.userStore.FindUserByAccount(r.Request.Context(), claims.Account)
+				if err != nil {
+					return nil, fmt.Errorf("failed to get principal for token: %w", err)
+				}
+				user = temp
 			}
-			return []byte(principal.Salt), nil
+
+			principal.Admin = claims.Admin
+			principal.App = claims.App
+			principal.DisplayName = claims.Account
+			return []byte(claims.Account), nil
 		},
 	)
 
@@ -68,20 +76,22 @@ func (a *JWTAuthenticator) Authenticate(r *gin.Context) (*auth.Session, error) {
 		return nil, errors.New("invalid HMAC signature for JWT")
 	}
 
-	// 试图从query中获取sudo用户ID
-	sudoUserID, err := req.QueryParamAsPositiveInt64OrDefault(r, req.QueryParamSudoUserID, 0)
-	if err != nil {
-		logger.Warnf("failed to get sudo user ID from query: %v", err)
-	}
+	if user == nil {
+		// 试图从query中获取sudo用户ID
+		sudoUserID, err := req.QueryParamAsPositiveInt64OrDefault(r, req.QueryParamSudoUserID, 0)
+		if err != nil {
+			logger.Warnf("failed to get sudo user ID from query: %v", err)
+		}
 
-	// 试图从sudo用户ID获取用户
-	user, err := a.principalStore.FindUserByID(r.Request.Context(), sudoUserID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get principal for token: %w", err)
+		// 试图从sudo用户ID获取用户
+		user, err = a.userStore.FindUserByID(r.Request.Context(), sudoUserID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get user for token: %w", err)
+		}
 	}
 
 	return &auth.Session{
-		Principal: *principal,
+		Principal: principal,
 		User:      user,
 	}, nil
 }

@@ -62,7 +62,6 @@ func NewRouter(mode string, logger *logger.SugaredMateLogger, controller *Contro
 func registerPublicRoutes(r *gin.Engine, controller *Controller) {
 	public := r.Group("/public")
 	{
-		public.POST("/login", controller.User.Login)
 
 		public.GET("/health", func(c *gin.Context) {
 			c.JSON(200, gin.H{"status": "healthy"})

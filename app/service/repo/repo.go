@@ -59,12 +59,12 @@ func (s *Service) Create(ctx context.Context, session *authModel.Session, req *r
 		Identifier:    req.Identifier,
 		GitUID:        gitResp.UID,
 		Desc:          req.Desc,
-		CreatedBy:     session.Principal.UID,
+		CreatedBy:     session.User.Account,
 		ForkID:        req.ForkID,
 		DefaultBranch: req.DefaultBranch,
 		Empty:         isEmpty,
 		ACL:           req.ACL,
-		Status: int(constant.RepoStateMigrateGitPush),
+		Status:        int(constant.RepoStateMigrateGitPush),
 	}
 
 	repoData, err := s.repoStore.Create(ctx, repo)
@@ -117,7 +117,7 @@ func (s *Service) createGitRepository(ctx context.Context, req *repoModel.Create
 		ctx,
 		s.urlProvider.GetInternalAPIURL(ctx),
 		0,
-		session.Principal.ID,
+		session.User.ID,
 		true,
 		true,
 	)
@@ -127,20 +127,20 @@ func (s *Service) createGitRepository(ctx context.Context, req *repoModel.Create
 	now := time.Now()
 	resp, err := s.gitSvc.CreateRepository(ctx, &git.CreateRepositoryParams{
 		Actor: git.Identity{
-			Name:  session.Principal.UID,
-			Email: session.Principal.Email,
+			Name:  session.User.Account,
+			Email: session.User.Email,
 		},
 		EnvVars:       envVars,
 		DefaultBranch: req.DefaultBranch,
 		Files:         files,
 		Author: &git.Identity{
-			Name:  session.Principal.UID,
-			Email: session.Principal.Email,
+			Name:  session.User.Account,
+			Email: session.User.Email,
 		},
 		AuthorDate: &now,
 		Committer: &git.Identity{
-			Name:  session.Principal.UID,
-			Email: session.Principal.Email,
+			Name:  session.User.Account,
+			Email: session.User.Email,
 		},
 		CommitterDate: &now,
 	})
