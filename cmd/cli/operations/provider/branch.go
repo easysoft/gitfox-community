@@ -8,7 +8,7 @@ import (
 )
 
 var BranchWireSet = wire.NewSet(
-	branch.NewBranchController,
-	wire.Bind(new(branchSvc.BranchInterface), new(*branchSvc.BranchSvc)),
-	branchSvc.NewBranchSvc,
+	branch.NewController,
+	wire.Bind(new(branchSvc.Interface), new(*branchSvc.Service)),
+	branchSvc.NewService,
 )

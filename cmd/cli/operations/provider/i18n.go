@@ -6,7 +6,7 @@ import (
 
 	"github.com/google/wire"
 
-	gitfoxcommunity "gitfox.zcorp.cc/git/Pangu/gitfox-community"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/resources"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
@@ -43,7 +43,7 @@ func NewI18nManager(config *config.Config) (*I18nManager, error) {
 	dstDir := filepath.Join(exeDir, "locales")
 
 	if _, statErr := os.Stat(dstDir); os.IsNotExist(statErr) {
-		if err := utils.CopyEmbeddedDir(gitfoxcommunity.EmbeddedLocales, "locales", dstDir); err != nil {
+		if err := utils.CopyEmbeddedDir(resources.EmbeddedLocales, "locales", dstDir); err != nil {
 			return nil, errors.SystemErr.Wrap(err, "[i18n]failed to copy embedded locales")
 		}
 	}

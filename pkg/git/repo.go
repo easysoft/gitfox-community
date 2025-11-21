@@ -25,14 +25,13 @@ import (
 	"runtime/debug"
 	"time"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/api"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/check"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/hash"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/util"
-	"github.com/easysoft/gitfox/errors"
-
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	gonanoid "github.com/matoous/go-nanoid/v2"
-	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -160,7 +159,7 @@ func (s *Service) CreateRepository(
 		return nil, err
 	}
 
-	log := log.Ctx(ctx)
+	log := logger.GetLogger(ctx)
 
 	if params.RepoUID == "" {
 		uid, err := NewRepositoryUID()
@@ -169,8 +168,7 @@ func (s *Service) CreateRepository(
 		}
 		params.RepoUID = uid
 	}
-	log.Info().
-		Msgf("Create new git repository with uid '%s' and default branch '%s'", params.RepoUID, params.DefaultBranch)
+	log.Infof("Create new git repository with uid '%s' and default branch '%s'", params.RepoUID, params.DefaultBranch)
 
 	writeParams := WriteParams{
 		RepoUID: params.RepoUID,
@@ -226,7 +224,7 @@ func (s *Service) DeleteRepository(ctx context.Context, params *DeleteRepository
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
 
 	if _, err := os.Stat(repoPath); err != nil && errors.Is(err, fs.ErrNotExist) {
-		return errors.NotFound("repository path not found")
+		return errors.NotFound.New("repository path not found")
 	} else if err != nil {
 		return fmt.Errorf("failed to check the status of the repository %v: %w", repoPath, err)
 	}
@@ -255,7 +253,7 @@ func (s *Service) DeleteRepositoryBestEffort(ctx context.Context, repoUID string
 	}
 
 	if err := os.RemoveAll(tempPath); err != nil {
-		log.Ctx(ctx).Warn().Err(err).Msgf("failed to delete dir %s from graveyard", tempPath)
+		logger.GetLogger(ctx).Warnf("failed to delete dir %s from graveyard, %w", tempPath, err)
 	}
 
 	return nil
@@ -273,12 +271,12 @@ func (s *Service) SyncRepository(
 	// create repo if requested
 	_, err := os.Stat(repoPath)
 	if err != nil && !errors.Is(err, fs.ErrNotExist) {
-		return nil, errors.Internal(err, "failed to create repository")
+		return nil, errors.SystemErr.Wrapf(err, "failed to create repository")
 	}
 
 	if errors.Is(err, fs.ErrNotExist) {
 		if !params.CreateIfNotExists {
-			return nil, errors.NotFound("repository not found")
+			return nil, errors.NotFound.New("repository not found")
 		}
 
 		// the default branch doesn't matter for a sync,
@@ -303,7 +301,7 @@ func (s *Service) SyncRepository(
 	if err != nil {
 		return nil, fmt.Errorf("failed to sync from source repo: %w", err)
 	}
-	log.Ctx(ctx).Debug().Msgf("SyncRepository: git repo synced, mirror: %v", params.Mirror)
+	logger.GetLogger(ctx).Debugf("SyncRepository: git repo synced, mirror: %v", params.Mirror)
 	// if mirror set source as remote
 	if params.Mirror {
 		err = s.git.MirrorAddFetch(ctx, repoPath, "origin", params.Source)
@@ -421,10 +419,10 @@ func (s *Service) createRepositoryInternal(
 	author *Identity,
 	authorDate time.Time,
 ) error {
-	log := log.Ctx(ctx)
+	log := logger.GetLogger(ctx)
 	repoPath := getFullPathForRepo(s.reposRoot, base.RepoUID)
 	if _, err := os.Stat(repoPath); !errors.Is(err, fs.ErrNotExist) {
-		return errors.Conflict("repository already exists at path %q", repoPath)
+		return errors.SystemErr.Newf("repository already exists at path %q", repoPath)
 	}
 
 	// create repository in repos folder
@@ -437,7 +435,7 @@ func (s *Service) createRepositoryInternal(
 		if err != nil {
 			cleanuperr := s.DeleteRepositoryBestEffort(ctx, base.RepoUID)
 			if cleanuperr != nil {
-				log.Warn().Err(cleanuperr).Msg("failed to cleanup repo dir")
+				log.Warnf("failed to cleanup repo dir, %w", cleanuperr)
 			}
 		}
 	}()
@@ -465,13 +463,13 @@ func (s *Service) createRepositoryInternal(
 		// when repo is successfully created remove temp dir
 		errRm := os.RemoveAll(path)
 		if errRm != nil {
-			log.Err(errRm).Msg("failed to cleanup temporary dir.")
+			log.Errorf("failed to cleanup temporary dir. %w", errRm)
 		}
 	}(tempDir)
 
 	// Clone repository to temp dir
 	if err = s.git.Clone(ctx, repoPath, tempDir, api.CloneRepoOptions{Mirror: base.Mirror}); err != nil {
-		return fmt.Errorf("createRepositoryInternal: failed to clone repo: %w", err)
+		return errors.Newf("createRepositoryInternal: failed to clone repo: %v", err)
 	}
 
 	// logic for receiving files
@@ -480,11 +478,11 @@ func (s *Service) createRepositoryInternal(
 		var filePath string
 		filePath, err = s.handleFileUploadIfAvailable(ctx, tempDir, file)
 		if errors.Is(err, io.EOF) {
-			log.Info().Msg("received stream EOF")
+			log.Info("received stream EOF")
 			break
 		}
 		if err != nil {
-			return errors.Internal(err, "failed to receive file %s", file)
+			return errors.InternalError.Wrapf(err, "failed to receive file %s", file)
 		}
 
 		filePaths = append(filePaths, filePath)
@@ -525,10 +523,10 @@ func (s *Service) createRepositoryInternal(
 	// 	}
 	// }
 	if err = s.createDelegateHooks(repoPath); err != nil {
-		return errors.Internal(err, "failed to setup createDelegateHooks, gitHookPath: %s", s.gitHookPath)
+		return errors.InternalError.Wrapf(err, "failed to setup createDelegateHooks, gitHookPath: %s", s.gitHookPath)
 	}
 
-	log.Info().Msgf("repository created. Path: %s", repoPath)
+	log.Infof("repository created. Path: %s", repoPath)
 	return nil
 }
 
@@ -610,7 +608,7 @@ func (s *Service) UpdateDefaultBranch(
 		return err
 	}
 	if err := check.BranchName(params.BranchName); err != nil {
-		return errors.InvalidArgument("invalid branch name: %s", err.Error())
+		return errors.InvalidArgument.Newf("invalid branch name: %s", err.Error())
 	}
 
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)

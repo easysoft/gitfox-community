@@ -23,7 +23,9 @@ import (
 	// "github.com/easysoft/gitfox/app/auth"
 	// "github.com/easysoft/gitfox/app/bootstrap"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/githook"
+	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
 	gitenum "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/enum"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/hook"
@@ -34,7 +36,6 @@ import (
 	// pullreqevents "github.com/easysoft/gitfox/app/events/pullreq"
 	// repoevents "github.com/easysoft/gitfox/app/events/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
-	"github.com/easysoft/gitfox/types"
 	"github.com/easysoft/gitfox/types/enum"
 
 	"github.com/rs/zerolog/log"
@@ -75,7 +76,7 @@ func (c *Controller) PostReceive(
 	c.handleEmptyRepoPush(ctx, repo, in.PostReceiveInput, &out)
 
 	// report ref events if repo is in an active state (best effort)
-	if repo.State == enum.RepoStateActive {
+	if constant.RepoState(repo.Status) == constant.RepoStateActive {
 		c.reportReferenceEvents(ctx, rgit, repo, in.PrincipalID, in.PostReceiveInput)
 	}
 
@@ -96,7 +97,7 @@ func (c *Controller) PostReceive(
 func (c *Controller) reportReferenceEvents(
 	ctx context.Context,
 	rgit RestrictedGIT,
-	repo *types.Repository,
+	repo *repoModel.Repo,
 	principalID int64,
 	in hook.PostReceiveInput,
 ) {
@@ -117,7 +118,7 @@ func (c *Controller) reportReferenceEvents(
 func (c *Controller) reportBranchEvent(
 	ctx context.Context,
 	rgit RestrictedGIT,
-	repo *types.Repository,
+	repo *repoModel.Repo,
 	principalID int64,
 	env hook.Environment,
 	branchUpdate hook.ReferenceUpdate,
@@ -191,7 +192,7 @@ func (c *Controller) reportBranchEvent(
 
 func (c *Controller) reportTagEvent(
 	ctx context.Context,
-	repo *types.Repository,
+	repo *repoModel.Repo,
 	principalID int64,
 	tagUpdate hook.ReferenceUpdate,
 ) {
@@ -227,7 +228,7 @@ func (c *Controller) reportTagEvent(
 // TODO: If it is a new branch, or an update on a branch without any PR, it also sends out an SSE for pr creation.
 func (c *Controller) handlePRMessaging(
 	ctx context.Context,
-	repo *types.Repository,
+	repo *repoModel.Repo,
 	principalID int64,
 	in hook.PostReceiveInput,
 	out *hook.Output,
@@ -251,7 +252,7 @@ func (c *Controller) handlePRMessaging(
 
 func (c *Controller) suggestPullRequest(
 	ctx context.Context,
-	repo *types.Repository,
+	repo *repoModel.Repo,
 	branchName, branchPre string,
 	principalID int64,
 	out *hook.Output,
@@ -311,7 +312,7 @@ func (c *Controller) suggestPullRequest(
 	// 	// prCount, _ := c.pullreqStore.Count(ctx, &types.PullReqFilter{
 	// 	// 	SourceRepoID: repo.ID,
 	// 	// })
-	// 	repo, err = c.repoStore.UpdateOptLock(ctx, repo, func(repo *types.Repository) error {
+	// 	repo, err = c.repoStore.UpdateOptLock(ctx, repo, func(repo *repoModel.Repo) error {
 	// 		repo.PullReqSeq++
 	// 		return nil
 	// 	})
@@ -402,7 +403,7 @@ func (c *Controller) suggestPullRequest(
 
 	out.Messages = append(out.Messages,
 		fmt.Sprintf("Create a pull request for %q by visiting:", branchName),
-		"  "+c.urlProvider.GenerateUICompareURL(ctx, repo.Path, repo.DefaultBranch, branchName),
+		"  "+c.urlProvider.GenerateUICompareURL(ctx, repo.Identifier, repo.DefaultBranch, branchName),
 	)
 }
 
@@ -438,7 +439,7 @@ func (c *Controller) checkIfAlreadyExists(ctx context.Context,
 }
 
 func (c *Controller) verifyBranchExistence(ctx context.Context,
-	repo *types.Repository, branch string,
+	repo *repoModel.Repo, branch string,
 ) (string, error) {
 	if branch == "" {
 		return "", errors.BadRequest.New("branch name can't be empty")
@@ -466,11 +467,11 @@ func (c *Controller) verifyBranchExistence(ctx context.Context,
 // handleEmptyRepoPush updates repo default branch on empty repos if push contains branches.
 func (c *Controller) handleEmptyRepoPush(
 	ctx context.Context,
-	repo *types.Repository,
+	repo *repoModel.Repo,
 	in hook.PostReceiveInput,
 	out *hook.Output,
 ) {
-	if !repo.IsEmpty {
+	if !repo.Empty {
 		return
 	}
 
@@ -494,30 +495,32 @@ func (c *Controller) handleEmptyRepoPush(
 	// 	return
 	// }
 
-	oldName := repo.DefaultBranch
-	var err error
-	repo, err = c.repoStore.UpdateOptLock(ctx, repo, func(r *types.Repository) error {
-		r.IsEmpty = false
-		r.DefaultBranch = newDefaultBranch
-		return nil
-	})
-	if err != nil {
-		log.Ctx(ctx).Warn().Err(err).Msgf("failed to update the repo default branch to %s and is_empty to false",
-			newDefaultBranch)
-		return
-	}
+	// TODO: Update repository default branch and empty status
+	// This requires implementing UpdateOptLock method in repoStore or using alternative update mechanism
+	// oldName := repo.DefaultBranch
+	// var err error
+	// repo, err = c.repoStore.UpdateOptLock(ctx, repo, func(r *repoModel.Repo) error {
+	// 	r.Empty = false
+	// 	r.DefaultBranch = newDefaultBranch
+	// 	return nil
+	// })
+	// if err != nil {
+	// 	log.Ctx(ctx).Warn().Err(err).Msgf("failed to update the repo default branch to %s and is_empty to false",
+	// 		newDefaultBranch)
+	// 	return
+	// }
 
-	if repo.DefaultBranch != oldName {
-		// c.repoReporter.DefaultBranchUpdated(ctx, &repoevents.DefaultBranchUpdatedPayload{
-		// 	RepoID:      repo.ID,
-		// 	PrincipalID: bootstrap.NewSystemServiceSession().Principal.ID,
-		// 	OldName:     oldName,
-		// 	NewName:     repo.DefaultBranch,
-		// })
-	}
+	// if repo.DefaultBranch != oldName {
+	// 	// c.repoReporter.DefaultBranchUpdated(ctx, &repoevents.DefaultBranchUpdatedPayload{
+	// 	// 	RepoID:      repo.ID,
+	// 	// 	PrincipalID: bootstrap.NewSystemServiceSession().Principal.ID,
+	// 	// 	OldName:     oldName,
+	// 	// 	NewName:     repo.DefaultBranch,
+	// 	// })
+	// }
 }
 
-func (c *Controller) getZtFlowBranchNamePre(ctx context.Context, repo *types.Repository, in hook.PostReceiveInput) string {
+func (c *Controller) getZtFlowBranchNamePre(ctx context.Context, repo *repoModel.Repo, in hook.PostReceiveInput) string {
 	branchPre := "refs/heads/ztflow-"
 	if commit, err := c.git.GetCommit(ctx, &git.GetCommitParams{
 		ReadParams: git.ReadParams{RepoUID: repo.GitUID},
@@ -535,7 +538,7 @@ func (c *Controller) getZtFlowBranchNamePre(ctx context.Context, repo *types.Rep
 	return branchPre
 }
 
-// func (c *Controller) notifyCodeOwners(ctx context.Context, session *auth.Session, repo *types.Repository, pr *types.PullReq) {
+// func (c *Controller) notifyCodeOwners(ctx context.Context, session *auth.Session, repo *repoModel.Repo, pr *types.PullReq) {
 // 	reviewers, err := c.reviewerStore.List(ctx, pr.ID)
 // 	if err != nil {
 // 		return

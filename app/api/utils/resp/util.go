@@ -12,11 +12,17 @@ import (
 // ListResponse represents a response structure for list data
 type ListResponse struct {
 	ObjectResponse
-	ListArgs
+	ListArgs any
 }
 
 type ListArgs struct {
 	Total    int64 `json:"total"`
+	Page     int64 `json:"page"`
+	PageSize int64 `json:"pageSize"`
+}
+
+type ListNoTotalArgs struct {
+	IsLast   bool  `json:"isLast"`
 	Page     int64 `json:"page"`
 	PageSize int64 `json:"pageSize"`
 }
@@ -60,8 +66,12 @@ func InternalError(c *gin.Context, err error, args ...interface{}) {
 	objectErr(c, err, http.StatusInternalServerError, args...)
 }
 
+func Unauthorized(c *gin.Context, err error, args ...interface{}) {
+	objectErr(c, err, http.StatusUnauthorized, args...)
+}
+
 // ListSuccess renders a successful list response (200 OK)
-func ListSuccess(c *gin.Context, data interface{}, listArgs ListArgs, code i18n.I18nKey, args ...interface{}) {
+func ListSuccess(c *gin.Context, data interface{}, listArgs interface{}, code i18n.I18nKey, args ...interface{}) {
 	list(c, data, listArgs, code, args)
 }
 
@@ -70,7 +80,7 @@ func ListSuccess(c *gin.Context, data interface{}, listArgs ListArgs, code i18n.
 // data: list data
 // listArgs: list arguments, e.g. total count, page, pageSize
 // code: i18n key, e.g. "repo.branch.list.success"
-func list(c *gin.Context, data interface{}, listArgs ListArgs, code i18n.I18nKey, args ...interface{}) {
+func list(c *gin.Context, data interface{}, listArgs interface{}, code i18n.I18nKey, args ...interface{}) {
 	traceID := getTraceID(c)
 	message := i18n.TGin(c, code, args...)
 
@@ -102,7 +112,7 @@ func objectErr(c *gin.Context, err error, httpStatus int, args ...interface{}) {
 	})
 }
 
-func objectOk(c *gin.Context, code i18n.I18nKey, httpStatus int, data ...interface{}) {
+func objectOk(c *gin.Context, code i18n.I18nKey, httpStatus int, data interface{}) {
 	message := i18n.TGin(c, code)
 	traceID := getTraceID(c)
 	c.JSON(httpStatus, ObjectResponse{

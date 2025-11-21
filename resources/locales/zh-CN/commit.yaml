@@ -1,0 +1,13 @@
+# 提交相关翻译
+commit:
+  path_param_error: "Path 参数解析失败。"
+  query_param_error: "Query 参数解析失败。"
+  body_param_error: "Body 参数解析失败。"
+  create_success: "提交创建成功。"
+  create_error: "提交创建失败。"
+  list_error: "查询提交列表失败。"
+  list_success: "查询提交列表成功。"
+  get_error: "获取提交信息失败。"
+  get_success: "获取提交信息成功。"
+  get_divergence_success: "查询提交分歧度成功。"
+  action_decode_error: "解码提交文件内容时失败。"

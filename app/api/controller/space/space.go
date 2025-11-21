@@ -13,11 +13,11 @@ import (
 
 // SpaceController 处理与空间相关的 HTTP 请求
 type SpaceController struct {
-	spaceSvc spaceSvc.SpaceInterface
+	spaceSvc spaceSvc.Interface
 }
 
 // NewSpaceController 创建空间处理器实例
-func NewSpaceController(spaceService spaceSvc.SpaceInterface) *SpaceController {
+func NewSpaceController(spaceService spaceSvc.Interface) *SpaceController {
 	return &SpaceController{
 		spaceSvc: spaceService,
 	}
@@ -154,7 +154,6 @@ func (ctl *SpaceController) Update(c *gin.Context) {
 	// 调用服务层更新空间
 	spaceObj, err := ctl.spaceSvc.Update(logger.GetContextWithLogger(c), objID, reqData)
 	if err != nil {
-		err = errors.WithI18nKey(err, i18n.SpaceUpdateError)
 		resp.InternalError(c, err)
 		return
 	}

@@ -11,20 +11,19 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/file"
 
+	"github.com/joho/godotenv"
+	"github.com/kelseyhightower/envconfig"
 	"golang.org/x/text/runes"
 	"golang.org/x/text/transform"
 	"golang.org/x/text/unicode/norm"
 	"gopkg.in/yaml.v3"
-	"github.com/joho/godotenv"
-	"github.com/kelseyhightower/envconfig"
-
 )
 
 const (
-	Debug               = "debug"
-	Local               = "local"
-	Dev                 = "dev"
-	Prod                = "prod"
+	Debug = "debug"
+	Local = "local"
+	Dev   = "dev"
+	Prod  = "prod"
 )
 
 const (
@@ -37,13 +36,16 @@ const (
 
 // LoadConfig loads the configuration based on the provided mode.
 func LoadConfig(mode string) (*Config, error) {
-	// 从环境变量加载配置
-	config, err := loadFromEnvVars(mode)
+	config := new(Config)
+	// 首先从 YAML 文件加载配置
+
+	err := loadFromYaml(mode, config)
+
 	if err != nil {
 		return nil, err
 	}
-	// 首先从 YAML 文件加载配置
-	err = loadFromYaml(mode, config)
+	// 从环境变量加载配置,可覆盖yaml中配置
+	err = loadFromEnvVars(mode, config)
 	if err != nil {
 		return nil, err
 	}
@@ -89,12 +91,12 @@ func LoadConfig(mode string) (*Config, error) {
 }
 
 // loadFromYaml loads the configuration from a YAML file based on the mode.
-func loadFromYaml(mode string, config *Config) (error) {
+func loadFromYaml(mode string, config *Config) error {
 	configPaths, err := findConfigFilePaths(mode, "yaml")
 	if err != nil {
 		return err
 	}
-	err = loadFromFile(configPaths[0],config)
+	err = loadFromFile(configPaths[0], config)
 	if err != nil {
 		return err
 	}
@@ -102,7 +104,7 @@ func loadFromYaml(mode string, config *Config) (error) {
 }
 
 // loadFromFile loads the configuration from a file.
-func loadFromFile(filePath string, config *Config) (error) {
+func loadFromFile(filePath string, config *Config) error {
 	data, err := os.ReadFile(filePath)
 	if err != nil {
 		return err
@@ -116,28 +118,24 @@ func loadFromFile(filePath string, config *Config) (error) {
 }
 
 // loadFromEnvVars 从gitfox.env文件中加载并设置为环境变量
-func loadFromEnvVars(mode string) (*Config, error) {	
+func loadFromEnvVars(mode string, config *Config) error {
 	configPaths, err := findConfigFilePaths(mode, "env")
 	if err != nil {
-		return nil, err
+		return err
 	}
 	//加载.env文件中配置至环境变量，若环境变量已存在则不覆盖
 	err = godotenv.Load(configPaths[0])
 	if err != nil {
-		return nil, fmt.Errorf("failed to load env file: %w", err)
+		return errors.SystemErr.Wrapf(err, "failed to load env file")
 	}
-	
-	//将环境变量映射到配置结构体
-	config := new(Config)
+
 	err = envconfig.Process("", config)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return config, nil
+	return nil
 
 }
-
-
 
 // getSanitizedMachineName gets the name of the machine and returns it in sanitized format.
 func getSanitizedMachineName() (string, error) {
@@ -320,8 +318,6 @@ func findConfigFilePaths(mode, ext string) ([]string, error) {
 	} else {
 		fileName = fmt.Sprintf("%s.%s", mode, ext)
 	}
-
-	
 
 	configPaths, err := file.FindFilesRecursive(exeDir, fileName)
 	if err != nil {

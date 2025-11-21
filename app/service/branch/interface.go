@@ -3,9 +3,13 @@ package branch
 import (
 	"context"
 
-	branchModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/branch"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/branch"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 )
 
-type BranchInterface interface {
-	Create(ctx context.Context, req branchModel.CreateBranchRequest) (*branchModel.CreateBranchResponse, error)
+type Interface interface {
+	Create(ctx context.Context, req branch.ReqForCreate, session *auth.Session, repo *repo.Repo) (*branch.Branch, error)
+	List(ctx context.Context, req branch.ReqFilter, repo *repo.Repo) ([]branch.Branch, bool, error)
+	ListPrefixes(ctx context.Context, repo repo.Repo) ([]branch.Prefix, error)
 }

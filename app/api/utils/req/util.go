@@ -3,6 +3,7 @@ package req
 import (
 	"context"
 	"net/url"
+	"reflect"
 	"strconv"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
@@ -256,4 +257,97 @@ func QueryParamListAsPositiveInt64(c *gin.Context, paramName string) ([]int64, e
 		valuesInt[i] = vi
 	}
 	return valuesInt, nil
+}
+
+// SetDefaults sets default values for struct fields using the `default` tag.
+// The function uses reflection to iterate through struct fields and set defaults
+// for zero-valued fields that have a `default` tag.
+// It also recursively processes embedded (anonymous) structs.
+//
+// Supported field types: int, uint, string, bool, float
+//
+// Example usage:
+//
+//	type ReqFilter struct {
+//	    Page  int    `json:"page" default:"1"`
+//	    Size  int    `json:"size" default:"20"`
+//	    Sort  string `json:"sort" default:"name"`
+//	    Order string `json:"order" default:"asc"`
+//	}
+//
+//	var req ReqFilter
+//	c.ShouldBindJSON(&req)
+//	SetDefaults(&req)
+func SetDefaults(v interface{}) {
+	val := reflect.ValueOf(v)
+
+	// Check if the input is a pointer
+	if val.Kind() != reflect.Ptr {
+		return
+	}
+
+	// Get the element the pointer points to
+	val = val.Elem()
+
+	// Check if it's a struct
+	if val.Kind() != reflect.Struct {
+		return
+	}
+
+	setStructDefaults(val)
+}
+
+// setStructDefaults is a helper function that processes a struct value
+func setStructDefaults(val reflect.Value) {
+	typ := val.Type()
+
+	// Iterate through all fields
+	for i := 0; i < val.NumField(); i++ {
+		field := val.Field(i)
+		typeField := typ.Field(i)
+
+		// Skip unexported fields
+		if !field.CanSet() {
+			continue
+		}
+
+		// If the field is an embedded (anonymous) struct, recursively process it
+		if typeField.Anonymous && field.Kind() == reflect.Struct {
+			setStructDefaults(field)
+			continue
+		}
+
+		// Get the default tag value
+		defaultVal := typeField.Tag.Get("default")
+		if defaultVal == "" {
+			continue
+		}
+
+		// Only set default if the field is zero-valued
+		if !field.IsZero() {
+			continue
+		}
+
+		// Set default value based on field type
+		switch field.Kind() {
+		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+			if intVal, err := strconv.ParseInt(defaultVal, 10, 64); err == nil {
+				field.SetInt(intVal)
+			}
+		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+			if uintVal, err := strconv.ParseUint(defaultVal, 10, 64); err == nil {
+				field.SetUint(uintVal)
+			}
+		case reflect.String:
+			field.SetString(defaultVal)
+		case reflect.Bool:
+			if boolVal, err := strconv.ParseBool(defaultVal); err == nil {
+				field.SetBool(boolVal)
+			}
+		case reflect.Float32, reflect.Float64:
+			if floatVal, err := strconv.ParseFloat(defaultVal, 64); err == nil {
+				field.SetFloat(floatVal)
+			}
+		}
+	}
 }

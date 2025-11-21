@@ -3,28 +3,445 @@ definitions:
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse:
     properties:
       code:
-        type: string
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_i18n.I18nKey'
       data: {}
+      listArgs: {}
       message:
         type: string
-      page:
-        type: integer
-      pageSize:
-        type: integer
-      total:
-        type: integer
       traceID:
         type: string
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse:
     properties:
       code:
-        type: string
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_i18n.I18nKey'
       data: {}
       message:
         type: string
       traceID:
         type: string
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.Branch:
+    properties:
+      commit:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.Commit'
+      commitDivergence:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.CommitDivergence'
+      isDefault:
+        type: boolean
+      name:
+        type: string
+      sha:
+        type: string
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.Prefix:
+    properties:
+      name:
+        type: string
+      total:
+        type: integer
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.ReqFilter:
+    properties:
+      includeArchived:
+        type: boolean
+      includeCommit:
+        type: boolean
+      maxDivergence:
+        type: integer
+      order:
+        default: asc
+        type: string
+      page:
+        default: 1
+        type: integer
+      prefix:
+        type: string
+      query:
+        type: string
+      repoID:
+        type: integer
+      size:
+        default: 20
+        type: integer
+      sort:
+        default: name
+        type: string
+    required:
+    - repoID
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.ReqForCreate:
+    properties:
+      name:
+        example: dev
+        maxLength: 100
+        type: string
+      repoID:
+        type: integer
+      source:
+        type: string
+    required:
+    - name
+    - repoID
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.Action:
+    properties:
+      action:
+        type: string
+      encoding:
+        type: string
+      path:
+        type: string
+      payload:
+        type: string
+      sha:
+        type: string
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.Author:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.ChangeStats:
+    properties:
+      changes:
+        type: integer
+      deletions:
+        type: integer
+      insertions:
+        type: integer
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.Commit:
+    properties:
+      author:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.Signature'
+      committer:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.Signature'
+      message:
+        type: string
+      parentShas:
+        items:
+          type: string
+        type: array
+      sha:
+        type: string
+      stats:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.CommitStats'
+      title:
+        type: string
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.CommitDivergence:
+    properties:
+      ahead:
+        description: Ahead is the count of commits the 'From' ref is ahead of the
+          'To' ref.
+        type: integer
+      behind:
+        description: Behind is the count of commits the 'From' ref is behind the 'To'
+          ref.
+        type: integer
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.CommitFileStats:
+    properties:
+      changes:
+        type: integer
+      deletions:
+        type: integer
+      insertions:
+        type: integer
+      oldPath:
+        type: string
+      path:
+        type: string
+      status:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git_enum.FileDiffStatus'
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.CommitStats:
+    properties:
+      files:
+        items:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.CommitFileStats'
+        type: array
+      total:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.ChangeStats'
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.CompareGitRef:
+    properties:
+      from:
+        type: string
+      to:
+        type: string
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.Identity:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.RenameDetails:
+    properties:
+      commitShaAfter:
+        type: string
+      commitShaBefore:
+        type: string
+      newPath:
+        type: string
+      oldPath:
+        type: string
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.ReqFilter:
+    properties:
+      after:
+        type: string
+      author:
+        type: string
+      authorIDs:
+        items:
+          type: integer
+        type: array
+      committer:
+        type: string
+      committerIDs:
+        items:
+          type: integer
+        type: array
+      gitRef:
+        type: string
+      includeStats:
+        type: boolean
+      limit:
+        default: 20
+        type: integer
+      page:
+        default: 1
+        type: integer
+      path:
+        type: string
+      repoID:
+        type: integer
+      since:
+        type: integer
+      until:
+        type: integer
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.ReqForCreate:
+    properties:
+      actions:
+        items:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.Action'
+        type: array
+      author:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.Author'
+      branch:
+        type: string
+      message:
+        type: string
+      newBranch:
+        type: string
+      repoID:
+        type: integer
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.ReqForDivergence:
+    properties:
+      maxDivergence:
+        type: integer
+      repoID:
+        type: integer
+      requests:
+        items:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.CompareGitRef'
+        type: array
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.ReqForGet:
+    properties:
+      repoID:
+        type: integer
+      sha:
+        type: string
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.RespForCreate:
+    properties:
+      sha:
+        type: string
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.RespForList:
+    properties:
+      commits:
+        items:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.Commit'
+        type: array
+      renameDetails:
+        items:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.RenameDetails'
+        type: array
+      totalCommits:
+        type: integer
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.Signature:
+    properties:
+      identity:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.Identity'
+      when:
+        type: string
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_publickey.CreatePublicKeyInput:
+    properties:
+      content:
+        type: string
+      identifier:
+        type: string
+    required:
+    - content
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.CreateRepoReq:
+    properties:
+      acl:
+        description: 权限（仅支持open/private）
+        enum:
+        - open
+        - private
+        type: string
+      defaultBranch:
+        description: 默认分支（默认main）
+        type: string
+      desc:
+        description: 仓库描述（最大500字符）
+        maxLength: 500
+        type: string
+      forkID:
+        description: 派生来源ID（可选）
+        type: integer
+      identifier:
+        description: 仓库唯一标识
+        type: string
+      ignore:
+        description: GitIgnore类型（如go/java）
+        type: string
+      license:
+        description: 许可证类型（如mit/apache）
+        type: string
+      readme:
+        description: 是否生成README.md
+        type: boolean
+      spaceID:
+        description: 空间ID（字符串类型，后续转int）
+        type: integer
+    required:
+    - acl
+    - identifier
+    - spaceID
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.CreateRepoResp:
+    properties:
+      acl:
+        type: string
+      createdBy:
+        type: string
+      createdDate:
+        description: 允许 NULL，用指针类型
+        type: string
+      defaultBranch:
+        type: string
+      deleted:
+        type: boolean
+      desc:
+        type: string
+      editedBy:
+        type: string
+      editedDate:
+        description: 允许 NULL，用指针类型
+        type: string
+      empty:
+        type: boolean
+      forkID:
+        description: 允许 NULL，用指针类型
+        type: integer
+      gitUID:
+        type: string
+      id:
+        type: integer
+      identifier:
+        type: string
+      mirror:
+        type: boolean
+      mutex:
+        type: integer
+      spaceID:
+        type: integer
+      status:
+        description: 状态码用 int 类型（兼容枚举映射）
+        type: integer
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.PathsDetailsInput:
+    properties:
+      gitRef:
+        type: string
+      paths:
+        items:
+          type: string
+        type: array
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.PathsDetailsOutput:
+    properties:
+      details:
+        items:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git.PathDetails'
+        type: array
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.PathsOutput:
+    properties:
+      directories:
+        items:
+          type: string
+        type: array
+      files:
+        items:
+          type: string
+        type: array
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.Repo:
+    properties:
+      acl:
+        type: string
+      createdBy:
+        type: string
+      createdDate:
+        description: 允许 NULL，用指针类型
+        type: string
+      defaultBranch:
+        type: string
+      deleted:
+        type: boolean
+      desc:
+        type: string
+      editedBy:
+        type: string
+      editedDate:
+        description: 允许 NULL，用指针类型
+        type: string
+      empty:
+        type: boolean
+      forkID:
+        description: 允许 NULL，用指针类型
+        type: integer
+      gitUID:
+        type: string
+      id:
+        type: integer
+      identifier:
+        type: string
+      mirror:
+        type: boolean
+      mutex:
+        type: integer
+      spaceID:
+        type: integer
+      status:
+        description: 状态码用 int 类型（兼容枚举映射）
+        type: integer
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.CreateSpaceRequest:
     properties:
@@ -92,6 +509,9 @@ definitions:
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.UpdateSpaceRequest:
     properties:
       acl:
+        enum:
+        - open
+        - private
         type: string
       desc:
         type: string
@@ -104,6 +524,605 @@ definitions:
     required:
     - editedBy
     type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_tag.ReqFilter:
+    properties:
+      includeCommit:
+        type: boolean
+      order:
+        default: asc
+        type: string
+      page:
+        default: 1
+        type: integer
+      query:
+        type: string
+      repoID:
+        type: integer
+      size:
+        default: 20
+        type: integer
+      sort:
+        default: name
+        type: string
+    required:
+    - repoID
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_tag.ReqForCreate:
+    properties:
+      message:
+        type: string
+      name:
+        type: string
+      repoID:
+        type: integer
+      source:
+        type: string
+    required:
+    - name
+    - repoID
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_tag.Tag:
+    properties:
+      commit:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.Commit'
+      createdBy:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.Signature'
+      message:
+        type: string
+      name:
+        type: string
+      sha:
+        type: string
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git.Commit:
+    properties:
+      author:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git.Signature'
+      committer:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git.Signature'
+      file_stats:
+        items:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git.CommitFileStats'
+        type: array
+      message:
+        type: string
+      parent_shas:
+        items:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git_sha.SHA'
+        type: array
+      sha:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git_sha.SHA'
+      title:
+        type: string
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git.CommitFileStats:
+    properties:
+      deletions:
+        format: int64
+        type: integer
+      insertions:
+        format: int64
+        type: integer
+      oldPath:
+        description: populated only in case of renames
+        type: string
+      path:
+        type: string
+      status:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git_enum.FileDiffStatus'
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git.Identity:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git.PathDetails:
+    properties:
+      last_commit:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git.Commit'
+      path:
+        type: string
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git.Signature:
+    properties:
+      identity:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git.Identity'
+      when:
+        type: string
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git_enum.FileDiffStatus:
+    enum:
+    - UNDEFINED
+    - ADDED
+    - MODIFIED
+    - DELETED
+    - RENAMED
+    - COPIED
+    type: string
+    x-enum-varnames:
+    - FileDiffStatusUndefined
+    - FileDiffStatusAdded
+    - FileDiffStatusModified
+    - FileDiffStatusDeleted
+    - FileDiffStatusRenamed
+    - FileDiffStatusCopied
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git_sha.SHA:
+    properties:
+      str:
+        type: string
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_i18n.I18nKey:
+    enum:
+    - auth.auth_user_login_success
+    - auth.no_data
+    - auth.no_session
+    - auth.pub_key_add_error
+    - auth.pub_key_add_success
+    - auth.pub_key_already_in_use
+    - auth.pub_key_create_error
+    - auth.pub_key_identifier_error
+    - auth.pub_key_not_found_by_fingerprint
+    - auth.pub_key_param_error
+    - auth.session_token_not_allowed
+    - auth.user_issue_pat_error
+    - auth.user_issue_token_error
+    - auth.user_not_found
+    - auth.user_pass_error
+    - branch.body_param_error
+    - branch.create_error
+    - branch.create_success
+    - branch.list_error
+    - branch.list_prefix_error
+    - branch.list_prefix_success
+    - branch.list_success
+    - branch.path_param_error
+    - branch.query_param_error
+    - commit.action_decode_error
+    - commit.body_param_error
+    - commit.create_error
+    - commit.create_success
+    - commit.get_divergence_success
+    - commit.get_error
+    - commit.get_success
+    - commit.list_error
+    - commit.list_success
+    - commit.path_param_error
+    - commit.query_param_error
+    - db.check_constraint_violation
+    - db.connection_failed
+    - db.data_too_long
+    - db.deadlock
+    - db.duplicate
+    - db.error
+    - db.foreign_key_violation
+    - db.invalid_data
+    - db.invalid_data_type
+    - db.invalid_transaction
+    - db.lock_wait_timeout
+    - db.not_null_violation
+    - db.notfound
+    - error.default
+    - error.embed_failed_to_mkdir
+    - error.embed_failed_to_read_dir
+    - error.embed_failed_to_read_file
+    - error.embed_failed_to_write_file
+    - error.gzip_failed_to_close_reader
+    - error.gzip_failed_to_create_reader
+    - git.create_exec_param_error
+    - git.exec_error
+    - git.map_output_error
+    - repo.body_param_error
+    - repo.create_error
+    - repo.create_success
+    - repo.get_paths_details_success
+    - repo.get_paths_success
+    - repo.identifier_invalid
+    - repo.line_number_error
+    - repo.mirror_read_only
+    - repo.path_param_error
+    - repo.pullRequests_merge_error
+    - repo.pullRequests_merge_success
+    - repo.pull_permission_error
+    - repo.push_permission_error
+    - repo.query_error
+    - repo.query_param_error
+    - repo.query_success
+    - request.invalid_boolean_parameter
+    - request.invalid_content_type
+    - request.invalid_integer_parameter
+    - request.invalid_json_format
+    - request.invalid_positive_integer_parameter
+    - request.invalid_request_body
+    - request.invalid_url_parameter
+    - request.parameter_decode_failed
+    - request.parameter_invalid
+    - request.parameter_missing
+    - request.parameter_type_mismatch
+    - request.path_parameter_not_found
+    - request.query_parameter_not_found
+    - request.request_body_too_large
+    - space.artifacts_title_success
+    - space.body_param_error
+    - space.create_error
+    - space.create_success
+    - space.list_error
+    - space.list_success
+    - space.path_param_error
+    - space.query_error
+    - space.query_param_error
+    - space.query_success
+    - space.secrets_add_error
+    - space.secrets_add_success
+    - space.secrets_delete_permission
+    - space.secrets_delete_success
+    - space.secrets_delete_used
+    - space.secrets_list_error
+    - space.secrets_list_success
+    - space.update_error
+    - space.update_success
+    - tag.body_param_error
+    - tag.create_error
+    - tag.create_success
+    - tag.delete_error
+    - tag.delete_success
+    - tag.list_error
+    - tag.list_success
+    - tag.path_param_error
+    - tag.query_param_error
+    type: string
+    x-enum-comments:
+      AuthAuthUserLoginSuccess: 用户登录成功
+      AuthNoData: 请求不包含任何可用于 Authorizer 的认证数据
+      AuthNoSession: 请求不包含任何会话数据,无法进行授权
+      AuthPubKeyAddError: 公钥添加失败
+      AuthPubKeyAddSuccess: 公钥添加成功
+      AuthPubKeyAlreadyInUse: 公钥已存在
+      AuthPubKeyCreateError: 公钥创建失败
+      AuthPubKeyIdentifierError: 添加公钥标识符校验错误
+      AuthPubKeyNotFoundByFingerprint: 公钥未找到
+      AuthPubKeyParamError: 添加公钥参数错误
+      AuthSessionTokenNotAllowed: 会话令牌不允许用于与 Git 交互
+      AuthUserIssuePatError: 用户创建访问令牌失败
+      AuthUserIssueTokenError: 用户创建会话令牌失败
+      AuthUserNotFound: 用户不存在
+      AuthUserPassError: 用户密码错误
+      BranchBodyParamError: Body 参数解析失败.
+      BranchCreateError: 分支创建失败.
+      BranchCreateSuccess: 分支创建成功.
+      BranchListError: 查询分支列表失败.
+      BranchListPrefixError: 查询分支前缀列表失败.
+      BranchListPrefixSuccess: 查询分支前缀列表成功.
+      BranchListSuccess: 查询分支列表成功.
+      BranchPathParamError: Path 参数解析失败.
+      BranchQueryParamError: Query 参数解析失败.
+      CommitActionDecodeError: 解码提交文件内容时失败.
+      CommitBodyParamError: Body 参数解析失败.
+      CommitCreateError: 提交创建失败.
+      CommitCreateSuccess: 提交创建成功.
+      CommitGetDivergenceSuccess: 查询提交分歧度成功.
+      CommitGetError: 获取提交信息失败.
+      CommitGetSuccess: 获取提交信息成功.
+      CommitListError: 查询提交列表失败.
+      CommitListSuccess: 查询提交列表成功.
+      CommitPathParamError: Path 参数解析失败.
+      CommitQueryParamError: Query 参数解析失败.
+      DbCheckConstraintViolation: 检查约束冲突.
+      DbConnectionFailed: 数据库连接失败.
+      DbDataTooLong: 字段数据过长.
+      DbDeadlock: 检测到数据库死锁.
+      DbDuplicate: 资源已存在.
+      DbError: 数据库错误.
+      DbForeignKeyViolation: 外键约束冲突.
+      DbInvalidData: 无效的数据.
+      DbInvalidDataType: 数据类型无效.
+      DbInvalidTransaction: 无效的事务.
+      DbLockWaitTimeout: 锁等待超时.
+      DbNotNullViolation: 非空约束冲突.
+      DbNotfound: 资源未找到.
+      ErrorDefault: 默认错误, %s!
+      ErrorEmbedFailedToMkdir: embed 创建目录失败
+      ErrorEmbedFailedToReadDir: embed 读取目录失败
+      ErrorEmbedFailedToReadFile: embed 读取文件失败
+      ErrorEmbedFailedToWriteFile: embed 写入文件失败
+      ErrorGzipFailedToCloseReader: gzip 关闭解压流失败
+      ErrorGzipFailedToCreateReader: gzip 解压失败
+      GitCreateExecParamError: 创建败 git 命令参数失败.
+      GitExecError: 执行 git 命令失败.
+      GitMapOutputError: 无法将 git 命令结果映射到响应结构体.
+      RepoBodyParamError: Body 参数解析失败.
+      RepoCreateError: 创建仓库异常
+      RepoCreateSuccess: 创建仓库成功
+      RepoGetPathsDetailsSuccess: 获取路径详情成功.
+      RepoGetPathsSuccess: 获取路径成功.
+      RepoIdentifierInvalid: 仓库名称不合法,identifier仅支持字母、数字、下划线(_)、连字符(-)、点号(.)
+      RepoLineNumberError: 行号必须大于0, 且结束行号必须大于起始行号
+      RepoMirrorReadOnly: 镜像仓库只读.
+      RepoPathParamError: Path 参数解析失败.
+      RepoPullPermissionError: 您没有权限拉取此仓库.
+      RepoPullRequestsMergeError: 合并失败,存在冲突或检查未通过.
+      RepoPullRequestsMergeSuccess: 合并成功!
+      RepoPushPermissionError: 您没有权限推送此仓库.
+      RepoQueryError: 查询仓库失败
+      RepoQueryParamError: Query 参数解析失败.
+      RepoQuerySuccess: 查询仓库成功
+      RequestInvalidBooleanParameter: 参数必须为布尔值.
+      RequestInvalidContentType: Content-Type 无效.
+      RequestInvalidIntegerParameter: 参数必须为有效的整数.
+      RequestInvalidJsonFormat: JSON 格式无效.
+      RequestInvalidPositiveIntegerParameter: 参数必须为正整数.
+      RequestInvalidRequestBody: 请求体无效.
+      RequestInvalidUrlParameter: URL 参数无效.
+      RequestParameterDecodeFailed: 参数解码失败.
+      RequestParameterInvalid: 参数无效.
+      RequestParameterMissing: 缺少必须参数.
+      RequestParameterTypeMismatch: 参数类型不匹配.
+      RequestPathParameterNotFound: 路径参数未找到.
+      RequestQueryParameterNotFound: 查询参数未找到.
+      RequestRequestBodyTooLarge: 请求体过大.
+      SpaceArtifactsTitleSuccess: 仓库设置保存成功
+      SpaceBodyParamError: Body 参数解析失败.
+      SpaceCreateError: 空间创建失败.
+      SpaceCreateSuccess: 空间创建成功.
+      SpaceListError: 查询空间列表失败
+      SpaceListSuccess: 查询空间列表成功
+      SpacePathParamError: Path 参数解析失败.
+      SpaceQueryError: 查询空间失败
+      SpaceQueryParamError: Query 参数解析失败.
+      SpaceQuerySuccess: 查询空间成功
+      SpaceSecretsAddError: 添加密钥失败,请检查名称是否重复或格式是否正确.
+      SpaceSecretsAddSuccess: 密钥已成功添加.
+      SpaceSecretsDeletePermission: 删除失败:权限不足,您无法删除此密钥.
+      SpaceSecretsDeleteSuccess: 密钥已成功删除.
+      SpaceSecretsDeleteUsed: 删除失败:此密钥可能正在被一个或多个服务使用.
+      SpaceSecretsListError: 无法加载密钥列表,请稍后重试.
+      SpaceSecretsListSuccess: 仓库密钥列表成功.
+      SpaceUpdateError: 空间更新失败.
+      SpaceUpdateSuccess: 空间更新成功.
+      TagBodyParamError: Body 参数解析失败.
+      TagCreateError: 标签创建失败.
+      TagCreateSuccess: 标签创建成功.
+      TagDeleteError: 标签删除失败.
+      TagDeleteSuccess: 标签删除成功.
+      TagListError: 查询标签列表失败.
+      TagListSuccess: 查询标签列表成功.
+      TagPathParamError: Path 参数解析失败.
+      TagQueryParamError: Query 参数解析失败.
+    x-enum-descriptions:
+    - 用户登录成功
+    - 请求不包含任何可用于 Authorizer 的认证数据
+    - 请求不包含任何会话数据,无法进行授权
+    - 公钥添加失败
+    - 公钥添加成功
+    - 公钥已存在
+    - 公钥创建失败
+    - 添加公钥标识符校验错误
+    - 公钥未找到
+    - 添加公钥参数错误
+    - 会话令牌不允许用于与 Git 交互
+    - 用户创建访问令牌失败
+    - 用户创建会话令牌失败
+    - 用户不存在
+    - 用户密码错误
+    - Body 参数解析失败.
+    - 分支创建失败.
+    - 分支创建成功.
+    - 查询分支列表失败.
+    - 查询分支前缀列表失败.
+    - 查询分支前缀列表成功.
+    - 查询分支列表成功.
+    - Path 参数解析失败.
+    - Query 参数解析失败.
+    - 解码提交文件内容时失败.
+    - Body 参数解析失败.
+    - 提交创建失败.
+    - 提交创建成功.
+    - 查询提交分歧度成功.
+    - 获取提交信息失败.
+    - 获取提交信息成功.
+    - 查询提交列表失败.
+    - 查询提交列表成功.
+    - Path 参数解析失败.
+    - Query 参数解析失败.
+    - 检查约束冲突.
+    - 数据库连接失败.
+    - 字段数据过长.
+    - 检测到数据库死锁.
+    - 资源已存在.
+    - 数据库错误.
+    - 外键约束冲突.
+    - 无效的数据.
+    - 数据类型无效.
+    - 无效的事务.
+    - 锁等待超时.
+    - 非空约束冲突.
+    - 资源未找到.
+    - 默认错误, %s!
+    - embed 创建目录失败
+    - embed 读取目录失败
+    - embed 读取文件失败
+    - embed 写入文件失败
+    - gzip 关闭解压流失败
+    - gzip 解压失败
+    - 创建败 git 命令参数失败.
+    - 执行 git 命令失败.
+    - 无法将 git 命令结果映射到响应结构体.
+    - Body 参数解析失败.
+    - 创建仓库异常
+    - 创建仓库成功
+    - 获取路径详情成功.
+    - 获取路径成功.
+    - 仓库名称不合法,identifier仅支持字母、数字、下划线(_)、连字符(-)、点号(.)
+    - 行号必须大于0, 且结束行号必须大于起始行号
+    - 镜像仓库只读.
+    - Path 参数解析失败.
+    - 合并失败,存在冲突或检查未通过.
+    - 合并成功!
+    - 您没有权限拉取此仓库.
+    - 您没有权限推送此仓库.
+    - 查询仓库失败
+    - Query 参数解析失败.
+    - 查询仓库成功
+    - 参数必须为布尔值.
+    - Content-Type 无效.
+    - 参数必须为有效的整数.
+    - JSON 格式无效.
+    - 参数必须为正整数.
+    - 请求体无效.
+    - URL 参数无效.
+    - 参数解码失败.
+    - 参数无效.
+    - 缺少必须参数.
+    - 参数类型不匹配.
+    - 路径参数未找到.
+    - 查询参数未找到.
+    - 请求体过大.
+    - 仓库设置保存成功
+    - Body 参数解析失败.
+    - 空间创建失败.
+    - 空间创建成功.
+    - 查询空间列表失败
+    - 查询空间列表成功
+    - Path 参数解析失败.
+    - 查询空间失败
+    - Query 参数解析失败.
+    - 查询空间成功
+    - 添加密钥失败,请检查名称是否重复或格式是否正确.
+    - 密钥已成功添加.
+    - 删除失败:权限不足,您无法删除此密钥.
+    - 密钥已成功删除.
+    - 删除失败:此密钥可能正在被一个或多个服务使用.
+    - 无法加载密钥列表,请稍后重试.
+    - 仓库密钥列表成功.
+    - 空间更新失败.
+    - 空间更新成功.
+    - Body 参数解析失败.
+    - 标签创建失败.
+    - 标签创建成功.
+    - 标签删除失败.
+    - 标签删除成功.
+    - 查询标签列表失败.
+    - 查询标签列表成功.
+    - Path 参数解析失败.
+    - Query 参数解析失败.
+    x-enum-varnames:
+    - AuthAuthUserLoginSuccess
+    - AuthNoData
+    - AuthNoSession
+    - AuthPubKeyAddError
+    - AuthPubKeyAddSuccess
+    - AuthPubKeyAlreadyInUse
+    - AuthPubKeyCreateError
+    - AuthPubKeyIdentifierError
+    - AuthPubKeyNotFoundByFingerprint
+    - AuthPubKeyParamError
+    - AuthSessionTokenNotAllowed
+    - AuthUserIssuePatError
+    - AuthUserIssueTokenError
+    - AuthUserNotFound
+    - AuthUserPassError
+    - BranchBodyParamError
+    - BranchCreateError
+    - BranchCreateSuccess
+    - BranchListError
+    - BranchListPrefixError
+    - BranchListPrefixSuccess
+    - BranchListSuccess
+    - BranchPathParamError
+    - BranchQueryParamError
+    - CommitActionDecodeError
+    - CommitBodyParamError
+    - CommitCreateError
+    - CommitCreateSuccess
+    - CommitGetDivergenceSuccess
+    - CommitGetError
+    - CommitGetSuccess
+    - CommitListError
+    - CommitListSuccess
+    - CommitPathParamError
+    - CommitQueryParamError
+    - DbCheckConstraintViolation
+    - DbConnectionFailed
+    - DbDataTooLong
+    - DbDeadlock
+    - DbDuplicate
+    - DbError
+    - DbForeignKeyViolation
+    - DbInvalidData
+    - DbInvalidDataType
+    - DbInvalidTransaction
+    - DbLockWaitTimeout
+    - DbNotNullViolation
+    - DbNotfound
+    - ErrorDefault
+    - ErrorEmbedFailedToMkdir
+    - ErrorEmbedFailedToReadDir
+    - ErrorEmbedFailedToReadFile
+    - ErrorEmbedFailedToWriteFile
+    - ErrorGzipFailedToCloseReader
+    - ErrorGzipFailedToCreateReader
+    - GitCreateExecParamError
+    - GitExecError
+    - GitMapOutputError
+    - RepoBodyParamError
+    - RepoCreateError
+    - RepoCreateSuccess
+    - RepoGetPathsDetailsSuccess
+    - RepoGetPathsSuccess
+    - RepoIdentifierInvalid
+    - RepoLineNumberError
+    - RepoMirrorReadOnly
+    - RepoPathParamError
+    - RepoPullRequestsMergeError
+    - RepoPullRequestsMergeSuccess
+    - RepoPullPermissionError
+    - RepoPushPermissionError
+    - RepoQueryError
+    - RepoQueryParamError
+    - RepoQuerySuccess
+    - RequestInvalidBooleanParameter
+    - RequestInvalidContentType
+    - RequestInvalidIntegerParameter
+    - RequestInvalidJsonFormat
+    - RequestInvalidPositiveIntegerParameter
+    - RequestInvalidRequestBody
+    - RequestInvalidUrlParameter
+    - RequestParameterDecodeFailed
+    - RequestParameterInvalid
+    - RequestParameterMissing
+    - RequestParameterTypeMismatch
+    - RequestPathParameterNotFound
+    - RequestQueryParameterNotFound
+    - RequestRequestBodyTooLarge
+    - SpaceArtifactsTitleSuccess
+    - SpaceBodyParamError
+    - SpaceCreateError
+    - SpaceCreateSuccess
+    - SpaceListError
+    - SpaceListSuccess
+    - SpacePathParamError
+    - SpaceQueryError
+    - SpaceQueryParamError
+    - SpaceQuerySuccess
+    - SpaceSecretsAddError
+    - SpaceSecretsAddSuccess
+    - SpaceSecretsDeletePermission
+    - SpaceSecretsDeleteSuccess
+    - SpaceSecretsDeleteUsed
+    - SpaceSecretsListError
+    - SpaceSecretsListSuccess
+    - SpaceUpdateError
+    - SpaceUpdateSuccess
+    - TagBodyParamError
+    - TagCreateError
+    - TagCreateSuccess
+    - TagDeleteError
+    - TagDeleteSuccess
+    - TagListError
+    - TagListSuccess
+    - TagPathParamError
+    - TagQueryParamError
 host: localhost:3000
 info:
   contact: {}
@@ -115,28 +1134,484 @@ info:
   title: GitFox API
   version: "1.0"
 paths:
-  /public/test_accessLog:
-    get:
+  /branches:
+    post:
       consumes:
       - application/json
-      description: 用于测试访问日志中间件功能，返回固定响应并包含 trace_id
+      description: 新增一个分支
       parameters:
-      - default: fixed-req
-        description: 请求参数
-        in: query
-        name: req
-        type: string
+      - description: 创建分支请求参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.ReqForCreate'
       produces:
       - application/json
       responses:
         "200":
-          description: 测试成功
+          description: 创建成功
           schema:
-            additionalProperties: true
-            type: object
-      summary: 访问日志测试接口
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.Branch'
+              type: object
+        "400":
+          description: 参数错误（如名称重复）
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 创建分支
       tags:
-      - test
+      - branches
+  /branches/list:
+    post:
+      consumes:
+      - application/json
+      description: 分页查询分支列表
+      parameters:
+      - description: 创建分支请求参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.ReqFilter'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 查询成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.Branch'
+                  type: array
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse'
+      summary: 查询分支列表
+      tags:
+      - branches
+  /branches/prefixes:
+    get:
+      consumes:
+      - application/json
+      description: 查询分支标签
+      parameters:
+      - description: 仓库 ID
+        in: query
+        name: repoID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 查询成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.Prefix'
+                  type: array
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse'
+      summary: 查询分支标签
+      tags:
+      - branches
+  /commits:
+    get:
+      consumes:
+      - application/json
+      description: 根据提交 SHA 获取提交详情
+      parameters:
+      - description: 提交 SHA
+        in: query
+        name: sha
+        required: true
+        type: string
+      - description: 仓库 ID
+        in: query
+        name: repoID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 查询成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.Commit'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "404":
+          description: 提交未找到
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 获取单个提交详情
+      tags:
+      - commits
+    post:
+      consumes:
+      - application/json
+      description: 新增一个提交
+      parameters:
+      - description: 创建提交请求参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.ReqForCreate'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 创建成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.RespForCreate'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 创建提交
+      tags:
+      - commits
+  /commits/diff:
+    post:
+      consumes:
+      - application/json
+      description: 获取指定提交的 diff 内容(text/plain 格式)
+      parameters:
+      - description: 获取 diff 请求参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.ReqForGet'
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: diff 文本
+          schema:
+            type: string
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "404":
+          description: 提交未找到
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 获取提交 Diff
+      tags:
+      - commits
+  /commits/divergence:
+    post:
+      consumes:
+      - application/json
+      description: 获取多个 git 引用之间的提交分歧（ahead/behind）信息
+      parameters:
+      - description: 获取分歧信息请求参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.ReqForDivergence'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 查询成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.CommitDivergence'
+                  type: array
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 获取提交分歧信息
+      tags:
+      - commits
+  /commits/list:
+    post:
+      consumes:
+      - application/json
+      description: 分页查询提交列表
+      parameters:
+      - description: 查询提交请求参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.ReqFilter'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 查询成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.RespForList'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse'
+      summary: 查询提交列表
+      tags:
+      - commits
+  /repos:
+    post:
+      consumes:
+      - application/json
+      description: 基于传入参数创建远端Git仓库，自动处理GitIgnore模板、License协议、README文件生成，支持派生仓库配置
+      parameters:
+      - description: 创建仓库请求参数
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.CreateRepoReq'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: 创建成功（返回仓库核心信息）
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.CreateRepoResp'
+              type: object
+      summary: 创建远端仓库
+      tags:
+      - repos
+  /repos/{id}:
+    get:
+      consumes:
+      - application/json
+      description: 根据传入的仓库 ID 获取仓库信息
+      parameters:
+      - description: 仓库 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功（返回仓库核心信息）
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.Repo'
+              type: object
+      summary: 获取仓库信息
+      tags:
+      - repos
+  /repos/{id}/diff:
+    post:
+      consumes:
+      - application/json
+      description: 获取仓库指定 GitRef Diff
+      parameters:
+      - description: 仓库 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.Repo'
+              type: object
+      summary: 获取仓库指定 GitRef Diff
+      tags:
+      - repos
+  /repos/{id}/paths:
+    get:
+      consumes:
+      - application/json
+      description: 获取仓库指定 GitRef 路径
+      parameters:
+      - description: 仓库 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Git 引用
+        in: query
+        name: gitRef
+        type: string
+      - description: 包含目录
+        in: query
+        name: includeDirectories
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.PathsOutput'
+              type: object
+      summary: 获取仓库指定 GitRef 路径
+      tags:
+      - repos
+  /repos/{id}/paths/details:
+    post:
+      consumes:
+      - application/json
+      description: 获取仓库指定 GitRef 路径详情
+      parameters:
+      - description: 仓库 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 查询路径详情的请求参数
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.PathsDetailsInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.PathsDetailsOutput'
+              type: object
+      summary: 获取仓库指定 GitRef 路径详情
+      tags:
+      - repos
+  /repos/{repoId}/blame/{filePath}:
+    get:
+      consumes:
+      - application/json
+      description: 根据传入的仓库 ID、文件路径、Git 引用、行号范围等信息，获取仓库代码blame信息
+      parameters:
+      - description: 仓库 ID
+        in: path
+        name: repoId
+        required: true
+        type: integer
+      - description: 文件路径
+        in: path
+        name: filePath
+        required: true
+        type: string
+      - description: Git 引用
+        in: query
+        name: gitRef
+        type: string
+      - description: 起始行号
+        in: query
+        name: lineFrom
+        type: integer
+      - description: 结束行号
+        in: query
+        name: lineTo
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功（返回仓库代码blame流式）
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            - properties:
+                data: {}
+              type: object
+      summary: 仓库代码blame
+      tags:
+      - repos
   /spaces:
     get:
       consumes:
@@ -380,6 +1855,138 @@ paths:
       summary: 恢复已删除空间
       tags:
       - spaces
+  /tags:
+    post:
+      consumes:
+      - application/json
+      description: 新增一个标签
+      parameters:
+      - description: 创建标签请求参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_tag.ReqForCreate'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 创建成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_tag.Tag'
+              type: object
+        "400":
+          description: 参数错误（如名称重复）
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 创建标签
+      tags:
+      - tags
+  /tags/{name}:
+    delete:
+      consumes:
+      - application/json
+      description: 删除指定标签
+      parameters:
+      - description: 标签名称
+        in: path
+        name: name
+        required: true
+        type: string
+      - description: 仓库 ID
+        in: query
+        name: repoID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 删除成功
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 删除标签
+      tags:
+      - tags
+  /tags/list:
+    post:
+      consumes:
+      - application/json
+      description: 分页查询标签列表
+      parameters:
+      - description: 查询标签列表参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_tag.ReqFilter'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 查询成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_tag.Tag'
+                  type: array
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse'
+      summary: 查询标签列表
+      tags:
+      - tags
+  /user/public-keys:
+    post:
+      consumes:
+      - application/json
+      description: 创建用户公钥
+      parameters:
+      - description: 创建用户公钥参数
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_publickey.CreatePublicKeyInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 创建用户公钥成功
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "400":
+          description: 创建用户公钥失败
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 创建用户公钥
+      tags:
+      - 用户
 securityDefinitions:
   ApiKeyAuth:
     in: header

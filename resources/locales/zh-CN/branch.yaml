@@ -1,0 +1,11 @@
+# 分支相关翻译
+branch:
+  path_param_error: "Path 参数解析失败。"
+  query_param_error: "Query 参数解析失败。"
+  body_param_error: "Body 参数解析失败。"
+  create_success: "分支创建成功。"
+  create_error: "分支创建失败。"
+  list_error: "查询分支列表失败。"
+  list_success: "查询分支列表成功。"
+  list_prefix_error: "查询分支前缀列表失败。"
+  list_prefix_success: "查询分支前缀列表成功。"

@@ -1,6 +1,0 @@
-branch:
-  path_param_error: "Path param parsing failed."
-  query_param_error: "Query param parsing failed."
-  body_param_error: "Body param parsing failed."
-  create_success: "Branch created successfully."
-  create_error: "Branch created failed."

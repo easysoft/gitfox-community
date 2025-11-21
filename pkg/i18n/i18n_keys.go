@@ -7,15 +7,45 @@ type I18nKey string
 
 const (
 	// Auth 相关常量
-	AuthNoData    I18nKey = "auth.no_data"    // 请求不包含任何可用于 Authorizer 的认证数据
-	AuthNoSession I18nKey = "auth.no_session" // 请求不包含任何会话数据,无法进行授权
+	AuthAuthUserLoginSuccess        I18nKey = "auth.auth_user_login_success"          // 用户登录成功
+	AuthNoData                      I18nKey = "auth.no_data"                          // 请求不包含任何可用于 Authorizer 的认证数据
+	AuthNoSession                   I18nKey = "auth.no_session"                       // 请求不包含任何会话数据,无法进行授权
+	AuthPubKeyAddError              I18nKey = "auth.pub_key_add_error"                // 公钥添加失败
+	AuthPubKeyAddSuccess            I18nKey = "auth.pub_key_add_success"              // 公钥添加成功
+	AuthPubKeyAlreadyInUse          I18nKey = "auth.pub_key_already_in_use"           // 公钥已存在
+	AuthPubKeyCreateError           I18nKey = "auth.pub_key_create_error"             // 公钥创建失败
+	AuthPubKeyIdentifierError       I18nKey = "auth.pub_key_identifier_error"         // 添加公钥标识符校验错误
+	AuthPubKeyNotFoundByFingerprint I18nKey = "auth.pub_key_not_found_by_fingerprint" // 公钥未找到
+	AuthPubKeyParamError            I18nKey = "auth.pub_key_param_error"              // 添加公钥参数错误
+	AuthSessionTokenNotAllowed      I18nKey = "auth.session_token_not_allowed"        // 会话令牌不允许用于与 Git 交互
+	AuthUserIssuePatError           I18nKey = "auth.user_issue_pat_error"             // 用户创建访问令牌失败
+	AuthUserIssueTokenError         I18nKey = "auth.user_issue_token_error"           // 用户创建会话令牌失败
+	AuthUserNotFound                I18nKey = "auth.user_not_found"                   // 用户不存在
+	AuthUserPassError               I18nKey = "auth.user_pass_error"                  // 用户密码错误
 
 	// Branch 相关常量
-	BranchBodyParamError  I18nKey = "branch.body_param_error"  // Body 参数解析失败.
-	BranchCreateError     I18nKey = "branch.create_error"      // 分支创建失败.
-	BranchCreateSuccess   I18nKey = "branch.create_success"    // 分支创建成功.
-	BranchPathParamError  I18nKey = "branch.path_param_error"  // Path 参数解析失败.
-	BranchQueryParamError I18nKey = "branch.query_param_error" // Query 参数解析失败.
+	BranchBodyParamError    I18nKey = "branch.body_param_error"    // Body 参数解析失败.
+	BranchCreateError       I18nKey = "branch.create_error"        // 分支创建失败.
+	BranchCreateSuccess     I18nKey = "branch.create_success"      // 分支创建成功.
+	BranchListError         I18nKey = "branch.list_error"          // 查询分支列表失败.
+	BranchListPrefixError   I18nKey = "branch.list_prefix_error"   // 查询分支前缀列表失败.
+	BranchListPrefixSuccess I18nKey = "branch.list_prefix_success" // 查询分支前缀列表成功.
+	BranchListSuccess       I18nKey = "branch.list_success"        // 查询分支列表成功.
+	BranchPathParamError    I18nKey = "branch.path_param_error"    // Path 参数解析失败.
+	BranchQueryParamError   I18nKey = "branch.query_param_error"   // Query 参数解析失败.
+
+	// Commit 相关常量
+	CommitActionDecodeError    I18nKey = "commit.action_decode_error"    // 解码提交文件内容时失败.
+	CommitBodyParamError       I18nKey = "commit.body_param_error"       // Body 参数解析失败.
+	CommitCreateError          I18nKey = "commit.create_error"           // 提交创建失败.
+	CommitCreateSuccess        I18nKey = "commit.create_success"         // 提交创建成功.
+	CommitGetDivergenceSuccess I18nKey = "commit.get_divergence_success" // 查询提交分歧度成功.
+	CommitGetError             I18nKey = "commit.get_error"              // 获取提交信息失败.
+	CommitGetSuccess           I18nKey = "commit.get_success"            // 获取提交信息成功.
+	CommitListError            I18nKey = "commit.list_error"             // 查询提交列表失败.
+	CommitListSuccess          I18nKey = "commit.list_success"           // 查询提交列表成功.
+	CommitPathParamError       I18nKey = "commit.path_param_error"       // Path 参数解析失败.
+	CommitQueryParamError      I18nKey = "commit.query_param_error"      // Query 参数解析失败.
 
 	// Db 相关常量
 	DbCheckConstraintViolation I18nKey = "db.check_constraint_violation" // 检查约束冲突.
@@ -23,6 +53,7 @@ const (
 	DbDataTooLong              I18nKey = "db.data_too_long"              // 字段数据过长.
 	DbDeadlock                 I18nKey = "db.deadlock"                   // 检测到数据库死锁.
 	DbDuplicate                I18nKey = "db.duplicate"                  // 资源已存在.
+	DbError                    I18nKey = "db.error"                      // 数据库错误.
 	DbForeignKeyViolation      I18nKey = "db.foreign_key_violation"      // 外键约束冲突.
 	DbInvalidData              I18nKey = "db.invalid_data"               // 无效的数据.
 	DbInvalidDataType          I18nKey = "db.invalid_data_type"          // 数据类型无效.
@@ -46,8 +77,22 @@ const (
 	GitMapOutputError       I18nKey = "git.map_output_error"        // 无法将 git 命令结果映射到响应结构体.
 
 	// Repo 相关常量
+	RepoBodyParamError           I18nKey = "repo.body_param_error"           // Body 参数解析失败.
+	RepoCreateError              I18nKey = "repo.create_error"               // 创建仓库异常
+	RepoCreateSuccess            I18nKey = "repo.create_success"             // 创建仓库成功
+	RepoGetPathsDetailsSuccess   I18nKey = "repo.get_paths_details_success"  // 获取路径详情成功.
+	RepoGetPathsSuccess          I18nKey = "repo.get_paths_success"          // 获取路径成功.
+	RepoIdentifierInvalid        I18nKey = "repo.identifier_invalid"         // 仓库名称不合法,identifier仅支持字母、数字、下划线(_)、连字符(-)、点号(.)
+	RepoLineNumberError          I18nKey = "repo.line_number_error"          // 行号必须大于0, 且结束行号必须大于起始行号
+	RepoMirrorReadOnly           I18nKey = "repo.mirror_read_only"           // 镜像仓库只读.
+	RepoPathParamError           I18nKey = "repo.path_param_error"           // Path 参数解析失败.
 	RepoPullRequestsMergeError   I18nKey = "repo.pullRequests_merge_error"   // 合并失败,存在冲突或检查未通过.
 	RepoPullRequestsMergeSuccess I18nKey = "repo.pullRequests_merge_success" // 合并成功!
+	RepoPullPermissionError      I18nKey = "repo.pull_permission_error"      // 您没有权限拉取此仓库.
+	RepoPushPermissionError      I18nKey = "repo.push_permission_error"      // 您没有权限推送此仓库.
+	RepoQueryError               I18nKey = "repo.query_error"                // 查询仓库失败
+	RepoQueryParamError          I18nKey = "repo.query_param_error"          // Query 参数解析失败.
+	RepoQuerySuccess             I18nKey = "repo.query_success"              // 查询仓库成功
 
 	// Request 相关常量
 	RequestInvalidBooleanParameter         I18nKey = "request.invalid_boolean_parameter"          // 参数必须为布尔值.
@@ -85,4 +130,15 @@ const (
 	SpaceSecretsListSuccess      I18nKey = "space.secrets_list_success"      // 仓库密钥列表成功.
 	SpaceUpdateError             I18nKey = "space.update_error"              // 空间更新失败.
 	SpaceUpdateSuccess           I18nKey = "space.update_success"            // 空间更新成功.
+
+	// Tag 相关常量
+	TagBodyParamError  I18nKey = "tag.body_param_error"  // Body 参数解析失败.
+	TagCreateError     I18nKey = "tag.create_error"      // 标签创建失败.
+	TagCreateSuccess   I18nKey = "tag.create_success"    // 标签创建成功.
+	TagDeleteError     I18nKey = "tag.delete_error"      // 标签删除失败.
+	TagDeleteSuccess   I18nKey = "tag.delete_success"    // 标签删除成功.
+	TagListError       I18nKey = "tag.list_error"        // 查询标签列表失败.
+	TagListSuccess     I18nKey = "tag.list_success"      // 查询标签列表成功.
+	TagPathParamError  I18nKey = "tag.path_param_error"  // Path 参数解析失败.
+	TagQueryParamError I18nKey = "tag.query_param_error" // Query 参数解析失败.
 )

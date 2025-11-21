@@ -1,5 +1,7 @@
 package auth
 
+import "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
+
 type Metadata interface {
 	ImpactsAuthorization() bool
 }
@@ -8,5 +10,15 @@ type Metadata interface {
 type EmptyMetadata struct{}
 
 func (m *EmptyMetadata) ImpactsAuthorization() bool {
+	return false
+}
+
+// TokenMetadata contains information about the token that was used during auth.
+type TokenMetadata struct {
+	TokenType constant.TokenType
+	TokenID   int64
+}
+
+func (m *TokenMetadata) ImpactsAuthorization() bool {
 	return false
 }

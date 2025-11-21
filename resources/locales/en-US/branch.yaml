@@ -1,0 +1,10 @@
+branch:
+  path_param_error: "Path param parsing failed."
+  query_param_error: "Query param parsing failed."
+  body_param_error: "Body param parsing failed."
+  create_success: "Branch created successfully."
+  create_error: "Branch created failed."
+  list_error: "Failed to query branch list."
+  list_success: "Query the branch list successfully."
+  list_prefix_error: "Failed to query the list of branch prefixes."
+  list_prefix_success: "Query the list of branch prefixes successfully."

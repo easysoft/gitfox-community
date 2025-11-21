@@ -1,7 +1,7 @@
 version: '3'
 
 vars:
-  LOCALES_DIR: locales
+  LOCALES_DIR: ./resources/locales
   GO_MODULE: gitfox.zcorp.cc/git/Pangu/gitfox-community
   GOPROXY: 'https://goproxy.cn,direct'
   GOSUMDB: sum.golang.google.cn

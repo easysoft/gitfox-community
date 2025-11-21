@@ -54,8 +54,8 @@ type Server struct {
 	KeepAliveInterval       time.Duration
 	ServerHostKeysDir       string
 
-	Verifier publickey.IPublicKey
-	RepoCtrl *repo.RepoHandler
+	Verifier publickey.Interface
+	RepoCtrl *repo.Controller
 }
 
 // - 验证服务器配置参数是否正确
@@ -154,7 +154,7 @@ func (s *Server) publicKeyHandler(ctx ssh.Context, key ssh.PublicKey) bool {
 		return false
 	}
 
-	principal, err := s.Verifier.ValidateKey(ctx, key, constant.PublicKeyUsageAuth)
+	principal, err := s.Verifier.ValidateKey(ctx, key)
 	if errors.IsNotFound(err) {
 		log.Debug().Err(err).Msg("public key is unknown")
 		return false
@@ -250,14 +250,10 @@ func (s *Server) sessionHandler(session ssh.Session) {
 	err = s.RepoCtrl.GitServicePack(
 		WithContext(ctx, session),
 		&auth.Session{
-			Principal: principal.Principal{
-				ID:          principalInfo.ID,
-				UID:         principalInfo.UID,
-				Email:       principalInfo.Email,
-				Type:        principalInfo.Type,
-				DisplayName: principalInfo.DisplayName,
-				Created:     principalInfo.Created,
-				Updated:     principalInfo.Updated,
+			Principal: principal.User{
+				ID:    principalInfo.ID,
+				UID:   principalInfo.UID,
+				Email: principalInfo.Email,
 			},
 		},
 		repoRef,

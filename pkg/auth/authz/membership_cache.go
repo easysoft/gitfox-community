@@ -1,0 +1,45 @@
+package authz
+
+import (
+	"context"
+	"time"
+
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
+
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/cache"
+)
+
+type PermissionCacheKey struct {
+	Account    string
+	Scope      constant.Scope
+	Permission constant.Permission
+}
+
+type PublicAccessCacheKey struct {
+	Scope constant.Scope
+}
+
+type PermissionCache cache.Cache[PermissionCacheKey, bool]
+type PublicAccessCache cache.Cache[PublicAccessCacheKey, bool]
+
+func NewPermissionCache(
+	cacheDuration time.Duration,
+) (PermissionCache, PublicAccessCache) {
+	return cache.New(permissionCacheGetter{}, cacheDuration),
+		cache.New(publicAccessCacheGetter{}, cacheDuration)
+}
+
+type permissionCacheGetter struct {
+}
+type publicAccessCacheGetter struct {
+}
+
+// Find implements cache.Getter.
+func (p permissionCacheGetter) Find(ctx context.Context, key PermissionCacheKey) (bool, error) {
+	panic("unimplemented")
+}
+
+// Find implements cache.Getter.
+func (p publicAccessCacheGetter) Find(ctx context.Context, key PublicAccessCacheKey) (bool, error) {
+	panic("unimplemented")
+}

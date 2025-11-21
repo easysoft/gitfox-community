@@ -7,8 +7,8 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
 )
 
-// SpaceInterface 空间数据存储接口
-type SpaceInterface interface {
+// Interface 空间数据存储接口
+type Interface interface {
 	Create(ctx context.Context, req spaceModel.CreateSpaceRequest) (*spaceModel.SpaceResponse, error)
 	Update(ctx context.Context, id uint, req spaceModel.UpdateSpaceRequest) (*spaceModel.SpaceResponse, error)
 	List(ctx context.Context, filter spaceModel.ListSpaceFilter) (*database.PageResult[*Space], error)

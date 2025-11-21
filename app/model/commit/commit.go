@@ -4,51 +4,84 @@ import (
 	"time"
 
 	gitenum "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/enum"
-	"github.com/easysoft/gitfox/types/enum"
 )
 
 const NilSHA = "0000000000000000000000000000000000000000"
 
+type ReqForCreate struct {
+	RepoID    uint     `json:"repoID"`
+	Message   string   `json:"message"`
+	Branch    string   `json:"branch"`
+	NewBranch string   `json:"newBranch"`
+	Actions   []Action `json:"actions"`
+	Author    Author   `json:"author"`
+}
+
+type RespForCreate struct {
+	SHA string `json:"sha"`
+}
+
+type Action struct {
+	Action   string `json:"action"`
+	Path     string `json:"path"`
+	Payload  string `json:"payload"`
+	Encoding string `json:"encoding"`
+	SHA      string `json:"sha"`
+}
+
+type Author struct {
+	Name  string `json:"name"`
+	Email string `json:"email"`
+}
+
 // PaginationFilter stores pagination query parameters.
 type PaginationFilter struct {
-	Page  int `json:"page"`
-	Limit int `json:"limit"`
+	Page  int `json:"page" form:"page" default:"1"`
+	Limit int `json:"limit" form:"limit" default:"20"`
 }
 
-// CommitFilter stores commit query parameters.
-type CommitFilter struct {
+// ReqFilter stores commit query parameters.
+type ReqFilter struct {
 	PaginationFilter
-	After        string  `json:"after"`
-	Path         string  `json:"path"`
-	Since        int64   `json:"since"`
-	Until        int64   `json:"until"`
-	Committer    string  `json:"committer"`
-	CommitterIDs []int64 `json:"committer_ids"`
-	Author       string  `json:"author"`
-	AuthorIDs    []int64 `json:"author_ids"`
-	IncludeStats bool    `json:"include_stats"`
+	After        string  `json:"after" form:"after"`
+	Path         string  `json:"path" form:"path"`
+	Since        int64   `json:"since" form:"since"`
+	Until        int64   `json:"until" form:"until"`
+	Committer    string  `json:"committer" form:"committer"`
+	CommitterIDs []int64 `json:"committerIDs" form:"committerIDs"`
+	Author       string  `json:"author" form:"author"`
+	AuthorIDs    []int64 `json:"authorIDs" form:"authorIDs"`
+	IncludeStats bool    `json:"includeStats" form:"includeStats"`
+	RepoID       uint    `json:"repoID" form:"repoID"`
+	GitRef       string  `json:"gitRef" form:"gitRef"`
 }
 
-// TagFilter stores commit tag query parameters.
-type TagFilter struct {
-	Query string             `json:"query"`
-	Sort  enum.TagSortOption `json:"sort"`
-	Order enum.Order         `json:"order"`
-	Page  int                `json:"page"`
-	Size  int                `json:"size"`
+type RespForList struct {
+	Commits       []Commit        `json:"commits"`
+	RenameDetails []RenameDetails `json:"renameDetails"`
+	TotalCommits  int             `json:"totalCommits,omitempty"`
 }
 
-type ChangeStats struct {
-	Insertions int64 `json:"insertions"`
-	Deletions  int64 `json:"deletions"`
-	Changes    int64 `json:"changes"`
+type RenameDetails struct {
+	OldPath         string `json:"oldPath"`
+	NewPath         string `json:"newPath"`
+	CommitShaBefore string `json:"commitShaBefore"`
+	CommitShaAfter  string `json:"commitShaAfter"`
 }
 
-type CommitFileStats struct {
-	Path    string                 `json:"path"`
-	OldPath string                 `json:"old_path,omitempty"`
-	Status  gitenum.FileDiffStatus `json:"status"`
-	ChangeStats
+type ReqForGet struct {
+	RepoID uint   `json:"repoID" form:"repoID"`
+	SHA    string `json:"sha" form:"sha"`
+}
+
+type Commit struct {
+	SHA        string       `json:"sha"`
+	ParentSHAs []string     `json:"parentShas,omitempty"`
+	Title      string       `json:"title"`
+	Message    string       `json:"message"`
+	Author     Signature    `json:"author"`
+	Committer  Signature    `json:"committer"`
+	Stats      *CommitStats `json:"stats,omitempty"`
 }
 
 type CommitStats struct {
@@ -56,14 +89,17 @@ type CommitStats struct {
 	Files []CommitFileStats `json:"files,omitempty"`
 }
 
-type Commit struct {
-	SHA        string       `json:"sha"`
-	ParentSHAs []string     `json:"parent_shas,omitempty"`
-	Title      string       `json:"title"`
-	Message    string       `json:"message"`
-	Author     Signature    `json:"author"`
-	Committer  Signature    `json:"committer"`
-	Stats      *CommitStats `json:"stats,omitempty"`
+type CommitFileStats struct {
+	Path    string                 `json:"path"`
+	OldPath string                 `json:"oldPath,omitempty"`
+	Status  gitenum.FileDiffStatus `json:"status"`
+	ChangeStats
+}
+
+type ChangeStats struct {
+	Insertions int64 `json:"insertions"`
+	Deletions  int64 `json:"deletions"`
+	Changes    int64 `json:"changes"`
 }
 
 type Signature struct {
@@ -74,19 +110,6 @@ type Signature struct {
 type Identity struct {
 	Name  string `json:"name"`
 	Email string `json:"email"`
-}
-
-type RenameDetails struct {
-	OldPath         string `json:"old_path"`
-	NewPath         string `json:"new_path"`
-	CommitShaBefore string `json:"commit_sha_before"`
-	CommitShaAfter  string `json:"commit_sha_after"`
-}
-
-type ListCommitResponse struct {
-	Commits       []Commit        `json:"commits"`
-	RenameDetails []RenameDetails `json:"rename_details"`
-	TotalCommits  int             `json:"total_commits,omitempty"`
 }
 
 type CommitCount struct {
@@ -100,4 +123,22 @@ type CommitCountData struct {
 	Additions int `json:"additions"`
 	Deletions int `json:"deletions"`
 	Changes   int `json:"changes"`
+}
+
+type ReqForDivergence struct {
+	RepoID        uint            `json:"repoID"`
+	MaxDivergence uint            `json:"maxDivergence"`
+	Requests      []CompareGitRef `json:"requests"`
+}
+
+type CommitDivergence struct {
+	// Ahead is the count of commits the 'From' ref is ahead of the 'To' ref.
+	Ahead int32 `json:"ahead"`
+	// Behind is the count of commits the 'From' ref is behind the 'To' ref.
+	Behind int32 `json:"behind"`
+}
+
+type CompareGitRef struct {
+	From string `json:"from"`
+	To   string `json:"to"`
 }

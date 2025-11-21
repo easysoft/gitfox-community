@@ -13,6 +13,7 @@ const (
 	DBError
 	SystemErr
 	InternalError
+	InvalidArgument
 )
 
 const defaultI18nKey = i18n.ErrorDefault

@@ -1,3 +1,0 @@
-repo:
-  pullRequests_merge_success: "Merge successful!"
-  pullRequests_merge_error: "Merge failed. Conflicts exist or checks have not passed."
