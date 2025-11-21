@@ -53,6 +53,7 @@ func NewRouter(mode string, logger *logger.SugaredMateLogger, controller *Contro
 	registerCommitRoutes(authGroup, controller) // 提交相关路由
 	registerGitRoutes(authGroup, controller)    // Git 相关路由
 	registerRepoRoutes(authGroup, controller)   // 仓库相关路由
+	registerScanRoutes(authGroup, controller)   // 扫描相关路由
 	registerUserRoutes(authGroup, controller)   // 用户相关路由
 	return r
 }

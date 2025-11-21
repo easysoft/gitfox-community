@@ -39,17 +39,16 @@ func (c *Controller) Create(ctx *gin.Context) {
 	var reqBody branchModel.ReqForCreate
 	var err error
 
-	session, ok := req.GetAuthSession(ctx.Request.Context())
-	if !ok {
-		err = errors.WithI18nKey(errors.New("session not found"), i18n.AuthNoSession)
-		resp.BadRequest(ctx, err)
-		return
-	}
-
 	// 解析请求体
 	if err = ctx.ShouldBindJSON(&reqBody); err != nil {
 		err = errors.WithI18nKey(err, i18n.BranchBodyParamError)
 		resp.BadRequest(ctx, err)
+		return
+	}
+
+	session, ok := req.GetAuthSession(ctx.Request.Context())
+	if !ok {
+		resp.Unauthorized(ctx, errors.WithI18nKey(nil, i18n.AuthNoSession))
 		return
 	}
 
@@ -94,12 +93,6 @@ func (c *Controller) Create(ctx *gin.Context) {
 func (c *Controller) List(ctx *gin.Context) {
 	var reqQuery branchModel.ReqFilter
 	var err error
-	session, ok := req.GetAuthSession(ctx.Request.Context())
-	if !ok {
-		err = errors.WithI18nKey(errors.New("session not found"), i18n.AuthNoSession)
-		resp.BadRequest(ctx, err)
-		return
-	}
 
 	if err = ctx.ShouldBindJSON(&reqQuery); err != nil {
 		err = errors.WithI18nKey(err, i18n.BranchQueryParamError)
@@ -110,6 +103,12 @@ func (c *Controller) List(ctx *gin.Context) {
 	req.SetDefaults(&reqQuery)
 	// 设置默认值
 	req.SetDefaults(&reqQuery)
+
+	session, ok := req.GetAuthSession(ctx.Request.Context())
+	if !ok {
+		resp.Unauthorized(ctx, errors.WithI18nKey(nil, i18n.AuthNoSession))
+		return
+	}
 
 	// 通过仓库 ID 获取仓库
 	repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, reqQuery.RepoID)
@@ -145,16 +144,16 @@ func (c *Controller) List(ctx *gin.Context) {
 func (c *Controller) ListPrefixes(ctx *gin.Context) {
 	var reqQuery branchModel.ReqFilter
 	var err error
-	session, ok := req.GetAuthSession(ctx.Request.Context())
-	if !ok {
-		err = errors.WithI18nKey(errors.New("session not found"), i18n.AuthNoSession)
-		resp.BadRequest(ctx, err)
-		return
-	}
 
 	if err = ctx.ShouldBindQuery(&reqQuery); err != nil {
 		err = errors.WithI18nKey(err, i18n.BranchQueryParamError)
 		resp.BadRequest(ctx, err)
+		return
+	}
+
+	session, ok := req.GetAuthSession(ctx.Request.Context())
+	if !ok {
+		resp.Unauthorized(ctx, errors.WithI18nKey(nil, i18n.AuthNoSession))
 		return
 	}
 

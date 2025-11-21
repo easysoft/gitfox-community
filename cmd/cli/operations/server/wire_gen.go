@@ -11,6 +11,7 @@ import (
 	commit2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/commit"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/githook"
 	repo3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/repo"
+	scan3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/scan"
 	space3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/space"
 	tag2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/tag"
 	user3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/user"
@@ -19,11 +20,13 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/commit"
 	publickey2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/publickey"
 	repo2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
+	scan2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/scan"
 	space2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/space"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/tag"
 	user2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/user"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/publickey"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/scan"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/space"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/user"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/cmd/cli/operations/provider"
@@ -99,7 +102,10 @@ func NewApp(mode string) (*App, func(), error) {
 	userController := user3.NewUserController(userService, interface2)
 	service2 := provider.NewGitService(gitService)
 	gitController := provider.NewGitController(service2, repoService)
-	routerController := provider.NewControllers(spaceController, controller, tagController, commitController, repoController, userController, gitController)
+	ruleSetStore := scan.NewRuleSetStore(db)
+	ruleSetService := scan2.NewRuleSetService(ruleSetStore)
+	ruleSetController := scan3.NewRuleSetController(ruleSetService)
+	routerController := provider.NewControllers(spaceController, controller, tagController, commitController, repoController, userController, gitController, ruleSetController)
 	i18nManager, err := provider.NewI18nManager(config)
 	if err != nil {
 		cleanup2()
