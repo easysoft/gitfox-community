@@ -53,7 +53,6 @@ func (s *Service) Create(ctx context.Context, session *auth.Session, params *rep
 		return nil, errors.SystemErr.Newf("error creating repository on git: %v", err)
 	}
 
-	
 	repo := &repo.Repository{
 		Mutex:         0,
 		SpaceID:       params.SpaceID,
