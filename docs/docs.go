@@ -582,6 +582,57 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "put": {
+                "description": "修改仓库基础信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "repos"
+                ],
+                "summary": "修改仓库基础信息",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "仓库 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "更新仓库所需请求参数",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.ReqForUpdate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "更新成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.Repo"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
             }
         },
         "/repos/{id}/diff": {
@@ -1832,7 +1883,8 @@ const docTemplate = `{
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_publickey.CreatePublicKeyInput": {
             "type": "object",
             "required": [
-                "content"
+                "content",
+                "identifier"
             ],
             "properties": {
                 "content": {
@@ -2032,7 +2084,13 @@ const docTemplate = `{
                     "description": "允许 NULL，用指针类型",
                     "type": "integer"
                 },
+                "gitSSHURL": {
+                    "type": "string"
+                },
                 "gitUID": {
+                    "type": "string"
+                },
+                "gitURL": {
                     "type": "string"
                 },
                 "id": {
@@ -2052,6 +2110,41 @@ const docTemplate = `{
                 },
                 "status": {
                     "description": "状态码用 int 类型（兼容枚举映射）",
+                    "type": "integer"
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.ReqForUpdate": {
+            "type": "object",
+            "required": [
+                "acl",
+                "identifier",
+                "spaceID"
+            ],
+            "properties": {
+                "acl": {
+                    "description": "权限（仅支持open/private）",
+                    "type": "string",
+                    "enum": [
+                        "open",
+                        "private"
+                    ]
+                },
+                "defaultBranch": {
+                    "description": "默认分支（默认main）",
+                    "type": "string"
+                },
+                "desc": {
+                    "description": "仓库描述（最大500字符）",
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "identifier": {
+                    "description": "仓库唯一标识",
+                    "type": "string"
+                },
+                "spaceID": {
+                    "description": "空间ID（字符串类型，后续转int）",
                     "type": "integer"
                 }
             }
@@ -2439,6 +2532,7 @@ const docTemplate = `{
                 "repo.query_error",
                 "repo.query_param_error",
                 "repo.query_success",
+                "repo.update_success",
                 "request.invalid_boolean_parameter",
                 "request.invalid_content_type",
                 "request.invalid_integer_parameter",
@@ -2557,6 +2651,7 @@ const docTemplate = `{
                 "RepoQueryError": "查询仓库失败",
                 "RepoQueryParamError": "Query 参数解析失败.",
                 "RepoQuerySuccess": "查询仓库成功",
+                "RepoUpdateSuccess": "更新仓库成功",
                 "RequestInvalidBooleanParameter": "参数必须为布尔值.",
                 "RequestInvalidContentType": "Content-Type 无效.",
                 "RequestInvalidIntegerParameter": "参数必须为有效的整数.",
@@ -2675,6 +2770,7 @@ const docTemplate = `{
                 "查询仓库失败",
                 "Query 参数解析失败.",
                 "查询仓库成功",
+                "更新仓库成功",
                 "参数必须为布尔值.",
                 "Content-Type 无效.",
                 "参数必须为有效的整数.",
@@ -2793,6 +2889,7 @@ const docTemplate = `{
                 "RepoQueryError",
                 "RepoQueryParamError",
                 "RepoQuerySuccess",
+                "RepoUpdateSuccess",
                 "RequestInvalidBooleanParameter",
                 "RequestInvalidContentType",
                 "RequestInvalidIntegerParameter",

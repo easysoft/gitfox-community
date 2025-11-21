@@ -295,6 +295,7 @@ definitions:
         type: string
     required:
     - content
+    - identifier
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.CreateRepoReq:
     properties:
@@ -427,7 +428,11 @@ definitions:
       forkID:
         description: 允许 NULL，用指针类型
         type: integer
+      gitSSHURL:
+        type: string
       gitUID:
+        type: string
+      gitURL:
         type: string
       id:
         type: integer
@@ -442,6 +447,32 @@ definitions:
       status:
         description: 状态码用 int 类型（兼容枚举映射）
         type: integer
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.ReqForUpdate:
+    properties:
+      acl:
+        description: 权限（仅支持open/private）
+        enum:
+        - open
+        - private
+        type: string
+      defaultBranch:
+        description: 默认分支（默认main）
+        type: string
+      desc:
+        description: 仓库描述（最大500字符）
+        maxLength: 500
+        type: string
+      identifier:
+        description: 仓库唯一标识
+        type: string
+      spaceID:
+        description: 空间ID（字符串类型，后续转int）
+        type: integer
+    required:
+    - acl
+    - identifier
+    - spaceID
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.CreateSpaceRequest:
     properties:
@@ -729,6 +760,7 @@ definitions:
     - repo.query_error
     - repo.query_param_error
     - repo.query_success
+    - repo.update_success
     - request.invalid_boolean_parameter
     - request.invalid_content_type
     - request.invalid_integer_parameter
@@ -847,6 +879,7 @@ definitions:
       RepoQueryError: 查询仓库失败
       RepoQueryParamError: Query 参数解析失败.
       RepoQuerySuccess: 查询仓库成功
+      RepoUpdateSuccess: 更新仓库成功
       RequestInvalidBooleanParameter: 参数必须为布尔值.
       RequestInvalidContentType: Content-Type 无效.
       RequestInvalidIntegerParameter: 参数必须为有效的整数.
@@ -964,6 +997,7 @@ definitions:
     - 查询仓库失败
     - Query 参数解析失败.
     - 查询仓库成功
+    - 更新仓库成功
     - 参数必须为布尔值.
     - Content-Type 无效.
     - 参数必须为有效的整数.
@@ -1081,6 +1115,7 @@ definitions:
     - RepoQueryError
     - RepoQueryParamError
     - RepoQuerySuccess
+    - RepoUpdateSuccess
     - RequestInvalidBooleanParameter
     - RequestInvalidContentType
     - RequestInvalidIntegerParameter
@@ -1476,6 +1511,37 @@ paths:
                   $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.Repo'
               type: object
       summary: 获取仓库信息
+      tags:
+      - repos
+    put:
+      consumes:
+      - application/json
+      description: 修改仓库基础信息
+      parameters:
+      - description: 仓库 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 更新仓库所需请求参数
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.ReqForUpdate'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.Repo'
+              type: object
+      summary: 修改仓库基础信息
       tags:
       - repos
   /repos/{id}/diff:

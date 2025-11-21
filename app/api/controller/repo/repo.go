@@ -60,7 +60,13 @@ func (ctl *Controller) Create(c *gin.Context) {
 		return
 	}
 
-	data, err := ctl.repoSvc.Create(logger.GetContextWithLogger(c), reqData)
+	session, ok := req.GetAuthSession(c.Request.Context())
+	if !ok {
+		resp.Unauthorized(c, errors.WithI18nKey(nil, i18n.AuthNoSession))
+		return
+	}
+
+	data, err := ctl.repoSvc.Create(logger.GetContextWithLogger(c), session, reqData)
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.RepoCreateError)
 		resp.InternalError(c, err)
@@ -91,7 +97,7 @@ func (ctl *Controller) Get(c *gin.Context) {
 		return
 	}
 
-	repoID, err := req.PathParamAsPositiveUint(c, req.QueryParamRepoID)
+	repoID, err := req.PathParamAsPositiveUint(c, "id")
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.RepoPathParamError)
 		resp.BadRequest(c, err)
@@ -111,6 +117,70 @@ func (ctl *Controller) Get(c *gin.Context) {
 	}
 
 	resp.OK(c, i18n.RepoQuerySuccess, obj)
+}
+
+// Update 修改仓库基础信息
+// @Summary 修改仓库基础信息
+// @Description 修改仓库基础信息
+// @Tags repos
+// @Accept application/json
+// @Produce application/json
+// @Param id path uint true "仓库 ID"
+// @Param body body repoModel.ReqForUpdate true "更新仓库所需请求参数"
+// @Success 200 {object} resp.ObjectResponse{data=repoModel.Repo} "更新成功"
+// @Error 400 {object} resp.ObjectResponse "参数错误"
+// @Error 404 {object} resp.ObjectResponse "代码库不存在"
+// @Error 500 {object} resp.ObjectResponse "服务器内部错误"
+// @Router /repos/{id} [put]
+func (c *Controller) Update(ctx *gin.Context) {
+
+	var reqBody repoModel.ReqForUpdate
+	var err error
+
+	// 解析 path id
+	repoID, err := req.PathParamAsPositiveUint(ctx, "id")
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RepoPathParamError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
+	// 解析请求体
+	if err = ctx.ShouldBindJSON(&reqBody); err != nil {
+		err = errors.WithI18nKey(err, i18n.RepoBodyParamError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+	// TODO: 获取操作人
+	// session, ok := req.GetAuthSession(ctx.Request.Context())
+	// if !ok {
+	// 	err := errors.WithI18nKey(errors.New("get session failed"), i18n.AuthNoSession)
+	// 	resp.BadRequest(ctx, err)
+	// 	return
+	// }
+	session := &auth.Session{
+		Principal: principal.User{
+			ID:    1,
+			Email: "actor@chandao.com",
+			UID:   "actor",
+		},
+	}
+
+	// 通过仓库 ID 获取仓库
+	repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, repoID)
+	if err != nil {
+		resp.InternalError(ctx, err)
+		return
+	}
+
+	respData, err := c.repoSvc.Update(ctx, &reqBody, *repoOut, session)
+	if err != nil {
+		resp.InternalError(ctx, err)
+		return
+	}
+
+	resp.OK(ctx, i18n.RepoUpdateSuccess, respData)
+
 }
 
 func (ctl *Controller) GetContent(ctx *gin.Context) {

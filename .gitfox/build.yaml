@@ -1,0 +1,51 @@
+version: 1
+kind: pipeline
+spec:
+  options:
+    envs:
+      REGISTRY_HOST: hub.zentao.net
+      IMAGE_REPOSITORY: app/gitfox-community
+  stages:
+    - name: prepare
+      type: ci
+      spec:
+        steps:
+          - name: image tag
+            type: run
+            spec:
+              container: hub.zentao.net/app/debian:11.8-slim
+              script:
+              - image_tag="v2.0-test-$(echo ${GITFOX_BRANCH:-release} | tr '/' '-')-$(date +%Y%m%d)"
+              - echo "APP_IMAGE=${REGISTRY_HOST}/${IMAGE_REPOSITORY}:${image_tag}" >> $GITFOX_CUSTOM_ENV
+          - name: 构建镜像
+            type: run
+            spec:
+              container:
+                image: hub.zentao.net/ci/docker:24.0.8-cli
+              script:
+              - |
+                docker buildx create \
+                    --name=kube \
+                    --driver=kubernetes \
+                    --driver-opt=namespace=quickon-ci,replicas=5,nodeselector="node-role.kubernetes.io/ci=true",rootless=true,image=hub.zentao.net/ci/moby-buildkit:buildx-stable-1-rootless,qemu.install=true,qemu.image=hub.zentao.net/ci/binfmt:qemu-v8.1.5
+              - docker buildx use kube
+              - docker login -u ${{ secrets.get("zentao-registry-docker-username") }} -p ${{ secrets.get("zentao-registry-docker-password") }} hub.zentao.net || sleep 10
+              - docker buildx build --pull --push --platform linux/amd64 --build-arg MIRROR=true --build-arg BUILD_ENV=internal -t ${APP_IMAGE} -f deploy/Dockerfile . || sleep 10
+              - sleep 120
+          - name: 消息通知
+            type: plugin
+            when: failure()
+            spec:
+              inputs:
+                debug: true
+                custom: true
+                token: ${{ secrets.get("xuan_token") }}
+                caller: zenci
+                api: https://gw.easycorp.cn
+                title: 单元测试
+                content: 单元测试执行失败
+                url: ${GITFOX_BUILD_LINK}
+                users:
+                  "0": caiyan
+                  "1": "a509e82a-7484-42c4-91c4-4de68388bb11"
+              name: gitfox-xuanim-plugin
