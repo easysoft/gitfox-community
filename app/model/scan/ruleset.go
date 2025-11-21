@@ -27,6 +27,16 @@ type RuleSetUpdateReq struct {
 	Status string `json:"status,omitempty"`
 }
 
+type RuleSetListReq struct {
+	Name     string `form:"name"`
+	Lang     string `form:"lang"`
+	Tag      string `form:"tag"`
+	Type     string `form:"type"`
+	Status   string `form:"status"`
+	Page     int    `form:"page"`
+	PageSize int    `form:"pageSize"`
+}
+
 type RuleSet struct {
 	ID          int64                   `json:"id"`
 	Name        string                  `json:"name"`
@@ -41,6 +51,4 @@ type RuleSet struct {
 	EditedBy    string                  `json:"editedBy"`
 	EditedDate  *time.Time              `json:"editedDate"` // 允许 NULL，用指针类型
 	Deleted     bool                    `json:"deleted"`
-	RulesCount  int64                   `json:"rulesCount"`
-	Rules       []*Rule                 `json:"rules,omitempty"`
 }

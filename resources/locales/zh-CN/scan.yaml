@@ -10,3 +10,6 @@ ruleSet:
   update_error: "规则集更新失败。"
   list_error: "规则集列表查询失败。"
   list_success: "规则集列表查询成功。"
+  delete_error: "规则集列表删除失败。"
+  delete_success: "规则集列表删除成功。"
+  in_use_error: "规则集已被扫描解决方案使用。"

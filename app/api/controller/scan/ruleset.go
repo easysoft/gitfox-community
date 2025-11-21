@@ -57,6 +57,39 @@ func (c *RuleSetController) Create(ctx *gin.Context) {
 	resp.Created(ctx, i18n.RuleSetCreateSuccess, data)
 }
 
+// List 查询规则集列表
+// @Summary 查询规则集列表
+// @Description 根据过滤条件查询规则集列表，支持分页
+// @Tags scan
+// @Accept application/json
+// @Produce application/json
+// @Success 200 {object} resp.ListResponse{data=[]scanModel.RuleSet} "查询成功"
+// @Error 400 {object} resp.ObjectResponse "参数错误"
+// @Error 500 {object} resp.ObjectResponse "服务器内部错误"
+// @Router /scan/rulesets/list [post]
+func (c *RuleSetController) List(ctx *gin.Context) {
+	var filter scanModel.RuleSetListReq
+	if err := ctx.ShouldBindJSON(&filter); err != nil {
+		err = errors.WithI18nKey(err, i18n.RuleSetQueryParamError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
+	result, err := c.ruleSetSvc.List(logger.GetContextWithLogger(ctx), filter)
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RuleSetListError)
+		resp.InternalError(ctx, err)
+		return
+	}
+
+	resp.ListSuccess(ctx, result.Data,
+		resp.ListArgs{
+			Total:    result.Total,
+			Page:     int64(result.Page),
+			PageSize: int64(result.PageSize),
+		}, i18n.RuleSetListSuccess, nil)
+}
+
 // Get 获取规则集
 // @Summary 获取规则集信息
 // @Description 根据传入的规则集 ID 获取规则集信息
@@ -132,4 +165,32 @@ func (c *RuleSetController) Update(ctx *gin.Context) {
 	}
 
 	resp.OK(ctx, i18n.RuleSetUpdateSuccess, respData)
+}
+
+// Delete 删除规则集
+// @Summary 删除规则集
+// @Description 根据规则集 ID 删除规则集及其关联的规则
+// @Tags scan
+// @Accept application/json
+// @Produce application/json
+// @Param id path uint true "规则集 ID"
+// @Success 200 {object} resp.ObjectResponse "删除成功"
+// @Error 400 {object} resp.ObjectResponse "参数错误"
+// @Error 500 {object} resp.ObjectResponse "服务器内部错误"
+// @Router /scan/rulesets/{id} [delete]
+func (c *RuleSetController) Delete(ctx *gin.Context) {
+	ruleSetID, err := req.PathParamAsPositiveUint(ctx, "id")
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RuleSetPathParamError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
+	if err := c.ruleSetSvc.Delete(logger.GetContextWithLogger(ctx), ruleSetID); err != nil {
+		err = errors.WithI18nKey(err, i18n.RuleSetDeleteError)
+		resp.InternalError(ctx, err)
+		return
+	}
+
+	resp.OK(ctx, i18n.RuleSetDeleteSuccess, nil)
 }
