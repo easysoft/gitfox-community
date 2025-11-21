@@ -149,10 +149,18 @@ func (c *Controller) Update(ctx *gin.Context) {
 		resp.BadRequest(ctx, err)
 		return
 	}
+<<<<<<< HEAD
 
 	session, ok := req.GetAuthSession(ctx.Request.Context())
 	if !ok {
 		resp.Unauthorized(ctx, errors.WithI18nKey(nil, i18n.AuthNoSession))
+=======
+	// TODO: 获取操作人
+	session, ok := req.GetAuthSession(ctx.Request.Context())
+	if !ok {
+		err := errors.WithI18nKey(errors.New("get session failed"), i18n.AuthNoSession)
+		resp.BadRequest(ctx, err)
+>>>>>>> 1543c33 (sync)
 		return
 	}
 
