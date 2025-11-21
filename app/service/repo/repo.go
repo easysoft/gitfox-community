@@ -9,7 +9,6 @@ import (
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/githook"
 	authModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/principal"
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/utils"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
@@ -43,22 +42,10 @@ func NewRepoSvc(gitSvc git.Interface, repoStore repo.Interface, spaceStore space
 	}
 }
 
-func (s *Service) Create(ctx context.Context, req *repoModel.CreateRepoReq) (*repoModel.Repo, error) {
+func (s *Service) Create(ctx context.Context, session *authModel.Session, req *repoModel.CreateRepoReq) (*repoModel.Repo, error) {
 	_, err := s.spaceStore.GetByID(ctx, req.SpaceID)
 	if err != nil {
 		return nil, errors.NotFound.Newf("failed to find the parent space: %v", err)
-	}
-	// session, ok := reqPkg.GetAuthSession(ctx)
-	// if !ok {
-	// 	return nil, errors.SystemErr.Newf("error getting auth session: %w", err)
-	// }
-
-	//TODO : mock session
-	session := &authModel.Session{
-		Principal: principal.User{
-			Email: "actor@chandao.com",
-			UID:   "actor",
-		},
 	}
 
 	gitResp, isEmpty, err := s.createGitRepository(ctx, req, session)
@@ -77,9 +64,17 @@ func (s *Service) Create(ctx context.Context, req *repoModel.CreateRepoReq) (*re
 		DefaultBranch: req.DefaultBranch,
 		Empty:         isEmpty,
 		ACL:           req.ACL,
+		Status: int(constant.RepoStateMigrateGitPush),
 	}
 
-	return s.repoStore.Create(ctx, repo)
+	repoData, err := s.repoStore.Create(ctx, repo)
+	if err != nil {
+		return nil, errors.SystemErr.Newf("failed to create repository in store: %v", err)
+	}
+	// backfil GitURL
+	repoData.GitURL = s.urlProvider.GenerateGITCloneURL(ctx, repoData.Path)
+	repoData.GitSSHURL = s.urlProvider.GenerateGITCloneSSHURL(ctx, repoData.Path)
+	return repoData, nil
 }
 
 func (s *Service) createGitRepository(ctx context.Context, req *repoModel.CreateRepoReq, session *authModel.Session) (*git.CreateRepositoryOutput, bool, error) {

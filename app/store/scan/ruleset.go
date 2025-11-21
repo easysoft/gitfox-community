@@ -2,7 +2,6 @@ package scan
 
 import (
 	"context"
-	"time"
 
 	scanModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
@@ -54,28 +53,18 @@ func (s *RuleSetStore) Update(ctx context.Context, ruleSet *RuleSet, id uint) (*
 // mapToModel 将 RuleSet 转换为 scanModel.RuleSet
 func mapToModel(data RuleSet) *scanModel.RuleSet {
 	return &scanModel.RuleSet{
-		ID:            data.ID,
-		Name:          data.Name,
-		Description:   data.Description,
-		DescriptionEN: data.DescriptionEN,
-		Lang:          data.Lang,
-		LangID:        data.LangID,
-		Tag:           data.Tag,
-		Type:          data.Type,
-		Plugin:        data.Plugin,
-		Status:        data.Status,
-		CreatedBy:     data.CreatedBy,
-		UpdatedBy:     data.UpdatedBy,
-		CreatedAt:     timeToUnix(data.CreatedDate),
-		UpdatedAt:     timeToUnix(data.EditedDate),
-		IsCustom:      data.IsCustom,
+		ID:          data.ID,
+		Name:        data.Name,
+		Desc:        data.Desc,
+		DescEn:      data.DescrEn,
+		Lang:        data.Lang,
+		Tag:         data.Tag,
+		Status:      data.Status,
+		CreatedBy:   data.CreatedBy,
+		CreatedDate: data.CreatedDate,
+		EditedBy:    data.EditedBy,
+		EditedDate:  data.EditedDate,
+		IsCustom:    data.IsCustom,
+		Deleted:     data.Deleted,
 	}
-}
-
-// timeToUnix 将 time.Time 指针转换为 Unix 时间戳（毫秒）
-func timeToUnix(t *time.Time) int64 {
-	if t == nil {
-		return 0
-	}
-	return t.UnixMilli()
 }

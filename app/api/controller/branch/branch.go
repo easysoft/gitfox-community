@@ -3,9 +3,7 @@ package branch
 import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
 	branchModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/branch"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/principal"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/branch"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
@@ -48,14 +46,13 @@ func (c *Controller) Create(ctx *gin.Context) {
 		resp.BadRequest(ctx, err)
 		return
 	}
-	// TODO: 获取操作人
-	session := &auth.Session{
-		Principal: principal.User{
-			ID:    1,
-			Email: "actor@chandao.com",
-			UID:   "actor",
-		},
+
+	session, ok := req.GetAuthSession(ctx.Request.Context())
+	if !ok {
+		resp.Unauthorized(ctx, errors.WithI18nKey(nil, i18n.AuthNoSession))
+		return
 	}
+
 	// 通过仓库 ID 获取仓库
 	repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, reqBody.RepoID)
 	if err != nil {
@@ -108,14 +105,12 @@ func (c *Controller) List(ctx *gin.Context) {
 	// 设置默认值
 	req.SetDefaults(&reqQuery)
 
-	// TODO: 获取操作人
-	session := &auth.Session{
-		Principal: principal.User{
-			ID:    1,
-			Email: "actor@chandao.com",
-			UID:   "actor",
-		},
+	session, ok := req.GetAuthSession(ctx.Request.Context())
+	if !ok {
+		resp.Unauthorized(ctx, errors.WithI18nKey(nil, i18n.AuthNoSession))
+		return
 	}
+
 	// 通过仓库 ID 获取仓库
 	repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, reqQuery.RepoID)
 	if err != nil {
@@ -157,14 +152,12 @@ func (c *Controller) ListPrefixes(ctx *gin.Context) {
 		return
 	}
 
-	// TODO: 获取操作人
-	session := &auth.Session{
-		Principal: principal.User{
-			ID:    1,
-			Email: "actor@chandao.com",
-			UID:   "actor",
-		},
+	session, ok := req.GetAuthSession(ctx.Request.Context())
+	if !ok {
+		resp.Unauthorized(ctx, errors.WithI18nKey(nil, i18n.AuthNoSession))
+		return
 	}
+
 	// 通过仓库 ID 获取仓库
 	repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, reqQuery.RepoID)
 	if err != nil {

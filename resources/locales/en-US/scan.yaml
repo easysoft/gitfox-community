@@ -1,0 +1,12 @@
+ruleSet:
+  path_param_error: "Path param parsing failed."
+  query_param_error: "Query param parsing failed."
+  body_param_error: "Body param parsing failed."
+  create_success: "RuleSet created successfully."
+  create_error: "RuleSet created failed."
+  query_success: "RuleSet details queried successfully."
+  query_error: "Failed to query ruleSet details."
+  update_success: "RuleSet updated successfully."
+  update_error: "Failed to update ruleSet."
+  list_error: "Failed to query ruleSet list."
+  list_success: "Query the ruleSet list successfully."
