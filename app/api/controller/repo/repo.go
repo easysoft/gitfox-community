@@ -37,7 +37,7 @@ func NewRepoController(repoSvc repo.Interface, urlProvider urlPkg.Provider, gitP
 // @Accept application/json
 // @Produce application/json
 // @Param body body repoModel.CreateRepoReq true "创建仓库请求参数"
-// @Success 201 {object} resp.ObjectResponse{data=repoModel.CreateRepoResp} "创建成功（返回仓库核心信息）"
+// @Success 201 {object} resp.ObjectResponse{data=repoModel.Repo} "创建成功（返回仓库核心信息）"
 // @Error 400 {object} resp.ObjectResponse "参数错误（如identifier格式非法、spaceID为空等）"
 // @Error 404 {object} resp.ObjectResponse "空间不存在（传入的spaceID对应的空间未找到）"
 // @Error 409 {object} resp.ObjectResponse "仓库标识冲突（同一空间内identifier已存在）"

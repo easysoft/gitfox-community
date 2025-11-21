@@ -8,7 +8,6 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/paths"
 
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/space"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
 	"gorm.io/gorm"
 )
@@ -16,14 +15,12 @@ import (
 var _ Interface = (*Store)(nil)
 
 type Store struct {
-	db         *gorm.DB
-	spaceStore space.Interface
+	db *gorm.DB
 }
 
-func NewRepoStore(db *gorm.DB, spaceStore space.Interface) *Store {
+func NewRepoStore(db *gorm.DB) *Store {
 	return &Store{
-		db:         db,
-		spaceStore: spaceStore,
+		db: db,
 	}
 }
 
@@ -36,10 +33,6 @@ func (s *Store) FindByRef(ctx context.Context, ref string) (*repoModel.Repo, err
 }
 
 func (s *Store) Create(ctx context.Context, repo *Repository) (*repoModel.Repo, error) {
-	_, err := s.spaceStore.GetByID(ctx, repo.SpaceID)
-	if err != nil {
-		return nil, database.ProcessSQLErrorf(ctx, err)
-	}
 	if err := s.db.WithContext(ctx).Create(&repo).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
