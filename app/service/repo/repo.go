@@ -53,7 +53,6 @@ func (s *Service) Create(ctx context.Context, session *auth.Session, params *rep
 		return nil, errors.SystemErr.Newf("error creating repository on git: %v", err)
 	}
 
-	
 	repo := &repo.Repository{
 		Mutex:         0,
 		SpaceID:       params.SpaceID,
@@ -67,7 +66,13 @@ func (s *Service) Create(ctx context.Context, session *auth.Session, params *rep
 		ACL:           params.ACL,
 	}
 
-	return s.repoStore.Create(ctx, repo)
+	repoObj, err := s.repoStore.Create(ctx, repo)
+	if err != nil {
+		return nil, err
+	}
+	repoObj.GitSSHURL = s.urlProvider.GenerateGITCloneSSHURL(ctx, repoObj.Path)
+	repoObj.GitURL = s.urlProvider.GenerateGITCloneURL(ctx, repoObj.Path)
+	return repoObj, nil
 }
 
 func (s *Service) createGitRepository(ctx context.Context, req *repoModel.CreateRepoReq, session *auth.Session) (*git.CreateRepositoryOutput, bool, error) {
@@ -217,6 +222,9 @@ func (s *Service) GetRepo(ctx context.Context, repoRef string, allowedStates []c
 	if len(allowedStates) > 0 && !slice.Contain(allowedStates, constant.RepoState(repo.Status)) {
 		return nil, errors.BadRequest.New("Repository is not ready to use.")
 	}
+	// 回填 gitURL 和 gitSSHURL
+	repo.GitURL = s.urlProvider.GenerateGITCloneURL(ctx, repo.Path)
+	repo.GitSSHURL = s.urlProvider.GenerateGITCloneSSHURL(ctx, repo.Path)
 
 	return repo, nil
 }
@@ -230,8 +238,10 @@ func (s *Service) GetByID(ctx context.Context, session *auth.Session, id uint) (
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to find repository: %d", id)
 	}
+	// 回填 gitURL 和 gitSSHURL
+	repo.GitURL = s.urlProvider.GenerateGITCloneURL(ctx, repo.Path)
+	repo.GitSSHURL = s.urlProvider.GenerateGITCloneSSHURL(ctx, repo.Path)
 
-	// _, err = s.GetRepoCheckAccess(ctx, session, repo.Ref, []constant.Permission{constant.PermissionRepoRead})
 	return repo, nil
 }
 

@@ -14,8 +14,8 @@ func registerRepoRoutes(r *gin.RouterGroup, controller *Controller) {
 		repos.POST("/", controller.Repo.Create)
 		reposWithID := repos.Group(":id")
 		{
-			reposWithID.GET("", controller.Repo.Get)
-			reposWithID.PUT("", controller.Repo.Update)
+			reposWithID.GET("/", controller.Repo.Get)
+			reposWithID.PUT("/", controller.Repo.Update)
 			reposWithID.POST("/diff", controller.Repo.GetDiff)
 			reposWithID.GET("/paths", controller.Repo.GetPaths)
 			reposWithID.POST("/paths/details", controller.Repo.GetPathsDetails)
