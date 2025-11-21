@@ -8,13 +8,13 @@ import (
 	"time"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/githook"
-	authModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
+
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/utils"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/space"
-
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
@@ -42,42 +42,34 @@ func NewRepoSvc(gitSvc git.Interface, repoStore repo.Interface, spaceStore space
 	}
 }
 
-func (s *Service) Create(ctx context.Context, session *authModel.Session, req *repoModel.CreateRepoReq) (*repoModel.Repo, error) {
-	_, err := s.spaceStore.GetByID(ctx, req.SpaceID)
+func (s *Service) Create(ctx context.Context, session *auth.Session, params *repoModel.CreateRepoReq) (*repoModel.Repo, error) {
+	_, err := s.spaceStore.GetByID(ctx, params.SpaceID)
 	if err != nil {
 		return nil, errors.NotFound.Newf("failed to find the parent space: %v", err)
 	}
 
-	gitResp, isEmpty, err := s.createGitRepository(ctx, req, session)
+	gitResp, isEmpty, err := s.createGitRepository(ctx, params, session)
 	if err != nil {
 		return nil, errors.SystemErr.Newf("error creating repository on git: %v", err)
 	}
 
 	repo := &repo.Repository{
 		Mutex:         0,
-		SpaceID:       req.SpaceID,
-		Identifier:    req.Identifier,
+		SpaceID:       params.SpaceID,
+		Identifier:    params.Identifier,
 		GitUID:        gitResp.UID,
-		Desc:          req.Desc,
-		CreatedBy:     session.Principal.UID,
-		ForkID:        req.ForkID,
-		DefaultBranch: req.DefaultBranch,
+		Desc:          params.Desc,
+		CreatedBy:     session.User.Account,
+		ForkID:        params.ForkID,
+		DefaultBranch: params.DefaultBranch,
 		Empty:         isEmpty,
-		ACL:           req.ACL,
-		Status: int(constant.RepoStateMigrateGitPush),
+		ACL:           params.ACL,
 	}
 
-	repoData, err := s.repoStore.Create(ctx, repo)
-	if err != nil {
-		return nil, errors.SystemErr.Newf("failed to create repository in store: %v", err)
-	}
-	// backfil GitURL
-	repoData.GitURL = s.urlProvider.GenerateGITCloneURL(ctx, repoData.Path)
-	repoData.GitSSHURL = s.urlProvider.GenerateGITCloneSSHURL(ctx, repoData.Path)
-	return repoData, nil
+	return s.repoStore.Create(ctx, repo)
 }
 
-func (s *Service) createGitRepository(ctx context.Context, req *repoModel.CreateRepoReq, session *authModel.Session) (*git.CreateRepositoryOutput, bool, error) {
+func (s *Service) createGitRepository(ctx context.Context, req *repoModel.CreateRepoReq, session *auth.Session) (*git.CreateRepositoryOutput, bool, error) {
 	var (
 		err     error
 		content []byte
@@ -117,7 +109,7 @@ func (s *Service) createGitRepository(ctx context.Context, req *repoModel.Create
 		ctx,
 		s.urlProvider.GetInternalAPIURL(ctx),
 		0,
-		session.Principal.ID,
+		session.User.ID,
 		true,
 		true,
 	)
@@ -127,20 +119,20 @@ func (s *Service) createGitRepository(ctx context.Context, req *repoModel.Create
 	now := time.Now()
 	resp, err := s.gitSvc.CreateRepository(ctx, &git.CreateRepositoryParams{
 		Actor: git.Identity{
-			Name:  session.Principal.UID,
-			Email: session.Principal.Email,
+			Name:  session.User.Account,
+			Email: session.User.Email,
 		},
 		EnvVars:       envVars,
 		DefaultBranch: req.DefaultBranch,
 		Files:         files,
 		Author: &git.Identity{
-			Name:  session.Principal.UID,
-			Email: session.Principal.Email,
+			Name:  session.User.Account,
+			Email: session.User.Email,
 		},
 		AuthorDate: &now,
 		Committer: &git.Identity{
-			Name:  session.Principal.UID,
-			Email: session.Principal.Email,
+			Name:  session.User.Account,
+			Email: session.User.Email,
 		},
 		CommitterDate: &now,
 	})
@@ -150,7 +142,7 @@ func (s *Service) createGitRepository(ctx context.Context, req *repoModel.Create
 	return resp, len(files) == 0, nil
 }
 
-func (s *Service) Update(ctx context.Context, req *repoModel.ReqForUpdate, oldRepo repoModel.Repo, session *authModel.Session) (*repoModel.Repo, error) {
+func (s *Service) Update(ctx context.Context, req *repoModel.ReqForUpdate, oldRepo repoModel.Repo, session *auth.Session) (*repoModel.Repo, error) {
 	// 调用 git 命令更新默认分支
 	if req.DefaultBranch != "" {
 		writeParams, err := utils.CreateRPCInternalWriteParams(ctx, s.urlProvider, session, &oldRepo)
@@ -197,7 +189,7 @@ func (s *Service) Update(ctx context.Context, req *repoModel.ReqForUpdate, oldRe
 	return updatedRepo, nil
 }
 
-func (s *Service) GetRepoCheckAccess(ctx context.Context, session *authModel.Session, repoRef string, reqPermission []constant.Permission) (*repoModel.Repo, error) {
+func (s *Service) GetRepoCheckAccess(ctx context.Context, session *auth.Session, repoRef string, reqPermission []constant.Permission) (*repoModel.Repo, error) {
 
 	// get repo
 	repo, err := s.GetRepo(ctx, repoRef, []constant.RepoState{constant.RepoStateActive, constant.RepoStateMigrateGitPush})
@@ -228,7 +220,7 @@ func (s *Service) GetRepo(ctx context.Context, repoRef string, allowedStates []c
 	return repo, nil
 }
 
-func (s *Service) GetByID(ctx context.Context, session *authModel.Session, id uint) (*repoModel.Repo, error) {
+func (s *Service) GetByID(ctx context.Context, session *auth.Session, id uint) (*repoModel.Repo, error) {
 	if id < 1 {
 		return nil, errors.BadRequest.New("A valid repository id must be provided.")
 	}

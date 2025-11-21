@@ -3,9 +3,7 @@ package commit
 import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
 	commitModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/commit"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/principal"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/commit"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
@@ -39,9 +37,15 @@ func NewController(commitService commit.Interface, repoService repo.Interface) *
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
 // @Router /commits [post]
 func (c *Controller) Create(ctx *gin.Context) {
-
 	var reqBody commitModel.ReqForCreate
 	var err error
+
+	session, ok := req.GetAuthSession(ctx.Request.Context())
+	if !ok {
+		err = errors.WithI18nKey(errors.New("session not found"), i18n.AuthNoSession)
+		resp.BadRequest(ctx, err)
+		return
+	}
 
 	// 解析请求体
 	if err = ctx.ShouldBindJSON(&reqBody); err != nil {
@@ -50,14 +54,6 @@ func (c *Controller) Create(ctx *gin.Context) {
 		return
 	}
 
-	// TODO: 获取操作人
-	session := &auth.Session{
-		Principal: principal.User{
-			ID:    1,
-			Email: "actor@chandao.com",
-			UID:   "actor",
-		},
-	}
 	// 通过仓库 ID 获取仓库
 	repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, reqBody.RepoID)
 	if err != nil {
@@ -96,9 +92,15 @@ func (c *Controller) Create(ctx *gin.Context) {
 // @Failure 500 {object} resp.ListResponse "服务器错误"
 // @Router /commits/list [post]
 func (c *Controller) List(ctx *gin.Context) {
-
 	var reqQuery commitModel.ReqFilter
 	var err error
+	session, ok := req.GetAuthSession(ctx.Request.Context())
+	if !ok {
+		err = errors.WithI18nKey(errors.New("session not found"), i18n.AuthNoSession)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
 	if err = ctx.ShouldBindJSON(&reqQuery); err != nil {
 		err = errors.WithI18nKey(err, i18n.CommitQueryParamError)
 		resp.BadRequest(ctx, err)
@@ -109,14 +111,6 @@ func (c *Controller) List(ctx *gin.Context) {
 	// 设置默认值
 	req.SetDefaults(&reqQuery)
 
-	// TODO: 获取操作人
-	session := &auth.Session{
-		Principal: principal.User{
-			ID:    1,
-			Email: "actor@chandao.com",
-			UID:   "actor",
-		},
-	}
 	// 通过仓库 ID 获取仓库
 	repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, reqQuery.RepoID)
 	if err != nil {
@@ -151,32 +145,30 @@ func (c *Controller) List(ctx *gin.Context) {
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
 // @Router /commits [get]
 func (c *Controller) Get(ctx *gin.Context) {
-
-	var req commitModel.ReqForGet
+	var params commitModel.ReqForGet
 	var err error
-	if err = ctx.ShouldBindQuery(&req); err != nil {
+	session, ok := req.GetAuthSession(ctx.Request.Context())
+	if !ok {
+		err = errors.WithI18nKey(errors.New("session not found"), i18n.AuthNoSession)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
+	if err = ctx.ShouldBindQuery(&params); err != nil {
 		err = errors.WithI18nKey(err, i18n.CommitQueryParamError)
 		resp.BadRequest(ctx, err)
 		return
 	}
 
-	// TODO: 获取操作人
-	session := &auth.Session{
-		Principal: principal.User{
-			ID:    1,
-			Email: "actor@chandao.com",
-			UID:   "actor",
-		},
-	}
 	// 通过仓库 ID 获取仓库
-	repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, req.RepoID)
+	repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, params.RepoID)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return
 	}
 
 	// 调用 service 层获取提交详情
-	respData, err := c.commitSvc.Get(ctx.Request.Context(), req.SHA, *repoOut)
+	respData, err := c.commitSvc.Get(ctx.Request.Context(), params.SHA, *repoOut)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return
@@ -196,9 +188,15 @@ func (c *Controller) Get(ctx *gin.Context) {
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
 // @Router /commits/divergence [post]
 func (c *Controller) GetDivergence(ctx *gin.Context) {
-
 	var reqBody commitModel.ReqForDivergence
 	var err error
+
+	session, ok := req.GetAuthSession(ctx.Request.Context())
+	if !ok {
+		err = errors.WithI18nKey(errors.New("session not found"), i18n.AuthNoSession)
+		resp.BadRequest(ctx, err)
+		return
+	}
 
 	// 解析请求体
 	if err = ctx.ShouldBindJSON(&reqBody); err != nil {
@@ -207,14 +205,6 @@ func (c *Controller) GetDivergence(ctx *gin.Context) {
 		return
 	}
 
-	// TODO: 获取操作人
-	session := &auth.Session{
-		Principal: principal.User{
-			ID:    1,
-			Email: "actor@chandao.com",
-			UID:   "actor",
-		},
-	}
 	// 通过仓库 ID 获取仓库
 	repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, reqBody.RepoID)
 	if err != nil {
@@ -244,11 +234,16 @@ func (c *Controller) GetDivergence(ctx *gin.Context) {
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
 // @Router /commits/diff [post]
 func (c *Controller) GetDiff(ctx *gin.Context) {
-
 	log := logger.GetLogger(ctx.Request.Context())
-
 	var reqBody commitModel.ReqForGet
 	var err error
+
+	session, ok := req.GetAuthSession(ctx.Request.Context())
+	if !ok {
+		err = errors.WithI18nKey(errors.New("session not found"), i18n.AuthNoSession)
+		resp.BadRequest(ctx, err)
+		return
+	}
 
 	// 解析请求体
 	if err = ctx.ShouldBindJSON(&reqBody); err != nil {
@@ -257,14 +252,6 @@ func (c *Controller) GetDiff(ctx *gin.Context) {
 		return
 	}
 
-	// TODO: 获取操作人
-	session := &auth.Session{
-		Principal: principal.User{
-			ID:    1,
-			Email: "actor@chandao.com",
-			UID:   "actor",
-		},
-	}
 	// 通过仓库 ID 获取仓库
 	repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, reqBody.RepoID)
 	if err != nil {

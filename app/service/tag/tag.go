@@ -50,7 +50,7 @@ func (s *Service) Create(
 		Name:        req.Name,
 		Target:      req.Source,
 		Message:     req.Message,
-		Tagger:      &git.Identity{Name: session.Principal.UID, Email: session.Principal.Email}, // 从上下文中获取
+		Tagger:      &git.Identity{Name: session.User.Account, Email: session.User.Email}, // 从上下文中获取
 		TaggerDate:  &now,
 	})
 	if err != nil {

@@ -3,9 +3,7 @@ package branch
 import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
 	branchModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/branch"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/principal"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/branch"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
@@ -38,9 +36,15 @@ func NewController(branchService branch.Interface, repoService repo.Interface) *
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
 // @Router /branches [post]
 func (c *Controller) Create(ctx *gin.Context) {
-
 	var reqBody branchModel.ReqForCreate
 	var err error
+
+	session, ok := req.GetAuthSession(ctx.Request.Context())
+	if !ok {
+		err = errors.WithI18nKey(errors.New("session not found"), i18n.AuthNoSession)
+		resp.BadRequest(ctx, err)
+		return
+	}
 
 	// 解析请求体
 	if err = ctx.ShouldBindJSON(&reqBody); err != nil {
@@ -48,14 +52,7 @@ func (c *Controller) Create(ctx *gin.Context) {
 		resp.BadRequest(ctx, err)
 		return
 	}
-	// TODO: 获取操作人
-	session := &auth.Session{
-		Principal: principal.User{
-			ID:    1,
-			Email: "actor@chandao.com",
-			UID:   "actor",
-		},
-	}
+
 	// 通过仓库 ID 获取仓库
 	repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, reqBody.RepoID)
 	if err != nil {
@@ -95,9 +92,15 @@ func (c *Controller) Create(ctx *gin.Context) {
 // @Failure 500 {object} resp.ListResponse "服务器错误"
 // @Router /branches/list [post]
 func (c *Controller) List(ctx *gin.Context) {
-
 	var reqQuery branchModel.ReqFilter
 	var err error
+	session, ok := req.GetAuthSession(ctx.Request.Context())
+	if !ok {
+		err = errors.WithI18nKey(errors.New("session not found"), i18n.AuthNoSession)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
 	if err = ctx.ShouldBindJSON(&reqQuery); err != nil {
 		err = errors.WithI18nKey(err, i18n.BranchQueryParamError)
 		resp.BadRequest(ctx, err)
@@ -108,14 +111,6 @@ func (c *Controller) List(ctx *gin.Context) {
 	// 设置默认值
 	req.SetDefaults(&reqQuery)
 
-	// TODO: 获取操作人
-	session := &auth.Session{
-		Principal: principal.User{
-			ID:    1,
-			Email: "actor@chandao.com",
-			UID:   "actor",
-		},
-	}
 	// 通过仓库 ID 获取仓库
 	repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, reqQuery.RepoID)
 	if err != nil {
@@ -148,23 +143,21 @@ func (c *Controller) List(ctx *gin.Context) {
 // @Failure 500 {object} resp.ListResponse "服务器错误"
 // @Router /branches/prefixes [get]
 func (c *Controller) ListPrefixes(ctx *gin.Context) {
-
 	var reqQuery branchModel.ReqFilter
 	var err error
+	session, ok := req.GetAuthSession(ctx.Request.Context())
+	if !ok {
+		err = errors.WithI18nKey(errors.New("session not found"), i18n.AuthNoSession)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
 	if err = ctx.ShouldBindQuery(&reqQuery); err != nil {
 		err = errors.WithI18nKey(err, i18n.BranchQueryParamError)
 		resp.BadRequest(ctx, err)
 		return
 	}
 
-	// TODO: 获取操作人
-	session := &auth.Session{
-		Principal: principal.User{
-			ID:    1,
-			Email: "actor@chandao.com",
-			UID:   "actor",
-		},
-	}
 	// 通过仓库 ID 获取仓库
 	repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, reqQuery.RepoID)
 	if err != nil {

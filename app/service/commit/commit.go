@@ -78,7 +78,7 @@ func (s *Service) Create(
 		Branch:        req.Branch,
 		NewBranch:     req.NewBranch,
 		Actions:       actions,
-		Committer:     &git.Identity{Name: session.Principal.UID, Email: session.Principal.Email},
+		Committer:     &git.Identity{Name: session.User.Account, Email: session.User.Email},
 		CommitterDate: &now,
 		Author:        &git.Identity{Name: req.Author.Name, Email: req.Author.Email},
 		AuthorDate:    &now,

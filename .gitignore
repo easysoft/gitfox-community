@@ -37,3 +37,6 @@ configs/*local.*
 
 # 二进制文件目录
 bin/*
+
+# 本地测试文件
+cmd/cli/*
