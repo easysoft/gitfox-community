@@ -34,18 +34,20 @@ func (s *tokensStore) GetByID(ctx context.Context, id int64) (*Token, error) {
 }
 
 func (s *tokensStore) CreateUserPAT(ctx context.Context, user *principal.User, tokenIdentifier string, lifetime *time.Duration) (*auth.Token, error) {
-	issuedAt := time.Now()
-
-	var expiresAt time.Time
-	if lifetime != nil {
-		expiresAt = issuedAt.Add(*lifetime)
-	}
 	token := &Token{
 		Account:    user.Account,
 		Type:       string(constant.TokenTypePAT),
 		Identifier: tokenIdentifier,
-		ExpiresAt:  &expiresAt,
 	}
+
+	// 如果提供了 lifetime，则设置过期时间
+	if lifetime != nil {
+		expiresDate := time.Now().Add(*lifetime)
+		token.ExpiresDate = &expiresDate
+	}
+	// 否则 ExpiresDate 保持为 nil，表示永不过期
+	// CreatedDate 会由 BeforeCreate 钩子自动设置
+
 	if err := s.db.WithContext(ctx).Create(token).Error; err != nil {
 		return nil, errors.DBError.Wrapf(err, "create user pat token for user %d", user.ID)
 	}
@@ -54,18 +56,18 @@ func (s *tokensStore) CreateUserPAT(ctx context.Context, user *principal.User, t
 }
 
 func (s *tokensStore) CreateAppPAT(ctx context.Context, user *principal.User, tokenIdentifier string, lifetime *time.Duration) (*auth.Token, error) {
-	issuedAt := time.Now()
-
-	var expiresAt time.Time
-	if lifetime != nil {
-		expiresAt = issuedAt.Add(*lifetime)
-	}
 	token := &Token{
 		Account:    user.Account,
 		Type:       string(constant.TokenTypeApp),
 		Identifier: tokenIdentifier,
-		ExpiresAt:  &expiresAt,
 	}
+
+	// 如果提供了 lifetime，则设置过期时间
+	if lifetime != nil {
+		expiresDate := time.Now().Add(*lifetime)
+		token.ExpiresDate = &expiresDate
+	}
+
 	if err := s.db.WithContext(ctx).Create(token).Error; err != nil {
 		return nil, errors.DBError.Wrapf(err, "create app pat token for user %s", user.Account)
 	}
