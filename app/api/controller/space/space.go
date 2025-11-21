@@ -64,6 +64,7 @@ func (ctl *SpaceController) Create(c *gin.Context) {
 // @Param name query string false "空间名称（模糊查询）"
 // @Param permission query string false "空间权限（open-私有，private-公开）" Enums(open, private)
 // @Param owner query string false "负责人"
+// @Param ids query []uint false "空间ID列表（用于批量查询）"
 // @Param page query int false "页码（默认1）" default(1) minimum(1)
 // @Param pageSize query int false "每页条数（默认20）" default(20) minimum(1) maximum(100)
 // @Success 200 {object} resp.ListResponse{data=[]space.SpaceResponse} "查询成功"
@@ -71,15 +72,15 @@ func (ctl *SpaceController) Create(c *gin.Context) {
 // @Failure 500 {object} resp.ListResponse "服务器错误"
 // @Router /spaces [get]
 func (ctl *SpaceController) List(c *gin.Context) {
-	var req space.ListSpaceFilter
+	var requestData space.ListSpaceFilter
 	var err error
-	if err = c.ShouldBindQuery(&req); err != nil {
+	if err = c.ShouldBindQuery(&requestData); err != nil {
 		err = errors.WithI18nKey(err, i18n.SpaceBodyParamError)
 		resp.BadRequest(c, err)
 		return
 	}
 
-	spaceObj, err := ctl.spaceSvc.List(logger.GetContextWithLogger(c), req)
+	spaceObj, err := ctl.spaceSvc.List(logger.GetContextWithLogger(c), requestData)
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.SpaceListError)
 		resp.InternalError(c, err)
