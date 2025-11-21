@@ -50,6 +50,66 @@ func (s *RuleSetStore) Update(ctx context.Context, ruleSet *RuleSet, id uint) (*
 	return mapToModel(updated), nil
 }
 
+// Delete 软删除规则集及其关联的规则记录
+func (s *RuleSetStore) Delete(ctx context.Context, id uint) error {
+	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		// 软删除规则集
+		if err := tx.Model(&RuleSet{}).Where("id = ?", id).Update("deleted", true).Error; err != nil {
+			return database.ProcessSQLErrorf(ctx, err)
+		}
+
+		// 软删除关联表中的记录
+		if err := tx.Model(&RuleSetRules{}).Where("ruleSetID = ?", id).Update("deleted", true).Error; err != nil {
+			return database.ProcessSQLErrorf(ctx, err)
+		}
+
+		return nil
+	})
+}
+
+// IsUsedBySolution 检查规则集是否被扫描方案使用
+func (s *RuleSetStore) IsUsedBySolution(ctx context.Context, id uint) (bool, error) {
+	var count int64
+	err := s.db.WithContext(ctx).Model(&SolutionRuleSets{}).
+		Where("ruleSetID = ? AND deleted = ?", id, false).
+		Count(&count).Error
+	if err != nil {
+		return false, database.ProcessSQLErrorf(ctx, err)
+	}
+	return count > 0, nil
+}
+
+// List 查询规则集列表（支持分页和过滤）
+func (s *RuleSetStore) List(ctx context.Context, filter scanModel.RuleSetListReq) (*database.PageResult[*RuleSet], error) {
+	tx := s.db.WithContext(ctx).Model(&RuleSet{}).Where("deleted = ?", false)
+
+	// 过滤条件
+	if filter.Name != "" {
+		tx = tx.Where("LOWER(name) LIKE LOWER(?)", "%"+filter.Name+"%")
+	}
+	if filter.Lang != "" {
+		tx = tx.Where("lang = ?", filter.Lang)
+	}
+	if filter.Tag != "" {
+		tx = tx.Where("tag = ?", filter.Tag)
+	}
+	if filter.Type != "" {
+		tx = tx.Where("type = ?", filter.Type)
+	}
+	if filter.Status != "" {
+		tx = tx.Where("status = ?", filter.Status)
+	}
+
+	// 分页查询
+	var ruleSets []*RuleSet
+	pageResult, err := database.PaginateDefault(ctx, tx, filter.Page, filter.PageSize, &ruleSets)
+	if err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
+	}
+
+	return pageResult, nil
+}
+
 // mapToModel 将 RuleSet 转换为 scanModel.RuleSet
 func mapToModel(data RuleSet) *scanModel.RuleSet {
 	return &scanModel.RuleSet{

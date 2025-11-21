@@ -7,6 +7,9 @@ import (
 	authModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
 	scanModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
 	scanStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/scan"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 )
 
 var _ IRuleSet = (*RuleSetService)(nil)
@@ -73,4 +76,51 @@ func (s *RuleSetService) Update(ctx context.Context, session *authModel.Session,
 	}
 
 	return s.ruleSetStore.Update(ctx, ruleSet, id)
+}
+
+func (s *RuleSetService) Delete(ctx context.Context, id uint) error {
+	// 检查规则集是否被扫描方案使用
+	isUsed, err := s.ruleSetStore.IsUsedBySolution(ctx, id)
+	if err != nil {
+		return err
+	}
+	if isUsed {
+		return errors.WithI18nKey(nil, i18n.RuleSetInUseError)
+	}
+
+	return s.ruleSetStore.Delete(ctx, id)
+}
+
+func (s *RuleSetService) List(ctx context.Context, filter scanModel.RuleSetListReq) (*database.PageResult[*scanModel.RuleSet], error) {
+	storeResult, err := s.ruleSetStore.List(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	// 转换 store 层数据为 model 层数据
+	modelData := make([]*scanModel.RuleSet, 0, len(storeResult.Data))
+	for _, item := range storeResult.Data {
+		modelData = append(modelData, &scanModel.RuleSet{
+			ID:          item.ID,
+			Name:        item.Name,
+			Desc:        item.Desc,
+			DescEn:      item.DescrEn,
+			Lang:        item.Lang,
+			Tag:         item.Tag,
+			IsCustom:    item.IsCustom,
+			Status:      item.Status,
+			CreatedBy:   item.CreatedBy,
+			CreatedDate: item.CreatedDate,
+			EditedBy:    item.EditedBy,
+			EditedDate:  item.EditedDate,
+			Deleted:     item.Deleted,
+		})
+	}
+
+	return &database.PageResult[*scanModel.RuleSet]{
+		Data:     modelData,
+		Total:    storeResult.Total,
+		Page:     storeResult.Page,
+		PageSize: storeResult.PageSize,
+	}, nil
 }

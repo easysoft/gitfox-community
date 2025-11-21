@@ -10,3 +10,6 @@ ruleSet:
   update_error: "Failed to update ruleSet."
   list_error: "Failed to query ruleSet list."
   list_success: "Query the ruleSet list successfully."
+  delete_error: "Failed to delete ruleSet."
+  delete_success: "RuleSet delete successfully."
+  in_use_error: "RuleSet is being used by scan solution."
