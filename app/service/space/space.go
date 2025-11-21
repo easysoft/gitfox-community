@@ -6,7 +6,9 @@ import (
 	"strings"
 
 	spaceModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/space"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/space"
+
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 )
@@ -14,6 +16,7 @@ import (
 type Service struct {
 	// 依赖的存储接口等，可以在这里添加
 	spaceStore space.Interface
+	repoStore  repo.Interface
 }
 
 // NewService 创建 SpaceService 实例
