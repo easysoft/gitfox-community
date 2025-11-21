@@ -13,7 +13,7 @@ type IRuleSet interface {
 	Update(ctx context.Context, ruleSet *RuleSet, id uint) (*scanModel.RuleSet, error)
 	Delete(ctx context.Context, id uint) error
 	IsUsedBySolution(ctx context.Context, id uint) (bool, error)
-	List(ctx context.Context, filter scanModel.RuleSetListReq) (*database.PageResult[*RuleSet], error)
+	List(ctx context.Context, filter scanModel.RuleSetListReq) (*database.PageResult[*scanModel.RuleSet], error)
 }
 
 type IRule interface {

@@ -80,7 +80,7 @@ func (s *RuleSetStore) IsUsedBySolution(ctx context.Context, id uint) (bool, err
 }
 
 // List 查询规则集列表（支持分页和过滤）
-func (s *RuleSetStore) List(ctx context.Context, filter scanModel.RuleSetListReq) (*database.PageResult[*RuleSet], error) {
+func (s *RuleSetStore) List(ctx context.Context, filter scanModel.RuleSetListReq) (*database.PageResult[*scanModel.RuleSet], error) {
 	tx := s.db.WithContext(ctx).Model(&RuleSet{}).Where("deleted = ?", false)
 
 	// 过滤条件
@@ -107,7 +107,18 @@ func (s *RuleSetStore) List(ctx context.Context, filter scanModel.RuleSetListReq
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
 
-	return pageResult, nil
+	// 转换为 model 层数据
+	modelData := make([]*scanModel.RuleSet, 0, len(pageResult.Data))
+	for _, item := range pageResult.Data {
+		modelData = append(modelData, mapToModel(*item))
+	}
+
+	return &database.PageResult[*scanModel.RuleSet]{
+		Data:     modelData,
+		Total:    pageResult.Total,
+		Page:     pageResult.Page,
+		PageSize: pageResult.PageSize,
+	}, nil
 }
 
 // mapToModel 将 RuleSet 转换为 scanModel.RuleSet

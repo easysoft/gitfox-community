@@ -92,35 +92,5 @@ func (s *RuleSetService) Delete(ctx context.Context, id uint) error {
 }
 
 func (s *RuleSetService) List(ctx context.Context, filter scanModel.RuleSetListReq) (*database.PageResult[*scanModel.RuleSet], error) {
-	storeResult, err := s.ruleSetStore.List(ctx, filter)
-	if err != nil {
-		return nil, err
-	}
-
-	// 转换 store 层数据为 model 层数据
-	modelData := make([]*scanModel.RuleSet, 0, len(storeResult.Data))
-	for _, item := range storeResult.Data {
-		modelData = append(modelData, &scanModel.RuleSet{
-			ID:          item.ID,
-			Name:        item.Name,
-			Desc:        item.Desc,
-			DescEn:      item.DescrEn,
-			Lang:        item.Lang,
-			Tag:         item.Tag,
-			IsCustom:    item.IsCustom,
-			Status:      item.Status,
-			CreatedBy:   item.CreatedBy,
-			CreatedDate: item.CreatedDate,
-			EditedBy:    item.EditedBy,
-			EditedDate:  item.EditedDate,
-			Deleted:     item.Deleted,
-		})
-	}
-
-	return &database.PageResult[*scanModel.RuleSet]{
-		Data:     modelData,
-		Total:    storeResult.Total,
-		Page:     storeResult.Page,
-		PageSize: storeResult.PageSize,
-	}, nil
+	return s.ruleSetStore.List(ctx, filter)
 }
