@@ -1,7 +1,6 @@
 package publickey
 
 import (
-	principalStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/principal"
 	publickeyStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/publickey"
 	"github.com/google/wire"
 )
@@ -12,7 +11,7 @@ var WireSet = wire.NewSet(
 	publickeyStore.NewPublicKeyStore,
 
 	// Principal Info Cache
-	principalStore.NewPrincipalInfoCache,
+	//principalStore.NewPrincipalInfoCache,
 
 	// Public Key Service
 	NewPublicKeyService,

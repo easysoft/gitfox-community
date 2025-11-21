@@ -4,7 +4,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/principal"
+	principal "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/user"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/auth/authn"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
@@ -27,7 +27,7 @@ func Attempt(authenticator authn.Authenticator) gin.HandlerFunc {
 		}
 
 		// 更新日志上下文，注入用户信息
-		log = log.With("principal_uid", session.User.UID)
+		log = log.With("principal_account", session.User.Account)
 		c.Set(logger.ContextLogger, log)
 
 		// 将认证会话注入到 Context 中
@@ -47,20 +47,19 @@ func MockAttempt() gin.HandlerFunc {
 		// 尝试认证请求
 
 		session := &auth.Session{
-			Principal: principal.User{
-				ID:    1,
-				Email: "actor@chandao.com",
-				UID:   "actor",
+			Principal: &principal.Principal{
+				ID:  1,
+				App: "devops",
 			},
 			User: &principal.User{
-				ID:    2,
-				Email: "gitfox@chandao.com",
-				UID:   "gitfox",
+				ID:      2,
+				Email:   "gitfox@chandao.com",
+				Account: "gitfox",
 			},
 		}
 
 		// 更新日志上下文，注入用户信息
-		log = log.With("principal_uid", session.User.UID)
+		log = log.With("principal_account", session.User.Account)
 		c.Set(logger.ContextLogger, log)
 
 		// 将认证会话注入到 Context 中

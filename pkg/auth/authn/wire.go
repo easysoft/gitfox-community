@@ -3,8 +3,8 @@ package authn
 import (
 	"go/types"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/principal"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/token"
+	principal "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/user"
 )
 
 func ProvideAuthenticators(

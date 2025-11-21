@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/githook"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/principal"
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
+	principal "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/user"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/utils"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/space"
@@ -54,9 +54,10 @@ func (s *Service) Create(ctx context.Context, req *repoModel.CreateRepoReq) (*re
 
 	//TODO : mock session
 	session := &auth.Session{
-		Principal: principal.User{
-			Email: "actor@chandao.com",
-			UID:   "actor",
+		User: &principal.User{
+			ID:      1,
+			Email:   "actor@chandao.com",
+			Account: "actor",
 		},
 	}
 
@@ -71,7 +72,7 @@ func (s *Service) Create(ctx context.Context, req *repoModel.CreateRepoReq) (*re
 		Identifier:    req.Identifier,
 		GitUID:        gitResp.UID,
 		Desc:          req.Desc,
-		CreatedBy:     session.Principal.UID,
+		CreatedBy:     session.User.Account,
 		ForkID:        req.ForkID,
 		DefaultBranch: req.DefaultBranch,
 		Empty:         isEmpty,
@@ -121,7 +122,7 @@ func (s *Service) createGitRepository(ctx context.Context, req *repoModel.Create
 		ctx,
 		s.urlProvider.GetInternalAPIURL(ctx),
 		0,
-		session.Principal.ID,
+		session.User.ID,
 		true,
 		true,
 	)
@@ -131,20 +132,20 @@ func (s *Service) createGitRepository(ctx context.Context, req *repoModel.Create
 	now := time.Now()
 	resp, err := s.gitSvc.CreateRepository(ctx, &git.CreateRepositoryParams{
 		Actor: git.Identity{
-			Name:  session.Principal.UID,
-			Email: session.Principal.Email,
+			Name:  session.User.Account,
+			Email: session.User.Email,
 		},
 		EnvVars:       envVars,
 		DefaultBranch: req.DefaultBranch,
 		Files:         files,
 		Author: &git.Identity{
-			Name:  session.Principal.UID,
-			Email: session.Principal.Email,
+			Name:  session.User.Account,
+			Email: session.User.Email,
 		},
 		AuthorDate: &now,
 		Committer: &git.Identity{
-			Name:  session.Principal.UID,
-			Email: session.Principal.Email,
+			Name:  session.User.Account,
+			Email: session.User.Email,
 		},
 		CommitterDate: &now,
 	})

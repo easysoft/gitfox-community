@@ -6,7 +6,7 @@ import (
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/principal"
+	principal "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/user"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 
 	"gorm.io/gorm"
@@ -30,19 +30,6 @@ func (s *tokensStore) GetByID(ctx context.Context, id int64) (*Token, error) {
 	return &out, nil
 }
 
-func (s *tokensStore) CreateUserSession(ctx context.Context, user *principal.User, tokenIdentifier string) (*auth.Token, error) {
-	token := &Token{
-		PrincipalID: user.ID,
-		Type:        string(constant.TokenTypeSession),
-		Identifier:  tokenIdentifier,
-	}
-	if err := s.db.WithContext(ctx).Create(token).Error; err != nil {
-		return nil, errors.DBError.Wrapf(err, "create user session token for user %d", user.ID)
-	}
-
-	return token.ToAuthToken(), nil
-}
-
 func (s *tokensStore) CreateUserPAT(ctx context.Context, user *principal.User, tokenIdentifier string, lifetime *time.Duration) (*auth.Token, error) {
 	issuedAt := time.Now()
 
@@ -51,10 +38,30 @@ func (s *tokensStore) CreateUserPAT(ctx context.Context, user *principal.User, t
 		expiresAt = issuedAt.Add(*lifetime)
 	}
 	token := &Token{
-		PrincipalID: user.ID,
-		Type:        string(constant.TokenTypePAT),
-		Identifier:  tokenIdentifier,
-		ExpiresAt:   &expiresAt,
+		Account:    user.Account,
+		Type:       string(constant.TokenTypePAT),
+		Identifier: tokenIdentifier,
+		ExpiresAt:  &expiresAt,
+	}
+	if err := s.db.WithContext(ctx).Create(token).Error; err != nil {
+		return nil, errors.DBError.Wrapf(err, "create user pat token for user %d", user.ID)
+	}
+
+	return token.ToAuthToken(), nil
+}
+
+func (s *tokensStore) CreateAppPAT(ctx context.Context, user *principal.User, tokenIdentifier string, lifetime *time.Duration) (*auth.Token, error) {
+	issuedAt := time.Now()
+
+	var expiresAt time.Time
+	if lifetime != nil {
+		expiresAt = issuedAt.Add(*lifetime)
+	}
+	token := &Token{
+		Account:    user.Account,
+		Type:       string(constant.TokenTypeApp),
+		Identifier: tokenIdentifier,
+		ExpiresAt:  &expiresAt,
 	}
 	if err := s.db.WithContext(ctx).Create(token).Error; err != nil {
 		return nil, errors.DBError.Wrapf(err, "create user pat token for user %d", user.ID)

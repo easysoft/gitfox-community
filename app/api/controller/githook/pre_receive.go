@@ -89,7 +89,7 @@ func (c *Controller) PreReceive(
 	// For internal calls - through the application interface (API) - no need to verify protection rules.
 	if !in.Internal && constant.RepoState(repo.Status) == constant.RepoStateActive {
 		// TODO: use store.PrincipalInfoCache once we abstracted principals.
-		_, err := c.principalStore.FindUserByID(ctx, in.PrincipalID)
+		_, err := c.userStore.FindUserByID(ctx, in.PrincipalID)
 		if err != nil {
 			return hook.Output{}, fmt.Errorf("failed to find inner principal with id %d: %w", in.PrincipalID, err)
 		}
