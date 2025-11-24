@@ -307,3 +307,17 @@ func (s *Service) PathsDetails(ctx context.Context, req repoModel.PathsDetailsIn
 	}, nil
 
 }
+
+// Delete 删除代码库软删除
+func (s *Service) Delete(ctx context.Context, session *auth.Session, id uint) error {
+	_, err := s.repoStore.GetByID(ctx, id)
+	if err != nil {
+		return err
+	}
+	// 调用 store 层删除 repository 记录
+	err = s.repoStore.Delete(ctx, id)
+	if err != nil {
+		return err
+	}
+	return nil
+}

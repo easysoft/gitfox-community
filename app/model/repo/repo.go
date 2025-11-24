@@ -81,7 +81,7 @@ type Repo struct {
 	CreatedDate *time.Time `json:"createdDate"` // 允许 NULL，用指针类型
 	EditedBy    string     `json:"editedBy"`
 	EditedDate  *time.Time `json:"editedDate"` // 允许 NULL，用指针类型
-	Deleted     bool       `json:"deleted"`
+	Deleted     uint       `json:"deleted"`
 }
 
 type ReqForDiff struct {
