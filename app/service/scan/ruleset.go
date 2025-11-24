@@ -16,15 +16,17 @@ var _ IRuleSet = (*RuleSetService)(nil)
 
 type RuleSetService struct {
 	ruleSetStore scanStore.IRuleSet
+	ruleStore    scanStore.IRule
 }
 
-func NewRuleSetService(ruleSetStore scanStore.IRuleSet) *RuleSetService {
+func NewRuleSetService(ruleSetStore scanStore.IRuleSet, ruleStore scanStore.IRule) *RuleSetService {
 	return &RuleSetService{
 		ruleSetStore: ruleSetStore,
+		ruleStore:    ruleStore,
 	}
 }
 
-func (s *RuleSetService) Create(ctx context.Context, session *authModel.Session, req scanModel.RuleSetCreateReq) (*scanModel.RuleSet, error) {
+func (s *RuleSetService) Create(ctx context.Context, session *authModel.Session, req scanModel.RuleSetReqForCreate) (*scanModel.RuleSet, error) {
 	// 将请求转换为 store 层的 RuleSet 结构
 	ruleSet := &scanStore.RuleSet{
 		Name:      req.Name,
@@ -46,7 +48,7 @@ func (s *RuleSetService) GetByID(ctx context.Context, id uint) (*scanModel.RuleS
 	return s.ruleSetStore.GetByID(ctx, id)
 }
 
-func (s *RuleSetService) Update(ctx context.Context, session *authModel.Session, id uint, req scanModel.RuleSetUpdateReq) (*scanModel.RuleSet, error) {
+func (s *RuleSetService) Update(ctx context.Context, session *authModel.Session, id uint, req scanModel.RuleSetReqForUpdate) (*scanModel.RuleSet, error) {
 	// 将请求转换为 store 层的 RuleSet 结构
 	ruleSet := &scanStore.RuleSet{EditedBy: session.User.Account}
 
@@ -91,6 +93,50 @@ func (s *RuleSetService) Delete(ctx context.Context, id uint) error {
 	return s.ruleSetStore.Delete(ctx, id)
 }
 
-func (s *RuleSetService) List(ctx context.Context, filter scanModel.RuleSetListReq) (*database.PageResult[*scanModel.RuleSet], error) {
+func (s *RuleSetService) List(ctx context.Context, filter scanModel.RuleSetReqFilter) (*database.PageResult[*scanModel.RuleSet], error) {
 	return s.ruleSetStore.List(ctx, filter)
+}
+
+// GetBindRule 根据规则集ID获取关联的规则列表
+func (s *RuleSetService) GetBindRule(ctx context.Context, ruleSetID uint, filter scanModel.RuleReqFilter) (*database.PageResult[*scanModel.Rule], error) {
+	// 先获取规则集关联的规则ID列表
+	ruleIDs, err := s.ruleSetStore.GetRuleIDList(ctx, ruleSetID)
+	if err != nil {
+		return nil, err
+	}
+
+	// 如果没有规则ID，返回空结果
+	if len(ruleIDs) == 0 {
+		return &database.PageResult[*scanModel.Rule]{
+			Data:     []*scanModel.Rule{},
+			Total:    0,
+			Page:     filter.Page,
+			PageSize: filter.Size,
+		}, nil
+	}
+
+	// 调用 store 层获取规则列表
+	return s.ruleStore.ListByRuleSetID(ctx, ruleIDs, filter)
+}
+
+// GetUnBindRule 根据规则集ID获取未关联的规则列表
+func (s *RuleSetService) GetUnBindRule(ctx context.Context, ruleSetID uint, filter scanModel.RuleReqFilter) (*database.PageResult[*scanModel.Rule], error) {
+	// 先获取规则集关联的规则ID列表
+	ruleIDs, err := s.ruleSetStore.GetRuleIDList(ctx, ruleSetID)
+	if err != nil {
+		return nil, err
+	}
+
+	// 调用 store 层获取排除已绑定ID的规则列表
+	return s.ruleStore.ExcludeByRuleSetID(ctx, ruleIDs, filter)
+}
+
+// BindRule 绑定规则到规则集
+func (s *RuleSetService) BindRule(ctx context.Context, ruleSetID uint, req scanModel.RuleSetReqForBind) error {
+	return s.ruleSetStore.BindRule(ctx, ruleSetID, req.IDs)
+}
+
+// UnBindRule 解绑规则与规则集
+func (s *RuleSetService) UnBindRule(ctx context.Context, ruleSetID uint, req scanModel.RuleSetReqForBind) error {
+	return s.ruleSetStore.UnBindRule(ctx, ruleSetID, req.IDs)
 }

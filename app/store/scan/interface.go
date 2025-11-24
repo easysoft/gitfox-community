@@ -12,10 +12,22 @@ type IRuleSet interface {
 	GetByID(ctx context.Context, id uint) (*scanModel.RuleSet, error)
 	Update(ctx context.Context, ruleSet *RuleSet, id uint) (*scanModel.RuleSet, error)
 	Delete(ctx context.Context, id uint) error
+	List(ctx context.Context, filter scanModel.RuleSetReqFilter) (*database.PageResult[*scanModel.RuleSet], error)
+	GetRuleIDList(ctx context.Context, ruleSetID uint) ([]int64, error)
 	IsUsedBySolution(ctx context.Context, id uint) (bool, error)
-	List(ctx context.Context, filter scanModel.RuleSetListReq) (*database.PageResult[*scanModel.RuleSet], error)
+	BindRule(ctx context.Context, ruleSetID uint, ruleIDs []uint) error
+	UnBindRule(ctx context.Context, ruleSetID uint, ruleIDs []uint) error
 }
 
 type IRule interface {
-	ListByRuleSetID(ctx context.Context, ruleIDs []int64) ([]Rule, error)
+	ListByRuleSetID(
+		ctx context.Context,
+		ruleIDs []int64,
+		filter scanModel.RuleReqFilter,
+	) (*database.PageResult[*scanModel.Rule], error)
+	ExcludeByRuleSetID(
+		ctx context.Context,
+		excludeIDs []int64,
+		filter scanModel.RuleReqFilter,
+	) (*database.PageResult[*scanModel.Rule], error)
 }

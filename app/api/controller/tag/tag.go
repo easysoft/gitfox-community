@@ -92,13 +92,6 @@ func (c *Controller) List(ctx *gin.Context) {
 	var reqQuery tagModel.ReqFilter
 	var err error
 
-	session, ok := req.GetAuthSession(ctx.Request.Context())
-	if !ok {
-		err = errors.WithI18nKey(errors.New("session not found"), i18n.AuthNoSession)
-		resp.BadRequest(ctx, err)
-		return
-	}
-
 	if err = ctx.ShouldBindJSON(&reqQuery); err != nil {
 		err = errors.WithI18nKey(err, i18n.TagQueryParamError)
 		resp.BadRequest(ctx, err)
@@ -106,8 +99,13 @@ func (c *Controller) List(ctx *gin.Context) {
 	}
 	// 设置默认值
 	req.SetDefaults(&reqQuery)
-	// 设置默认值
-	req.SetDefaults(&reqQuery)
+
+	session, ok := req.GetAuthSession(ctx.Request.Context())
+	if !ok {
+		err = errors.WithI18nKey(errors.New("session not found"), i18n.AuthNoSession)
+		resp.BadRequest(ctx, err)
+		return
+	}
 
 	// 通过仓库 ID 获取仓库
 	repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, reqQuery.RepoID)

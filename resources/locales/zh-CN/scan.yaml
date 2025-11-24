@@ -13,3 +13,7 @@ ruleSet:
   delete_error: "规则集列表删除失败。"
   delete_success: "规则集列表删除成功。"
   in_use_error: "规则集已被扫描解决方案使用。"
+  bind_success: "规则集绑定规则成功。"
+  bind_error: "规则集绑定规则失败。"
+  unbind_success: "规则集解绑规则成功。"
+  unbind_error: "规则集解绑规则失败。"

@@ -80,12 +80,12 @@ func (s *RuleSetStore) IsUsedBySolution(ctx context.Context, id uint) (bool, err
 }
 
 // List 查询规则集列表（支持分页和过滤）
-func (s *RuleSetStore) List(ctx context.Context, filter scanModel.RuleSetListReq) (*database.PageResult[*scanModel.RuleSet], error) {
+func (s *RuleSetStore) List(ctx context.Context, filter scanModel.RuleSetReqFilter) (*database.PageResult[*scanModel.RuleSet], error) {
 	tx := s.db.WithContext(ctx).Model(&RuleSet{}).Where("deleted = ?", false)
 
 	// 过滤条件
 	if filter.Name != "" {
-		tx = tx.Where("LOWER(name) LIKE LOWER(?)", "%"+filter.Name+"%")
+		tx = tx.Where("name LIKE ?", "%"+filter.Name+"%")
 	}
 	if filter.Lang != "" {
 		tx = tx.Where("lang = ?", filter.Lang)
@@ -102,7 +102,7 @@ func (s *RuleSetStore) List(ctx context.Context, filter scanModel.RuleSetListReq
 
 	// 分页查询
 	var ruleSets []*RuleSet
-	pageResult, err := database.PaginateDefault(ctx, tx, filter.Page, filter.PageSize, &ruleSets)
+	pageResult, err := database.PaginateDefault(ctx, tx, filter.Page, filter.Size, &ruleSets)
 	if err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
@@ -138,4 +138,62 @@ func mapToModel(data RuleSet) *scanModel.RuleSet {
 		IsCustom:    data.IsCustom,
 		Deleted:     data.Deleted,
 	}
+}
+
+// GetRuleIDList 根据规则集ID获取关联的规则ID列表
+func (s *RuleSetStore) GetRuleIDList(ctx context.Context, ruleSetID uint) ([]int64, error) {
+	var ruleIDs []int64
+	err := s.db.WithContext(ctx).Model(&RuleSetRules{}).
+		Where("rulesetID = ? AND deleted = ?", ruleSetID, false).
+		Pluck("ruleID", &ruleIDs).Error
+	if err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
+	}
+	return ruleIDs, nil
+}
+
+// BindRule 绑定规则到规则集（将 deleted 设置为 false，不存在则新增记录）
+func (s *RuleSetStore) BindRule(ctx context.Context, ruleSetID uint, ruleIDs []uint) error {
+
+	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		for _, ruleID := range ruleIDs {
+			// 查询关联记录是否存在
+			var existingRecord RuleSetRules
+			err := tx.Where("rulesetID = ? AND ruleID = ?", ruleSetID, ruleID).
+				First(&existingRecord).Error
+
+			if err == gorm.ErrRecordNotFound {
+				// 记录不存在，插入新记录
+				newRecord := RuleSetRules{
+					RuleSetID: int64(ruleSetID),
+					RuleID:    int64(ruleID),
+					Deleted:   false,
+				}
+				if err := tx.Create(&newRecord).Error; err != nil {
+					return database.ProcessSQLErrorf(ctx, err)
+				}
+			} else if err != nil {
+				// 查询出错
+				return database.ProcessSQLErrorf(ctx, err)
+			} else if existingRecord.Deleted {
+				// 记录存在但已被删除，恢复记录
+				if err := tx.Model(&RuleSetRules{}).
+					Where("rulesetID = ? AND ruleID = ?", ruleSetID, ruleID).
+					Update("deleted", false).Error; err != nil {
+					return database.ProcessSQLErrorf(ctx, err)
+				}
+			}
+			// 如果记录存在且未被删除，不做任何操作
+		}
+		return nil
+	})
+}
+
+// UnBindRule 解绑规则与规则集（将 deleted 设置为 true）
+func (s *RuleSetStore) UnBindRule(ctx context.Context, ruleSetID uint, ruleIDs []uint) error {
+
+	// 将关联表中对应记录的 deleted 设置为 true
+	return s.db.WithContext(ctx).Model(&RuleSetRules{}).
+		Where("rulesetID = ? AND ruleID IN ?", ruleSetID, ruleIDs).
+		Update("deleted", true).Error
 }

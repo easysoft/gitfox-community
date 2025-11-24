@@ -9,9 +9,17 @@ import (
 )
 
 type IRuleSet interface {
-	Create(ctx context.Context, session *authModel.Session, req scanModel.RuleSetCreateReq) (*scanModel.RuleSet, error)
+	Create(ctx context.Context, session *authModel.Session, req scanModel.RuleSetReqForCreate) (*scanModel.RuleSet, error)
 	GetByID(ctx context.Context, id uint) (*scanModel.RuleSet, error)
-	Update(ctx context.Context, session *authModel.Session, id uint, req scanModel.RuleSetUpdateReq) (*scanModel.RuleSet, error)
+	Update(ctx context.Context, session *authModel.Session, id uint, req scanModel.RuleSetReqForUpdate) (*scanModel.RuleSet, error)
 	Delete(ctx context.Context, id uint) error
-	List(ctx context.Context, filter scanModel.RuleSetListReq) (*database.PageResult[*scanModel.RuleSet], error)
+	List(ctx context.Context, filter scanModel.RuleSetReqFilter) (*database.PageResult[*scanModel.RuleSet], error)
+	GetBindRule(ctx context.Context, ruleSetID uint, filter scanModel.RuleReqFilter) (*database.PageResult[*scanModel.Rule], error)
+	GetUnBindRule(ctx context.Context, ruleSetID uint, filter scanModel.RuleReqFilter) (*database.PageResult[*scanModel.Rule], error)
+	BindRule(ctx context.Context, ruleSetID uint, req scanModel.RuleSetReqForBind) error
+	UnBindRule(ctx context.Context, ruleSetID uint, req scanModel.RuleSetReqForBind) error
+}
+
+type IRule interface {
+	ListByRuleSetID(ctx context.Context, filter scanModel.RuleReqFilter) (*database.PageResult[*scanModel.Rule], error)
 }

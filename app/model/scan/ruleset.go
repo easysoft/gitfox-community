@@ -6,7 +6,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 )
 
-type RuleSetCreateReq struct {
+type RuleSetReqForCreate struct {
 	Name   string `json:"name" binding:"required,max=100"`
 	Desc   string `json:"desc"`
 	DescEn string `json:"descEn,omitempty"`
@@ -16,7 +16,7 @@ type RuleSetCreateReq struct {
 	Plugin string `json:"plugin"`
 }
 
-type RuleSetUpdateReq struct {
+type RuleSetReqForUpdate struct {
 	Name   string `json:"name,omitempty"`
 	Desc   string `json:"desc,omitempty"`
 	DescEn string `json:"descEn,omitempty"`
@@ -27,14 +27,16 @@ type RuleSetUpdateReq struct {
 	Status string `json:"status,omitempty"`
 }
 
-type RuleSetListReq struct {
-	Name     string `form:"name"`
-	Lang     string `form:"lang"`
-	Tag      string `form:"tag"`
-	Type     string `form:"type"`
-	Status   string `form:"status"`
-	Page     int    `form:"page"`
-	PageSize int    `form:"pageSize"`
+type RuleSetReqFilter struct {
+	Name   string `json:"name"`
+	Lang   string `json:"lang"`
+	Tag    string `json:"tag"`
+	Type   string `json:"type"`
+	Status string `json:"status"`
+	Sort   string `json:"sort" form:"sort" default:"id"`
+	Order  string `json:"order" form:"order" default:"asc"`
+	Page   int    `json:"page" form:"page" default:"1"`
+	Size   int    `json:"size" form:"size" default:"30"`
 }
 
 type RuleSet struct {
@@ -51,4 +53,8 @@ type RuleSet struct {
 	EditedBy    string                  `json:"editedBy"`
 	EditedDate  *time.Time              `json:"editedDate"` // 允许 NULL，用指针类型
 	Deleted     bool                    `json:"deleted"`
+}
+
+type RuleSetReqForBind struct {
+	IDs []uint `json:"ruleIDList"`
 }

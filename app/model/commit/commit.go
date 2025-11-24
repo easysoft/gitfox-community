@@ -36,8 +36,8 @@ type Author struct {
 
 // PaginationFilter stores pagination query parameters.
 type PaginationFilter struct {
-	Page  int `json:"page" form:"page" default:"1"`
-	Limit int `json:"limit" form:"limit" default:"20"`
+	Page int `json:"page" form:"page" default:"1"`
+	Size int `json:"size" form:"size" default:"20"`
 }
 
 // ReqFilter stores commit query parameters.

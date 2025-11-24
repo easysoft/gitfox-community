@@ -76,7 +76,6 @@ func (c *Controller) Create(ctx *gin.Context) {
 	}
 
 	// TODO: 记录审计日志
-	// TODO: 记录审计日志
 	resp.Created(ctx, i18n.BranchCreateSuccess, respData)
 }
 
@@ -99,8 +98,6 @@ func (c *Controller) List(ctx *gin.Context) {
 		resp.BadRequest(ctx, err)
 		return
 	}
-	// 设置默认值
-	req.SetDefaults(&reqQuery)
 	// 设置默认值
 	req.SetDefaults(&reqQuery)
 
@@ -151,6 +148,9 @@ func (c *Controller) ListPrefixes(ctx *gin.Context) {
 		return
 	}
 
+	// 设置默认值
+	req.SetDefaults(&reqQuery)
+
 	session, ok := req.GetAuthSession(ctx.Request.Context())
 	if !ok {
 		resp.Unauthorized(ctx, errors.WithI18nKey(nil, i18n.AuthNoSession))
@@ -169,6 +169,5 @@ func (c *Controller) ListPrefixes(ctx *gin.Context) {
 		resp.InternalError(ctx, err)
 		return
 	}
-	resp.ListSuccess(ctx, respData, nil, i18n.BranchListPrefixSuccess, nil)
 	resp.ListSuccess(ctx, respData, nil, i18n.BranchListPrefixSuccess, nil)
 }

@@ -663,6 +663,36 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "delete": {
+                "description": "删除仓库,软删除",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "repos"
+                ],
+                "summary": "删除仓库",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "仓库 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "删除仓库成功",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
             }
         },
         "/repos/{id}/diff": {
@@ -905,7 +935,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.RuleSetCreateReq"
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.RuleSetReqForCreate"
                         }
                     }
                 ],
@@ -938,12 +968,23 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "produces": [
-                    "application/json"
+                    "application/js"
                 ],
                 "tags": [
                     "scan"
                 ],
                 "summary": "查询规则集列表",
+                "parameters": [
+                    {
+                        "description": "查询规则集请求参数",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.RuleSetReqFilter"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "查询成功",
@@ -1038,7 +1079,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.RuleSetUpdateReq"
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.RuleSetReqForUpdate"
                         }
                     }
                 ],
@@ -1087,6 +1128,206 @@ const docTemplate = `{
                 "responses": {
                     "200": {
                         "description": "删除成功",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/scan/rulesets/{id}/bind": {
+            "get": {
+                "description": "根据规则集ID查询已绑定的规则列表，支持分页",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scan"
+                ],
+                "summary": "获取规则集已绑定的规则列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "规则集ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 30,
+                        "description": "每页数量",
+                        "name": "size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "查询成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.Rule"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "将指定的规则绑定到规则集",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scan"
+                ],
+                "summary": "绑定规则到规则集",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "规则集ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "绑定规则请求参数",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.RuleSetReqForBind"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "绑定成功",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/scan/rulesets/{id}/unbind": {
+            "get": {
+                "description": "根据规则集ID查询未绑定的规则列表，支持分页",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scan"
+                ],
+                "summary": "获取规则集未绑定的规则列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "规则集ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 30,
+                        "description": "每页数量",
+                        "name": "size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "查询成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.Rule"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "将指定的规则从规则集中解绑",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scan"
+                ],
+                "summary": "解绑规则与规则集",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "规则集ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "解绑规则请求参数",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.RuleSetReqForBind"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "解绑成功",
                         "schema": {
                             "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
                         }
@@ -2081,10 +2322,6 @@ const docTemplate = `{
                 "includeStats": {
                     "type": "boolean"
                 },
-                "limit": {
-                    "type": "integer",
-                    "default": 20
-                },
                 "page": {
                     "type": "integer",
                     "default": 1
@@ -2097,6 +2334,10 @@ const docTemplate = `{
                 },
                 "since": {
                     "type": "integer"
+                },
+                "size": {
+                    "type": "integer",
+                    "default": 20
                 },
                 "until": {
                     "type": "integer"
@@ -2323,7 +2564,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deleted": {
-                    "type": "boolean"
+                    "type": "integer"
                 },
                 "desc": {
                     "type": "string"
@@ -2411,6 +2652,70 @@ const docTemplate = `{
                 }
             }
         },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.Rule": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "contentEn": {
+                    "type": "string"
+                },
+                "createdBy": {
+                    "type": "string"
+                },
+                "createdDate": {
+                    "description": "允许 NULL，用指针类型",
+                    "type": "string"
+                },
+                "deleted": {
+                    "type": "boolean"
+                },
+                "desc": {
+                    "type": "string"
+                },
+                "descEn": {
+                    "type": "string"
+                },
+                "editedBy": {
+                    "type": "string"
+                },
+                "editedDate": {
+                    "description": "允许 NULL，用指针类型",
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "isCustom": {
+                    "type": "boolean"
+                },
+                "lang": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanLangName"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "plugin": {
+                    "type": "string"
+                },
+                "priority": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRulePriority"
+                },
+                "ruleKey": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleStatus"
+                },
+                "tag": {
+                    "type": "string"
+                },
+                "type": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleType"
+                }
+            }
+        },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.RuleSet": {
             "type": "object",
             "properties": {
@@ -2457,7 +2762,54 @@ const docTemplate = `{
                 }
             }
         },
-        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.RuleSetCreateReq": {
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.RuleSetReqFilter": {
+            "type": "object",
+            "properties": {
+                "lang": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "order": {
+                    "type": "string",
+                    "default": "asc"
+                },
+                "page": {
+                    "type": "integer",
+                    "default": 1
+                },
+                "size": {
+                    "type": "integer",
+                    "default": 30
+                },
+                "sort": {
+                    "type": "string",
+                    "default": "id"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "tag": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.RuleSetReqForBind": {
+            "type": "object",
+            "properties": {
+                "ruleIDList": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.RuleSetReqForCreate": {
             "type": "object",
             "required": [
                 "name",
@@ -2494,7 +2846,7 @@ const docTemplate = `{
                 }
             }
         },
-        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.RuleSetUpdateReq": {
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.RuleSetReqForUpdate": {
             "type": "object",
             "properties": {
                 "desc": {
@@ -2906,6 +3258,8 @@ const docTemplate = `{
                 "repo.create_success",
                 "repo.delete_error",
                 "repo.delete_success",
+                "repo.delete_error",
+                "repo.delete_success",
                 "repo.get_paths_details_success",
                 "repo.get_paths_success",
                 "repo.identifier_invalid",
@@ -2934,9 +3288,14 @@ const docTemplate = `{
                 "request.path_parameter_not_found",
                 "request.query_parameter_not_found",
                 "request.request_body_too_large",
+                "ruleSet.bind_error",
+                "ruleSet.bind_success",
                 "ruleSet.body_param_error",
                 "ruleSet.create_error",
                 "ruleSet.create_success",
+                "ruleSet.delete_error",
+                "ruleSet.delete_success",
+                "ruleSet.in_use_error",
                 "ruleSet.delete_error",
                 "ruleSet.delete_success",
                 "ruleSet.in_use_error",
@@ -2946,6 +3305,8 @@ const docTemplate = `{
                 "ruleSet.query_error",
                 "ruleSet.query_param_error",
                 "ruleSet.query_success",
+                "ruleSet.unbind_error",
+                "ruleSet.unbind_success",
                 "ruleSet.update_error",
                 "ruleSet.update_success",
                 "space.artifacts_title_success",
@@ -3046,6 +3407,8 @@ const docTemplate = `{
                 "RepoCreateSuccess": "创建仓库成功",
                 "RepoDeleteError": "删除仓库失败.",
                 "RepoDeleteSuccess": "仓库删除成功.",
+                "RepoDeleteError": "删除仓库失败.",
+                "RepoDeleteSuccess": "仓库删除成功.",
                 "RepoGetPathsDetailsSuccess": "获取路径详情成功.",
                 "RepoGetPathsSuccess": "获取路径成功.",
                 "RepoIdentifierInvalid": "仓库名称不合法,identifier仅支持字母、数字、下划线(_)、连字符(-)、点号(.)",
@@ -3074,9 +3437,14 @@ const docTemplate = `{
                 "RequestPathParameterNotFound": "路径参数未找到.",
                 "RequestQueryParameterNotFound": "查询参数未找到.",
                 "RequestRequestBodyTooLarge": "请求体过大.",
+                "RuleSetBindError": "规则集绑定规则失败.",
+                "RuleSetBindSuccess": "规则集绑定规则成功.",
                 "RuleSetBodyParamError": "请求体参数解析失败.",
                 "RuleSetCreateError": "规则集创建失败.",
                 "RuleSetCreateSuccess": "规则集创建成功.",
+                "RuleSetDeleteError": "规则集列表删除失败.",
+                "RuleSetDeleteSuccess": "规则集列表删除成功.",
+                "RuleSetInUseError": "规则集已被扫描解决方案使用.",
                 "RuleSetDeleteError": "规则集列表删除失败.",
                 "RuleSetDeleteSuccess": "规则集列表删除成功.",
                 "RuleSetInUseError": "规则集已被扫描解决方案使用.",
@@ -3086,6 +3454,8 @@ const docTemplate = `{
                 "RuleSetQueryError": "规则集详情查询失败.",
                 "RuleSetQueryParamError": "查询参数解析失败.",
                 "RuleSetQuerySuccess": "规则集详情查询成功.",
+                "RuleSetUnbindError": "规则集解绑规则失败.",
+                "RuleSetUnbindSuccess": "规则集解绑规则成功.",
                 "RuleSetUpdateError": "规则集更新失败.",
                 "RuleSetUpdateSuccess": "规则集更新成功.",
                 "SpaceArtifactsTitleSuccess": "仓库设置保存成功",
@@ -3186,6 +3556,8 @@ const docTemplate = `{
                 "创建仓库成功",
                 "删除仓库失败.",
                 "仓库删除成功.",
+                "删除仓库失败.",
+                "仓库删除成功.",
                 "获取路径详情成功.",
                 "获取路径成功.",
                 "仓库名称不合法,identifier仅支持字母、数字、下划线(_)、连字符(-)、点号(.)",
@@ -3214,9 +3586,14 @@ const docTemplate = `{
                 "路径参数未找到.",
                 "查询参数未找到.",
                 "请求体过大.",
+                "规则集绑定规则失败.",
+                "规则集绑定规则成功.",
                 "请求体参数解析失败.",
                 "规则集创建失败.",
                 "规则集创建成功.",
+                "规则集列表删除失败.",
+                "规则集列表删除成功.",
+                "规则集已被扫描解决方案使用.",
                 "规则集列表删除失败.",
                 "规则集列表删除成功.",
                 "规则集已被扫描解决方案使用.",
@@ -3226,6 +3603,8 @@ const docTemplate = `{
                 "规则集详情查询失败.",
                 "查询参数解析失败.",
                 "规则集详情查询成功.",
+                "规则集解绑规则失败.",
+                "规则集解绑规则成功.",
                 "规则集更新失败.",
                 "规则集更新成功.",
                 "仓库设置保存成功",
@@ -3326,6 +3705,8 @@ const docTemplate = `{
                 "RepoCreateSuccess",
                 "RepoDeleteError",
                 "RepoDeleteSuccess",
+                "RepoDeleteError",
+                "RepoDeleteSuccess",
                 "RepoGetPathsDetailsSuccess",
                 "RepoGetPathsSuccess",
                 "RepoIdentifierInvalid",
@@ -3354,9 +3735,14 @@ const docTemplate = `{
                 "RequestPathParameterNotFound",
                 "RequestQueryParameterNotFound",
                 "RequestRequestBodyTooLarge",
+                "RuleSetBindError",
+                "RuleSetBindSuccess",
                 "RuleSetBodyParamError",
                 "RuleSetCreateError",
                 "RuleSetCreateSuccess",
+                "RuleSetDeleteError",
+                "RuleSetDeleteSuccess",
+                "RuleSetInUseError",
                 "RuleSetDeleteError",
                 "RuleSetDeleteSuccess",
                 "RuleSetInUseError",
@@ -3366,6 +3752,8 @@ const docTemplate = `{
                 "RuleSetQueryError",
                 "RuleSetQueryParamError",
                 "RuleSetQuerySuccess",
+                "RuleSetUnbindError",
+                "RuleSetUnbindSuccess",
                 "RuleSetUpdateError",
                 "RuleSetUpdateSuccess",
                 "SpaceArtifactsTitleSuccess",

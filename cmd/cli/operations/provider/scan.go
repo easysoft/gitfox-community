@@ -15,3 +15,8 @@ var ScanRuleSetWireSet = wire.NewSet(
 	wire.Bind(new(scanStore.IRuleSet), new(*scanStore.RuleSetStore)),
 	scanStore.NewRuleSetStore,
 )
+
+var ScanRuleWireSet = wire.NewSet(
+	wire.Bind(new(scanStore.IRule), new(*scanStore.RuleStore)),
+	scanStore.NewRuleStore,
+)

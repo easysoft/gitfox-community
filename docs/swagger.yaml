@@ -250,9 +250,6 @@ definitions:
         type: string
       includeStats:
         type: boolean
-      limit:
-        default: 20
-        type: integer
       page:
         default: 1
         type: integer
@@ -261,6 +258,9 @@ definitions:
       repoID:
         type: integer
       since:
+        type: integer
+      size:
+        default: 20
         type: integer
       until:
         type: integer
@@ -414,7 +414,7 @@ definitions:
       defaultBranch:
         type: string
       deleted:
-        type: boolean
+        type: integer
       desc:
         type: string
       editedBy:
@@ -476,8 +476,12 @@ definitions:
     - identifier
     - spaceID
     type: object
-  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.RuleSet:
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.Rule:
     properties:
+      content:
+        type: string
+      contentEn:
+        type: string
       createdBy:
         type: string
       createdDate:
@@ -502,12 +506,81 @@ definitions:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanLangName'
       name:
         type: string
+      plugin:
+        type: string
+      priority:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRulePriority'
+      ruleKey:
+        type: string
+      status:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleStatus'
+      tag:
+        type: string
+      type:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleType'
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.RuleSet:
+    properties:
+      lang:
+        type: string
+      name:
+        type: string
+      order:
+        default: asc
+        type: string
+      page:
+        default: 1
+        type: integer
+      size:
+        default: 30
+        type: integer
+      sort:
+        default: id
+        type: string
+      status:
+        type: string
+      tag:
+        type: string
+      type:
+        type: string
       status:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleStatus'
       tag:
         type: string
     type: object
-  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.RuleSetCreateReq:
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.RuleSetReqFilter:
+    properties:
+      lang:
+        type: string
+      name:
+        type: string
+      order:
+        default: asc
+        type: string
+      page:
+        default: 1
+        type: integer
+      size:
+        default: 30
+        type: integer
+      sort:
+        default: id
+        type: string
+      status:
+        type: string
+      tag:
+        type: string
+      type:
+        type: string
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.RuleSetReqForBind:
+    properties:
+      ruleIDList:
+        items:
+          type: integer
+        type: array
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.RuleSetReqForCreate:
     properties:
       desc:
         type: string
@@ -533,7 +606,7 @@ definitions:
     - name
     - type
     type: object
-  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.RuleSetUpdateReq:
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.RuleSetReqForUpdate:
     properties:
       desc:
         type: string
@@ -837,6 +910,8 @@ definitions:
     - repo.create_success
     - repo.delete_error
     - repo.delete_success
+    - repo.delete_error
+    - repo.delete_success
     - repo.get_paths_details_success
     - repo.get_paths_success
     - repo.identifier_invalid
@@ -865,9 +940,14 @@ definitions:
     - request.path_parameter_not_found
     - request.query_parameter_not_found
     - request.request_body_too_large
+    - ruleSet.bind_error
+    - ruleSet.bind_success
     - ruleSet.body_param_error
     - ruleSet.create_error
     - ruleSet.create_success
+    - ruleSet.delete_error
+    - ruleSet.delete_success
+    - ruleSet.in_use_error
     - ruleSet.delete_error
     - ruleSet.delete_success
     - ruleSet.in_use_error
@@ -877,6 +957,8 @@ definitions:
     - ruleSet.query_error
     - ruleSet.query_param_error
     - ruleSet.query_success
+    - ruleSet.unbind_error
+    - ruleSet.unbind_success
     - ruleSet.update_error
     - ruleSet.update_success
     - space.artifacts_title_success
@@ -977,6 +1059,8 @@ definitions:
       RepoCreateSuccess: 创建仓库成功
       RepoDeleteError: 删除仓库失败.
       RepoDeleteSuccess: 仓库删除成功.
+      RepoDeleteError: 删除仓库失败.
+      RepoDeleteSuccess: 仓库删除成功.
       RepoGetPathsDetailsSuccess: 获取路径详情成功.
       RepoGetPathsSuccess: 获取路径成功.
       RepoIdentifierInvalid: 仓库名称不合法,identifier仅支持字母、数字、下划线(_)、连字符(-)、点号(.)
@@ -1005,9 +1089,14 @@ definitions:
       RequestPathParameterNotFound: 路径参数未找到.
       RequestQueryParameterNotFound: 查询参数未找到.
       RequestRequestBodyTooLarge: 请求体过大.
+      RuleSetBindError: 规则集绑定规则失败.
+      RuleSetBindSuccess: 规则集绑定规则成功.
       RuleSetBodyParamError: 请求体参数解析失败.
       RuleSetCreateError: 规则集创建失败.
       RuleSetCreateSuccess: 规则集创建成功.
+      RuleSetDeleteError: 规则集列表删除失败.
+      RuleSetDeleteSuccess: 规则集列表删除成功.
+      RuleSetInUseError: 规则集已被扫描解决方案使用.
       RuleSetDeleteError: 规则集列表删除失败.
       RuleSetDeleteSuccess: 规则集列表删除成功.
       RuleSetInUseError: 规则集已被扫描解决方案使用.
@@ -1017,6 +1106,8 @@ definitions:
       RuleSetQueryError: 规则集详情查询失败.
       RuleSetQueryParamError: 查询参数解析失败.
       RuleSetQuerySuccess: 规则集详情查询成功.
+      RuleSetUnbindError: 规则集解绑规则失败.
+      RuleSetUnbindSuccess: 规则集解绑规则成功.
       RuleSetUpdateError: 规则集更新失败.
       RuleSetUpdateSuccess: 规则集更新成功.
       SpaceArtifactsTitleSuccess: 仓库设置保存成功
@@ -1116,6 +1207,8 @@ definitions:
     - 创建仓库成功
     - 删除仓库失败.
     - 仓库删除成功.
+    - 删除仓库失败.
+    - 仓库删除成功.
     - 获取路径详情成功.
     - 获取路径成功.
     - 仓库名称不合法,identifier仅支持字母、数字、下划线(_)、连字符(-)、点号(.)
@@ -1144,9 +1237,14 @@ definitions:
     - 路径参数未找到.
     - 查询参数未找到.
     - 请求体过大.
+    - 规则集绑定规则失败.
+    - 规则集绑定规则成功.
     - 请求体参数解析失败.
     - 规则集创建失败.
     - 规则集创建成功.
+    - 规则集列表删除失败.
+    - 规则集列表删除成功.
+    - 规则集已被扫描解决方案使用.
     - 规则集列表删除失败.
     - 规则集列表删除成功.
     - 规则集已被扫描解决方案使用.
@@ -1156,6 +1254,8 @@ definitions:
     - 规则集详情查询失败.
     - 查询参数解析失败.
     - 规则集详情查询成功.
+    - 规则集解绑规则失败.
+    - 规则集解绑规则成功.
     - 规则集更新失败.
     - 规则集更新成功.
     - 仓库设置保存成功
@@ -1255,6 +1355,8 @@ definitions:
     - RepoCreateSuccess
     - RepoDeleteError
     - RepoDeleteSuccess
+    - RepoDeleteError
+    - RepoDeleteSuccess
     - RepoGetPathsDetailsSuccess
     - RepoGetPathsSuccess
     - RepoIdentifierInvalid
@@ -1283,9 +1385,14 @@ definitions:
     - RequestPathParameterNotFound
     - RequestQueryParameterNotFound
     - RequestRequestBodyTooLarge
+    - RuleSetBindError
+    - RuleSetBindSuccess
     - RuleSetBodyParamError
     - RuleSetCreateError
     - RuleSetCreateSuccess
+    - RuleSetDeleteError
+    - RuleSetDeleteSuccess
+    - RuleSetInUseError
     - RuleSetDeleteError
     - RuleSetDeleteSuccess
     - RuleSetInUseError
@@ -1295,6 +1402,8 @@ definitions:
     - RuleSetQueryError
     - RuleSetQueryParamError
     - RuleSetQuerySuccess
+    - RuleSetUnbindError
+    - RuleSetUnbindSuccess
     - RuleSetUpdateError
     - RuleSetUpdateSuccess
     - SpaceArtifactsTitleSuccess
@@ -1675,6 +1784,26 @@ paths:
       summary: 删除仓库
       tags:
       - repos
+    delete:
+      consumes:
+      - application/json
+      description: 删除仓库,软删除
+      parameters:
+      - description: 仓库 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 删除仓库成功
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 删除仓库
+      tags:
+      - repos
     get:
       consumes:
       - application/json
@@ -1876,7 +2005,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.RuleSetCreateReq'
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.RuleSetReqForCreate'
       produces:
       - application/json
       responses:
@@ -1893,6 +2022,26 @@ paths:
       tags:
       - scan
   /scan/rulesets/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: 根据规则集 ID 删除规则集及其关联的规则
+      parameters:
+      - description: 规则集 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 删除成功
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 删除规则集
+      tags:
+      - scan
     delete:
       consumes:
       - application/json
@@ -1953,7 +2102,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.RuleSetUpdateReq'
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.RuleSetReqForUpdate'
       produces:
       - application/json
       responses:
@@ -1969,13 +2118,148 @@ paths:
       summary: 修改规则集信息
       tags:
       - scan
+  /scan/rulesets/{id}/bind:
+    get:
+      consumes:
+      - application/json
+      description: 根据规则集ID查询已绑定的规则列表，支持分页
+      parameters:
+      - description: 规则集ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - default: 1
+        description: 页码
+        in: query
+        name: page
+        type: integer
+      - default: 30
+        description: 每页数量
+        in: query
+        name: size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 查询成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.Rule'
+                  type: array
+              type: object
+      summary: 获取规则集已绑定的规则列表
+      tags:
+      - scan
+    post:
+      consumes:
+      - application/json
+      description: 将指定的规则绑定到规则集
+      parameters:
+      - description: 规则集ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 绑定规则请求参数
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.RuleSetReqForBind'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 绑定成功
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 绑定规则到规则集
+      tags:
+      - scan
+  /scan/rulesets/{id}/unbind:
+    get:
+      consumes:
+      - application/json
+      description: 根据规则集ID查询未绑定的规则列表，支持分页
+      parameters:
+      - description: 规则集ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - default: 1
+        description: 页码
+        in: query
+        name: page
+        type: integer
+      - default: 30
+        description: 每页数量
+        in: query
+        name: size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 查询成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.Rule'
+                  type: array
+              type: object
+      summary: 获取规则集未绑定的规则列表
+      tags:
+      - scan
+    post:
+      consumes:
+      - application/json
+      description: 将指定的规则从规则集中解绑
+      parameters:
+      - description: 规则集ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 解绑规则请求参数
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.RuleSetReqForBind'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 解绑成功
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 解绑规则与规则集
+      tags:
+      - scan
   /scan/rulesets/list:
     post:
       consumes:
       - application/json
       description: 根据过滤条件查询规则集列表，支持分页
+      parameters:
+      - description: 查询规则集请求参数
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.RuleSetReqFilter'
       produces:
-      - application/json
+      - application/js
       responses:
         "200":
           description: 查询成功
