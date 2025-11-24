@@ -23,7 +23,7 @@ func NewTokensStore(db *gorm.DB) *tokensStore {
 func (s *tokensStore) GetByID(ctx context.Context, id int64) (*Token, error) {
 	var out Token
 	out.ID = id
-	if err := s.db.WithContext(ctx).Find(&out).Error; err != nil {
+	if err := s.db.WithContext(ctx).Where("id = ?", id).Find(&out).Error; err != nil {
 		return nil, errors.DBError.Wrapf(err, "get token by id %d", id)
 	}
 	if out.ID == 0 {
@@ -42,10 +42,10 @@ func (s *tokensStore) CreateUserPAT(ctx context.Context, user *principal.User, t
 
 	// 如果提供了 lifetime，则设置过期时间
 	if lifetime != nil {
-		expiresDate := time.Now().Add(*lifetime)
-		token.ExpiresDate = &expiresDate
+		expirationDate := time.Now().Add(*lifetime)
+		token.ExpirationDate = &expirationDate
 	}
-	// 否则 ExpiresDate 保持为 nil，表示永不过期
+	// 否则 ExpirationDate 保持为 nil，表示永不过期
 	// CreatedDate 会由 BeforeCreate 钩子自动设置
 
 	if err := s.db.WithContext(ctx).Create(token).Error; err != nil {
@@ -64,8 +64,8 @@ func (s *tokensStore) CreateAppPAT(ctx context.Context, user *principal.User, to
 
 	// 如果提供了 lifetime，则设置过期时间
 	if lifetime != nil {
-		expiresDate := time.Now().Add(*lifetime)
-		token.ExpiresDate = &expiresDate
+		expirationDate := time.Now().Add(*lifetime)
+		token.ExpirationDate = &expirationDate
 	}
 
 	if err := s.db.WithContext(ctx).Create(token).Error; err != nil {
@@ -80,15 +80,15 @@ func (s *tokensStore) UpdateToken(ctx context.Context, id int64, token string) e
 }
 
 func (s *tokensStore) GetByIdentifier(ctx context.Context, identifier string) (*Token, error) {
-	var out Token
-	out.Identifier = identifier
-	if err := s.db.WithContext(ctx).Find(&out).Error; err != nil {
+	var token Token
+
+	if err := s.db.WithContext(ctx).Where("identifier = ?", identifier).Find(&token).Error; err != nil {
 		return nil, errors.DBError.Wrapf(err, "get token by identifier %s", identifier)
 	}
 
-	if out.ID == 0 {
+	if token.ID == 0 {
 		return nil, errors.NotFound.Newf("token not found by identifier %s", identifier)
 	}
 
-	return &out, nil
+	return &token, nil
 }

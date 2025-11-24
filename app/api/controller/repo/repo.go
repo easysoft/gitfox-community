@@ -213,8 +213,7 @@ func (ctl *Controller) GetContent(ctx *gin.Context) {
 	// 在像 /v1/repos/{repoRef}/contents/* 这样的路由下
 	// * 表示仓库内的文件或目录的相对路径。
 	// 例如请求 /v1/repos/12/contents/src/main.go ，这里的余量就是 src/main.go
-	path := req.PathParamOrEmpty(ctx, req.PathParamRemainder)
-
+	path := req.PathParamOrEmpty(ctx, req.PathParamFilePath)
 	logger.Infof("origin url %s , repoID: %d,gitRef: %s, path: %s,includeCommit: %v,flattenDirectories: %v", ctx.Request.URL.String(), params.RepoID, gitRef, path, includeCommit, flattenDirectories)
 
 	fmt.Println(ctx.Param("path"))

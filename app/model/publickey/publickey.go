@@ -8,14 +8,14 @@ import (
 )
 
 type PublicKey struct {
-	ID          int64      `json:"-"`
-	Account     string     `json:"account"`     // 关联的账号
-	Verified    *time.Time `json:"verified"`    // 公钥是否已验证
-	Identifier  string     `json:"identifier"`  // 公钥标识符
-	Fingerprint string     `json:"fingerprint"` // 公钥指纹
-	Content     string     `json:"-"`           // 公钥内容 eg: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDB...
-	Comment     string     `json:"comment"`     // 公钥注释 eg: "user@example.com"
-	Type        string     `json:"type"`        // 公钥类型 eg: "ssh-rsa"
+	ID           int64      `json:"-"`
+	Account      string     `json:"account"`      // 关联的账号
+	VerifiedDate *time.Time `json:"verifiedDate"` // 公钥是否已验证
+	Identifier   string     `json:"identifier"`   // 公钥标识符
+	Fingerprint  string     `json:"fingerprint"`  // 公钥指纹
+	Content      string     `json:"-"`            // 公钥内容 eg: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDB...
+	Comment      string     `json:"comment"`      // 公钥注释 eg: "user@example.com"
+	Type         string     `json:"type"`         // 公钥类型 eg: "ssh-rsa"
 }
 
 type AddPublicKeyInput struct {

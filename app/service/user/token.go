@@ -27,7 +27,6 @@ func (s *Service) IssueUserPAT(ctx context.Context, user *principal.User, identi
 		return nil, err
 	}
 
-	// create jwt token.
 	jwtToken, err := authPkg.GenerateForToken(token, user.Account)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create jwt token: %w", err)
@@ -42,7 +41,6 @@ func (s *Service) IssueAppPAT(ctx context.Context, user *principal.User, identif
 		return nil, err
 	}
 
-	// create jwt token.
 	jwtToken, err := authPkg.GenerateForAppToken(token, user.Account, false)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create jwt token: %w", err)
