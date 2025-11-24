@@ -23,7 +23,7 @@ type Space struct {
 	CreatedDate *time.Time `gorm:"column:createdDate;type:datetime;comment:'创建时间'" json:"createdDate,omitempty"` // 允许为NULL，指针类型
 	EditedBy    string     `gorm:"column:editedBy;type:varchar(30);not null;default:'';comment:'更新人'" json:"editedBy"`
 	EditedDate  *time.Time `gorm:"column:editedDate;type:datetime;comment:'更新时间'" json:"editedDate,omitempty"` // 允许为NULL，指针类型
-	Deleted     int8       `gorm:"column:deleted;type:tinyint;not null;default:0;comment:'删除标识，0-未删除，1-已删除'" json:"deleted"`
+	Deleted     uint8       `gorm:"column:deleted;type:tinyint;not null;default:0;comment:'删除标识，0-未删除，1-已删除'" json:"deleted"`
 }
 
 // TableName 显式指定结构体对应的数据表名为 ops_space

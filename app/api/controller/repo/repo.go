@@ -173,6 +173,41 @@ func (c *Controller) Update(ctx *gin.Context) {
 
 }
 
+//Delete 删除仓库，数据库软删除
+// @Summary 删除仓库
+// @Description 删除仓库,软删除
+// @Tags repos
+// @Accept application/json
+// @Produce application/json
+// @Param id path uint true "仓库 ID"
+// @Success 200 {object} resp.ObjectResponse "删除仓库成功"
+// @Error 400 {object} resp.ObjectResponse "参数错误"
+// @Error 500 {object} resp.ObjectResponse "服务器内部错误"
+// @Router /repos/{id} [delete]
+func (c *Controller) Delete(ctx *gin.Context) {
+	// 解析 path id
+	repoID, err := req.PathParamAsPositiveUint(ctx, "id")
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RepoPathParamError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+	session, ok := req.GetAuthSession(ctx.Request.Context())
+	if !ok {
+		resp.Unauthorized(ctx, errors.WithI18nKey(nil, i18n.AuthNoSession))
+		return
+	}
+
+	err = c.repoSvc.Delete(ctx.Request.Context(), session, repoID)
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RepoDeleteError)
+		resp.InternalError(ctx, err)
+		return
+	}
+
+	resp.OK(ctx, i18n.RepoDeleteSuccess, nil)
+}
+
 func (ctl *Controller) GetContent(ctx *gin.Context) {
 	logger := logger.GetLogger(ctx)
 	var params req.RepoId

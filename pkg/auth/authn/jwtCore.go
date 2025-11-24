@@ -77,7 +77,6 @@ func GenerateForToken(token *auth.Token, secret string) (string, error) {
 		},
 		Account:    token.Account,
 		Identifier: token.Identifier,
-
 		Token: &SubClaimsToken{
 			Type: token.Type,
 			ID:   token.ID,

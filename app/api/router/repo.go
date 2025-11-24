@@ -16,6 +16,7 @@ func registerRepoRoutes(r *gin.RouterGroup, controller *Controller) {
 		{
 			reposWithID.GET("/", controller.Repo.Get)
 			reposWithID.PUT("/", controller.Repo.Update)
+			reposWithID.DELETE("/", controller.Repo.Delete)
 			reposWithID.POST("/diff", controller.Repo.GetDiff)
 			reposWithID.GET("/paths", controller.Repo.GetPaths)
 			reposWithID.POST("/paths/details", controller.Repo.GetPathsDetails)
