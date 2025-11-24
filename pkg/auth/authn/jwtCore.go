@@ -62,8 +62,8 @@ type AccessPermissions struct {
 // GenerateForToken generates a jwt for a given token.
 func GenerateForToken(token *auth.Token, secret string) (string, error) {
 	var expiresDate int64
-	if token.ExpiresDate != nil {
-		expiresDate = token.ExpiresDate.Unix()
+	if token.ExpirationDate != nil {
+		expiresDate = token.ExpirationDate.Unix()
 	}
 
 	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, Claims{
@@ -91,8 +91,8 @@ func GenerateForToken(token *auth.Token, secret string) (string, error) {
 // GenerateForToken generates a jwt for a given token.
 func GenerateForAppToken(token *auth.Token, secret string, isAdmin bool) (string, error) {
 	var expiresDate int64
-	if token.ExpiresDate != nil {
-		expiresDate = token.ExpiresDate.Unix()
+	if token.ExpirationDate != nil {
+		expiresDate = token.ExpirationDate.Unix()
 	}
 
 	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, Claims{

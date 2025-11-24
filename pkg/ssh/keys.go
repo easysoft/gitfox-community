@@ -30,7 +30,7 @@ func (s *Server) setupHostKeys() error {
 	}
 
 	if len(keys) == 0 {
-		log.Debug().Msg("no host key provided - setup default key if it doesn't exist yet")
+		//log.Debug().Msg("no host key provided - setup default key if it doesn't exist yet")
 		keyPath := filepath.Join(s.ServerHostKeysDir, defaultServerKeyPath)
 		err := createKeyIfNotExists(keyPath)
 		if err != nil {
