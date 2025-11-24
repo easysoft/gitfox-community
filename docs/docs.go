@@ -663,6 +663,36 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "delete": {
+                "description": "删除仓库,软删除",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "repos"
+                ],
+                "summary": "删除仓库",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "仓库 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "删除仓库成功",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
             }
         },
         "/repos/{id}/diff": {
@@ -1993,21 +2023,6 @@ const docTemplate = `{
                 "ScanLangCsharpName"
             ]
         },
-        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRulePriority": {
-            "type": "integer",
-            "enum": [
-                0,
-                1,
-                2,
-                3
-            ],
-            "x-enum-varnames": [
-                "ScanRulePriorityLow",
-                "ScanRulePriorityMedium",
-                "ScanRulePriorityHigh",
-                "scanRulePriorityNone"
-            ]
-        },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleStatus": {
             "type": "string",
             "enum": [
@@ -2019,36 +2034,6 @@ const docTemplate = `{
                 "ScanRuleStatusEnabled",
                 "ScanRuleStatusDisabled",
                 "scanRuleStatusNone"
-            ]
-        },
-        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleType": {
-            "type": "string",
-            "enum": [
-                "defect",
-                "security",
-                "compliance",
-                "optimize",
-                ""
-            ],
-            "x-enum-comments": {
-                "ScanRuleTypeComplian": "合规",
-                "ScanRuleTypeDefect": "缺陷",
-                "ScanRuleTypeOptimize": "优化 // 代码异味",
-                "ScanRuleTypeVuln": "安全"
-            },
-            "x-enum-descriptions": [
-                "缺陷",
-                "安全",
-                "合规",
-                "优化 // 代码异味",
-                ""
-            ],
-            "x-enum-varnames": [
-                "ScanRuleTypeDefect",
-                "ScanRuleTypeVuln",
-                "ScanRuleTypeComplian",
-                "ScanRuleTypeOptimize",
-                "scanRuleTypeNone"
             ]
         },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.Branch": {
@@ -3273,6 +3258,8 @@ const docTemplate = `{
                 "repo.create_success",
                 "repo.delete_error",
                 "repo.delete_success",
+                "repo.delete_error",
+                "repo.delete_success",
                 "repo.get_paths_details_success",
                 "repo.get_paths_success",
                 "repo.identifier_invalid",
@@ -3306,6 +3293,9 @@ const docTemplate = `{
                 "ruleSet.body_param_error",
                 "ruleSet.create_error",
                 "ruleSet.create_success",
+                "ruleSet.delete_error",
+                "ruleSet.delete_success",
+                "ruleSet.in_use_error",
                 "ruleSet.delete_error",
                 "ruleSet.delete_success",
                 "ruleSet.in_use_error",
@@ -3417,6 +3407,8 @@ const docTemplate = `{
                 "RepoCreateSuccess": "创建仓库成功",
                 "RepoDeleteError": "删除仓库失败.",
                 "RepoDeleteSuccess": "仓库删除成功.",
+                "RepoDeleteError": "删除仓库失败.",
+                "RepoDeleteSuccess": "仓库删除成功.",
                 "RepoGetPathsDetailsSuccess": "获取路径详情成功.",
                 "RepoGetPathsSuccess": "获取路径成功.",
                 "RepoIdentifierInvalid": "仓库名称不合法,identifier仅支持字母、数字、下划线(_)、连字符(-)、点号(.)",
@@ -3450,6 +3442,9 @@ const docTemplate = `{
                 "RuleSetBodyParamError": "请求体参数解析失败.",
                 "RuleSetCreateError": "规则集创建失败.",
                 "RuleSetCreateSuccess": "规则集创建成功.",
+                "RuleSetDeleteError": "规则集列表删除失败.",
+                "RuleSetDeleteSuccess": "规则集列表删除成功.",
+                "RuleSetInUseError": "规则集已被扫描解决方案使用.",
                 "RuleSetDeleteError": "规则集列表删除失败.",
                 "RuleSetDeleteSuccess": "规则集列表删除成功.",
                 "RuleSetInUseError": "规则集已被扫描解决方案使用.",
@@ -3561,6 +3556,8 @@ const docTemplate = `{
                 "创建仓库成功",
                 "删除仓库失败.",
                 "仓库删除成功.",
+                "删除仓库失败.",
+                "仓库删除成功.",
                 "获取路径详情成功.",
                 "获取路径成功.",
                 "仓库名称不合法,identifier仅支持字母、数字、下划线(_)、连字符(-)、点号(.)",
@@ -3594,6 +3591,9 @@ const docTemplate = `{
                 "请求体参数解析失败.",
                 "规则集创建失败.",
                 "规则集创建成功.",
+                "规则集列表删除失败.",
+                "规则集列表删除成功.",
+                "规则集已被扫描解决方案使用.",
                 "规则集列表删除失败.",
                 "规则集列表删除成功.",
                 "规则集已被扫描解决方案使用.",
@@ -3705,6 +3705,8 @@ const docTemplate = `{
                 "RepoCreateSuccess",
                 "RepoDeleteError",
                 "RepoDeleteSuccess",
+                "RepoDeleteError",
+                "RepoDeleteSuccess",
                 "RepoGetPathsDetailsSuccess",
                 "RepoGetPathsSuccess",
                 "RepoIdentifierInvalid",
@@ -3738,6 +3740,9 @@ const docTemplate = `{
                 "RuleSetBodyParamError",
                 "RuleSetCreateError",
                 "RuleSetCreateSuccess",
+                "RuleSetDeleteError",
+                "RuleSetDeleteSuccess",
+                "RuleSetInUseError",
                 "RuleSetDeleteError",
                 "RuleSetDeleteSuccess",
                 "RuleSetInUseError",
