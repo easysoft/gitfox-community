@@ -30,6 +30,8 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/space"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/user"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/cmd/cli/operations/provider"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/auth/authn"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/auth/authz"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/ssh"
@@ -87,7 +89,11 @@ func NewApp(mode string) (*App, func(), error) {
 	}
 	branchService := branch.NewService(urlProvider, gitService)
 	repoStore := repo.NewRepoStore(db)
-	repoService := repo2.NewRepoSvc(gitService, repoStore, spaceStore, urlProvider)
+	duration := authz.ProvideCacheDuration()
+	permissionCache := authz.NewPermissionCache(duration)
+	publicAccessCache := authz.NewPublicAccessCache(duration)
+	membershipAuthorizer := authz.NewMembershipAuthorizer(permissionCache, publicAccessCache)
+	repoService := repo2.NewRepoSvc(gitService, repoStore, spaceStore, urlProvider, membershipAuthorizer)
 	controller := branch2.NewController(branchService, repoService)
 	tagService := tag.NewService(urlProvider, gitService)
 	tagController := tag2.NewController(tagService, repoService)
@@ -114,17 +120,19 @@ func NewApp(mode string) (*App, func(), error) {
 	}
 	githookController := provider.NewGitHookController(userStore, repoStore, gitService, urlProvider, clientFactory)
 	server := provider.ProvideSSHServer(config, interface2, repoController)
+	authenticator := authn.ProvideAuthenticators(config, userStore, tokenInterface)
 	app := &App{
-		SystemConfig: config,
-		SystemLog:    systemLog,
-		APILog:       apiLog,
-		DB:           db,
-		SqliteDB:     sqliteDB,
-		Controller:   routerController,
-		I18nManager:  i18nManager,
-		GithookCtrl:  githookController,
-		SSHServer:    server,
-		UserService:  userService,
+		SystemConfig:  config,
+		SystemLog:     systemLog,
+		APILog:        apiLog,
+		DB:            db,
+		SqliteDB:      sqliteDB,
+		Controller:    routerController,
+		I18nManager:   i18nManager,
+		GithookCtrl:   githookController,
+		SSHServer:     server,
+		UserService:   userService,
+		Authenticator: authenticator,
 	}
 	return app, func() {
 		cleanup2()
@@ -135,14 +143,15 @@ func NewApp(mode string) (*App, func(), error) {
 // wire.go:
 
 type App struct {
-	SystemConfig *config.Config
-	SystemLog    *provider.SystemLog
-	APILog       *provider.APILog
-	DB           *gorm.DB
-	SqliteDB     *database.SqliteDB
-	Controller   *router.Controller
-	I18nManager  *provider.I18nManager
-	GithookCtrl  *githook.Controller
-	SSHServer    *ssh.Server
-	UserService  user2.Interface
+	SystemConfig  *config.Config
+	SystemLog     *provider.SystemLog
+	APILog        *provider.APILog
+	DB            *gorm.DB
+	SqliteDB      *database.SqliteDB
+	Controller    *router.Controller
+	I18nManager   *provider.I18nManager
+	GithookCtrl   *githook.Controller
+	SSHServer     *ssh.Server
+	UserService   user2.Interface
+	Authenticator authn.Authenticator
 }

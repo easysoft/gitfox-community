@@ -15,6 +15,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/utils"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/space"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/auth/authz"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
@@ -28,17 +29,25 @@ type Service struct {
 	repoStore   repo.Interface
 	spaceStore  space.Interface
 	urlProvider url.Provider
+	authorizer  authz.Authorizer
 }
 
 var _ Interface = (*Service)(nil)
 
-// NewService 创建 SpaceService 实例
-func NewRepoSvc(gitSvc git.Interface, repoStore repo.Interface, spaceStore space.Interface, urlProvider url.Provider) *Service {
+// NewRepoSvc 创建 RepoService 实例
+func NewRepoSvc(
+	gitSvc git.Interface,
+	repoStore repo.Interface,
+	spaceStore space.Interface,
+	urlProvider url.Provider,
+	authorizer authz.Authorizer,
+) *Service {
 	return &Service{
 		gitSvc:      gitSvc,
 		repoStore:   repoStore,
 		spaceStore:  spaceStore,
 		urlProvider: urlProvider,
+		authorizer:  authorizer,
 	}
 }
 
@@ -195,28 +204,39 @@ func (s *Service) Update(ctx context.Context, req *repoModel.ReqForUpdate, oldRe
 	return updatedRepo, nil
 }
 
-func (s *Service) GetRepoCheckAccess(ctx context.Context, session *auth.Session, repoRef string, reqPermission []constant.Permission) (*repoModel.Repo, error) {
+func (s *Service) GetRepoCheckAccess(ctx context.Context, session *auth.Session, repoID uint, reqPermission []constant.Permission) (*repoModel.Repo, error) {
 
 	// get repo
-	repo, err := s.GetRepo(ctx, repoRef, []constant.RepoState{constant.RepoStateActive, constant.RepoStateMigrateGitPush})
+	repo, err := s.GetRepo(ctx, repoID, []constant.RepoState{constant.RepoStateActive, constant.RepoStateMigrateGitPush})
 	if err != nil {
 		return nil, err
 	}
 
-	// check repo todo
-	// reqPermission
+	// for _, v := range reqPermission {
+	// 	ok, err := s.authorizer.Check(ctx, session,
+	// 		constant.Scope{
+	// 			ResourceType: constant.ResourceTypeRepo,
+	// 			ResourceID:   repo.ID,
+	// 		},
+	// 		v,
+	// 	)
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+	// 	fmt.Printf("Permission %v: %v\n", v, ok)
+	// }
 
 	return repo, nil
 }
 
-func (s *Service) GetRepo(ctx context.Context, repoRef string, allowedStates []constant.RepoState) (*repoModel.Repo, error) {
-	if repoRef == "" {
-		return nil, errors.BadRequest.New("A valid repository reference must be provided.")
+func (s *Service) GetRepo(ctx context.Context, repoID uint, allowedStates []constant.RepoState) (*repoModel.Repo, error) {
+	if repoID < 1 {
+		return nil, errors.BadRequest.New("A valid repository id must be provided.")
 	}
 
-	repo, err := s.repoStore.FindByRef(ctx, repoRef)
+	repo, err := s.repoStore.GetByID(ctx, repoID)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to find repository: %s", repoRef)
+		return nil, errors.Wrapf(err, "failed to find repository: %d", repoID)
 	}
 
 	if len(allowedStates) > 0 && !slice.Contain(allowedStates, constant.RepoState(repo.Status)) {

@@ -5,6 +5,8 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
 	principal "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/user"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/auth/authn"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
@@ -22,13 +24,16 @@ func Attempt(authenticator authn.Authenticator) gin.HandlerFunc {
 		session, err := authenticator.Authenticate(c)
 		if err != nil {
 			log.Debugf("authentication failed: %v", err)
+			err = errors.WithI18nKey(err, i18n.AuthFailed)
 			resp.Unauthorized(c, err)
 			return
 		}
 
 		// 更新日志上下文，注入用户信息
-		log = log.With("principal_account", session.User.Account)
-		c.Set(logger.ContextLogger, log)
+		if session.User != nil {
+			log = log.With("principal_account", session.User.Account)
+			c.Set(logger.ContextLogger, log)
+		}
 
 		// 将认证会话注入到 Context 中
 		c.Request = c.Request.WithContext(

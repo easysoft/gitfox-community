@@ -38,7 +38,7 @@ func (s *Store) ListByFingerprint(ctx context.Context, fingerprint string) ([]pu
 	return result, nil
 }
 
-func (s *Store) Add(ctx context.Context, publicKey PublicKey) error {
+func (s *Store) Create(ctx context.Context, publicKey PublicKey) error {
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 
 		// 先查询是否存在相同指纹的公钥

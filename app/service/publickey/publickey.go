@@ -90,7 +90,7 @@ func (s Service) CreatePublicKey(ctx context.Context, session *auth.Session, par
 		Type:        key.Type(),        // 公钥算法类型（如 ssh-ed25519 、 ssh-rsa ），用于展示与后续策略控制。
 	}
 
-	err = s.publicKeyStore.Add(ctx, input)
+	err = s.publicKeyStore.Create(ctx, input)
 	if err != nil {
 		return errors.Wrap(err, "failed to create public key")
 	}

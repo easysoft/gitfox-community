@@ -28,6 +28,9 @@ func NewBasicAuthenticator(userStore user.Interface) *BasicAuthenticator {
 	}
 }
 
+// 请求示例
+// Authorization: Basic base64(username:password)
+// Authorization: Basic YWRtaW46MTIzNDU2
 func (a *BasicAuthenticator) Authenticate(r *gin.Context) (*auth.Session, error) {
 
 	logger := logger.GetLogger(r)
@@ -40,6 +43,10 @@ func (a *BasicAuthenticator) Authenticate(r *gin.Context) (*auth.Session, error)
 
 	user, err := a.userStore.FindUserByAccount(r, userName)
 	if errors.Is(err, errors.ErrResourceNotFound) {
+		return nil, constant.ErrUnauthorized
+	}
+
+	if user == nil {
 		return nil, constant.ErrUnauthorized
 	}
 

@@ -2,6 +2,7 @@ package authn
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
@@ -26,9 +27,10 @@ const (
 type Claims struct {
 	jwt.StandardClaims
 
-	App     string `json:"app,omitempty"`
-	Admin   bool   `json:"admin,omitempty"`
-	Account string `json:"account,omitempty"`
+	App        string `json:"app,omitempty"`
+	Admin      bool   `json:"admin,omitempty"`
+	Account    string `json:"account,omitempty"`
+	Identifier string `json:"identifier,omitempty"`
 
 	Token             *SubClaimsToken             `json:"tkn,omitempty"`
 	Membership        *SubClaimsMembership        `json:"ms,omitempty"`
@@ -73,7 +75,9 @@ func GenerateForToken(token *auth.Token, secret string) (string, error) {
 			IssuedAt:  token.CreatedDate.Unix(),
 			ExpiresAt: expiresDate / 1000,
 		},
-		Account: token.Account,
+		Account:    token.Account,
+		Identifier: token.Identifier,
+
 		Token: &SubClaimsToken{
 			Type: token.Type,
 			ID:   token.ID,
@@ -102,9 +106,11 @@ func GenerateForAppToken(token *auth.Token, secret string, isAdmin bool) (string
 			IssuedAt:  token.CreatedDate.Unix(),
 			ExpiresAt: expiresDate / 1000,
 		},
-		App:     token.Account,
-		Admin:   isAdmin,
-		Account: token.Identifier,
+		App:        token.Account,
+		Admin:      isAdmin,
+		Account:    token.Account,
+		Identifier: token.Identifier,
+
 		Token: &SubClaimsToken{
 			Type: token.Type,
 			ID:   token.ID,
@@ -170,4 +176,8 @@ func GenerateForTokenWithAccessPermissions(account string, lifetime *time.Durati
 	}
 
 	return res, nil
+}
+
+func KeysToSecret(key ...string) string {
+	return strings.Join(key, "_")
 }

@@ -10,7 +10,7 @@ const (
 	QueryParamRepoID  = "repoId"
 	QueryParamSpaceID = "spaceId"
 
-	QueryParamSudoUserID = "sudoUserId"
+	QueryParamOperation = "Operation"
 )
 
 func GetRepoRefFromPath(r *gin.Context) (string, error) {

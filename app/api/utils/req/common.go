@@ -11,11 +11,11 @@ const (
 )
 
 type RepoRef struct {
-	RepoRef string `uri:"repoRef" binding:"required"`
+	RepoRef uint `uri:"repoRef" binding:"required"`
 }
 
 type RepoId struct {
-	RepoID int64 `uri:"repoId" binding:"required"`
+	RepoID uint `uri:"repoId" binding:"required"`
 }
 
 const (

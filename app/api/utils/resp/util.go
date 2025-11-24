@@ -67,7 +67,15 @@ func InternalError(c *gin.Context, err error, args ...interface{}) {
 }
 
 func Unauthorized(c *gin.Context, err error, args ...interface{}) {
-	objectErr(c, err, http.StatusUnauthorized, args...)
+	code := errors.GetI18nKey(err)
+	message := i18n.TGin(c, code, args...) + fmt.Sprintf(";%s", err.Error())
+	traceID := getTraceID(c)
+	c.AbortWithStatusJSON(http.StatusUnauthorized, ObjectResponse{
+		Code:    code,
+		Message: message,
+		TraceID: traceID,
+		Data:    nil,
+	})
 }
 
 // ListSuccess renders a successful list response (200 OK)

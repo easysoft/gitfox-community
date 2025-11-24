@@ -22,11 +22,12 @@ type PublicAccessCacheKey struct {
 type PermissionCache cache.Cache[PermissionCacheKey, bool]
 type PublicAccessCache cache.Cache[PublicAccessCacheKey, bool]
 
-func NewPermissionCache(
-	cacheDuration time.Duration,
-) (PermissionCache, PublicAccessCache) {
-	return cache.New(permissionCacheGetter{}, cacheDuration),
-		cache.New(publicAccessCacheGetter{}, cacheDuration)
+func NewPermissionCache(cacheDuration time.Duration) PermissionCache {
+	return cache.New(permissionCacheGetter{}, cacheDuration)
+}
+
+func NewPublicAccessCache(cacheDuration time.Duration) PublicAccessCache {
+	return cache.New(publicAccessCacheGetter{}, cacheDuration)
 }
 
 type permissionCacheGetter struct {
