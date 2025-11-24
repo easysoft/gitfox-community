@@ -13,3 +13,7 @@ ruleSet:
   delete_error: "Failed to delete ruleSet."
   delete_success: "RuleSet delete successfully."
   in_use_error: "RuleSet is being used by scan solution."
+  bind_success: "RuleSet bind rules successfully."
+  bind_error: "Failed to bind rules to ruleSet."
+  unbind_success: "RuleSet unbind rules successfully."
+  unbind_error: "Failed to unbind rules from ruleSet."

@@ -117,6 +117,8 @@ const (
 	RequestRequestBodyTooLarge             I18nKey = "request.request_body_too_large"             // 请求体过大.
 
 	// RuleSet 相关常量
+	RuleSetBindError       I18nKey = "ruleSet.bind_error"        // 规则集绑定规则失败.
+	RuleSetBindSuccess     I18nKey = "ruleSet.bind_success"      // 规则集绑定规则成功.
 	RuleSetBodyParamError  I18nKey = "ruleSet.body_param_error"  // 请求体参数解析失败.
 	RuleSetCreateError     I18nKey = "ruleSet.create_error"      // 规则集创建失败.
 	RuleSetCreateSuccess   I18nKey = "ruleSet.create_success"    // 规则集创建成功.
@@ -129,6 +131,8 @@ const (
 	RuleSetQueryError      I18nKey = "ruleSet.query_error"       // 规则集详情查询失败.
 	RuleSetQueryParamError I18nKey = "ruleSet.query_param_error" // 查询参数解析失败.
 	RuleSetQuerySuccess    I18nKey = "ruleSet.query_success"     // 规则集详情查询成功.
+	RuleSetUnbindError     I18nKey = "ruleSet.unbind_error"      // 规则集解绑规则失败.
+	RuleSetUnbindSuccess   I18nKey = "ruleSet.unbind_success"    // 规则集解绑规则成功.
 	RuleSetUpdateError     I18nKey = "ruleSet.update_error"      // 规则集更新失败.
 	RuleSetUpdateSuccess   I18nKey = "ruleSet.update_success"    // 规则集更新成功.
 

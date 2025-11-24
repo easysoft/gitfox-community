@@ -27,3 +27,10 @@ type Rule struct {
 	EditedDate  *time.Time                `json:"editedDate"` // 允许 NULL，用指针类型
 	Deleted     bool                      `json:"deleted"`
 }
+
+type RuleReqFilter struct {
+	Sort  string `json:"sort" form:"sort" default:"id"`
+	Order string `json:"order" form:"order" default:"asc"`
+	Page  int    `json:"page" form:"page" default:"1"`
+	Size  int    `json:"size" form:"size" default:"30"`
+}

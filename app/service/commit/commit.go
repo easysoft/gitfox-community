@@ -103,7 +103,7 @@ func (s *Service) List(ctx context.Context, req commitModel.ReqFilter, repo repo
 		GitREF:       gitRef,
 		After:        req.After,
 		Page:         int32(req.Page),
-		Limit:        int32(req.Limit),
+		Limit:        int32(req.Size),
 		Path:         req.Path,
 		Since:        req.Since,
 		Until:        req.Until,
@@ -115,10 +115,10 @@ func (s *Service) List(ctx context.Context, req commitModel.ReqFilter, repo repo
 		return commitModel.RespForList{}, isLast, err
 	}
 
-	isLast = len(rpcOut.Commits) <= req.Limit
+	isLast = len(rpcOut.Commits) <= req.Size
 	commits := rpcOut.Commits
-	if len(rpcOut.Commits) > req.Limit {
-		commits = rpcOut.Commits[:req.Limit]
+	if len(rpcOut.Commits) > req.Size {
+		commits = rpcOut.Commits[:req.Size]
 		isLast = false
 	}
 	response := make([]commitModel.Commit, len(commits))

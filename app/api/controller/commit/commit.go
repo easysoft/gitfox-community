@@ -94,13 +94,6 @@ func (c *Controller) Create(ctx *gin.Context) {
 func (c *Controller) List(ctx *gin.Context) {
 	var reqQuery commitModel.ReqFilter
 	var err error
-	session, ok := req.GetAuthSession(ctx.Request.Context())
-	if !ok {
-		err = errors.WithI18nKey(errors.New("session not found"), i18n.AuthNoSession)
-		resp.BadRequest(ctx, err)
-		return
-	}
-
 	if err = ctx.ShouldBindJSON(&reqQuery); err != nil {
 		err = errors.WithI18nKey(err, i18n.CommitQueryParamError)
 		resp.BadRequest(ctx, err)
@@ -108,8 +101,13 @@ func (c *Controller) List(ctx *gin.Context) {
 	}
 	// 设置默认值
 	req.SetDefaults(&reqQuery)
-	// 设置默认值
-	req.SetDefaults(&reqQuery)
+
+	session, ok := req.GetAuthSession(ctx.Request.Context())
+	if !ok {
+		err = errors.WithI18nKey(errors.New("session not found"), i18n.AuthNoSession)
+		resp.BadRequest(ctx, err)
+		return
+	}
 
 	// 通过仓库 ID 获取仓库
 	repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, reqQuery.RepoID)
@@ -128,7 +126,7 @@ func (c *Controller) List(ctx *gin.Context) {
 		resp.ListNoTotalArgs{
 			IsLast:   isLast,
 			Page:     int64(reqQuery.Page),
-			PageSize: int64(reqQuery.Limit),
+			PageSize: int64(reqQuery.Size),
 		}, i18n.CommitListSuccess, nil)
 }
 

@@ -124,11 +124,11 @@ func TestSetDefaults_EmbeddedStruct(t *testing.T) {
 	if reqFilter.Page != 1 {
 		t.Errorf("Expected Page=1, got %d", reqFilter.Page)
 	}
-	if reqFilter.Limit != 20 {
-		t.Errorf("Expected Limit=20, got %d", reqFilter.Limit)
+	if reqFilter.Size != 20 {
+		t.Errorf("Expected Limit=20, got %d", reqFilter.Size)
 	}
 
-	t.Logf("Successfully set defaults for embedded struct: Page=%d, Limit=%d", reqFilter.Page, reqFilter.Limit)
+	t.Logf("Successfully set defaults for embedded struct: Page=%d, Limit=%d", reqFilter.Page, reqFilter.Size)
 }
 
 func TestSetDefaults_InvalidInput(t *testing.T) {

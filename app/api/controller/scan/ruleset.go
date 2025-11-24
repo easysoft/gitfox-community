@@ -28,13 +28,13 @@ func NewRuleSetController(ruleSetSvc scanService.IRuleSet) *RuleSetController {
 // @Tags scan
 // @Accept application/json
 // @Produce application/json
-// @Param body body scanModel.RuleSetCreateReq true "创建规则集请求参数"
+// @Param body body scanModel.RuleSetReqForCreate true "创建规则集请求参数"
 // @Success 201 {object} resp.ObjectResponse{data=scanModel.RuleSet} "创建成功"
 // @Error 400 {object} resp.ObjectResponse "参数错误"
 // @Error 500 {object} resp.ObjectResponse "服务器内部错误"
 // @Router /scan/rulesets [post]
 func (c *RuleSetController) Create(ctx *gin.Context) {
-	reqData := new(scanModel.RuleSetCreateReq)
+	reqData := new(scanModel.RuleSetReqForCreate)
 	if err := ctx.ShouldBindJSON(&reqData); err != nil {
 		err = errors.WithI18nKey(err, i18n.RuleSetBodyParamError)
 		resp.BadRequest(ctx, err)
@@ -62,20 +62,24 @@ func (c *RuleSetController) Create(ctx *gin.Context) {
 // @Description 根据过滤条件查询规则集列表，支持分页
 // @Tags scan
 // @Accept application/json
-// @Produce application/json
+// @Produce application/js
+// @Param body body scanModel.RuleSetReqFilter true "查询规则集请求参数"
 // @Success 200 {object} resp.ListResponse{data=[]scanModel.RuleSet} "查询成功"
 // @Error 400 {object} resp.ObjectResponse "参数错误"
 // @Error 500 {object} resp.ObjectResponse "服务器内部错误"
 // @Router /scan/rulesets/list [post]
 func (c *RuleSetController) List(ctx *gin.Context) {
-	var filter scanModel.RuleSetListReq
-	if err := ctx.ShouldBindJSON(&filter); err != nil {
+	var reqQuery scanModel.RuleSetReqFilter
+	if err := ctx.ShouldBindJSON(&reqQuery); err != nil {
 		err = errors.WithI18nKey(err, i18n.RuleSetQueryParamError)
 		resp.BadRequest(ctx, err)
 		return
 	}
 
-	result, err := c.ruleSetSvc.List(logger.GetContextWithLogger(ctx), filter)
+	// 设置默认值
+	req.SetDefaults(&reqQuery)
+
+	result, err := c.ruleSetSvc.List(logger.GetContextWithLogger(ctx), reqQuery)
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.RuleSetListError)
 		resp.InternalError(ctx, err)
@@ -85,8 +89,8 @@ func (c *RuleSetController) List(ctx *gin.Context) {
 	resp.ListSuccess(ctx, result.Data,
 		resp.ListArgs{
 			Total:    result.Total,
-			Page:     int64(result.Page),
-			PageSize: int64(result.PageSize),
+			Page:     int64(reqQuery.Page),
+			PageSize: int64(reqQuery.Size),
 		}, i18n.RuleSetListSuccess, nil)
 }
 
@@ -127,14 +131,14 @@ func (c *RuleSetController) Get(ctx *gin.Context) {
 // @Accept application/json
 // @Produce application/json
 // @Param id path uint true "规则集 ID"
-// @Param body body scanModel.RuleSetUpdateReq true "更新规则集所需请求参数"
+// @Param body body scanModel.RuleSetReqForUpdate true "更新规则集所需请求参数"
 // @Success 200 {object} resp.ObjectResponse{data=scanModel.RuleSet} "更新成功"
 // @Error 400 {object} resp.ObjectResponse "参数错误"
 // @Error 404 {object} resp.ObjectResponse "规则集不存在"
 // @Error 500 {object} resp.ObjectResponse "服务器内部错误"
 // @Router /scan/rulesets/{id} [put]
 func (c *RuleSetController) Update(ctx *gin.Context) {
-	var reqBody scanModel.RuleSetUpdateReq
+	var reqBody scanModel.RuleSetReqForUpdate
 	var err error
 
 	// 解析 path id
@@ -193,4 +197,168 @@ func (c *RuleSetController) Delete(ctx *gin.Context) {
 	}
 
 	resp.OK(ctx, i18n.RuleSetDeleteSuccess, nil)
+}
+
+// GetBindRule 获取规则集已绑定的规则列表
+// @Summary 获取规则集已绑定的规则列表
+// @Description 根据规则集ID查询已绑定的规则列表，支持分页
+// @Tags scan
+// @Accept application/json
+// @Produce application/json
+// @Param id path uint true "规则集ID"
+// @Param page query int false "页码" default(1)
+// @Param size query int false "每页数量" default(30)
+// @Success 200 {object} resp.ListResponse{data=[]scanModel.Rule} "查询成功"
+// @Error 400 {object} resp.ObjectResponse "参数错误"
+// @Error 500 {object} resp.ObjectResponse "服务器内部错误"
+// @Router /scan/rulesets/{id}/bind [get]
+func (c *RuleSetController) GetBindRule(ctx *gin.Context) {
+	ruleSetID, err := req.PathParamAsPositiveUint(ctx, "id")
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RuleSetPathParamError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
+	var reqQuery scanModel.RuleReqFilter
+	if err := ctx.ShouldBindQuery(&reqQuery); err != nil {
+		err = errors.WithI18nKey(err, i18n.RuleSetQueryParamError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
+	// 设置默认值
+	req.SetDefaults(&reqQuery)
+
+	result, err := c.ruleSetSvc.GetBindRule(logger.GetContextWithLogger(ctx), ruleSetID, reqQuery)
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RuleSetListError)
+		resp.InternalError(ctx, err)
+		return
+	}
+
+	resp.ListSuccess(ctx, result.Data,
+		resp.ListArgs{
+			Total:    result.Total,
+			Page:     int64(reqQuery.Page),
+			PageSize: int64(reqQuery.Size),
+		}, i18n.RuleSetListSuccess, nil)
+}
+
+// GetUnBindRule 获取规则集未绑定的规则列表
+// @Summary 获取规则集未绑定的规则列表
+// @Description 根据规则集ID查询未绑定的规则列表，支持分页
+// @Tags scan
+// @Accept application/json
+// @Produce application/json
+// @Param id path uint true "规则集ID"
+// @Param page query int false "页码" default(1)
+// @Param size query int false "每页数量" default(30)
+// @Success 200 {object} resp.ListResponse{data=[]scanModel.Rule} "查询成功"
+// @Error 400 {object} resp.ObjectResponse "参数错误"
+// @Error 500 {object} resp.ObjectResponse "服务器内部错误"
+// @Router /scan/rulesets/{id}/unbind [get]
+func (c *RuleSetController) GetUnBindRule(ctx *gin.Context) {
+	ruleSetID, err := req.PathParamAsPositiveUint(ctx, "id")
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RuleSetPathParamError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
+	var reqQuery scanModel.RuleReqFilter
+	if err := ctx.ShouldBindQuery(&reqQuery); err != nil {
+		err = errors.WithI18nKey(err, i18n.RuleSetQueryParamError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
+	// 设置默认值
+	req.SetDefaults(&reqQuery)
+
+	result, err := c.ruleSetSvc.GetUnBindRule(logger.GetContextWithLogger(ctx), ruleSetID, reqQuery)
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RuleSetListError)
+		resp.InternalError(ctx, err)
+		return
+	}
+
+	resp.ListSuccess(ctx, result.Data,
+		resp.ListArgs{
+			Total:    result.Total,
+			Page:     int64(reqQuery.Page),
+			PageSize: int64(reqQuery.Size),
+		}, i18n.RuleSetListSuccess, nil)
+}
+
+// BindRule 绑定规则到规则集
+// @Summary 绑定规则到规则集
+// @Description 将指定的规则绑定到规则集
+// @Tags scan
+// @Accept application/json
+// @Produce application/json
+// @Param id path uint true "规则集ID"
+// @Param body body scanModel.RuleSetReqForBind true "绑定规则请求参数"
+// @Success 200 {object} resp.ObjectResponse "绑定成功"
+// @Error 400 {object} resp.ObjectResponse "参数错误"
+// @Error 500 {object} resp.ObjectResponse "服务器内部错误"
+// @Router /scan/rulesets/{id}/bind [post]
+func (c *RuleSetController) BindRule(ctx *gin.Context) {
+	ruleSetID, err := req.PathParamAsPositiveUint(ctx, "id")
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RuleSetPathParamError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
+	reqData := new(scanModel.RuleSetReqForBind)
+	if err := ctx.ShouldBindJSON(&reqData); err != nil {
+		err = errors.WithI18nKey(err, i18n.RuleSetBodyParamError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
+	if err := c.ruleSetSvc.BindRule(logger.GetContextWithLogger(ctx), ruleSetID, *reqData); err != nil {
+		err = errors.WithI18nKey(err, i18n.RuleSetBindError)
+		resp.InternalError(ctx, err)
+		return
+	}
+
+	resp.OK(ctx, i18n.RuleSetBindSuccess, nil)
+}
+
+// UnBindRule 解绑规则与规则集
+// @Summary 解绑规则与规则集
+// @Description 将指定的规则从规则集中解绑
+// @Tags scan
+// @Accept application/json
+// @Produce application/json
+// @Param id path uint true "规则集ID"
+// @Param body body scanModel.RuleSetReqForBind true "解绑规则请求参数"
+// @Success 200 {object} resp.ObjectResponse "解绑成功"
+// @Error 400 {object} resp.ObjectResponse "参数错误"
+// @Error 500 {object} resp.ObjectResponse "服务器内部错误"
+// @Router /scan/rulesets/{id}/unbind [post]
+func (c *RuleSetController) UnBindRule(ctx *gin.Context) {
+	ruleSetID, err := req.PathParamAsPositiveUint(ctx, "id")
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RuleSetPathParamError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
+	reqData := new(scanModel.RuleSetReqForBind)
+	if err := ctx.ShouldBindJSON(&reqData); err != nil {
+		err = errors.WithI18nKey(err, i18n.RuleSetBodyParamError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
+	if err := c.ruleSetSvc.UnBindRule(logger.GetContextWithLogger(ctx), ruleSetID, *reqData); err != nil {
+		err = errors.WithI18nKey(err, i18n.RuleSetUnbindError)
+		resp.InternalError(ctx, err)
+		return
+	}
+
+	resp.OK(ctx, i18n.RuleSetUnbindSuccess, nil)
 }
