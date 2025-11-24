@@ -633,6 +633,36 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "delete": {
+                "description": "删除仓库,软删除",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "repos"
+                ],
+                "summary": "删除仓库",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "仓库 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "删除仓库成功",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
             }
         },
         "/repos/{id}/diff": {
@@ -2549,7 +2579,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "deleted": {
-                    "type": "boolean"
+                    "type": "integer"
                 },
                 "desc": {
                     "type": "string"
@@ -3241,6 +3271,8 @@ const docTemplate = `{
                 "repo.body_param_error",
                 "repo.create_error",
                 "repo.create_success",
+                "repo.delete_error",
+                "repo.delete_success",
                 "repo.get_paths_details_success",
                 "repo.get_paths_success",
                 "repo.identifier_invalid",
@@ -3383,6 +3415,8 @@ const docTemplate = `{
                 "RepoBodyParamError": "Body 参数解析失败.",
                 "RepoCreateError": "创建仓库异常",
                 "RepoCreateSuccess": "创建仓库成功",
+                "RepoDeleteError": "删除仓库失败.",
+                "RepoDeleteSuccess": "仓库删除成功.",
                 "RepoGetPathsDetailsSuccess": "获取路径详情成功.",
                 "RepoGetPathsSuccess": "获取路径成功.",
                 "RepoIdentifierInvalid": "仓库名称不合法,identifier仅支持字母、数字、下划线(_)、连字符(-)、点号(.)",
@@ -3525,6 +3559,8 @@ const docTemplate = `{
                 "Body 参数解析失败.",
                 "创建仓库异常",
                 "创建仓库成功",
+                "删除仓库失败.",
+                "仓库删除成功.",
                 "获取路径详情成功.",
                 "获取路径成功.",
                 "仓库名称不合法,identifier仅支持字母、数字、下划线(_)、连字符(-)、点号(.)",
@@ -3667,6 +3703,8 @@ const docTemplate = `{
                 "RepoBodyParamError",
                 "RepoCreateError",
                 "RepoCreateSuccess",
+                "RepoDeleteError",
+                "RepoDeleteSuccess",
                 "RepoGetPathsDetailsSuccess",
                 "RepoGetPathsSuccess",
                 "RepoIdentifierInvalid",

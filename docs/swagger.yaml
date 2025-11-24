@@ -451,7 +451,7 @@ definitions:
       defaultBranch:
         type: string
       deleted:
-        type: boolean
+        type: integer
       desc:
         type: string
       editedBy:
@@ -947,6 +947,8 @@ definitions:
     - repo.body_param_error
     - repo.create_error
     - repo.create_success
+    - repo.delete_error
+    - repo.delete_success
     - repo.get_paths_details_success
     - repo.get_paths_success
     - repo.identifier_invalid
@@ -1089,6 +1091,8 @@ definitions:
       RepoBodyParamError: Body 参数解析失败.
       RepoCreateError: 创建仓库异常
       RepoCreateSuccess: 创建仓库成功
+      RepoDeleteError: 删除仓库失败.
+      RepoDeleteSuccess: 仓库删除成功.
       RepoGetPathsDetailsSuccess: 获取路径详情成功.
       RepoGetPathsSuccess: 获取路径成功.
       RepoIdentifierInvalid: 仓库名称不合法,identifier仅支持字母、数字、下划线(_)、连字符(-)、点号(.)
@@ -1230,6 +1234,8 @@ definitions:
     - Body 参数解析失败.
     - 创建仓库异常
     - 创建仓库成功
+    - 删除仓库失败.
+    - 仓库删除成功.
     - 获取路径详情成功.
     - 获取路径成功.
     - 仓库名称不合法,identifier仅支持字母、数字、下划线(_)、连字符(-)、点号(.)
@@ -1371,6 +1377,8 @@ definitions:
     - RepoBodyParamError
     - RepoCreateError
     - RepoCreateSuccess
+    - RepoDeleteError
+    - RepoDeleteSuccess
     - RepoGetPathsDetailsSuccess
     - RepoGetPathsSuccess
     - RepoIdentifierInvalid
@@ -1775,6 +1783,26 @@ paths:
       tags:
       - repos
   /repos/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: 删除仓库,软删除
+      parameters:
+      - description: 仓库 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 删除仓库成功
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 删除仓库
+      tags:
+      - repos
     get:
       consumes:
       - application/json

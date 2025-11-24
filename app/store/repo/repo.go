@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/paths"
 
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
@@ -81,15 +80,18 @@ func mapToModel(data Repository) *repoModel.Repo {
 // The repository is not checked for existence before calling this method, so if the repository does not exist, an error will be returned.
 func (s *Store) GetByID(ctx context.Context, id uint) (*repoModel.Repo, error) {
 	var repo Repository
-	repo.ID = id
-	err := s.db.WithContext(ctx).First(&repo).Where("deleted = 0").Error
-	if err != nil && errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, errors.NotFound.Wrapf(err, "repository %d not found", id)
-	}
-
+	err := s.db.WithContext(ctx).Where("id = ? AND deleted = 0", id).First(&repo).Error
 	if err != nil {
-		return nil, err
+		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
 
 	return mapToModel(repo), nil
+}
+
+
+func (s *Store) Delete(ctx context.Context, id uint) error {
+	if err := s.db.WithContext(ctx).Model(&Repository{}).Where("id = ?", id).Update("deleted", 1).Error; err != nil {
+		return database.ProcessSQLErrorf(ctx, err)
+	}
+	return nil
 }

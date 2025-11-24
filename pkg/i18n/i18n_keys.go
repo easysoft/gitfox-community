@@ -85,6 +85,8 @@ const (
 	RepoBodyParamError           I18nKey = "repo.body_param_error"           // Body 参数解析失败.
 	RepoCreateError              I18nKey = "repo.create_error"               // 创建仓库异常
 	RepoCreateSuccess            I18nKey = "repo.create_success"             // 创建仓库成功
+	RepoDeleteError              I18nKey = "repo.delete_error"               // 删除仓库失败.
+	RepoDeleteSuccess            I18nKey = "repo.delete_success"             // 仓库删除成功.
 	RepoGetPathsDetailsSuccess   I18nKey = "repo.get_paths_details_success"  // 获取路径详情成功.
 	RepoGetPathsSuccess          I18nKey = "repo.get_paths_success"          // 获取路径成功.
 	RepoIdentifierInvalid        I18nKey = "repo.identifier_invalid"         // 仓库名称不合法,identifier仅支持字母、数字、下划线(_)、连字符(-)、点号(.)

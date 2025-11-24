@@ -16,3 +16,5 @@ repo:
   mirror_read_only: "Mirror repository read-only."
   get_paths_success: "Get paths successfully."
   get_paths_details_success: "Get paths details successfully."
+  delete_success: "Repository deleted successfully."
+  delete_error: "Failed to delete the repository."
