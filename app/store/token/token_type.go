@@ -15,12 +15,11 @@ type Token struct {
 	Identifier string `gorm:"column:identifier"`
 	Token      string `gorm:"column:token"`
 
-	ExpiresDate *time.Time `gorm:"column:expires_date"` // ExpiresDate is an optional date that if specified restricts the validity of a token.
-	CreatedBy   string     `gorm:"column:created_by"`
-	CreatedDate *time.Time `gorm:"column:created_date"`
-	EditedBy    string     `gorm:"column:edited_by"`
-	EditedDate  *time.Time `gorm:"column:edited_date"`
-	Deleted     int8       `gorm:"column:deleted"`
+	ExpirationDate *time.Time `gorm:"column:expirationDate"` // ExpiresDate is an optional date that if specified restricts the validity of a token.
+	CreatedBy      string     `gorm:"column:createdBy"`
+	CreatedDate    *time.Time `gorm:"column:createdDate"`
+	EditedBy       string     `gorm:"column:editedBy"`
+	EditedDate     *time.Time `gorm:"column:editedDate"`
 }
 
 func (Token) TableName() string {
@@ -43,11 +42,11 @@ func (r *Token) BeforeUpdate(tx *gorm.DB) error {
 
 func (t *Token) ToAuthToken() *auth.Token {
 	return &auth.Token{
-		ID:          t.ID,
-		Account:     t.Account,
-		Type:        constant.TokenType(t.Type),
-		Identifier:  t.Identifier,
-		ExpiresDate: t.ExpiresDate,
-		CreatedDate: t.CreatedDate,
+		ID:             t.ID,
+		Account:        t.Account,
+		Type:           constant.TokenType(t.Type),
+		Identifier:     t.Identifier,
+		ExpirationDate: t.ExpirationDate,
+		CreatedDate:    t.CreatedDate,
 	}
 }

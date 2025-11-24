@@ -118,7 +118,7 @@ func (s *Server) ListenAndServe() error {
 		return fmt.Errorf("failed to setup host keys: %w", err)
 	}
 
-	log.Debug().Msgf("starting ssh service....: %v", s.internal.Addr)
+	//log.Debug().Msgf("starting ssh service....: %v", s.internal.Addr)
 	err = s.internal.ListenAndServe()
 	if err != nil {
 		return fmt.Errorf("ssh service not running: %w", err)
