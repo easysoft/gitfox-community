@@ -10,7 +10,7 @@ import (
 
 func (s *Service) GetContent(ctx context.Context, session *auth.Session, req *repoModel.GetContentReq) (*repoModel.GetContentOutput, error) {
 	// GetRepoById todo
-	repo, err := s.GetRepoCheckAccess(ctx, session, "", []constant.Permission{constant.PermissionRepoView})
+	repo, err := s.GetRepoCheckAccess(ctx, session, 1, []constant.Permission{constant.PermissionRepoView})
 	if err != nil {
 		return nil, err
 	}

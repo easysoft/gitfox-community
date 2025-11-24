@@ -7,6 +7,7 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/middleware"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/auth/authn"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 )
@@ -44,17 +45,21 @@ func NewRouter(mode string, logger *logger.SugaredMateLogger, controller *Contro
 	// 注册无需认证的公共路由
 	registerPublicRoutes(r, controller)
 
-	// 创建需要认证的路由组（应用鉴权中间件）
-	authGroup := r.Group("/api/v2")
-	authGroup.Use(middleware.MockAttempt())     // 模拟认证中间件
-	registerSpaceRoutes(authGroup, controller)  // 空间相关路由
-	registerBranchRoutes(authGroup, controller) // 分支相关路由
-	registerTagRoutes(authGroup, controller)    // 标签相关路由
-	registerCommitRoutes(authGroup, controller) // 提交相关路由
-	registerGitRoutes(authGroup, controller)    // Git 相关路由
-	registerRepoRoutes(authGroup, controller)   // 仓库相关路由
-	registerScanRoutes(authGroup, controller)   // 扫描相关路由
-	registerUserRoutes(authGroup, controller)   // 用户相关路由
+	// 创建需要 JWT 认证的路由组
+	jwtAuthGroup := r.Group("/api/v2")
+	jwtAuthGroup.Use(middleware.Attempt(authn.Get(authn.AuthKindJWT)))
+	registerSpaceRoutes(jwtAuthGroup, controller)  // 空间相关路由
+	registerBranchRoutes(jwtAuthGroup, controller) // 分支相关路由
+	registerTagRoutes(jwtAuthGroup, controller)    // 标签相关路由
+	registerCommitRoutes(jwtAuthGroup, controller) // 提交相关路由
+	registerRepoRoutes(jwtAuthGroup, controller)   // 仓库相关路由
+	registerScanRoutes(jwtAuthGroup, controller)   // 扫描相关路由
+	registerUserRoutes(jwtAuthGroup, controller)   // 用户相关路由
+
+	// 创建需要 Basic 认证的路由组（用于 Git 操作）
+	basicAuthGroup := r.Group("/api/v2")
+	basicAuthGroup.Use(middleware.Attempt(authn.Get(authn.AuthKindBasic)))
+	registerGitRoutes(basicAuthGroup, controller) // Git 相关路由
 	return r
 }
 

@@ -79,15 +79,15 @@ func (s *tokensStore) UpdateToken(ctx context.Context, id int64, token string) e
 	return s.db.WithContext(ctx).Model(&Token{}).Where("id = ?", id).Update("token", token).Error
 }
 
-func (s *tokensStore) GetByIdentifier(ctx context.Context, identifier string) (*Token, error) {
+func (s *tokensStore) GetByIdentifier(ctx context.Context, account string, identifier string) (*Token, error) {
 	var token Token
 
-	if err := s.db.WithContext(ctx).Where("identifier = ?", identifier).Find(&token).Error; err != nil {
-		return nil, errors.DBError.Wrapf(err, "get token by identifier %s", identifier)
+	if err := s.db.WithContext(ctx).Where("account = ? AND identifier = ?", account, identifier).Find(&token).Error; err != nil {
+		return nil, errors.DBError.Wrapf(err, "get token by account %s and identifier %s", account, identifier)
 	}
 
 	if token.ID == 0 {
-		return nil, errors.NotFound.Newf("token not found by identifier %s", identifier)
+		return nil, errors.NotFound.Newf("token not found by account %s and identifier %s", account, identifier)
 	}
 
 	return &token, nil

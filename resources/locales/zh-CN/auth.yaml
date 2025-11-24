@@ -1,5 +1,6 @@
 auth:
   no_data: "请求不包含任何可用于 Authorizer 的认证数据"
+  failed: "尝试认证失败"
   no_session: "请求不包含任何会话数据，无法进行授权"
   session_token_not_allowed: "会话令牌不允许用于与 Git 交互"
   user_not_found: "用户不存在"

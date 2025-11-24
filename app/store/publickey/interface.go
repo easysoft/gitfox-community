@@ -13,5 +13,5 @@ type Interface interface {
 	ListByAccount(ctx context.Context, account string, params req.ListFilter) (*database.PageResult[*publickey.PublicKey], error)
 	MarkAsVerified(ctx context.Context, id int64, verified int64) error
 
-	Add(ctx context.Context, publicKey PublicKey) error
+	Create(ctx context.Context, publicKey PublicKey) error
 }

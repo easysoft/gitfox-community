@@ -26,6 +26,15 @@ func NewMembershipAuthorizer(permissionCache PermissionCache, publicAccessCache 
 func (a *MembershipAuthorizer) Check(ctx context.Context, session *auth.Session, scope constant.Scope, permission constant.Permission) (bool, error) {
 	log := logger.GetLogger(ctx)
 
+	var account string
+
+	// 非用户授权
+	if session.User == nil {
+		account = session.Principal.App
+	} else {
+		account = session.User.Account
+	}
+
 	// 公开资源
 	publicAccessAllowed, err := a.CheckPublicAccess(ctx, scope.ResourceType, scope.ResourceID, permission)
 	if err != nil {
@@ -36,8 +45,8 @@ func (a *MembershipAuthorizer) Check(ctx context.Context, session *auth.Session,
 	}
 
 	log.Debugf(
-		"[MembershipAuthorizer]id '%d' requests %s in scope %#v",
-		session.Principal.ID,
+		"[MembershipAuthorizer]account '%s' requests %s in scope %#v",
+		account,
 		permission,
 		scope,
 	)
@@ -55,7 +64,7 @@ func (a *MembershipAuthorizer) Check(ctx context.Context, session *auth.Session,
 
 	return a.permissionCache.Get(
 		ctx, PermissionCacheKey{
-			Account:    session.User.Account,
+			Account:    account,
 			Scope:      scope,
 			Permission: permission,
 		},

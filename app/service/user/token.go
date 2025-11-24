@@ -55,7 +55,7 @@ const devopsAdminIdentifier = "devops_admin_identifier"
 func (s *Service) IssueAdminPAT() (string, error) {
 	ctx := context.Background()
 
-	tokens, err := s.tokenStore.GetByIdentifier(ctx, devopsAdminIdentifier)
+	tokens, err := s.tokenStore.GetByIdentifier(ctx, devopsAdminAccount, devopsAdminIdentifier)
 	if err != nil && !errors.IsNotFound(err) {
 		return "", errors.Wrapf(err, "get devops admin token")
 	}
@@ -72,7 +72,7 @@ func (s *Service) IssueAdminPAT() (string, error) {
 	}
 
 	// create jwt token.
-	jwtToken, err := authPkg.GenerateForAppToken(token, devopsAdmin.Account, true)
+	jwtToken, err := authPkg.GenerateForAppToken(token, authPkg.KeysToSecret(token.Account, token.Identifier), true)
 	if err != nil {
 		return "", errors.Wrapf(err, "create devops admin jwt token for user %s", devopsAdmin.Account)
 	}

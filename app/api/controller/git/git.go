@@ -3,7 +3,6 @@ package git
 import (
 	"compress/gzip"
 	"fmt"
-	"net/url"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
@@ -34,12 +33,20 @@ func NewGitController(gitSvc git.Interface, repoSvc repoSvc.Interface) *GitContr
 
 func (ctl *GitController) Clone(ctx *gin.Context) {
 	logger := logger.GetLogger(ctx)
-	var params req.RepoRef
+	var params req.RepoId
 	var err error
 
 	// 公共解析逻辑
 	session, contentEncoding, gitProtocol, err := ctl.prepareRequest(ctx, &params)
 	if err != nil {
+		resp.BadRequest(ctx, err)
+		return
+	}
+
+	permission := constant.PermissionRepoView
+	repo, err := ctl.repoSvc.GetRepoCheckAccess(ctx, session, params.RepoID, []constant.Permission{permission})
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RepoPullPermissionError)
 		resp.BadRequest(ctx, err)
 		return
 	}
@@ -66,13 +73,13 @@ func (ctl *GitController) Clone(ctx *gin.Context) {
 
 	// clone 是写操作 只要可读即可
 	// isWriteOperation := false
-	permission := constant.PermissionRepoView
-	repo, err := ctl.repoSvc.GetRepoCheckAccess(ctx, session, params.RepoRef, []constant.Permission{permission})
-	if err != nil {
-		err = errors.WithI18nKey(err, i18n.RepoPullPermissionError)
-		resp.BadRequest(ctx, err)
-		return
-	}
+	// permission := constant.PermissionRepoView
+	// repo, err := ctl.repoSvc.GetRepoCheckAccess(ctx, session, params.RepoID, []constant.Permission{permission})
+	// if err != nil {
+	// 	err = errors.WithI18nKey(err, i18n.RepoPullPermissionError)
+	// 	resp.BadRequest(ctx, err)
+	// 	return
+	// }
 
 	options := api.ServicePackOptions{
 		Service:      constant.GitServiceTypeUploadPack,
@@ -106,7 +113,7 @@ func (ctl *GitController) Clone(ctx *gin.Context) {
 
 func (ctl *GitController) Push(ctx *gin.Context) {
 	logger := logger.GetLogger(ctx)
-	var params req.RepoRef
+	var params req.RepoId
 	var err error
 
 	// 公共解析逻辑
@@ -140,7 +147,7 @@ func (ctl *GitController) Push(ctx *gin.Context) {
 	// clone 是写操作 只要可读即可
 	// isWriteOperation := true
 	permission := constant.PermissionRepoPush
-	repo, err := ctl.repoSvc.GetRepoCheckAccess(ctx, session, params.RepoRef, []constant.Permission{permission})
+	repo, err := ctl.repoSvc.GetRepoCheckAccess(ctx, session, params.RepoID, []constant.Permission{permission})
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.RepoPushPermissionError)
 		resp.BadRequest(ctx, err)
@@ -195,7 +202,7 @@ func (ctl *GitController) InfoRefs(c *gin.Context) {
 }
 
 // 提取公共解析逻辑
-func (ctl *GitController) prepareRequest(ctx *gin.Context, params *req.RepoRef) (*auth.Session, string, string, error) {
+func (ctl *GitController) prepareRequest(ctx *gin.Context, params *req.RepoId) (*auth.Session, string, string, error) {
 	logger := logger.GetLogger(ctx)
 	var err error
 
@@ -205,18 +212,12 @@ func (ctl *GitController) prepareRequest(ctx *gin.Context, params *req.RepoRef) 
 		return nil, "", "", err
 	}
 
-	if err = ctx.ShouldBindUri(params); err != nil || params.RepoRef == "" {
+	if err = ctx.ShouldBindUri(params); err != nil || params.RepoID == 0 {
 		err = errors.WithI18nKey(err, i18n.RequestPathParameterNotFound)
 		return nil, "", "", err
 	}
 
-	val, err := url.PathUnescape(params.RepoRef)
-	if err != nil {
-		err = errors.WithI18nKey(err, i18n.RequestPathParameterNotFound)
-		return nil, "", "", err
-	}
-
-	logger.Infof("origin url %s , repoRef: %s", ctx.Request.URL.String(), val)
+	logger.Infof("origin url %s , repoRef: %d", ctx.Request.URL.String(), params.RepoID)
 
 	contentEncoding := req.GetHeaderOrDefault(ctx, req.HeaderContentEncoding, "")
 	gitProtocol := req.GetHeaderOrDefault(ctx, req.HeaderParamGitProtocol, "")
