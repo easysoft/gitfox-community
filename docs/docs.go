@@ -633,6 +633,36 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "delete": {
+                "description": "删除仓库,软删除",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "repos"
+                ],
+                "summary": "删除仓库",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "仓库 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "删除仓库成功",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
             }
         },
         "/repos/{id}/diff": {
@@ -901,6 +931,44 @@ const docTemplate = `{
                 }
             }
         },
+        "/scan/rulesets/list": {
+            "post": {
+                "description": "根据过滤条件查询规则集列表，支持分页",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scan"
+                ],
+                "summary": "查询规则集列表",
+                "responses": {
+                    "200": {
+                        "description": "查询成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.RuleSet"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/scan/rulesets/{id}": {
             "get": {
                 "description": "根据传入的规则集 ID 获取规则集信息",
@@ -991,6 +1059,36 @@ const docTemplate = `{
                                     }
                                 }
                             ]
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "根据规则集 ID 删除规则集及其关联的规则",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scan"
+                ],
+                "summary": "删除规则集",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "规则集 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "删除成功",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
                         }
                     }
                 }
@@ -1684,21 +1782,6 @@ const docTemplate = `{
                 "ScanLangCsharpName"
             ]
         },
-        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRulePriority": {
-            "type": "integer",
-            "enum": [
-                0,
-                1,
-                2,
-                3
-            ],
-            "x-enum-varnames": [
-                "ScanRulePriorityLow",
-                "ScanRulePriorityMedium",
-                "ScanRulePriorityHigh",
-                "scanRulePriorityNone"
-            ]
-        },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleStatus": {
             "type": "string",
             "enum": [
@@ -1710,36 +1793,6 @@ const docTemplate = `{
                 "ScanRuleStatusEnabled",
                 "ScanRuleStatusDisabled",
                 "scanRuleStatusNone"
-            ]
-        },
-        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleType": {
-            "type": "string",
-            "enum": [
-                "defect",
-                "security",
-                "compliance",
-                "optimize",
-                ""
-            ],
-            "x-enum-comments": {
-                "ScanRuleTypeComplian": "合规",
-                "ScanRuleTypeDefect": "缺陷",
-                "ScanRuleTypeOptimize": "优化 // 代码异味",
-                "ScanRuleTypeVuln": "安全"
-            },
-            "x-enum-descriptions": [
-                "缺陷",
-                "安全",
-                "合规",
-                "优化 // 代码异味",
-                ""
-            ],
-            "x-enum-varnames": [
-                "ScanRuleTypeDefect",
-                "ScanRuleTypeVuln",
-                "ScanRuleTypeComplian",
-                "ScanRuleTypeOptimize",
-                "scanRuleTypeNone"
             ]
         },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.Branch": {
@@ -2358,70 +2411,6 @@ const docTemplate = `{
                 }
             }
         },
-        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.Rule": {
-            "type": "object",
-            "properties": {
-                "content": {
-                    "type": "string"
-                },
-                "contentEn": {
-                    "type": "string"
-                },
-                "createdBy": {
-                    "type": "string"
-                },
-                "createdDate": {
-                    "description": "允许 NULL，用指针类型",
-                    "type": "string"
-                },
-                "deleted": {
-                    "type": "boolean"
-                },
-                "desc": {
-                    "type": "string"
-                },
-                "descEn": {
-                    "type": "string"
-                },
-                "editedBy": {
-                    "type": "string"
-                },
-                "editedDate": {
-                    "description": "允许 NULL，用指针类型",
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "isCustom": {
-                    "type": "boolean"
-                },
-                "lang": {
-                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanLangName"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "plugin": {
-                    "type": "string"
-                },
-                "priority": {
-                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRulePriority"
-                },
-                "ruleKey": {
-                    "type": "string"
-                },
-                "status": {
-                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleStatus"
-                },
-                "tag": {
-                    "type": "string"
-                },
-                "type": {
-                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleType"
-                }
-            }
-        },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.RuleSet": {
             "type": "object",
             "properties": {
@@ -2459,15 +2448,6 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
-                },
-                "rules": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.Rule"
-                    }
-                },
-                "rulesCount": {
-                    "type": "integer"
                 },
                 "status": {
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleStatus"
@@ -2924,6 +2904,8 @@ const docTemplate = `{
                 "repo.body_param_error",
                 "repo.create_error",
                 "repo.create_success",
+                "repo.delete_error",
+                "repo.delete_success",
                 "repo.get_paths_details_success",
                 "repo.get_paths_success",
                 "repo.identifier_invalid",
@@ -2955,6 +2937,9 @@ const docTemplate = `{
                 "ruleSet.body_param_error",
                 "ruleSet.create_error",
                 "ruleSet.create_success",
+                "ruleSet.delete_error",
+                "ruleSet.delete_success",
+                "ruleSet.in_use_error",
                 "ruleSet.list_error",
                 "ruleSet.list_success",
                 "ruleSet.path_param_error",
@@ -3059,6 +3044,8 @@ const docTemplate = `{
                 "RepoBodyParamError": "Body 参数解析失败.",
                 "RepoCreateError": "创建仓库异常",
                 "RepoCreateSuccess": "创建仓库成功",
+                "RepoDeleteError": "删除仓库失败.",
+                "RepoDeleteSuccess": "仓库删除成功.",
                 "RepoGetPathsDetailsSuccess": "获取路径详情成功.",
                 "RepoGetPathsSuccess": "获取路径成功.",
                 "RepoIdentifierInvalid": "仓库名称不合法,identifier仅支持字母、数字、下划线(_)、连字符(-)、点号(.)",
@@ -3090,6 +3077,9 @@ const docTemplate = `{
                 "RuleSetBodyParamError": "请求体参数解析失败.",
                 "RuleSetCreateError": "规则集创建失败.",
                 "RuleSetCreateSuccess": "规则集创建成功.",
+                "RuleSetDeleteError": "规则集列表删除失败.",
+                "RuleSetDeleteSuccess": "规则集列表删除成功.",
+                "RuleSetInUseError": "规则集已被扫描解决方案使用.",
                 "RuleSetListError": "规则集列表查询失败.",
                 "RuleSetListSuccess": "规则集列表查询成功.",
                 "RuleSetPathParamError": "路径参数解析失败.",
@@ -3194,6 +3184,8 @@ const docTemplate = `{
                 "Body 参数解析失败.",
                 "创建仓库异常",
                 "创建仓库成功",
+                "删除仓库失败.",
+                "仓库删除成功.",
                 "获取路径详情成功.",
                 "获取路径成功.",
                 "仓库名称不合法,identifier仅支持字母、数字、下划线(_)、连字符(-)、点号(.)",
@@ -3225,6 +3217,9 @@ const docTemplate = `{
                 "请求体参数解析失败.",
                 "规则集创建失败.",
                 "规则集创建成功.",
+                "规则集列表删除失败.",
+                "规则集列表删除成功.",
+                "规则集已被扫描解决方案使用.",
                 "规则集列表查询失败.",
                 "规则集列表查询成功.",
                 "路径参数解析失败.",
@@ -3329,6 +3324,8 @@ const docTemplate = `{
                 "RepoBodyParamError",
                 "RepoCreateError",
                 "RepoCreateSuccess",
+                "RepoDeleteError",
+                "RepoDeleteSuccess",
                 "RepoGetPathsDetailsSuccess",
                 "RepoGetPathsSuccess",
                 "RepoIdentifierInvalid",
@@ -3360,6 +3357,9 @@ const docTemplate = `{
                 "RuleSetBodyParamError",
                 "RuleSetCreateError",
                 "RuleSetCreateSuccess",
+                "RuleSetDeleteError",
+                "RuleSetDeleteSuccess",
+                "RuleSetInUseError",
                 "RuleSetListError",
                 "RuleSetListSuccess",
                 "RuleSetPathParamError",
