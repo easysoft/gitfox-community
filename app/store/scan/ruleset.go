@@ -2,6 +2,7 @@ package scan
 
 import (
 	"context"
+	"strings"
 
 	scanModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
@@ -88,7 +89,7 @@ func (s *RuleSetStore) List(ctx context.Context, filter scanModel.RuleSetReqFilt
 		tx = tx.Where("name LIKE ?", "%"+filter.Name+"%")
 	}
 	if filter.Lang != "" {
-		tx = tx.Where("lang = ?", filter.Lang)
+		tx = tx.Where("lang = ?", strings.ToLower(filter.Lang))
 	}
 	if filter.Tag != "" {
 		tx = tx.Where("tag = ?", filter.Tag)
