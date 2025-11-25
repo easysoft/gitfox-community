@@ -215,14 +215,14 @@ func (c *RuleSetController) Delete(ctx *gin.Context) {
 func (c *RuleSetController) GetBindRule(ctx *gin.Context) {
 	ruleSetID, err := req.PathParamAsPositiveUint(ctx, "id")
 	if err != nil {
-		err = errors.WithI18nKey(err, i18n.RuleSetPathParamError)
+		err = errors.WithI18nKey(err, i18n.RulePathParamError)
 		resp.BadRequest(ctx, err)
 		return
 	}
 
 	var reqQuery scanModel.RuleReqFilter
 	if err := ctx.ShouldBindQuery(&reqQuery); err != nil {
-		err = errors.WithI18nKey(err, i18n.RuleSetQueryParamError)
+		err = errors.WithI18nKey(err, i18n.RuleQueryParamError)
 		resp.BadRequest(ctx, err)
 		return
 	}
@@ -232,7 +232,7 @@ func (c *RuleSetController) GetBindRule(ctx *gin.Context) {
 
 	result, err := c.ruleSetSvc.GetBindRule(logger.GetContextWithLogger(ctx), ruleSetID, reqQuery)
 	if err != nil {
-		err = errors.WithI18nKey(err, i18n.RuleSetListError)
+		err = errors.WithI18nKey(err, i18n.RuleListError)
 		resp.InternalError(ctx, err)
 		return
 	}
@@ -242,7 +242,7 @@ func (c *RuleSetController) GetBindRule(ctx *gin.Context) {
 			Total:    result.Total,
 			Page:     int64(reqQuery.Page),
 			PageSize: int64(reqQuery.Size),
-		}, i18n.RuleSetListSuccess, nil)
+		}, i18n.RuleListSuccess, nil)
 }
 
 // GetUnBindRule 获取规则集未绑定的规则列表
@@ -261,14 +261,14 @@ func (c *RuleSetController) GetBindRule(ctx *gin.Context) {
 func (c *RuleSetController) GetUnBindRule(ctx *gin.Context) {
 	ruleSetID, err := req.PathParamAsPositiveUint(ctx, "id")
 	if err != nil {
-		err = errors.WithI18nKey(err, i18n.RuleSetPathParamError)
+		err = errors.WithI18nKey(err, i18n.RulePathParamError)
 		resp.BadRequest(ctx, err)
 		return
 	}
 
 	var reqQuery scanModel.RuleReqFilter
 	if err := ctx.ShouldBindQuery(&reqQuery); err != nil {
-		err = errors.WithI18nKey(err, i18n.RuleSetQueryParamError)
+		err = errors.WithI18nKey(err, i18n.RuleQueryParamError)
 		resp.BadRequest(ctx, err)
 		return
 	}
@@ -278,7 +278,7 @@ func (c *RuleSetController) GetUnBindRule(ctx *gin.Context) {
 
 	result, err := c.ruleSetSvc.GetUnBindRule(logger.GetContextWithLogger(ctx), ruleSetID, reqQuery)
 	if err != nil {
-		err = errors.WithI18nKey(err, i18n.RuleSetListError)
+		err = errors.WithI18nKey(err, i18n.RuleListError)
 		resp.InternalError(ctx, err)
 		return
 	}
@@ -288,7 +288,7 @@ func (c *RuleSetController) GetUnBindRule(ctx *gin.Context) {
 			Total:    result.Total,
 			Page:     int64(reqQuery.Page),
 			PageSize: int64(reqQuery.Size),
-		}, i18n.RuleSetListSuccess, nil)
+		}, i18n.RuleListSuccess, nil)
 }
 
 // BindRule 绑定规则到规则集

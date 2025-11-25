@@ -32,7 +32,7 @@ func (s *RuleSetService) Create(ctx context.Context, session *authModel.Session,
 		Name:      req.Name,
 		Desc:      req.Desc,
 		DescrEn:   req.DescEn,
-		Lang:      constant.ScanLangName(req.Lang),
+		Lang:      constant.ScanLangName(constant.ParseLang(req.Lang).LowerString()),
 		Tag:       req.Tag,
 		Type:      constant.ScanRuleType(req.Type),
 		Plugin:    req.Plugin,
@@ -62,7 +62,7 @@ func (s *RuleSetService) Update(ctx context.Context, session *authModel.Session,
 		ruleSet.DescrEn = req.DescEn
 	}
 	if req.Lang != "" {
-		ruleSet.Lang = constant.ScanLangName(req.Lang)
+		ruleSet.Lang = constant.ScanLangName(constant.ParseLang(req.Lang).LowerString())
 	}
 	if req.Tag != "" {
 		ruleSet.Tag = req.Tag

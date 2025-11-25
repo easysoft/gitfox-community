@@ -17,3 +17,18 @@ ruleSet:
   bind_error: "Failed to bind rules to ruleSet."
   unbind_success: "RuleSet unbind rules successfully."
   unbind_error: "Failed to unbind rules from ruleSet."
+
+rule:
+  path_param_error: "Path param parsing failed."
+  query_param_error: "Query param parsing failed."
+  body_param_error: "Body param parsing failed."
+  create_success: "Rule created successfully."
+  create_error: "Rule created failed."
+  query_success: "Rule details queried successfully."
+  query_error: "Failed to query ruleSet details."
+  update_success: "Rule updated successfully."
+  update_error: "Failed to update rule."
+  list_error: "Failed to query rule list."
+  list_success: "Query the rule list successfully."
+  delete_error: "Failed to delete rule."
+  delete_success: "Rule delete successfully."
