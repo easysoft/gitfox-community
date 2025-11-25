@@ -49,6 +49,18 @@ definitions:
     - ScanLangTypeScriptName
     - ScanLangCName
     - ScanLangCsharpName
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRulePriority:
+    enum:
+    - 0
+    - 1
+    - 2
+    - 3
+    type: integer
+    x-enum-varnames:
+    - ScanRulePriorityLow
+    - ScanRulePriorityMedium
+    - ScanRulePriorityHigh
+    - scanRulePriorityNone
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleStatus:
     enum:
     - enabled
@@ -59,6 +71,31 @@ definitions:
     - ScanRuleStatusEnabled
     - ScanRuleStatusDisabled
     - scanRuleStatusNone
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleType:
+    enum:
+    - defect
+    - security
+    - compliance
+    - optimize
+    - ""
+    type: string
+    x-enum-comments:
+      ScanRuleTypeComplian: 合规
+      ScanRuleTypeDefect: 缺陷
+      ScanRuleTypeOptimize: 优化 // 代码异味
+      ScanRuleTypeVuln: 安全
+    x-enum-descriptions:
+    - 缺陷
+    - 安全
+    - 合规
+    - 优化 // 代码异味
+    - ""
+    x-enum-varnames:
+    - ScanRuleTypeDefect
+    - ScanRuleTypeVuln
+    - ScanRuleTypeComplian
+    - ScanRuleTypeOptimize
+    - scanRuleTypeNone
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.Branch:
     properties:
       commit:
@@ -521,27 +558,29 @@ definitions:
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.RuleSet:
     properties:
+      createdBy:
+        type: string
+      createdDate:
+        description: 允许 NULL，用指针类型
+        type: string
+      deleted:
+        type: boolean
+      desc:
+        type: string
+      descEn:
+        type: string
+      editedBy:
+        type: string
+      editedDate:
+        description: 允许 NULL，用指针类型
+        type: string
+      id:
+        type: integer
+      isCustom:
+        type: boolean
       lang:
-        type: string
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanLangName'
       name:
-        type: string
-      order:
-        default: asc
-        type: string
-      page:
-        default: 1
-        type: integer
-      size:
-        default: 30
-        type: integer
-      sort:
-        default: id
-        type: string
-      status:
-        type: string
-      tag:
-        type: string
-      type:
         type: string
       status:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleStatus'
@@ -843,6 +882,7 @@ definitions:
   gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_i18n.I18nKey:
     enum:
     - auth.auth_user_login_success
+    - auth.failed
     - auth.no_data
     - auth.no_session
     - auth.pub_key_add_already_in_use
@@ -910,8 +950,6 @@ definitions:
     - repo.create_success
     - repo.delete_error
     - repo.delete_success
-    - repo.delete_error
-    - repo.delete_success
     - repo.get_paths_details_success
     - repo.get_paths_success
     - repo.identifier_invalid
@@ -940,14 +978,24 @@ definitions:
     - request.path_parameter_not_found
     - request.query_parameter_not_found
     - request.request_body_too_large
+    - rule.body_param_error
+    - rule.create_error
+    - rule.create_success
+    - rule.delete_error
+    - rule.delete_success
+    - rule.list_error
+    - rule.list_success
+    - rule.path_param_error
+    - rule.query_error
+    - rule.query_param_error
+    - rule.query_success
+    - rule.update_error
+    - rule.update_success
     - ruleSet.bind_error
     - ruleSet.bind_success
     - ruleSet.body_param_error
     - ruleSet.create_error
     - ruleSet.create_success
-    - ruleSet.delete_error
-    - ruleSet.delete_success
-    - ruleSet.in_use_error
     - ruleSet.delete_error
     - ruleSet.delete_success
     - ruleSet.in_use_error
@@ -992,6 +1040,7 @@ definitions:
     type: string
     x-enum-comments:
       AuthAuthUserLoginSuccess: 用户登录成功
+      AuthFailed: 尝试认证失败
       AuthNoData: 请求不包含任何可用于 Authorizer 的认证数据
       AuthNoSession: 请求不包含任何会话数据,无法进行授权
       AuthPubKeyAddAlreadyInUse: 公钥已存在
@@ -1059,8 +1108,6 @@ definitions:
       RepoCreateSuccess: 创建仓库成功
       RepoDeleteError: 删除仓库失败.
       RepoDeleteSuccess: 仓库删除成功.
-      RepoDeleteError: 删除仓库失败.
-      RepoDeleteSuccess: 仓库删除成功.
       RepoGetPathsDetailsSuccess: 获取路径详情成功.
       RepoGetPathsSuccess: 获取路径成功.
       RepoIdentifierInvalid: 仓库名称不合法,identifier仅支持字母、数字、下划线(_)、连字符(-)、点号(.)
@@ -1089,14 +1136,22 @@ definitions:
       RequestPathParameterNotFound: 路径参数未找到.
       RequestQueryParameterNotFound: 查询参数未找到.
       RequestRequestBodyTooLarge: 请求体过大.
+      RuleBodyParamError: 请求体参数解析失败.
+      RuleCreateError: 规则创建失败.
+      RuleCreateSuccess: 规则创建成功.
+      RuleDeleteError: 规则删除失败.
+      RuleDeleteSuccess: 规则删除成功.
+      RuleListError: 规则列表查询失败.
+      RuleListSuccess: 规则列表查询成功.
+      RulePathParamError: 路径参数解析失败.
+      RuleQueryError: 规则详情查询失败.
+      RuleQueryParamError: 查询参数解析失败.
+      RuleQuerySuccess: 规则详情查询成功.
       RuleSetBindError: 规则集绑定规则失败.
       RuleSetBindSuccess: 规则集绑定规则成功.
       RuleSetBodyParamError: 请求体参数解析失败.
       RuleSetCreateError: 规则集创建失败.
       RuleSetCreateSuccess: 规则集创建成功.
-      RuleSetDeleteError: 规则集列表删除失败.
-      RuleSetDeleteSuccess: 规则集列表删除成功.
-      RuleSetInUseError: 规则集已被扫描解决方案使用.
       RuleSetDeleteError: 规则集列表删除失败.
       RuleSetDeleteSuccess: 规则集列表删除成功.
       RuleSetInUseError: 规则集已被扫描解决方案使用.
@@ -1110,6 +1165,8 @@ definitions:
       RuleSetUnbindSuccess: 规则集解绑规则成功.
       RuleSetUpdateError: 规则集更新失败.
       RuleSetUpdateSuccess: 规则集更新成功.
+      RuleUpdateError: 规则更新失败.
+      RuleUpdateSuccess: 规则更新成功.
       SpaceArtifactsTitleSuccess: 仓库设置保存成功
       SpaceBodyParamError: Body 参数解析失败.
       SpaceCreateError: 空间创建失败.
@@ -1140,6 +1197,7 @@ definitions:
       TagQueryParamError: Query 参数解析失败.
     x-enum-descriptions:
     - 用户登录成功
+    - 尝试认证失败
     - 请求不包含任何可用于 Authorizer 的认证数据
     - 请求不包含任何会话数据,无法进行授权
     - 公钥已存在
@@ -1207,8 +1265,6 @@ definitions:
     - 创建仓库成功
     - 删除仓库失败.
     - 仓库删除成功.
-    - 删除仓库失败.
-    - 仓库删除成功.
     - 获取路径详情成功.
     - 获取路径成功.
     - 仓库名称不合法,identifier仅支持字母、数字、下划线(_)、连字符(-)、点号(.)
@@ -1237,14 +1293,24 @@ definitions:
     - 路径参数未找到.
     - 查询参数未找到.
     - 请求体过大.
+    - 请求体参数解析失败.
+    - 规则创建失败.
+    - 规则创建成功.
+    - 规则删除失败.
+    - 规则删除成功.
+    - 规则列表查询失败.
+    - 规则列表查询成功.
+    - 路径参数解析失败.
+    - 规则详情查询失败.
+    - 查询参数解析失败.
+    - 规则详情查询成功.
+    - 规则更新失败.
+    - 规则更新成功.
     - 规则集绑定规则失败.
     - 规则集绑定规则成功.
     - 请求体参数解析失败.
     - 规则集创建失败.
     - 规则集创建成功.
-    - 规则集列表删除失败.
-    - 规则集列表删除成功.
-    - 规则集已被扫描解决方案使用.
     - 规则集列表删除失败.
     - 规则集列表删除成功.
     - 规则集已被扫描解决方案使用.
@@ -1288,6 +1354,7 @@ definitions:
     - Query 参数解析失败.
     x-enum-varnames:
     - AuthAuthUserLoginSuccess
+    - AuthFailed
     - AuthNoData
     - AuthNoSession
     - AuthPubKeyAddAlreadyInUse
@@ -1355,8 +1422,6 @@ definitions:
     - RepoCreateSuccess
     - RepoDeleteError
     - RepoDeleteSuccess
-    - RepoDeleteError
-    - RepoDeleteSuccess
     - RepoGetPathsDetailsSuccess
     - RepoGetPathsSuccess
     - RepoIdentifierInvalid
@@ -1385,14 +1450,24 @@ definitions:
     - RequestPathParameterNotFound
     - RequestQueryParameterNotFound
     - RequestRequestBodyTooLarge
+    - RuleBodyParamError
+    - RuleCreateError
+    - RuleCreateSuccess
+    - RuleDeleteError
+    - RuleDeleteSuccess
+    - RuleListError
+    - RuleListSuccess
+    - RulePathParamError
+    - RuleQueryError
+    - RuleQueryParamError
+    - RuleQuerySuccess
+    - RuleUpdateError
+    - RuleUpdateSuccess
     - RuleSetBindError
     - RuleSetBindSuccess
     - RuleSetBodyParamError
     - RuleSetCreateError
     - RuleSetCreateSuccess
-    - RuleSetDeleteError
-    - RuleSetDeleteSuccess
-    - RuleSetInUseError
     - RuleSetDeleteError
     - RuleSetDeleteSuccess
     - RuleSetInUseError
@@ -1784,26 +1859,6 @@ paths:
       summary: 删除仓库
       tags:
       - repos
-    delete:
-      consumes:
-      - application/json
-      description: 删除仓库,软删除
-      parameters:
-      - description: 仓库 ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 删除仓库成功
-          schema:
-            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
-      summary: 删除仓库
-      tags:
-      - repos
     get:
       consumes:
       - application/json
@@ -2022,26 +2077,6 @@ paths:
       tags:
       - scan
   /scan/rulesets/{id}:
-    delete:
-      consumes:
-      - application/json
-      description: 根据规则集 ID 删除规则集及其关联的规则
-      parameters:
-      - description: 规则集 ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 删除成功
-          schema:
-            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
-      summary: 删除规则集
-      tags:
-      - scan
     delete:
       consumes:
       - application/json
