@@ -19,7 +19,7 @@ import (
 // @property listArgs ListArgs  `json:"listArgs" description:"分页元数据" $ref:"#/components/schemas/ListArgs"`
 type ListResponse struct {
 	ObjectResponse
-	ListArgs any
+	ListArgs any `json:"listArgs"`
 }
 
 // ListArgs 列表分页元数据（描述列表的总数、页码、每页条数）
