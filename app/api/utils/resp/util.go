@@ -10,24 +10,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// ListResponse represents a response structure for list data
-// ListResponse 列表类型统一响应结构体
-// @Schema
-// @Description 列表查询接口的统一响应结构，继承基础响应字段并补充分页元数据
-// @allOf                       // 合并基础结构体（Swagger 3.0+ 支持）
-// @property {} ObjectResponse  // 继承基础响应的所有字段
-// @property listArgs ListArgs  `json:"listArgs" description:"分页元数据" $ref:"#/components/schemas/ListArgs"`
 type ListResponse struct {
 	ObjectResponse
 	ListArgs any `json:"listArgs"`
 }
 
-// ListArgs 列表分页元数据（描述列表的总数、页码、每页条数）
-// @Schema
-// @Description 列表类接口的分页参数集合，用于前端分页展示
-// @property total int64 `json:"total" description:"符合条件的总记录数" example:"100"`
-// @property page int64 `json:"page" description:"当前页码（从1开始）" example:"1"`
-// @property pageSize int64 `json:"pageSize" description:"每页显示的记录数" example:"20"`
 type ListArgs struct {
 	Total    int64 `json:"total"`
 	Page     int64 `json:"page"`
@@ -40,14 +27,6 @@ type ListNoTotalArgs struct {
 	PageSize int64 `json:"pageSize"`
 }
 
-// ObjectResponse represents a response structure for single object data
-// ObjectResponse 基础响应结构体（所有接口响应的公共结构）
-// @Schema
-// @Description 所有接口的基础响应模板，包含状态码、提示信息、追踪ID和业务数据
-// @property code constant.RespCode `json:"code" description:"状态码（success,failure）" example:"success"`
-// @property message string `json:"message" description:"响应提示信息"`
-// @property traceID string `json:"traceID" description:"请求追踪ID"`
-// @property data interface{} `json:"data" description:"业务核心数据（object 或 list）"`
 type ObjectResponse struct {
 	Code    constant.RespCode `json:"code"`
 	Message string            `json:"message"`
