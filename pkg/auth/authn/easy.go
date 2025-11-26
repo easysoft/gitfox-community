@@ -94,10 +94,6 @@ func (a *EasyAuthenticator) Authenticate(r *gin.Context) (*auth.Session, error) 
 	// 使用 app 作为 identifier 来查询 token
 	entry, err := a.tokenStore.GetDevopsToken(r.Request.Context())
 	if err != nil {
-		if errors.IsNotFound(err) {
-			logger.Debugf("[authn.easy]token not found for user %s with app %s", operator, app)
-			return nil, constant.ErrUnauthorized
-		}
 		logger.Debugf("[authn.easy]failed to get token for user %s: %v", operator, err)
 		return nil, constant.ErrUnauthorized
 	}
