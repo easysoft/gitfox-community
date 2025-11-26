@@ -19,7 +19,7 @@ const (
 
 const (
 	RespSuccessCode = "success"
-	RespFailCode = "failure"
+	RespFailCode    = "failure"
 )
 
 func Sanitize[E constraints.Ordered](element E, all func() ([]E, E)) (E, bool) {
