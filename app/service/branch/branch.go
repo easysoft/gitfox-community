@@ -77,17 +77,17 @@ func (s *Service) List(ctx context.Context, filter branchModel.ReqFilter, repo *
 		Sort:            mapToRPCBranchSortOption(filter.Sort),
 		Order:           utils.MapToRPCSortOrder(filter.Order),
 		Page:            int32(filter.Page),
-		PageSize:        int32(filter.Size + 1),
+		PageSize:        int32(filter.PageSize + 1),
 	})
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.GitCreateExecParamError)
 		return nil, isLast, err
 	}
 
-	isLast = len(rpcOut.Branches) <= filter.Size
+	isLast = len(rpcOut.Branches) <= filter.PageSize
 	branches := rpcOut.Branches
-	if len(rpcOut.Branches) > filter.Size {
-		branches = rpcOut.Branches[:filter.Size]
+	if len(rpcOut.Branches) > filter.PageSize {
+		branches = rpcOut.Branches[:filter.PageSize]
 		isLast = false
 	}
 	response := make([]branchModel.Branch, len(branches))

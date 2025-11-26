@@ -28,15 +28,15 @@ type RuleSetReqForUpdate struct {
 }
 
 type RuleSetReqFilter struct {
-	Name   string `json:"name"`
-	Lang   string `json:"lang"`
-	Tag    string `json:"tag"`
-	Type   string `json:"type"`
-	Status string `json:"status"`
-	Sort   string `json:"sort" form:"sort" default:"id"`
-	Order  string `json:"order" form:"order" default:"asc"`
-	Page   int    `json:"page" form:"page" default:"1"`
-	Size   int    `json:"size" form:"size" default:"30"`
+	Name     string `json:"name"`
+	Lang     string `json:"lang"`
+	Tag      string `json:"tag"`
+	Type     string `json:"type"`
+	Status   string `json:"status"`
+	Sort     string `json:"sort" form:"sort" default:"id"`
+	Order    string `json:"order" form:"order" default:"asc"`
+	Page     int    `json:"page" form:"page" default:"1"`
+	PageSize int    `json:"pageSize" form:"pageSize" default:"30"`
 }
 
 type RuleSet struct {
