@@ -84,7 +84,7 @@ func (c *Controller) Create(ctx *gin.Context) {
 // @Accept application/json
 // @Produce application/json
 // @Param request body tagModel.ReqFilter true "查询标签列表参数"
-// @Success 200 {object} resp.ListResponse{data=[]tagModel.Tag} "查询成功"
+// @Success 200 {object} resp.ListResponse{data=[]tagModel.Tag,listArgs=resp.ListNoTotalArgs} "查询成功"
 // @Failure 400 {object} resp.ListResponse "参数错误"
 // @Failure 500 {object} resp.ListResponse "服务器错误"
 // @Router /tags/list [post]

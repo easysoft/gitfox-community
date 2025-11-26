@@ -87,7 +87,7 @@ func (c *Controller) Create(ctx *gin.Context) {
 // @Accept application/json
 // @Produce application/json
 // @Param request body commitModel.ReqFilter true "查询提交请求参数"
-// @Success 200 {object} resp.ListResponse{data=commitModel.RespForList} "查询成功"
+// @Success 200 {object} resp.ListResponse{data=commitModel.RespForList,listArgs=resp.ListNoTotalArgs} "查询成功"
 // @Failure 400 {object} resp.ListResponse "参数错误"
 // @Failure 500 {object} resp.ListResponse "服务器错误"
 // @Router /commits/list [post]

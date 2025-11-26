@@ -177,6 +177,9 @@ const docTemplate = `{
                                             "items": {
                                                 "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.Prefix"
                                             }
+                                        },
+                                        "listArgs": {
+                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListNoTotalArgs"
                                         }
                                     }
                                 }
@@ -473,6 +476,9 @@ const docTemplate = `{
                                     "properties": {
                                         "data": {
                                             "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.RespForList"
+                                        },
+                                        "listArgs": {
+                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListNoTotalArgs"
                                         }
                                     }
                                 }
@@ -971,6 +977,9 @@ const docTemplate = `{
                                             "items": {
                                                 "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.RuleSet"
                                             }
+                                        },
+                                        "listArgs": {
+                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListArgs"
                                         }
                                     }
                                 }
@@ -1369,7 +1378,25 @@ const docTemplate = `{
                     "200": {
                         "description": "查询成功：返回空间列表+分页元数据",
                         "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.SpaceResponse"
+                                            }
+                                        },
+                                        "listArgs": {
+                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListArgs"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -1775,6 +1802,9 @@ const docTemplate = `{
                                             "items": {
                                                 "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_tag.Tag"
                                             }
+                                        },
+                                        "listArgs": {
+                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListNoTotalArgs"
                                         }
                                     }
                                 }
@@ -1916,8 +1946,35 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListArgs": {
+            "type": "object",
+            "properties": {
+                "page": {
+                    "type": "integer"
+                },
+                "pageSize": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListNoTotalArgs": {
+            "type": "object",
+            "properties": {
+                "isLast": {
+                    "type": "boolean"
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "pageSize": {
+                    "type": "integer"
+                }
+            }
+        },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse": {
-            "description": "列表查询接口的统一响应结构，继承基础响应字段并补充分页元数据",
             "type": "object",
             "properties": {
                 "code": {
@@ -1934,7 +1991,6 @@ const docTemplate = `{
             }
         },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse": {
-            "description": "所有接口的基础响应模板，包含状态码、提示信息、追踪ID和业务数据",
             "type": "object",
             "properties": {
                 "code": {
@@ -2103,6 +2159,10 @@ const docTemplate = `{
                     "type": "integer",
                     "default": 1
                 },
+                "pageSize": {
+                    "type": "integer",
+                    "default": 20
+                },
                 "prefix": {
                     "type": "string"
                 },
@@ -2111,10 +2171,6 @@ const docTemplate = `{
                 },
                 "repoID": {
                     "type": "integer"
-                },
-                "size": {
-                    "type": "integer",
-                    "default": 20
                 },
                 "sort": {
                     "type": "string",
@@ -2339,6 +2395,10 @@ const docTemplate = `{
                     "type": "integer",
                     "default": 1
                 },
+                "pageSize": {
+                    "type": "integer",
+                    "default": 20
+                },
                 "path": {
                     "type": "string"
                 },
@@ -2347,10 +2407,6 @@ const docTemplate = `{
                 },
                 "since": {
                     "type": "integer"
-                },
-                "size": {
-                    "type": "integer",
-                    "default": 20
                 },
                 "until": {
                     "type": "integer"
@@ -2792,7 +2848,7 @@ const docTemplate = `{
                     "type": "integer",
                     "default": 1
                 },
-                "size": {
+                "pageSize": {
                     "type": "integer",
                     "default": 30
                 },
@@ -3028,15 +3084,15 @@ const docTemplate = `{
                     "type": "integer",
                     "default": 1
                 },
+                "pageSize": {
+                    "type": "integer",
+                    "default": 20
+                },
                 "query": {
                     "type": "string"
                 },
                 "repoID": {
                     "type": "integer"
-                },
-                "size": {
-                    "type": "integer",
-                    "default": 20
                 },
                 "sort": {
                     "type": "string",

@@ -1,7 +1,24 @@
 basePath: /api/v2
 definitions:
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListArgs:
+    properties:
+      page:
+        type: integer
+      pageSize:
+        type: integer
+      total:
+        type: integer
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListNoTotalArgs:
+    properties:
+      isLast:
+        type: boolean
+      page:
+        type: integer
+      pageSize:
+        type: integer
+    type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse:
-    description: 列表查询接口的统一响应结构，继承基础响应字段并补充分页元数据
     properties:
       code:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.RespCode'
@@ -13,7 +30,6 @@ definitions:
         type: string
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse:
-    description: 所有接口的基础响应模板，包含状态码、提示信息、追踪ID和业务数据
     properties:
       code:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.RespCode'
@@ -140,14 +156,14 @@ definitions:
       page:
         default: 1
         type: integer
+      pageSize:
+        default: 20
+        type: integer
       prefix:
         type: string
       query:
         type: string
       repoID:
-        type: integer
-      size:
-        default: 20
         type: integer
       sort:
         default: name
@@ -300,14 +316,14 @@ definitions:
       page:
         default: 1
         type: integer
+      pageSize:
+        default: 20
+        type: integer
       path:
         type: string
       repoID:
         type: integer
       since:
-        type: integer
-      size:
-        default: 20
         type: integer
       until:
         type: integer
@@ -609,7 +625,7 @@ definitions:
       page:
         default: 1
         type: integer
-      size:
+      pageSize:
         default: 30
         type: integer
       sort:
@@ -770,12 +786,12 @@ definitions:
       page:
         default: 1
         type: integer
+      pageSize:
+        default: 20
+        type: integer
       query:
         type: string
       repoID:
-        type: integer
-      size:
-        default: 20
         type: integer
       sort:
         default: name
@@ -996,6 +1012,8 @@ paths:
                   items:
                     $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.Prefix'
                   type: array
+                listArgs:
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListNoTotalArgs'
               type: object
         "400":
           description: 参数错误
@@ -1179,6 +1197,8 @@ paths:
             - properties:
                 data:
                   $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.RespForList'
+                listArgs:
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListNoTotalArgs'
               type: object
         "400":
           description: 参数错误
@@ -1686,6 +1706,8 @@ paths:
                   items:
                     $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.RuleSet'
                   type: array
+                listArgs:
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListArgs'
               type: object
       summary: 查询规则集列表
       tags:
@@ -1734,7 +1756,16 @@ paths:
         "200":
           description: 查询成功：返回空间列表+分页元数据
           schema:
-            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse'
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.SpaceResponse'
+                  type: array
+                listArgs:
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListArgs'
+              type: object
         "400":
           description: 参数错误
           schema:
@@ -2024,6 +2055,8 @@ paths:
                   items:
                     $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_tag.Tag'
                   type: array
+                listArgs:
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListNoTotalArgs'
               type: object
         "400":
           description: 参数错误

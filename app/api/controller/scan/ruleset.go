@@ -64,7 +64,7 @@ func (c *RuleSetController) Create(ctx *gin.Context) {
 // @Accept application/json
 // @Produce application/js
 // @Param body body scanModel.RuleSetReqFilter true "查询规则集请求参数"
-// @Success 200 {object} resp.ListResponse{data=[]scanModel.RuleSet} "查询成功"
+// @Success 200 {object} resp.ListResponse{data=[]scanModel.RuleSet,listArgs=resp.ListArgs} "查询成功"
 // @Error 400 {object} resp.ObjectResponse "参数错误"
 // @Error 500 {object} resp.ObjectResponse "服务器内部错误"
 // @Router /scan/rulesets/list [post]
