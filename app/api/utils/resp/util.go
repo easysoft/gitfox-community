@@ -10,10 +10,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// ListResponse represents a response structure for list data
 type ListResponse struct {
 	ObjectResponse
-	ListArgs any
+	ListArgs any `json:"listArgs"`
 }
 
 type ListArgs struct {
@@ -28,12 +27,11 @@ type ListNoTotalArgs struct {
 	PageSize int64 `json:"pageSize"`
 }
 
-// ObjectResponse represents a response structure for single object data
 type ObjectResponse struct {
-	Code    i18n.I18nKey `json:"code"`
-	Message string       `json:"message"`
-	TraceID string       `json:"traceID"`
-	Data    interface{}  `json:"data"`
+	Code    constant.RespCode `json:"code"`
+	Message string            `json:"message"`
+	TraceID string            `json:"traceID"`
+	Data    interface{}       `json:"data"`
 }
 
 // ObjectOK renders a successful object response (200 OK)

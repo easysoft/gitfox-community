@@ -134,7 +134,7 @@ func (c *Controller) List(ctx *gin.Context) {
 // @Accept application/json
 // @Produce application/json
 // @Param repoID query uint true "仓库 ID"
-// @Success 200 {object} resp.ListResponse{data=[]branchModel.Prefix} "查询成功"
+// @Success 200 {object} resp.ListResponse{data=[]branchModel.Prefix,listArgs=resp.ListNoTotalArgs} "查询成功"
 // @Failure 400 {object} resp.ListResponse "参数错误"
 // @Failure 500 {object} resp.ListResponse "服务器错误"
 // @Router /branches/prefixes [get]
