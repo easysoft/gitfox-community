@@ -34,7 +34,6 @@ spec:
               - sleep 120
           - name: 消息通知
             type: plugin
-            when: failure()
             spec:
               inputs:
                 debug: true
@@ -42,8 +41,8 @@ spec:
                 token: ${{ secrets.get("xuan_token") }}
                 caller: zenci
                 api: https://gw.easycorp.cn
-                title: 单元测试
-                content: 单元测试执行失败
+                title: gitfox-community镜像构建成功
+                content: 镜像地址:${APP_IMAGE}
                 url: ${GITFOX_BUILD_LINK}
                 users:
                   "0": caiyan
