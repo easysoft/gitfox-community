@@ -46,16 +46,16 @@ func NewRouter(mode string, logger *logger.SugaredMateLogger, controller *Contro
 	registerPublicRoutes(r, controller)
 
 	// 创建需要 JWT 认证的路由组
-	jwtAuthGroup := r.Group("/api/v2")
-	jwtAuthGroup.Use(middleware.Attempt(authn.Get(authn.AuthKindEasy)))
-	jwtAuthGroup.Use(middleware.MockAttempt())
-	registerSpaceRoutes(jwtAuthGroup, controller)  // 空间相关路由
-	registerBranchRoutes(jwtAuthGroup, controller) // 分支相关路由
-	registerTagRoutes(jwtAuthGroup, controller)    // 标签相关路由
-	registerCommitRoutes(jwtAuthGroup, controller) // 提交相关路由
-	registerRepoRoutes(jwtAuthGroup, controller)   // 仓库相关路由
-	registerScanRoutes(jwtAuthGroup, controller)   // 扫描相关路由
-	registerUserRoutes(jwtAuthGroup, controller)   // 用户相关路由
+	AuthGroup := r.Group("/api/v2")
+	AuthGroup.Use(middleware.Attempt(authn.Get(authn.AuthKindEasy)))
+	AuthGroup.Use(middleware.MockAttempt())
+	registerSpaceRoutes(AuthGroup, controller)  // 空间相关路由
+	registerBranchRoutes(AuthGroup, controller) // 分支相关路由
+	registerTagRoutes(AuthGroup, controller)    // 标签相关路由
+	registerCommitRoutes(AuthGroup, controller) // 提交相关路由
+	registerRepoRoutes(AuthGroup, controller)   // 仓库相关路由
+	registerScanRoutes(AuthGroup, controller)   // 扫描相关路由
+	registerUserRoutes(AuthGroup, controller)   // 用户相关路由
 
 	// 创建需要 Basic 认证的路由组（用于 Git 操作）
 	basicAuthGroup := r.Group("/api/v2")

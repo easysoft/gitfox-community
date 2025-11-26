@@ -1,8 +1,6 @@
 package authn
 
 import (
-	"crypto/md5"
-	"encoding/hex"
 	"strings"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
@@ -13,6 +11,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/user"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/cryptor"
 	"github.com/gin-gonic/gin"
 )
 
@@ -110,7 +109,7 @@ func (a *EasyAuthenticator) Authenticate(r *gin.Context) (*auth.Session, error) 
 	// }
 
 	// 4. 计算期望的 Authorization 值：md5(app + operator + token)
-	expectedAuth := calculateMD5(app + operator + Token)
+	expectedAuth := cryptor.Md5String(app + operator + Token)
 
 	// 5. 比对 Authorization 值（不区分大小写）
 	if !strings.EqualFold(authorization, expectedAuth) {
@@ -126,10 +125,4 @@ func (a *EasyAuthenticator) Authenticate(r *gin.Context) (*auth.Session, error) 
 		},
 		User: user,
 	}, nil
-}
-
-// calculateMD5 计算字符串的 MD5 值并返回 32 位小写十六进制字符串
-func calculateMD5(text string) string {
-	hash := md5.Sum([]byte(text))
-	return hex.EncodeToString(hash[:])
 }
