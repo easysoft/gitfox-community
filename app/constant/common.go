@@ -17,9 +17,11 @@ const (
 	ContentEncodingTypeBase64 = "base64"
 )
 
+type RespCode string
+
 const (
-	RespSuccessCode = "success"
-	RespFailCode    = "failure"
+	RespSuccessCode RespCode = "success"
+	RespFailCode    RespCode = "failure"
 )
 
 func Sanitize[E constraints.Ordered](element E, all func() ([]E, E)) (E, bool) {
