@@ -92,3 +92,17 @@ func (s *tokensStore) GetByIdentifier(ctx context.Context, account string, ident
 
 	return &token, nil
 }
+
+func (s *tokensStore) GetDevopsToken(ctx context.Context) (*Entry, error) {
+	var entry Entry
+
+	if err := s.db.WithContext(ctx).Where("code = 'gitfox'").Find(&entry).Error; err != nil {
+		return nil, errors.DBError.Wrapf(err, "get entry by code gitfox")
+	}
+
+	if entry.ID == 0 {
+		return nil, errors.NotFound.Newf("entry not found by code gitfox")
+	}
+
+	return &entry, nil
+}
