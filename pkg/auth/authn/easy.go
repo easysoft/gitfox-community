@@ -1,0 +1,134 @@
+package authn
+
+import (
+	"crypto/md5"
+	"encoding/hex"
+	"strings"
+
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
+	principal "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/user"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/token"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/user"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
+	"github.com/gin-gonic/gin"
+)
+
+const (
+	HeaderApp      = "App"
+	HeaderOperator = "Operator"
+)
+
+var _ Authenticator = (*EasyAuthenticator)(nil)
+
+// EasyAuthenticator uses App, Operator and Authorization headers to authenticate the caller.
+// EasyAuthenticator 使用 App、Operator 和 Authorization 请求头来验证调用者。
+//
+// 鉴权机制：
+// 1. 前端计算：Authorization = md5(app + operator + token)
+// 2. 后端验证：从请求头获取 app、operator，从数据库获取 token，计算 md5 并与 Authorization 对比
+//
+// 请求示例：
+// curl --location --request DELETE 'http://example.com/api/v2/repos/2' \
+// --header 'Authorization: 7f18226c955beb483985aed5c581d0ba' \
+// --header 'App: zentao' \
+// --header 'Operator: zhangsan'
+type EasyAuthenticator struct {
+	userStore  user.Interface
+	tokenStore token.Interface
+}
+
+// NewEasyAuthenticator creates a new EasyAuthenticator.
+// NewEasyAuthenticator 创建一个新的 EasyAuthenticator。
+func NewEasyAuthenticator(userStore user.Interface, tokenStore token.Interface) *EasyAuthenticator {
+	return &EasyAuthenticator{
+		userStore:  userStore,
+		tokenStore: tokenStore,
+	}
+}
+
+// Authenticate validates the request using Easy authentication mechanism.
+// Authenticate 使用 Easy 鉴权机制验证请求。
+func (a *EasyAuthenticator) Authenticate(r *gin.Context) (*auth.Session, error) {
+	logger := logger.GetLogger(r)
+	logger.Debug("[authn.easy]trigger EasyAuthenticator")
+
+	// 1. 从请求头获取必要的认证信息
+	authorization, ok := req.GetHeader(r, HeaderAuthorization)
+	if !ok || authorization == "" {
+		logger.Debug("[authn.easy]missing Authorization header")
+		return nil, constant.ErrAuthNoData
+	}
+
+	app, ok := req.GetHeader(r, HeaderApp)
+	if !ok || app == "" {
+		logger.Debug("[authn.easy]missing App header")
+		return nil, constant.ErrAuthNoData
+	}
+
+	operator, ok := req.GetHeader(r, HeaderOperator)
+	if !ok || operator == "" {
+		logger.Debug("[authn.easy]missing Operator header")
+		return nil, constant.ErrAuthNoData
+	}
+
+	// 2. 根据 operator（用户账号）查询用户信息
+	user, err := a.userStore.FindUserByAccount(r.Request.Context(), operator)
+	if err != nil {
+		if errors.Is(err, errors.ErrResourceNotFound) {
+			logger.Debugf("[authn.easy]user %s not found", operator)
+			return nil, constant.ErrUnauthorized
+		}
+		logger.Debugf("[authn.easy]failed to find user %s: %v", operator, err)
+		return nil, constant.ErrUnauthorized
+	}
+
+	if user == nil {
+		logger.Debugf("[authn.easy]user %s is nil", operator)
+		return nil, constant.ErrUnauthorized
+	}
+
+	// TODO
+	// 3. 从数据库获取用户的 token
+	// 使用 app 作为 identifier 来查询 token
+	tokenRecord, err := a.tokenStore.GetByIdentifier(r.Request.Context(), operator, app)
+	if err != nil {
+		if errors.Is(err, errors.ErrResourceNotFound) {
+			logger.Debugf("[authn.easy]token not found for user %s with app %s", operator, app)
+			return nil, constant.ErrUnauthorized
+		}
+		logger.Debugf("[authn.easy]failed to get token for user %s: %v", operator, err)
+		return nil, constant.ErrUnauthorized
+	}
+
+	if tokenRecord == nil || tokenRecord.Token == "" {
+		logger.Debugf("[authn.easy]token is empty for user %s", operator)
+		return nil, constant.ErrUnauthorized
+	}
+
+	// 4. 计算期望的 Authorization 值：md5(app + operator + token)
+	expectedAuth := calculateMD5(app + operator + tokenRecord.Token)
+
+	// 5. 比对 Authorization 值（不区分大小写）
+	if !strings.EqualFold(authorization, expectedAuth) {
+		logger.Debugf("[authn.easy]invalid authorization for user %s, expected: %s, got: %s",
+			operator, expectedAuth, authorization)
+		return nil, constant.ErrUnauthorized
+	}
+
+	logger.Debugf("[authn.easy]user %s authenticated successfully", operator)
+	return &auth.Session{
+		Principal: &principal.Principal{
+			App: app,
+		},
+		User: user,
+	}, nil
+}
+
+// calculateMD5 计算字符串的 MD5 值并返回 32 位小写十六进制字符串
+func calculateMD5(text string) string {
+	hash := md5.Sum([]byte(text))
+	return hex.EncodeToString(hash[:])
+}

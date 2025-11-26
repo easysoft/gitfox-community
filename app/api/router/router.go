@@ -7,6 +7,7 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/middleware"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/auth/authn"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 )
@@ -46,7 +47,7 @@ func NewRouter(mode string, logger *logger.SugaredMateLogger, controller *Contro
 
 	// 创建需要 JWT 认证的路由组
 	jwtAuthGroup := r.Group("/api/v2")
-	// jwtAuthGroup.Use(middleware.Attempt(authn.Get(authn.AuthKindJWT)))
+	jwtAuthGroup.Use(middleware.Attempt(authn.Get(authn.AuthKindEasy)))
 	jwtAuthGroup.Use(middleware.MockAttempt())
 	registerSpaceRoutes(jwtAuthGroup, controller)  // 空间相关路由
 	registerBranchRoutes(jwtAuthGroup, controller) // 分支相关路由

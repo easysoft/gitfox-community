@@ -36,7 +36,7 @@ type Repository struct {
 	CreatedDate   *time.Time `gorm:"column:createdDate;comment:'创建时间'"`
 	EditedBy      string     `gorm:"column:editedBy;comment:'更新人'"`
 	EditedDate    *time.Time `gorm:"column:editedDate;comment:'更新时间'"`
-	Deleted       uint8       `gorm:"column:deleted;comment:'删除标识（0=未删除，1=已删除）'"`
+	Deleted       uint8      `gorm:"column:deleted;comment:'删除标识（0=未删除，1=已删除）'"`
 }
 
 // TableName 指定数据库表名（GORM自动映射时使用）
