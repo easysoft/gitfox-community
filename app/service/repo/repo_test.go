@@ -27,7 +27,7 @@ func TestServiceDeleteSuccess(t *testing.T) {
 	testCtx := context.Background()
 	testSession := &auth.Session{
 		User: &principal.User{
-			ID: 1,
+			ID:      1,
 			Account: "actor",
 		},
 	} // 按需填充 Session 字段（若 service 未使用，可空）

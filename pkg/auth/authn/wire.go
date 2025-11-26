@@ -22,5 +22,8 @@ func ProvideAuthenticators(
 	basic := NewBasicAuthenticator(principalStore)
 	_ = Register(AuthKindBasic, basic)
 
+	easy := NewEasyAuthenticator(principalStore, tokenStore)
+	_ = Register(AuthKindEasy, easy)
+
 	return jwt
 }

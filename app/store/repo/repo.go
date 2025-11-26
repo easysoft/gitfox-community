@@ -88,7 +88,6 @@ func (s *Store) GetByID(ctx context.Context, id uint) (*repoModel.Repo, error) {
 	return mapToModel(repo), nil
 }
 
-
 func (s *Store) Delete(ctx context.Context, id uint) error {
 	if err := s.db.WithContext(ctx).Model(&Repository{}).Where("id = ?", id).Update("deleted", 1).Error; err != nil {
 		return database.ProcessSQLErrorf(ctx, err)

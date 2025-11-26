@@ -173,7 +173,7 @@ func (c *Controller) Update(ctx *gin.Context) {
 
 }
 
-//Delete 删除仓库，数据库软删除
+// Delete 删除仓库，数据库软删除
 // @Summary 删除仓库
 // @Description 删除仓库,软删除
 // @Tags repos
