@@ -72,7 +72,7 @@ func Unauthorized(c *gin.Context, err error, args ...interface{}) {
 	message := i18n.TGin(c, code, args...) + fmt.Sprintf(";%s", err.Error())
 	traceID := getTraceID(c)
 	c.AbortWithStatusJSON(http.StatusUnauthorized, ObjectResponse{
-		Code:    code,
+		Code:    constant.RespFailCode,
 		Message: message,
 		TraceID: traceID,
 		Data:    nil,
