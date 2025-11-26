@@ -124,7 +124,7 @@ func (c *Controller) List(ctx *gin.Context) {
 		resp.ListNoTotalArgs{
 			IsLast:   isLast,
 			Page:     int64(reqQuery.Page),
-			PageSize: int64(reqQuery.Size),
+			PageSize: int64(reqQuery.PageSize),
 		}, i18n.TagListSuccess, nil)
 }
 

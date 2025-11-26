@@ -90,7 +90,7 @@ func (c *RuleSetController) List(ctx *gin.Context) {
 		resp.ListArgs{
 			Total:    result.Total,
 			Page:     int64(reqQuery.Page),
-			PageSize: int64(reqQuery.Size),
+			PageSize: int64(reqQuery.PageSize),
 		}, i18n.RuleSetListSuccess, nil)
 }
 

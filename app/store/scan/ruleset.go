@@ -103,7 +103,7 @@ func (s *RuleSetStore) List(ctx context.Context, filter scanModel.RuleSetReqFilt
 
 	// 分页查询
 	var ruleSets []*RuleSet
-	pageResult, err := database.PaginateDefault(ctx, tx, filter.Page, filter.Size, &ruleSets)
+	pageResult, err := database.PaginateDefault(ctx, tx, filter.Page, filter.PageSize, &ruleSets)
 	if err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}

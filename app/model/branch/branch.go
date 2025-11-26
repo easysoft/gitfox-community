@@ -21,7 +21,7 @@ type ReqFilter struct {
 	Sort            string `json:"sort" form:"sort" default:"name"`
 	Order           string `json:"order" form:"order" default:"asc"`
 	Page            int    `json:"page" form:"page" default:"1"`
-	Size            int    `json:"size" form:"size" default:"20"`
+	PageSize        int    `json:"pageSize" form:"pageSize" default:"20"`
 }
 
 type Prefix struct {
