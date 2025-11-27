@@ -89,7 +89,6 @@ func (a *EasyAuthenticator) Authenticate(r *gin.Context) (*auth.Session, error) 
 		return nil, constant.ErrUnauthorized
 	}
 
-	// TODO
 	// 3. 从数据库获取用户的 token
 	// 使用 app 作为 identifier 来查询 token
 	entry, err := a.tokenStore.GetDevopsToken(r.Request.Context())

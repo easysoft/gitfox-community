@@ -96,7 +96,7 @@ func (s *tokensStore) GetByIdentifier(ctx context.Context, account string, ident
 func (s *tokensStore) GetDevopsToken(ctx context.Context) (*Entry, error) {
 	var entry Entry
 
-	if err := s.db.WithContext(ctx).Where("name = 'GitFox' and code = 'gitfox' and deleted = 0").First(&entry).Error; err != nil {
+	if err := s.db.WithContext(ctx).Where("name = 'GitFox' and code = 'gitfox' and deleted = '0'").First(&entry).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
 
