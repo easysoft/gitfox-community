@@ -53,12 +53,13 @@ func (c *command) run(*kingpin.ParseContext) error {
 		Handler: router.NewRouter(c.mode, app.APILog.SugaredMateLogger, app.Controller),
 	}
 
-	adminPAT, err := app.UserService.IssueAdminPAT()
-	if err != nil {
-		app.SystemLog.Errorw("[Server] Failed to issue admin PAT", "error", err)
-		panic(err)
-	}
-	app.SystemLog.Infow("[Server] Admin PAT issued", "pat", adminPAT)
+	// 停止使用
+	// adminPAT, err := app.UserService.IssueAdminPAT()
+	// if err != nil {
+	// 	app.SystemLog.Errorw("[Server] Failed to issue admin PAT", "error", err)
+	// 	panic(err)
+	// }
+	// app.SystemLog.Infow("[Server] Admin PAT issued", "pat", adminPAT)
 
 	// 创建错误通道用于捕获服务器启动错误
 	serverErrors := make(chan error, 2) // 增加容量以支持 HTTP 和 SSH 服务器
