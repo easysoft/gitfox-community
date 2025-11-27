@@ -77,7 +77,7 @@ func (ctl *GitController) Clone(ctx *gin.Context) {
 	resp.NoCache(ctx.Writer)
 	ctx.Writer.Header().Set("Content-Type", fmt.Sprintf("application/x-git-%s-result", constant.GitServiceTypeUploadPack))
 
-	// TODO: 实现 ServicePack 调用
+	// 调用 ServicePack 处理 Git 协议
 	options := api.ServicePackOptions{
 		Service:      constant.GitServiceTypeUploadPack,
 		StatelessRPC: true,
@@ -85,8 +85,13 @@ func (ctl *GitController) Clone(ctx *gin.Context) {
 		Stdin:        dataReader,
 		Protocol:     gitProtocol,
 	}
-	_ = options
-	_ = repo
+
+	err = ctl.gitSvc.GitServicePack(ctx, repo.GitUID, options)
+	if err != nil {
+		logger.Errorf("GitServicePack failed: %v", err)
+		resp.InternalError(ctx, err)
+		return
+	}
 }
 
 func (ctl *GitController) Push(ctx *gin.Context) {
@@ -139,11 +144,7 @@ func (ctl *GitController) Push(ctx *gin.Context) {
 		return
 	}
 
-	if need {
-		// todo
-	}
-
-	// TODO: 实现 ServicePack 调用
+	// 调用 ServicePack 处理 Git 协议
 	options := api.ServicePackOptions{
 		Service:      constant.GitServiceTypeReceivePack,
 		StatelessRPC: true,
@@ -151,10 +152,15 @@ func (ctl *GitController) Push(ctx *gin.Context) {
 		Stdin:        dataReader,
 		Protocol:     gitProtocol,
 		IsWrite:      true,
+		FitClient:    need,
 	}
 
-	_ = options
-	_ = repo
+	err = ctl.gitSvc.GitServicePack(ctx, repo.GitUID, options)
+	if err != nil {
+		logger.Errorf("GitServicePack failed: %v", err)
+		resp.InternalError(ctx, err)
+		return
+	}
 }
 
 func (ctl *GitController) InfoRefs(ctx *gin.Context) {
@@ -207,7 +213,7 @@ func (ctl *GitController) InfoRefs(ctx *gin.Context) {
 
 	// 设置响应头
 	resp.NoCache(ctx.Writer)
-	ctx.Writer.Header().Set("Content-Type", fmt.Sprintf("application/x-git-%s-advertisement", service))
+	ctx.Writer.Header().Set("Content-Type", fmt.Sprintf("application/x-git-%s-advertisement", gitService))
 
 	// 写入响应
 	if _, err := ctx.Writer.Write(data); err != nil {

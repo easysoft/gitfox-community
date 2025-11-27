@@ -9,7 +9,7 @@ import (
 )
 
 type Interface interface {
-	GitServicePack(ctx context.Context, options api.ServicePackOptions) error
+	GitServicePack(ctx context.Context, repoUID string, options api.ServicePackOptions) error
 	GetInfoRefs(ctx context.Context, repoUID string, service string, gitProtocol string) ([]byte, error)
 }
 
@@ -39,23 +39,25 @@ func (s *Service) GetInfoRefs(ctx context.Context, repoUID string, service strin
 	return buf.Bytes(), nil
 }
 
-func (s *Service) GitServicePack(ctx context.Context, options api.ServicePackOptions) error {
-	// setup read/writeparams depending on whether it's a write operation
-	if options.IsWrite {
-		// var writeParams git.WriteParams
-		// writeParams, err = controller.CreateRPCExternalWriteParams(ctx, c.urlProvider, session, repo)
-		// if err != nil {
-		// 	return fmt.Errorf("failed to create RPC write params: %w", err)
-		// }
-		// params.WriteParams = &writeParams
-	} else {
-		// readParams := git.CreateReadParams(repo)
-		// params.ReadParams = &readParams
+func (s *Service) GitServicePack(ctx context.Context, repoUID string, options api.ServicePackOptions) error {
+	params := &git.ServicePackParams{
+		ServicePackOptions: options,
 	}
 
-	// if err = s.pkgGit.ServicePack(ctx, params); err != nil {
-	// 	return fmt.Errorf("failed service pack operation %q  on git: %w", options.Service, err)
-	// }
+	// setup read/writeparams depending on whether it's a write operation
+	if options.IsWrite {
+		params.WriteParams = &git.WriteParams{
+			RepoUID: repoUID,
+		}
+	} else {
+		params.ReadParams = &git.ReadParams{
+			RepoUID: repoUID,
+		}
+	}
+
+	if err := s.git.ServicePack(ctx, params); err != nil {
+		return err
+	}
 
 	return nil
 }
