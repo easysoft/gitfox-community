@@ -513,6 +513,15 @@ definitions:
         description: 状态码用 int 类型（兼容枚举映射）
         type: integer
     type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.ReqForDiff:
+    properties:
+      files:
+        items:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git_api.FileDiffRequest'
+        type: array
+      range:
+        type: string
+    type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.ReqForUpdate:
     properties:
       acl:
@@ -883,6 +892,13 @@ definitions:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git.Identity'
       when:
         type: string
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git_api.FileDiffRequest:
+    properties:
+      path:
+        type: string
+      start_line:
+        type: integer
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git_enum.FileDiffStatus:
     enum:
@@ -1326,18 +1342,19 @@ paths:
         name: id
         required: true
         type: integer
+      - description: 查看 gitRef diff 所需请求参数
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.ReqForDiff'
       produces:
       - text/plain
       responses:
         "200":
-          description: 获取成功
+          description: diff 文本
           schema:
-            allOf:
-            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.Repo'
-              type: object
+            type: string
       summary: 获取仓库指定 GitRef Diff
       tags:
       - repos

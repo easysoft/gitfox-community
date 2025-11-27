@@ -331,7 +331,8 @@ func (ctl *Controller) Blame(c *gin.Context) {
 // @Accept application/json
 // @Produce text/plain
 // @Param id path uint true "仓库 ID"
-// @Success 200 {object} resp.ObjectResponse{data=repoModel.Repo} "获取成功"
+// @Param body body repoModel.ReqForDiff true "查看 gitRef diff 所需请求参数"
+// @Success 200 {string} string "diff 文本"
 // @Error 400 {object} resp.ObjectResponse "参数错误"
 // @Error 404 {object} resp.ObjectResponse "代码库不存在"
 // @Error 500 {object} resp.ObjectResponse "服务器内部错误"

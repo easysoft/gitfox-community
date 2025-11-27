@@ -691,25 +691,22 @@ const docTemplate = `{
                         "name": "id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "description": "查看 gitRef diff 所需请求参数",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.ReqForDiff"
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "获取成功",
+                        "description": "diff 文本",
                         "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.Repo"
-                                        }
-                                    }
-                                }
-                            ]
+                            "type": "string"
                         }
                     }
                 }
@@ -2686,6 +2683,20 @@ const docTemplate = `{
                 }
             }
         },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.ReqForDiff": {
+            "type": "object",
+            "properties": {
+                "files": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git_api.FileDiffRequest"
+                    }
+                },
+                "range": {
+                    "type": "string"
+                }
+            }
+        },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.ReqForUpdate": {
             "type": "object",
             "required": [
@@ -3226,6 +3237,17 @@ const docTemplate = `{
                 },
                 "when": {
                     "type": "string"
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git_api.FileDiffRequest": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "string"
+                },
+                "start_line": {
+                    "type": "integer"
                 }
             }
         },
