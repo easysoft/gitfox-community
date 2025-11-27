@@ -8,6 +8,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/githook"
 	gitSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/git"
 	repoSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
+	spaceSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/space"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
 	principal "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/user"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/cache"
@@ -127,6 +128,6 @@ func NewGitService(gitPkg gitPkg.Interface) *gitSvc.Service {
 	return gitSvc.NewGitService(gitPkg).(*gitSvc.Service)
 }
 
-func NewGitController(gitService gitSvc.Interface, repoService repoSvc.Interface) *git.GitController {
-	return git.NewGitController(gitService, repoService)
+func NewGitController(gitService gitSvc.Interface, spaceService spaceSvc.Interface, repoService repoSvc.Interface) *git.GitController {
+	return git.NewGitController(gitService, spaceService, repoService)
 }

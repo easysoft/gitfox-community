@@ -1,6 +1,7 @@
 package git
 
 import (
+	"bytes"
 	"context"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
@@ -9,6 +10,7 @@ import (
 
 type Interface interface {
 	GitServicePack(ctx context.Context, options api.ServicePackOptions) error
+	GetInfoRefs(ctx context.Context, repoUID string, service string, gitProtocol string) ([]byte, error)
 }
 
 type Service struct {
@@ -17,6 +19,24 @@ type Service struct {
 
 func NewGitService(gitPkg git.Interface) Interface {
 	return &Service{git: gitPkg}
+}
+
+func (s *Service) GetInfoRefs(ctx context.Context, repoUID string, service string, gitProtocol string) ([]byte, error) {
+	buf := &bytes.Buffer{}
+
+	params := &git.InfoRefsParams{
+		ReadParams: git.ReadParams{
+			RepoUID: repoUID,
+		},
+		Service:     service,
+		GitProtocol: gitProtocol,
+	}
+
+	if err := s.git.GetInfoRefs(ctx, buf, params); err != nil {
+		return nil, err
+	}
+
+	return buf.Bytes(), nil
 }
 
 func (s *Service) GitServicePack(ctx context.Context, options api.ServicePackOptions) error {

@@ -18,6 +18,15 @@ type RepoId struct {
 	RepoID uint `uri:"repoId" binding:"required"`
 }
 
+type SpaceId struct {
+	SpaceID uint `uri:"spaceId" binding:"required"`
+}
+
+type SpaceRepoRef struct {
+	SpaceID uint   `uri:"spaceId" binding:"required"`
+	RepoRef string `uri:"repoRef" binding:"required"`
+}
+
 const (
 	HeaderParamGitProtocol       = "Git-Protocol"        // Git 协议版本，例如：git/2.0
 	QueryParamIncludeCommit      = "include_commit"      // 是否包含提交信息 默认 false
