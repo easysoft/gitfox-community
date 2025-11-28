@@ -7,8 +7,8 @@ import (
 const (
 	PathParamRepoRef  = "repoRef"
 	PathParamFilePath = "filePath"
-	QueryParamRepoID  = "repoId"
-	QueryParamSpaceID = "spaceId"
+	QueryParamRepoID  = "repoID"
+	QueryParamSpaceID = "spaceID"
 
 	QueryParamOperation = "Operation"
 )

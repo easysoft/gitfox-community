@@ -254,7 +254,7 @@ func (ctl *GitController) prepareRequest(ctx *gin.Context, params *req.SpaceRepo
 		return nil, "", "", err
 	}
 
-	logger.Infof("origin url %s , spaceId: %d, repoRef: %s", ctx.Request.URL.String(), params.SpaceID, params.RepoRef)
+	logger.Infof("origin url %s , spaceID: %d, repoRef: %s", ctx.Request.URL.String(), params.SpaceID, params.RepoRef)
 
 	contentEncoding := req.GetHeaderOrDefault(ctx, req.HeaderContentEncoding, "")
 	gitProtocol := req.GetHeaderOrDefault(ctx, req.HeaderParamGitProtocol, "")

@@ -204,10 +204,10 @@ func (s *Service) Update(ctx context.Context, req *repoModel.ReqForUpdate, oldRe
 	return updatedRepo, nil
 }
 
-func (s *Service) GetRepoCheckAccess(ctx context.Context, session *auth.Session, spaceId uint, identifier string, reqPermission []constant.Permission) (*repoModel.Repo, error) {
+func (s *Service) GetRepoCheckAccess(ctx context.Context, session *auth.Session, spaceID uint, identifier string, reqPermission []constant.Permission) (*repoModel.Repo, error) {
 
 	// get repo
-	repo, err := s.GetRepoByIdentifier(ctx, spaceId, identifier, []constant.RepoState{constant.RepoStateActive, constant.RepoStateMigrateGitPush})
+	repo, err := s.GetRepoByIdentifier(ctx, spaceID, identifier, []constant.RepoState{constant.RepoStateActive, constant.RepoStateMigrateGitPush})
 	if err != nil {
 		return nil, err
 	}
