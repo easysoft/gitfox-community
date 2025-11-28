@@ -4,7 +4,7 @@ import "time"
 
 type CreateSpaceRequest struct {
 	Name       string `json:"name" binding:"required,max=200" example:"测试空间01"`
-	Owner      string `json:"owner" binding:"required"`
+	Owner      string `json:"owner"`
 	Permission string `json:"acl" binding:"required,oneof=open private" example:"open"`
 	Desc       string `json:"desc"`
 	CreatedBy  string `json:"createdBy" binding:"required"`
