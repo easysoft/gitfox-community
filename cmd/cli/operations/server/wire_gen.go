@@ -123,7 +123,7 @@ func NewApp(mode string) (*App, func(), error) {
 		return nil, nil, err
 	}
 	githookController := provider.NewGitHookController(userStore, store, gitService, urlProvider, clientFactory)
-	server := provider.ProvideSSHServer(config, interface2, repoController)
+	server := provider.ProvideSSHServer(config, interface2, gitController)
 	authenticator := authn.ProvideAuthenticators(config, userStore, tokenInterface)
 	app := &App{
 		SystemConfig:  config,
