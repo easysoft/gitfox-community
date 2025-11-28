@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"context"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/api"
 )
 
 type Interface interface {
-	GitServicePack(ctx context.Context, repoUID string, options api.ServicePackOptions) error
+	GitServicePack(ctx context.Context, session *auth.Session, repoUID string, options api.ServicePackOptions) error
 	GetInfoRefs(ctx context.Context, repoUID string, service string, gitProtocol string) ([]byte, error)
 }
 
@@ -39,19 +40,25 @@ func (s *Service) GetInfoRefs(ctx context.Context, repoUID string, service strin
 	return buf.Bytes(), nil
 }
 
-func (s *Service) GitServicePack(ctx context.Context, repoUID string, options api.ServicePackOptions) error {
-	params := &git.ServicePackParams{
-		ServicePackOptions: options,
-	}
+func (s *Service) GitServicePack(ctx context.Context, session *auth.Session, repoUID string, options api.ServicePackOptions) error {
+	var params *git.ServicePackParams
 
 	// setup read/writeparams depending on whether it's a write operation
 	if options.IsWrite {
-		params.WriteParams = &git.WriteParams{
-			RepoUID: repoUID,
+		params = &git.ServicePackParams{
+			WriteParams: &git.WriteParams{
+				Actor: git.Identity{
+					Name:  session.User.Account,
+					Email: session.User.Email,
+				},
+				RepoUID: repoUID,
+			},
+			ServicePackOptions: options,
 		}
 	} else {
-		params.ReadParams = &git.ReadParams{
-			RepoUID: repoUID,
+		params = &git.ServicePackParams{
+			ReadParams:         &git.ReadParams{RepoUID: repoUID},
+			ServicePackOptions: options,
 		}
 	}
 

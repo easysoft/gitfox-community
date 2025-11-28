@@ -31,8 +31,8 @@ type GitController struct {
 }
 
 // NewGitController 创建 Git 处理器实例
-func NewGitController(gitSvc git.Interface, spaceSvc spaceSvc.Interface, repoSvc repoSvc.Interface) *GitController {
-	return &GitController{gitSvc: gitSvc, spaceSvc: spaceSvc, repoSvc: repoSvc}
+func NewGitController(gitSvc git.Interface, spaceSvc spaceSvc.Interface, repoSvc repoSvc.Interface, settingsSvc settingsSvc.Interface) *GitController {
+	return &GitController{gitSvc: gitSvc, spaceSvc: spaceSvc, repoSvc: repoSvc, settingsSvc: settingsSvc}
 }
 
 func (ctl *GitController) Clone(ctx *gin.Context) {
@@ -86,7 +86,7 @@ func (ctl *GitController) Clone(ctx *gin.Context) {
 		Protocol:     gitProtocol,
 	}
 
-	err = ctl.gitSvc.GitServicePack(ctx, repo.GitUID, options)
+	err = ctl.gitSvc.GitServicePack(ctx, session, repo.GitUID, options)
 	if err != nil {
 		logger.Errorf("GitServicePack failed: %v", err)
 		resp.InternalError(ctx, err)
@@ -137,12 +137,12 @@ func (ctl *GitController) Push(ctx *gin.Context) {
 	resp.NoCache(ctx.Writer)
 	ctx.Writer.Header().Set("Content-Type", fmt.Sprintf("application/x-git-%s-result", constant.GitServiceTypeReceivePack))
 
-	need, err := ctl.settingsSvc.NeedFitClient(ctx, repo.ID, constant.KeyRequireFitClient)
-	if err != nil {
-		err = errors.WithI18nKey(err, i18n.DbError)
-		resp.InternalError(ctx, err)
-		return
-	}
+	// need, err := ctl.settingsSvc.NeedFitClient(ctx, repo.ID, constant.KeyRequireFitClient)
+	// if err != nil {
+	// 	err = errors.WithI18nKey(err, i18n.DbError)
+	// 	resp.InternalError(ctx, err)
+	// 	return
+	// }
 
 	// 调用 ServicePack 处理 Git 协议
 	options := api.ServicePackOptions{
@@ -152,10 +152,10 @@ func (ctl *GitController) Push(ctx *gin.Context) {
 		Stdin:        dataReader,
 		Protocol:     gitProtocol,
 		IsWrite:      true,
-		FitClient:    need,
+		FitClient:    false,
 	}
 
-	err = ctl.gitSvc.GitServicePack(ctx, repo.GitUID, options)
+	err = ctl.gitSvc.GitServicePack(ctx, session, repo.GitUID, options)
 	if err != nil {
 		logger.Errorf("GitServicePack failed: %v", err)
 		resp.InternalError(ctx, err)

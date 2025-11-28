@@ -11,7 +11,7 @@ func FindFilesRecursive(dir, target string) ([]string, error) {
 	// 1. 校验目录是否有效（存在且为目录）
 	info, err := os.Stat(dir)
 	if err != nil {
-		return nil, errors.Newf("目录无效: %w", err)
+		return nil, errors.Newf("目录无效: %s", err.Error())
 	}
 	if !info.IsDir() {
 		return nil, errors.New("指定路径不是目录")
@@ -19,7 +19,7 @@ func FindFilesRecursive(dir, target string) ([]string, error) {
 
 	absDir, err := filepath.Abs(dir)
 	if err != nil {
-		return nil, errors.Newf("无法获取绝对路径: %w", err)
+		return nil, errors.Newf("无法获取绝对路径: %s", err.Error())
 	}
 
 	var result []string
@@ -37,7 +37,7 @@ func FindFilesRecursive(dir, target string) ([]string, error) {
 	})
 
 	if err != nil {
-		return nil, errors.Newf("遍历目录失败: %w", err)
+		return nil, errors.Newf("遍历目录失败: %s", err.Error())
 	}
 
 	return result, nil

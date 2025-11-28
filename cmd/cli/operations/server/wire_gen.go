@@ -27,6 +27,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/publickey"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/scan"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/settings"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/space"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/user"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/cmd/cli/operations/provider"
@@ -107,7 +108,9 @@ func NewApp(mode string) (*App, func(), error) {
 	interface2 := publickey2.NewPublicKeyService(publickeyInterface, userService)
 	userController := user3.NewUserController(userService, interface2)
 	service2 := provider.NewGitService(gitService)
-	gitController := provider.NewGitController(service2, service, repoService)
+	settingsInterface := settings.NewSettingStore(db)
+	settingsService := provider.NewSettingsService(settingsInterface)
+	gitController := provider.NewGitController(service2, service, repoService, settingsService)
 	ruleSetStore := scan.NewRuleSetStore(db)
 	ruleStore := scan.NewRuleStore(db)
 	ruleSetService := scan2.NewRuleSetService(ruleSetStore, ruleStore)

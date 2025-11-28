@@ -72,13 +72,19 @@ func (s *Service) ServicePack(ctx context.Context, params *ServicePackParams) er
 	var repoPath string
 	switch params.Service {
 	case constant.GitServiceTypeUploadPack:
-		if err := params.ReadParams.Validate(); err != nil {
+		if params.ReadParams == nil {
 			return errors.InvalidArgument("upload-pack requires ReadParams")
+		}
+		if err := params.ReadParams.Validate(); err != nil {
+			return errors.InvalidArgument("upload-pack requires ReadParams: %v", err)
 		}
 		repoPath = getFullPathForRepo(s.reposRoot, params.ReadParams.RepoUID)
 	case constant.GitServiceTypeReceivePack:
-		if err := params.WriteParams.Validate(); err != nil {
+		if params.WriteParams == nil {
 			return errors.InvalidArgument("receive-pack requires WriteParams")
+		}
+		if err := params.WriteParams.Validate(); err != nil {
+			return errors.InvalidArgument("receive-pack requires WriteParams: %v", err)
 		}
 		params.Env = append(params.Env, CreateEnvironmentForPush(ctx, *params.WriteParams)...)
 		repoPath = getFullPathForRepo(s.reposRoot, params.WriteParams.RepoUID)
