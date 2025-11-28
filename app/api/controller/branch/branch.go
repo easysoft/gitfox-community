@@ -39,6 +39,14 @@ func (c *Controller) Create(ctx *gin.Context) {
 	var reqBody branchModel.ReqForCreate
 	var err error
 
+	// 解析 path id
+	repoID, err := req.PathParamAsPositiveUint(ctx, "id")
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RepoPathParamError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
 	// 解析请求体
 	if err = ctx.ShouldBindJSON(&reqBody); err != nil {
 		err = errors.WithI18nKey(err, i18n.BranchBodyParamError)
@@ -53,7 +61,7 @@ func (c *Controller) Create(ctx *gin.Context) {
 	}
 
 	// 通过仓库 ID 获取仓库
-	repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, reqBody.RepoID)
+	repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, repoID)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return
@@ -93,6 +101,14 @@ func (c *Controller) List(ctx *gin.Context) {
 	var reqQuery branchModel.ReqFilter
 	var err error
 
+	// 解析 path id
+	repoID, err := req.PathParamAsPositiveUint(ctx, "id")
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RepoPathParamError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
 	if err = ctx.ShouldBindJSON(&reqQuery); err != nil {
 		err = errors.WithI18nKey(err, i18n.BranchQueryParamError)
 		resp.BadRequest(ctx, err)
@@ -108,7 +124,7 @@ func (c *Controller) List(ctx *gin.Context) {
 	}
 
 	// 通过仓库 ID 获取仓库
-	repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, reqQuery.RepoID)
+	repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, repoID)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return
@@ -142,6 +158,14 @@ func (c *Controller) ListPrefixes(ctx *gin.Context) {
 	var reqQuery branchModel.ReqFilter
 	var err error
 
+	// 解析 path id
+	repoID, err := req.PathParamAsPositiveUint(ctx, "id")
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RepoPathParamError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
 	if err = ctx.ShouldBindQuery(&reqQuery); err != nil {
 		err = errors.WithI18nKey(err, i18n.BranchQueryParamError)
 		resp.BadRequest(ctx, err)
@@ -158,7 +182,7 @@ func (c *Controller) ListPrefixes(ctx *gin.Context) {
 	}
 
 	// 通过仓库 ID 获取仓库
-	repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, reqQuery.RepoID)
+	repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, repoID)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return

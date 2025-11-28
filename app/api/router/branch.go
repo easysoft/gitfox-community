@@ -6,7 +6,7 @@ import (
 
 // registerBranchRoutes 注册分支相关路由
 func registerBranchRoutes(r *gin.RouterGroup, controller *Controller) {
-	branches := r.Group("/branches")
+	branches := r.Group("/repos/:id/branches")
 	{
 		branches.POST("", controller.Branch.Create)               // 创建分支
 		branches.POST("/list", controller.Branch.List)            // 查看分支列表
