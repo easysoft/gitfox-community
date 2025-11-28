@@ -12,5 +12,5 @@ type Interface interface {
 	FindByRef(ctx context.Context, ref string) (*repoModel.Repo, error)
 	GetByID(ctx context.Context, id uint) (*repoModel.Repo, error)
 	Delete(ctx context.Context, id uint) error
-	FindBySpaceAndIdentifier(ctx context.Context, spaceID uint, identifier string) (*repoModel.Repo, error)
+	GetBySpaceAndIdentifier(ctx context.Context, spaceID uint, identifier string) (*repoModel.Repo, error)
 }

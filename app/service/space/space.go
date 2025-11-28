@@ -133,7 +133,7 @@ func (s *Service) GetSpaceCheckAccess(ctx context.Context, session *auth.Session
 		}
 
 		if !ok {
-			return nil, errors.NoType.Newf("insufficient permissions for space %d : %v", spaceID, v)
+			return nil, constant.ErrUnauthorized
 		}
 	}
 

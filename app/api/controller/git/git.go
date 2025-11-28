@@ -226,7 +226,7 @@ func (ctl *GitController) getRepoByIdentifier(ctx *gin.Context, session *auth.Se
 	// 检查空间权限
 	_, err := ctl.spaceSvc.GetSpaceCheckAccess(ctx, session, spaceID, []constant.Permission{constant.PermissionSpaceView})
 	if err != nil {
-		return nil, errors.WithI18nKey(err, i18n.SpaceQueryError)
+		return nil, err
 	}
 
 	// 通过 identifier 查询仓库
@@ -249,7 +249,7 @@ func (ctl *GitController) prepareRequest(ctx *gin.Context, params *req.SpaceRepo
 		return nil, "", "", err
 	}
 
-	if err = ctx.ShouldBindUri(params); err != nil || params.SpaceID == 0 {
+	if err = ctx.ShouldBindUri(params); err != nil {
 		err = errors.WithI18nKey(err, i18n.RequestPathParameterNotFound)
 		return nil, "", "", err
 	}

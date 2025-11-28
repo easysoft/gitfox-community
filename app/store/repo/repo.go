@@ -95,8 +95,8 @@ func (s *Store) Delete(ctx context.Context, id uint) error {
 	return nil
 }
 
-// FindBySpaceAndIdentifier 通过 spaceID 和 identifier 查找仓库
-func (s *Store) FindBySpaceAndIdentifier(ctx context.Context, spaceID uint, identifier string) (*repoModel.Repo, error) {
+// GetBySpaceAndIdentifier 通过 spaceID 和 identifier 查找仓库
+func (s *Store) GetBySpaceAndIdentifier(ctx context.Context, spaceID uint, identifier string) (*repoModel.Repo, error) {
 	var repo Repository
 	err := s.db.WithContext(ctx).Where("spaceID = ? AND identifier = ? AND deleted = 0", spaceID, identifier).First(&repo).Error
 	if err != nil {

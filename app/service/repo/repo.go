@@ -207,7 +207,7 @@ func (s *Service) Update(ctx context.Context, req *repoModel.ReqForUpdate, oldRe
 func (s *Service) GetRepoCheckAccess(ctx context.Context, session *auth.Session, spaceID uint, identifier string, reqPermission []constant.Permission) (*repoModel.Repo, error) {
 
 	// get repo
-	repo, err := s.GetRepoByIdentifier(ctx, spaceID, identifier, []constant.RepoState{constant.RepoStateActive, constant.RepoStateMigrateGitPush})
+	repo, err := s.GetByIdentifier(ctx, spaceID, identifier, []constant.RepoState{constant.RepoStateActive, constant.RepoStateMigrateGitPush})
 	if err != nil {
 		return nil, err
 	}
@@ -232,12 +232,8 @@ func (s *Service) GetRepoCheckAccess(ctx context.Context, session *auth.Session,
 	return repo, nil
 }
 
-func (s *Service) GetRepoByIdentifier(ctx context.Context, spaceId uint, identifier string, allowedStates []constant.RepoState) (*repoModel.Repo, error) {
-	if spaceId < 1 {
-		return nil, errors.BadRequest.New("A valid space id must be provided.")
-	}
-
-	repo, err := s.repoStore.FindBySpaceAndIdentifier(ctx, spaceId, identifier)
+func (s *Service) GetByIdentifier(ctx context.Context, spaceID uint, identifier string, allowedStates []constant.RepoState) (*repoModel.Repo, error) {
+	repo, err := s.repoStore.GetBySpaceAndIdentifier(ctx, spaceID, identifier)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to find repository: %s", identifier)
 	}
