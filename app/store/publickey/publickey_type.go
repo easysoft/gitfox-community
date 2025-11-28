@@ -16,14 +16,14 @@ type PublicKey struct {
 	Comment      string     `db:"comment" gorm:"column:comment"`         // 公钥末尾的注释部分（通常是 user@host ），便于展示和识别。
 	Type         string     `db:"type" gorm:"column:type"`               // 公钥算法类型（如 ssh-ed25519 、 ssh-rsa ），用于展示与后续策略控制。
 
-	CreatedBy   string     `gorm:"column:created_by"`
-	CreatedDate *time.Time `gorm:"column:created_date"`
-	EditedBy    string     `gorm:"column:edited_by"`
-	EditedDate  *time.Time `gorm:"column:edited_date"`
+	CreatedBy   string     `gorm:"column:createdBy"`
+	CreatedDate *time.Time `gorm:"column:createdDate"`
+	EditedBy    string     `gorm:"column:editedBy"`
+	EditedDate  *time.Time `gorm:"column:editedDate"`
 }
 
 func (pk *PublicKey) TableName() string {
-	return "ops_public_keys"
+	return "ops_publicKeys"
 }
 
 func (pk *PublicKey) toModel() publickey.PublicKey {

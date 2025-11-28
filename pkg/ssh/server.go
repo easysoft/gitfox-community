@@ -23,7 +23,7 @@ import (
 	"strings"
 	"time"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/repo"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/git"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
 	principal "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/user"
@@ -55,7 +55,7 @@ type Server struct {
 	ServerHostKeysDir       string
 
 	Verifier publickey.Interface
-	RepoCtrl *repo.Controller
+	GitCtrl  *git.GitController
 }
 
 // - 验证服务器配置参数是否正确
@@ -82,9 +82,10 @@ func (s *Server) sanitize() error {
 		s.KeepAliveInterval = 5000
 	}
 
-	if s.RepoCtrl == nil {
-		return errors.InvalidArgument("repository controller is needed to run git service pack commands")
+	if s.GitCtrl == nil {
+		return errors.InvalidArgument("git controller is needed to run git service pack commands")
 	}
+
 	return nil
 }
 
@@ -247,7 +248,7 @@ func (s *Server) sessionHandler(session ssh.Session) {
 		go sendKeepAliveMsg(ctx, session, s.KeepAliveInterval)
 	}
 
-	err = s.RepoCtrl.GitServicePack(
+	err = s.GitCtrl.GitServicePack(
 		WithContext(ctx, session),
 		&auth.Session{
 			User: &principal.User{

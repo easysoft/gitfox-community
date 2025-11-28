@@ -15,7 +15,16 @@ type RepoRef struct {
 }
 
 type RepoId struct {
-	RepoID uint `uri:"repoId" binding:"required"`
+	RepoID uint `uri:"repoID" binding:"required"`
+}
+
+type SpaceId struct {
+	SpaceID uint `uri:"spaceID" binding:"required"`
+}
+
+type SpaceRepoRef struct {
+	SpaceID uint   `uri:"spaceID" binding:"required"`
+	RepoRef string `uri:"repoRef" binding:"required"`
 }
 
 const (

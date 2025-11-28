@@ -204,39 +204,38 @@ func (s *Service) Update(ctx context.Context, req *repoModel.ReqForUpdate, oldRe
 	return updatedRepo, nil
 }
 
-func (s *Service) GetRepoCheckAccess(ctx context.Context, session *auth.Session, repoID uint, reqPermission []constant.Permission) (*repoModel.Repo, error) {
+func (s *Service) GetRepoCheckAccess(ctx context.Context, session *auth.Session, spaceID uint, identifier string, reqPermission []constant.Permission) (*repoModel.Repo, error) {
 
 	// get repo
-	repo, err := s.GetRepo(ctx, repoID, []constant.RepoState{constant.RepoStateActive, constant.RepoStateMigrateGitPush})
+	repo, err := s.GetByIdentifier(ctx, spaceID, identifier, []constant.RepoState{constant.RepoStateActive, constant.RepoStateMigrateGitPush})
 	if err != nil {
 		return nil, err
 	}
 
-	// for _, v := range reqPermission {
-	// 	ok, err := s.authorizer.Check(ctx, session,
-	// 		constant.Scope{
-	// 			ResourceType: constant.ResourceTypeRepo,
-	// 			ResourceID:   repo.ID,
-	// 		},
-	// 		v,
-	// 	)
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-	// 	fmt.Printf("Permission %v: %v\n", v, ok)
-	// }
+	for _, v := range reqPermission {
+		ok, err := s.authorizer.Check(ctx, session,
+			constant.Scope{
+				ResourceType: constant.ResourceTypeRepo,
+				ResourceID:   repo.ID,
+			},
+			v,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		if !ok {
+			return nil, errors.NoType.Newf("insufficient permissions for repo %s : %v", identifier, v)
+		}
+	}
 
 	return repo, nil
 }
 
-func (s *Service) GetRepo(ctx context.Context, repoID uint, allowedStates []constant.RepoState) (*repoModel.Repo, error) {
-	if repoID < 1 {
-		return nil, errors.BadRequest.New("A valid repository id must be provided.")
-	}
-
-	repo, err := s.repoStore.GetByID(ctx, repoID)
+func (s *Service) GetByIdentifier(ctx context.Context, spaceID uint, identifier string, allowedStates []constant.RepoState) (*repoModel.Repo, error) {
+	repo, err := s.repoStore.GetBySpaceAndIdentifier(ctx, spaceID, identifier)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to find repository: %d", repoID)
+		return nil, errors.Wrapf(err, "failed to find repository: %s", identifier)
 	}
 
 	if len(allowedStates) > 0 && !slice.Contain(allowedStates, constant.RepoState(repo.Status)) {

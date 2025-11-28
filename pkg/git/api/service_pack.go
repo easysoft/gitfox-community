@@ -91,7 +91,7 @@ func (g *Git) ServicePack(
 	options ServicePackOptions,
 ) error {
 	cmd := command.New(string(options.Service),
-		command.WithArg(repoPath),
+		command.WithArg("."),
 		command.WithEnv("SSH_ORIGINAL_COMMAND", string(options.Service)),
 	)
 

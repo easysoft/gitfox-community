@@ -5,10 +5,13 @@ import (
 	"fmt"
 	"strings"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
 	spaceModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/space"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/space"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/auth/authz"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 )
@@ -17,12 +20,15 @@ type Service struct {
 	// 依赖的存储接口等，可以在这里添加
 	spaceStore space.Interface
 	repoStore  repo.Interface
+	authorizer authz.Authorizer
 }
 
 // NewService 创建 SpaceService 实例
-func NewSpaceSvc(spaceStore space.Interface) *Service {
+func NewSpaceSvc(spaceStore space.Interface, repoStore repo.Interface, authorizer authz.Authorizer) *Service {
 	return &Service{
 		spaceStore: spaceStore,
+		repoStore:  repoStore,
+		authorizer: authorizer,
 	}
 }
 
@@ -107,6 +113,29 @@ func (s *Service) Undelete(ctx context.Context, req spaceModel.UndeleteSpaceRequ
 	return nil
 }
 
-func (s *Service) CheckPermission() {
-	// TODO: implement permission checks for spaces; placeholder to satisfy compilation.
+func (s *Service) GetSpaceCheckAccess(ctx context.Context, session *auth.Session, spaceID uint, permissions []constant.Permission) (*space.Space, error) {
+	spaceObj, err := s.spaceStore.GetByID(ctx, spaceID)
+	if err != nil {
+		return nil, err
+	}
+
+	// 检查权限
+	for _, v := range permissions {
+		ok, err := s.authorizer.Check(ctx, session,
+			constant.Scope{
+				ResourceType: constant.ResourceTypeSpace,
+				ResourceID:   spaceObj.ID,
+			},
+			v,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		if !ok {
+			return nil, constant.ErrUnauthorized
+		}
+	}
+
+	return spaceObj, nil
 }

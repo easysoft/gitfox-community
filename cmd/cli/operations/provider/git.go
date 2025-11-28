@@ -8,7 +8,10 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/githook"
 	gitSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/git"
 	repoSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
+	settingsSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/settings"
+	spaceSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/space"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
+	settingsStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/settings"
 	principal "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/user"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/cache"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
@@ -32,8 +35,11 @@ var GitWireSet = wire.NewSet(
 	NewGitHookController,
 	NewGitService,
 	NewGitController,
+	NewSettingsService,
+	settingsStore.NewSettingStore,
 	wire.Bind(new(gitPkg.Interface), new(*gitPkg.Service)),
 	wire.Bind(new(gitSvc.Interface), new(*gitSvc.Service)),
+	wire.Bind(new(settingsSvc.Interface), new(*settingsSvc.Service)),
 )
 
 func NewLastCommitCache(config types.Config) (cache.Cache[api.CommitEntryKey, *api.Commit], error) {
@@ -127,6 +133,10 @@ func NewGitService(gitPkg gitPkg.Interface) *gitSvc.Service {
 	return gitSvc.NewGitService(gitPkg).(*gitSvc.Service)
 }
 
-func NewGitController(gitService gitSvc.Interface, repoService repoSvc.Interface) *git.GitController {
-	return git.NewGitController(gitService, repoService)
+func NewSettingsService(settingsStore settingsStore.Interface) *settingsSvc.Service {
+	return settingsSvc.NewSettingsService(settingsStore).(*settingsSvc.Service)
+}
+
+func NewGitController(gitService gitSvc.Interface, spaceService spaceSvc.Interface, repoService repoSvc.Interface, settingsService settingsSvc.Interface) *git.GitController {
+	return git.NewGitController(gitService, spaceService, repoService, settingsService)
 }

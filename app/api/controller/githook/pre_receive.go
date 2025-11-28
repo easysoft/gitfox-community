@@ -41,6 +41,7 @@ import (
 )
 
 // PreReceive executes the pre-receive hook for a git repository.
+// PreRestore执行git存储库的预接收挂钩。
 func (c *Controller) PreReceive(
 	ctx context.Context,
 	rgit RestrictedGIT,
@@ -64,6 +65,7 @@ func (c *Controller) PreReceive(
 
 	forced := make([]bool, len(in.RefUpdates))
 	for i, refUpdate := range in.RefUpdates {
+		// 强制推送检测
 		forced[i], err = isForcePush(
 			ctx, rgit, repo.GitUID, in.Environment.AlternateObjectDirs, refUpdate,
 		)

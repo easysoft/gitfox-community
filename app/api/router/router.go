@@ -58,9 +58,8 @@ func NewRouter(mode string, logger *logger.SugaredMateLogger, controller *Contro
 	registerUserRoutes(authGroup, controller)   // 用户相关路由
 
 	// 创建需要 Basic 认证的路由组（用于 Git 操作）
-	basicAuthGroup := r.Group("/api/v2")
-	// basicAuthGroup.Use(middleware.Attempt(authn.Get(authn.AuthKindBasic)))
-	basicAuthGroup.Use(middleware.MockAttempt())
+	basicAuthGroup := r.Group("")
+	basicAuthGroup.Use(middleware.Attempt(authn.Get(authn.AuthKindBasic)))
 	registerGitRoutes(basicAuthGroup, controller) // Git 相关路由
 	return r
 }

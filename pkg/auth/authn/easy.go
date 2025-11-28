@@ -112,11 +112,22 @@ func (a *EasyAuthenticator) Authenticate(r *gin.Context) (*auth.Session, error) 
 		return nil, constant.ErrUnauthorized
 	}
 
+	var isAdmin bool
+	if app == HeaderAppAdmin {
+		isAdmin = true
+	}
+
 	logger.Debugf("[authn.easy]user %s authenticated successfully", operator)
 	return &auth.Session{
 		Principal: &principal.Principal{
-			App: app,
+			App:         app,
+			DisplayName: app,
+			Admin:       isAdmin,
 		},
 		User: user,
 	}, nil
 }
+
+const (
+	HeaderAppAdmin = "zentao"
+)

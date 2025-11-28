@@ -27,6 +27,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/publickey"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/scan"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/settings"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/space"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/user"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/cmd/cli/operations/provider"
@@ -58,7 +59,12 @@ func NewApp(mode string) (*App, func(), error) {
 		return nil, nil, err
 	}
 	spaceStore := space.NewSpaceStore(db)
-	service := space2.NewSpaceSvc(spaceStore)
+	store := repo.NewRepoStore(db)
+	duration := authz.ProvideCacheDuration()
+	permissionCache := authz.NewPermissionCache(duration)
+	publicAccessCache := authz.NewPublicAccessCache(duration)
+	membershipAuthorizer := authz.NewMembershipAuthorizer(permissionCache, publicAccessCache)
+	service := space2.NewSpaceSvc(spaceStore, store, membershipAuthorizer)
 	spaceController := space3.NewSpaceController(service)
 	urlProvider, err := provider.NewURLProvider(config)
 	if err != nil {
@@ -80,20 +86,15 @@ func NewApp(mode string) (*App, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	store := provider.NewGitLocalStore()
-	gitService, err := provider.NewGit(typesConfig, git, clientFactory, store)
+	storageStore := provider.NewGitLocalStore()
+	gitService, err := provider.NewGit(typesConfig, git, clientFactory, storageStore)
 	if err != nil {
 		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
 	branchService := branch.NewService(urlProvider, gitService)
-	repoStore := repo.NewRepoStore(db)
-	duration := authz.ProvideCacheDuration()
-	permissionCache := authz.NewPermissionCache(duration)
-	publicAccessCache := authz.NewPublicAccessCache(duration)
-	membershipAuthorizer := authz.NewMembershipAuthorizer(permissionCache, publicAccessCache)
-	repoService := repo2.NewRepoSvc(gitService, repoStore, spaceStore, urlProvider, membershipAuthorizer)
+	repoService := repo2.NewRepoSvc(gitService, store, spaceStore, urlProvider, membershipAuthorizer)
 	controller := branch2.NewController(branchService, repoService)
 	tagService := tag.NewService(urlProvider, gitService)
 	tagController := tag2.NewController(tagService, repoService)
@@ -107,7 +108,9 @@ func NewApp(mode string) (*App, func(), error) {
 	interface2 := publickey2.NewPublicKeyService(publickeyInterface, userService)
 	userController := user3.NewUserController(userService, interface2)
 	service2 := provider.NewGitService(gitService)
-	gitController := provider.NewGitController(service2, repoService)
+	settingsInterface := settings.NewSettingStore(db)
+	settingsService := provider.NewSettingsService(settingsInterface)
+	gitController := provider.NewGitController(service2, service, repoService, settingsService)
 	ruleSetStore := scan.NewRuleSetStore(db)
 	ruleStore := scan.NewRuleStore(db)
 	ruleSetService := scan2.NewRuleSetService(ruleSetStore, ruleStore)
@@ -119,8 +122,8 @@ func NewApp(mode string) (*App, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	githookController := provider.NewGitHookController(userStore, repoStore, gitService, urlProvider, clientFactory)
-	server := provider.ProvideSSHServer(config, interface2, repoController)
+	githookController := provider.NewGitHookController(userStore, store, gitService, urlProvider, clientFactory)
+	server := provider.ProvideSSHServer(config, interface2, gitController)
 	authenticator := authn.ProvideAuthenticators(config, userStore, tokenInterface)
 	app := &App{
 		SystemConfig:  config,

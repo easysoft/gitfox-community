@@ -13,8 +13,8 @@ type Service struct {
 	settingsStore settings.Interface
 }
 
-// NewService 创建 SpaceService 实例
-func NewSpaceSvc(settingsStore settings.Interface) Interface {
+// NewService 创建 SettingsService 实例
+func NewSettingsService(settingsStore settings.Interface) Interface {
 	return &Service{
 		settingsStore: settingsStore,
 	}
@@ -27,14 +27,14 @@ func (s *Service) NeedFitClient(ctx context.Context, repoID uint, key constant.S
 	}
 
 	if setting == nil { // not found return true
-		return true, nil
-	}
-
-	if setting.Value == string(constant.DefaultRequireFitClient) {
 		return false, nil
 	}
 
-	return true, nil
+	if setting.Value != string(constant.DefaultRequireFitClient) {
+		return true, nil
+	}
+
+	return false, nil
 }
 
 func (s *Service) GetSpaceSettings(ctx context.Context, spaceID uint) ([]*settingsModel.Setting, error) {
