@@ -6,7 +6,6 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/space"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	gitPkg "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
@@ -22,7 +21,7 @@ type Controller struct {
 }
 
 // NewRepoController 创建代码库处理器实例
-func NewRepoController(repoSvc repo.Interface, spaceSvc space.Interface, urlProvider urlPkg.Provider, gitPkg gitPkg.Interface) *Controller {
+func NewRepoController(repoSvc repo.Interface, urlProvider urlPkg.Provider, gitPkg gitPkg.Interface) *Controller {
 	return &Controller{
 		repoSvc:     repoSvc,
 		urlProvider: urlProvider,
@@ -208,6 +207,22 @@ func (c *Controller) Delete(ctx *gin.Context) {
 	resp.OK(ctx, i18n.RepoDeleteSuccess, nil)
 }
 
+// GetContent 获取仓库内容
+// @Summary 获取仓库文件或目录内容
+// @Description 根据路径获取仓库中的文件内容、目录列表或子模块信息，支持指定 Git 引用(分支/标签/提交)
+// @Tags repos
+// @Accept application/json
+// @Produce application/json
+// @Param id path uint true "仓库 ID"
+// @Param filepath path string false "文件或目录路径 (如 src/main.go)，为空则返回根目录"
+// @Param gitRef query string false "Git 引用 (分支/标签/提交SHA)，默认为 refs/heads/main"
+// @Param includeCommit query bool false "是否包含最新提交信息，默认 false"
+// @Param flattenDirectories query bool false "是否展平单层目录结构，默认 false"
+// @Success 200 {object} resp.ObjectResponse{data=repoModel.GetContentOutput} "获取成功，返回文件/目录/符号链接/子模块内容"
+// @Failure 400 {object} resp.ObjectResponse "参数错误或权限不足"
+// @Failure 404 {object} resp.ObjectResponse "仓库或文件不存在"
+// @Failure 500 {object} resp.ObjectResponse "服务器内部错误"
+// @Router /repos/{id}/contents/{filepath} [get]
 func (ctl *Controller) GetContent(ctx *gin.Context) {
 	logger := logger.GetLogger(ctx)
 	var params req.RepoId
@@ -378,7 +393,7 @@ func (c *Controller) GetDiff(ctx *gin.Context) {
 
 	session, ok := req.GetAuthSession(ctx.Request.Context())
 	if !ok {
-		err := errors.WithI18nKey(errors.New("get session failed"), i18n.AuthNoSession)
+		err = errors.WithI18nKey(errors.New("get session failed"), i18n.AuthNoSession)
 		resp.BadRequest(ctx, err)
 		return
 	}

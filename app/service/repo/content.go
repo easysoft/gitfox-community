@@ -18,11 +18,11 @@ import (
 func (s *Service) GetContent(ctx context.Context, session *auth.Session, repo *repoModel.Repo, gitRef string, repoPath string, includeLatestCommit bool, flattenDirectories bool) (*repoModel.GetContentOutput, error) {
 
 	// create read params once
-
+	readParams := git.ReadParams{
+		RepoUID: repo.GitUID,
+	}
 	treeNodeOutput, err := s.gitSvc.GetTreeNode(ctx, &git.GetTreeNodeParams{
-		ReadParams: git.ReadParams{
-			RepoUID: repo.GitUID,
-		},
+		ReadParams:          readParams,
 		GitREF:              gitRef,
 		Path:                repoPath,
 		IncludeLatestCommit: includeLatestCommit,
@@ -36,16 +36,16 @@ func (s *Service) GetContent(ctx context.Context, session *auth.Session, repo *r
 		return nil, err
 	}
 
-	var content Content
+	var content repoModel.Content
 	switch info.Type {
-	case ContentTypeDir:
-		content, err = c.getDirContent(ctx, readParams, gitRef, repoPath, flattenDirectories)
-	case ContentTypeFile:
-		content, err = c.getFileContent(ctx, readParams, info.SHA)
-	case ContentTypeSymlink:
-		content, err = c.getSymlinkContent(ctx, readParams, info.SHA)
-	case ContentTypeSubmodule:
-		content, err = c.getSubmoduleContent(ctx, readParams, gitRef, repoPath, info.SHA)
+	case repoModel.ContentTypeDir:
+		content, err = s.getDirContent(ctx, readParams, gitRef, repoPath, flattenDirectories)
+	case repoModel.ContentTypeFile:
+		content, err = s.getFileContent(ctx, readParams, info.SHA)
+	case repoModel.ContentTypeSymlink:
+		content, err = s.getSymlinkContent(ctx, readParams, info.SHA)
+	case repoModel.ContentTypeSubmodule:
+		content, err = s.getSubmoduleContent(ctx, readParams, gitRef, repoPath, info.SHA)
 	default:
 		err = fmt.Errorf("unknown tree node type '%s'", treeNodeOutput.Node.Type)
 	}
@@ -65,8 +65,8 @@ func (s *Service) getSubmoduleContent(ctx context.Context,
 	gitRef string,
 	repoPath string,
 	commitSHA string,
-) (*SubmoduleContent, error) {
-	output, err := c.git.GetSubmodule(ctx, &git.GetSubmoduleParams{
+) (*repoModel.SubmoduleContent, error) {
+	output, err := s.gitSvc.GetSubmodule(ctx, &git.GetSubmoduleParams{
 		ReadParams: readParams,
 		GitREF:     gitRef,
 		Path:       repoPath,
@@ -76,7 +76,7 @@ func (s *Service) getSubmoduleContent(ctx context.Context,
 		return nil, fmt.Errorf("failed to get submodule: %w", err)
 	}
 
-	return &SubmoduleContent{
+	return &repoModel.SubmoduleContent{
 		URL:       output.Submodule.URL,
 		CommitSHA: commitSHA,
 	}, nil
@@ -85,11 +85,11 @@ func (s *Service) getSubmoduleContent(ctx context.Context,
 func (s *Service) getFileContent(ctx context.Context,
 	readParams git.ReadParams,
 	blobSHA string,
-) (*FileContent, error) {
-	output, err := c.git.GetBlob(ctx, &git.GetBlobParams{
+) (*repoModel.FileContent, error) {
+	output, err := s.gitSvc.GetBlob(ctx, &git.GetBlobParams{
 		ReadParams: readParams,
 		SHA:        blobSHA,
-		SizeLimit:  maxGetContentFileSize,
+		SizeLimit:  repoModel.MaxGetContentFileSize,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get file content: %w", err)
@@ -106,7 +106,7 @@ func (s *Service) getFileContent(ctx context.Context,
 		return nil, fmt.Errorf("failed to read blob content: %w", err)
 	}
 
-	return &FileContent{
+	return &repoModel.FileContent{
 		Size:     output.Size,
 		DataSize: output.ContentSize,
 		Encoding: enum.ContentEncodingTypeBase64,
@@ -117,11 +117,11 @@ func (s *Service) getFileContent(ctx context.Context,
 func (s *Service) getSymlinkContent(ctx context.Context,
 	readParams git.ReadParams,
 	blobSHA string,
-) (*SymlinkContent, error) {
-	output, err := c.git.GetBlob(ctx, &git.GetBlobParams{
+) (*repoModel.SymlinkContent, error) {
+	output, err := s.gitSvc.GetBlob(ctx, &git.GetBlobParams{
 		ReadParams: readParams,
 		SHA:        blobSHA,
-		SizeLimit:  maxGetContentFileSize, // TODO: do we need to guard against too big symlinks?
+		SizeLimit:  repoModel.MaxGetContentFileSize, // TODO: do we need to guard against too big symlinks?
 	})
 	if err != nil {
 		// TODO: handle not found error
@@ -139,7 +139,7 @@ func (s *Service) getSymlinkContent(ctx context.Context,
 		return nil, fmt.Errorf("failed to read blob content: %w", err)
 	}
 
-	return &SymlinkContent{
+	return &repoModel.SymlinkContent{
 		Size:   output.Size,
 		Target: string(content),
 	}, nil
@@ -150,8 +150,8 @@ func (s *Service) getDirContent(ctx context.Context,
 	gitRef string,
 	repoPath string,
 	flattenDirectories bool,
-) (*DirContent, error) {
-	output, err := c.git.ListTreeNodes(ctx, &git.ListTreeNodeParams{
+) (*repoModel.DirContent, error) {
+	output, err := s.gitSvc.ListTreeNodes(ctx, &git.ListTreeNodeParams{
 		ReadParams:         readParams,
 		GitREF:             gitRef,
 		Path:               repoPath,
@@ -162,7 +162,7 @@ func (s *Service) getDirContent(ctx context.Context,
 		return nil, fmt.Errorf("failed to get content of dir: %w", err)
 	}
 
-	entries := make([]ContentInfo, len(output.Nodes))
+	entries := make([]repoModel.ContentInfo, len(output.Nodes))
 	for i, node := range output.Nodes {
 		entries[i], err = mapToContentInfo(node, nil, false)
 		if err != nil {
@@ -170,7 +170,7 @@ func (s *Service) getDirContent(ctx context.Context,
 		}
 	}
 
-	return &DirContent{
+	return &repoModel.DirContent{
 		Entries: entries,
 	}, nil
 }
