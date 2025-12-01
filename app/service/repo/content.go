@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"io"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/utils"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
-	"github.com/easysoft/gitfox/types/enum"
 	"github.com/rs/zerolog/log"
 )
 
@@ -109,7 +109,7 @@ func (s *Service) getFileContent(ctx context.Context,
 	return &repoModel.FileContent{
 		Size:     output.Size,
 		DataSize: output.ContentSize,
-		Encoding: enum.ContentEncodingTypeBase64,
+		Encoding: constant.ContentEncodingTypeBase64,
 		Data:     base64.StdEncoding.EncodeToString(content),
 	}, nil
 }

@@ -1,9 +1,9 @@
 package repo
 
 import (
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/commit"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
-	"github.com/easysoft/gitfox/types/enum"
 )
 
 const (
@@ -51,10 +51,10 @@ type Content interface {
 }
 
 type FileContent struct {
-	Encoding enum.ContentEncodingType `json:"encoding"`
-	Data     string                   `json:"data"`
-	Size     int64                    `json:"size"`
-	DataSize int64                    `json:"data_size"`
+	Encoding constant.ContentEncodingType `json:"encoding"`
+	Data     string                       `json:"data"`
+	Size     int64                        `json:"size"`
+	DataSize int64                        `json:"data_size"`
 }
 
 func (c *FileContent) isContent() {}
