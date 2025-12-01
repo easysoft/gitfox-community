@@ -2,12 +2,12 @@ package git
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 	"strings"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/api"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 )
@@ -25,13 +25,13 @@ func (c *GitController) GitServicePack(
 	// 解析 repoRef: "1/ldg-repo" -> spaceID=1, repoName="ldg-repo"
 	parts := strings.SplitN(repoRef, "/", 2)
 	if len(parts) != 2 {
-		return fmt.Errorf("invalid repository path format, expected: spaceID/repoName")
+		return errors.New("invalid repository path format, expected: spaceID/repoName")
 	}
 
 	// 解析 spaceID
 	spaceID, err := strconv.ParseUint(parts[0], 10, 32)
 	if err != nil {
-		return fmt.Errorf("invalid spaceID: %s", parts[0])
+		return errors.Wrapf(err, "invalid spaceID: %s", parts[0])
 	}
 
 	repoName := strings.TrimSuffix(parts[1], ".git")
@@ -47,13 +47,13 @@ func (c *GitController) GitServicePack(
 	// 查询仓库并检查权限
 	repo, err := c.repoSvc.GetRepoCheckAccess(ctx, session, uint(spaceID), repoName, []constant.Permission{permission})
 	if err != nil {
-		return fmt.Errorf("failed to get repository: %w", err)
+		return errors.Wrapf(err, "failed to get repository: %w", err)
 	}
 
 	// 调用 Git 服务执行操作
 	err = c.gitSvc.GitServicePack(ctx, session, repo.GitUID, options)
 	if err != nil {
-		return fmt.Errorf("git service pack failed: %w", err)
+		return errors.Wrapf(err, "git service pack failed: %w", err)
 	}
 
 	return nil

@@ -1,8 +1,8 @@
 package repo
 
 import (
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/commit"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
-	"github.com/easysoft/gitfox/types"
 )
 
 // GetContentReq 获取仓库内容请求参
@@ -21,11 +21,11 @@ type GetContentOutput struct {
 }
 
 type ContentInfo struct {
-	Type         ContentType   `json:"type"`
-	SHA          string        `json:"sha"`
-	Name         string        `json:"name"`
-	Path         string        `json:"path"`
-	LatestCommit *types.Commit `json:"latest_commit,omitempty"`
+	Type         ContentType    `json:"type"`
+	SHA          string         `json:"sha"`
+	Name         string         `json:"name"`
+	Path         string         `json:"path"`
+	LatestCommit *commit.Commit `json:"latest_commit,omitempty"`
 }
 
 type ContentType string

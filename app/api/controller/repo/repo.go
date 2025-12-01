@@ -1,12 +1,12 @@
 package repo
 
 import (
-	"fmt"
-
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/space"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	gitPkg "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
@@ -22,7 +22,7 @@ type Controller struct {
 }
 
 // NewRepoController 创建代码库处理器实例
-func NewRepoController(repoSvc repo.Interface, urlProvider urlPkg.Provider, gitPkg gitPkg.Interface) *Controller {
+func NewRepoController(repoSvc repo.Interface, spaceSvc space.Interface, urlProvider urlPkg.Provider, gitPkg gitPkg.Interface) *Controller {
 	return &Controller{
 		repoSvc:     repoSvc,
 		urlProvider: urlProvider,
@@ -213,7 +213,7 @@ func (ctl *Controller) GetContent(ctx *gin.Context) {
 	var params req.RepoId
 	var err error
 
-	_, ok := req.GetAuthSession(ctx.Request.Context())
+	session, ok := req.GetAuthSession(ctx.Request.Context())
 	if !ok {
 		err = errors.WithI18nKey(errors.New("get session failed"), i18n.AuthNoSession)
 		resp.BadRequest(ctx, err)
@@ -251,7 +251,24 @@ func (ctl *Controller) GetContent(ctx *gin.Context) {
 	path := req.PathParamOrEmpty(ctx, req.PathParamFilePath)
 	logger.Infof("origin url %s , repoID: %d,gitRef: %s, path: %s,includeCommit: %v,flattenDirectories: %v", ctx.Request.URL.String(), params.RepoID, gitRef, path, includeCommit, flattenDirectories)
 
-	fmt.Println(ctx.Param("path"))
+	// todo check spcace ?
+
+	// get repo
+	repoM, err := ctl.repoSvc.GetRepoCheckAccess(ctx.Request.Context(), session, params.RepoID, gitRef, []constant.Permission{constant.PermissionRepoView})
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RepoGetContentPermissionError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
+	re, err := ctl.repoSvc.GetContent(ctx.Request.Context(), session, repoM, gitRef, path, includeCommit, flattenDirectories)
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RepoGetContentError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
+	resp.OK(ctx, i18n.RepoGetContentSuccess, re)
 }
 
 // @Summary 仓库代码blame
