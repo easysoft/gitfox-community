@@ -16,6 +16,7 @@ package ssh
 
 import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/git"
+	publickeyService "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/publickey"
 	"github.com/easysoft/gitfox/types"
 
 	"github.com/google/wire"
@@ -28,7 +29,7 @@ var WireSet = wire.NewSet(
 func ProviderSShServer(
 	config *types.Config,
 	GitCtrl *git.GitController,
-	// vierifier publickey.Service,
+	verifier publickeyService.Interface,
 ) *Server {
 	return &Server{
 		Host:                    config.SSH.Host,
@@ -43,6 +44,6 @@ func ProviderSShServer(
 		KeepAliveInterval:       config.SSH.KeepAliveInterval,
 		ServerHostKeysDir:       config.SSH.ServerHostKeysDir,
 		GitCtrl:                 GitCtrl,
-		// Verifier:                vierifier,
+		Verifier:                verifier,
 	}
 }

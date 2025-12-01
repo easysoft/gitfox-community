@@ -3,6 +3,7 @@ package commit
 import (
 	"time"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	gitenum "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/enum"
 )
 
@@ -21,11 +22,11 @@ type RespForCreate struct {
 }
 
 type Action struct {
-	Action   string `json:"action"`
-	Path     string `json:"path"`
-	Payload  string `json:"payload"`
-	Encoding string `json:"encoding"`
-	SHA      string `json:"sha"`
+	Action   string                       `json:"action"`
+	Path     string                       `json:"path"`
+	Payload  string                       `json:"payload"`
+	Encoding constant.ContentEncodingType `json:"encoding"`
+	SHA      string                       `json:"sha"`
 }
 
 type Author struct {

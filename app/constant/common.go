@@ -11,10 +11,12 @@ const (
 	MaxDescByteCountUTF8MB4 = MaxDescCharCount * 4 // 2000 字节
 )
 
+type ContentEncodingType string
+
 // 编码
 const (
-	ContentEncodingTypeUTF8   = "utf8"
-	ContentEncodingTypeBase64 = "base64"
+	ContentEncodingTypeUTF8   ContentEncodingType = "utf8"
+	ContentEncodingTypeBase64 ContentEncodingType = "base64"
 )
 
 type RespCode string

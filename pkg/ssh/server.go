@@ -155,7 +155,7 @@ func (s *Server) publicKeyHandler(ctx ssh.Context, key ssh.PublicKey) bool {
 		return false
 	}
 
-	user, err := s.Verifier.ValidateKey(ctx, key)
+	user, keyID, err := s.Verifier.ValidateKey(ctx, key)
 	if errors.IsNotFound(err) {
 		log.Debug().Err(err).Msg("public key is unknown")
 		return false
@@ -186,6 +186,7 @@ func (s *Server) publicKeyHandler(ctx ssh.Context, key ssh.PublicKey) bool {
 	}
 
 	ctx.SetValue(principalKey, user)
+	ctx.SetValue(principalID, keyID)
 	return true
 }
 
@@ -202,6 +203,13 @@ func (s *Server) sessionHandler(session ssh.Session) {
 	if !ok {
 		_, _ = fmt.Fprintf(session.Stderr(), "principal not found or empty")
 		return
+	}
+
+	// 标记密钥为已验证(仅在会话成功建立后)
+	if keyID, ok := session.Context().Value(principalID).(int64); ok {
+		if err := s.Verifier.MarkKeyAsVerified(session.Context(), keyID); err != nil {
+			log.Warn().Err(err).Msg("failed to mark key as verified")
+		}
 	}
 
 	parts := strings.Fields(command)
@@ -232,6 +240,8 @@ func (s *Server) sessionHandler(session ssh.Session) {
 	repoRef := strings.Trim(gitArgs[0], "'")
 	// remove .git suffix
 	repoRef = strings.TrimSuffix(repoRef, ".git")
+	// remove leading slash if present (e.g., "/1/ldg-repo" -> "1/ldg-repo")
+	repoRef = strings.TrimPrefix(repoRef, "/")
 
 	gitProtocol := ""
 	for _, key := range session.Environ() {
@@ -264,6 +274,7 @@ func (s *Server) sessionHandler(session ssh.Session) {
 			Stdin:    session,
 			Stderr:   session.Stderr(),
 			Protocol: gitProtocol,
+			IsWrite:  service == constant.GitServiceTypeReceivePack,
 		},
 	)
 	if err != nil {

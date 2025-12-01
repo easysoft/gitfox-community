@@ -3,7 +3,6 @@ package publickey
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
@@ -33,16 +32,14 @@ type Service struct {
 }
 
 // ValidateKey tries to match the provided key to one of the keys in the database.
-// It updates the verified timestamp of the matched key to mark it as used.
 // ValidateKey尝试将提供的键与数据库中的一个键匹配。
-// 更新匹配密钥的验证时间戳，标记为已使用。
-func (s Service) ValidateKey(ctx context.Context, publicKey ssh.PublicKey) (*principal.User, error) {
+func (s Service) ValidateKey(ctx context.Context, publicKey ssh.PublicKey) (*principal.User, int64, error) {
 	key := From(publicKey)
 	fingerprint := key.Fingerprint()
 
 	existingKeys, err := s.publicKeyStore.ListByFingerprint(ctx, fingerprint)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read keys by fingerprint: %w", err)
+		return nil, 0, fmt.Errorf("failed to read keys by fingerprint: %w", err)
 	}
 
 	var keyID int64
@@ -55,23 +52,29 @@ func (s Service) ValidateKey(ctx context.Context, publicKey ssh.PublicKey) (*pri
 
 		keyID = existingKey.ID
 		account = existingKey.Account
+		break
 	}
 
 	if keyID == 0 {
-		return nil, errors.NotFound.New("Unrecognized key")
+		return nil, 0, errors.NotFound.New("Unrecognized key")
 	}
 
 	user, err := s.userStore.FindUserByAccount(ctx, account)
 	if err != nil {
-		return nil, fmt.Errorf("failed to pull user info by public key's account: %w", err)
+		return nil, 0, fmt.Errorf("failed to pull user info by public key's account: %w", err)
 	}
 
-	err = s.publicKeyStore.MarkAsVerified(ctx, keyID, time.Now().UnixMilli())
+	return user, keyID, nil
+}
+
+// MarkKeyAsVerified updates the verified timestamp of the matched key to mark it as used.
+// MarkKeyAsVerified 更新匹配密钥的验证时间戳,标记为已使用。
+func (s Service) MarkKeyAsVerified(ctx context.Context, keyID int64) error {
+	err := s.publicKeyStore.MarkAsVerified(ctx, keyID)
 	if err != nil {
-		return nil, fmt.Errorf("failed mark key as verified: %w", err)
+		return fmt.Errorf("failed mark key as verified: %w", err)
 	}
-
-	return user, nil
+	return nil
 }
 
 func (s Service) CreatePublicKey(ctx context.Context, session *auth.Session, params *PublicKeyModel.AddPublicKeyInput) error {

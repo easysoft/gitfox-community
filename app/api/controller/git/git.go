@@ -35,6 +35,21 @@ func NewGitController(gitSvc git.Interface, spaceSvc spaceSvc.Interface, repoSvc
 	return &GitController{gitSvc: gitSvc, spaceSvc: spaceSvc, repoSvc: repoSvc, settingsSvc: settingsSvc}
 }
 
+// Clone 处理 Git clone/fetch 操作 (upload-pack)
+// @Summary Git Clone/Fetch 操作
+// @Description 处理 Git 客户端的 clone 和 fetch 请求，通过 upload-pack 协议发送仓库对象数据
+// @Tags git
+// @Accept application/x-git-upload-pack-request
+// @Produce application/x-git-upload-pack-result
+// @Param spaceID path uint true "空间ID"
+// @Param repoRef path string true "仓库标识 (支持 .git 后缀)"
+// @Param Content-Encoding header string false "内容编码 (如 gzip)"
+// @Param Git-Protocol header string false "Git 协议版本"
+// @Success 200 {string} string "成功返回 Git pack 数据"
+// @Failure 400 {object} resp.ObjectResponse "参数错误或权限不足"
+// @Failure 404 {object} resp.ObjectResponse "仓库不存在"
+// @Failure 500 {object} resp.ObjectResponse "服务器内部错误"
+// @Router /git/{spaceID}/{repoRef}/git-upload-pack [post]
 func (ctl *GitController) Clone(ctx *gin.Context) {
 	logger := logger.GetLogger(ctx)
 	var params req.SpaceRepoRef
@@ -94,6 +109,21 @@ func (ctl *GitController) Clone(ctx *gin.Context) {
 	}
 }
 
+// Push 处理 Git push 操作 (receive-pack)
+// @Summary Git Push 操作
+// @Description 处理 Git 客户端的 push 请求，通过 receive-pack 协议接收仓库对象数据并更新引用
+// @Tags git
+// @Accept application/x-git-receive-pack-request
+// @Produce application/x-git-receive-pack-result
+// @Param spaceID path uint true "空间ID"
+// @Param repoRef path string true "仓库标识 (支持 .git 后缀)"
+// @Param Content-Encoding header string false "内容编码 (如 gzip)"
+// @Param Git-Protocol header string false "Git 协议版本"
+// @Success 200 {string} string "成功接收并处理 Git pack 数据"
+// @Failure 400 {object} resp.ObjectResponse "参数错误或权限不足"
+// @Failure 404 {object} resp.ObjectResponse "仓库不存在"
+// @Failure 500 {object} resp.ObjectResponse "服务器内部错误"
+// @Router /git/{spaceID}/{repoRef}/git-receive-pack [post]
 func (ctl *GitController) Push(ctx *gin.Context) {
 	logger := logger.GetLogger(ctx)
 	var params req.SpaceRepoRef
@@ -163,6 +193,21 @@ func (ctl *GitController) Push(ctx *gin.Context) {
 	}
 }
 
+// InfoRefs 处理 Git info/refs 请求
+// @Summary Git Info/Refs 请求
+// @Description 处理 Git 客户端的 info/refs 请求，返回仓库的引用信息(分支、标签等)，用于 Smart HTTP 协议的初始握手
+// @Tags git
+// @Accept */*
+// @Produce application/x-git-upload-pack-advertisement,application/x-git-receive-pack-advertisement
+// @Param spaceID path uint true "空间ID"
+// @Param repoRef path string true "仓库标识 (支持 .git 后缀)"
+// @Param service query string true "Git 服务类型" Enums(git-upload-pack, git-receive-pack)
+// @Param Git-Protocol header string false "Git 协议版本"
+// @Success 200 {string} string "成功返回引用广告信息"
+// @Failure 400 {object} resp.ObjectResponse "参数错误或权限不足"
+// @Failure 404 {object} resp.ObjectResponse "仓库不存在"
+// @Failure 500 {object} resp.ObjectResponse "服务器内部错误"
+// @Router /git/{spaceID}/{repoRef}/info/refs [get]
 func (ctl *GitController) InfoRefs(ctx *gin.Context) {
 	logger := logger.GetLogger(ctx)
 	var params req.SpaceRepoRef

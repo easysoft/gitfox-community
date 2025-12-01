@@ -39,6 +39,14 @@ definitions:
       traceID:
         type: string
     type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ContentEncodingType:
+    enum:
+    - utf8
+    - base64
+    type: string
+    x-enum-varnames:
+    - ContentEncodingTypeUTF8
+    - ContentEncodingTypeBase64
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.RespCode:
     enum:
     - success
@@ -183,7 +191,7 @@ definitions:
       action:
         type: string
       encoding:
-        type: string
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ContentEncodingType'
       path:
         type: string
       payload:
@@ -385,6 +393,18 @@ definitions:
     - content
     - identifier
     type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.ContentType:
+    enum:
+    - file
+    - dir
+    - symlink
+    - submodule
+    type: string
+    x-enum-varnames:
+    - ContentTypeFile
+    - ContentTypeDir
+    - ContentTypeSymlink
+    - ContentTypeSubmodule
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.CreateRepoReq:
     properties:
       acl:
@@ -422,6 +442,20 @@ definitions:
     - acl
     - identifier
     - spaceID
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.GetContentOutput:
+    properties:
+      content: {}
+      latest_commit:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.Commit'
+      name:
+        type: string
+      path:
+        type: string
+      sha:
+        type: string
+      type:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.ContentType'
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.PathsDetailsInput:
     properties:
@@ -909,6 +943,149 @@ info:
   title: GitFox API
   version: "1.0"
 paths:
+  /git/{spaceID}/{repoRef}/git-receive-pack:
+    post:
+      consumes:
+      - application/x-git-receive-pack-request
+      description: 处理 Git 客户端的 push 请求，通过 receive-pack 协议接收仓库对象数据并更新引用
+      parameters:
+      - description: 空间ID
+        in: path
+        name: spaceID
+        required: true
+        type: integer
+      - description: 仓库标识 (支持 .git 后缀)
+        in: path
+        name: repoRef
+        required: true
+        type: string
+      - description: 内容编码 (如 gzip)
+        in: header
+        name: Content-Encoding
+        type: string
+      - description: Git 协议版本
+        in: header
+        name: Git-Protocol
+        type: string
+      produces:
+      - application/x-git-receive-pack-result
+      responses:
+        "200":
+          description: 成功接收并处理 Git pack 数据
+          schema:
+            type: string
+        "400":
+          description: 参数错误或权限不足
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "404":
+          description: 仓库不存在
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: Git Push 操作
+      tags:
+      - git
+  /git/{spaceID}/{repoRef}/git-upload-pack:
+    post:
+      consumes:
+      - application/x-git-upload-pack-request
+      description: 处理 Git 客户端的 clone 和 fetch 请求，通过 upload-pack 协议发送仓库对象数据
+      parameters:
+      - description: 空间ID
+        in: path
+        name: spaceID
+        required: true
+        type: integer
+      - description: 仓库标识 (支持 .git 后缀)
+        in: path
+        name: repoRef
+        required: true
+        type: string
+      - description: 内容编码 (如 gzip)
+        in: header
+        name: Content-Encoding
+        type: string
+      - description: Git 协议版本
+        in: header
+        name: Git-Protocol
+        type: string
+      produces:
+      - application/x-git-upload-pack-result
+      responses:
+        "200":
+          description: 成功返回 Git pack 数据
+          schema:
+            type: string
+        "400":
+          description: 参数错误或权限不足
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "404":
+          description: 仓库不存在
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: Git Clone/Fetch 操作
+      tags:
+      - git
+  /git/{spaceID}/{repoRef}/info/refs:
+    get:
+      consumes:
+      - '*/*'
+      description: 处理 Git 客户端的 info/refs 请求，返回仓库的引用信息(分支、标签等)，用于 Smart HTTP 协议的初始握手
+      parameters:
+      - description: 空间ID
+        in: path
+        name: spaceID
+        required: true
+        type: integer
+      - description: 仓库标识 (支持 .git 后缀)
+        in: path
+        name: repoRef
+        required: true
+        type: string
+      - description: Git 服务类型
+        enum:
+        - git-upload-pack
+        - git-receive-pack
+        in: query
+        name: service
+        required: true
+        type: string
+      - description: Git 协议版本
+        in: header
+        name: Git-Protocol
+        type: string
+      produces:
+      - application/x-git-upload-pack-advertisement
+      - application/x-git-receive-pack-advertisement
+      responses:
+        "200":
+          description: 成功返回引用广告信息
+          schema:
+            type: string
+        "400":
+          description: 参数错误或权限不足
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "404":
+          description: 仓库不存在
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: Git Info/Refs 请求
+      tags:
+      - git
   /repos:
     post:
       consumes:
@@ -1338,6 +1515,110 @@ paths:
       summary: 查询提交列表
       tags:
       - commits
+  /repos/{id}/content:
+    get:
+      consumes:
+      - application/json
+      description: 根据路径获取仓库中的文件内容、目录列表或子模块信息，支持指定 Git 引用(分支/标签/提交)。路径参数可选，不传或传空则返回根目录
+      parameters:
+      - description: 仓库 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Git 引用 (分支/标签/提交SHA)，默认为 refs/heads/main
+        in: query
+        name: gitRef
+        type: string
+      - description: 是否包含最新提交信息，默认 false
+        in: query
+        name: includeCommit
+        type: boolean
+      - description: 是否展平单层目录结构，默认 false
+        in: query
+        name: flattenDirectories
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功，返回文件/目录/符号链接/子模块内容
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.GetContentOutput'
+              type: object
+        "400":
+          description: 参数错误或权限不足
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "404":
+          description: 仓库或文件不存在
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 获取仓库文件或目录内容
+      tags:
+      - repos
+  /repos/{id}/content/{filepath}:
+    get:
+      consumes:
+      - application/json
+      description: 根据路径获取仓库中的文件内容、目录列表或子模块信息，支持指定 Git 引用(分支/标签/提交)。路径参数可选，不传或传空则返回根目录
+      parameters:
+      - description: 仓库 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 文件或目录路径 (如 src/main.go)，可选，为空则返回根目录
+        in: path
+        name: filepath
+        type: string
+      - description: Git 引用 (分支/标签/提交SHA)，默认为 refs/heads/main
+        in: query
+        name: gitRef
+        type: string
+      - description: 是否包含最新提交信息，默认 false
+        in: query
+        name: includeCommit
+        type: boolean
+      - description: 是否展平单层目录结构，默认 false
+        in: query
+        name: flattenDirectories
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功，返回文件/目录/符号链接/子模块内容
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.GetContentOutput'
+              type: object
+        "400":
+          description: 参数错误或权限不足
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "404":
+          description: 仓库或文件不存在
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 获取仓库文件或目录内容
+      tags:
+      - repos
   /repos/{id}/diff:
     post:
       consumes:
