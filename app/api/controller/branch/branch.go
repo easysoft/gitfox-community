@@ -30,11 +30,12 @@ func NewController(branchService branch.Interface, repoService repo.Interface) *
 // @Tags branches
 // @Accept application/json
 // @Produce application/json
+// @Param id path uint true "仓库 ID"
 // @Param request body branchModel.ReqForCreate true "创建分支请求参数"
 // @Success 200 {object} resp.ObjectResponse{data=branchModel.Branch} "创建成功"
 // @Failure 400 {object} resp.ObjectResponse "参数错误（如名称重复）"
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
-// @Router /branches [post]
+// @Router /repos/{id}/branches [post]
 func (c *Controller) Create(ctx *gin.Context) {
 	var reqBody branchModel.ReqForCreate
 	var err error
@@ -92,11 +93,12 @@ func (c *Controller) Create(ctx *gin.Context) {
 // @Tags branches
 // @Accept application/json
 // @Produce application/json
-// @Param request body branchModel.ReqFilter true "创建分支请求参数"
-// @Success 200 {object} resp.ListResponse{data=[]branchModel.Branch} "查询成功"
+// @Param id path uint true "仓库 ID"
+// @Param request body branchModel.ReqFilter true "查询分支请求参数"
+// @Success 200 {object} resp.ListResponse{data=[]branchModel.Branch,listArgs=resp.ListNoTotalArgs} "查询成功"
 // @Failure 400 {object} resp.ListResponse "参数错误"
 // @Failure 500 {object} resp.ListResponse "服务器错误"
-// @Router /branches/list [post]
+// @Router /repos/{id}/branches/list [post]
 func (c *Controller) List(ctx *gin.Context) {
 	var reqQuery branchModel.ReqFilter
 	var err error
@@ -149,13 +151,12 @@ func (c *Controller) List(ctx *gin.Context) {
 // @Tags branches
 // @Accept application/json
 // @Produce application/json
-// @Param repoID query uint true "仓库 ID"
-// @Success 200 {object} resp.ListResponse{data=[]branchModel.Prefix,listArgs=resp.ListNoTotalArgs} "查询成功"
+// @Param id path uint true "仓库 ID"
+// @Success 200 {object} resp.ListResponse{data=[]branchModel.Prefix} "查询成功"
 // @Failure 400 {object} resp.ListResponse "参数错误"
 // @Failure 500 {object} resp.ListResponse "服务器错误"
-// @Router /branches/prefixes [get]
+// @Router /repos/{id}/branches/prefixes [get]
 func (c *Controller) ListPrefixes(ctx *gin.Context) {
-	var reqQuery branchModel.ReqFilter
 	var err error
 
 	// 解析 path id
@@ -165,15 +166,6 @@ func (c *Controller) ListPrefixes(ctx *gin.Context) {
 		resp.BadRequest(ctx, err)
 		return
 	}
-
-	if err = ctx.ShouldBindQuery(&reqQuery); err != nil {
-		err = errors.WithI18nKey(err, i18n.BranchQueryParamError)
-		resp.BadRequest(ctx, err)
-		return
-	}
-
-	// 设置默认值
-	req.SetDefaults(&reqQuery)
 
 	session, ok := req.GetAuthSession(ctx.Request.Context())
 	if !ok {
