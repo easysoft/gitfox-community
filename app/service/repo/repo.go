@@ -212,24 +212,51 @@ func (s *Service) GetRepoCheckAccess(ctx context.Context, session *auth.Session,
 		return nil, err
 	}
 
-	for _, v := range reqPermission {
+	// check permissions
+	if err := s.checkRepoPermissions(ctx, session, repo, reqPermission); err != nil {
+		return nil, err
+	}
+
+	return repo, nil
+}
+
+func (s *Service) GetRepoCheckAccessByID(ctx context.Context, session *auth.Session, repoID uint, reqPermission []constant.Permission) (*repoModel.Repo, error) {
+
+	// get repo
+	repo, err := s.GetByID(ctx, session, repoID)
+	if err != nil {
+		return nil, err
+	}
+
+	// check permissions
+	if err := s.checkRepoPermissions(ctx, session, repo, reqPermission); err != nil {
+		return nil, err
+	}
+
+	return repo, nil
+}
+
+// checkRepoPermissions 检查仓库权限的公共方法
+// 遍历所有请求的权限,确保用户对该仓库拥有所有所需权限
+func (s *Service) checkRepoPermissions(ctx context.Context, session *auth.Session, repo *repoModel.Repo, reqPermissions []constant.Permission) error {
+	for _, permission := range reqPermissions {
 		ok, err := s.authorizer.Check(ctx, session,
 			constant.Scope{
 				ResourceType: constant.ResourceTypeRepo,
 				ResourceID:   repo.ID,
 			},
-			v,
+			permission,
 		)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		if !ok {
-			return nil, errors.NoType.Newf("insufficient permissions for repo %s : %v", identifier, v)
+			return errors.NoType.Newf("insufficient permissions for repo %s : %v", repo.Identifier, permission)
 		}
 	}
 
-	return repo, nil
+	return nil
 }
 
 func (s *Service) GetByIdentifier(ctx context.Context, spaceID uint, identifier string, allowedStates []constant.RepoState) (*repoModel.Repo, error) {

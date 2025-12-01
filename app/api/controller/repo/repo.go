@@ -1,6 +1,8 @@
 package repo
 
 import (
+	"strings"
+
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
@@ -222,10 +224,10 @@ func (c *Controller) Delete(ctx *gin.Context) {
 // @Failure 400 {object} resp.ObjectResponse "参数错误或权限不足"
 // @Failure 404 {object} resp.ObjectResponse "仓库或文件不存在"
 // @Failure 500 {object} resp.ObjectResponse "服务器内部错误"
-// @Router /repos/{id}/contents/{filepath} [get]
+// @Router /repos/{id}/content/{filepath} [get]
 func (ctl *Controller) GetContent(ctx *gin.Context) {
 	logger := logger.GetLogger(ctx)
-	var params req.RepoId
+	var repoID uint
 	var err error
 
 	session, ok := req.GetAuthSession(ctx.Request.Context())
@@ -235,8 +237,9 @@ func (ctl *Controller) GetContent(ctx *gin.Context) {
 		return
 	}
 
-	if err = ctx.ShouldBindUri(&params); err != nil || params.RepoID == 0 {
-		err = errors.WithI18nKey(err, i18n.RequestPathParameterNotFound)
+	repoID, err = req.PathParamAsPositiveUint(ctx, "id")
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RepoPathParamError)
 		resp.BadRequest(ctx, err)
 		return
 	}
@@ -263,13 +266,14 @@ func (ctl *Controller) GetContent(ctx *gin.Context) {
 	// 在像 /v1/repos/{repoRef}/contents/* 这样的路由下
 	// * 表示仓库内的文件或目录的相对路径。
 	// 例如请求 /v1/repos/12/contents/src/main.go ，这里的余量就是 src/main.go
-	path := req.PathParamOrEmpty(ctx, req.PathParamFilePath)
-	logger.Infof("origin url %s , repoID: %d,gitRef: %s, path: %s,includeCommit: %v,flattenDirectories: %v", ctx.Request.URL.String(), params.RepoID, gitRef, path, includeCommit, flattenDirectories)
+	// 注意：通配符参数会包含前导斜杠，需要去除（例如 "/src/main.go" -> "src/main.go"）
+	path := strings.TrimPrefix(req.PathParamOrEmpty(ctx, req.PathParamFilePath), "/")
+	logger.Infof("origin url %s , repoID: %d,gitRef: %s, path: %s,includeCommit: %v,flattenDirectories: %v", ctx.Request.URL.String(), repoID, gitRef, path, includeCommit, flattenDirectories)
 
 	// todo check spcace ?
 
 	// get repo
-	repoM, err := ctl.repoSvc.GetRepoCheckAccess(ctx.Request.Context(), session, params.RepoID, gitRef, []constant.Permission{constant.PermissionRepoView})
+	repoM, err := ctl.repoSvc.GetRepoCheckAccessByID(ctx.Request.Context(), session, repoID, []constant.Permission{constant.PermissionRepoView})
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.RepoGetContentPermissionError)
 		resp.BadRequest(ctx, err)
