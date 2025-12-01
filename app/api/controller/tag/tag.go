@@ -30,11 +30,12 @@ func NewController(tagService tag.Interface, repoService repo.Interface) *Contro
 // @Tags tags
 // @Accept application/json
 // @Produce application/json
+// @Param id path uint true "仓库 ID"
 // @Param request body tagModel.ReqForCreate true "创建标签请求参数"
 // @Success 200 {object} resp.ObjectResponse{data=tagModel.Tag} "创建成功"
 // @Failure 400 {object} resp.ObjectResponse "参数错误（如名称重复）"
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
-// @Router /tags [post]
+// @Router /repos/{id}/tags [post]
 func (c *Controller) Create(ctx *gin.Context) {
 
 	var reqBody tagModel.ReqForCreate
@@ -47,6 +48,14 @@ func (c *Controller) Create(ctx *gin.Context) {
 		return
 	}
 
+	// 解析 path id
+	repoID, err := req.PathParamAsPositiveUint(ctx, "id")
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RepoPathParamError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
 	session, ok := req.GetAuthSession(ctx.Request.Context())
 	if !ok {
 		err = errors.WithI18nKey(errors.New("session not found"), i18n.AuthNoSession)
@@ -54,7 +63,7 @@ func (c *Controller) Create(ctx *gin.Context) {
 		return
 	}
 	// 通过仓库 ID 获取仓库
-	repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, reqBody.RepoID)
+	repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, repoID)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return
@@ -83,11 +92,12 @@ func (c *Controller) Create(ctx *gin.Context) {
 // @Tags tags
 // @Accept application/json
 // @Produce application/json
+// @Param id path uint true "仓库 ID"
 // @Param request body tagModel.ReqFilter true "查询标签列表参数"
 // @Success 200 {object} resp.ListResponse{data=[]tagModel.Tag,listArgs=resp.ListNoTotalArgs} "查询成功"
 // @Failure 400 {object} resp.ListResponse "参数错误"
 // @Failure 500 {object} resp.ListResponse "服务器错误"
-// @Router /tags/list [post]
+// @Router /repos/{id}/tags/list [post]
 func (c *Controller) List(ctx *gin.Context) {
 	var reqQuery tagModel.ReqFilter
 	var err error
@@ -100,6 +110,14 @@ func (c *Controller) List(ctx *gin.Context) {
 	// 设置默认值
 	req.SetDefaults(&reqQuery)
 
+	// 解析 path id
+	repoID, err := req.PathParamAsPositiveUint(ctx, "id")
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RepoPathParamError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
 	session, ok := req.GetAuthSession(ctx.Request.Context())
 	if !ok {
 		err = errors.WithI18nKey(errors.New("session not found"), i18n.AuthNoSession)
@@ -108,7 +126,7 @@ func (c *Controller) List(ctx *gin.Context) {
 	}
 
 	// 通过仓库 ID 获取仓库
-	repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, reqQuery.RepoID)
+	repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, repoID)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return
@@ -133,18 +151,26 @@ func (c *Controller) List(ctx *gin.Context) {
 // @Tags tags
 // @Accept application/json
 // @Produce application/json
+// @Param id path uint true "仓库 ID"
 // @Param name path string true "标签名称"
-// @Param repoID query uint true "仓库 ID"
 // @Success 200 {object} resp.ObjectResponse "删除成功"
 // @Failure 400 {object} resp.ObjectResponse "参数错误"
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
-// @Router /tags/{name} [delete]
+// @Router /repos/{id}/tags/{name} [delete]
 func (c *Controller) Delete(ctx *gin.Context) {
 
 	var err error
 	name := ctx.Param("name")
 	if name == "" {
 		err = errors.WithI18nKey(nil, i18n.TagPathParamError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
+	// 解析 path id
+	repoID, err := req.PathParamAsPositiveUint(ctx, "id")
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RepoPathParamError)
 		resp.BadRequest(ctx, err)
 		return
 	}
@@ -156,17 +182,8 @@ func (c *Controller) Delete(ctx *gin.Context) {
 		return
 	}
 
-	var reqQuery struct {
-		RepoID uint `form:"repoID" binding:"required"`
-	}
-	if err = ctx.ShouldBindQuery(&reqQuery); err != nil {
-		err = errors.WithI18nKey(err, i18n.TagQueryParamError)
-		resp.BadRequest(ctx, err)
-		return
-	}
-
 	// 通过仓库 ID 获取仓库
-	repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, reqQuery.RepoID)
+	repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, repoID)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return

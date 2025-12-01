@@ -5,14 +5,12 @@ import (
 )
 
 type ReqForCreate struct {
-	RepoID uint   `json:"repoID" binding:"required"`
 	Name   string `json:"name" binding:"required,max=100" example:"dev"`
 	Source string `json:"source"`
 }
 
 // ReqFilter stores branch query parameters.
 type ReqFilter struct {
-	RepoID          uint   `json:"repoID" form:"repoID" binding:"required"`
 	Query           string `json:"query" form:"query"`
 	Prefix          string `json:"prefix" form:"prefix"`
 	IncludeArchived bool   `json:"includeArchived" form:"includeArchived"`

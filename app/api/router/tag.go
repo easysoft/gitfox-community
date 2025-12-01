@@ -6,7 +6,7 @@ import (
 
 // registerTagRoutes 注册标签相关路由
 func registerTagRoutes(r *gin.RouterGroup, controller *Controller) {
-	tags := r.Group("/tags")
+	tags := r.Group("/repos/:id/tags")
 	{
 		tags.POST("", controller.Tag.Create)         // 创建标签
 		tags.POST("/list", controller.Tag.List)      // 查看标签列表
