@@ -51,7 +51,7 @@ func (c *Controller) Create(ctx *gin.Context) {
 	// 解析 path id
 	repoID, err := req.PathParamAsPositiveUint(ctx, "id")
 	if err != nil {
-		err = errors.WithI18nKey(err, i18n.TagPathParamError)
+		err = errors.WithI18nKey(err, i18n.RepoPathParamError)
 		resp.BadRequest(ctx, err)
 		return
 	}
@@ -113,7 +113,7 @@ func (c *Controller) List(ctx *gin.Context) {
 	// 解析 path id
 	repoID, err := req.PathParamAsPositiveUint(ctx, "id")
 	if err != nil {
-		err = errors.WithI18nKey(err, i18n.TagPathParamError)
+		err = errors.WithI18nKey(err, i18n.RepoPathParamError)
 		resp.BadRequest(ctx, err)
 		return
 	}
@@ -170,7 +170,7 @@ func (c *Controller) Delete(ctx *gin.Context) {
 	// 解析 path id
 	repoID, err := req.PathParamAsPositiveUint(ctx, "id")
 	if err != nil {
-		err = errors.WithI18nKey(err, i18n.TagPathParamError)
+		err = errors.WithI18nKey(err, i18n.RepoPathParamError)
 		resp.BadRequest(ctx, err)
 		return
 	}
