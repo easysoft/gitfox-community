@@ -3,13 +3,13 @@ package commit
 import (
 	"time"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	gitenum "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/enum"
 )
 
 const NilSHA = "0000000000000000000000000000000000000000"
 
 type ReqForCreate struct {
-	RepoID    uint     `json:"repoID"`
 	Message   string   `json:"message"`
 	Branch    string   `json:"branch"`
 	NewBranch string   `json:"newBranch"`
@@ -22,11 +22,11 @@ type RespForCreate struct {
 }
 
 type Action struct {
-	Action   string `json:"action"`
-	Path     string `json:"path"`
-	Payload  string `json:"payload"`
-	Encoding string `json:"encoding"`
-	SHA      string `json:"sha"`
+	Action   string                       `json:"action"`
+	Path     string                       `json:"path"`
+	Payload  string                       `json:"payload"`
+	Encoding constant.ContentEncodingType `json:"encoding"`
+	SHA      string                       `json:"sha"`
 }
 
 type Author struct {
@@ -36,8 +36,8 @@ type Author struct {
 
 // PaginationFilter stores pagination query parameters.
 type PaginationFilter struct {
-	Page  int `json:"page" form:"page" default:"1"`
-	Limit int `json:"limit" form:"limit" default:"20"`
+	Page     int `json:"page" form:"page" default:"1"`
+	PageSize int `json:"pageSize" form:"pageSize" default:"20"`
 }
 
 // ReqFilter stores commit query parameters.
@@ -52,7 +52,6 @@ type ReqFilter struct {
 	Author       string  `json:"author" form:"author"`
 	AuthorIDs    []int64 `json:"authorIDs" form:"authorIDs"`
 	IncludeStats bool    `json:"includeStats" form:"includeStats"`
-	RepoID       uint    `json:"repoID" form:"repoID"`
 	GitRef       string  `json:"gitRef" form:"gitRef"`
 }
 
@@ -70,8 +69,7 @@ type RenameDetails struct {
 }
 
 type ReqForGet struct {
-	RepoID uint   `json:"repoID" form:"repoID"`
-	SHA    string `json:"sha" form:"sha"`
+	SHA string `json:"sha" form:"sha"`
 }
 
 type Commit struct {
@@ -126,7 +124,6 @@ type CommitCountData struct {
 }
 
 type ReqForDivergence struct {
-	RepoID        uint            `json:"repoID"`
 	MaxDivergence uint            `json:"maxDivergence"`
 	Requests      []CompareGitRef `json:"requests"`
 }

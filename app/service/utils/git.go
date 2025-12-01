@@ -38,8 +38,8 @@ func createRPCWriteParams(
 
 	return git.WriteParams{
 		Actor: git.Identity{
-			Name:  session.Principal.UID,
-			Email: session.Principal.Email,
+			Name:  session.User.Account,
+			Email: session.User.Email,
 		},
 		RepoUID: repo.GitUID,
 		EnvVars: envVars,

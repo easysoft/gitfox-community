@@ -8,15 +8,21 @@ type I18nKey string
 const (
 	// Auth 相关常量
 	AuthAuthUserLoginSuccess        I18nKey = "auth.auth_user_login_success"          // 用户登录成功
+	AuthFailed                      I18nKey = "auth.failed"                           // 尝试认证失败
 	AuthNoData                      I18nKey = "auth.no_data"                          // 请求不包含任何可用于 Authorizer 的认证数据
 	AuthNoSession                   I18nKey = "auth.no_session"                       // 请求不包含任何会话数据,无法进行授权
+	AuthPubKeyAddAlreadyInUse       I18nKey = "auth.pub_key_add_already_in_use"       // 公钥已存在
 	AuthPubKeyAddError              I18nKey = "auth.pub_key_add_error"                // 公钥添加失败
+	AuthPubKeyAddParamError         I18nKey = "auth.pub_key_add_param_error"          // 公钥参数错误
 	AuthPubKeyAddSuccess            I18nKey = "auth.pub_key_add_success"              // 公钥添加成功
-	AuthPubKeyAlreadyInUse          I18nKey = "auth.pub_key_already_in_use"           // 公钥已存在
-	AuthPubKeyCreateError           I18nKey = "auth.pub_key_create_error"             // 公钥创建失败
-	AuthPubKeyIdentifierError       I18nKey = "auth.pub_key_identifier_error"         // 添加公钥标识符校验错误
+	AuthPubKeyDeleteError           I18nKey = "auth.pub_key_delete_error"             // 公钥删除失败
+	AuthPubKeyDeleteParamError      I18nKey = "auth.pub_key_delete_param_error"       // 公钥删除参数校验错误
+	AuthPubKeyDeleteSuccess         I18nKey = "auth.pub_key_delete_success"           // 公钥删除成功
+	AuthPubKeyIdentifierError       I18nKey = "auth.pub_key_identifier_error"         // 公钥标识符校验错误
+	AuthPubKeyListError             I18nKey = "auth.pub_key_list_error"               // 公钥列表失败
+	AuthPubKeyListParamError        I18nKey = "auth.pub_key_list_param_error"         // 公钥列表参数校验错误
+	AuthPubKeyListSuccess           I18nKey = "auth.pub_key_list_success"             // 公钥列表成功
 	AuthPubKeyNotFoundByFingerprint I18nKey = "auth.pub_key_not_found_by_fingerprint" // 公钥未找到
-	AuthPubKeyParamError            I18nKey = "auth.pub_key_param_error"              // 添加公钥参数错误
 	AuthSessionTokenNotAllowed      I18nKey = "auth.session_token_not_allowed"        // 会话令牌不允许用于与 Git 交互
 	AuthUserIssuePatError           I18nKey = "auth.user_issue_pat_error"             // 用户创建访问令牌失败
 	AuthUserIssueTokenError         I18nKey = "auth.user_issue_token_error"           // 用户创建会话令牌失败
@@ -77,22 +83,28 @@ const (
 	GitMapOutputError       I18nKey = "git.map_output_error"        // 无法将 git 命令结果映射到响应结构体.
 
 	// Repo 相关常量
-	RepoBodyParamError           I18nKey = "repo.body_param_error"           // Body 参数解析失败.
-	RepoCreateError              I18nKey = "repo.create_error"               // 创建仓库异常
-	RepoCreateSuccess            I18nKey = "repo.create_success"             // 创建仓库成功
-	RepoGetPathsDetailsSuccess   I18nKey = "repo.get_paths_details_success"  // 获取路径详情成功.
-	RepoGetPathsSuccess          I18nKey = "repo.get_paths_success"          // 获取路径成功.
-	RepoIdentifierInvalid        I18nKey = "repo.identifier_invalid"         // 仓库名称不合法,identifier仅支持字母、数字、下划线(_)、连字符(-)、点号(.)
-	RepoLineNumberError          I18nKey = "repo.line_number_error"          // 行号必须大于0, 且结束行号必须大于起始行号
-	RepoMirrorReadOnly           I18nKey = "repo.mirror_read_only"           // 镜像仓库只读.
-	RepoPathParamError           I18nKey = "repo.path_param_error"           // Path 参数解析失败.
-	RepoPullRequestsMergeError   I18nKey = "repo.pullRequests_merge_error"   // 合并失败,存在冲突或检查未通过.
-	RepoPullRequestsMergeSuccess I18nKey = "repo.pullRequests_merge_success" // 合并成功!
-	RepoPullPermissionError      I18nKey = "repo.pull_permission_error"      // 您没有权限拉取此仓库.
-	RepoPushPermissionError      I18nKey = "repo.push_permission_error"      // 您没有权限推送此仓库.
-	RepoQueryError               I18nKey = "repo.query_error"                // 查询仓库失败
-	RepoQueryParamError          I18nKey = "repo.query_param_error"          // Query 参数解析失败.
-	RepoQuerySuccess             I18nKey = "repo.query_success"              // 查询仓库成功
+	RepoBodyParamError            I18nKey = "repo.body_param_error"             // Body 参数解析失败.
+	RepoCreateError               I18nKey = "repo.create_error"                 // 创建仓库异常
+	RepoCreateSuccess             I18nKey = "repo.create_success"               // 创建仓库成功
+	RepoDeleteError               I18nKey = "repo.delete_error"                 // 删除仓库失败.
+	RepoDeleteSuccess             I18nKey = "repo.delete_success"               // 仓库删除成功.
+	RepoGetContentError           I18nKey = "repo.get_content_error"            // 获取仓库内容失败.
+	RepoGetContentPermissionError I18nKey = "repo.get_content_permission_error" // 您没有权限获取此仓库的内容.
+	RepoGetContentSuccess         I18nKey = "repo.get_content_success"          // 获取仓库内容成功.
+	RepoGetPathsDetailsSuccess    I18nKey = "repo.get_paths_details_success"    // 获取路径详情成功.
+	RepoGetPathsSuccess           I18nKey = "repo.get_paths_success"            // 获取路径成功.
+	RepoIdentifierInvalid         I18nKey = "repo.identifier_invalid"           // 仓库名称不合法,identifier仅支持字母、数字、下划线(_)、连字符(-)、点号(.)
+	RepoLineNumberError           I18nKey = "repo.line_number_error"            // 行号必须大于0, 且结束行号必须大于起始行号
+	RepoMirrorReadOnly            I18nKey = "repo.mirror_read_only"             // 镜像仓库只读.
+	RepoPathParamError            I18nKey = "repo.path_param_error"             // Path 参数解析失败.
+	RepoPullRequestsMergeError    I18nKey = "repo.pullRequests_merge_error"     // 合并失败,存在冲突或检查未通过.
+	RepoPullRequestsMergeSuccess  I18nKey = "repo.pullRequests_merge_success"   // 合并成功!
+	RepoPullPermissionError       I18nKey = "repo.pull_permission_error"        // 您没有权限拉取此仓库.
+	RepoPushPermissionError       I18nKey = "repo.push_permission_error"        // 您没有权限推送此仓库.
+	RepoQueryError                I18nKey = "repo.query_error"                  // 查询仓库失败
+	RepoQueryParamError           I18nKey = "repo.query_param_error"            // Query 参数解析失败.
+	RepoQuerySuccess              I18nKey = "repo.query_success"                // 查询仓库成功
+	RepoUpdateSuccess             I18nKey = "repo.update_success"               // 更新仓库成功
 
 	// Request 相关常量
 	RequestInvalidBooleanParameter         I18nKey = "request.invalid_boolean_parameter"          // 参数必须为布尔值.
@@ -109,6 +121,41 @@ const (
 	RequestPathParameterNotFound           I18nKey = "request.path_parameter_not_found"           // 路径参数未找到.
 	RequestQueryParameterNotFound          I18nKey = "request.query_parameter_not_found"          // 查询参数未找到.
 	RequestRequestBodyTooLarge             I18nKey = "request.request_body_too_large"             // 请求体过大.
+
+	// Rule 相关常量
+	RuleBodyParamError  I18nKey = "rule.body_param_error"  // 请求体参数解析失败.
+	RuleCreateError     I18nKey = "rule.create_error"      // 规则创建失败.
+	RuleCreateSuccess   I18nKey = "rule.create_success"    // 规则创建成功.
+	RuleDeleteError     I18nKey = "rule.delete_error"      // 规则删除失败.
+	RuleDeleteSuccess   I18nKey = "rule.delete_success"    // 规则删除成功.
+	RuleListError       I18nKey = "rule.list_error"        // 规则列表查询失败.
+	RuleListSuccess     I18nKey = "rule.list_success"      // 规则列表查询成功.
+	RulePathParamError  I18nKey = "rule.path_param_error"  // 路径参数解析失败.
+	RuleQueryError      I18nKey = "rule.query_error"       // 规则详情查询失败.
+	RuleQueryParamError I18nKey = "rule.query_param_error" // 查询参数解析失败.
+	RuleQuerySuccess    I18nKey = "rule.query_success"     // 规则详情查询成功.
+	RuleUpdateError     I18nKey = "rule.update_error"      // 规则更新失败.
+	RuleUpdateSuccess   I18nKey = "rule.update_success"    // 规则更新成功.
+
+	// RuleSet 相关常量
+	RuleSetBindError       I18nKey = "ruleSet.bind_error"        // 规则集绑定规则失败.
+	RuleSetBindSuccess     I18nKey = "ruleSet.bind_success"      // 规则集绑定规则成功.
+	RuleSetBodyParamError  I18nKey = "ruleSet.body_param_error"  // 请求体参数解析失败.
+	RuleSetCreateError     I18nKey = "ruleSet.create_error"      // 规则集创建失败.
+	RuleSetCreateSuccess   I18nKey = "ruleSet.create_success"    // 规则集创建成功.
+	RuleSetDeleteError     I18nKey = "ruleSet.delete_error"      // 规则集列表删除失败.
+	RuleSetDeleteSuccess   I18nKey = "ruleSet.delete_success"    // 规则集列表删除成功.
+	RuleSetInUseError      I18nKey = "ruleSet.in_use_error"      // 规则集已被扫描解决方案使用.
+	RuleSetListError       I18nKey = "ruleSet.list_error"        // 规则集列表查询失败.
+	RuleSetListSuccess     I18nKey = "ruleSet.list_success"      // 规则集列表查询成功.
+	RuleSetPathParamError  I18nKey = "ruleSet.path_param_error"  // 路径参数解析失败.
+	RuleSetQueryError      I18nKey = "ruleSet.query_error"       // 规则集详情查询失败.
+	RuleSetQueryParamError I18nKey = "ruleSet.query_param_error" // 查询参数解析失败.
+	RuleSetQuerySuccess    I18nKey = "ruleSet.query_success"     // 规则集详情查询成功.
+	RuleSetUnbindError     I18nKey = "ruleSet.unbind_error"      // 规则集解绑规则失败.
+	RuleSetUnbindSuccess   I18nKey = "ruleSet.unbind_success"    // 规则集解绑规则成功.
+	RuleSetUpdateError     I18nKey = "ruleSet.update_error"      // 规则集更新失败.
+	RuleSetUpdateSuccess   I18nKey = "ruleSet.update_success"    // 规则集更新成功.
 
 	// Space 相关常量
 	SpaceArtifactsTitleSuccess   I18nKey = "space.artifacts_title_success"   // 仓库设置保存成功

@@ -2,6 +2,7 @@ package authn
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
@@ -26,7 +27,10 @@ const (
 type Claims struct {
 	jwt.StandardClaims
 
-	PrincipalID int64 `json:"pid,omitempty"`
+	App        string `json:"app,omitempty"`
+	Admin      bool   `json:"admin,omitempty"`
+	Account    string `json:"account,omitempty"`
+	Identifier string `json:"identifier,omitempty"`
 
 	Token             *SubClaimsToken             `json:"tkn,omitempty"`
 	Membership        *SubClaimsMembership        `json:"ms,omitempty"`
@@ -59,9 +63,9 @@ type AccessPermissions struct {
 
 // GenerateForToken generates a jwt for a given token.
 func GenerateForToken(token *auth.Token, secret string) (string, error) {
-	var expiresAt int64
-	if token.ExpiresAt != nil {
-		expiresAt = token.ExpiresAt.Unix()
+	var expiresDate int64
+	if token.ExpirationDate != nil {
+		expiresDate = token.ExpirationDate.Unix()
 	}
 
 	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, Claims{
@@ -69,9 +73,10 @@ func GenerateForToken(token *auth.Token, secret string) (string, error) {
 			Issuer: issuer,
 			// times required to be in sec not millisec
 			IssuedAt:  token.CreatedDate.Unix(),
-			ExpiresAt: expiresAt / 1000,
+			ExpiresAt: expiresDate / 1000,
 		},
-		PrincipalID: token.PrincipalID,
+		Account:    token.Account,
+		Identifier: token.Identifier,
 		Token: &SubClaimsToken{
 			Type: token.Type,
 			ID:   token.ID,
@@ -86,25 +91,52 @@ func GenerateForToken(token *auth.Token, secret string) (string, error) {
 	return res, nil
 }
 
+// GenerateForToken generates a jwt for a given token.
+func GenerateForAppToken(token *auth.Token, secret string, isAdmin bool) (string, error) {
+	var expiresDate int64
+	if token.ExpirationDate != nil {
+		expiresDate = token.ExpirationDate.Unix()
+	}
+
+	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, Claims{
+		StandardClaims: jwt.StandardClaims{
+			Issuer: issuer,
+			// times required to be in sec not millisec
+			IssuedAt:  token.CreatedDate.Unix(),
+			ExpiresAt: expiresDate / 1000,
+		},
+		App:        token.Account,
+		Admin:      isAdmin,
+		Account:    token.Account,
+		Identifier: token.Identifier,
+
+		Token: &SubClaimsToken{
+			Type: token.Type,
+			ID:   token.ID,
+		},
+	})
+
+	res, err := jwtToken.SignedString([]byte(secret))
+	if err != nil {
+		return "", fmt.Errorf("failed to sign app token: %w", err)
+	}
+
+	return res, nil
+}
+
 // GenerateWithMembership generates a jwt with the given ephemeral membership.
-func GenerateWithMembership(
-	principalID int64,
-	spaceID int64,
-	role enum.MembershipRole,
-	lifetime time.Duration,
-	secret string,
-) (string, error) {
+func GenerateWithMembership(account string, spaceID int64, role enum.MembershipRole, lifetime time.Duration, secret string) (string, error) {
 	issuedAt := time.Now()
-	expiresAt := issuedAt.Add(lifetime)
+	expiresDate := issuedAt.Add(lifetime)
 
 	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, Claims{
 		StandardClaims: jwt.StandardClaims{
 			Issuer: issuer,
 			// times required to be in sec
 			IssuedAt:  issuedAt.Unix(),
-			ExpiresAt: expiresAt.Unix(),
+			ExpiresAt: expiresDate.Unix(),
 		},
-		PrincipalID: principalID,
+		Account: account,
 		Membership: &SubClaimsMembership{
 			SpaceID: spaceID,
 			Role:    role,
@@ -120,24 +152,20 @@ func GenerateWithMembership(
 }
 
 // GenerateForTokenWithAccessPermissions generates a jwt for a given token.
-func GenerateForTokenWithAccessPermissions(
-	principalID int64,
-	lifetime *time.Duration,
-	secret string, accessPermissions *SubClaimsAccessPermissions,
-) (string, error) {
+func GenerateForTokenWithAccessPermissions(account string, lifetime *time.Duration, secret string, accessPermissions *SubClaimsAccessPermissions) (string, error) {
 	issuedAt := time.Now()
 	if lifetime == nil {
 		return "", fmt.Errorf("token lifetime is required")
 	}
-	expiresAt := issuedAt.Add(*lifetime)
+	expiresDate := issuedAt.Add(*lifetime)
 
 	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, Claims{
 		StandardClaims: jwt.StandardClaims{
 			Issuer:    issuer,
 			IssuedAt:  issuedAt.Unix(),
-			ExpiresAt: expiresAt.Unix(),
+			ExpiresAt: expiresDate.Unix(),
 		},
-		PrincipalID:       principalID,
+		Account:           account,
 		AccessPermissions: accessPermissions,
 	})
 
@@ -147,4 +175,8 @@ func GenerateForTokenWithAccessPermissions(
 	}
 
 	return res, nil
+}
+
+func KeysToSecret(key ...string) string {
+	return strings.Join(key, "_")
 }

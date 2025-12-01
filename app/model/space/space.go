@@ -4,7 +4,7 @@ import "time"
 
 type CreateSpaceRequest struct {
 	Name       string `json:"name" binding:"required,max=200" example:"测试空间01"`
-	Owner      string `json:"owner" binding:"required"`
+	Owner      string `json:"owner"`
 	Permission string `json:"acl" binding:"required,oneof=open private" example:"open"`
 	Desc       string `json:"desc"`
 	CreatedBy  string `json:"createdBy" binding:"required"`
@@ -34,6 +34,7 @@ type ListSpaceFilter struct {
 	Name       string `form:"name" binding:"omitempty"`                                      // 非必填，omitempty 允许空值
 	Permission string `json:"name" form:"permission" binding:"omitempty,oneof=open private"` // 枚举校验：仅允许 open/private
 	Owner      string `form:"owner" binding:"omitempty"`
+	IDs        string `json:"ids" form:"ids" binding:"omitempty,gt=0"` //gt=0 要求元素大于0
 
 	// 分页参数（对应 pagination.PageParam）
 	Page     int `form:"page" binding:"omitempty,min=1"`             // 最小1

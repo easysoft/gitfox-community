@@ -1,12 +1,11 @@
 package repo
 
 import (
-	"fmt"
+	"strings"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/principal"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
@@ -39,7 +38,7 @@ func NewRepoController(repoSvc repo.Interface, urlProvider urlPkg.Provider, gitP
 // @Accept application/json
 // @Produce application/json
 // @Param body body repoModel.CreateRepoReq true "创建仓库请求参数"
-// @Success 201 {object} resp.ObjectResponse{data=repoModel.CreateRepoResp} "创建成功（返回仓库核心信息）"
+// @Success 201 {object} resp.ObjectResponse{data=repoModel.Repo} "创建成功（返回仓库核心信息）"
 // @Error 400 {object} resp.ObjectResponse "参数错误（如identifier格式非法、spaceID为空等）"
 // @Error 404 {object} resp.ObjectResponse "空间不存在（传入的spaceID对应的空间未找到）"
 // @Error 409 {object} resp.ObjectResponse "仓库标识冲突（同一空间内identifier已存在）"
@@ -60,7 +59,13 @@ func (ctl *Controller) Create(c *gin.Context) {
 		return
 	}
 
-	data, err := ctl.repoSvc.Create(logger.GetContextWithLogger(c), reqData)
+	session, ok := req.GetAuthSession(c.Request.Context())
+	if !ok {
+		resp.Unauthorized(c, errors.WithI18nKey(nil, i18n.AuthNoSession))
+		return
+	}
+
+	data, err := ctl.repoSvc.Create(logger.GetContextWithLogger(c), session, reqData)
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.RepoCreateError)
 		resp.InternalError(c, err)
@@ -91,7 +96,7 @@ func (ctl *Controller) Get(c *gin.Context) {
 		return
 	}
 
-	repoID, err := req.PathParamAsPositiveUint(c, req.QueryParamRepoID)
+	repoID, err := req.PathParamAsPositiveUint(c, "id")
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.RepoPathParamError)
 		resp.BadRequest(c, err)
@@ -113,20 +118,128 @@ func (ctl *Controller) Get(c *gin.Context) {
 	resp.OK(c, i18n.RepoQuerySuccess, obj)
 }
 
-func (ctl *Controller) GetContent(ctx *gin.Context) {
-	logger := logger.GetLogger(ctx)
-	var params req.RepoId
+// Update 修改仓库基础信息
+// @Summary 修改仓库基础信息
+// @Description 修改仓库基础信息
+// @Tags repos
+// @Accept application/json
+// @Produce application/json
+// @Param id path uint true "仓库 ID"
+// @Param body body repoModel.ReqForUpdate true "更新仓库所需请求参数"
+// @Success 200 {object} resp.ObjectResponse{data=repoModel.Repo} "更新成功"
+// @Error 400 {object} resp.ObjectResponse "参数错误"
+// @Error 404 {object} resp.ObjectResponse "代码库不存在"
+// @Error 500 {object} resp.ObjectResponse "服务器内部错误"
+// @Router /repos/{id} [put]
+func (c *Controller) Update(ctx *gin.Context) {
+
+	var reqBody repoModel.ReqForUpdate
 	var err error
 
-	_, ok := req.GetAuthSession(ctx)
-	if !ok {
-		err = errors.WithI18nKey(errors.New("get session failed"), i18n.AuthNoSession)
+	// 解析 path id
+	repoID, err := req.PathParamAsPositiveUint(ctx, "id")
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RepoPathParamError)
 		resp.BadRequest(ctx, err)
 		return
 	}
 
-	if err = ctx.ShouldBindUri(&params); err != nil || params.RepoID == 0 {
-		err = errors.WithI18nKey(err, i18n.RequestPathParameterNotFound)
+	// 解析请求体
+	if err = ctx.ShouldBindJSON(&reqBody); err != nil {
+		err = errors.WithI18nKey(err, i18n.RepoBodyParamError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
+	session, ok := req.GetAuthSession(ctx.Request.Context())
+	if !ok {
+		resp.Unauthorized(ctx, errors.WithI18nKey(nil, i18n.AuthNoSession))
+		return
+	}
+
+	// 通过仓库 ID 获取仓库
+	repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, repoID)
+	if err != nil {
+		resp.InternalError(ctx, err)
+		return
+	}
+
+	respData, err := c.repoSvc.Update(ctx, &reqBody, *repoOut, session)
+	if err != nil {
+		resp.InternalError(ctx, err)
+		return
+	}
+
+	resp.OK(ctx, i18n.RepoUpdateSuccess, respData)
+
+}
+
+// Delete 删除仓库，数据库软删除
+// @Summary 删除仓库
+// @Description 删除仓库,软删除
+// @Tags repos
+// @Accept application/json
+// @Produce application/json
+// @Param id path uint true "仓库 ID"
+// @Success 200 {object} resp.ObjectResponse "删除仓库成功"
+// @Error 400 {object} resp.ObjectResponse "参数错误"
+// @Error 500 {object} resp.ObjectResponse "服务器内部错误"
+// @Router /repos/{id} [delete]
+func (c *Controller) Delete(ctx *gin.Context) {
+	// 解析 path id
+	repoID, err := req.PathParamAsPositiveUint(ctx, "id")
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RepoPathParamError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+	session, ok := req.GetAuthSession(ctx.Request.Context())
+	if !ok {
+		resp.Unauthorized(ctx, errors.WithI18nKey(nil, i18n.AuthNoSession))
+		return
+	}
+
+	err = c.repoSvc.Delete(ctx.Request.Context(), session, repoID)
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RepoDeleteError)
+		resp.InternalError(ctx, err)
+		return
+	}
+
+	resp.OK(ctx, i18n.RepoDeleteSuccess, nil)
+}
+
+// GetContent 获取仓库内容
+// @Summary 获取仓库文件或目录内容
+// @Description 根据路径获取仓库中的文件内容、目录列表或子模块信息，支持指定 Git 引用(分支/标签/提交)。路径参数可选，不传或传空则返回根目录
+// @Tags repos
+// @Accept application/json
+// @Produce application/json
+// @Param id path uint true "仓库 ID"
+// @Param filepath path string false "文件或目录路径 (如 src/main.go)，可选，为空则返回根目录"
+// @Param gitRef query string false "Git 引用 (分支/标签/提交SHA)，默认为 refs/heads/main"
+// @Param includeCommit query bool false "是否包含最新提交信息，默认 false"
+// @Param flattenDirectories query bool false "是否展平单层目录结构，默认 false"
+// @Success 200 {object} resp.ObjectResponse{data=repoModel.GetContentOutput} "获取成功，返回文件/目录/符号链接/子模块内容"
+// @Failure 400 {object} resp.ObjectResponse "参数错误或权限不足"
+// @Failure 404 {object} resp.ObjectResponse "仓库或文件不存在"
+// @Failure 500 {object} resp.ObjectResponse "服务器内部错误"
+// @Router /repos/{id}/content [get]
+// @Router /repos/{id}/content/{filepath} [get]
+func (ctl *Controller) GetContent(ctx *gin.Context) {
+	logger := logger.GetLogger(ctx)
+	var repoID uint
+	var err error
+
+	session, ok := req.GetAuthSession(ctx.Request.Context())
+	if !ok {
+		resp.Unauthorized(ctx, errors.WithI18nKey(nil, i18n.AuthNoSession))
+		return
+	}
+
+	repoID, err = req.PathParamAsPositiveUint(ctx, "id")
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RepoPathParamError)
 		resp.BadRequest(ctx, err)
 		return
 	}
@@ -153,11 +266,28 @@ func (ctl *Controller) GetContent(ctx *gin.Context) {
 	// 在像 /v1/repos/{repoRef}/contents/* 这样的路由下
 	// * 表示仓库内的文件或目录的相对路径。
 	// 例如请求 /v1/repos/12/contents/src/main.go ，这里的余量就是 src/main.go
-	path := req.PathParamOrEmpty(ctx, req.PathParamRemainder)
+	// 注意：通配符参数会包含前导斜杠，需要去除（例如 "/src/main.go" -> "src/main.go"）
+	path := strings.TrimPrefix(req.PathParamOrEmpty(ctx, req.PathParamFilePath), "/")
+	logger.Infof("origin url %s , repoID: %d,gitRef: %s, path: %s,includeCommit: %v,flattenDirectories: %v", ctx.Request.URL.String(), repoID, gitRef, path, includeCommit, flattenDirectories)
 
-	logger.Infof("origin url %s , repoID: %d,gitRef: %s, path: %s,includeCommit: %v,flattenDirectories: %v", ctx.Request.URL.String(), params.RepoID, gitRef, path, includeCommit, flattenDirectories)
+	// todo check spcace ?
 
-	fmt.Println(ctx.Param("path"))
+	// get repo
+	repoM, err := ctl.repoSvc.GetRepoCheckAccessByID(ctx.Request.Context(), session, repoID, []constant.Permission{constant.PermissionRepoView})
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RepoGetContentPermissionError)
+		resp.Unauthorized(ctx, err)
+		return
+	}
+
+	re, err := ctl.repoSvc.GetContent(ctx.Request.Context(), session, repoM, gitRef, path, includeCommit, flattenDirectories)
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RepoGetContentError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
+	resp.OK(ctx, i18n.RepoGetContentSuccess, re)
 }
 
 // @Summary 仓库代码blame
@@ -237,7 +367,8 @@ func (ctl *Controller) Blame(c *gin.Context) {
 // @Accept application/json
 // @Produce text/plain
 // @Param id path uint true "仓库 ID"
-// @Success 200 {object} resp.ObjectResponse{data=repoModel.Repo} "获取成功"
+// @Param body body repoModel.ReqForDiff true "查看 gitRef diff 所需请求参数"
+// @Success 200 {string} string "diff 文本"
 // @Error 400 {object} resp.ObjectResponse "参数错误"
 // @Error 404 {object} resp.ObjectResponse "代码库不存在"
 // @Error 500 {object} resp.ObjectResponse "服务器内部错误"
@@ -264,10 +395,9 @@ func (c *Controller) GetDiff(ctx *gin.Context) {
 		return
 	}
 
-	// TODO: 获取操作人
 	session, ok := req.GetAuthSession(ctx.Request.Context())
 	if !ok {
-		err := errors.WithI18nKey(errors.New("get session failed"), i18n.AuthNoSession)
+		err = errors.WithI18nKey(errors.New("get session failed"), i18n.AuthNoSession)
 		resp.BadRequest(ctx, err)
 		return
 	}
@@ -325,19 +455,11 @@ func (c *Controller) GetPaths(ctx *gin.Context) {
 		resp.BadRequest(ctx, err)
 		return
 	}
-	// TODO: 获取操作人
-	// session, ok := req.GetAuthSession(ctx.Request.Context())
-	// if !ok {
-	// 	err := errors.WithI18nKey(errors.New("get session failed"), i18n.AuthNoSession)
-	// 	resp.BadRequest(ctx, err)
-	// 	return
-	// }
-	session := &auth.Session{
-		Principal: principal.User{
-			ID:    1,
-			Email: "actor@chandao.com",
-			UID:   "actor",
-		},
+
+	session, ok := req.GetAuthSession(ctx.Request.Context())
+	if !ok {
+		resp.Unauthorized(ctx, errors.WithI18nKey(nil, i18n.AuthNoSession))
+		return
 	}
 
 	// 通过仓库 ID 获取仓库
@@ -394,19 +516,11 @@ func (c *Controller) GetPathsDetails(ctx *gin.Context) {
 		resp.BadRequest(ctx, err)
 		return
 	}
-	// TODO: 获取操作人
-	// session, ok := req.GetAuthSession(ctx.Request.Context())
-	// if !ok {
-	// 	err := errors.WithI18nKey(errors.New("get session failed"), i18n.AuthNoSession)
-	// 	resp.BadRequest(ctx, err)
-	// 	return
-	// }
-	session := &auth.Session{
-		Principal: principal.User{
-			ID:    1,
-			Email: "actor@chandao.com",
-			UID:   "actor",
-		},
+
+	session, ok := req.GetAuthSession(ctx.Request.Context())
+	if !ok {
+		resp.Unauthorized(ctx, errors.WithI18nKey(nil, i18n.AuthNoSession))
+		return
 	}
 
 	// 通过仓库 ID 获取仓库

@@ -50,7 +50,7 @@ func (s *Service) Create(
 		Name:        req.Name,
 		Target:      req.Source,
 		Message:     req.Message,
-		Tagger:      &git.Identity{Name: session.Principal.UID, Email: session.Principal.Email}, // 从上下文中获取
+		Tagger:      &git.Identity{Name: session.User.Account, Email: session.User.Email}, // 从上下文中获取
 		TaggerDate:  &now,
 	})
 	if err != nil {
@@ -78,17 +78,17 @@ func (s *Service) List(ctx context.Context, req tagModel.ReqFilter, repo repoMod
 		Sort:          mapToRPCTagSortOption(req.Sort),
 		Order:         utils.MapToRPCSortOrder(req.Order),
 		Page:          int32(req.Page),
-		PageSize:      int32(req.Size),
+		PageSize:      int32(req.PageSize),
 	})
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.GitExecError)
 		return nil, isLast, err
 	}
 
-	isLast = len(rpcOut.Tags) <= req.Size
+	isLast = len(rpcOut.Tags) <= req.PageSize
 	tags := rpcOut.Tags
-	if len(rpcOut.Tags) > req.Size {
-		tags = rpcOut.Tags[:req.Size]
+	if len(rpcOut.Tags) > req.PageSize {
+		tags = rpcOut.Tags[:req.PageSize]
 		isLast = false
 	}
 	response := make([]tagModel.Tag, len(tags))

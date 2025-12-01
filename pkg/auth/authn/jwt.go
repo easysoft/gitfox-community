@@ -5,14 +5,13 @@ import (
 	"strings"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
-	userModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/principal"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/principal"
+	userModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/user"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/token"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/user"
 	"github.com/gin-gonic/gin"
 
 	gojwt "github.com/golang-jwt/jwt"
@@ -25,39 +24,45 @@ const AdminPATIdentifier = "adminPat"
 var _ Authenticator = (*BasicAuthenticator)(nil)
 
 type JWTAuthenticator struct {
-	principalStore principal.Interface
-	TokenStore     token.Interface
+	userStore  user.Interface
+	TokenStore token.Interface
 }
 
-func NewJWTAuthenticator(principalStore principal.Interface, tokenStore token.Interface) *JWTAuthenticator {
+func NewJWTAuthenticator(userStore user.Interface, tokenStore token.Interface) *JWTAuthenticator {
 	return &JWTAuthenticator{
-		principalStore: principalStore,
-		TokenStore:     tokenStore,
+		userStore:  userStore,
+		TokenStore: tokenStore,
 	}
 }
 
 func (a *JWTAuthenticator) Authenticate(r *gin.Context) (*auth.Session, error) {
-	logger := logger.GetLogger(r)
 	token := extractToken(r)
 	if token == "" {
 		return nil, constant.ErrAuthNoData
 	}
 
-	var principal *userModel.User
+	principal := &userModel.Principal{}
+	var user *userModel.User
 	var err error
 	claims := &Claims{}
 	parsed, err := gojwt.ParseWithClaims(
 		token, claims, func(_ *gojwt.Token) (interface{}, error) {
-			principal, err = a.principalStore.FindUserByID(r.Request.Context(), claims.PrincipalID)
-			if err != nil {
-				return nil, fmt.Errorf("failed to get principal for token: %w", err)
+			if claims.App == "" { // 用户令牌
+				temp, err := a.userStore.FindUserByAccount(r.Request.Context(), claims.Account)
+				if err != nil {
+					return nil, fmt.Errorf("failed to get principal for token: %w", err)
+				}
+				user = temp
 			}
-			return []byte(principal.Salt), nil
+			principal.Admin = claims.Admin
+			principal.App = claims.App
+			principal.DisplayName = claims.Account
+			return []byte(KeysToSecret(claims.Account, claims.Identifier)), nil
 		},
 	)
 
 	if err != nil {
-		return nil, errors.Newf("parsing of JWT claims failed: %w", err)
+		return nil, errors.Wrapf(err, "parsing of JWT claims failed")
 	}
 
 	if !parsed.Valid {
@@ -68,20 +73,18 @@ func (a *JWTAuthenticator) Authenticate(r *gin.Context) (*auth.Session, error) {
 		return nil, errors.New("invalid HMAC signature for JWT")
 	}
 
-	// 试图从query中获取sudo用户ID
-	sudoUserID, err := req.QueryParamAsPositiveInt64OrDefault(r, req.QueryParamSudoUserID, 0)
-	if err != nil {
-		logger.Warnf("failed to get sudo user ID from query: %v", err)
-	}
-
-	// 试图从sudo用户ID获取用户
-	user, err := a.principalStore.FindUserByID(r.Request.Context(), sudoUserID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get principal for token: %w", err)
+	if user == nil {
+		operation := req.GetHeaderOrDefault(r, req.QueryParamOperation, "")
+		if operation != "" {
+			user, err = a.userStore.FindUserByAccount(r.Request.Context(), operation)
+			if err != nil {
+				return nil, fmt.Errorf("failed to get user for token: %w", err)
+			}
+		}
 	}
 
 	return &auth.Session{
-		Principal: *principal,
+		Principal: principal,
 		User:      user,
 	}, nil
 }
@@ -116,13 +119,12 @@ func extractToken(r *gin.Context) string {
 		return headerToken
 	}
 
-	// check cookies last (as that's least visible to caller)
-	// 最后检查 Cookie（因为对调用者来说，它是最不可见的）
-	if cookieToken, ok := req.GetCookie(r, CookieName); ok {
-		return cookieToken
-	}
-
 	// no token found
 	// 没有找到令牌
 	return ""
+}
+
+func GenerateJWTToken(claims *Claims, secret []byte) (string, error) {
+	token := gojwt.NewWithClaims(gojwt.SigningMethodHS256, claims)
+	return token.SignedString(secret)
 }

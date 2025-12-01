@@ -8,21 +8,27 @@ import (
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/githook"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/router"
+	userSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/user"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/cmd/cli/operations/provider"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/auth/authn"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/ssh"
 	"gorm.io/gorm"
 )
 
 type App struct {
-	SystemConfig    *config.Config
-	SystemLog       *provider.SystemLog
-	APILog          *provider.APILog
-	DB              *gorm.DB
-	SqliteDB        *database.SqliteDB
-	Controller      *router.Controller
-	I18nManager     *provider.I18nManager
-	GithookCtrl     *githook.Controller
+	SystemConfig  *config.Config
+	SystemLog     *provider.SystemLog
+	APILog        *provider.APILog
+	DB            *gorm.DB
+	SqliteDB      *database.SqliteDB
+	Controller    *router.Controller
+	I18nManager   *provider.I18nManager
+	GithookCtrl   *githook.Controller
+	SSHServer     *ssh.Server
+	UserService   userSvc.Interface
+	Authenticator authn.Authenticator
 }
 
 func NewApp(mode string) (*App, func(), error) {
@@ -33,13 +39,17 @@ func NewApp(mode string) (*App, func(), error) {
 		provider.PrincipalWireSet,
 		provider.GitWireSet,
 		provider.SpaceWireSet,
-		provider.RepoWireSet, // 必须在 Branch/Tag/Commit 之前，因为它们依赖 repoService
+		provider.RepoWireSet,
 		provider.BranchWireSet,
 		provider.TagWireSet,
+		provider.ScanRuleSetWireSet,
+		provider.ScanRuleWireSet,
 		provider.CommitWireSet,
 		provider.ControllersWireSet,
 		provider.URLWireSet,
 		provider.I18nWireSet,
+		provider.SSHWireSet,
+		provider.AuthWireSet,
 		wire.Struct(new(App), "*")),
 	)
 }

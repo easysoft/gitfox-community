@@ -11,11 +11,20 @@ const (
 )
 
 type RepoRef struct {
-	RepoRef string `uri:"repoRef" binding:"required"`
+	RepoRef uint `uri:"repoRef" binding:"required"`
 }
 
 type RepoId struct {
-	RepoID int64 `uri:"repoId" binding:"required"`
+	RepoID uint `uri:"repoID" binding:"required"`
+}
+
+type SpaceId struct {
+	SpaceID uint `uri:"spaceID" binding:"required"`
+}
+
+type SpaceRepoRef struct {
+	SpaceID uint   `uri:"spaceID" binding:"required"`
+	RepoRef string `uri:"repoRef" binding:"required"`
 }
 
 const (
@@ -33,3 +42,9 @@ const (
 	QueryParamAccessToken   = "access_token"
 	QueryParamIncludeCookie = "include_cookie"
 )
+
+type ListFilter struct {
+	// 分页参数（对应 pagination.PageParam）
+	Page     int `form:"page" binding:"omitempty,min=1"`             // 最小1
+	PageSize int `form:"pageSize" binding:"omitempty,min=1,max=100"` // 1-100
+}

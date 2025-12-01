@@ -11,20 +11,31 @@ import (
 	commit2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/commit"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/githook"
 	repo3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/repo"
+	scan3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/scan"
 	space3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/space"
 	tag2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/tag"
+	user3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/user"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/router"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/branch"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/commit"
+	publickey2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/publickey"
 	repo2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
+	scan2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/scan"
 	space2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/space"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/tag"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/principal"
+	user2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/user"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/publickey"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/scan"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/settings"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/space"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/user"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/cmd/cli/operations/provider"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/auth/authn"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/auth/authz"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/ssh"
 	"gorm.io/gorm"
 )
 
@@ -48,7 +59,12 @@ func NewApp(mode string) (*App, func(), error) {
 		return nil, nil, err
 	}
 	spaceStore := space.NewSpaceStore(db)
-	service := space2.NewSpaceSvc(spaceStore)
+	store := repo.NewRepoStore(db)
+	duration := authz.ProvideCacheDuration()
+	permissionCache := authz.NewPermissionCache(duration)
+	publicAccessCache := authz.NewPublicAccessCache(duration)
+	membershipAuthorizer := authz.NewMembershipAuthorizer(permissionCache, publicAccessCache)
+	service := space2.NewSpaceSvc(spaceStore, store, membershipAuthorizer)
 	spaceController := space3.NewSpaceController(service)
 	urlProvider, err := provider.NewURLProvider(config)
 	if err != nil {
@@ -70,40 +86,57 @@ func NewApp(mode string) (*App, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	store := provider.NewGitLocalStore()
-	gitService, err := provider.NewGit(typesConfig, git, clientFactory, store)
+	storageStore := provider.NewGitLocalStore()
+	gitService, err := provider.NewGit(typesConfig, git, clientFactory, storageStore)
 	if err != nil {
 		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
 	branchService := branch.NewService(urlProvider, gitService)
-	repoStore := repo.NewRepoStore(db)
-	repoService := repo2.NewRepoSvc(gitService, repoStore, spaceStore, urlProvider)
+	repoService := repo2.NewRepoSvc(gitService, store, spaceStore, urlProvider, membershipAuthorizer)
 	controller := branch2.NewController(branchService, repoService)
 	tagService := tag.NewService(urlProvider, gitService)
 	tagController := tag2.NewController(tagService, repoService)
 	commitService := commit.NewService(urlProvider, gitService)
 	commitController := commit2.NewController(commitService, repoService)
 	repoController := repo3.NewRepoController(repoService, urlProvider, gitService)
-	routerController := provider.NewControllers(spaceController, controller, tagController, commitController, repoController)
+	userStore := user.NewUserStore(db)
+	tokenInterface := provider.NewTokenStoreProvider(db)
+	userService := user2.NewService(userStore, tokenInterface)
+	publickeyInterface := publickey.NewPublicKeyStore(db)
+	interface2 := publickey2.NewPublicKeyService(publickeyInterface, userService)
+	userController := user3.NewUserController(userService, interface2)
+	service2 := provider.NewGitService(gitService)
+	settingsInterface := settings.NewSettingStore(db)
+	settingsService := provider.NewSettingsService(settingsInterface)
+	gitController := provider.NewGitController(service2, service, repoService, settingsService)
+	ruleSetStore := scan.NewRuleSetStore(db)
+	ruleStore := scan.NewRuleStore(db)
+	ruleSetService := scan2.NewRuleSetService(ruleSetStore, ruleStore)
+	ruleSetController := scan3.NewRuleSetController(ruleSetService)
+	routerController := provider.NewControllers(spaceController, controller, tagController, commitController, repoController, userController, gitController, ruleSetController)
 	i18nManager, err := provider.NewI18nManager(config)
 	if err != nil {
 		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
-	principalStore := principal.NewPrincipalStore(db)
-	githookController := provider.NewGitHookController(principalStore, repoStore, gitService, urlProvider, clientFactory)
+	githookController := provider.NewGitHookController(userStore, store, gitService, urlProvider, clientFactory)
+	server := provider.ProvideSSHServer(config, interface2, gitController)
+	authenticator := authn.ProvideAuthenticators(config, userStore, tokenInterface)
 	app := &App{
-		SystemConfig: config,
-		SystemLog:    systemLog,
-		APILog:       apiLog,
-		DB:           db,
-		SqliteDB:     sqliteDB,
-		Controller:   routerController,
-		I18nManager:  i18nManager,
-		GithookCtrl:  githookController,
+		SystemConfig:  config,
+		SystemLog:     systemLog,
+		APILog:        apiLog,
+		DB:            db,
+		SqliteDB:      sqliteDB,
+		Controller:    routerController,
+		I18nManager:   i18nManager,
+		GithookCtrl:   githookController,
+		SSHServer:     server,
+		UserService:   userService,
+		Authenticator: authenticator,
 	}
 	return app, func() {
 		cleanup2()
@@ -114,12 +147,15 @@ func NewApp(mode string) (*App, func(), error) {
 // wire.go:
 
 type App struct {
-	SystemConfig *config.Config
-	SystemLog    *provider.SystemLog
-	APILog       *provider.APILog
-	DB           *gorm.DB
-	SqliteDB     *database.SqliteDB
-	Controller   *router.Controller
-	I18nManager  *provider.I18nManager
-	GithookCtrl  *githook.Controller
+	SystemConfig  *config.Config
+	SystemLog     *provider.SystemLog
+	APILog        *provider.APILog
+	DB            *gorm.DB
+	SqliteDB      *database.SqliteDB
+	Controller    *router.Controller
+	I18nManager   *provider.I18nManager
+	GithookCtrl   *githook.Controller
+	SSHServer     *ssh.Server
+	UserService   user2.Interface
+	Authenticator authn.Authenticator
 }

@@ -25,6 +25,19 @@ func NewMembershipAuthorizer(permissionCache PermissionCache, publicAccessCache 
 
 func (a *MembershipAuthorizer) Check(ctx context.Context, session *auth.Session, scope constant.Scope, permission constant.Permission) (bool, error) {
 	log := logger.GetLogger(ctx)
+	var account string
+
+	// 非用户授权，使用应用名
+	if session.User == nil {
+		account = session.Principal.App
+	} else {
+		account = session.User.Account
+	}
+
+	// zentao 管理员权限
+	if session.Principal != nil && session.Principal.Admin {
+		return true, nil
+	}
 
 	// 公开资源
 	publicAccessAllowed, err := a.CheckPublicAccess(ctx, scope.ResourceType, scope.ResourceID, permission)
@@ -36,26 +49,15 @@ func (a *MembershipAuthorizer) Check(ctx context.Context, session *auth.Session,
 	}
 
 	log.Debugf(
-		"[MembershipAuthorizer]id '%d' requests %s in scope %#v",
-		session.Principal.ID,
+		"[MembershipAuthorizer]account '%s' requests %s in scope %#v",
+		account,
 		permission,
 		scope,
 	)
 
-	if scope.ResourceType == constant.ResourceTypeRepo &&
-		(permission != constant.PermissionRepoView &&
-			permission != constant.PermissionPipelineView) {
-		return false, nil
-	}
-
-	if scope.ResourceType == constant.ResourceTypeSpace &&
-		permission != constant.PermissionSpaceView {
-		return false, nil
-	}
-
 	return a.permissionCache.Get(
 		ctx, PermissionCacheKey{
-			Account:    session.User.UID,
+			Account:    account,
 			Scope:      scope,
 			Permission: permission,
 		},

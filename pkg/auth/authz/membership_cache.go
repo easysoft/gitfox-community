@@ -22,11 +22,12 @@ type PublicAccessCacheKey struct {
 type PermissionCache cache.Cache[PermissionCacheKey, bool]
 type PublicAccessCache cache.Cache[PublicAccessCacheKey, bool]
 
-func NewPermissionCache(
-	cacheDuration time.Duration,
-) (PermissionCache, PublicAccessCache) {
-	return cache.New(permissionCacheGetter{}, cacheDuration),
-		cache.New(publicAccessCacheGetter{}, cacheDuration)
+func NewPermissionCache(cacheDuration time.Duration) PermissionCache {
+	return cache.New(permissionCacheGetter{}, cacheDuration)
+}
+
+func NewPublicAccessCache(cacheDuration time.Duration) PublicAccessCache {
+	return cache.New(publicAccessCacheGetter{}, cacheDuration)
 }
 
 type permissionCacheGetter struct {
@@ -36,10 +37,12 @@ type publicAccessCacheGetter struct {
 
 // Find implements cache.Getter.
 func (p permissionCacheGetter) Find(ctx context.Context, key PermissionCacheKey) (bool, error) {
-	panic("unimplemented")
+	return true, nil
+	// panic("unimplemented")
 }
 
 // Find implements cache.Getter.
 func (p publicAccessCacheGetter) Find(ctx context.Context, key PublicAccessCacheKey) (bool, error) {
-	panic("unimplemented")
+	return true, nil
+	//panic("unimplemented")
 }

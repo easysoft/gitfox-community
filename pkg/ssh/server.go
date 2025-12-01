@@ -23,10 +23,10 @@ import (
 	"strings"
 	"time"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/repo"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/git"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/principal"
+	principal "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/user"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/publickey"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/api"
 
@@ -55,7 +55,7 @@ type Server struct {
 	ServerHostKeysDir       string
 
 	Verifier publickey.Interface
-	RepoCtrl *repo.Controller
+	GitCtrl  *git.GitController
 }
 
 // - 验证服务器配置参数是否正确
@@ -82,9 +82,10 @@ func (s *Server) sanitize() error {
 		s.KeepAliveInterval = 5000
 	}
 
-	if s.RepoCtrl == nil {
-		return errors.InvalidArgument("repository controller is needed to run git service pack commands")
+	if s.GitCtrl == nil {
+		return errors.InvalidArgument("git controller is needed to run git service pack commands")
 	}
+
 	return nil
 }
 
@@ -118,7 +119,7 @@ func (s *Server) ListenAndServe() error {
 		return fmt.Errorf("failed to setup host keys: %w", err)
 	}
 
-	log.Debug().Msgf("starting ssh service....: %v", s.internal.Addr)
+	//log.Debug().Msgf("starting ssh service....: %v", s.internal.Addr)
 	err = s.internal.ListenAndServe()
 	if err != nil {
 		return fmt.Errorf("ssh service not running: %w", err)
@@ -154,7 +155,7 @@ func (s *Server) publicKeyHandler(ctx ssh.Context, key ssh.PublicKey) bool {
 		return false
 	}
 
-	principal, err := s.Verifier.ValidateKey(ctx, key)
+	user, keyID, err := s.Verifier.ValidateKey(ctx, key)
 	if errors.IsNotFound(err) {
 		log.Debug().Err(err).Msg("public key is unknown")
 		return false
@@ -179,12 +180,13 @@ func (s *Server) publicKeyHandler(ctx ssh.Context, key ssh.PublicKey) bool {
 		}
 
 		certChecker := &gossh.CertChecker{}
-		if err := certChecker.CheckCert(principal.UID, cert); err != nil {
+		if err := certChecker.CheckCert(user.Account, cert); err != nil {
 			return false
 		}
 	}
 
-	ctx.SetValue(principalKey, principal)
+	ctx.SetValue(principalKey, user)
+	ctx.SetValue(principalID, keyID)
 	return true
 }
 
@@ -197,10 +199,17 @@ func (s *Server) sessionHandler(session ssh.Session) {
 	// eg.git-receive-pack 'space/repo.git'
 	command := session.RawCommand()
 
-	principalInfo, ok := session.Context().Value(principalKey).(*principal.PrincipalInfo)
+	principalInfo, ok := session.Context().Value(principalKey).(*principal.User)
 	if !ok {
 		_, _ = fmt.Fprintf(session.Stderr(), "principal not found or empty")
 		return
+	}
+
+	// 标记密钥为已验证(仅在会话成功建立后)
+	if keyID, ok := session.Context().Value(principalID).(int64); ok {
+		if err := s.Verifier.MarkKeyAsVerified(session.Context(), keyID); err != nil {
+			log.Warn().Err(err).Msg("failed to mark key as verified")
+		}
 	}
 
 	parts := strings.Fields(command)
@@ -231,6 +240,8 @@ func (s *Server) sessionHandler(session ssh.Session) {
 	repoRef := strings.Trim(gitArgs[0], "'")
 	// remove .git suffix
 	repoRef = strings.TrimSuffix(repoRef, ".git")
+	// remove leading slash if present (e.g., "/1/ldg-repo" -> "1/ldg-repo")
+	repoRef = strings.TrimPrefix(repoRef, "/")
 
 	gitProtocol := ""
 	for _, key := range session.Environ() {
@@ -247,13 +258,13 @@ func (s *Server) sessionHandler(session ssh.Session) {
 		go sendKeepAliveMsg(ctx, session, s.KeepAliveInterval)
 	}
 
-	err = s.RepoCtrl.GitServicePack(
+	err = s.GitCtrl.GitServicePack(
 		WithContext(ctx, session),
 		&auth.Session{
-			Principal: principal.User{
-				ID:    principalInfo.ID,
-				UID:   principalInfo.UID,
-				Email: principalInfo.Email,
+			User: &principal.User{
+				ID:      principalInfo.ID,
+				Email:   principalInfo.Email,
+				Account: principalInfo.Account,
 			},
 		},
 		repoRef,
@@ -263,6 +274,7 @@ func (s *Server) sessionHandler(session ssh.Session) {
 			Stdin:    session,
 			Stderr:   session.Stderr(),
 			Protocol: gitProtocol,
+			IsWrite:  service == constant.GitServiceTypeReceivePack,
 		},
 	)
 	if err != nil {

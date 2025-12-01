@@ -131,11 +131,20 @@ func WithI18nKey(err error, i18nKey i18n.I18nKey) error {
 		return customError{errorType: customErr.errorType, i18nKey: i18nKey, originalError: customErr.originalError}
 	}
 
+	// 如果 err 为 nil，创建一个新的错误，使用 i18nKey 作为消息
+	if err == nil {
+		return customError{errorType: NoType, i18nKey: i18nKey, originalError: errors.New(string(i18nKey))}
+	}
+
 	return customError{errorType: NoType, i18nKey: i18nKey, originalError: err}
 }
 
 // WithHttpStatus 添加HTTP状态码
 func WithHttpStatus(err error, httpStatus int) error {
+	if err == nil {
+		return nil
+	}
+
 	if customErr, ok := err.(customError); ok {
 		return customError{errorType: customErr.errorType, httpStatus: httpStatus, originalError: customErr.originalError}
 	}

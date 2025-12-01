@@ -78,7 +78,7 @@ func (s *Service) Create(
 		Branch:        req.Branch,
 		NewBranch:     req.NewBranch,
 		Actions:       actions,
-		Committer:     &git.Identity{Name: session.Principal.UID, Email: session.Principal.Email},
+		Committer:     &git.Identity{Name: session.User.Account, Email: session.User.Email},
 		CommitterDate: &now,
 		Author:        &git.Identity{Name: req.Author.Name, Email: req.Author.Email},
 		AuthorDate:    &now,
@@ -103,7 +103,7 @@ func (s *Service) List(ctx context.Context, req commitModel.ReqFilter, repo repo
 		GitREF:       gitRef,
 		After:        req.After,
 		Page:         int32(req.Page),
-		Limit:        int32(req.Limit),
+		Limit:        int32(req.PageSize),
 		Path:         req.Path,
 		Since:        req.Since,
 		Until:        req.Until,
@@ -115,10 +115,10 @@ func (s *Service) List(ctx context.Context, req commitModel.ReqFilter, repo repo
 		return commitModel.RespForList{}, isLast, err
 	}
 
-	isLast = len(rpcOut.Commits) <= req.Limit
+	isLast = len(rpcOut.Commits) <= req.PageSize
 	commits := rpcOut.Commits
-	if len(rpcOut.Commits) > req.Limit {
-		commits = rpcOut.Commits[:req.Limit]
+	if len(rpcOut.Commits) > req.PageSize {
+		commits = rpcOut.Commits[:req.PageSize]
 		isLast = false
 	}
 	response := make([]commitModel.Commit, len(commits))

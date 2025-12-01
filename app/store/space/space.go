@@ -2,7 +2,7 @@ package space
 
 import (
 	"context"
-	"fmt"
+	"strings"
 
 	spaceModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/space"
 
@@ -103,15 +103,17 @@ func (s *SpaceStore) List(ctx context.Context, filter spaceModel.ListSpaceFilter
 	if filter.Owner != "" {
 		tx = tx.Where("owner = ?", filter.Owner)
 	}
+	if len(filter.IDs) > 0 {
+		ids := strings.Split(filter.IDs, ",")
+		tx = tx.Where("id IN ?", ids)
+	}
 
 	// 2. 调用通用分页工具（NeedTotal默认true，自动统计总条数）
 	var spaces []*Space
-	pageResult, err := database.PaginateDefault(ctx, tx, filter.Page, filter.PageSize, &spaces)	
-	fmt.Println(pageResult)
+	pageResult, err := database.PaginateDefault(ctx, tx, filter.Page, filter.PageSize, &spaces)
 	if err != nil {
-		return nil,  database.ProcessSQLErrorf(ctx, err)
+		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
-
 	return pageResult, nil
 }
 

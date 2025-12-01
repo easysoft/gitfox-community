@@ -1,18 +1,18 @@
 package publickey
 
 import (
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/publickey"
+	publickeyStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/publickey"
 	"github.com/google/wire"
 )
 
+// WireSet provides all dependencies for publickey service
 var WireSet = wire.NewSet(
-	ProviderPublicKey,
-)
+	// Public Key Store
+	publickeyStore.NewPublicKeyStore,
 
-func ProviderPublicKey(
-	publicKeyStore publickey.Store,
-	pCache store.PrincipalInfoCache,
-) Interface {
-	return NewPublicKeyService(publicKeyStore, pCache)
-}
+	// Principal Info Cache
+	//principalStore.NewPrincipalInfoCache,
+
+	// Public Key Service
+	NewPublicKeyService,
+)

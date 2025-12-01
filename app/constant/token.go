@@ -4,9 +4,8 @@ package constant
 type TokenType string
 
 const (
-	// TokenTypeSession is the token returned during user login or signup.
-	TokenTypeSession TokenType = "session"
-
 	// TokenTypePAT is a personal access token.
 	TokenTypePAT TokenType = "pat"
+
+	TokenTypeApp TokenType = "app"
 )

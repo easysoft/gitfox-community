@@ -4,15 +4,15 @@ import (
 	"fmt"
 	"net/http"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	"github.com/gin-gonic/gin"
 )
 
-// ListResponse represents a response structure for list data
 type ListResponse struct {
 	ObjectResponse
-	ListArgs any
+	ListArgs any `json:"listArgs"`
 }
 
 type ListArgs struct {
@@ -27,12 +27,11 @@ type ListNoTotalArgs struct {
 	PageSize int64 `json:"pageSize"`
 }
 
-// ObjectResponse represents a response structure for single object data
 type ObjectResponse struct {
-	Code    i18n.I18nKey `json:"code"`
-	Message string       `json:"message"`
-	TraceID string       `json:"traceID"`
-	Data    interface{}  `json:"data"`
+	Code    constant.RespCode `json:"code"`
+	Message string            `json:"message"`
+	TraceID string            `json:"traceID"`
+	Data    interface{}       `json:"data"`
 }
 
 // ObjectOK renders a successful object response (200 OK)
@@ -67,12 +66,20 @@ func InternalError(c *gin.Context, err error, args ...interface{}) {
 }
 
 func Unauthorized(c *gin.Context, err error, args ...interface{}) {
-	objectErr(c, err, http.StatusUnauthorized, args...)
+	code := errors.GetI18nKey(err)
+	message := i18n.TGin(c, code, args...) + fmt.Sprintf(";%s", err.Error())
+	traceID := getTraceID(c)
+	c.AbortWithStatusJSON(http.StatusUnauthorized, ObjectResponse{
+		Code:    constant.RespFailCode,
+		Message: message,
+		TraceID: traceID,
+		Data:    nil,
+	})
 }
 
 // ListSuccess renders a successful list response (200 OK)
 func ListSuccess(c *gin.Context, data interface{}, listArgs interface{}, code i18n.I18nKey, args ...interface{}) {
-	list(c, data, listArgs, code, args)
+	listSuccess(c, data, listArgs, code, args)
 }
 
 // list renders a list response
@@ -80,13 +87,13 @@ func ListSuccess(c *gin.Context, data interface{}, listArgs interface{}, code i1
 // data: list data
 // listArgs: list arguments, e.g. total count, page, pageSize
 // code: i18n key, e.g. "repo.branch.list.success"
-func list(c *gin.Context, data interface{}, listArgs interface{}, code i18n.I18nKey, args ...interface{}) {
+func listSuccess(c *gin.Context, data interface{}, listArgs interface{}, code i18n.I18nKey, args ...interface{}) {
 	traceID := getTraceID(c)
 	message := i18n.TGin(c, code, args...)
 
 	c.JSON(http.StatusOK, ListResponse{
 		ObjectResponse: ObjectResponse{
-			Code:    code,
+			Code:    constant.RespSuccessCode,
 			Message: message,
 			TraceID: traceID,
 			Data:    data,
@@ -105,7 +112,7 @@ func objectErr(c *gin.Context, err error, httpStatus int, args ...interface{}) {
 	message := i18n.TGin(c, code, args...) + fmt.Sprintf(";%s", err.Error())
 	traceID := getTraceID(c)
 	c.JSON(httpStatus, ObjectResponse{
-		Code:    code,
+		Code:    constant.RespFailCode,
 		Message: message,
 		TraceID: traceID,
 		Data:    nil,
@@ -116,7 +123,7 @@ func objectOk(c *gin.Context, code i18n.I18nKey, httpStatus int, data interface{
 	message := i18n.TGin(c, code)
 	traceID := getTraceID(c)
 	c.JSON(httpStatus, ObjectResponse{
-		Code:    code,
+		Code:    constant.RespSuccessCode,
 		Message: message,
 		TraceID: traceID,
 		Data:    data,
