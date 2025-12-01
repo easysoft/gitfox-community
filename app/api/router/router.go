@@ -48,7 +48,6 @@ func NewRouter(mode string, logger *logger.SugaredMateLogger, controller *Contro
 	// 创建需要 JWT 认证的路由组
 	authGroup := r.Group("/api/v2")
 	authGroup.Use(middleware.Attempt(authn.Get(authn.AuthKindEasy)))
-	authGroup.Use(middleware.MockAttempt())
 	registerSpaceRoutes(authGroup, controller)  // 空间相关路由
 	registerBranchRoutes(authGroup, controller) // 分支相关路由
 	registerTagRoutes(authGroup, controller)    // 标签相关路由

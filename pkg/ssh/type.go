@@ -2,7 +2,10 @@ package ssh
 
 type contextKey string
 
-const principalKey = contextKey("principalKey")
+const (
+	principalKey   = contextKey("principalKey")
+	publicKeyIDKey = contextKey("publicKeyID")
+)
 
 var (
 	allowedCommands = []string{

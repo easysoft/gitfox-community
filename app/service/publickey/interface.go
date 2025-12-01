@@ -14,7 +14,8 @@ import (
 )
 
 type Interface interface {
-	ValidateKey(ctx context.Context, publicKey ssh.PublicKey) (*principal.User, error)
+	ValidateKey(ctx context.Context, publicKey ssh.PublicKey) (*principal.User, int64, error)
+	MarkKeyAsVerified(ctx context.Context, keyID int64) error
 
 	CreatePublicKey(ctx context.Context, session *auth.Session, params *publickey.AddPublicKeyInput) error
 	ListPublicKeys(ctx context.Context, session *auth.Session, params req.ListFilter) (*database.PageResult[*publickey.PublicKey], error)

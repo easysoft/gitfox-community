@@ -9,7 +9,7 @@ import (
 type PublicKey struct {
 	ID           int64      `db:"id" gorm:"column:id;primaryKey"`
 	Account      string     `db:"account" gorm:"column:account"`
-	VerifiedDate *time.Time `db:"verified" gorm:"column:verifiedDate"` // 公钥验证时间（若已验证），用于记录验证成功的时间。
+	VerifiedDate *time.Time `db:"verifiedDate" gorm:"column:verifiedDate"` // 公钥验证时间（若已验证），用于记录验证成功的时间。
 	Identifier   string     `db:"identifier" gorm:"column:identifier"`
 	Fingerprint  string     `db:"fingerprint" gorm:"column:fingerprint"` // 根据公钥内容计算的指纹（稳定摘要），用于快速查重与匹配。
 	Content      string     `db:"content" gorm:"column:content"`         // 公钥原始内容（如 ssh-ed25519 AAAA... user@host ），用于精确匹配与验证

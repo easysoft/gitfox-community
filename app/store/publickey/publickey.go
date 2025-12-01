@@ -2,6 +2,7 @@ package publickey
 
 import (
 	"context"
+	"time"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/publickey"
@@ -71,13 +72,12 @@ func (s *Store) Create(ctx context.Context, publicKey PublicKey) error {
 
 // MarkAsVerified updates the public key to mark it as verified.
 // MarkAsVerified更新公钥标记为已验证。
-func (s *Store) MarkAsVerified(ctx context.Context, id int64, verified int64) error {
-
-	if err := s.db.WithContext(ctx).Model(&PublicKey{}).Where("id = ?", id).Update("verified", verified).Error; err != nil {
-		return err
-	}
-
-	return nil
+func (s *Store) MarkAsVerified(ctx context.Context, id int64) error {
+	now := time.Now()
+	return s.db.WithContext(ctx).
+		Model(&PublicKey{}).
+		Where("id = ?", id).
+		Updates(&PublicKey{VerifiedDate: &now}).Error
 }
 
 func (s *Store) ListByAccount(ctx context.Context, account string, params req.ListFilter) (*database.PageResult[*publickey.PublicKey], error) {

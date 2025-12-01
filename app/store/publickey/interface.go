@@ -11,7 +11,7 @@ import (
 type Interface interface {
 	ListByFingerprint(ctx context.Context, fingerprint string) ([]publickey.PublicKey, error)
 	ListByAccount(ctx context.Context, account string, params req.ListFilter) (*database.PageResult[*publickey.PublicKey], error)
-	MarkAsVerified(ctx context.Context, id int64, verified int64) error
+	MarkAsVerified(ctx context.Context, id int64) error
 
 	Create(ctx context.Context, publicKey PublicKey) error
 }
