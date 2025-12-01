@@ -233,8 +233,7 @@ func (ctl *Controller) GetContent(ctx *gin.Context) {
 
 	session, ok := req.GetAuthSession(ctx.Request.Context())
 	if !ok {
-		err = errors.WithI18nKey(errors.New("get session failed"), i18n.AuthNoSession)
-		resp.BadRequest(ctx, err)
+		resp.Unauthorized(ctx, errors.WithI18nKey(nil, i18n.AuthNoSession))
 		return
 	}
 
@@ -277,7 +276,7 @@ func (ctl *Controller) GetContent(ctx *gin.Context) {
 	repoM, err := ctl.repoSvc.GetRepoCheckAccessByID(ctx.Request.Context(), session, repoID, []constant.Permission{constant.PermissionRepoView})
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.RepoGetContentPermissionError)
-		resp.BadRequest(ctx, err)
+		resp.Unauthorized(ctx, err)
 		return
 	}
 

@@ -73,7 +73,7 @@ func (s *Service) getSubmoduleContent(ctx context.Context,
 	})
 	if err != nil {
 		// TODO: handle not found error
-		return nil, fmt.Errorf("failed to get submodule: %w", err)
+		return nil, errors.Wrapf(err, "failed to get submodule: %w", err)
 	}
 
 	return &repoModel.SubmoduleContent{

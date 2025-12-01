@@ -3,8 +3,8 @@ package ssh
 type contextKey string
 
 const (
-	principalKey   = contextKey("principalKey")
-	publicKeyIDKey = contextKey("publicKeyID")
+	principalKey = contextKey("principalKey")
+	principalID  = contextKey("principalID")
 )
 
 var (

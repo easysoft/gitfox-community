@@ -186,7 +186,7 @@ func (s *Server) publicKeyHandler(ctx ssh.Context, key ssh.PublicKey) bool {
 	}
 
 	ctx.SetValue(principalKey, user)
-	ctx.SetValue(publicKeyIDKey, keyID)
+	ctx.SetValue(principalID, keyID)
 	return true
 }
 
@@ -206,7 +206,7 @@ func (s *Server) sessionHandler(session ssh.Session) {
 	}
 
 	// 标记密钥为已验证(仅在会话成功建立后)
-	if keyID, ok := session.Context().Value(publicKeyIDKey).(int64); ok {
+	if keyID, ok := session.Context().Value(principalID).(int64); ok {
 		if err := s.Verifier.MarkKeyAsVerified(session.Context(), keyID); err != nil {
 			log.Warn().Err(err).Msg("failed to mark key as verified")
 		}

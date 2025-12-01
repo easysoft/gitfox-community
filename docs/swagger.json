@@ -14,6 +14,219 @@
     "host": "localhost:3000",
     "basePath": "/api/v2",
     "paths": {
+        "/git/{spaceID}/{repoRef}/git-receive-pack": {
+            "post": {
+                "description": "处理 Git 客户端的 push 请求，通过 receive-pack 协议接收仓库对象数据并更新引用",
+                "consumes": [
+                    "application/x-git-receive-pack-request"
+                ],
+                "produces": [
+                    "application/x-git-receive-pack-result"
+                ],
+                "tags": [
+                    "git"
+                ],
+                "summary": "Git Push 操作",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "空间ID",
+                        "name": "spaceID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "仓库标识 (支持 .git 后缀)",
+                        "name": "repoRef",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "内容编码 (如 gzip)",
+                        "name": "Content-Encoding",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Git 协议版本",
+                        "name": "Git-Protocol",
+                        "in": "header"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功接收并处理 Git pack 数据",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误或权限不足",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "仓库不存在",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/git/{spaceID}/{repoRef}/git-upload-pack": {
+            "post": {
+                "description": "处理 Git 客户端的 clone 和 fetch 请求，通过 upload-pack 协议发送仓库对象数据",
+                "consumes": [
+                    "application/x-git-upload-pack-request"
+                ],
+                "produces": [
+                    "application/x-git-upload-pack-result"
+                ],
+                "tags": [
+                    "git"
+                ],
+                "summary": "Git Clone/Fetch 操作",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "空间ID",
+                        "name": "spaceID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "仓库标识 (支持 .git 后缀)",
+                        "name": "repoRef",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "内容编码 (如 gzip)",
+                        "name": "Content-Encoding",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Git 协议版本",
+                        "name": "Git-Protocol",
+                        "in": "header"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功返回 Git pack 数据",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误或权限不足",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "仓库不存在",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/git/{spaceID}/{repoRef}/info/refs": {
+            "get": {
+                "description": "处理 Git 客户端的 info/refs 请求，返回仓库的引用信息(分支、标签等)，用于 Smart HTTP 协议的初始握手",
+                "consumes": [
+                    "*/*"
+                ],
+                "produces": [
+                    "application/x-git-upload-pack-advertisement",
+                    "application/x-git-receive-pack-advertisement"
+                ],
+                "tags": [
+                    "git"
+                ],
+                "summary": "Git Info/Refs 请求",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "空间ID",
+                        "name": "spaceID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "仓库标识 (支持 .git 后缀)",
+                        "name": "repoRef",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "enum": [
+                            "git-upload-pack",
+                            "git-receive-pack"
+                        ],
+                        "type": "string",
+                        "description": "Git 服务类型",
+                        "name": "service",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Git 协议版本",
+                        "name": "Git-Protocol",
+                        "in": "header"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功返回引用广告信息",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误或权限不足",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "仓库不存在",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/repos": {
             "post": {
                 "description": "基于传入参数创建远端Git仓库，自动处理GitIgnore模板、License协议、README文件生成，支持派生仓库配置",
@@ -702,6 +915,172 @@
                         "description": "服务器错误",
                         "schema": {
                             "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/repos/{id}/content": {
+            "get": {
+                "description": "根据路径获取仓库中的文件内容、目录列表或子模块信息，支持指定 Git 引用(分支/标签/提交)。路径参数可选，不传或传空则返回根目录",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "repos"
+                ],
+                "summary": "获取仓库文件或目录内容",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "仓库 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Git 引用 (分支/标签/提交SHA)，默认为 refs/heads/main",
+                        "name": "gitRef",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "是否包含最新提交信息，默认 false",
+                        "name": "includeCommit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "是否展平单层目录结构，默认 false",
+                        "name": "flattenDirectories",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "获取成功，返回文件/目录/符号链接/子模块内容",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.GetContentOutput"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误或权限不足",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "仓库或文件不存在",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/repos/{id}/content/{filepath}": {
+            "get": {
+                "description": "根据路径获取仓库中的文件内容、目录列表或子模块信息，支持指定 Git 引用(分支/标签/提交)。路径参数可选，不传或传空则返回根目录",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "repos"
+                ],
+                "summary": "获取仓库文件或目录内容",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "仓库 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "文件或目录路径 (如 src/main.go)，可选，为空则返回根目录",
+                        "name": "filepath",
+                        "in": "path"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Git 引用 (分支/标签/提交SHA)，默认为 refs/heads/main",
+                        "name": "gitRef",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "是否包含最新提交信息，默认 false",
+                        "name": "includeCommit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "是否展平单层目录结构，默认 false",
+                        "name": "flattenDirectories",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "获取成功，返回文件/目录/符号链接/子模块内容",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.GetContentOutput"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误或权限不足",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "仓库或文件不存在",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
                         }
                     }
                 }
@@ -2052,6 +2431,17 @@
                 }
             }
         },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ContentEncodingType": {
+            "type": "string",
+            "enum": [
+                "utf8",
+                "base64"
+            ],
+            "x-enum-varnames": [
+                "ContentEncodingTypeUTF8",
+                "ContentEncodingTypeBase64"
+            ]
+        },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.RespCode": {
             "type": "string",
             "enum": [
@@ -2242,7 +2632,7 @@
                     "type": "string"
                 },
                 "encoding": {
-                    "type": "string"
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ContentEncodingType"
                 },
                 "path": {
                     "type": "string"
@@ -2548,6 +2938,21 @@
                 }
             }
         },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.ContentType": {
+            "type": "string",
+            "enum": [
+                "file",
+                "dir",
+                "symlink",
+                "submodule"
+            ],
+            "x-enum-varnames": [
+                "ContentTypeFile",
+                "ContentTypeDir",
+                "ContentTypeSymlink",
+                "ContentTypeSubmodule"
+            ]
+        },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.CreateRepoReq": {
             "type": "object",
             "required": [
@@ -2596,6 +3001,27 @@
                 "spaceID": {
                     "description": "空间ID（字符串类型，后续转int）",
                     "type": "integer"
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.GetContentOutput": {
+            "type": "object",
+            "properties": {
+                "content": {},
+                "latest_commit": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.Commit"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "path": {
+                    "type": "string"
+                },
+                "sha": {
+                    "type": "string"
+                },
+                "type": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.ContentType"
                 }
             }
         },
