@@ -31,11 +31,12 @@ func NewController(commitService commit.Interface, repoService repo.Interface) *
 // @Tags commits
 // @Accept application/json
 // @Produce application/json
+// @Param id path uint true "仓库 ID"
 // @Param request body commitModel.ReqForCreate true "创建提交请求参数"
 // @Success 200 {object} resp.ObjectResponse{data=commitModel.RespForCreate} "创建成功"
 // @Failure 400 {object} resp.ObjectResponse "参数错误"
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
-// @Router /commits [post]
+// @Router /repos/{id}/commits [post]
 func (c *Controller) Create(ctx *gin.Context) {
 	var reqBody commitModel.ReqForCreate
 	var err error
@@ -54,8 +55,16 @@ func (c *Controller) Create(ctx *gin.Context) {
 		return
 	}
 
+	// 解析 path id
+	repoID, err := req.PathParamAsPositiveUint(ctx, "id")
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RepoPathParamError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
 	// 通过仓库 ID 获取仓库
-	repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, reqBody.RepoID)
+	repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, repoID)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return
@@ -86,11 +95,12 @@ func (c *Controller) Create(ctx *gin.Context) {
 // @Tags commits
 // @Accept application/json
 // @Produce application/json
+// @Param id path uint true "仓库 ID"
 // @Param request body commitModel.ReqFilter true "查询提交请求参数"
 // @Success 200 {object} resp.ListResponse{data=commitModel.RespForList,listArgs=resp.ListNoTotalArgs} "查询成功"
 // @Failure 400 {object} resp.ListResponse "参数错误"
 // @Failure 500 {object} resp.ListResponse "服务器错误"
-// @Router /commits/list [post]
+// @Router /repos/{id}/commits/list [post]
 func (c *Controller) List(ctx *gin.Context) {
 	var reqQuery commitModel.ReqFilter
 	var err error
@@ -102,6 +112,14 @@ func (c *Controller) List(ctx *gin.Context) {
 	// 设置默认值
 	req.SetDefaults(&reqQuery)
 
+	// 解析 path id
+	repoID, err := req.PathParamAsPositiveUint(ctx, "id")
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RepoPathParamError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
 	session, ok := req.GetAuthSession(ctx.Request.Context())
 	if !ok {
 		err = errors.WithI18nKey(errors.New("session not found"), i18n.AuthNoSession)
@@ -110,7 +128,7 @@ func (c *Controller) List(ctx *gin.Context) {
 	}
 
 	// 通过仓库 ID 获取仓库
-	repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, reqQuery.RepoID)
+	repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, repoID)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return
@@ -135,13 +153,13 @@ func (c *Controller) List(ctx *gin.Context) {
 // @Tags commits
 // @Accept application/json
 // @Produce application/json
+// @Param id path uint true "仓库 ID"
 // @Param sha query string true "提交 SHA"
-// @Param repoID query uint true "仓库 ID"
 // @Success 200 {object} resp.ObjectResponse{data=commitModel.Commit} "查询成功"
 // @Failure 400 {object} resp.ObjectResponse "参数错误"
 // @Failure 404 {object} resp.ObjectResponse "提交未找到"
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
-// @Router /commits [get]
+// @Router /repos/{id}/commits [get]
 func (c *Controller) Get(ctx *gin.Context) {
 	var params commitModel.ReqForGet
 	var err error
@@ -158,8 +176,16 @@ func (c *Controller) Get(ctx *gin.Context) {
 		return
 	}
 
+	// 解析 path id
+	repoID, err := req.PathParamAsPositiveUint(ctx, "id")
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RepoPathParamError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
 	// 通过仓库 ID 获取仓库
-	repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, params.RepoID)
+	repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, repoID)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return
@@ -180,11 +206,12 @@ func (c *Controller) Get(ctx *gin.Context) {
 // @Tags commits
 // @Accept application/json
 // @Produce application/json
+// @Param id path uint true "仓库 ID"
 // @Param request body commitModel.ReqForDivergence true "获取分歧信息请求参数"
 // @Success 200 {object} resp.ObjectResponse{data=[]commitModel.CommitDivergence} "查询成功"
 // @Failure 400 {object} resp.ObjectResponse "参数错误"
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
-// @Router /commits/divergence [post]
+// @Router /repos/{id}/commits/divergence [post]
 func (c *Controller) GetDivergence(ctx *gin.Context) {
 	var reqBody commitModel.ReqForDivergence
 	var err error
@@ -203,8 +230,16 @@ func (c *Controller) GetDivergence(ctx *gin.Context) {
 		return
 	}
 
+	// 解析 path id
+	repoID, err := req.PathParamAsPositiveUint(ctx, "id")
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RepoPathParamError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
 	// 通过仓库 ID 获取仓库
-	repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, reqBody.RepoID)
+	repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, repoID)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return
@@ -225,12 +260,13 @@ func (c *Controller) GetDivergence(ctx *gin.Context) {
 // @Tags commits
 // @Accept application/json
 // @Produce text/plain
+// @Param id path uint true "仓库 ID"
 // @Param request body commitModel.ReqForGet true "获取 diff 请求参数"
 // @Success 200 {string} string "diff 文本"
 // @Failure 400 {object} resp.ObjectResponse "参数错误"
 // @Failure 404 {object} resp.ObjectResponse "提交未找到"
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
-// @Router /commits/diff [post]
+// @Router /repos/{id}/commits/diff [post]
 func (c *Controller) GetDiff(ctx *gin.Context) {
 	log := logger.GetLogger(ctx.Request.Context())
 	var reqBody commitModel.ReqForGet
@@ -250,8 +286,16 @@ func (c *Controller) GetDiff(ctx *gin.Context) {
 		return
 	}
 
+	// 解析 path id
+	repoID, err := req.PathParamAsPositiveUint(ctx, "id")
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RepoPathParamError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
 	// 通过仓库 ID 获取仓库
-	repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, reqBody.RepoID)
+	repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, repoID)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return

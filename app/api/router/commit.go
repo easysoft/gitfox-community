@@ -6,7 +6,7 @@ import (
 
 // registerCommitRoutes 注册提交相关路由
 func registerCommitRoutes(r *gin.RouterGroup, controller *Controller) {
-	commits := r.Group("/commits")
+	commits := r.Group("/repos/:id/commits")
 	{
 		commits.POST("", controller.Commit.Create)                   // 创建提交
 		commits.POST("/list", controller.Commit.List)                // 查看提交列表

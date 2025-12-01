@@ -9,7 +9,6 @@ type ReqForCreate struct {
 	Name    string `json:"name" binding:"required"`
 	Source  string `json:"source"`
 	Message string `json:"message"`
-	RepoID  uint   `json:"repoID" binding:"required"`
 }
 
 type ReqFilter struct {
@@ -19,7 +18,6 @@ type ReqFilter struct {
 	Page          int    `json:"page" form:"page" default:"1"`
 	PageSize      int    `json:"pageSize" form:"pageSize" default:"20"`
 	IncludeCommit bool   `json:"includeCommit" form:"includeCommit"`
-	RepoID        uint   `json:"repoID" form:"repoID" binding:"required"`
 }
 
 type Tag struct {

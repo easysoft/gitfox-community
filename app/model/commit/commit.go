@@ -9,7 +9,6 @@ import (
 const NilSHA = "0000000000000000000000000000000000000000"
 
 type ReqForCreate struct {
-	RepoID    uint     `json:"repoID"`
 	Message   string   `json:"message"`
 	Branch    string   `json:"branch"`
 	NewBranch string   `json:"newBranch"`
@@ -52,7 +51,6 @@ type ReqFilter struct {
 	Author       string  `json:"author" form:"author"`
 	AuthorIDs    []int64 `json:"authorIDs" form:"authorIDs"`
 	IncludeStats bool    `json:"includeStats" form:"includeStats"`
-	RepoID       uint    `json:"repoID" form:"repoID"`
 	GitRef       string  `json:"gitRef" form:"gitRef"`
 }
 
@@ -70,8 +68,7 @@ type RenameDetails struct {
 }
 
 type ReqForGet struct {
-	RepoID uint   `json:"repoID" form:"repoID"`
-	SHA    string `json:"sha" form:"sha"`
+	SHA string `json:"sha" form:"sha"`
 }
 
 type Commit struct {
@@ -126,7 +123,6 @@ type CommitCountData struct {
 }
 
 type ReqForDivergence struct {
-	RepoID        uint            `json:"repoID"`
 	MaxDivergence uint            `json:"maxDivergence"`
 	Requests      []CompareGitRef `json:"requests"`
 }
