@@ -78,9 +78,15 @@ const (
 	ErrorGzipFailedToCreateReader I18nKey = "error.gzip_failed_to_create_reader" // gzip 解压失败
 
 	// Git 相关常量
-	GitCreateExecParamError I18nKey = "git.create_exec_param_error" // 创建败 git 命令参数失败.
-	GitExecError            I18nKey = "git.exec_error"              // 执行 git 命令失败.
-	GitMapOutputError       I18nKey = "git.map_output_error"        // 无法将 git 命令结果映射到响应结构体.
+	GitCreateExecParamError      I18nKey = "git.create_exec_param_error"       // 创建败 git 命令参数失败.
+	GitExecError                 I18nKey = "git.exec_error"                    // 执行 git 命令失败.
+	GitGitHookPostReceiveError   I18nKey = "git.git_hook_post_receive_error"   // 处理 git 钩子 post-receive 失败.
+	GitGitHookPostReceiveSuccess I18nKey = "git.git_hook_post_receive_success" // Post-receive 钩子处理成功.
+	GitGitHookPreReceiveError    I18nKey = "git.git_hook_pre_receive_error"    // 处理 git 钩子 pre-receive 失败.
+	GitGitHookPreReceiveSuccess  I18nKey = "git.git_hook_pre_receive_success"  // Pre-receive 钩子处理成功.
+	GitGitHookUpdateError        I18nKey = "git.git_hook_update_error"         // 处理 git 钩子 update 失败.
+	GitGitHookUpdateSuccess      I18nKey = "git.git_hook_update_success"       // Update 钩子处理成功.
+	GitMapOutputError            I18nKey = "git.map_output_error"              // 无法将 git 命令结果映射到响应结构体.
 
 	// Repo 相关常量
 	RepoBodyParamError            I18nKey = "repo.body_param_error"             // Body 参数解析失败.

@@ -42,7 +42,7 @@ func GenerateEnvironmentVariables(
 ) (map[string]string, error) {
 	// 从 ctx 拿 requestID
 	// generate githook base url
-	baseURL := strings.TrimLeft(apiBaseURL, "/") + "/v1/internal/git-hooks"
+	baseURL := strings.TrimLeft(apiBaseURL, "/") + "/v2/internal/git-hooks"
 
 	payload := Payload{
 		BaseURL:          baseURL,
