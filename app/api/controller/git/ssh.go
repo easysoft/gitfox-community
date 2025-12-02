@@ -53,7 +53,7 @@ func (c *GitController) GitServicePack(
 	}
 
 	// 调用 Git 服务执行操作
-	err = c.gitSvc.GitServicePack(ctx, session, repo.GitUID, options)
+	err = c.gitSvc.GitServicePack(ctx, session, repo, options)
 	if err != nil {
 		return errors.Wrapf(err, "git service pack failed: %v", err)
 	}

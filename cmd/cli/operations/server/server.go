@@ -34,17 +34,17 @@ func (c *command) run(*kingpin.ParseContext) error {
 	}()
 
 	// 启动定时任务管理器
-	cronManager := cron.NewCronManager()
+	// cronManager := cron.NewCronManager()
 
-	// 示例：添加系统健康检查定时任务：每一分钟打印一条系统日志
-	_, err = cronManager.AddJob("system-health-check", "0 * * * * *", func() {
-		app.SystemLog.Infow("System health check", "status", "running")
-	})
-	if err != nil {
-		app.SystemLog.Errorw("[Server] Failed to add cron job", "error", err)
-	} else {
-		app.SystemLog.Info("[Server] System health check cron job started (runs every minute)")
-	}
+	// // 示例：添加系统健康检查定时任务：每一分钟打印一条系统日志
+	// _, err = cronManager.AddJob("system-health-check", "0 * * * * *", func() {
+	// 	app.SystemLog.Infow("System health check", "status", "running")
+	// })
+	// if err != nil {
+	// 	app.SystemLog.Errorw("[Server] Failed to add cron job", "error", err)
+	// } else {
+	// 	app.SystemLog.Info("[Server] System health check cron job started (runs every minute)")
+	// }
 
 	// 启动 HTTP 服务器
 	addr := fmt.Sprintf("%s:%d", app.SystemConfig.Server.Host, app.SystemConfig.Server.Port)
