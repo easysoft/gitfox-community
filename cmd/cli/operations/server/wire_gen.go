@@ -107,7 +107,7 @@ func NewApp(mode string) (*App, func(), error) {
 	publickeyInterface := publickey.NewPublicKeyStore(db)
 	interface2 := publickey2.NewPublicKeyService(publickeyInterface, userService)
 	userController := user3.NewUserController(userService, interface2)
-	service2 := provider.NewGitService(gitService)
+	service2 := provider.NewGitService(gitService, urlProvider)
 	settingsInterface := settings.NewSettingStore(db)
 	settingsService := provider.NewSettingsService(settingsInterface)
 	gitController := provider.NewGitController(service2, service, repoService, settingsService)

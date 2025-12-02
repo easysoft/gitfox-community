@@ -36,7 +36,7 @@ func GenerateEnvironmentVariables(
 	ctx context.Context,
 	apiBaseURL string,
 	repoID int64,
-	principalID int64,
+	principalAccount string,
 	disabled bool,
 	internal bool,
 ) (map[string]string, error) {
@@ -45,12 +45,12 @@ func GenerateEnvironmentVariables(
 	baseURL := strings.TrimLeft(apiBaseURL, "/") + "/v1/internal/git-hooks"
 
 	payload := Payload{
-		BaseURL:     baseURL,
-		RepoID:      repoID,
-		PrincipalID: principalID,
-		RequestID:   "requestID",
-		Disabled:    disabled,
-		Internal:    internal,
+		BaseURL:          baseURL,
+		RepoID:           repoID,
+		PrincipalAccount: principalAccount,
+		RequestID:        "requestID",
+		Disabled:         disabled,
+		Internal:         internal,
 	}
 
 	if err := payload.Validate(); err != nil {

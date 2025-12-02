@@ -22,12 +22,12 @@ import (
 
 // Payload defines the payload that's send to git via environment variables.
 type Payload struct {
-	BaseURL     string
-	RepoID      int64
-	PrincipalID int64
-	RequestID   string
-	Disabled    bool
-	Internal    bool // Internal calls originate from Harness, and external calls are direct git pushes.
+	BaseURL          string
+	RepoID           int64
+	PrincipalAccount string
+	RequestID        string
+	Disabled         bool
+	Internal         bool // Internal calls originate from Harness, and external calls are direct git pushes.
 }
 
 func (p Payload) Validate() error {
@@ -39,8 +39,8 @@ func (p Payload) Validate() error {
 	if p.BaseURL == "" {
 		return errors.New("payload doesn't contain a base url")
 	}
-	if p.PrincipalID <= 0 {
-		return errors.New("payload doesn't contain a principal id")
+	if p.PrincipalAccount == "" {
+		return errors.New("payload doesn't contain a principal account")
 	}
 	if p.RepoID <= 0 {
 		return errors.New("payload doesn't contain a repo id")
@@ -51,8 +51,8 @@ func (p Payload) Validate() error {
 
 func GetInputBaseFromPayload(p Payload) githook.GithookInputBase {
 	return githook.GithookInputBase{
-		RepoID:      p.RepoID,
-		PrincipalID: p.PrincipalID,
-		Internal:    p.Internal,
+		RepoID:           p.RepoID,
+		PrincipalAccount: p.PrincipalAccount,
+		Internal:         p.Internal,
 	}
 }

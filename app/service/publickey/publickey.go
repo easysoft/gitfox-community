@@ -59,7 +59,7 @@ func (s Service) ValidateKey(ctx context.Context, publicKey ssh.PublicKey) (*pri
 		return nil, 0, errors.NotFound.New("Unrecognized key")
 	}
 
-	user, err := s.userStore.FindUserByAccount(ctx, account)
+	user, err := s.userStore.FindByAccount(ctx, account)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to pull user info by public key's account: %w", err)
 	}

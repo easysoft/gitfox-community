@@ -124,7 +124,7 @@ func (s *Service) createGitRepository(ctx context.Context, req *repoModel.Create
 		ctx,
 		s.urlProvider.GetInternalAPIURL(ctx),
 		0,
-		session.User.ID,
+		session.User.Account,
 		true,
 		true,
 	)

@@ -21,7 +21,7 @@ type Store struct {
 	db *gorm.DB
 }
 
-func (s *Store) FindUserByID(ctx context.Context, id int64) (*principal.User, error) {
+func (s *Store) FindByID(ctx context.Context, id int64) (*principal.User, error) {
 	var user User
 	user.ID = id
 	if err := s.db.WithContext(ctx).First(&user).Error; err != nil {
@@ -35,7 +35,7 @@ func (s *Store) FindUserByID(ctx context.Context, id int64) (*principal.User, er
 	return user.toUser(), nil
 }
 
-func (s *Store) FindUserByAccount(ctx context.Context, account string) (*principal.User, error) {
+func (s *Store) FindByAccount(ctx context.Context, account string) (*principal.User, error) {
 	var user User
 	err := s.db.WithContext(ctx).Where("account = ?", account).First(&user).Error
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
@@ -54,7 +54,7 @@ func (s *Store) FindUserByAccount(ctx context.Context, account string) (*princip
 	return user.toUser(), nil
 }
 
-func (s *Store) FindUserByEmail(ctx context.Context, email string) (*principal.User, error) {
+func (s *Store) FindByEmail(ctx context.Context, email string) (*principal.User, error) {
 	var user User
 	err := s.db.WithContext(ctx).Where("email = ?", email).First(&user).Error
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {

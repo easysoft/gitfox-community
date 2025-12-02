@@ -28,7 +28,7 @@ func createRPCWriteParams(
 		ctx,
 		urlProvider.GetInternalAPIURL(ctx),
 		int64(repo.ID),
-		session.Principal.ID,
+		session.User.Account,
 		false,
 		isInternal,
 	)
