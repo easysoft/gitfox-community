@@ -9,9 +9,9 @@ import (
 )
 
 type Interface interface {
-	FindUserByID(ctx context.Context, id int64) (*principal.User, error)
-	FindUserByAccount(ctx context.Context, account string) (*principal.User, error)
-	FindUserByEmail(ctx context.Context, email string) (*principal.User, error)
+	FindByID(ctx context.Context, id int64) (*principal.User, error)
+	FindByAccount(ctx context.Context, account string) (*principal.User, error)
+	FindByEmail(ctx context.Context, email string) (*principal.User, error)
 
 	CompareHashAndPassword(ctx context.Context, hashedPassword, password []byte) error
 

@@ -41,7 +41,7 @@ func (a *BasicAuthenticator) Authenticate(r *gin.Context) (*auth.Session, error)
 		return nil, constant.ErrAuthNoData
 	}
 
-	user, err := a.userStore.FindUserByAccount(r, userName)
+	user, err := a.userStore.FindByAccount(r, userName)
 	if errors.Is(err, errors.ErrResourceNotFound) {
 		return nil, constant.ErrUnauthorized
 	}

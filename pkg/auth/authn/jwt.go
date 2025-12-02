@@ -48,7 +48,7 @@ func (a *JWTAuthenticator) Authenticate(r *gin.Context) (*auth.Session, error) {
 	parsed, err := gojwt.ParseWithClaims(
 		token, claims, func(_ *gojwt.Token) (interface{}, error) {
 			if claims.App == "" { // 用户令牌
-				temp, err := a.userStore.FindUserByAccount(r.Request.Context(), claims.Account)
+				temp, err := a.userStore.FindByAccount(r.Request.Context(), claims.Account)
 				if err != nil {
 					return nil, fmt.Errorf("failed to get principal for token: %w", err)
 				}
@@ -76,7 +76,7 @@ func (a *JWTAuthenticator) Authenticate(r *gin.Context) (*auth.Session, error) {
 	if user == nil {
 		operation := req.GetHeaderOrDefault(r, req.QueryParamOperation, "")
 		if operation != "" {
-			user, err = a.userStore.FindUserByAccount(r.Request.Context(), operation)
+			user, err = a.userStore.FindByAccount(r.Request.Context(), operation)
 			if err != nil {
 				return nil, fmt.Errorf("failed to get user for token: %w", err)
 			}

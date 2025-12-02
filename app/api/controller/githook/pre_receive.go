@@ -30,6 +30,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/githook"
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/hook"
 	gitutil "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/util"
 
@@ -92,9 +93,9 @@ func (c *Controller) PreReceive(
 	// For internal calls - through the application interface (API) - no need to verify protection rules.
 	if !in.Internal && constant.RepoState(repo.Status) == constant.RepoStateActive {
 		// TODO: use store.PrincipalInfoCache once we abstracted principals.
-		_, err := c.userStore.FindUserByAccount(ctx, in.PrincipalAccount)
+		_, err := c.userStore.FindByAccount(ctx, in.PrincipalAccount)
 		if err != nil {
-			return hook.Output{}, fmt.Errorf("failed to find inner principal with account %s: %w", in.PrincipalAccount, err)
+			return hook.Output{}, errors.Wrapf(err, "failed to find inner principal with account %s", in.PrincipalAccount)
 		}
 
 		// dummySession := &auth.Session{Principal: *principal}

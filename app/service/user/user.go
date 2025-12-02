@@ -25,16 +25,16 @@ func NewService(userStore user.Interface, tokenStore token.Interface) *Service {
 	}
 }
 
-func (s *Service) FindUserByID(ctx context.Context, id int64) (*principal.User, error) {
-	return s.userStore.FindUserByID(ctx, id)
+func (s *Service) FindByID(ctx context.Context, id int64) (*principal.User, error) {
+	return s.userStore.FindByID(ctx, id)
 }
 
-func (s *Service) FindUserByAccount(ctx context.Context, account string) (*principal.User, error) {
-	return s.userStore.FindUserByAccount(ctx, account)
+func (s *Service) FindByAccount(ctx context.Context, account string) (*principal.User, error) {
+	return s.userStore.FindByAccount(ctx, account)
 }
 
-func (s *Service) FindUserByEmail(ctx context.Context, email string) (*principal.User, error) {
-	return s.userStore.FindUserByEmail(ctx, email)
+func (s *Service) FindByEmail(ctx context.Context, email string) (*principal.User, error) {
+	return s.userStore.FindByEmail(ctx, email)
 }
 
 func (s *Service) CompareHashAndPassword(ctx context.Context, hashedPassword, password []byte) error {
