@@ -313,7 +313,7 @@ func (ctl *Controller) Blame(c *gin.Context) {
 		return
 	}
 
-	repoID, err := req.PathParamAsPositiveUint(c, req.QueryParamRepoID)
+	repoID, err := req.PathParamAsPositiveUint(c, "id")
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.RepoPathParamError)
 		resp.BadRequest(c, err)
