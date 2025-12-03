@@ -314,7 +314,7 @@ func (s *Service) GetDiff(ctx context.Context, req repoModel.ReqForDiff, repo re
 }
 
 func (s *Service) Paths(ctx context.Context, req repoModel.PathsInput, repo repoModel.Repo) (*repoModel.PathsOutput, error) {
-	var gitRef string
+	gitRef := req.GitRef
 	if req.GitRef == "" {
 		gitRef = repo.DefaultBranch
 	}
@@ -334,7 +334,7 @@ func (s *Service) Paths(ctx context.Context, req repoModel.PathsInput, repo repo
 }
 
 func (s *Service) PathsDetails(ctx context.Context, req repoModel.PathsDetailsInput, repo repoModel.Repo) (*repoModel.PathsDetailsOutput, error) {
-	var gitRef string
+	gitRef := req.GitRef
 	if req.GitRef == "" {
 		gitRef = repo.DefaultBranch
 	}

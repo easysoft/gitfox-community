@@ -80,8 +80,8 @@ type SubmoduleContent struct {
 func (c *SubmoduleContent) isContent() {}
 
 type PathsInput struct {
-	IncludeDirectories bool   `json:"includeDirectories"`
-	GitRef             string `json:"gitRef"`
+	IncludeDirectories bool   `json:"includeDirectories" form:"includeDirectories"`
+	GitRef             string `json:"gitRef" form:"gitRef"`
 }
 
 type PathsOutput struct {
