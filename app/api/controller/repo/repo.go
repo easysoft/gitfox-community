@@ -65,7 +65,7 @@ func (ctl *Controller) Create(c *gin.Context) {
 		return
 	}
 
-	data, err := ctl.repoSvc.Create(logger.GetContextWithLogger(c), session, reqData)
+	data, err := ctl.repoSvc.Create(c.Request.Context(), session, reqData)
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.RepoCreateError)
 		resp.InternalError(c, err)
@@ -351,8 +351,7 @@ func (ctl *Controller) Blame(c *gin.Context) {
 		return
 	}
 
-	// 设置响应头为 NDJSON (Newline Delimited JSON)
-	c.Writer.Header().Set("Content-Type", "application/x-ndjson; charset=utf-8")
+	c.Writer.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	resp.NoCache(c.Writer)
 
 	// 调用 service 层，直接将 blame 输出写入响应流

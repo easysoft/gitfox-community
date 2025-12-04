@@ -7,7 +7,6 @@ import (
 	spaceSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/space"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	"github.com/gin-gonic/gin"
 )
 
@@ -46,7 +45,7 @@ func (ctl *SpaceController) Create(c *gin.Context) {
 
 	// 获取包含 logger 和其他上下文信息的 context 传递给 Service 层
 	// 调用服务层创建空间
-	spaceObj, err := ctl.spaceSvc.Create(logger.GetContextWithLogger(c), reqData)
+	spaceObj, err := ctl.spaceSvc.Create(c.Request.Context(), reqData)
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.SpaceCreateError)
 		resp.InternalError(c, err)
@@ -80,7 +79,7 @@ func (ctl *SpaceController) List(c *gin.Context) {
 		return
 	}
 
-	spaceObj, err := ctl.spaceSvc.List(logger.GetContextWithLogger(c), requestData)
+	spaceObj, err := ctl.spaceSvc.List(c.Request.Context(), requestData)
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.SpaceListError)
 		resp.InternalError(c, err)
@@ -112,7 +111,7 @@ func (ctl *SpaceController) GetByID(c *gin.Context) {
 		return
 	}
 
-	obj, err := ctl.spaceSvc.GetByID(logger.GetContextWithLogger(c), spaceID)
+	obj, err := ctl.spaceSvc.GetByID(c.Request.Context(), spaceID)
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.SpaceQueryError)
 		resp.InternalError(c, err)
@@ -153,7 +152,7 @@ func (ctl *SpaceController) Update(c *gin.Context) {
 	}
 
 	// 调用服务层更新空间
-	spaceObj, err := ctl.spaceSvc.Update(logger.GetContextWithLogger(c), objID, reqData)
+	spaceObj, err := ctl.spaceSvc.Update(c.Request.Context(), objID, reqData)
 	if err != nil {
 		resp.InternalError(c, err)
 		return
@@ -185,7 +184,7 @@ func (ctl *SpaceController) Delete(c *gin.Context) {
 	}
 
 	// 调用服务层删除空间
-	if err = ctl.spaceSvc.Delete(logger.GetContextWithLogger(c), objID); err != nil {
+	if err = ctl.spaceSvc.Delete(c.Request.Context(), objID); err != nil {
 		// 判断错误类型，返回相应的HTTP状态码
 		if errors.IsNotFound(err) {
 			err = errors.WithI18nKey(err, "space.not_found")
@@ -223,7 +222,7 @@ func (ctl *SpaceController) Undelete(c *gin.Context) {
 	}
 
 	// 调用服务层恢复空间
-	if err = ctl.spaceSvc.Undelete(logger.GetContextWithLogger(c), reqData); err != nil {
+	if err = ctl.spaceSvc.Undelete(c.Request.Context(), reqData); err != nil {
 		// 判断错误类型，返回相应的HTTP状态码
 		if errors.IsNotFound(err) {
 			err = errors.WithI18nKey(err, "space.not_found")
