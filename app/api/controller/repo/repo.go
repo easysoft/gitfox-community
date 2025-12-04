@@ -294,18 +294,20 @@ func (ctl *Controller) GetContent(ctx *gin.Context) {
 // @Description 根据传入的仓库 ID、文件路径、Git 引用、行号范围等信息，获取仓库代码blame信息
 // @Tags repos
 // @Accept application/json
-// @Produce application/json
+// @Produce application/x-ndjson
 // @Param repoId path uint true "仓库 ID"
 // @Param filePath path string true "文件路径" e.g. src/main.go
 // @Param gitRef query string false "Git 引用" e.g. refs/heads/main
 // @Param lineFrom query int false "起始行号" e.g. 1
 // @Param lineTo query int false "结束行号" e.g. 100
-// @Success 200 {object} resp.ObjectResponse{data=interface{}} "获取成功（返回仓库代码blame流式）"
+// @Success 200 {string} string "Newline-delimited JSON stream of BlamePart objects"
 // @Error 400 {object} resp.ObjectResponse "参数错误（如identifier格式非法、ID为空等）"
 // @Error 404 {object} resp.ObjectResponse "代码库不存在（传入的repoID对应的空间未找到）"
 // @Error 500 {object} resp.ObjectResponse "服务器内部错误（如Git服务调用失败、数据库异常等）"
 // @Router /repos/{repoId}/blame/{filePath} [get]
 func (ctl *Controller) Blame(c *gin.Context) {
+	log := logger.GetLogger(c.Request.Context())
+
 	session, ok := req.GetAuthSession(c.Request.Context())
 	if !ok {
 		err := errors.WithI18nKey(errors.New("get session failed"), i18n.AuthNoSession)
@@ -320,22 +322,24 @@ func (ctl *Controller) Blame(c *gin.Context) {
 		return
 	}
 
-	filePath, err := req.PathParamOrError(c, req.PathParamFilePath)
-	if err != nil {
-		err = errors.WithI18nKey(err, i18n.RepoPathParamError)
+	// 获取文件路径，并去除前导斜杠
+	// 通配符参数会包含前导斜杠，需要去除（例如 "/test.php" -> "test.php"）
+	filePath := strings.TrimPrefix(req.PathParamOrEmpty(c, req.PathParamFilePath), "/")
+	if filePath == "" {
+		err = errors.WithI18nKey(errors.New("file path is required"), i18n.RepoPathParamError)
 		resp.BadRequest(c, err)
 		return
 	}
 
 	var BlameFilter repoModel.BlameFilter
-	if err = c.ShouldBindJSON(&BlameFilter); err != nil {
-		err = errors.WithI18nKey(err, i18n.RepoQueryError)
+	if err = c.ShouldBindQuery(&BlameFilter); err != nil {
+		err = errors.WithI18nKey(err, i18n.RepoBodyParamError)
 		resp.BadRequest(c, err)
 		return
 	}
 
 	if BlameFilter.LineTo > 0 && BlameFilter.LineFrom > BlameFilter.LineTo {
-		err = errors.WithI18nKey(err, i18n.RepoLineNumberError)
+		err = errors.WithI18nKey(err, i18n.RepoBodyParamError)
 		resp.BadRequest(c, err)
 		return
 	}
@@ -347,17 +351,18 @@ func (ctl *Controller) Blame(c *gin.Context) {
 		return
 	}
 
-	if BlameFilter.GitRef == "" {
-		BlameFilter.GitRef = repoInfo.DefaultBranch
-	}
+	// 设置响应头为 NDJSON (Newline Delimited JSON)
+	c.Writer.Header().Set("Content-Type", "application/x-ndjson; charset=utf-8")
+	resp.NoCache(c.Writer)
 
-	gitPkg.NewStreamReader(ctl.gitPkg.Blame(c, &gitPkg.BlameParams{
-		ReadParams: gitPkg.ReadParams{RepoUID: repoInfo.GitUID},
-		Path:       filePath,
-		GitRef:     BlameFilter.GitRef,
-		LineFrom:   BlameFilter.LineFrom,
-		LineTo:     BlameFilter.LineTo,
-	}))
+	// 调用 service 层，直接将 blame 输出写入响应流
+	err = ctl.repoSvc.GetBlame(c.Request.Context(), BlameFilter, *repoInfo, filePath, c.Writer)
+	if err != nil {
+		// 如果已经开始写入响应,则无法再使用标准的错误响应
+		// 只能记录日志
+		log.Errorf("Failed to get blame: %v", err)
+		return
+	}
 }
 
 // GetDiff 获取仓库指定 GitRef Diff

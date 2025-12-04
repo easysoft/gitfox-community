@@ -108,6 +108,7 @@ type Interface interface {
 	 * Blame services
 	 */
 	Blame(ctx context.Context, params *BlameParams) (<-chan *BlamePart, <-chan error)
+	RawBlame(ctx context.Context, w io.Writer, params *BlameParams) error
 	PushRemote(ctx context.Context, params *PushRemoteParams) error
 
 	GeneratePipeline(ctx context.Context, params *GeneratePipelineParams) (GeneratePipelinesOutput, error)

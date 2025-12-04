@@ -18,6 +18,7 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"encoding/json"
 	"io"
 	"regexp"
 	"strconv"
@@ -318,4 +319,46 @@ func extractEmail(s string) string {
 func extractTime(s string) time.Time {
 	milli, _ := strconv.ParseInt(s, 10, 64)
 	return time.Unix(milli, 0)
+}
+
+// RawBlame executes git blame and writes JSON-formatted BlamePart objects to the writer.
+// Each BlamePart is written as a separate JSON object followed by a newline (NDJSON format).
+func (g *Git) RawBlame(
+	ctx context.Context,
+	w io.Writer,
+	repoPath string,
+	rev string,
+	file string,
+	lineFrom int,
+	lineTo int,
+) error {
+	if repoPath == "" {
+		return errors.InvalidArgument("repository path cannot be empty")
+	}
+	if rev == "" {
+		return errors.InvalidArgument("revision cannot be empty")
+	}
+	if file == "" {
+		return errors.InvalidArgument("file path cannot be empty")
+	}
+
+	reader := g.Blame(ctx, repoPath, rev, file, lineFrom, lineTo)
+
+	for {
+		part, err := reader.NextPart()
+		if part != nil {
+			// Write each BlamePart as a JSON object followed by newline
+			encoder := json.NewEncoder(w)
+			if encErr := encoder.Encode(part); encErr != nil {
+				return errors.Internal(encErr, "failed to encode blame part")
+			}
+		}
+
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				return nil
+			}
+			return err
+		}
+	}
 }
