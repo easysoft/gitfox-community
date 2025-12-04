@@ -1478,7 +1478,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "diff 文本",
+                        "description": "blame 文本",
                         "schema": {
                             "type": "string"
                         }

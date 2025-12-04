@@ -300,9 +300,9 @@ func (ctl *Controller) GetContent(ctx *gin.Context) {
 // @Param gitRef query string false "Git 引用" e.g. refs/heads/main
 // @Param lineFrom query int false "起始行号" e.g. 1
 // @Param lineTo query int false "结束行号" e.g. 100
-// @Success 200 {string} string "diff 文本"
-// @Error 400 {object} resp.ObjectResponse "参数错误（如identifier格式非法、ID为空等）"
-// @Error 404 {object} resp.ObjectResponse "代码库不存在（传入的repoID对应的空间未找到）"
+// @Success 200 {string} string "blame 文本"
+// @Error 400 {object} resp.ObjectResponse "参数错误（如ID为空等）"
+// @Error 404 {object} resp.ObjectResponse "代码库不存在"
 // @Error 500 {object} resp.ObjectResponse "服务器内部错误（如Git服务调用失败、数据库异常等）"
 // @Router /repos/{repoId}/blame/{filePath} [get]
 func (ctl *Controller) Blame(c *gin.Context) {
