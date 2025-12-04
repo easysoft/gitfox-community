@@ -135,3 +135,30 @@ func (s *Service) Blame(ctx context.Context, params *BlameParams) (<-chan *Blame
 
 	return ch, chErr
 }
+
+// RawBlame writes git blame output directly to the provided writer in NDJSON format.
+// Each BlamePart is written as a JSON object followed by a newline.
+func (s *Service) RawBlame(
+	ctx context.Context,
+	out io.Writer,
+	params *BlameParams,
+) error {
+	if err := params.Validate(); err != nil {
+		return err
+	}
+
+	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
+
+	err := s.git.RawBlame(ctx,
+		out,
+		repoPath,
+		params.GitRef,
+		params.Path,
+		params.LineFrom,
+		params.LineTo,
+	)
+	if err != nil {
+		return err
+	}
+	return nil
+}

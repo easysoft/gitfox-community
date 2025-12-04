@@ -90,9 +90,9 @@ type ReqForDiff struct {
 }
 
 type BlameFilter struct {
-	GitRef   string `json:"gitRef" binding:"omitempty"`   // 非必填，omitempty 允许空值
-	LineFrom int    `json:"lineFrom" binding:"omitempty"` // 非必填，omitempty 允许空值
-	LineTo   int    `json:"lineTo" binding:"omitempty"`   // 非必填，omitempty 允许空值
+	GitRef   string `json:"gitRef" binding:"required" form:"gitRef"`      // 非必填，omitempty 允许空值
+	LineFrom int    `json:"lineFrom" binding:"omitempty" form:"lineFrom"` // 非必填，omitempty 允许空值
+	LineTo   int    `json:"lineTo" binding:"omitempty" form:"lineTo"`     // 非必填，omitempty 允许空值
 }
 
 type CompareInfo struct {
