@@ -108,6 +108,8 @@ func (s *Service) List(ctx context.Context, req commitModel.ReqFilter, repo repo
 		Since:        req.Since,
 		Until:        req.Until,
 		IncludeStats: req.IncludeStats,
+		Committer:    req.Committer,
+		Author:       req.Author,
 		Regex:        true,
 	})
 	if err != nil {
