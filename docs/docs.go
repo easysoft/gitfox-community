@@ -1436,7 +1436,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "produces": [
-                    "application/json"
+                    "text/plain"
                 ],
                 "tags": [
                     "repos"
@@ -1478,19 +1478,9 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "获取成功（返回仓库代码blame流式）",
+                        "description": "diff 文本",
                         "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {}
-                                    }
-                                }
-                            ]
+                            "type": "string"
                         }
                     }
                 }

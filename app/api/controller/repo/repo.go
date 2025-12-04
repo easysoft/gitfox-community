@@ -294,13 +294,13 @@ func (ctl *Controller) GetContent(ctx *gin.Context) {
 // @Description 根据传入的仓库 ID、文件路径、Git 引用、行号范围等信息，获取仓库代码blame信息
 // @Tags repos
 // @Accept application/json
-// @Produce application/x-ndjson
+// @Produce text/plain
 // @Param repoId path uint true "仓库 ID"
 // @Param filePath path string true "文件路径" e.g. src/main.go
 // @Param gitRef query string false "Git 引用" e.g. refs/heads/main
 // @Param lineFrom query int false "起始行号" e.g. 1
 // @Param lineTo query int false "结束行号" e.g. 100
-// @Success 200 {string} string "Newline-delimited JSON stream of BlamePart objects"
+// @Success 200 {string} string "diff 文本"
 // @Error 400 {object} resp.ObjectResponse "参数错误（如identifier格式非法、ID为空等）"
 // @Error 404 {object} resp.ObjectResponse "代码库不存在（传入的repoID对应的空间未找到）"
 // @Error 500 {object} resp.ObjectResponse "服务器内部错误（如Git服务调用失败、数据库异常等）"
