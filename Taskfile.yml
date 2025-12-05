@@ -152,8 +152,21 @@ tasks:
     desc: 检查多语言文件键值一致性,生成多语言键值常量
     cmds:
       - go run pkg/i18n/i18n-keygen/main.go -o pkg/i18n/i18n_keys.go {{.LOCALES_DIR}}
-  
+
   i18n:check:
     desc: 仅检查多语言文件键值一致性
     cmds:
       - go run pkg/i18n/i18n-keygen/main.go -c {{.LOCALES_DIR}}
+
+  # 扫描规则验证任务
+  scanrule:check:
+    desc: 验证扫描规则的完整性（检查 types 和 rules 是否匹配，是否有重复）
+    dir: resources/scanrule
+    cmds:
+      - go run cmd/validate/main.go -dir .
+
+  scanrule:check:plugin:
+    desc: 验证指定插件的扫描规则（用法：task scanrule:check:plugin PLUGIN=golangci-lint）
+    dir: resources/scanrule
+    cmds:
+      - go run cmd/validate/main.go -dir . -plugin {{.PLUGIN}}

@@ -1,0 +1,47 @@
+package main
+
+import (
+	"flag"
+	"fmt"
+	"os"
+
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/resources/scanrule"
+)
+
+func main() {
+	// 定义命令行参数
+	dir := flag.String("dir", ".", "Directory containing the scan rule files")
+	plugin := flag.String("plugin", "", "Specific plugin to validate (optional, validates all if not specified)")
+	flag.Parse()
+
+	if *plugin != "" {
+		// 验证单个插件
+		typesFile := fmt.Sprintf("%s/%s.types.json", *dir, *plugin)
+		rulesFile := fmt.Sprintf("%s/%s.rules.json", *dir, *plugin)
+
+		result := scanrule.ValidatePlugin(*plugin, typesFile, rulesFile)
+		scanrule.PrintValidateResults([]scanrule.ValidateResult{result})
+
+		if !result.IsValid || result.ErrorMessage != "" {
+			os.Exit(1)
+		}
+	} else {
+		// 验证所有插件
+		results, err := scanrule.ValidateAllPlugins(*dir)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			os.Exit(1)
+		}
+
+		scanrule.PrintValidateResults(results)
+
+		// 如果有任何验证失败，退出码为 1
+		for _, result := range results {
+			if !result.IsValid || result.ErrorMessage != "" {
+				os.Exit(1)
+			}
+		}
+	}
+
+	fmt.Println("\n✅ All validations passed!")
+}

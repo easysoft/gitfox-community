@@ -14,13 +14,13 @@ import (
 
 // Controller 聚合所有的 HTTP 处理器
 type Controller struct {
-	User    *user.Controller
-	Commit  *commit.Controller
-	Tag     *tag.Controller
-	Branch  *branch.Controller
-	Space   *space.SpaceController
-	Git     *git.GitController
-	Repo    *repo.Controller
-	RuleSet *scan.RuleSetController
-	Test    *test.TestController
+	User   *user.Controller
+	Commit *commit.Controller
+	Tag    *tag.Controller
+	Branch *branch.Controller
+	Space  *space.SpaceController
+	Git    *git.GitController
+	Repo   *repo.Controller
+	Scan   *scan.ScanController
+	Test   *test.TestController
 }

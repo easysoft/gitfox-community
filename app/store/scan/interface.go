@@ -20,14 +20,10 @@ type IRuleSet interface {
 }
 
 type IRule interface {
-	ListByRuleSetID(
-		ctx context.Context,
-		ruleIDs []int64,
-		filter scanModel.RuleReqFilter,
-	) (*database.PageResult[*scanModel.Rule], error)
-	ExcludeByRuleSetID(
-		ctx context.Context,
-		excludeIDs []int64,
-		filter scanModel.RuleReqFilter,
-	) (*database.PageResult[*scanModel.Rule], error)
+	ListByRuleSetID(ctx context.Context, ruleIDs []int64, filter scanModel.RuleReqFilter) (*database.PageResult[*scanModel.Rule], error)
+	ExcludeByRuleSetID(ctx context.Context, excludeIDs []int64, filter scanModel.RuleReqFilter) (*database.PageResult[*scanModel.Rule], error)
+
+	GetByID(ctx context.Context, id uint) (*scanModel.Rule, error)
+	UpdateStatus(ctx context.Context, id uint) error
+	List(ctx context.Context, filter scanModel.RuleListReqFilter) (*database.PageResult[*scanModel.Rule], error)
 }
