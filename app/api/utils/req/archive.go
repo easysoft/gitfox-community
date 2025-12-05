@@ -1,12 +1,12 @@
 package req
 
 import (
-	"fmt"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/api"
 	"github.com/gin-gonic/gin"
 )
@@ -54,7 +54,7 @@ func ParseArchiveParams(r *gin.Context) (api.ArchiveParams, string, error) {
 	path = strings.TrimPrefix(path, "/")
 
 	if path == "" {
-		return api.ArchiveParams{}, "", fmt.Errorf("missing archive path, use format: /archive/{ref}.{format}")
+		return api.ArchiveParams{}, "", errors.New("missing archive path, use format: /archive/{ref}.{format}")
 	}
 
 	// Split path into directory (rev) and filename
@@ -63,7 +63,7 @@ func ParseArchiveParams(r *gin.Context) (api.ArchiveParams, string, error) {
 	// Extract format from filename extension
 	formatStr := Ext(filename)
 	if formatStr == "" {
-		return api.ArchiveParams{}, "", fmt.Errorf("cannot determine archive format from path '%s', supported formats: tar, zip, tar.gz, tgz", path)
+		return api.ArchiveParams{}, "", errors.Newf("cannot determine archive format from path '%s', supported formats: tar, zip, tar.gz, tgz", path)
 	}
 
 	// Build treeish by removing the format extension from filename
