@@ -2065,58 +2065,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/spaces/undelete": {
-            "post": {
-                "description": "恢复已逻辑删除的空间",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "spaces"
-                ],
-                "summary": "恢复已删除空间",
-                "parameters": [
-                    {
-                        "description": "恢复空间请求参数",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.UndeleteSpaceRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "恢复成功",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "空间不存在或未删除",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "恢复失败",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/spaces/{id}": {
             "get": {
                 "description": "根据ID查询单个空间详情",
@@ -2292,6 +2240,57 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "删除失败（如存在关联资源）",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/spaces/{id}/restore": {
+            "post": {
+                "description": "恢复已逻辑删除的空间",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "spaces"
+                ],
+                "summary": "恢复已删除空间",
+                "parameters": [
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "description": "空间ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "恢复成功",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "空间不存在或未删除",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "恢复失败",
                         "schema": {
                             "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
                         }
@@ -3472,31 +3471,6 @@ const docTemplate = `{
                 },
                 "owner": {
                     "type": "string"
-                }
-            }
-        },
-        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.UndeleteSpaceRequest": {
-            "type": "object",
-            "required": [
-                "editedBy",
-                "ids"
-            ],
-            "properties": {
-                "editedBy": {
-                    "type": "string",
-                    "example": "admin"
-                },
-                "ids": {
-                    "type": "array",
-                    "minItems": 1,
-                    "items": {
-                        "type": "integer"
-                    },
-                    "example": [
-                        1,
-                        2,
-                        3
-                    ]
                 }
             }
         },

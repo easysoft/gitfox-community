@@ -204,12 +204,12 @@ func (ctl *SpaceController) Delete(c *gin.Context) {
 // @Tags spaces
 // @Accept application/json
 // @Produce application/json
-// @Param request body space.UndeleteSpaceRequest true "恢复空间请求参数"
+// @Param id path int true "空间ID" minimum(1)
 // @Success 200 {object} resp.ObjectResponse "恢复成功"
 // @Failure 400 {object} resp.ObjectResponse "参数错误"
 // @Failure 404 {object} resp.ObjectResponse "空间不存在或未删除"
 // @Failure 500 {object} resp.ObjectResponse "恢复失败"
-// @Router /spaces/undelete [post]
+// @Router /spaces/{id}/restore [post]
 func (ctl *SpaceController) Undelete(c *gin.Context) {
 	var err error
 	// 解析 path id
