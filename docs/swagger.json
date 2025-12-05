@@ -398,6 +398,105 @@
                 }
             }
         },
+        "/repos/{id}/archive/{gitRef}": {
+            "get": {
+                "description": "根据指定的 Git 引用和格式生成并下载仓库归档文件。通过 URL 路径传递 Git 引用和格式\nURL 格式: /archive/{ref}.{format}\n示例: /archive/main.zip, /archive/refs/heads/main.tar.gz, /archive/v1.0.0.zip",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/tar",
+                    "application/zip",
+                    "application/gzip"
+                ],
+                "tags": [
+                    "repos"
+                ],
+                "summary": "获取仓库归档文件(tar/zip/tar.gz/tgz)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "仓库 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Git 引用和文件格式(如 main.zip、refs/heads/main.tar.gz、v1.0.0.zip),格式由扩展名决定",
+                        "name": "gitRef",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "description": "可选的路径列表,仅归档指定的文件/目录。不指定则归档整个仓库",
+                        "name": "path",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "归档文件中路径前缀,会添加到所有文件路径前",
+                        "name": "prefix",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Git 属性(export-ignore 或 export-subst)",
+                        "name": "attributes",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "归档条目的修改时间,格式为 RFC3339(如 2006-01-02 15:04:05)",
+                        "name": "time",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "压缩级别,zip 格式为 0-9,tar.gz/tgz 格式支持数字压缩级别",
+                        "name": "compression",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "归档文件,文件名格式为 {仓库标识}_{Git引用}_{格式}",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误(如格式不支持、Git引用无效等)",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权或无会话",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "代码库不存在或 Git 引用不存在",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误(如 Git 服务调用失败、数据库异常等)",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/repos/{id}/branches": {
             "post": {
                 "description": "新增一个分支",

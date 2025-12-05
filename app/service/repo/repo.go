@@ -18,6 +18,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/auth/authz"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
+	gitAPI "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/api"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/slice"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/url"
@@ -311,6 +312,14 @@ func (s *Service) GetDiff(ctx context.Context, req repoModel.ReqForDiff, repo re
 		HeadRef:    info.HeadRef,
 		MergeBase:  info.MergeBase,
 	}, req.Files...)
+}
+
+func (s *Service) Archive(ctx context.Context, params gitAPI.ArchiveParams, repo repoModel.Repo, w io.Writer) error {
+
+	return s.gitSvc.Archive(ctx, git.ArchiveParams{
+		ReadParams:    git.ReadParams{RepoUID: repo.GitUID},
+		ArchiveParams: params,
+	}, w)
 }
 
 func (s *Service) GetBlame(ctx context.Context, req repoModel.BlameFilter, repo repoModel.Repo, filePath string, w io.Writer) error {
