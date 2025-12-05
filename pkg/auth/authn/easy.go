@@ -54,37 +54,23 @@ func (a *EasyAuthenticator) Authenticate(r *gin.Context) (*auth.Session, error) 
 	logger := logger.GetLogger(r)
 	logger.Debug("[authn.easy]trigger EasyAuthenticator")
 
-	// 1. 优先从 query 参数获取 authorization
-	var authorization, app, operator string
-	queryAuth := r.Query("authorization")
+	// 1. 从请求头获取必要的认证信息
+	authorization, ok := req.GetHeader(r, HeaderAuthorization)
+	if !ok || authorization == "" {
+		logger.Debug("[authn.easy]missing Authorization header")
+		return nil, constant.ErrAuthNoData
+	}
 
-	if queryAuth != "" {
-		// 从 query 获取到 authorization，使用默认值
-		authorization = queryAuth
-		app = "zentao"
-		operator = "admin"
-		logger.Debug("[authn.easy]using authorization from query with default app=zentao, operator=admin")
-	} else {
-		// 从请求头获取必要的认证信息
-		var ok bool
-		authorization, ok = req.GetHeader(r, HeaderAuthorization)
-		if !ok || authorization == "" {
-			logger.Debug("[authn.easy]missing Authorization header")
-			return nil, constant.ErrAuthNoData
-		}
+	app, ok := req.GetHeader(r, HeaderApp)
+	if !ok || app == "" {
+		logger.Debug("[authn.easy]missing App header")
+		return nil, constant.ErrAuthNoData
+	}
 
-		app, ok = req.GetHeader(r, HeaderApp)
-		if !ok || app == "" {
-			logger.Debug("[authn.easy]missing App header")
-			return nil, constant.ErrAuthNoData
-		}
-
-		operator, ok = req.GetHeader(r, HeaderOperator)
-		if !ok || operator == "" {
-			logger.Debug("[authn.easy]missing Operator header")
-			return nil, constant.ErrAuthNoData
-		}
-		logger.Debug("[authn.easy]using authorization from headers")
+	operator, ok := req.GetHeader(r, HeaderOperator)
+	if !ok || operator == "" {
+		logger.Debug("[authn.easy]missing Operator header")
+		return nil, constant.ErrAuthNoData
 	}
 
 	// 2. 根据 operator（用户账号）查询用户信息

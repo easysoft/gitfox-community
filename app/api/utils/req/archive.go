@@ -33,63 +33,42 @@ func Ext(path string) string {
 }
 
 func ParseArchiveParams(r *gin.Context) (api.ArchiveParams, string, error) {
-	// This function supports two URL formats:
-	//
-	// Format 1 (Path parameter): /api/v2/repos/{id}/archive/{ref}.{format}
+	// 只支持 Path parameter 格式: /api/v2/repos/{id}/archive/{ref}.{format}
 	//   Example: /api/v2/repos/32/archive/refs/heads/main.zip
 	//            /api/v2/repos/32/archive/branch01.zip
-	//
-	// Format 2 (Query parameters): /api/v2/repos/{id}/archive?ref={ref}&format={format}
-	//   Example: /api/v2/repos/32/archive?ref=branch01&format=zip
-	//            /api/v2/repos/32/archive?ref=refs/heads/main&format=tar.gz
-	//
-	// Query parameters have priority over path parameters
 
-	var treeish string
-	var formatStr string
+	// 从 path 参数获取
+	path := PathParamOrEmpty(r, "filePath")
 
-	// Check if format is provided as query parameter
-	formatQuery, hasFormatQuery := QueryParam(r, "format")
-	refQuery, hasRefQuery := QueryParam(r, "ref")
-
-	if hasFormatQuery && hasRefQuery {
-		// Use query parameters (Format 2)
-		treeish = refQuery
-		formatStr = formatQuery
-	} else {
-		// Use path parameter (Format 1)
-		path := PathParamOrEmpty(r, "filePath")
-
-		// If path is empty or only "/", try to extract from full request path
-		if path == "" || path == "/" {
-			// Fallback: parse from full URL path
-			fullPath := r.Request.URL.Path
-			archiveIdx := strings.Index(fullPath, "/archive/")
-			if archiveIdx >= 0 {
-				path = fullPath[archiveIdx+9:] // Skip "/archive/" (9 chars)
-			}
+	// If path is empty or only "/", try to extract from full request path
+	if path == "" || path == "/" {
+		// Fallback: parse from full URL path
+		fullPath := r.Request.URL.Path
+		archiveIdx := strings.Index(fullPath, "/archive/")
+		if archiveIdx >= 0 {
+			path = fullPath[archiveIdx+9:] // Skip "/archive/" (9 chars)
 		}
-
-		// Remove leading slash that Gin adds to wildcard parameters
-		path = strings.TrimPrefix(path, "/")
-
-		if path == "" {
-			return api.ArchiveParams{}, "", fmt.Errorf("missing archive path: use either /archive/{ref}.{format} or /archive?ref={ref}&format={format}")
-		}
-
-		// Split path into directory (rev) and filename
-		rev, filename := filepath.Split(path)
-
-		// Extract format from filename extension
-		formatStr = Ext(filename)
-		if formatStr == "" {
-			return api.ArchiveParams{}, "", fmt.Errorf("cannot determine archive format from path '%s'", path)
-		}
-
-		// Build treeish by removing the format extension from filename
-		name := strings.TrimSuffix(filename, "."+formatStr)
-		treeish = rev + name
 	}
+
+	// Remove leading slash that Gin adds to wildcard parameters
+	path = strings.TrimPrefix(path, "/")
+
+	if path == "" {
+		return api.ArchiveParams{}, "", fmt.Errorf("missing archive path, use format: /archive/{ref}.{format}")
+	}
+
+	// Split path into directory (rev) and filename
+	rev, filename := filepath.Split(path)
+
+	// Extract format from filename extension
+	formatStr := Ext(filename)
+	if formatStr == "" {
+		return api.ArchiveParams{}, "", fmt.Errorf("cannot determine archive format from path '%s', supported formats: tar, zip, tar.gz, tgz", path)
+	}
+
+	// Build treeish by removing the format extension from filename
+	name := strings.TrimSuffix(filename, "."+formatStr)
+	treeish := rev + name
 
 	// Parse and validate the format
 	archFormat, err := api.ParseArchiveFormat(formatStr)
@@ -98,9 +77,9 @@ func ParseArchiveParams(r *gin.Context) (api.ArchiveParams, string, error) {
 	}
 
 	// Generate filename for response
-	filename := treeish + "." + formatStr
+	responseFilename := treeish + "." + formatStr
 	// Clean filename to remove directory separators
-	filename = strings.ReplaceAll(filename, "/", "_")
+	responseFilename = strings.ReplaceAll(responseFilename, "/", "_")
 
 	// prefix is used for git archive to prefix all paths.
 	prefix, _ := QueryParam(r, QueryParamArchivePrefix)
@@ -132,5 +111,5 @@ func ParseArchiveParams(r *gin.Context) (api.ArchiveParams, string, error) {
 		Compression: compression,
 		Treeish:     treeish,
 		Paths:       r.Request.URL.Query()[QueryParamArchivePaths],
-	}, filename, nil
+	}, responseFilename, nil
 }
