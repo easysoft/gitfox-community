@@ -1,6 +1,7 @@
 package repo
 
 import (
+	"fmt"
 	"strings"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
@@ -10,6 +11,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	gitPkg "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
+	gitAPI "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/api"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	urlPkg "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/url"
@@ -288,6 +290,94 @@ func (ctl *Controller) GetContent(ctx *gin.Context) {
 	}
 
 	resp.OK(ctx, i18n.RepoGetContentSuccess, re)
+}
+
+// Archive 获取仓库归档文件
+// @Summary 获取仓库归档文件(tar/zip/tar.gz/tgz)
+// @Description 根据指定的 Git 引用和格式生成并下载仓库归档文件。支持两种调用方式:
+// @Description 1. 路径参数: /archive/{ref}.{format} (如 /archive/branch01.zip)
+// @Description 2. Query参数: /archive?ref={ref}&format={format} (推荐,避免特殊字符问题)
+// @Tags repos
+// @Accept application/json
+// @Produce application/tar,application/zip,application/gzip
+// @Param id path uint true "仓库 ID"
+// @Param gitRef path string false "Git 引用和文件名(如 branch01.zip、refs/heads/main.tar.gz),格式由扩展名决定"
+// @Param ref query string false "Git 引用(如 branch01、refs/heads/main),与 format 参数配合使用"
+// @Param format query string false "归档格式(tar/zip/tar.gz/tgz),与 ref 参数配合使用"
+// @Param path query []string false "可选的路径列表,仅归档指定的文件/目录。不指定则归档整个仓库"
+// @Param prefix query string false "归档文件中路径前缀,会添加到所有文件路径前"
+// @Param attributes query string false "Git 属性(export-ignore 或 export-subst)"
+// @Param time query string false "归档条目的修改时间,格式为 RFC3339(如 2006-01-02 15:04:05)"
+// @Param compression query int false "压缩级别,zip 格式为 0-9,tar.gz/tgz 格式支持数字压缩级别"
+// @Success 200 {file} binary "归档文件,文件名格式为 {仓库标识}_{Git引用}_{格式}"
+// @Failure 400 {object} resp.ObjectResponse "参数错误(如格式不支持、Git引用无效等)"
+// @Failure 401 {object} resp.ObjectResponse "未授权或无会话"
+// @Failure 404 {object} resp.ObjectResponse "代码库不存在或 Git 引用不存在"
+// @Failure 500 {object} resp.ObjectResponse "服务器内部错误(如 Git 服务调用失败、数据库异常等)"
+// @Router /repos/{id}/archive [get]
+// @Router /repos/{id}/archive/{gitRef} [get]
+func (c *Controller) Archive(ctx *gin.Context) {
+
+	log := logger.GetLogger(ctx)
+
+	// Debug: log request URL and all params
+	log.Infof("Archive request - URL: %s, Path: %s", ctx.Request.URL.String(), ctx.Request.URL.Path)
+	for _, param := range ctx.Params {
+		log.Infof("Archive request - Param: %s = %s", param.Key, param.Value)
+	}
+
+	var repoID uint
+	var err error
+
+	session, ok := req.GetAuthSession(ctx.Request.Context())
+	if !ok {
+		resp.Unauthorized(ctx, errors.WithI18nKey(nil, i18n.AuthNoSession))
+		return
+	}
+
+	repoID, err = req.PathParamAsPositiveUint(ctx, "id")
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RepoPathParamError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
+	// 通过仓库 ID 获取仓库
+	repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, repoID)
+	if err != nil {
+		resp.InternalError(ctx, err)
+		return
+	}
+
+	params, filename, err := req.ParseArchiveParams(ctx)
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RepoPathParamError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
+	var contentType string
+	switch params.Format {
+	case gitAPI.ArchiveFormatTar:
+		contentType = "application/tar"
+	case gitAPI.ArchiveFormatZip:
+		contentType = "application/zip"
+	case gitAPI.ArchiveFormatTarGz, gitAPI.ArchiveFormatTgz:
+		contentType = "application/gzip"
+	default:
+		contentType = "application/zip"
+	}
+
+	filename = repoOut.Identifier + "_" + filename
+	ctx.Writer.Header().Set("Content-Type", contentType)
+	ctx.Writer.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
+
+	err = c.repoSvc.Archive(ctx.Request.Context(), params, *repoOut, ctx.Writer)
+	if err != nil {
+		log.Errorf("Failed to get archive: %v", err)
+		return
+	}
+
 }
 
 // @Summary 仓库代码blame
