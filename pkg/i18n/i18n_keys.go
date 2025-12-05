@@ -174,6 +174,8 @@ const (
 	SpaceQueryError              I18nKey = "space.query_error"               // 查询空间失败
 	SpaceQueryParamError         I18nKey = "space.query_param_error"         // Query 参数解析失败.
 	SpaceQuerySuccess            I18nKey = "space.query_success"             // 查询空间成功
+	SpaceRestoreError            I18nKey = "space.restore_error"             // 恢复空间失败
+	SpaceRestoreSuccess          I18nKey = "space.restore_success"           // 恢复空间成功
 	SpaceSecretsAddError         I18nKey = "space.secrets_add_error"         // 添加密钥失败,请检查名称是否重复或格式是否正确.
 	SpaceSecretsAddSuccess       I18nKey = "space.secrets_add_success"       // 密钥已成功添加.
 	SpaceSecretsDeletePermission I18nKey = "space.secrets_delete_permission" // 删除失败:权限不足,您无法删除此密钥.

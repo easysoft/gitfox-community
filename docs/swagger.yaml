@@ -767,24 +767,6 @@ definitions:
       owner:
         type: string
     type: object
-  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.UndeleteSpaceRequest:
-    properties:
-      editedBy:
-        example: admin
-        type: string
-      ids:
-        example:
-        - 1
-        - 2
-        - 3
-        items:
-          type: integer
-        minItems: 1
-        type: array
-    required:
-    - editedBy
-    - ids
-    type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.UpdateSpaceRequest:
     properties:
       acl:
@@ -2416,18 +2398,18 @@ paths:
       summary: 更新空间
       tags:
       - spaces
-  /spaces/undelete:
+  /spaces/{id}/restore:
     post:
       consumes:
       - application/json
       description: 恢复已逻辑删除的空间
       parameters:
-      - description: 恢复空间请求参数
-        in: body
-        name: request
+      - description: 空间ID
+        in: path
+        minimum: 1
+        name: id
         required: true
-        schema:
-          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.UndeleteSpaceRequest'
+        type: integer
       produces:
       - application/json
       responses:
