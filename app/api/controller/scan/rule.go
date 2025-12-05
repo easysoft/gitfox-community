@@ -13,14 +13,16 @@ func (s *ScanController) MigrateRules(ctx *gin.Context) {
 	// 实现规则迁移逻辑
 }
 
-// ListRules 获取规则列表
-// @Summary 获取规则列表
-// @Description 根据传入的查询参数获取规则列表
+// @Summary 查询规则列表
+// @Description 根据传入的查询参数分页查询扫描规则列表，支持按规则集、语言、插件等条件过滤
 // @Tags scan
 // @Accept application/json
 // @Produce application/json
-// @Param filter query scan.RuleListReqFilter true "查询参数"
-// @Success 200 {object} resp.ObjectResponse{data=database.PageResult[scanModel.Rule]} "获取成功"
+// @Param request body scan.RuleListReqFilter true "查询规则请求参数"
+// @Success 200 {object} resp.ListResponse{data=[]scan.Rule,listArgs=resp.ListArgs} "查询成功"
+// @Failure 400 {object} resp.ObjectResponse "参数错误"
+// @Failure 401 {object} resp.ObjectResponse "未授权"
+// @Failure 500 {object} resp.ObjectResponse "服务器错误"
 // @Router /scan/rules/list [post]
 func (s *ScanController) ListRules(ctx *gin.Context) {
 	var err error
@@ -58,14 +60,17 @@ func (s *ScanController) ListRules(ctx *gin.Context) {
 		}, i18n.RuleListSuccess, nil)
 }
 
-// GetRule 获取规则
-// @Summary 获取规则信息
-// @Description 根据传入的规则 ID 获取规则信息
+// @Summary 获取规则详情
+// @Description 根据规则 ID 获取规则详细信息
 // @Tags scan
 // @Accept application/json
 // @Produce application/json
 // @Param id path uint true "规则 ID"
-// @Success 200 {object} resp.ObjectResponse{data=scanModel.Rule} "获取成功"
+// @Success 200 {object} resp.ObjectResponse{data=scan.Rule} "获取成功"
+// @Failure 400 {object} resp.ObjectResponse "参数错误"
+// @Failure 401 {object} resp.ObjectResponse "未授权"
+// @Failure 404 {object} resp.ObjectResponse "规则不存在"
+// @Failure 500 {object} resp.ObjectResponse "服务器错误"
 // @Router /scan/rules/{id} [get]
 func (s *ScanController) GetRule(ctx *gin.Context) {
 	var err error
@@ -92,14 +97,17 @@ func (s *ScanController) GetRule(ctx *gin.Context) {
 	resp.OK(ctx, i18n.RuleQuerySuccess, rule)
 }
 
-// UpdateRuleStatus 更新规则状态
-// @Summary 更新规则状态
-// @Description 根据传入的规则 ID 更新规则状态
+// @Summary 切换规则状态
+// @Description 根据规则 ID 切换规则的启用/禁用状态（enabled ↔ disabled）
 // @Tags scan
 // @Accept application/json
 // @Produce application/json
 // @Param id path uint true "规则 ID"
-// @Success 200 {object} resp.ObjectResponse{data=scanModel.Rule} "更新成功"
+// @Success 200 {object} resp.ObjectResponse "更新成功"
+// @Failure 400 {object} resp.ObjectResponse "参数错误"
+// @Failure 401 {object} resp.ObjectResponse "未授权"
+// @Failure 404 {object} resp.ObjectResponse "规则不存在"
+// @Failure 500 {object} resp.ObjectResponse "服务器错误"
 // @Router /scan/rules/{id}/status [put]
 func (s *ScanController) UpdateRuleStatus(ctx *gin.Context) {
 	var err error

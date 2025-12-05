@@ -1486,6 +1486,200 @@ const docTemplate = `{
                 }
             }
         },
+        "/scan/rules/list": {
+            "post": {
+                "description": "根据传入的查询参数分页查询扫描规则列表，支持按规则集、语言、插件等条件过滤",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scan"
+                ],
+                "summary": "查询规则列表",
+                "parameters": [
+                    {
+                        "description": "查询规则请求参数",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.RuleListReqFilter"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "查询成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.Rule"
+                                            }
+                                        },
+                                        "listArgs": {
+                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListArgs"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/scan/rules/{id}": {
+            "get": {
+                "description": "根据规则 ID 获取规则详细信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scan"
+                ],
+                "summary": "获取规则详情",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "规则 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "获取成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.Rule"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "规则不存在",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/scan/rules/{id}/status": {
+            "put": {
+                "description": "根据规则 ID 切换规则的启用/禁用状态（enabled ↔ disabled）",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scan"
+                ],
+                "summary": "切换规则状态",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "规则 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "更新成功",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "规则不存在",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/scan/rulesets": {
             "post": {
                 "description": "基于传入参数创建规则集",
@@ -3182,6 +3376,19 @@ const docTemplate = `{
                 }
             }
         },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.Order": {
+            "type": "string",
+            "enum": [
+                "asc",
+                "desc",
+                ""
+            ],
+            "x-enum-varnames": [
+                "OrderAsc",
+                "OrderDesc",
+                "orderNone"
+            ]
+        },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.Rule": {
             "type": "object",
             "properties": {
@@ -3243,6 +3450,53 @@ const docTemplate = `{
                 },
                 "type": {
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleType"
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.RuleListReqFilter": {
+            "type": "object",
+            "properties": {
+                "bind": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRuleBind"
+                },
+                "lang": {
+                    "type": "string"
+                },
+                "lang_id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "order": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.Order"
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "pageSize": {
+                    "type": "integer"
+                },
+                "plugin": {
+                    "type": "string"
+                },
+                "priority": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRulePriority"
+                },
+                "ruleset_id": {
+                    "type": "integer"
+                },
+                "sort": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRuleSort"
+                },
+                "status": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRuleStatus"
+                },
+                "tag": {
+                    "type": "string"
+                },
+                "type": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRuleType"
                 }
             }
         },
@@ -3410,6 +3664,94 @@ const docTemplate = `{
                     ]
                 }
             }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRuleBind": {
+            "type": "string",
+            "enum": [
+                "bind",
+                "unbind",
+                ""
+            ],
+            "x-enum-varnames": [
+                "ScanRuleBindBind",
+                "ScanRuleBindUnbind",
+                "scanRuleBindNone"
+            ]
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRulePriority": {
+            "type": "string",
+            "enum": [
+                "low",
+                "medium",
+                "high",
+                ""
+            ],
+            "x-enum-varnames": [
+                "ScanRulePriorityLow",
+                "ScanRulePriorityMedium",
+                "ScanRulePriorityHigh",
+                "scanRulePriorityNone"
+            ]
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRuleSort": {
+            "type": "string",
+            "enum": [
+                "id",
+                "name",
+                "priority",
+                "created_date",
+                ""
+            ],
+            "x-enum-varnames": [
+                "ScanRuleSortID",
+                "ScanRuleSortName",
+                "ScanRuleSortPriority",
+                "ScanRuleSortCreatedDate",
+                "scanRuleSortNone"
+            ]
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRuleStatus": {
+            "type": "string",
+            "enum": [
+                "enabled",
+                "disabled",
+                ""
+            ],
+            "x-enum-varnames": [
+                "ScanRuleStatusEnabled",
+                "ScanRuleStatusDisabled",
+                "scanRuleStatusNone"
+            ]
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRuleType": {
+            "type": "string",
+            "enum": [
+                "defect",
+                "security",
+                "compliance",
+                "optimize",
+                ""
+            ],
+            "x-enum-comments": {
+                "ScanRuleTypeComplian": "合规",
+                "ScanRuleTypeDefect": "缺陷",
+                "ScanRuleTypeOptimize": "优化 // 代码异味",
+                "ScanRuleTypeVuln": "安全"
+            },
+            "x-enum-descriptions": [
+                "缺陷",
+                "安全",
+                "合规",
+                "优化 // 代码异味",
+                ""
+            ],
+            "x-enum-varnames": [
+                "ScanRuleTypeDefect",
+                "ScanRuleTypeVuln",
+                "ScanRuleTypeComplian",
+                "ScanRuleTypeOptimize",
+                "scanRuleTypeNone"
+            ]
         },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.CreateSpaceRequest": {
             "type": "object",

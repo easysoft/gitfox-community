@@ -130,15 +130,15 @@ func (s *RuleStore) List(ctx context.Context, filter scanModel.RuleListReqFilter
 
 	if filter.Bind == scanModel.ScanRuleBindBind {
 		if filter.RuleSetID > 0 {
-			tx = tx.Where("id IN (SELECT ops_scan_ruleset_rules.ruleID FROM ops_scan_ruleset_rules WHERE ops_scan_ruleset_rules.rulesetID = ? AND ops_scan_ruleset_rules.deleted = 0)", filter.RuleSetID)
+			subQuery := s.db.Model(&RuleSetRules{}).
+				Select("ruleID").
+				Where("rulesetID = ? AND deleted = ?", filter.RuleSetID, false)
+			tx = tx.Where("ops_scan_rules.id IN (?)", subQuery)
 		} else {
-			tx = tx.Where("id IN (SELECT DISTINCT ops_scan_ruleset_rules.ruleID FROM ops_scan_ruleset_rules WHERE ops_scan_ruleset_rules.deleted = 0)")
-		}
-	} else if filter.Bind == scanModel.ScanRuleBindUnbind {
-		if filter.RuleSetID > 0 {
-			tx = tx.Where("id NOT IN (SELECT ops_scan_ruleset_rules.ruleID FROM ops_scan_ruleset_rules WHERE ops_scan_ruleset_rules.rulesetID = ? AND ops_scan_ruleset_rules.deleted = 0)", filter.RuleSetID)
-		} else {
-			tx = tx.Where("id NOT IN (SELECT DISTINCT ops_scan_ruleset_rules.ruleID FROM ops_scan_ruleset_rules WHERE ops_scan_ruleset_rules.deleted = 0)")
+			subQuery := s.db.Model(&RuleSetRules{}).
+				Select("DISTINCT ruleID").
+				Where("deleted = ?", false)
+			tx = tx.Where("ops_scan_rules.id IN (?)", subQuery)
 		}
 	}
 
