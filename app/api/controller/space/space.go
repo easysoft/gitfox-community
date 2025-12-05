@@ -211,29 +211,22 @@ func (ctl *SpaceController) Delete(c *gin.Context) {
 // @Failure 500 {object} resp.ObjectResponse "恢复失败"
 // @Router /spaces/undelete [post]
 func (ctl *SpaceController) Undelete(c *gin.Context) {
-	var reqData space.UndeleteSpaceRequest
 	var err error
-
-	// 解析请求体
-	if err = c.ShouldBindJSON(&reqData); err != nil {
-		err = errors.WithI18nKey(err, i18n.SpaceBodyParamError)
+	// 解析 path id
+	objID, err := req.PathParamAsPositiveUint(c, "id")
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.SpacePathParamError)
 		resp.BadRequest(c, err)
 		return
 	}
 
+
 	// 调用服务层恢复空间
-	if err = ctl.spaceSvc.Undelete(c.Request.Context(), reqData); err != nil {
+	if err = ctl.spaceSvc.Undelete(c.Request.Context(), objID); err != nil {
 		// 判断错误类型，返回相应的HTTP状态码
-		if errors.IsNotFound(err) {
-			err = errors.WithI18nKey(err, "space.not_found")
-			resp.NotFound(c, err)
-			return
-		}
-		// 如果是名称冲突或其他业务错误
-		err = errors.WithI18nKey(err, "space.undelete_error")
+		err = errors.WithI18nKey(err, i18n.SpaceRestoreError)
 		resp.InternalError(c, err)
 		return
 	}
-
-	resp.OK(c, "space.undelete_success", nil)
+	resp.OK(c, i18n.SpaceRestoreSuccess, nil)
 }
