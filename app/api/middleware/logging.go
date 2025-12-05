@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"bytes"
+	"context"
 	"io"
 	"strings"
 	"time"
@@ -24,6 +25,9 @@ func RequestID(log *logger.SugaredMateLogger) gin.HandlerFunc {
 		// 将 trace_id 附加到 logger 并注入到上下文中，方便后续层级调用
 		requestLogger := log.With("trace_id", traceID)
 		c.Set(logger.ContextLogger, requestLogger)
+		ctx := c.Request.Context()
+		ctx = context.WithValue(ctx, logger.LoggerContextKey, log)
+		c.Request = c.Request.WithContext(ctx)
 
 		c.Next()
 	}

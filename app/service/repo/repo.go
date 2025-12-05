@@ -313,6 +313,21 @@ func (s *Service) GetDiff(ctx context.Context, req repoModel.ReqForDiff, repo re
 	}, req.Files...)
 }
 
+func (s *Service) GetBlame(ctx context.Context, req repoModel.BlameFilter, repo repoModel.Repo, filePath string, w io.Writer) error {
+	gitRef := req.GitRef
+	if gitRef == "" {
+		gitRef = repo.DefaultBranch
+	}
+
+	return s.gitSvc.RawBlame(ctx, w, &git.BlameParams{
+		ReadParams: git.ReadParams{RepoUID: repo.GitUID},
+		Path:       filePath,
+		GitRef:     gitRef,
+		LineFrom:   req.LineFrom,
+		LineTo:     req.LineTo,
+	})
+}
+
 func (s *Service) Paths(ctx context.Context, req repoModel.PathsInput, repo repoModel.Repo) (*repoModel.PathsOutput, error) {
 	gitRef := req.GitRef
 	if req.GitRef == "" {

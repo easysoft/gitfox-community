@@ -6,7 +6,6 @@ import (
 	scanModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	"github.com/gin-gonic/gin"
 )
 
@@ -35,7 +34,7 @@ func (c *ScanController) Create(ctx *gin.Context) {
 		return
 	}
 
-	data, err := c.ruleSetSvc.Create(logger.GetContextWithLogger(ctx), session, *reqData)
+	data, err := c.ruleSetSvc.Create(ctx.Request.Context(), session, *reqData)
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.RuleSetCreateError)
 		resp.InternalError(ctx, err)
@@ -67,7 +66,7 @@ func (c *ScanController) List(ctx *gin.Context) {
 	// 设置默认值
 	req.SetDefaults(&reqQuery)
 
-	result, err := c.ruleSetSvc.List(logger.GetContextWithLogger(ctx), reqQuery)
+	result, err := c.ruleSetSvc.List(ctx.Request.Context(), reqQuery)
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.RuleSetListError)
 		resp.InternalError(ctx, err)
@@ -102,7 +101,7 @@ func (c *ScanController) Get(ctx *gin.Context) {
 		return
 	}
 
-	obj, err := c.ruleSetSvc.GetByID(logger.GetContextWithLogger(ctx), ruleSetID)
+	obj, err := c.ruleSetSvc.GetByID(ctx.Request.Context(), ruleSetID)
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.RuleSetQueryError)
 		resp.InternalError(ctx, err)
@@ -150,7 +149,7 @@ func (c *ScanController) Update(ctx *gin.Context) {
 		return
 	}
 
-	respData, err := c.ruleSetSvc.Update(logger.GetContextWithLogger(ctx), session, ruleSetID, reqBody)
+	respData, err := c.ruleSetSvc.Update(ctx.Request.Context(), session, ruleSetID, reqBody)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return
@@ -178,7 +177,7 @@ func (c *ScanController) Delete(ctx *gin.Context) {
 		return
 	}
 
-	if err := c.ruleSetSvc.Delete(logger.GetContextWithLogger(ctx), ruleSetID); err != nil {
+	if err := c.ruleSetSvc.Delete(ctx.Request.Context(), ruleSetID); err != nil {
 		err = errors.WithI18nKey(err, i18n.RuleSetDeleteError)
 		resp.InternalError(ctx, err)
 		return
@@ -218,7 +217,7 @@ func (c *ScanController) GetBindRule(ctx *gin.Context) {
 	// 设置默认值
 	req.SetDefaults(&reqQuery)
 
-	result, err := c.ruleSetSvc.GetBindRule(logger.GetContextWithLogger(ctx), ruleSetID, reqQuery)
+	result, err := c.ruleSetSvc.GetBindRule(ctx.Request.Context(), ruleSetID, reqQuery)
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.RuleListError)
 		resp.InternalError(ctx, err)
@@ -264,7 +263,7 @@ func (c *ScanController) GetUnBindRule(ctx *gin.Context) {
 	// 设置默认值
 	req.SetDefaults(&reqQuery)
 
-	result, err := c.ruleSetSvc.GetUnBindRule(logger.GetContextWithLogger(ctx), ruleSetID, reqQuery)
+	result, err := c.ruleSetSvc.GetUnBindRule(ctx.Request.Context(), ruleSetID, reqQuery)
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.RuleListError)
 		resp.InternalError(ctx, err)
@@ -306,7 +305,7 @@ func (c *ScanController) BindRule(ctx *gin.Context) {
 		return
 	}
 
-	if err := c.ruleSetSvc.BindRule(logger.GetContextWithLogger(ctx), ruleSetID, *reqData); err != nil {
+	if err := c.ruleSetSvc.BindRule(ctx.Request.Context(), ruleSetID, *reqData); err != nil {
 		err = errors.WithI18nKey(err, i18n.RuleSetBindError)
 		resp.InternalError(ctx, err)
 		return
@@ -342,7 +341,7 @@ func (c *ScanController) UnBindRule(ctx *gin.Context) {
 		return
 	}
 
-	if err := c.ruleSetSvc.UnBindRule(logger.GetContextWithLogger(ctx), ruleSetID, *reqData); err != nil {
+	if err := c.ruleSetSvc.UnBindRule(ctx.Request.Context(), ruleSetID, *reqData); err != nil {
 		err = errors.WithI18nKey(err, i18n.RuleSetUnbindError)
 		resp.InternalError(ctx, err)
 		return
