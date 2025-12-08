@@ -21,5 +21,8 @@ type IRuleSet interface {
 }
 
 type IRule interface {
-	ListByRuleSetID(ctx context.Context, filter scanModel.RuleReqFilter) (*database.PageResult[*scanModel.Rule], error)
+	GetByID(ctx context.Context, session *authModel.Session, id uint) (*scanModel.Rule, error)
+	Migrate(ctx context.Context) error
+	List(ctx context.Context, session *authModel.Session, filter scanModel.RuleListReqFilter) (*database.PageResult[*scanModel.Rule], error)
+	UpdateStatus(ctx context.Context, session *authModel.Session, id uint) error
 }

@@ -27,16 +27,16 @@ func NewControllers(
 	repoController *repo.Controller,
 	userController *user.Controller,
 	gitController *git.GitController,
-	ruleSetController *scan.RuleSetController,
+	scanController *scan.ScanController,
 ) *router.Controller {
 	return &router.Controller{
-		Space:   spaceController,
-		Branch:  branchController,
-		Tag:     tagController,
-		Commit:  commitController,
-		Repo:    repoController,
-		User:    userController,
-		Git:     gitController,
-		RuleSet: ruleSetController,
+		Space:  spaceController,
+		Branch: branchController,
+		Tag:    tagController,
+		Commit: commitController,
+		Repo:   repoController,
+		User:   userController,
+		Git:    gitController,
+		Scan:   scanController,
 	}
 }

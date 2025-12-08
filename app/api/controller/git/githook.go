@@ -15,5 +15,5 @@ func (ctl *GitController) PostReceiveClone(ctx *gin.Context) {
 }
 
 func (ctl *GitController) UpdateClone(ctx *gin.Context) {
-	resp.OK(ctx, i18n.TagDeleteSuccess, nil)
+	resp.OK(ctx, i18n.GitGitHookUpdateSuccess, nil)
 }

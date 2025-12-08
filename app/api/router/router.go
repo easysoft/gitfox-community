@@ -67,8 +67,8 @@ func NewRouter(mode string, logger *logger.SugaredMateLogger, controller *Contro
 	registerGitRoutes(basicAuthGroup, controller) // Git 相关路由
 
 	// 注册 Git 钩子路由 内部使用无需鉴权
-	hookGroup := r.Group("/api/v2/internal")
-	registerGitHookRoutes(hookGroup, controller)
+	internalGroup := r.Group("/api/v2/internal")
+	registerGitHookRoutes(internalGroup, controller)
 
 	return r
 }

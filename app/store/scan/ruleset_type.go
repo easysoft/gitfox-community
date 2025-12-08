@@ -8,10 +8,10 @@ import (
 )
 
 type RuleSet struct {
-	ID          int64                   `gorm:"column:id"`
+	ID          uint64                  `gorm:"column:id"`
 	Name        string                  `gorm:"column:name"`
 	Desc        string                  `gorm:"column:desc"`
-	DescrEn     string                  `gorm:"column:descEn"`
+	DescEn      string                  `gorm:"column:descEn"`
 	Type        constant.ScanRuleType   `gorm:"column:type"`
 	Lang        constant.ScanLangName   `gorm:"column:lang"`
 	Plugin      string                  `gorm:"column:plugin"`
@@ -42,38 +42,4 @@ func (r *RuleSet) BeforeUpdate(tx *gorm.DB) error {
 	now := time.Now()
 	r.EditedDate = &now
 	return nil
-}
-
-// RuleSetRules 规则集与规则关联表
-type RuleSetRules struct {
-	ID          int64      `gorm:"column:id;primaryKey"`
-	RuleSetID   int64      `gorm:"column:rulesetID"`
-	RuleID      int64      `gorm:"column:ruleID"`
-	CreatedBy   string     `gorm:"column:createdBy"`
-	CreatedDate *time.Time `gorm:"column:createdDate"`
-	EditedBy    string     `gorm:"column:editedBy"`
-	EditedDate  *time.Time `gorm:"column:editedDate"`
-	Deleted     bool       `gorm:"column:deleted"`
-}
-
-// TableName 指定数据库表名
-func (r *RuleSetRules) TableName() string {
-	return "ops_scan_ruleset_rules"
-}
-
-// SolutionRuleSets 扫描方案与规则集关联表
-type SolutionRuleSets struct {
-	ID          int64      `gorm:"column:id;primaryKey"`
-	SolutionID  int64      `gorm:"column:solutionID"`
-	RuleSetID   int64      `gorm:"column:ruleSetID"`
-	CreatedBy   string     `gorm:"column:createdBy"`
-	CreatedDate *time.Time `gorm:"column:createdDate"`
-	EditedBy    string     `gorm:"column:editedBy"`
-	EditedDate  *time.Time `gorm:"column:editedDate"`
-	Deleted     bool       `gorm:"column:deleted"`
-}
-
-// TableName 指定数据库表名
-func (s *SolutionRuleSets) TableName() string {
-	return "ops_scan_solution_rulesets"
 }

@@ -6,6 +6,9 @@ var (
 	//go:embed locales
 	EmbeddedLocales embed.FS
 
+	//go:embed scanrule/*.json
+	EmbeddedScanRules embed.FS
+
 	//go:embed license
 	Licence embed.FS
 

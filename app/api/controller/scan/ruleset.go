@@ -4,22 +4,10 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
 	scanModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
-	scanService "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/scan"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	"github.com/gin-gonic/gin"
 )
-
-type RuleSetController struct {
-	ruleSetSvc scanService.IRuleSet
-}
-
-// NewRuleSetController 创建规则集处理器实例
-func NewRuleSetController(ruleSetSvc scanService.IRuleSet) *RuleSetController {
-	return &RuleSetController{
-		ruleSetSvc: ruleSetSvc,
-	}
-}
 
 // Create 创建规则集
 // @Summary 创建规则集
@@ -32,7 +20,7 @@ func NewRuleSetController(ruleSetSvc scanService.IRuleSet) *RuleSetController {
 // @Error 400 {object} resp.ObjectResponse "参数错误"
 // @Error 500 {object} resp.ObjectResponse "服务器内部错误"
 // @Router /scan/rulesets [post]
-func (c *RuleSetController) Create(ctx *gin.Context) {
+func (c *ScanController) Create(ctx *gin.Context) {
 	reqData := new(scanModel.RuleSetReqForCreate)
 	if err := ctx.ShouldBindJSON(&reqData); err != nil {
 		err = errors.WithI18nKey(err, i18n.RuleSetBodyParamError)
@@ -67,7 +55,7 @@ func (c *RuleSetController) Create(ctx *gin.Context) {
 // @Error 400 {object} resp.ObjectResponse "参数错误"
 // @Error 500 {object} resp.ObjectResponse "服务器内部错误"
 // @Router /scan/rulesets/list [post]
-func (c *RuleSetController) List(ctx *gin.Context) {
+func (c *ScanController) List(ctx *gin.Context) {
 	var reqQuery scanModel.RuleSetReqFilter
 	if err := ctx.ShouldBindJSON(&reqQuery); err != nil {
 		err = errors.WithI18nKey(err, i18n.RuleSetQueryParamError)
@@ -105,7 +93,7 @@ func (c *RuleSetController) List(ctx *gin.Context) {
 // @Error 404 {object} resp.ObjectResponse "规则集不存在"
 // @Error 500 {object} resp.ObjectResponse "服务器内部错误"
 // @Router /scan/rulesets/{id} [get]
-func (c *RuleSetController) Get(ctx *gin.Context) {
+func (c *ScanController) Get(ctx *gin.Context) {
 	ruleSetID, err := req.PathParamAsPositiveUint(ctx, "id")
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.RuleSetPathParamError)
@@ -136,7 +124,7 @@ func (c *RuleSetController) Get(ctx *gin.Context) {
 // @Error 404 {object} resp.ObjectResponse "规则集不存在"
 // @Error 500 {object} resp.ObjectResponse "服务器内部错误"
 // @Router /scan/rulesets/{id} [put]
-func (c *RuleSetController) Update(ctx *gin.Context) {
+func (c *ScanController) Update(ctx *gin.Context) {
 	var reqBody scanModel.RuleSetReqForUpdate
 	var err error
 
@@ -181,7 +169,7 @@ func (c *RuleSetController) Update(ctx *gin.Context) {
 // @Error 400 {object} resp.ObjectResponse "参数错误"
 // @Error 500 {object} resp.ObjectResponse "服务器内部错误"
 // @Router /scan/rulesets/{id} [delete]
-func (c *RuleSetController) Delete(ctx *gin.Context) {
+func (c *ScanController) Delete(ctx *gin.Context) {
 	ruleSetID, err := req.PathParamAsPositiveUint(ctx, "id")
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.RuleSetPathParamError)
@@ -211,7 +199,7 @@ func (c *RuleSetController) Delete(ctx *gin.Context) {
 // @Error 400 {object} resp.ObjectResponse "参数错误"
 // @Error 500 {object} resp.ObjectResponse "服务器内部错误"
 // @Router /scan/rulesets/{id}/bind [get]
-func (c *RuleSetController) GetBindRule(ctx *gin.Context) {
+func (c *ScanController) GetBindRule(ctx *gin.Context) {
 	ruleSetID, err := req.PathParamAsPositiveUint(ctx, "id")
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.RulePathParamError)
@@ -257,7 +245,7 @@ func (c *RuleSetController) GetBindRule(ctx *gin.Context) {
 // @Error 400 {object} resp.ObjectResponse "参数错误"
 // @Error 500 {object} resp.ObjectResponse "服务器内部错误"
 // @Router /scan/rulesets/{id}/unbind [get]
-func (c *RuleSetController) GetUnBindRule(ctx *gin.Context) {
+func (c *ScanController) GetUnBindRule(ctx *gin.Context) {
 	ruleSetID, err := req.PathParamAsPositiveUint(ctx, "id")
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.RulePathParamError)
@@ -302,7 +290,7 @@ func (c *RuleSetController) GetUnBindRule(ctx *gin.Context) {
 // @Error 400 {object} resp.ObjectResponse "参数错误"
 // @Error 500 {object} resp.ObjectResponse "服务器内部错误"
 // @Router /scan/rulesets/{id}/bind [post]
-func (c *RuleSetController) BindRule(ctx *gin.Context) {
+func (c *ScanController) BindRule(ctx *gin.Context) {
 	ruleSetID, err := req.PathParamAsPositiveUint(ctx, "id")
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.RuleSetPathParamError)
@@ -338,7 +326,7 @@ func (c *RuleSetController) BindRule(ctx *gin.Context) {
 // @Error 400 {object} resp.ObjectResponse "参数错误"
 // @Error 500 {object} resp.ObjectResponse "服务器内部错误"
 // @Router /scan/rulesets/{id}/unbind [post]
-func (c *RuleSetController) UnBindRule(ctx *gin.Context) {
+func (c *ScanController) UnBindRule(ctx *gin.Context) {
 	ruleSetID, err := req.PathParamAsPositiveUint(ctx, "id")
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.RuleSetPathParamError)
