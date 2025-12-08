@@ -41,3 +41,5 @@ rule:
   get_all_plugins_success: "规则插件查询成功。"
   get_all_langs_error: "规则语言查询失败。"
   get_all_langs_success: "规则语言查询成功。"
+  get_all_tags_error: "规则标签查询失败。"
+  get_all_tags_success: "规则标签查询成功。"

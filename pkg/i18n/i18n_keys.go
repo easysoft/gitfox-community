@@ -138,6 +138,8 @@ const (
 	RuleGetAllLangsSuccess   I18nKey = "rule.get_all_langs_success"   // 规则语言查询成功.
 	RuleGetAllPluginsError   I18nKey = "rule.get_all_plugins_error"   // 规则插件查询失败.
 	RuleGetAllPluginsSuccess I18nKey = "rule.get_all_plugins_success" // 规则插件查询成功.
+	RuleGetAllTagsError      I18nKey = "rule.get_all_tags_error"      // 规则标签查询失败.
+	RuleGetAllTagsSuccess    I18nKey = "rule.get_all_tags_success"    // 规则标签查询成功.
 	RuleGetAllTypesError     I18nKey = "rule.get_all_types_error"     // 规则类型查询失败.
 	RuleGetAllTypesSuccess   I18nKey = "rule.get_all_types_success"   // 规则类型查询成功.
 	RuleListError            I18nKey = "rule.list_error"              // 规则列表查询失败.

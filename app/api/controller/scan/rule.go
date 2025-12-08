@@ -232,3 +232,30 @@ func (s *ScanController) AllLangs(ctx *gin.Context) {
 
 	resp.OK(ctx, i18n.RuleGetAllLangsSuccess, result)
 }
+
+// @Summary 查询所有扫描标签
+// @Description 获取所有可用的扫描标签列表
+// @Tags scan
+// @Accept application/json
+// @Produce application/json
+// @Success 200 {object} resp.ObjectResponse{data=[]scan.ScanBaseResp} "查询成功"
+// @Error 401 {object} resp.ObjectResponse "未授权（会话不存在或已过期）"
+// @Error 500 {object} resp.ObjectResponse "服务器内部错误（数据库查询失败等）"
+// @Router /scan/tags [get]
+func (s *ScanController) AllTags(ctx *gin.Context) {
+	var err error
+	session, ok := req.GetAuthSession(ctx.Request.Context())
+	if !ok {
+		resp.Unauthorized(ctx, errors.WithI18nKey(nil, i18n.AuthNoSession))
+		return
+	}
+
+	result, err := s.ruleSvc.AllScanBaseByField(ctx.Request.Context(), session, "tag")
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RuleGetAllTagsError)
+		resp.InternalError(ctx, err)
+		return
+	}
+
+	resp.OK(ctx, i18n.RuleGetAllTagsSuccess, result)
+}

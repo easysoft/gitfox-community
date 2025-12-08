@@ -41,3 +41,5 @@ rule:
   get_all_plugins_success: "Query the rule plugins successfully."
   get_all_langs_error: "Failed to query rule langs."
   get_all_langs_success: "Query the rule langs successfully."
+  get_all_tags_error: "Failed to query rule tags."
+  get_all_tags_success: "Query the rule tags successfully."

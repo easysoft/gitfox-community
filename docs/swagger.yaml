@@ -2504,6 +2504,28 @@ paths:
       summary: 查询规则集列表
       tags:
       - scan
+  /scan/tags:
+    get:
+      consumes:
+      - application/json
+      description: 获取所有可用的扫描标签列表
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 查询成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanBaseResp'
+                  type: array
+              type: object
+      summary: 查询所有扫描标签
+      tags:
+      - scan
   /scan/types:
     get:
       consumes:
