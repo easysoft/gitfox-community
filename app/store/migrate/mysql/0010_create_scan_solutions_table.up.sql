@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS `ops_scan_solutions` (
 	`name` varchar(255) NOT NULL COMMENT '扫描解决方案名称',
 	`desc` varchar(500) NULL DEFAULT NULL COMMENT '解决方案描述（中文）',
 	`descEn` varchar(500) NULL DEFAULT NULL COMMENT '解决方案描述（英文）',
-	`status` tinyint(1) NOT NULL DEFAULT 1 COMMENT '规则状态（1-启用、0-禁用，默认启用）',
+	`status` varchar(20) NOT NULL DEFAULT 1 COMMENT '规则状态（enabled-启用、disabled-禁用，默认启用）',
 	`tag` varchar(50) NULL DEFAULT NULL COMMENT '解决方案标签（用于分类筛选，如：安全加固、漏洞修复、合规整改等）',
 	`isCustom` tinyint(1) NOT NULL DEFAULT '1' COMMENT '是否自定义解决方案（1=自定义，0=系统默认解决方案）',
 	`createdBy` varchar(30) NOT NULL DEFAULT '' COMMENT '创建人',

@@ -9,6 +9,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// @Summary 迁移规则
+// @Description 迁移扫描规则，包括规则集、解决方法和规则
+// @Tags scan
+// @Accept application/json
+// @Produce application/json
+// @Success 200 {object} resp.ObjectResponse{data=string} "迁移成功"
+// @Failure 401 {object} resp.ObjectResponse "未授权"
+// @Failure 500 {object} resp.ObjectResponse "服务器错误"
+// @Router /scan/rules/migrate [post]
 func (s *ScanController) MigrateRules(ctx *gin.Context) {
 	var err error
 
