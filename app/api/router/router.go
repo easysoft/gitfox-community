@@ -1,12 +1,15 @@
 package router
 
 import (
+	"fmt"
+
 	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/middleware"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/auth/authn"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
@@ -44,6 +47,8 @@ func NewRouter(mode string, logger *logger.SugaredMateLogger, controller *Contro
 
 	// 注册无需认证的公共路由
 	registerPublicRoutes(r, controller)
+	// 注册无需认证的特殊路由
+	registerNoAuthRoutes(r, controller)
 
 	// 创建需要 JWT 认证的路由组
 	authGroup := r.Group("/api/v2")
@@ -82,4 +87,9 @@ func registerPublicRoutes(r *gin.Engine, controller *Controller) {
 
 		public.GET("/test", controller.Test.Test)
 	}
+}
+
+// registerNoAuthRoutes 注册无需认证的特殊路由
+func registerNoAuthRoutes(r *gin.Engine, controller *Controller) {
+	r.GET(fmt.Sprintf("/api/v2/na/repos/:id/archive/*%s", req.PathParamFilePath), controller.Repo.Archive)
 }

@@ -181,28 +181,18 @@ func (r *SpaceStore) Delete(ctx context.Context, id uint) error {
 }
 
 // Undelete 批量恢复已删除的空间
-func (r *SpaceStore) Undelete(ctx context.Context, ids []uint, editedBy string) error {
+func (r *SpaceStore) Undelete(ctx context.Context, id uint) error {
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		// 状态校验
-		var spaces []Space
-		if err := tx.Where("id IN ?", ids).Where("deleted = ?", 1).Find(&spaces).Error; err != nil {
+		var space Space
+		if err := tx.Where("id = ?", id).Where("deleted = ?", 1).First(&space).Error; err != nil {
 			return database.ProcessSQLErrorf(ctx, err)
 		}
 
-		if len(spaces) == 0 {
-			return database.ProcessSQLErrorf(ctx, gorm.ErrRecordNotFound)
-		}
-
 		// 恢复空间
-		updateData := map[string]interface{}{
+		if err := tx.Model(&space).UpdateColumns(map[string]interface{}{
 			"deleted":    0,
-			"editedBy":   editedBy,
-			"editedDate": tx.NowFunc(),
-		}
-		if err := tx.Model(&Space{}).
-			Where("id IN ?", ids).
-			Where("deleted = ?", 1).
-			Updates(updateData).Error; err != nil {
+		}).Error; err != nil {
 			return database.ProcessSQLErrorf(ctx, err)
 		}
 		return nil

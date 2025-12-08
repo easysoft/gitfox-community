@@ -13,6 +13,6 @@ func registerSpaceRoutes(r *gin.RouterGroup, controller *Controller) {
 		spaces.GET("/:id", controller.Space.GetByID)        // 单个查询
 		spaces.PUT("/:id", controller.Space.Update)         // 更新空间
 		spaces.DELETE("/:id", controller.Space.Delete)      // 删除空间
-		spaces.POST("/undelete", controller.Space.Undelete) // 恢复空间
+		spaces.POST("/:id/restore", controller.Space.Undelete) // 恢复空间
 	}
 }
