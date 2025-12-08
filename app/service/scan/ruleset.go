@@ -31,7 +31,7 @@ func (s *RuleSetService) Create(ctx context.Context, session *authModel.Session,
 	ruleSet := &scanStore.RuleSet{
 		Name:      req.Name,
 		Desc:      req.Desc,
-		DescrEn:   req.DescEn,
+		DescEn:    req.DescEn,
 		Lang:      constant.ScanLangName(constant.ParseLang(req.Lang).LowerString()),
 		Tag:       req.Tag,
 		Type:      constant.ScanRuleType(req.Type),
@@ -59,7 +59,7 @@ func (s *RuleSetService) Update(ctx context.Context, session *authModel.Session,
 		ruleSet.Desc = req.Desc
 	}
 	if req.DescEn != "" {
-		ruleSet.DescrEn = req.DescEn
+		ruleSet.DescEn = req.DescEn
 	}
 	if req.Lang != "" {
 		ruleSet.Lang = constant.ScanLangName(constant.ParseLang(req.Lang).LowerString())

@@ -10,7 +10,16 @@ import (
 )
 
 func (s *ScanController) MigrateRules(ctx *gin.Context) {
-	// 实现规则迁移逻辑
+	var err error
+
+	err = s.ruleSvc.Migrate(ctx)
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RuleCreateError)
+		resp.InternalError(ctx, err)
+		return
+	}
+
+	resp.OK(ctx, i18n.RuleCreateSuccess, nil)
 }
 
 // @Summary 查询规则列表

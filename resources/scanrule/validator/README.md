@@ -10,12 +10,13 @@ resources/scanrule/
 ├── golangci-lint.rules.json    # golangci-lint 规则定义
 ├── phpstan.types.json          # phpstan 类型定义
 ├── phpstan.rules.json          # phpstan 规则定义
-├── validator.go                # 验证器核心代码
-├── validator_test.go           # 测试用例
-├── cmd/
-│   └── validate/
-│       └── main.go             # 命令行工具
-└── README.md                   # 本文档
+├── validator/                  # 验证器目录
+│   ├── validator.go            # 验证器核心代码
+│   ├── validator_test.go       # 测试用例
+│   ├── structure_test.go       # 结构验证测试
+│   ├── main.go                 # 命令行工具
+│   └── README.md               # 本文档
+└── (其他插件的 types.json 和 rules.json 文件)
 ```
 
 ## 功能说明
@@ -63,63 +64,32 @@ task scanrule:check:plugin PLUGIN=phpstan
 
 ```bash
 cd resources/scanrule
-go run cmd/validate/main.go -dir .
+go run validator/validator.go validator/main.go -dir .
 ```
 
 #### 验证单个插件
 
 ```bash
 cd resources/scanrule
-go run cmd/validate/main.go -dir . -plugin golangci-lint
+go run validator/validator.go validator/main.go -dir . -plugin golangci-lint
 ```
 
 #### 构建可执行文件
 
 ```bash
-cd resources/scanrule/cmd/validate
+cd resources/scanrule/validator
 go build -o scanrule-validator
-./scanrule-validator -dir ../../
+./scanrule-validator -dir ../
 ```
 
 ### 方法三：运行测试
 
 ```bash
-cd resources/scanrule
+cd resources/scanrule/validator
 go test -v
 ```
 
-### 方法四：在代码中使用
-
-```go
-package main
-
-import (
-    "fmt"
-    "gitfox.zcorp.cc/git/Pangu/gitfox-community/resources/scanrule"
-)
-
-func main() {
-    // 验证所有插件
-    results, err := scanrule.ValidateAllPlugins("./resources/scanrule")
-    if err != nil {
-        panic(err)
-    }
-
-    // 打印结果
-    scanrule.PrintValidateResults(results)
-
-    // 或者验证单个插件
-    result := scanrule.ValidatePlugin(
-        "golangci-lint",
-        "./resources/scanrule/golangci-lint.types.json",
-        "./resources/scanrule/golangci-lint.rules.json",
-    )
-
-    if !result.IsValid {
-        fmt.Printf("Validation failed: %v\n", result.MissingKeys)
-    }
-}
-```
+**注意**：验证器现在是一个独立的命令行工具（`package main`），主要通过 Task 命令或直接运行 `go run` 使用。如果需要在其他 Go 代码中复用验证逻辑，可以将相关函数提取到单独的包中。
 
 ## 输出示例
 

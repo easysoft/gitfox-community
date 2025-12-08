@@ -163,10 +163,10 @@ tasks:
     desc: 验证扫描规则的完整性（检查 types 和 rules 是否匹配，是否有重复）
     dir: resources/scanrule
     cmds:
-      - go run cmd/validate/main.go -dir .
+      - go run validator/validator.go validator/main.go -dir .
 
   scanrule:check:plugin:
     desc: 验证指定插件的扫描规则（用法：task scanrule:check:plugin PLUGIN=golangci-lint）
     dir: resources/scanrule
     cmds:
-      - go run cmd/validate/main.go -dir . -plugin {{.PLUGIN}}
+      - go run validator/validator.go validator/main.go -dir . -plugin {{.PLUGIN}}

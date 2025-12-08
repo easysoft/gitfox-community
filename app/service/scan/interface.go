@@ -22,7 +22,7 @@ type IRuleSet interface {
 
 type IRule interface {
 	GetByID(ctx context.Context, session *authModel.Session, id uint) (*scanModel.Rule, error)
-	Migrate(ctx context.Context, session *authModel.Session, files []string) error
+	Migrate(ctx context.Context) error
 	List(ctx context.Context, session *authModel.Session, filter scanModel.RuleListReqFilter) (*database.PageResult[*scanModel.Rule], error)
 	UpdateStatus(ctx context.Context, session *authModel.Session, id uint) error
 }

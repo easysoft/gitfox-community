@@ -128,7 +128,7 @@ func mapToModel(data RuleSet) *scanModel.RuleSet {
 		ID:          data.ID,
 		Name:        data.Name,
 		Desc:        data.Desc,
-		DescEn:      data.DescrEn,
+		DescEn:      data.DescEn,
 		Lang:        data.Lang,
 		Tag:         data.Tag,
 		Status:      data.Status,

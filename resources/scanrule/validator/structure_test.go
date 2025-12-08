@@ -1,4 +1,4 @@
-package scanrule
+package main
 
 import (
 	"os"
