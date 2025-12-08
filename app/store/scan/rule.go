@@ -2,6 +2,7 @@ package scan
 
 import (
 	"context"
+	"fmt"
 
 	"gorm.io/gorm"
 
@@ -211,4 +212,19 @@ func (s *RuleStore) UpdateStatus(ctx context.Context, id uint) error {
 
 	// 保存更新
 	return database.ProcessSQLErrorf(ctx, s.db.WithContext(ctx).Save(&rule).Error)
+}
+
+func (s *RuleStore) AllScanBaseByField(ctx context.Context, field string) ([]scanModel.ScanBaseResp, error) {
+	var rules []scanModel.ScanBaseResp
+	err := s.db.WithContext(ctx).
+		Model(&Rule{}).
+		Select(fmt.Sprintf("%s, COUNT(*) as count", field)).
+		Where("deleted = ?", false).
+		Group(field).
+		Order("count DESC, " + field + " ASC").
+		Find(&rules).Error
+	if err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
+	}
+	return rules, nil
 }

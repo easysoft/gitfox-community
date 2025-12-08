@@ -129,19 +129,21 @@ const (
 	RequestRequestBodyTooLarge             I18nKey = "request.request_body_too_large"             // 请求体过大.
 
 	// Rule 相关常量
-	RuleBodyParamError  I18nKey = "rule.body_param_error"  // 请求体参数解析失败.
-	RuleCreateError     I18nKey = "rule.create_error"      // 规则创建失败.
-	RuleCreateSuccess   I18nKey = "rule.create_success"    // 规则创建成功.
-	RuleDeleteError     I18nKey = "rule.delete_error"      // 规则删除失败.
-	RuleDeleteSuccess   I18nKey = "rule.delete_success"    // 规则删除成功.
-	RuleListError       I18nKey = "rule.list_error"        // 规则列表查询失败.
-	RuleListSuccess     I18nKey = "rule.list_success"      // 规则列表查询成功.
-	RulePathParamError  I18nKey = "rule.path_param_error"  // 路径参数解析失败.
-	RuleQueryError      I18nKey = "rule.query_error"       // 规则详情查询失败.
-	RuleQueryParamError I18nKey = "rule.query_param_error" // 查询参数解析失败.
-	RuleQuerySuccess    I18nKey = "rule.query_success"     // 规则详情查询成功.
-	RuleUpdateError     I18nKey = "rule.update_error"      // 规则更新失败.
-	RuleUpdateSuccess   I18nKey = "rule.update_success"    // 规则更新成功.
+	RuleBodyParamError     I18nKey = "rule.body_param_error"      // 请求体参数解析失败.
+	RuleCreateError        I18nKey = "rule.create_error"          // 规则创建失败.
+	RuleCreateSuccess      I18nKey = "rule.create_success"        // 规则创建成功.
+	RuleDeleteError        I18nKey = "rule.delete_error"          // 规则删除失败.
+	RuleDeleteSuccess      I18nKey = "rule.delete_success"        // 规则删除成功.
+	RuleGetAllTypesError   I18nKey = "rule.get_all_types_error"   // 规则类型查询失败.
+	RuleGetAllTypesSuccess I18nKey = "rule.get_all_types_success" // 规则类型查询成功.
+	RuleListError          I18nKey = "rule.list_error"            // 规则列表查询失败.
+	RuleListSuccess        I18nKey = "rule.list_success"          // 规则列表查询成功.
+	RulePathParamError     I18nKey = "rule.path_param_error"      // 路径参数解析失败.
+	RuleQueryError         I18nKey = "rule.query_error"           // 规则详情查询失败.
+	RuleQueryParamError    I18nKey = "rule.query_param_error"     // 查询参数解析失败.
+	RuleQuerySuccess       I18nKey = "rule.query_success"         // 规则详情查询成功.
+	RuleUpdateError        I18nKey = "rule.update_error"          // 规则更新失败.
+	RuleUpdateSuccess      I18nKey = "rule.update_success"        // 规则更新成功.
 
 	// RuleSet 相关常量
 	RuleSetBindError       I18nKey = "ruleSet.bind_error"        // 规则集绑定规则失败.

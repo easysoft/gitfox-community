@@ -101,3 +101,12 @@ func (f *RuleListReqFilter) Validater() error {
 
 	return nil
 }
+
+type ScanBaseResp struct {
+	ID     uint64 `json:"id,omitempty"`
+	Tag    string `json:"tag,omitempty"`
+	Lang   string `json:"lang,omitempty"`
+	Plugin string `json:"plugin,omitempty"`
+	Type   string `json:"type,omitempty"`
+	Count  int64  `json:"count,omitempty"`
+}

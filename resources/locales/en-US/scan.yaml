@@ -32,3 +32,5 @@ rule:
   list_success: "Query the rule list successfully."
   delete_error: "Failed to delete rule."
   delete_success: "Rule delete successfully."
+  get_all_types_error: "Failed to query rule types."
+  get_all_types_success: "Query the rule types successfully."

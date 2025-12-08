@@ -764,6 +764,21 @@ definitions:
         - optimize
         type: string
     type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanBaseResp:
+    properties:
+      count:
+        type: integer
+      id:
+        type: integer
+      lang:
+        type: string
+      plugin:
+        type: string
+      tag:
+        type: string
+      type:
+        type: string
+    type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRuleBind:
     enum:
     - bind
@@ -2154,6 +2169,34 @@ paths:
       summary: 查询规则列表
       tags:
       - scan
+  /scan/rules/migrate:
+    post:
+      consumes:
+      - application/json
+      description: 迁移扫描规则，包括规则集、解决方法和规则
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 迁移成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 迁移规则
+      tags:
+      - scan
   /scan/rulesets:
     post:
       consumes:
@@ -2415,6 +2458,28 @@ paths:
                   $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListArgs'
               type: object
       summary: 查询规则集列表
+      tags:
+      - scan
+  /scan/types:
+    get:
+      consumes:
+      - application/json
+      description: 获取所有可用的扫描类型列表
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 查询成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanBaseResp'
+                  type: array
+              type: object
+      summary: 查询所有扫描类型
       tags:
       - scan
   /spaces:

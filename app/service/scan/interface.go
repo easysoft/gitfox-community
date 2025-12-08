@@ -24,5 +24,6 @@ type IRule interface {
 	GetByID(ctx context.Context, session *authModel.Session, id uint) (*scanModel.Rule, error)
 	Migrate(ctx context.Context) error
 	List(ctx context.Context, session *authModel.Session, filter scanModel.RuleListReqFilter) (*database.PageResult[*scanModel.Rule], error)
+	AllScanBaseByField(ctx context.Context, session *authModel.Session, field string) ([]scanModel.ScanBaseResp, error)
 	UpdateStatus(ctx context.Context, session *authModel.Session, id uint) error
 }
