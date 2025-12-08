@@ -169,7 +169,7 @@ func (s *ScanController) AllTypes(ctx *gin.Context) {
 		return
 	}
 
-	result, err := s.ruleSvc.AllScanBaseByField(ctx, session, "type")
+	result, err := s.ruleSvc.AllScanBaseByField(ctx.Request.Context(), session, "type")
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.RuleGetAllTypesError)
 		resp.InternalError(ctx, err)
