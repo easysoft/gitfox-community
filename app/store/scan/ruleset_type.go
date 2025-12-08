@@ -8,7 +8,7 @@ import (
 )
 
 type RuleSet struct {
-	ID          int64                   `gorm:"column:id"`
+	ID          uint64                  `gorm:"column:id"`
 	Name        string                  `gorm:"column:name"`
 	Desc        string                  `gorm:"column:desc"`
 	DescEn      string                  `gorm:"column:descEn"`

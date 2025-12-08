@@ -9,9 +9,9 @@ import (
 
 // RuleSetRules 规则集与规则关联表
 type RuleSetRules struct {
-	ID          int64      `gorm:"column:id;primaryKey"`
-	RuleSetID   int64      `gorm:"column:rulesetID"`
-	RuleID      int64      `gorm:"column:ruleID"`
+	ID          uint64     `gorm:"column:id;primaryKey"`
+	RuleSetID   uint64     `gorm:"column:rulesetID"`
+	RuleID      uint64     `gorm:"column:ruleID"`
 	CreatedBy   string     `gorm:"column:createdBy"`
 	CreatedDate *time.Time `gorm:"column:createdDate"`
 	EditedBy    string     `gorm:"column:editedBy"`
@@ -40,7 +40,7 @@ func (r *RuleSetRules) BeforeUpdate(tx *gorm.DB) error {
 
 // SolutionRules 扫描方案
 type SolutionRules struct {
-	ID          int64                   `gorm:"column:id;primaryKey"`
+	ID          uint64                  `gorm:"column:id;primaryKey"`
 	Name        string                  `gorm:"column:name"`
 	Desc        string                  `gorm:"column:desc"`
 	DescEn      string                  `gorm:"column:descEn"`
@@ -75,9 +75,9 @@ func (r *SolutionRules) BeforeUpdate(tx *gorm.DB) error {
 
 // SolutionRuleSets 扫描方案与规则集关联表
 type SolutionRuleSets struct {
-	ID          int64      `gorm:"column:id;primaryKey"`
-	SolutionID  int64      `gorm:"column:solutionID"`
-	RuleSetID   int64      `gorm:"column:ruleSetID"`
+	ID          uint64     `gorm:"column:id;primaryKey"`
+	SolutionID  uint64     `gorm:"column:solutionID"`
+	RuleSetID   uint64     `gorm:"column:ruleSetID"`
 	CreatedBy   string     `gorm:"column:createdBy"`
 	CreatedDate *time.Time `gorm:"column:createdDate"`
 	EditedBy    string     `gorm:"column:editedBy"`
