@@ -103,7 +103,7 @@ func (f *RuleListReqFilter) Validater() error {
 }
 
 type ScanBaseResp struct {
-	ID     int64  `json:"id,omitempty"`
+	ID     uint64 `json:"id,omitempty"`
 	Tag    string `json:"tag,omitempty"`
 	Lang   string `json:"lang,omitempty"`
 	Plugin string `json:"plugin,omitempty"`
