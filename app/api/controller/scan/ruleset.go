@@ -178,7 +178,6 @@ func (c *ScanController) Delete(ctx *gin.Context) {
 	}
 
 	if err := c.ruleSetSvc.Delete(ctx.Request.Context(), ruleSetID); err != nil {
-		err = errors.WithI18nKey(err, i18n.RuleSetDeleteError)
 		resp.InternalError(ctx, err)
 		return
 	}
@@ -306,7 +305,6 @@ func (c *ScanController) BindRule(ctx *gin.Context) {
 	}
 
 	if err := c.ruleSetSvc.BindRule(ctx.Request.Context(), ruleSetID, *reqData); err != nil {
-		err = errors.WithI18nKey(err, i18n.RuleSetBindError)
 		resp.InternalError(ctx, err)
 		return
 	}
@@ -342,7 +340,6 @@ func (c *ScanController) UnBindRule(ctx *gin.Context) {
 	}
 
 	if err := c.ruleSetSvc.UnBindRule(ctx.Request.Context(), ruleSetID, *reqData); err != nil {
-		err = errors.WithI18nKey(err, i18n.RuleSetUnbindError)
 		resp.InternalError(ctx, err)
 		return
 	}
