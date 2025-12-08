@@ -180,8 +180,8 @@ func (r *SpaceStore) Delete(ctx context.Context, id uint) error {
 	})
 }
 
-// Undelete 批量恢复已删除的空间
-func (r *SpaceStore) Undelete(ctx context.Context, id uint) error {
+// Restore 批量恢复已删除的空间
+func (r *SpaceStore) Restore(ctx context.Context, id uint) error {
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		// 状态校验
 		var space Space

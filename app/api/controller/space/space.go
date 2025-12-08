@@ -210,7 +210,7 @@ func (ctl *SpaceController) Delete(c *gin.Context) {
 // @Failure 404 {object} resp.ObjectResponse "空间不存在或未删除"
 // @Failure 500 {object} resp.ObjectResponse "恢复失败"
 // @Router /spaces/{id}/restore [post]
-func (ctl *SpaceController) Undelete(c *gin.Context) {
+func (ctl *SpaceController) Restore(c *gin.Context) {
 	var err error
 	// 解析 path id
 	objID, err := req.PathParamAsPositiveUint(c, "id")
@@ -220,9 +220,8 @@ func (ctl *SpaceController) Undelete(c *gin.Context) {
 		return
 	}
 
-
 	// 调用服务层恢复空间
-	if err = ctl.spaceSvc.Undelete(c.Request.Context(), objID); err != nil {
+	if err = ctl.spaceSvc.Restore(c.Request.Context(), objID); err != nil {
 		// 判断错误类型，返回相应的HTTP状态码
 		err = errors.WithI18nKey(err, i18n.SpaceRestoreError)
 		resp.InternalError(c, err)

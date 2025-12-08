@@ -87,9 +87,9 @@ func (s *Service) Delete(ctx context.Context, id uint) error {
 	return s.spaceStore.Delete(ctx, id)
 }
 
-func (s *Service) Undelete(ctx context.Context, id uint) error {
+func (s *Service) Restore(ctx context.Context, id uint) error {
 	// 调用 Store 层恢复空间
-	err := s.spaceStore.Undelete(ctx, id)
+	err := s.spaceStore.Restore(ctx, id)
 	if err != nil {
 		return err
 	}
