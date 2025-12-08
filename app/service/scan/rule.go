@@ -54,3 +54,7 @@ func (s *RuleService) UpdateStatus(ctx context.Context, session *authModel.Sessi
 func (s *RuleService) List(ctx context.Context, session *authModel.Session, filter scanModel.RuleListReqFilter) (*database.PageResult[*scanModel.Rule], error) {
 	return s.ruleStore.List(ctx, filter)
 }
+
+func (s *RuleService) AllScanBaseByField(ctx context.Context, session *authModel.Session, field string) ([]scanModel.ScanBaseResp, error) {
+	return s.ruleStore.AllScanBaseByField(ctx, field)
+}

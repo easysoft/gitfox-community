@@ -27,5 +27,6 @@ type IRule interface {
 	GetByID(ctx context.Context, id uint) (*scanModel.Rule, error)
 	UpdateStatus(ctx context.Context, id uint) error
 	List(ctx context.Context, filter scanModel.RuleListReqFilter) (*database.PageResult[*scanModel.Rule], error)
+	AllScanBaseByField(ctx context.Context, field string) ([]scanModel.ScanBaseResp, error)
 	Migrate(ctx context.Context, rulesFile *resources.RulesFile) error
 }

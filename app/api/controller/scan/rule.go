@@ -151,3 +151,30 @@ func (s *ScanController) UpdateRuleStatus(ctx *gin.Context) {
 
 	resp.OK(ctx, i18n.RuleUpdateSuccess, nil)
 }
+
+// @Summary 查询所有扫描类型
+// @Description 获取所有可用的扫描类型列表
+// @Tags scan
+// @Accept application/json
+// @Produce application/json
+// @Success 200 {object} resp.ObjectResponse{data=[]scan.ScanBaseResp} "查询成功"
+// @Error 401 {object} resp.ObjectResponse "未授权（会话不存在或已过期）"
+// @Error 500 {object} resp.ObjectResponse "服务器内部错误（数据库查询失败等）"
+// @Router /scan/types [get]
+func (s *ScanController) AllTypes(ctx *gin.Context) {
+	var err error
+	session, ok := req.GetAuthSession(ctx.Request.Context())
+	if !ok {
+		resp.Unauthorized(ctx, errors.WithI18nKey(nil, i18n.AuthNoSession))
+		return
+	}
+
+	result, err := s.ruleSvc.AllScanBaseByField(ctx, session, "type")
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RuleGetAllTypesError)
+		resp.InternalError(ctx, err)
+		return
+	}
+
+	resp.OK(ctx, i18n.RuleGetAllTypesSuccess, result)
+}
