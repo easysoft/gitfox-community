@@ -134,6 +134,8 @@ const (
 	RuleCreateSuccess        I18nKey = "rule.create_success"          // 规则创建成功.
 	RuleDeleteError          I18nKey = "rule.delete_error"            // 规则删除失败.
 	RuleDeleteSuccess        I18nKey = "rule.delete_success"          // 规则删除成功.
+	RuleGetAllLangsError     I18nKey = "rule.get_all_langs_error"     // 规则语言查询失败.
+	RuleGetAllLangsSuccess   I18nKey = "rule.get_all_langs_success"   // 规则语言查询成功.
 	RuleGetAllPluginsError   I18nKey = "rule.get_all_plugins_error"   // 规则插件查询失败.
 	RuleGetAllPluginsSuccess I18nKey = "rule.get_all_plugins_success" // 规则插件查询成功.
 	RuleGetAllTypesError     I18nKey = "rule.get_all_types_error"     // 规则类型查询失败.

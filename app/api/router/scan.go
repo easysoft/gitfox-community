@@ -11,6 +11,7 @@ func registerScanRoutes(r *gin.RouterGroup, controller *Controller) {
 
 		rule.GET("/types", controller.Scan.AllTypes)
 		rule.GET("/plugins", controller.Scan.AllPlugins)
+		rule.GET("/langs", controller.Scan.AllLangs)
 		// 规则相关路由
 		rules := rule.Group("/rules")
 		rules.POST("/migrate", controller.Scan.MigrateRules)
