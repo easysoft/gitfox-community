@@ -2047,6 +2047,28 @@ paths:
       summary: 仓库代码blame
       tags:
       - repos
+  /scan/plugins:
+    get:
+      consumes:
+      - application/json
+      description: 获取所有可用的扫描插件列表
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 查询成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanBaseResp'
+                  type: array
+              type: object
+      summary: 查询所有扫描插件
+      tags:
+      - scan
   /scan/rules/{id}:
     get:
       consumes:

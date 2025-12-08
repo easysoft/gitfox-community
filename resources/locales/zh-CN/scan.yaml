@@ -34,3 +34,5 @@ rule:
   delete_success: "规则删除成功。"
   get_all_types_error: "规则类型查询失败。"
   get_all_types_success: "规则类型查询成功。"
+  get_all_plugins_error: "规则插件查询失败。"
+  get_all_plugins_success: "规则插件查询成功。"
