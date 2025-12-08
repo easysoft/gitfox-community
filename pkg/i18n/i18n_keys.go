@@ -148,24 +148,27 @@ const (
 	RuleUpdateSuccess      I18nKey = "rule.update_success"        // 规则更新成功.
 
 	// RuleSet 相关常量
-	RuleSetBindError       I18nKey = "ruleSet.bind_error"        // 规则集绑定规则失败.
-	RuleSetBindSuccess     I18nKey = "ruleSet.bind_success"      // 规则集绑定规则成功.
-	RuleSetBodyParamError  I18nKey = "ruleSet.body_param_error"  // 请求体参数解析失败.
-	RuleSetCreateError     I18nKey = "ruleSet.create_error"      // 规则集创建失败.
-	RuleSetCreateSuccess   I18nKey = "ruleSet.create_success"    // 规则集创建成功.
-	RuleSetDeleteError     I18nKey = "ruleSet.delete_error"      // 规则集列表删除失败.
-	RuleSetDeleteSuccess   I18nKey = "ruleSet.delete_success"    // 规则集列表删除成功.
-	RuleSetInUseError      I18nKey = "ruleSet.in_use_error"      // 规则集已被扫描解决方案使用.
-	RuleSetListError       I18nKey = "ruleSet.list_error"        // 规则集列表查询失败.
-	RuleSetListSuccess     I18nKey = "ruleSet.list_success"      // 规则集列表查询成功.
-	RuleSetPathParamError  I18nKey = "ruleSet.path_param_error"  // 路径参数解析失败.
-	RuleSetQueryError      I18nKey = "ruleSet.query_error"       // 规则集详情查询失败.
-	RuleSetQueryParamError I18nKey = "ruleSet.query_param_error" // 查询参数解析失败.
-	RuleSetQuerySuccess    I18nKey = "ruleSet.query_success"     // 规则集详情查询成功.
-	RuleSetUnbindError     I18nKey = "ruleSet.unbind_error"      // 规则集解绑规则失败.
-	RuleSetUnbindSuccess   I18nKey = "ruleSet.unbind_success"    // 规则集解绑规则成功.
-	RuleSetUpdateError     I18nKey = "ruleSet.update_error"      // 规则集更新失败.
-	RuleSetUpdateSuccess   I18nKey = "ruleSet.update_success"    // 规则集更新成功.
+	RuleSetBindError          I18nKey = "ruleSet.bind_error"           // 规则集绑定规则失败.
+	RuleSetBindSuccess        I18nKey = "ruleSet.bind_success"         // 规则集绑定规则成功.
+	RuleSetBodyParamError     I18nKey = "ruleSet.body_param_error"     // 请求体参数解析失败.
+	RuleSetBuiltinBindError   I18nKey = "ruleSet.builtin_bind_error"   // 内置规则集禁止绑定规则.
+	RuleSetBuiltinDeleteError I18nKey = "ruleSet.builtin_delete_error" // 内置规则集不允许删除.
+	RuleSetBuiltinUnbindError I18nKey = "ruleSet.builtin_unbind_error" // 内置规则集禁止解绑规则.
+	RuleSetCreateError        I18nKey = "ruleSet.create_error"         // 规则集创建失败.
+	RuleSetCreateSuccess      I18nKey = "ruleSet.create_success"       // 规则集创建成功.
+	RuleSetDeleteError        I18nKey = "ruleSet.delete_error"         // 规则集列表删除失败.
+	RuleSetDeleteSuccess      I18nKey = "ruleSet.delete_success"       // 规则集列表删除成功.
+	RuleSetInUseError         I18nKey = "ruleSet.in_use_error"         // 规则集已被扫描解决方案使用.
+	RuleSetListError          I18nKey = "ruleSet.list_error"           // 规则集列表查询失败.
+	RuleSetListSuccess        I18nKey = "ruleSet.list_success"         // 规则集列表查询成功.
+	RuleSetPathParamError     I18nKey = "ruleSet.path_param_error"     // 路径参数解析失败.
+	RuleSetQueryError         I18nKey = "ruleSet.query_error"          // 规则集详情查询失败.
+	RuleSetQueryParamError    I18nKey = "ruleSet.query_param_error"    // 查询参数解析失败.
+	RuleSetQuerySuccess       I18nKey = "ruleSet.query_success"        // 规则集详情查询成功.
+	RuleSetUnbindError        I18nKey = "ruleSet.unbind_error"         // 规则集解绑规则失败.
+	RuleSetUnbindSuccess      I18nKey = "ruleSet.unbind_success"       // 规则集解绑规则成功.
+	RuleSetUpdateError        I18nKey = "ruleSet.update_error"         // 规则集更新失败.
+	RuleSetUpdateSuccess      I18nKey = "ruleSet.update_success"       // 规则集更新成功.
 
 	// Space 相关常量
 	SpaceArtifactsTitleSuccess   I18nKey = "space.artifacts_title_success"   // 仓库设置保存成功
