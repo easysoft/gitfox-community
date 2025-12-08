@@ -59,7 +59,7 @@ func mapRuleToModel(data *Rule) *scanModel.Rule {
 		return nil
 	}
 	return &scanModel.Rule{
-		ID:          data.ID,
+		ID:          int64(data.ID),
 		RuleKey:     data.RuleKey,
 		Name:        data.Name,
 		Desc:        data.Desc,
@@ -137,7 +137,7 @@ func (s *RuleStore) List(ctx context.Context, filter scanModel.RuleListReqFilter
 			tx = tx.Where("ops_scan_rules.id IN (?)", subQuery)
 		} else {
 			subQuery := s.db.Model(&RuleSetRules{}).
-				Select("DISTINCT ruleID").
+				Distinct("ruleID").
 				Where("deleted = ?", false)
 			tx = tx.Where("ops_scan_rules.id IN (?)", subQuery)
 		}

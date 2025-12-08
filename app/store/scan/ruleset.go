@@ -37,7 +37,7 @@ func (s *RuleSetStore) GetByID(ctx context.Context, id uint) (*scanModel.RuleSet
 }
 
 func (s *RuleSetStore) Update(ctx context.Context, ruleSet *RuleSet, id uint) (*scanModel.RuleSet, error) {
-	ruleSet.ID = int64(id)
+	ruleSet.ID = uint64(id)
 	if err := s.db.WithContext(ctx).Updates(ruleSet).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
@@ -125,7 +125,7 @@ func (s *RuleSetStore) List(ctx context.Context, filter scanModel.RuleSetReqFilt
 // mapToModel 将 RuleSet 转换为 scanModel.RuleSet
 func mapToModel(data RuleSet) *scanModel.RuleSet {
 	return &scanModel.RuleSet{
-		ID:          data.ID,
+		ID:          int64(data.ID),
 		Name:        data.Name,
 		Desc:        data.Desc,
 		DescEn:      data.DescEn,
@@ -166,8 +166,8 @@ func (s *RuleSetStore) BindRule(ctx context.Context, ruleSetID uint, ruleIDs []u
 			if err == gorm.ErrRecordNotFound {
 				// 记录不存在，插入新记录
 				newRecord := RuleSetRules{
-					RuleSetID: int64(ruleSetID),
-					RuleID:    int64(ruleID),
+					RuleSetID: uint64(ruleSetID),
+					RuleID:    uint64(ruleID),
 					Deleted:   false,
 				}
 				if err := tx.Create(&newRecord).Error; err != nil {

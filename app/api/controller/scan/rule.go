@@ -21,7 +21,7 @@ import (
 func (s *ScanController) MigrateRules(ctx *gin.Context) {
 	var err error
 
-	err = s.ruleSvc.Migrate(ctx)
+	err = s.ruleSvc.Migrate(ctx.Request.Context())
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.RuleCreateError)
 		resp.InternalError(ctx, err)
@@ -63,7 +63,7 @@ func (s *ScanController) ListRules(ctx *gin.Context) {
 		return
 	}
 
-	result, err := s.ruleSvc.List(ctx, session, params)
+	result, err := s.ruleSvc.List(ctx.Request.Context(), session, params)
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.RuleListError)
 		resp.InternalError(ctx, err)
@@ -105,7 +105,7 @@ func (s *ScanController) GetRule(ctx *gin.Context) {
 		return
 	}
 
-	rule, err := s.ruleSvc.GetByID(ctx, session, ruleID)
+	rule, err := s.ruleSvc.GetByID(ctx.Request.Context(), session, ruleID)
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.RuleQueryError)
 		resp.BadRequest(ctx, err)
@@ -142,7 +142,7 @@ func (s *ScanController) UpdateRuleStatus(ctx *gin.Context) {
 		return
 	}
 
-	err = s.ruleSvc.UpdateStatus(ctx, session, ruleID)
+	err = s.ruleSvc.UpdateStatus(ctx.Request.Context(), session, ruleID)
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.RuleUpdateError)
 		resp.BadRequest(ctx, err)

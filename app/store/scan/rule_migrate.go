@@ -263,8 +263,8 @@ func createMigrateScanRuleSolutions(ctx context.Context, tx *gorm.DB, rulesFile 
 
 	for _, ruleSetID := range ruleSetIDs {
 		solutionRuleSet := &SolutionRuleSets{
-			SolutionID:  solution.ID,
-			RuleSetID:   ruleSetID,
+			SolutionID:  uint64(solution.ID),
+			RuleSetID:   uint64(ruleSetID),
 			CreatedBy:   "system",
 			CreatedDate: &now,
 			EditedBy:    "system",
@@ -325,7 +325,7 @@ func rulesSetBindRules(ctx context.Context, tx *gorm.DB, ruleSet *RuleSet, ruleI
 	for _, ruleID := range ruleIDs {
 		newRuleSetRule := &RuleSetRules{
 			RuleSetID:   ruleSet.ID,
-			RuleID:      ruleID,
+			RuleID:      uint64(ruleID),
 			CreatedBy:   "system",
 			CreatedDate: &now,
 			EditedBy:    "system",

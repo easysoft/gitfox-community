@@ -9,7 +9,7 @@ import (
 
 // Rule 扫描规则表
 type Rule struct {
-	ID          int64                     `gorm:"column:id;primaryKey"`
+	ID          uint64                    `gorm:"column:id;primaryKey"`
 	RuleKey     string                    `gorm:"column:ruleKey"`
 	Name        string                    `gorm:"column:name"`
 	Desc        string                    `gorm:"column:desc"`
