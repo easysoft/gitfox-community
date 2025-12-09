@@ -22,7 +22,7 @@ func (s *SpaceStore) Create(ctx context.Context, req spaceModel.CreateSpaceReque
 
 	data := Space{
 		Name:       req.Name,
-		Owner:      req.Owner,
+		Auth:       req.Auth,
 		Permission: req.Permission,
 		Desc:       req.Desc,
 		CreatedBy:  req.CreatedBy,
@@ -49,8 +49,8 @@ func (s *SpaceStore) Update(ctx context.Context, id uint, req spaceModel.UpdateS
 	if req.Name != "" {
 		updateData["name"] = req.Name
 	}
-	if req.Owner != "" {
-		updateData["owner"] = req.Owner
+	if req.Auth != "" {
+		updateData["auth"] = req.Auth
 	}
 	if req.Permission != "" {
 		updateData["acl"] = req.Permission
@@ -214,7 +214,7 @@ func mapToModel(data Space) *spaceModel.SpaceResponse {
 	return &spaceModel.SpaceResponse{
 		ID:          data.ID,
 		Name:        data.Name,
-		Owner:       data.Owner,
+		Auth:        data.Auth,
 		Permission:  data.Permission,
 		Desc:        data.Desc,
 		CreatedBy:   data.CreatedBy,
