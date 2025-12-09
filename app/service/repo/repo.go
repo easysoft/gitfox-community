@@ -391,3 +391,23 @@ func (s *Service) Delete(ctx context.Context, session *auth.Session, id uint) er
 	}
 	return nil
 }
+
+// List 分页查询仓库列表
+func (s *Service) List(ctx context.Context, session *auth.Session, filter repoModel.ReqFilter) ([]*repoModel.Repo, bool, error) {
+	// 调用 store 层查询
+	pageResult, err := s.repoStore.List(ctx, filter)
+	if err != nil {
+		return nil, false, err
+	}
+
+	// 为每个仓库填充 Git URL
+	for _, repoObj := range pageResult.Data {
+		repoObj.GitSSHURL = s.urlProvider.GenerateGITCloneSSHURL(ctx, repoObj.Path)
+		repoObj.GitURL = s.urlProvider.GenerateGITCloneURL(ctx, repoObj.Path)
+	}
+
+	// 计算是否为最后一页
+	isLast := pageResult.Page*pageResult.PageSize >= int(pageResult.Total)
+
+	return pageResult.Data, isLast, nil
+}

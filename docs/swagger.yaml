@@ -532,6 +532,17 @@ definitions:
         description: 状态码用 int 类型（兼容枚举映射）
         type: integer
     type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.ReqFilter:
+    properties:
+      page:
+        default: 1
+        type: integer
+      pageSize:
+        default: 20
+        type: integer
+      query:
+        type: string
+    type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.ReqForDiff:
     properties:
       files:
@@ -2045,6 +2056,45 @@ paths:
           schema:
             type: string
       summary: 仓库代码blame
+      tags:
+      - repos
+  /repos/list:
+    post:
+      consumes:
+      - application/json
+      description: 分页查询仓库列表
+      parameters:
+      - description: 查询仓库请求参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.ReqFilter'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 查询成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.Repo'
+                  type: array
+                listArgs:
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListNoTotalArgs'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse'
+      summary: 查询仓库列表
       tags:
       - repos
   /scan/langs:
