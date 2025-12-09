@@ -4169,6 +4169,7 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "acl",
+                "auth",
                 "createdBy",
                 "name"
             ],
@@ -4181,6 +4182,14 @@ const docTemplate = `{
                     ],
                     "example": "open"
                 },
+                "auth": {
+                    "type": "string",
+                    "enum": [
+                        "extend",
+                        "reset"
+                    ],
+                    "example": "extend"
+                },
                 "createdBy": {
                     "type": "string"
                 },
@@ -4191,9 +4200,6 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 200,
                     "example": "测试空间01"
-                },
-                "owner": {
-                    "type": "string"
                 }
             }
         },
@@ -4201,6 +4207,9 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "acl": {
+                    "type": "string"
+                },
+                "auth": {
                     "type": "string"
                 },
                 "createdBy": {
@@ -4223,15 +4232,13 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
-                },
-                "owner": {
-                    "type": "string"
                 }
             }
         },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.UpdateSpaceRequest": {
             "type": "object",
             "required": [
+                "auth",
                 "editedBy"
             ],
             "properties": {
@@ -4242,6 +4249,14 @@ const docTemplate = `{
                         "private"
                     ]
                 },
+                "auth": {
+                    "type": "string",
+                    "enum": [
+                        "extend",
+                        "reset"
+                    ],
+                    "example": "extend"
+                },
                 "desc": {
                     "type": "string"
                 },
@@ -4249,9 +4264,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "name": {
-                    "type": "string"
-                },
-                "owner": {
                     "type": "string"
                 }
             }

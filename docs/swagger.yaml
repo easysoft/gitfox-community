@@ -869,6 +869,12 @@ definitions:
         - private
         example: open
         type: string
+      auth:
+        enum:
+        - extend
+        - reset
+        example: extend
+        type: string
       createdBy:
         type: string
       desc:
@@ -877,16 +883,17 @@ definitions:
         example: 测试空间01
         maxLength: 200
         type: string
-      owner:
-        type: string
     required:
     - acl
+    - auth
     - createdBy
     - name
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.SpaceResponse:
     properties:
       acl:
+        type: string
+      auth:
         type: string
       createdBy:
         type: string
@@ -902,8 +909,6 @@ definitions:
         type: integer
       name:
         type: string
-      owner:
-        type: string
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.UpdateSpaceRequest:
     properties:
@@ -912,15 +917,20 @@ definitions:
         - open
         - private
         type: string
+      auth:
+        enum:
+        - extend
+        - reset
+        example: extend
+        type: string
       desc:
         type: string
       editedBy:
         type: string
       name:
         type: string
-      owner:
-        type: string
     required:
+    - auth
     - editedBy
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_tag.ReqFilter:

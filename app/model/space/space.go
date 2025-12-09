@@ -4,15 +4,15 @@ import "time"
 
 type CreateSpaceRequest struct {
 	Name       string `json:"name" binding:"required,max=200" example:"测试空间01"`
-	Owner      string `json:"owner"`
 	Permission string `json:"acl" binding:"required,oneof=open private" example:"open"`
+	Auth       string `json:"auth" binding:"required,oneof=extend reset" example:"extend"`
 	Desc       string `json:"desc"`
 	CreatedBy  string `json:"createdBy" binding:"required"`
 }
 
 type UpdateSpaceRequest struct {
 	Name       string `json:"name"`
-	Owner      string `json:"owner"`
+	Auth       string `json:"auth" binding:"required,oneof=extend reset" example:"extend"`
 	Permission string `json:"acl" binding:"omitempty,oneof=open private"`
 	Desc       string `json:"desc"`
 	EditedBy   string `json:"editedBy" binding:"required"`
@@ -21,7 +21,7 @@ type UpdateSpaceRequest struct {
 type SpaceResponse struct {
 	ID          uint       `json:"id"`
 	Name        string     `json:"name"`
-	Owner       string     `json:"owner"`
+	Auth        string     `json:"auth"`
 	Permission  string     `json:"acl"`
 	Desc        string     `json:"desc"`
 	CreatedBy   string     `json:"createdBy"`
@@ -33,10 +33,9 @@ type SpaceResponse struct {
 type ListSpaceFilter struct {
 	Name       string `form:"name" binding:"omitempty"`                                      // 非必填，omitempty 允许空值
 	Permission string `json:"name" form:"permission" binding:"omitempty,oneof=open private"` // 枚举校验：仅允许 open/private
-	Owner      string `form:"owner" binding:"omitempty"`
 	IDs        string `json:"ids" form:"ids" binding:"omitempty,gt=0"` //gt=0 要求元素大于0
-	Deleted    bool  `form:"deleted" binding:"omitempty"`          // 是否包含已删除空间
-	IsOpen     bool  `form:"isOpen" binding:"omitempty"`           // 是否公开空间
+	Deleted    bool   `form:"deleted" binding:"omitempty"`             // 是否包含已删除空间
+	IsOpen     bool   `form:"isOpen" binding:"omitempty"`              // 是否公开空间
 
 	// 分页参数（对应 pagination.PageParam）
 	Page     int `form:"page" binding:"omitempty,min=1"`             // 最小1

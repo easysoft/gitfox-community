@@ -16,7 +16,7 @@ const (
 type Space struct {
 	ID          uint       `gorm:"column:id;type:int unsigned;primaryKey;autoIncrement;comment:'ID'" json:"id"`
 	Name        string     `gorm:"column:name;type:varchar(200);not null;uniqueIndex:uk_name;comment:'名称'" json:"name"` // 唯一索引
-	Owner       string     `gorm:"column:owner;type:varchar(30);not null;default:'';comment:'负责人'" json:"owner"`
+	Auth       string     `gorm:"column:auth;type:varchar(30);not null;default:'';comment:'空间人员权限类型'" json:"auth"`
 	Permission  string     `gorm:"column:acl;type:varchar(30);not null;default:'open';comment:'权限:private,open'" json:"acl"`
 	Desc        string     `gorm:"column:desc;type:varchar(500);not null;default:'';comment:'描述'" json:"desc"`
 	CreatedBy   string     `gorm:"column:createdBy;type:varchar(30);not null;default:'';comment:'创建人'" json:"createdBy"`
