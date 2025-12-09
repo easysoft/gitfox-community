@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS `ops_scan_rules` (
 	`content` text NOT NULL COMMENT '规则内容（中文，如扫描正则、检查逻辑描述等）',
 	`contentEn` text NOT NULL COMMENT '规则内容（英文，如扫描正则、检查逻辑描述等）',
 	`isCustom` tinyint(1) NOT NULL DEFAULT '1' COMMENT '是否自定义规则（1=自定义规则，0=系统默认规则）',
-	`status` varchar(20) NOT NULL DEFAULT 1 COMMENT '规则状态（enabled-启用、disabled-禁用，默认启用）',
+	`status` varchar(20) NOT NULL DEFAULT 'enabled' COMMENT '规则状态（enabled-启用、disabled-禁用，默认启用）',
 	`createdBy` varchar(30) NOT NULL DEFAULT '' COMMENT '创建人',
 	`createdDate` datetime NULL COMMENT '创建时间',
 	`editedBy` varchar(30) NOT NULL DEFAULT '',
@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS `ops_scan_rules` (
 ENGINE=InnoDB COMMENT='扫描规则表';
 
 CREATE UNIQUE INDEX uk_ruleKey ON ops_scan_rules (ruleKey);
-CREATE UNIQUE INDEX uk_name_lang_deleted_unique ON ops_scan_rules (ruleKey, lang, deleted);
+CREATE UNIQUE INDEX uk_ruleKey_lang_deleted_unique ON ops_scan_rules (ruleKey, lang, deleted);
 CREATE INDEX idx_name ON ops_scan_rules (name);
 CREATE INDEX idx_type ON ops_scan_rules (type);
 CREATE INDEX idx_plugin_tag ON ops_scan_rules (plugin, tag);
