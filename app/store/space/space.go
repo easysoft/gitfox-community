@@ -91,22 +91,32 @@ func (s *SpaceStore) Update(ctx context.Context, id uint, req spaceModel.UpdateS
 }
 
 func (s *SpaceStore) List(ctx context.Context, filter spaceModel.ListSpaceFilter) (*database.PageResult[*Space], error) {
-	tx := s.db.WithContext(ctx).Model(&Space{}).Where("deleted = ?", 0)
+	tx := s.db.WithContext(ctx).Model(&Space{})
 
 	if filter.Name != "" {
-		// 用LOWER函数实现不区分大小写匹配，避免数据库大小写敏感问题
-		tx = tx.Where("LOWER(name) LIKE LOWER(?)", "%"+filter.Name+"%")
+		tx = tx.Where("name LIKE ?", "%"+filter.Name+"%")
 	}
 	if filter.Permission != "" {
 		tx = tx.Where("acl = ?", filter.Permission)
 	}
-	if filter.Owner != "" {
-		tx = tx.Where("owner = ?", filter.Owner)
+	if filter.Deleted {
+		tx = tx.Where("deleted = ?", 1)
+	} else {
+		tx = tx.Where("deleted = ?", 0)
 	}
-	if len(filter.IDs) > 0 {
-		ids := strings.Split(filter.IDs, ",")
+
+	ids := strings.Split(filter.IDs, ",")
+	// 查询包含所有公开空间
+	if filter.IsOpen {
+		tx = tx.Where("acl = ?", "open")
+		if len(filter.IDs) > 0 {
+			tx = tx.Or("id IN ?", ids)
+		}
+	} else if len(filter.IDs) > 0 {
 		tx = tx.Where("id IN ?", ids)
 	}
+
+	tx = tx.Distinct().Order("FIELD(acl, 'private', 'open'), id DESC")
 
 	// 2. 调用通用分页工具（NeedTotal默认true，自动统计总条数）
 	var spaces []*Space
@@ -180,8 +190,8 @@ func (r *SpaceStore) Delete(ctx context.Context, id uint) error {
 	})
 }
 
-// Undelete 批量恢复已删除的空间
-func (r *SpaceStore) Undelete(ctx context.Context, id uint) error {
+// Restore 批量恢复已删除的空间
+func (r *SpaceStore) Restore(ctx context.Context, id uint) error {
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		// 状态校验
 		var space Space
@@ -191,7 +201,7 @@ func (r *SpaceStore) Undelete(ctx context.Context, id uint) error {
 
 		// 恢复空间
 		if err := tx.Model(&space).UpdateColumns(map[string]interface{}{
-			"deleted":    0,
+			"deleted": 0,
 		}).Error; err != nil {
 			return database.ProcessSQLErrorf(ctx, err)
 		}

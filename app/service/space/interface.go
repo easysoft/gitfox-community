@@ -16,7 +16,7 @@ type Interface interface {
 	GetByID(ctx context.Context, id uint) (*space.Space, error)
 	Update(ctx context.Context, id uint, req spaceModel.UpdateSpaceRequest) (*spaceModel.SpaceResponse, error)
 	Delete(ctx context.Context, id uint) error
-	Undelete(ctx context.Context, id uint) error
+	Restore(ctx context.Context, id uint) error
 
 	GetSpaceCheckAccess(ctx context.Context, session *auth.Session, spaceID uint, permissions []constant.Permission) (*space.Space, error)
 }

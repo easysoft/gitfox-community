@@ -64,6 +64,8 @@ func (ctl *SpaceController) Create(c *gin.Context) {
 // @Param permission query string false "空间权限（open-私有，private-公开）" Enums(open, private)
 // @Param owner query string false "负责人"
 // @Param ids query string false "空间ID,逗号分隔"
+// @Param deleted query bool false "是否包含已删除，默认false"
+// @Param isOpen query bool false "是否公开空间，默认false"
 // @Param page query int false "页码（默认1）" default(1) minimum(1)
 // @Param pageSize query int false "每页条数（默认20）" default(20) minimum(1) maximum(100)
 // @Success 200 {object} resp.ListResponse{data=[]space.SpaceResponse,listArgs=resp.ListArgs}"查询成功：返回空间列表+分页元数据"
@@ -210,7 +212,7 @@ func (ctl *SpaceController) Delete(c *gin.Context) {
 // @Failure 404 {object} resp.ObjectResponse "空间不存在或未删除"
 // @Failure 500 {object} resp.ObjectResponse "恢复失败"
 // @Router /spaces/{id}/restore [post]
-func (ctl *SpaceController) Undelete(c *gin.Context) {
+func (ctl *SpaceController) Restore(c *gin.Context) {
 	var err error
 	// 解析 path id
 	objID, err := req.PathParamAsPositiveUint(c, "id")
@@ -220,9 +222,8 @@ func (ctl *SpaceController) Undelete(c *gin.Context) {
 		return
 	}
 
-
 	// 调用服务层恢复空间
-	if err = ctl.spaceSvc.Undelete(c.Request.Context(), objID); err != nil {
+	if err = ctl.spaceSvc.Restore(c.Request.Context(), objID); err != nil {
 		// 判断错误类型，返回相应的HTTP状态码
 		err = errors.WithI18nKey(err, i18n.SpaceRestoreError)
 		resp.InternalError(c, err)

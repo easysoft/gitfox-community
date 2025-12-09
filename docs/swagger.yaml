@@ -2573,6 +2573,14 @@ paths:
         in: query
         name: ids
         type: string
+      - description: 是否包含已删除，默认false
+        in: query
+        name: deleted
+        type: boolean
+      - description: 是否公开空间，默认false
+        in: query
+        name: isOpen
+        type: boolean
       - default: 1
         description: 页码（默认1）
         in: query
