@@ -80,6 +80,49 @@ func (ctl *Controller) Create(c *gin.Context) {
 
 }
 
+// List 查询仓库列表
+// @Summary 查询仓库列表
+// @Description 分页查询仓库列表
+// @Tags repos
+// @Accept application/json
+// @Produce application/json
+// @Param request body repoModel.ReqFilter true "查询仓库请求参数"
+// @Success 200 {object} resp.ListResponse{data=[]repoModel.Repo,listArgs=resp.ListNoTotalArgs} "查询成功"
+// @Failure 400 {object} resp.ListResponse "参数错误"
+// @Failure 500 {object} resp.ListResponse "服务器错误"
+// @Router /repos/list [post]
+func (c *Controller) List(ctx *gin.Context) {
+	var reqQuery repoModel.ReqFilter
+	var err error
+
+	if err = ctx.ShouldBindJSON(&reqQuery); err != nil {
+		err = errors.WithI18nKey(err, i18n.RepoQueryParamError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+	// 设置默认值
+	req.SetDefaults(&reqQuery)
+
+	session, ok := req.GetAuthSession(ctx.Request.Context())
+	if !ok {
+		resp.Unauthorized(ctx, errors.WithI18nKey(nil, i18n.AuthNoSession))
+		return
+	}
+
+	respData, isLast, err := c.repoSvc.List(ctx.Request.Context(), session, reqQuery)
+	if err != nil {
+		resp.InternalError(ctx, err)
+		return
+	}
+
+	resp.ListSuccess(ctx, respData,
+		resp.ListNoTotalArgs{
+			IsLast:   isLast,
+			Page:     int64(reqQuery.Page),
+			PageSize: int64(reqQuery.PageSize),
+		}, i18n.RepoQuerySuccess, nil)
+}
+
 // Get 获取代码库
 // @Summary 获取仓库信息
 // @Description 根据传入的仓库 ID 获取仓库信息

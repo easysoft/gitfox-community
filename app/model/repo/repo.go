@@ -23,6 +23,13 @@ type CreateRepoReq struct {
 	Readme        bool   `json:"readme"`                                    // 是否生成README.md
 }
 
+// ReqFilter stores repo query parameters.
+type ReqFilter struct {
+	Query    string `json:"query" form:"query"`
+	Page     int    `json:"page" form:"page" default:"1"`
+	PageSize int    `json:"pageSize" form:"pageSize" default:"20"`
+}
+
 // 自定义参数校验：Identifier 仅允许字母、数字、下划线、连字符
 func (req *CreateRepoReq) Validate() error {
 

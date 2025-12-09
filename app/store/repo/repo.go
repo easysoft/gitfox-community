@@ -104,3 +104,40 @@ func (s *Store) GetBySpaceAndIdentifier(ctx context.Context, spaceID uint, ident
 	}
 	return mapToModel(repo), nil
 }
+
+// List 分页查询仓库列表
+func (s *Store) List(ctx context.Context, filter repoModel.ReqFilter) (*database.PageResult[*repoModel.Repo], error) {
+	tx := s.db.WithContext(ctx).Model(&Repository{})
+
+	// 默认只查询未删除的仓库
+	tx = tx.Where("deleted = ?", 0)
+
+	// 如果有 query 参数，模糊搜索 identifier 或 desc 字段
+	if filter.Query != "" {
+		tx = tx.Where("identifier LIKE ? OR `desc` LIKE ?", "%"+filter.Query+"%", "%"+filter.Query+"%")
+	}
+
+	// 按 ID 降序排序
+	tx = tx.Order("id DESC")
+
+	// 执行分页查询
+	var repos []*Repository
+	pageResult, err := database.PaginateDefault(ctx, tx, filter.Page, filter.PageSize, &repos)
+	if err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
+	}
+
+	// 转换为 model 类型
+	repoModels := make([]*repoModel.Repo, len(repos))
+	for i, repo := range repos {
+		repoModels[i] = mapToModel(*repo)
+	}
+
+	// 构造返回结果
+	return &database.PageResult[*repoModel.Repo]{
+		Data:     repoModels,
+		Total:    pageResult.Total,
+		Page:     pageResult.Page,
+		PageSize: pageResult.PageSize,
+	}, nil
+}

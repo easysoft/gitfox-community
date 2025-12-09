@@ -11,6 +11,7 @@ import (
 func registerRepoRoutes(r *gin.RouterGroup, controller *Controller) {
 	repos := r.Group("/repos")
 	{
+		repos.POST("/list", controller.Repo.List)
 		repos.POST("/", controller.Repo.Create)
 		reposWithID := repos.Group(":id")
 		{

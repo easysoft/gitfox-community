@@ -273,6 +273,70 @@
                 }
             }
         },
+        "/repos/list": {
+            "post": {
+                "description": "分页查询仓库列表",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "repos"
+                ],
+                "summary": "查询仓库列表",
+                "parameters": [
+                    {
+                        "description": "查询仓库请求参数",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.ReqFilter"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "查询成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.Repo"
+                                            }
+                                        },
+                                        "listArgs": {
+                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListNoTotalArgs"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/repos/{id}": {
             "get": {
                 "description": "根据传入的仓库 ID 获取仓库信息",
@@ -3627,6 +3691,22 @@
                 "status": {
                     "description": "状态码用 int 类型（兼容枚举映射）",
                     "type": "integer"
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.ReqFilter": {
+            "type": "object",
+            "properties": {
+                "page": {
+                    "type": "integer",
+                    "default": 1
+                },
+                "pageSize": {
+                    "type": "integer",
+                    "default": 20
+                },
+                "query": {
+                    "type": "string"
                 }
             }
         },
