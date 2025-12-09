@@ -35,6 +35,8 @@ type ListSpaceFilter struct {
 	Permission string `json:"name" form:"permission" binding:"omitempty,oneof=open private"` // 枚举校验：仅允许 open/private
 	Owner      string `form:"owner" binding:"omitempty"`
 	IDs        string `json:"ids" form:"ids" binding:"omitempty,gt=0"` //gt=0 要求元素大于0
+	Deleted    bool  `form:"deleted" binding:"omitempty"`          // 是否包含已删除空间
+	IsOpen     bool  `form:"isOpen" binding:"omitempty"`           // 是否公开空间
 
 	// 分页参数（对应 pagination.PageParam）
 	Page     int `form:"page" binding:"omitempty,min=1"`             // 最小1

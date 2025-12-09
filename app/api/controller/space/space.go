@@ -64,6 +64,8 @@ func (ctl *SpaceController) Create(c *gin.Context) {
 // @Param permission query string false "空间权限（open-私有，private-公开）" Enums(open, private)
 // @Param owner query string false "负责人"
 // @Param ids query string false "空间ID,逗号分隔"
+// @Param deleted query bool false "是否包含已删除，默认false"
+// @Param isOpen query bool false "是否公开空间，默认false"
 // @Param page query int false "页码（默认1）" default(1) minimum(1)
 // @Param pageSize query int false "每页条数（默认20）" default(20) minimum(1) maximum(100)
 // @Success 200 {object} resp.ListResponse{data=[]space.SpaceResponse,listArgs=resp.ListArgs}"查询成功：返回空间列表+分页元数据"
