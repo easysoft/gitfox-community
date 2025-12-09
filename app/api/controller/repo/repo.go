@@ -109,7 +109,7 @@ func (c *Controller) List(ctx *gin.Context) {
 		return
 	}
 
-	respData, isLast, err := c.repoSvc.List(ctx, session, reqQuery)
+	respData, isLast, err := c.repoSvc.List(ctx.Request.Context(), session, reqQuery)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return

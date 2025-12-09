@@ -132,7 +132,7 @@ func (c *Controller) List(ctx *gin.Context) {
 		return
 	}
 
-	respData, isLast, err := c.branchSvc.List(ctx, reqQuery, repoOut)
+	respData, isLast, err := c.branchSvc.List(ctx.Request.Context(), reqQuery, repoOut)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return
@@ -180,7 +180,7 @@ func (c *Controller) ListPrefixes(ctx *gin.Context) {
 		return
 	}
 
-	respData, err := c.branchSvc.ListPrefixes(ctx, *repoOut)
+	respData, err := c.branchSvc.ListPrefixes(ctx.Request.Context(), *repoOut)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return
