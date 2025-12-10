@@ -110,6 +110,21 @@ func (mr *MockInterfaceMockRecorder) GetBySpaceAndIdentifier(ctx, spaceID, ident
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBySpaceAndIdentifier", reflect.TypeOf((*MockInterface)(nil).GetBySpaceAndIdentifier), ctx, spaceID, identifier)
 }
 
+// List mocks base method.
+func (m *MockInterface) List(ctx context.Context, filter repoModel.ReqFilter) (repo0.RepoPageResult, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "List", ctx, filter)
+	ret0, _ := ret[0].(repo0.RepoPageResult)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// List indicates an expected call of List.
+func (mr *MockInterfaceMockRecorder) List(ctx, filter interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockInterface)(nil).List), ctx, filter)
+}
+
 // Update mocks base method.
 func (m *MockInterface) Update(ctx context.Context, repo *repo0.Repository, id uint) (*repoModel.Repo, error) {
 	m.ctrl.T.Helper()

@@ -59,6 +59,7 @@ ENV GITFOX_DB_DRIVER=mysql
 ENV GITFOX_DB_DATASOURCE=root:pass4GitFox@tcp(mysql:3306)/gitfox-community?parseTime=true&loc=Local
 ENV GITFOX_DOCKER_HOST=unix:///var/run/docker.sock
 ENV GITFOX_DOCKER_API_VERSION=1.40
+ENV GITFOX_URL_BASE=http://gitfox.oop.cc:3052
 
 COPY --from=build /app/bin/gitfox_linux /app/gitfox
 COPY --from=build /app/configs/dev.env /app/dev.env
