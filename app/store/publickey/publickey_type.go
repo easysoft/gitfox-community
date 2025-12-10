@@ -23,7 +23,7 @@ type PublicKey struct {
 }
 
 func (pk *PublicKey) TableName() string {
-	return "ops_publicKeys"
+	return "ops_public_keys"
 }
 
 func (pk *PublicKey) toModel() publickey.PublicKey {
