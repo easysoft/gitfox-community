@@ -3,8 +3,8 @@ package repo
 import (
 	"database/sql/driver"
 	"fmt"
-	"time"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
 	"gorm.io/gorm"
 )
 
@@ -33,9 +33,9 @@ type Repository struct {
 	Status        int        `gorm:"column:status;comment:'代码库状态（0=正常，1=Git导入中，2=迁移Git推送中，3=迁移数据导入中）'"`
 	Mutex         int        `gorm:"column:mutex;comment:'乐观锁版本号'"`
 	CreatedBy     string     `gorm:"column:createdBy;comment:'创建人'"`
-	CreatedDate   *time.Time `gorm:"column:createdDate;comment:'创建时间'"`
+	CreatedDate   *datetime.Local `gorm:"column:createdDate;comment:'创建时间'"`
 	EditedBy      string     `gorm:"column:editedBy;comment:'更新人'"`
-	EditedDate    *time.Time `gorm:"column:editedDate;comment:'更新时间'"`
+	EditedDate    *datetime.Local `gorm:"column:editedDate;comment:'更新时间'"`
 	Deleted       uint8      `gorm:"column:deleted;comment:'删除标识（0=未删除，1=已删除）'"`
 }
 
@@ -45,16 +45,16 @@ func (r *Repository) TableName() string {
 }
 
 func (r *Repository) BeforeCreate(tx *gorm.DB) error {
-	now := time.Now()
-	r.CreatedDate = &now
-	r.EditedDate = &now
+	now:= datetime.NowLocalTime()
+	r.CreatedDate = now
+	r.EditedDate = now
 	return nil
 }
 
 // BeforeUpdate GORM 钩子：更新前自动设置 EditedDate
 func (r *Repository) BeforeUpdate(tx *gorm.DB) error {
-	now := time.Now()
-	r.EditedDate = &now
+	now:= datetime.NowLocalTime()
+	r.EditedDate = now
 	return nil
 }
 

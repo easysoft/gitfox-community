@@ -39,47 +39,32 @@ func (s *SpaceStore) Create(ctx context.Context, req spaceModel.CreateSpaceReque
 func (s *SpaceStore) Update(ctx context.Context, id uint, req spaceModel.UpdateSpaceRequest) (*spaceModel.SpaceResponse, error) {
 	var out Space
 	out.ID = id
-
-	updateData := make(map[string]any)
-
-	// EditedBy 和 EditedDate 是必填字段
-	updateData["editedBy"] = req.EditedBy
-
-	// 只更新非空字段
-	if req.Name != "" {
-		updateData["name"] = req.Name
-	}
-	if req.Auth != "" {
-		updateData["auth"] = req.Auth
-	}
-	if req.Permission != "" {
-		updateData["acl"] = req.Permission
-	}
-	if req.Desc != "" {
-		updateData["desc"] = req.Desc
-	}
-
 	// 使用事务确保查询和更新的原子性
 	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		// 先查询出要更新的记录
 		if err := tx.First(&out).Error; err != nil {
 			return database.ProcessSQLErrorf(ctx, err)
 		}
+		// EditedBy
+		out.EditedBy = req.EditedBy
 
-		// 提取 map 中的所有字段名,用于 Select
-		fields := make([]string, 0, len(updateData))
-		for field := range updateData {
-			fields = append(fields, field)
+		if req.Name != "" {
+			out.Name = req.Name
+		}
+		if req.Auth != "" {
+			out.Auth = req.Auth
+		}
+		if req.Permission != "" {
+			out.Permission = req.Permission
+		}
+		if req.Desc != "" {
+			out.Desc = req.Desc
 		}
 
-		// 使用 Select 明确指定要更新的字段,支持零值更新
-		// Updates 会直接更新 out 对象（传入指针）
-		if err := tx.Model(&out).
-			Select(fields).
-			Updates(updateData).Error; err != nil {
+		// 3. 更新（BeforeUpdate钩子会自动填充EditedDate，无需手动处理）
+		if err := tx.Updates(&out).Error; err != nil {
 			return database.ProcessSQLErrorf(ctx, err)
 		}
-
 		return nil
 	})
 	if err != nil {
@@ -179,11 +164,9 @@ func (r *SpaceStore) Delete(ctx context.Context, id uint) error {
 			return database.ProcessSQLErrorf(ctx, err)
 		}
 
-		// 删除操作.
-		if err := tx.Model(&space).UpdateColumns(map[string]interface{}{
-			"deleted":    1,
-			"editedDate": tx.NowFunc(),
-		}).Error; err != nil {
+		// 删除操作
+		space.Deleted = 1
+		if err := tx.Model(&space).Select("deleted", "editedDate").Updates(&space).Error; err != nil {
 			return database.ProcessSQLErrorf(ctx, err)
 		}
 		return nil
@@ -199,14 +182,14 @@ func (r *SpaceStore) Restore(ctx context.Context, id uint) error {
 			return database.ProcessSQLErrorf(ctx, err)
 		}
 
-		// 恢复空间
-		if err := tx.Model(&space).UpdateColumns(map[string]interface{}{
-			"deleted": 0,
-		}).Error; err != nil {
-			return database.ProcessSQLErrorf(ctx, err)
-		}
+		 space.Deleted = 0
+
+        if err := tx.Model(&space).Select("deleted", "editedDate").Updates(&space).Error; err != nil {
+            return database.ProcessSQLErrorf(ctx, err)
+        }
 		return nil
 	})
+	
 }
 
 // mapToModel 将 Space 转换为 SpaceResponse

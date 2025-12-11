@@ -3,11 +3,11 @@ package repo
 import (
 	"regexp"
 	"strings"
-	"time"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	gitTypes "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/api"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
 )
 
 // CreateRemoteRepoRequest 创建远端仓库请求参数
@@ -85,9 +85,9 @@ type Repo struct {
 	GitSSHURL   string     `json:"gitSSHURL,omitempty"`
 	Path        string     `json:"path"`
 	CreatedBy   string     `json:"createdBy"`
-	CreatedDate *time.Time `json:"createdDate"` // 允许 NULL，用指针类型
+	CreatedDate *datetime.Local `json:"createdDate"` // 允许 NULL，用指针类型
 	EditedBy    string     `json:"editedBy"`
-	EditedDate  *time.Time `json:"editedDate"` // 允许 NULL，用指针类型
+	EditedDate  *datetime.Local `json:"editedDate"` // 允许 NULL，用指针类型
 	Deleted     uint       `json:"deleted"`
 }
 
