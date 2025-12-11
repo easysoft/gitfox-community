@@ -22,9 +22,11 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/api"
 )
 
-func (s *Service) ListBranchesV2(ctx context.Context, params *ListBranchesParams) (*ListBranchesOutput, error) {
+func (s *Service) ListBranchesV2(ctx context.Context, params *ListBranchesParams) (*ListBranchesOutput, bool, error) {
+	var isLast bool
+
 	if params == nil {
-		return nil, ErrNoParamsProvided
+		return nil, isLast, ErrNoParamsProvided
 	}
 
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
@@ -39,7 +41,7 @@ func (s *Service) ListBranchesV2(ctx context.Context, params *ListBranchesParams
 		PageSize:      10000,
 	})
 	if err != nil {
-		return nil, err
+		return nil, isLast, err
 	}
 
 	var filteredBranches []*api.Branch
@@ -62,14 +64,23 @@ func (s *Service) ListBranchesV2(ctx context.Context, params *ListBranchesParams
 		filteredBranches = append(filteredBranches, branch)
 	}
 
-	// 应用分页
+	// 应用分页并判断是否为最后一页
+	totalCount := int32(len(filteredBranches))
 	start := (params.Page - 1) * params.PageSize
 	end := start + params.PageSize
-	if start >= int32(len(filteredBranches)) {
+
+	// 如果起始位置超过总数，说明请求的页码超出范围，返回空列表且标记为最后一页
+	if start >= totalCount {
 		filteredBranches = []*api.Branch{}
+		isLast = true
 	} else {
-		if end > int32(len(filteredBranches)) {
-			end = int32(len(filteredBranches))
+		// 如果结束位置大于等于总数，说明当前页包含了剩余的所有数据，这是最后一页
+		if end > totalCount {
+			end = totalCount
+			isLast = true
+		} else {
+			// 结束位置小于总数，说明后面还有数据，不是最后一页
+			isLast = false
 		}
 		filteredBranches = filteredBranches[start:end]
 	}
@@ -82,7 +93,7 @@ func (s *Service) ListBranchesV2(ctx context.Context, params *ListBranchesParams
 
 		gitCommits, err := s.git.GetCommits(ctx, repoPath, commitSHAs)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get commit: %w", err)
+			return nil, isLast, fmt.Errorf("failed to get commit: %w", err)
 		}
 
 		for i := range gitCommits {
@@ -94,12 +105,12 @@ func (s *Service) ListBranchesV2(ctx context.Context, params *ListBranchesParams
 	for i, branch := range filteredBranches {
 		b, err := mapBranch(branch)
 		if err != nil {
-			return nil, err
+			return nil, isLast, err
 		}
 		branches[i] = *b
 	}
 
 	return &ListBranchesOutput{
 		Branches: branches,
-	}, nil
+	}, isLast, nil
 }

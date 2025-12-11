@@ -65,10 +65,8 @@ func (s *Service) Create(
 
 func (s *Service) List(ctx context.Context, filter branchModel.ReqFilter, repo *repoModel.Repo) ([]branchModel.Branch, bool, error) {
 
-	var isLast bool
-
 	// 准备 RPC 参数
-	rpcOut, err := s.gitPkg.ListBranchesV2(ctx, &git.ListBranchesParams{
+	rpcOut, isLast, err := s.gitPkg.ListBranchesV2(ctx, &git.ListBranchesParams{
 		ReadParams:      git.ReadParams{RepoUID: repo.GitUID},
 		IncludeCommit:   filter.IncludeCommit,
 		Query:           filter.Query,
@@ -77,19 +75,14 @@ func (s *Service) List(ctx context.Context, filter branchModel.ReqFilter, repo *
 		Sort:            mapToRPCBranchSortOption(filter.Sort),
 		Order:           utils.MapToRPCSortOrder(filter.Order),
 		Page:            int32(filter.Page),
-		PageSize:        int32(filter.PageSize + 1),
+		PageSize:        int32(filter.PageSize),
 	})
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.GitCreateExecParamError)
 		return nil, isLast, err
 	}
 
-	isLast = len(rpcOut.Branches) <= filter.PageSize
 	branches := rpcOut.Branches
-	if len(rpcOut.Branches) > filter.PageSize {
-		branches = rpcOut.Branches[:filter.PageSize]
-		isLast = false
-	}
 	response := make([]branchModel.Branch, len(branches))
 	for i := range branches {
 		response[i], err = utils.MapBranch(branches[i])

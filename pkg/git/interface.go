@@ -41,7 +41,7 @@ type Interface interface {
 	PathsDetails(ctx context.Context, params PathsDetailsParams) (PathsDetailsOutput, error)
 	Summary(ctx context.Context, params SummaryParams) (SummaryOutput, error)
 	// ListBranchesV2 对ListBranches的补充，历史接口没法过滤ztflow分支
-	ListBranchesV2(ctx context.Context, params *ListBranchesParams) (*ListBranchesOutput, error)
+	ListBranchesV2(ctx context.Context, params *ListBranchesParams) (*ListBranchesOutput, bool, error)
 	ListBranchLabelsV2(ctx context.Context, params *ListBranchesParams) ([]Label, error)
 
 	// GetRepositorySize calculates the size of a repo in KiB.
