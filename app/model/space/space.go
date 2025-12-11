@@ -1,6 +1,9 @@
 package space
 
-import "time"
+import (
+
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
+)
 
 type CreateSpaceRequest struct {
 	Name       string `json:"name" binding:"required,max=200" example:"测试空间01"`
@@ -25,9 +28,9 @@ type SpaceResponse struct {
 	Permission  string     `json:"acl"`
 	Desc        string     `json:"desc"`
 	CreatedBy   string     `json:"createdBy"`
-	CreatedDate *time.Time `json:"createdDate"`
+	CreatedDate *datetime.Local `json:"createdDate"`
 	EditedBy    string     `json:"editedBy"`
-	EditedDate  *time.Time `json:"editedDate"`
+	EditedDate  *datetime.Local `json:"editedDate"`
 }
 
 type ListSpaceFilter struct {
