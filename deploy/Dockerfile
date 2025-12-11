@@ -71,5 +71,6 @@ COPY --from=cert-image /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-cert
 
 EXPOSE 3000
 EXPOSE 22
+EXPOSE 3322
 
 CMD [ "/app/gitfox", "server", "dev" ]

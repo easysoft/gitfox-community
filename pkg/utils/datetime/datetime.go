@@ -1,6 +1,7 @@
 package datetime
 
 import (
+	"database/sql/driver"
 	"fmt"
 	"strings"
 	"time"
@@ -213,4 +214,86 @@ func TrackFuncTime(pre time.Time) func() {
 		elapsed := time.Since(pre)
 		fmt.Printf("Function %s execution time:\t %v", callerName, elapsed)
 	}
+}
+
+
+// 定义东八区时区（避免硬编码偏移量，更规范）
+var CST = time.FixedZone("CST", 8*3600) // UTC+8
+
+// Local 自定义时间类型，继承 time.Time，实现 JSON 序列化/反序列化、GORM 读写接口
+type Local time.Time
+
+// MarshalJSON 实现 json.Marshaler 接口：序列化时自动转为 "2006-01-02 15:04:05" 格式
+func (t *Local) MarshalJSON() ([]byte, error) {
+	// 处理 nil 指针（数据库字段为 NULL 时）
+	if t == nil {
+		return []byte("null"), nil
+	}
+	// 转换为东八区时间并格式化（确保时区统一）
+	formatted := time.Time(*t).In(CST).Format("2006-01-02 15:04:05")
+	// 包裹双引号，符合 JSON 字符串格式
+	return []byte(fmt.Sprintf("\"%s\"", formatted)), nil
+}
+
+// UnmarshalJSON 实现 json.Unmarshaler 接口：反序列化（前端传参时解析）
+func (t *Local) UnmarshalJSON(data []byte) error {
+	// 处理 null 值
+	if string(data) == "null" {
+		return nil
+	}
+	// 解析前端传入的 "2025-11-27 14:43:19" 格式
+	parsedTime, err := time.Parse(`"2006-01-02 15:04:05"`, string(data))
+	if err != nil {
+		return fmt.Errorf("时间格式错误，需为 2006-01-02 15:04:05: %w", err)
+	}
+	// 转换为东八区时间并赋值
+	*t = Local(parsedTime.In(CST))
+	return nil
+}
+
+// Scan 实现 gorm.Scanner 接口：数据库查询时解析时间（兼容数据库的时间类型）
+func (t *Local) Scan(value interface{}) error {
+	if value == nil {
+		*t = Local(time.Time{})
+		return nil
+	}
+	// 适配数据库返回的时间类型（time.Time / []byte / string）
+	switch v := value.(type) {
+	case time.Time:
+		*t = Local(v.In(CST)) // 转换为东八区
+	case []byte:
+		parsedTime, err := time.Parse(time.RFC3339, string(v))
+		if err != nil {
+			return fmt.Errorf("解析时间失败: %w", err)
+		}
+		*t = Local(parsedTime.In(CST))
+	case string:
+		parsedTime, err := time.Parse(time.RFC3339, v)
+		if err != nil {
+			return fmt.Errorf("解析时间失败: %w", err)
+		}
+		*t = Local(parsedTime.In(CST))
+	default:
+		return fmt.Errorf("不支持的时间类型: %T", value)
+	}
+	return nil
+}
+
+// Value 实现 driver.Valuer 接口：数据库存储时转换为 time.Time
+func (t Local) Value() (driver.Value, error) {
+	// 转换为标准 time.Time 类型，GORM 自动处理存储
+	return time.Time(t).In(CST), nil
+}
+
+func (t *Local) String() string {
+	if t == nil {
+		return ""
+	}
+	return time.Time(*t).In(CST).Format("2006-01-02 15:04:05")
+}
+
+func NowLocalTime() *Local {
+	now := time.Now().In(CST)
+	localNow := Local(now)
+	return &localNow
 }
