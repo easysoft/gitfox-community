@@ -126,17 +126,27 @@ func (p DeleteTagParams) Validate() error {
 func (s *Service) ListCommitTags(
 	ctx context.Context,
 	params *ListCommitTagsParams,
-) (*ListCommitTagsOutput, error) {
+) (*ListCommitTagsOutput, bool, error) {
+	var isLast bool
+
 	if err := params.Validate(); err != nil {
-		return nil, err
+		return nil, isLast, err
 	}
 
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
 
 	// get all required information from git references
-	tags, err := s.listCommitTagsLoadReferenceData(ctx, repoPath, params)
+	tags, err := s.listCommitTagsLoadReferenceData(ctx, repoPath, &ListCommitTagsParams{
+		ReadParams:    params.ReadParams,
+		IncludeCommit: params.IncludeCommit,
+		Query:         params.Query,
+		Sort:          params.Sort,
+		Order:         params.Order,
+		Page:          1,
+		PageSize:      10000,
+	})
 	if err != nil {
-		return nil, fmt.Errorf("ListCommitTags: failed to get git references: %w", err)
+		return nil, isLast, fmt.Errorf("ListCommitTags: failed to get git references: %w", err)
 	}
 
 	// get all tag and commit SHAs
@@ -157,7 +167,7 @@ func (s *Service) ListCommitTags(
 		var aTags []api.Tag
 		aTags, err = s.git.GetAnnotatedTags(ctx, repoPath, annotatedTagSHAs)
 		if err != nil {
-			return nil, fmt.Errorf("ListCommitTags: failed to get annotated tag: %w", err)
+			return nil, isLast, fmt.Errorf("ListCommitTags: failed to get annotated tag: %w", err)
 		}
 
 		ai := 0 // index for annotated tags
@@ -191,7 +201,7 @@ func (s *Service) ListCommitTags(
 			tags[wi].Title = aTags[ai].Title
 			tagger, err := mapSignature(&aTags[ai].Tagger)
 			if err != nil {
-				return nil, fmt.Errorf("signature mapping error: %w", err)
+				return nil, isLast, fmt.Errorf("signature mapping error: %w", err)
 			}
 			tags[wi].Tagger = tagger
 
@@ -208,21 +218,41 @@ func (s *Service) ListCommitTags(
 	if params.IncludeCommit {
 		gitCommits, err := s.git.GetCommits(ctx, repoPath, commitSHAs)
 		if err != nil {
-			return nil, fmt.Errorf("ListCommitTags: failed to get commits: %w", err)
+			return nil, isLast, fmt.Errorf("ListCommitTags: failed to get commits: %w", err)
 		}
 
 		for i := range gitCommits {
 			c, err := mapCommit(gitCommits[i])
 			if err != nil {
-				return nil, fmt.Errorf("commit mapping error: %w", err)
+				return nil, isLast, fmt.Errorf("commit mapping error: %w", err)
 			}
 			tags[i].Commit = c
 		}
 	}
 
+	// 分页并判断是否为最后一页
+	totalCount := int32(len(tags))
+	start := (params.Page - 1) * params.PageSize
+	end := start + params.PageSize
+
+	// 如果起始位置超过总数，说明请求的页码超出范围，返回空列表且标记为最后一页
+	if start >= totalCount {
+		tags = []CommitTag{}
+		isLast = true
+	} else {
+		// 如果结束位置大于等于总数，说明当前页包含了剩余的所有数据，这是最后一页
+		if end >= totalCount {
+			end = totalCount
+			isLast = true
+		} else {
+			// 结束位置小于总数，说明后面还有数据，不是最后一页
+			isLast = false
+		}
+		tags = tags[start:end]
+	}
 	return &ListCommitTagsOutput{
 		Tags: tags,
-	}, nil
+	}, isLast, nil
 }
 
 //nolint:gocognit
