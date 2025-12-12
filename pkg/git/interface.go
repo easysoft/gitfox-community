@@ -63,7 +63,7 @@ type Interface interface {
 	ListCommits(ctx context.Context, params *ListCommitsParams) (*ListCommitsOutput, error)
 	ListCommitters(ctx context.Context, params *ListCommittersParams) ([]string, error)
 	ListCommitSHAs(ctx context.Context, params *ListCommitsParams) ([]string, error)
-	ListCommitTags(ctx context.Context, params *ListCommitTagsParams) (*ListCommitTagsOutput, error)
+	ListCommitTags(ctx context.Context, params *ListCommitTagsParams) (*ListCommitTagsOutput, bool, error)
 	CountCommits(ctx context.Context, params *CountCommitsParams) (*CountCommitsOutput, error)
 	CountCommitsWithShortstat(ctx context.Context, params *CountCommitsParams) (*CountCommitsShortstatOutput, error)
 	GetCommitDivergences(ctx context.Context, params *GetCommitDivergencesParams) (*GetCommitDivergencesOutput, error)

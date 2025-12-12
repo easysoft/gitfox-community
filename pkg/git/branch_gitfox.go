@@ -75,7 +75,7 @@ func (s *Service) ListBranchesV2(ctx context.Context, params *ListBranchesParams
 		isLast = true
 	} else {
 		// 如果结束位置大于等于总数，说明当前页包含了剩余的所有数据，这是最后一页
-		if end > totalCount {
+		if end >= totalCount {
 			end = totalCount
 			isLast = true
 		} else {

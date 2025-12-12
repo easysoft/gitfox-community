@@ -69,9 +69,7 @@ func (s *Service) Create(
 
 func (s *Service) List(ctx context.Context, req tagModel.ReqFilter, repo repoModel.Repo) ([]tagModel.Tag, bool, error) {
 
-	var isLast bool
-
-	rpcOut, err := s.gitPkg.ListCommitTags(ctx, &git.ListCommitTagsParams{
+	rpcOut, isLast, err := s.gitPkg.ListCommitTags(ctx, &git.ListCommitTagsParams{
 		ReadParams:    git.ReadParams{RepoUID: repo.GitUID},
 		IncludeCommit: req.IncludeCommit,
 		Query:         req.Query,
@@ -85,12 +83,7 @@ func (s *Service) List(ctx context.Context, req tagModel.ReqFilter, repo repoMod
 		return nil, isLast, err
 	}
 
-	isLast = len(rpcOut.Tags) <= req.PageSize
 	tags := rpcOut.Tags
-	if len(rpcOut.Tags) > req.PageSize {
-		tags = rpcOut.Tags[:req.PageSize]
-		isLast = false
-	}
 	response := make([]tagModel.Tag, len(tags))
 	for i := range tags {
 		response[i], err = mapCommitTag(tags[i])
