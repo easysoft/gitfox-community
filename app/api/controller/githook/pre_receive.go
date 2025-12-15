@@ -27,8 +27,10 @@ import (
 	// "github.com/easysoft/gitfox/app/api/controller/limiter"
 	// "github.com/easysoft/gitfox/app/api/usererror"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/githook"
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/hook"
 	gitutil "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/util"
 
@@ -91,14 +93,13 @@ func (c *Controller) PreReceive(
 	// For internal calls - through the application interface (API) - no need to verify protection rules.
 	if !in.Internal && constant.RepoState(repo.Status) == constant.RepoStateActive {
 		// TODO: use store.PrincipalInfoCache once we abstracted principals.
-		_, err := c.userStore.FindUserByID(ctx, in.PrincipalID)
+		_, err := c.userStore.FindByAccount(ctx, in.PrincipalAccount)
 		if err != nil {
-			return hook.Output{}, fmt.Errorf("failed to find inner principal with id %d: %w", in.PrincipalID, err)
+			return hook.Output{}, errors.Wrapf(err, "failed to find inner principal with account %s", in.PrincipalAccount)
 		}
 
-		// dummySession := &auth.Session{Principal: *principal, Metadata: nil}
-
-		// err = c.checkProtectionRules(ctx, repo, refUpdates, &output)
+		// dummySession := &auth.Session{Principal: *principal}
+		// err = c.checkProtectionRules(ctx, dummySession, repo, refUpdates, &output)
 		// if output.Error != nil {
 		// 	return output, nil
 		// }
@@ -152,9 +153,10 @@ func (c *Controller) blockPullReqRefUpdate(refUpdates changedRefs, state constan
 		slices.ContainsFunc(refUpdates.other.forced, fn)
 }
 
+// 检查保护规则
 func (c *Controller) checkProtectionRules(
 	ctx context.Context,
-	// session *auth.Session,
+	session *auth.Session,
 	repo *repoModel.Repo,
 	refUpdates changedRefs,
 	output *hook.Output,

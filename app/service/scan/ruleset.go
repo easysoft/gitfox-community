@@ -31,7 +31,7 @@ func (s *RuleSetService) Create(ctx context.Context, session *authModel.Session,
 	ruleSet := &scanStore.RuleSet{
 		Name:      req.Name,
 		Desc:      req.Desc,
-		DescrEn:   req.DescEn,
+		DescEn:    req.DescEn,
 		Lang:      constant.ScanLangName(constant.ParseLang(req.Lang).LowerString()),
 		Tag:       req.Tag,
 		Type:      constant.ScanRuleType(req.Type),
@@ -59,7 +59,7 @@ func (s *RuleSetService) Update(ctx context.Context, session *authModel.Session,
 		ruleSet.Desc = req.Desc
 	}
 	if req.DescEn != "" {
-		ruleSet.DescrEn = req.DescEn
+		ruleSet.DescEn = req.DescEn
 	}
 	if req.Lang != "" {
 		ruleSet.Lang = constant.ScanLangName(constant.ParseLang(req.Lang).LowerString())
@@ -81,6 +81,17 @@ func (s *RuleSetService) Update(ctx context.Context, session *authModel.Session,
 }
 
 func (s *RuleSetService) Delete(ctx context.Context, id uint) error {
+	// 查询规则集详情
+	ruleSet, err := s.ruleSetStore.GetByID(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	// 检查是否为内置规则集
+	if !ruleSet.IsCustom {
+		return errors.WithI18nKey(nil, i18n.RuleSetBuiltinDeleteError)
+	}
+
 	// 检查规则集是否被扫描方案使用
 	isUsed, err := s.ruleSetStore.IsUsedBySolution(ctx, id)
 	if err != nil {
@@ -133,10 +144,32 @@ func (s *RuleSetService) GetUnBindRule(ctx context.Context, ruleSetID uint, filt
 
 // BindRule 绑定规则到规则集
 func (s *RuleSetService) BindRule(ctx context.Context, ruleSetID uint, req scanModel.RuleSetReqForBind) error {
+	// 查询规则集详情
+	ruleSet, err := s.ruleSetStore.GetByID(ctx, ruleSetID)
+	if err != nil {
+		return err
+	}
+
+	// 检查是否为内置规则集
+	if !ruleSet.IsCustom {
+		return errors.WithI18nKey(nil, i18n.RuleSetBuiltinBindError)
+	}
+
 	return s.ruleSetStore.BindRule(ctx, ruleSetID, req.IDs)
 }
 
 // UnBindRule 解绑规则与规则集
 func (s *RuleSetService) UnBindRule(ctx context.Context, ruleSetID uint, req scanModel.RuleSetReqForBind) error {
+	// 查询规则集详情
+	ruleSet, err := s.ruleSetStore.GetByID(ctx, ruleSetID)
+	if err != nil {
+		return err
+	}
+
+	// 检查是否为内置规则集
+	if !ruleSet.IsCustom {
+		return errors.WithI18nKey(nil, i18n.RuleSetBuiltinUnbindError)
+	}
+
 	return s.ruleSetStore.UnBindRule(ctx, ruleSetID, req.IDs)
 }

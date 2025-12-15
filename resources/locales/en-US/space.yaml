@@ -18,3 +18,5 @@ space:
   list_success: "Query the space list successfully"
   query_error: "Failed to query space"
   query_success: "Query the space successfully"
+  restore_error: "Failed to restore space"
+  restore_success: "restore space successfully"

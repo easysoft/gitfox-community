@@ -16,3 +16,12 @@ func registerGitRoutes(r *gin.RouterGroup, controller *Controller) {
 		git.GET("/info/refs", controller.Git.InfoRefs)
 	}
 }
+
+func registerGitHookRoutes(r *gin.RouterGroup, controller *Controller) {
+	git := r.Group("/git-hooks")
+	{
+		git.POST("/pre-receive", controller.Git.PreReceiveClone)
+		git.POST("/post-receive", controller.Git.PostReceiveClone)
+		git.GET("/update", controller.Git.UpdateClone)
+	}
+}

@@ -80,7 +80,6 @@ func MockAttempt() gin.HandlerFunc {
 
 		session := &auth.Session{
 			Principal: &principal.Principal{
-				ID:  1,
 				App: "devops",
 			},
 			User: &principal.User{

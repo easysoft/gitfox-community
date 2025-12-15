@@ -6,9 +6,9 @@ import (
 
 // GithookInputBase contains the base input of the githook apis.
 type GithookInputBase struct {
-	RepoID      int64
-	PrincipalID int64
-	Internal    bool // Internal calls originate from Gitness, and external calls are direct git pushes.
+	RepoID           int64
+	PrincipalAccount string
+	Internal         bool // Internal calls originate from Gitness, and external calls are direct git pushes.
 }
 
 // GithookPreReceiveInput is the input for the pre-receive githook api call.

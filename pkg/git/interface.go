@@ -41,7 +41,7 @@ type Interface interface {
 	PathsDetails(ctx context.Context, params PathsDetailsParams) (PathsDetailsOutput, error)
 	Summary(ctx context.Context, params SummaryParams) (SummaryOutput, error)
 	// ListBranchesV2 对ListBranches的补充，历史接口没法过滤ztflow分支
-	ListBranchesV2(ctx context.Context, params *ListBranchesParams) (*ListBranchesOutput, error)
+	ListBranchesV2(ctx context.Context, params *ListBranchesParams) (*ListBranchesOutput, bool, error)
 	ListBranchLabelsV2(ctx context.Context, params *ListBranchesParams) ([]Label, error)
 
 	// GetRepositorySize calculates the size of a repo in KiB.
@@ -63,7 +63,7 @@ type Interface interface {
 	ListCommits(ctx context.Context, params *ListCommitsParams) (*ListCommitsOutput, error)
 	ListCommitters(ctx context.Context, params *ListCommittersParams) ([]string, error)
 	ListCommitSHAs(ctx context.Context, params *ListCommitsParams) ([]string, error)
-	ListCommitTags(ctx context.Context, params *ListCommitTagsParams) (*ListCommitTagsOutput, error)
+	ListCommitTags(ctx context.Context, params *ListCommitTagsParams) (*ListCommitTagsOutput, bool, error)
 	CountCommits(ctx context.Context, params *CountCommitsParams) (*CountCommitsOutput, error)
 	CountCommitsWithShortstat(ctx context.Context, params *CountCommitsParams) (*CountCommitsShortstatOutput, error)
 	GetCommitDivergences(ctx context.Context, params *GetCommitDivergencesParams) (*GetCommitDivergencesOutput, error)
@@ -108,6 +108,7 @@ type Interface interface {
 	 * Blame services
 	 */
 	Blame(ctx context.Context, params *BlameParams) (<-chan *BlamePart, <-chan error)
+	RawBlame(ctx context.Context, w io.Writer, params *BlameParams) error
 	PushRemote(ctx context.Context, params *PushRemoteParams) error
 
 	GeneratePipeline(ctx context.Context, params *GeneratePipelineParams) (GeneratePipelinesOutput, error)

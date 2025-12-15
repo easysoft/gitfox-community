@@ -16,5 +16,5 @@ type Interface interface {
 	GetByID(ctx context.Context, id uint) (*Space, error)
 	HasRepositories(ctx context.Context, spaceID uint) (bool, error)
 	HasArtifacts(ctx context.Context, spaceID uint) (bool, error)
-	Undelete(ctx context.Context, ids []uint, editedBy string) error
+	Restore(ctx context.Context, id uint) error
 }

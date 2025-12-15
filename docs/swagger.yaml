@@ -532,6 +532,17 @@ definitions:
         description: 状态码用 int 类型（兼容枚举映射）
         type: integer
     type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.ReqFilter:
+    properties:
+      page:
+        default: 1
+        type: integer
+      pageSize:
+        default: 20
+        type: integer
+      query:
+        type: string
+    type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.ReqForDiff:
     properties:
       files:
@@ -567,6 +578,16 @@ definitions:
     - identifier
     - spaceID
     type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.Order:
+    enum:
+    - asc
+    - desc
+    - ""
+    type: string
+    x-enum-varnames:
+    - OrderAsc
+    - OrderDesc
+    - orderNone
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.Rule:
     properties:
       content:
@@ -609,6 +630,37 @@ definitions:
         type: string
       type:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleType'
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.RuleListReqFilter:
+    properties:
+      bind:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRuleBind'
+      lang:
+        type: string
+      lang_id:
+        type: integer
+      name:
+        type: string
+      order:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.Order'
+      page:
+        type: integer
+      pageSize:
+        type: integer
+      plugin:
+        type: string
+      priority:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRulePriority'
+      ruleset_id:
+        type: integer
+      sort:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRuleSort'
+      status:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRuleStatus'
+      tag:
+        type: string
+      type:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRuleType'
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.RuleSet:
     properties:
@@ -723,6 +775,92 @@ definitions:
         - optimize
         type: string
     type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanBaseResp:
+    properties:
+      count:
+        type: integer
+      id:
+        type: integer
+      lang:
+        type: string
+      plugin:
+        type: string
+      tag:
+        type: string
+      type:
+        type: string
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRuleBind:
+    enum:
+    - bind
+    - unbind
+    - ""
+    type: string
+    x-enum-varnames:
+    - ScanRuleBindBind
+    - ScanRuleBindUnbind
+    - scanRuleBindNone
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRulePriority:
+    enum:
+    - low
+    - medium
+    - high
+    - ""
+    type: string
+    x-enum-varnames:
+    - ScanRulePriorityLow
+    - ScanRulePriorityMedium
+    - ScanRulePriorityHigh
+    - scanRulePriorityNone
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRuleSort:
+    enum:
+    - id
+    - name
+    - priority
+    - created_date
+    - ""
+    type: string
+    x-enum-varnames:
+    - ScanRuleSortID
+    - ScanRuleSortName
+    - ScanRuleSortPriority
+    - ScanRuleSortCreatedDate
+    - scanRuleSortNone
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRuleStatus:
+    enum:
+    - enabled
+    - disabled
+    - ""
+    type: string
+    x-enum-varnames:
+    - ScanRuleStatusEnabled
+    - ScanRuleStatusDisabled
+    - scanRuleStatusNone
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRuleType:
+    enum:
+    - defect
+    - security
+    - compliance
+    - optimize
+    - ""
+    type: string
+    x-enum-comments:
+      ScanRuleTypeComplian: 合规
+      ScanRuleTypeDefect: 缺陷
+      ScanRuleTypeOptimize: 优化 // 代码异味
+      ScanRuleTypeVuln: 安全
+    x-enum-descriptions:
+    - 缺陷
+    - 安全
+    - 合规
+    - 优化 // 代码异味
+    - ""
+    x-enum-varnames:
+    - ScanRuleTypeDefect
+    - ScanRuleTypeVuln
+    - ScanRuleTypeComplian
+    - ScanRuleTypeOptimize
+    - scanRuleTypeNone
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.CreateSpaceRequest:
     properties:
       acl:
@@ -730,6 +868,12 @@ definitions:
         - open
         - private
         example: open
+        type: string
+      auth:
+        enum:
+        - extend
+        - reset
+        example: extend
         type: string
       createdBy:
         type: string
@@ -739,16 +883,17 @@ definitions:
         example: 测试空间01
         maxLength: 200
         type: string
-      owner:
-        type: string
     required:
     - acl
+    - auth
     - createdBy
     - name
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.SpaceResponse:
     properties:
       acl:
+        type: string
+      auth:
         type: string
       createdBy:
         type: string
@@ -764,26 +909,6 @@ definitions:
         type: integer
       name:
         type: string
-      owner:
-        type: string
-    type: object
-  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.UndeleteSpaceRequest:
-    properties:
-      editedBy:
-        example: admin
-        type: string
-      ids:
-        example:
-        - 1
-        - 2
-        - 3
-        items:
-          type: integer
-        minItems: 1
-        type: array
-    required:
-    - editedBy
-    - ids
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.UpdateSpaceRequest:
     properties:
@@ -792,15 +917,20 @@ definitions:
         - open
         - private
         type: string
+      auth:
+        enum:
+        - extend
+        - reset
+        example: extend
+        type: string
       desc:
         type: string
       editedBy:
         type: string
       name:
         type: string
-      owner:
-        type: string
     required:
+    - auth
     - editedBy
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_tag.ReqFilter:
@@ -1188,6 +1318,76 @@ paths:
                   $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.Repo'
               type: object
       summary: 修改仓库基础信息
+      tags:
+      - repos
+  /repos/{id}/archive/{gitRef}:
+    get:
+      consumes:
+      - application/json
+      description: |-
+        根据指定的 Git 引用和格式生成并下载仓库归档文件。通过 URL 路径传递 Git 引用和格式
+        URL 格式: /archive/{ref}.{format}
+        示例: /archive/main.zip, /archive/refs/heads/main.tar.gz, /archive/v1.0.0.zip
+      parameters:
+      - description: 仓库 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Git 引用和文件格式(如 main.zip、refs/heads/main.tar.gz、v1.0.0.zip),格式由扩展名决定
+        in: path
+        name: gitRef
+        required: true
+        type: string
+      - collectionFormat: csv
+        description: 可选的路径列表,仅归档指定的文件/目录。不指定则归档整个仓库
+        in: query
+        items:
+          type: string
+        name: path
+        type: array
+      - description: 归档文件中路径前缀,会添加到所有文件路径前
+        in: query
+        name: prefix
+        type: string
+      - description: Git 属性(export-ignore 或 export-subst)
+        in: query
+        name: attributes
+        type: string
+      - description: 归档条目的修改时间,格式为 RFC3339(如 2006-01-02 15:04:05)
+        in: query
+        name: time
+        type: string
+      - description: 压缩级别,zip 格式为 0-9,tar.gz/tgz 格式支持数字压缩级别
+        in: query
+        name: compression
+        type: integer
+      produces:
+      - application/tar
+      - application/zip
+      - application/gzip
+      responses:
+        "200":
+          description: 归档文件,文件名格式为 {仓库标识}_{Git引用}_{格式}
+          schema:
+            type: file
+        "400":
+          description: 参数错误(如格式不支持、Git引用无效等)
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "401":
+          description: 未授权或无会话
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "404":
+          description: 代码库不存在或 Git 引用不存在
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器内部错误(如 Git 服务调用失败、数据库异常等)
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 获取仓库归档文件(tar/zip/tar.gz/tgz)
       tags:
       - repos
   /repos/{id}/branches:
@@ -1859,19 +2059,248 @@ paths:
         name: lineTo
         type: integer
       produces:
+      - text/plain
+      responses:
+        "200":
+          description: blame 文本
+          schema:
+            type: string
+      summary: 仓库代码blame
+      tags:
+      - repos
+  /repos/list:
+    post:
+      consumes:
+      - application/json
+      description: 分页查询仓库列表
+      parameters:
+      - description: 查询仓库请求参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.ReqFilter'
+      produces:
       - application/json
       responses:
         "200":
-          description: 获取成功（返回仓库代码blame流式）
+          description: 查询成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.Repo'
+                  type: array
+                listArgs:
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListNoTotalArgs'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse'
+      summary: 查询仓库列表
+      tags:
+      - repos
+  /scan/langs:
+    get:
+      consumes:
+      - application/json
+      description: 获取所有可用的扫描语言列表
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 查询成功
           schema:
             allOf:
             - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
             - properties:
-                data: {}
+                data:
+                  items:
+                    $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanBaseResp'
+                  type: array
               type: object
-      summary: 仓库代码blame
+      summary: 查询所有扫描语言
       tags:
-      - repos
+      - scan
+  /scan/plugins:
+    get:
+      consumes:
+      - application/json
+      description: 获取所有可用的扫描插件列表
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 查询成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanBaseResp'
+                  type: array
+              type: object
+      summary: 查询所有扫描插件
+      tags:
+      - scan
+  /scan/rules/{id}:
+    get:
+      consumes:
+      - application/json
+      description: 根据规则 ID 获取规则详细信息
+      parameters:
+      - description: 规则 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.Rule'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "404":
+          description: 规则不存在
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 获取规则详情
+      tags:
+      - scan
+  /scan/rules/{id}/status:
+    put:
+      consumes:
+      - application/json
+      description: 根据规则 ID 切换规则的启用/禁用状态（enabled ↔ disabled）
+      parameters:
+      - description: 规则 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新成功
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "404":
+          description: 规则不存在
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 切换规则状态
+      tags:
+      - scan
+  /scan/rules/list:
+    post:
+      consumes:
+      - application/json
+      description: 根据传入的查询参数分页查询扫描规则列表，支持按规则集、语言、插件等条件过滤
+      parameters:
+      - description: 查询规则请求参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.RuleListReqFilter'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 查询成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.Rule'
+                  type: array
+                listArgs:
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListArgs'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 查询规则列表
+      tags:
+      - scan
+  /scan/rules/migrate:
+    post:
+      consumes:
+      - application/json
+      description: 迁移扫描规则，包括规则集、解决方法和规则
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 迁移成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 迁移规则
+      tags:
+      - scan
   /scan/rulesets:
     post:
       consumes:
@@ -2135,6 +2564,50 @@ paths:
       summary: 查询规则集列表
       tags:
       - scan
+  /scan/tags:
+    get:
+      consumes:
+      - application/json
+      description: 获取所有可用的扫描标签列表
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 查询成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanBaseResp'
+                  type: array
+              type: object
+      summary: 查询所有扫描标签
+      tags:
+      - scan
+  /scan/types:
+    get:
+      consumes:
+      - application/json
+      description: 获取所有可用的扫描类型列表
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 查询成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanBaseResp'
+                  type: array
+              type: object
+      summary: 查询所有扫描类型
+      tags:
+      - scan
   /spaces:
     get:
       consumes:
@@ -2160,6 +2633,14 @@ paths:
         in: query
         name: ids
         type: string
+      - description: 是否包含已删除，默认false
+        in: query
+        name: deleted
+        type: boolean
+      - description: 是否公开空间，默认false
+        in: query
+        name: isOpen
+        type: boolean
       - default: 1
         description: 页码（默认1）
         in: query
@@ -2350,18 +2831,18 @@ paths:
       summary: 更新空间
       tags:
       - spaces
-  /spaces/undelete:
+  /spaces/{id}/restore:
     post:
       consumes:
       - application/json
       description: 恢复已逻辑删除的空间
       parameters:
-      - description: 恢复空间请求参数
-        in: body
-        name: request
+      - description: 空间ID
+        in: path
+        minimum: 1
+        name: id
         required: true
-        schema:
-          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.UndeleteSpaceRequest'
+        type: integer
       produces:
       - application/json
       responses:

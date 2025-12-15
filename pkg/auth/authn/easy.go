@@ -74,7 +74,7 @@ func (a *EasyAuthenticator) Authenticate(r *gin.Context) (*auth.Session, error) 
 	}
 
 	// 2. 根据 operator（用户账号）查询用户信息
-	user, err := a.userStore.FindUserByAccount(r.Request.Context(), operator)
+	user, err := a.userStore.FindByAccount(r.Request.Context(), operator)
 	if err != nil {
 		if errors.Is(err, errors.ErrResourceNotFound) {
 			logger.Debugf("[authn.easy]user %s not found", operator)

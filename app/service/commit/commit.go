@@ -91,9 +91,8 @@ func (s *Service) Create(
 	return &commitModel.RespForCreate{SHA: rpcOut.CommitID.String()}, nil
 }
 
-func (s *Service) List(ctx context.Context, req commitModel.ReqFilter, repo repoModel.Repo, gitRef string) (commitModel.RespForList, bool, error) {
+func (s *Service) List(ctx context.Context, req commitModel.ReqFilter, repo repoModel.Repo, gitRef string) (commitModel.RespForList, error) {
 
-	var isLast bool
 	if gitRef == "" {
 		gitRef = repo.DefaultBranch
 	}
@@ -108,26 +107,23 @@ func (s *Service) List(ctx context.Context, req commitModel.ReqFilter, repo repo
 		Since:        req.Since,
 		Until:        req.Until,
 		IncludeStats: req.IncludeStats,
+		Committer:    req.Committer,
+		Author:       req.Author,
 		Regex:        true,
 	})
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.GitExecError)
-		return commitModel.RespForList{}, isLast, err
+		return commitModel.RespForList{}, err
 	}
 
-	isLast = len(rpcOut.Commits) <= req.PageSize
 	commits := rpcOut.Commits
-	if len(rpcOut.Commits) > req.PageSize {
-		commits = rpcOut.Commits[:req.PageSize]
-		isLast = false
-	}
 	response := make([]commitModel.Commit, len(commits))
 	for i := range commits {
 		var commit *commitModel.Commit
 		commit, err = utils.MapCommit(&commits[i])
 		if err != nil {
 			err = errors.WithI18nKey(err, i18n.GitMapOutputError)
-			return commitModel.RespForList{}, isLast, err
+			return commitModel.RespForList{}, err
 		}
 		response[i] = *commit
 	}
@@ -136,7 +132,7 @@ func (s *Service) List(ctx context.Context, req commitModel.ReqFilter, repo repo
 		renameDetails := utils.MapRenameDetails(rpcOut.RenameDetails[i])
 		if renameDetails == nil {
 			err = errors.WithI18nKey(err, i18n.GitMapOutputError)
-			return commitModel.RespForList{}, isLast, err
+			return commitModel.RespForList{}, err
 		}
 		renameDetailList[i] = *renameDetails
 	}
@@ -144,7 +140,7 @@ func (s *Service) List(ctx context.Context, req commitModel.ReqFilter, repo repo
 		Commits:       response,
 		RenameDetails: renameDetailList,
 		TotalCommits:  rpcOut.TotalCommits,
-	}, isLast, nil
+	}, nil
 }
 
 func (s *Service) Get(ctx context.Context, commitSHA string, repo repoModel.Repo) (*commitModel.Commit, error) {

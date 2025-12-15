@@ -3,7 +3,6 @@ package space
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
@@ -88,25 +87,10 @@ func (s *Service) Delete(ctx context.Context, id uint) error {
 	return s.spaceStore.Delete(ctx, id)
 }
 
-func (s *Service) Undelete(ctx context.Context, req spaceModel.UndeleteSpaceRequest) error {
-	// 将 []uint16 转换为 []uint
-	ids := make([]uint, len(req.IDs))
-	for i, id := range req.IDs {
-		ids[i] = uint(id)
-	}
-
-	if len(ids) == 0 {
-		return errors.BadRequest.New("no space IDs provided")
-	}
-
+func (s *Service) Restore(ctx context.Context, id uint) error {
 	// 调用 Store 层恢复空间
-	err := s.spaceStore.Undelete(ctx, ids, req.EditedBy)
+	err := s.spaceStore.Restore(ctx, id)
 	if err != nil {
-		// 检查是否是名称冲突错误
-		errMsg := err.Error()
-		if strings.Contains(errMsg, "already exists") {
-			return errors.BadRequest.Wrapf(err, "cannot undelete spaces: name conflict")
-		}
 		return err
 	}
 

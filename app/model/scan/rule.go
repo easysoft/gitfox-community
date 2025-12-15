@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 )
 
 type Rule struct {
@@ -33,4 +34,79 @@ type RuleReqFilter struct {
 	Order string `json:"order" form:"order" default:"asc"`
 	Page  int    `json:"page" form:"page" default:"1"`
 	Size  int    `json:"size" form:"size" default:"30"`
+}
+
+type RuleListReqFilter struct {
+	RuleSetID    int64            `json:"ruleset_id,omitempty"`
+	Name         string           `json:"name,omitempty"`
+	Lang         string           `json:"lang,omitempty"`
+	LangID       int64            `json:"lang_id,omitempty"`
+	Plugin       string           `json:"plugin,omitempty"`
+	Tag          string           `json:"tag,omitempty"`
+	Priority     ScanRulePriority `json:"priority,omitempty"`
+	Status       ScanRuleStatus   `json:"status,omitempty"`
+	Type         ScanRuleType     `json:"type,omitempty"`
+	Sort         ScanRuleSort     `json:"sort"`
+	Order        Order            `json:"order"`
+	Bind         ScanRuleBind     `json:"bind,omitempty"`
+	ShowAllRules bool             `json:"-"`
+	Page         int              `json:"page" form:"page"`
+	PageSize     int              `json:"pageSize" form:"pageSize"`
+}
+
+func (f *RuleListReqFilter) Validater() error {
+	// 设置分页默认值
+	if f.Page <= 0 {
+		f.Page = 1
+	}
+	if f.PageSize <= 0 {
+		f.PageSize = 30
+	}
+
+	// 验证 Priority
+	if f.Priority != "" && !f.Priority.IsValid() {
+		return errors.Newf("priority %s is invalid", f.Priority)
+	}
+
+	// 验证 Status
+	if f.Status != "" && !f.Status.IsValid() {
+		return errors.Newf("status %s is invalid", f.Status)
+	}
+
+	// 验证 Type
+	if f.Type != "" && !f.Type.IsValid() {
+		return errors.Newf("type %s is invalid", f.Type)
+	}
+
+	// 验证和设置 Sort 默认值
+	if f.Sort == "" {
+		f.Sort = ScanRuleSortID
+	}
+	if !f.Sort.IsValid() {
+		return errors.Newf("sort %s is invalid", f.Sort)
+	}
+
+	// 验证和设置 Order 默认值
+	if f.Order == "" {
+		f.Order = OrderDesc
+	}
+	if !f.Order.IsValid() {
+		return errors.Newf("order %s is invalid", f.Order)
+	}
+
+	// 验证 Bind
+	if f.Bind != "" && !f.Bind.IsValid() {
+		return errors.Newf("bind %s is invalid", f.Bind)
+	}
+
+	return nil
+}
+
+type ScanBaseResp struct {
+	ID     uint64 `json:"id,omitempty"`
+	Tag    string `json:"tag,omitempty"`
+	Lang   string `json:"lang,omitempty"`
+	Plugin string `json:"plugin,omitempty"`
+	Type   string `json:"type,omitempty"`
+	Count  int64  `json:"count,omitempty"`
 }

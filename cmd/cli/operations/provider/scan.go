@@ -9,9 +9,11 @@ import (
 )
 
 var ScanRuleSetWireSet = wire.NewSet(
-	scan.NewRuleSetController,
+	scan.NewScanController,
 	wire.Bind(new(scanSvc.IRuleSet), new(*scanSvc.RuleSetService)),
 	scanSvc.NewRuleSetService,
+	wire.Bind(new(scanSvc.IRule), new(*scanSvc.RuleService)),
+	scanSvc.NewRuleService,
 	wire.Bind(new(scanStore.IRuleSet), new(*scanStore.RuleSetStore)),
 	scanStore.NewRuleSetStore,
 )

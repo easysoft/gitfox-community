@@ -59,6 +59,7 @@ const (
 )
 
 // PostReceive executes the post-receive hook for a git repository.
+// PostReceive执行git存储库的post-receive钩子。
 func (c *Controller) PostReceive(
 	ctx context.Context,
 	rgit RestrictedGIT,
@@ -77,11 +78,11 @@ func (c *Controller) PostReceive(
 
 	// report ref events if repo is in an active state (best effort)
 	if constant.RepoState(repo.Status) == constant.RepoStateActive {
-		c.reportReferenceEvents(ctx, rgit, repo, in.PrincipalID, in.PostReceiveInput)
+		c.reportReferenceEvents(ctx, rgit, repo, in.PrincipalAccount, in.PostReceiveInput)
 	}
 
 	// handle branch updates related to PRs - best effort
-	c.handlePRMessaging(ctx, repo, in.PrincipalID, in.PostReceiveInput, &out)
+	c.handlePRMessaging(ctx, repo, in.PrincipalAccount, in.PostReceiveInput, &out)
 
 	// err = c.postReceiveExtender.Extend(ctx, rgit, session, repo, in, &out)
 	// if err != nil {
@@ -98,17 +99,17 @@ func (c *Controller) reportReferenceEvents(
 	ctx context.Context,
 	rgit RestrictedGIT,
 	repo *repoModel.Repo,
-	principalID int64,
+	principalAccount string,
 	in hook.PostReceiveInput,
 ) {
 	for _, refUpdate := range in.RefUpdates {
 		switch {
 		case strings.HasPrefix(refUpdate.Ref, gitReferenceNamePrefixBranch):
-			c.reportBranchEvent(ctx, rgit, repo, principalID, in.Environment, refUpdate, in, enum.PullRequestFlowGithub)
+			c.reportBranchEvent(ctx, rgit, repo, principalAccount, in.Environment, refUpdate, in, enum.PullRequestFlowGithub)
 		case strings.HasPrefix(refUpdate.Ref, gitReferenceNameAgitPullReq):
-			c.reportBranchEvent(ctx, rgit, repo, principalID, in.Environment, refUpdate, in, enum.PullRequestFlowZentao)
+			c.reportBranchEvent(ctx, rgit, repo, principalAccount, in.Environment, refUpdate, in, enum.PullRequestFlowZentao)
 		case strings.HasPrefix(refUpdate.Ref, gitReferenceNamePrefixTag):
-			c.reportTagEvent(ctx, repo, principalID, refUpdate)
+			c.reportTagEvent(ctx, repo, principalAccount, refUpdate)
 		default:
 			// Ignore any other references in post-receive
 		}
@@ -119,7 +120,7 @@ func (c *Controller) reportBranchEvent(
 	ctx context.Context,
 	rgit RestrictedGIT,
 	repo *repoModel.Repo,
-	principalID int64,
+	principalAccount string,
 	env hook.Environment,
 	branchUpdate hook.ReferenceUpdate,
 	in hook.PostReceiveInput,
@@ -193,7 +194,7 @@ func (c *Controller) reportBranchEvent(
 func (c *Controller) reportTagEvent(
 	ctx context.Context,
 	repo *repoModel.Repo,
-	principalID int64,
+	principalAccount string,
 	tagUpdate hook.ReferenceUpdate,
 ) {
 	switch {
@@ -229,7 +230,7 @@ func (c *Controller) reportTagEvent(
 func (c *Controller) handlePRMessaging(
 	ctx context.Context,
 	repo *repoModel.Repo,
-	principalID int64,
+	principalAccount string,
 	in hook.PostReceiveInput,
 	out *hook.Output,
 ) {
@@ -245,7 +246,7 @@ func (c *Controller) handlePRMessaging(
 		branchName = in.RefUpdates[0].Ref[len(gitReferenceNameAgitPullReq):]
 		branchPre = c.getZtFlowBranchNamePre(ctx, repo, in)
 	}
-	c.suggestPullRequest(ctx, repo, branchName, branchPre, principalID, out)
+	c.suggestPullRequest(ctx, repo, branchName, branchPre, principalAccount, out)
 
 	// TODO: store latest pushed branch for user in cache and send out SSE
 }
@@ -254,7 +255,7 @@ func (c *Controller) suggestPullRequest(
 	ctx context.Context,
 	repo *repoModel.Repo,
 	branchName, branchPre string,
-	principalID int64,
+	principalAccount string,
 	out *hook.Output,
 ) {
 	if branchName == repo.DefaultBranch && len(branchPre) == 0 {

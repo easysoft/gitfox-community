@@ -20,7 +20,6 @@ func (u *User) Identifier() string {
 // Principal represents the identity of an acting entity ( ServiceAccount, Service).
 // Principal 主要代表一个活动实体（服务帐户、服务）的标识。
 type Principal struct {
-	ID          int64  `json:"-"`
 	App         string `json:"app"`
 	DisplayName string `json:"display_name"`
 	Admin       bool   `json:"admin"`

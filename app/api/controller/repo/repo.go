@@ -1,15 +1,19 @@
 package repo
 
 import (
+	"fmt"
 	"strings"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
+	principal "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/user"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	gitPkg "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
+	gitAPI "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/api"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	urlPkg "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/url"
@@ -65,7 +69,7 @@ func (ctl *Controller) Create(c *gin.Context) {
 		return
 	}
 
-	data, err := ctl.repoSvc.Create(logger.GetContextWithLogger(c), session, reqData)
+	data, err := ctl.repoSvc.Create(c.Request.Context(), session, reqData)
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.RepoCreateError)
 		resp.InternalError(c, err)
@@ -74,6 +78,49 @@ func (ctl *Controller) Create(c *gin.Context) {
 
 	resp.Created(c, i18n.RepoCreateSuccess, data)
 
+}
+
+// List 查询仓库列表
+// @Summary 查询仓库列表
+// @Description 分页查询仓库列表
+// @Tags repos
+// @Accept application/json
+// @Produce application/json
+// @Param request body repoModel.ReqFilter true "查询仓库请求参数"
+// @Success 200 {object} resp.ListResponse{data=[]repoModel.Repo,listArgs=resp.ListNoTotalArgs} "查询成功"
+// @Failure 400 {object} resp.ListResponse "参数错误"
+// @Failure 500 {object} resp.ListResponse "服务器错误"
+// @Router /repos/list [post]
+func (c *Controller) List(ctx *gin.Context) {
+	var reqQuery repoModel.ReqFilter
+	var err error
+
+	if err = ctx.ShouldBindJSON(&reqQuery); err != nil {
+		err = errors.WithI18nKey(err, i18n.RepoQueryParamError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+	// 设置默认值
+	req.SetDefaults(&reqQuery)
+
+	session, ok := req.GetAuthSession(ctx.Request.Context())
+	if !ok {
+		resp.Unauthorized(ctx, errors.WithI18nKey(nil, i18n.AuthNoSession))
+		return
+	}
+
+	respData, isLast, err := c.repoSvc.List(ctx.Request.Context(), session, reqQuery)
+	if err != nil {
+		resp.InternalError(ctx, err)
+		return
+	}
+
+	resp.ListSuccess(ctx, respData,
+		resp.ListNoTotalArgs{
+			IsLast:   isLast,
+			Page:     int64(reqQuery.Page),
+			PageSize: int64(reqQuery.PageSize),
+		}, i18n.RepoQuerySuccess, nil)
 }
 
 // Get 获取代码库
@@ -290,22 +337,109 @@ func (ctl *Controller) GetContent(ctx *gin.Context) {
 	resp.OK(ctx, i18n.RepoGetContentSuccess, re)
 }
 
+// Archive 获取仓库归档文件
+// @Summary 获取仓库归档文件(tar/zip/tar.gz/tgz)
+// @Description 根据指定的 Git 引用和格式生成并下载仓库归档文件。通过 URL 路径传递 Git 引用和格式
+// @Description URL 格式: /archive/{ref}.{format}
+// @Description 示例: /archive/main.zip, /archive/refs/heads/main.tar.gz, /archive/v1.0.0.zip
+// @Tags repos
+// @Accept application/json
+// @Produce application/tar,application/zip,application/gzip
+// @Param id path uint true "仓库 ID"
+// @Param gitRef path string true "Git 引用和文件格式(如 main.zip、refs/heads/main.tar.gz、v1.0.0.zip),格式由扩展名决定"
+// @Param path query []string false "可选的路径列表,仅归档指定的文件/目录。不指定则归档整个仓库"
+// @Param prefix query string false "归档文件中路径前缀,会添加到所有文件路径前"
+// @Param attributes query string false "Git 属性(export-ignore 或 export-subst)"
+// @Param time query string false "归档条目的修改时间,格式为 RFC3339(如 2006-01-02 15:04:05)"
+// @Param compression query int false "压缩级别,zip 格式为 0-9,tar.gz/tgz 格式支持数字压缩级别"
+// @Success 200 {file} binary "归档文件,文件名格式为 {仓库标识}_{Git引用}_{格式}"
+// @Failure 400 {object} resp.ObjectResponse "参数错误(如格式不支持、Git引用无效等)"
+// @Failure 401 {object} resp.ObjectResponse "未授权或无会话"
+// @Failure 404 {object} resp.ObjectResponse "代码库不存在或 Git 引用不存在"
+// @Failure 500 {object} resp.ObjectResponse "服务器内部错误(如 Git 服务调用失败、数据库异常等)"
+// @Router /repos/{id}/archive/{gitRef} [get]
+func (c *Controller) Archive(ctx *gin.Context) {
+
+	log := logger.GetLogger(ctx)
+
+	// Debug: log request URL and all params
+	log.Infof("Archive request - URL: %s, Path: %s", ctx.Request.URL.String(), ctx.Request.URL.Path)
+	for _, param := range ctx.Params {
+		log.Infof("Archive request - Param: %s = %s", param.Key, param.Value)
+	}
+
+	var repoID uint
+	var err error
+
+	session := &auth.Session{
+		User: &principal.User{
+			Account: "admin",
+		},
+	}
+
+	repoID, err = req.PathParamAsPositiveUint(ctx, "id")
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RepoPathParamError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
+	// 通过仓库 ID 获取仓库
+	repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, repoID)
+	if err != nil {
+		resp.InternalError(ctx, err)
+		return
+	}
+
+	params, filename, err := req.ParseArchiveParams(ctx)
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RepoPathParamError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
+	var contentType string
+	switch params.Format {
+	case gitAPI.ArchiveFormatTar:
+		contentType = "application/tar"
+	case gitAPI.ArchiveFormatZip:
+		contentType = "application/zip"
+	case gitAPI.ArchiveFormatTarGz, gitAPI.ArchiveFormatTgz:
+		contentType = "application/gzip"
+	default:
+		contentType = "application/zip"
+	}
+
+	filename = repoOut.Identifier + "_" + filename
+	ctx.Writer.Header().Set("Content-Type", contentType)
+	ctx.Writer.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
+
+	err = c.repoSvc.Archive(ctx.Request.Context(), params, *repoOut, ctx.Writer)
+	if err != nil {
+		log.Errorf("Failed to get archive: %v", err)
+		return
+	}
+
+}
+
 // @Summary 仓库代码blame
 // @Description 根据传入的仓库 ID、文件路径、Git 引用、行号范围等信息，获取仓库代码blame信息
 // @Tags repos
 // @Accept application/json
-// @Produce application/json
+// @Produce text/plain
 // @Param repoId path uint true "仓库 ID"
 // @Param filePath path string true "文件路径" e.g. src/main.go
 // @Param gitRef query string false "Git 引用" e.g. refs/heads/main
 // @Param lineFrom query int false "起始行号" e.g. 1
 // @Param lineTo query int false "结束行号" e.g. 100
-// @Success 200 {object} resp.ObjectResponse{data=interface{}} "获取成功（返回仓库代码blame流式）"
-// @Error 400 {object} resp.ObjectResponse "参数错误（如identifier格式非法、ID为空等）"
-// @Error 404 {object} resp.ObjectResponse "代码库不存在（传入的repoID对应的空间未找到）"
+// @Success 200 {string} string "blame 文本"
+// @Error 400 {object} resp.ObjectResponse "参数错误（如ID为空等）"
+// @Error 404 {object} resp.ObjectResponse "代码库不存在"
 // @Error 500 {object} resp.ObjectResponse "服务器内部错误（如Git服务调用失败、数据库异常等）"
 // @Router /repos/{repoId}/blame/{filePath} [get]
 func (ctl *Controller) Blame(c *gin.Context) {
+	log := logger.GetLogger(c.Request.Context())
+
 	session, ok := req.GetAuthSession(c.Request.Context())
 	if !ok {
 		err := errors.WithI18nKey(errors.New("get session failed"), i18n.AuthNoSession)
@@ -313,29 +447,31 @@ func (ctl *Controller) Blame(c *gin.Context) {
 		return
 	}
 
-	repoID, err := req.PathParamAsPositiveUint(c, req.QueryParamRepoID)
+	repoID, err := req.PathParamAsPositiveUint(c, "id")
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.RepoPathParamError)
 		resp.BadRequest(c, err)
 		return
 	}
 
-	filePath, err := req.PathParamOrError(c, req.PathParamFilePath)
-	if err != nil {
-		err = errors.WithI18nKey(err, i18n.RepoPathParamError)
+	// 获取文件路径，并去除前导斜杠
+	// 通配符参数会包含前导斜杠，需要去除（例如 "/test.php" -> "test.php"）
+	filePath := strings.TrimPrefix(req.PathParamOrEmpty(c, req.PathParamFilePath), "/")
+	if filePath == "" {
+		err = errors.WithI18nKey(errors.New("file path is required"), i18n.RepoPathParamError)
 		resp.BadRequest(c, err)
 		return
 	}
 
 	var BlameFilter repoModel.BlameFilter
-	if err = c.ShouldBindJSON(&BlameFilter); err != nil {
-		err = errors.WithI18nKey(err, i18n.RepoQueryError)
+	if err = c.ShouldBindQuery(&BlameFilter); err != nil {
+		err = errors.WithI18nKey(err, i18n.RepoBodyParamError)
 		resp.BadRequest(c, err)
 		return
 	}
 
 	if BlameFilter.LineTo > 0 && BlameFilter.LineFrom > BlameFilter.LineTo {
-		err = errors.WithI18nKey(err, i18n.RepoLineNumberError)
+		err = errors.WithI18nKey(err, i18n.RepoBodyParamError)
 		resp.BadRequest(c, err)
 		return
 	}
@@ -347,17 +483,17 @@ func (ctl *Controller) Blame(c *gin.Context) {
 		return
 	}
 
-	if BlameFilter.GitRef == "" {
-		BlameFilter.GitRef = repoInfo.DefaultBranch
-	}
+	c.Writer.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	resp.NoCache(c.Writer)
 
-	gitPkg.NewStreamReader(ctl.gitPkg.Blame(c, &gitPkg.BlameParams{
-		ReadParams: gitPkg.ReadParams{RepoUID: repoInfo.GitUID},
-		Path:       filePath,
-		GitRef:     BlameFilter.GitRef,
-		LineFrom:   BlameFilter.LineFrom,
-		LineTo:     BlameFilter.LineTo,
-	}))
+	// 调用 service 层，直接将 blame 输出写入响应流
+	err = ctl.repoSvc.GetBlame(c.Request.Context(), BlameFilter, *repoInfo, filePath, c.Writer)
+	if err != nil {
+		// 如果已经开始写入响应,则无法再使用标准的错误响应
+		// 只能记录日志
+		log.Errorf("Failed to get blame: %v", err)
+		return
+	}
 }
 
 // GetDiff 获取仓库指定 GitRef Diff

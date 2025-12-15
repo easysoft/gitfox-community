@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS `ops_scan_rulesets` (
 	`plugin` varchar(50) NOT NULL COMMENT '所属插件名称（标识规则集归属的扫描插件）',
 	`tag` varchar(50) NOT NULL COMMENT '规则集标签（用于分类筛选，如：安全合规、代码规范、性能优化等）',
 	`isCustom` tinyint(1) NOT NULL DEFAULT '1' COMMENT '是否自定义规则集（1=自定义，0=系统默认规则集）',
-	`status` varchar(20) NOT NULL DEFAULT 1 COMMENT '规则状态（enabled-启用、disabled-禁用，默认启用）',
+	`status` varchar(20) NOT NULL DEFAULT 'enabled' COMMENT '规则状态（enabled-启用、disabled-禁用，默认启用）',
 	`createdBy` varchar(30) NOT NULL DEFAULT '' COMMENT '创建人',
 	`createdDate` datetime NULL COMMENT '创建时间',
 	`editedBy` varchar(30) NOT NULL DEFAULT '',

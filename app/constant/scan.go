@@ -190,6 +190,24 @@ func (s ScanRuleStatus) String() string {
 	return string(s)
 }
 
+// IsEnabled 判断状态是否为启用
+func (s ScanRuleStatus) IsEnabled() bool {
+	return s == ScanRuleStatusEnabled
+}
+
+// IsDisabled 判断状态是否为禁用
+func (s ScanRuleStatus) IsDisabled() bool {
+	return s == ScanRuleStatusDisabled
+}
+
+// UpdateStatus 切换状态（enabled ↔ disabled）
+func (s ScanRuleStatus) UpdateStatus() ScanRuleStatus {
+	if s == ScanRuleStatusEnabled {
+		return ScanRuleStatusDisabled
+	}
+	return ScanRuleStatusEnabled
+}
+
 type ScanRuleType string
 
 const (

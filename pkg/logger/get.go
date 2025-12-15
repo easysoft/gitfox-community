@@ -14,7 +14,7 @@ const ContextLogger = "logger"
 // contextKey 用于在 context.Context 中存储 logger 的 key 类型
 type contextKey string
 
-const loggerContextKey = contextKey(ContextLogger)
+const LoggerContextKey = contextKey(ContextLogger)
 
 var (
 	defaultLogger     *SugaredMateLogger
@@ -36,7 +36,7 @@ func getDefaultLogger() *SugaredMateLogger {
 // GetLogger 从 context.Context 中获取 logger
 // 如果上下文中不存在 logger，返回一个不带 trace_id 的默认 logger
 func GetLogger(ctx context.Context) *SugaredMateLogger {
-	if log := ctx.Value(loggerContextKey); log != nil {
+	if log := ctx.Value(LoggerContextKey); log != nil {
 		if logger, ok := log.(*SugaredMateLogger); ok {
 			return logger
 		}
@@ -47,7 +47,7 @@ func GetLogger(ctx context.Context) *SugaredMateLogger {
 
 // WithLogger 将 logger 添加到 context.Context 中
 func WithLogger(ctx context.Context, log *SugaredMateLogger) context.Context {
-	return context.WithValue(ctx, loggerContextKey, log)
+	return context.WithValue(ctx, LoggerContextKey, log)
 }
 
 // GetLoggerFromGin 从 gin.Context 中获取 logger

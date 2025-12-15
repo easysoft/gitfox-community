@@ -71,7 +71,7 @@ type SSHConfig struct {
 	Enable      bool   `yaml:"enable"`
 	Host        string `yaml:"host"`
 	Port        int    `yaml:"port"`
-	DefaultUser string `yaml:"defaultUser"`
+	DefaultUser string `yaml:"defaultUser" default:"git"`
 	HostKeysDir string `envconfig:"GITFOX_SSH_HOST_KEYS_DIR" default:"/data/gitfox/ssh"`
 }
 
@@ -178,7 +178,7 @@ type MiddlewareConfig struct {
 type URL struct {
 	// Base is used to generate external facing URLs in case they aren't provided explicitly.
 	// Value is derived from Server.HTTP Config unless explicitly specified (e.g. http://localhost:3000).
-	Base string
+	Base string `envconfig:"GITFOX_URL_BASE"`
 
 	// Git defines the external URL via which the GIT API is reachable.
 	// NOTE: for routing to work properly, the request path & hostname reaching gitfox

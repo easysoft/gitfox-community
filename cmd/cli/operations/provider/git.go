@@ -129,8 +129,8 @@ func NewGitLocalStore() storage.Store {
 	return storage.NewLocalStore()
 }
 
-func NewGitService(gitPkg gitPkg.Interface) *gitSvc.Service {
-	return gitSvc.NewGitService(gitPkg).(*gitSvc.Service)
+func NewGitService(gitPkg gitPkg.Interface, urlProvider url.Provider) *gitSvc.Service {
+	return gitSvc.NewGitService(gitPkg, urlProvider).(*gitSvc.Service)
 }
 
 func NewSettingsService(settingsStore settingsStore.Interface) *settingsSvc.Service {

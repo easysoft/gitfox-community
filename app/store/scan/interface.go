@@ -5,6 +5,7 @@ import (
 
 	scanModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/resources"
 )
 
 type IRuleSet interface {
@@ -20,14 +21,12 @@ type IRuleSet interface {
 }
 
 type IRule interface {
-	ListByRuleSetID(
-		ctx context.Context,
-		ruleIDs []int64,
-		filter scanModel.RuleReqFilter,
-	) (*database.PageResult[*scanModel.Rule], error)
-	ExcludeByRuleSetID(
-		ctx context.Context,
-		excludeIDs []int64,
-		filter scanModel.RuleReqFilter,
-	) (*database.PageResult[*scanModel.Rule], error)
+	ListByRuleSetID(ctx context.Context, ruleIDs []int64, filter scanModel.RuleReqFilter) (*database.PageResult[*scanModel.Rule], error)
+	ExcludeByRuleSetID(ctx context.Context, excludeIDs []int64, filter scanModel.RuleReqFilter) (*database.PageResult[*scanModel.Rule], error)
+
+	GetByID(ctx context.Context, id uint) (*scanModel.Rule, error)
+	UpdateStatus(ctx context.Context, id uint) error
+	List(ctx context.Context, filter scanModel.RuleListReqFilter) (*database.PageResult[*scanModel.Rule], error)
+	AllScanBaseByField(ctx context.Context, field string) ([]scanModel.ScanBaseResp, error)
+	Migrate(ctx context.Context, rulesFile *resources.RulesFile) error
 }

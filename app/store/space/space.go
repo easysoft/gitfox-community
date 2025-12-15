@@ -22,7 +22,7 @@ func (s *SpaceStore) Create(ctx context.Context, req spaceModel.CreateSpaceReque
 
 	data := Space{
 		Name:       req.Name,
-		Owner:      req.Owner,
+		Auth:       req.Auth,
 		Permission: req.Permission,
 		Desc:       req.Desc,
 		CreatedBy:  req.CreatedBy,
@@ -39,47 +39,32 @@ func (s *SpaceStore) Create(ctx context.Context, req spaceModel.CreateSpaceReque
 func (s *SpaceStore) Update(ctx context.Context, id uint, req spaceModel.UpdateSpaceRequest) (*spaceModel.SpaceResponse, error) {
 	var out Space
 	out.ID = id
-
-	updateData := make(map[string]any)
-
-	// EditedBy 和 EditedDate 是必填字段
-	updateData["editedBy"] = req.EditedBy
-
-	// 只更新非空字段
-	if req.Name != "" {
-		updateData["name"] = req.Name
-	}
-	if req.Owner != "" {
-		updateData["owner"] = req.Owner
-	}
-	if req.Permission != "" {
-		updateData["acl"] = req.Permission
-	}
-	if req.Desc != "" {
-		updateData["desc"] = req.Desc
-	}
-
 	// 使用事务确保查询和更新的原子性
 	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		// 先查询出要更新的记录
 		if err := tx.First(&out).Error; err != nil {
 			return database.ProcessSQLErrorf(ctx, err)
 		}
+		// EditedBy
+		out.EditedBy = req.EditedBy
 
-		// 提取 map 中的所有字段名,用于 Select
-		fields := make([]string, 0, len(updateData))
-		for field := range updateData {
-			fields = append(fields, field)
+		if req.Name != "" {
+			out.Name = req.Name
+		}
+		if req.Auth != "" {
+			out.Auth = req.Auth
+		}
+		if req.Permission != "" {
+			out.Permission = req.Permission
+		}
+		if req.Desc != "" {
+			out.Desc = req.Desc
 		}
 
-		// 使用 Select 明确指定要更新的字段,支持零值更新
-		// Updates 会直接更新 out 对象（传入指针）
-		if err := tx.Model(&out).
-			Select(fields).
-			Updates(updateData).Error; err != nil {
+		// 3. 更新（BeforeUpdate钩子会自动填充EditedDate，无需手动处理）
+		if err := tx.Updates(&out).Error; err != nil {
 			return database.ProcessSQLErrorf(ctx, err)
 		}
-
 		return nil
 	})
 	if err != nil {
@@ -91,22 +76,32 @@ func (s *SpaceStore) Update(ctx context.Context, id uint, req spaceModel.UpdateS
 }
 
 func (s *SpaceStore) List(ctx context.Context, filter spaceModel.ListSpaceFilter) (*database.PageResult[*Space], error) {
-	tx := s.db.WithContext(ctx).Model(&Space{}).Where("deleted = ?", 0)
+	tx := s.db.WithContext(ctx).Model(&Space{})
 
 	if filter.Name != "" {
-		// 用LOWER函数实现不区分大小写匹配，避免数据库大小写敏感问题
-		tx = tx.Where("LOWER(name) LIKE LOWER(?)", "%"+filter.Name+"%")
+		tx = tx.Where("name LIKE ?", "%"+filter.Name+"%")
 	}
 	if filter.Permission != "" {
 		tx = tx.Where("acl = ?", filter.Permission)
 	}
-	if filter.Owner != "" {
-		tx = tx.Where("owner = ?", filter.Owner)
+	if filter.Deleted {
+		tx = tx.Where("deleted = ?", 1)
+	} else {
+		tx = tx.Where("deleted = ?", 0)
 	}
-	if len(filter.IDs) > 0 {
-		ids := strings.Split(filter.IDs, ",")
+
+	ids := strings.Split(filter.IDs, ",")
+	// 查询包含所有公开空间
+	if filter.IsOpen {
+		tx = tx.Where("acl = ?", "open")
+		if len(filter.IDs) > 0 {
+			tx = tx.Or("id IN ?", ids)
+		}
+	} else if len(filter.IDs) > 0 {
 		tx = tx.Where("id IN ?", ids)
 	}
+
+	tx = tx.Distinct().Order("FIELD(acl, 'private', 'open'), id DESC")
 
 	// 2. 调用通用分页工具（NeedTotal默认true，自动统计总条数）
 	var spaces []*Space
@@ -169,44 +164,32 @@ func (r *SpaceStore) Delete(ctx context.Context, id uint) error {
 			return database.ProcessSQLErrorf(ctx, err)
 		}
 
-		// 删除操作.
-		if err := tx.Model(&space).UpdateColumns(map[string]interface{}{
-			"deleted":    1,
-			"editedDate": tx.NowFunc(),
-		}).Error; err != nil {
+		// 删除操作
+		space.Deleted = 1
+		if err := tx.Model(&space).Select("deleted", "editedDate").Updates(&space).Error; err != nil {
 			return database.ProcessSQLErrorf(ctx, err)
 		}
 		return nil
 	})
 }
 
-// Undelete 批量恢复已删除的空间
-func (r *SpaceStore) Undelete(ctx context.Context, ids []uint, editedBy string) error {
+// Restore 批量恢复已删除的空间
+func (r *SpaceStore) Restore(ctx context.Context, id uint) error {
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		// 状态校验
-		var spaces []Space
-		if err := tx.Where("id IN ?", ids).Where("deleted = ?", 1).Find(&spaces).Error; err != nil {
+		var space Space
+		if err := tx.Where("id = ?", id).Where("deleted = ?", 1).First(&space).Error; err != nil {
 			return database.ProcessSQLErrorf(ctx, err)
 		}
 
-		if len(spaces) == 0 {
-			return database.ProcessSQLErrorf(ctx, gorm.ErrRecordNotFound)
-		}
+		 space.Deleted = 0
 
-		// 恢复空间
-		updateData := map[string]interface{}{
-			"deleted":    0,
-			"editedBy":   editedBy,
-			"editedDate": tx.NowFunc(),
-		}
-		if err := tx.Model(&Space{}).
-			Where("id IN ?", ids).
-			Where("deleted = ?", 1).
-			Updates(updateData).Error; err != nil {
-			return database.ProcessSQLErrorf(ctx, err)
-		}
+        if err := tx.Model(&space).Select("deleted", "editedDate").Updates(&space).Error; err != nil {
+            return database.ProcessSQLErrorf(ctx, err)
+        }
 		return nil
 	})
+	
 }
 
 // mapToModel 将 Space 转换为 SpaceResponse
@@ -214,7 +197,7 @@ func mapToModel(data Space) *spaceModel.SpaceResponse {
 	return &spaceModel.SpaceResponse{
 		ID:          data.ID,
 		Name:        data.Name,
-		Owner:       data.Owner,
+		Auth:        data.Auth,
 		Permission:  data.Permission,
 		Desc:        data.Desc,
 		CreatedBy:   data.CreatedBy,

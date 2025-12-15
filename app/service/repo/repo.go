@@ -18,6 +18,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/auth/authz"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
+	gitAPI "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/api"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/slice"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/url"
@@ -124,7 +125,7 @@ func (s *Service) createGitRepository(ctx context.Context, req *repoModel.Create
 		ctx,
 		s.urlProvider.GetInternalAPIURL(ctx),
 		0,
-		session.User.ID,
+		session.User.Account,
 		true,
 		true,
 	)
@@ -313,8 +314,31 @@ func (s *Service) GetDiff(ctx context.Context, req repoModel.ReqForDiff, repo re
 	}, req.Files...)
 }
 
+func (s *Service) Archive(ctx context.Context, params gitAPI.ArchiveParams, repo repoModel.Repo, w io.Writer) error {
+
+	return s.gitSvc.Archive(ctx, git.ArchiveParams{
+		ReadParams:    git.ReadParams{RepoUID: repo.GitUID},
+		ArchiveParams: params,
+	}, w)
+}
+
+func (s *Service) GetBlame(ctx context.Context, req repoModel.BlameFilter, repo repoModel.Repo, filePath string, w io.Writer) error {
+	gitRef := req.GitRef
+	if gitRef == "" {
+		gitRef = repo.DefaultBranch
+	}
+
+	return s.gitSvc.RawBlame(ctx, w, &git.BlameParams{
+		ReadParams: git.ReadParams{RepoUID: repo.GitUID},
+		Path:       filePath,
+		GitRef:     gitRef,
+		LineFrom:   req.LineFrom,
+		LineTo:     req.LineTo,
+	})
+}
+
 func (s *Service) Paths(ctx context.Context, req repoModel.PathsInput, repo repoModel.Repo) (*repoModel.PathsOutput, error) {
-	var gitRef string
+	gitRef := req.GitRef
 	if req.GitRef == "" {
 		gitRef = repo.DefaultBranch
 	}
@@ -334,7 +358,7 @@ func (s *Service) Paths(ctx context.Context, req repoModel.PathsInput, repo repo
 }
 
 func (s *Service) PathsDetails(ctx context.Context, req repoModel.PathsDetailsInput, repo repoModel.Repo) (*repoModel.PathsDetailsOutput, error) {
-	var gitRef string
+	gitRef := req.GitRef
 	if req.GitRef == "" {
 		gitRef = repo.DefaultBranch
 	}
@@ -366,4 +390,24 @@ func (s *Service) Delete(ctx context.Context, session *auth.Session, id uint) er
 		return err
 	}
 	return nil
+}
+
+// List 分页查询仓库列表
+func (s *Service) List(ctx context.Context, session *auth.Session, filter repoModel.ReqFilter) ([]*repoModel.Repo, bool, error) {
+	// 调用 store 层查询
+	pageResult, err := s.repoStore.List(ctx, filter)
+	if err != nil {
+		return nil, false, err
+	}
+
+	// 为每个仓库填充 Git URL
+	for _, repoObj := range pageResult.Data {
+		repoObj.GitSSHURL = s.urlProvider.GenerateGITCloneSSHURL(ctx, repoObj.Path)
+		repoObj.GitURL = s.urlProvider.GenerateGITCloneURL(ctx, repoObj.Path)
+	}
+
+	// 计算是否为最后一页
+	isLast := pageResult.Page*pageResult.PageSize >= int(pageResult.Total)
+
+	return pageResult.Data, isLast, nil
 }

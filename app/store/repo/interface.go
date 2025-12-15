@@ -4,7 +4,10 @@ import (
 	"context"
 
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
 )
+
+type RepoPageResult = *database.PageResult[*repoModel.Repo]
 
 type Interface interface {
 	Create(ctx context.Context, repo *Repository) (*repoModel.Repo, error)
@@ -13,4 +16,5 @@ type Interface interface {
 	GetByID(ctx context.Context, id uint) (*repoModel.Repo, error)
 	Delete(ctx context.Context, id uint) error
 	GetBySpaceAndIdentifier(ctx context.Context, spaceID uint, identifier string) (*repoModel.Repo, error)
+	List(ctx context.Context, filter repoModel.ReqFilter) (RepoPageResult, error)
 }

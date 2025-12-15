@@ -101,7 +101,7 @@ func (ctl *GitController) Clone(ctx *gin.Context) {
 		Protocol:     gitProtocol,
 	}
 
-	err = ctl.gitSvc.GitServicePack(ctx, session, repo.GitUID, options)
+	err = ctl.gitSvc.GitServicePack(ctx, session, repo, options)
 	if err != nil {
 		logger.Errorf("GitServicePack failed: %v", err)
 		resp.InternalError(ctx, err)
@@ -185,7 +185,7 @@ func (ctl *GitController) Push(ctx *gin.Context) {
 		FitClient:    false,
 	}
 
-	err = ctl.gitSvc.GitServicePack(ctx, session, repo.GitUID, options)
+	err = ctl.gitSvc.GitServicePack(ctx, session, repo, options)
 	if err != nil {
 		logger.Errorf("GitServicePack failed: %v", err)
 		resp.InternalError(ctx, err)

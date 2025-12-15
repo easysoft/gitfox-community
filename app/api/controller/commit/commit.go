@@ -134,15 +134,15 @@ func (c *Controller) List(ctx *gin.Context) {
 		return
 	}
 
-	respData, isLast, err := c.commitSvc.List(ctx, reqQuery, *repoOut, reqQuery.GitRef)
+	respData, err := c.commitSvc.List(ctx.Request.Context(), reqQuery, *repoOut, reqQuery.GitRef)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return
 	}
 
 	resp.ListSuccess(ctx, respData,
-		resp.ListNoTotalArgs{
-			IsLast:   isLast,
+		resp.ListArgs{
+			Total:    int64(respData.TotalCommits),
 			Page:     int64(reqQuery.Page),
 			PageSize: int64(reqQuery.PageSize),
 		}, i18n.CommitListSuccess, nil)
