@@ -81,14 +81,14 @@ type Repo struct {
 	Status        int    `json:"status"` // 状态码用 int 类型（兼容枚举映射）
 	Mutex         int    `json:"mutex"`
 	// git urls
-	GitURL      string     `json:"gitURL,omitempty"`
-	GitSSHURL   string     `json:"gitSSHURL,omitempty"`
-	Path        string     `json:"path"`
-	CreatedBy   string     `json:"createdBy"`
+	GitURL      string          `json:"gitURL,omitempty"`
+	GitSSHURL   string          `json:"gitSSHURL,omitempty"`
+	Path        string          `json:"path"`
+	CreatedBy   string          `json:"createdBy"`
 	CreatedDate *datetime.Local `json:"createdDate"` // 允许 NULL，用指针类型
-	EditedBy    string     `json:"editedBy"`
+	EditedBy    string          `json:"editedBy"`
 	EditedDate  *datetime.Local `json:"editedDate"` // 允许 NULL，用指针类型
-	Deleted     uint       `json:"deleted"`
+	Deleted     uint            `json:"deleted"`
 }
 
 type ReqForDiff struct {

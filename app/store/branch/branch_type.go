@@ -1,0 +1,41 @@
+package branch
+
+import (
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
+	"gorm.io/gorm"
+)
+
+// BranchType 分支类型模型
+type BranchType struct {
+	ID          uint            `gorm:"column:id"`
+	RepoID      uint            `gorm:"column:repoID"`
+	Name        string          `gorm:"column:name"`
+	Key         string          `gorm:"column:key"`
+	Prefixes    []string        `gorm:"column:prefix;serializer:json"` // 存储为 JSON 数组
+	Desc        string          `gorm:"column:desc"`
+	CreatedBy   string          `gorm:"column:createdBy"`
+	CreatedDate *datetime.Local `gorm:"column:createdDate"`
+	EditedBy    string          `gorm:"column:editedBy"`
+	EditedDate  *datetime.Local `gorm:"column:editedDate"`
+	Deleted     uint8           `gorm:"column:deleted"`
+}
+
+// TableName 显式指定结构体对应的数据表名为 ops_branch_type
+func (BranchType) TableName() string {
+	return "ops_branch_type"
+}
+
+// BeforeCreate GORM钩子：创建前自动填充创建时间与更新时间
+func (b *BranchType) BeforeCreate(tx *gorm.DB) error {
+	now := datetime.NowLocalTime()
+	b.CreatedDate = now
+	b.EditedDate = now
+	return nil
+}
+
+// BeforeUpdate GORM钩子：更新前自动填充更新时间
+func (b *BranchType) BeforeUpdate(tx *gorm.DB) error {
+	now := datetime.NowLocalTime()
+	b.EditedDate = now
+	return nil
+}

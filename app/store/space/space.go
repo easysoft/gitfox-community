@@ -182,14 +182,14 @@ func (r *SpaceStore) Restore(ctx context.Context, id uint) error {
 			return database.ProcessSQLErrorf(ctx, err)
 		}
 
-		 space.Deleted = 0
+		space.Deleted = 0
 
-        if err := tx.Model(&space).Select("deleted", "editedDate").Updates(&space).Error; err != nil {
-            return database.ProcessSQLErrorf(ctx, err)
-        }
+		if err := tx.Model(&space).Select("deleted", "editedDate").Updates(&space).Error; err != nil {
+			return database.ProcessSQLErrorf(ctx, err)
+		}
 		return nil
 	})
-	
+
 }
 
 // mapToModel 将 Space 转换为 SpaceResponse

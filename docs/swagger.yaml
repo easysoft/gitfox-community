@@ -143,6 +143,31 @@ definitions:
       sha:
         type: string
     type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.BranchType:
+    properties:
+      createdBy:
+        type: string
+      createdDate:
+        type: string
+      desc:
+        type: string
+      editedBy:
+        type: string
+      editedDate:
+        type: string
+      id:
+        type: integer
+      key:
+        type: string
+      name:
+        type: string
+      prefixes:
+        items:
+          type: string
+        type: array
+      repoId:
+        type: integer
+    type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.Prefix:
     properties:
       name:
@@ -175,6 +200,23 @@ definitions:
         default: name
         type: string
     type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.ReqFilterBranchType:
+    properties:
+      desc:
+        type: string
+      key:
+        type: string
+      name:
+        type: string
+      page:
+        default: 1
+        type: integer
+      pageSize:
+        default: 20
+        type: integer
+      prefix:
+        type: string
+    type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.ReqForCreate:
     properties:
       name:
@@ -185,6 +227,57 @@ definitions:
         type: string
     required:
     - name
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.ReqForCreateBranchType:
+    properties:
+      desc:
+        example: 用于开发新功能的分支
+        maxLength: 500
+        type: string
+      key:
+        example: feature
+        maxLength: 50
+        type: string
+      name:
+        example: 功能分支
+        maxLength: 100
+        type: string
+      prefixes:
+        example:
+        - feature/
+        - feat/
+        items:
+          type: string
+        maxItems: 5
+        minItems: 1
+        type: array
+    required:
+    - key
+    - name
+    - prefixes
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.ReqForUpdateBranchType:
+    properties:
+      desc:
+        example: 用于开发新功能的分支
+        maxLength: 500
+        type: string
+      name:
+        example: 功能分支
+        maxLength: 100
+        type: string
+      prefixes:
+        example:
+        - feature/
+        - feat/
+        items:
+          type: string
+        maxItems: 5
+        minItems: 1
+        type: array
+    required:
+    - name
+    - prefixes
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.Action:
     properties:
@@ -1390,6 +1483,222 @@ paths:
       summary: 获取仓库归档文件(tar/zip/tar.gz/tgz)
       tags:
       - repos
+  /repos/{id}/branch-types:
+    post:
+      consumes:
+      - application/json
+      description: 为指定仓库创建一个新的分支类型
+      parameters:
+      - description: 仓库 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 创建分支类型请求参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.ReqForCreateBranchType'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: 创建成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.BranchType'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "409":
+          description: 分支类型 Key 已存在
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 创建分支类型
+      tags:
+      - branch-types
+  /repos/{id}/branch-types/{typeId}:
+    delete:
+      consumes:
+      - application/json
+      description: 删除指定的分支类型
+      parameters:
+      - description: 仓库 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 分支类型 ID
+        in: path
+        name: typeId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 删除成功
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "404":
+          description: 分支类型不存在
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 删除分支类型
+      tags:
+      - branch-types
+    get:
+      consumes:
+      - application/json
+      description: 获取指定分支类型的详细信息
+      parameters:
+      - description: 仓库 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 分支类型 ID
+        in: path
+        name: typeId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 查询成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.BranchType'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "404":
+          description: 分支类型不存在
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 获取分支类型详情
+      tags:
+      - branch-types
+    put:
+      consumes:
+      - application/json
+      description: 更新指定的分支类型信息
+      parameters:
+      - description: 仓库 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 分支类型 ID
+        in: path
+        name: typeId
+        required: true
+        type: integer
+      - description: 更新分支类型请求参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.ReqForUpdateBranchType'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.BranchType'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "404":
+          description: 分支类型不存在
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 更新分支类型
+      tags:
+      - branch-types
+  /repos/{id}/branch-types/list:
+    post:
+      consumes:
+      - application/json
+      description: 分页查询仓库的分支类型列表
+      parameters:
+      - description: 仓库 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 查询分支类型请求参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.ReqFilterBranchType'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 查询成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.BranchType'
+                  type: array
+                listArgs:
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListArgs'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse'
+      summary: 查询分支类型列表
+      tags:
+      - branch-types
   /repos/{id}/branches:
     post:
       consumes:

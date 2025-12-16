@@ -8,6 +8,7 @@ import (
 	branchModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/branch"
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/utils"
+	branchStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/branch"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
@@ -17,15 +18,17 @@ import (
 type Service struct {
 	urlProvider url.Provider
 	gitPkg      git.Interface
+	branchStore branchStore.Interface
 }
 
 var _ Interface = (*Service)(nil)
 
 // NewService 创建 BranchSrv 实例
-func NewService(urlProvider url.Provider, git git.Interface) *Service {
+func NewService(urlProvider url.Provider, git git.Interface, branchStore branchStore.Interface) *Service {
 	return &Service{
 		urlProvider: urlProvider,
 		gitPkg:      git,
+		branchStore: branchStore,
 	}
 }
 
