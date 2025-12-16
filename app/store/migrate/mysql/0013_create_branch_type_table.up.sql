@@ -12,6 +12,6 @@ CREATE TABLE IF NOT EXISTS `ops_branch_type` (
 	`deleted` tinyint NOT NULL DEFAULT 0 COMMENT '删除标识，0-未删除，1-已删除',
 	PRIMARY KEY (`id`) USING BTREE
 ) ENGINE=InnoDB COMMENT='分支类型表';
-CREATE UNIQUE INDEX uk_repo_branch_type ON ops_branch_type (repoID, `key`);
-CREATE UNIQUE INDEX uk_branch_type_key ON ops_branch_type (repoID, prefix);
+CREATE UNIQUE INDEX uk_repo_branch_key ON ops_branch_type (repoID, `key`);
+CREATE UNIQUE INDEX uk_repo_branch_prefix ON ops_branch_type (repoID, prefix);
 CREATE INDEX idx_deleted ON ops_branch_type (deleted);
