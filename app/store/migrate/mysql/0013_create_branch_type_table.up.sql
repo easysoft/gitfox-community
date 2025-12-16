@@ -14,4 +14,3 @@ CREATE TABLE IF NOT EXISTS `ops_branch_type` (
 ) ENGINE=InnoDB COMMENT='分支类型表';
 CREATE UNIQUE INDEX uk_repo_branch_key ON ops_branch_type (repoID, `key`);
 CREATE UNIQUE INDEX uk_repo_branch_prefix ON ops_branch_type (repoID, prefix);
-CREATE INDEX idx_deleted ON ops_branch_type (deleted);
