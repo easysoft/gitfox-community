@@ -325,16 +325,16 @@ func (c *Controller) ListBranchTypes(ctx *gin.Context) {
 	}
 
 	// 调用 service 层查询分支类型列表
-	respData, total, err := c.branchSvc.ListBranchTypes(ctx.Request.Context(), reqFilter, repoID)
+	pageResult, err := c.branchSvc.ListBranchTypes(ctx.Request.Context(), reqFilter, repoID)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return
 	}
 
-	resp.ListSuccess(ctx, respData,
+	resp.ListSuccess(ctx, pageResult.Data,
 		resp.ListArgs{
-			Total:    total,
-			Page:     int64(reqFilter.Page),
-			PageSize: int64(reqFilter.PageSize),
+			Total:    pageResult.Total,
+			Page:     int64(pageResult.Page),
+			PageSize: int64(pageResult.PageSize),
 		}, i18n.BranchTypeQuerySuccess, nil)
 }

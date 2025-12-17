@@ -6,6 +6,7 @@ import (
 	authModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
 	branchModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/branch"
 	branchStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/branch"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 )
@@ -133,11 +134,11 @@ func (s *Service) ListBranchTypes(
 	ctx context.Context,
 	filter branchModel.ReqFilterBranchType,
 	repoID uint,
-) ([]branchModel.BranchType, int64, error) {
-	result, total, err := s.branchStore.ListBranchTypes(ctx, repoID, filter)
+) (*database.PageResult[branchModel.BranchType], error) {
+	result, err := s.branchStore.ListBranchTypes(ctx, repoID, filter)
 	if err != nil {
-		return nil, 0, errors.WithI18nKey(err, i18n.BranchTypeQueryError)
+		return nil, errors.WithI18nKey(err, i18n.BranchTypeQueryError)
 	}
 
-	return result, total, nil
+	return result, nil
 }

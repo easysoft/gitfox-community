@@ -6,6 +6,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/branch"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
 )
 
 type Interface interface {
@@ -18,5 +19,5 @@ type Interface interface {
 	UpdateBranchType(ctx context.Context, id uint, req branch.ReqForUpdateBranchType, session *auth.Session, repoID uint) (*branch.BranchType, error)
 	GetBranchType(ctx context.Context, id uint, repoID uint) (*branch.BranchType, error)
 	DeleteBranchType(ctx context.Context, id uint, repoID uint) error
-	ListBranchTypes(ctx context.Context, filter branch.ReqFilterBranchType, repoID uint) ([]branch.BranchType, int64, error)
+	ListBranchTypes(ctx context.Context, filter branch.ReqFilterBranchType, repoID uint) (*database.PageResult[branch.BranchType], error)
 }

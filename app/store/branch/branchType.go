@@ -10,21 +10,23 @@ import (
 
 // BatchCreateBranchType 批量创建分支类型(带事务)
 func (s *Store) BatchCreateBranchType(ctx context.Context, branchTypes []*BranchType) ([]branchModel.BranchType, error) {
-	results := make([]branchModel.BranchType, 0, len(branchTypes))
-
-	// 开启事务
+	// 开启事务，使用 CreateInBatches 批量插入
 	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		for _, branchType := range branchTypes {
-			if err := tx.Create(branchType).Error; err != nil {
-				return database.ProcessSQLErrorf(ctx, err)
-			}
-			results = append(results, *mapBranchTypeToModel(*branchType))
+		// 每批100条记录
+		if err := tx.CreateInBatches(branchTypes, 100).Error; err != nil {
+			return database.ProcessSQLErrorf(ctx, err)
 		}
 		return nil
 	})
 
 	if err != nil {
 		return nil, err
+	}
+
+	// 转换为 model
+	results := make([]branchModel.BranchType, len(branchTypes))
+	for i, bt := range branchTypes {
+		results[i] = *mapBranchTypeToModel(*bt)
 	}
 
 	return results, nil
@@ -66,10 +68,7 @@ func (s *Store) DeleteBranchType(ctx context.Context, id uint) error {
 }
 
 // ListBranchTypes 分页查询分支类型列表
-func (s *Store) ListBranchTypes(ctx context.Context, repoID uint, filter branchModel.ReqFilterBranchType) ([]branchModel.BranchType, int64, error) {
-	var branchTypes []BranchType
-	var total int64
-
+func (s *Store) ListBranchTypes(ctx context.Context, repoID uint, filter branchModel.ReqFilterBranchType) (*database.PageResult[branchModel.BranchType], error) {
 	query := s.db.WithContext(ctx).Model(&BranchType{}).
 		Where("repoID = ? AND deleted = 0", repoID)
 
@@ -87,25 +86,27 @@ func (s *Store) ListBranchTypes(ctx context.Context, repoID uint, filter branchM
 		query = query.Where("desc LIKE ?", "%"+filter.Desc+"%")
 	}
 
-	// 获取总数
-	if err := query.Count(&total).Error; err != nil {
-		return nil, 0, database.ProcessSQLErrorf(ctx, err)
+	// 执行分页查询
+	var branchTypes []BranchType
+	pageResult, err := database.PaginateDefault(ctx, query, filter.Page, filter.PageSize, &branchTypes)
+	if err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
 
-	// 应用分页
-	offset := (filter.Page - 1) * filter.PageSize
-	limit := filter.PageSize
-
-	if err := query.Offset(offset).Limit(limit).Order("createdDate DESC").Find(&branchTypes).Error; err != nil {
-		return nil, 0, database.ProcessSQLErrorf(ctx, err)
-	}
-
+	// 转换为 model 类型
 	result := make([]branchModel.BranchType, len(branchTypes))
 	for i, bt := range branchTypes {
 		result[i] = *mapBranchTypeToModel(bt)
 	}
 
-	return result, total, nil
+	// 构造返回结果
+	return &database.PageResult[branchModel.BranchType]{
+		Data:      result,
+		Total:     pageResult.Total,
+		Page:      pageResult.Page,
+		PageSize:  pageResult.PageSize,
+		TotalPage: pageResult.TotalPage,
+	}, nil
 }
 
 // mapBranchTypeToModel 将 store 模型转换为 API 模型
