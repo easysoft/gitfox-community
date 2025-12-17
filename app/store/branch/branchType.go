@@ -8,14 +8,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// CreateBranchType 创建分支类型
-func (s *Store) CreateBranchType(ctx context.Context, branchType *BranchType) (*branchModel.BranchType, error) {
-	if err := s.db.WithContext(ctx).Create(branchType).Error; err != nil {
-		return nil, database.ProcessSQLErrorf(ctx, err)
-	}
-	return mapBranchTypeToModel(*branchType), nil
-}
-
 // BatchCreateBranchType 批量创建分支类型(带事务)
 func (s *Store) BatchCreateBranchType(ctx context.Context, branchTypes []*BranchType) ([]branchModel.BranchType, error) {
 	results := make([]branchModel.BranchType, 0, len(branchTypes))

@@ -226,8 +226,8 @@ func PathParamAsPositiveUint(c *gin.Context, paramName string) (uint, error) {
 	return uint(valueUint), nil
 }
 
-// PathParamAsPositiveint extracts an integer parameter from the request path.
-func PathParamAsPositiveint(c *gin.Context, paramName string) (uint, error) {
+// PathParamAsNaturalNum extracts an integer parameter from the request path.
+func PathParamAsNaturalNum(c *gin.Context, paramName string) (uint, error) {
 	rawValue, err := PathParamOrError(c, paramName)
 	if err != nil {
 		return 0, err

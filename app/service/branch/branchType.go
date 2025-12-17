@@ -10,36 +10,6 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 )
 
-// CreateBranchType 创建分支类型
-func (s *Service) CreateBranchType(
-	ctx context.Context,
-	req branchModel.ReqForCreateBranchType,
-	session *authModel.Session,
-	repoID uint,
-) (*branchModel.BranchType, error) {
-	// 调用Check方法进行参数校验
-	if err := req.Check(); err != nil {
-		return nil, errors.WithI18nKey(err, i18n.BranchTypeBodyParamError)
-	}
-
-	branchType := &branchStore.BranchType{
-		RepoID:    repoID,
-		Name:      req.Name,
-		Key:       req.Key,
-		Prefixes:  req.Prefixes,
-		Desc:      req.Desc,
-		CreatedBy: session.User.Account,
-		EditedBy:  session.User.Account,
-	}
-
-	result, err := s.branchStore.CreateBranchType(ctx, branchType)
-	if err != nil {
-		return nil, errors.WithI18nKey(err, i18n.BranchTypeCreateError)
-	}
-
-	return result, nil
-}
-
 // BatchCreateBranchType 批量创建分支类型
 func (s *Service) BatchCreateBranchType(
 	ctx context.Context,
@@ -50,11 +20,6 @@ func (s *Service) BatchCreateBranchType(
 	branchTypes := make([]*branchStore.BranchType, 0, len(reqs))
 
 	for _, req := range reqs {
-		// 调用Check方法进行参数校验
-		if err := req.Check(); err != nil {
-			return nil, errors.WithI18nKey(err, i18n.BranchTypeBodyParamError)
-		}
-
 		branchType := &branchStore.BranchType{
 			RepoID:    repoID,
 			Name:      req.Name,
@@ -83,11 +48,6 @@ func (s *Service) UpdateBranchType(
 	session *authModel.Session,
 	repoID uint,
 ) (*branchModel.BranchType, error) {
-	// 调用Check方法进行参数校验
-	if err := req.Check(); err != nil {
-		return nil, errors.WithI18nKey(err, i18n.BranchTypeBodyParamError)
-	}
-
 	// 检查分支类型是否存在
 	existing, err := s.branchStore.GetBranchTypeByID(ctx, id)
 	if err != nil {

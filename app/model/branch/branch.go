@@ -64,15 +64,12 @@ type BranchType struct {
 type ReqForCreateBranchType struct {
 	Name     string   `json:"name" binding:"required,max=100" example:"功能分支"`
 	Key      string   `json:"key" binding:"required,max=50,alphanum_start" example:"feature"`
-	Prefixes []string `json:"prefixes" binding:"required,min=1,max=5,dive,max=50,valid_prefix" example:"feature/,feat/"`
+	Prefixes []string `json:"prefixes" binding:"required,min=1,max=5,dive,valid_prefix" example:"feature/,feat/"`
 	Desc     string   `json:"desc" binding:"max=500" example:"用于开发新功能的分支"`
 }
 
 func (r *ReqForCreateBranchType) Check() error {
-	// 名称必填
-	if r.Name == "" {
-		return errors.New("name is required")
-	}
+
 	if len(r.Name) > 100 {
 		return errors.New("name length must be less than 100")
 	}
@@ -115,7 +112,7 @@ func (r *ReqForCreateBranchType) Check() error {
 // ReqForUpdateBranchType 更新分支类型请求
 type ReqForUpdateBranchType struct {
 	Name     string   `json:"name" binding:"required,max=100" example:"功能分支"`
-	Prefixes []string `json:"prefixes" binding:"required,min=1,max=5,dive,max=50,valid_prefix" example:"feature/,feat/"`
+	Prefixes []string `json:"prefixes" binding:"required,min=1,max=5,dive,valid_prefix" example:"feature/,feat/"`
 	Desc     string   `json:"desc" binding:"omitempty,max=500" example:"用于开发新功能的分支"`
 }
 

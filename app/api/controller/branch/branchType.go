@@ -24,7 +24,7 @@ import (
 // @Router /repos/{id}/branch-types [post]
 func (c *Controller) CreateBranchType(ctx *gin.Context) {
 	// 解析 path id
-	repoID, err := req.PathParamAsPositiveint(ctx, "id")
+	repoID, err := req.PathParamAsNaturalNum(ctx, "id")
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.BranchTypePathParamError)
 		resp.BadRequest(ctx, err)
@@ -54,6 +54,15 @@ func (c *Controller) CreateBranchType(ctx *gin.Context) {
 		err = errors.WithI18nKey(err, i18n.BranchTypeBodyParamError)
 		resp.BadRequest(ctx, err)
 		return
+	}
+
+	for _, v := range reqBodyArray {
+		// 调用Check方法进行参数校验
+		if err := v.Check(); err != nil {
+			err = errors.WithI18nKey(err, i18n.BranchTypeBodyParamError)
+			resp.BadRequest(ctx, err)
+			return
+		}
 	}
 
 	// 如果是空数组
@@ -87,25 +96,25 @@ func (c *Controller) CreateBranchType(ctx *gin.Context) {
 // @Accept application/json
 // @Produce application/json
 // @Param id path uint true "仓库 ID"
-// @Param typeId path uint true "分支类型 ID"
+// @Param typeid path uint true "分支类型 ID"
 // @Param request body branchModel.ReqForUpdateBranchType true "更新分支类型请求参数"
 // @Success 200 {object} resp.ObjectResponse{data=branchModel.BranchType} "更新成功"
 // @Failure 400 {object} resp.ObjectResponse "参数错误"
 // @Failure 404 {object} resp.ObjectResponse "分支类型不存在"
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
-// @Router /repos/{id}/branch-types/{typeId} [put]
+// @Router /repos/{id}/branch-types/{typeid} [put]
 func (c *Controller) UpdateBranchType(ctx *gin.Context) {
 	var reqBody branchModel.ReqForUpdateBranchType
 
 	// 解析 path id
-	repoID, err := req.PathParamAsPositiveint(ctx, "id")
+	repoID, err := req.PathParamAsNaturalNum(ctx, "id")
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.BranchTypePathParamError)
 		resp.BadRequest(ctx, err)
 		return
 	}
 
-	typeID, err := req.PathParamAsPositiveUint(ctx, "typeId")
+	typeID, err := req.PathParamAsPositiveUint(ctx, "typeid")
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.BranchTypePathParamError)
 		resp.BadRequest(ctx, err)
@@ -114,6 +123,13 @@ func (c *Controller) UpdateBranchType(ctx *gin.Context) {
 
 	// 解析请求体
 	if err := ctx.ShouldBindJSON(&reqBody); err != nil {
+		err = errors.WithI18nKey(err, i18n.BranchTypeBodyParamError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
+	// 调用Check方法进行参数校验
+	if err := reqBody.Check(); err != nil {
 		err = errors.WithI18nKey(err, i18n.BranchTypeBodyParamError)
 		resp.BadRequest(ctx, err)
 		return
@@ -153,22 +169,22 @@ func (c *Controller) UpdateBranchType(ctx *gin.Context) {
 // @Accept application/json
 // @Produce application/json
 // @Param id path uint true "仓库 ID"
-// @Param typeId path uint true "分支类型 ID"
+// @Param typeid path uint true "分支类型 ID"
 // @Success 200 {object} resp.ObjectResponse{data=branchModel.BranchType} "查询成功"
 // @Failure 400 {object} resp.ObjectResponse "参数错误"
 // @Failure 404 {object} resp.ObjectResponse "分支类型不存在"
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
-// @Router /repos/{id}/branch-types/{typeId} [get]
+// @Router /repos/{id}/branch-types/{typeid} [get]
 func (c *Controller) GetBranchType(ctx *gin.Context) {
 	// 解析 path id
-	repoID, err := req.PathParamAsPositiveint(ctx, "id")
+	repoID, err := req.PathParamAsNaturalNum(ctx, "id")
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.BranchTypePathParamError)
 		resp.BadRequest(ctx, err)
 		return
 	}
 
-	typeID, err := req.PathParamAsPositiveUint(ctx, "typeId")
+	typeID, err := req.PathParamAsPositiveUint(ctx, "typeid")
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.BranchTypePathParamError)
 		resp.BadRequest(ctx, err)
@@ -209,22 +225,22 @@ func (c *Controller) GetBranchType(ctx *gin.Context) {
 // @Accept application/json
 // @Produce application/json
 // @Param id path uint true "仓库 ID"
-// @Param typeId path uint true "分支类型 ID"
+// @Param typeid path uint true "分支类型 ID"
 // @Success 200 {object} resp.ObjectResponse "删除成功"
 // @Failure 400 {object} resp.ObjectResponse "参数错误"
 // @Failure 404 {object} resp.ObjectResponse "分支类型不存在"
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
-// @Router /repos/{id}/branch-types/{typeId} [delete]
+// @Router /repos/{id}/branch-types/{typeid} [delete]
 func (c *Controller) DeleteBranchType(ctx *gin.Context) {
 	// 解析 path id
-	repoID, err := req.PathParamAsPositiveint(ctx, "id")
+	repoID, err := req.PathParamAsNaturalNum(ctx, "id")
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.BranchTypePathParamError)
 		resp.BadRequest(ctx, err)
 		return
 	}
 
-	typeID, err := req.PathParamAsPositiveUint(ctx, "typeId")
+	typeID, err := req.PathParamAsPositiveUint(ctx, "typeid")
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.BranchTypePathParamError)
 		resp.BadRequest(ctx, err)
@@ -274,7 +290,7 @@ func (c *Controller) ListBranchTypes(ctx *gin.Context) {
 	var reqFilter branchModel.ReqFilterBranchType
 
 	// 解析 path id
-	repoID, err := req.PathParamAsPositiveint(ctx, "id")
+	repoID, err := req.PathParamAsNaturalNum(ctx, "id")
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.BranchTypePathParamError)
 		resp.BadRequest(ctx, err)

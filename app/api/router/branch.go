@@ -18,8 +18,8 @@ func registerBranchRoutes(r *gin.RouterGroup, controller *Controller) {
 	{
 		branchTypes.POST("", controller.Branch.CreateBranchType)           // 创建分支类型
 		branchTypes.POST("/list", controller.Branch.ListBranchTypes)       // 查询分支类型列表
-		branchTypes.GET("/:typeId", controller.Branch.GetBranchType)       // 获取分支类型详情
-		branchTypes.PUT("/:typeId", controller.Branch.UpdateBranchType)    // 更新分支类型
-		branchTypes.DELETE("/:typeId", controller.Branch.DeleteBranchType) // 删除分支类型
+		branchTypes.GET("/:typeid", controller.Branch.GetBranchType)       // 获取分支类型详情
+		branchTypes.PUT("/:typeid", controller.Branch.UpdateBranchType)    // 更新分支类型
+		branchTypes.DELETE("/:typeid", controller.Branch.DeleteBranchType) // 删除分支类型
 	}
 }

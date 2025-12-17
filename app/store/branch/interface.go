@@ -8,7 +8,6 @@ import (
 
 type Interface interface {
 	// BranchType 相关接口
-	CreateBranchType(ctx context.Context, branchType *BranchType) (*branchModel.BranchType, error)
 	BatchCreateBranchType(ctx context.Context, branchTypes []*BranchType) ([]branchModel.BranchType, error)
 	UpdateBranchType(ctx context.Context, branchType *BranchType, id uint) (*branchModel.BranchType, error)
 	GetBranchTypeByID(ctx context.Context, id uint) (*branchModel.BranchType, error)
