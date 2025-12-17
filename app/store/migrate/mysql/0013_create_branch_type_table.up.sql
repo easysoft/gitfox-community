@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS `ops_branch_type` (
 	`name` varchar(255) NOT NULL COMMENT '分支类型名称',
 	`key` varchar(255) NOT NULL DEFAULT '' COMMENT '分支类型键值，仓库下唯一',
 	`prefix` varchar(255) NOT NULL DEFAULT '' COMMENT '分支前缀，仓库下唯一',
-	`desc` varchar(500) NOT NULL DEFAULT '' COMMENT '描述', 
+	`desc` varchar(500) NOT NULL DEFAULT '' COMMENT '描述',
 	`createdBy` varchar(30) NOT NULL DEFAULT '' COMMENT '创建人',
 	`createdDate` datetime NULL COMMENT '创建时间',
 	`editedBy` varchar(30) NOT NULL DEFAULT '',

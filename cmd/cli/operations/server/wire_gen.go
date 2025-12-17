@@ -7,7 +7,7 @@
 package server
 
 import (
-	branch2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/branch"
+	branch3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/branch"
 	commit2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/commit"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/githook"
 	repo3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/repo"
@@ -16,7 +16,7 @@ import (
 	tag2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/tag"
 	user3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/user"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/router"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/branch"
+	branch2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/branch"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/commit"
 	publickey2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/publickey"
 	repo2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
@@ -24,6 +24,7 @@ import (
 	space2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/space"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/tag"
 	user2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/user"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/branch"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/publickey"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/scan"
@@ -93,9 +94,10 @@ func NewApp(mode string) (*App, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	branchService := branch.NewService(urlProvider, gitService)
+	branchStore := branch.NewBranchStore(db)
+	branchService := branch2.NewService(urlProvider, gitService, branchStore)
 	repoService := repo2.NewRepoSvc(gitService, store, spaceStore, urlProvider, membershipAuthorizer)
-	controller := branch2.NewController(branchService, repoService)
+	controller := branch3.NewController(branchService, repoService)
 	tagService := tag.NewService(urlProvider, gitService)
 	tagController := tag2.NewController(tagService, repoService)
 	commitService := commit.NewService(urlProvider, gitService)
