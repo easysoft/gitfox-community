@@ -709,7 +709,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/repos/{id}/branch-types/{typeId}": {
+        "/repos/{id}/branch-types/{typeid}": {
             "get": {
                 "description": "获取指定分支类型的详细信息",
                 "consumes": [
@@ -733,7 +733,7 @@ const docTemplate = `{
                     {
                         "type": "integer",
                         "description": "分支类型 ID",
-                        "name": "typeId",
+                        "name": "typeid",
                         "in": "path",
                         "required": true
                     }
@@ -800,7 +800,7 @@ const docTemplate = `{
                     {
                         "type": "integer",
                         "description": "分支类型 ID",
-                        "name": "typeId",
+                        "name": "typeid",
                         "in": "path",
                         "required": true
                     },
@@ -876,7 +876,7 @@ const docTemplate = `{
                     {
                         "type": "integer",
                         "description": "分支类型 ID",
-                        "name": "typeId",
+                        "name": "typeid",
                         "in": "path",
                         "required": true
                     }

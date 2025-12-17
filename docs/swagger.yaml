@@ -1527,7 +1527,7 @@ paths:
       summary: 创建分支类型
       tags:
       - branch-types
-  /repos/{id}/branch-types/{typeId}:
+  /repos/{id}/branch-types/{typeid}:
     delete:
       consumes:
       - application/json
@@ -1540,7 +1540,7 @@ paths:
         type: integer
       - description: 分支类型 ID
         in: path
-        name: typeId
+        name: typeid
         required: true
         type: integer
       produces:
@@ -1577,7 +1577,7 @@ paths:
         type: integer
       - description: 分支类型 ID
         in: path
-        name: typeId
+        name: typeid
         required: true
         type: integer
       produces:
@@ -1619,7 +1619,7 @@ paths:
         type: integer
       - description: 分支类型 ID
         in: path
-        name: typeId
+        name: typeid
         required: true
         type: integer
       - description: 更新分支类型请求参数
