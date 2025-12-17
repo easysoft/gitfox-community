@@ -64,7 +64,7 @@ type BranchType struct {
 type ReqForCreateBranchType struct {
 	Name     string   `json:"name" binding:"required,max=100" example:"功能分支"`
 	Key      string   `json:"key" binding:"required,max=50" example:"feature"`
-	Prefixes []string `json:"prefixes" binding:"required,min=1,max=5" example:"feature/,feat/"`
+	Prefixes []string `json:"prefixes" binding:"required,min=1,max=5,unique"`
 	Desc     string   `json:"desc" binding:"max=500" example:"用于开发新功能的分支"`
 }
 
@@ -75,9 +75,6 @@ func (r *ReqForCreateBranchType) Check() error {
 	}
 
 	// Key必填,以字母开头,仅能输入英文字母、数字与符号（/-_.），最多50个字符
-	if r.Key == "" {
-		return errors.New("key is required")
-	}
 	if len(r.Key) > 50 {
 		return errors.New("key length must be less than 50")
 	}
@@ -90,9 +87,6 @@ func (r *ReqForCreateBranchType) Check() error {
 		return errors.New("prefixes length must be between 1 and 5")
 	}
 	for _, prefix := range r.Prefixes {
-		if prefix == "" {
-			return errors.New("prefix cannot be empty")
-		}
 		if len(prefix) > 50 {
 			return errors.New("prefix length must be less than 50")
 		}
@@ -112,13 +106,13 @@ func (r *ReqForCreateBranchType) Check() error {
 // ReqForUpdateBranchType 更新分支类型请求
 type ReqForUpdateBranchType struct {
 	Name     string   `json:"name" binding:"required,max=100" example:"功能分支"`
-	Prefixes []string `json:"prefixes" binding:"required,min=1,max=5,dive" example:"feature/,feat/"`
+	Prefixes []string `json:"prefixes" binding:"required,min=1,max=5,unique"`
 	Desc     string   `json:"desc" binding:"omitempty,max=500" example:"用于开发新功能的分支"`
 }
 
 func (r *ReqForUpdateBranchType) Check() error {
 	// 名称选填,如果提供则校验长度
-	if r.Name != "" && len(r.Name) > 100 {
+	if len(r.Name) > 100 {
 		return errors.New("name length must be less than 100")
 	}
 
@@ -128,9 +122,6 @@ func (r *ReqForUpdateBranchType) Check() error {
 			return errors.New("prefixes length must be less than 5")
 		}
 		for _, prefix := range r.Prefixes {
-			if prefix == "" {
-				return errors.New("prefix cannot be empty")
-			}
 			if len(prefix) > 50 {
 				return errors.New("prefix length must be less than 50")
 			}
