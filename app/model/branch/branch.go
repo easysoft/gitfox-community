@@ -63,8 +63,8 @@ type BranchType struct {
 // ReqForCreateBranchType 创建分支类型请求
 type ReqForCreateBranchType struct {
 	Name     string   `json:"name" binding:"required,max=100" example:"功能分支"`
-	Key      string   `json:"key" binding:"required,max=50,alphanum_start" example:"feature"`
-	Prefixes []string `json:"prefixes" binding:"required,min=1,max=5,dive,valid_prefix" example:"feature/,feat/"`
+	Key      string   `json:"key" binding:"required,max=50" example:"feature"`
+	Prefixes []string `json:"prefixes" binding:"required,min=1,max=5" example:"feature/,feat/"`
 	Desc     string   `json:"desc" binding:"max=500" example:"用于开发新功能的分支"`
 }
 
@@ -112,7 +112,7 @@ func (r *ReqForCreateBranchType) Check() error {
 // ReqForUpdateBranchType 更新分支类型请求
 type ReqForUpdateBranchType struct {
 	Name     string   `json:"name" binding:"required,max=100" example:"功能分支"`
-	Prefixes []string `json:"prefixes" binding:"required,min=1,max=5,dive,valid_prefix" example:"feature/,feat/"`
+	Prefixes []string `json:"prefixes" binding:"required,min=1,max=5,dive" example:"feature/,feat/"`
 	Desc     string   `json:"desc" binding:"omitempty,max=500" example:"用于开发新功能的分支"`
 }
 
