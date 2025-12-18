@@ -15,5 +15,5 @@ spec:
             spec:
               container: hub.zentao.net/ci/golang:1.25-alpine3.22
               script:
-              - go install github.com/go-task/task/v3/cmd/task@latest
+              - GOPROXY=https://goproxy.cn,direct go install github.com/go-task/task/v3/cmd/task@latest
               - task test:service
