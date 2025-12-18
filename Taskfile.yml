@@ -64,6 +64,7 @@ tasks:
 
       # 步骤3：执行单测并生成 JSON/JUnit 日志
       - |
+        mkdir -p {{.UNIT_DIR}} && \
         cd "{{.ROOT_DIR}}/app/service" && \
         echo "🚀 开始执行 service 单测..."
         # 生成 JSON 日志（用于原生统计）
