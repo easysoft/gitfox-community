@@ -17,18 +17,3 @@ spec:
               script:
               - task test:service
               - bash -c echo "UNIT_TEST=$(cat unit/unit_stats.txt)" >> $GITFOX_CUSTOM_ENV
-          - name: 消息通知
-            type: plugin
-            spec:
-              inputs:
-                debug: true
-                custom: true
-                token: ${{ secrets.get("xuan_token") }}
-                caller: zenci
-                api: https://gw.easycorp.cn
-                title: gitfox-community镜像构建成功
-                content: {{.UNIT_TEST}}
-                url: ${GITFOX_BUILD_LINK}
-                groups:
-                  "0": 31a0008b-6e3e-4b7f-9b7b-396a46b1f8f4
-              name: gitfox-xuanim-plugin
