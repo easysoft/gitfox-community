@@ -40,6 +40,7 @@ tasks:
       UNIT_JSON_FILE: "{{.UNIT_DIR}}/ut_result.json"
       JUNIT_REPORT_FILE: "{{.UNIT_DIR}}/junit-report.xml"
       COVER_PROFILE_FILE: "{{.UNIT_DIR}}/coverage.out"
+      STATS_OUTPUT_FILE: "{{.UNIT_DIR}}/unit_stats.txt"
     cmds:
       # 步骤2：自动检测并安装 go-junit-report（核心新增逻辑）
       - |
@@ -69,7 +70,7 @@ tasks:
         echo "🚀 开始执行 service 单测..."
         # 生成 JSON 日志（用于原生统计）
         go test -v -json \
-          -coverpkg="{{.COVER_PKG}}" \
+          -coverpkg="gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/..." \
           -coverprofile="{{.COVER_PROFILE_FILE}}" \
           -covermode=atomic \
           ./... > "{{.UNIT_JSON_FILE}}" 2>&1
@@ -111,13 +112,15 @@ tasks:
           RATE="${RATE}%"
         fi
 
-        # 输出统计结果
-        echo "总用例数: $TOTAL"
-        echo "成功数:   $PASSED"
-        echo "失败数:   $FAILED"
-        echo "跳过数:   $SKIPPED"
-        echo "通过率:   $RATE"
-        echo "========================================\n"
+        echo -e "\n========================================"
+        echo "          📊 测试&覆盖率统计          "
+        echo "========================================"
+        echo "总用例:   $TOTAL" | tee -a "{{.STATS_OUTPUT_FILE}}"
+        echo "成功数:   $PASSED" | tee -a "{{.STATS_OUTPUT_FILE}}"
+        echo "失败数:   $FAILED" | tee -a "{{.STATS_OUTPUT_FILE}}"
+        echo "跳过数:   $SKIPPED" | tee -a "{{.STATS_OUTPUT_FILE}}"
+        echo "通过率:   $RATE" | tee -a "{{.STATS_OUTPUT_FILE}}"
+        echo "----------------------------------------" | tee -a "{{.STATS_OUTPUT_FILE}}"
 
         # 失败数非0则退出（适配 CI/CD）
         if [ $FAILED -gt 0 ]; then
@@ -152,7 +155,8 @@ tasks:
         fi
 
         # 仅输出整体覆盖率（核心需求）
-        echo "Service层整体代码覆盖率: $TOTAL_COVERAGE"
+        echo "Service 整体覆盖率: $TOTAL_COVERAGE" | tee -a "{{.STATS_OUTPUT_FILE}}"
+
     silent: false
 
   test:clean:
