@@ -6,7 +6,7 @@ spec:
       REGISTRY_HOST: hub.zentao.net
       IMAGE_REPOSITORY: app/gitfox-community
   stages:
-    - name: prepare
+    - name: unit
       type: ci
       spec:
         steps:
@@ -17,7 +17,6 @@ spec:
               script:
               - task test:service
               - bash -c echo "UNIT_TEST=$(cat unit/unit_stats.txt)" >> $GITFOX_CUSTOM_ENV
-
           - name: 消息通知
             type: plugin
             spec:
