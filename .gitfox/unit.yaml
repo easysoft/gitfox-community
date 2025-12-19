@@ -26,7 +26,7 @@ spec:
                 token: ${{ secrets.get("xuan_token") }}
                 caller: zenci
                 api: https://gw.easycorp.cn
-                title: gitfox-community单测执行完成
+                title: gitfox-community镜像构建成功
                 content: {{.UNIT_TEST}}
                 url: ${GITFOX_BUILD_LINK}
                 groups:
