@@ -32,6 +32,4 @@ spec:
                 url: ${GITFOX_BUILD_LINK}
                 users:
                   "0": "caiyan"
-                # groups:
-                  # "0": 31a0008b-6e3e-4b7f-9b7b-396a46b1f8f4
               name: gitfox-xuanim-plugin
