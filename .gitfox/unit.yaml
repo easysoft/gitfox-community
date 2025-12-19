@@ -17,4 +17,4 @@ spec:
               script:
               - task test:service
               - bash -c echo "UNIT_TEST=$(cat unit/unit_stats.txt)" >> $GITFOX_CUSTOM_ENV
-              - echo {{.UNIT_TEST}}
+              - echo ${UNIT_TEST}
