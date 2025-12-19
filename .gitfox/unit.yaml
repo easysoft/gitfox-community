@@ -13,6 +13,6 @@ spec:
           - name: unit test
             type: run
             spec:
-              container: hub.zentao.net/ci/golang:1.25-alpine3.22-go-junit-report
+              container: hub.zentao.net/ci/golang:1.25-alpine3.22-junit-report
               script:
               - task test:service
