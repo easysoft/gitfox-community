@@ -13,7 +13,6 @@ spec:
           - name: unit test
             type: run
             spec:
-              container: hub.zentao.net/ci/golang:1.25-alpine3.22
+              container: hub.zentao.net/ci/golang:1.25-alpine3.22-go-junit-report
               script:
-              - GOPROXY=https://goproxy.cn,direct go install github.com/go-task/task/v3/cmd/task@latest
               - task test:service
