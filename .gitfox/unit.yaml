@@ -16,5 +16,5 @@ spec:
               container: hub.zentao.net/ci/golang:1.25-alpine3.22-junit-report
               script:
               - task test:service
-              - echo "UNIT_TEST=$(printf "%q" "$(cat unit/unit_stats.txt)")" >> $GITFOX_CUSTOM_ENV
+              - bash -c echo "UNIT_TEST=$(cat unit/unit_stats.txt)" >> $GITFOX_CUSTOM_ENV
               - echo {{.UNIT_TEST}}
