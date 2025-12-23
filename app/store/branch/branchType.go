@@ -5,6 +5,7 @@ import (
 
 	branchModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/branch"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/str"
 	"gorm.io/gorm"
 )
 
@@ -116,7 +117,7 @@ func mapBranchTypeToModel(data BranchType) *branchModel.BranchType {
 		RepoID:      data.RepoID,
 		Name:        data.Name,
 		Key:         data.Key,
-		Prefixes:    data.Prefixes,
+		Prefixes:    str.SplitEx(data.Prefixes, ",", true),
 		Desc:        data.Desc,
 		CreatedBy:   data.CreatedBy,
 		CreatedDate: data.CreatedDate,

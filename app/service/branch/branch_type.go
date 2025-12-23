@@ -9,6 +9,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/slice"
 )
 
 // BatchCreateBranchType 批量创建分支类型
@@ -25,7 +26,7 @@ func (s *Service) BatchCreateBranchType(
 			RepoID:    repoID,
 			Name:      req.Name,
 			Key:       req.Key,
-			Prefixes:  req.Prefixes,
+			Prefixes:  slice.Join(req.Prefixes, ","),
 			Desc:      req.Desc,
 			CreatedBy: session.User.Account,
 			EditedBy:  session.User.Account,
@@ -70,7 +71,7 @@ func (s *Service) UpdateBranchType(
 	}
 
 	if len(req.Prefixes) > 0 {
-		branchType.Prefixes = req.Prefixes
+		branchType.Prefixes = slice.Join(req.Prefixes, ",")
 	}
 
 	if req.Desc != "" {

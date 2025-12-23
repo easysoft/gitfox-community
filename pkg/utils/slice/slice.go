@@ -37,6 +37,26 @@ func AppendIfAbsent[T comparable](slice []T, item T) []T {
 	return slice
 }
 
+// Join the slice item with specify separator.
+func Join[T any](slice []T, separator string) string {
+	str := Map(slice, func(_ int, item T) string {
+		return fmt.Sprint(item)
+	})
+
+	return strings.Join(str, separator)
+}
+
+// Map creates an slice of values by running each element of slice thru iteratee function.
+func Map[T any, U any](slice []T, iteratee func(index int, item T) U) []U {
+	result := make([]U, len(slice), cap(slice))
+
+	for i := 0; i < len(slice); i++ {
+		result[i] = iteratee(i, slice[i])
+	}
+
+	return result
+}
+
 // JoinFunc joins the slice elements into a single string with the given separator.
 // 将切片元素连接为单个字符串，使用给定的分隔符。
 func JoinFunc[T any](slice []T, sep string, transform func(T) T) string {
