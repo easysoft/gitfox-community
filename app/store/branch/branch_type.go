@@ -11,7 +11,7 @@ type BranchType struct {
 	RepoID      uint            `gorm:"column:repoID"`
 	Name        string          `gorm:"column:name"`
 	Key         string          `gorm:"column:key"`
-	Prefixes    []string        `gorm:"column:prefix;serializer:json"` // 存储为 JSON 数组
+	Prefixes    string          `gorm:"column:prefix"`
 	Desc        string          `gorm:"column:desc"`
 	CreatedBy   string          `gorm:"column:createdBy"`
 	CreatedDate *datetime.Local `gorm:"column:createdDate"`
