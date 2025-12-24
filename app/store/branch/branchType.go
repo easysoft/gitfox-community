@@ -114,7 +114,7 @@ func (s *Store) ListBranchTypes(ctx context.Context, repoID uint, filter branchM
 func mapBranchTypeToModel(data BranchType) *branchModel.BranchType {
 	return &branchModel.BranchType{
 		ID:          data.ID,
-		RepoID:      data.RepoID,
+		RepoID:      data.Repo,
 		Name:        data.Name,
 		Key:         data.Key,
 		Prefixes:    str.SplitEx(data.Prefixes, ",", true),
