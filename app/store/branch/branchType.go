@@ -5,6 +5,8 @@ import (
 
 	branchModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/branch"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/slice"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/str"
 	"gorm.io/gorm"
 )
@@ -13,6 +15,18 @@ import (
 func (s *Store) BatchCreateBranchType(ctx context.Context, branchTypes []*BranchType) ([]branchModel.BranchType, error) {
 	// 开启事务，使用 CreateInBatches 批量插入
 	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+
+		for _, branchType := range branchTypes {
+			// 检查前缀是否重复
+			check, err := s.CheckBranchTypePrefix(ctx, tx, branchType.Repo, str.SplitEx(branchType.Prefixes, ",", true))
+			if err != nil {
+				return err
+			}
+			if check {
+				return errors.ErrDuplicate
+			}
+		}
+
 		// 每批100条记录
 		if err := tx.CreateInBatches(branchTypes, 100).Error; err != nil {
 			return database.ProcessSQLErrorf(ctx, err)
@@ -36,8 +50,23 @@ func (s *Store) BatchCreateBranchType(ctx context.Context, branchTypes []*Branch
 // UpdateBranchType 更新分支类型
 func (s *Store) UpdateBranchType(ctx context.Context, branchType *BranchType, id uint) (*branchModel.BranchType, error) {
 	branchType.ID = id
-	if err := s.db.WithContext(ctx).Model(branchType).Updates(branchType).Error; err != nil {
-		return nil, database.ProcessSQLErrorf(ctx, err)
+
+	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		check, err := s.CheckBranchTypePrefix(ctx, tx, branchType.Repo, str.SplitEx(branchType.Prefixes, ",", true))
+		if err != nil {
+			return err
+		}
+		if check {
+			return errors.ErrDuplicate
+		}
+		if err := tx.Model(branchType).Updates(branchType).Error; err != nil {
+			return database.ProcessSQLErrorf(ctx, err)
+		}
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
 	}
 
 	// 重新查询完整记录,因为 Updates 只更新指定非零值字段,不会回填其他字段
@@ -108,6 +137,37 @@ func (s *Store) ListBranchTypes(ctx context.Context, repoID uint, filter branchM
 		PageSize:  pageResult.PageSize,
 		TotalPage: pageResult.TotalPage,
 	}, nil
+}
+
+// CheckBranchTypePrefix 检查分支类型前缀是否重复
+func (s *Store) CheckBranchTypePrefix(ctx context.Context, tx *gorm.DB, repo uint, prefixes []string) (bool, error) {
+	var branchTypes []BranchType
+
+	// 可能同前缀的分支类型
+	err := tx.WithContext(ctx).Model(&BranchType{}).
+		Where("repo = ?", repo).
+		Where(func(db *gorm.DB) *gorm.DB {
+			for i, p := range prefixes {
+				if i == 0 {
+					db = db.Where("prefix LIKE ?", "%"+p+"%")
+				} else {
+					db = db.Or("prefix LIKE ?", "%"+p+"%")
+				}
+			}
+			return db
+		}(tx)).
+		Find(&branchTypes).Error
+	if err != nil {
+		return false, database.ProcessSQLErrorf(ctx, err)
+	}
+
+	for _, branchType := range branchTypes {
+		if len(slice.Intersection(str.SplitEx(branchType.Prefixes, ",", true), prefixes)) > 0 {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }
 
 // mapBranchTypeToModel 将 store 模型转换为 API 模型
