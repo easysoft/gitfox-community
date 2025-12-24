@@ -84,18 +84,18 @@ func (s *SpaceStore) List(ctx context.Context, filter spaceModel.ListSpaceFilter
 	if filter.Permission != "" {
 		tx = tx.Where("acl = ?", filter.Permission)
 	}
-	if filter.Deleted {
-		tx = tx.Where("deleted = ?", 1)
-	} else {
+	if !filter.Deleted {
 		tx = tx.Where("deleted = ?", 0)
 	}
 
 	ids := strings.Split(filter.IDs, ",")
 	// 查询包含所有公开空间
 	if filter.IsOpen {
-		tx = tx.Where("acl = ?", "open")
+		// 嵌套Where：强制 (acl='open' OR id IN (ids)) 作为整体，与前面的条件做AND
 		if len(filter.IDs) > 0 {
-			tx = tx.Or("id IN ?", ids)
+			tx = tx.Where("acl = ? OR id IN ?", "open", ids)
+		} else {
+			tx = tx.Where("acl = ?", "open")	
 		}
 	} else if len(filter.IDs) > 0 {
 		tx = tx.Where("id IN ?", ids)
@@ -111,6 +111,7 @@ func (s *SpaceStore) List(ctx context.Context, filter spaceModel.ListSpaceFilter
 	}
 	return pageResult, nil
 }
+
 
 // GetByID 根据ID查询单个空间
 func (r *SpaceStore) GetByID(ctx context.Context, id uint) (*Space, error) {

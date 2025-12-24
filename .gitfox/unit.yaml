@@ -1,0 +1,19 @@
+version: 1
+kind: pipeline
+spec:
+  options:
+    envs:
+      REGISTRY_HOST: hub.zentao.net
+      IMAGE_REPOSITORY: app/gitfox-community
+  stages:
+    - name: unit
+      type: ci
+      spec:
+        steps:
+          - name: unit test
+            type: run
+            spec:
+              container: hub.zentao.net/ci/golang:1.25-alpine3.22-junit-report
+              script:
+              - task test:service
+              - bash -c echo "UNIT_TEST=$(cat unit/unit_stats.txt)" >> $GITFOX_CUSTOM_ENV

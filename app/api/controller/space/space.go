@@ -85,6 +85,7 @@ func (ctl *SpaceController) List(c *gin.Context) {
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.SpaceListError)
 		resp.InternalError(c, err)
+		return
 	}
 	resp.ListSuccess(c, spaceObj.Data,
 		resp.ListArgs{

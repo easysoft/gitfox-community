@@ -5,7 +5,8 @@ vars:
   GO_MODULE: gitfox.zcorp.cc/git/Pangu/gitfox-community
   GOPROXY: 'https://goproxy.cn,direct'
   GOSUMDB: sum.golang.google.cn
-  BIN_DIR: $(pwd)/bin
+  BIN_DIR: "{{.ROOT_DIR}}/bin"
+  UNIT_DIR: "{{.ROOT_DIR}}/unit"
   GOOS: $(go env GOOS)
   GOARCH: $(go env GOARCH)
 
@@ -24,23 +25,144 @@ vars:
   - os: windows
     arches: [amd64, arm64]       # Windows支持的架构
 
+
 tasks:
   # 默认任务
   default:
     desc: 显示所有可用任务
     cmds:
       - task --list
-      
-  # 测试相关任务
-  test:
-    desc: 运行所有测试
-    cmds:
-      - go test ./...
 
-  test:verbose:
-    desc: 运行测试（详细输出）
+  # 测试相关任务
+  test:service:
+    desc: "仅执行Service层单测"
+    vars:
+      UNIT_JSON_FILE: "{{.UNIT_DIR}}/ut_result.json"
+      JUNIT_REPORT_FILE: "{{.UNIT_DIR}}/junit-report.xml"
+      COVER_PROFILE_FILE: "{{.UNIT_DIR}}/coverage.out"
+      STATS_OUTPUT_FILE: "{{.UNIT_DIR}}/unit_stats.txt"
     cmds:
-      - go test -v ./...
+      # 步骤2：自动检测并安装 go-junit-report（核心新增逻辑）
+      - |
+        echo "🔍 检查 go-junit-report 工具是否安装..."
+        if ! command -v go-junit-report &> /dev/null; then
+          echo "⚠️ 未检测到 go-junit-report，开始自动安装..."
+          # 临时设置 GOPROXY 确保安装速度
+          GOPROXY=https://goproxy.cn,direct go install github.com/jstemmer/go-junit-report/v2@latest
+          # 验证安装是否成功
+          if ! command -v go-junit-report &> /dev/null; then
+            # 尝试手动添加 GOPATH/bin 到 PATH（避免安装后路径未生效）
+            export PATH="$PATH:$(go env GOPATH)/bin"
+            if ! command -v go-junit-report &> /dev/null; then
+              echo "❌ 安装 go-junit-report 失败！请手动执行：go install github.com/jstemmer/go-junit-report/v2@latest"
+              exit 1
+            fi
+          fi
+          echo "✅ go-junit-report 安装成功！"
+        else
+          echo "✅ go-junit-report 已安装，跳过安装步骤"
+        fi
+
+      # 步骤3：执行单测并生成 JSON/JUnit 日志
+      - |
+        mkdir -p {{.UNIT_DIR}} && \
+        cd "{{.ROOT_DIR}}/app/service" && \
+        echo "🚀 开始执行 service 单测..."
+        # 生成 JSON 日志（用于原生统计）
+        go test -v -json \
+          -coverpkg="gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/..." \
+          -coverprofile="{{.COVER_PROFILE_FILE}}" \
+          -covermode=atomic \
+          ./... > "{{.UNIT_JSON_FILE}}" 2>&1
+        # 生成 JUnit XML 报告（用于结构化统计）
+        cat "{{.UNIT_JSON_FILE}}" | go-junit-report -set-exit-code > "{{.JUNIT_REPORT_FILE}}" 2>&1
+
+      # 步骤4：解析 JUnit 报告统计用例结果
+      - |
+        cd "{{.ROOT_DIR}}/app/service" && \
+        echo -e "\n========================================"
+        echo "          📊 service 测试结果统计         "
+        echo "========================================"
+        
+        # 安装 xmllint（若缺失，仅 Linux 需要）
+        if ! command -v xmllint &> /dev/null && [ "$(uname -s)" = "Linux" ]; then
+          echo "⚠️ 未检测到 xmllint，开始自动安装（仅Linux）..."
+          if [ -x "$(command -v apt)" ]; then
+            apt update && apt install -y libxml2-utils -qq > /dev/null
+          elif [ -x "$(command -v yum)" ]; then
+            yum install -y libxml2 -qq > /dev/null
+          else
+            echo "❌ 无法自动安装 xmllint，请手动安装后重试！"
+            exit 1
+          fi
+          echo "✅ xmllint 安装成功！"
+        fi
+
+        # 统计核心指标
+        TOTAL=$(xmllint --xpath 'count(//testcase)' "{{.JUNIT_REPORT_FILE}}" 2>/dev/null || echo 0)
+        FAILED=$(xmllint --xpath 'count(//failure) + count(//error)' "{{.JUNIT_REPORT_FILE}}" 2>/dev/null || echo 0)
+        PASSED=$((TOTAL - FAILED))
+        SKIPPED=$(xmllint --xpath 'count(//skipped)' "{{.JUNIT_REPORT_FILE}}" 2>/dev/null || echo 0)
+
+        # 计算通过率（避免除以0）
+        if [ $TOTAL -eq 0 ]; then
+          RATE="0.00%"
+        else
+          RATE=$(echo "scale=2; $PASSED / $TOTAL * 100" | bc 2>/dev/null || echo 0.00)
+          RATE="${RATE}%"
+        fi
+
+        echo -e "\n========================================"
+        echo "          📊 测试&覆盖率统计          "
+        echo "========================================"
+        echo "总用例:   $TOTAL" | tee -a "{{.STATS_OUTPUT_FILE}}"
+        echo "成功数:   $PASSED" | tee -a "{{.STATS_OUTPUT_FILE}}"
+        echo "失败数:   $FAILED" | tee -a "{{.STATS_OUTPUT_FILE}}"
+        echo "跳过数:   $SKIPPED" | tee -a "{{.STATS_OUTPUT_FILE}}"
+        echo "通过率:   $RATE" | tee -a "{{.STATS_OUTPUT_FILE}}"
+        echo "----------------------------------------" | tee -a "{{.STATS_OUTPUT_FILE}}"
+
+        # 失败数非0则退出（适配 CI/CD）
+        if [ $FAILED -gt 0 ]; then
+          echo "❌ service 测试失败！失败用例数：$FAILED"
+          exit 1
+        else
+          echo "✅ service 所有用例测试通过！"
+        fi
+
+      - |
+        if [ -f "{{.COVER_PROFILE_FILE}}" ] && [ -s "{{.COVER_PROFILE_FILE}}" ]; then
+          echo "🚀 生成HTML覆盖率报告..."
+          go tool cover -html="{{.COVER_PROFILE_FILE}}" -o "{{.COVER_HTML_FILE}}"
+          echo "📄 HTML覆盖率报告已生成：{{.COVER_HTML_FILE}}"
+        else
+          echo "⚠️  未生成有效覆盖率文件（无测试文件执行）"
+        fi
+
+      # 步骤2：解析覆盖率数据（核心）
+      - |
+        # 初始化覆盖率为0
+        TOTAL_COVERAGE="0.00%"
+        
+        # 仅当覆盖率文件有效时计算
+        if [ -f "{{.COVER_PROFILE_FILE}}" ] && [ -s "{{.COVER_PROFILE_FILE}}" ]; then
+          # 精准提取total行 + 格式化数值（修复.6%→0.60%问题）
+          COVER_VALUE=$(go tool cover -func="{{.COVER_PROFILE_FILE}}" | \
+            grep -E "^total:" | awk '{print $3}' | sed 's/%//')
+          # 补零+保留两位小数
+          COVER_VALUE=$(echo "scale=2; $COVER_VALUE" | bc 2>/dev/null | awk '{printf "%.2f", $0}')
+          TOTAL_COVERAGE="${COVER_VALUE}%"
+        fi
+
+        # 仅输出整体覆盖率（核心需求）
+        echo "Service 整体覆盖率: $TOTAL_COVERAGE" | tee -a "{{.STATS_OUTPUT_FILE}}"
+
+    silent: false
+
+  test:clean:
+    desc: 清理单测输出文件
+    cmds:
+      - rm -rf {{.UNIT_DIR}}/*
 
   test:coverage:
     desc: 运行测试并生成覆盖率报告
@@ -75,7 +197,6 @@ tasks:
     desc: 清理构建文件
     cmds:
       - rm -rf {{.BIN_DIR}}/*
-      - rm -f coverage.out coverage.html
 
   # 完整的检查流程
   check:

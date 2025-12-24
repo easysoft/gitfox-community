@@ -1,0 +1,25 @@
+FROM hub.zentao.net/ci/golang:1.25-alpine3.22 AS build
+
+ARG TZ="Asia/Shanghai"
+ENV TZ=${TZ}
+ENV GOPROXY=https://goproxy.cn,direct
+ENV GO111MODULE=on
+ENV CGO_ENABLED=1
+
+
+# 安装工具 + 立即验证可用性（核心测试步骤）
+RUN set -ex \
+    && sed -i 's/dl-cdn.alpinelinux.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apk/repositories \
+    && apk --no-cache add git bash musl tzdata curl vim \
+    && apk --no-cache add gcc musl-dev sqlite-dev \
+    && apk add --no-cache libxml2 libxml2-utils \ 
+    && xmllint --version \
+    && go install github.com/go-task/task/v3/cmd/task@latest \
+    && go install github.com/jstemmer/go-junit-report/v2@latest \
+    && ls -l /usr/bin/xmllint \
+    && task --version \
+    && go-junit-report --version \
+    && chmod +x /usr/bin/xmllint \
+    && xmllint --version \
+    # 6. 清理缓存减小体积
+    && rm -rf /var/cache/apk/* /tmp/* /var/tmp/*

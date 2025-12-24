@@ -2,102 +2,119 @@ package repo
 
 import (
 	"context"
-	"errors"
 	"testing"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 	principal "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/user"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo/mock"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/assert" // 推荐使用 testify 断言，更简洁
 	"gorm.io/gorm"
 )
 
-// 测试用例：正常删除（记录存在，GetByID 和 Delete 均成功）
-func TestServiceDeleteSuccess(t *testing.T) {
-	// 1. 初始化 gomock 控制器（用于管理 Mock 生命周期）
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish() // 测试结束后验证所有 Mock 期望调用是否执行
 
-	// 2. 创建 Mock 对象（基于生成的 MockRepoStoreInterface）
-	mockRepoStore := mock.NewMockInterface(ctrl)
+var (
+	ErrDBUpdateFailed = errors.New("数据库更新失败") // 统一错误实例
+)
+// TestDelete 表格驱动测试 Service.Delete 方法
+// 命名规范：Test<方法名>，符合 Go 单测命名标准
+func TestDelete(t *testing.T) {
+	t.Parallel() // 无状态用例开启并发执行，提升测试效率
 
-	// 3. 定义测试参数
-	testID := uint(123)
-	testCtx := context.Background()
-	testSession := &auth.Session{
-		User: &principal.User{
-			ID:      1,
-			Account: "actor",
+	// 1. 定义测试用例结构体（覆盖所有核心场景）
+	type testCase struct {
+		name        string                     // 场景名称（精准描述）
+		repoID      uint                       // 测试的仓库ID
+		session     *auth.Session              // 会话参数
+		mockSetup   func(ctrl *gomock.Controller, ms *mock.MockInterface) // Mock 期望设置
+		expectErr   error                      // 预期返回的错误（nil 表示无错误）
+	}
+
+	// 2. 构建测试用例表格（整合所有场景）
+	cases := []testCase{
+		{
+			name:   "成功-正常删除（记录存在且Delete执行成功）",
+			repoID: 123,
+			session: &auth.Session{
+				User: &principal.User{
+					ID:      1,
+					Account: "actor",
+				},
+			},
+			mockSetup: func(ctrl *gomock.Controller, ms *mock.MockInterface) {
+				testCtx := context.Background()
+				testRepo := &repoModel.Repo{ID: 123, Deleted: 0}
+
+				// 期望1：GetByID 被调用且返回正常数据
+				getByIDCall := ms.EXPECT().GetByID(testCtx, uint(123)).Return(testRepo, nil)
+				// 期望2：Delete 在 GetByID 后被调用且返回成功
+				ms.EXPECT().Delete(testCtx, uint(123)).Return(nil).After(getByIDCall)
+			},
+			expectErr: nil,
 		},
-	} // 按需填充 Session 字段（若 service 未使用，可空）
-	testRepo := &repoModel.Repo{ID: testID, Deleted: 0}
+		{
+			name:   "失败-GetByID返回记录不存在（不调用Delete）",
+			repoID: 456,
+			session: &auth.Session{},
+			mockSetup: func(ctrl *gomock.Controller, ms *mock.MockInterface) {
+				testCtx := context.Background()
+				expectedGetErr := gorm.ErrRecordNotFound
 
-	// 4. 设置 Mock 期望行为
-	// 期望 1：调用 GetByID(testCtx, testID)，返回 testRepo 和 nil 错误
-	getByIDCall := mockRepoStore.EXPECT().GetByID(testCtx, testID).Return(testRepo, nil)
-	// 期望 2：调用 Delete(testCtx, testID)，返回 nil 错误（必须在 GetByID 之后执行）
-	mockRepoStore.EXPECT().Delete(testCtx, testID).Return(nil).After(getByIDCall)
-	// 5. 初始化 service，注入 Mock 对象
-	service := &Service{repoStore: mockRepoStore}
+				// 期望1：GetByID 被调用且返回记录不存在错误
+				ms.EXPECT().GetByID(testCtx, uint(456)).Return(nil, expectedGetErr)
+				// 期望2：Delete 完全不被调用（增强测试严谨性）
+				ms.EXPECT().Delete(gomock.Any(), gomock.Any()).Times(0)
+			},
+			expectErr: gorm.ErrRecordNotFound,
+		},
+		{
+			name:   "失败-GetByID成功但Delete执行失败",
+			repoID: 789,
+			session: &auth.Session{},
+			mockSetup: func(ctrl *gomock.Controller, ms *mock.MockInterface) {
+				testCtx := context.Background()
+				testRepo := &repoModel.Repo{ID: 789, Deleted: 0}
+				expectedDeleteErr := ErrDBUpdateFailed
 
-	// 6. 调用 service 层 Delete 方法
-	err := service.Delete(testCtx, testSession, testID)
-
-	// 7. 断言结果
-	if err != nil {
-		t.Errorf("Delete() 预期无错误，实际返回: %v", err)
+				// 期望1：GetByID 被调用且返回正常数据
+				ms.EXPECT().GetByID(testCtx, uint(789)).Return(testRepo, nil)
+				// 期望2：Delete 被调用且返回指定错误
+				ms.EXPECT().Delete(testCtx, uint(789)).Return(expectedDeleteErr)
+			},
+			expectErr: ErrDBUpdateFailed,
+		},
 	}
-}
 
-// 测试用例：GetByID 失败（记录不存在）→ service 直接返回错误，不调用 Delete
-func TestServiceDeleteGetByIDFailed(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
+	// 3. 遍历执行所有测试用例
+	for _, tc := range cases {
+		// t.Run 为每个用例创建独立的子测试，失败时可精准定位场景
+		t.Run(tc.name, func(t *testing.T) {
+			// 每个用例独立创建 gomock 控制器，避免用例间 Mock 污染
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish() // 测试结束后验证所有 Mock 期望是否执行
 
-	mockRepoStore := mock.NewMockInterface(ctrl)
-	testID := uint(456)
-	testCtx := context.Background()
-	testSession := &auth.Session{}
-	expectedErr := gorm.ErrRecordNotFound // 模拟“记录不存在”错误
+			// 初始化 Mock 对象
+			mockRepoStore := mock.NewMockInterface(ctrl)
 
-	// 设置 Mock 期望行为：仅调用 GetByID，返回预期错误，不调用 Delete
-	mockRepoStore.EXPECT().GetByID(testCtx, testID).Return(nil, expectedErr)
-	// 明确期望 Delete 不会被调用（可选，增强测试严谨性）
-	mockRepoStore.EXPECT().Delete(gomock.Any(), gomock.Any()).Times(0)
+			// 执行当前用例的 Mock 期望设置
+			tc.mockSetup(ctrl, mockRepoStore)
 
-	// 初始化 service 并调用方法
-	service := &Service{repoStore: mockRepoStore}
-	err := service.Delete(testCtx, testSession, testID)
+			// 初始化被测 Service（注入 Mock 依赖）
+			service := &Service{repoStore: mockRepoStore}
 
-	// 断言：返回的错误与预期一致
-	if !errors.Is(err, expectedErr) {
-		t.Errorf("Delete() 预期错误为 %v，实际为 %v", expectedErr, err)
-	}
-}
+			// 执行被测方法
+			testCtx := context.Background()
+			err := service.Delete(testCtx, tc.session, tc.repoID)
 
-// 测试用例：Delete 失败（GetByID 成功，但 Delete 执行出错）→ service 返回 Delete 错误
-func TestServiceDeleteDeleteFailed(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	mockRepoStore := mock.NewMockInterface(ctrl)
-	testID := uint(789)
-	testCtx := context.Background()
-	testSession := &auth.Session{}
-	testRepo := &repoModel.Repo{ID: testID, Deleted: 0}
-	expectedErr := errors.New("数据库更新失败") // 模拟 Delete 执行错误
-
-	// 设置 Mock 期望行为
-	mockRepoStore.EXPECT().GetByID(testCtx, testID).Return(testRepo, nil)
-	mockRepoStore.EXPECT().Delete(testCtx, testID).Return(expectedErr)
-
-	// 初始化 service 并调用方法
-	service := &Service{repoStore: mockRepoStore}
-	err := service.Delete(testCtx, testSession, testID)
-
-	// 断言：返回的错误与 Delete 错误一致
-	if !errors.Is(err, expectedErr) {
-		t.Errorf("Delete() 预期错误为 %v，实际为 %v", expectedErr, err)
+			// 4. 断言结果（使用 testify 断言更简洁，符合业界主流）
+			if tc.expectErr == nil {
+				assert.NoError(t, err, "Delete() 预期无错误，实际返回错误：%v", err)
+			} else {
+				assert.True(t, errors.Is(err, tc.expectErr),
+					"Delete() 预期错误为 %v，实际为 %v", tc.expectErr, err)
+			}
+		})
 	}
 }
