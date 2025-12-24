@@ -49,7 +49,7 @@ type Branch struct {
 // BranchType 分支类型请求/响应模型
 type BranchType struct {
 	ID          uint            `json:"id"`
-	RepoID      uint            `json:"repoId"`
+	RepoID      uint            `json:"repo"`
 	Name        string          `json:"name"`
 	Key         string          `json:"key"`
 	Prefixes    []string        `json:"prefixes"`

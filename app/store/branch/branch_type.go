@@ -8,7 +8,7 @@ import (
 // BranchType 分支类型模型
 type BranchType struct {
 	ID          uint            `gorm:"column:id"`
-	RepoID      uint            `gorm:"column:repoID"`
+	Repo        uint            `gorm:"column:repo"`
 	Name        string          `gorm:"column:name"`
 	Key         string          `gorm:"column:key"`
 	Prefixes    string          `gorm:"column:prefix"`

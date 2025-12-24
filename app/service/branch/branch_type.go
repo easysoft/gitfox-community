@@ -23,7 +23,7 @@ func (s *Service) BatchCreateBranchType(
 
 	for _, req := range reqs {
 		branchType := &branchStore.BranchType{
-			RepoID:    repoID,
+			Repo:      repoID,
 			Name:      req.Name,
 			Key:       req.Key,
 			Prefixes:  slice.Join(req.Prefixes, ","),
