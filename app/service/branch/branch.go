@@ -115,6 +115,40 @@ func (s *Service) ListPrefixes(ctx context.Context, repo repoModel.Repo) ([]bran
 	return outLabels, nil
 }
 
+func (s *Service) Delete(
+	ctx context.Context,
+	name string,
+	session *authModel.Session,
+	repo *repoModel.Repo,
+) error {
+	// 准备 RPC 参数
+	writeParams, err := utils.CreateRPCInternalWriteParams(ctx, s.urlProvider, session, repo)
+	if err != nil {
+		return errors.WithI18nKey(err, i18n.GitCreateExecParamError)
+	}
+
+	// 获取分支信息以取得 SHA
+	branchOut, err := s.gitPkg.GetBranch(ctx, &git.GetBranchParams{
+		ReadParams: git.ReadParams{RepoUID: repo.GitUID},
+		BranchName: name,
+	})
+	if err != nil {
+		return errors.WithI18nKey(err, i18n.GitExecError)
+	}
+
+	// 调用 Git 层删除分支
+	err = s.gitPkg.DeleteBranch(ctx, &git.DeleteBranchParams{
+		WriteParams: writeParams,
+		BranchName:  name,
+		SHA:         branchOut.Branch.SHA.String(),
+	})
+	if err != nil {
+		return errors.WithI18nKey(err, i18n.GitExecError)
+	}
+
+	return nil
+}
+
 func mapToRPCBranchSortOption(o string) git.BranchSortOption {
 	switch o {
 	case "date":

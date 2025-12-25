@@ -165,7 +165,7 @@ definitions:
         items:
           type: string
         type: array
-      repoId:
+      repo:
         type: integer
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.Prefix:
@@ -243,18 +243,25 @@ definitions:
         maxLength: 100
         type: string
       prefixes:
-        example:
-        - feature/
-        - feat/
         items:
           type: string
         maxItems: 5
         minItems: 1
         type: array
+        uniqueItems: true
     required:
     - key
     - name
     - prefixes
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.ReqForDelete:
+    properties:
+      name:
+        example: dev
+        maxLength: 100
+        type: string
+    required:
+    - name
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.ReqForUpdateBranchType:
     properties:
@@ -267,14 +274,12 @@ definitions:
         maxLength: 100
         type: string
       prefixes:
-        example:
-        - feature/
-        - feat/
         items:
           type: string
         maxItems: 5
         minItems: 1
         type: array
+        uniqueItems: true
     required:
     - name
     - prefixes
@@ -1700,6 +1705,40 @@ paths:
       tags:
       - branch-types
   /repos/{id}/branches:
+    delete:
+      consumes:
+      - application/json
+      description: 删除指定分支
+      parameters:
+      - description: 仓库 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 删除分支请求参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.ReqForDelete'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 删除成功
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 删除分支
+      tags:
+      - tags
     post:
       consumes:
       - application/json

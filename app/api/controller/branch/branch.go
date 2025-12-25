@@ -187,3 +187,66 @@ func (c *Controller) ListPrefixes(ctx *gin.Context) {
 	}
 	resp.ListSuccess(ctx, respData, nil, i18n.BranchListPrefixSuccess, nil)
 }
+
+// @Summary 删除分支
+// @Description 删除指定分支
+// @Tags tags
+// @Accept application/json
+// @Produce application/json
+// @Param id path uint true "仓库 ID"
+// @Param request body branchModel.ReqForDelete true "删除分支请求参数"
+// @Success 200 {object} resp.ObjectResponse "删除成功"
+// @Failure 400 {object} resp.ObjectResponse "参数错误"
+// @Failure 500 {object} resp.ObjectResponse "服务器错误"
+// @Router /repos/{id}/branches [delete]
+func (c *Controller) Delete(ctx *gin.Context) {
+
+	var err error
+	var reqBody branchModel.ReqForDelete
+
+	// 解析 path id
+	repoID, err := req.PathParamAsPositiveUint(ctx, "id")
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RepoPathParamError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
+	// 解析请求体
+	if err = ctx.ShouldBindJSON(&reqBody); err != nil {
+		err = errors.WithI18nKey(err, i18n.BranchBodyParamError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
+	session, ok := req.GetAuthSession(ctx.Request.Context())
+	if !ok {
+		err = errors.WithI18nKey(errors.New("session not found"), i18n.AuthNoSession)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
+	// 通过仓库 ID 获取仓库
+	repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, repoID)
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RepoQueryError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
+	if repoOut.Mirror {
+		err = errors.WithI18nKey(err, i18n.RepoMirrorReadOnly)
+		resp.InternalError(ctx, err)
+		return
+	}
+
+	// 调用 service 层删除分支
+	err = c.branchSvc.Delete(ctx.Request.Context(), reqBody.Name, session, repoOut)
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.BranchDeleteError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
+	resp.OK(ctx, i18n.BranchDeleteSuccess, nil)
+}

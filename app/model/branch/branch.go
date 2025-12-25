@@ -20,6 +20,10 @@ type ReqForCreate struct {
 	Source string `json:"source"`
 }
 
+type ReqForDelete struct {
+	Name string `json:"name" binding:"required,max=100" example:"dev"`
+}
+
 // ReqFilter stores branch query parameters.
 type ReqFilter struct {
 	Query           string `json:"query" form:"query"`

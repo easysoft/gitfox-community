@@ -4,6 +4,8 @@ branch:
   body_param_error: "Body param parsing failed."
   create_success: "Branch created successfully."
   create_error: "Branch created failed."
+  delete_success: "Branch deleted successfully."
+  delete_error: "Branch deleted failed."
   list_error: "Failed to query branch list."
   list_success: "Query the branch list successfully."
   list_prefix_error: "Failed to query the list of branch prefixes."
