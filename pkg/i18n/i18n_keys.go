@@ -33,6 +33,8 @@ const (
 	BranchBodyParamError    I18nKey = "branch.body_param_error"    // Body 参数解析失败.
 	BranchCreateError       I18nKey = "branch.create_error"        // 分支创建失败.
 	BranchCreateSuccess     I18nKey = "branch.create_success"      // 分支创建成功.
+	BranchDeleteError       I18nKey = "branch.delete_error"        // 分支删除失败.
+	BranchDeleteSuccess     I18nKey = "branch.delete_success"      // 分支删除成功.
 	BranchListError         I18nKey = "branch.list_error"          // 查询分支列表失败.
 	BranchListPrefixError   I18nKey = "branch.list_prefix_error"   // 查询分支前缀列表失败.
 	BranchListPrefixSuccess I18nKey = "branch.list_prefix_success" // 查询分支前缀列表成功.

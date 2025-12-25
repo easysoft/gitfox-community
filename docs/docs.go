@@ -972,6 +972,57 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "delete": {
+                "description": "删除指定分支",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tags"
+                ],
+                "summary": "删除分支",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "仓库 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "删除分支请求参数",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.ReqForDelete"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "删除成功",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
             }
         },
         "/repos/{id}/branches/list": {
@@ -3500,7 +3551,7 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
-                "repoId": {
+                "repo": {
                     "type": "integer"
                 }
             }
@@ -3620,13 +3671,23 @@ const docTemplate = `{
                     "type": "array",
                     "maxItems": 5,
                     "minItems": 1,
+                    "uniqueItems": true,
                     "items": {
                         "type": "string"
-                    },
-                    "example": [
-                        "feature/",
-                        "feat/"
-                    ]
+                    }
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.ReqForDelete": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "example": "dev"
                 }
             }
         },
@@ -3651,13 +3712,10 @@ const docTemplate = `{
                     "type": "array",
                     "maxItems": 5,
                     "minItems": 1,
+                    "uniqueItems": true,
                     "items": {
                         "type": "string"
-                    },
-                    "example": [
-                        "feature/",
-                        "feat/"
-                    ]
+                    }
                 }
             }
         },

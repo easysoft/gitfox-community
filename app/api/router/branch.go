@@ -11,6 +11,7 @@ func registerBranchRoutes(r *gin.RouterGroup, controller *Controller) {
 		branches.POST("", controller.Branch.Create)               // 创建分支
 		branches.POST("/list", controller.Branch.List)            // 查看分支列表
 		branches.GET("/prefixes", controller.Branch.ListPrefixes) // 查看分支前缀列表
+		branches.DELETE("", controller.Branch.Delete)             // 删除分支
 	}
 
 	// 分支类型路由
