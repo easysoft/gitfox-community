@@ -18,7 +18,7 @@ func (s *Store) BatchCreateBranchType(ctx context.Context, branchTypes []*Branch
 
 		for _, branchType := range branchTypes {
 			// 检查前缀是否重复
-			check, err := s.CheckBranchTypePrefix(ctx, tx, branchType.Repo, str.SplitEx(branchType.Prefixes, ",", true))
+			check, err := s.CheckBranchTypePrefix(ctx, tx, branchType.Repo, 0, str.SplitEx(branchType.Prefixes, ",", true))
 			if err != nil {
 				return err
 			}
@@ -52,7 +52,7 @@ func (s *Store) UpdateBranchType(ctx context.Context, branchType *BranchType, id
 	branchType.ID = id
 
 	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		check, err := s.CheckBranchTypePrefix(ctx, tx, branchType.Repo, str.SplitEx(branchType.Prefixes, ",", true))
+		check, err := s.CheckBranchTypePrefix(ctx, tx, branchType.Repo, branchType.ID, str.SplitEx(branchType.Prefixes, ",", true))
 		if err != nil {
 			return err
 		}
@@ -140,13 +140,16 @@ func (s *Store) ListBranchTypes(ctx context.Context, repoID uint, filter branchM
 }
 
 // CheckBranchTypePrefix 检查分支类型前缀是否重复
-func (s *Store) CheckBranchTypePrefix(ctx context.Context, tx *gorm.DB, repo uint, prefixes []string) (bool, error) {
+func (s *Store) CheckBranchTypePrefix(ctx context.Context, tx *gorm.DB, repo uint, branchTypeID uint, prefixes []string) (bool, error) {
 	var branchTypes []BranchType
 
 	// 可能同前缀的分支类型
 	err := tx.WithContext(ctx).Model(&BranchType{}).
 		Where("repo = ?", repo).
 		Where(func(db *gorm.DB) *gorm.DB {
+			if branchTypeID > 0 {
+				db = db.Where("id <> ?", branchTypeID)
+			}
 			for i, p := range prefixes {
 				if i == 0 {
 					db = db.Where("prefix LIKE ?", "%"+p+"%")
