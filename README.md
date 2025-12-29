@@ -154,6 +154,173 @@ go mod tidy  # 自动下载依赖并清理无用依赖
     ]
 }
 ```
+
+## 三、Service 层单测书写规范
+
+### 1. 基础命名 / 文件规范
+
+| 维度  | 规范要求 | 示例  |
+| --- | --- | --- |
+| 测试文件命名 | 与被测文件同目录，后缀为 `_test.go`，前缀与被测文件一致 | 被测：`repo.go` → 测试：`repo_test.go` |
+| 包名  | 优先与被测包同名（方便访问包内未导出方法），避免 `package xxx_test`（除非需隔离） | `package service` |
+| 测试函数命名 | `Test<方法名>`，大驼峰，参数固定为 `t *testing.T` | 被测方法：`UserService.GetUserByID` → 测试函数：`TestGetUserByID` |
+| 测试用例命名 | 表格驱动用例中，用例名称清晰描述场景（中文 / 英文均可，优先英文） | `{"name": "无效ID-负数", "inputID": -1, "expectErr": "invalid user id"}` |
+
+### 2. 测试函数设计规范
+
+1. **单一职责**：一个测试函数聚焦测试一个业务方法，不同场景通过「表格驱动」拆分，不写超大函数；
+2. **并发安全**：无状态测试用例添加 `t.Parallel()` 提升测试速度；
+3. **错误信息**：断言失败时给出「期望 / 实际」明确对比，避免仅 `t.Fail()`；
+4. **依赖隔离**：Service 层依赖的 Repo、RPC、缓存、数据库等，**必须通过 Mock 隔离**，禁止依赖真实环境；
+5. **断言选型**：优先使用 `testify/assert`，替代原生 `if` 判断，简化代码。
+
+### 3. 测试用例结构规范（表格驱动）
+
+Go 业界主流使用「表格驱动测试」（Table-Driven Tests），优势是易扩展、场景清晰。核心结构：
+
+```go
+func TestXxx(t *testing.T) {
+    t.Parallel() // 并发执行（无状态用例）
+    // 1. 定义测试用例结构体
+    type testCase struct {
+        name        string        // 用例名称
+        input       inputType     // 入参
+        mockSetup   func()        // Mock 依赖的行为
+        expectRes   resultType    // 期望返回值
+        expectErr   string        // 期望错误（模糊匹配）
+    }
+
+    // 2. 构建测试用例列表
+    cases := []testCase{
+        {
+            name:  "成功-查询存在的用户",
+            input: 1001,
+            mockSetup: func() {
+                // Mock Repo 返回存在的用户
+            },
+            expectRes: &repo.User{ID: 1001, Name: "张三"},
+            expectErr: "",
+        },
+        {
+            name:  "失败-用户不存在",
+            input: 9999,
+            mockSetup: func() {
+                // Mock Repo 返回空
+            },
+            expectRes: nil,
+            expectErr: "user not found",
+        },
+    }
+
+    // 3. 遍历执行用例
+    for _, tc := range cases {
+        t.Run(tc.name, func(t *testing.T) {
+            // 初始化依赖 + 执行 Mock
+            tc.mockSetup()
+            // 执行被测方法
+            res, err := s.GetUserByID(tc.input)
+            // 断言
+            if tc.expectErr != "" {
+                assert.ErrorContains(t, err, tc.expectErr)
+            } else {
+                assert.NoError(t, err)
+                assert.Equal(t, tc.expectRes, res)
+            }
+        })
+    }
+}
+```
+
+#### 参考示例
+
+**service/repo/repo_test.go**
+
+### 4. Mock 策略与规范
+
+Service 层依赖的底层组件（store、RPC、缓存等）必须 Mock，主流工具：
+
+| Mock 工具 | 适用场景 | 优势  |
+| --- | --- | --- |
+| `gomock` | 复杂接口 Mock（Google 官方），需生成 Mock 代码 | 类型安全、支持更多 Mock 行为 |
+
+#### Mock 核心规范
+
+1. **依赖接口化**：Service 层依赖必须定义接口，而非具体实现（核心原则）；
+  
+  ```go
+  // 被测 Service 依赖接口（而非具体的 MysqlRepo）
+  type UserService struct {
+     repo repo.UserRepo // 接口类型
+  }
+  // Repo 层定义接口
+  type UserRepo interface {
+     GetByID(id int64) (*User, error)
+  }
+  ```
+  
+2. **Mock 行为准确**：模拟真实场景的返回（成功、失败、参数错误、超时等）；
+  
+3. **Mock 清理**：每个用例独立初始化 Mock，避免用例间污染；
+  
+4. **禁止过度 Mock**：仅 Mock Service 层的直接依赖，不 Mock 底层底层（如 Repo 内部的 DB 操作）。
+  
+5. **mock文件生成路径**：store每个模块下新建mock目录
+  
+
+#### gomock使用
+
+##### 1. 环境准备
+
+首先安装 `gomock` 和 `mockgen` 工具：
+
+```bash
+# 安装 gomock 核心库和 mockgen 生成工具（Go 1.16+）
+go install github.com/golang/mock/mockgen@latest
+
+# 验证安装（确保 GOPATH/bin 在系统 PATH 中）
+mockgen -version
+```
+
+##### 2. Mock 文件生成
+
+**方式 ：通过 `go generate` 生成**
+
+在接口文件中添加 `//go:generate` 注释，实现「一键生成 / 更新 Mock 文件」，适合团队协作。
+
+**步骤 1：在接口文件头部添加注释**
+
+```go
+// store/interfaces.go
+package service
+
+//go:generate mockgen -source=$GOFILE -destination=mock/repo_store.go -package=mock
+
+import (
+    "context"
+)
+
+// ... 接口定义 ...
+```
+
+注释说明：
+
+- `$GOFILE`：当前文件名称（interfaces.go）；
+- `$GOPACKAGE`：当前包名（service）；
+- 最终生成的文件名为 `repo_store.go`，包名为mock
+**步骤 2：执行生成命令**
+
+```bash
+# 进入接口文件所在目录
+cd ./store/repo
+# 执行 go generate 生成 Mock 文件
+go generate
+```
+
+### 参考示例
+
+app/store/repo/interface.go
+
+app/store/repo/mock/repo_store.go //mockgen自动生成
 ## 三、分支开发策略
 开发分支策略与禅道保持一致
 

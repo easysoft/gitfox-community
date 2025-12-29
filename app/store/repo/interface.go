@@ -1,5 +1,7 @@
 package repo
 
+//go:generate mockgen -source=$GOFILE -destination=mock/repo_store.go -package=mock
+
 import (
 	"context"
 
