@@ -96,7 +96,7 @@ func (s *Store) GetBranchTypeByID(ctx context.Context, id uint) (*branchModel.Br
 	return mapBranchTypeToModel(branchType), nil
 }
 
-// DeleteBranchType 删除分支类型(软删除)
+// DeleteBranchType 删除分支类型
 func (s *Store) DeleteBranchType(ctx context.Context, id uint) error {
 	if err := s.db.WithContext(ctx).Model(&BranchType{}).Delete("id = ?", id).Error; err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
