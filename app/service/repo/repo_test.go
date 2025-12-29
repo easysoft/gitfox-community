@@ -7,7 +7,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 	principal "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/user"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo/mock"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo/mock"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert" // 推荐使用 testify 断言，更简洁

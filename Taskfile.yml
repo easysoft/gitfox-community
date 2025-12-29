@@ -120,7 +120,6 @@ tasks:
         echo "失败数:   $FAILED" | tee -a "{{.STATS_OUTPUT_FILE}}"
         echo "跳过数:   $SKIPPED" | tee -a "{{.STATS_OUTPUT_FILE}}"
         echo "通过率:   $RATE" | tee -a "{{.STATS_OUTPUT_FILE}}"
-        echo "----------------------------------------" | tee -a "{{.STATS_OUTPUT_FILE}}"
 
         # 失败数非0则退出（适配 CI/CD）
         if [ $FAILED -gt 0 ]; then
