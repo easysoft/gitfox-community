@@ -28,7 +28,7 @@ spec:
                 token: ${{ secrets.get("xuan_token") }}
                 caller: zenci
                 api: https://gw.easycorp.cn
-                title: gitfox-community-单测覆盖执行完成
+                title: gitfox-community-单测覆盖率执行完成
                 content: "{{.UNIT_TEST}}"
                 url: ${GITFOX_BUILD_LINK}
                 groups:
@@ -44,7 +44,7 @@ spec:
                 token: ${{ secrets.get("xuan_token") }}
                 caller: zenci
                 api: https://gw.easycorp.cn
-                title: gitfox-community-单测覆盖执行失败
+                title: gitfox-community-单测覆盖率执行失败
                 content: "GitFox-单测覆盖执行失败，请点击流水线执行链接排查"
                 url: ${GITFOX_BUILD_LINK}
                 groups:
