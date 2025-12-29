@@ -91,7 +91,7 @@ func (s *Store) GetBranchTypeByID(ctx context.Context, id uint) (*branchModel.Br
 
 // DeleteBranchType 删除分支类型(软删除)
 func (s *Store) DeleteBranchType(ctx context.Context, id uint) error {
-	if err := s.db.WithContext(ctx).Model(&BranchType{}).Where("id = ?", id).Update("deleted", 1).Error; err != nil {
+	if err := s.db.WithContext(ctx).Model(&BranchType{}).Delete("id = ?", id).Error; err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
 	}
 	return nil
@@ -150,6 +150,9 @@ func (s *Store) CheckBranchTypePrefix(ctx context.Context, tx *gorm.DB, repo uin
 			if branchTypeID > 0 {
 				db = db.Where("id <> ?", branchTypeID)
 			}
+			return db
+		}(tx)).
+		Where(func(db *gorm.DB) *gorm.DB {
 			for i, p := range prefixes {
 				if i == 0 {
 					db = db.Where("prefix LIKE ?", "%"+p+"%")
