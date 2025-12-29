@@ -6,6 +6,7 @@ import (
 	branchModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/branch"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/slice"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/str"
 	"gorm.io/gorm"
@@ -23,13 +24,16 @@ func (s *Store) BatchCreateBranchType(ctx context.Context, branchTypes []*Branch
 				return err
 			}
 			if check {
-				return errors.ErrDuplicate
+				return errors.WithI18nKey(errors.ErrDuplicate, i18n.BranchTypeCreateErrorPrefix)
 			}
 		}
 
 		// 每批100条记录
 		if err := tx.CreateInBatches(branchTypes, 100).Error; err != nil {
-			return database.ProcessSQLErrorf(ctx, err)
+			if errors.Is(database.ProcessSQLErrorf(ctx, err), errors.ErrDuplicate) {
+				return errors.WithI18nKey(err, i18n.BranchTypeCreateErrorKey)
+			}
+			return errors.WithI18nKey(database.ProcessSQLErrorf(ctx, err), i18n.BranchTypeCreateError)
 		}
 		return nil
 	})
@@ -57,10 +61,13 @@ func (s *Store) UpdateBranchType(ctx context.Context, branchType *BranchType, id
 			return err
 		}
 		if check {
-			return errors.ErrDuplicate
+			return errors.WithI18nKey(errors.ErrDuplicate, i18n.BranchTypeUpdateErrorPrefix)
 		}
 		if err := tx.Model(branchType).Updates(branchType).Error; err != nil {
-			return database.ProcessSQLErrorf(ctx, err)
+			if errors.Is(err, errors.ErrDuplicate) {
+				return errors.WithI18nKey(database.ProcessSQLErrorf(ctx, err), i18n.BranchTypeUpdateErrorKey)
+			}
+			return errors.WithI18nKey(database.ProcessSQLErrorf(ctx, err), i18n.BranchTypeUpdateError)
 		}
 		return nil
 	})
@@ -91,7 +98,7 @@ func (s *Store) GetBranchTypeByID(ctx context.Context, id uint) (*branchModel.Br
 
 // DeleteBranchType 删除分支类型(软删除)
 func (s *Store) DeleteBranchType(ctx context.Context, id uint) error {
-	if err := s.db.WithContext(ctx).Model(&BranchType{}).Where("id = ?", id).Update("deleted", 1).Error; err != nil {
+	if err := s.db.WithContext(ctx).Model(&BranchType{}).Delete("id = ?", id).Error; err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
 	}
 	return nil
@@ -150,6 +157,9 @@ func (s *Store) CheckBranchTypePrefix(ctx context.Context, tx *gorm.DB, repo uin
 			if branchTypeID > 0 {
 				db = db.Where("id <> ?", branchTypeID)
 			}
+			return db
+		}(tx)).
+		Where(func(db *gorm.DB) *gorm.DB {
 			for i, p := range prefixes {
 				if i == 0 {
 					db = db.Where("prefix LIKE ?", "%"+p+"%")
