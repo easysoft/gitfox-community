@@ -36,7 +36,7 @@ func (s *Service) BatchCreateBranchType(
 
 	results, err := s.branchStore.BatchCreateBranchType(ctx, branchTypes)
 	if err != nil {
-		return nil, errors.WithI18nKey(err, i18n.BranchTypeCreateError)
+		return nil, err
 	}
 
 	return results, nil
@@ -80,7 +80,7 @@ func (s *Service) UpdateBranchType(
 
 	result, err := s.branchStore.UpdateBranchType(ctx, branchType, id)
 	if err != nil {
-		return nil, errors.WithI18nKey(err, i18n.BranchTypeUpdateError)
+		return nil, err
 	}
 
 	return result, nil
