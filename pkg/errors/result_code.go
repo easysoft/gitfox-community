@@ -11,6 +11,7 @@ const (
 	BadRequest
 	NotFound
 	DBError
+	GitError
 	SystemErr
 	InternalError
 	InvalidArgument

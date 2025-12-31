@@ -11,6 +11,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/utils"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/util"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/url"
 )
@@ -54,8 +55,7 @@ func (s *Service) Create(
 		TaggerDate:  &now,
 	})
 	if err != nil {
-		err = errors.WithI18nKey(err, i18n.GitExecError)
-		return nil, err
+		return nil, util.ProcessGitErrorf(ctx, err)
 	}
 
 	commitTag, err := mapCommitTag(rpcOut.CommitTag)
