@@ -5,6 +5,9 @@ import (
 	"gorm.io/gorm"
 )
 
+// ***** BranchType(zt_ops_branch_type) 表在devops 库中 *****
+// ***** BranchType(zt_ops_branch_type) 表 Repo 字段 存储的是 devops 库中 zt_repo 表的 id 字段*****
+
 // BranchType 分支类型模型
 type BranchType struct {
 	ID          uint            `gorm:"column:id"`
