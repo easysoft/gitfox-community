@@ -1,0 +1,34 @@
+CREATE TABLE IF NOT EXISTS `ops_pullrequests` (
+	`id` int unsigned NOT NULL AUTO_INCREMENT COMMENT '自增主键',
+	`title` varchar(255) NOT NULL COMMENT 'PR 标题',
+	`desc` TEXT NOT NULL COMMENT '拉取请求详细描述',
+	`sourceRepoID` int unsigned NOT NULL COMMENT '源仓库ID，关联repository表的id',
+	`sourceBranch` varchar(255) NOT NULL COMMENT '源分支名称（待合并的分支）',
+	`sourceSHA` char(40) NOT NULL COMMENT '源分支最新提交的SHA-1值',
+	`targetRepoID` int unsigned NOT NULL COMMENT '目标仓库ID，关联repository表的id',
+	`targetBranch` varchar(255) NOT NULL COMMENT '目标分支名称（合并目标分支）',
+	`mergedBy` varchar(30) NULL DEFAULT NULL COMMENT '执行合并操作的用户ID（未合并则为NULL）',
+	`mergeMethod` varchar(255) NULL DEFAULT NULL COMMENT '合并方法:merge/squash/rebase/fast-forward',
+	`mergeTargetSHA` char(40) NULL DEFAULT NULL COMMENT '合并时目标分支的 SHA,用于验证目标分支未变更',
+	`mergeBaseSHA` char(40) NOT NULL DEFAULT '' COMMENT '合并基准 SHA(源分支和目标分支的共同祖先)',
+	`mergeSHA` char(40) NULL DEFAULT NULL COMMENT '合并后生成的 commit SHA',
+	`mergeCheckStatus` varchar(255) NOT NULL COMMENT '合并前检查状态（如passed/failed/pending/skipped）',
+	`mergeConflicts` text NULL DEFAULT NULL COMMENT 'merge/squash 冲突文件列表,换行符分隔',
+	`rebaseCheckStatus` varchar(255) NOT NULL DEFAULT 'unchecked' COMMENT '变基检查状态（unchecked=未检查，passed=通过，failed=失败，pending=检查中）',
+	`rebaseConflicts` text NULL DEFAULT NULL COMMENT '变基时产生的冲突详情（文件路径、冲突内容，未变基/无冲突则为NULL）',
+	`commitCount` int unsigned NULL DEFAULT NULL COMMENT 'PR 包含的 commit 数量',
+	`fileCount` int unsigned NULL DEFAULT NULL COMMENT 'PR 修改的文件数量',
+	`flow` tinyint(1) NOT NULL DEFAULT '0' COMMENT '拉取请求对应的流程标识（0=默认流程，其他值对应自定义流程）',
+	`reviewFlowID` int unsigned NOT NULL DEFAULT '0' COMMENT '关联的评审流程ID',
+	`additions` int unsigned NULL DEFAULT NULL COMMENT '新增的代码行数',
+	`deletions` int unsigned NULL DEFAULT NULL COMMENT '删除的代码行数',
+	`status` varchar(255) NOT NULL COMMENT '拉取请求状态（如open/closed/merged/draft等）',  
+	`createdBy` varchar(30) NOT NULL DEFAULT '' COMMENT '创建人',
+	`createdDate` datetime NULL COMMENT '创建时间',
+	`editedBy` varchar(30) NOT NULL DEFAULT '',
+	`editedDate` datetime NULL COMMENT '更新时间',
+	PRIMARY KEY (`id`)
+	) ENGINE=InnoDB COMMENT='合并请求主表';
+
+CREATE INDEX `idx_createdBy` ON ops_pullrequests (`createdBy`);
+CREATE INDEX `idx_sourceRepoID_sourceBranch_targetRepoID_targetBranch` ON ops_pullrequests (`sourceRepoID`, `sourceBranch`, `targetRepoID`, `targetBranch`);
