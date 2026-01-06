@@ -43,6 +43,7 @@ const (
 	BranchQueryParamError   I18nKey = "branch.query_param_error"   // Query 参数解析失败.
 
 	// Branch_type 相关常量
+	BranchTypeBodyCheckError    I18nKey = "branch_type.body_check_error"    // 请求参数校验失败.
 	BranchTypeBodyParamError    I18nKey = "branch_type.body_param_error"    // Body 参数解析失败.
 	BranchTypeCreateError       I18nKey = "branch_type.create_error"        // 分支类型创建失败.
 	BranchTypeCreateErrorKey    I18nKey = "branch_type.create_error_key"    // 分支类型键值已存在.

@@ -14,6 +14,7 @@ branch:
 branch_type:
   path_param_error: "Path param parsing failed."
   body_param_error: "Body param parsing failed."
+  body_check_error: "Request parameter validation failed."
   create_success: "Branch type created successfully."
   create_error: "Failed to create branch type."
   create_error_key: "Branch type key already exists."
