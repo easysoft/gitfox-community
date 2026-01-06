@@ -33,12 +33,32 @@ const (
 	BranchBodyParamError    I18nKey = "branch.body_param_error"    // Body 参数解析失败.
 	BranchCreateError       I18nKey = "branch.create_error"        // 分支创建失败.
 	BranchCreateSuccess     I18nKey = "branch.create_success"      // 分支创建成功.
+	BranchDeleteError       I18nKey = "branch.delete_error"        // 分支删除失败.
+	BranchDeleteSuccess     I18nKey = "branch.delete_success"      // 分支删除成功.
 	BranchListError         I18nKey = "branch.list_error"          // 查询分支列表失败.
 	BranchListPrefixError   I18nKey = "branch.list_prefix_error"   // 查询分支前缀列表失败.
 	BranchListPrefixSuccess I18nKey = "branch.list_prefix_success" // 查询分支前缀列表成功.
 	BranchListSuccess       I18nKey = "branch.list_success"        // 查询分支列表成功.
 	BranchPathParamError    I18nKey = "branch.path_param_error"    // Path 参数解析失败.
 	BranchQueryParamError   I18nKey = "branch.query_param_error"   // Query 参数解析失败.
+
+	// Branch_type 相关常量
+	BranchTypeBodyCheckError    I18nKey = "branch_type.body_check_error"    // 请求参数校验失败.
+	BranchTypeBodyParamError    I18nKey = "branch_type.body_param_error"    // Body 参数解析失败.
+	BranchTypeCreateError       I18nKey = "branch_type.create_error"        // 分支类型创建失败.
+	BranchTypeCreateErrorKey    I18nKey = "branch_type.create_error_key"    // 分支类型键值已存在.
+	BranchTypeCreateErrorPrefix I18nKey = "branch_type.create_error_prefix" // 分支类型前缀已存在.
+	BranchTypeCreateSuccess     I18nKey = "branch_type.create_success"      // 分支类型创建成功.
+	BranchTypeDeleteError       I18nKey = "branch_type.delete_error"        // 分支类型删除失败.
+	BranchTypeDeleteSuccess     I18nKey = "branch_type.delete_success"      // 分支类型删除成功.
+	BranchTypeNotFound          I18nKey = "branch_type.not_found"           // 分支类型未找到.
+	BranchTypePathParamError    I18nKey = "branch_type.path_param_error"    // Path 参数解析失败.
+	BranchTypeQueryError        I18nKey = "branch_type.query_error"         // 分支类型查询失败.
+	BranchTypeQuerySuccess      I18nKey = "branch_type.query_success"       // 分支类型查询成功.
+	BranchTypeUpdateError       I18nKey = "branch_type.update_error"        // 分支类型更新失败.
+	BranchTypeUpdateErrorKey    I18nKey = "branch_type.update_error_key"    // 分支类型键值已存在.
+	BranchTypeUpdateErrorPrefix I18nKey = "branch_type.update_error_prefix" // 分支类型前缀已存在.
+	BranchTypeUpdateSuccess     I18nKey = "branch_type.update_success"      // 分支类型更新成功.
 
 	// Commit 相关常量
 	CommitActionDecodeError    I18nKey = "commit.action_decode_error"    // 解码提交文件内容时失败.
@@ -78,7 +98,9 @@ const (
 	ErrorGzipFailedToCreateReader I18nKey = "error.gzip_failed_to_create_reader" // gzip 解压失败
 
 	// Git 相关常量
+	GitAmbiguousRef              I18nKey = "git.ambiguous_ref"                 // 引用不明确.
 	GitCreateExecParamError      I18nKey = "git.create_exec_param_error"       // 创建败 git 命令参数失败.
+	GitEmptyRepo                 I18nKey = "git.empty_repo"                    // 仓库为空.
 	GitExecError                 I18nKey = "git.exec_error"                    // 执行 git 命令失败.
 	GitGitHookPostReceiveError   I18nKey = "git.git_hook_post_receive_error"   // 处理 git 钩子 post-receive 失败.
 	GitGitHookPostReceiveSuccess I18nKey = "git.git_hook_post_receive_success" // Post-receive 钩子处理成功.
@@ -86,7 +108,21 @@ const (
 	GitGitHookPreReceiveSuccess  I18nKey = "git.git_hook_pre_receive_success"  // Pre-receive 钩子处理成功.
 	GitGitHookUpdateError        I18nKey = "git.git_hook_update_error"         // 处理 git 钩子 update 失败.
 	GitGitHookUpdateSuccess      I18nKey = "git.git_hook_update_success"       // Update 钩子处理成功.
+	GitHookFailed                I18nKey = "git.hook_failed"                   // Git 钩子执行失败.
+	GitInvalidPath               I18nKey = "git.invalid_path"                  // 无效的路径.
+	GitInvalidRef                I18nKey = "git.invalid_ref"                   // 无效的引用.
+	GitInvalidSignature          I18nKey = "git.invalid_signature"             // 无效的签名.
 	GitMapOutputError            I18nKey = "git.map_output_error"              // 无法将 git 命令结果映射到响应结构体.
+	GitMergeConflict             I18nKey = "git.merge_conflict"                // 合并冲突.
+	GitObjectNotFound            I18nKey = "git.object_not_found"              // 对象不存在.
+	GitPathNotFound              I18nKey = "git.path_not_found"                // 路径不存在.
+	GitPushOutOfDate             I18nKey = "git.push_out_of_date"              // 推送过期,需要先拉取.
+	GitPushRejected              I18nKey = "git.push_rejected"                 // 推送被拒绝.
+	GitRefAlreadyExists          I18nKey = "git.ref_already_exists"            // 引用已存在.
+	GitRefNotFound               I18nKey = "git.ref_not_found"                 // 引用不存在.
+	GitRepoNotFound              I18nKey = "git.repo_not_found"                // 仓库不存在.
+	GitTimeout                   I18nKey = "git.timeout"                       // Git 操作超时.
+	GitUnrelatedHistories        I18nKey = "git.unrelated_histories"           // 不相关的历史记录.
 
 	// Repo 相关常量
 	RepoBodyParamError            I18nKey = "repo.body_param_error"             // Body 参数解析失败.

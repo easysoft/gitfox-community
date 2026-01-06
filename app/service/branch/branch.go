@@ -8,6 +8,7 @@ import (
 	branchModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/branch"
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/utils"
+	branchStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/branch"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
@@ -17,15 +18,17 @@ import (
 type Service struct {
 	urlProvider url.Provider
 	gitPkg      git.Interface
+	branchStore branchStore.Interface
 }
 
 var _ Interface = (*Service)(nil)
 
 // NewService 创建 BranchSrv 实例
-func NewService(urlProvider url.Provider, git git.Interface) *Service {
+func NewService(urlProvider url.Provider, git git.Interface, branchStore branchStore.Interface) *Service {
 	return &Service{
 		urlProvider: urlProvider,
 		gitPkg:      git,
+		branchStore: branchStore,
 	}
 }
 
@@ -110,6 +113,40 @@ func (s *Service) ListPrefixes(ctx context.Context, repo repoModel.Repo) ([]bran
 		outLabels[i] = branchModel.Prefix{Name: label.Name, Total: label.Total}
 	}
 	return outLabels, nil
+}
+
+func (s *Service) Delete(
+	ctx context.Context,
+	name string,
+	session *authModel.Session,
+	repo *repoModel.Repo,
+) error {
+	// 准备 RPC 参数
+	writeParams, err := utils.CreateRPCInternalWriteParams(ctx, s.urlProvider, session, repo)
+	if err != nil {
+		return errors.WithI18nKey(err, i18n.GitCreateExecParamError)
+	}
+
+	// 获取分支信息以取得 SHA
+	branchOut, err := s.gitPkg.GetBranch(ctx, &git.GetBranchParams{
+		ReadParams: git.ReadParams{RepoUID: repo.GitUID},
+		BranchName: name,
+	})
+	if err != nil {
+		return errors.WithI18nKey(err, i18n.GitExecError)
+	}
+
+	// 调用 Git 层删除分支
+	err = s.gitPkg.DeleteBranch(ctx, &git.DeleteBranchParams{
+		WriteParams: writeParams,
+		BranchName:  name,
+		SHA:         branchOut.Branch.SHA.String(),
+	})
+	if err != nil {
+		return errors.WithI18nKey(err, i18n.GitExecError)
+	}
+
+	return nil
 }
 
 func mapToRPCBranchSortOption(o string) git.BranchSortOption {

@@ -1,0 +1,53 @@
+version: 1
+kind: pipeline
+spec:
+  options:
+    envs:
+      REGISTRY_HOST: hub.zentao.net
+      IMAGE_REPOSITORY: app/gitfox-community
+  stages:
+    - name: unit
+      type: ci
+      spec:
+        steps:
+          - name: unit test
+            type: run
+            spec:
+              container: hub.zentao.net/ci/golang:1.25-alpine3.22-junit-report
+              script:
+              - task test:service
+              - ls unit
+              - cat unit/unit_stats.txt
+              - echo "UNIT_TEST=\"$(cat unit/unit_stats.txt 2>/dev/null)\"" >> "$GITFOX_CUSTOM_ENV"
+          - name: 消息通知
+            type: plugin
+            spec:
+              inputs:
+                debug: true
+                custom: true
+                token: ${{ secrets.get("xuan_token") }}
+                caller: zenci
+                api: https://gw.easycorp.cn
+                title: gitfox-community-单测覆盖率执行完成
+                content: "{{.UNIT_TEST}}"
+                url: ${GITFOX_BUILD_LINK}
+                groups:
+                  "0": 31a0008b-6e3e-4b7f-9b7b-396a46b1f8f4
+              name: gitfox-xuanim-plugin
+          - name: 消息通知-失败
+            when: failure()
+            type: plugin
+            spec:
+              inputs:
+                debug: true
+                custom: true
+                token: ${{ secrets.get("xuan_token") }}
+                caller: zenci
+                api: https://gw.easycorp.cn
+                title: gitfox-community-单测覆盖率执行失败
+                content: "GitFox-单测覆盖执行失败，请点击流水线执行链接排查"
+                url: ${GITFOX_BUILD_LINK}
+                groups:
+                  "0": 31a0008b-6e3e-4b7f-9b7b-396a46b1f8f4
+              name: gitfox-xuanim-plugin
+              

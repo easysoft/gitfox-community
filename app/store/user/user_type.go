@@ -40,7 +40,7 @@ type User struct {
 	Visits       uint       `db:"visits" gorm:"column:visits"`
 	Visions      string     `db:"visions" gorm:"column:visions"`
 	IP           string     `db:"ip" gorm:"column:ip"`
-	Last         uint       `db:"last" gorm:"column:last"`
+	Last         *time.Time `db:"last" gorm:"column:last"`
 	Fails        int8       `db:"fails" gorm:"column:fails"`
 	Locked       *time.Time `db:"locked" gorm:"column:locked"`
 	Feedback     string     `db:"feedback" gorm:"column:feedback"`

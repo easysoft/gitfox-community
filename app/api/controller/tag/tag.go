@@ -185,7 +185,8 @@ func (c *Controller) Delete(ctx *gin.Context) {
 	// 通过仓库 ID 获取仓库
 	repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, repoID)
 	if err != nil {
-		resp.InternalError(ctx, err)
+		err = errors.WithI18nKey(err, i18n.RepoQueryError)
+		resp.BadRequest(ctx, err)
 		return
 	}
 
@@ -200,7 +201,8 @@ func (c *Controller) Delete(ctx *gin.Context) {
 	// 调用 service 层删除标签
 	err = c.tagSvc.Delete(ctx.Request.Context(), name, session, repoOut)
 	if err != nil {
-		resp.InternalError(ctx, err)
+		err = errors.WithI18nKey(err, i18n.TagDeleteError)
+		resp.BadRequest(ctx, err)
 		return
 	}
 
