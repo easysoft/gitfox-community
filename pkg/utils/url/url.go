@@ -1,5 +1,6 @@
 package url
 
+//go:generate mockgen -source=$GOFILE -destination=mock/url_provider.go -package=mock
 import (
 	"context"
 	"fmt"

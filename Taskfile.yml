@@ -41,6 +41,7 @@ tasks:
       JUNIT_REPORT_FILE: "{{.UNIT_DIR}}/junit-report.xml"
       COVER_PROFILE_FILE: "{{.UNIT_DIR}}/coverage.out"
       STATS_OUTPUT_FILE: "{{.UNIT_DIR}}/unit_stats.txt"
+      COVER_HTML_FILE: "{{.UNIT_DIR}}/coverage.html"
     cmds:
       # 步骤2：自动检测并安装 go-junit-report（核心新增逻辑）
       - |
