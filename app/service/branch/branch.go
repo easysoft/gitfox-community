@@ -11,6 +11,7 @@ import (
 	branchStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/branch"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
+	gitUtil "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/util"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/url"
 )
@@ -53,8 +54,7 @@ func (s *Service) Create(
 		Target:      req.Source,
 	})
 	if err != nil {
-		err = errors.WithI18nKey(err, i18n.GitExecError)
-		return &branchModel.Branch{}, err
+		return &branchModel.Branch{}, gitUtil.ProcessGitErrorf(ctx, err)
 	}
 
 	// 将返回结果映射为前端对象
