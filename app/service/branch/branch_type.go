@@ -12,6 +12,9 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/slice"
 )
 
+// ***** BranchType(zt_ops_branch_type) 表在devops 库中 *****
+// ***** BranchType(zt_ops_branch_type) 表 Repo 字段 存储的是 devops 库中 zt_repo 表的 id 字段*****
+
 // BatchCreateBranchType 批量创建分支类型
 func (s *Service) BatchCreateBranchType(
 	ctx context.Context,

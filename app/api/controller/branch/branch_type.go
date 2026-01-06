@@ -9,6 +9,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// ***** BranchType(zt_ops_branch_type) 表在devops 库中 *****
+// ***** BranchType(zt_ops_branch_type) 表 Repo 字段 存储的是 devops 库中 zt_repo 表的 id 字段*****
+
 // CreateBranchType 创建分支类型
 // @Summary 创建分支类型
 // @Description 为指定仓库创建一个新的分支类型
@@ -38,16 +41,6 @@ func (c *Controller) CreateBranchType(ctx *gin.Context) {
 		return
 	}
 
-	if repoID != 0 {
-		// 通过仓库 ID 获取仓库
-		repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, repoID)
-		if err != nil || repoOut == nil {
-			err = errors.WithI18nKey(err, i18n.BranchTypeBodyParamError)
-			resp.InternalError(ctx, err)
-			return
-		}
-	}
-
 	// 解析请求题
 	var reqBodyArray []branchModel.ReqForCreateBranchType
 	if err := ctx.ShouldBindJSON(&reqBodyArray); err != nil {
@@ -59,7 +52,7 @@ func (c *Controller) CreateBranchType(ctx *gin.Context) {
 	for _, v := range reqBodyArray {
 		// 调用Check方法进行参数校验
 		if err := v.Check(); err != nil {
-			err = errors.WithI18nKey(err, i18n.BranchTypeBodyParamError)
+			err = errors.WithI18nKey(err, i18n.BranchTypeBodyCheckError)
 			resp.BadRequest(ctx, err)
 			return
 		}
@@ -130,7 +123,7 @@ func (c *Controller) UpdateBranchType(ctx *gin.Context) {
 
 	// 调用Check方法进行参数校验
 	if err := reqBody.Check(); err != nil {
-		err = errors.WithI18nKey(err, i18n.BranchTypeBodyParamError)
+		err = errors.WithI18nKey(err, i18n.BranchTypeBodyCheckError)
 		resp.BadRequest(ctx, err)
 		return
 	}
@@ -140,16 +133,6 @@ func (c *Controller) UpdateBranchType(ctx *gin.Context) {
 	if !ok {
 		resp.Unauthorized(ctx, errors.WithI18nKey(nil, i18n.AuthNoSession))
 		return
-	}
-
-	if repoID != 0 {
-		// 通过仓库 ID 获取仓库
-		repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, repoID)
-		if err != nil || repoOut == nil {
-			err = errors.WithI18nKey(err, i18n.BranchTypeBodyParamError)
-			resp.InternalError(ctx, err)
-			return
-		}
 	}
 
 	// 调用 service 层更新分支类型
@@ -192,20 +175,10 @@ func (c *Controller) GetBranchType(ctx *gin.Context) {
 	}
 
 	// 获取会话
-	session, ok := req.GetAuthSession(ctx.Request.Context())
+	_, ok := req.GetAuthSession(ctx.Request.Context())
 	if !ok {
 		resp.Unauthorized(ctx, errors.WithI18nKey(nil, i18n.AuthNoSession))
 		return
-	}
-
-	if repoID != 0 {
-		// 通过仓库 ID 获取仓库
-		repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, repoID)
-		if err != nil || repoOut == nil {
-			err = errors.WithI18nKey(err, i18n.BranchTypeBodyParamError)
-			resp.InternalError(ctx, err)
-			return
-		}
 	}
 
 	// 调用 service 层获取分支类型
@@ -248,20 +221,10 @@ func (c *Controller) DeleteBranchType(ctx *gin.Context) {
 	}
 
 	// 获取会话
-	session, ok := req.GetAuthSession(ctx.Request.Context())
+	_, ok := req.GetAuthSession(ctx.Request.Context())
 	if !ok {
 		resp.Unauthorized(ctx, errors.WithI18nKey(nil, i18n.AuthNoSession))
 		return
-	}
-
-	if repoID != 0 {
-		// 通过仓库 ID 获取仓库
-		repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, repoID)
-		if err != nil || repoOut == nil {
-			err = errors.WithI18nKey(err, i18n.BranchTypeBodyParamError)
-			resp.InternalError(ctx, err)
-			return
-		}
 	}
 
 	// 调用 service 层删除分支类型
@@ -308,20 +271,10 @@ func (c *Controller) ListBranchTypes(ctx *gin.Context) {
 	req.SetDefaults(&reqFilter)
 
 	// 获取会话
-	session, ok := req.GetAuthSession(ctx.Request.Context())
+	_, ok := req.GetAuthSession(ctx.Request.Context())
 	if !ok {
 		resp.Unauthorized(ctx, errors.WithI18nKey(nil, i18n.AuthNoSession))
 		return
-	}
-
-	if repoID != 0 {
-		// 通过仓库 ID 获取仓库
-		repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, repoID)
-		if err != nil || repoOut == nil {
-			err = errors.WithI18nKey(err, i18n.BranchTypeBodyParamError)
-			resp.InternalError(ctx, err)
-			return
-		}
 	}
 
 	// 调用 service 层查询分支类型列表

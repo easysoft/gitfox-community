@@ -15,6 +15,7 @@ branch:
 branch_type:
   path_param_error: "Path 参数解析失败。"
   body_param_error: "Body 参数解析失败。"
+  body_check_error: "请求参数校验失败。"
   create_success: "分支类型创建成功。"
   create_error: "分支类型创建失败。"
   create_error_key: "分支类型键值已存在。"
