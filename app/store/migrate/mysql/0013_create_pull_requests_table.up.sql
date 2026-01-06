@@ -2,6 +2,7 @@ CREATE TABLE IF NOT EXISTS `ops_pullrequests` (
 	`id` int unsigned NOT NULL AUTO_INCREMENT COMMENT '自增主键',
 	`title` varchar(255) NOT NULL COMMENT 'PR 标题',
 	`desc` TEXT NOT NULL COMMENT '拉取请求详细描述',
+	`repoID` int unsigned NOT NULL COMMENT '关联zt_repo表的id',
 	`sourceRepoID` int unsigned NOT NULL COMMENT '源仓库ID，关联repository表的id',
 	`sourceBranch` varchar(255) NOT NULL COMMENT '源分支名称（待合并的分支）',
 	`sourceSHA` char(40) NOT NULL COMMENT '源分支最新提交的SHA-1值',
