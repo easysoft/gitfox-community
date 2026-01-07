@@ -91,14 +91,14 @@ type PullRequest struct {
 
 // DiffStats shows total number of commits and modified files. 展示该 PR 包含的提交（Commit）总数、发生变更的文件总数、新增的代码行数、删除的代码行数
 type DiffStats struct {
-	Commits      uint `json:"commits,omitempty"`       // 该 PR 包含的提交（Commit）总数
-	FilesChanged uint `json:"files_changed,omitempty"` // 发生变更的文件总数
-	Additions    uint `json:"additions,omitempty"`     // 新增的代码行数
-	Deletions    uint `json:"deletions,omitempty"`     // 删除的代码行数
+	Commits      uint `json:"commits,omitempty"`      // 该 PR 包含的提交（Commit）总数
+	FilesChanged uint `json:"filesChanged,omitempty"` // 发生变更的文件总数
+	Additions    uint `json:"additions,omitempty"`    // 新增的代码行数
+	Deletions    uint `json:"deletions,omitempty"`    // 删除的代码行数
 }
 
 // MergeCheck 合并检查结果
 type MergeCheck struct {
-	Mergeable     bool     `json:"mergeable"`                // 是否可合并
-	ConflictFiles []string `json:"conflict_files,omitempty"` // 冲突文件列表
+	Mergeable     bool     `json:"mergeable"`               // 是否可合并
+	ConflictFiles []string `json:"conflictFiles,omitempty"` // 冲突文件列表
 }

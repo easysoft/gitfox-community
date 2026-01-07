@@ -13,7 +13,7 @@ const (
 	QueryParamOperation = "Operation"
 
 	PathToPath    = "pathToPath"
-	PullreqNumber = "pullreqNumber"
+	PullrequestID = "pullrequestid"
 )
 
 func GetRepoRefFromPath(r *gin.Context) (string, error) {

@@ -1,4 +1,4 @@
-package repo
+package pullrequest
 
 import (
 	"context"
@@ -8,13 +8,40 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/utils"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/pullrequest"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/api"
 	gitUtil "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/util"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/url"
 )
+
+type Service struct {
+	gitSvc           git.Interface
+	repoSvc          repo.Interface
+	pullRequestStore pullrequest.Interface
+	urlProvider      url.Provider
+}
+
+var _ Interface = (*Service)(nil)
+
+// NewPullRequestSvc 创建 PullRequestService 实例
+func NewPullRequestSvc(
+	gitSvc git.Interface,
+	repoSvc repo.Interface,
+	pullRequestStore pullrequest.Interface,
+	urlProvider url.Provider,
+) *Service {
+	return &Service{
+		gitSvc:           gitSvc,
+		repoSvc:          repoSvc,
+		pullRequestStore: pullRequestStore,
+		urlProvider:      urlProvider,
+	}
+}
 
 func (s *Service) GetMetadata(ctx context.Context, session *auth.Session, repoid uint, pullreqnumber uint) (*repoModel.DiffStats, error) {
 	// find pull request by number
@@ -23,7 +50,7 @@ func (s *Service) GetMetadata(ctx context.Context, session *auth.Session, repoid
 		return nil, err
 	}
 
-	repo, err := s.GetRepoCheckAccessByID(ctx, session, repoid, []constant.Permission{constant.PermissionRepoView})
+	repo, err := s.repoSvc.GetRepoCheckAccessByID(ctx, session, repoid, []constant.Permission{constant.PermissionRepoView})
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +91,7 @@ func (s *Service) GetMetadata(ctx context.Context, session *auth.Session, repoid
 }
 
 func (s *Service) GetDiffStats(ctx context.Context, session *auth.Session, repoid uint, pathTopath string) (*repoModel.DiffStats, error) {
-	repo, err := s.GetRepoCheckAccessByID(ctx, session, repoid, []constant.Permission{constant.PermissionRepoView})
+	repo, err := s.repoSvc.GetRepoCheckAccessByID(ctx, session, repoid, []constant.Permission{constant.PermissionRepoView})
 	if err != nil {
 		return nil, err
 	}
@@ -96,7 +123,7 @@ func (s *Service) GetDiffStats(ctx context.Context, session *auth.Session, repoi
 }
 
 func (s *Service) MergeCheck(ctx context.Context, session *auth.Session, repoid uint, pathTopath string) (*repoModel.MergeCheck, error) {
-	repo, err := s.GetRepoCheckAccessByID(ctx, session, repoid, []constant.Permission{constant.PermissionRepoView})
+	repo, err := s.repoSvc.GetRepoCheckAccessByID(ctx, session, repoid, []constant.Permission{constant.PermissionRepoView})
 	if err != nil {
 		return nil, err
 	}

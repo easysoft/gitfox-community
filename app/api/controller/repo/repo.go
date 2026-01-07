@@ -10,6 +10,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 	principal "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/user"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/pullrequest"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	gitPkg "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
@@ -21,17 +22,19 @@ import (
 )
 
 type Controller struct {
-	repoSvc     repo.Interface
-	urlProvider urlPkg.Provider
-	gitPkg      gitPkg.Interface
+	repoSvc        repo.Interface
+	pullrequestSvc pullrequest.Interface
+	urlProvider    urlPkg.Provider
+	gitPkg         gitPkg.Interface
 }
 
 // NewRepoController 创建代码库处理器实例
-func NewRepoController(repoSvc repo.Interface, urlProvider urlPkg.Provider, gitPkg gitPkg.Interface) *Controller {
+func NewRepoController(repoSvc repo.Interface, pullrequestSvc pullrequest.Interface, urlProvider urlPkg.Provider, gitPkg gitPkg.Interface) *Controller {
 	return &Controller{
-		repoSvc:     repoSvc,
-		urlProvider: urlProvider,
-		gitPkg:      gitPkg,
+		repoSvc:        repoSvc,
+		pullrequestSvc: pullrequestSvc,
+		urlProvider:    urlProvider,
+		gitPkg:         gitPkg,
 	}
 }
 
@@ -534,7 +537,7 @@ func (c *Controller) GetDiff(ctx *gin.Context) {
 	session, ok := req.GetAuthSession(ctx.Request.Context())
 	if !ok {
 		err = errors.WithI18nKey(errors.New("get session failed"), i18n.AuthNoSession)
-		resp.BadRequest(ctx, err)
+		resp.Unauthorized(ctx, err)
 		return
 	}
 

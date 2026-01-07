@@ -552,7 +552,7 @@ definitions:
       deletions:
         description: 删除的代码行数
         type: integer
-      files_changed:
+      filesChanged:
         description: 发生变更的文件总数
         type: integer
     type: object
@@ -572,7 +572,7 @@ definitions:
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.MergeCheck:
     properties:
-      conflict_files:
+      conflictFiles:
         description: 冲突文件列表
         items:
           type: string

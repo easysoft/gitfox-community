@@ -19,6 +19,7 @@ import (
 	branch2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/branch"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/commit"
 	publickey2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/publickey"
+	pullrequest2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/pullrequest"
 	repo2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
 	scan2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/scan"
 	space2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/space"
@@ -97,14 +98,15 @@ func NewApp(mode string) (*App, func(), error) {
 	}
 	branchStore := branch.NewBranchStore(db)
 	branchService := branch2.NewService(urlProvider, gitService, branchStore)
-	pullrequestStore := pullrequest.NewPullRequestStore(db)
-	repoService := repo2.NewRepoSvc(gitService, store, pullrequestStore, spaceStore, urlProvider, membershipAuthorizer)
+	repoService := repo2.NewRepoSvc(gitService, store, spaceStore, urlProvider, membershipAuthorizer)
 	controller := branch3.NewController(branchService, repoService)
 	tagService := tag.NewService(urlProvider, gitService)
 	tagController := tag2.NewController(tagService, repoService)
 	commitService := commit.NewService(urlProvider, gitService)
 	commitController := commit2.NewController(commitService, repoService)
-	repoController := repo3.NewRepoController(repoService, urlProvider, gitService)
+	pullrequestStore := pullrequest.NewPullRequestStore(db)
+	pullrequestService := pullrequest2.NewPullRequestSvc(gitService, repoService, pullrequestStore, urlProvider)
+	repoController := repo3.NewRepoController(repoService, pullrequestService, urlProvider, gitService)
 	userStore := user.NewUserStore(db)
 	tokenInterface := provider.NewTokenStoreProvider(db)
 	userService := user2.NewService(userStore, tokenInterface)

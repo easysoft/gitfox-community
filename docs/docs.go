@@ -4266,7 +4266,7 @@ const docTemplate = `{
                     "description": "删除的代码行数",
                     "type": "integer"
                 },
-                "files_changed": {
+                "filesChanged": {
                     "description": "发生变更的文件总数",
                     "type": "integer"
                 }
@@ -4296,7 +4296,7 @@ const docTemplate = `{
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.MergeCheck": {
             "type": "object",
             "properties": {
-                "conflict_files": {
+                "conflictFiles": {
                     "description": "冲突文件列表",
                     "type": "array",
                     "items": {

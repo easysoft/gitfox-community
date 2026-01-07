@@ -28,7 +28,7 @@ func registerRepoRoutes(r *gin.RouterGroup, controller *Controller) {
 			reposWithID.POST(fmt.Sprintf("/merge-check/*%s", req.PathToPath), controller.Repo.MergeCheck)
 			repopull := reposWithID.Group("/pullreq")
 			{
-				repopull.GET(fmt.Sprintf("/:%s/metadata", req.PullreqNumber), controller.Repo.Metadata)
+				repopull.GET(fmt.Sprintf("/:%s/metadata", req.PullrequestID), controller.Repo.Metadata)
 			}
 		}
 	}
