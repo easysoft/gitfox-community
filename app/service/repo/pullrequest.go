@@ -2,26 +2,28 @@ package repo
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/utils"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/api"
 	gitUtil "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/util"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 )
 
-func (s *Service) GetMetadata(ctx context.Context, sess *auth.Session, repoid uint, pullreqnumber uint) (*repoModel.DiffStats, error) {
-
+func (s *Service) GetMetadata(ctx context.Context, session *auth.Session, repoid uint, pullreqnumber uint) (*repoModel.DiffStats, error) {
 	// find pull request by number
 	pr, err := s.pullRequestStore.GetByID(ctx, repoid, pullreqnumber)
 	if err != nil {
 		return nil, err
 	}
 
-	repo, err := s.GetRepoCheckAccessByID(ctx, sess, repoid, []constant.Permission{constant.PermissionRepoView})
+	repo, err := s.GetRepoCheckAccessByID(ctx, session, repoid, []constant.Permission{constant.PermissionRepoView})
 	if err != nil {
 		return nil, err
 	}
@@ -61,9 +63,8 @@ func (s *Service) GetMetadata(ctx context.Context, sess *auth.Session, repoid ui
 	return re, nil
 }
 
-func (s *Service) GetDiffStats(ctx context.Context, sess *auth.Session, repoid uint, pathTopath string) (*repoModel.DiffStats, error) {
-
-	repo, err := s.GetRepoCheckAccessByID(ctx, sess, repoid, []constant.Permission{constant.PermissionRepoView})
+func (s *Service) GetDiffStats(ctx context.Context, session *auth.Session, repoid uint, pathTopath string) (*repoModel.DiffStats, error) {
+	repo, err := s.GetRepoCheckAccessByID(ctx, session, repoid, []constant.Permission{constant.PermissionRepoView})
 	if err != nil {
 		return nil, err
 	}
@@ -92,6 +93,52 @@ func (s *Service) GetDiffStats(ctx context.Context, sess *auth.Session, repoid u
 	}
 
 	return re, nil
+}
+
+func (s *Service) MergeCheck(ctx context.Context, session *auth.Session, repoid uint, pathTopath string) (*repoModel.MergeCheck, error) {
+	repo, err := s.GetRepoCheckAccessByID(ctx, session, repoid, []constant.Permission{constant.PermissionRepoView})
+	if err != nil {
+		return nil, err
+	}
+
+	info, err := parseDiffPath(pathTopath)
+	if err != nil {
+		return nil, err
+	}
+
+	writeParams, err := utils.CreateRPCInternalWriteParams(ctx, s.urlProvider, session, repo)
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.GitCreateExecParamError)
+		return nil, err
+	}
+
+	mergeOutput, err := s.gitSvc.Merge(ctx, &git.MergeParams{
+		WriteParams: writeParams,
+		BaseBranch:  info.BaseRef,
+		HeadRepoUID: writeParams.RepoUID, // forks are not supported for now
+		HeadBranch:  info.HeadRef,
+	})
+	if err != nil {
+		// git.Merge works with commits and error is not user-friendly
+		// and here we are modify base-ref and head-ref with user input
+		// values.
+		if uErr := api.AsUnrelatedHistoriesError(err); uErr != nil {
+			uErr.BaseRef = info.BaseRef
+			uErr.HeadRef = info.HeadRef
+			return nil, uErr
+		}
+		return nil, fmt.Errorf("merge check execution failed: %w", err)
+	}
+	if len(mergeOutput.ConflictFiles) > 0 {
+		return &repoModel.MergeCheck{
+			Mergeable:     false,
+			ConflictFiles: mergeOutput.ConflictFiles,
+		}, nil
+	}
+
+	return &repoModel.MergeCheck{
+		Mergeable: true,
+	}, nil
 }
 
 type CompareInfo struct {

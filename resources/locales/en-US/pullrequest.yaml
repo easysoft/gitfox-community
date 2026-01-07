@@ -1,3 +1,4 @@
 pullrequest:
   query_success: "Query pull request success"
   path_param_error: "Path parameter error"
+  merge_check_success: "Merge check success"

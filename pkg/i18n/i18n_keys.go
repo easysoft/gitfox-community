@@ -125,8 +125,9 @@ const (
 	GitUnrelatedHistories        I18nKey = "git.unrelated_histories"           // 不相关的历史记录.
 
 	// Pullrequest 相关常量
-	PullrequestPathParamError I18nKey = "pullrequest.path_param_error" // Path 参数解析失败.
-	PullrequestQuerySuccess   I18nKey = "pullrequest.query_success"    // 查询 Pull Request 成功
+	PullrequestMergeCheckSuccess I18nKey = "pullrequest.merge_check_success" // 合并检查成功
+	PullrequestPathParamError    I18nKey = "pullrequest.path_param_error"    // Path 参数解析失败.
+	PullrequestQuerySuccess      I18nKey = "pullrequest.query_success"       // 查询 Pull Request 成功
 
 	// Repo 相关常量
 	RepoBodyParamError            I18nKey = "repo.body_param_error"             // Body 参数解析失败.

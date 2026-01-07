@@ -17,6 +17,7 @@ package sharedrepo
 import (
 	"context"
 	"fmt"
+	"path/filepath"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/hook"
 )
@@ -32,6 +33,11 @@ func Run(
 	fn func(s *SharedRepo) error,
 	alternates ...string,
 ) error {
+	repoPath, err := filepath.Abs(repoPath)
+	if err != nil {
+		return fmt.Errorf("failed to get absolute path for repo: %w", err)
+	}
+
 	s, err := NewSharedRepo(tmpDir, repoPath)
 	if err != nil {
 		return err

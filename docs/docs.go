@@ -1740,6 +1740,57 @@ const docTemplate = `{
                 }
             }
         },
+        "/repos/{id}/merge-check/{pathToPath}": {
+            "post": {
+                "description": "根据传入的仓库 ID 和 路径获取 Pull Request 合并检查信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "pureq"
+                ],
+                "summary": "获取代码Pull Request 合并检查信息",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "仓库 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "路径",
+                        "name": "pathToPath",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "获取成功（返回合并检查信息）",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.MergeCheck"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/repos/{id}/paths": {
             "get": {
                 "description": "获取仓库指定 GitRef 路径",
@@ -4239,6 +4290,22 @@ const docTemplate = `{
                 },
                 "type": {
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.ContentType"
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.MergeCheck": {
+            "type": "object",
+            "properties": {
+                "conflict_files": {
+                    "description": "冲突文件列表",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "mergeable": {
+                    "description": "是否可合并",
+                    "type": "boolean"
                 }
             }
         },
