@@ -33,24 +33,24 @@ func (ctl *Controller) Metadata(c *gin.Context) {
 
 	repoID, err := req.PathParamAsPositiveUint(c, "id")
 	if err != nil {
-		err = errors.WithI18nKey(err, i18n.RepoPathParamError)
+		err = errors.WithI18nKey(err, i18n.PullrequestPathParamError)
 		resp.BadRequest(c, err)
 		return
 	}
 	if repoID <= 0 {
-		err = errors.WithI18nKey(err, i18n.RepoPathParamError)
+		err = errors.WithI18nKey(err, i18n.PullrequestPathParamError)
 		resp.BadRequest(c, err)
 		return
 	}
 
 	pullreqID, err := req.PathParamAsPositiveUint(c, req.PullreqNumber)
 	if err != nil {
-		err = errors.WithI18nKey(err, i18n.RepoPathParamError)
+		err = errors.WithI18nKey(err, i18n.PullrequestPathParamError)
 		resp.BadRequest(c, err)
 		return
 	}
 	if pullreqID <= 0 {
-		err = errors.WithI18nKey(err, i18n.RepoPathParamError)
+		err = errors.WithI18nKey(err, i18n.PullrequestPathParamError)
 		resp.BadRequest(c, err)
 		return
 	}
@@ -61,7 +61,7 @@ func (ctl *Controller) Metadata(c *gin.Context) {
 		return
 	}
 
-	resp.OK(c, i18n.RepoQuerySuccess, data)
+	resp.OK(c, i18n.PullrequestQuerySuccess, data)
 }
 
 // GetDiffStats 获取代码Pull Request 差异统计信息
@@ -87,24 +87,24 @@ func (ctl *Controller) GetDiffStats(c *gin.Context) {
 
 	repoID, err := req.PathParamAsPositiveUint(c, "id")
 	if err != nil {
-		err = errors.WithI18nKey(err, i18n.RepoPathParamError)
+		err = errors.WithI18nKey(err, i18n.PullrequestPathParamError)
 		resp.BadRequest(c, err)
 		return
 	}
 	if repoID <= 0 {
-		err = errors.WithI18nKey(err, i18n.RepoPathParamError)
+		err = errors.WithI18nKey(err, i18n.PullrequestPathParamError)
 		resp.BadRequest(c, err)
 		return
 	}
 
 	pathToPath, err := req.PathParamOrError(c, req.PathToPath)
 	if err != nil {
-		err = errors.WithI18nKey(err, i18n.RepoPathParamError)
+		err = errors.WithI18nKey(err, i18n.PullrequestPathParamError)
 		resp.BadRequest(c, err)
 		return
 	}
 	if pathToPath == "" {
-		err = errors.WithI18nKey(err, i18n.RepoPathParamError)
+		err = errors.WithI18nKey(err, i18n.PullrequestPathParamError)
 		resp.BadRequest(c, err)
 		return
 	}
@@ -117,5 +117,5 @@ func (ctl *Controller) GetDiffStats(c *gin.Context) {
 		return
 	}
 
-	resp.OK(c, i18n.RepoQuerySuccess, data)
+	resp.OK(c, i18n.PullrequestQuerySuccess, data)
 }

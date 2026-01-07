@@ -26,6 +26,7 @@ import (
 	user2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/user"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/branch"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/publickey"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/pullrequest"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/scan"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/settings"
@@ -96,7 +97,8 @@ func NewApp(mode string) (*App, func(), error) {
 	}
 	branchStore := branch.NewBranchStore(db)
 	branchService := branch2.NewService(urlProvider, gitService, branchStore)
-	repoService := repo2.NewRepoSvc(gitService, store, spaceStore, urlProvider, membershipAuthorizer)
+	pullrequestStore := pullrequest.NewPullRequestStore(db)
+	repoService := repo2.NewRepoSvc(gitService, store, pullrequestStore, spaceStore, urlProvider, membershipAuthorizer)
 	controller := branch3.NewController(branchService, repoService)
 	tagService := tag.NewService(urlProvider, gitService)
 	tagController := tag2.NewController(tagService, repoService)

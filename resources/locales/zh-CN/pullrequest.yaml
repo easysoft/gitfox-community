@@ -1,0 +1,3 @@
+pullrequest:
+  query_success: "查询 Pull Request 成功"
+  path_param_error: "Path 参数解析失败。"

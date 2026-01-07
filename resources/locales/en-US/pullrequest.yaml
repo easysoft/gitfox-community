@@ -1,0 +1,3 @@
+pullrequest:
+  query_success: "Query pull request success"
+  path_param_error: "Path parameter error"

@@ -1,4 +1,4 @@
-package repo
+package pullrequest
 
 import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"

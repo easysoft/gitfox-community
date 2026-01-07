@@ -13,6 +13,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/utils"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/pullrequest"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/space"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/auth/authz"
@@ -26,11 +27,12 @@ import (
 )
 
 type Service struct {
-	gitSvc      git.Interface
-	repoStore   repo.Interface
-	spaceStore  space.Interface
-	urlProvider url.Provider
-	authorizer  authz.Authorizer
+	gitSvc           git.Interface
+	repoStore        repo.Interface
+	pullRequestStore pullrequest.Interface
+	spaceStore       space.Interface
+	urlProvider      url.Provider
+	authorizer       authz.Authorizer
 }
 
 var _ Interface = (*Service)(nil)
@@ -39,16 +41,18 @@ var _ Interface = (*Service)(nil)
 func NewRepoSvc(
 	gitSvc git.Interface,
 	repoStore repo.Interface,
+	pullRequestStore pullrequest.Interface,
 	spaceStore space.Interface,
 	urlProvider url.Provider,
 	authorizer authz.Authorizer,
 ) *Service {
 	return &Service{
-		gitSvc:      gitSvc,
-		repoStore:   repoStore,
-		spaceStore:  spaceStore,
-		urlProvider: urlProvider,
-		authorizer:  authorizer,
+		gitSvc:           gitSvc,
+		repoStore:        repoStore,
+		pullRequestStore: pullRequestStore,
+		spaceStore:       spaceStore,
+		urlProvider:      urlProvider,
+		authorizer:       authorizer,
 	}
 }
 

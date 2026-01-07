@@ -1,4 +1,4 @@
-package repo
+package pullrequest
 
 import (
 	"context"
@@ -6,10 +6,23 @@ import (
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
+	"gorm.io/gorm"
 )
 
-// GetPullRequestByID 根据ID获取PR
-func (s *Store) GetPullRequestByID(ctx context.Context, repoID uint, id uint) (*repoModel.PullRequest, error) {
+var _ Interface = (*Store)(nil)
+
+type Store struct {
+	db *gorm.DB
+}
+
+func NewPullRequestStore(db *gorm.DB) *Store {
+	return &Store{
+		db: db,
+	}
+}
+
+// GetByID 根据ID获取PR
+func (s *Store) GetByID(ctx context.Context, repoID uint, id uint) (*repoModel.PullRequest, error) {
 	var pr PullRequest
 	if err := s.db.WithContext(ctx).First(&pr, "repoID = ? AND id = ?", repoID, id).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
@@ -17,8 +30,8 @@ func (s *Store) GetPullRequestByID(ctx context.Context, repoID uint, id uint) (*
 	return mapPullRequestToModel(pr), nil
 }
 
-// UpdatePullRequestStatus 更新PR状态
-func (s *Store) UpdatePullRequestStatus(ctx context.Context, repoID uint, id uint, status repoModel.PullRequestStatus, editedBy string) error {
+// UpdateStatus 更新PR状态
+func (s *Store) UpdateStatus(ctx context.Context, repoID uint, id uint, status repoModel.PullRequestStatus, editedBy string) error {
 	updates := map[string]interface{}{
 		"status":     status,
 		"editedBy":   editedBy,
@@ -30,8 +43,8 @@ func (s *Store) UpdatePullRequestStatus(ctx context.Context, repoID uint, id uin
 	return nil
 }
 
-// UpdatePullRequestMergeInfo 更新合并信息
-func (s *Store) UpdatePullRequestMergeInfo(
+// UpdateMergeInfo 更新合并信息
+func (s *Store) UpdateMergeInfo(
 	ctx context.Context,
 	repoID uint,
 	id uint,
@@ -54,8 +67,8 @@ func (s *Store) UpdatePullRequestMergeInfo(
 	return nil
 }
 
-// UpdatePullRequestMergeCheckStatus 更新合并检查状态
-func (s *Store) UpdatePullRequestMergeCheckStatus(
+// UpdateMergeCheckStatus 更新合并检查状态
+func (s *Store) UpdateMergeCheckStatus(
 	ctx context.Context,
 	repoID uint,
 	id uint,
@@ -73,8 +86,8 @@ func (s *Store) UpdatePullRequestMergeCheckStatus(
 	return nil
 }
 
-// UpdatePullRequestRebaseCheckStatus 更新变基检查状态
-func (s *Store) UpdatePullRequestRebaseCheckStatus(
+// UpdateRebaseCheckStatus 更新变基检查状态
+func (s *Store) UpdateRebaseCheckStatus(
 	ctx context.Context,
 	repoID uint,
 	id uint,
@@ -92,8 +105,8 @@ func (s *Store) UpdatePullRequestRebaseCheckStatus(
 	return nil
 }
 
-// UpdatePullRequestDiffStats 更新PR差异统计信息
-func (s *Store) UpdatePullRequestDiffStats(
+// UpdateDiffStats 更新PR差异统计信息
+func (s *Store) UpdateDiffStats(
 	ctx context.Context,
 	repoID uint,
 	id uint,
@@ -112,8 +125,8 @@ func (s *Store) UpdatePullRequestDiffStats(
 	return nil
 }
 
-// PullRequestCountByRepoID 统计仓库的PR数量
-func (s *Store) PullRequestCountByRepoID(ctx context.Context, repoID uint) (int64, error) {
+// CountByRepoID 统计仓库的PR数量
+func (s *Store) CountByRepoID(ctx context.Context, repoID uint) (int64, error) {
 	var count int64
 	if err := s.db.WithContext(ctx).Model(&PullRequest{}).Where("repoID = ?", repoID).Count(&count).Error; err != nil {
 		return 0, database.ProcessSQLErrorf(ctx, err)
@@ -121,8 +134,8 @@ func (s *Store) PullRequestCountByRepoID(ctx context.Context, repoID uint) (int6
 	return count, nil
 }
 
-// PullRequestCountByStatus 按状态统计PR数量
-func (s *Store) PullRequestCountByStatus(ctx context.Context, repoID uint, status repoModel.PullRequestStatus) (int64, error) {
+// CountByStatus 按状态统计PR数量
+func (s *Store) CountByStatus(ctx context.Context, repoID uint, status repoModel.PullRequestStatus) (int64, error) {
 	var count int64
 	if err := s.db.WithContext(ctx).Model(&PullRequest{}).
 		Where("repoID = ? AND status = ?", repoID, status).
@@ -165,12 +178,4 @@ func mapPullRequestToModel(data PullRequest) *repoModel.PullRequest {
 		EditedBy:          data.EditedBy,
 		EditedDate:        data.EditedDate,
 	}
-}
-
-func mapPullRequestListToModel(data []*PullRequest) []*repoModel.PullRequest {
-	result := make([]*repoModel.PullRequest, 0, len(data))
-	for _, item := range data {
-		result = append(result, mapPullRequestToModel(*item))
-	}
-	return result
 }

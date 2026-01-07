@@ -16,7 +16,7 @@ import (
 func (s *Service) GetMetadata(ctx context.Context, sess *auth.Session, repoid uint, pullreqnumber uint) (*repoModel.DiffStats, error) {
 
 	// find pull request by number
-	pr, err := s.repoStore.GetPullRequestByID(ctx, repoid, pullreqnumber)
+	pr, err := s.pullRequestStore.GetByID(ctx, repoid, pullreqnumber)
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +53,7 @@ func (s *Service) GetMetadata(ctx context.Context, sess *auth.Session, repoid ui
 	}
 
 	// updata diff stats
-	err = s.repoStore.UpdatePullRequestDiffStats(ctx, repoid, pullreqnumber, re)
+	err = s.pullRequestStore.UpdateDiffStats(ctx, repoid, pullreqnumber, re)
 	if err != nil {
 		return nil, err
 	}
@@ -107,7 +107,7 @@ func parseDiffPath(path string) (CompareInfo, error) {
 	}
 	if len(infos) != 2 {
 		err := errors.Newf("invalid format \"%s\"", path)
-		err = errors.WithI18nKey(err, i18n.RepoPathParamError)
+		err = errors.WithI18nKey(err, i18n.PullrequestPathParamError)
 		return CompareInfo{}, err
 	}
 	return CompareInfo{
