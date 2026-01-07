@@ -23,6 +23,11 @@ func registerRepoRoutes(r *gin.RouterGroup, controller *Controller) {
 			reposWithID.POST("/paths/details", controller.Repo.GetPathsDetails)
 			reposWithID.GET(fmt.Sprintf("/content/*%s", req.PathParamFilePath), controller.Repo.GetContent)
 			reposWithID.GET(fmt.Sprintf("/blame/*%s", req.PathParamFilePath), controller.Repo.Blame)
+
+			repopull := reposWithID.Group("/pullreq")
+			{
+				repopull.GET(fmt.Sprintf("/:%s/metadata", req.PullreqNumber), controller.Repo.Metadata)
+			}
 		}
 	}
 }

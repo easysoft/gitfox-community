@@ -477,10 +477,10 @@ func TestGetByIdentifier(t *testing.T) {
 type GetByIDTestCase struct {
 	name string
 	// 前置条件
-	mockRepoStoreGet func(m *mock.MockInterface) // Mock repoStore.GetByID
-	mockURLProvider  func(m *urlMock.MockProvider)   // Mock urlProvider URL生成方法
-	inputID          uint                        // 入参：id
-	inputSession     *auth.Session               // 入参：session
+	mockRepoStoreGet func(m *mock.MockInterface)   // Mock repoStore.GetByID
+	mockURLProvider  func(m *urlMock.MockProvider) // Mock urlProvider URL生成方法
+	inputID          uint                          // 入参：id
+	inputSession     *auth.Session                 // 入参：session
 	// 预期结果
 	expectedRepo *repoModel.Repo // 预期返回的repo
 	expectedErr  error           // 预期错误

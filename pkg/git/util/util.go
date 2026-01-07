@@ -73,7 +73,7 @@ func CheckGitVersionAtLeast(atLeast string) error {
 
 // SupportProcReceive returns true if the installed git binary supports proc-receive
 func SupportProcReceive() bool {
-	return CheckGitVersionAtLeast("2.29") != nil
+	return CheckGitVersionAtLeast("2.29") == nil
 }
 
 func loadGitfoxBinPath() string {

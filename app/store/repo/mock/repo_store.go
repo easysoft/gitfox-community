@@ -8,6 +8,7 @@ import (
 	context "context"
 	reflect "reflect"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 	repo0 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
 	gomock "github.com/golang/mock/gomock"
@@ -66,10 +67,10 @@ func (mr *MockInterfaceMockRecorder) Delete(ctx, id interface{}) *gomock.Call {
 }
 
 // FindByRef mocks base method.
-func (m *MockInterface) FindByRef(ctx context.Context, ref string) (*repoModel.Repo, error) {
+func (m *MockInterface) FindByRef(ctx context.Context, ref string) (*repo.Repo, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FindByRef", ctx, ref)
-	ret0, _ := ret[0].(*repoModel.Repo)
+	ret0, _ := ret[0].(*repo.Repo)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -81,10 +82,10 @@ func (mr *MockInterfaceMockRecorder) FindByRef(ctx, ref interface{}) *gomock.Cal
 }
 
 // GetByID mocks base method.
-func (m *MockInterface) GetByID(ctx context.Context, id uint) (*repoModel.Repo, error) {
+func (m *MockInterface) GetByID(ctx context.Context, id uint) (*repo.Repo, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetByID", ctx, id)
-	ret0, _ := ret[0].(*repoModel.Repo)
+	ret0, _ := ret[0].(*repo.Repo)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -96,10 +97,10 @@ func (mr *MockInterfaceMockRecorder) GetByID(ctx, id interface{}) *gomock.Call {
 }
 
 // GetBySpaceAndIdentifier mocks base method.
-func (m *MockInterface) GetBySpaceAndIdentifier(ctx context.Context, spaceID uint, identifier string) (*repoModel.Repo, error) {
+func (m *MockInterface) GetBySpaceAndIdentifier(ctx context.Context, spaceID uint, identifier string) (*repo.Repo, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetBySpaceAndIdentifier", ctx, spaceID, identifier)
-	ret0, _ := ret[0].(*repoModel.Repo)
+	ret0, _ := ret[0].(*repo.Repo)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -110,8 +111,23 @@ func (mr *MockInterfaceMockRecorder) GetBySpaceAndIdentifier(ctx, spaceID, ident
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBySpaceAndIdentifier", reflect.TypeOf((*MockInterface)(nil).GetBySpaceAndIdentifier), ctx, spaceID, identifier)
 }
 
+// GetPullRequestByID mocks base method.
+func (m *MockInterface) GetPullRequestByID(ctx context.Context, repoID, id uint) (*repoModel.PullRequest, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPullRequestByID", ctx, repoID, id)
+	ret0, _ := ret[0].(*repoModel.PullRequest)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPullRequestByID indicates an expected call of GetPullRequestByID.
+func (mr *MockInterfaceMockRecorder) GetPullRequestByID(ctx, repoID, id interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPullRequestByID", reflect.TypeOf((*MockInterface)(nil).GetPullRequestByID), ctx, repoID, id)
+}
+
 // List mocks base method.
-func (m *MockInterface) List(ctx context.Context, filter repoModel.ReqFilter) (repo0.RepoPageResult, error) {
+func (m *MockInterface) List(ctx context.Context, filter repo.ReqFilter) (repo0.RepoPageResult, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "List", ctx, filter)
 	ret0, _ := ret[0].(repo0.RepoPageResult)
@@ -123,6 +139,36 @@ func (m *MockInterface) List(ctx context.Context, filter repoModel.ReqFilter) (r
 func (mr *MockInterfaceMockRecorder) List(ctx, filter interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockInterface)(nil).List), ctx, filter)
+}
+
+// PullRequestCountByRepoID mocks base method.
+func (m *MockInterface) PullRequestCountByRepoID(ctx context.Context, repoID uint) (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "PullRequestCountByRepoID", ctx, repoID)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// PullRequestCountByRepoID indicates an expected call of PullRequestCountByRepoID.
+func (mr *MockInterfaceMockRecorder) PullRequestCountByRepoID(ctx, repoID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PullRequestCountByRepoID", reflect.TypeOf((*MockInterface)(nil).PullRequestCountByRepoID), ctx, repoID)
+}
+
+// PullRequestCountByStatus mocks base method.
+func (m *MockInterface) PullRequestCountByStatus(ctx context.Context, repoID uint, status repo.PullRequestStatus) (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "PullRequestCountByStatus", ctx, repoID, status)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// PullRequestCountByStatus indicates an expected call of PullRequestCountByStatus.
+func (mr *MockInterfaceMockRecorder) PullRequestCountByStatus(ctx, repoID, status interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PullRequestCountByStatus", reflect.TypeOf((*MockInterface)(nil).PullRequestCountByStatus), ctx, repoID, status)
 }
 
 // Update mocks base method.
@@ -138,4 +184,74 @@ func (m *MockInterface) Update(ctx context.Context, repo *repo0.Repository, id u
 func (mr *MockInterfaceMockRecorder) Update(ctx, repo, id interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockInterface)(nil).Update), ctx, repo, id)
+}
+
+// UpdatePullRequestDiffStats mocks base method.
+func (m *MockInterface) UpdatePullRequestDiffStats(ctx context.Context, repoID, id uint, diffStats *repo.DiffStats) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdatePullRequestDiffStats", ctx, repoID, id, diffStats)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdatePullRequestDiffStats indicates an expected call of UpdatePullRequestDiffStats.
+func (mr *MockInterfaceMockRecorder) UpdatePullRequestDiffStats(ctx, repoID, id, diffStats interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdatePullRequestDiffStats", reflect.TypeOf((*MockInterface)(nil).UpdatePullRequestDiffStats), ctx, repoID, id, diffStats)
+}
+
+// UpdatePullRequestMergeCheckStatus mocks base method.
+func (m *MockInterface) UpdatePullRequestMergeCheckStatus(ctx context.Context, repoID, id uint, status repo.MergeCheckStatus, conflicts *string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdatePullRequestMergeCheckStatus", ctx, repoID, id, status, conflicts)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdatePullRequestMergeCheckStatus indicates an expected call of UpdatePullRequestMergeCheckStatus.
+func (mr *MockInterfaceMockRecorder) UpdatePullRequestMergeCheckStatus(ctx, repoID, id, status, conflicts interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdatePullRequestMergeCheckStatus", reflect.TypeOf((*MockInterface)(nil).UpdatePullRequestMergeCheckStatus), ctx, repoID, id, status, conflicts)
+}
+
+// UpdatePullRequestMergeInfo mocks base method.
+func (m *MockInterface) UpdatePullRequestMergeInfo(ctx context.Context, repoID, id uint, mergedBy string, mergeMethod repo.MergeMethod, mergeSHA, editedBy string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdatePullRequestMergeInfo", ctx, repoID, id, mergedBy, mergeMethod, mergeSHA, editedBy)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdatePullRequestMergeInfo indicates an expected call of UpdatePullRequestMergeInfo.
+func (mr *MockInterfaceMockRecorder) UpdatePullRequestMergeInfo(ctx, repoID, id, mergedBy, mergeMethod, mergeSHA, editedBy interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdatePullRequestMergeInfo", reflect.TypeOf((*MockInterface)(nil).UpdatePullRequestMergeInfo), ctx, repoID, id, mergedBy, mergeMethod, mergeSHA, editedBy)
+}
+
+// UpdatePullRequestRebaseCheckStatus mocks base method.
+func (m *MockInterface) UpdatePullRequestRebaseCheckStatus(ctx context.Context, repoID, id uint, status repo.RebaseCheckStatus, conflicts *string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdatePullRequestRebaseCheckStatus", ctx, repoID, id, status, conflicts)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdatePullRequestRebaseCheckStatus indicates an expected call of UpdatePullRequestRebaseCheckStatus.
+func (mr *MockInterfaceMockRecorder) UpdatePullRequestRebaseCheckStatus(ctx, repoID, id, status, conflicts interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdatePullRequestRebaseCheckStatus", reflect.TypeOf((*MockInterface)(nil).UpdatePullRequestRebaseCheckStatus), ctx, repoID, id, status, conflicts)
+}
+
+// UpdatePullRequestStatus mocks base method.
+func (m *MockInterface) UpdatePullRequestStatus(ctx context.Context, repoID, id uint, status repo.PullRequestStatus, editedBy string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdatePullRequestStatus", ctx, repoID, id, status, editedBy)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdatePullRequestStatus indicates an expected call of UpdatePullRequestStatus.
+func (mr *MockInterfaceMockRecorder) UpdatePullRequestStatus(ctx, repoID, id, status, editedBy interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdatePullRequestStatus", reflect.TypeOf((*MockInterface)(nil).UpdatePullRequestStatus), ctx, repoID, id, status, editedBy)
 }

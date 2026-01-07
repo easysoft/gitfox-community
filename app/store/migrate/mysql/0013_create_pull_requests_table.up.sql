@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS `ops_pullrequests` (
 	`sourceSHA` char(40) NOT NULL COMMENT '源分支最新提交的SHA-1值',
 	`targetRepoID` int unsigned NOT NULL COMMENT '目标仓库ID，关联repository表的id',
 	`targetBranch` varchar(255) NOT NULL COMMENT '目标分支名称（合并目标分支）',
-	`mergedBy` varchar(30) NULL DEFAULT NULL COMMENT '执行合并操作的用户ID（未合并则为NULL）',
+	`mergedBy` varchar(30) NULL DEFAULT NULL COMMENT '执行合并操作的用户（未合并则为NULL）',
 	`mergeMethod` varchar(255) NULL DEFAULT NULL COMMENT '合并方法:merge/squash/rebase/fast-forward',
 	`mergeTargetSHA` char(40) NULL DEFAULT NULL COMMENT '合并时目标分支的 SHA,用于验证目标分支未变更',
 	`mergeBaseSHA` char(40) NOT NULL DEFAULT '' COMMENT '合并基准 SHA(源分支和目标分支的共同祖先)',
