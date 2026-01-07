@@ -27,4 +27,5 @@ type Interface interface {
 	List(ctx context.Context, session *auth.Session, filter repoModel.ReqFilter) ([]*repoModel.Repo, bool, error)
 
 	GetMetadata(ctx context.Context, session *auth.Session, repoID uint, pullreqID uint) (*repoModel.DiffStats, error)
+	GetDiffStats(ctx context.Context, session *auth.Session, repoID uint, pathToPath string) (*repoModel.DiffStats, error)
 }

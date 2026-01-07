@@ -12,6 +12,7 @@ const (
 
 	QueryParamOperation = "Operation"
 
+	PathToPath    = "pathToPath"
 	PullreqNumber = "pullreqNumber"
 )
 

@@ -544,12 +544,16 @@ definitions:
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.DiffStats:
     properties:
       additions:
+        description: 新增的代码行数
         type: integer
       commits:
+        description: 该 PR 包含的提交（Commit）总数
         type: integer
       deletions:
+        description: 删除的代码行数
         type: integer
       files_changed:
+        description: 发生变更的文件总数
         type: integer
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.GetContentOutput:
@@ -2205,6 +2209,37 @@ paths:
       summary: 获取仓库指定 GitRef Diff
       tags:
       - repos
+  /repos/{id}/diff-stats/{pathToPath}:
+    get:
+      consumes:
+      - application/json
+      description: 根据传入的仓库 ID 和 路径获取 Pull Request 差异统计信息
+      parameters:
+      - description: 仓库 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 路径
+        in: path
+        name: pathToPath
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功（返回差异统计信息）
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.DiffStats'
+              type: object
+      summary: 获取代码Pull Request 差异统计信息
+      tags:
+      - pureq
   /repos/{id}/paths:
     get:
       consumes:

@@ -1683,6 +1683,57 @@
                 }
             }
         },
+        "/repos/{id}/diff-stats/{pathToPath}": {
+            "get": {
+                "description": "根据传入的仓库 ID 和 路径获取 Pull Request 差异统计信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "pureq"
+                ],
+                "summary": "获取代码Pull Request 差异统计信息",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "仓库 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "路径",
+                        "name": "pathToPath",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "获取成功（返回差异统计信息）",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.DiffStats"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/repos/{id}/paths": {
             "get": {
                 "description": "获取仓库指定 GitRef 路径",
@@ -4147,15 +4198,19 @@
             "type": "object",
             "properties": {
                 "additions": {
+                    "description": "新增的代码行数",
                     "type": "integer"
                 },
                 "commits": {
+                    "description": "该 PR 包含的提交（Commit）总数",
                     "type": "integer"
                 },
                 "deletions": {
+                    "description": "删除的代码行数",
                     "type": "integer"
                 },
                 "files_changed": {
+                    "description": "发生变更的文件总数",
                     "type": "integer"
                 }
             }
