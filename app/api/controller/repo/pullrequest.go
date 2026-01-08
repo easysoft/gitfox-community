@@ -5,6 +5,7 @@ import (
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
+	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	"github.com/gin-gonic/gin"
@@ -169,6 +170,13 @@ func (ctl *Controller) MergeCheck(ctx *gin.Context) {
 
 	data, err := ctl.pullrequestSvc.MergeCheck(ctx.Request.Context(), session, repoID, pathToPath)
 	if err != nil {
+		if errors.GetI18nKey(err) == i18n.GitMergeCheckNoCommits {
+			resp.OK(ctx, i18n.PullrequestMergeCheckSuccess, &repoModel.MergeCheck{
+				Mergeable: false,
+				Message:   i18n.TfGin(ctx, string(i18n.GitMergeCheckNoCommits), nil),
+			})
+			return
+		}
 		resp.InternalError(ctx, err)
 		return
 	}

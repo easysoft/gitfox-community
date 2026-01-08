@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"time"
 
+	pkgerror "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/api"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/enum"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/hook"
@@ -26,7 +27,6 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/parser"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/sha"
 	"github.com/easysoft/gitfox/errors"
-
 	"github.com/rs/zerolog/log"
 )
 
@@ -77,15 +77,15 @@ func (p *MergeParams) Validate() error {
 	}
 
 	if p.BaseBranch == "" && p.BaseSHA.IsEmpty() {
-		return errors.InvalidArgument("either base branch or commit SHA is mandatory")
+		return pkgerror.ErrGitMergeCheckBaseBranchNotFound
 	}
 
 	if p.HeadBranch == "" {
-		return errors.InvalidArgument("head branch is mandatory")
+		return pkgerror.ErrGitMergeCheckHeadBranchNotFound
 	}
 
 	if p.RefType != enum.RefTypeUndefined && p.RefName == "" {
-		return errors.InvalidArgument("ref name has to be provided if type is defined")
+		return pkgerror.ErrGitMergeCheckRefTypeNotFound
 	}
 	return nil
 }
@@ -137,7 +137,7 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 
 	mergeMethod, ok := params.Method.Sanitize()
 	if !ok && params.Method != "" {
-		return MergeOutput{}, errors.InvalidArgument("unsupported merge method: %s", params.Method)
+		return MergeOutput{}, pkgerror.ErrGitMergeMethodUnsupported
 	}
 
 	var mergeFunc merge.Func
@@ -207,7 +207,8 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 	}
 
 	if headCommitSHA.Equal(mergeBaseCommitSHA) {
-		return MergeOutput{}, errors.InvalidArgument("head branch doesn't contain any new commits")
+		err = pkgerror.ErrGitMergeCheckNoCommits
+		return MergeOutput{}, err
 	}
 
 	// find short stat and number of commits
@@ -325,12 +326,12 @@ func (p *MergeBaseParams) Validate() error {
 
 	if p.Ref1 == "" {
 		// needs better naming
-		return errors.InvalidArgument("first reference cannot be empty")
+		return pkgerror.ErrGitRefFirstNotFound
 	}
 
 	if p.Ref2 == "" {
 		// needs better naming
-		return errors.InvalidArgument("second reference cannot be empty")
+		return pkgerror.ErrGitRefSecondNotFound
 	}
 
 	return nil
