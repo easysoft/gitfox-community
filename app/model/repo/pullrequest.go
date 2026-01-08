@@ -56,7 +56,7 @@ const (
 	MergeMethodFastForward MergeMethod = "fast-forward"
 )
 
-// PullRequest 合并请求表（ops_pullrequests）Store层结构体
+// PullRequest 合并请求表（ops_ppmrequests）Store层结构体
 type PullRequest struct {
 	ID                uint              `json:"id"`
 	Title             string            `json:"title"`

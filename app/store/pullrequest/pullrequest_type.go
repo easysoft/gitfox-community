@@ -5,7 +5,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// PullRequest 合并请求表（ops_pullrequests）Store层结构体
+// PullRequest 合并请求表（ops_ppmrequests）Store层结构体
 type PullRequest struct {
 	ID                uint            `gorm:"column:id;primaryKey;autoIncrement;comment:'自增主键'"`
 	Title             string          `gorm:"column:title;not null;comment:'PR 标题'"`
@@ -40,7 +40,7 @@ type PullRequest struct {
 
 // TableName 指定数据库表名
 func (p *PullRequest) TableName() string {
-	return "ops_pullrequests"
+	return "ops_ppmrequests"
 }
 
 // BeforeCreate GORM 钩子：创建前自动设置时间
