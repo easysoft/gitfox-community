@@ -101,4 +101,5 @@ type DiffStats struct {
 type MergeCheck struct {
 	Mergeable     bool     `json:"mergeable"`               // 是否可合并
 	ConflictFiles []string `json:"conflictFiles,omitempty"` // 冲突文件列表
+	Message       string   `json:"message"`                 // 合并检查消息列表
 }

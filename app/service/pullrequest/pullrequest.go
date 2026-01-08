@@ -149,10 +149,14 @@ func (s *Service) MergeCheck(ctx context.Context, session *auth.Session, repoid 
 		// git.Merge works with commits and error is not user-friendly
 		// and here we are modify base-ref and head-ref with user input
 		// values.
+		// 当尝试合并两个没有共同提交历史的分支（例如它们是作为独立仓库创建的）时，就会发生这种错误
 		if uErr := api.AsUnrelatedHistoriesError(err); uErr != nil {
 			uErr.BaseRef = info.BaseRef
 			uErr.HeadRef = info.HeadRef
 			return nil, uErr
+		}
+		if errors.GetI18nKey(err) == i18n.GitMergeCheckNoCommits {
+			return nil, err
 		}
 		return nil, fmt.Errorf("merge check execution failed: %w", err)
 	}
