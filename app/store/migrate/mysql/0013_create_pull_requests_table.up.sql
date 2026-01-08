@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS `ops_pullrequests` (
+CREATE TABLE IF NOT EXISTS `ops_ppmrequests` (
 	`id` int unsigned NOT NULL AUTO_INCREMENT COMMENT '自增主键',
 	`title` varchar(255) NOT NULL COMMENT 'PR 标题',
 	`desc` TEXT NOT NULL COMMENT '拉取请求详细描述',
@@ -19,10 +19,10 @@ CREATE TABLE IF NOT EXISTS `ops_pullrequests` (
 	`rebaseConflicts` text NULL DEFAULT NULL COMMENT '变基时产生的冲突详情（文件路径、冲突内容，未变基/无冲突则为NULL）',
 	`commitCount` int unsigned NULL DEFAULT NULL COMMENT 'PR 包含的 commit 数量',
 	`fileCount` int unsigned NULL DEFAULT NULL COMMENT 'PR 修改的文件数量',
-	`flow` tinyint(1) NOT NULL DEFAULT '0' COMMENT '拉取请求对应的流程标识（0=默认流程，其他值对应自定义流程）',
-	`reviewFlowID` int unsigned NOT NULL DEFAULT '0' COMMENT '关联的评审流程ID',
 	`additions` int unsigned NULL DEFAULT NULL COMMENT '新增的代码行数',
 	`deletions` int unsigned NULL DEFAULT NULL COMMENT '删除的代码行数',
+	`flow` tinyint(1) NOT NULL DEFAULT '0' COMMENT '拉取请求对应的流程标识（0=默认流程，其他值对应自定义流程）',
+	`reviewFlowID` int unsigned NOT NULL DEFAULT '0' COMMENT '关联的评审流程ID',
 	`status` varchar(255) NOT NULL COMMENT '拉取请求状态（如open/closed/merged/draft等）',  
 	`createdBy` varchar(30) NOT NULL DEFAULT '' COMMENT '创建人',
 	`createdDate` datetime NULL COMMENT '创建时间',
@@ -31,5 +31,5 @@ CREATE TABLE IF NOT EXISTS `ops_pullrequests` (
 	PRIMARY KEY (`id`)
 	) ENGINE=InnoDB COMMENT='合并请求主表';
 
-CREATE INDEX `idx_createdBy` ON ops_pullrequests (`createdBy`);
-CREATE INDEX `idx_sourceRepoID_sourceBranch_targetRepoID_targetBranch` ON ops_pullrequests (`sourceRepoID`, `sourceBranch`, `targetRepoID`, `targetBranch`);
+CREATE INDEX `idx_createdBy` ON ops_ppmrequests (`createdBy`);
+CREATE INDEX `idx_sourceRepoID_sourceBranch_targetRepoID_targetBranch` ON ops_ppmrequests (`sourceRepoID`, `sourceBranch`, `targetRepoID`, `targetBranch`);
