@@ -287,10 +287,16 @@ func (ctl *Controller) Commits(ctx *gin.Context) {
 		return
 	}
 
-	page, err := req.QueryParamAsPositiveInt64OrDefault(ctx, req.QueryParamPage, 1)
-	limit, err := req.QueryParamAsPositiveInt64OrDefault(ctx, req.QueryParamPage, 30)
+	var filter req.GitListFilter
+	if err = ctx.ShouldBindQuery(&filter); err != nil {
+		err = errors.WithI18nKey(err, i18n.PullrequestPathParamError)
+		resp.BadRequest(ctx, err)
+		return
+	}
 
-	commits, err := ctl.pullrequestSvc.Commits(ctx.Request.Context(), session, repoID, pullreqID, uint(page), uint(limit))
+	req.SetDefaults(&filter)
+
+	commits, err := ctl.pullrequestSvc.Commits(ctx.Request.Context(), session, repoID, pullreqID, uint(filter.Page), uint(filter.Limit))
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return
@@ -298,9 +304,9 @@ func (ctl *Controller) Commits(ctx *gin.Context) {
 
 	resp.ListSuccess(ctx, commits,
 		resp.ListNoTotalArgs{
-			IsLast:   len(commits) < int(limit),
-			Page:     int64(page),
-			PageSize: int64(limit),
+			IsLast:   len(commits) < int(filter.Limit),
+			Page:     int64(filter.Page),
+			PageSize: int64(filter.Limit),
 		}, i18n.PullrequestQuerySuccess, nil)
 }
 
