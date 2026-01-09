@@ -48,3 +48,8 @@ type ListFilter struct {
 	Page     int `form:"page" binding:"omitempty,min=1"`             // 最小1
 	PageSize int `form:"pageSize" binding:"omitempty,min=1,max=100"` // 1-100
 }
+
+type GitListFilter struct {
+	Page  int `form:"page" binding:"omitempty,min=1" default:"1"`          // 最小1
+	Limit int `form:"limit" binding:"omitempty,min=1,max=100" default:"20"` // 1-100
+}
