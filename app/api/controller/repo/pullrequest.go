@@ -311,17 +311,8 @@ func GetReqQueryParamID(ctx *gin.Context) (uint, uint, error) {
 		err = errors.WithI18nKey(err, i18n.PullrequestPathParamError)
 		return 0, 0, err
 	}
-	if repoID <= 0 {
-		err = errors.WithI18nKey(err, i18n.PullrequestPathParamError)
-		return 0, 0, err
-	}
-
 	pullreqID, err := req.PathParamAsPositiveUint(ctx, req.PullrequestID)
 	if err != nil {
-		err = errors.WithI18nKey(err, i18n.PullrequestPathParamError)
-		return 0, 0, err
-	}
-	if pullreqID <= 0 {
 		err = errors.WithI18nKey(err, i18n.PullrequestPathParamError)
 		return 0, 0, err
 	}
@@ -336,17 +327,9 @@ func GetReqQueryParamIDAndPath(ctx *gin.Context) (uint, string, error) {
 		err = errors.WithI18nKey(err, i18n.PullrequestPathParamError)
 		return 0, "", err
 	}
-	if repoID <= 0 {
-		err = errors.WithI18nKey(err, i18n.PullrequestPathParamError)
-		return 0, "", err
-	}
 
 	pathToPath, err := req.PathParamOrError(ctx, req.PathToPath)
 	if err != nil {
-		err = errors.WithI18nKey(err, i18n.PullrequestPathParamError)
-		return 0, "", err
-	}
-	if pathToPath == "" {
 		err = errors.WithI18nKey(err, i18n.PullrequestPathParamError)
 		return 0, "", err
 	}
