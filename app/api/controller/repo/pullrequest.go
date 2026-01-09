@@ -148,7 +148,7 @@ func (ctl *Controller) MergeCheck(ctx *gin.Context) {
 // @Error 400 {object} resp.ObjectResponse "参数错误（如SourcePathToTargetPath格式非法、为空等）"
 // @Error 401 {object} resp.ObjectResponse "未授权（会话不存在或已过期）"
 // @Error 500 {object} resp.ObjectResponse "服务器内部错误（如Git服务调用失败、数据库异常等）"
-// @Router /repos/{id}/pullreq/{pullrequestID}/diff/ [get]
+// @Router /repos/{id}/pullreq/{pullrequestID}/diff [get]
 func (ctl *Controller) DiffSimp(ctx *gin.Context) {
 	var param []repoModel.FileDiff
 	var err error
@@ -268,11 +268,11 @@ func (ctl *Controller) Diff(ctx *gin.Context) {
 // @Param pullrequestID path uint true "Pull Request 编号"
 // @Param page query int false "分页页码，默认1"
 // @Param limit query int false "分页每页数量，默认20"
-// @Success 200 {object} resp.ObjectResponse{data=commitModel.Commit} "获取成功（返回提交信息）"
+// @Success 200 {object} resp.ListResponse{data=commitModel.Commit,listArgs=resp.ListNoTotalArgs} "查询成功"
 // @Error 400 {object} resp.ObjectResponse "参数错误（如SourcePathToTargetPath格式非法、为空等）"
 // @Error 401 {object} resp.ObjectResponse "未授权（会话不存在或已过期）"
 // @Error 500 {object} resp.ObjectResponse "服务器内部错误（如Git服务调用失败、数据库异常等）"
-// @Router /repos/{id}/pullreq/{pullrequestID}/commits/ [get]
+// @Router /repos/{id}/pullreq/{pullrequestID}/commits [get]
 func (ctl *Controller) Commits(ctx *gin.Context) {
 	var err error
 

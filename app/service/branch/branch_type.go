@@ -81,6 +81,8 @@ func (s *Service) UpdateBranchType(
 		branchType.Desc = req.Desc
 	}
 
+	branchType.Repo = repoID
+
 	result, err := s.branchStore.UpdateBranchType(ctx, branchType, id)
 	if err != nil {
 		return nil, err
