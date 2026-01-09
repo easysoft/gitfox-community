@@ -16,6 +16,13 @@ branch_type:
   path_param_error: "Path 参数解析失败。"
   body_param_error: "Body 参数解析失败。"
   body_check_error: "请求参数校验失败。"
+  body_check_name_length: "名称长度必须小于100个字符。"
+  body_check_key_length: "键值长度必须小于50个字符。"
+  body_check_key_format: "键值仅可包含英文字母、数字与分隔符 / - _ .，最多50个字符。"
+  body_check_prefix_length: "前缀长度必须小于50个字符。"
+  body_check_prefix_num: "前缀数量须为1至5个。"
+  body_check_prefix_format: "前缀仅可包含字母与数字，须以字母开头；可在末尾出现且仅出现一个分隔符（/ - _ .）。"
+  body_check_desc_length: "描述长度必须小于500个字符。"
   create_success: "分支类型创建成功。"
   create_error: "分支类型创建失败。"
   create_error_key: "分支类型键值已存在。"
@@ -29,3 +36,4 @@ branch_type:
   query_success: "分支类型查询成功。"
   query_error: "分支类型查询失败。"
   not_found: "分支类型未找到。"
+  

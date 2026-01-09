@@ -579,22 +579,22 @@ definitions:
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.MergeCheck:
     properties:
-      baseSHA:
-        description: 基础分支最新提交 SHA
-        type: string
       conflictFiles:
         description: 冲突文件列表
         items:
           type: string
         type: array
-      headSHA:
-        description: 头分支最新提交 SHA
-        type: string
       mergeable:
         description: 是否可合并
         type: boolean
       message:
         description: 合并检查消息列表
+        type: string
+      sourceSHA:
+        description: 源分支最新提交 SHA
+        type: string
+      targetSHA:
+        description: 目标分支最新提交 SHA
         type: string
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.PathsDetailsInput:
