@@ -266,6 +266,8 @@ func (ctl *Controller) Diff(ctx *gin.Context) {
 // @Produce application/json
 // @Param id path uint true "仓库 ID"
 // @Param pullrequestID path uint true "Pull Request 编号"
+// @Param page query int false "分页页码，默认1"
+// @Param limit query int false "分页每页数量，默认20"
 // @Success 200 {object} resp.ObjectResponse{data=commitModel.Commit} "获取成功（返回提交信息）"
 // @Error 400 {object} resp.ObjectResponse "参数错误（如pathToPath格式非法、为空等）"
 // @Error 401 {object} resp.ObjectResponse "未授权（会话不存在或已过期）"
