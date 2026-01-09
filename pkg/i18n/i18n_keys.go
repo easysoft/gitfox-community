@@ -43,22 +43,29 @@ const (
 	BranchQueryParamError   I18nKey = "branch.query_param_error"   // Query 参数解析失败.
 
 	// Branch_type 相关常量
-	BranchTypeBodyCheckError    I18nKey = "branch_type.body_check_error"    // 请求参数校验失败.
-	BranchTypeBodyParamError    I18nKey = "branch_type.body_param_error"    // Body 参数解析失败.
-	BranchTypeCreateError       I18nKey = "branch_type.create_error"        // 分支类型创建失败.
-	BranchTypeCreateErrorKey    I18nKey = "branch_type.create_error_key"    // 分支类型键值已存在.
-	BranchTypeCreateErrorPrefix I18nKey = "branch_type.create_error_prefix" // 分支类型前缀已存在.
-	BranchTypeCreateSuccess     I18nKey = "branch_type.create_success"      // 分支类型创建成功.
-	BranchTypeDeleteError       I18nKey = "branch_type.delete_error"        // 分支类型删除失败.
-	BranchTypeDeleteSuccess     I18nKey = "branch_type.delete_success"      // 分支类型删除成功.
-	BranchTypeNotFound          I18nKey = "branch_type.not_found"           // 分支类型未找到.
-	BranchTypePathParamError    I18nKey = "branch_type.path_param_error"    // Path 参数解析失败.
-	BranchTypeQueryError        I18nKey = "branch_type.query_error"         // 分支类型查询失败.
-	BranchTypeQuerySuccess      I18nKey = "branch_type.query_success"       // 分支类型查询成功.
-	BranchTypeUpdateError       I18nKey = "branch_type.update_error"        // 分支类型更新失败.
-	BranchTypeUpdateErrorKey    I18nKey = "branch_type.update_error_key"    // 分支类型键值已存在.
-	BranchTypeUpdateErrorPrefix I18nKey = "branch_type.update_error_prefix" // 分支类型前缀已存在.
-	BranchTypeUpdateSuccess     I18nKey = "branch_type.update_success"      // 分支类型更新成功.
+	BranchTypeBodyCheckDescLength   I18nKey = "branch_type.body_check_desc_length"   // 描述长度必须小于500个字符.
+	BranchTypeBodyCheckError        I18nKey = "branch_type.body_check_error"         // 请求参数校验失败.
+	BranchTypeBodyCheckKeyFormat    I18nKey = "branch_type.body_check_key_format"    // 键值仅可包含英文字母、数字与分隔符 / - _ .,最多50个字符.
+	BranchTypeBodyCheckKeyLength    I18nKey = "branch_type.body_check_key_length"    // 键值长度必须小于50个字符.
+	BranchTypeBodyCheckNameLength   I18nKey = "branch_type.body_check_name_length"   // 名称长度必须小于100个字符.
+	BranchTypeBodyCheckPrefixFormat I18nKey = "branch_type.body_check_prefix_format" // 前缀仅可包含字母与数字,须以字母开头；可在末尾出现且仅出现一个分隔符('/', '-', '_...
+	BranchTypeBodyCheckPrefixLength I18nKey = "branch_type.body_check_prefix_length" // 前缀长度必须小于50个字符.
+	BranchTypeBodyCheckPrefixNum    I18nKey = "branch_type.body_check_prefix_num"    // 前缀数量须为1至5个.
+	BranchTypeBodyParamError        I18nKey = "branch_type.body_param_error"         // Body 参数解析失败.
+	BranchTypeCreateError           I18nKey = "branch_type.create_error"             // 分支类型创建失败.
+	BranchTypeCreateErrorKey        I18nKey = "branch_type.create_error_key"         // 分支类型键值已存在.
+	BranchTypeCreateErrorPrefix     I18nKey = "branch_type.create_error_prefix"      // 分支类型前缀已存在.
+	BranchTypeCreateSuccess         I18nKey = "branch_type.create_success"           // 分支类型创建成功.
+	BranchTypeDeleteError           I18nKey = "branch_type.delete_error"             // 分支类型删除失败.
+	BranchTypeDeleteSuccess         I18nKey = "branch_type.delete_success"           // 分支类型删除成功.
+	BranchTypeNotFound              I18nKey = "branch_type.not_found"                // 分支类型未找到.
+	BranchTypePathParamError        I18nKey = "branch_type.path_param_error"         // Path 参数解析失败.
+	BranchTypeQueryError            I18nKey = "branch_type.query_error"              // 分支类型查询失败.
+	BranchTypeQuerySuccess          I18nKey = "branch_type.query_success"            // 分支类型查询成功.
+	BranchTypeUpdateError           I18nKey = "branch_type.update_error"             // 分支类型更新失败.
+	BranchTypeUpdateErrorKey        I18nKey = "branch_type.update_error_key"         // 分支类型键值已存在.
+	BranchTypeUpdateErrorPrefix     I18nKey = "branch_type.update_error_prefix"      // 分支类型前缀已存在.
+	BranchTypeUpdateSuccess         I18nKey = "branch_type.update_success"           // 分支类型更新成功.
 
 	// Commit 相关常量
 	CommitActionDecodeError    I18nKey = "commit.action_decode_error"    // 解码提交文件内容时失败.
