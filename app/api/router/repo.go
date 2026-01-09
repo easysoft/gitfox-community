@@ -29,6 +29,9 @@ func registerRepoRoutes(r *gin.RouterGroup, controller *Controller) {
 			repopull := reposWithID.Group("/pullreq")
 			{
 				repopull.GET(fmt.Sprintf("/:%s/metadata", req.PullrequestID), controller.Repo.Metadata)
+				repopull.GET(fmt.Sprintf("/:%s/diff", req.PullrequestID), controller.Repo.DiffSimp)
+				repopull.POST(fmt.Sprintf("/:%s/diff", req.PullrequestID), controller.Repo.Diff)
+				repopull.GET(fmt.Sprintf("/:%s/commits", req.PullrequestID), controller.Repo.Commits)
 			}
 		}
 	}
