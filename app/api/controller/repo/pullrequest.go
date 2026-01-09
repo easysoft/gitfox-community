@@ -141,7 +141,7 @@ func (ctl *Controller) MergeCheck(ctx *gin.Context) {
 // @Param pullrequestID path uint true "Pull Request 编号"
 // @Param Accept header string false "Accept 头，可选值：text/plain, application/json"
 // @Description 如果设置为 text/plain，返回 Git 原生 Diff 文本格式；否则返回 JSON 格式
-// @Param include_patch query boolean false "是否在返回结果中包含具体的代码补丁 ( patch 字段)。默认为 false 。"
+// @Param includePatch query boolean false "是否在返回结果中包含具体的代码补丁 ( patch 字段)。默认为 false 。"
 // @Param path query []string false "指定只对比哪些文件（支持多次传递）。"
 // @Param range query []string false "指定文件的行号范围 (格式: start:end )，与 path 一一对应。"
 // @Success 200 {object} resp.ObjectResponse{data=repoModel.DiffStats} "获取成功（返回差异统计信息）"
@@ -186,7 +186,7 @@ func (ctl *Controller) DiffSimp(ctx *gin.Context) {
 		return
 	}
 
-	_, includePatch := req.QueryParam(ctx, "include_patch")
+	_, includePatch := req.QueryParam(ctx, "includePatch")
 	stream, err := ctl.pullrequestSvc.Diff(ctx.Request.Context(), session, repoID, pullreqID, setSHAs, includePatch, param...)
 	if err != nil {
 		resp.InternalError(ctx, err)
@@ -249,7 +249,7 @@ func (ctl *Controller) Diff(ctx *gin.Context) {
 		return
 	}
 
-	_, includePatch := req.QueryParam(ctx, "include_patch")
+	_, includePatch := req.QueryParam(ctx, "includePatch")
 	stream, err := ctl.pullrequestSvc.Diff(ctx.Request.Context(), session, repoID, pullreqID, setSHAs, includePatch, param...)
 	if err != nil {
 		resp.InternalError(ctx, err)
