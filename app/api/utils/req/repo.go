@@ -12,10 +12,10 @@ const (
 
 	QueryParamOperation = "Operation"
 
-	PathToPath      = "pathToPath"
-	PullrequestID   = "pullrequestid"
-	QueryParamPage  = "page"
-	QueryParamLimit = "limit"
+	SourcePathToTargetPath = "sourcePathToTargetPath"
+	PullrequestID          = "pullrequestid"
+	QueryParamPage         = "page"
+	QueryParamLimit        = "limit"
 )
 
 func GetRepoRefFromPath(r *gin.Context) (string, error) {

@@ -4522,10 +4522,6 @@ const docTemplate = `{
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.MergeCheck": {
             "type": "object",
             "properties": {
-                "baseSHA": {
-                    "description": "基础分支最新提交 SHA",
-                    "type": "string"
-                },
                 "conflictFiles": {
                     "description": "冲突文件列表",
                     "type": "array",
@@ -4533,16 +4529,20 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
-                "headSHA": {
-                    "description": "头分支最新提交 SHA",
-                    "type": "string"
-                },
                 "mergeable": {
                     "description": "是否可合并",
                     "type": "boolean"
                 },
                 "message": {
                     "description": "合并检查消息列表",
+                    "type": "string"
+                },
+                "sourceSHA": {
+                    "description": "源分支最新提交 SHA",
+                    "type": "string"
+                },
+                "targetSHA": {
+                    "description": "目标分支最新提交 SHA",
                     "type": "string"
                 }
             }

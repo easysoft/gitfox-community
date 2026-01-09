@@ -180,8 +180,8 @@ func (s *Service) MergeCheck(ctx context.Context, session *auth.Session, repoid 
 	})
 	if err != nil {
 		data := &repoModel.MergeCheck{
-			BaseSHA: baseSHA,
-			HeadSHA: headSHA,
+			SourceSHA: headSHA,
+			TargetSHA: baseSHA,
 		}
 		// git.Merge works with commits and error is not user-friendly
 		// and here we are modify base-ref and head-ref with user input
@@ -202,15 +202,15 @@ func (s *Service) MergeCheck(ctx context.Context, session *auth.Session, repoid 
 		return &repoModel.MergeCheck{
 			Mergeable:     false,
 			ConflictFiles: mergeOutput.ConflictFiles,
-			BaseSHA:       baseSHA,
-			HeadSHA:       headSHA,
+			SourceSHA:     headSHA,
+			TargetSHA:     baseSHA,
 		}, nil
 	}
 
 	return &repoModel.MergeCheck{
 		Mergeable: true,
-		BaseSHA:   baseSHA,
-		HeadSHA:   headSHA,
+		SourceSHA: headSHA,
+		TargetSHA: baseSHA,
 	}, nil
 }
 
