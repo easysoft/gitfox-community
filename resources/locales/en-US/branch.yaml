@@ -20,7 +20,7 @@ branch_type:
   body_check_key_format: "Key may contain only letters, digits and separators (/ - _ .); maximum 50 characters."
   body_check_prefix_length: "Prefix must be under 50 characters."
   body_check_prefix_num: "Number of prefixes must be between 1 and 5."
-  body_check_prefix_format: "Prefix may contain only letters and digits and must start with a letter; at most one separator (/ - _ .) is allowed and, if present, must be the final character."
+  body_check_prefix_format: "Prefix must start with a letter; letters/digits only. One trailing separator allowed (/ - _ .)"
   body_check_desc_length: "Description must be under 500 characters."
   create_success: "Branch type created successfully."
   create_error: "Failed to create branch type."

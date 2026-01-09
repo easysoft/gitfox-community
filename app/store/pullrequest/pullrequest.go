@@ -22,22 +22,22 @@ func NewPullRequestStore(db *gorm.DB) *Store {
 }
 
 // GetByID 根据ID获取PR
-func (s *Store) GetByID(ctx context.Context, repoID uint, id uint) (*repoModel.PullRequest, error) {
+func (s *Store) GetByID(ctx context.Context, targetRepoID uint, id uint) (*repoModel.PullRequest, error) {
 	var pr PullRequest
-	if err := s.db.WithContext(ctx).First(&pr, "repoID = ? AND id = ?", repoID, id).Error; err != nil {
+	if err := s.db.WithContext(ctx).First(&pr, "targetRepoID = ? AND id = ?", targetRepoID, id).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
 	return mapPullRequestToModel(pr), nil
 }
 
 // UpdateStatus 更新PR状态
-func (s *Store) UpdateStatus(ctx context.Context, repoID uint, id uint, status repoModel.PullRequestStatus, editedBy string) error {
+func (s *Store) UpdateStatus(ctx context.Context, targetRepoID uint, id uint, status repoModel.PullRequestStatus, editedBy string) error {
 	updates := map[string]interface{}{
 		"status":     status,
 		"editedBy":   editedBy,
 		"editedDate": datetime.NowLocalTime(),
 	}
-	if err := s.db.WithContext(ctx).Model(&PullRequest{}).Where("repoID = ? AND id = ?", repoID, id).Updates(updates).Error; err != nil {
+	if err := s.db.WithContext(ctx).Model(&PullRequest{}).Where("targetRepoID = ? AND id = ?", targetRepoID, id).Updates(updates).Error; err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
 	}
 	return nil
@@ -46,7 +46,7 @@ func (s *Store) UpdateStatus(ctx context.Context, repoID uint, id uint, status r
 // UpdateMergeInfo 更新合并信息
 func (s *Store) UpdateMergeInfo(
 	ctx context.Context,
-	repoID uint,
+	targetRepoID uint,
 	id uint,
 	mergedBy string,
 	mergeMethod repoModel.MergeMethod,
@@ -61,7 +61,7 @@ func (s *Store) UpdateMergeInfo(
 		"editedBy":    editedBy,
 		"editedDate":  datetime.NowLocalTime(),
 	}
-	if err := s.db.WithContext(ctx).Model(&PullRequest{}).Where("repoID = ? AND id = ?", repoID, id).Updates(updates).Error; err != nil {
+	if err := s.db.WithContext(ctx).Model(&PullRequest{}).Where("targetRepoID = ? AND id = ?", targetRepoID, id).Updates(updates).Error; err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
 	}
 	return nil
@@ -70,7 +70,7 @@ func (s *Store) UpdateMergeInfo(
 // UpdateMergeCheckStatus 更新合并检查状态
 func (s *Store) UpdateMergeCheckStatus(
 	ctx context.Context,
-	repoID uint,
+	targetRepoID uint,
 	id uint,
 	status repoModel.MergeCheckStatus,
 	conflicts *string,
@@ -80,7 +80,7 @@ func (s *Store) UpdateMergeCheckStatus(
 		"mergeConflicts":   conflicts,
 		"editedDate":       datetime.NowLocalTime(),
 	}
-	if err := s.db.WithContext(ctx).Model(&PullRequest{}).Where("repoID = ? AND id = ?", repoID, id).Updates(updates).Error; err != nil {
+	if err := s.db.WithContext(ctx).Model(&PullRequest{}).Where("targetRepoID = ? AND id = ?", targetRepoID, id).Updates(updates).Error; err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
 	}
 	return nil
@@ -89,7 +89,7 @@ func (s *Store) UpdateMergeCheckStatus(
 // UpdateRebaseCheckStatus 更新变基检查状态
 func (s *Store) UpdateRebaseCheckStatus(
 	ctx context.Context,
-	repoID uint,
+	targetRepoID uint,
 	id uint,
 	status repoModel.RebaseCheckStatus,
 	conflicts *string,
@@ -99,7 +99,7 @@ func (s *Store) UpdateRebaseCheckStatus(
 		"rebaseConflicts":   conflicts,
 		"editedDate":        datetime.NowLocalTime(),
 	}
-	if err := s.db.WithContext(ctx).Model(&PullRequest{}).Where("repoID = ? AND id = ?", repoID, id).Updates(updates).Error; err != nil {
+	if err := s.db.WithContext(ctx).Model(&PullRequest{}).Where("targetRepoID = ? AND id = ?", targetRepoID, id).Updates(updates).Error; err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
 	}
 	return nil
@@ -108,7 +108,7 @@ func (s *Store) UpdateRebaseCheckStatus(
 // UpdateDiffStats 更新PR差异统计信息
 func (s *Store) UpdateDiffStats(
 	ctx context.Context,
-	repoID uint,
+	targetRepoID uint,
 	id uint,
 	diffStats *repoModel.DiffStats,
 ) error {
@@ -119,26 +119,26 @@ func (s *Store) UpdateDiffStats(
 		"deletions":   diffStats.Deletions,
 		"editedDate":  datetime.NowLocalTime(),
 	}
-	if err := s.db.WithContext(ctx).Model(&PullRequest{}).Where("repoID = ? AND id = ?", repoID, id).Updates(updates).Error; err != nil {
+	if err := s.db.WithContext(ctx).Model(&PullRequest{}).Where("targetRepoID = ? AND id = ?", targetRepoID, id).Updates(updates).Error; err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
 	}
 	return nil
 }
 
-// CountByRepoID 统计仓库的PR数量
-func (s *Store) CountByRepoID(ctx context.Context, repoID uint) (int64, error) {
+// CountByTargetRepoID 统计仓库的PR数量
+func (s *Store) CountByTargetRepoID(ctx context.Context, targetRepoID uint) (int64, error) {
 	var count int64
-	if err := s.db.WithContext(ctx).Model(&PullRequest{}).Where("repoID = ?", repoID).Count(&count).Error; err != nil {
+	if err := s.db.WithContext(ctx).Model(&PullRequest{}).Where("targetRepoID = ?", targetRepoID).Count(&count).Error; err != nil {
 		return 0, database.ProcessSQLErrorf(ctx, err)
 	}
 	return count, nil
 }
 
 // CountByStatus 按状态统计PR数量
-func (s *Store) CountByStatus(ctx context.Context, repoID uint, status repoModel.PullRequestStatus) (int64, error) {
+func (s *Store) CountByStatus(ctx context.Context, targetRepoID uint, status repoModel.PullRequestStatus) (int64, error) {
 	var count int64
 	if err := s.db.WithContext(ctx).Model(&PullRequest{}).
-		Where("repoID = ? AND status = ?", repoID, status).
+		Where("targetRepoID = ? AND status = ?", targetRepoID, status).
 		Count(&count).Error; err != nil {
 		return 0, database.ProcessSQLErrorf(ctx, err)
 	}
