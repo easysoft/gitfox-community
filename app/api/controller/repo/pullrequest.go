@@ -268,7 +268,7 @@ func (ctl *Controller) Diff(ctx *gin.Context) {
 // @Param pullrequestID path uint true "Pull Request 编号"
 // @Param page query int false "分页页码，默认1"
 // @Param limit query int false "分页每页数量，默认20"
-// @Success 200 {object} resp.ListResponse{data=commitModel.Commit,listArgs=resp.ListNoTotalArgs} "查询成功"
+// @Success 200 {object} resp.ListResponse{data=commitModel.Commit,listArgs=resp.ListArgs} "查询成功"
 // @Error 400 {object} resp.ObjectResponse "参数错误（如SourcePathToTargetPath格式非法、为空等）"
 // @Error 401 {object} resp.ObjectResponse "未授权（会话不存在或已过期）"
 // @Error 500 {object} resp.ObjectResponse "服务器内部错误（如Git服务调用失败、数据库异常等）"
@@ -298,15 +298,15 @@ func (ctl *Controller) Commits(ctx *gin.Context) {
 
 	req.SetDefaults(&filter)
 
-	commits, err := ctl.pullrequestSvc.Commits(ctx.Request.Context(), session, repoID, pullreqID, uint(filter.Page), uint(filter.Limit))
+	commits, totalCommits, err := ctl.pullrequestSvc.Commits(ctx.Request.Context(), session, repoID, pullreqID, uint(filter.Page), uint(filter.Limit))
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return
 	}
 
 	resp.ListSuccess(ctx, commits,
-		resp.ListNoTotalArgs{
-			IsLast:   len(commits) < int(filter.Limit),
+		resp.ListArgs{
+			Total:    int64(totalCommits),
 			Page:     int64(filter.Page),
 			PageSize: int64(filter.Limit),
 		}, i18n.PullrequestQuerySuccess, nil)

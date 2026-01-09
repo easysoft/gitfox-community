@@ -282,15 +282,15 @@ func (s *Service) RawDiff(ctx context.Context, w http.ResponseWriter, session *a
 	return util.ProcessGitErrorf(ctx, err)
 }
 
-func (s *Service) Commits(ctx context.Context, session *auth.Session, repoid uint, pullreqnumber uint, page, limit uint) ([]commit.Commit, error) {
+func (s *Service) Commits(ctx context.Context, session *auth.Session, repoid uint, pullreqnumber uint, page, limit uint) ([]commit.Commit, int, error) {
 	pr, err := s.pullRequestStore.GetByID(ctx, repoid, pullreqnumber)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	repo, err := s.repoSvc.GetRepoCheckAccessByID(ctx, session, repoid, []constant.Permission{constant.PermissionRepoView})
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	gitRef := pr.SourceSHA
@@ -304,7 +304,7 @@ func (s *Service) Commits(ctx context.Context, session *auth.Session, repoid uin
 		Limit:      int32(limit),
 	})
 	if err != nil {
-		return nil, util.ProcessGitErrorf(ctx, err)
+		return nil, 0, util.ProcessGitErrorf(ctx, err)
 	}
 
 	commits := make([]commit.Commit, len(output.Commits))
@@ -312,12 +312,12 @@ func (s *Service) Commits(ctx context.Context, session *auth.Session, repoid uin
 		var commit *commit.Commit
 		commit, err = utils.MapCommit(&output.Commits[i])
 		if err != nil {
-			return nil, fmt.Errorf("failed to map commit: %w", err)
+			return nil, 0, fmt.Errorf("failed to map commit: %w", err)
 		}
 		commits[i] = *commit
 	}
 
-	return commits, nil
+	return commits, output.TotalCommits, nil
 
 }
 
