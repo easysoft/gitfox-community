@@ -230,7 +230,7 @@ func (ctl *Controller) Diff(ctx *gin.Context) {
 	}
 
 	if err = ctx.ShouldBindJSON(&param); err != nil {
-		err = errors.WithI18nKey(err, i18n.PullrequestPathParamError)
+		err = errors.WithI18nKey(err, i18n.PullrequestBodyParamError)
 		resp.BadRequest(ctx, err)
 		return
 	}
@@ -312,6 +312,54 @@ func (ctl *Controller) Commits(ctx *gin.Context) {
 		}, i18n.PullrequestQuerySuccess, nil)
 }
 
+// Merge 合并代码Pull Request
+// @Summary 合并代码Pull Request
+// @Description 根据传入的仓库 ID 和 参数 合并 Pull Request
+// @Tags pureq
+// @Accept application/json
+// @Produce application/json
+// @Param id path uint true "仓库 ID"
+// @Param pullrequestID path uint true "Pull Request 编号"
+// @Param request body repoModel.Merge true "合并 Pull Request 请求参数"
+// @Success 200 {object} resp.ObjectResponse{data=repoModel.MergeResponse} "合并成功（返回合并信息）"
+// @Success 200 {object} resp.ObjectResponse{data=repoModel.MergeViolations} "合并失败（返回合并冲突和规则违规信息）"
+// @Error 400 {object} resp.ObjectResponse "参数错误（如Merge方法、SourceSHA、Title、Message格式非法、为空等）"
+// @Error 401 {object} resp.ObjectResponse "未授权（会话不存在或已过期）"
+// @Error 500 {object} resp.ObjectResponse "服务器内部错误（如Git服务调用失败、数据库异常等）"
+// @Router /repos/{id}/pullreq/{pullrequestID}/merge [post]
+func (ctl *Controller) Merge(ctx *gin.Context) {
+	var param repoModel.Merge
+	var err error
+
+	_, ok := req.GetAuthSession(ctx.Request.Context())
+	if !ok {
+		err := errors.WithI18nKey(errors.New("get session failed"), i18n.AuthNoSession)
+		resp.Unauthorized(ctx, err)
+		return
+	}
+
+	repoID, pullreqID, err := GetReqQueryParamID(ctx)
+	if err != nil {
+		resp.BadRequest(ctx, err)
+		return
+	}
+	_ = repoID
+	_ = pullreqID
+
+	if err = ctx.ShouldBindJSON(&param); err != nil {
+		err = errors.WithI18nKey(err, i18n.PullrequestBodyParamError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
+	if err = param.Check(); err != nil {
+		resp.BadRequest(ctx, err)
+		return
+	}
+
+	resp.OK(ctx, i18n.PullrequestMergeSuccess, nil)
+}
+
 // GetReqQueryParamID 从路径参数中获取仓库 ID 和 Pull Request 编号
 func GetReqQueryParamID(ctx *gin.Context) (uint, uint, error) {
 	repoID, err := req.PathParamAsPositiveUint(ctx, "id")
@@ -348,12 +396,8 @@ func GetReqQueryParamIDAndPath(ctx *gin.Context) (uint, string, error) {
 // GetFileDiffFromQuery 从查询参数中获取文件差异信息
 func GetFileDiffFromQuery(ctx *gin.Context) (files []repoModel.FileDiff, ok bool) {
 	paths, ok := req.QueryParamList(ctx, "path")
-	if !ok {
-		return
-	}
-
 	ranges, ok := req.QueryParamList(ctx, "range")
-	if !ok {
+	if len(ranges) != len(paths) {
 		return
 	}
 

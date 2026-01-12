@@ -48,7 +48,7 @@ const (
 	BranchTypeBodyCheckKeyFormat    I18nKey = "branch_type.body_check_key_format"    // 键值仅可包含英文字母、数字与分隔符 / - _ .,最多50个字符.
 	BranchTypeBodyCheckKeyLength    I18nKey = "branch_type.body_check_key_length"    // 键值长度必须小于50个字符.
 	BranchTypeBodyCheckNameLength   I18nKey = "branch_type.body_check_name_length"   // 名称长度必须小于100个字符.
-	BranchTypeBodyCheckPrefixFormat I18nKey = "branch_type.body_check_prefix_format" // 前缀仅可包含字母与数字,须以字母开头；可在末尾出现且仅出现一个分隔符('/', '-', '_...
+	BranchTypeBodyCheckPrefixFormat I18nKey = "branch_type.body_check_prefix_format" // 前缀以字母开头,仅含字母或数字；末尾需有且仅可有一个分隔符(/ - _ .)
 	BranchTypeBodyCheckPrefixLength I18nKey = "branch_type.body_check_prefix_length" // 前缀长度必须小于50个字符.
 	BranchTypeBodyCheckPrefixNum    I18nKey = "branch_type.body_check_prefix_num"    // 前缀数量须为1至5个.
 	BranchTypeBodyParamError        I18nKey = "branch_type.body_param_error"         // Body 参数解析失败.
@@ -137,9 +137,16 @@ const (
 	GitUnrelatedHistories           I18nKey = "git.unrelated_histories"               // 不相关的历史记录.
 
 	// Pullrequest 相关常量
-	PullrequestMergeCheckSuccess I18nKey = "pullrequest.merge_check_success" // 合并检查成功
-	PullrequestPathParamError    I18nKey = "pullrequest.path_param_error"    // Path 参数解析失败.
-	PullrequestQuerySuccess      I18nKey = "pullrequest.query_success"       // 查询 Pull Request 成功
+	PullrequestBodyParamError                I18nKey = "pullrequest.body_param_error"                   // Body 参数解析失败.
+	PullrequestMergeCheckSuccess             I18nKey = "pullrequest.merge_check_success"                // 合并检查成功
+	PullrequestMergeError                    I18nKey = "pullrequest.merge_error"                        // 合并检查失败
+	PullrequestMergeErrorMethodNotAllowed    I18nKey = "pullrequest.merge_error_method_not_allowed"     // 当前仓库或分支禁止使用您选择的合并方式,请换用其他方式或联系管理员.
+	PullrequestMergeErrorMethodNotFound      I18nKey = "pullrequest.merge_error_method_not_found"       // 未识别您选择的合并方式,请检查合并选项并重试.
+	PullrequestMergeErrorSourceShaNotFound   I18nKey = "pullrequest.merge_error_source_sha_not_found"   // 用于合并的源提交不存在或已被修改,请确认分支/提交是否正确后再试.
+	PullrequestMergeErrorTitleOrMessageEmpty I18nKey = "pullrequest.merge_error_title_or_Message_empty" // 标题或提交信息为空
+	PullrequestMergeSuccess                  I18nKey = "pullrequest.merge_success"                      // 合并成功
+	PullrequestPathParamError                I18nKey = "pullrequest.path_param_error"                   // Path 参数解析失败.
+	PullrequestQuerySuccess                  I18nKey = "pullrequest.query_success"                      // 查询 Pull Request 成功
 
 	// Repo 相关常量
 	RepoBodyParamError            I18nKey = "repo.body_param_error"             // Body 参数解析失败.
@@ -156,8 +163,6 @@ const (
 	RepoLineNumberError           I18nKey = "repo.line_number_error"            // 行号必须大于0, 且结束行号必须大于起始行号
 	RepoMirrorReadOnly            I18nKey = "repo.mirror_read_only"             // 镜像仓库只读.
 	RepoPathParamError            I18nKey = "repo.path_param_error"             // Path 参数解析失败.
-	RepoPullRequestsMergeError    I18nKey = "repo.pullRequests_merge_error"     // 合并失败,存在冲突或检查未通过.
-	RepoPullRequestsMergeSuccess  I18nKey = "repo.pullRequests_merge_success"   // 合并成功!
 	RepoPullPermissionError       I18nKey = "repo.pull_permission_error"        // 您没有权限拉取此仓库.
 	RepoPushPermissionError       I18nKey = "repo.push_permission_error"        // 您没有权限推送此仓库.
 	RepoQueryError                I18nKey = "repo.query_error"                  // 查询仓库失败

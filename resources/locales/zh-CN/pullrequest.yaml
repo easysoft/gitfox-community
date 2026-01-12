@@ -1,4 +1,11 @@
 pullrequest:
   query_success: "查询 Pull Request 成功"
   path_param_error: "Path 参数解析失败。"
+  body_param_error: "Body 参数解析失败。"
   merge_check_success: "合并检查成功"
+  merge_error: "合并检查失败"
+  merge_success: "合并成功"
+  merge_error_method_not_found: "未识别您选择的合并方式，请检查合并选项并重试。"
+  merge_error_source_sha_not_found: "用于合并的源提交不存在或已被修改，请确认分支/提交是否正确后再试。"
+  merge_error_method_not_allowed: "当前仓库或分支禁止使用您选择的合并方式，请换用其他方式或联系管理员。"
+  merge_error_title_or_Message_empty: "标题或提交信息为空"

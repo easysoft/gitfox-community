@@ -1,4 +1,11 @@
 pullrequest:
   query_success: "Query pull request success"
   path_param_error: "Path parameter error"
+  body_param_error: "Body parameter error"
   merge_check_success: "Merge check success"
+  merge_error: "Merge check error"
+  merge_success: "Merge success"
+  merge_error_method_not_found: "The selected merge method is not recognized. Please check your merge options and try again."
+  merge_error_source_sha_not_found: "The source commit (SHA) for the merge does not exist or has been modified. Please verify the branch/commit and try again."
+  merge_error_method_not_allowed: "The selected merge method is not permitted for this repository or branch. Please use a different method or contact the administrator."
+  merge_error_title_or_Message_empty: "The title or commit message is empty."
