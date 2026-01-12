@@ -1,5 +1,7 @@
 package pullrequest
 
+//go:generate mockgen -source=$GOFILE -destination=mock/pullrequest_store.go -package=mock
+
 import (
 	"context"
 

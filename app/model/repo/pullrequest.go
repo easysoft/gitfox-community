@@ -132,14 +132,14 @@ type FileDiff struct {
 }
 
 type Merge struct {
-	Method    MergeMethod `json:"method"`     // 合并策略: merge , squash , rebase , fast-forward (*DryRun 时可选)
-	SourceSHA string      `json:"source_sha"` // 源分支当前的 Commit SHA，用于乐观锁并发控制
-	Title     string      `json:"title"`      // 合并提交的标题
-	Message   string      `json:"message"`    // 合并提交的详细描述
+	Method    MergeMethod `json:"method"`    // 合并策略: merge , squash , rebase , fast-forward (*DryRun 时可选)
+	SourceSHA string      `json:"sourceSHA"` // 源分支当前的 Commit SHA，用于乐观锁并发控制
+	Title     string      `json:"title"`     // 合并提交的标题
+	Message   string      `json:"message"`   // 合并提交的详细描述
 
-	BypassRules bool `json:"bypass_rules"`  // 是否强制绕过分支保护规则（需要管理员权限）
-	DryRun      bool `json:"dry_run"`       // 试运行模式 。仅模拟合并，检查冲突和规则，不修改数据
-	DryRunRules bool `json:"dry_run_rules"` // 仅检查规则模式。不执行 Git 合并模拟，只检查分支保护规则
+	BypassRules bool `json:"bypassRules"` // 是否强制绕过分支保护规则（需要管理员权限）
+	DryRun      bool `json:"dryRun"`      // 试运行模式 。仅模拟合并，检查冲突和规则，不修改数据
+	DryRunRules bool `json:"dryRunRules"` // 仅检查规则模式。不执行 Git 合并模拟，只检查分支保护规则
 }
 
 func (in *Merge) Check() error {
@@ -190,7 +190,7 @@ type MergeResponse struct {
 
 	// --- Dry Run (试运行) 专用字段 ---
 	// 当请求参数 dry_run=true 时，下面这些字段才会有值
-	DryRun         bool               `json:"dry_run"`
+	DryRun         bool               `json:"dryRun"`         // 是否为试运行模式
 	Mergeable      bool               `json:"mergeable"`      // 是否无代码冲突
 	ConflictFiles  []string           `json:"conflictFiles"`  // 如果有冲突，列出文件名
 	AllowedMethods []enum.MergeMethod `json:"allowedMethods"` // 当前规则允许的合并方式（如只允许 squash）
