@@ -156,10 +156,6 @@ func unmarshalResponse[T any](resp *http.Response) (T, error) {
 		return body, hook.ErrNotFound
 	}
 
-	if resp.StatusCode != http.StatusOK {
-		return body, fmt.Errorf("expected response code 200 but got: %s", resp.Status)
-	}
-
 	// ensure we actually got a body returned.
 	if resp.Body == nil {
 		return body, errors.New("http response body is empty")

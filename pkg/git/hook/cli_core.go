@@ -60,6 +60,7 @@ func (c *CLICore) PreReceive(ctx context.Context) error {
 		},
 	}
 	out, err := c.client.PreReceive(ctx, in)
+
 	return handleServerHookOutput(out, err)
 }
 
@@ -132,6 +133,7 @@ func handleServerHookOutput(out Output, err error) error {
 		fmt.Println()
 	}
 	if out.Error != nil {
+		fmt.Println(*out.Error)
 		return errors.New(*out.Error)
 	}
 

@@ -21,6 +21,7 @@ import (
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/user"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/api"
@@ -30,10 +31,11 @@ import (
 )
 
 type Controller struct {
-	userStore   user.Interface
-	repoStore   repo.Interface
-	git         git.Interface
-	urlProvider url.Provider
+	userStore    user.Interface
+	repoStore    repo.Interface
+	git          git.Interface
+	urlProvider  url.Provider
+	devopsConfig config.DevopsConfig
 }
 
 func NewController(
@@ -41,12 +43,14 @@ func NewController(
 	repoStore repo.Interface,
 	git git.Interface,
 	urlProvider url.Provider,
+	devopsConfig config.DevopsConfig,
 ) *Controller {
 	return &Controller{
-		userStore:   userStore,
-		repoStore:   repoStore,
-		git:         git,
-		urlProvider: urlProvider,
+		userStore:    userStore,
+		repoStore:    repoStore,
+		git:          git,
+		urlProvider:  urlProvider,
+		devopsConfig: devopsConfig,
 	}
 }
 

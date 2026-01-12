@@ -27,9 +27,9 @@ import (
 	// "github.com/easysoft/gitfox/app/api/controller/limiter"
 	// "github.com/easysoft/gitfox/app/api/usererror"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/githook"
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/utils"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/hook"
 	gitutil "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/util"
@@ -98,14 +98,13 @@ func (c *Controller) PreReceive(
 			return hook.Output{}, errors.Wrapf(err, "failed to find inner principal with account %s", in.PrincipalAccount)
 		}
 
-		// dummySession := &auth.Session{Principal: *principal}
-		// err = c.checkProtectionRules(ctx, dummySession, repo, refUpdates, &output)
-		// if output.Error != nil {
-		// 	return output, nil
-		// }
-		// if err != nil {
-		// 	return hook.Output{}, fmt.Errorf("failed to check protection rules: %w", err)
-		// }
+		err = c.checkProtectionRules(ctx, in.PrincipalAccount, repo, refUpdates, &output)
+		if output.Error != nil {
+			return output, nil
+		}
+		if err != nil {
+			return hook.Output{}, fmt.Errorf("failed to check protection rules: %w", err)
+		}
 	}
 
 	// err = c.ztFlow(ctx, rgit, repo, in, &output)
@@ -156,74 +155,46 @@ func (c *Controller) blockPullReqRefUpdate(refUpdates changedRefs, state constan
 // 检查保护规则
 func (c *Controller) checkProtectionRules(
 	ctx context.Context,
-	session *auth.Session,
+	principalAccount string,
 	repo *repoModel.Repo,
 	refUpdates changedRefs,
 	output *hook.Output,
 ) error {
-	// isRepoOwner, err := apiauth.IsRepoOwner(ctx, c.authorizer, nil, repo)
-	// if err != nil {
-	// 	return fmt.Errorf("failed to determine if user is repo owner: %w", err)
-	// }
+	// 定义所有需要检查的分支操作
+	checks := []struct {
+		branches        []string
+		actionType      constant.GitOperationType
+		getAllowedUsers func(*utils.BranchPermissionResult) []string
+	}{
+		{refUpdates.branches.deleted, constant.GitOperationDelete, func(r *utils.BranchPermissionResult) []string { return r.DeleteUser }},
+		{refUpdates.branches.created, constant.GitOperationCreate, func(r *utils.BranchPermissionResult) []string { return r.CreateUser }},
+		{refUpdates.branches.updated, constant.GitOperationUpdate, func(r *utils.BranchPermissionResult) []string { return r.UpdateUser }},
+		{refUpdates.branches.forced, constant.GitOperationForcePush, func(r *utils.BranchPermissionResult) []string { return r.ForcePushUser }},
+	}
 
-	// protectionRules, err := c.protectionManager.ForRepository(ctx, repo.ID)
-	// if err != nil {
-	// 	return fmt.Errorf("failed to fetch protection rules for the repository: %w", err)
-	// }
+	for _, check := range checks {
+		if len(check.branches) == 0 {
+			continue
+		}
+		for _, branchName := range check.branches {
+			rule, err := utils.GetBranchRermission(ctx, c.devopsConfig.URL, int64(repo.ID), branchName, c.devopsConfig.Authorization)
+			if err != nil {
+				return errors.Wrapf(err, "failed to get branch rule for %s", branchName)
+			}
 
-	// var ruleViolations []types.RuleViolations
-	// var errCheckAction error
+			allowedUsers := check.getAllowedUsers(rule)
+			// 如果允许的用户列表为空，表示没有限制
+			if len(allowedUsers) == 0 {
+				continue
+			}
 
-	//nolint:unparam
-	// checkAction := func(refAction protection.RefAction, refType protection.RefType, names []string) {
-	// 	if errCheckAction != nil || len(names) == 0 {
-	// 		return
-	// 	}
-
-	// 	violations, err := protectionRules.RefChangeVerify(ctx, protection.RefChangeVerifyInput{
-	// 		Actor:       &session.Principal,
-	// 		AllowBypass: true,
-	// 		IsRepoOwner: isRepoOwner,
-	// 		Repo:        repo,
-	// 		RefAction:   refAction,
-	// 		RefType:     refType,
-	// 		RefNames:    names,
-	// 	})
-	// 	if err != nil {
-	// 		errCheckAction = fmt.Errorf("failed to verify protection rules for git push: %w", err)
-	// 		return
-	// 	}
-
-	// 	ruleViolations = append(ruleViolations, violations...)
-	// }
-
-	// checkAction(protection.RefActionCreate, protection.RefTypeBranch, refUpdates.branches.created)
-	// checkAction(protection.RefActionDelete, protection.RefTypeBranch, refUpdates.branches.deleted)
-	// checkAction(protection.RefActionUpdate, protection.RefTypeBranch, refUpdates.branches.updated)
-	// checkAction(protection.RefActionUpdateForce, protection.RefTypeBranch, refUpdates.branches.forced)
-
-	// if errCheckAction != nil {
-	// 	return errCheckAction
-	// }
-
-	// var criticalViolation bool
-
-	// for _, ruleViolation := range ruleViolations {
-	// 	criticalViolation = criticalViolation || ruleViolation.IsCritical()
-	// 	for _, violation := range ruleViolation.Violations {
-	// 		var message string
-	// 		if ruleViolation.Bypassed {
-	// 			message = fmt.Sprintf("Bypassed rule %q: %s", ruleViolation.Rule.Identifier, violation.Message)
-	// 		} else {
-	// 			message = fmt.Sprintf("Rule %q violation: %s", ruleViolation.Rule.Identifier, violation.Message)
-	// 		}
-	// 		output.Messages = append(output.Messages, message)
-	// 	}
-	// }
-
-	// if criticalViolation {
-	// 	output.Error = ptr.String("Blocked by protection rules.")
-	// }
+			// 检查当前用户是否在允许列表中
+			if !slices.Contains(allowedUsers, principalAccount) {
+				output.Error = ptr.String(fmt.Sprintf("not allowed to perform %s operation on branch %s", check.actionType, branchName))
+				return nil
+			}
+		}
+	}
 
 	return nil
 }

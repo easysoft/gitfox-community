@@ -2,20 +2,25 @@ package git
 
 import (
 	"compress/gzip"
+	"context"
 	"fmt"
 	"strings"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/githook"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
+	githookModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/githook"
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/git"
 	repoSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
 	settingsSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/settings"
 	spaceSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/space"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+	gitPkg "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/api"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/hook"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 
@@ -28,11 +33,20 @@ type GitController struct {
 	repoSvc     repoSvc.Interface
 	spaceSvc    spaceSvc.Interface
 	settingsSvc settingsSvc.Interface
+	githookCtrl GithookController
+	git         gitPkg.Interface
+}
+
+// GithookController defines the interface for githook operations
+type GithookController interface {
+	PreReceive(ctx context.Context, rgit githook.RestrictedGIT, in githookModel.GithookPreReceiveInput) (hook.Output, error)
+	PostReceive(ctx context.Context, rgit githook.RestrictedGIT, in githookModel.GithookPostReceiveInput) (hook.Output, error)
+	Update(ctx context.Context, rgit githook.RestrictedGIT, in githookModel.GithookUpdateInput) (hook.Output, error)
 }
 
 // NewGitController 创建 Git 处理器实例
-func NewGitController(gitSvc git.Interface, spaceSvc spaceSvc.Interface, repoSvc repoSvc.Interface, settingsSvc settingsSvc.Interface) *GitController {
-	return &GitController{gitSvc: gitSvc, spaceSvc: spaceSvc, repoSvc: repoSvc, settingsSvc: settingsSvc}
+func NewGitController(gitSvc git.Interface, spaceSvc spaceSvc.Interface, repoSvc repoSvc.Interface, settingsSvc settingsSvc.Interface, githookCtrl GithookController, gitPkgInterface gitPkg.Interface) *GitController {
+	return &GitController{gitSvc: gitSvc, spaceSvc: spaceSvc, repoSvc: repoSvc, settingsSvc: settingsSvc, githookCtrl: githookCtrl, git: gitPkgInterface}
 }
 
 // Clone 处理 Git clone/fetch 操作 (upload-pack)
