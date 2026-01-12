@@ -1,6 +1,11 @@
 package repo
 
 import (
+	"strings"
+
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/enum"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
 )
 
@@ -56,6 +61,22 @@ const (
 	MergeMethodFastForward MergeMethod = "fast-forward"
 )
 
+var MergeMethods = []MergeMethod{
+	MergeMethodMerge,
+	MergeMethodSquash,
+	MergeMethodRebase,
+	MergeMethodFastForward,
+}
+
+func (m MergeMethod) Check() (MergeMethod, bool) {
+	switch m {
+	case MergeMethodMerge, MergeMethodSquash, MergeMethodRebase, MergeMethodFastForward:
+		return m, true
+	default:
+		return MergeMethodMerge, false
+	}
+}
+
 // PullRequest 合并请求表（ops_ppmrequests）Store层结构体
 type PullRequest struct {
 	ID                uint              `json:"id"`
@@ -108,4 +129,97 @@ type MergeCheck struct {
 type FileDiff struct {
 	Path      string `json:"path"`
 	StartLine int    `json:"start_line"`
+}
+
+type Merge struct {
+	Method    MergeMethod `json:"method"`     // 合并策略: merge , squash , rebase , fast-forward (*DryRun 时可选)
+	SourceSHA string      `json:"source_sha"` // 源分支当前的 Commit SHA，用于乐观锁并发控制
+	Title     string      `json:"title"`      // 合并提交的标题
+	Message   string      `json:"message"`    // 合并提交的详细描述
+
+	BypassRules bool `json:"bypass_rules"`  // 是否强制绕过分支保护规则（需要管理员权限）
+	DryRun      bool `json:"dry_run"`       // 试运行模式 。仅模拟合并，检查冲突和规则，不修改数据
+	DryRunRules bool `json:"dry_run_rules"` // 仅检查规则模式。不执行 Git 合并模拟，只检查分支保护规则
+}
+
+func (in *Merge) Check() error {
+	var err error
+	if in.Method == "" && !in.DryRun && !in.DryRunRules {
+		err = errors.WithI18nKey(err, i18n.PullrequestBodyParamError)
+		return err
+	}
+
+	if in.SourceSHA == "" {
+		err = errors.WithI18nKey(err, i18n.PullrequestBodyParamError)
+		return err
+	}
+
+	if in.Method != "" {
+		method, ok := in.Method.Check()
+		if !ok {
+			err = errors.WithI18nKey(err, i18n.PullrequestBodyParamError)
+			return err
+		}
+
+		in.Method = method
+	}
+
+	// cleanup title / message (NOTE: git doesn't support white space only)
+	in.Title = strings.TrimSpace(in.Title)
+	in.Message = strings.TrimSpace(in.Message)
+
+	if (in.Method == MergeMethodRebase || in.Method == MergeMethodFastForward) &&
+		(in.Title != "" || in.Message != "") {
+		err = errors.WithI18nKey(err, i18n.PullrequestBodyParamError)
+		return err
+	}
+
+	return nil
+}
+
+// MergeResponse 合并响应
+type MergeResponse struct {
+	// --- 核心结果字段 ---
+	SHA           string `json:"sha"`           // 合并成功后生成的 Commit SHA
+	BranchDeleted bool   `json:"branchDeleted"` // 是否自动删除了源分支
+
+	// --- 规则相关 ---
+	// 即使合并成功，也可能存在被"绕过"的规则（比如管理员强制合并）
+	// 这里列出的是那些"虽然违规但被允许绕过"的规则详情
+	RuleViolations []RuleViolations `json:"ruleViolations"`
+
+	// --- Dry Run (试运行) 专用字段 ---
+	// 当请求参数 dry_run=true 时，下面这些字段才会有值
+	DryRun         bool               `json:"dry_run"`
+	Mergeable      bool               `json:"mergeable"`      // 是否无代码冲突
+	ConflictFiles  []string           `json:"conflictFiles"`  // 如果有冲突，列出文件名
+	AllowedMethods []enum.MergeMethod `json:"allowedMethods"` // 当前规则允许的合并方式（如只允许 squash）
+}
+
+// MergeViolations 合并冲突和规则违规
+type MergeViolations struct {
+	Message        string           `json:"message"`        // 错误摘要信息
+	ConflictFiles  []string         `json:"conflictFiles"`  // 代码冲突的文件列表（Git 层面冲突）
+	RuleViolations []RuleViolations `json:"ruleViolations"` // 规则拦截详情（业务规则冲突）
+}
+
+// RuleViolations 规则违规详情
+type RuleViolations struct {
+	Rule       RuleInfo    `json:"rule"`       // 违规的规则元数据
+	Bypassable bool        `json:"bypassable"` // 是否可绕过
+	Bypassed   bool        `json:"bypassed"`   // 是否已绕过
+	Violations []Violation `json:"violations"` // 具体违规信息列表
+}
+
+// RuleInfo 规则元数据
+type RuleInfo struct {
+	ID      int64 `json:"-"`
+	Buildin bool  `json:"buildin"` // 是否为内置规则
+}
+
+// Violation 具体违规信息
+type Violation struct {
+	Code    string `json:"code"`    // 违规码，用于唯一标识违规类型
+	Message string `json:"message"` // 违规详情描述
+	Params  []any  `json:"params"`  // 违规参数，用于格式化违规详情描述
 }
