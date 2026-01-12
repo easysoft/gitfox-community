@@ -79,3 +79,6 @@ middleware:
   logResponseBody: true
   maxLoggedBodyBytes: 2048
 
+devops:
+  url: "http://xxx/api.php/v1"
+  authorization: "xxx"

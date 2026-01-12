@@ -7,9 +7,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
-	principal "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/user"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/pullrequest"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
@@ -374,10 +372,10 @@ func (c *Controller) Archive(ctx *gin.Context) {
 	var repoID uint
 	var err error
 
-	session := &auth.Session{
-		User: &principal.User{
-			Account: "admin",
-		},
+	session, ok := req.GetAuthSession(ctx.Request.Context())
+	if !ok {
+		resp.Unauthorized(ctx, errors.WithI18nKey(nil, i18n.AuthNoSession))
+		return
 	}
 
 	repoID, err = req.PathParamAsPositiveUint(ctx, "id")

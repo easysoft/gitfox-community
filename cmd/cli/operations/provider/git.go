@@ -109,12 +109,14 @@ func NewGitHookController(
 	git gitPkg.Interface,
 	urlProvider url.Provider,
 	githookFactory hook.ClientFactory,
+	cfg *config.Config,
 ) *githook.Controller {
 	ctrl := githook.NewController(
 		principalStore,
 		repoStore,
 		git,
 		urlProvider,
+		cfg.Devops,
 	)
 	// Wire the controller into the factory
 	// Wire the controller into the factory
@@ -137,6 +139,6 @@ func NewSettingsService(settingsStore settingsStore.Interface) *settingsSvc.Serv
 	return settingsSvc.NewSettingsService(settingsStore).(*settingsSvc.Service)
 }
 
-func NewGitController(gitService gitSvc.Interface, spaceService spaceSvc.Interface, repoService repoSvc.Interface, settingsService settingsSvc.Interface) *git.GitController {
-	return git.NewGitController(gitService, spaceService, repoService, settingsService)
+func NewGitController(gitService gitSvc.Interface, spaceService spaceSvc.Interface, repoService repoSvc.Interface, settingsService settingsSvc.Interface, githookCtrl *githook.Controller, gitPkgInterface gitPkg.Interface) *git.GitController {
+	return git.NewGitController(gitService, spaceService, repoService, settingsService, githookCtrl, gitPkgInterface)
 }

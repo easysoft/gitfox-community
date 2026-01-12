@@ -21,6 +21,7 @@ type Config struct {
 	Middleware MiddlewareConfig `yaml:"middleware"`
 	I18n       I18nConfig       `yaml:"i18n"`
 	Principal  PrincipalConfig  `yaml:"principal"`
+	Devops     DevopsConfig     `yaml:"devops"`
 }
 
 // ServerConfig HTTP服务配置
@@ -229,4 +230,10 @@ type PrincipalConfig struct {
 		Email       string `yaml:"email"`    // No default email
 		Password    string `yaml:"password"` // No default password
 	}
+}
+
+// DevopsConfig DevOps 平台配置
+type DevopsConfig struct {
+	URL           string `yaml:"url"`           // DevOps 平台 API 地址
+	Authorization string `yaml:"authorization"` // DevOps 平台 API 授权密钥
 }

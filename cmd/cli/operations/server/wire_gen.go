@@ -66,7 +66,8 @@ func NewApp(mode string) (*App, func(), error) {
 	duration := authz.ProvideCacheDuration()
 	permissionCache := authz.NewPermissionCache(duration)
 	publicAccessCache := authz.NewPublicAccessCache(duration)
-	membershipAuthorizer := authz.NewMembershipAuthorizer(permissionCache, publicAccessCache)
+	devopsConfig := provider.NewDevopsConfig(config)
+	membershipAuthorizer := authz.NewMembershipAuthorizer(permissionCache, publicAccessCache, devopsConfig)
 	service := space2.NewSpaceSvc(spaceStore, store, membershipAuthorizer)
 	spaceController := space3.NewSpaceController(service)
 	urlProvider, err := provider.NewURLProvider(config)
@@ -116,7 +117,8 @@ func NewApp(mode string) (*App, func(), error) {
 	service2 := provider.NewGitService(gitService, urlProvider)
 	settingsInterface := settings.NewSettingStore(db)
 	settingsService := provider.NewSettingsService(settingsInterface)
-	gitController := provider.NewGitController(service2, service, repoService, settingsService)
+	githookController := provider.NewGitHookController(userStore, store, gitService, urlProvider, clientFactory, config)
+	gitController := provider.NewGitController(service2, service, repoService, settingsService, githookController, gitService)
 	ruleSetStore := scan.NewRuleSetStore(db)
 	ruleStore := scan.NewRuleStore(db)
 	ruleSetService := scan2.NewRuleSetService(ruleSetStore, ruleStore)
@@ -129,7 +131,6 @@ func NewApp(mode string) (*App, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	githookController := provider.NewGitHookController(userStore, store, gitService, urlProvider, clientFactory)
 	server := provider.ProvideSSHServer(config, interface2, gitController)
 	authenticator := authn.ProvideAuthenticators(config, userStore, tokenInterface)
 	app := &App{
