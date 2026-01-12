@@ -397,7 +397,7 @@ func GetReqQueryParamIDAndPath(ctx *gin.Context) (uint, string, error) {
 func GetFileDiffFromQuery(ctx *gin.Context) (files []repoModel.FileDiff, ok bool) {
 	paths, ok := req.QueryParamList(ctx, "path")
 	ranges, ok := req.QueryParamList(ctx, "range")
-	if len(ranges) != len(paths) {
+	if len(paths) != len(ranges) {
 		return
 	}
 
