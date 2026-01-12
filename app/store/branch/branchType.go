@@ -24,6 +24,7 @@ func (s *Store) BatchCreateBranchType(ctx context.Context, branchTypes []*Branch
 			// 检查前缀是否重复
 			check, err := s.CheckBranchTypePrefix(ctx, tx, branchType.Repo, 0, str.SplitEx(branchType.Prefixes, ",", true))
 			if err != nil {
+				err = errors.WithI18nKey(err, i18n.BranchTypeCreateErrorPrefix)
 				return err
 			}
 			if check {
