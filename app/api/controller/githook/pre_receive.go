@@ -179,7 +179,7 @@ func (c *Controller) checkProtectionRules(
 		for _, branchName := range check.branches {
 			rule, err := utils.GetBranchRermission(ctx, c.devopsConfig.URL, int64(repo.ID), branchName, c.devopsConfig.Authorization)
 			if err != nil {
-				return fmt.Errorf("failed to get branch rule for %s: %w", branchName, err)
+				return errors.Wrapf(err, "failed to get branch rule for %s", branchName)
 			}
 
 			allowedUsers := check.getAllowedUsers(rule)
