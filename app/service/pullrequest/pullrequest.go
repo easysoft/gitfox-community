@@ -337,7 +337,7 @@ func (s *Service) Merge(ctx context.Context, session *auth.Session, repoid uint,
 		return nil, nil, err
 	}
 
-	// TODO 加锁
+	// TODO: 加锁
 
 	pr, err := s.pullRequestStore.GetByID(ctx, repoid, pullreqnumber)
 	if err != nil {
@@ -404,10 +404,10 @@ func (s *Service) Merge(ctx context.Context, session *auth.Session, repoid uint,
 				Deletions:    uint(mergeOutput.Deletions),
 			})
 			if err != nil {
-				// // TODO log
+				// TODO: log
 				return nil, nil, nil
 			}
-			// TODO send sse event
+			// TODO: send sse event
 			return nil, nil, nil
 		}
 
@@ -441,7 +441,7 @@ func (s *Service) Merge(ctx context.Context, session *auth.Session, repoid uint,
 		author = &git.Identity{
 			Name:  session.User.Account,
 			Email: session.User.Email,
-		} // TODO commit 真实作者
+		} // TODO: commit 真实作者
 	case repoModel.MergeMethodRebase, repoModel.MergeMethodFastForward:
 		author = nil
 	}
@@ -467,7 +467,7 @@ func (s *Service) Merge(ctx context.Context, session *auth.Session, repoid uint,
 		switch params.Method {
 		case repoModel.MergeMethodMerge:
 			params.Title = fmt.Sprintf("Merge branch '%s' of %s (#%d)", pr.SourceBranch, repo.Path, pr.ID)
-			// TODO 这个还保留不？
+			// TODO: 这个还保留不？
 			// if pr.Flow == repoModel.PullRequestFlowZentao || strings.HasPrefix(pr.SourceBranch, "ztflow-") {
 			// 	params.Title = fmt.Sprintf("Merge branch '%s' of %s (#%d)", pr.TargetBranch, repo.Path, pr.ID)
 			// }
