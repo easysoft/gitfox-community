@@ -566,7 +566,6 @@ func (s *Service) Merge(ctx context.Context, session *auth.Session, repoid uint,
 	return &repoModel.MergeResponse{
 		SHA: mergeOutput.MergeSHA.String(),
 	}, nil, nil
-
 }
 
 type CompareInfo struct {

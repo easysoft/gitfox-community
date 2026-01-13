@@ -17,7 +17,7 @@ func (l Locker) LockPR(ctx context.Context, repoID int64, prNum int64, expiry ti
 
 	unlockFn, err := l.lock(ctx, namespaceRepo, key, expiry)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to lock mutex for pr %d in repo %d: %w", prNum, repoID, err)
+		return nil, errors.Wrapf(err, "failed to lock mutex for pr %d in repo %d", prNum, repoID)
 	}
 
 	return unlockFn, nil

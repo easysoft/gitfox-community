@@ -36,14 +36,14 @@ func (l Locker) lock(ctx context.Context, namespace string, key string, expiry t
 		lock.WithTimeoutFactor(4/expiry.Seconds()), // 4s
 	)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to create new mutex: %w", err)
+		return nil, errors.Wrapf(err, "failed to create new mutex")
 	}
 
 	logger.Debug("attempting to acquire lock")
 
 	err = mutext.Lock(ctx)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to lock the mutex: %w", err)
+		return nil, errors.Wrapf(err, "failed to lock the mutex")
 	}
 
 	logger.Debugf("successfully locked (expiry: %s)", expiry)

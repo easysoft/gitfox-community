@@ -17,7 +17,7 @@ func (l Locker) LockDefaultBranch(ctx context.Context, repoID int64, branchName 
 
 	unlockFn, err := l.lock(ctx, namespaceRepo, key, expiry)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to lock repo to update default branch to %s: %w", branchName, err)
+		return nil, errors.Wrapf(err, "failed to lock repo to update default branch to %s", branchName)
 	}
 
 	return unlockFn, nil
