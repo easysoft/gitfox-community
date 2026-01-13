@@ -34,10 +34,11 @@ import (
 type GitReferenceField string
 
 const (
-	GitReferenceFieldRefName     GitReferenceField = "refname"
-	GitReferenceFieldObjectType  GitReferenceField = "objecttype"
-	GitReferenceFieldObjectName  GitReferenceField = "objectname"
-	GitReferenceFieldCreatorDate GitReferenceField = "creatordate"
+	GitReferenceFieldRefName       GitReferenceField = "refname"
+	GitReferenceFieldObjectType    GitReferenceField = "objecttype"
+	GitReferenceFieldObjectName    GitReferenceField = "objectname"
+	GitReferenceFieldCreatorDate   GitReferenceField = "creatordate"
+	GitReferenceFieldCommitterDate GitReferenceField = "*committerdate"
 )
 
 func ParseGitReferenceField(f string) (GitReferenceField, error) {
@@ -50,6 +51,8 @@ func ParseGitReferenceField(f string) (GitReferenceField, error) {
 		return GitReferenceFieldObjectName, nil
 	case string(GitReferenceFieldObjectType):
 		return GitReferenceFieldObjectType, nil
+	case string(GitReferenceFieldCommitterDate):
+		return GitReferenceFieldCommitterDate, nil
 	default:
 		return GitReferenceFieldRefName, fmt.Errorf("unknown git reference field '%s'", f)
 	}

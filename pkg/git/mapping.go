@@ -141,7 +141,7 @@ func mapAnnotatedTag(tag *api.Tag) *CommitTag {
 func mapListCommitTagsSortOption(s TagSortOption) api.GitReferenceField {
 	switch s {
 	case TagSortOptionDate:
-		return api.GitReferenceFieldCreatorDate
+		return api.GitReferenceFieldCommitterDate
 	case TagSortOptionName:
 		return api.GitReferenceFieldRefName
 	case TagSortOptionDefault:
