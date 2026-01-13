@@ -430,6 +430,7 @@ func (s *Service) Merge(ctx context.Context, session *auth.Session, repoid uint,
 	// --- 正式合并 ---
 
 	// 准备提交信息
+	// Author（作者）：原始代码的编写者
 	var author *git.Identity
 	switch params.Method {
 	case repoModel.MergeMethodMerge:
@@ -446,6 +447,7 @@ func (s *Service) Merge(ctx context.Context, session *auth.Session, repoid uint,
 		author = nil
 	}
 
+	// Committer（提交者）：将代码提交到仓库的人
 	var committer *git.Identity
 	switch params.Method {
 	case repoModel.MergeMethodMerge, repoModel.MergeMethodSquash:
