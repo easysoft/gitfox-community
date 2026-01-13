@@ -410,7 +410,6 @@ func (s *Service) Merge(ctx context.Context, session *auth.Session, repoid uint,
 			if err != nil {
 				return nil, nil, util.ProcessGitErrorf(ctx, err)
 			}
-			_ = mergeOutput
 
 			// Dry Run（试运行）模式下，更新 Pull Request 的合并状态缓存 。
 			err = s.pullRequestStore.UpdateDiffStatsSafe(ctx, repoid, pr, &repoModel.DiffStats{
