@@ -36,8 +36,8 @@ func mapToReferenceSortingArgument(
 	sortBy := string(GitReferenceFieldRefName)
 	desc := o == SortOrderDesc
 
-	if s == GitReferenceFieldCreatorDate {
-		sortBy = string(GitReferenceFieldCreatorDate)
+	if s == GitReferenceFieldCreatorDate || s == GitReferenceFieldCommitterDate {
+		sortBy = string(s)
 		if o == SortOrderDefault {
 			desc = true
 		}
