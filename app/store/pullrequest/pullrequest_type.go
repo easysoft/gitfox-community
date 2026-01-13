@@ -1,9 +1,49 @@
 package pullrequest
 
 import (
+	"database/sql/driver"
+	"errors"
+	"strings"
+
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
 	"gorm.io/gorm"
 )
+
+// StringSlice 自定义字符串切片类型，用于处理数据库中的换行符分隔字符串
+type StringSlice []string
+
+// Scan implements the Scanner interface.
+func (ss *StringSlice) Scan(value interface{}) error {
+	if value == nil {
+		*ss = nil
+		return nil
+	}
+	var str string
+	switch v := value.(type) {
+	case []byte:
+		str = string(v)
+	case string:
+		str = v
+	default:
+		return errors.New("failed to scan StringSlice: invalid value type")
+	}
+	if str == "" {
+		*ss = []string{}
+		return nil
+	}
+	// Normalize line endings
+	str = strings.ReplaceAll(str, "\r\n", "\n")
+	*ss = strings.Split(str, "\n")
+	return nil
+}
+
+// Value implements the driver Valuer interface.
+func (ss StringSlice) Value() (driver.Value, error) {
+	if len(ss) == 0 {
+		return "", nil
+	}
+	return strings.Join(ss, "\n"), nil
+}
 
 // PullRequest 合并请求表（ops_ppmrequests）Store层结构体
 type PullRequest struct {
@@ -22,9 +62,9 @@ type PullRequest struct {
 	MergeBaseSHA      string          `gorm:"column:mergeBaseSHA;type:char(40);not null;default:'';comment:'合并基准SHA'"`
 	MergeSHA          string          `gorm:"column:mergeSHA;type:char(40);comment:'合并后生成的commit SHA'"`
 	MergeCheckStatus  string          `gorm:"column:mergeCheckStatus;not null;comment:'合并前检查状态'"`
-	MergeConflicts    []string        `gorm:"column:mergeConflicts;type:text;comment:'冲突文件列表'"`
+	MergeConflicts    StringSlice     `gorm:"column:mergeConflicts;type:text;comment:'冲突文件列表'"`
 	RebaseCheckStatus string          `gorm:"column:rebaseCheckStatus;not null;default:'unchecked';comment:'变基检查状态'"`
-	RebaseConflicts   []string        `gorm:"column:rebaseConflicts;type:text;comment:'变基冲突详情'"`
+	RebaseConflicts   StringSlice     `gorm:"column:rebaseConflicts;type:text;comment:'变基冲突详情'"`
 	CommitCount       *uint           `gorm:"column:commitCount;comment:'PR包含的commit数量'"`
 	FileCount         *uint           `gorm:"column:fileCount;comment:'PR修改的文件数量'"`
 	Flow              int8            `gorm:"column:flow;not null;default:0;comment:'流程标识'"`

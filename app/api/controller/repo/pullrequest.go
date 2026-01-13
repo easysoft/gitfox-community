@@ -6,6 +6,7 @@ import (
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
+	commitModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/commit"
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
@@ -268,13 +269,14 @@ func (ctl *Controller) Diff(ctx *gin.Context) {
 // @Param pullrequestID path uint true "Pull Request 编号"
 // @Param page query int false "分页页码，默认1"
 // @Param limit query int false "分页每页数量，默认20"
-// @Success 200 {object} resp.ListResponse{data=commitModel.Commit,listArgs=resp.ListArgs} "查询成功"
+// @Success 200 {object} resp.ListResponse{data=[]commitModel.Commit,listArgs=resp.ListArgs} "查询成功"
 // @Error 400 {object} resp.ObjectResponse "参数错误（如SourcePathToTargetPath格式非法、为空等）"
 // @Error 401 {object} resp.ObjectResponse "未授权（会话不存在或已过期）"
 // @Error 500 {object} resp.ObjectResponse "服务器内部错误（如Git服务调用失败、数据库异常等）"
 // @Router /repos/{id}/pullreq/{pullrequestID}/commits [get]
 func (ctl *Controller) Commits(ctx *gin.Context) {
 	var err error
+	var commits []commitModel.Commit
 
 	session, ok := req.GetAuthSession(ctx.Request.Context())
 	if !ok {
@@ -328,7 +330,7 @@ func (ctl *Controller) Commits(ctx *gin.Context) {
 // @Error 500 {object} resp.ObjectResponse "服务器内部错误（如Git服务调用失败、数据库异常等）"
 // @Router /repos/{id}/pullreq/{pullrequestID}/merge [post]
 func (ctl *Controller) Merge(ctx *gin.Context) {
-	var param repoModel.Merge
+	var params repoModel.Merge
 	var err error
 
 	session, ok := req.GetAuthSession(ctx.Request.Context())
@@ -344,17 +346,18 @@ func (ctl *Controller) Merge(ctx *gin.Context) {
 		return
 	}
 
-	if err = ctx.ShouldBindJSON(&param); err != nil {
+	if err = ctx.ShouldBindJSON(&params); err != nil {
 		err = errors.WithI18nKey(err, i18n.PullrequestBodyParamError)
 		resp.BadRequest(ctx, err)
 		return
 	}
 
-	if err = param.Check(); err != nil {
+	if err = params.Check(); err != nil {
 		resp.BadRequest(ctx, err)
 		return
 	}
-	mergeResp, mergeViolations, err := ctl.pullrequestSvc.Merge(ctx.Request.Context(), session, repoID, pullreqID, param)
+
+	mergeResp, mergeViolations, err := ctl.pullrequestSvc.Merge(ctx.Request.Context(), session, repoID, pullreqID, params)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return

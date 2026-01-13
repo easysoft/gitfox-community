@@ -18,6 +18,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/router"
 	branch2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/branch"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/commit"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/locker"
 	publickey2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/publickey"
 	pullrequest2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/pullrequest"
 	repo2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
@@ -38,6 +39,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/auth/authz"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/lock"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/ssh"
 	"gorm.io/gorm"
 )
@@ -105,8 +107,10 @@ func NewApp(mode string) (*App, func(), error) {
 	tagController := tag2.NewController(tagService, repoService)
 	commitService := commit.NewService(urlProvider, gitService)
 	commitController := commit2.NewController(commitService, repoService)
+	mutexManager := lock.ProvideMutexManager()
+	lockerLocker := locker.NewLocker(mutexManager)
 	pullrequestStore := pullrequest.NewPullRequestStore(db)
-	pullrequestService := pullrequest2.NewPullRequestSvc(gitService, repoService, pullrequestStore, urlProvider)
+	pullrequestService := pullrequest2.NewPullRequestSvc(gitService, repoService, lockerLocker, pullrequestStore, urlProvider)
 	repoController := repo3.NewRepoController(repoService, pullrequestService, urlProvider, gitService)
 	userStore := user.NewUserStore(db)
 	tokenInterface := provider.NewTokenStoreProvider(db)

@@ -13,3 +13,4 @@ pullrequest:
   merge_already_merged: "Pull Request has already been merged, no need to merge again."
   merge_source_sha_not_match: "The source commit (SHA) used for the merge does not match the current Pull Request. Please verify the branch/commit and try again."
   merge_check_mergeability_error: "Merge check failed. This may be due to the branch being modified or merge conflicts. Please verify and try again."
+  merge_lock_error: "Merge lock error. Another operation may be in progress. Please try again later."

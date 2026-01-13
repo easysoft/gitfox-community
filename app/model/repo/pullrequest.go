@@ -110,6 +110,16 @@ type DiffStats struct {
 	Deletions    uint   `json:"deletions,omitempty"`    // 删除的代码行数
 }
 
+type MergeAfter struct {
+	DiffStats
+
+	MergedBy       *string     `json:"mergedBy"`
+	MergeMethod    MergeMethod `json:"mergeMethod"`
+	MergeTargetSHA string      `json:"mergeTargetSHA"`
+	MergeBaseSHA   string      `json:"mergeBaseSHA"`
+	MergeSHA       string      `json:"mergeSHA"`
+}
+
 // MergeCheck 合并检查结果
 type MergeCheck struct {
 	Mergeable     bool     `json:"mergeable"`               // 是否可合并

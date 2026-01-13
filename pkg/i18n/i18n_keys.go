@@ -146,6 +146,7 @@ const (
 	PullrequestMergeErrorMethodNotFound      I18nKey = "pullrequest.merge_error_method_not_found"       // 未识别您选择的合并方式,请检查合并选项并重试.
 	PullrequestMergeErrorSourceShaNotFound   I18nKey = "pullrequest.merge_error_source_sha_not_found"   // 用于合并的源提交不存在或已被修改,请确认分支/提交是否正确后再试.
 	PullrequestMergeErrorTitleOrMessageEmpty I18nKey = "pullrequest.merge_error_title_or_Message_empty" // 标题或提交信息为空
+	PullrequestMergeLockError                I18nKey = "pullrequest.merge_lock_error"                   // 合并锁错误,可能是因为其他操作正在进行中,请稍后重试.
 	PullrequestMergeSourceShaNotMatch        I18nKey = "pullrequest.merge_source_sha_not_match"         // 用于合并的源提交与当前 Pull Request 不一致,请确认后再试.
 	PullrequestMergeSuccess                  I18nKey = "pullrequest.merge_success"                      // 合并成功
 	PullrequestMergeViolations               I18nKey = "pullrequest.merge_violations"                   // 合并冲突

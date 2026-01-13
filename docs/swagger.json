@@ -1998,7 +1998,10 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.Commit"
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.Commit"
+                                            }
                                         },
                                         "listArgs": {
                                             "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListArgs"
@@ -2152,6 +2155,66 @@
                                     "properties": {
                                         "data": {
                                             "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.MergeCheck"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/repos/{id}/pullreq/{pullrequestID}/merge": {
+            "post": {
+                "description": "根据传入的仓库 ID 和 参数 合并 Pull Request",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "pureq"
+                ],
+                "summary": "合并代码Pull Request",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "仓库 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Pull Request 编号",
+                        "name": "pullrequestID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "合并 Pull Request 请求参数",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.Merge"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "合并失败（返回合并冲突和规则违规信息）",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.MergeViolations"
                                         }
                                     }
                                 }
@@ -4479,6 +4542,10 @@
                 "filesChanged": {
                     "description": "发生变更的文件总数",
                     "type": "integer"
+                },
+                "headHash": {
+                    "description": "该 PR 最新的 Commit SHA",
+                    "type": "string"
                 }
             }
         },
@@ -4514,6 +4581,39 @@
                 }
             }
         },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.Merge": {
+            "type": "object",
+            "properties": {
+                "bypassRules": {
+                    "description": "是否强制绕过分支保护规则（需要管理员权限）",
+                    "type": "boolean"
+                },
+                "dryRun": {
+                    "description": "试运行模式 。仅模拟合并，不修改数据",
+                    "type": "boolean"
+                },
+                "message": {
+                    "description": "合并提交的详细描述",
+                    "type": "string"
+                },
+                "method": {
+                    "description": "合并策略: merge , squash , rebase , fast-forward (*DryRun 时可选)",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.MergeMethod"
+                        }
+                    ]
+                },
+                "sourceSHA": {
+                    "description": "源分支当前的 Commit SHA，用于乐观锁并发控制",
+                    "type": "string"
+                },
+                "title": {
+                    "description": "合并提交的标题",
+                    "type": "string"
+                }
+            }
+        },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.MergeCheck": {
             "type": "object",
             "properties": {
@@ -4539,6 +4639,86 @@
                 "targetSHA": {
                     "description": "目标分支最新提交 SHA",
                     "type": "string"
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.MergeMethod": {
+            "type": "string",
+            "enum": [
+                "merge",
+                "squash",
+                "rebase",
+                "fast-forward"
+            ],
+            "x-enum-varnames": [
+                "MergeMethodMerge",
+                "MergeMethodSquash",
+                "MergeMethodRebase",
+                "MergeMethodFastForward"
+            ]
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.MergeResponse": {
+            "type": "object",
+            "properties": {
+                "allowedMethods": {
+                    "description": "当前规则允许的合并方式（如只允许 squash）",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git_enum.MergeMethod"
+                    }
+                },
+                "branchDeleted": {
+                    "description": "是否自动删除了源分支",
+                    "type": "boolean"
+                },
+                "conflictFiles": {
+                    "description": "如果有冲突，列出文件名",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "dryRun": {
+                    "description": "--- Dry Run (试运行) 专用字段 ---\n当请求参数 dry_run=true 时，下面这些字段才会有值",
+                    "type": "boolean"
+                },
+                "mergeable": {
+                    "description": "是否无代码冲突",
+                    "type": "boolean"
+                },
+                "ruleViolations": {
+                    "description": "--- 规则相关 ---\n即使合并成功，也可能存在被\"绕过\"的规则（比如管理员强制合并）\n这里列出的是那些\"虽然违规但被允许绕过\"的规则详情",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.RuleViolations"
+                    }
+                },
+                "sha": {
+                    "description": "--- 核心结果字段 ---",
+                    "type": "string"
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.MergeViolations": {
+            "type": "object",
+            "properties": {
+                "conflictFiles": {
+                    "description": "代码冲突的文件列表（Git 层面冲突）",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "message": {
+                    "description": "错误摘要信息",
+                    "type": "string"
+                },
+                "ruleViolations": {
+                    "description": "规则拦截详情（业务规则冲突）",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.RuleViolations"
+                    }
                 }
             }
         },
@@ -4716,6 +4896,61 @@
                 "spaceID": {
                     "description": "空间ID（字符串类型，后续转int）",
                     "type": "integer"
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.RuleInfo": {
+            "type": "object",
+            "properties": {
+                "buildin": {
+                    "description": "是否为内置规则",
+                    "type": "boolean"
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.RuleViolations": {
+            "type": "object",
+            "properties": {
+                "bypassable": {
+                    "description": "是否可绕过",
+                    "type": "boolean"
+                },
+                "bypassed": {
+                    "description": "是否已绕过",
+                    "type": "boolean"
+                },
+                "rule": {
+                    "description": "违规的规则元数据",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.RuleInfo"
+                        }
+                    ]
+                },
+                "violations": {
+                    "description": "具体违规信息列表",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.Violation"
+                    }
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.Violation": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "违规码，用于唯一标识违规类型",
+                    "type": "string"
+                },
+                "message": {
+                    "description": "违规详情描述",
+                    "type": "string"
+                },
+                "params": {
+                    "description": "违规参数，用于格式化违规详情描述",
+                    "type": "array",
+                    "items": {}
                 }
             }
         },
@@ -5402,6 +5637,21 @@
                 "FileDiffStatusDeleted",
                 "FileDiffStatusRenamed",
                 "FileDiffStatusCopied"
+            ]
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git_enum.MergeMethod": {
+            "type": "string",
+            "enum": [
+                "merge",
+                "squash",
+                "rebase",
+                "fast-forward"
+            ],
+            "x-enum-varnames": [
+                "MergeMethodMerge",
+                "MergeMethodSquash",
+                "MergeMethodRebase",
+                "MergeMethodFastForward"
             ]
         },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git_sha.SHA": {
