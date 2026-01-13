@@ -131,5 +131,5 @@ func (a *EasyAuthenticator) Authenticate(r *gin.Context) (*auth.Session, error) 
 
 const (
 	HeaderAppAdmin   = "zentao"
-	HeaderAdminEmail = "ccccy@zentao.com"
+	HeaderAdminEmail = "devops@chandao.com"
 )
