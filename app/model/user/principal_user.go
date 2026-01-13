@@ -23,6 +23,6 @@ type Principal struct {
 	App         string `json:"app"`
 	DisplayName string `json:"display_name"`
 	Admin       bool   `json:"admin"`
-
+	Email       string `json:"email"`
 	// todo: 后续根据需要添加其他字段
 }

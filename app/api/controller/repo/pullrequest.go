@@ -331,7 +331,7 @@ func (ctl *Controller) Merge(ctx *gin.Context) {
 	var param repoModel.Merge
 	var err error
 
-	_, ok := req.GetAuthSession(ctx.Request.Context())
+	session, ok := req.GetAuthSession(ctx.Request.Context())
 	if !ok {
 		err := errors.WithI18nKey(errors.New("get session failed"), i18n.AuthNoSession)
 		resp.Unauthorized(ctx, err)
@@ -343,8 +343,6 @@ func (ctl *Controller) Merge(ctx *gin.Context) {
 		resp.BadRequest(ctx, err)
 		return
 	}
-	_ = repoID
-	_ = pullreqID
 
 	if err = ctx.ShouldBindJSON(&param); err != nil {
 		err = errors.WithI18nKey(err, i18n.PullrequestBodyParamError)
@@ -356,8 +354,18 @@ func (ctl *Controller) Merge(ctx *gin.Context) {
 		resp.BadRequest(ctx, err)
 		return
 	}
+	mergeResp, mergeViolations, err := ctl.pullrequestSvc.Merge(ctx.Request.Context(), session, repoID, pullreqID, param)
+	if err != nil {
+		resp.InternalError(ctx, err)
+		return
+	}
 
-	resp.OK(ctx, i18n.PullrequestMergeSuccess, nil)
+	if mergeViolations != nil {
+		resp.OK(ctx, i18n.PullrequestMergeViolations, mergeViolations)
+		return
+	}
+
+	resp.OK(ctx, i18n.PullrequestMergeSuccess, mergeResp)
 }
 
 // GetReqQueryParamID 从路径参数中获取仓库 ID 和 Pull Request 编号

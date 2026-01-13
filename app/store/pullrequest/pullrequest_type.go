@@ -22,9 +22,9 @@ type PullRequest struct {
 	MergeBaseSHA      string          `gorm:"column:mergeBaseSHA;type:char(40);not null;default:'';comment:'合并基准SHA'"`
 	MergeSHA          string          `gorm:"column:mergeSHA;type:char(40);comment:'合并后生成的commit SHA'"`
 	MergeCheckStatus  string          `gorm:"column:mergeCheckStatus;not null;comment:'合并前检查状态'"`
-	MergeConflicts    *string         `gorm:"column:mergeConflicts;type:text;comment:'冲突文件列表'"`
+	MergeConflicts    []string        `gorm:"column:mergeConflicts;type:text;comment:'冲突文件列表'"`
 	RebaseCheckStatus string          `gorm:"column:rebaseCheckStatus;not null;default:'unchecked';comment:'变基检查状态'"`
-	RebaseConflicts   *string         `gorm:"column:rebaseConflicts;type:text;comment:'变基冲突详情'"`
+	RebaseConflicts   []string        `gorm:"column:rebaseConflicts;type:text;comment:'变基冲突详情'"`
 	CommitCount       *uint           `gorm:"column:commitCount;comment:'PR包含的commit数量'"`
 	FileCount         *uint           `gorm:"column:fileCount;comment:'PR修改的文件数量'"`
 	Flow              int8            `gorm:"column:flow;not null;default:0;comment:'流程标识'"`
