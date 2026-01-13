@@ -106,7 +106,7 @@ func (s *Store) UpdateRebaseCheckStatus(
 	return nil
 }
 
-// UpdateDiffStats dry-run 模式下 安全的更新PR差异统计信息
+// UpdateDiffStats 安全的更新PR差异统计信息
 func (s *Store) UpdateDiffStatsSafe(
 	ctx context.Context,
 	targetRepoID uint,
@@ -128,6 +128,50 @@ func (s *Store) UpdateDiffStatsSafe(
 			"fileCount":   diffStats.FilesChanged,
 			"additions":   diffStats.Additions,
 			"deletions":   diffStats.Deletions,
+		}
+		if err := tx.WithContext(ctx).Model(&PullRequest{}).Where("targetRepoID = ? AND id = ?", targetRepoID, pr.ID).Updates(updates).Error; err != nil {
+			return err
+		}
+		return nil
+	})
+
+	if err != nil {
+		return database.ProcessSQLErrorf(ctx, err)
+	}
+	return nil
+}
+
+// UpdateMergeAfter 安全的更新PR合并信息
+func (s *Store) UpdateMergeAfterSafe(
+	ctx context.Context,
+	targetRepoID uint,
+	pr *repoModel.PullRequest,
+	mergeAfter *repoModel.MergeAfter,
+) error {
+	err := s.db.Transaction(func(tx *gorm.DB) error {
+
+		if pr.Status != repoModel.PullRequestStatusOpen {
+			return errors.New("Pull request must be open")
+		}
+
+		updates := map[string]interface{}{
+			"status":            repoModel.PullRequestStatusMerged,
+			"mergeCheckStatus":  repoModel.MergeCheckStatusMergeable,
+			"mergeConflicts":    nil,
+			"rebaseCheckStatus": repoModel.MergeCheckStatusMergeable,
+			"rebaseConflicts":   nil,
+
+			"commitCount": mergeAfter.Commits,
+			"fileCount":   mergeAfter.FilesChanged,
+			"additions":   mergeAfter.Additions,
+			"deletions":   mergeAfter.Deletions,
+
+			"mergedBy":       mergeAfter.MergedBy,
+			"mergeMethod":    mergeAfter.MergeMethod,
+			"sourceSHA":      mergeAfter.HeadHash,
+			"mergeTargetSHA": mergeAfter.MergeTargetSHA,
+			"mergeBaseSHA":   mergeAfter.MergeBaseSHA,
+			"mergeSHA":       mergeAfter.MergeSHA,
 		}
 		if err := tx.WithContext(ctx).Model(&PullRequest{}).Where("targetRepoID = ? AND id = ?", targetRepoID, pr.ID).Updates(updates).Error; err != nil {
 			return err

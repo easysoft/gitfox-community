@@ -94,6 +94,20 @@ func (mr *MockInterfaceMockRecorder) UpdateDiffStatsSafe(ctx, repoID, pr, diffSt
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateDiffStatsSafe", reflect.TypeOf((*MockInterface)(nil).UpdateDiffStatsSafe), ctx, repoID, pr, diffStats)
 }
 
+// UpdateMergeAfterSafe mocks base method.
+func (m *MockInterface) UpdateMergeAfterSafe(ctx context.Context, repoID uint, pr *repo.PullRequest, mergeAfter *repo.MergeAfter) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateMergeAfterSafe", ctx, repoID, pr, mergeAfter)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateMergeAfterSafe indicates an expected call of UpdateMergeAfterSafe.
+func (mr *MockInterfaceMockRecorder) UpdateMergeAfterSafe(ctx, repoID, pr, mergeAfter interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateMergeAfterSafe", reflect.TypeOf((*MockInterface)(nil).UpdateMergeAfterSafe), ctx, repoID, pr, mergeAfter)
+}
+
 // UpdateMergeCheckStatus mocks base method.
 func (m *MockInterface) UpdateMergeCheckStatus(ctx context.Context, repoID, id uint, status repo.MergeCheckStatus, conflicts *string) error {
 	m.ctrl.T.Helper()

@@ -23,6 +23,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/util"
 	gitUtil "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/util"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/url"
 )
 
@@ -325,6 +326,7 @@ func (s *Service) Commits(ctx context.Context, session *auth.Session, repoid uin
 
 func (s *Service) Merge(ctx context.Context, session *auth.Session, repoid uint, pullreqnumber uint, params repoModel.Merge) (*repoModel.MergeResponse, *repoModel.MergeViolations, error) {
 	var err error
+	logger := logger.GetLogger(ctx)
 
 	requiredPermission := constant.PermissionRepoPush
 	if params.DryRun {
@@ -397,18 +399,16 @@ func (s *Service) Merge(ctx context.Context, session *auth.Session, repoid uint,
 
 			// Dry Run（试运行）模式下，更新 Pull Request 的合并状态缓存 。
 			err = s.pullRequestStore.UpdateDiffStatsSafe(ctx, repoid, pr, &repoModel.DiffStats{
-				HeadHash:     params.SourceSHA,
+				HeadHash:     mergeOutput.MergeSHA.String(),
 				Commits:      uint(mergeOutput.CommitCount),
 				FilesChanged: uint(mergeOutput.ChangedFileCount),
 				Additions:    uint(mergeOutput.Additions),
 				Deletions:    uint(mergeOutput.Deletions),
 			})
 			if err != nil {
-				// TODO: log
-				return nil, nil, nil
+				logger.Errorf("failed to update unchecked pull request diff stats,err:%v", err)
 			}
 			// TODO: send sse event
-			return nil, nil, nil
 		}
 
 		var conflicts []string
@@ -500,58 +500,62 @@ func (s *Service) Merge(ctx context.Context, session *auth.Session, repoid uint,
 	if err != nil {
 		return nil, nil, util.ProcessGitErrorf(ctx, err)
 	}
-	_ = mergeOutput
 
 	// 处理合并冲突
-	// if mergeOutput.MergeSHA.String() == "" || len(mergeOutput.ConflictFiles) > 0 {
-	// 	_, err = c.pullreqStore.UpdateOptLock(ctx, pr, func(pr *types.PullReq) error {
-	// 		if pr.SourceSHA != mergeOutput.HeadSHA.String() {
-	// 			return errors.New("source SHA has changed")
-	// 		}
+	if mergeOutput.MergeSHA.String() == "" || len(mergeOutput.ConflictFiles) > 0 {
+		err = s.pullRequestStore.UpdateDiffStatsSafe(ctx, repoid, pr, &repoModel.DiffStats{
+			HeadHash:     mergeOutput.MergeSHA.String(),
+			Commits:      uint(mergeOutput.CommitCount),
+			FilesChanged: uint(mergeOutput.ChangedFileCount),
+			Additions:    uint(mergeOutput.Additions),
+			Deletions:    uint(mergeOutput.Deletions),
+		})
 
-	// 		// update all Merge specific information
-	// 		pr.MergeBaseSHA = mergeOutput.MergeBaseSHA.String()
-	// 		pr.MergeTargetSHA = ptr.String(mergeOutput.BaseSHA.String())
-	// 		pr.MergeSHA = nil
-	// 		pr.UpdateMergeOutcome(params.Method, mergeOutput.ConflictFiles)
-	// 		pr.Stats.DiffStats = types.NewDiffStats(
-	// 			mergeOutput.CommitCount,
-	// 			mergeOutput.ChangedFileCount,
-	// 			mergeOutput.Additions,
-	// 			mergeOutput.Deletions,
-	// 		)
-	// 		return nil
-	// 	})
-	// 	if err != nil {
-	// 		// non-critical error
-	// 		log.Ctx(ctx).Warn().Err(err).Msg("failed to update pull request with conflict files")
-	// 	} else {
-	// 		if err = c.sseStreamer.Publish(ctx, targetRepo.ParentID, enum.SSETypePullRequestUpdated, pr); err != nil {
-	// 			log.Ctx(ctx).Warn().Err(err).Msg("failed to publish PR changed event")
-	// 		}
-	// 	}
+		if err != nil {
+			logger.Errorf("failed to update pull request with conflict files,err:%v", err)
+		}
 
-	// 	log.Ctx(ctx).Info().Msg("aborting pull request merge because of conflicts")
+		// TODO: send sse event
 
-	// 	return nil, &repoModel.MergeViolations{
-	// 		ConflictFiles:  mergeOutput.ConflictFiles,
-	// 		RuleViolations: violations,
-	// 		// In case of conflicting files we prioritize those for the error message.
-	// 		Message: fmt.Sprintf("Merge blocked by conflicting files: %v", mergeOutput.ConflictFiles),
-	// 	}, nil
-	// }
+		logger.Errorf("aborting pull request merge because of conflicts,conflictFiles:%v", mergeOutput.ConflictFiles)
 
-	// 合并成功后首位
+		return nil, &repoModel.MergeViolations{
+			ConflictFiles: mergeOutput.ConflictFiles,
+			Message:       fmt.Sprintf("Merge blocked by conflicting files: %v", mergeOutput.ConflictFiles),
+		}, nil
+	}
 
-	// 记录活动日志
+	logger.Infof("successfully merged PR")
 
-	// 触发事件 - 触发 Merged 事件，这可能会触发 Webhooks 或 CI/CD 流水线。
+	// 合并成功后收尾工作
+	err = s.pullRequestStore.UpdateMergeAfterSafe(ctx, repoid, pr, &repoModel.MergeAfter{
+		DiffStats: repoModel.DiffStats{
+			HeadHash:     mergeOutput.MergeSHA.String(),
+			Commits:      uint(mergeOutput.CommitCount),
+			FilesChanged: uint(mergeOutput.ChangedFileCount),
+			Additions:    uint(mergeOutput.Additions),
+			Deletions:    uint(mergeOutput.Deletions),
+		},
+		MergedBy:       &session.User.Account,
+		MergeMethod:    repoModel.MergeMethod(params.Method),
+		MergeTargetSHA: mergeOutput.MergeBaseSHA.String(),
+		MergeBaseSHA:   mergeOutput.MergeBaseSHA.String(),
+		MergeSHA:       mergeOutput.MergeSHA.String(),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
 
-	// 通知 审计 埋点
+	// TODO: 记录活动日志
+
+	// TODO: 触发事件 - 触发 Merged 事件，这可能会触发 Webhooks 或 CI/CD 流水线。
+
+	// TODO: 通知 审计 埋点
 
 	// 返回结果
-
-	return nil, nil, nil
+	return &repoModel.MergeResponse{
+		SHA: mergeOutput.MergeSHA.String(),
+	}, nil, nil
 
 }
 

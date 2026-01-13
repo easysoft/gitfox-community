@@ -123,11 +123,13 @@ func (a *EasyAuthenticator) Authenticate(r *gin.Context) (*auth.Session, error) 
 			App:         app,
 			DisplayName: app,
 			Admin:       isAdmin,
+			Email:       HeaderAdminEmail,
 		},
 		User: user,
 	}, nil
 }
 
 const (
-	HeaderAppAdmin = "zentao"
+	HeaderAppAdmin   = "zentao"
+	HeaderAdminEmail = "ccccy@zentao.com"
 )
