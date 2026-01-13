@@ -342,22 +342,19 @@ func (s *Service) Merge(ctx context.Context, session *auth.Session, repoid uint,
 	if err != nil {
 		return nil, nil, err
 	}
+	// 加锁
+	const timeout = 3 * time.Minute
 
-	// TODO: 加锁
-	// var lockID int64 // 0 means locking repo level for prs (for actual merging)
-	// if params.DryRun {
-	// 	lockID = int64(pullreqID) // dryrun doesn't need repo level lock
-	// }
-	// unlock, err := c.locker.LockPR(
-	// 	ctx,
-	// 	targetRepo.ID,
-	// 	lockID,
-	// 	timeout+30*time.Second, // add 30s to the lock to give enough time for pre + post merge
-	// )
-	// if err != nil {
-	// 	return nil, nil, errors.WithI18nKey(err, i18n.PullrequestMergeLockError)
-	// }
-	// defer unlock()
+	var lockID int64 // 0 means locking repo level for prs (for actual merging)
+	if params.DryRun {
+		lockID = int64(pullreqID) // dryrun doesn't need repo level lock
+	}
+	unlock, err := s.locker.LockPR(ctx, int64(repo.ID), lockID, timeout+30*time.Second)
+
+	if err != nil {
+		return nil, nil, errors.WithI18nKey(err, i18n.PullrequestMergeLockError)
+	}
+	defer unlock()
 
 	pr, err := s.pullRequestStore.GetByID(ctx, repoid, pullreqID)
 	if err != nil {
@@ -564,11 +561,7 @@ func (s *Service) Merge(ctx context.Context, session *auth.Session, repoid uint,
 		return nil, nil, err
 	}
 
-	// TODO: 记录活动日志
-
 	// TODO: 触发事件 - 触发 Merged 事件，这可能会触发 Webhooks 或 CI/CD 流水线。
-
-	// TODO: 通知 审计 埋点
 
 	// 返回结果
 	return &repoModel.MergeResponse{
