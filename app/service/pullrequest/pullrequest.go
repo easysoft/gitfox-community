@@ -12,6 +12,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/commit"
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/locker"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/utils"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/pullrequest"
@@ -30,6 +31,7 @@ import (
 type Service struct {
 	gitSvc           git.Interface
 	repoSvc          repo.Interface
+	locker           *locker.Locker
 	pullRequestStore pullrequest.Interface
 	urlProvider      url.Provider
 }
@@ -40,12 +42,14 @@ var _ Interface = (*Service)(nil)
 func NewPullRequestSvc(
 	gitSvc git.Interface,
 	repoSvc repo.Interface,
+	locker *locker.Locker,
 	pullRequestStore pullrequest.Interface,
 	urlProvider url.Provider,
 ) *Service {
 	return &Service{
 		gitSvc:           gitSvc,
 		repoSvc:          repoSvc,
+		locker:           locker,
 		pullRequestStore: pullRequestStore,
 		urlProvider:      urlProvider,
 	}
@@ -324,7 +328,7 @@ func (s *Service) Commits(ctx context.Context, session *auth.Session, repoid uin
 	return commits, output.TotalCommits, nil
 }
 
-func (s *Service) Merge(ctx context.Context, session *auth.Session, repoid uint, pullreqnumber uint, params repoModel.Merge) (*repoModel.MergeResponse, *repoModel.MergeViolations, error) {
+func (s *Service) Merge(ctx context.Context, session *auth.Session, repoid uint, pullreqID uint, params repoModel.Merge) (*repoModel.MergeResponse, *repoModel.MergeViolations, error) {
 	var err error
 	logger := logger.GetLogger(ctx)
 
@@ -340,8 +344,22 @@ func (s *Service) Merge(ctx context.Context, session *auth.Session, repoid uint,
 	}
 
 	// TODO: 加锁
+	// var lockID int64 // 0 means locking repo level for prs (for actual merging)
+	// if params.DryRun {
+	// 	lockID = int64(pullreqID) // dryrun doesn't need repo level lock
+	// }
+	// unlock, err := c.locker.LockPR(
+	// 	ctx,
+	// 	targetRepo.ID,
+	// 	lockID,
+	// 	timeout+30*time.Second, // add 30s to the lock to give enough time for pre + post merge
+	// )
+	// if err != nil {
+	// 	return nil, nil, errors.WithI18nKey(err, i18n.PullrequestMergeLockError)
+	// }
+	// defer unlock()
 
-	pr, err := s.pullRequestStore.GetByID(ctx, repoid, pullreqnumber)
+	pr, err := s.pullRequestStore.GetByID(ctx, repoid, pullreqID)
 	if err != nil {
 		return nil, nil, err
 	}
