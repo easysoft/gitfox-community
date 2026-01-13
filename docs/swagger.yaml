@@ -555,6 +555,9 @@ definitions:
       filesChanged:
         description: 发生变更的文件总数
         type: integer
+      headHash:
+        description: 该 PR 最新的 Commit SHA
+        type: string
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.FileDiff:
     properties:
@@ -577,6 +580,28 @@ definitions:
       type:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.ContentType'
     type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.Merge:
+    properties:
+      bypassRules:
+        description: 是否强制绕过分支保护规则（需要管理员权限）
+        type: boolean
+      dryRun:
+        description: 试运行模式 。仅模拟合并，不修改数据
+        type: boolean
+      message:
+        description: 合并提交的详细描述
+        type: string
+      method:
+        allOf:
+        - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.MergeMethod'
+        description: '合并策略: merge , squash , rebase , fast-forward (*DryRun 时可选)'
+      sourceSHA:
+        description: 源分支当前的 Commit SHA，用于乐观锁并发控制
+        type: string
+      title:
+        description: 合并提交的标题
+        type: string
+    type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.MergeCheck:
     properties:
       conflictFiles:
@@ -596,6 +621,69 @@ definitions:
       targetSHA:
         description: 目标分支最新提交 SHA
         type: string
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.MergeMethod:
+    enum:
+    - merge
+    - squash
+    - rebase
+    - fast-forward
+    type: string
+    x-enum-varnames:
+    - MergeMethodMerge
+    - MergeMethodSquash
+    - MergeMethodRebase
+    - MergeMethodFastForward
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.MergeResponse:
+    properties:
+      allowedMethods:
+        description: 当前规则允许的合并方式（如只允许 squash）
+        items:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git_enum.MergeMethod'
+        type: array
+      branchDeleted:
+        description: 是否自动删除了源分支
+        type: boolean
+      conflictFiles:
+        description: 如果有冲突，列出文件名
+        items:
+          type: string
+        type: array
+      dryRun:
+        description: |-
+          --- Dry Run (试运行) 专用字段 ---
+          当请求参数 dry_run=true 时，下面这些字段才会有值
+        type: boolean
+      mergeable:
+        description: 是否无代码冲突
+        type: boolean
+      ruleViolations:
+        description: |-
+          --- 规则相关 ---
+          即使合并成功，也可能存在被"绕过"的规则（比如管理员强制合并）
+          这里列出的是那些"虽然违规但被允许绕过"的规则详情
+        items:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.RuleViolations'
+        type: array
+      sha:
+        description: '--- 核心结果字段 ---'
+        type: string
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.MergeViolations:
+    properties:
+      conflictFiles:
+        description: 代码冲突的文件列表（Git 层面冲突）
+        items:
+          type: string
+        type: array
+      message:
+        description: 错误摘要信息
+        type: string
+      ruleViolations:
+        description: 规则拦截详情（业务规则冲突）
+        items:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.RuleViolations'
+        type: array
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.PathsDetailsInput:
     properties:
@@ -717,6 +805,43 @@ definitions:
     - acl
     - identifier
     - spaceID
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.RuleInfo:
+    properties:
+      buildin:
+        description: 是否为内置规则
+        type: boolean
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.RuleViolations:
+    properties:
+      bypassable:
+        description: 是否可绕过
+        type: boolean
+      bypassed:
+        description: 是否已绕过
+        type: boolean
+      rule:
+        allOf:
+        - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.RuleInfo'
+        description: 违规的规则元数据
+      violations:
+        description: 具体违规信息列表
+        items:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.Violation'
+        type: array
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.Violation:
+    properties:
+      code:
+        description: 违规码，用于唯一标识违规类型
+        type: string
+      message:
+        description: 违规详情描述
+        type: string
+      params:
+        description: 违规参数，用于格式化违规详情描述
+        items: {}
+        type: array
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.Order:
     enum:
@@ -1197,6 +1322,18 @@ definitions:
     - FileDiffStatusDeleted
     - FileDiffStatusRenamed
     - FileDiffStatusCopied
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git_enum.MergeMethod:
+    enum:
+    - merge
+    - squash
+    - rebase
+    - fast-forward
+    type: string
+    x-enum-varnames:
+    - MergeMethodMerge
+    - MergeMethodSquash
+    - MergeMethodRebase
+    - MergeMethodFastForward
   gitfox_zcorp_cc_git_Pangu_gitfox-community_pkg_git_sha.SHA:
     properties:
       str:
@@ -2429,7 +2566,9 @@ paths:
             - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.Commit'
+                  items:
+                    $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.Commit'
+                  type: array
                 listArgs:
                   $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListArgs'
               type: object
@@ -2533,6 +2672,43 @@ paths:
                   $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.MergeCheck'
               type: object
       summary: 获取代码Pull Request 差异信息
+      tags:
+      - pureq
+  /repos/{id}/pullreq/{pullrequestID}/merge:
+    post:
+      consumes:
+      - application/json
+      description: 根据传入的仓库 ID 和 参数 合并 Pull Request
+      parameters:
+      - description: 仓库 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Pull Request 编号
+        in: path
+        name: pullrequestID
+        required: true
+        type: integer
+      - description: 合并 Pull Request 请求参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.Merge'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 合并失败（返回合并冲突和规则违规信息）
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.MergeViolations'
+              type: object
+      summary: 合并代码Pull Request
       tags:
       - pureq
   /repos/{id}/tags:
