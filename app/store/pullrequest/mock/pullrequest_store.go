@@ -80,18 +80,18 @@ func (mr *MockInterfaceMockRecorder) GetByID(ctx, targetRepoID, id interface{}) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByID", reflect.TypeOf((*MockInterface)(nil).GetByID), ctx, targetRepoID, id)
 }
 
-// UpdateDiffStats mocks base method.
-func (m *MockInterface) UpdateDiffStats(ctx context.Context, repoID, id uint, diffStats *repo.DiffStats) error {
+// UpdateDiffStatsSafe mocks base method.
+func (m *MockInterface) UpdateDiffStatsSafe(ctx context.Context, repoID uint, pr *repo.PullRequest, diffStats *repo.DiffStats) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateDiffStats", ctx, repoID, id, diffStats)
+	ret := m.ctrl.Call(m, "UpdateDiffStatsSafe", ctx, repoID, pr, diffStats)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// UpdateDiffStats indicates an expected call of UpdateDiffStats.
-func (mr *MockInterfaceMockRecorder) UpdateDiffStats(ctx, repoID, id, diffStats interface{}) *gomock.Call {
+// UpdateDiffStatsSafe indicates an expected call of UpdateDiffStatsSafe.
+func (mr *MockInterfaceMockRecorder) UpdateDiffStatsSafe(ctx, repoID, pr, diffStats interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateDiffStats", reflect.TypeOf((*MockInterface)(nil).UpdateDiffStats), ctx, repoID, id, diffStats)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateDiffStatsSafe", reflect.TypeOf((*MockInterface)(nil).UpdateDiffStatsSafe), ctx, repoID, pr, diffStats)
 }
 
 // UpdateMergeCheckStatus mocks base method.
@@ -123,7 +123,7 @@ func (mr *MockInterfaceMockRecorder) UpdateMergeInfo(ctx, targetRepoID, id, merg
 }
 
 // UpdateRebaseCheckStatus mocks base method.
-func (m *MockInterface) UpdateRebaseCheckStatus(ctx context.Context, repoID, id uint, status repo.RebaseCheckStatus, conflicts *string) error {
+func (m *MockInterface) UpdateRebaseCheckStatus(ctx context.Context, repoID, id uint, status repo.MergeCheckStatus, conflicts *string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateRebaseCheckStatus", ctx, repoID, id, status, conflicts)
 	ret0, _ := ret[0].(error)

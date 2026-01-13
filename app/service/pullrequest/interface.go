@@ -19,4 +19,5 @@ type Interface interface {
 	RawDiff(ctx context.Context, w http.ResponseWriter, session *auth.Session, repoID uint, pullreqID uint, setSHAs func(sourceSHA, mergeBaseSHA string), files ...repoModel.FileDiff) error
 	Diff(ctx context.Context, session *auth.Session, repoID uint, pullreqID uint, setSHAs func(sourceSHA, mergeBaseSHA string), includePatch bool, files ...repoModel.FileDiff) (resp.Stream[*git.FileDiff], error)
 	Commits(ctx context.Context, session *auth.Session, repoID uint, pullreqID uint, page, limit uint) ([]commit.Commit, int, error)
+	Merge(ctx context.Context, session *auth.Session, repoID uint, pullreqID uint, params repoModel.Merge) (*repoModel.MergeResponse, *repoModel.MergeViolations, error)
 }

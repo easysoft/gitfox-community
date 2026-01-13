@@ -138,13 +138,17 @@ const (
 
 	// Pullrequest 相关常量
 	PullrequestBodyParamError                I18nKey = "pullrequest.body_param_error"                   // Body 参数解析失败.
+	PullrequestMergeAlreadyMerged            I18nKey = "pullrequest.merge_already_merged"               // Pull Request 已合并,无需重复操作.
+	PullrequestMergeCheckMergeabilityError   I18nKey = "pullrequest.merge_check_mergeability_error"     // 合并检查失败,可能是因为分支已被修改或合并冲突.请确认后再试.
 	PullrequestMergeCheckSuccess             I18nKey = "pullrequest.merge_check_success"                // 合并检查成功
 	PullrequestMergeError                    I18nKey = "pullrequest.merge_error"                        // 合并检查失败
 	PullrequestMergeErrorMethodNotAllowed    I18nKey = "pullrequest.merge_error_method_not_allowed"     // 当前仓库或分支禁止使用您选择的合并方式,请换用其他方式或联系管理员.
 	PullrequestMergeErrorMethodNotFound      I18nKey = "pullrequest.merge_error_method_not_found"       // 未识别您选择的合并方式,请检查合并选项并重试.
 	PullrequestMergeErrorSourceShaNotFound   I18nKey = "pullrequest.merge_error_source_sha_not_found"   // 用于合并的源提交不存在或已被修改,请确认分支/提交是否正确后再试.
 	PullrequestMergeErrorTitleOrMessageEmpty I18nKey = "pullrequest.merge_error_title_or_Message_empty" // 标题或提交信息为空
+	PullrequestMergeSourceShaNotMatch        I18nKey = "pullrequest.merge_source_sha_not_match"         // 用于合并的源提交与当前 Pull Request 不一致,请确认后再试.
 	PullrequestMergeSuccess                  I18nKey = "pullrequest.merge_success"                      // 合并成功
+	PullrequestMergeViolations               I18nKey = "pullrequest.merge_violations"                   // 合并冲突
 	PullrequestPathParamError                I18nKey = "pullrequest.path_param_error"                   // Path 参数解析失败.
 	PullrequestQuerySuccess                  I18nKey = "pullrequest.query_success"                      // 查询 Pull Request 成功
 

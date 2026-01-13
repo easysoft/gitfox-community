@@ -2,6 +2,7 @@ package pullrequest
 
 import (
 	"context"
+	"errors"
 
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
@@ -91,7 +92,7 @@ func (s *Store) UpdateRebaseCheckStatus(
 	ctx context.Context,
 	targetRepoID uint,
 	id uint,
-	status repoModel.RebaseCheckStatus,
+	status repoModel.MergeCheckStatus,
 	conflicts *string,
 ) error {
 	updates := map[string]interface{}{
@@ -105,21 +106,36 @@ func (s *Store) UpdateRebaseCheckStatus(
 	return nil
 }
 
-// UpdateDiffStats 更新PR差异统计信息
-func (s *Store) UpdateDiffStats(
+// UpdateDiffStats dry-run 模式下 安全的更新PR差异统计信息
+func (s *Store) UpdateDiffStatsSafe(
 	ctx context.Context,
 	targetRepoID uint,
-	id uint,
+	pr *repoModel.PullRequest,
 	diffStats *repoModel.DiffStats,
 ) error {
-	updates := map[string]interface{}{
-		"commitCount": diffStats.Commits,
-		"fileCount":   diffStats.FilesChanged,
-		"additions":   diffStats.Additions,
-		"deletions":   diffStats.Deletions,
-		"editedDate":  datetime.NowLocalTime(),
-	}
-	if err := s.db.WithContext(ctx).Model(&PullRequest{}).Where("targetRepoID = ? AND id = ?", targetRepoID, id).Updates(updates).Error; err != nil {
+	err := s.db.Transaction(func(tx *gorm.DB) error {
+
+		if pr.SourceSHA != diffStats.HeadHash {
+			return errors.New("source SHA has changed")
+		}
+
+		if pr.Status != repoModel.PullRequestStatusOpen {
+			return errors.New("Pull request must be open")
+		}
+
+		updates := map[string]interface{}{
+			"commitCount": diffStats.Commits,
+			"fileCount":   diffStats.FilesChanged,
+			"additions":   diffStats.Additions,
+			"deletions":   diffStats.Deletions,
+		}
+		if err := tx.WithContext(ctx).Model(&PullRequest{}).Where("targetRepoID = ? AND id = ?", targetRepoID, pr.ID).Updates(updates).Error; err != nil {
+			return err
+		}
+		return nil
+	})
+
+	if err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
 	}
 	return nil
@@ -164,7 +180,7 @@ func mapPullRequestToModel(data PullRequest) *repoModel.PullRequest {
 		MergeSHA:          data.MergeSHA,
 		MergeCheckStatus:  repoModel.MergeCheckStatus(data.MergeCheckStatus),
 		MergeConflicts:    data.MergeConflicts,
-		RebaseCheckStatus: repoModel.RebaseCheckStatus(data.RebaseCheckStatus),
+		RebaseCheckStatus: repoModel.MergeCheckStatus(data.RebaseCheckStatus),
 		RebaseConflicts:   data.RebaseConflicts,
 		CommitCount:       data.CommitCount,
 		FileCount:         data.FileCount,

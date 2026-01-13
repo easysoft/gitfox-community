@@ -31,24 +31,15 @@ const (
 	PullRequestStatusMerged PullRequestStatus = "merged"
 )
 
-// MergeCheckStatus 合并检查状态枚举（passed/failed/pending/skipped）
 type MergeCheckStatus string
 
 const (
-	MergeCheckStatusPassed  MergeCheckStatus = "passed"
-	MergeCheckStatusFailed  MergeCheckStatus = "failed"
-	MergeCheckStatusPending MergeCheckStatus = "pending"
-	MergeCheckStatusSkipped MergeCheckStatus = "skipped"
-)
-
-// RebaseCheckStatus 变基检查状态枚举（unchecked/passed/failed/pending）
-type RebaseCheckStatus string
-
-const (
-	RebaseCheckStatusUnchecked RebaseCheckStatus = "unchecked"
-	RebaseCheckStatusPassed    RebaseCheckStatus = "passed"
-	RebaseCheckStatusFailed    RebaseCheckStatus = "failed"
-	RebaseCheckStatusPending   RebaseCheckStatus = "pending"
+	// MergeCheckStatusUnchecked merge status has not been checked.
+	MergeCheckStatusUnchecked MergeCheckStatus = "unchecked"
+	// MergeCheckStatusConflict can’t merge into the target branch due to a potential conflict.
+	MergeCheckStatusConflict MergeCheckStatus = "conflict"
+	// MergeCheckStatusMergeable branch can merged cleanly into the target branch.
+	MergeCheckStatusMergeable MergeCheckStatus = "mergeable"
 )
 
 // MergeMethod 合并方法枚举
@@ -94,9 +85,9 @@ type PullRequest struct {
 	MergeBaseSHA      string            `json:"mergeBaseSHA"`
 	MergeSHA          string            `json:"mergeSHA"`
 	MergeCheckStatus  MergeCheckStatus  `json:"mergeCheckStatus"`
-	MergeConflicts    *string           `json:"mergeConflicts"`
-	RebaseCheckStatus RebaseCheckStatus `json:"rebaseCheckStatus"`
-	RebaseConflicts   *string           `json:"rebaseConflicts"`
+	MergeConflicts    []string          `json:"mergeConflicts"`
+	RebaseCheckStatus MergeCheckStatus  `json:"rebaseCheckStatus"`
+	RebaseConflicts   []string          `json:"rebaseConflicts"`
 	CommitCount       *uint             `json:"commitCount"`
 	FileCount         *uint             `json:"fileCount"`
 	Flow              int8              `json:"flow"`
@@ -112,10 +103,11 @@ type PullRequest struct {
 
 // DiffStats shows total number of commits and modified files. 展示该 PR 包含的提交（Commit）总数、发生变更的文件总数、新增的代码行数、删除的代码行数
 type DiffStats struct {
-	Commits      uint `json:"commits,omitempty"`      // 该 PR 包含的提交（Commit）总数
-	FilesChanged uint `json:"filesChanged,omitempty"` // 发生变更的文件总数
-	Additions    uint `json:"additions,omitempty"`    // 新增的代码行数
-	Deletions    uint `json:"deletions,omitempty"`    // 删除的代码行数
+	HeadHash     string `json:"headHash,omitempty"`     // 该 PR 最新的 Commit SHA
+	Commits      uint   `json:"commits,omitempty"`      // 该 PR 包含的提交（Commit）总数
+	FilesChanged uint   `json:"filesChanged,omitempty"` // 发生变更的文件总数
+	Additions    uint   `json:"additions,omitempty"`    // 新增的代码行数
+	Deletions    uint   `json:"deletions,omitempty"`    // 删除的代码行数
 }
 
 // MergeCheck 合并检查结果
@@ -138,13 +130,12 @@ type Merge struct {
 	Message   string      `json:"message"`   // 合并提交的详细描述
 
 	BypassRules bool `json:"bypassRules"` // 是否强制绕过分支保护规则（需要管理员权限）
-	DryRun      bool `json:"dryRun"`      // 试运行模式 。仅模拟合并，检查冲突和规则，不修改数据
-	DryRunRules bool `json:"dryRunRules"` // 仅检查规则模式。不执行 Git 合并模拟，只检查分支保护规则
+	DryRun      bool `json:"dryRun"`      // 试运行模式 。仅模拟合并，不修改数据
 }
 
 func (in *Merge) Check() error {
 	var err error
-	if in.Method == "" && !in.DryRun && !in.DryRunRules {
+	if in.Method == "" && !in.DryRun {
 		err = errors.WithI18nKey(err, i18n.PullrequestBodyParamError)
 		return err
 	}
