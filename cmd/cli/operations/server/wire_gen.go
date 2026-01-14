@@ -24,6 +24,7 @@ import (
 	repo2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
 	scan2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/scan"
 	space2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/space"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/sse"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/tag"
 	user2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/user"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/branch"
@@ -40,6 +41,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/lock"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pubsub"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/ssh"
 	"gorm.io/gorm"
 )
@@ -70,7 +72,9 @@ func NewApp(mode string) (*App, func(), error) {
 	publicAccessCache := authz.NewPublicAccessCache(duration)
 	devopsConfig := provider.NewDevopsConfig(config)
 	membershipAuthorizer := authz.NewMembershipAuthorizer(permissionCache, publicAccessCache, devopsConfig)
-	service := space2.NewSpaceSvc(spaceStore, store, membershipAuthorizer)
+	pubSub := pubsub.ProvidePubSub()
+	streamer := sse.NewSSE(pubSub, mode)
+	service := space2.NewSpaceSvc(spaceStore, store, membershipAuthorizer, streamer)
 	spaceController := space3.NewSpaceController(service)
 	urlProvider, err := provider.NewURLProvider(config)
 	if err != nil {
