@@ -234,7 +234,7 @@ func (ctl *SpaceController) Restore(c *gin.Context) {
 	resp.OK(c, i18n.SpaceRestoreSuccess, nil)
 }
 
-// @Summary 查询空间事件
+// @Summary 订阅空间事件
 // @Description 订阅空间事件，实时获取空间内的操作事件
 // @Tags spaces
 // @Accept application/json

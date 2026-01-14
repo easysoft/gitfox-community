@@ -1,6 +1,6 @@
 # SSE (Server-Sent Events) 服务模块
 
-`sse` 模块基于 `pkg/pubsub` 实现了服务器发送事件（Server-Sent Events）的流式服务。它主要用于在后端发生特定业务事件时，实时向前端或其他客户端推送数据变更。
+`sse` 模块基于 `pkg/pubsub` 实现了服务器发送事件（Server-Sent Events）的流式服务。它主要用于在后端发生特定业务事件时，实时向前端推送数据变更。
 
 该模块将业务层面的“事件”概念与底层的“发布/订阅”机制结合，提供了一套面向业务的流式接口。
 
@@ -97,3 +97,50 @@ func (c *Controller) HandleSSE(ctx *gin.Context) {
     }
 }
 ```
+
+## 技术实现
+
+SSE 模块充当了 **业务事件** 与 **HTTP 长连接** 之间的桥梁，其核心流程如下：
+
+1.  **事件总线 (PubSub)**: 底层依赖 `pkg/pubsub`。当业务发生变更（如 `Publish`）时，本质上是向 PubSub 的特定 Topic（如 `spaces:1001`）发送了一条消息。
+2.  **管道转换 (Channel)**: `Stream` 方法调用时，会创建一个临时的订阅者。这个订阅者会把从 PubSub 收到的原始 `[]byte` 消息，反序列化为 `Event` 对象，并塞入一个 Go Channel (`<-chan *Event`)。
+3.  **HTTP 长连接**: 在 Controller 层（Web 接口），通过 `for select` 循环不断从这个 Channel 读取数据。每读到一个事件，就按照 [SSE 协议规范](https://html.spec.whatwg.org/multipage/server-sent-events.html)（`data: ...\n\n`）直接写入 HTTP Response Body，并刷新缓冲区，从而实现实时推送。
+
+
+## Q&A
+
+1、SSE 是怎么实现单向长连接的？
+
+本质上SSE 是“一直没发完”的 HTTP 请求。
+
+- 原理 :
+  1. 浏览器发一个普通的 HTTP GET 请求给服务器。
+  2. 服务器响应头里说： Content-Type: text/event-stream 。
+  3. 关键点 : 服务器 不发送 Content-Length ，也不关闭连接。
+  4. 服务器每隔一会就往这个连接里写一行数据（ data: hello\n\n ），然后 Flush 一下。
+  5. 浏览器收到数据就处理，但依然保持连接打开，等待下一行数据。
+- 形象比喻 :
+    - Webhook : 寄信。我写好信（事件），投递到你的邮箱（URL），然后我就走了。
+    - WebSocket : 打电话。我们俩同时拿着听筒，我能说话，你也能说话，谁都可以随时打断对方。
+    - SSE : 收音机/大喇叭 。我（服务器）一直拿着麦克风说话，你（浏览器）只能戴着耳机听。你不能通过这个耳机跟我说话（单向），只要我不关麦，你就能一直听到新消息（长连接）
+
+2、 在gitfox中都有哪些应用场景？
+
+| 事件类型 (`EventType`) | 触发场景 | 推送数据内容 (`Data`) | 作用 |
+| :--- | :--- | :--- | :--- |
+| **Pull Request 相关** | | | |
+| `pullreq_updated` | PR 创建、编辑、合并、关闭、源分支更新 | `PullReq` 对象 (JSON) | 刷新 PR 列表状态、合并按钮状态 |
+| `pullreq_reviewer_added` | 添加评审人 | - | 刷新评审人列表 |
+| `pullreq_reviewer_removed` | 移除评审人 | - | 刷新评审人列表 |
+| `pullreq_ai_review_updated`| AI 评审状态更新 | - | 显示 AI 评审进度 |
+| **CI/CD 流水线相关** | | | |
+| `execution_updated` | 流水线状态变更 (如 Pending -> Running) | `Execution` 对象 | 实时显示 Pipeline 进度条 |
+| `execution_running` | 流水线开始运行 | `Execution` 对象 | 标记开始 |
+| `execution_completed` | 流水线执行结束 | `Execution` 对象 | 显示最终结果 (成功/失败) |
+| `execution_canceled` | 流水线被取消 | `Execution` 对象 | 显示取消状态 |
+| `log_line_appended` | 产生新的日志行 | 日志片段 | 实时滚动展示构建日志 |
+| **仓库操作相关** | | | |
+| `repository_import_completed`| 仓库导入完成 | `Repository` 对象 | 通知用户导入已完成 |
+| `repository_export_completed`| 仓库导出完成 | `Repository` 对象 | 通知用户下载链接可用 |
+
+---
