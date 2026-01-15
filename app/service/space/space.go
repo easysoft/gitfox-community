@@ -3,9 +3,11 @@ package space
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
+	eventModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/event"
 	spaceModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/space"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/sse"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
@@ -30,6 +32,7 @@ func NewSpaceSvc(spaceStore space.Interface, repoStore repo.Interface, authorize
 		spaceStore: spaceStore,
 		repoStore:  repoStore,
 		authorizer: authorizer,
+		sseSvc:     sseService,
 	}
 }
 
@@ -135,4 +138,15 @@ func (s *Service) Events(ctx context.Context, spaceID uint) (<-chan *sse.Event, 
 	chEvents, chErr, sseCancel := s.sseSvc.Stream(ctx, int64(spaceID))
 
 	return chEvents, chErr, sseCancel, nil
+}
+
+func (s *Service) TestEvents(ctx context.Context, spaceID uint) {
+	for i := 0; i < 10; i++ {
+		time.Sleep(1 * time.Second)
+		s.sseSvc.Publish(context.Background(), 1, eventModel.SSETypePullRequestUpdated, map[string]interface{}{
+			"status": "merged",
+			"msg":    fmt.Sprintf("Message #%d for PHP client", i),
+			"ts":     time.Now().Unix(),
+		})
+	}
 }

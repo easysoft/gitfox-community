@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gitfox SSE Events Demo</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .status-bar {
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .status-connecting { background-color: #fff3cd; color: #856404; }
+        .status-connected { background-color: #d4edda; color: #155724; }
+        .status-error { background-color: #f8d7da; color: #721c24; }
+        .status-closed { background-color: #e2e3e5; color: #383d41; }
+        
+        .events-list {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            height: 400px;
+            overflow-y: auto;
+            padding: 10px;
+            background-color: #fafafa;
+        }
+        .event-item {
+            padding: 8px;
+            margin-bottom: 8px;
+            border-bottom: 1px solid #eee;
+            background-color: white;
+            border-radius: 4px;
+        }
+        .event-time {
+            color: #666;
+            font-size: 0.85em;
+            margin-bottom: 4px;
+        }
+        .event-type {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 3px;
+            background-color: #e3f2fd;
+            color: #0d47a1;
+            font-size: 0.85em;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+        .event-data {
+            font-family: monospace;
+            white-space: pre-wrap;
+            color: #333;
+        }
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            flex-grow: 1;
+        }
+        button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+        }
+        button:hover { background-color: #0056b3; }
+        button.stop { background-color: #dc3545; }
+        button.stop:hover { background-color: #c82333; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Gitfox 实时事件监听</h1>
+        
+        <div class="controls">
+            <input type="number" id="spaceIdInput" placeholder="输入 Space ID (例如: 1)" value="1">
+            <button onclick="startListening()">开始监听</button>
+            <button onclick="stopListening()" class="stop">停止</button>
+            <button onclick="clearLogs()">清空日志</button>
+        </div>
+
+        <div id="statusBar" class="status-bar status-closed">
+            状态: 未连接
+        </div>
+
+        <h3>事件日志:</h3>
+        <div id="eventsList" class="events-list"></div>
+    </div>
+
+    <script>
+        let eventSource = null;
+        const statusBar = document.getElementById('statusBar');
+        const eventsList = document.getElementById('eventsList');
+
+        function updateStatus(status, message) {
+            statusBar.className = 'status-bar status-' + status;
+            statusBar.textContent = '状态: ' + message;
+        }
+
+        function appendEvent(type, data) {
+            const item = document.createElement('div');
+            item.className = 'event-item';
+            
+            const time = new Date().toLocaleTimeString();
+            let dataStr = data;
+            try {
+                if (typeof data === 'string' && (data.startsWith('{') || data.startsWith('['))) {
+                    dataStr = JSON.stringify(JSON.parse(data), null, 2);
+                }
+            } catch (e) {}
+
+            item.innerHTML = `
+                <div class="event-time">${time}</div>
+                <div>
+                    <span class="event-type">${type}</span>
+                </div>
+                <div class="event-data">${dataStr}</div>
+            `;
+            
+            eventsList.insertBefore(item, eventsList.firstChild);
+        }
+
+        function startListening() {
+            if (eventSource) {
+                eventSource.close();
+            }
+
+            const spaceId = document.getElementById('spaceIdInput').value;
+            if (!spaceId) {
+                alert('请输入 Space ID');
+                return;
+            }
+
+            // 构造带认证参数的 URL
+            const baseUrl = `http://10.0.4.2:3000/api/v2/spaces/${spaceId}/events`;
+            const params = new URLSearchParams({
+                'App': 'zentao',
+                'Operator': 'admin',
+                'Authorization': 'e8196194fd65c5fda75290cad753a911'
+            });
+            const url = `${baseUrl}?${params.toString()}`;
+            
+            console.log(`正在连接 SSE: ${url}`);
+            updateStatus('connecting', '正在连接...');
+
+            eventSource = new EventSource(url);
+
+            eventSource.onopen = function(event) {
+                console.log('SSE 连接已建立');
+                updateStatus('connected', '已连接 (监听 Space ID: ' + spaceId + ')');
+            };
+
+            // 监听默认消息
+            eventSource.onmessage = function(event) {
+                console.log('收到消息:', event);
+                appendEvent('message', event.data);
+            };
+
+            // 监听自定义事件类型
+            const eventTypes = [
+                'execution_updated',
+                'execution_running',
+                'execution_completed',
+                'execution_canceled',
+                'repository_import_completed',
+                'pullreq_updated',
+                'pullreq_reviewer_added',
+                'pullreq_reviewer_removed'
+            ];
+
+            eventTypes.forEach(type => {
+                eventSource.addEventListener(type, function(event) {
+                    console.log(`收到 ${type} 事件:`, event.data);
+                    appendEvent(type, event.data);
+                });
+            });
+
+            eventSource.onerror = function(error) {
+                console.error('SSE 错误:', error);
+                if (eventSource.readyState === EventSource.CLOSED) {
+                    updateStatus('closed', '连接已关闭');
+                } else {
+                    updateStatus('error', '连接发生错误 (正在重试...)');
+                }
+            };
+        }
+
+        function stopListening() {
+            if (eventSource) {
+                eventSource.close();
+                eventSource = null;
+                updateStatus('closed', '已停止监听');
+                console.log('SSE 连接已手动关闭');
+            }
+        }
+
+        function clearLogs() {
+            eventsList.innerHTML = '';
+        }
+    </script>
+</body>
+</html>

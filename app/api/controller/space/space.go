@@ -1,6 +1,8 @@
 package space
 
 import (
+	"time"
+
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/space"
@@ -266,5 +268,9 @@ func (ctl *SpaceController) Events(c *gin.Context) {
 		}
 	}()
 
+	go func(spaceID uint) {
+		time.Sleep(2 * time.Second)
+		ctl.spaceSvc.TestEvents(c.Request.Context(), spaceID)
+	}(spaceID)
 	resp.StreamSSE(c.Request.Context(), c.Writer, c.Done(), chEvents, chErr)
 }
