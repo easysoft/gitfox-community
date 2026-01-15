@@ -26,7 +26,7 @@ type PullRequestFilter struct {
 type PullRequestStatus string
 
 const (
-	PullRequestStatusOpen   PullRequestStatus = "open"
+	PullRequestStatusOpen   PullRequestStatus = "opened"
 	PullRequestStatusClosed PullRequestStatus = "closed"
 	PullRequestStatusMerged PullRequestStatus = "merged"
 )
@@ -170,7 +170,7 @@ func (in *Merge) Check() error {
 	in.Message = strings.TrimSpace(in.Message)
 
 	if (in.Method == MergeMethodRebase || in.Method == MergeMethodFastForward) &&
-		(in.Title != "") {
+		(in.Title != "" || in.Message != "") {
 		err = errors.WithI18nKey(err, i18n.PullrequestMergeCheckTitleError)
 		return err
 	}
