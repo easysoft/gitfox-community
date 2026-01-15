@@ -272,5 +272,6 @@ func (ctl *SpaceController) Events(c *gin.Context) {
 		time.Sleep(2 * time.Second)
 		ctl.spaceSvc.TestEvents(c.Request.Context(), spaceID)
 	}(spaceID)
+
 	resp.StreamSSE(c.Request.Context(), c.Writer, c.Done(), chEvents, chErr)
 }

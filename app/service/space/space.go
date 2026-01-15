@@ -143,7 +143,7 @@ func (s *Service) Events(ctx context.Context, spaceID uint) (<-chan *sse.Event, 
 func (s *Service) TestEvents(ctx context.Context, spaceID uint) {
 	for i := 0; i < 10; i++ {
 		time.Sleep(1 * time.Second)
-		s.sseSvc.Publish(context.Background(), 1, eventModel.SSETypePullRequestUpdated, map[string]interface{}{
+		s.sseSvc.Publish(context.Background(), int64(spaceID), eventModel.SSETypePullRequestUpdated, map[string]interface{}{
 			"status": "merged",
 			"msg":    fmt.Sprintf("Message #%d for PHP client", i),
 			"ts":     time.Now().Unix(),
