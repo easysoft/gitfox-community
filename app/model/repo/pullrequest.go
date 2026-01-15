@@ -146,19 +146,19 @@ type Merge struct {
 func (in *Merge) Check() error {
 	var err error
 	if in.Method == "" && !in.DryRun {
-		err = errors.WithI18nKey(err, i18n.PullrequestBodyParamError)
+		err = errors.WithI18nKey(err, i18n.PullrequestMergeCheckMethodError)
 		return err
 	}
 
 	if in.SourceSHA == "" {
-		err = errors.WithI18nKey(err, i18n.PullrequestBodyParamError)
+		err = errors.WithI18nKey(err, i18n.PullrequestMergeCheckSourceShaError)
 		return err
 	}
 
 	if in.Method != "" {
 		method, ok := in.Method.Check()
 		if !ok {
-			err = errors.WithI18nKey(err, i18n.PullrequestBodyParamError)
+			err = errors.WithI18nKey(err, i18n.PullrequestMergeCheckMethodError)
 			return err
 		}
 
@@ -170,8 +170,8 @@ func (in *Merge) Check() error {
 	in.Message = strings.TrimSpace(in.Message)
 
 	if (in.Method == MergeMethodRebase || in.Method == MergeMethodFastForward) &&
-		(in.Title != "" || in.Message != "") {
-		err = errors.WithI18nKey(err, i18n.PullrequestBodyParamError)
+		(in.Title != "") {
+		err = errors.WithI18nKey(err, i18n.PullrequestMergeCheckTitleError)
 		return err
 	}
 
