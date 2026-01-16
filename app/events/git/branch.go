@@ -4,8 +4,7 @@ import (
 	"context"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/events"
-
-	"github.com/rs/zerolog/log"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 )
 
 const BranchCreatedEvent events.EventType = "branch-created"
@@ -18,13 +17,16 @@ type BranchCreatedPayload struct {
 }
 
 func (r *Reporter) BranchCreated(ctx context.Context, payload *BranchCreatedPayload) {
+
+	logger := logger.GetLogger(ctx)
+
 	eventID, err := events.ReporterSendEvent(r.innerReporter, ctx, BranchCreatedEvent, payload)
 	if err != nil {
-		log.Ctx(ctx).Err(err).Msgf("failed to send branch created event")
+		logger.Error("failed to send branch created event")
 		return
 	}
 
-	log.Ctx(ctx).Debug().Msgf("reported branch created event with id '%s'", eventID)
+	logger.Infof("reported branch created event with id '%s'", eventID)
 }
 
 func (r *Reader) RegisterBranchCreated(fn events.HandlerFunc[*BranchCreatedPayload],
@@ -44,13 +46,15 @@ type BranchUpdatedPayload struct {
 }
 
 func (r *Reporter) BranchUpdated(ctx context.Context, payload *BranchUpdatedPayload) {
+
+	logger := logger.GetLogger(ctx)
 	eventID, err := events.ReporterSendEvent(r.innerReporter, ctx, BranchUpdatedEvent, payload)
 	if err != nil {
-		log.Ctx(ctx).Err(err).Msgf("failed to send branch updated event")
+		logger.Error("failed to send branch updated event")
 		return
 	}
 
-	log.Ctx(ctx).Debug().Msgf("reported branch updated event with id '%s'", eventID)
+	logger.Infof("reported branch updated event with id '%s'", eventID)
 }
 
 func (r *Reader) RegisterBranchUpdated(fn events.HandlerFunc[*BranchUpdatedPayload],
@@ -68,13 +72,14 @@ type BranchDeletedPayload struct {
 }
 
 func (r *Reporter) BranchDeleted(ctx context.Context, payload *BranchDeletedPayload) {
+	logger := logger.GetLogger(ctx)
 	eventID, err := events.ReporterSendEvent(r.innerReporter, ctx, BranchDeletedEvent, payload)
 	if err != nil {
-		log.Ctx(ctx).Err(err).Msgf("failed to send branch deleted event")
+		logger.Error("failed to send branch deleted event")
 		return
 	}
 
-	log.Ctx(ctx).Debug().Msgf("reported branch deleted event with id '%s'", eventID)
+	logger.Infof("reported branch deleted event with id '%s'", eventID)
 }
 
 func (r *Reader) RegisterBranchDeleted(fn events.HandlerFunc[*BranchDeletedPayload],
