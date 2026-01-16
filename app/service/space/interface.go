@@ -21,5 +21,4 @@ type Interface interface {
 
 	GetSpaceCheckAccess(ctx context.Context, session *auth.Session, spaceID uint, permissions []constant.Permission) (*space.Space, error)
 	Events(ctx context.Context, spaceID uint) (<-chan *sse.Event, <-chan error, func(context.Context) error, error)
-	TestEvents(ctx context.Context, spaceID uint)
 }
