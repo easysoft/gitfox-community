@@ -13,6 +13,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/auth/authn"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/events"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/ssh"
 	"gorm.io/gorm"
 )
@@ -29,6 +30,7 @@ type App struct {
 	SSHServer     *ssh.Server
 	UserService   userSvc.Interface
 	Authenticator authn.Authenticator
+	EventSystem   *events.System
 }
 
 func NewApp(mode string) (*App, func(), error) {
@@ -48,8 +50,9 @@ func NewApp(mode string) (*App, func(), error) {
 		provider.ControllersWireSet,
 		provider.URLWireSet,
 		provider.I18nWireSet,
-		                provider.SSHWireSet,
-		                provider.LockWireSet,
-		                provider.AuthWireSet,		wire.Struct(new(App), "*")),
+		provider.SSHWireSet,
+		provider.LockWireSet,
+		provider.EventWireSet,
+		provider.AuthWireSet, wire.Struct(new(App), "*")),
 	)
 }
