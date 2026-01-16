@@ -12,7 +12,7 @@ const (
 
 	QueryParamOperation = "Operation"
 
-	SourcePathToTargetPath = "sourcePathToTargetPath"
+	TargetPathToSourcePath = "targetPathToSourcePath"
 	PullrequestID          = "pullrequestid"
 	QueryParamPage         = "page"
 	QueryParamLimit        = "limit"
