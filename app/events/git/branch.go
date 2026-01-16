@@ -35,12 +35,12 @@ func (r *Reader) RegisterBranchCreated(fn events.HandlerFunc[*BranchCreatedPaylo
 const BranchUpdatedEvent events.EventType = "branch-updated"
 
 type BranchUpdatedPayload struct {
-	RepoID      int64  `json:"repo_id"`
-	PrincipalID int64  `json:"principal_id"`
-	Ref         string `json:"ref"`
-	OldSHA      string `json:"old_sha"`
-	NewSHA      string `json:"new_sha"`
-	Forced      bool   `json:"forced"`
+	RepoID  int64  `json:"repoID"`
+	Account string `json:"account"`
+	Ref     string `json:"ref"`
+	OldSHA  string `json:"oldSHA"`
+	NewSHA  string `json:"newSHA"`
+	Forced  bool   `json:"forced"`
 }
 
 func (r *Reporter) BranchUpdated(ctx context.Context, payload *BranchUpdatedPayload) {
@@ -61,10 +61,10 @@ func (r *Reader) RegisterBranchUpdated(fn events.HandlerFunc[*BranchUpdatedPaylo
 const BranchDeletedEvent events.EventType = "branch-deleted"
 
 type BranchDeletedPayload struct {
-	RepoID      int64  `json:"repo_id"`
-	PrincipalID int64  `json:"principal_id"`
-	Ref         string `json:"ref"`
-	SHA         string `json:"sha"`
+	RepoID  int64  `json:"repoID"`
+	Account string `json:"account"`
+	Ref     string `json:"ref"`
+	SHA     string `json:"sha"`
 }
 
 func (r *Reporter) BranchDeleted(ctx context.Context, payload *BranchDeletedPayload) {
