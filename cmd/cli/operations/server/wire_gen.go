@@ -39,6 +39,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/auth/authz"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/events"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/lock"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/ssh"
 	"gorm.io/gorm"
@@ -137,6 +138,14 @@ func NewApp(mode string) (*App, func(), error) {
 	}
 	server := provider.ProvideSSHServer(config, interface2, gitController)
 	authenticator := authn.ProvideAuthenticators(config, userStore, tokenInterface)
+	eventsConfig := provider.NewEventConfig()
+	universalClient := provider.NewEventRedisClient()
+	system, err := provider.ProvideEventSystem(eventsConfig, universalClient)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
 	app := &App{
 		SystemConfig:  config,
 		SystemLog:     systemLog,
@@ -149,6 +158,7 @@ func NewApp(mode string) (*App, func(), error) {
 		SSHServer:     server,
 		UserService:   userService,
 		Authenticator: authenticator,
+		EventSystem:   system,
 	}
 	return app, func() {
 		cleanup2()
@@ -170,4 +180,5 @@ type App struct {
 	SSHServer     *ssh.Server
 	UserService   user2.Interface
 	Authenticator authn.Authenticator
+	EventSystem   *events.System
 }
