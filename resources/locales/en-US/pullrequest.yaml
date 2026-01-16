@@ -14,3 +14,6 @@ pullrequest:
   merge_source_sha_not_match: "The source commit (SHA) used for the merge does not match the current Pull Request. Please verify the branch/commit and try again."
   merge_check_mergeability_error: "Merge check failed. This may be due to the branch being modified or merge conflicts. Please verify and try again."
   merge_lock_error: "Merge lock error. Another operation may be in progress. Please try again later."
+  merge_check_title_error: "Merge check failed. The title cannot be empty."
+  merge_check_method_error: "Merge check failed. If not in dryrun mode, the merge method cannot be empty. It must be one of the following: merge, squash, rebase, fast-forward."
+  merge_check_source_sha_error: "Merge check failed. The source commit (SHA) cannot be empty."

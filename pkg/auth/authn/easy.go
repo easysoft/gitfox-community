@@ -54,21 +54,32 @@ func (a *EasyAuthenticator) Authenticate(r *gin.Context) (*auth.Session, error) 
 	logger := logger.GetLogger(r)
 	logger.Debug("[authn.easy]trigger EasyAuthenticator")
 
+	var authorization, app, operator string
 	// 1. 从请求头获取必要的认证信息
-	authorization, ok := req.GetHeader(r, HeaderAuthorization)
-	if !ok || authorization == "" {
+	authorization, _ = req.GetHeader(r, HeaderAuthorization)
+	if authorization == "" {
+		authorization, _ = req.QueryParam(r, HeaderAuthorization)
+	}
+	if authorization == "" {
 		logger.Debug("[authn.easy]missing Authorization header")
 		return nil, constant.ErrAuthNoData
 	}
 
-	app, ok := req.GetHeader(r, HeaderApp)
-	if !ok || app == "" {
+	app, _ = req.GetHeader(r, HeaderApp)
+	if app == "" {
+		app, _ = req.QueryParam(r, HeaderApp)
+	}
+	if app == "" {
 		logger.Debug("[authn.easy]missing App header")
 		return nil, constant.ErrAuthNoData
 	}
 
-	operator, ok := req.GetHeader(r, HeaderOperator)
-	if !ok || operator == "" {
+	operator, _ = req.GetHeader(r, HeaderOperator)
+	if operator == "" {
+		operator, _ = req.QueryParam(r, HeaderOperator)
+	}
+
+	if operator == "" {
 		logger.Debug("[authn.easy]missing Operator header")
 		return nil, constant.ErrAuthNoData
 	}

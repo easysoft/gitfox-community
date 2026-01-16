@@ -3630,6 +3630,40 @@ paths:
       summary: 更新空间
       tags:
       - spaces
+  /spaces/{id}/events:
+    get:
+      consumes:
+      - application/json
+      description: 订阅空间事件，实时获取空间内的操作事件
+      parameters:
+      - description: 空间ID
+        in: path
+        minimum: 1
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 事件流
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "400":
+          description: ID格式错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "404":
+          description: 空间不存在或已删除
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 查询空间事件
+      tags:
+      - spaces
   /spaces/{id}/restore:
     post:
       consumes:

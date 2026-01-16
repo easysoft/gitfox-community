@@ -3640,6 +3640,57 @@ const docTemplate = `{
                 }
             }
         },
+        "/spaces/{id}/events": {
+            "get": {
+                "description": "订阅空间事件，实时获取空间内的操作事件",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "spaces"
+                ],
+                "summary": "查询空间事件",
+                "parameters": [
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "description": "空间ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "事件流",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "ID格式错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "空间不存在或已删除",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/spaces/{id}/restore": {
             "post": {
                 "description": "恢复已逻辑删除的空间",

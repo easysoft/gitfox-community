@@ -7,6 +7,7 @@ import (
 	spaceSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/space"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	"github.com/gin-gonic/gin"
 )
 
@@ -231,4 +232,39 @@ func (ctl *SpaceController) Restore(c *gin.Context) {
 		return
 	}
 	resp.OK(c, i18n.SpaceRestoreSuccess, nil)
+}
+
+// @Summary 订阅空间事件
+// @Description 订阅空间事件，实时获取空间内的操作事件
+// @Tags spaces
+// @Accept application/json
+// @Produce application/json
+// @Param id path int true "空间ID" minimum(1)
+// @Success 200 {object} resp.ObjectResponse "事件流"
+// @Failure 400 {object} resp.ObjectResponse "ID格式错误"
+// @Failure 404 {object} resp.ObjectResponse "空间不存在或已删除"
+// @Failure 500 {object} resp.ObjectResponse "服务器错误"
+// @Router /spaces/{id}/events [get]
+func (ctl *SpaceController) Events(c *gin.Context) {
+	var err error
+	logger := logger.GetLogger(c.Request.Context())
+	spaceID, err := req.PathParamAsPositiveUint(c, "id")
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.SpacePathParamError)
+		resp.BadRequest(c, err)
+		return
+	}
+
+	chEvents, chErr, sseCancel, err := ctl.spaceSvc.Events(c.Request.Context(), spaceID)
+	if err != nil {
+		resp.InternalError(c, err)
+		return
+	}
+	defer func() {
+		if err := sseCancel(c.Request.Context()); err != nil {
+			logger.Errorf("failed to cancel sse stream for space '%d' ,err:%v", spaceID, err)
+		}
+	}()
+
+	resp.StreamSSE(c.Request.Context(), c.Writer, c.Done(), chEvents, chErr)
 }

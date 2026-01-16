@@ -7,6 +7,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
 	spaceModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/space"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/sse"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/space"
 
@@ -16,18 +17,20 @@ import (
 )
 
 type Service struct {
-	// 依赖的存储接口等，可以在这里添加
 	spaceStore space.Interface
 	repoStore  repo.Interface
 	authorizer authz.Authorizer
+
+	sseSvc sse.Streamer
 }
 
 // NewService 创建 SpaceService 实例
-func NewSpaceSvc(spaceStore space.Interface, repoStore repo.Interface, authorizer authz.Authorizer) *Service {
+func NewSpaceSvc(spaceStore space.Interface, repoStore repo.Interface, authorizer authz.Authorizer, sseService sse.Streamer) *Service {
 	return &Service{
 		spaceStore: spaceStore,
 		repoStore:  repoStore,
 		authorizer: authorizer,
+		sseSvc:     sseService,
 	}
 }
 
@@ -122,4 +125,15 @@ func (s *Service) GetSpaceCheckAccess(ctx context.Context, session *auth.Session
 	}
 
 	return spaceObj, nil
+}
+
+func (s *Service) Events(ctx context.Context, spaceID uint) (<-chan *sse.Event, <-chan error, func(context.Context) error, error) {
+	_, err := s.GetByID(ctx, spaceID)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	chEvents, chErr, sseCancel := s.sseSvc.Stream(ctx, int64(spaceID))
+
+	return chEvents, chErr, sseCancel, nil
 }
