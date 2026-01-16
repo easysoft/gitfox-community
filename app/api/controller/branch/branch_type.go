@@ -124,7 +124,6 @@ func (c *Controller) UpdateBranchType(ctx *gin.Context) {
 
 	// 调用Check方法进行参数校验
 	if err := reqBody.Check(); err != nil {
-		err = errors.WithI18nKey(err, i18n.BranchTypeBodyCheckError)
 		resp.BadRequest(ctx, err)
 		return
 	}

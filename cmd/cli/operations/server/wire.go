@@ -53,6 +53,7 @@ func NewApp(mode string) (*App, func(), error) {
 		provider.SSHWireSet,
 		provider.LockWireSet,
 		provider.EventWireSet,
+		provider.PubSubProvider,
 		provider.AuthWireSet, wire.Struct(new(App), "*")),
 	)
 }

@@ -1689,7 +1689,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/repos/{id}/diff-stats/{pathToPath}": {
+        "/repos/{id}/diff-stats/{targetPathToSourcePath}": {
             "get": {
                 "description": "根据传入的仓库 ID 和 路径获取 Pull Request 差异统计信息",
                 "consumes": [
@@ -1712,8 +1712,8 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "路径",
-                        "name": "pathToPath",
+                        "description": "目标路径到源路径",
+                        "name": "targetPathToSourcePath",
                         "in": "path",
                         "required": true
                     }
@@ -1740,7 +1740,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/repos/{id}/merge-check/{pathToPath}": {
+        "/repos/{id}/merge-check/{targetPathToSourcePath}": {
             "post": {
                 "description": "根据传入的仓库 ID 和 路径获取 Pull Request 合并检查信息",
                 "consumes": [
@@ -1763,8 +1763,8 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "路径",
-                        "name": "pathToPath",
+                        "description": "目标路径到源路径",
+                        "name": "targetPathToSourcePath",
                         "in": "path",
                         "required": true
                     }
@@ -3652,7 +3652,7 @@ const docTemplate = `{
                 "tags": [
                     "spaces"
                 ],
-                "summary": "查询空间事件",
+                "summary": "订阅空间事件",
                 "parameters": [
                     {
                         "minimum": 1,

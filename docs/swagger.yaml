@@ -2373,7 +2373,7 @@ paths:
       summary: 获取仓库指定 GitRef Diff
       tags:
       - repos
-  /repos/{id}/diff-stats/{pathToPath}:
+  /repos/{id}/diff-stats/{targetPathToSourcePath}:
     get:
       consumes:
       - application/json
@@ -2384,9 +2384,9 @@ paths:
         name: id
         required: true
         type: integer
-      - description: 路径
+      - description: 目标路径到源路径
         in: path
-        name: pathToPath
+        name: targetPathToSourcePath
         required: true
         type: string
       produces:
@@ -2404,7 +2404,7 @@ paths:
       summary: 获取代码Pull Request 差异统计信息
       tags:
       - pureq
-  /repos/{id}/merge-check/{pathToPath}:
+  /repos/{id}/merge-check/{targetPathToSourcePath}:
     post:
       consumes:
       - application/json
@@ -2415,9 +2415,9 @@ paths:
         name: id
         required: true
         type: integer
-      - description: 路径
+      - description: 目标路径到源路径
         in: path
-        name: pathToPath
+        name: targetPathToSourcePath
         required: true
         type: string
       produces:
@@ -3661,7 +3661,7 @@ paths:
           description: 服务器错误
           schema:
             $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
-      summary: 查询空间事件
+      summary: 订阅空间事件
       tags:
       - spaces
   /spaces/{id}/restore:

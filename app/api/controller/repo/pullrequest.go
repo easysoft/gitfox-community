@@ -56,12 +56,12 @@ func (ctl *Controller) Metadata(ctx *gin.Context) {
 // @Accept application/json
 // @Produce application/json
 // @Param id path uint true "仓库 ID"
-// @Param pathToPath path string true "路径"
+// @Param targetPathToSourcePath path string true "目标路径到源路径"
 // @Success 200 {object} resp.ObjectResponse{data=repoModel.DiffStats} "获取成功（返回差异统计信息）"
-// @Error 400 {object} resp.ObjectResponse "参数错误（如SourcePathToTargetPath格式非法、为空等）"
+// @Error 400 {object} resp.ObjectResponse "参数错误（如TargetPathToSourcePath格式非法、为空等）"
 // @Error 401 {object} resp.ObjectResponse "未授权（会话不存在或已过期）"
 // @Error 500 {object} resp.ObjectResponse "服务器内部错误（如Git服务调用失败、数据库异常等）"
-// @Router /repos/{id}/diff-stats/{pathToPath} [get]
+// @Router /repos/{id}/diff-stats/{targetPathToSourcePath} [get]
 func (ctl *Controller) GetDiffStats(ctx *gin.Context) {
 	session, ok := req.GetAuthSession(ctx.Request.Context())
 	if !ok {
@@ -94,12 +94,12 @@ func (ctl *Controller) GetDiffStats(ctx *gin.Context) {
 // @Accept application/json
 // @Produce application/json
 // @Param id path uint true "仓库 ID"
-// @Param pathToPath path string true "路径"
+// @Param targetPathToSourcePath path string true "目标路径到源路径"
 // @Success 200 {object} resp.ObjectResponse{data=repoModel.MergeCheck} "获取成功（返回合并检查信息）"
-// @Error 400 {object} resp.ObjectResponse "参数错误（如SourcePathToTargetPath格式非法、为空等）"
+// @Error 400 {object} resp.ObjectResponse "参数错误（如TargetPathToSourcePath格式非法、为空等）"
 // @Error 401 {object} resp.ObjectResponse "未授权（会话不存在或已过期）"
 // @Error 500 {object} resp.ObjectResponse "服务器内部错误（如Git服务调用失败、数据库异常等）"
-// @Router /repos/{id}/merge-check/{pathToPath} [post]
+// @Router /repos/{id}/merge-check/{targetPathToSourcePath} [post]
 func (ctl *Controller) MergeCheck(ctx *gin.Context) {
 	session, ok := req.GetAuthSession(ctx.Request.Context())
 	if !ok {
@@ -146,7 +146,7 @@ func (ctl *Controller) MergeCheck(ctx *gin.Context) {
 // @Param path query []string false "指定只对比哪些文件（支持多次传递）。"
 // @Param range query []string false "指定文件的行号范围 (格式: start:end )，与 path 一一对应。"
 // @Success 200 {object} resp.ObjectResponse{data=repoModel.DiffStats} "获取成功（返回差异统计信息）"
-// @Error 400 {object} resp.ObjectResponse "参数错误（如SourcePathToTargetPath格式非法、为空等）"
+// @Error 400 {object} resp.ObjectResponse "参数错误（如TargetPathToSourcePath格式非法、为空等）"
 // @Error 401 {object} resp.ObjectResponse "未授权（会话不存在或已过期）"
 // @Error 500 {object} resp.ObjectResponse "服务器内部错误（如Git服务调用失败、数据库异常等）"
 // @Router /repos/{id}/pullreq/{pullrequestID}/diff [get]
@@ -209,7 +209,7 @@ func (ctl *Controller) DiffSimp(ctx *gin.Context) {
 // @Description 如果设置为 text/plain，返回 Git 原生 Diff 文本格式；否则返回 JSON 格式
 // @Param request body []repoModel.FileDiff true "查询仓库请求参数"
 // @Success 200 {object} resp.ObjectResponse{data=repoModel.MergeCheck} "获取成功（返回合并检查信息）"
-// @Error 400 {object} resp.ObjectResponse "参数错误（如SourcePathToTargetPath格式非法、为空等）"
+// @Error 400 {object} resp.ObjectResponse "参数错误（如TargetPathToSourcePath格式非法、为空等）"
 // @Error 401 {object} resp.ObjectResponse "未授权（会话不存在或已过期）"
 // @Error 500 {object} resp.ObjectResponse "服务器内部错误（如Git服务调用失败、数据库异常等）"
 // @Router /repos/{id}/pullreq/{pullrequestID}/diff [post]
@@ -270,7 +270,7 @@ func (ctl *Controller) Diff(ctx *gin.Context) {
 // @Param page query int false "分页页码，默认1"
 // @Param limit query int false "分页每页数量，默认20"
 // @Success 200 {object} resp.ListResponse{data=[]commitModel.Commit,listArgs=resp.ListArgs} "查询成功"
-// @Error 400 {object} resp.ObjectResponse "参数错误（如SourcePathToTargetPath格式非法、为空等）"
+// @Error 400 {object} resp.ObjectResponse "参数错误（如TargetPathToSourcePath格式非法、为空等）"
 // @Error 401 {object} resp.ObjectResponse "未授权（会话不存在或已过期）"
 // @Error 500 {object} resp.ObjectResponse "服务器内部错误（如Git服务调用失败、数据库异常等）"
 // @Router /repos/{id}/pullreq/{pullrequestID}/commits [get]
@@ -395,7 +395,7 @@ func GetReqQueryParamIDAndPath(ctx *gin.Context) (uint, string, error) {
 		return 0, "", err
 	}
 
-	pathToPath, err := req.PathParamOrError(ctx, req.SourcePathToTargetPath)
+	pathToPath, err := req.PathParamOrError(ctx, req.TargetPathToSourcePath)
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.PullrequestPathParamError)
 		return 0, "", err
