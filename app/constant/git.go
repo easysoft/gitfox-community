@@ -9,10 +9,10 @@ import (
 type GitOperationType string
 
 const (
-	GitOperationCreate    GitOperationType = "创建"
-	GitOperationUpdate    GitOperationType = "更新"
-	GitOperationDelete    GitOperationType = "删除"
-	GitOperationForcePush GitOperationType = "强制推送"
+	GitOperationCreate    GitOperationType = "create"
+	GitOperationUpdate    GitOperationType = "update"
+	GitOperationDelete    GitOperationType = "delete"
+	GitOperationForcePush GitOperationType = "force push"
 )
 
 // GitServiceType represents the different types of service values send by git's smart http protocol.
