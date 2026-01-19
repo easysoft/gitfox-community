@@ -56,6 +56,7 @@ type PullRequest struct {
 	SourceSHA         string          `gorm:"column:sourceSHA;type:char(40);not null;comment:'源分支最新提交的SHA-1值'"`
 	TargetRepoID      uint            `gorm:"column:targetRepoID;not null;comment:'目标仓库ID'"`
 	TargetBranch      string          `gorm:"column:targetBranch;not null;comment:'目标分支名称'"`
+	MergeDate         *datetime.Local `gorm:"column:mergeDate;comment:'合并时间'"`
 	MergedBy          *string         `gorm:"column:mergedBy;comment:'执行合并操作的用户ID'"`
 	MergeMethod       string          `gorm:"column:mergeMethod;comment:'合并方法'"`
 	MergeTargetSHA    string          `gorm:"column:mergeTargetSHA;type:char(40);comment:'合并时目标分支的SHA'"`

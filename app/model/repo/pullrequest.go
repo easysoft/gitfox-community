@@ -68,7 +68,7 @@ func (m MergeMethod) Check() (MergeMethod, bool) {
 	}
 }
 
-// PullRequest 合并请求表（ops_ppmrequests）Store层结构体
+// PullRequest 合并请求表（ops_ppmrequests）Model层结构体
 type PullRequest struct {
 	ID                uint              `json:"id"`
 	Title             string            `json:"title"`
@@ -79,6 +79,7 @@ type PullRequest struct {
 	SourceSHA         string            `json:"sourceSHA"`
 	TargetRepoID      uint              `json:"targetRepoID"`
 	TargetBranch      string            `json:"targetBranch"`
+	MergeDate         *datetime.Local   `json:"mergeDate"`
 	MergedBy          *string           `json:"mergedBy"`
 	MergeMethod       MergeMethod       `json:"mergeMethod"`
 	MergeTargetSHA    string            `json:"mergeTargetSHA"`
@@ -113,11 +114,12 @@ type DiffStats struct {
 type MergeAfter struct {
 	DiffStats
 
-	MergedBy       *string     `json:"mergedBy"`
-	MergeMethod    MergeMethod `json:"mergeMethod"`
-	MergeTargetSHA string      `json:"mergeTargetSHA"`
-	MergeBaseSHA   string      `json:"mergeBaseSHA"`
-	MergeSHA       string      `json:"mergeSHA"`
+	MergedBy       *string         `json:"mergedBy"`
+	MergeDate      *datetime.Local `json:"mergeDate"`
+	MergeMethod    MergeMethod     `json:"mergeMethod"`
+	MergeTargetSHA string          `json:"mergeTargetSHA"`
+	MergeBaseSHA   string          `json:"mergeBaseSHA"`
+	MergeSHA       string          `json:"mergeSHA"`
 }
 
 // MergeCheck 合并检查结果

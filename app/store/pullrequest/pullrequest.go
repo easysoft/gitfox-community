@@ -166,6 +166,7 @@ func (s *Store) UpdateMergeAfterSafe(
 			"additions":   mergeAfter.Additions,
 			"deletions":   mergeAfter.Deletions,
 
+			"mergeDate":      mergeAfter.MergeDate,
 			"mergedBy":       mergeAfter.MergedBy,
 			"editedBy":       mergeAfter.MergedBy,
 			"editedDate":     datetime.NowLocalTime(),
