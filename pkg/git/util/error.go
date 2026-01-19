@@ -38,10 +38,10 @@ func ProcessGitErrorf(ctx context.Context, err error) error {
 		translatedError = errors.ErrGitRefNotFound
 	// 1.2. 最常见：分支不存在
 	case isBranchRefNotFoundError(errMsg):
-		translatedError = errors.ErrGitBranchRefNotFound
+		translatedError = errors.ErrGitBranchNotFound
 	// 1.3. 最常见：标签不存在
 	case isTagRefNotFoundError(errMsg):
-		translatedError = errors.ErrGitTagRefNotFound
+		translatedError = errors.ErrGitTagNotFound
 
 	// 2.1. 常见：引用已存在
 	case isRefAlreadyExistsError(errMsg):
