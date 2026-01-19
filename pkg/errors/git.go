@@ -9,11 +9,15 @@ var (
 
 	// ErrGitRefNotFound 表示引用不存在（分支、标签等）
 	ErrGitRefNotFound       = WithI18nKey(GitError.New("reference not found"), i18n.GitRefNotFound)
+	ErrGitBranchRefNotFound = WithI18nKey(GitError.New("branch not found"), i18n.GitBranchRefNotFound)
+	ErrGitTagRefNotFound    = WithI18nKey(GitError.New("tag not found"), i18n.GitTagRefNotFound)
 	ErrGitRefFirstNotFound  = WithI18nKey(GitError.New("first reference not found"), i18n.GitRefNotFound)
 	ErrGitRefSecondNotFound = WithI18nKey(GitError.New("second reference not found"), i18n.GitRefNotFound)
 
 	// ErrGitRefAlreadyExists 表示引用已存在
-	ErrGitRefAlreadyExists = WithI18nKey(GitError.New("reference already exists"), i18n.GitRefAlreadyExists)
+	ErrGitRefAlreadyExists       = WithI18nKey(GitError.New("reference already exists"), i18n.GitRefAlreadyExists)
+	ErrGitBranchRefAlreadyExists = WithI18nKey(GitError.New("branch already exists"), i18n.GitBranchAlreadyExists)
+	ErrGitTagRefAlreadyExists    = WithI18nKey(GitError.New("tag already exists"), i18n.GitTagAlreadyExists)
 
 	// ErrGitInvalidRef 表示无效的引用
 	ErrGitInvalidRef = WithI18nKey(GitError.New("invalid reference"), i18n.GitInvalidRef)
