@@ -25,6 +25,7 @@ import (
 	gitUtil "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/util"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/url"
 )
 
@@ -551,6 +552,7 @@ func (s *Service) Merge(ctx context.Context, session *auth.Session, repoid uint,
 			Deletions:    uint(mergeOutput.Deletions),
 		},
 		MergedBy:       &session.User.Account,
+		MergeDate:      datetime.NowLocalTime(),
 		MergeMethod:    repoModel.MergeMethod(params.Method),
 		MergeTargetSHA: mergeOutput.MergeBaseSHA.String(),
 		MergeBaseSHA:   mergeOutput.MergeBaseSHA.String(),

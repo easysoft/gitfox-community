@@ -106,6 +106,8 @@ const (
 
 	// Git 相关常量
 	GitAmbiguousRef                 I18nKey = "git.ambiguous_ref"                     // 引用不明确.
+	GitBranchAlreadyExists          I18nKey = "git.branch_already_exists"             // 分支已存在.
+	GitBranchNotFound               I18nKey = "git.branch_not_found"                  // 分支不存在
 	GitCreateExecParamError         I18nKey = "git.create_exec_param_error"           // 创建败 git 命令参数失败.
 	GitEmptyRepo                    I18nKey = "git.empty_repo"                        // 仓库为空.
 	GitExecError                    I18nKey = "git.exec_error"                        // 执行 git 命令失败.
@@ -133,6 +135,8 @@ const (
 	GitRefAlreadyExists             I18nKey = "git.ref_already_exists"                // 引用已存在.
 	GitRefNotFound                  I18nKey = "git.ref_not_found"                     // 引用不存在.
 	GitRepoNotFound                 I18nKey = "git.repo_not_found"                    // 仓库不存在.
+	GitTagAlreadyExists             I18nKey = "git.tag_already_exists"                // 标签已存在.
+	GitTagNotFound                  I18nKey = "git.tag_not_found"                     // 标签不存在
 	GitTimeout                      I18nKey = "git.timeout"                           // Git 操作超时.
 	GitUnrelatedHistories           I18nKey = "git.unrelated_histories"               // 不相关的历史记录.
 
