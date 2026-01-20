@@ -5097,7 +5097,7 @@ const docTemplate = `{
                 "lang": {
                     "type": "string"
                 },
-                "lang_id": {
+                "langID": {
                     "type": "integer"
                 },
                 "name": {
@@ -5118,7 +5118,7 @@ const docTemplate = `{
                 "priority": {
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRulePriority"
                 },
-                "ruleset_id": {
+                "rulesetID": {
                     "type": "integer"
                 },
                 "sort": {
