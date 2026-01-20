@@ -8,6 +8,7 @@ import (
 	context "context"
 	reflect "reflect"
 
+	repo "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 	repo0 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
 	gomock "github.com/golang/mock/gomock"
@@ -66,10 +67,10 @@ func (mr *MockInterfaceMockRecorder) Delete(ctx, id interface{}) *gomock.Call {
 }
 
 // FindByRef mocks base method.
-func (m *MockInterface) FindByRef(ctx context.Context, ref string) (*repoModel.Repo, error) {
+func (m *MockInterface) FindByRef(ctx context.Context, ref string) (*repo.Repo, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FindByRef", ctx, ref)
-	ret0, _ := ret[0].(*repoModel.Repo)
+	ret0, _ := ret[0].(*repo.Repo)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -81,10 +82,10 @@ func (mr *MockInterfaceMockRecorder) FindByRef(ctx, ref interface{}) *gomock.Cal
 }
 
 // GetByID mocks base method.
-func (m *MockInterface) GetByID(ctx context.Context, id uint) (*repoModel.Repo, error) {
+func (m *MockInterface) GetByID(ctx context.Context, id uint) (*repo.Repo, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetByID", ctx, id)
-	ret0, _ := ret[0].(*repoModel.Repo)
+	ret0, _ := ret[0].(*repo.Repo)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -96,10 +97,10 @@ func (mr *MockInterfaceMockRecorder) GetByID(ctx, id interface{}) *gomock.Call {
 }
 
 // GetBySpaceAndIdentifier mocks base method.
-func (m *MockInterface) GetBySpaceAndIdentifier(ctx context.Context, spaceID uint, identifier string) (*repoModel.Repo, error) {
+func (m *MockInterface) GetBySpaceAndIdentifier(ctx context.Context, spaceID uint, identifier string) (*repo.Repo, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetBySpaceAndIdentifier", ctx, spaceID, identifier)
-	ret0, _ := ret[0].(*repoModel.Repo)
+	ret0, _ := ret[0].(*repo.Repo)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -111,7 +112,7 @@ func (mr *MockInterfaceMockRecorder) GetBySpaceAndIdentifier(ctx, spaceID, ident
 }
 
 // List mocks base method.
-func (m *MockInterface) List(ctx context.Context, filter repoModel.ReqFilter) (repo0.RepoPageResult, error) {
+func (m *MockInterface) List(ctx context.Context, filter repo.ReqFilter) (repo0.RepoPageResult, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "List", ctx, filter)
 	ret0, _ := ret[0].(repo0.RepoPageResult)

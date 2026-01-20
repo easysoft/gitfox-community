@@ -31,9 +31,10 @@ var httpcli = &http.Client{
 	Timeout: 10 * time.Second,
 }
 
-// BaseResult 基础返回体，支持实现不同的返回体
+// BaseResult 基础返回体
 type BaseResult struct {
-	Data interface{} `json:"data"`
+	Data    interface{} `json:"data"`
+	Message string      `json:"message"`
 }
 
 // Get 发送 GET 请求

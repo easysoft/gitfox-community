@@ -33,14 +33,25 @@ func ProcessGitErrorf(ctx context.Context, err error) error {
 	// 按照错误出现频率排序，最常见的错误放在前面以提高性能
 	var translatedError error
 	switch {
-	// 1. 最常见：引用/分支/标签不存在
-	case isRefNotFoundError(err, errMsg):
+	// 1.1. 最常见：引用/分支/标签不存在
+	case isRefNotFoundError(errMsg):
 		translatedError = errors.ErrGitRefNotFound
+	// 1.2. 最常见：分支不存在
+	case isBranchRefNotFoundError(errMsg):
+		translatedError = errors.ErrGitBranchNotFound
+	// 1.3. 最常见：标签不存在
+	case isTagRefNotFoundError(errMsg):
+		translatedError = errors.ErrGitTagNotFound
 
-	// 2. 常见：引用已存在
+	// 2.1. 常见：引用已存在
 	case isRefAlreadyExistsError(errMsg):
 		translatedError = errors.ErrGitRefAlreadyExists
-
+	// 2.2. 常见：分支已存在
+	case isRefBranchAlreadyExistsError(errMsg):
+		translatedError = errors.ErrGitBranchRefAlreadyExists
+	// 2.3. 常见：标签已存在
+	case isRefTagAlreadyExistsError(errMsg):
+		translatedError = errors.ErrGitTagRefAlreadyExists
 	// 3. 常见：仓库不存在
 	case isRepoNotFoundError(errMsg):
 		translatedError = errors.ErrGitRepoNotFound
@@ -98,19 +109,39 @@ func ProcessGitErrorf(ctx context.Context, err error) error {
 }
 
 // isRefNotFoundError 检查是否是引用不存在错误
-func isRefNotFoundError(err error, errMsg string) bool {
+func isRefNotFoundError(errMsg string) bool {
 	// 检查常见的引用不存在错误消息
-	if strings.Contains(errMsg, "not found") && (strings.Contains(errMsg, "ref") ||
-		strings.Contains(errMsg, "branch") ||
-		strings.Contains(errMsg, "tag")) {
+	if strings.Contains(errMsg, "not found") && strings.Contains(errMsg, "ref") {
 		return true
 	}
+
 	if strings.Contains(errMsg, "unknown revision") {
 		return true
 	}
+
 	if strings.Contains(errMsg, "couldn't find remote ref") {
 		return true
 	}
+	return false
+}
+
+// isBranchRefNotFoundError 检查是否是分支引用不存在错误
+func isBranchRefNotFoundError(errMsg string) bool {
+	// 检查常见的引用不存在错误消息
+	if strings.Contains(errMsg, "not found") && strings.Contains(errMsg, "branch") {
+		return true
+
+	}
+	return false
+}
+
+// isTagRefNotFoundError 检查是否是标签引用不存在错误
+func isTagRefNotFoundError(errMsg string) bool {
+	// 检查常见的引用不存在错误消息
+	if strings.Contains(errMsg, "not found") && strings.Contains(errMsg, "tag") {
+		return true
+	}
+
 	return false
 }
 
@@ -121,11 +152,29 @@ func isRefAlreadyExistsError(errMsg string) bool {
 	if strings.Contains(errMsgLower, "reference already exists") {
 		return true
 	}
-	// 匹配 "tag 'xxx' already exists" 或 "branch 'xxx' already exists" 等
-	if strings.Contains(errMsgLower, "already exists") &&
-		(strings.Contains(errMsgLower, "branch") ||
-			strings.Contains(errMsgLower, "tag") ||
-			strings.Contains(errMsgLower, "ref")) {
+	// 匹配 ""ref 'xxx' already exists"
+	if strings.Contains(errMsgLower, "already exists") && strings.Contains(errMsgLower, "ref") {
+		return true
+	}
+	return false
+}
+
+// isRefBranchAlreadyExistsError 检查是否是分支引用已存在错误
+func isRefBranchAlreadyExistsError(errMsg string) bool {
+	errMsgLower := strings.ToLower(errMsg)
+	// 匹配  "branch 'xxx' already exists"
+	if strings.Contains(errMsgLower, "already exists") && strings.Contains(errMsgLower, "branch") {
+		return true
+	}
+	return false
+}
+
+// isRefTagAlreadyExistsError 检查是否是标签引用已存在错误
+func isRefTagAlreadyExistsError(errMsg string) bool {
+	errMsgLower := strings.ToLower(errMsg)
+
+	// 匹配 "tag 'xxx' already exists"
+	if strings.Contains(errMsgLower, "already exists") && strings.Contains(errMsgLower, "tag") {
 		return true
 	}
 	return false

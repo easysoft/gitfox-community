@@ -26,6 +26,8 @@ import (
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
 // @Router /repos/{id}/branch-types [post]
 func (c *Controller) CreateBranchType(ctx *gin.Context) {
+	var err error
+
 	// 解析 path id
 	repoID, err := req.PathParamAsNaturalNum(ctx, "id")
 	if err != nil {
@@ -52,7 +54,6 @@ func (c *Controller) CreateBranchType(ctx *gin.Context) {
 	for _, v := range reqBodyArray {
 		// 调用Check方法进行参数校验
 		if err := v.Check(); err != nil {
-			err = errors.WithI18nKey(err, i18n.BranchTypeBodyCheckError)
 			resp.BadRequest(ctx, err)
 			return
 		}
@@ -60,14 +61,14 @@ func (c *Controller) CreateBranchType(ctx *gin.Context) {
 
 	// 如果是空数组
 	if len(reqBodyArray) == 0 {
-		err = errors.WithI18nKey(errors.New("request body cannot be empty"), i18n.BranchTypeBodyParamError)
+		err = errors.WithI18nKey(err, i18n.BranchTypeBodyParamError)
 		resp.BadRequest(ctx, err)
 		return
 	}
 
 	// repoID=0 时不允许批量创建
 	if repoID == 0 && len(reqBodyArray) > 1 {
-		err = errors.WithI18nKey(errors.New("batch creation not allowed for system-level branch types"), i18n.BranchTypeBodyParamError)
+		err = errors.WithI18nKey(err, i18n.BranchTypeBodyParamError)
 		resp.BadRequest(ctx, err)
 		return
 	}
@@ -123,7 +124,6 @@ func (c *Controller) UpdateBranchType(ctx *gin.Context) {
 
 	// 调用Check方法进行参数校验
 	if err := reqBody.Check(); err != nil {
-		err = errors.WithI18nKey(err, i18n.BranchTypeBodyCheckError)
 		resp.BadRequest(ctx, err)
 		return
 	}

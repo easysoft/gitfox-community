@@ -20,8 +20,8 @@ func registerGitRoutes(r *gin.RouterGroup, controller *Controller) {
 func registerGitHookRoutes(r *gin.RouterGroup, controller *Controller) {
 	git := r.Group("/git-hooks")
 	{
-		git.POST("/pre-receive", controller.Git.PreReceiveClone)
-		git.POST("/post-receive", controller.Git.PostReceiveClone)
-		git.GET("/update", controller.Git.UpdateClone)
+		git.POST("/pre-receive", controller.Git.PreReceive)
+		git.POST("/post-receive", controller.Git.PostReceive)
+		git.GET("/update", controller.Git.Update)
 	}
 }

@@ -8,7 +8,7 @@ import (
 
 type ModeName string
 
-var ConfigWireSet = wire.NewSet(NewSystemConfig, NewSystemMode)
+var ConfigWireSet = wire.NewSet(NewSystemConfig, NewSystemMode, NewDevopsConfig)
 
 func NewSystemMode(mode string) ModeName {
 	return ModeName(mode)
@@ -20,4 +20,8 @@ func NewSystemConfig(mode ModeName) (*config.Config, error) {
 		return nil, err
 	}
 	return cfg, nil
+}
+
+func NewDevopsConfig(cfg *config.Config) config.DevopsConfig {
+	return cfg.Devops
 }

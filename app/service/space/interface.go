@@ -6,6 +6,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
 	spaceModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/space"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/sse"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/space"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
 )
@@ -19,4 +20,5 @@ type Interface interface {
 	Restore(ctx context.Context, id uint) error
 
 	GetSpaceCheckAccess(ctx context.Context, session *auth.Session, spaceID uint, permissions []constant.Permission) (*space.Space, error)
+	Events(ctx context.Context, spaceID uint) (<-chan *sse.Event, <-chan error, func(context.Context) error, error)
 }

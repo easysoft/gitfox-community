@@ -5,6 +5,16 @@ import (
 	"strings"
 )
 
+// GitOperationType Git 操作类型
+type GitOperationType string
+
+const (
+	GitOperationCreate    GitOperationType = "create"
+	GitOperationUpdate    GitOperationType = "update"
+	GitOperationDelete    GitOperationType = "delete"
+	GitOperationForcePush GitOperationType = "force push"
+)
+
 // GitServiceType represents the different types of service values send by git's smart http protocol.
 // See https://git-scm.com/docs/http-protocol#_smart_clients for more details.
 type GitServiceType string

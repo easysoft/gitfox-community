@@ -11,6 +11,11 @@ const (
 	QueryParamSpaceID = "spaceID"
 
 	QueryParamOperation = "Operation"
+
+	TargetPathToSourcePath = "targetPathToSourcePath"
+	PullrequestID          = "pullrequestid"
+	QueryParamPage         = "page"
+	QueryParamLimit        = "limit"
 )
 
 func GetRepoRefFromPath(r *gin.Context) (string, error) {
