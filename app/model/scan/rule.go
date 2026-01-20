@@ -37,10 +37,10 @@ type RuleReqFilter struct {
 }
 
 type RuleListReqFilter struct {
-	RuleSetID    int64            `json:"ruleset_id,omitempty"`
+	RuleSetID    int64            `json:"rulesetID,omitempty"`
 	Name         string           `json:"name,omitempty"`
 	Lang         string           `json:"lang,omitempty"`
-	LangID       int64            `json:"lang_id,omitempty"`
+	LangID       int64            `json:"langID,omitempty"`
 	Plugin       string           `json:"plugin,omitempty"`
 	Tag          string           `json:"tag,omitempty"`
 	Priority     ScanRulePriority `json:"priority,omitempty"`
