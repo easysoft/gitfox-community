@@ -238,3 +238,20 @@ type Violation struct {
 type EventTrigger struct {
 	Type string `json:"type"` // pull request 操作，例如 create, close, reopen
 }
+
+// EventTriggerType 事件触发类型常量
+const (
+	EventTriggerTypeCreate = "create"
+	EventTriggerTypeClose  = "close"
+	EventTriggerTypeReopen = "reopen"
+)
+
+// Check 校验事件触发类型是否有效
+func (e *EventTrigger) Check() error {
+	switch e.Type {
+	case EventTriggerTypeCreate, EventTriggerTypeClose, EventTriggerTypeReopen:
+		return nil
+	default:
+		return errors.WithI18nKey(nil, i18n.PullrequestEventTriggerInvalidType)
+	}
+}

@@ -10,6 +10,7 @@ import (
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/auth/authn"
 	gitevents "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/events/git"
 	pullreqevents "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/events/pullreq"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/githook"
@@ -726,12 +727,6 @@ func parseDiffPath(path string) (CompareInfo, error) {
 	}, nil
 }
 
-// System admin constants for internal git operations.
-const (
-	systemAdminAccount = "admin"
-	systemAdminEmail   = "devops@chandao.com"
-)
-
 // createSystemRPCWriteParams creates base write parameters for system internal write operations.
 // It uses the admin user for system-level git operations.
 func createSystemRPCWriteParams(
@@ -745,7 +740,7 @@ func createSystemRPCWriteParams(
 		ctx,
 		urlProvider.GetInternalAPIURL(ctx),
 		repoID,
-		systemAdminAccount,
+		authn.HeaderAppAdmin,
 		false,
 		true,
 	)
@@ -755,8 +750,8 @@ func createSystemRPCWriteParams(
 
 	return git.WriteParams{
 		Actor: git.Identity{
-			Name:  systemAdminAccount,
-			Email: systemAdminEmail,
+			Name:  authn.HeaderAppAdmin,
+			Email: authn.HeaderAdminEmail,
 		},
 		RepoUID: repoGITUID,
 		EnvVars: envVars,
@@ -774,6 +769,11 @@ func (s *Service) TriggerEvent(
 	pullreqID uint,
 	params repoModel.EventTrigger,
 ) error {
+	// 校验事件触发类型
+	if err := params.Check(); err != nil {
+		return err
+	}
+
 	pr, err := s.pullRequestStore.GetByID(ctx, repoID, pullreqID)
 	if err != nil {
 		return err
@@ -782,7 +782,7 @@ func (s *Service) TriggerEvent(
 	account := session.User.Account
 
 	switch params.Type {
-	case "create":
+	case repoModel.EventTriggerTypeCreate:
 		s.pullreqEvReporter.Created(ctx, &pullreqevents.CreatedPayload{
 			Base: pullreqevents.Base{
 				PullReqID:    int64(pr.ID),
@@ -794,7 +794,7 @@ func (s *Service) TriggerEvent(
 			TargetBranch: pr.TargetBranch,
 			SourceSHA:    pr.SourceSHA,
 		})
-	case "close":
+	case repoModel.EventTriggerTypeClose:
 		s.pullreqEvReporter.Closed(ctx, &pullreqevents.ClosedPayload{
 			Base: pullreqevents.Base{
 				PullReqID:    int64(pr.ID),
@@ -804,7 +804,7 @@ func (s *Service) TriggerEvent(
 			},
 			SourceSHA: pr.SourceSHA,
 		})
-	case "reopen":
+	case repoModel.EventTriggerTypeReopen:
 		s.pullreqEvReporter.Reopened(ctx, &pullreqevents.ReopenedPayload{
 			Base: pullreqevents.Base{
 				PullReqID:    int64(pr.ID),
@@ -815,8 +815,6 @@ func (s *Service) TriggerEvent(
 			SourceSHA:    pr.SourceSHA,
 			MergeBaseSHA: pr.MergeBaseSHA,
 		})
-	default:
-		return errors.Newf("unknown event type: %s", params.Type)
 	}
 
 	return nil

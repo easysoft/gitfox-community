@@ -19,3 +19,4 @@ pullrequest:
   merge_check_source_sha_error: "Merge check failed. The source commit (SHA) cannot be empty."
   event_trigger_success: "Event trigger success"
   event_trigger_error: "Event trigger error"
+  event_trigger_invalid_type: "Invalid event trigger type. Must be one of: create, close, reopen."

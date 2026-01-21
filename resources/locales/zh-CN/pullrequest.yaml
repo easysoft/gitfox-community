@@ -19,3 +19,4 @@ pullrequest:
   merge_check_source_sha_error: "合并检查失败，源提交不能为空。"
   event_trigger_success: "事件触发成功"
   event_trigger_error: "事件触发失败"
+  event_trigger_invalid_type: "事件触发类型无效，必须为 create、close、reopen 之一。"
