@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS `ops_scan_rules` (
 	`plugin` varchar(50) NOT NULL COMMENT '所属插件名称（标识规则归属的扫描插件）',
 	`tag` varchar(50) NOT NULL COMMENT '规则标签（用于分类筛选，如：安全、规范、性能等）',
 	`priority` tinyint(1) NOT NULL COMMENT '规则优先级（0-低、1-中、2-高）',
-	`type` varchar(20) NOT NULL COMMENT '规则类型（如：代码扫描、依赖扫描、配置扫描等）',
+	`type` varchar(20) NOT NULL COMMENT '规则类型（如：defect(缺陷)、security(安全)、compliance(合规)、optimize(优化)等）',
 	`content` text NOT NULL COMMENT '规则内容（中文，如扫描正则、检查逻辑描述等）',
 	`contentEn` text NOT NULL COMMENT '规则内容（英文，如扫描正则、检查逻辑描述等）',
 	`isCustom` tinyint(1) NOT NULL DEFAULT '1' COMMENT '是否自定义规则（1=自定义规则，0=系统默认规则）',
