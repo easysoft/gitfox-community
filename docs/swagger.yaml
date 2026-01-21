@@ -88,13 +88,11 @@ definitions:
     - 0
     - 1
     - 2
-    - 3
     type: integer
     x-enum-varnames:
     - ScanRulePriorityLow
     - ScanRulePriorityMedium
     - ScanRulePriorityHigh
-    - scanRulePriorityNone
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleStatus:
     enum:
     - enabled
@@ -918,6 +916,8 @@ definitions:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRulePriority'
       rulesetID:
         type: integer
+      showAllRules:
+        type: boolean
       sort:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRuleSort'
       status:
@@ -1067,11 +1067,11 @@ definitions:
     - scanRuleBindNone
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRulePriority:
     enum:
-    - low
-    - medium
-    - high
-    - ""
-    type: string
+    - 0
+    - 1
+    - 2
+    - -1
+    type: integer
     x-enum-varnames:
     - ScanRulePriorityLow
     - ScanRulePriorityMedium
