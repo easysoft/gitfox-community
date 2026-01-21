@@ -86,7 +86,7 @@ const (
 	ScanRulePriorityLow ScanRulePriority = iota
 	ScanRulePriorityMedium
 	ScanRulePriorityHigh
-	scanRulePriorityNone
+	scanRulePriorityNone = -1
 )
 
 var scanRulePriorities = sortEnum([]ScanRulePriority{
@@ -110,62 +110,6 @@ func (s ScanRulePriority) IsValid() bool {
 }
 func GetAllScanRulePriorities() ([]ScanRulePriority, ScanRulePriority) {
 	return scanRulePriorities, scanRulePriorityNone
-}
-
-// ScanRuleSeverity 规则严重性
-type ScanRuleSeverity string
-
-const (
-	ScanRuleSeverityLow      ScanRuleSeverity = "low"
-	ScanRuleSeverityMedium   ScanRuleSeverity = "medium"
-	ScanRuleSeverityHigh     ScanRuleSeverity = "high"
-	ScanRuleSeverityCritical ScanRuleSeverity = "critical"
-	scanRuleSeverityNone     ScanRuleSeverity = ""
-)
-
-var scanRuleSeverities = sortEnum([]ScanRuleSeverity{
-	ScanRuleSeverityLow,
-	ScanRuleSeverityMedium,
-	ScanRuleSeverityHigh,
-	ScanRuleSeverityCritical,
-})
-
-func (ScanRuleSeverity) Enum() []interface{} { return toInterfaceSlice(scanRuleSeverities) }
-func (s ScanRuleSeverity) Sanitize() (ScanRuleSeverity, bool) {
-	return Sanitize(s, GetAllScanRuleSeverities)
-}
-func (s ScanRuleSeverity) IsValid() bool {
-	severities, _ := GetAllScanRuleSeverities()
-	for _, sev := range severities {
-		if s == sev {
-			return true
-		}
-	}
-	return false
-}
-func GetAllScanRuleSeverities() ([]ScanRuleSeverity, ScanRuleSeverity) {
-	return scanRuleSeverities, scanRuleSeverityNone
-}
-
-type ScanRuleBind string
-
-const (
-	ScanRuleBindBind   ScanRuleBind = "bind"
-	ScanRuleBindUnbind ScanRuleBind = "unbind"
-	scanRuleBindNone   ScanRuleBind = ""
-)
-
-var scanRuleBinds = sortEnum([]ScanRuleBind{
-	ScanRuleBindBind,
-	ScanRuleBindUnbind,
-})
-
-func (ScanRuleBind) Enum() []interface{} { return toInterfaceSlice(scanRuleBinds) }
-func (s ScanRuleBind) Sanitize() (ScanRuleBind, bool) {
-	return Sanitize(s, GetAllScanRuleBinds)
-}
-func GetAllScanRuleBinds() ([]ScanRuleBind, ScanRuleBind) {
-	return scanRuleBinds, scanRuleBindNone
 }
 
 type ScanRuleStatus string

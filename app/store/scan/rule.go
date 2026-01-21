@@ -127,54 +127,54 @@ func (s *RuleStore) GetByID(ctx context.Context, id uint) (*scanModel.Rule, erro
 
 // List 查询规则列表
 func (s *RuleStore) List(ctx context.Context, filter scanModel.RuleListReqFilter) (*database.PageResult[*scanModel.Rule], error) {
-	tx := s.db.WithContext(ctx).Model(&Rule{}).Where("ops_scan_rules.deleted = ?", false)
+	tx := s.db.WithContext(ctx).Model(&Rule{}).Where("deleted = ?", false)
 
 	if filter.Bind == scanModel.ScanRuleBindBind {
 		if filter.RuleSetID > 0 {
 			subQuery := s.db.Model(&RuleSetRules{}).
 				Select("ruleID").
 				Where("rulesetID = ? AND deleted = ?", filter.RuleSetID, false)
-			tx = tx.Where("ops_scan_rules.id IN (?)", subQuery)
+			tx = tx.Where("id IN (?)", subQuery)
 		} else {
 			subQuery := s.db.Model(&RuleSetRules{}).
 				Distinct("ruleID").
 				Where("deleted = ?", false)
-			tx = tx.Where("ops_scan_rules.id IN (?)", subQuery)
+			tx = tx.Where("id IN (?)", subQuery)
 		}
 	}
 
 	// 过滤查询参数
 	if filter.Name != "" {
-		tx = tx.Where("ops_scan_rules.name LIKE ?", "%"+filter.Name+"%")
+		tx = tx.Where("name LIKE ?", "%"+filter.Name+"%")
 	}
 
 	if filter.Lang != "" {
-		tx = tx.Where("ops_scan_rules.lang = ?", filter.Lang)
+		tx = tx.Where("lang = ?", filter.Lang)
 	}
 
 	if filter.Plugin != "" {
-		tx = tx.Where("ops_scan_rules.plugin = ?", filter.Plugin)
+		tx = tx.Where("plugin = ?", filter.Plugin)
 	}
 
 	if filter.Tag != "" {
-		tx = tx.Where("ops_scan_rules.tag = ?", filter.Tag)
+		tx = tx.Where("tag = ?", filter.Tag)
 	}
 
-	if filter.Priority != "" {
-		tx = tx.Where("ops_scan_rules.priority = ?", filter.Priority)
+	if filter.Priority != -1 || filter.ShowAllRules {
+		tx = tx.Where("priority = ?", filter.Priority)
 	}
 
 	if filter.Status != "" {
-		tx = tx.Where("ops_scan_rules.status = ?", filter.Status)
+		tx = tx.Where("status = ?", filter.Status)
 	}
 
 	if filter.Type != "" {
-		tx = tx.Where("ops_scan_rules.type = ?", filter.Type)
+		tx = tx.Where("type = ?", filter.Type)
 	}
 
 	// 排序：组合 sort 和 order
 	if filter.Sort != "" && filter.Order != "" {
-		tx = tx.Order("ops_scan_rules." + string(filter.Sort) + " " + string(filter.Order))
+		tx = tx.Order("" + string(filter.Sort) + " " + string(filter.Order))
 	}
 
 	// 分页查询

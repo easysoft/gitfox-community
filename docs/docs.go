@@ -3928,14 +3928,12 @@ const docTemplate = `{
             "enum": [
                 0,
                 1,
-                2,
-                3
+                2
             ],
             "x-enum-varnames": [
                 "ScanRulePriorityLow",
                 "ScanRulePriorityMedium",
-                "ScanRulePriorityHigh",
-                "scanRulePriorityNone"
+                "ScanRulePriorityHigh"
             ]
         },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleStatus": {
@@ -5121,6 +5119,9 @@ const docTemplate = `{
                 "rulesetID": {
                     "type": "integer"
                 },
+                "showAllRules": {
+                    "type": "boolean"
+                },
                 "sort": {
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRuleSort"
                 },
@@ -5337,12 +5338,12 @@ const docTemplate = `{
             ]
         },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRulePriority": {
-            "type": "string",
+            "type": "integer",
             "enum": [
-                "low",
-                "medium",
-                "high",
-                ""
+                0,
+                1,
+                2,
+                -1
             ],
             "x-enum-varnames": [
                 "ScanRulePriorityLow",
