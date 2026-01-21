@@ -6,6 +6,8 @@ import (
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/git"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/githook"
+	gitevents "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/events/git"
+	pullreqevents "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/events/pullreq"
 	gitSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/git"
 	repoSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
 	settingsSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/settings"
@@ -110,6 +112,8 @@ func NewGitHookController(
 	urlProvider url.Provider,
 	githookFactory hook.ClientFactory,
 	cfg *config.Config,
+	prReporter *pullreqevents.Reporter,
+	gitReporter *gitevents.Reporter,
 ) *githook.Controller {
 	ctrl := githook.NewController(
 		principalStore,
@@ -117,6 +121,8 @@ func NewGitHookController(
 		git,
 		urlProvider,
 		cfg.Devops,
+		prReporter,
+		gitReporter,
 	)
 	// Wire the controller into the factory
 	// Wire the controller into the factory

@@ -18,6 +18,8 @@ import (
 	"context"
 	"fmt"
 
+	gitevents "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/events/git"
+	pullreqevents "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/events/pullreq"
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/user"
@@ -27,7 +29,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/api"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/hook"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/sha"
-	"github.com/easysoft/gitfox/app/url"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/url"
 )
 
 type Controller struct {
@@ -36,6 +38,8 @@ type Controller struct {
 	git          git.Interface
 	urlProvider  url.Provider
 	devopsConfig config.DevopsConfig
+	prReporter   *pullreqevents.Reporter
+	gitReporter  *gitevents.Reporter
 }
 
 func NewController(
@@ -44,6 +48,8 @@ func NewController(
 	git git.Interface,
 	urlProvider url.Provider,
 	devopsConfig config.DevopsConfig,
+	prReporter *pullreqevents.Reporter,
+	gitReporter *gitevents.Reporter,
 ) *Controller {
 	return &Controller{
 		userStore:    userStore,
@@ -51,6 +57,8 @@ func NewController(
 		git:          git,
 		urlProvider:  urlProvider,
 		devopsConfig: devopsConfig,
+		prReporter:   prReporter,
+		gitReporter:  gitReporter,
 	}
 }
 

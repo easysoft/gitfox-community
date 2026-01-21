@@ -135,6 +135,11 @@ func (c *command) run(*kingpin.ParseContext) error {
 		}
 	}
 
+	// 关闭事件系统（取消所有事件消费者）
+	app.SystemLog.Info("[Server] Stopping event system...")
+	app.EventContext.Cancel()
+	app.SystemLog.Info("[Server] Event system shutdown completed")
+
 	// 停止所有定时任务
 	app.SystemLog.Info("[Server] Stopping cron jobs...")
 	cron.StopAll()

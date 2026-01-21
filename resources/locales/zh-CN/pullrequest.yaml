@@ -17,3 +17,5 @@ pullrequest:
   merge_check_title_error: "合并检查失败，标题不能为空。"
   merge_check_method_error: "合并检查失败，如果不是dryrun模式，合并方式不能为空。且只能是 merge、squash、rebase、fast-forward 四种方式之一。"
   merge_check_source_sha_error: "合并检查失败，源提交不能为空。"
+  event_trigger_success: "事件触发成功"
+  event_trigger_error: "事件触发失败"

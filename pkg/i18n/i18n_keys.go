@@ -142,6 +142,8 @@ const (
 
 	// Pullrequest 相关常量
 	PullrequestBodyParamError                I18nKey = "pullrequest.body_param_error"                   // Body 参数解析失败.
+	PullrequestEventTriggerError             I18nKey = "pullrequest.event_trigger_error"                // 事件触发失败
+	PullrequestEventTriggerSuccess           I18nKey = "pullrequest.event_trigger_success"              // 事件触发成功
 	PullrequestMergeAlreadyMerged            I18nKey = "pullrequest.merge_already_merged"               // Pull Request 已合并,无需重复操作.
 	PullrequestMergeCheckMergeabilityError   I18nKey = "pullrequest.merge_check_mergeability_error"     // 合并检查失败,可能是因为分支已被修改或合并冲突.请确认后再试.
 	PullrequestMergeCheckMethodError         I18nKey = "pullrequest.merge_check_method_error"           // 合并检查失败,如果不是dryrun模式,合并方式不能为空.且只能是 merge、squash、...

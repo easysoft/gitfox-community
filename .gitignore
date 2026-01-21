@@ -39,4 +39,5 @@ configs/*local.*
 bin/*
 
 # 本地测试文件
+cmd/cli/gitfox_debug
 cmd/cli/gitfox/*
