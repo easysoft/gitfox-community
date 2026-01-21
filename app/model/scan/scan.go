@@ -241,7 +241,7 @@ const (
 	ScanRuleSortID          ScanRuleSort = "id"
 	ScanRuleSortName        ScanRuleSort = "name"
 	ScanRuleSortPriority    ScanRuleSort = "priority"
-	ScanRuleSortCreatedDate ScanRuleSort = "created_date"
+	ScanRuleSortCreatedDate ScanRuleSort = "createdDate"
 	scanRuleSortNone        ScanRuleSort = ""
 )
 
