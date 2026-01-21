@@ -68,7 +68,7 @@ func (m MergeMethod) Check() (MergeMethod, bool) {
 	}
 }
 
-// PullRequest 合并请求表（ops_ppmrequests）Model层结构体
+// PullRequest 合并请求表（ops_ppm）Model层结构体
 type PullRequest struct {
 	ID                uint              `json:"id"`
 	Title             string            `json:"title"`

@@ -45,7 +45,7 @@ func (ss StringSlice) Value() (driver.Value, error) {
 	return strings.Join(ss, "\n"), nil
 }
 
-// PullRequest 合并请求表（ops_ppmrequests）Store层结构体
+// PullRequest 合并请求表（ops_ppm）Store层结构体
 type PullRequest struct {
 	ID                uint            `gorm:"column:id;primaryKey;autoIncrement;comment:'自增主键'"`
 	Title             string          `gorm:"column:title;not null;comment:'PR 标题'"`
@@ -81,7 +81,7 @@ type PullRequest struct {
 
 // TableName 指定数据库表名
 func (p *PullRequest) TableName() string {
-	return "ops_ppmrequests"
+	return "ops_ppm"
 }
 
 // BeforeCreate GORM 钩子：创建前自动设置时间

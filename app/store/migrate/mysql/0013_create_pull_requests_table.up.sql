@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS `ops_ppmrequests` (
+CREATE TABLE IF NOT EXISTS `ops_ppm` (
 	`id` int unsigned NOT NULL AUTO_INCREMENT COMMENT '自增主键',
 	`title` varchar(255) NOT NULL COMMENT 'PR 标题',
 	`desc` TEXT NOT NULL COMMENT '拉取请求详细描述',
@@ -32,5 +32,5 @@ CREATE TABLE IF NOT EXISTS `ops_ppmrequests` (
 	PRIMARY KEY (`id`)
 	) ENGINE=InnoDB COMMENT='合并请求主表';
 
-CREATE INDEX `idx_createdBy` ON ops_ppmrequests (`createdBy`);
-CREATE INDEX `idx_sourceRepoID_sourceBranch_targetRepoID_targetBranch` ON ops_ppmrequests (`sourceRepoID`, `sourceBranch`, `targetRepoID`, `targetBranch`);
+CREATE INDEX `idx_createdBy` ON ops_ppm (`createdBy`);
+CREATE INDEX `idx_sourceRepoID_sourceBranch_targetRepoID_targetBranch` ON ops_ppm(`sourceRepoID`, `sourceBranch`, `targetRepoID`, `targetBranch`);
