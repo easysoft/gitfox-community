@@ -20,7 +20,6 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/commit"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/locker"
 	publickey2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/publickey"
-	pullrequest2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/pullrequest"
 	repo2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
 	scan2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/scan"
 	space2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/space"
@@ -112,10 +111,42 @@ func NewApp(mode string) (*App, func(), error) {
 	tagController := tag2.NewController(tagService, repoService)
 	commitService := commit.NewService(urlProvider, gitService)
 	commitController := commit2.NewController(commitService, repoService)
+	eventContext := provider.NewEventContext()
+	eventsConfig := provider.NewEventConfig()
+	universalClient := provider.NewEventRedisClient()
+	system, err := provider.ProvideEventSystem(eventsConfig, universalClient)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	readerFactory, err := provider.ProvideGitEventReaderFactory(system)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	eventsReaderFactory, err := provider.ProvidePullReqReaderFactory(system)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	reporter, err := provider.ProvidePullReqReporter(system)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
 	mutexManager := lock.ProvideMutexManager()
 	lockerLocker := locker.NewLocker(mutexManager)
 	pullrequestStore := pullrequest.NewPullRequestStore(db)
-	pullrequestService := pullrequest2.NewPullRequestSvc(gitService, repoService, lockerLocker, pullrequestStore, urlProvider)
+	pullrequestService, err := provider.ProvidePullRequestSvc(eventContext, readerFactory, eventsReaderFactory, reporter, config, gitService, repoService, store, lockerLocker, pullrequestStore, streamer, pubSub, urlProvider)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
 	repoController := repo3.NewRepoController(repoService, pullrequestService, urlProvider, gitService)
 	userStore := user.NewUserStore(db)
 	tokenInterface := provider.NewTokenStoreProvider(db)
@@ -126,7 +157,13 @@ func NewApp(mode string) (*App, func(), error) {
 	service2 := provider.NewGitService(gitService, urlProvider)
 	settingsInterface := settings.NewSettingStore(db)
 	settingsService := provider.NewSettingsService(settingsInterface)
-	githookController := provider.NewGitHookController(userStore, store, gitService, urlProvider, clientFactory, config)
+	eventsReporter, err := provider.ProvideGitEventReporter(system)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	githookController := provider.NewGitHookController(userStore, store, gitService, urlProvider, clientFactory, config, reporter, eventsReporter)
 	gitController := provider.NewGitController(service2, service, repoService, settingsService, githookController, gitService)
 	ruleSetStore := scan.NewRuleSetStore(db)
 	ruleStore := scan.NewRuleStore(db)
@@ -142,14 +179,6 @@ func NewApp(mode string) (*App, func(), error) {
 	}
 	server := provider.ProvideSSHServer(config, interface2, gitController)
 	authenticator := authn.ProvideAuthenticators(config, userStore, tokenInterface)
-	eventsConfig := provider.NewEventConfig()
-	universalClient := provider.NewEventRedisClient()
-	system, err := provider.ProvideEventSystem(eventsConfig, universalClient)
-	if err != nil {
-		cleanup2()
-		cleanup()
-		return nil, nil, err
-	}
 	app := &App{
 		SystemConfig:  config,
 		SystemLog:     systemLog,
@@ -163,6 +192,7 @@ func NewApp(mode string) (*App, func(), error) {
 		UserService:   userService,
 		Authenticator: authenticator,
 		EventSystem:   system,
+		EventContext:  eventContext,
 	}
 	return app, func() {
 		cleanup2()
@@ -185,4 +215,5 @@ type App struct {
 	UserService   user2.Interface
 	Authenticator authn.Authenticator
 	EventSystem   *events.System
+	EventContext  *provider.EventContext
 }

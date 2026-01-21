@@ -102,6 +102,14 @@ type PullRequest struct {
 	EditedDate        *datetime.Local   `json:"editedDate"`
 }
 
+// MarkAsMergeUnchecked 将合并检查状态重置为未检查
+func (pr *PullRequest) MarkAsMergeUnchecked() {
+	pr.MergeCheckStatus = MergeCheckStatusUnchecked
+	pr.MergeConflicts = nil
+	pr.RebaseCheckStatus = MergeCheckStatusUnchecked
+	pr.RebaseConflicts = nil
+}
+
 // DiffStats shows total number of commits and modified files. 展示该 PR 包含的提交（Commit）总数、发生变更的文件总数、新增的代码行数、删除的代码行数
 type DiffStats struct {
 	HeadHash     string `json:"headHash,omitempty"`     // 该 PR 最新的 Commit SHA
@@ -225,4 +233,25 @@ type Violation struct {
 	Code    string `json:"code"`    // 违规码，用于唯一标识违规类型
 	Message string `json:"message"` // 违规详情描述
 	Params  []any  `json:"params"`  // 违规参数，用于格式化违规详情描述
+}
+
+type EventTrigger struct {
+	Type string `json:"type"` // pull request 操作，例如 create, close, reopen
+}
+
+// EventTriggerType 事件触发类型常量
+const (
+	EventTriggerTypeCreate = "create"
+	EventTriggerTypeClose  = "close"
+	EventTriggerTypeReopen = "reopen"
+)
+
+// Check 校验事件触发类型是否有效
+func (e *EventTrigger) Check() error {
+	switch e.Type {
+	case EventTriggerTypeCreate, EventTriggerTypeClose, EventTriggerTypeReopen:
+		return nil
+	default:
+		return errors.WithI18nKey(nil, i18n.PullrequestEventTriggerInvalidType)
+	}
 }

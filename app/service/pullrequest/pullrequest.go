@@ -5,18 +5,27 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/auth/authn"
+	gitevents "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/events/git"
+	pullreqevents "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/events/pullreq"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/githook"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/commit"
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/locker"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/sse"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/utils"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/pullrequest"
+	repoStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/events"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/api"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/enum"
@@ -25,35 +34,148 @@ import (
 	gitUtil "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/util"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pubsub"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/stream"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/url"
 )
 
 type Service struct {
-	gitSvc           git.Interface
-	repoSvc          repo.Interface
-	locker           *locker.Locker
-	pullRequestStore pullrequest.Interface
-	urlProvider      url.Provider
+	gitSvc             git.Interface
+	repoSvc            repo.Interface
+	repoStore          repoStore.Interface
+	locker             *locker.Locker
+	pullRequestStore   pullrequest.Interface
+	pullreqEvReporter  *pullreqevents.Reporter
+	sseStreamer        sse.Streamer
+	urlProvider        url.Provider
+	cancelMutex        sync.Mutex
+	cancelMergeability map[string]context.CancelFunc
+	pubsub             pubsub.PubSub
 }
 
 var _ Interface = (*Service)(nil)
 
 // NewPullRequestSvc 创建 PullRequestService 实例
 func NewPullRequestSvc(
+	ctx context.Context,
+	gitReaderFactory *events.ReaderFactory[*gitevents.Reader],
+	pullReqEvFactory *events.ReaderFactory[*pullreqevents.Reader],
+	pullReqEvReporter *pullreqevents.Reporter,
+	cfg *config.Config,
 	gitSvc git.Interface,
 	repoSvc repo.Interface,
+	repoStore repoStore.Interface,
 	locker *locker.Locker,
 	pullRequestStore pullrequest.Interface,
+	sseStreamer sse.Streamer,
+	bus pubsub.PubSub,
 	urlProvider url.Provider,
-) *Service {
-	return &Service{
-		gitSvc:           gitSvc,
-		repoSvc:          repoSvc,
-		locker:           locker,
-		pullRequestStore: pullRequestStore,
-		urlProvider:      urlProvider,
+) (*Service, error) {
+	service := Service{
+		pullreqEvReporter:  pullReqEvReporter,
+		gitSvc:             gitSvc,
+		repoSvc:            repoSvc,
+		repoStore:          repoStore,
+		locker:             locker,
+		pullRequestStore:   pullRequestStore,
+		sseStreamer:        sseStreamer,
+		cancelMergeability: make(map[string]context.CancelFunc),
+		pubsub:             bus,
+		urlProvider:        urlProvider,
 	}
+
+	var err error
+
+	// handle git branch events to trigger specific pull request events
+	const groupGit = "gitfox:pullreq:git"
+	_, err = gitReaderFactory.Launch(ctx, groupGit, cfg.InstanceID,
+		func(r *gitevents.Reader) error {
+			const idleTimeout = 15 * time.Second
+			r.Configure(
+				stream.WithConcurrency(1),
+				stream.WithHandlerOptions(
+					stream.WithIdleTimeout(idleTimeout),
+					stream.WithMaxRetries(3),
+				))
+
+			_ = r.RegisterBranchUpdated(service.triggerPREventOnBranchUpdate)
+			_ = r.RegisterBranchDeleted(service.closePullReqOnBranchDelete)
+
+			return nil
+		})
+	if err != nil {
+		return nil, err
+	}
+
+	// pull request ref maintenance
+	const groupPullReqHeadRef = "gitfox:pullreq:headref"
+	_, err = pullReqEvFactory.Launch(ctx, groupPullReqHeadRef, cfg.InstanceID,
+		func(r *pullreqevents.Reader) error {
+			const idleTimeout = 10 * time.Second
+			r.Configure(
+				stream.WithConcurrency(1),
+				stream.WithHandlerOptions(
+					stream.WithIdleTimeout(idleTimeout),
+					stream.WithMaxRetries(3),
+				))
+
+			_ = r.RegisterCreated(service.createHeadRefOnCreated)
+			_ = r.RegisterBranchUpdated(service.updateHeadRefOnBranchUpdate)
+			_ = r.RegisterReopened(service.updateHeadRefOnReopen)
+
+			return nil
+		})
+	if err != nil {
+		return nil, err
+	}
+
+	// mergeability check
+	const groupPullReqMergeable = "gitfox:pullreq:mergeable"
+	_, err = pullReqEvFactory.Launch(ctx, groupPullReqMergeable, cfg.InstanceID,
+		func(r *pullreqevents.Reader) error {
+			const idleTimeout = 30 * time.Second
+			r.Configure(
+				stream.WithConcurrency(3),
+				stream.WithHandlerOptions(
+					stream.WithIdleTimeout(idleTimeout),
+					stream.WithMaxRetries(2),
+				))
+
+			_ = r.RegisterCreated(service.mergeCheckOnCreated)
+			_ = r.RegisterBranchUpdated(service.mergeCheckOnBranchUpdate)
+			_ = r.RegisterReopened(service.mergeCheckOnReopen)
+			_ = r.RegisterClosed(service.mergeCheckOnClosed)
+			_ = r.RegisterMerged(service.mergeCheckOnMerged)
+
+			return nil
+		})
+	if err != nil {
+		return nil, err
+	}
+
+	// cancel any previous pr mergeability check
+	// payload is oldsha.
+	_ = bus.Subscribe(ctx, cancelMergeCheckKey, func(payload []byte) error {
+		oldSHA := string(payload)
+		if oldSHA == "" {
+			return nil
+		}
+
+		service.cancelMutex.Lock()
+		defer service.cancelMutex.Unlock()
+
+		cancel := service.cancelMergeability[oldSHA]
+		if cancel != nil {
+			cancel()
+		}
+
+		delete(service.cancelMergeability, oldSHA)
+
+		return nil
+	}, pubsub.WithChannelNamespace("pullreq"))
+
+	return &service, nil
 }
 
 func (s *Service) GetMetadata(ctx context.Context, session *auth.Session, repoid uint, pullreqnumber uint) (*repoModel.DiffStats, error) {
@@ -562,7 +684,19 @@ func (s *Service) Merge(ctx context.Context, session *auth.Session, repoid uint,
 		return nil, nil, err
 	}
 
-	// TODO: 触发事件 - 触发 Merged 事件，这可能会触发 Webhooks 或 CI/CD 流水线。
+	// 触发 Merged 事件，这可能会触发 Webhooks 或 CI/CD 流水线。
+	s.pullreqEvReporter.Merged(ctx, &pullreqevents.MergedPayload{
+		Base: pullreqevents.Base{
+			PullReqID:    int64(pr.ID),
+			SourceRepoID: int64(pr.SourceRepoID),
+			TargetRepoID: int64(pr.TargetRepoID),
+			Account:      session.User.Account,
+		},
+		MergeMethod: params.Method,
+		MergeSHA:    mergeOutput.MergeSHA.String(),
+		TargetSHA:   mergeOutput.BaseSHA.String(),
+		SourceSHA:   mergeOutput.HeadSHA.String(),
+	})
 
 	// 返回结果
 	return &repoModel.MergeResponse{
@@ -591,4 +725,97 @@ func parseDiffPath(path string) (CompareInfo, error) {
 		HeadRef:   infos[1],
 		MergeBase: strings.Contains(path, "..."),
 	}, nil
+}
+
+// createSystemRPCWriteParams creates base write parameters for system internal write operations.
+// It uses the admin user for system-level git operations.
+func createSystemRPCWriteParams(
+	ctx context.Context,
+	urlProvider url.Provider,
+	repoID int64,
+	repoGITUID string,
+) (git.WriteParams, error) {
+	// generate envars (add everything githook CLI needs for execution)
+	envVars, err := githook.GenerateEnvironmentVariables(
+		ctx,
+		urlProvider.GetInternalAPIURL(ctx),
+		repoID,
+		authn.HeaderAppAdmin,
+		false,
+		true,
+	)
+	if err != nil {
+		return git.WriteParams{}, fmt.Errorf("failed to generate git hook environment variables: %w", err)
+	}
+
+	return git.WriteParams{
+		Actor: git.Identity{
+			Name:  authn.HeaderAppAdmin,
+			Email: authn.HeaderAdminEmail,
+		},
+		RepoUID: repoGITUID,
+		EnvVars: envVars,
+	}, nil
+}
+
+// TriggerEvent 根据类型触发 Pull Request 事件
+// type: create - 触发 Created 事件
+// type: close - 触发 Closed 事件
+// type: reopen - 触发 Reopened 事件
+func (s *Service) TriggerEvent(
+	ctx context.Context,
+	session *auth.Session,
+	repoID uint,
+	pullreqID uint,
+	params repoModel.EventTrigger,
+) error {
+	// 校验事件触发类型
+	if err := params.Check(); err != nil {
+		return err
+	}
+
+	pr, err := s.pullRequestStore.GetByID(ctx, repoID, pullreqID)
+	if err != nil {
+		return err
+	}
+
+	account := session.User.Account
+
+	switch params.Type {
+	case repoModel.EventTriggerTypeCreate:
+		s.pullreqEvReporter.Created(ctx, &pullreqevents.CreatedPayload{
+			Base: pullreqevents.Base{
+				PullReqID:    int64(pr.ID),
+				SourceRepoID: int64(pr.SourceRepoID),
+				TargetRepoID: int64(pr.TargetRepoID),
+				Account:      account,
+			},
+			SourceBranch: pr.SourceBranch,
+			TargetBranch: pr.TargetBranch,
+			SourceSHA:    pr.SourceSHA,
+		})
+	case repoModel.EventTriggerTypeClose:
+		s.pullreqEvReporter.Closed(ctx, &pullreqevents.ClosedPayload{
+			Base: pullreqevents.Base{
+				PullReqID:    int64(pr.ID),
+				SourceRepoID: int64(pr.SourceRepoID),
+				TargetRepoID: int64(pr.TargetRepoID),
+				Account:      account,
+			},
+			SourceSHA: pr.SourceSHA,
+		})
+	case repoModel.EventTriggerTypeReopen:
+		s.pullreqEvReporter.Reopened(ctx, &pullreqevents.ReopenedPayload{
+			Base: pullreqevents.Base{
+				PullReqID:    int64(pr.ID),
+				SourceRepoID: int64(pr.SourceRepoID),
+				TargetRepoID: int64(pr.TargetRepoID),
+				Account:      account,
+			},
+			SourceSHA:    pr.SourceSHA,
+			MergeBaseSHA: pr.MergeBaseSHA,
+		})
+	}
+
+	return nil
 }

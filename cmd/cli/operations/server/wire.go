@@ -31,6 +31,7 @@ type App struct {
 	UserService   userSvc.Interface
 	Authenticator authn.Authenticator
 	EventSystem   *events.System
+	EventContext  *provider.EventContext
 }
 
 func NewApp(mode string) (*App, func(), error) {
@@ -53,6 +54,8 @@ func NewApp(mode string) (*App, func(), error) {
 		provider.SSHWireSet,
 		provider.LockWireSet,
 		provider.EventWireSet,
+		provider.GitEventWireSet,
+		provider.PullReqEventWireSet,
 		provider.PubSubProvider,
 		provider.AuthWireSet, wire.Struct(new(App), "*")),
 	)

@@ -27,11 +27,11 @@ func (r *Reporter) Created(ctx context.Context, payload *CreatedPayload) {
 
 	eventID, err := events.ReporterSendEvent(r.innerReporter, ctx, CreatedEvent, payload)
 	if err != nil {
-		logger.Error("failed to send pull request created event")
+		logger.Error("[event]: failed to send pull request created event")
 		return
 	}
 
-	logger.Infof("reported pull request created event with id '%s'", eventID)
+	logger.Infof("[event]: reported pull request created event with id '%s'", eventID)
 }
 
 func (r *Reader) RegisterCreated(
@@ -58,11 +58,11 @@ func (r *Reporter) Closed(ctx context.Context, payload *ClosedPayload) {
 
 	eventID, err := events.ReporterSendEvent(r.innerReporter, ctx, ClosedEvent, payload)
 	if err != nil {
-		logger.Error("failed to send pull request closed event")
+		logger.Error("[event]: failed to send pull request closed event")
 		return
 	}
 
-	logger.Infof("reported pull request closed event with id '%s'", eventID)
+	logger.Infof("[event]: reported pull request closed event with id '%s'", eventID)
 }
 
 func (r *Reader) RegisterClosed(
@@ -90,11 +90,11 @@ func (r *Reporter) Reopened(ctx context.Context, payload *ReopenedPayload) {
 
 	eventID, err := events.ReporterSendEvent(r.innerReporter, ctx, ReopenedEvent, payload)
 	if err != nil {
-		logger.Errorf("failed to send pull request reopened event")
+		logger.Errorf("[event]: failed to send pull request reopened event")
 		return
 	}
 
-	logger.Infof("reported pull request reopened event with id '%s'", eventID)
+	logger.Infof("[event]: reported pull request reopened event with id '%s'", eventID)
 }
 
 func (r *Reader) RegisterReopened(
@@ -124,11 +124,11 @@ func (r *Reporter) Merged(ctx context.Context, payload *MergedPayload) {
 
 	eventID, err := events.ReporterSendEvent(r.innerReporter, ctx, MergedEvent, payload)
 	if err != nil {
-		logger.Error("failed to send pull request merged event")
+		logger.Error("[event]: failed to send pull request merged event")
 		return
 	}
 
-	logger.Infof("reported pull request merged event with id '%s'", eventID)
+	logger.Infof("[event]: reported pull request merged event with id '%s'", eventID)
 }
 
 func (r *Reader) RegisterMerged(

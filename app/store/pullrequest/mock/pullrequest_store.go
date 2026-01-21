@@ -80,6 +80,35 @@ func (mr *MockInterfaceMockRecorder) GetByID(ctx, targetRepoID, id interface{}) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByID", reflect.TypeOf((*MockInterface)(nil).GetByID), ctx, targetRepoID, id)
 }
 
+// List mocks base method.
+func (m *MockInterface) List(ctx context.Context, filter *repo.PullRequestFilter) ([]*repo.PullRequest, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "List", ctx, filter)
+	ret0, _ := ret[0].([]*repo.PullRequest)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// List indicates an expected call of List.
+func (mr *MockInterfaceMockRecorder) List(ctx, filter interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockInterface)(nil).List), ctx, filter)
+}
+
+// ResetMergeCheckStatus mocks base method.
+func (m *MockInterface) ResetMergeCheckStatus(ctx context.Context, targetRepoID uint, targetBranch string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ResetMergeCheckStatus", ctx, targetRepoID, targetBranch)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ResetMergeCheckStatus indicates an expected call of ResetMergeCheckStatus.
+func (mr *MockInterfaceMockRecorder) ResetMergeCheckStatus(ctx, targetRepoID, targetBranch interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ResetMergeCheckStatus", reflect.TypeOf((*MockInterface)(nil).ResetMergeCheckStatus), ctx, targetRepoID, targetBranch)
+}
+
 // UpdateDiffStatsSafe mocks base method.
 func (m *MockInterface) UpdateDiffStatsSafe(ctx context.Context, repoID uint, pr *repo.PullRequest, diffStats *repo.DiffStats) error {
 	m.ctrl.T.Helper()
@@ -134,6 +163,21 @@ func (m *MockInterface) UpdateMergeInfo(ctx context.Context, targetRepoID, id ui
 func (mr *MockInterfaceMockRecorder) UpdateMergeInfo(ctx, targetRepoID, id, mergedBy, mergeMethod, mergeSHA, editedBy interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateMergeInfo", reflect.TypeOf((*MockInterface)(nil).UpdateMergeInfo), ctx, targetRepoID, id, mergedBy, mergeMethod, mergeSHA, editedBy)
+}
+
+// UpdateOptLock mocks base method.
+func (m *MockInterface) UpdateOptLock(ctx context.Context, pr *repo.PullRequest, mutateFn func(*repo.PullRequest) error) (*repo.PullRequest, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateOptLock", ctx, pr, mutateFn)
+	ret0, _ := ret[0].(*repo.PullRequest)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateOptLock indicates an expected call of UpdateOptLock.
+func (mr *MockInterfaceMockRecorder) UpdateOptLock(ctx, pr, mutateFn interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateOptLock", reflect.TypeOf((*MockInterface)(nil).UpdateOptLock), ctx, pr, mutateFn)
 }
 
 // UpdateRebaseCheckStatus mocks base method.

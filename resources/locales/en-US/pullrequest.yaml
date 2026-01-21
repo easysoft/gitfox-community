@@ -17,3 +17,6 @@ pullrequest:
   merge_check_title_error: "Merge check failed. The title cannot be empty."
   merge_check_method_error: "Merge check failed. If not in dryrun mode, the merge method cannot be empty. It must be one of the following: merge, squash, rebase, fast-forward."
   merge_check_source_sha_error: "Merge check failed. The source commit (SHA) cannot be empty."
+  event_trigger_success: "Event trigger success"
+  event_trigger_error: "Event trigger error"
+  event_trigger_invalid_type: "Invalid event trigger type. Must be one of: create, close, reopen."
