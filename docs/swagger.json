@@ -2164,6 +2164,66 @@
                 }
             }
         },
+        "/repos/{id}/pullreq/{pullrequestID}/event-trigger": {
+            "post": {
+                "description": "根据传入的仓库 ID 和 参数 触发 Pull Request 事件",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "pureq"
+                ],
+                "summary": "Pull Request 创建，关闭，重新打开时调用",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "仓库 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Pull Request 编号",
+                        "name": "pullrequestID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "事件触发参数",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.EventTrigger"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "触发失败",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.MergeViolations"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/repos/{id}/pullreq/{pullrequestID}/merge": {
             "post": {
                 "description": "根据传入的仓库 ID 和 参数 合并 Pull Request",
@@ -4594,6 +4654,15 @@
                 },
                 "headHash": {
                     "description": "该 PR 最新的 Commit SHA",
+                    "type": "string"
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.EventTrigger": {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "description": "pull request 操作，例如 create, close, reopen",
                     "type": "string"
                 }
             }
