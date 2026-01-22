@@ -94,7 +94,7 @@ type MetricConfig struct {
 
 // CiConfig CI配置
 type CiConfig struct {
-	PluginsZipUrl string `yaml:"pluginsZipUrl"`
+	PluginsZipUrl string `envconfig:"GITFOX_CI_PLUGINS_ZIP_URL"`
 }
 
 // GitspaceConfig Gitspace配置

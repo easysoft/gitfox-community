@@ -214,7 +214,7 @@ tasks:
 
   build:
     desc: 构建应用
-    deps: [clean]  # 先执行清理
+    deps: [clean, download-ci-plugins]  # 先执行清理和下载 CI 插件
     cmds:
       - go build -o "{{.BIN_DIR}}/gitfox_linux" -ldflags "{{.LDFLAGS}}" ./cmd/cli/main.go
       - echo "本地构建完成，二进制文件位于 {{.BIN_DIR}}/gitfox_linux"
