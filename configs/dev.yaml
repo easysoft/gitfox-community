@@ -39,12 +39,8 @@ i18n:
 metric:
   enabled: true
 
-ci:
-  pluginsZipUrl: https://pkg.zentao.net/gitfox/20240513/plugins.zip
-
 gitspace:
   enable: true
-
 
 registry:
   http:

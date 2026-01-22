@@ -245,8 +245,8 @@ func TestLoadAllCIPlugins_CleanupDeletesTempFile(t *testing.T) {
 	// 添加文件名路径到 URL
 	testURL := server.URL + "/plugins.zip"
 
-	// 记录当前临时目录中的 plugins_*.zip 文件
-	beforeFiles, _ := filepath.Glob(filepath.Join(os.TempDir(), "plugins_*.zip"))
+	// 记录当前临时目录中的 plugins-*.zip 文件
+	beforeFiles, _ := filepath.Glob(filepath.Join(os.TempDir(), "plugins-*.zip"))
 
 	// 加载远程 ZIP 文件
 	zipReader, cleanup, err := LoadAllCIPlugins(ctx, testURL)
@@ -258,8 +258,8 @@ func TestLoadAllCIPlugins_CleanupDeletesTempFile(t *testing.T) {
 		t.Fatal("expected non-nil cleanup function")
 	}
 
-	// 查找新创建的临时文件（带时间戳的 plugins_*.zip）
-	afterFiles, err := filepath.Glob(filepath.Join(os.TempDir(), "plugins_*.zip"))
+	// 查找新创建的临时文件（plugins-*.zip）
+	afterFiles, err := filepath.Glob(filepath.Join(os.TempDir(), "plugins-*.zip"))
 	if err != nil {
 		t.Fatalf("failed to list temp files: %v", err)
 	}
