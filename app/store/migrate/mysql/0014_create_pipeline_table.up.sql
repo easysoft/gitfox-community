@@ -34,4 +34,3 @@ CREATE TABLE IF NOT EXISTS `ops_pipeline_content` (
 ) ENGINE=InnoDB COMMENT='流水线配置表';
 
 CREATE UNIQUE INDEX `uk_pipelineID_version` ON `ops_pipeline_contents` (`pipelineID`, `version`);
-CREATE INDEX `idx_pipelineID` ON `ops_pipeline_contents` (`pipelineID`);
