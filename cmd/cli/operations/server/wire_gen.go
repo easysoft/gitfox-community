@@ -19,6 +19,7 @@ import (
 	branch2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/branch"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/commit"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/locker"
+	pipeline2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/pipeline"
 	publickey2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/publickey"
 	repo2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
 	scan2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/scan"
@@ -27,6 +28,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/tag"
 	user2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/user"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/branch"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/pipeline"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/publickey"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/pullrequest"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
@@ -178,6 +180,8 @@ func NewApp(mode string) (*App, func(), error) {
 		return nil, nil, err
 	}
 	server := provider.ProvideSSHServer(config, interface2, gitController)
+	pipelineStore := pipeline.NewPluginStore(db)
+	pipelineService := pipeline2.NewPluginService(pipelineStore)
 	authenticator := authn.ProvideAuthenticators(config, userStore, tokenInterface)
 	app := &App{
 		SystemConfig:  config,
@@ -190,6 +194,7 @@ func NewApp(mode string) (*App, func(), error) {
 		GithookCtrl:   githookController,
 		SSHServer:     server,
 		UserService:   userService,
+		PluginService: pipelineService,
 		Authenticator: authenticator,
 		EventSystem:   system,
 		EventContext:  eventContext,
@@ -213,6 +218,7 @@ type App struct {
 	GithookCtrl   *githook.Controller
 	SSHServer     *ssh.Server
 	UserService   user2.Interface
+	PluginService pipeline2.PluginService
 	Authenticator authn.Authenticator
 	EventSystem   *events.System
 	EventContext  *provider.EventContext

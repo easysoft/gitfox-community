@@ -4,6 +4,8 @@ import (
 	"time"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/publickey"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
+	"gorm.io/gorm"
 )
 
 type PublicKey struct {
@@ -16,14 +18,28 @@ type PublicKey struct {
 	Comment      string     `db:"comment" gorm:"column:comment"`         // 公钥末尾的注释部分（通常是 user@host ），便于展示和识别。
 	Type         string     `db:"type" gorm:"column:type"`               // 公钥算法类型（如 ssh-ed25519 、 ssh-rsa ），用于展示与后续策略控制。
 
-	CreatedBy   string     `gorm:"column:createdBy"`
-	CreatedDate *time.Time `gorm:"column:createdDate"`
-	EditedBy    string     `gorm:"column:editedBy"`
-	EditedDate  *time.Time `gorm:"column:editedDate"`
+	CreatedBy   string          `gorm:"column:createdBy"`
+	CreatedDate *datetime.Local `gorm:"column:createdDate"`
+	EditedBy    string          `gorm:"column:editedBy"`
+	EditedDate  *datetime.Local `gorm:"column:editedDate"`
 }
 
 func (pk *PublicKey) TableName() string {
 	return "ops_public_keys"
+}
+
+func (pk *PublicKey) BeforeCreate(tx *gorm.DB) error {
+	now := datetime.NowLocalTime()
+	pk.CreatedDate = now
+	pk.EditedDate = now
+	return nil
+}
+
+// BeforeUpdate GORM 钩子：更新前自动设置 EditedDate
+func (pk *PublicKey) BeforeUpdate(tx *gorm.DB) error {
+	now := datetime.NowLocalTime()
+	pk.EditedDate = now
+	return nil
 }
 
 func (pk *PublicKey) toModel() publickey.PublicKey {
