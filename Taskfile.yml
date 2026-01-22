@@ -291,3 +291,8 @@ tasks:
     dir: resources/scanrule
     cmds:
       - go run validator/validator.go validator/main.go -dir . -plugin {{.PLUGIN}}
+  
+  download-ci-plugins:
+    desc: download ci plugin
+    cmds:
+      - wget -O resources/ciPlugins/plugins.zip https://pkg.zentao.net/gitfox/20241024/plugins.zip
