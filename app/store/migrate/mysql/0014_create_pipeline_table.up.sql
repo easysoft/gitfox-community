@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS `ops_pipeline` (
 	PRIMARY KEY (`id`)
 ) ENGINE=InnoDB COMMENT='流水线基本信息表';
 
-CREATE UNIQUE INDEX `uk_space_repo_name` ON `ops_pipelines` (`spaceID`,`repoID`,`name`);
+CREATE UNIQUE INDEX `uk_space_repo_name` ON `ops_pipeline` (`spaceID`,`repoID`,`name`);
 
 
 CREATE TABLE IF NOT EXISTS `ops_pipeline_content` (
@@ -33,4 +33,4 @@ CREATE TABLE IF NOT EXISTS `ops_pipeline_content` (
 	PRIMARY KEY (`id`)
 ) ENGINE=InnoDB COMMENT='流水线配置表';
 
-CREATE UNIQUE INDEX `uk_pipelineID_version` ON `ops_pipeline_contents` (`pipelineID`, `version`);
+CREATE UNIQUE INDEX `uk_pipelineID_version` ON `ops_pipeline_content` (`pipelineID`, `version`);
