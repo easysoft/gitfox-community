@@ -9,7 +9,7 @@ import (
 // TestDownloadFile 测试文件下载功能
 func TestDownloadFile(t *testing.T) {
 	// 测试 URL
-	testURL := "https://pkg.zentao.net/gitfox/20241024/plugins.zip"
+	testURL := "https://pkg.zentao.net/gitfox/20260123/plugins.zip"
 
 	// 创建测试目录
 	testDir := "./file"
@@ -167,7 +167,7 @@ func TestDownloadFileErrorCases(t *testing.T) {
 	t.Run("InvalidDirectory", func(t *testing.T) {
 		// 测试下载到无效的目录路径（父目录不存在）
 		filePath := "./nonexistent/subdir/file.zip"
-		testURL := "https://pkg.zentao.net/gitfox/20241024/plugins.zip"
+		testURL := "https://pkg.zentao.net/gitfox/20260123/plugins.zip"
 
 		err := DownloadFile(filePath, testURL)
 		if err == nil {
