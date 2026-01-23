@@ -45,7 +45,7 @@ func (c *command) run(*kingpin.ParseContext) error {
 	// } else {
 	// 	app.SystemLog.Info("[Server] System health check cron job started (runs every minute)")
 	// }
-	
+
 	// 启动 HTTP 服务器
 	addr := fmt.Sprintf("%s:%d", app.SystemConfig.Server.Host, app.SystemConfig.Server.Port)
 	srv := &http.Server{
