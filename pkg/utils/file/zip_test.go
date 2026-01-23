@@ -21,7 +21,7 @@ func TestReadZipFile(t *testing.T) {
 
 	// 下载测试用的 zip 文件
 	testZipPath := filepath.Join(testDir, "test.zip")
-	testURL := "https://pkg.zentao.net/gitfox/20241024/plugins.zip"
+	testURL := "https://pkg.zentao.net/gitfox/20260123/plugins.zip"
 
 	if err := DownloadFile(testZipPath, testURL); err != nil {
 		t.Fatalf("Failed to download test zip file: %v", err)
@@ -266,8 +266,8 @@ func TestReadZipFileErrorCases(t *testing.T) {
 // TestIsZipFile 测试 isZipFile 辅助函数（间接测试）
 func TestIsZipFileValidation(t *testing.T) {
 	testCases := []struct {
-		name     string
-		path     string
+		name       string
+		path       string
 		shouldPass bool
 	}{
 		{"Valid zip extension", "test.zip", true},
