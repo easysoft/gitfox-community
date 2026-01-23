@@ -8,6 +8,7 @@ import (
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/githook"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/router"
+	pipelineSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/pipeline"
 	userSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/user"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/cmd/cli/operations/provider"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/auth/authn"
@@ -29,6 +30,7 @@ type App struct {
 	GithookCtrl   *githook.Controller
 	SSHServer     *ssh.Server
 	UserService   userSvc.Interface
+	PluginService pipelineSvc.PluginService
 	Authenticator authn.Authenticator
 	EventSystem   *events.System
 	EventContext  *provider.EventContext
@@ -45,6 +47,7 @@ func NewApp(mode string) (*App, func(), error) {
 		provider.RepoWireSet,
 		provider.BranchWireSet,
 		provider.TagWireSet,
+		provider.PipelineWireSet,
 		provider.ScanRuleSetWireSet,
 		provider.ScanRuleWireSet,
 		provider.CommitWireSet,

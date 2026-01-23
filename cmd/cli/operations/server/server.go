@@ -45,12 +45,15 @@ func (c *command) run(*kingpin.ParseContext) error {
 	// } else {
 	// 	app.SystemLog.Info("[Server] System health check cron job started (runs every minute)")
 	// }
+	
 	// 启动 HTTP 服务器
 	addr := fmt.Sprintf("%s:%d", app.SystemConfig.Server.Host, app.SystemConfig.Server.Port)
 	srv := &http.Server{
 		Addr:    addr,
 		Handler: router.NewRouter(c.mode, app.APILog.SugaredMateLogger, app.Controller),
 	}
+
+	app.PluginService.Migrate(context.Background(), app.SystemConfig.Ci.PluginsZipUrl)
 
 	// 停止使用
 	// adminPAT, err := app.UserService.IssueAdminPAT()
