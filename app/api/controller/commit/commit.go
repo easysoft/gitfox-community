@@ -136,7 +136,7 @@ func (c *Controller) List(ctx *gin.Context) {
 
 	respData, err := c.commitSvc.List(ctx.Request.Context(), reqQuery, *repoOut, reqQuery.GitRef)
 	if err != nil {
-		resp.InternalError(ctx, err)
+		resp.InternalError(ctx, err, err.Error())
 		return
 	}
 
