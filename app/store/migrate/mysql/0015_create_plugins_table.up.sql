@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS `ops_plugins` (
 	`logo` mediumtext NOT NULL DEFAULT '' COMMENT '插件Logo（SVG格式）',
 	`yaml` longtext NOT NULL COMMENT '插件规范配置（YAML格式）',
 	`json` longtext NOT NULL COMMENT '插件规范配置（JSON格式）',
-	`type` varchar(255) NOT DEFAULT '' NULL COMMENT '插件类型：step/stage',
+	`type` varchar(255) NOT NULL DEFAULT ''  COMMENT '插件类型：step/stage',
 	`createdBy` varchar(30) NOT NULL DEFAULT '' COMMENT '创建人',
 	`createdDate` datetime NULL COMMENT '创建时间',
 	`editedBy` varchar(30) NOT NULL DEFAULT '' COMMENT '更新人',
