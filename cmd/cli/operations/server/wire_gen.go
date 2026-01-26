@@ -111,8 +111,8 @@ func NewApp(mode string) (*App, func(), error) {
 	repoService := repo2.NewRepoSvc(gitService, store, spaceStore, urlProvider, membershipAuthorizer)
 	controller := branch3.NewController(branchService, repoService)
 	ciConfig := provider.NewCiConfig(config)
-	pipelineStore := pipeline.NewPluginStore(db)
-	pipelineService := pipeline2.NewPluginService(pipelineStore)
+	pipelineStore := pipeline.NewPipelineStore(db)
+	pipelineService := pipeline2.NewPipelineService(pipelineStore)
 	pipelineController := pipeline3.NewController(ciConfig, pipelineService)
 	tagService := tag.NewService(urlProvider, gitService)
 	tagController := tag2.NewController(tagService, repoService)
@@ -187,20 +187,20 @@ func NewApp(mode string) (*App, func(), error) {
 	server := provider.ProvideSSHServer(config, interface2, gitController)
 	authenticator := authn.ProvideAuthenticators(config, userStore, tokenInterface)
 	app := &App{
-		SystemConfig:  config,
-		SystemLog:     systemLog,
-		APILog:        apiLog,
-		DB:            db,
-		SqliteDB:      sqliteDB,
-		Controller:    routerController,
-		I18nManager:   i18nManager,
-		GithookCtrl:   githookController,
-		SSHServer:     server,
-		UserService:   userService,
-		PluginService: pipelineService,
-		Authenticator: authenticator,
-		EventSystem:   system,
-		EventContext:  eventContext,
+		SystemConfig:    config,
+		SystemLog:       systemLog,
+		APILog:          apiLog,
+		DB:              db,
+		SqliteDB:        sqliteDB,
+		Controller:      routerController,
+		I18nManager:     i18nManager,
+		GithookCtrl:     githookController,
+		SSHServer:       server,
+		UserService:     userService,
+		PipelineService: pipelineService,
+		Authenticator:   authenticator,
+		EventSystem:     system,
+		EventContext:    eventContext,
 	}
 	return app, func() {
 		cleanup2()
@@ -211,18 +211,18 @@ func NewApp(mode string) (*App, func(), error) {
 // wire.go:
 
 type App struct {
-	SystemConfig  *config.Config
-	SystemLog     *provider.SystemLog
-	APILog        *provider.APILog
-	DB            *gorm.DB
-	SqliteDB      *database.SqliteDB
-	Controller    *router.Controller
-	I18nManager   *provider.I18nManager
-	GithookCtrl   *githook.Controller
-	SSHServer     *ssh.Server
-	UserService   user2.Interface
-	PluginService pipeline2.PluginService
-	Authenticator authn.Authenticator
-	EventSystem   *events.System
-	EventContext  *provider.EventContext
+	SystemConfig    *config.Config
+	SystemLog       *provider.SystemLog
+	APILog          *provider.APILog
+	DB              *gorm.DB
+	SqliteDB        *database.SqliteDB
+	Controller      *router.Controller
+	I18nManager     *provider.I18nManager
+	GithookCtrl     *githook.Controller
+	SSHServer       *ssh.Server
+	UserService     user2.Interface
+	PipelineService pipeline2.Interface
+	Authenticator   authn.Authenticator
+	EventSystem     *events.System
+	EventContext    *provider.EventContext
 }

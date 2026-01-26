@@ -1,5 +1,7 @@
 package pipeline
 
+import "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
+
 type PipelineConfigSource string
 
 const (
@@ -17,15 +19,6 @@ type PipelineConfigPath struct {
 
 type PipelineContentResponse struct {
 	Content string `json:"content"`
-}
-
-type PipelineContent struct {
-	PipelineId int64  `json:"pipeline_id"`
-	Version    int64  `json:"version"`
-	Success    bool   `json:"success"`
-	Created    int64  `json:"created"`
-	Updated    int64  `json:"updated"`
-	Data       []byte `json:"data"`
 }
 
 type PipelineContentValidateResponse []SchemaInvalidError
@@ -54,4 +47,40 @@ type GroupedPlugins struct {
 type StepFilter struct {
 	Name     string
 	Category string
+}
+
+// PipelineFile represents the raw file contents in the pipeline content.
+type PipelineFile struct {
+	Data []byte
+}
+
+type Pipeline struct {
+	ID            int64           `json:"id"`
+	Name          string          `json:"name"`
+	Type          string          `json:"type"`
+	SpaceID       int64           `json:"spaceID"`
+	RepoID        int64           `json:"repoID"`
+	Desc          string          `json:"desc"`
+	Status        string          `json:"status"`
+	LatestVersion int             `json:"latestVersion"`
+	DefaultBranch string          `json:"defaultBranch"`
+	YamlPath      string          `json:"yamlPath"`
+	CreatedBy     string          `json:"createdBy"`
+	CreatedDate   *datetime.Local `json:"createdDate"`
+	EditedBy      string          `json:"editedBy"`
+	EditedDate    *datetime.Local `json:"editedDate"`
+	Deleted       int8            `json:"deleted"`
+}
+
+type PipelineContent struct {
+	ID          int64           `json:"id"`
+	PipelineID  int64           `json:"pipelineID"`
+	Version     int             `json:"version"`
+	Data        []byte          `json:"data"`
+	DataStr     string          `json:"dataStr"`
+	Variables   string          `json:"variables"`
+	CreatedBy   string          `json:"createdBy"`
+	CreatedDate *datetime.Local `json:"createdDate"`
+	EditedBy    string          `json:"editedBy"`
+	EditedDate  *datetime.Local `json:"editedDate"`
 }

@@ -5,27 +5,14 @@ import (
 	"strings"
 
 	pipelineModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/pipeline"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/pipeline"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/file"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/resources"
 )
 
-var _ PluginService = (*Service)(nil)
-
-type Service struct {
-	pipelineStore pipeline.Interface
-}
-
-func NewPluginService(pipelineStore pipeline.Interface) *Service {
-	return &Service{
-		pipelineStore: pipelineStore,
-	}
-}
-
 func (s *Service) Migrate(ctx context.Context, url string) error {
 	log := logger.GetLogger(ctx)
-	plugins, err := s.pipelineStore.GetAll(ctx)
+	plugins, err := s.pipelineStore.GetAllPlugin(ctx)
 	if err != nil {
 		return err
 	}
@@ -48,7 +35,7 @@ func (s *Service) Migrate(ctx context.Context, url string) error {
 	_ = data
 	cnt := 0
 
-	groups, err := s.pipelineStore.GetAllGroup(ctx)
+	groups, err := s.pipelineStore.GetAllPluginGroup(ctx)
 	if err != nil {
 		return err
 	}
@@ -118,7 +105,7 @@ func (s *Service) Migrate(ctx context.Context, url string) error {
 		// 落库
 		if _, ok := pluginMap[plugin.Name]; ok {
 			log.Infof("update plugin '%s'", plugin.Name)
-			err = s.pipelineStore.UpdateByName(ctx, plugin)
+			err = s.pipelineStore.UpdatePluginByName(ctx, plugin)
 			if err != nil {
 
 				log.Warnf("could not update plugin %s: %v", plugin.Name, err)
@@ -126,7 +113,7 @@ func (s *Service) Migrate(ctx context.Context, url string) error {
 			}
 			log.Infof("detected changes: updated existing plugin entry %s", plugin.Name)
 		} else {
-			err = s.pipelineStore.Create(ctx, plugin)
+			err = s.pipelineStore.CreatePlugin(ctx, plugin)
 			if err != nil {
 				log.Warnf("could not create plugin in DB %s: %v", plugin.Name, err)
 				continue
@@ -189,7 +176,7 @@ func (s *Service) GetGroupedPlugins(ctx context.Context) ([]*pipelineModel.Group
 
 // GetPluginByName 根据插件名称获取插件
 func (s *Service) GetPluginByName(ctx context.Context, name string) (*pipelineModel.Plugin, error) {
-	return s.pipelineStore.GetByName(ctx, name)
+	return s.pipelineStore.GetPluginByName(ctx, name)
 }
 
 func GetPluginGroupID(groups []*pipelineModel.PluginGroup, groupName string) (int64, error) {

@@ -5,25 +5,10 @@ import (
 
 	pipelineModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/pipeline"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
-	"gorm.io/gorm"
 )
 
-var _ Interface = (*Store)(nil)
-
-// Store 插件存储实现
-type Store struct {
-	db *gorm.DB
-}
-
-// NewPluginStore 创建插件存储实例
-func NewPluginStore(db *gorm.DB) *Store {
-	return &Store{
-		db: db,
-	}
-}
-
-// Create 创建插件
-func (s *Store) Create(ctx context.Context, plugin *pipelineModel.Plugin) error {
+// CreatePlugin 创建插件
+func (s *Store) CreatePlugin(ctx context.Context, plugin *pipelineModel.Plugin) error {
 	storePlugin := mapPluginToStore(plugin)
 	if err := s.db.WithContext(ctx).Create(&storePlugin).Error; err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
@@ -34,8 +19,8 @@ func (s *Store) Create(ctx context.Context, plugin *pipelineModel.Plugin) error 
 	return nil
 }
 
-// UpdateByName 更新插件（根据 name）
-func (s *Store) UpdateByName(ctx context.Context, plugin *pipelineModel.Plugin) error {
+// UpdatePluginByName 更新插件（根据 name）
+func (s *Store) UpdatePluginByName(ctx context.Context, plugin *pipelineModel.Plugin) error {
 	storePlugin := mapPluginToStore(plugin)
 	if err := s.db.WithContext(ctx).Model(&Plugin{}).Where("name = ? AND deleted = 0", plugin.Name).Updates(&storePlugin).Error; err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
@@ -43,8 +28,8 @@ func (s *Store) UpdateByName(ctx context.Context, plugin *pipelineModel.Plugin) 
 	return nil
 }
 
-// GetByName 根据插件名称获取插件
-func (s *Store) GetByName(ctx context.Context, name string) (*pipelineModel.Plugin, error) {
+// GetPluginByName 根据插件名称获取插件
+func (s *Store) GetPluginByName(ctx context.Context, name string) (*pipelineModel.Plugin, error) {
 	var plugin Plugin
 	if err := s.db.WithContext(ctx).Where("name = ? AND deleted = 0", name).First(&plugin).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
@@ -52,8 +37,8 @@ func (s *Store) GetByName(ctx context.Context, name string) (*pipelineModel.Plug
 	return mapPluginToModel(plugin), nil
 }
 
-// GetAll 获取所有插件
-func (s *Store) GetAll(ctx context.Context) ([]*pipelineModel.Plugin, error) {
+// GetAllPlugin 获取所有插件
+func (s *Store) GetAllPlugin(ctx context.Context) ([]*pipelineModel.Plugin, error) {
 	var plugins []Plugin
 
 	if err := s.db.WithContext(ctx).Where("deleted = 0").Find(&plugins).Error; err != nil {
@@ -67,23 +52,8 @@ func (s *Store) GetAll(ctx context.Context) ([]*pipelineModel.Plugin, error) {
 	return result, nil
 }
 
-// GetByGroupID 根据分组ID获取插件列表
-func (s *Store) GetByGroupID(ctx context.Context, groupID int64) ([]*pipelineModel.Plugin, error) {
-	var plugins []Plugin
-
-	if err := s.db.WithContext(ctx).Where("groupID = ? AND deleted = 0", groupID).Find(&plugins).Error; err != nil {
-		return nil, database.ProcessSQLErrorf(ctx, err)
-	}
-
-	result := make([]*pipelineModel.Plugin, len(plugins))
-	for i, p := range plugins {
-		result[i] = mapPluginToModel(p)
-	}
-	return result, nil
-}
-
-// List 查询插件列表（分页）
-func (s *Store) List(ctx context.Context, filter *pipelineModel.PluginFilter) (*database.PageResult[*pipelineModel.Plugin], error) {
+// ListPlugin 查询插件列表（分页）
+func (s *Store) ListPlugin(ctx context.Context, filter *pipelineModel.PluginFilter) (*database.PageResult[*pipelineModel.Plugin], error) {
 	tx := s.db.WithContext(ctx).Model(&Plugin{}).Where("deleted = 0")
 
 	// 类型过滤
@@ -112,16 +82,16 @@ func (s *Store) List(ctx context.Context, filter *pipelineModel.PluginFilter) (*
 	}, nil
 }
 
-// Delete 删除插件（硬删除）
-func (s *Store) Delete(ctx context.Context, name string) error {
+// DeletePlugin 删除插件（硬删除）
+func (s *Store) DeletePlugin(ctx context.Context, name string) error {
 	if err := s.db.WithContext(ctx).Where("name = ?", name).Delete(&Plugin{}).Error; err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
 	}
 	return nil
 }
 
-// GetAllGroup 获取所有插件分组
-func (s *Store) GetAllGroup(ctx context.Context) ([]*pipelineModel.PluginGroup, error) {
+// GetAllPluginGroup 获取所有插件分组
+func (s *Store) GetAllPluginGroup(ctx context.Context) ([]*pipelineModel.PluginGroup, error) {
 	var groups []PluginGroup
 	if err := s.db.WithContext(ctx).Where("deleted = 0").Find(&groups).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
