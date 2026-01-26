@@ -53,7 +53,11 @@ func (c *command) run(*kingpin.ParseContext) error {
 		Handler: router.NewRouter(c.mode, app.APILog.SugaredMateLogger, app.Controller),
 	}
 
-	app.PluginService.Migrate(context.Background(), app.SystemConfig.Ci.PluginsZipUrl)
+	err = app.PluginService.Migrate(context.Background(), app.SystemConfig.Ci.PluginsZipUrl)
+	if err != nil {
+		app.SystemLog.Errorw("[Server] Failed to migrate plugins", "error", err)
+		panic(err)
+	}
 
 	// 停止使用
 	// adminPAT, err := app.UserService.IssueAdminPAT()

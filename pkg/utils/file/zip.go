@@ -104,17 +104,27 @@ func (zd *ZipData) GetDirName(index int) string {
 
 // NextFile 查找并返回data 内的指定后缀的文件，返回后id记录在 Read 中，不重复返回 ，Read 中都已经返回则返回nil
 func (zd *ZipData) NextFile(suffix string) *ZipData {
+	result := zd.nextFileRecursive(suffix, zd)
+	if result != nil {
+		// 在调用者节点上记录 Read 信息
+		zd.Read.IDs = append(zd.Read.IDs, result.id)
+		zd.Read.Suffix = suffix
+	}
+	return result
+}
+
+// nextFileRecursive 递归查找文件（内部方法）
+// caller: 最初的调用者，用于检查 Read 状态
+func (zd *ZipData) nextFileRecursive(suffix string, caller *ZipData) *ZipData {
 	// 如果当前节点是文件且后缀匹配
 	if zd.Type == "file" && zd.Suffix == suffix {
-		// 检查是否已经返回过
-		for _, readID := range zd.Read.IDs {
+		// 检查该文件是否已经在 caller 的 Read 中返回过
+		for _, readID := range caller.Read.IDs {
 			if readID == zd.id {
 				return nil
 			}
 		}
-		// 未返回过，记录 id 并返回
-		zd.Read.IDs = append(zd.Read.IDs, zd.id)
-		zd.Read.Suffix = suffix
+		// 未返回过，返回该文件
 		return zd
 	}
 
@@ -130,7 +140,7 @@ func (zd *ZipData) NextFile(suffix string) *ZipData {
 	}
 
 	for _, child := range nextMap {
-		if result := child.NextFile(suffix); result != nil {
+		if result := child.nextFileRecursive(suffix, caller); result != nil {
 			return result
 		}
 	}
@@ -138,10 +148,19 @@ func (zd *ZipData) NextFile(suffix string) *ZipData {
 	return nil
 }
 
-// CleanRead 清空Read
+// CleanRead 清空Read (递归清空所有子节点)
 func (zd *ZipData) CleanRead() {
 	zd.Read.IDs = nil
 	zd.Read.Suffix = ""
+
+	// 递归清空子节点的 Read
+	if zd.Type == "dir" && zd.Next != nil {
+		if nextMap, ok := zd.Next.(map[string]*ZipData); ok {
+			for _, child := range nextMap {
+				child.CleanRead()
+			}
+		}
+	}
 }
 
 func GetZipData(zipFile *zip.ReadCloser) (ZipData, error) {
