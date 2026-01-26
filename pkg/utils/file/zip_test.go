@@ -667,3 +667,278 @@ func TestGetZipData(t *testing.T) {
 		}
 	})
 }
+
+// TestGetDirName 测试 GetDirName 方法
+func TestGetDirName(t *testing.T) {
+	// 创建测试用的 zip 文件
+	testDir := "./test_getdirname"
+	if err := os.MkdirAll(testDir, 0755); err != nil {
+		t.Fatalf("Failed to create test directory: %v", err)
+	}
+	defer os.RemoveAll(testDir)
+
+	// 创建一个包含多级目录的 zip
+	testZipPath := filepath.Join(testDir, "test.zip")
+	zipFile, err := os.Create(testZipPath)
+	if err != nil {
+		t.Fatalf("Failed to create zip file: %v", err)
+	}
+
+	zipWriter := zip.NewWriter(zipFile)
+
+	// 添加测试文件，模拟真实的插件目录结构
+	files := []struct {
+		name    string
+		content string
+	}{
+		{"plugins/build/go/build_go.yaml", "go plugin yaml"},
+		{"plugins/build/go/build_go.json", "go plugin json"},
+		{"plugins/build/docker_build/build_docker_build.yaml", "docker build yaml"},
+		{"plugins/build/maven/build_maven.yaml", "maven plugin yaml"},
+		{"plugins/deploy/k8s/deploy_k8s.yaml", "k8s deploy yaml"},
+		{"plugins/test/unit/test_unit.yaml", "unit test yaml"},
+		{"readme.txt", "readme content"},
+	}
+
+	for _, f := range files {
+		writer, err := zipWriter.Create(f.name)
+		if err != nil {
+			t.Fatalf("Failed to create file in zip: %v", err)
+		}
+		_, err = writer.Write([]byte(f.content))
+		if err != nil {
+			t.Fatalf("Failed to write file content: %v", err)
+		}
+	}
+
+	if err := zipWriter.Close(); err != nil {
+		t.Fatalf("Failed to close zip writer: %v", err)
+	}
+	if err := zipFile.Close(); err != nil {
+		t.Fatalf("Failed to close zip file: %v", err)
+	}
+
+	// 读取 zip 文件并解析
+	zipReader, closeFunc, err := ReadZipFile(testZipPath)
+	if err != nil {
+		t.Fatalf("Failed to read zip file: %v", err)
+	}
+	defer closeFunc()
+
+	root, err := GetZipData(zipReader)
+	if err != nil {
+		t.Fatalf("Failed to get zip data: %v", err)
+	}
+
+	// 测试用例
+	testCases := []struct {
+		name        string
+		path        string
+		index       int
+		expectedDir string
+		description string
+	}{
+		{
+			name:        "GetParentDir_-1",
+			path:        "plugins/build/go/build_go.yaml",
+			index:       -1,
+			expectedDir: "go",
+			description: "Get parent directory (文件的父目录)",
+		},
+		{
+			name:        "GetGrandParentDir_-2",
+			path:        "plugins/build/go/build_go.yaml",
+			index:       -2,
+			expectedDir: "build",
+			description: "Get grandparent directory",
+		},
+		{
+			name:        "GetRootDir_-3",
+			path:        "plugins/build/go/build_go.yaml",
+			index:       -3,
+			expectedDir: "plugins",
+			description: "Get root plugins directory",
+		},
+		{
+			name:        "OutOfRange_-4",
+			path:        "plugins/build/go/build_go.yaml",
+			index:       -4,
+			expectedDir: "",
+			description: "Index out of range (beyond root)",
+		},
+		{
+			name:        "DockerBuild_-1",
+			path:        "plugins/build/docker_build/build_docker_build.yaml",
+			index:       -1,
+			expectedDir: "docker_build",
+			description: "Get parent directory for docker_build",
+		},
+		{
+			name:        "DeployK8s_-1",
+			path:        "plugins/deploy/k8s/deploy_k8s.yaml",
+			index:       -1,
+			expectedDir: "k8s",
+			description: "Get parent directory for deploy/k8s",
+		},
+		{
+			name:        "DeployK8s_-2",
+			path:        "plugins/deploy/k8s/deploy_k8s.yaml",
+			index:       -2,
+			expectedDir: "deploy",
+			description: "Get deploy directory",
+		},
+		{
+			name:        "RootFile_-1",
+			path:        "readme.txt",
+			index:       -1,
+			expectedDir: "",
+			description: "File in root directory (no parent)",
+		},
+		{
+			name:        "PositiveIndex",
+			path:        "plugins/build/go/build_go.yaml",
+			index:       0,
+			expectedDir: "",
+			description: "Positive index should return empty string",
+		},
+		{
+			name:        "PositiveIndex_1",
+			path:        "plugins/build/go/build_go.yaml",
+			index:       1,
+			expectedDir: "",
+			description: "Positive index 1 should return empty string",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			// 查找文件
+			file := root.SearchPath(tc.path)
+			if file == nil {
+				t.Fatalf("Failed to find file: %s", tc.path)
+			}
+
+			// 调用 GetDirName
+			result := file.GetDirName(tc.index)
+
+			// 验证结果
+			if result != tc.expectedDir {
+				t.Errorf("GetDirName(%d) for %s\n  Expected: %q\n  Got:      %q\n  Description: %s",
+					tc.index, tc.path, tc.expectedDir, result, tc.description)
+			} else {
+				t.Logf("✓ GetDirName(%d) for %s = %q (%s)",
+					tc.index, tc.path, result, tc.description)
+			}
+		})
+	}
+
+	// 测试在循环中使用 GetDirName
+	t.Run("GetDirNameInLoop", func(t *testing.T) {
+		root.CleanRead()
+
+		// 遍历所有 .yaml 文件并获取其父目录
+		var parentDirs []string
+		for {
+			file := root.NextFile(".yaml")
+			if file == nil {
+				break
+			}
+
+			// 跳过根目录文件
+			if file.Path == "readme.txt" {
+				continue
+			}
+
+			parentDir := file.GetDirName(-1)
+			if parentDir != "" {
+				parentDirs = append(parentDirs, parentDir)
+				t.Logf("File: %s -> Parent Dir: %s", file.Path, parentDir)
+			}
+		}
+
+		// 验证找到了预期的父目录
+		expectedParents := []string{"go", "docker_build", "maven", "k8s", "unit"}
+		if len(parentDirs) != len(expectedParents) {
+			t.Errorf("Expected %d parent directories, got %d", len(expectedParents), len(parentDirs))
+		}
+
+		// 验证包含预期的目录（不验证顺序）
+		parentSet := make(map[string]bool)
+		for _, p := range parentDirs {
+			parentSet[p] = true
+		}
+
+		for _, expected := range expectedParents {
+			if !parentSet[expected] {
+				t.Errorf("Expected parent directory %q not found", expected)
+			}
+		}
+	})
+
+	// 测试获取分组名称的实际场景
+	t.Run("GetGroupName", func(t *testing.T) {
+		root.CleanRead()
+
+		// 模拟获取插件分组（倒数第二级目录）
+		file := root.SearchPath("plugins/build/go/build_go.yaml")
+		if file == nil {
+			t.Fatal("Failed to find test file")
+		}
+
+		// 文件名
+		fileName := file.GetDirName(0) // 这应该是空，因为不支持正数
+		t.Logf("File name (index 0): %q", fileName)
+
+		// 插件名称（父目录）
+		pluginName := file.GetDirName(-1)
+		t.Logf("Plugin name (-1): %q", pluginName)
+		if pluginName != "go" {
+			t.Errorf("Expected plugin name 'go', got: %q", pluginName)
+		}
+
+		// 分组名称（build、deploy、test 等）
+		groupName := file.GetDirName(-2)
+		t.Logf("Group name (-2): %q", groupName)
+		if groupName != "build" {
+			t.Errorf("Expected group name 'build', got: %q", groupName)
+		}
+
+		// 根目录
+		rootDir := file.GetDirName(-3)
+		t.Logf("Root dir (-3): %q", rootDir)
+		if rootDir != "plugins" {
+			t.Errorf("Expected root dir 'plugins', got: %q", rootDir)
+		}
+	})
+
+	// 测试边界情况
+	t.Run("EdgeCases", func(t *testing.T) {
+		// 空路径
+		emptyData := &ZipData{Path: ""}
+		result := emptyData.GetDirName(-1)
+		if result != "" {
+			t.Errorf("Expected empty result for empty path, got: %q", result)
+		}
+
+		// 单级路径（只有文件名）
+		singleLevel := &ZipData{Path: "file.txt"}
+		result = singleLevel.GetDirName(-1)
+		if result != "" {
+			t.Errorf("Expected empty result for single-level path, got: %q", result)
+		}
+
+		// 两级路径
+		twoLevel := &ZipData{Path: "dir/file.txt"}
+		result = twoLevel.GetDirName(-1)
+		if result != "dir" {
+			t.Errorf("Expected 'dir' for two-level path, got: %q", result)
+		}
+
+		// 大的负数索引
+		largeNegative := &ZipData{Path: "a/b/c/d.txt"}
+		result = largeNegative.GetDirName(-100)
+		if result != "" {
+			t.Errorf("Expected empty result for large negative index, got: %q", result)
+		}
+	})
+}
