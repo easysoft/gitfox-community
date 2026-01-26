@@ -8,6 +8,7 @@ import (
 // Plugin 插件表 Store 层结构体
 type Plugin struct {
 	ID          int64           `gorm:"column:id;primaryKey;autoIncrement;comment:'插件ID，自增主键'"`
+	GroupID     int64           `gorm:"column:groupID;not null;comment:'插件分组ID'"`
 	Name        string          `gorm:"column:name;not null;uniqueIndex:uk_plugin_name;comment:'插件名称（唯一标识符）'"`
 	Desc        []byte          `gorm:"column:desc;not null;default:'';comment:'插件描述信息'"`
 	Logo        []byte          `gorm:"column:logo;type:text;not null;default:'';comment:'插件Logo（SVG格式）'"`
