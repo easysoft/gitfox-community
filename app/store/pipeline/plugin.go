@@ -34,8 +34,8 @@ func (s *Store) Create(ctx context.Context, plugin *pipelineModel.Plugin) error 
 	return nil
 }
 
-// Update 更新插件（根据 name）
-func (s *Store) Update(ctx context.Context, plugin *pipelineModel.Plugin) error {
+// UpdateByName 更新插件（根据 name）
+func (s *Store) UpdateByName(ctx context.Context, plugin *pipelineModel.Plugin) error {
 	storePlugin := mapPluginToStore(plugin)
 	if err := s.db.WithContext(ctx).Model(&Plugin{}).Where("name = ? AND deleted = 0", plugin.Name).Updates(&storePlugin).Error; err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
@@ -105,10 +105,28 @@ func (s *Store) Delete(ctx context.Context, name string) error {
 	return nil
 }
 
+// GetAllGroup 获取所有插件分组
+func (s *Store) GetAllGroup(ctx context.Context) ([]*pipelineModel.PluginGroup, error) {
+	var groups []PluginGroup
+	if err := s.db.WithContext(ctx).Where("deleted = 0").Find(&groups).Error; err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
+	}
+
+	result := make([]*pipelineModel.PluginGroup, len(groups))
+	for i, g := range groups {
+		result[i] = &pipelineModel.PluginGroup{
+			ID:   g.ID,
+			Name: g.Name,
+		}
+	}
+	return result, nil
+}
+
 // mapPluginToModel 将 Store 层结构转换为 Model 层结构
 func mapPluginToModel(p Plugin) *pipelineModel.Plugin {
 	return &pipelineModel.Plugin{
 		ID:          p.ID,
+		GroupID:     p.GroupID,
 		Name:        p.Name,
 		Desc:        string(p.Desc),
 		Logo:        string(p.Logo),
@@ -126,6 +144,7 @@ func mapPluginToModel(p Plugin) *pipelineModel.Plugin {
 func mapPluginToStore(p *pipelineModel.Plugin) *Plugin {
 	return &Plugin{
 		ID:          p.ID,
+		GroupID:     p.GroupID,
 		Name:        p.Name,
 		Desc:        []byte(p.Desc),
 		Logo:        []byte(p.Logo),

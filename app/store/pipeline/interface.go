@@ -13,8 +13,8 @@ import (
 type Interface interface {
 	// Create 创建插件
 	Create(ctx context.Context, plugin *pipelineModel.Plugin) error
-	// Update 更新插件（根据 name）
-	Update(ctx context.Context, plugin *pipelineModel.Plugin) error
+	// UpdateByName 更新插件（根据 name）
+	UpdateByName(ctx context.Context, plugin *pipelineModel.Plugin) error
 	// GetByName 根据插件名称获取插件
 	GetByName(ctx context.Context, name string) (*pipelineModel.Plugin, error)
 	// GetAll 获取所有插件
@@ -23,4 +23,7 @@ type Interface interface {
 	List(ctx context.Context, filter *pipelineModel.PluginFilter) (*database.PageResult[*pipelineModel.Plugin], error)
 	// Delete 删除插件（硬删除）
 	Delete(ctx context.Context, name string) error
+
+	// GetAllGroup 获取所有插件分组
+	GetAllGroup(ctx context.Context) ([]*pipelineModel.PluginGroup, error)
 }

@@ -1,5 +1,6 @@
 CREATE TABLE IF NOT EXISTS `ops_plugins` (
 	`id` int unsigned NOT NULL AUTO_INCREMENT COMMENT '插件ID，自增主键',
+	`groupID` int NOT NULL COMMENT '插件分组ID',
 	`name` varchar(255) NOT NULL COMMENT '插件名称（唯一标识符）',
 	`desc` mediumtext NOT NULL DEFAULT '' COMMENT '插件描述信息',
 	`logo` mediumtext NOT NULL DEFAULT '' COMMENT '插件Logo（SVG格式）',
