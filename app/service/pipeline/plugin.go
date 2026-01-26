@@ -66,7 +66,7 @@ func (s *Service) Migrate(ctx context.Context, url string) error {
 		}
 
 		// 读取 yaml 文件
-		yamlData, err := pipelineModel.ParseBytesSimp(yaml.Content.Bytes())
+		yamlData, err := pipelineModel.ParseBytesSimple(yaml.Content.Bytes())
 		if err != nil {
 			log.Warnf("could not parse schema into valid config %s: %v", yaml.Path, err)
 			continue
