@@ -1,7 +1,5 @@
 package pipeline
 
-import "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
-
 type PipelineConfigSource string
 
 const (
@@ -43,21 +41,6 @@ type SimpleStep struct {
 	Name   string `json:"name"`
 	NameCn string `json:"alias"`
 	Svg    string `json:"svg"`
-}
-
-type VisualStep struct {
-	Name       string                    `json:"name"`
-	NameCn     string                    `json:"alias"`
-	Svg        string                    `json:"svg"`
-	Os         []constant.PipelineOs     `json:"os"`
-	Runner     []constant.PipelineRunner `json:"runner"`
-	Categories []constant.StepCategory   `json:"categories"`
-}
-
-type GroupedSteps struct {
-	Name  constant.StepCategory `json:"name"`
-	Alias string                `json:"alias"`
-	Steps []*SimpleStep         `json:"steps"`
 }
 
 // GroupedPlugins 按分组归类的插件

@@ -143,43 +143,45 @@ func (s *Service) Migrate(ctx context.Context, url string) error {
 
 // GetGroupedPlugins 获取按分组归类的插件列表
 func (s *Service) GetGroupedPlugins(ctx context.Context) ([]*pipelineModel.GroupedPlugins, error) {
-	// 1. 查询所有插件分组
-	groups, err := s.pipelineStore.GetAllGroup(ctx)
+	// 一次性查询所有插件及其分组信息
+	pluginsWithGroup, err := s.pipelineStore.GetAllWithGroup(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	// 2. 遍历每个分组，查询其下的插件
-	result := make([]*pipelineModel.GroupedPlugins, 0, len(groups))
-	for _, group := range groups {
+	// 按分组ID进行分组，使用 map 保持分组顺序
+	groupMap := make(map[int64]*pipelineModel.GroupedPlugins)
+	groupOrder := make([]int64, 0)
+
+	for _, p := range pluginsWithGroup {
 		// 过滤掉 default 分组
-		if group.Name == pipelineModel.DefaultPluginGroup {
+		if p.GroupName == pipelineModel.DefaultPluginGroup {
 			continue
 		}
 
-		// 根据分组ID查询插件列表
-		plugins, err := s.pipelineStore.GetByGroupID(ctx, group.ID)
-		if err != nil {
-			return nil, err
+		// 如果分组不存在，创建新分组
+		if _, exists := groupMap[p.GroupID]; !exists {
+			groupMap[p.GroupID] = &pipelineModel.GroupedPlugins{
+				GroupID:   p.GroupID,
+				GroupName: p.GroupName,
+				Desc:      p.GroupDesc,
+				Plugins:   make([]*pipelineModel.SimpleStep, 0),
+			}
+			groupOrder = append(groupOrder, p.GroupID)
 		}
 
-		// 转换为 SimpleStep 格式
-		simpleSteps := make([]*pipelineModel.SimpleStep, 0, len(plugins))
-		for _, plugin := range plugins {
-			simpleSteps = append(simpleSteps, &pipelineModel.SimpleStep{
-				Name:   plugin.Name,
-				NameCn: plugin.Desc,
-				Svg:    plugin.Logo,
-			})
-		}
-
-		// 构建分组结果
-		result = append(result, &pipelineModel.GroupedPlugins{
-			GroupID:   group.ID,
-			GroupName: group.Name,
-			Desc:      group.Desc,
-			Plugins:   simpleSteps,
+		// 添加插件到对应分组
+		groupMap[p.GroupID].Plugins = append(groupMap[p.GroupID].Plugins, &pipelineModel.SimpleStep{
+			Name:   p.Name,
+			NameCn: p.Desc,
+			Svg:    p.Logo,
 		})
+	}
+
+	// 按原始顺序构建结果
+	result := make([]*pipelineModel.GroupedPlugins, 0, len(groupOrder))
+	for _, groupID := range groupOrder {
+		result = append(result, groupMap[groupID])
 	}
 
 	return result, nil

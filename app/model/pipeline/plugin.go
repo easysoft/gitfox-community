@@ -51,6 +51,13 @@ type PluginGroup struct {
 	Desc string `json:"desc"`
 }
 
+// PluginWithGroup 插件及其分组信息
+type PluginWithGroup struct {
+	Plugin
+	GroupName string `json:"groupName"`
+	GroupDesc string `json:"groupDesc"`
+}
+
 // Matches 判断插件是否匹配
 func (p *Plugin) Matches(v *Plugin) bool {
 	if p.GroupID != v.GroupID {
