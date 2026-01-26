@@ -67,6 +67,21 @@ func (s *Store) GetAll(ctx context.Context) ([]*pipelineModel.Plugin, error) {
 	return result, nil
 }
 
+// GetByGroupID 根据分组ID获取插件列表
+func (s *Store) GetByGroupID(ctx context.Context, groupID int64) ([]*pipelineModel.Plugin, error) {
+	var plugins []Plugin
+
+	if err := s.db.WithContext(ctx).Where("groupID = ? AND deleted = 0", groupID).Find(&plugins).Error; err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
+	}
+
+	result := make([]*pipelineModel.Plugin, len(plugins))
+	for i, p := range plugins {
+		result[i] = mapPluginToModel(p)
+	}
+	return result, nil
+}
+
 // List 查询插件列表（分页）
 func (s *Store) List(ctx context.Context, filter *pipelineModel.PluginFilter) (*database.PageResult[*pipelineModel.Plugin], error) {
 	tx := s.db.WithContext(ctx).Model(&Plugin{}).Where("deleted = 0")
@@ -117,6 +132,7 @@ func (s *Store) GetAllGroup(ctx context.Context) ([]*pipelineModel.PluginGroup, 
 		result[i] = &pipelineModel.PluginGroup{
 			ID:   g.ID,
 			Name: g.Name,
+			Desc: g.Desc,
 		}
 	}
 	return result, nil

@@ -477,6 +477,28 @@ definitions:
       when:
         type: string
     type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_pipeline.GroupedPlugins:
+    properties:
+      desc:
+        type: string
+      groupId:
+        type: integer
+      groupName:
+        type: string
+      plugins:
+        items:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_pipeline.SimpleStep'
+        type: array
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_pipeline.SimpleStep:
+    properties:
+      alias:
+        type: string
+      name:
+        type: string
+      svg:
+        type: string
+    type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_publickey.AddPublicKeyInput:
     properties:
       content:
@@ -1088,7 +1110,7 @@ definitions:
     - id
     - name
     - priority
-    - created_date
+    - createdDate
     - ""
     type: string
     x-enum-varnames:
@@ -1499,6 +1521,67 @@ paths:
       summary: Git Info/Refs 请求
       tags:
       - git
+  /pipeline/steps/{name}/schema:
+    get:
+      consumes:
+      - application/json
+      description: 查询流水线步骤表单配置
+      parameters:
+      - description: 步骤名称
+        in: path
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 查询成功
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 查询流水线步骤表单配置
+      tags:
+      - pipelines
+  /pipeline/steps/grouped:
+    get:
+      consumes:
+      - application/json
+      description: 查询流水线步骤分组
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 查询成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_pipeline.GroupedPlugins'
+                  type: array
+                listArgs:
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListNoTotalArgs'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse'
+      summary: 查询流水线步骤分组
+      tags:
+      - pipelines
   /repos:
     post:
       consumes:

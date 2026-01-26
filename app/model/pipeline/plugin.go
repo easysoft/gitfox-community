@@ -48,6 +48,7 @@ type PluginFilter struct {
 type PluginGroup struct {
 	ID   int64  `json:"id"`
 	Name string `json:"name"`
+	Desc string `json:"desc"`
 }
 
 // Matches 判断插件是否匹配

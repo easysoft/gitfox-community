@@ -10,6 +10,7 @@ import (
 	branch3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/branch"
 	commit2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/commit"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/githook"
+	pipeline3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/pipeline"
 	repo3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/repo"
 	scan3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/scan"
 	space3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/space"
@@ -109,6 +110,10 @@ func NewApp(mode string) (*App, func(), error) {
 	branchService := branch2.NewService(urlProvider, gitService, branchStore)
 	repoService := repo2.NewRepoSvc(gitService, store, spaceStore, urlProvider, membershipAuthorizer)
 	controller := branch3.NewController(branchService, repoService)
+	ciConfig := provider.NewCiConfig(config)
+	pipelineStore := pipeline.NewPluginStore(db)
+	pipelineService := pipeline2.NewPluginService(pipelineStore)
+	pipelineController := pipeline3.NewController(ciConfig, pipelineService)
 	tagService := tag.NewService(urlProvider, gitService)
 	tagController := tag2.NewController(tagService, repoService)
 	commitService := commit.NewService(urlProvider, gitService)
@@ -172,7 +177,7 @@ func NewApp(mode string) (*App, func(), error) {
 	ruleSetService := scan2.NewRuleSetService(ruleSetStore, ruleStore)
 	ruleService := scan2.NewRuleService(ruleStore, membershipAuthorizer)
 	scanController := scan3.NewScanController(ruleSetService, ruleService)
-	routerController := provider.NewControllers(spaceController, controller, tagController, commitController, repoController, userController, gitController, scanController)
+	routerController := provider.NewControllers(spaceController, controller, pipelineController, tagController, commitController, repoController, userController, gitController, scanController)
 	i18nManager, err := provider.NewI18nManager(config)
 	if err != nil {
 		cleanup2()
@@ -180,8 +185,6 @@ func NewApp(mode string) (*App, func(), error) {
 		return nil, nil, err
 	}
 	server := provider.ProvideSSHServer(config, interface2, gitController)
-	pipelineStore := pipeline.NewPluginStore(db)
-	pipelineService := pipeline2.NewPluginService(pipelineStore)
 	authenticator := authn.ProvideAuthenticators(config, userStore, tokenInterface)
 	app := &App{
 		SystemConfig:  config,

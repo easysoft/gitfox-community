@@ -141,6 +141,55 @@ func (s *Service) Migrate(ctx context.Context, url string) error {
 	return nil
 }
 
+// GetGroupedPlugins 获取按分组归类的插件列表
+func (s *Service) GetGroupedPlugins(ctx context.Context) ([]*pipelineModel.GroupedPlugins, error) {
+	// 1. 查询所有插件分组
+	groups, err := s.pipelineStore.GetAllGroup(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// 2. 遍历每个分组，查询其下的插件
+	result := make([]*pipelineModel.GroupedPlugins, 0, len(groups))
+	for _, group := range groups {
+		// 过滤掉 default 分组
+		if group.Name == pipelineModel.DefaultPluginGroup {
+			continue
+		}
+
+		// 根据分组ID查询插件列表
+		plugins, err := s.pipelineStore.GetByGroupID(ctx, group.ID)
+		if err != nil {
+			return nil, err
+		}
+
+		// 转换为 SimpleStep 格式
+		simpleSteps := make([]*pipelineModel.SimpleStep, 0, len(plugins))
+		for _, plugin := range plugins {
+			simpleSteps = append(simpleSteps, &pipelineModel.SimpleStep{
+				Name:   plugin.Name,
+				NameCn: plugin.Desc,
+				Svg:    plugin.Logo,
+			})
+		}
+
+		// 构建分组结果
+		result = append(result, &pipelineModel.GroupedPlugins{
+			GroupID:   group.ID,
+			GroupName: group.Name,
+			Desc:      group.Desc,
+			Plugins:   simpleSteps,
+		})
+	}
+
+	return result, nil
+}
+
+// GetPluginByName 根据插件名称获取插件
+func (s *Service) GetPluginByName(ctx context.Context, name string) (*pipelineModel.Plugin, error) {
+	return s.pipelineStore.GetByName(ctx, name)
+}
+
 func GetPluginGroupID(groups []*pipelineModel.PluginGroup, groupName string) (int64, error) {
 
 	for _, v := range groups {

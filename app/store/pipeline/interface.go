@@ -19,6 +19,8 @@ type Interface interface {
 	GetByName(ctx context.Context, name string) (*pipelineModel.Plugin, error)
 	// GetAll 获取所有插件
 	GetAll(ctx context.Context) ([]*pipelineModel.Plugin, error)
+	// GetByGroupID 根据分组ID获取插件列表
+	GetByGroupID(ctx context.Context, groupID int64) ([]*pipelineModel.Plugin, error)
 	// List 查询插件列表（分页）
 	List(ctx context.Context, filter *pipelineModel.PluginFilter) (*database.PageResult[*pipelineModel.Plugin], error)
 	// Delete 删除插件（硬删除）

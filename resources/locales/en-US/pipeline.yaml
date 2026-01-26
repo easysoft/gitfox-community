@@ -1,0 +1,6 @@
+pipeline:
+  query_schema_group_success: "Successfully retrieved schema group configuration."
+  query_step_schema_success: "Successfully retrieved step schema configuration."
+  path_param_error: "Failed to parse path parameter."
+  query_param_error: "Failed to parse query parameter."
+  body_param_error: "Failed to parse request body."
