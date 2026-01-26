@@ -140,6 +140,13 @@ const (
 	GitTimeout                      I18nKey = "git.timeout"                           // Git 操作超时.
 	GitUnrelatedHistories           I18nKey = "git.unrelated_histories"               // 不相关的历史记录.
 
+	// Pipeline 相关常量
+	PipelineBodyParamError          I18nKey = "pipeline.body_param_error"           // Body 参数解析失败.
+	PipelinePathParamError          I18nKey = "pipeline.path_param_error"           // Path 参数解析失败.
+	PipelineQueryParamError         I18nKey = "pipeline.query_param_error"          // Query 参数解析失败.
+	PipelineQuerySchemaGroupSuccess I18nKey = "pipeline.query_schema_group_success" // 查询 schema 分组配置成功
+	PipelineQueryStepSchemaSuccess  I18nKey = "pipeline.query_step_schema_success"  // 查询 schema 配置成功
+
 	// Pullrequest 相关常量
 	PullrequestBodyParamError                I18nKey = "pullrequest.body_param_error"                   // Body 参数解析失败.
 	PullrequestEventTriggerError             I18nKey = "pullrequest.event_trigger_error"                // 事件触发失败

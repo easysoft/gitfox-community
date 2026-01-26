@@ -1,0 +1,6 @@
+pipeline:
+  query_schema_group_success: "查询 schema 分组配置成功"
+  query_step_schema_success: "查询 schema 配置成功"
+  path_param_error: "Path 参数解析失败。"
+  query_param_error: "Query 参数解析失败。"
+  body_param_error: "Body 参数解析失败。"

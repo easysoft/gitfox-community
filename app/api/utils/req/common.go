@@ -2,6 +2,7 @@ package req
 
 const (
 	HeaderContentEncoding = "Content-Encoding"
+	QueryParamName        = "name"
 )
 
 type ContextKey int
@@ -50,6 +51,6 @@ type ListFilter struct {
 }
 
 type GitListFilter struct {
-	Page  int `form:"page" binding:"omitempty,min=1" default:"1"`          // 最小1
+	Page  int `form:"page" binding:"omitempty,min=1" default:"1"`           // 最小1
 	Limit int `form:"limit" binding:"omitempty,min=1,max=100" default:"20"` // 1-100
 }

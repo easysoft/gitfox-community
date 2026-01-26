@@ -48,6 +48,14 @@ type PluginFilter struct {
 type PluginGroup struct {
 	ID   int64  `json:"id"`
 	Name string `json:"name"`
+	Desc string `json:"desc"`
+}
+
+// PluginWithGroup 插件及其分组信息
+type PluginWithGroup struct {
+	Plugin
+	GroupName string `json:"groupName"`
+	GroupDesc string `json:"groupDesc"`
 }
 
 // Matches 判断插件是否匹配

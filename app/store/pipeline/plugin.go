@@ -67,6 +67,21 @@ func (s *Store) GetAll(ctx context.Context) ([]*pipelineModel.Plugin, error) {
 	return result, nil
 }
 
+// GetByGroupID 根据分组ID获取插件列表
+func (s *Store) GetByGroupID(ctx context.Context, groupID int64) ([]*pipelineModel.Plugin, error) {
+	var plugins []Plugin
+
+	if err := s.db.WithContext(ctx).Where("groupID = ? AND deleted = 0", groupID).Find(&plugins).Error; err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
+	}
+
+	result := make([]*pipelineModel.Plugin, len(plugins))
+	for i, p := range plugins {
+		result[i] = mapPluginToModel(p)
+	}
+	return result, nil
+}
+
 // List 查询插件列表（分页）
 func (s *Store) List(ctx context.Context, filter *pipelineModel.PluginFilter) (*database.PageResult[*pipelineModel.Plugin], error) {
 	tx := s.db.WithContext(ctx).Model(&Plugin{}).Where("deleted = 0")
@@ -117,6 +132,41 @@ func (s *Store) GetAllGroup(ctx context.Context) ([]*pipelineModel.PluginGroup, 
 		result[i] = &pipelineModel.PluginGroup{
 			ID:   g.ID,
 			Name: g.Name,
+			Desc: g.Desc,
+		}
+	}
+	return result, nil
+}
+
+// PluginWithGroupRow 关联查询结果行
+type PluginWithGroupRow struct {
+	Plugin
+	GroupName string `gorm:"column:group_name"`
+	GroupDesc string `gorm:"column:group_desc"`
+}
+
+// GetAllWithGroup 获取所有插件及其分组信息（关联查询）
+func (s *Store) GetAllWithGroup(ctx context.Context) ([]*pipelineModel.PluginWithGroup, error) {
+	var rows []PluginWithGroupRow
+
+	// 使用 JOIN 关联查询插件和分组
+	err := s.db.WithContext(ctx).
+		Table("ops_plugins p").
+		Select("p.*, g.name as group_name, g.desc as group_desc").
+		Joins("LEFT JOIN ops_plugin_group g ON p.groupID = g.id").
+		Where("p.deleted = 0 AND g.deleted = 0").
+		Find(&rows).Error
+
+	if err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
+	}
+
+	result := make([]*pipelineModel.PluginWithGroup, len(rows))
+	for i, row := range rows {
+		result[i] = &pipelineModel.PluginWithGroup{
+			Plugin:    *mapPluginToModel(row.Plugin),
+			GroupName: row.GroupName,
+			GroupDesc: row.GroupDesc,
 		}
 	}
 	return result, nil

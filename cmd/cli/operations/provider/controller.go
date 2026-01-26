@@ -6,6 +6,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/branch"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/commit"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/git"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/pipeline"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/scan"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/space"
@@ -22,6 +23,7 @@ var ControllersWireSet = wire.NewSet(
 func NewControllers(
 	spaceController *space.SpaceController,
 	branchController *branch.Controller,
+	pipelineController *pipeline.Controller,
 	tagController *tag.Controller,
 	commitController *commit.Controller,
 	repoController *repo.Controller,
@@ -30,13 +32,14 @@ func NewControllers(
 	scanController *scan.ScanController,
 ) *router.Controller {
 	return &router.Controller{
-		Space:  spaceController,
-		Branch: branchController,
-		Tag:    tagController,
-		Commit: commitController,
-		Repo:   repoController,
-		User:   userController,
-		Git:    gitController,
-		Scan:   scanController,
+		Space:    spaceController,
+		Branch:   branchController,
+		Tag:      tagController,
+		Commit:   commitController,
+		Repo:     repoController,
+		User:     userController,
+		Git:      gitController,
+		Scan:     scanController,
+		Pipeline: pipelineController,
 	}
 }
