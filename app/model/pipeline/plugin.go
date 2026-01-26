@@ -21,17 +21,22 @@ const (
 // Plugin 插件 Model 层结构体
 type Plugin struct {
 	ID          int64           `json:"id"`
-	Name        string          `json:"name"` // 插件名称（唯一标识符）
-	Desc        string          `json:"desc"` // 插件描述
-	Logo        string          `json:"logo"` // Logo (SVG)
-	Yaml        string          `json:"yaml"` // YAML 格式配置
-	Json        string          `json:"json"` // JSON 格式配置
-	Type        PluginType      `json:"type"` // 插件类型
+	GroupID     int64           `json:"groupId"` // 插件分组 ID
+	Name        string          `json:"name"`    // 插件名称（唯一标识符）
+	Desc        string          `json:"desc"`    // 插件描述
+	Logo        string          `json:"logo"`    // Logo (SVG)
+	Yaml        string          `json:"yaml"`    // YAML 格式配置
+	Json        string          `json:"json"`    // JSON 格式配置
+	Type        PluginType      `json:"type"`    // 插件类型
 	CreatedBy   string          `json:"createdBy"`
 	CreatedDate *datetime.Local `json:"createdDate"`
 	EditedBy    string          `json:"editedBy"`
 	EditedDate  *datetime.Local `json:"editedDate"`
 }
+
+const (
+	DefaultPluginGroup = "default"
+)
 
 // PluginFilter 插件查询过滤器
 type PluginFilter struct {
@@ -40,8 +45,16 @@ type PluginFilter struct {
 	PageSize int        `form:"pageSize" binding:"omitempty,min=1,max=100"` // 每页大小，1-100
 }
 
+type PluginGroup struct {
+	ID   int64  `json:"id"`
+	Name string `json:"name"`
+}
+
 // Matches 判断插件是否匹配
 func (p *Plugin) Matches(v *Plugin) bool {
+	if p.GroupID != v.GroupID {
+		return false
+	}
 	if p.Name != v.Name {
 		return false
 	}
@@ -68,6 +81,17 @@ type Yaml struct {
 	Type PluginType  `json:"type,omitempty"`
 	Name string      `json:"name,omitempty"`
 	Spec interface{} `json:"spec,omitempty"`
+}
+type YamlSimp struct {
+	Kind string     `json:"kind,omitempty"`
+	Type PluginType `json:"type,omitempty"`
+	Name string     `json:"name,omitempty"`
+	Spec SpecSimple `json:"spec,omitempty"`
+}
+
+type SpecSimple struct {
+	Name        string `json:"name,omitempty"`
+	Description string `json:"description,omitempty"`
 }
 
 // ParseBytes parses the configuration from bytes b.
@@ -116,5 +140,39 @@ func Parse(r io.Reader) (*Yaml, error) {
 		out.Spec = &stage
 	}
 
+	return out, nil
+}
+
+func ParseBytesSimple(b []byte) (*YamlSimp, error) {
+	return ParseSimple(
+		bytes.NewBuffer(b),
+	)
+}
+
+// ParseSimple parses the configuration from io.Reader r.
+func ParseSimple(r io.Reader) (*YamlSimp, error) {
+	b, err := ioutil.ReadAll(r)
+	if err != nil {
+		return nil, err
+	}
+	b, err = yaml.YAMLToJSON(b)
+	if err != nil {
+		return nil, err
+	}
+	out := new(YamlSimp)
+	err = json.Unmarshal(b, out)
+	if err != nil {
+		return out, err
+	}
+
+	var spec SpecSimple
+	specBytes, err := json.Marshal(out.Spec)
+	if err != nil {
+		return out, err
+	}
+	if err := json.Unmarshal(specBytes, &spec); err != nil {
+		return out, err
+	}
+	out.Spec = spec
 	return out, nil
 }
