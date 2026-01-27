@@ -104,6 +104,13 @@ const (
 	ErrorGzipFailedToCloseReader  I18nKey = "error.gzip_failed_to_close_reader"  // gzip 关闭解压流失败
 	ErrorGzipFailedToCreateReader I18nKey = "error.gzip_failed_to_create_reader" // gzip 解压失败
 
+	// Execution 相关常量
+	ExecutionBodyParamError  I18nKey = "execution.body_param_error"  // Body 参数解析失败.
+	ExecutionPathParamError  I18nKey = "execution.path_param_error"  // Path 参数解析失败.
+	ExecutionQueryParamError I18nKey = "execution.query_param_error" // Query 参数解析失败.
+	ExecutionTriggerError    I18nKey = "execution.trigger_error"     // 执行触发失败
+	ExecutionTriggerSuccess  I18nKey = "execution.trigger_success"   // 执行触发成功
+
 	// Git 相关常量
 	GitAmbiguousRef                 I18nKey = "git.ambiguous_ref"                     // 引用不明确.
 	GitBranchAlreadyExists          I18nKey = "git.branch_already_exists"             // 分支已存在.

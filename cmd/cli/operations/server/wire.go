@@ -48,6 +48,7 @@ func NewApp(mode string) (*App, func(), error) {
 		provider.BranchWireSet,
 		provider.TagWireSet,
 		provider.PipelineWireSet,
+		provider.ExecutionWireSet,
 		provider.ScanRuleSetWireSet,
 		provider.ScanRuleWireSet,
 		provider.CommitWireSet,

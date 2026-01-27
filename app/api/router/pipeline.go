@@ -14,4 +14,9 @@ func registerPipelineRoutes(r *gin.RouterGroup, controller *Controller) {
 		schema.GET("/grouped", controller.Pipeline.GroupSteps)
 		schema.GET(fmt.Sprintf("/:%s/schema", req.PathParamSchemaName), controller.Pipeline.GetSchema)
 	}
+
+	execution := r.Group("/pipeline/executions")
+	{
+		execution.POST("", controller.Execution.Create)
+	}
 }
