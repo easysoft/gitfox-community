@@ -21,8 +21,8 @@ func NewPipelineService(pipelineStore pipeline.Interface) *Service {
 
 type Interface interface {
 
-	// pipelineController 是流水线控制器
-	GetPipelineController(ctx context.Context, projectID int64) (*pipelineModel.PipelineFile, error)
+	// GetPipelineContent 根据流水线ID获取流水线内容
+	GetPipelineContent(ctx context.Context, pipelineID int64) (*pipelineModel.PipelineFile, error)
 
 	// Migrate migrates the pipeline plugin to the latest version.
 	Migrate(ctx context.Context, url string) error

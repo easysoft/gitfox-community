@@ -6,8 +6,8 @@ import (
 	pipelineModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/pipeline"
 )
 
-func (s *Service) GetPipelineController(ctx context.Context, projectID int64) (*pipelineModel.PipelineFile, error) {
-	pipelineFile, err := s.pipelineStore.GetPipelineContentByPipelineID(ctx, projectID)
+func (s *Service) GetPipelineContent(ctx context.Context, pipelineID int64) (*pipelineModel.PipelineFile, error) {
+	pipelineFile, err := s.pipelineStore.GetPipelineContentByPipelineID(ctx, pipelineID)
 	if err != nil {
 		return nil, err
 	}
