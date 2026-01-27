@@ -446,6 +446,261 @@ func TestGetPluginGroupID(t *testing.T) {
 	}
 }
 
+// ====================== Resolve 方法测试 ======================
+// ResolveTestCase 表格驱动用例结构体
+type ResolveTestCase struct {
+	name string
+	// 前置条件
+	mockPipelineStore func(m *pipelineStoreMock.MockInterface)
+	inputType         string
+	inputKind         string
+	inputPluginName   string
+	// 预期结果
+	expectedResult *pipelineModel.Yaml
+	expectedErr    bool
+	expectedErrMsg string
+}
+
+// validPluginYaml 用于测试的有效插件 YAML (JSON格式)
+const validPluginYaml = `{
+  "kind": "plugin",
+  "type": "step",
+  "name": "build_go",
+  "spec": {
+    "name": "Azure container Registry",
+    "description": "The ACR plugin can be used to build and publish images to the Azure ECR\nregistry.\n",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "plugins/acr",
+        "envs": {
+          "PLUGIN_REGISTRY": "${{ inputs.registry }}",
+          "PLUGIN_REPO": "${{ inputs.repo }}",
+          "PLUGIN_SERVICE_PRINCIPAL_CLIENT_ID": "${{ inputs.service_principal_client_id }}",
+          "PLUGIN_SERVICE_PRINCIPAL_CLIENT_SECRET": "${{ inputs.service_principal_client_secret }}"
+        }
+      }
+    },
+    "inputs": {
+      "registry": {
+        "type": "string",
+        "description": "authenticates to this registry",
+        "default": "azurecr.io"
+      },
+      "repo": {
+        "type": "string",
+        "description": "repository name for the image"
+      },
+      "service_principal_client_id": {
+        "type": "string",
+        "description": "authenticates with this username"
+      },
+      "service_principal_client_secret": {
+        "type": "string",
+        "description": "authenticates with this password",
+        "mask": true
+      }
+    }
+  }
+}`
+
+// TestResolve Resolve 单测入口
+func TestResolve(t *testing.T) {
+	t.Parallel()
+
+	testCases := []ResolveTestCase{
+		{
+			name: "场景1：正常解析 - plugin类型step级别插件成功",
+			mockPipelineStore: func(m *pipelineStoreMock.MockInterface) {
+				mockPlugin := &pipelineModel.Plugin{
+					ID:   1,
+					Name: "build_go",
+					Yaml: validPluginYaml,
+				}
+				m.EXPECT().GetPluginByName(gomock.Any(), "build_go").Return(mockPlugin, nil)
+			},
+			inputType:       "step",
+			inputKind:       "plugin",
+			inputPluginName: "build_go",
+			expectedResult: &pipelineModel.Yaml{
+				Kind: "plugin",
+				Type: pipelineModel.PluginTypeStep,
+				Name: "build_go",
+				Spec: &pipelineModel.PluginStep{
+					Name:        "Azure container Registry",
+					Description: "The ACR plugin can be used to build and publish images to the Azure ECR\nregistry.\n",
+					Step: &pipelineModel.Step{
+						Type: "script",
+						Spec: map[string]interface{}{
+							"image": "plugins/acr",
+							"envs": map[string]interface{}{
+								"PLUGIN_REGISTRY":                       "${{ inputs.registry }}",
+								"PLUGIN_REPO":                           "${{ inputs.repo }}",
+								"PLUGIN_SERVICE_PRINCIPAL_CLIENT_ID":    "${{ inputs.service_principal_client_id }}",
+								"PLUGIN_SERVICE_PRINCIPAL_CLIENT_SECRET": "${{ inputs.service_principal_client_secret }}",
+							},
+						},
+					},
+					Inputs: map[string]*pipelineModel.Input{
+						"registry": {
+							Type:        "string",
+							Description: "authenticates to this registry",
+							Default:     "azurecr.io",
+						},
+						"repo": {
+							Type:        "string",
+							Description: "repository name for the image",
+						},
+						"service_principal_client_id": {
+							Type:        "string",
+							Description: "authenticates with this username",
+						},
+						"service_principal_client_secret": {
+							Type:        "string",
+							Description: "authenticates with this password",
+							Mask:        true,
+						},
+					},
+				},
+			},
+			expectedErr: false,
+		},
+		{
+			name:            "场景2：无效的kind参数 - 返回错误",
+			mockPipelineStore: func(m *pipelineStoreMock.MockInterface) {
+				// 不需要调用 mock
+			},
+			inputType:       "step",
+			inputKind:       "invalid_kind",
+			inputPluginName: "build_go",
+			expectedResult:  nil,
+			expectedErr:     true,
+			expectedErrMsg:  "unknown resolver kind provided",
+		},
+		{
+			name:            "场景3：无效的type参数 - 返回错误",
+			mockPipelineStore: func(m *pipelineStoreMock.MockInterface) {
+				// 不需要调用 mock
+			},
+			inputType:       "invalid_type",
+			inputKind:       "plugin",
+			inputPluginName: "build_go",
+			expectedResult:  nil,
+			expectedErr:     true,
+			expectedErrMsg:  "unknown template type provided",
+		},
+		{
+			name:            "场景4：plugin类型但非step级别 - 返回错误",
+			mockPipelineStore: func(m *pipelineStoreMock.MockInterface) {
+				// 不需要调用 mock
+			},
+			inputType:       "stage",
+			inputKind:       "plugin",
+			inputPluginName: "build_go",
+			expectedResult:  nil,
+			expectedErr:     true,
+			expectedErrMsg:  "only step level plugins are currently supported",
+		},
+		{
+			name: "场景5：数据库查询插件失败 - 返回错误",
+			mockPipelineStore: func(m *pipelineStoreMock.MockInterface) {
+				m.EXPECT().GetPluginByName(gomock.Any(), "non_existent").Return(nil, ErrDBNotFound)
+			},
+			inputType:       "step",
+			inputKind:       "plugin",
+			inputPluginName: "non_existent",
+			expectedResult:  nil,
+			expectedErr:     true,
+			expectedErrMsg:  "could not lookup plugin",
+		},
+		{
+			name: "场景6：YAML解析失败 - 返回错误",
+			mockPipelineStore: func(m *pipelineStoreMock.MockInterface) {
+				mockPlugin := &pipelineModel.Plugin{
+					ID:   1,
+					Name: "bad_plugin",
+					Yaml: "invalid yaml {{{",
+				}
+				m.EXPECT().GetPluginByName(gomock.Any(), "bad_plugin").Return(mockPlugin, nil)
+			},
+			inputType:       "step",
+			inputKind:       "plugin",
+			inputPluginName: "bad_plugin",
+			expectedResult:  nil,
+			expectedErr:     true,
+			expectedErrMsg:  "could not unmarshal plugin to v1yaml spec",
+		},
+		{
+			name:            "场景7：template类型 - 返回无法解析错误",
+			mockPipelineStore: func(m *pipelineStoreMock.MockInterface) {
+				// 不需要调用 mock
+			},
+			inputType:       "step",
+			inputKind:       "template",
+			inputPluginName: "some_template",
+			expectedResult:  nil,
+			expectedErr:     true,
+			expectedErrMsg:  "could not resolve plugin",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			mockPipelineStore := pipelineStoreMock.NewMockInterface(ctrl)
+
+			service := &Service{
+				pipelineStore: mockPipelineStore,
+			}
+
+			tc.mockPipelineStore(mockPipelineStore)
+
+			ctx := context.Background()
+			actualResult, actualErr := service.Resolve(ctx, tc.inputType, tc.inputKind, tc.inputPluginName)
+
+			if tc.expectedErr {
+				assert.Error(t, actualErr)
+				if tc.expectedErrMsg != "" {
+					assert.Contains(t, actualErr.Error(), tc.expectedErrMsg,
+						"Resolve() 预期错误包含 %v，实际为 %v", tc.expectedErrMsg, actualErr)
+				}
+			} else {
+				assert.NoError(t, actualErr)
+			}
+
+			if tc.expectedResult != nil {
+				assert.Equal(t, tc.expectedResult.Kind, actualResult.Kind)
+				assert.Equal(t, tc.expectedResult.Type, actualResult.Type)
+				assert.Equal(t, tc.expectedResult.Name, actualResult.Name)
+
+				// 验证 Spec 类型和关键字段
+				if expectedSpec, ok := tc.expectedResult.Spec.(*pipelineModel.PluginStep); ok {
+					actualSpec, ok := actualResult.Spec.(*pipelineModel.PluginStep)
+					assert.True(t, ok, "Spec 应为 *PluginStep 类型")
+					assert.Equal(t, expectedSpec.Name, actualSpec.Name)
+					assert.Equal(t, expectedSpec.Description, actualSpec.Description)
+					assert.NotNil(t, actualSpec.Step)
+					assert.Equal(t, expectedSpec.Step.Type, actualSpec.Step.Type)
+					assert.Len(t, actualSpec.Inputs, len(expectedSpec.Inputs))
+
+					// 验证 inputs 字段
+					for key, expectedInput := range expectedSpec.Inputs {
+						actualInput, exists := actualSpec.Inputs[key]
+						assert.True(t, exists, "Input %s 应存在", key)
+						assert.Equal(t, expectedInput.Type, actualInput.Type)
+						assert.Equal(t, expectedInput.Description, actualInput.Description)
+						assert.Equal(t, expectedInput.Mask, actualInput.Mask)
+					}
+				}
+			} else {
+				assert.Nil(t, actualResult)
+			}
+		})
+	}
+}
+
 // ====================== Migrate 方法测试 ======================
 // MigrateTestCase 表格驱动用例结构体
 type MigrateTestCase struct {
