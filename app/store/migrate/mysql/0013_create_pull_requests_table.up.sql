@@ -32,6 +32,7 @@ CREATE TABLE IF NOT EXISTS `ops_ppm` (
 	`approval` int unsigned NOT NULL DEFAULT '0' COMMENT '审批实例',
 	`reviewers` varchar(255) NOT NULL DEFAULT '' COMMENT '最新节点评审人',
 	`approvalflow` int unsigned NOT NULL DEFAULT 0 COMMENT '审批流模板' ,
+	`reviewStatus` varchar(20) NOT NULL DEFAULT '' COMMENT '审批状态',
 	PRIMARY KEY (`id`)
 	) ENGINE=InnoDB COMMENT='合并请求主表';
 
