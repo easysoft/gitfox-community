@@ -30,10 +30,9 @@ CREATE TABLE IF NOT EXISTS `ops_ppm` (
 	`editedBy` varchar(30) NOT NULL DEFAULT '',
 	`editedDate` datetime NULL COMMENT '更新时间',
 	`approval` int unsigned NOT NULL DEFAULT '0' COMMENT '审批实例',
-	`reviewResult` varchar(20) NOT NULL DEFAULT '' COMMENT '最新节点结果',
-	`reviewOpinion` text NOT NULL DEFAULT '' COMMENT '最新节点审批意见',
 	`reviewers` varchar(255) NOT NULL DEFAULT '' COMMENT '最新节点评审人',
 	`approvalflow` int unsigned NOT NULL DEFAULT 0 COMMENT '审批流模板' ,
+	`reviewStatus` varchar(20) NOT NULL DEFAULT '' COMMENT '审批状态',
 	PRIMARY KEY (`id`)
 	) ENGINE=InnoDB COMMENT='合并请求主表';
 
