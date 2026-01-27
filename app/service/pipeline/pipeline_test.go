@@ -658,7 +658,7 @@ func TestResolve(t *testing.T) {
 			tc.mockPipelineStore(mockPipelineStore)
 
 			ctx := context.Background()
-			actualResult, actualErr := service.Resolve(ctx, tc.inputType, tc.inputKind, tc.inputPluginName)
+			actualResult, actualErr := service.Resolve(ctx, tc.inputKind, tc.inputType, tc.inputPluginName)
 
 			if tc.expectedErr {
 				assert.Error(t, actualErr)
