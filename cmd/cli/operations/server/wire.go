@@ -20,20 +20,20 @@ import (
 )
 
 type App struct {
-	SystemConfig  *config.Config
-	SystemLog     *provider.SystemLog
-	APILog        *provider.APILog
-	DB            *gorm.DB
-	SqliteDB      *database.SqliteDB
-	Controller    *router.Controller
-	I18nManager   *provider.I18nManager
-	GithookCtrl   *githook.Controller
-	SSHServer     *ssh.Server
-	UserService   userSvc.Interface
-	PluginService pipelineSvc.PluginService
-	Authenticator authn.Authenticator
-	EventSystem   *events.System
-	EventContext  *provider.EventContext
+	SystemConfig    *config.Config
+	SystemLog       *provider.SystemLog
+	APILog          *provider.APILog
+	DB              *gorm.DB
+	SqliteDB        *database.SqliteDB
+	Controller      *router.Controller
+	I18nManager     *provider.I18nManager
+	GithookCtrl     *githook.Controller
+	SSHServer       *ssh.Server
+	UserService     userSvc.Interface
+	PipelineService pipelineSvc.Interface
+	Authenticator   authn.Authenticator
+	EventSystem     *events.System
+	EventContext    *provider.EventContext
 }
 
 func NewApp(mode string) (*App, func(), error) {

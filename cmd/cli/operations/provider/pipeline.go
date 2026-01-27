@@ -10,8 +10,8 @@ import (
 
 var PipelineWireSet = wire.NewSet(
 	pipeline.NewController,
-	wire.Bind(new(pipelineSvc.PluginService), new(*pipelineSvc.Service)),
-	pipelineSvc.NewPluginService,
+	wire.Bind(new(pipelineSvc.Interface), new(*pipelineSvc.Service)),
+	pipelineSvc.NewPipelineService,
 	wire.Bind(new(pipelineStore.Interface), new(*pipelineStore.Store)),
-	pipelineStore.NewPluginStore,
+	pipelineStore.NewPipelineStore,
 )
