@@ -19,7 +19,7 @@ type Execution struct {
 	Params      string     `json:"params"`
 	Started     *time.Time `json:"started"`
 	Finished    *time.Time `json:"finished"`
-	Duration    int        `json:"duration"`
+	Duration    uint       `json:"duration"`
 	Status      string     `json:"status"`
 	Error       string     `json:"error"`
 	CreatedBy   string     `json:"createdBy"`
