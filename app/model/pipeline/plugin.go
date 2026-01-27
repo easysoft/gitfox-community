@@ -151,6 +151,13 @@ func Parse(r io.Reader) (*Yaml, error) {
 	return out, nil
 }
 
+// ParseString parses the configuration from string s.
+func ParseString(s string) (*Yaml, error) {
+	return ParseBytes(
+		[]byte(s),
+	)
+}
+
 func ParseBytesSimple(b []byte) (*YamlSimp, error) {
 	return ParseSimple(
 		bytes.NewBuffer(b),

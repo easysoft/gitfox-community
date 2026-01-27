@@ -30,4 +30,6 @@ type Interface interface {
 	GetGroupedPlugins(ctx context.Context) ([]*pipelineModel.GroupedPlugins, error)
 	// GetPluginByName 根据插件名称获取插件
 	GetPluginByName(ctx context.Context, name string) (*pipelineModel.Plugin, error)
+	// Resolve resolves the pipeline plugin configuration.
+	Resolve(ctx context.Context, kind, typ, pluginName string) (*pipelineModel.Yaml, error)
 }
