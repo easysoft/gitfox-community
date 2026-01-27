@@ -115,7 +115,7 @@ func NewApp(mode string) (*App, func(), error) {
 	pipelineStore := pipeline.NewPipelineStore(db)
 	pipelineService := pipeline2.NewPipelineService(pipelineStore)
 	pipelineController := pipeline3.NewController(ciConfig, pipelineService, repoService)
-	executionController := execution.NewController(repoService, branchService)
+	executionController := execution.NewController()
 	tagService := tag.NewService(urlProvider, gitService)
 	tagController := tag2.NewController(tagService, repoService)
 	commitService := commit.NewService(urlProvider, gitService)
