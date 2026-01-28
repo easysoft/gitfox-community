@@ -359,7 +359,7 @@ func (ctl *Controller) Merge(ctx *gin.Context) {
 
 	mergeResp, mergeViolations, err := ctl.pullrequestSvc.Merge(ctx.Request.Context(), session, repoID, pullreqID, params)
 	if err != nil {
-		resp.InternalError(ctx, err)
+		resp.InternalError(ctx, err, err.Error())
 		return
 	}
 
