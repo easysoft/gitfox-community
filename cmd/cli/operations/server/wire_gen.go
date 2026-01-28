@@ -9,6 +9,7 @@ package server
 import (
 	branch3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/branch"
 	commit2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/commit"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/execution"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/githook"
 	pipeline3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/pipeline"
 	repo3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/repo"
@@ -17,6 +18,7 @@ import (
 	tag2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/tag"
 	user3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/user"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/router"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/triggerer"
 	branch2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/branch"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/commit"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/locker"
@@ -113,7 +115,9 @@ func NewApp(mode string) (*App, func(), error) {
 	ciConfig := provider.NewCiConfig(config)
 	pipelineStore := pipeline.NewPipelineStore(db)
 	pipelineService := pipeline2.NewPipelineService(pipelineStore)
-	pipelineController := pipeline3.NewController(ciConfig, pipelineService)
+	pipelineController := pipeline3.NewController(ciConfig, pipelineService, repoService)
+	triggererTriggerer := triggerer.New()
+	executionController := execution.NewController(triggererTriggerer)
 	tagService := tag.NewService(urlProvider, gitService)
 	tagController := tag2.NewController(tagService, repoService)
 	commitService := commit.NewService(urlProvider, gitService)
@@ -177,7 +181,7 @@ func NewApp(mode string) (*App, func(), error) {
 	ruleSetService := scan2.NewRuleSetService(ruleSetStore, ruleStore)
 	ruleService := scan2.NewRuleService(ruleStore, membershipAuthorizer)
 	scanController := scan3.NewScanController(ruleSetService, ruleService)
-	routerController := provider.NewControllers(spaceController, controller, pipelineController, tagController, commitController, repoController, userController, gitController, scanController)
+	routerController := provider.NewControllers(spaceController, controller, pipelineController, executionController, tagController, commitController, repoController, userController, gitController, scanController)
 	i18nManager, err := provider.NewI18nManager(config)
 	if err != nil {
 		cleanup2()

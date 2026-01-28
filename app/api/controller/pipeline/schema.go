@@ -24,7 +24,7 @@ var (
 // @Router /pipeline/steps/grouped [get]
 func (c *Controller) GroupSteps(ctx *gin.Context) {
 	// 调用 service 层查询插件分组数据
-	groupedPlugins, err := c.pluginService.GetGroupedPlugins(ctx.Request.Context())
+	groupedPlugins, err := c.pipelineSvc.GetGroupedPlugins(ctx.Request.Context())
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return
@@ -51,7 +51,7 @@ func (c *Controller) GetSchema(ctx *gin.Context) {
 	}
 
 	// 调用 service 层根据 name 查询插件
-	plugin, err := c.pluginService.GetPluginByName(ctx.Request.Context(), stepName)
+	plugin, err := c.pipelineSvc.GetPluginByName(ctx.Request.Context(), stepName)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return

@@ -1,0 +1,6 @@
+execution:
+  trigger_success: "执行触发成功"
+  trigger_error: "执行触发失败"
+  path_param_error: "Path 参数解析失败。"
+  query_param_error: "Query 参数解析失败。"
+  body_param_error: "Body 参数解析失败。"

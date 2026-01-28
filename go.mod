@@ -8,8 +8,10 @@ require (
 	github.com/djherbis/buffer v1.2.0
 	github.com/djherbis/nio/v3 v3.0.1
 	github.com/drone/go-generate v1.1.0
+	github.com/drone/go-scm v1.38.4
 	github.com/easysoft/gitfox v0.0.0-20250729070057-4c964c413416
 	github.com/fatih/color v1.17.0
+	github.com/ghodss/yaml v1.0.0
 	github.com/gin-contrib/pprof v1.5.3
 	github.com/gin-gonic/gin v1.11.0
 	github.com/gliderlabs/ssh v0.3.7
@@ -69,7 +71,6 @@ require (
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/fatih/semgroup v1.2.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
-	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/gitleaks/go-gitdiff v0.9.1 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
