@@ -10,7 +10,6 @@ import (
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/auth/authn"
 	gitevents "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/events/git"
 	pullreqevents "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/events/pullreq"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/githook"
@@ -23,6 +22,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/utils"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/pullrequest"
 	repoStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/auth/authn"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/events"
@@ -674,7 +674,7 @@ func (s *Service) Merge(ctx context.Context, session *auth.Session, repoid uint,
 			Deletions:    uint(mergeOutput.Deletions),
 		},
 		MergedBy:       &session.User.Account,
-		MergeDate:      datetime.NowLocalTime(),
+		MergedDate:     datetime.NowLocalTime(),
 		MergeMethod:    repoModel.MergeMethod(params.Method),
 		MergeTargetSHA: mergeOutput.MergeBaseSHA.String(),
 		MergeBaseSHA:   mergeOutput.MergeBaseSHA.String(),

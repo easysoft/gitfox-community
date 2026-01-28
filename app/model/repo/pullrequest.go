@@ -79,7 +79,7 @@ type PullRequest struct {
 	SourceSHA         string            `json:"sourceSHA"`
 	TargetRepoID      uint              `json:"targetRepoID"`
 	TargetBranch      string            `json:"targetBranch"`
-	MergeDate         *datetime.Local   `json:"mergeDate"`
+	MergedDate        *datetime.Local   `json:"mergedDate"`
 	MergedBy          *string           `json:"mergedBy"`
 	MergeMethod       MergeMethod       `json:"mergeMethod"`
 	MergeTargetSHA    string            `json:"mergeTargetSHA"`
@@ -123,7 +123,7 @@ type MergeAfter struct {
 	DiffStats
 
 	MergedBy       *string         `json:"mergedBy"`
-	MergeDate      *datetime.Local `json:"mergeDate"`
+	MergedDate     *datetime.Local `json:"mergedDate"`
 	MergeMethod    MergeMethod     `json:"mergeMethod"`
 	MergeTargetSHA string          `json:"mergeTargetSHA"`
 	MergeBaseSHA   string          `json:"mergeBaseSHA"`
