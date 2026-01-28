@@ -42,11 +42,9 @@ func (c *Controller) Create(ctx *gin.Context) {
 		resp.BadRequest(ctx, err)
 		return
 	}
-	ref, ok := reqBody.Params["ref"]
+	ref, ok := reqBody.Params["gitRef"]
 	if !ok {
-		err = errors.WithI18nKey(err, i18n.ExecutionBodyParamError)
-		resp.BadRequest(ctx, err)
-		return
+		ref = ""
 	}
 
 	session, ok := req.GetAuthSession(ctx.Request.Context())

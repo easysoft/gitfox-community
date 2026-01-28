@@ -33,7 +33,7 @@ type Hook struct {
 // incoming hook (could be manual or webhook). If an execution is skipped a nil value is
 // returned.
 type Triggerer interface {
-	Trigger(ctx context.Context, pipelineID uint, hook *Hook, opts ...Option) (*executionModel.Execution, error)
+	Trigger(ctx context.Context, pipelineID uint, hook *Hook) (*executionModel.Execution, error)
 }
 
 type triggerer struct{}
@@ -47,7 +47,6 @@ func (t *triggerer) Trigger(
 	ctx context.Context,
 	pipelineID uint,
 	base *Hook,
-	opts ...Option,
 ) (*executionModel.Execution, error) {
 	log := logger.GetLogger(ctx).With(
 		"pipeline.id", pipelineID,
