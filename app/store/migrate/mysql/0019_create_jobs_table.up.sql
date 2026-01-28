@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS `ops_jobs` (
+CREATE TABLE IF NOT EXISTS `ops_schedule_jobs` (
 	`id` int unsigned NOT NULL AUTO_INCREMENT COMMENT '任务ID，自增主键',
 	`name` varchar(255) NOT NULL COMMENT '任务唯一标识',
 	`type` varchar(255) NOT NULL COMMENT '任务类型',
@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS `ops_jobs` (
 	PRIMARY KEY (`id`)
 ) ENGINE=InnoDB COMMENT='后台任务表';
 
-CREATE UNIQUE INDEX `uk_job_name` ON `ops_jobs` (`name`);
-CREATE INDEX `idx_job_type` ON `ops_jobs` (`type`);
-CREATE INDEX `idx_job_state` ON `ops_jobs` (`state`);
-CREATE INDEX `idx_job_groupID` ON `ops_jobs` (`groupID`);
+CREATE UNIQUE INDEX `uk_job_name` ON `ops_schedule_jobs` (`name`);
+CREATE INDEX `idx_job_type` ON `ops_schedule_jobs` (`type`);
+CREATE INDEX `idx_job_state` ON `ops_schedule_jobs` (`state`);
+CREATE INDEX `idx_job_groupID` ON `ops_schedule_jobs` (`groupID`);
