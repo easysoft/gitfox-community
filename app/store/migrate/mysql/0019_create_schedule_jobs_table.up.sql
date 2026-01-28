@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS `ops_schedule_jobs` (
 	PRIMARY KEY (`id`)
 ) ENGINE=InnoDB COMMENT='后台任务表';
 
-CREATE UNIQUE INDEX `uk_job_name` ON `ops_schedule_jobs` (`name`);
-CREATE INDEX `idx_job_type` ON `ops_schedule_jobs` (`type`);
-CREATE INDEX `idx_job_state` ON `ops_schedule_jobs` (`state`);
-CREATE INDEX `idx_job_groupID` ON `ops_schedule_jobs` (`groupID`);
+CREATE UNIQUE INDEX `uk_schedule_job_name` ON `ops_schedule_jobs` (`name`);
+CREATE INDEX `idx_schedule_job_type` ON `ops_schedule_jobs` (`type`);
+CREATE INDEX `idx_schedule_job_state` ON `ops_schedule_jobs` (`state`);
+CREATE INDEX `idx_schedule_job_groupID` ON `ops_schedule_jobs` (`groupID`);
