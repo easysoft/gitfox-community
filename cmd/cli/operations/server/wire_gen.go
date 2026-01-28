@@ -18,6 +18,7 @@ import (
 	tag2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/tag"
 	user3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/user"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/router"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/triggerer"
 	branch2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/branch"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/commit"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/locker"
@@ -115,7 +116,8 @@ func NewApp(mode string) (*App, func(), error) {
 	pipelineStore := pipeline.NewPipelineStore(db)
 	pipelineService := pipeline2.NewPipelineService(pipelineStore)
 	pipelineController := pipeline3.NewController(ciConfig, pipelineService, repoService)
-	executionController := execution.NewController()
+	triggererTriggerer := triggerer.New()
+	executionController := execution.NewController(triggererTriggerer)
 	tagService := tag.NewService(urlProvider, gitService)
 	tagController := tag2.NewController(tagService, repoService)
 	commitService := commit.NewService(urlProvider, gitService)

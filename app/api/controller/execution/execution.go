@@ -11,11 +11,15 @@ import (
 )
 
 // Controller 处理与 pipeline 执行相关的 HTTP 请求
-type Controller struct{}
+type Controller struct {
+	triggerer triggerer.Triggerer
+}
 
 // NewController 创建流水线执行实例
-func NewController() *Controller {
-	return &Controller{}
+func NewController(triggerer triggerer.Triggerer) *Controller {
+	return &Controller{
+		triggerer: triggerer,
+	}
 }
 
 // @Summary 创建流水线执行
@@ -59,6 +63,11 @@ func (c *Controller) Create(ctx *gin.Context) {
 		Params:      reqBody.Params,
 	}
 
-	// c.triggerer.Trigger(ctx, reqBody.PipelineID, hook)
-	resp.OK(ctx, i18n.ExecutionTriggerSuccess, hook)
+	executionOutput, err := c.triggerer.Trigger(ctx, reqBody.PipelineID, hook)
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.ExecutionTriggerError)
+		resp.InternalError(ctx, err)
+		return
+	}
+	resp.OK(ctx, i18n.ExecutionTriggerSuccess, executionOutput)
 }
