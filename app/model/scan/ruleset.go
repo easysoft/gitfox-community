@@ -7,13 +7,14 @@ import (
 )
 
 type RuleSetReqForCreate struct {
-	Name   string `json:"name" binding:"required,max=100"`
-	Desc   string `json:"desc"`
-	DescEn string `json:"descEn,omitempty"`
-	Lang   string `json:"lang"`
-	Tag    string `json:"tag"`
-	Type   string `json:"type" binding:"required,oneof=defect security compliance optimize"`
-	Plugin string `json:"plugin"`
+	Name     string `json:"name" binding:"required,max=100"`
+	Desc     string `json:"desc"`
+	DescEn   string `json:"descEn,omitempty"`
+	Lang     string `json:"lang"`
+	Tag      string `json:"tag"`
+	Type     string `json:"type" binding:"required,oneof=defect security compliance optimize"`
+	Plugin   string `json:"plugin"`
+	IsCustom bool   `json:"isCustom"`
 }
 
 type RuleSetReqForUpdate struct {

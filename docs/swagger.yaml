@@ -477,6 +477,50 @@ definitions:
       when:
         type: string
     type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_execution.Execution:
+    properties:
+      commit:
+        type: string
+      createdBy:
+        type: string
+      createdDate:
+        type: string
+      duration:
+        type: integer
+      editedDate:
+        type: string
+      error:
+        type: string
+      finished:
+        type: string
+      id:
+        type: integer
+      params:
+        type: string
+      parent:
+        type: integer
+      pipelineID:
+        type: integer
+      ref:
+        type: string
+      started:
+        type: string
+      status:
+        type: string
+      trigger:
+        type: string
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_execution.ReqForCreate:
+    properties:
+      params:
+        additionalProperties:
+          type: string
+        type: object
+      pipelineID:
+        type: integer
+    required:
+    - pipelineID
+    type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_pipeline.GroupedPlugins:
     properties:
       desc:
@@ -1024,6 +1068,8 @@ definitions:
         type: string
       descEn:
         type: string
+      isCustom:
+        type: boolean
       lang:
         type: string
       name:
@@ -1521,6 +1567,41 @@ paths:
       summary: Git Info/Refs 请求
       tags:
       - git
+  /pipeline/executions:
+    post:
+      consumes:
+      - application/json
+      description: 创建新的流水线执行
+      parameters:
+      - description: 创建流水线执行的请求参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_execution.ReqForCreate'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 创建成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_execution.Execution'
+              type: object
+        "400":
+          description: 参数错误（如名称重复）
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 创建流水线执行
+      tags:
+      - executions
   /pipeline/steps/{name}/schema:
     get:
       consumes:

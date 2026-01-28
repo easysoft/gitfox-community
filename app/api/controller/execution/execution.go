@@ -27,8 +27,8 @@ func NewController(triggerer triggerer.Triggerer) *Controller {
 // @Tags executions
 // @Accept application/json
 // @Produce application/json
-// @Param request body pipelineModel.ReqForCreate true "创建流水线执行的请求参数"
-// @Success 200 {object} resp.ObjectResponse{data=pipelineModel.Pipeline} "创建成功"
+// @Param request body executionModel.ReqForCreate true "创建流水线执行的请求参数"
+// @Success 200 {object} resp.ObjectResponse{data=executionModel.Execution} "创建成功"
 // @Failure 400 {object} resp.ObjectResponse "参数错误（如名称重复）"
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
 // @Router /pipeline/executions [post]
