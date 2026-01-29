@@ -291,7 +291,7 @@ func (ctl *Controller) Commits(ctx *gin.Context) {
 		return
 	}
 
-	var filter req.GitListFilter
+	var filter req.ListFilter
 	if err = ctx.ShouldBindQuery(&filter); err != nil {
 		err = errors.WithI18nKey(err, i18n.PullrequestPathParamError)
 		resp.BadRequest(ctx, err)
@@ -300,7 +300,7 @@ func (ctl *Controller) Commits(ctx *gin.Context) {
 
 	req.SetDefaults(&filter)
 
-	commits, totalCommits, err := ctl.pullrequestSvc.Commits(ctx.Request.Context(), session, repoID, pullreqID, uint(filter.Page), uint(filter.Limit))
+	commits, totalCommits, err := ctl.pullrequestSvc.Commits(ctx.Request.Context(), session, repoID, pullreqID, uint(filter.Page), uint(filter.PageSize))
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return
@@ -310,7 +310,7 @@ func (ctl *Controller) Commits(ctx *gin.Context) {
 		resp.ListArgs{
 			Total:    int64(totalCommits),
 			Page:     int64(filter.Page),
-			PageSize: int64(filter.Limit),
+			PageSize: int64(filter.PageSize),
 		}, i18n.PullrequestQuerySuccess, nil)
 }
 
