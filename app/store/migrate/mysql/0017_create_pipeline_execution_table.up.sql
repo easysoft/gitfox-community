@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS `ops_stage_executions` (
 	`name` varchar(255) NOT NULL DEFAULT '' COMMENT '显示名称',
 	`code` varchar(255) NOT NULL COMMENT '阶段内部标识名称',
 	`sn` int unsigned NOT NULL COMMENT 'serial number阶段序号',
+	`type` varchar(50) NOT NULL DEFAULT '' COMMENT '类型:agent',
 	`host` varchar(255) NOT NULL DEFAULT '' COMMENT 'machine运行机器标识',
 	`os` varchar(255) NOT NULL DEFAULT '' COMMENT '阶段运行的操作系统（如：linux、windows、macos）',
 	`arch` varchar(255) NOT NULL DEFAULT '' COMMENT '阶段运行的CPU架构（如：amd64、arm64、x86）',
