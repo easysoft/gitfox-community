@@ -21,6 +21,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/triggerer"
 	branch2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/branch"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/commit"
+	jobs2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/jobs"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/locker"
 	pipeline2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/pipeline"
 	publickey2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/publickey"
@@ -31,6 +32,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/tag"
 	user2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/user"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/branch"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/jobs"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/pipeline"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/publickey"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/pullrequest"
@@ -190,6 +192,14 @@ func NewApp(mode string) (*App, func(), error) {
 	}
 	server := provider.ProvideSSHServer(config, interface2, gitController)
 	authenticator := authn.ProvideAuthenticators(config, userStore, tokenInterface)
+	jobsStore := jobs.NewScheduleJob(db)
+	jobConfig := provider.ProvideJobConfig(config)
+	scheduler, err := provider.ProvideScheduler(jobsStore, mutexManager, pubSub, jobConfig)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
 	app := &App{
 		SystemConfig:    config,
 		SystemLog:       systemLog,
@@ -205,6 +215,7 @@ func NewApp(mode string) (*App, func(), error) {
 		Authenticator:   authenticator,
 		EventSystem:     system,
 		EventContext:    eventContext,
+		JobScheduler:    scheduler,
 	}
 	return app, func() {
 		cleanup2()
@@ -229,4 +240,5 @@ type App struct {
 	Authenticator   authn.Authenticator
 	EventSystem     *events.System
 	EventContext    *provider.EventContext
+	JobScheduler    *jobs2.Scheduler
 }

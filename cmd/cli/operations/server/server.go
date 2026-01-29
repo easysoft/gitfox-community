@@ -12,7 +12,6 @@ import (
 	"github.com/quicklyon/kingpin/v2"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/router"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/cron"
 )
 
 type command struct {
@@ -46,17 +45,31 @@ func (c *command) run(*kingpin.ParseContext) error {
 	// 	app.SystemLog.Info("[Server] System health check cron job started (runs every minute)")
 	// }
 
+	err = app.PipelineService.Migrate(context.Background(), app.SystemConfig.Ci.PluginsZipUrl)
+	if err != nil {
+		app.SystemLog.Errorw("[Server] Failed to migrate plugins", "error", err)
+		panic(err)
+	}
+
+	// 启动 Job Scheduler
+	app.SystemLog.Info("[Server] Starting job scheduler...")
+	jobSchedulerCtx, cancelJobScheduler := context.WithCancel(context.Background())
+	defer cancelJobScheduler() // Ensure context is canceled on all return paths
+	jobSchedulerErrors := make(chan error, 1)
+
+	go func() {
+		if err := app.JobScheduler.Run(jobSchedulerCtx); err != nil && err != context.Canceled {
+			app.SystemLog.Errorw("[Server] Job scheduler error", "error", err)
+			jobSchedulerErrors <- err
+		}
+	}()
+	app.SystemLog.Info("[Server] Job scheduler started")
+
 	// 启动 HTTP 服务器
 	addr := fmt.Sprintf("%s:%d", app.SystemConfig.Server.Host, app.SystemConfig.Server.Port)
 	srv := &http.Server{
 		Addr:    addr,
 		Handler: router.NewRouter(c.mode, app.APILog.SugaredMateLogger, app.Controller),
-	}
-
-	err = app.PipelineService.Migrate(context.Background(), app.SystemConfig.Ci.PluginsZipUrl)
-	if err != nil {
-		app.SystemLog.Errorw("[Server] Failed to migrate plugins", "error", err)
-		panic(err)
 	}
 
 	// 停止使用
@@ -68,7 +81,7 @@ func (c *command) run(*kingpin.ParseContext) error {
 	// app.SystemLog.Infow("[Server] Admin PAT issued", "pat", adminPAT)
 
 	// 创建错误通道用于捕获服务器启动错误
-	serverErrors := make(chan error, 2) // 增加容量以支持 HTTP 和 SSH 服务器
+	serverErrors := make(chan error, 3) // 增加容量以支持 HTTP、SSH 和 JobScheduler
 
 	// 在 goroutine 中启动 HTTP 服务器
 	go func() {
@@ -106,6 +119,9 @@ func (c *command) run(*kingpin.ParseContext) error {
 		app.SystemLog.Info("[Server] Received shutdown signal, shutting down server...")
 	case err := <-serverErrors:
 		app.SystemLog.Errorw("[Server] Server error occurred", "error", err)
+		return err
+	case err := <-jobSchedulerErrors:
+		app.SystemLog.Errorw("[Server] Job scheduler error occurred", "error", err)
 		return err
 	}
 
@@ -147,9 +163,14 @@ func (c *command) run(*kingpin.ParseContext) error {
 	app.EventContext.Cancel()
 	app.SystemLog.Info("[Server] Event system shutdown completed")
 
+	// 停止 Job Scheduler
+	app.SystemLog.Info("[Server] Stopping job scheduler...")
+	app.JobScheduler.WaitJobsDone(ctx)
+	app.SystemLog.Info("[Server] Job scheduler shutdown completed")
+
 	// 停止所有定时任务
-	app.SystemLog.Info("[Server] Stopping cron jobs...")
-	cron.StopAll()
+	// app.SystemLog.Info("[Server] Stopping cron jobs...")
+	// cron.StopAll()
 	return nil
 }
 

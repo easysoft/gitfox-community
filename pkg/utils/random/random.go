@@ -1,6 +1,8 @@
 package random
 
 import (
+	"encoding/base32"
+	"errors"
 	"math"
 	"math/rand"
 	"os"
@@ -65,6 +67,58 @@ func RandNumeralOrLetter(length int) string {
 // 生成指定长度的随机符号字符字符串。
 func RandSymbolChar(length int) string {
 	return random(SymbolChars, length)
+}
+
+type UIDLength int
+
+// UIDLength constants define the length of the generated UID string.
+// Note: These values represent the number of characters in the output string,
+// NOT the CPU architecture (e.g., 32-bit or 64-bit processor).
+// It works consistently on any architecture.
+const (
+	// UIDLength16 generates a 16-char string.
+	// Example: "ORSXG5A6NZQXG2L"
+	UIDLength16 UIDLength = 16
+
+	// UIDLength32 generates a 32-char string.
+	// Example: "ORSXG5A6NZQXG2LORSXG5A6NZQXG2L12"
+	UIDLength32 UIDLength = 32
+
+	// UIDLength64 generates a 64-char string.
+	// Example: "ORSXG5A6NZQXG2LORSXG5A6NZQXG2L12ORSXG5A6NZQXG2LORSXG5A6NZQXG2L12"
+	UIDLength64 UIDLength = 64
+)
+
+// UID returns unique random string with the specified length enum.
+func UID(l UIDLength) (string, error) {
+	length := int(l)
+	switch l {
+	case UIDLength16, UIDLength32, UIDLength64:
+		// valid
+	default:
+		return "", errors.New("invalid UID length")
+	}
+
+	// Calculate number of bytes required to generate at least 'length' base32 characters.
+	// Each base32 char is 5 bits. Total bits = length * 5.
+	// Total bytes = ceil(total bits / 8).
+	uidSizeBytes := (length*5 + 7) / 8
+
+	buf := make([]byte, uidSizeBytes)
+	_, err := rand.Read(buf)
+	if err != nil {
+		return "", err
+	}
+
+	uid := base32.StdEncoding.EncodeToString(buf)
+
+	// base32 encoding might produce more characters (padding or byte alignment).
+	// Truncate to the requested length.
+	if len(uid) > length {
+		uid = uid[:length]
+	}
+
+	return uid, nil
 }
 
 // random generate a random string based on given string range.
