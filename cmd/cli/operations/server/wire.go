@@ -8,6 +8,7 @@ import (
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/githook"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/router"
+	jobsSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/jobs"
 	pipelineSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/pipeline"
 	userSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/user"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/cmd/cli/operations/provider"
@@ -34,6 +35,7 @@ type App struct {
 	Authenticator   authn.Authenticator
 	EventSystem     *events.System
 	EventContext    *provider.EventContext
+	JobScheduler    *jobsSvc.Scheduler
 }
 
 func NewApp(mode string) (*App, func(), error) {
@@ -61,6 +63,8 @@ func NewApp(mode string) (*App, func(), error) {
 		provider.GitEventWireSet,
 		provider.PullReqEventWireSet,
 		provider.PubSubProvider,
-		provider.AuthWireSet, wire.Struct(new(App), "*")),
+		provider.JobWireSet,
+		provider.AuthWireSet,
+		wire.Struct(new(App), "*")),
 	)
 }

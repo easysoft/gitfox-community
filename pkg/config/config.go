@@ -11,6 +11,7 @@ type Config struct {
 	SQLite     SQLiteConfig     `yaml:"sqlite"`
 	Docker     DockerConfig     `yaml:"docker"`
 	Git        GitConfig        `yaml:"git"`
+	Job        JobConfig        `yaml:"job"`
 	Webhook    WebhookConfig    `yaml:"webhook"`
 	SSH        SSHConfig        `yaml:"ssh"`
 	Metric     MetricConfig     `yaml:"metric"`
@@ -59,6 +60,13 @@ type GitConfig struct {
 	DefaultBranch string `yaml:"defaultBranch"`
 	Root          string `envconfig:"GITFOX_GIT_ROOT_DIR" default:"/data/gitfox/git"`
 	HookPath      string `yaml:"hookPath"`
+}
+
+// JobConfig holds configuration for job scheduler.
+type JobConfig struct {
+	InstanceID    string        `yaml:"instanceID"`
+	MaxRunning    int           `yaml:"maxRunning"`
+	RetentionTime time.Duration `yaml:"retentionTime"`
 }
 
 // WebhookConfig Webhook配置
