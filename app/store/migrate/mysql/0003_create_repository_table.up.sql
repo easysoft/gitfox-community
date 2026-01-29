@@ -21,3 +21,13 @@ CREATE TABLE IF NOT EXISTS `ops_repository` (
 CREATE UNIQUE INDEX uk_repo_space_id ON ops_repository (identifier, spaceID);
 CREATE UNIQUE INDEX uk_gituid ON ops_repository (gitUID);
 CREATE INDEX idx_deleted ON ops_repository (deleted);
+
+
+CREATE TABLE IF NOT EXISTS `ops_repouser` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT COMMENT '编号',
+  `repo` int unsigned NOT NULL DEFAULT 0 COMMENT '所属代码库',
+  `account` varchar(30) NOT NULL DEFAULT '' COMMENT '用户帐号',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB COMMENT='代码库用户关联表';
+CREATE UNIQUE INDEX `uk_repouser` ON `ops_repouser` (`repo`,`account`);
+
