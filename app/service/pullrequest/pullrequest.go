@@ -413,7 +413,7 @@ func (s *Service) RawDiff(ctx context.Context, w http.ResponseWriter, session *a
 	return gitUtil.ProcessGitErrorf(ctx, err)
 }
 
-func (s *Service) Commits(ctx context.Context, session *auth.Session, repoid uint, pullreqnumber uint, page, limit uint) ([]commit.Commit, int, error) {
+func (s *Service) Commits(ctx context.Context, session *auth.Session, repoid uint, pullreqnumber uint, page, pageSize uint) ([]commit.Commit, int, error) {
 	pr, err := s.pullRequestStore.GetByID(ctx, repoid, pullreqnumber)
 	if err != nil {
 		return nil, 0, err
@@ -432,7 +432,7 @@ func (s *Service) Commits(ctx context.Context, session *auth.Session, repoid uin
 		GitREF:     gitRef,
 		After:      afterRef,
 		Page:       int32(page),
-		Limit:      int32(limit),
+		Limit:      int32(pageSize),
 	})
 	if err != nil {
 		return nil, 0, gitUtil.ProcessGitErrorf(ctx, err)
