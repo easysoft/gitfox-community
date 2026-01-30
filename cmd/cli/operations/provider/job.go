@@ -25,12 +25,14 @@ func ProvideScheduler(
 	jobStore jobsStore.Interface,
 	mxManager lock.MutexManager,
 	pubsubService pubsub.PubSub,
+	jobLog *JobLog,
 	cfg config.JobConfig,
 ) (*jobsSvc.Scheduler, error) {
 	return jobsSvc.NewScheduler(
 		jobStore,
 		mxManager,
 		pubsubService,
+		jobLog.SugaredMateLogger,
 		cfg.InstanceID,
 		cfg.MaxRunning,
 		cfg.RetentionTime,

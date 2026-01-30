@@ -11,6 +11,7 @@ import (
 	jobsStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/jobs"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/lock"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pubsub"
 )
 
@@ -25,12 +26,14 @@ func ProvideScheduler(
 	jobStore jobsStore.Interface,
 	mxManager lock.MutexManager,
 	pubsubService pubsub.PubSub,
+	log *logger.SugaredMateLogger,
 	cfg config.JobConfig,
 ) (*Scheduler, error) {
 	return NewScheduler(
 		jobStore,
 		mxManager,
 		pubsubService,
+		log,
 		cfg.InstanceID,
 		cfg.MaxRunning,
 		cfg.RetentionTime,
@@ -61,5 +64,4 @@ func ProvideJobConfig(cfg *config.Config) config.JobConfig {
 		RetentionTime: retentionTime,
 	}
 }
-
 
