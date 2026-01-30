@@ -8,6 +8,7 @@ import (
 // Trigger 触发器表 Store 层结构体
 type Trigger struct {
 	ID          int64           `gorm:"column:id;primaryKey;autoIncrement;comment:'触发器ID，自增主键'"`
+	RepoID      int64           `gorm:"column:repoID;not null;comment:'关联的仓库ID'"`
 	PipelineID  int64           `gorm:"column:pipelineID;not null;comment:'关联的流水线ID'"`
 	Trigger     string          `gorm:"column:trigger;not null;default:'';comment:'触发动作'"`
 	Cron        string          `gorm:"column:cron;not null;default:'';comment:'定时配置'"`

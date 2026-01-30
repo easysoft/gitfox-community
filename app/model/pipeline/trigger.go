@@ -11,6 +11,7 @@ import (
 
 type Trigger struct {
 	ID          int64           `json:"id"`
+	RepoID      int64           `json:"repoID"`
 	PipelineID  int64           `json:"pipelineID"`
 	Trigger     []string        `json:"trigger"`
 	Cron        string          `json:"cron"`
@@ -42,8 +43,7 @@ func (t *Trigger) Validate() error {
 }
 
 type TriggerFilter struct {
-	Page       int      `json:"page" form:"page" default:"1"`
-	PageSize   int      `json:"pageSize" form:"pageSize" default:"20"`
-	PipelineID int      `json:"pipelineID"`
+	RepoID     int64    `json:"repoID"`
+	PipelineID int64    `json:"pipelineID"`
 	Trigger    []string `json:"trigger"`
 }

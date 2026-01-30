@@ -4,7 +4,6 @@ import (
 	"context"
 
 	pipelineModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/pipeline"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
 )
 
 // CreateTrigger 创建触发
@@ -23,8 +22,8 @@ func (s *Service) GetTriggerByID(ctx context.Context, id int64) (*pipelineModel.
 }
 
 // ListTriggers 查询触发列表
-func (s *Service) ListTriggers(ctx context.Context, filter *pipelineModel.TriggerFilter) (*database.PageResult[*pipelineModel.Trigger], error) {
-	return s.pipelineStore.ListTrigger(ctx, filter)
+func (s *Service) GetTriggers(ctx context.Context, filter *pipelineModel.TriggerFilter) ([]*pipelineModel.Trigger, error) {
+	return s.pipelineStore.GetTriggers(ctx, filter)
 }
 
 // DeleteTrigger 删除触发

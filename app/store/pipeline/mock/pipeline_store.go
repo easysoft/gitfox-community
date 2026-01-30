@@ -203,6 +203,21 @@ func (mr *MockInterfaceMockRecorder) GetTriggerByPipelineID(ctx, pipelineID any)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTriggerByPipelineID", reflect.TypeOf((*MockInterface)(nil).GetTriggerByPipelineID), ctx, pipelineID)
 }
 
+// GetTriggers mocks base method.
+func (m *MockInterface) GetTriggers(ctx context.Context, filter *pipeline.TriggerFilter) ([]*pipeline.Trigger, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTriggers", ctx, filter)
+	ret0, _ := ret[0].([]*pipeline.Trigger)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTriggers indicates an expected call of GetTriggers.
+func (mr *MockInterfaceMockRecorder) GetTriggers(ctx, filter any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTriggers", reflect.TypeOf((*MockInterface)(nil).GetTriggers), ctx, filter)
+}
+
 // ListPlugin mocks base method.
 func (m *MockInterface) ListPlugin(ctx context.Context, filter *pipeline.PluginFilter) (*database.PageResult[*pipeline.Plugin], error) {
 	m.ctrl.T.Helper()
@@ -216,21 +231,6 @@ func (m *MockInterface) ListPlugin(ctx context.Context, filter *pipeline.PluginF
 func (mr *MockInterfaceMockRecorder) ListPlugin(ctx, filter any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListPlugin", reflect.TypeOf((*MockInterface)(nil).ListPlugin), ctx, filter)
-}
-
-// ListTrigger mocks base method.
-func (m *MockInterface) ListTrigger(ctx context.Context, filter *pipeline.TriggerFilter) (*database.PageResult[*pipeline.Trigger], error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListTrigger", ctx, filter)
-	ret0, _ := ret[0].(*database.PageResult[*pipeline.Trigger])
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// ListTrigger indicates an expected call of ListTrigger.
-func (mr *MockInterfaceMockRecorder) ListTrigger(ctx, filter any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListTrigger", reflect.TypeOf((*MockInterface)(nil).ListTrigger), ctx, filter)
 }
 
 // UpdatePluginByName mocks base method.
