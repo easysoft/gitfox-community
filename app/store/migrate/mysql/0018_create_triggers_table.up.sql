@@ -1,5 +1,6 @@
 CREATE TABLE IF NOT EXISTS `ops_triggers` (
 	`id` int unsigned NOT NULL AUTO_INCREMENT COMMENT '触发器ID，自增主键',
+	`repoID` int unsigned NOT NULL COMMENT '关联的仓库ID',
 	`pipelineID` int unsigned NOT NULL DEFAULT 0 COMMENT '关联的流水线ID',
 	`trigger` varchar(500) NOT NULL DEFAULT '' COMMENT '触发动作',
 	`cron` varchar(255) NOT NULL DEFAULT '' COMMENT '定时配置',

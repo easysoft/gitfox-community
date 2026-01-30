@@ -6,7 +6,6 @@ import (
 
 	pipelineModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/pipeline"
 	pipelineStoreMock "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/pipeline/mock"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 
 	"github.com/stretchr/testify/assert"
@@ -312,58 +311,27 @@ func TestDeleteTrigger(t *testing.T) {
 	}
 }
 
-// ====================== ListTriggers 方法测试 ======================
-// ListTriggersTestCase 表格驱动用例结构体
-type ListTriggersTestCase struct {
+// ====================== GetTriggers 方法测试 ======================
+// GetTriggersTestCase 表格驱动用例结构体
+type GetTriggersTestCase struct {
 	name string
 	// 前置条件
 	mockPipelineStore func(m *pipelineStoreMock.MockInterface)
 	inputFilter       *pipelineModel.TriggerFilter
 	// 预期结果
-	expectedResult *database.PageResult[*pipelineModel.Trigger]
+	expectedResult []*pipelineModel.Trigger
 	expectedErr    error
 }
 
-// TestListTriggers ListTriggers 单测入口
-func TestListTriggers(t *testing.T) {
+// TestGetTriggers GetTriggers 单测入口
+func TestGetTriggers(t *testing.T) {
 	t.Parallel()
 
-	testCases := []ListTriggersTestCase{
+	testCases := []GetTriggersTestCase{
 		{
 			name: "场景1：正常查询 - 获取触发列表成功",
 			mockPipelineStore: func(m *pipelineStoreMock.MockInterface) {
-				mockResult := &database.PageResult[*pipelineModel.Trigger]{
-					Total:    2,
-					Page:     1,
-					PageSize: 20,
-					Data: []*pipelineModel.Trigger{
-						{
-							ID:         1,
-							PipelineID: 100,
-							Trigger:    []string{"push"},
-							Cron:       "0 0 * * *",
-							CreatedBy:  "admin",
-						},
-						{
-							ID:         2,
-							PipelineID: 101,
-							Trigger:    []string{"tag"},
-							Cron:       "",
-							CreatedBy:  "user1",
-						},
-					},
-				}
-				m.EXPECT().ListTrigger(gomock.Any(), gomock.Any()).Return(mockResult, nil)
-			},
-			inputFilter: &pipelineModel.TriggerFilter{
-				Page:     1,
-				PageSize: 20,
-			},
-			expectedResult: &database.PageResult[*pipelineModel.Trigger]{
-				Total:    2,
-				Page:     1,
-				PageSize: 20,
-				Data: []*pipelineModel.Trigger{
+				mockResult := []*pipelineModel.Trigger{
 					{
 						ID:         1,
 						PipelineID: 100,
@@ -378,6 +346,25 @@ func TestListTriggers(t *testing.T) {
 						Cron:       "",
 						CreatedBy:  "user1",
 					},
+				}
+				m.EXPECT().GetTriggers(gomock.Any(), gomock.Any()).Return(mockResult, nil)
+			},
+			inputFilter: &pipelineModel.TriggerFilter{
+			},
+			expectedResult: []*pipelineModel.Trigger{
+				{
+					ID:         1,
+					PipelineID: 100,
+					Trigger:    []string{"push"},
+					Cron:       "0 0 * * *",
+					CreatedBy:  "admin",
+				},
+				{
+					ID:         2,
+					PipelineID: 101,
+					Trigger:    []string{"tag"},
+					Cron:       "",
+					CreatedBy:  "user1",
 				},
 			},
 			expectedErr: nil,
@@ -385,32 +372,7 @@ func TestListTriggers(t *testing.T) {
 		{
 			name: "场景2：按流水线ID过滤 - 获取触发列表成功",
 			mockPipelineStore: func(m *pipelineStoreMock.MockInterface) {
-				mockResult := &database.PageResult[*pipelineModel.Trigger]{
-					Total:    1,
-					Page:     1,
-					PageSize: 20,
-					Data: []*pipelineModel.Trigger{
-						{
-							ID:         1,
-							PipelineID: 100,
-							Trigger:    []string{"push"},
-							Cron:       "0 0 * * *",
-							CreatedBy:  "admin",
-						},
-					},
-				}
-				m.EXPECT().ListTrigger(gomock.Any(), gomock.Any()).Return(mockResult, nil)
-			},
-			inputFilter: &pipelineModel.TriggerFilter{
-				Page:       1,
-				PageSize:   20,
-				PipelineID: 100,
-			},
-			expectedResult: &database.PageResult[*pipelineModel.Trigger]{
-				Total:    1,
-				Page:     1,
-				PageSize: 20,
-				Data: []*pipelineModel.Trigger{
+				mockResult := []*pipelineModel.Trigger{
 					{
 						ID:         1,
 						PipelineID: 100,
@@ -418,6 +380,19 @@ func TestListTriggers(t *testing.T) {
 						Cron:       "0 0 * * *",
 						CreatedBy:  "admin",
 					},
+				}
+				m.EXPECT().GetTriggers(gomock.Any(), gomock.Any()).Return(mockResult, nil)
+			},
+			inputFilter: &pipelineModel.TriggerFilter{
+				PipelineID: 100,
+			},
+			expectedResult: []*pipelineModel.Trigger{
+				{
+					ID:         1,
+					PipelineID: 100,
+					Trigger:    []string{"push"},
+					Cron:       "0 0 * * *",
+					CreatedBy:  "admin",
 				},
 			},
 			expectedErr: nil,
@@ -425,34 +400,20 @@ func TestListTriggers(t *testing.T) {
 		{
 			name: "场景3：空列表 - 返回空数组",
 			mockPipelineStore: func(m *pipelineStoreMock.MockInterface) {
-				mockResult := &database.PageResult[*pipelineModel.Trigger]{
-					Total:    0,
-					Page:     1,
-					PageSize: 20,
-					Data:     []*pipelineModel.Trigger{},
-				}
-				m.EXPECT().ListTrigger(gomock.Any(), gomock.Any()).Return(mockResult, nil)
+				mockResult := []*pipelineModel.Trigger{}
+				m.EXPECT().GetTriggers(gomock.Any(), gomock.Any()).Return(mockResult, nil)
 			},
 			inputFilter: &pipelineModel.TriggerFilter{
-				Page:     1,
-				PageSize: 20,
 			},
-			expectedResult: &database.PageResult[*pipelineModel.Trigger]{
-				Total:    0,
-				Page:     1,
-				PageSize: 20,
-				Data:     []*pipelineModel.Trigger{},
-			},
-			expectedErr: nil,
+			expectedResult: []*pipelineModel.Trigger{},
+			expectedErr:    nil,
 		},
 		{
 			name: "场景4：数据库查询失败 - 返回错误",
 			mockPipelineStore: func(m *pipelineStoreMock.MockInterface) {
-				m.EXPECT().ListTrigger(gomock.Any(), gomock.Any()).Return(nil, ErrDBQuery)
+				m.EXPECT().GetTriggers(gomock.Any(), gomock.Any()).Return(nil, ErrDBQuery)
 			},
 			inputFilter: &pipelineModel.TriggerFilter{
-				Page:     1,
-				PageSize: 20,
 			},
 			expectedResult: nil,
 			expectedErr:    ErrDBQuery,
@@ -473,12 +434,12 @@ func TestListTriggers(t *testing.T) {
 			tc.mockPipelineStore(mockPipelineStore)
 
 			ctx := context.Background()
-			actualResult, actualErr := service.ListTriggers(ctx, tc.inputFilter)
+			actualResult, actualErr := service.GetTriggers(ctx, tc.inputFilter)
 
 			if tc.expectedErr != nil {
 				assert.Error(t, actualErr)
 				assert.True(t, errors.Is(actualErr, tc.expectedErr),
-					"ListTriggers() 预期错误为 %v，实际为 %v", tc.expectedErr, actualErr)
+					"GetTriggers() 预期错误为 %v，实际为 %v", tc.expectedErr, actualErr)
 			} else {
 				assert.NoError(t, actualErr)
 			}

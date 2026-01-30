@@ -62,8 +62,7 @@ func (c *Controller) CreateTrigger(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param pipelineID path int true "流水线ID"
-// @Param page query int false "页码" default(1)
-// @Param pageSize query int false "每页数量" default(20)
+// @Param repoID query string false "仓库ID"
 // @Success 200 {object} resp.ListResponse{data=[]pipelineModel.Trigger,listArgs=resp.ListArgs} "查询成功"
 // @Failure 400 {object} resp.ListResponse "参数错误"
 // @Failure 500 {object} resp.ListResponse "服务器错误"
@@ -84,20 +83,16 @@ func (c *Controller) ListTriggers(ctx *gin.Context) {
 	}
 
 	req.SetDefaults(&filter)
-	filter.PipelineID = int(pipelineID)
+	filter.PipelineID = pipelineID
 
-	result, err := c.pipelineSvc.ListTriggers(ctx.Request.Context(), &filter)
+	triggers, err := c.pipelineSvc.GetTriggers(ctx.Request.Context(), &filter)
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.PipelineTriggerListError)
 		resp.InternalError(ctx, err)
 		return
 	}
 
-	resp.ListSuccess(ctx, result.Data, resp.ListArgs{
-		Total:    result.Total,
-		Page:     int64(result.Page),
-		PageSize: int64(result.PageSize),
-	}, i18n.PipelineTriggerListSuccess, nil)
+	resp.OK(ctx, i18n.PipelineTriggerListSuccess, triggers)
 }
 
 // GetTriggerByID 查询流水线触发配置

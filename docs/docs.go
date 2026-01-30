@@ -410,17 +410,9 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "type": "integer",
-                        "default": 1,
-                        "description": "页码",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "default": 20,
-                        "description": "每页数量",
-                        "name": "pageSize",
+                        "type": "string",
+                        "description": "仓库ID",
+                        "name": "repoID",
                         "in": "query"
                     }
                 ],
@@ -5155,6 +5147,9 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "pipelineID": {
+                    "type": "integer"
+                },
+                "repoID": {
                     "type": "integer"
                 },
                 "trigger": {

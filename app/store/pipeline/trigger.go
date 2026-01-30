@@ -6,6 +6,7 @@ import (
 
 	pipelineModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/pipeline"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/slice"
 )
 
 // CreateTrigger 创建触发
@@ -52,48 +53,33 @@ func (s *Store) GetTriggerByPipelineID(ctx context.Context, pipelineID int64) (*
 	return mapTriggerToModel(&trigger), nil
 }
 
-// GetAllTrigger 获取所有触发
-func (s *Store) GetAllTrigger(ctx context.Context) ([]*pipelineModel.Trigger, error) {
+// GetTriggers 获取触发列表
+func (s *Store) GetTriggers(ctx context.Context, filter *pipelineModel.TriggerFilter) ([]*pipelineModel.Trigger, error) {
 	var triggers []Trigger
-	if err := s.db.WithContext(ctx).Where("deleted = 0").Find(&triggers).Error; err != nil {
+	query := s.db.WithContext(ctx).Where("deleted = 0")
+	if filter.RepoID > 0 {
+		query = query.Where("repoID = ?", filter.RepoID)
+	}
+
+	if filter.PipelineID > 0 {
+		query = query.Where("pipelineID = ?", filter.PipelineID)
+	}
+
+	if err := query.Find(&triggers).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
 
-	result := make([]*pipelineModel.Trigger, len(triggers))
-	for i := range triggers {
-		result[i] = mapTriggerToModel(&triggers[i])
+	result := make([]*pipelineModel.Trigger, 0, len(triggers))
+	for _, t := range triggers {
+		if t.Trigger != "" && len(filter.Trigger) > 0 {
+			if len(slice.Intersection(filter.Trigger, strings.Split(t.Trigger, ","))) == 0 {
+				continue
+			}
+		}
+		result = append(result, mapTriggerToModel(&t))
 	}
+
 	return result, nil
-}
-
-// ListTrigger 查询触发列表（分页）
-func (s *Store) ListTrigger(ctx context.Context, filter *pipelineModel.TriggerFilter) (*database.PageResult[*pipelineModel.Trigger], error) {
-	tx := s.db.WithContext(ctx).Model(&Trigger{}).Where("deleted = 0")
-
-	// 流水线ID过滤
-	if filter.PipelineID != 0 {
-		tx = tx.Where("pipelineID = ?", filter.PipelineID)
-	}
-
-	// 执行分页查询
-	var triggers []*Trigger
-	pageResult, err := database.PaginateDefault(ctx, tx, filter.Page, filter.PageSize, &triggers)
-	if err != nil {
-		return nil, database.ProcessSQLErrorf(ctx, err)
-	}
-
-	// 转换为 Model 层结构
-	result := make([]*pipelineModel.Trigger, len(triggers))
-	for i := range triggers {
-		result[i] = mapTriggerToModel(triggers[i])
-	}
-
-	return &database.PageResult[*pipelineModel.Trigger]{
-		Total:    pageResult.Total,
-		Page:     pageResult.Page,
-		PageSize: pageResult.PageSize,
-		Data:     result,
-	}, nil
 }
 
 // DeleteTrigger 删除触发（硬删除）
@@ -112,6 +98,7 @@ func mapTriggerToModel(t *Trigger) *pipelineModel.Trigger {
 	}
 	return &pipelineModel.Trigger{
 		ID:          t.ID,
+		RepoID:      t.RepoID,
 		PipelineID:  t.PipelineID,
 		Trigger:     triggerList,
 		Cron:        t.Cron,
@@ -126,6 +113,7 @@ func mapTriggerToModel(t *Trigger) *pipelineModel.Trigger {
 func mapTriggerToStore(t *pipelineModel.Trigger) *Trigger {
 	return &Trigger{
 		ID:          t.ID,
+		RepoID:      t.RepoID,
 		PipelineID:  t.PipelineID,
 		Trigger:     strings.Join(t.Trigger, ","),
 		Cron:        t.Cron,
