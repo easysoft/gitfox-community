@@ -49,4 +49,20 @@ type Interface interface {
 	// --- 插件分组相关 ---
 	// GetAllPluginGroup 获取所有插件分组
 	GetAllPluginGroup(ctx context.Context) ([]*pipelineModel.PluginGroup, error)
+
+	// --- 触发相关 ---
+	// CreateTrigger 创建触发
+	CreateTrigger(ctx context.Context, trigger *pipelineModel.Trigger) error
+	// UpdateTrigger 更新触发
+	UpdateTrigger(ctx context.Context, trigger *pipelineModel.Trigger) error
+	// GetTriggerByID 根据触发ID获取触发
+	GetTriggerByID(ctx context.Context, id int64) (*pipelineModel.Trigger, error)
+	// GetTriggerByPipelineID 根据流水线ID获取触发
+	GetTriggerByPipelineID(ctx context.Context, pipelineID int64) (*pipelineModel.Trigger, error)
+	// GetAllTrigger 获取所有触发
+	GetAllTrigger(ctx context.Context) ([]*pipelineModel.Trigger, error)
+	// ListTrigger 查询触发列表（分页）
+	ListTrigger(ctx context.Context, filter *pipelineModel.TriggerFilter) (*database.PageResult[*pipelineModel.Trigger], error)
+	// DeleteTrigger 删除触发（硬删除）
+	DeleteTrigger(ctx context.Context, id int64) error
 }

@@ -56,6 +56,20 @@ func (mr *MockInterfaceMockRecorder) CreatePlugin(ctx, plugin any) *gomock.Call 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreatePlugin", reflect.TypeOf((*MockInterface)(nil).CreatePlugin), ctx, plugin)
 }
 
+// CreateTrigger mocks base method.
+func (m *MockInterface) CreateTrigger(ctx context.Context, trigger *pipeline.Trigger) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateTrigger", ctx, trigger)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CreateTrigger indicates an expected call of CreateTrigger.
+func (mr *MockInterfaceMockRecorder) CreateTrigger(ctx, trigger any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateTrigger", reflect.TypeOf((*MockInterface)(nil).CreateTrigger), ctx, trigger)
+}
+
 // DeletePlugin mocks base method.
 func (m *MockInterface) DeletePlugin(ctx context.Context, name string) error {
 	m.ctrl.T.Helper()
@@ -68,6 +82,20 @@ func (m *MockInterface) DeletePlugin(ctx context.Context, name string) error {
 func (mr *MockInterfaceMockRecorder) DeletePlugin(ctx, name any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeletePlugin", reflect.TypeOf((*MockInterface)(nil).DeletePlugin), ctx, name)
+}
+
+// DeleteTrigger mocks base method.
+func (m *MockInterface) DeleteTrigger(ctx context.Context, id int64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteTrigger", ctx, id)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteTrigger indicates an expected call of DeleteTrigger.
+func (mr *MockInterfaceMockRecorder) DeleteTrigger(ctx, id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteTrigger", reflect.TypeOf((*MockInterface)(nil).DeleteTrigger), ctx, id)
 }
 
 // GetAllPlugin mocks base method.
@@ -98,6 +126,21 @@ func (m *MockInterface) GetAllPluginGroup(ctx context.Context) ([]*pipeline.Plug
 func (mr *MockInterfaceMockRecorder) GetAllPluginGroup(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllPluginGroup", reflect.TypeOf((*MockInterface)(nil).GetAllPluginGroup), ctx)
+}
+
+// GetAllTrigger mocks base method.
+func (m *MockInterface) GetAllTrigger(ctx context.Context) ([]*pipeline.Trigger, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAllTrigger", ctx)
+	ret0, _ := ret[0].([]*pipeline.Trigger)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAllTrigger indicates an expected call of GetAllTrigger.
+func (mr *MockInterfaceMockRecorder) GetAllTrigger(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllTrigger", reflect.TypeOf((*MockInterface)(nil).GetAllTrigger), ctx)
 }
 
 // GetAllWithGroup mocks base method.
@@ -145,6 +188,36 @@ func (mr *MockInterfaceMockRecorder) GetPluginByName(ctx, name any) *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPluginByName", reflect.TypeOf((*MockInterface)(nil).GetPluginByName), ctx, name)
 }
 
+// GetTriggerByID mocks base method.
+func (m *MockInterface) GetTriggerByID(ctx context.Context, id int64) (*pipeline.Trigger, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTriggerByID", ctx, id)
+	ret0, _ := ret[0].(*pipeline.Trigger)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTriggerByID indicates an expected call of GetTriggerByID.
+func (mr *MockInterfaceMockRecorder) GetTriggerByID(ctx, id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTriggerByID", reflect.TypeOf((*MockInterface)(nil).GetTriggerByID), ctx, id)
+}
+
+// GetTriggerByPipelineID mocks base method.
+func (m *MockInterface) GetTriggerByPipelineID(ctx context.Context, pipelineID int64) (*pipeline.Trigger, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTriggerByPipelineID", ctx, pipelineID)
+	ret0, _ := ret[0].(*pipeline.Trigger)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTriggerByPipelineID indicates an expected call of GetTriggerByPipelineID.
+func (mr *MockInterfaceMockRecorder) GetTriggerByPipelineID(ctx, pipelineID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTriggerByPipelineID", reflect.TypeOf((*MockInterface)(nil).GetTriggerByPipelineID), ctx, pipelineID)
+}
+
 // ListPlugin mocks base method.
 func (m *MockInterface) ListPlugin(ctx context.Context, filter *pipeline.PluginFilter) (*database.PageResult[*pipeline.Plugin], error) {
 	m.ctrl.T.Helper()
@@ -160,6 +233,21 @@ func (mr *MockInterfaceMockRecorder) ListPlugin(ctx, filter any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListPlugin", reflect.TypeOf((*MockInterface)(nil).ListPlugin), ctx, filter)
 }
 
+// ListTrigger mocks base method.
+func (m *MockInterface) ListTrigger(ctx context.Context, filter *pipeline.TriggerFilter) (*database.PageResult[*pipeline.Trigger], error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListTrigger", ctx, filter)
+	ret0, _ := ret[0].(*database.PageResult[*pipeline.Trigger])
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListTrigger indicates an expected call of ListTrigger.
+func (mr *MockInterfaceMockRecorder) ListTrigger(ctx, filter any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListTrigger", reflect.TypeOf((*MockInterface)(nil).ListTrigger), ctx, filter)
+}
+
 // UpdatePluginByName mocks base method.
 func (m *MockInterface) UpdatePluginByName(ctx context.Context, plugin *pipeline.Plugin) error {
 	m.ctrl.T.Helper()
@@ -172,4 +260,18 @@ func (m *MockInterface) UpdatePluginByName(ctx context.Context, plugin *pipeline
 func (mr *MockInterfaceMockRecorder) UpdatePluginByName(ctx, plugin any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdatePluginByName", reflect.TypeOf((*MockInterface)(nil).UpdatePluginByName), ctx, plugin)
+}
+
+// UpdateTrigger mocks base method.
+func (m *MockInterface) UpdateTrigger(ctx context.Context, trigger *pipeline.Trigger) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateTrigger", ctx, trigger)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateTrigger indicates an expected call of UpdateTrigger.
+func (mr *MockInterfaceMockRecorder) UpdateTrigger(ctx, trigger any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateTrigger", reflect.TypeOf((*MockInterface)(nil).UpdateTrigger), ctx, trigger)
 }

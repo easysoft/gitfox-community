@@ -19,4 +19,13 @@ func registerPipelineRoutes(r *gin.RouterGroup, controller *Controller) {
 	{
 		execution.POST("", controller.Execution.Create)
 	}
+
+	trigger := r.Group(fmt.Sprintf("/pipelines/:%s/triggers", req.PathParamPipelineID))
+	{
+		trigger.POST("", controller.Pipeline.CreateTrigger)
+		trigger.GET("", controller.Pipeline.ListTriggers)
+		trigger.GET(fmt.Sprintf("/:%s", req.PathParamTriggerID), controller.Pipeline.GetTriggerByID)
+		trigger.PUT(fmt.Sprintf("/:%s", req.PathParamTriggerID), controller.Pipeline.UpdateTrigger)
+		trigger.DELETE(fmt.Sprintf("/:%s", req.PathParamTriggerID), controller.Pipeline.DeleteTrigger)
+	}
 }

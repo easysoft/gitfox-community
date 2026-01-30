@@ -12,4 +12,6 @@ const (
 
 	PathParamBuildEnvId = "env_id"
 	PathParamSchemaName = "name"
+	PathParamTriggerID  = "triggerID"
+	PathParamPipelineID = "pipelineID"
 )

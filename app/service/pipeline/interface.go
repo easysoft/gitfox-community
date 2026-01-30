@@ -5,6 +5,7 @@ import (
 
 	pipelineModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/pipeline"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/pipeline"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
 )
 
 var _ Interface = (*Service)(nil)
@@ -32,4 +33,16 @@ type Interface interface {
 	GetPluginByName(ctx context.Context, name string) (*pipelineModel.Plugin, error)
 	// Resolve resolves the pipeline plugin configuration.
 	Resolve(ctx context.Context, kind, typ, pluginName string) (*pipelineModel.Yaml, error)
+
+	// --- 触发相关 ---
+	// CreateTrigger 创建触发
+	CreateTrigger(ctx context.Context, trigger *pipelineModel.Trigger) error
+	// UpdateTrigger 更新触发
+	UpdateTrigger(ctx context.Context, trigger *pipelineModel.Trigger) error
+	// GetTriggerByID 根据触发ID获取触发
+	GetTriggerByID(ctx context.Context, id int64) (*pipelineModel.Trigger, error)
+	// ListTriggers 查询触发列表
+	ListTriggers(ctx context.Context, filter *pipelineModel.TriggerFilter) (*database.PageResult[*pipelineModel.Trigger], error)
+	// DeleteTrigger 删除触发
+	DeleteTrigger(ctx context.Context, id int64) error
 }
