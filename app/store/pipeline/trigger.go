@@ -43,6 +43,15 @@ func (s *Store) GetTriggerByID(ctx context.Context, id int64) (*pipelineModel.Tr
 	return mapTriggerToModel(&trigger), nil
 }
 
+// GetTriggerByPipelineID 根据流水线ID获取触发
+func (s *Store) GetTriggerByPipelineID(ctx context.Context, pipelineID int64) (*pipelineModel.Trigger, error) {
+	var trigger Trigger
+	if err := s.db.WithContext(ctx).Where("pipelineID = ? AND deleted = 0", pipelineID).First(&trigger).Error; err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
+	}
+	return mapTriggerToModel(&trigger), nil
+}
+
 // GetAllTrigger 获取所有触发
 func (s *Store) GetAllTrigger(ctx context.Context) ([]*pipelineModel.Trigger, error) {
 	var triggers []Trigger

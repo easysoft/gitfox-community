@@ -203,6 +203,21 @@ func (mr *MockInterfaceMockRecorder) GetTriggerByID(ctx, id any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTriggerByID", reflect.TypeOf((*MockInterface)(nil).GetTriggerByID), ctx, id)
 }
 
+// GetTriggerByPipelineID mocks base method.
+func (m *MockInterface) GetTriggerByPipelineID(ctx context.Context, pipelineID int64) (*pipeline.Trigger, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTriggerByPipelineID", ctx, pipelineID)
+	ret0, _ := ret[0].(*pipeline.Trigger)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTriggerByPipelineID indicates an expected call of GetTriggerByPipelineID.
+func (mr *MockInterfaceMockRecorder) GetTriggerByPipelineID(ctx, pipelineID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTriggerByPipelineID", reflect.TypeOf((*MockInterface)(nil).GetTriggerByPipelineID), ctx, pipelineID)
+}
+
 // ListPlugin mocks base method.
 func (m *MockInterface) ListPlugin(ctx context.Context, filter *pipeline.PluginFilter) (*database.PageResult[*pipeline.Plugin], error) {
 	m.ctrl.T.Helper()

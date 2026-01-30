@@ -57,6 +57,8 @@ type Interface interface {
 	UpdateTrigger(ctx context.Context, trigger *pipelineModel.Trigger) error
 	// GetTriggerByID 根据触发ID获取触发
 	GetTriggerByID(ctx context.Context, id int64) (*pipelineModel.Trigger, error)
+	// GetTriggerByPipelineID 根据流水线ID获取触发
+	GetTriggerByPipelineID(ctx context.Context, pipelineID int64) (*pipelineModel.Trigger, error)
 	// GetAllTrigger 获取所有触发
 	GetAllTrigger(ctx context.Context) ([]*pipelineModel.Trigger, error)
 	// ListTrigger 查询触发列表（分页）

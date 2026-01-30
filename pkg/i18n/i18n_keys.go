@@ -153,6 +153,15 @@ const (
 	PipelineQueryParamError         I18nKey = "pipeline.query_param_error"          // Query 参数解析失败.
 	PipelineQuerySchemaGroupSuccess I18nKey = "pipeline.query_schema_group_success" // 查询 schema 分组配置成功
 	PipelineQueryStepSchemaSuccess  I18nKey = "pipeline.query_step_schema_success"  // 查询 schema 配置成功
+	PipelineTriggerCreateError      I18nKey = "pipeline.trigger_create_error"       // 触发创建失败.
+	PipelineTriggerCreateSuccess    I18nKey = "pipeline.trigger_create_success"     // 触发创建成功.
+	PipelineTriggerDeleteError      I18nKey = "pipeline.trigger_delete_error"       // 触发删除失败.
+	PipelineTriggerDeleteSuccess    I18nKey = "pipeline.trigger_delete_success"     // 触发删除成功.
+	PipelineTriggerGetError         I18nKey = "pipeline.trigger_get_error"          // 触发获取失败.
+	PipelineTriggerGetSuccess       I18nKey = "pipeline.trigger_get_success"        // 触发获取成功.
+	PipelineTriggerListError        I18nKey = "pipeline.trigger_list_error"         // 触发列表获取失败.
+	PipelineTriggerListSuccess      I18nKey = "pipeline.trigger_list_success"       // 触发列表获取成功.
+	PipelineTriggerParamError       I18nKey = "pipeline.trigger_param_error"        // 触发参数解析失败.
 
 	// Pullrequest 相关常量
 	PullrequestBodyParamError                I18nKey = "pullrequest.body_param_error"                   // Body 参数解析失败.

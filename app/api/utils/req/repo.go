@@ -5,10 +5,11 @@ import (
 )
 
 const (
-	PathParamRepoRef  = "repoRef"
-	PathParamFilePath = "filePath"
-	QueryParamRepoID  = "repoID"
-	QueryParamSpaceID = "spaceID"
+	PathParamRepoRef    = "repoRef"
+	PathParamFilePath   = "filePath"
+	QueryParamRepoID    = "repoID"
+	QueryParamSpaceID   = "spaceID"
+	PathParamPipelineID = "pipelineID"
 
 	QueryParamOperation = "Operation"
 
