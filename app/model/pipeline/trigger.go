@@ -42,7 +42,8 @@ func (t *Trigger) Validate() error {
 }
 
 type TriggerFilter struct {
-	Page       int `json:"page" form:"page" default:"1"`
-	PageSize   int `json:"pageSize" form:"pageSize" default:"20"`
-	PipelineID int `json:"pipelineID"`
+	Page       int      `json:"page" form:"page" default:"1"`
+	PageSize   int      `json:"pageSize" form:"pageSize" default:"20"`
+	PipelineID int      `json:"pipelineID"`
+	Trigger    []string `json:"trigger"`
 }

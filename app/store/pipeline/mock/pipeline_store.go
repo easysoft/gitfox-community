@@ -128,21 +128,6 @@ func (mr *MockInterfaceMockRecorder) GetAllPluginGroup(ctx any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllPluginGroup", reflect.TypeOf((*MockInterface)(nil).GetAllPluginGroup), ctx)
 }
 
-// GetAllTrigger mocks base method.
-func (m *MockInterface) GetAllTrigger(ctx context.Context) ([]*pipeline.Trigger, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAllTrigger", ctx)
-	ret0, _ := ret[0].([]*pipeline.Trigger)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetAllTrigger indicates an expected call of GetAllTrigger.
-func (mr *MockInterfaceMockRecorder) GetAllTrigger(ctx any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllTrigger", reflect.TypeOf((*MockInterface)(nil).GetAllTrigger), ctx)
-}
-
 // GetAllWithGroup mocks base method.
 func (m *MockInterface) GetAllWithGroup(ctx context.Context) ([]*pipeline.PluginWithGroup, error) {
 	m.ctrl.T.Helper()

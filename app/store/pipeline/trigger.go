@@ -52,20 +52,6 @@ func (s *Store) GetTriggerByPipelineID(ctx context.Context, pipelineID int64) (*
 	return mapTriggerToModel(&trigger), nil
 }
 
-// GetAllTrigger 获取所有触发
-func (s *Store) GetAllTrigger(ctx context.Context) ([]*pipelineModel.Trigger, error) {
-	var triggers []Trigger
-	if err := s.db.WithContext(ctx).Where("deleted = 0").Find(&triggers).Error; err != nil {
-		return nil, database.ProcessSQLErrorf(ctx, err)
-	}
-
-	result := make([]*pipelineModel.Trigger, len(triggers))
-	for i := range triggers {
-		result[i] = mapTriggerToModel(&triggers[i])
-	}
-	return result, nil
-}
-
 // ListTrigger 查询触发列表（分页）
 func (s *Store) ListTrigger(ctx context.Context, filter *pipelineModel.TriggerFilter) (*database.PageResult[*pipelineModel.Trigger], error) {
 	tx := s.db.WithContext(ctx).Model(&Trigger{}).Where("deleted = 0")
@@ -73,6 +59,20 @@ func (s *Store) ListTrigger(ctx context.Context, filter *pipelineModel.TriggerFi
 	// 流水线ID过滤
 	if filter.PipelineID != 0 {
 		tx = tx.Where("pipelineID = ?", filter.PipelineID)
+	}
+
+	// 触发类型过滤
+	// - 如果传入 ["push", "tag"]
+	// - 生成的 SQL 类似：WHERE (`trigger` LIKE '%push%' OR `trigger` LIKE '%tag%')
+	// - 会匹配到 push、tag、push,tag、merge,push 等所有包含这些值的记录
+	if len(filter.Trigger) > 0 {
+		var orConditions []string
+		var args []any
+		for _, t := range filter.Trigger {
+			orConditions = append(orConditions, "`trigger` LIKE ?")
+			args = append(args, "%"+t+"%")
+		}
+		tx = tx.Where(strings.Join(orConditions, " OR "), args...)
 	}
 
 	// 执行分页查询
