@@ -69,6 +69,8 @@ logging:
     filename: scan.log
   logSystemConf:
     filename: system.log
+  logJobConf:
+    filename: job.log
 
 middleware:
   logRequestBody: true

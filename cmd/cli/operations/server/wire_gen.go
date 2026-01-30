@@ -193,8 +193,9 @@ func NewApp(mode string) (*App, func(), error) {
 	server := provider.ProvideSSHServer(config, interface2, gitController)
 	authenticator := authn.ProvideAuthenticators(config, userStore, tokenInterface)
 	jobsStore := jobs.NewScheduleJob(db)
+	jobLog := provider.NewJobLogger(config)
 	jobConfig := provider.ProvideJobConfig(config)
-	scheduler, err := provider.ProvideScheduler(jobsStore, mutexManager, pubSub, jobConfig)
+	scheduler, err := provider.ProvideScheduler(jobsStore, mutexManager, pubSub, jobLog, jobConfig)
 	if err != nil {
 		cleanup2()
 		cleanup()

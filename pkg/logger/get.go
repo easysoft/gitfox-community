@@ -33,6 +33,21 @@ func getDefaultLogger() *SugaredMateLogger {
 	return defaultLogger
 }
 
+// NewNopLogger 创建一个无操作的 logger，用于测试
+func NewNopLogger() *SugaredMateLogger {
+	nopLogger := zap.NewNop()
+	return &SugaredMateLogger{
+		base: &ZapMateLogger{
+			lock:      new(sync.Mutex),
+			isAsync:   false,
+			Logger:    nopLogger,
+			entryChan: make(chan *logEntry, 1),
+			wg:        new(sync.WaitGroup),
+		},
+		SugaredLogger: nopLogger.Sugar(),
+	}
+}
+
 // GetLogger 从 context.Context 中获取 logger
 // 如果上下文中不存在 logger，返回一个不带 trace_id 的默认 logger
 func GetLogger(ctx context.Context) *SugaredMateLogger {

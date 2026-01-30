@@ -151,6 +151,7 @@ type LoggingConfig struct {
 	LogSSHConf       LogSSHConfig       `yaml:"logSSHConf"`
 	LogScanConf      LogScanConfig      `yaml:"logScanConf"`
 	LogSystemConf    LogSystemConfig    `yaml:"logSystemConf"`
+	LogJobConf       LogJobConfig       `yaml:"logJobConf"`
 }
 
 // LogAPIServerConfig
@@ -175,6 +176,11 @@ type LogScanConfig struct {
 
 // LogSystemConfig
 type LogSystemConfig struct {
+	Filename string `yaml:"filename"`
+}
+
+// LogJobConfig
+type LogJobConfig struct {
 	Filename string `yaml:"filename"`
 }
 

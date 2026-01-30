@@ -10,6 +10,7 @@ import (
 	jobModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/jobs"
 	mockStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/jobs/mock"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/lock"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pubsub"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
 )
@@ -70,10 +71,12 @@ func TestNewScheduler(t *testing.T) {
 	mockMxManager := &mockMutexManager{}
 	mockPubsubService := &mockPubSub{}
 
+	testLog := logger.NewNopLogger()
 	scheduler, err := NewScheduler(
 		mockJobStore,
 		mockMxManager,
 		mockPubsubService,
+		testLog,
 		"test-instance",
 		5,
 		24*time.Hour,
@@ -117,10 +120,12 @@ func TestNewScheduler_MinMaxRunning(t *testing.T) {
 	mockPubsubService := &mockPubSub{}
 
 	// Test that maxRunning is set to at least 1
+	testLog := logger.NewNopLogger()
 	scheduler, err := NewScheduler(
 		mockJobStore,
 		mockMxManager,
 		mockPubsubService,
+		testLog,
 		"test-instance",
 		0, // Invalid: should be corrected to 1
 		24*time.Hour,
@@ -143,10 +148,12 @@ func TestScheduler_addRecurringJob(t *testing.T) {
 	mockMxManager := &mockMutexManager{}
 	mockPubsubService := &mockPubSub{}
 
+	testLog := logger.NewNopLogger()
 	scheduler, _ := NewScheduler(
 		mockJobStore,
 		mockMxManager,
 		mockPubsubService,
+		testLog,
 		"test-instance",
 		5,
 		24*time.Hour,
@@ -247,10 +254,12 @@ func TestScheduler_preExec(t *testing.T) {
 	mockMxManager := &mockMutexManager{}
 	mockPubsubService := &mockPubSub{}
 
+	testLog := logger.NewNopLogger()
 	scheduler, _ := NewScheduler(
 		mockJobStore,
 		mockMxManager,
 		mockPubsubService,
+		testLog,
 		"test-instance-123",
 		5,
 		24*time.Hour,
@@ -578,10 +587,12 @@ func TestScheduler_RunJob(t *testing.T) {
 	mockMxManager := &mockMutexManager{}
 	mockPubsubService := &mockPubSub{}
 
+	testLog := logger.NewNopLogger()
 	scheduler, _ := NewScheduler(
 		mockJobStore,
 		mockMxManager,
 		mockPubsubService,
+		testLog,
 		"test-instance",
 		5,
 		24*time.Hour,

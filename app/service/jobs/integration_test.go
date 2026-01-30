@@ -10,6 +10,7 @@ import (
 	jobModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/jobs"
 	mockStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/jobs/mock"
 	pkgJobs "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/jobs"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
 )
 
@@ -21,11 +22,13 @@ func TestIntegration_SimpleJobExecution(t *testing.T) {
 	mockJobStore := mockStore.NewMockInterface(ctrl)
 	mockMxManager := &mockMutexManager{}
 	mockPubsubService := &mockPubSub{}
+	testLog := logger.NewNopLogger()
 
 	scheduler, err := NewScheduler(
 		mockJobStore,
 		mockMxManager,
 		mockPubsubService,
+		testLog,
 		"test-instance",
 		5,
 		24*time.Hour,
@@ -84,11 +87,13 @@ func TestIntegration_RecurringJobCronCalculation(t *testing.T) {
 	mockJobStore := mockStore.NewMockInterface(ctrl)
 	mockMxManager := &mockMutexManager{}
 	mockPubsubService := &mockPubSub{}
+	testLog := logger.NewNopLogger()
 
 	scheduler, _ := NewScheduler(
 		mockJobStore,
 		mockMxManager,
 		mockPubsubService,
+		testLog,
 		"test-instance",
 		5,
 		24*time.Hour,
@@ -195,11 +200,13 @@ func TestIntegration_JobLifecycle(t *testing.T) {
 	mockJobStore := mockStore.NewMockInterface(ctrl)
 	mockMxManager := &mockMutexManager{}
 	mockPubsubService := &mockPubSub{}
+	testLog := logger.NewNopLogger()
 
 	scheduler, _ := NewScheduler(
 		mockJobStore,
 		mockMxManager,
 		mockPubsubService,
+		testLog,
 		"test-instance",
 		5,
 		24*time.Hour,

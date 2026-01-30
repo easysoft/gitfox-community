@@ -13,10 +13,10 @@ import (
 	jobsStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/jobs"
 	pkgJobs "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/jobs"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/lock"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pubsub"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
 	"github.com/gorhill/cronexpr"
-	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -34,6 +34,7 @@ type Scheduler struct {
 	executor      *pkgJobs.Executor
 	mxManager     lock.MutexManager
 	pubsubService pubsub.PubSub
+	log           *logger.SugaredMateLogger
 
 	// configuration fields 配置字段
 	instanceID    string
@@ -52,6 +53,7 @@ func NewScheduler(
 	jobStore jobsStore.Interface,
 	mxManager lock.MutexManager,
 	pubsubService pubsub.PubSub,
+	log *logger.SugaredMateLogger,
 	instanceID string,
 	maxRunning int,
 	retentionTime time.Duration,
@@ -67,6 +69,7 @@ func NewScheduler(
 		executor:      executor,
 		mxManager:     mxManager,
 		pubsubService: pubsubService,
+		log:           log,
 
 		instanceID:    instanceID,
 		maxRunning:    maxRunning,
@@ -90,8 +93,7 @@ func (s *Scheduler) Run(ctx context.Context) error {
 	defer func() {
 		err := consumer.Close()
 		if err != nil {
-			log.Ctx(ctx).Err(err).
-				Msg("[JobScheduler] failed to close pubsub cancel job consumer")
+			s.log.Errorw("[JobScheduler] failed to close pubsub cancel job consumer", "error", err)
 		}
 	}()
 
@@ -107,7 +109,7 @@ func (s *Scheduler) Run(ctx context.Context) error {
 
 	s.executor.FinishRegistration()
 
-	log.Ctx(ctx).Info().Msg("[JobScheduler] Starting job scheduler")
+	s.log.Info("[JobScheduler] Starting job scheduler")
 
 	s.done = make(chan struct{})
 	defer close(s.done)
@@ -122,22 +124,21 @@ func (s *Scheduler) Run(ctx context.Context) error {
 			defer func() {
 				if r := recover(); r != nil {
 					stack := string(debug.Stack())
-					log.Ctx(ctx).Error().
-						Str("panic", fmt.Sprintf("[%T] job scheduler panic: %v", r, r)).
-						Msg(stack)
+					s.log.Errorw("[JobScheduler] panic recovered",
+						"panic", fmt.Sprintf("[%T] job scheduler panic: %v", r, r),
+						"stack", stack)
 				}
 			}()
 
 			select {
 			case <-ctx.Done():
-				log.Ctx(ctx).Info().Msg("[JobScheduler] Context done, stopping scheduler")
+				s.log.Info("[JobScheduler] Context done, stopping scheduler")
 				return ctx.Err()
 
 			case newTime := <-s.signal:
 				dur := timer.RescheduleEarlier(newTime)
 				if dur > 0 {
-					log.Ctx(ctx).Trace().
-						Msgf("[JobScheduler] Update scheduled job processing time... runs in %s", dur)
+					s.log.Debugf("[JobScheduler] Update scheduled job processing time... runs in %s", dur)
 				}
 				return nil
 
@@ -154,11 +155,11 @@ func (s *Scheduler) Run(ctx context.Context) error {
 				dur := timer.ResetAt(nextExec, !gotAllJobs)
 
 				if err != nil {
-					log.Ctx(ctx).Err(err).
-						Msgf("[JobScheduler] failed to process jobs; next iteration in %s", dur)
+					s.log.Errorw("[JobScheduler] failed to process jobs",
+						"error", err,
+						"next_iteration", dur.String())
 				} else {
-					log.Ctx(ctx).Trace().
-						Msgf("[JobScheduler] started %d jobs; next iteration in %s", count, dur)
+					s.log.Debugf("[JobScheduler] started %d jobs; next iteration in %s", count, dur)
 				}
 
 				return nil
@@ -173,7 +174,7 @@ func (s *Scheduler) Run(ctx context.Context) error {
 // WaitJobsDone waits until execution of all jobs has finished.
 // It is intended to be used for graceful shutdown, after the Run method has finished.
 func (s *Scheduler) WaitJobsDone(ctx context.Context) {
-	log.Ctx(ctx).Debug().Msg("[JobScheduler] Waiting for running jobs to finish")
+	s.log.Debug("[JobScheduler] Waiting for running jobs to finish")
 
 	ch := make(chan struct{})
 	go func() {
@@ -183,9 +184,9 @@ func (s *Scheduler) WaitJobsDone(ctx context.Context) {
 
 	select {
 	case <-ctx.Done():
-		log.Ctx(ctx).Warn().Msg("[JobScheduler] Stop interrupted")
+		s.log.Warn("[JobScheduler] Stop interrupted")
 	case <-ch:
-		log.Ctx(ctx).Info().Msg("[JobScheduler] Gracefully stopped")
+		s.log.Info("[JobScheduler] Gracefully stopped")
 	}
 }
 
@@ -198,7 +199,7 @@ func (s *Scheduler) CancelJob(ctx context.Context, jobName string) error {
 
 	defer func() {
 		if err := mx.Unlock(ctx); err != nil {
-			log.Ctx(ctx).Err(err).Msg("[JobScheduler] failed to release global lock after canceling a job")
+			s.log.Errorw("[JobScheduler] failed to release global lock after canceling a job", "error", err)
 		}
 	}()
 
@@ -286,8 +287,8 @@ func (s *Scheduler) processReadyJobs(ctx context.Context, now time.Time) (int, t
 
 	defer func() {
 		if err := mx.Unlock(ctx); err != nil {
-			log.Ctx(ctx).Err(err).
-				Msg("[JobScheduler] failed to release global lock after periodic processing of ready jobs")
+			s.log.Errorw("[JobScheduler] failed to release global lock after periodic processing of ready jobs",
+				"error", err)
 		}
 	}()
 
@@ -323,10 +324,7 @@ func (s *Scheduler) processReadyJobs(ctx context.Context, now time.Time) (int, t
 	}
 
 	for _, job := range jobs {
-		jobCtx := log.Ctx(ctx).With().
-			Str("job.Name", job.Name).
-			Str("job.Type", job.Type).
-			Logger().WithContext(ctx)
+		jobLog := s.log.With("job.Name", job.Name, "job.Type", job.Type)
 
 		// Update the job fields for the new execution
 		s.preExec(job)
@@ -334,16 +332,16 @@ func (s *Scheduler) processReadyJobs(ctx context.Context, now time.Time) (int, t
 		if err := s.jobStore.UpdateExecution(ctx, job); err != nil {
 			knownNextExecTime = time.Time{}
 			gotAllJobs = false
-			log.Ctx(jobCtx).Err(err).Msg("[JobScheduler] failed to update job to mark it as running")
+			jobLog.Errorw("[JobScheduler] failed to update job to mark it as running", "error", err)
 			continue
 		}
 
 		// tell everybody that a job has started
 		if err := publishStateChange(ctx, s.pubsubService, job); err != nil {
-			log.Ctx(jobCtx).Err(err).Msg("[JobScheduler] failed to publish job state change")
+			jobLog.Errorw("[JobScheduler] failed to publish job state change", "error", err)
 		}
 
-		s.runJob(jobCtx, job)
+		s.runJob(ctx, job, jobLog)
 
 		countExecuted++
 	}
@@ -367,15 +365,16 @@ func (s *Scheduler) availableSlots(ctx context.Context) (int, error) {
 
 // runJob updates the job in the database and starts it in a separate goroutine.
 // The function will also log the execution.
-func (s *Scheduler) runJob(ctx context.Context, j *jobModel.ScheduleJob) {
+func (s *Scheduler) runJob(ctx context.Context, j *jobModel.ScheduleJob, jobLog *logger.SugaredMateLogger) {
 	s.wgRunning.Add(1)
 	go func(ctx context.Context,
 		jobName, jobType, jobData string,
 		jobRunDeadline *datetime.Local,
+		jobLog *logger.SugaredMateLogger,
 	) {
 		defer s.wgRunning.Done()
 
-		log.Ctx(ctx).Debug().Msg("[JobScheduler] started job")
+		jobLog.Debug("[JobScheduler] started job")
 
 		timeStart := time.Now()
 
@@ -388,18 +387,18 @@ func (s *Scheduler) runJob(ctx context.Context, j *jobModel.ScheduleJob) {
 
 		if mx, err := globalLock(backgroundCtx, s.mxManager); err != nil {
 			// If locking failed, just log the error and proceed to update the DB anyway.
-			log.Ctx(ctx).Err(err).Msg("[JobScheduler] failed to obtain global lock to update job after execution")
+			jobLog.Errorw("[JobScheduler] failed to obtain global lock to update job after execution", "error", err)
 		} else {
 			defer func() {
 				if err := mx.Unlock(backgroundCtx); err != nil {
-					log.Ctx(ctx).Err(err).Msg("[JobScheduler] failed to release global lock to update job after execution")
+					jobLog.Errorw("[JobScheduler] failed to release global lock to update job after execution", "error", err)
 				}
 			}()
 		}
 
 		job, err := s.jobStore.GetByName(backgroundCtx, jobName)
 		if err != nil {
-			log.Ctx(ctx).Err(err).Msg("[JobScheduler] failed to find job after execution")
+			jobLog.Errorw("[JobScheduler] failed to find job after execution", "error", err)
 			return
 		}
 
@@ -408,52 +407,52 @@ func (s *Scheduler) runJob(ctx context.Context, j *jobModel.ScheduleJob) {
 
 		err = s.jobStore.UpdateExecution(backgroundCtx, job)
 		if err != nil {
-			log.Ctx(ctx).Err(err).Msg("[JobScheduler] failed to update job after execution")
+			jobLog.Errorw("[JobScheduler] failed to update job after execution", "error", err)
 			return
 		}
 
-		logInfo := log.Ctx(ctx).Info().Str("duration", time.Since(timeStart).String())
+		duration := time.Since(timeStart).String()
+		logFields := []interface{}{"duration", duration}
 
 		if job.IsRecurring {
-			logInfo = logInfo.Bool("job.IsRecurring", true)
+			logFields = append(logFields, "job.IsRecurring", true)
 		}
 		if job.Result != "" {
-			logInfo = logInfo.Str("job.Result", job.Result)
+			logFields = append(logFields, "job.Result", job.Result)
 		}
 		if job.LastFailureError != "" {
-			logInfo = logInfo.Str("job.Failure", job.LastFailureError)
+			logFields = append(logFields, "job.Failure", job.LastFailureError)
 		}
 
 		switch job.State {
 		case jobModel.StateFinished:
-			logInfo.Msg("[JobScheduler] job successfully finished")
+			jobLog.Infow("[JobScheduler] job successfully finished", logFields...)
 			s.scheduleIfHaveMoreJobs()
 
 		case jobModel.StateFailed:
-			logInfo.Msg("[JobScheduler] job failed")
+			jobLog.Infow("[JobScheduler] job failed", logFields...)
 			s.scheduleIfHaveMoreJobs()
 
 		case jobModel.StateCanceled:
-			log.Ctx(ctx).Error().Msg("[JobScheduler] job canceled")
+			jobLog.Error("[JobScheduler] job canceled")
 			s.scheduleIfHaveMoreJobs()
 
 		case jobModel.StateScheduled:
 			scheduledTime := time.Time(*job.Scheduled)
-			logInfo.
-				Str("job.Scheduled", scheduledTime.Format(time.RFC3339Nano)).
-				Msg("[JobScheduler] job finished and rescheduled")
+			logFields = append(logFields, "job.Scheduled", scheduledTime.Format(time.RFC3339Nano))
+			jobLog.Infow("[JobScheduler] job finished and rescheduled", logFields...)
 
 			s.scheduleProcessing(scheduledTime)
 
 		case jobModel.StateRunning:
-			log.Ctx(ctx).Error().Msg("[JobScheduler] should not happen; job still has state=running after finishing")
+			jobLog.Error("[JobScheduler] should not happen; job still has state=running after finishing")
 		}
 
 		// tell everybody that a job has finished execution
 		if err := publishStateChange(backgroundCtx, s.pubsubService, job); err != nil {
-			log.Ctx(ctx).Err(err).Msg("[JobScheduler] failed to publish job state change")
+			jobLog.Errorw("[JobScheduler] failed to publish job state change", "error", err)
 		}
-	}(ctx, j.Name, j.Type, j.Data, j.RunDeadline)
+	}(ctx, j.Name, j.Type, j.Data, j.RunDeadline, jobLog)
 }
 
 // preExec updates the provided Job before execution.
@@ -515,15 +514,27 @@ func (s *Scheduler) doExec(ctx context.Context,
 			return nil, errors.New("progress must be between 0 and 100")
 		}
 
-		if err := s.jobStore.UpdateProgress(ctx, &jobModel.ScheduleJob{
+		jobProgress := &jobModel.ScheduleJob{
 			Name:        jobName,
 			Type:        jobType,
 			State:       jobModel.StateRunning,
 			RunProgress: progress,
 			EditedDate:  datetime.NowLocalTime(),
 			Result:      result,
-		}); err != nil {
+		}
+
+		if err := s.jobStore.UpdateProgress(ctx, jobProgress); err != nil {
 			return nil, err
+		}
+
+		// 发布进度更新事件，让订阅者能实时获取进度
+		if err := publishStateChange(ctx, s.pubsubService, jobProgress); err != nil {
+			s.log.Warnw("[JobScheduler] failed to publish job progress change",
+				"job.Name", jobName,
+				"job.Type", jobType,
+				"progress", progress,
+				"error", err)
+			// 不返回错误，进度发布失败不应影响任务执行
 		}
 
 		return []byte(result), nil
@@ -674,7 +685,7 @@ func (s *Scheduler) registerSystemJobs() error {
 		return fmt.Errorf("failed to register overdue job: %w", err)
 	}
 
-	log.Info().Msg("[JobScheduler] System jobs registered successfully")
+	s.log.Info("[JobScheduler] System jobs registered successfully")
 	return nil
 }
 
@@ -687,7 +698,7 @@ func (s *Scheduler) createSystemJobs(ctx context.Context) error {
 
 	defer func() {
 		if err := mx.Unlock(ctx); err != nil {
-			log.Ctx(ctx).Err(err).Msg("[JobScheduler] Failed to release global lock")
+			s.log.Errorw("[JobScheduler] Failed to release global lock", "error", err)
 		}
 	}()
 
@@ -701,7 +712,7 @@ func (s *Scheduler) createSystemJobs(ctx context.Context) error {
 		return fmt.Errorf("failed to create overdue job: %w", err)
 	}
 
-	log.Ctx(ctx).Info().Msg("[JobScheduler] System jobs created successfully")
+	s.log.Info("[JobScheduler] System jobs created successfully")
 	return nil
 }
 
