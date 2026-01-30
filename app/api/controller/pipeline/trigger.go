@@ -16,15 +16,32 @@ import (
 // @Tags pipelines
 // @Accept json
 // @Produce json
+// @Param pipelineID path int true "流水线ID"
 // @Param input body pipelineModel.Trigger true "创建触发参数"
 // @Success 200 {object} resp.ObjectResponse{data=pipelineModel.Trigger} "创建成功"
 // @Failure 400 {object} resp.ObjectResponse "参数错误"
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
-// @Router /pipeline/triggers [post]
+// @Router /pipelines/{pipelineID}/triggers [post]
 func (c *Controller) CreateTrigger(ctx *gin.Context) {
+	pipelineID, err := req.PathParamAsPositiveInt64(ctx, req.PathParamPipelineID)
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.PipelinePathParamError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
 	var params pipelineModel.Trigger
 	if err := ctx.ShouldBindJSON(&params); err != nil {
 		err = errors.WithI18nKey(err, i18n.PipelineBodyParamError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
+	// 设置 pipelineID
+	params.PipelineID = pipelineID
+
+	// 校验参数
+	if err := params.Validate(); err != nil {
 		resp.BadRequest(ctx, err)
 		return
 	}
@@ -40,24 +57,34 @@ func (c *Controller) CreateTrigger(ctx *gin.Context) {
 
 // ListTriggers 查询流水线触发列表
 // @Summary 查询流水线触发列表
-// @Description 查询流水线触发配置列表
+// @Description 查询指定流水线的触发配置列表
 // @Tags pipelines
 // @Accept json
 // @Produce json
+// @Param pipelineID path int true "流水线ID"
 // @Param page query int false "页码" default(1)
 // @Param pageSize query int false "每页数量" default(20)
-// @Param pipelineID query int false "流水线ID"
 // @Success 200 {object} resp.ListResponse{data=[]pipelineModel.Trigger,listArgs=resp.ListArgs} "查询成功"
 // @Failure 400 {object} resp.ListResponse "参数错误"
 // @Failure 500 {object} resp.ListResponse "服务器错误"
-// @Router /pipeline/triggers [get]
+// @Router /pipelines/{pipelineID}/triggers [get]
 func (c *Controller) ListTriggers(ctx *gin.Context) {
+	pipelineID, err := req.PathParamAsPositiveInt64(ctx, req.PathParamPipelineID)
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.PipelinePathParamError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
 	var filter pipelineModel.TriggerFilter
 	if err := ctx.ShouldBindQuery(&filter); err != nil {
 		err = errors.WithI18nKey(err, i18n.PipelineQueryParamError)
 		resp.BadRequest(ctx, err)
 		return
 	}
+
+	req.SetDefaults(&filter)
+	filter.PipelineID = int(pipelineID)
 
 	result, err := c.pipelineSvc.ListTriggers(ctx.Request.Context(), &filter)
 	if err != nil {
@@ -79,20 +106,28 @@ func (c *Controller) ListTriggers(ctx *gin.Context) {
 // @Tags pipelines
 // @Accept json
 // @Produce json
-// @Param id path int true "触发ID"
+// @Param pipelineID path int true "流水线ID"
+// @Param triggerID path int true "触发ID"
 // @Success 200 {object} resp.ObjectResponse{data=pipelineModel.Trigger} "查询成功"
 // @Failure 400 {object} resp.ObjectResponse "参数错误"
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
-// @Router /pipeline/triggers/{id} [get]
+// @Router /pipelines/{pipelineID}/triggers/{triggerID} [get]
 func (c *Controller) GetTriggerByID(ctx *gin.Context) {
-	id, err := req.PathParamAsPositiveInt64(ctx, "id")
+	_, err := req.PathParamAsPositiveInt64(ctx, req.PathParamPipelineID)
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.PipelinePathParamError)
 		resp.BadRequest(ctx, err)
 		return
 	}
 
-	trigger, err := c.pipelineSvc.GetTriggerByID(ctx.Request.Context(), id)
+	triggerID, err := req.PathParamAsPositiveInt64(ctx, req.PathParamTriggerID)
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.PipelinePathParamError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
+	trigger, err := c.pipelineSvc.GetTriggerByID(ctx.Request.Context(), triggerID)
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.PipelineTriggerGetError)
 		resp.InternalError(ctx, err)
@@ -102,18 +137,20 @@ func (c *Controller) GetTriggerByID(ctx *gin.Context) {
 	resp.OK(ctx, i18n.PipelineTriggerGetSuccess, trigger)
 }
 
-// GetTriggerByPipelineID 查询流水线触发配置
-// @Summary 根据流水线ID获取触发配置
-// @Description 根据流水线ID获取触发配置
+// UpdateTrigger 更新流水线触发配置
+// @Summary 更新触发配置
+// @Description 根据触发ID更新流水线触发配置
 // @Tags pipelines
 // @Accept json
 // @Produce json
 // @Param pipelineID path int true "流水线ID"
-// @Success 200 {object} resp.ObjectResponse{data=pipelineModel.Trigger} "查询成功"
+// @Param triggerID path int true "触发ID"
+// @Param input body pipelineModel.Trigger true "更新触发参数"
+// @Success 200 {object} resp.ObjectResponse{data=pipelineModel.Trigger} "更新成功"
 // @Failure 400 {object} resp.ObjectResponse "参数错误"
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
-// @Router /pipeline/triggers/by-pipeline/{pipelineID} [get]
-func (c *Controller) GetTriggerByPipelineID(ctx *gin.Context) {
+// @Router /pipelines/{pipelineID}/triggers/{triggerID} [put]
+func (c *Controller) UpdateTrigger(ctx *gin.Context) {
 	pipelineID, err := req.PathParamAsPositiveInt64(ctx, req.PathParamPipelineID)
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.PipelinePathParamError)
@@ -121,14 +158,37 @@ func (c *Controller) GetTriggerByPipelineID(ctx *gin.Context) {
 		return
 	}
 
-	trigger, err := c.pipelineSvc.GetTriggerByPipelineID(ctx.Request.Context(), pipelineID)
+	triggerID, err := req.PathParamAsPositiveInt64(ctx, req.PathParamTriggerID)
 	if err != nil {
-		err = errors.WithI18nKey(err, i18n.PipelineTriggerGetError)
+		err = errors.WithI18nKey(err, i18n.PipelinePathParamError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
+	var params pipelineModel.Trigger
+	if err := ctx.ShouldBindJSON(&params); err != nil {
+		err = errors.WithI18nKey(err, i18n.PipelineBodyParamError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
+	// 校验参数
+	if err := params.Validate(); err != nil {
+		resp.BadRequest(ctx, err)
+		return
+	}
+
+	// 设置 ID 和 pipelineID
+	params.ID = triggerID
+	params.PipelineID = pipelineID
+
+	if err := c.pipelineSvc.UpdateTrigger(ctx.Request.Context(), &params); err != nil {
+		err = errors.WithI18nKey(err, i18n.PipelineTriggerUpdateError)
 		resp.InternalError(ctx, err)
 		return
 	}
 
-	resp.OK(ctx, i18n.PipelineTriggerGetSuccess, trigger)
+	resp.OK(ctx, i18n.PipelineTriggerUpdateSuccess, params)
 }
 
 // DeleteTrigger 删除流水线触发配置
@@ -137,20 +197,28 @@ func (c *Controller) GetTriggerByPipelineID(ctx *gin.Context) {
 // @Tags pipelines
 // @Accept json
 // @Produce json
-// @Param id path int true "触发ID"
+// @Param pipelineID path int true "流水线ID"
+// @Param triggerID path int true "触发ID"
 // @Success 200 {object} resp.ObjectResponse "删除成功"
 // @Failure 400 {object} resp.ObjectResponse "参数错误"
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
-// @Router /pipeline/triggers/{id} [delete]
+// @Router /pipelines/{pipelineID}/triggers/{triggerID} [delete]
 func (c *Controller) DeleteTrigger(ctx *gin.Context) {
-	id, err := req.PathParamAsPositiveInt64(ctx, "id")
+	_, err := req.PathParamAsPositiveInt64(ctx, req.PathParamPipelineID)
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.PipelinePathParamError)
 		resp.BadRequest(ctx, err)
 		return
 	}
 
-	if err := c.pipelineSvc.DeleteTrigger(ctx.Request.Context(), id); err != nil {
+	triggerID, err := req.PathParamAsPositiveInt64(ctx, req.PathParamTriggerID)
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.PipelinePathParamError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
+	if err := c.pipelineSvc.DeleteTrigger(ctx.Request.Context(), triggerID); err != nil {
 		err = errors.WithI18nKey(err, i18n.PipelineTriggerDeleteError)
 		resp.InternalError(ctx, err)
 		return

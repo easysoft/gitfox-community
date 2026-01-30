@@ -1684,12 +1684,17 @@ paths:
       summary: 查询流水线步骤分组
       tags:
       - pipelines
-  /pipeline/triggers:
+  /pipelines/{pipelineID}/triggers:
     get:
       consumes:
       - application/json
-      description: 查询流水线触发配置列表
+      description: 查询指定流水线的触发配置列表
       parameters:
+      - description: 流水线ID
+        in: path
+        name: pipelineID
+        required: true
+        type: integer
       - default: 1
         description: 页码
         in: query
@@ -1699,10 +1704,6 @@ paths:
         description: 每页数量
         in: query
         name: pageSize
-        type: integer
-      - description: 流水线ID
-        in: query
-        name: pipelineID
         type: integer
       produces:
       - application/json
@@ -1736,6 +1737,11 @@ paths:
       - application/json
       description: 创建流水线触发配置
       parameters:
+      - description: 流水线ID
+        in: path
+        name: pipelineID
+        required: true
+        type: integer
       - description: 创建触发参数
         in: body
         name: input
@@ -1765,15 +1771,20 @@ paths:
       summary: 创建流水线触发
       tags:
       - pipelines
-  /pipeline/triggers/{id}:
+  /pipelines/{pipelineID}/triggers/{triggerID}:
     delete:
       consumes:
       - application/json
       description: 根据触发ID删除流水线触发配置
       parameters:
+      - description: 流水线ID
+        in: path
+        name: pipelineID
+        required: true
+        type: integer
       - description: 触发ID
         in: path
-        name: id
+        name: triggerID
         required: true
         type: integer
       produces:
@@ -1799,9 +1810,14 @@ paths:
       - application/json
       description: 根据触发ID获取流水线触发配置
       parameters:
+      - description: 流水线ID
+        in: path
+        name: pipelineID
+        required: true
+        type: integer
       - description: 触发ID
         in: path
-        name: id
+        name: triggerID
         required: true
         type: integer
       produces:
@@ -1827,22 +1843,32 @@ paths:
       summary: 根据ID获取触发配置
       tags:
       - pipelines
-  /pipeline/triggers/by-pipeline/{pipelineID}:
-    get:
+    put:
       consumes:
       - application/json
-      description: 根据流水线ID获取触发配置
+      description: 根据触发ID更新流水线触发配置
       parameters:
       - description: 流水线ID
         in: path
         name: pipelineID
         required: true
         type: integer
+      - description: 触发ID
+        in: path
+        name: triggerID
+        required: true
+        type: integer
+      - description: 更新触发参数
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_pipeline.Trigger'
       produces:
       - application/json
       responses:
         "200":
-          description: 查询成功
+          description: 更新成功
           schema:
             allOf:
             - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
@@ -1858,7 +1884,7 @@ paths:
           description: 服务器错误
           schema:
             $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
-      summary: 根据流水线ID获取触发配置
+      summary: 更新触发配置
       tags:
       - pipelines
   /repos:

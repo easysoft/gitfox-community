@@ -388,9 +388,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/pipeline/triggers": {
+        "/pipelines/{pipelineID}/triggers": {
             "get": {
-                "description": "查询流水线触发配置列表",
+                "description": "查询指定流水线的触发配置列表",
                 "consumes": [
                     "application/json"
                 ],
@@ -404,6 +404,13 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
+                        "description": "流水线ID",
+                        "name": "pipelineID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
                         "default": 1,
                         "description": "页码",
                         "name": "page",
@@ -414,12 +421,6 @@ const docTemplate = `{
                         "default": 20,
                         "description": "每页数量",
                         "name": "pageSize",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "流水线ID",
-                        "name": "pipelineID",
                         "in": "query"
                     }
                 ],
@@ -476,6 +477,13 @@ const docTemplate = `{
                 "summary": "创建流水线触发",
                 "parameters": [
                     {
+                        "type": "integer",
+                        "description": "流水线ID",
+                        "name": "pipelineID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
                         "description": "创建触发参数",
                         "name": "input",
                         "in": "body",
@@ -519,9 +527,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/pipeline/triggers/by-pipeline/{pipelineID}": {
+        "/pipelines/{pipelineID}/triggers/{triggerID}": {
             "get": {
-                "description": "根据流水线ID获取触发配置",
+                "description": "根据触发ID获取流水线触发配置",
                 "consumes": [
                     "application/json"
                 ],
@@ -531,12 +539,19 @@ const docTemplate = `{
                 "tags": [
                     "pipelines"
                 ],
-                "summary": "根据流水线ID获取触发配置",
+                "summary": "根据ID获取触发配置",
                 "parameters": [
                     {
                         "type": "integer",
                         "description": "流水线ID",
                         "name": "pipelineID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "触发ID",
+                        "name": "triggerID",
                         "in": "path",
                         "required": true
                     }
@@ -573,11 +588,9 @@ const docTemplate = `{
                         }
                     }
                 }
-            }
-        },
-        "/pipeline/triggers/{id}": {
-            "get": {
-                "description": "根据触发ID获取流水线触发配置",
+            },
+            "put": {
+                "description": "根据触发ID更新流水线触发配置",
                 "consumes": [
                     "application/json"
                 ],
@@ -587,19 +600,35 @@ const docTemplate = `{
                 "tags": [
                     "pipelines"
                 ],
-                "summary": "根据ID获取触发配置",
+                "summary": "更新触发配置",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "触发ID",
-                        "name": "id",
+                        "description": "流水线ID",
+                        "name": "pipelineID",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "触发ID",
+                        "name": "triggerID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "更新触发参数",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_pipeline.Trigger"
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "查询成功",
+                        "description": "更新成功",
                         "schema": {
                             "allOf": [
                                 {
@@ -645,8 +674,15 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
+                        "description": "流水线ID",
+                        "name": "pipelineID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
                         "description": "触发ID",
-                        "name": "id",
+                        "name": "triggerID",
                         "in": "path",
                         "required": true
                     }

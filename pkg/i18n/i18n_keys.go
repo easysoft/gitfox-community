@@ -161,7 +161,10 @@ const (
 	PipelineTriggerGetSuccess       I18nKey = "pipeline.trigger_get_success"        // 触发获取成功.
 	PipelineTriggerListError        I18nKey = "pipeline.trigger_list_error"         // 触发列表获取失败.
 	PipelineTriggerListSuccess      I18nKey = "pipeline.trigger_list_success"       // 触发列表获取成功.
+	PipelineTriggerParamCronError   I18nKey = "pipeline.trigger_param_cron_error"   // 无效的 cron 表达式.
 	PipelineTriggerParamError       I18nKey = "pipeline.trigger_param_error"        // 触发参数解析失败.
+	PipelineTriggerUpdateError      I18nKey = "pipeline.trigger_update_error"       // 触发更新失败.
+	PipelineTriggerUpdateSuccess    I18nKey = "pipeline.trigger_update_success"     // 触发更新成功.
 
 	// Pullrequest 相关常量
 	PullrequestBodyParamError                I18nKey = "pullrequest.body_param_error"                   // Body 参数解析失败.

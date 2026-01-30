@@ -5,6 +5,7 @@ pipeline:
   query_param_error: "Query 参数解析失败。"
   body_param_error: "Body 参数解析失败。"
   trigger_param_error: "触发参数解析失败。"
+  trigger_param_cron_error: "无效的 cron 表达式。"
   trigger_create_success: "触发创建成功。"
   trigger_create_error: "触发创建失败。"
   trigger_delete_success: "触发删除成功。"
@@ -13,3 +14,5 @@ pipeline:
   trigger_get_error: "触发获取失败。"
   trigger_list_success: "触发列表获取成功。"
   trigger_list_error: "触发列表获取失败。"
+  trigger_update_success: "触发更新成功。"
+  trigger_update_error: "触发更新失败。"

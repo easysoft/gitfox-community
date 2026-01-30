@@ -41,8 +41,6 @@ type Interface interface {
 	UpdateTrigger(ctx context.Context, trigger *pipelineModel.Trigger) error
 	// GetTriggerByID 根据触发ID获取触发
 	GetTriggerByID(ctx context.Context, id int64) (*pipelineModel.Trigger, error)
-	// GetTriggerByPipelineID 根据流水线ID获取触发
-	GetTriggerByPipelineID(ctx context.Context, pipelineID int64) (*pipelineModel.Trigger, error)
 	// ListTriggers 查询触发列表
 	ListTriggers(ctx context.Context, filter *pipelineModel.TriggerFilter) (*database.PageResult[*pipelineModel.Trigger], error)
 	// DeleteTrigger 删除触发

@@ -22,11 +22,6 @@ func (s *Service) GetTriggerByID(ctx context.Context, id int64) (*pipelineModel.
 	return s.pipelineStore.GetTriggerByID(ctx, id)
 }
 
-// GetTriggerByPipelineID 根据流水线ID获取触发
-func (s *Service) GetTriggerByPipelineID(ctx context.Context, pipelineID int64) (*pipelineModel.Trigger, error) {
-	return s.pipelineStore.GetTriggerByPipelineID(ctx, pipelineID)
-}
-
 // ListTriggers 查询触发列表
 func (s *Service) ListTriggers(ctx context.Context, filter *pipelineModel.TriggerFilter) (*database.PageResult[*pipelineModel.Trigger], error) {
 	return s.pipelineStore.ListTrigger(ctx, filter)
