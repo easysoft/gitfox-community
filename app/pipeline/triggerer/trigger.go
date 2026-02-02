@@ -121,7 +121,7 @@ func (t *triggerer) Trigger(
 		if stage.Status != string(constant.CIStatusPending) {
 			continue
 		}
-		log.Infof("[trigger] scheduling stage code=%d name=%s", stage.Code, stage.Name)
+		log.Infof("[trigger] scheduling stage code=%s name=%s", stage.Code, stage.Name)
 		// err = t.scheduler.Schedule(ctx, stage)
 		// if err != nil {
 		// 	log.Error().Err(err).Msg("trigger: cannot enqueue execution")
@@ -164,6 +164,7 @@ func parseV1Stages(
 
 	inputParams := map[string]interface{}{}
 	inputParams["build"] = inputs.Build(manager.ConvertToDroneBuild(execution))
+	inputParams["parameters"] = base.Params
 
 	var prevStage string
 
@@ -187,12 +188,12 @@ func parseV1Stages(
 		// Expand expressions in strings and matrices
 		script.ExpandConfig(config, inputParams)
 
-		runPolicyList := []string{"onSuccess", "onFailure", "always"}
+		runPolicyList := constant.RunPolicyList
 		for idx, stage := range v.Stages {
 			// Only parse CI stages for now
 			switch stage.Spec.(type) {
 			case *v1yaml.StageCI:
-				runPolicy := "onSuccess"
+				runPolicy := string(constant.RunPolicyOnSuccess)
 				if stage.When != nil {
 					if when := stage.When.Eval; when != "" {
 						trimmedWhen := strings.TrimSpace(when)
@@ -207,11 +208,11 @@ func parseV1Stages(
 							}
 							switch {
 							case onSuccess && onFailure:
-								runPolicy = "always"
+								runPolicy = string(constant.RunPolicyAlways)
 							case onSuccess:
-								runPolicy = "onSuccess"
+								runPolicy = string(constant.RunPolicyOnSuccess)
 							case onFailure:
-								runPolicy = "onFailure"
+								runPolicy = string(constant.RunPolicyOnFailure)
 							}
 						}
 					}
