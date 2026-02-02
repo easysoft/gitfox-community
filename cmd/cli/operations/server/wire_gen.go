@@ -9,7 +9,7 @@ package server
 import (
 	branch3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/branch"
 	commit2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/commit"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/execution"
+	execution2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/execution"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/githook"
 	pipeline3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/pipeline"
 	repo3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/repo"
@@ -30,8 +30,10 @@ import (
 	space2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/space"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/sse"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/tag"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/trigger"
 	user2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/user"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/branch"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/execution"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/jobs"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/pipeline"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/publickey"
@@ -40,12 +42,14 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/scan"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/settings"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/space"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/stage"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/user"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/cmd/cli/operations/provider"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/auth/authn"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/auth/authz"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database/dbtx"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/events"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/lock"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pubsub"
@@ -118,8 +122,11 @@ func NewApp(mode string) (*App, func(), error) {
 	pipelineStore := pipeline.NewPipelineStore(db)
 	pipelineService := pipeline2.NewPipelineService(pipelineStore)
 	pipelineController := pipeline3.NewController(ciConfig, pipelineService, repoService)
-	triggererTriggerer := triggerer.New()
-	executionController := execution.NewController(triggererTriggerer)
+	executionStore := execution.NewExecutionStore(db)
+	stageStore := stage.NewStageStore(db)
+	txRunnerImpl := dbtx.NewTxRunner(db)
+	triggererTriggerer := triggerer.New(pipelineService, executionStore, stageStore, txRunnerImpl)
+	executionController := execution2.NewController(triggererTriggerer)
 	tagService := tag.NewService(urlProvider, gitService)
 	tagController := tag2.NewController(tagService, repoService)
 	commitService := commit.NewService(urlProvider, gitService)
@@ -191,6 +198,12 @@ func NewApp(mode string) (*App, func(), error) {
 		return nil, nil, err
 	}
 	server := provider.ProvideSSHServer(config, interface2, gitController)
+	triggerService, err := provider.ProvideTriggerService(eventContext, pipelineService, triggererTriggerer, readerFactory, eventsReaderFactory)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
 	authenticator := authn.ProvideAuthenticators(config, userStore, tokenInterface)
 	jobsStore := jobs.NewScheduleJob(db)
 	jobLog := provider.NewJobLogger(config)
@@ -213,6 +226,7 @@ func NewApp(mode string) (*App, func(), error) {
 		SSHServer:       server,
 		UserService:     userService,
 		PipelineService: pipelineService,
+		TriggerService:  triggerService,
 		Authenticator:   authenticator,
 		EventSystem:     system,
 		EventContext:    eventContext,
@@ -238,6 +252,7 @@ type App struct {
 	SSHServer       *ssh.Server
 	UserService     user2.Interface
 	PipelineService pipeline2.Interface
+	TriggerService  *trigger.Service
 	Authenticator   authn.Authenticator
 	EventSystem     *events.System
 	EventContext    *provider.EventContext

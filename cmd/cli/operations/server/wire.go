@@ -10,6 +10,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/router"
 	jobsSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/jobs"
 	pipelineSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/pipeline"
+	triggerSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/trigger"
 	userSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/user"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/cmd/cli/operations/provider"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/auth/authn"
@@ -32,6 +33,7 @@ type App struct {
 	SSHServer       *ssh.Server
 	UserService     userSvc.Interface
 	PipelineService pipelineSvc.Interface
+	TriggerService  *triggerSvc.Service
 	Authenticator   authn.Authenticator
 	EventSystem     *events.System
 	EventContext    *provider.EventContext
@@ -62,6 +64,7 @@ func NewApp(mode string) (*App, func(), error) {
 		provider.EventWireSet,
 		provider.GitEventWireSet,
 		provider.PullReqEventWireSet,
+		provider.TriggerWireSet,
 		provider.PubSubProvider,
 		provider.JobWireSet,
 		provider.AuthWireSet,

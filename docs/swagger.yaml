@@ -496,7 +496,9 @@ definitions:
       id:
         type: integer
       params:
-        type: string
+        additionalProperties:
+          type: string
+        type: object
       parent:
         type: integer
       pipelineID:
@@ -3631,7 +3633,7 @@ paths:
       summary: 修改规则集信息
       tags:
       - scan
-  /scan/rulesets/{id}/bind:
+  /scan/rulesets/{id}/rules/bind:
     get:
       consumes:
       - application/json
@@ -3695,7 +3697,7 @@ paths:
       summary: 绑定规则到规则集
       tags:
       - scan
-  /scan/rulesets/{id}/unbind:
+  /scan/rulesets/{id}/rules/unbind:
     get:
       consumes:
       - application/json

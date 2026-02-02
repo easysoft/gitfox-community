@@ -143,6 +143,21 @@ func (mr *MockInterfaceMockRecorder) GetAllWithGroup(ctx any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllWithGroup", reflect.TypeOf((*MockInterface)(nil).GetAllWithGroup), ctx)
 }
 
+// GetPipelineByID mocks base method.
+func (m *MockInterface) GetPipelineByID(ctx context.Context, id int64) (*pipeline.Pipeline, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPipelineByID", ctx, id)
+	ret0, _ := ret[0].(*pipeline.Pipeline)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPipelineByID indicates an expected call of GetPipelineByID.
+func (mr *MockInterfaceMockRecorder) GetPipelineByID(ctx, id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPipelineByID", reflect.TypeOf((*MockInterface)(nil).GetPipelineByID), ctx, id)
+}
+
 // GetPipelineContentByPipelineID mocks base method.
 func (m *MockInterface) GetPipelineContentByPipelineID(ctx context.Context, pipelineID int64) (*pipeline.PipelineContent, error) {
 	m.ctrl.T.Helper()

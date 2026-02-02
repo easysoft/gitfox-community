@@ -21,8 +21,15 @@ func NewPipelineService(pipelineStore pipeline.Interface) *Service {
 
 type Interface interface {
 
+	// GetPipelineByID 根据流水线ID获取流水线（deleted=0）
+	GetPipelineByID(ctx context.Context, id int64) (*pipelineModel.Pipeline, error)
+
 	// GetPipelineContent 根据流水线ID获取流水线内容
 	GetPipelineContent(ctx context.Context, pipelineID int64) (*pipelineModel.PipelineFile, error)
+
+	// GetPipelineVariables 根据流水线ID获取流水线变量，返回 key-value 映射
+	// 如果 runtime=true，取 key 和 默认值 defaultValue；如果 runtime=false，取 key 和 固定值 value
+	GetPipelineVariables(ctx context.Context, pipelineID int64) (map[string]string, error)
 
 	// Migrate migrates the pipeline plugin to the latest version.
 	Migrate(ctx context.Context, url string) error

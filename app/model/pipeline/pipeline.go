@@ -84,3 +84,11 @@ type PipelineContent struct {
 	EditedBy    string          `json:"editedBy"`
 	EditedDate  *datetime.Local `json:"editedDate"`
 }
+
+type PipelineVariable struct {
+	Name         string `json:"name"`
+	Key          string `json:"key"`
+	Runtime      bool   `json:"runtime"`
+	Value        string `json:"value"`
+	DefaultValue string `json:"defaultValue"`
+}

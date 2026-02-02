@@ -26,6 +26,10 @@ func NewPipelineStore(db *gorm.DB) *Store {
 
 type Interface interface {
 
+	// --- 流水线相关 ---
+	// GetPipelineByID 根据流水线ID获取流水线（deleted=0）
+	GetPipelineByID(ctx context.Context, id int64) (*pipelineModel.Pipeline, error)
+
 	// --- 流水线内容相关 ---
 	// GetPipelineContentByPipelineID 根据流水线ID获取流水线内容
 	GetPipelineContentByPipelineID(ctx context.Context, pipelineID int64) (*pipelineModel.PipelineContent, error)

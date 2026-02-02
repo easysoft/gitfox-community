@@ -4,9 +4,13 @@ go 1.25.1
 
 require (
 	gitfox.zcorp.cc/git/Pangu/dm-gorm v1.0.0
+	github.com/antonmedv/expr v1.15.5
+	github.com/bmatcuk/doublestar v1.3.4
 	github.com/bmatcuk/doublestar/v4 v4.9.1
 	github.com/djherbis/buffer v1.2.0
 	github.com/djherbis/nio/v3 v3.0.1
+	github.com/docker/go-units v0.5.0
+	github.com/drone/drone-go v1.7.1
 	github.com/drone/go-generate v1.1.0
 	github.com/easysoft/gitfox v0.0.0-20250729070057-4c964c413416
 	github.com/fatih/color v1.17.0
@@ -68,7 +72,6 @@ require (
 	github.com/charmbracelet/x/ansi v0.1.4 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
-	github.com/docker/go-units v0.5.0 // indirect
 	github.com/fatih/semgroup v1.2.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/gitleaks/go-gitdiff v0.9.1 // indirect
