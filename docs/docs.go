@@ -3542,7 +3542,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/scan/rulesets/{id}/bind": {
+        "/scan/rulesets/{id}/rules/bind": {
             "get": {
                 "description": "根据规则集ID查询已绑定的规则列表，支持分页",
                 "consumes": [
@@ -3642,7 +3642,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/scan/rulesets/{id}/unbind": {
+        "/scan/rulesets/{id}/rules/unbind": {
             "get": {
                 "description": "根据规则集ID查询未绑定的规则列表，支持分页",
                 "consumes": [
@@ -5052,7 +5052,10 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "params": {
-                    "type": "string"
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
                 },
                 "parent": {
                     "type": "integer"

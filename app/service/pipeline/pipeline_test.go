@@ -403,7 +403,7 @@ func TestGetPluginGroupID(t *testing.T) {
 			expectedErr:    nil,
 		},
 		{
-			name: "场景3：分组列表为空 - 返回0",
+			name:           "场景3：分组列表为空 - 返回0",
 			inputGroups:    []*pipelineModel.PluginGroup{},
 			inputGroupName: "任意分组",
 			expectedID:     0,
@@ -534,9 +534,9 @@ func TestResolve(t *testing.T) {
 						Spec: map[string]interface{}{
 							"image": "plugins/acr",
 							"envs": map[string]interface{}{
-								"PLUGIN_REGISTRY":                       "${{ inputs.registry }}",
-								"PLUGIN_REPO":                           "${{ inputs.repo }}",
-								"PLUGIN_SERVICE_PRINCIPAL_CLIENT_ID":    "${{ inputs.service_principal_client_id }}",
+								"PLUGIN_REGISTRY":                        "${{ inputs.registry }}",
+								"PLUGIN_REPO":                            "${{ inputs.repo }}",
+								"PLUGIN_SERVICE_PRINCIPAL_CLIENT_ID":     "${{ inputs.service_principal_client_id }}",
 								"PLUGIN_SERVICE_PRINCIPAL_CLIENT_SECRET": "${{ inputs.service_principal_client_secret }}",
 							},
 						},
@@ -566,7 +566,7 @@ func TestResolve(t *testing.T) {
 			expectedErr: false,
 		},
 		{
-			name:            "场景2：无效的kind参数 - 返回错误",
+			name: "场景2：无效的kind参数 - 返回错误",
 			mockPipelineStore: func(m *pipelineStoreMock.MockInterface) {
 				// 不需要调用 mock
 			},
@@ -578,7 +578,7 @@ func TestResolve(t *testing.T) {
 			expectedErrMsg:  "unknown resolver kind provided",
 		},
 		{
-			name:            "场景3：无效的type参数 - 返回错误",
+			name: "场景3：无效的type参数 - 返回错误",
 			mockPipelineStore: func(m *pipelineStoreMock.MockInterface) {
 				// 不需要调用 mock
 			},
@@ -590,7 +590,7 @@ func TestResolve(t *testing.T) {
 			expectedErrMsg:  "unknown template type provided",
 		},
 		{
-			name:            "场景4：plugin类型但非step级别 - 返回错误",
+			name: "场景4：plugin类型但非step级别 - 返回错误",
 			mockPipelineStore: func(m *pipelineStoreMock.MockInterface) {
 				// 不需要调用 mock
 			},
@@ -631,7 +631,7 @@ func TestResolve(t *testing.T) {
 			expectedErrMsg:  "could not unmarshal plugin to v1yaml spec",
 		},
 		{
-			name:            "场景7：template类型 - 返回无法解析错误",
+			name: "场景7：template类型 - 返回无法解析错误",
 			mockPipelineStore: func(m *pipelineStoreMock.MockInterface) {
 				// 不需要调用 mock
 			},
