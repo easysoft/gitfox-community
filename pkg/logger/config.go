@@ -17,6 +17,7 @@ const (
 	LogTypeSSH       = "ssh"
 	LogTypeScan      = "scan"
 	LogTypeSystem    = "system"
+	LogTypeJob       = "job"
 )
 
 func getLogPath(c config.LoggingConfig, logType string) string {
@@ -31,6 +32,8 @@ func getLogPath(c config.LoggingConfig, logType string) string {
 		return filepath.Join(c.LogDir, c.LogScanConf.Filename)
 	case LogTypeSystem:
 		return filepath.Join(c.LogDir, c.LogSystemConf.Filename)
+	case LogTypeJob:
+		return filepath.Join(c.LogDir, c.LogJobConf.Filename)
 	default:
 		// 如果传入未知类型，默认使用 system 日志
 		return filepath.Join(c.LogDir, c.LogSystemConf.Filename)

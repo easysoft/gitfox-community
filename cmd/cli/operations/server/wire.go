@@ -8,6 +8,9 @@ import (
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/githook"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/router"
+	jobsSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/jobs"
+	pipelineSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/pipeline"
+	triggerSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/trigger"
 	userSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/user"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/cmd/cli/operations/provider"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/auth/authn"
@@ -19,18 +22,22 @@ import (
 )
 
 type App struct {
-	SystemConfig  *config.Config
-	SystemLog     *provider.SystemLog
-	APILog        *provider.APILog
-	DB            *gorm.DB
-	SqliteDB      *database.SqliteDB
-	Controller    *router.Controller
-	I18nManager   *provider.I18nManager
-	GithookCtrl   *githook.Controller
-	SSHServer     *ssh.Server
-	UserService   userSvc.Interface
-	Authenticator authn.Authenticator
-	EventSystem   *events.System
+	SystemConfig    *config.Config
+	SystemLog       *provider.SystemLog
+	APILog          *provider.APILog
+	DB              *gorm.DB
+	SqliteDB        *database.SqliteDB
+	Controller      *router.Controller
+	I18nManager     *provider.I18nManager
+	GithookCtrl     *githook.Controller
+	SSHServer       *ssh.Server
+	UserService     userSvc.Interface
+	PipelineService pipelineSvc.Interface
+	TriggerService  *triggerSvc.Service
+	Authenticator   authn.Authenticator
+	EventSystem     *events.System
+	EventContext    *provider.EventContext
+	JobScheduler    *jobsSvc.Scheduler
 }
 
 func NewApp(mode string) (*App, func(), error) {
@@ -44,6 +51,8 @@ func NewApp(mode string) (*App, func(), error) {
 		provider.RepoWireSet,
 		provider.BranchWireSet,
 		provider.TagWireSet,
+		provider.PipelineWireSet,
+		provider.ExecutionWireSet,
 		provider.ScanRuleSetWireSet,
 		provider.ScanRuleWireSet,
 		provider.CommitWireSet,
@@ -53,7 +62,12 @@ func NewApp(mode string) (*App, func(), error) {
 		provider.SSHWireSet,
 		provider.LockWireSet,
 		provider.EventWireSet,
+		provider.GitEventWireSet,
+		provider.PullReqEventWireSet,
+		provider.TriggerWireSet,
 		provider.PubSubProvider,
-		provider.AuthWireSet, wire.Struct(new(App), "*")),
+		provider.JobWireSet,
+		provider.AuthWireSet,
+		wire.Struct(new(App), "*")),
 	)
 }

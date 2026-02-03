@@ -1,0 +1,38 @@
+package pipeline
+
+import (
+	"context"
+
+	pipelineModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/pipeline"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
+)
+
+// GetPipelineByID 根据流水线ID获取流水线（deleted=0）
+func (s *Store) GetPipelineByID(ctx context.Context, id int64) (*pipelineModel.Pipeline, error) {
+	var pipeline Pipeline
+	if err := s.db.WithContext(ctx).Where("id = ? AND deleted = 0", id).First(&pipeline).Error; err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
+	}
+	return mapPipelineToModel(&pipeline), nil
+}
+
+// mapPipelineToModel 将数据库模型映射为流水线模型
+func mapPipelineToModel(p *Pipeline) *pipelineModel.Pipeline {
+	return &pipelineModel.Pipeline{
+		ID:            p.ID,
+		Name:          p.Name,
+		Type:          p.Type,
+		SpaceID:       p.SpaceID,
+		RepoID:        p.RepoID,
+		Desc:          p.Desc,
+		Status:        p.Status,
+		LatestVersion: p.LatestVersion,
+		DefaultBranch: p.DefaultBranch,
+		YamlPath:      p.YamlPath,
+		CreatedBy:     p.CreatedBy,
+		CreatedDate:   p.CreatedDate,
+		EditedBy:      p.EditedBy,
+		EditedDate:    p.EditedDate,
+		Deleted:       p.Deleted,
+	}
+}

@@ -1,13 +1,13 @@
 package scan
 
 // ScanRulePriority 规则优先级
-type ScanRulePriority string
+type ScanRulePriority int
 
 const (
-	ScanRulePriorityLow    ScanRulePriority = "low"
-	ScanRulePriorityMedium ScanRulePriority = "medium"
-	ScanRulePriorityHigh   ScanRulePriority = "high"
-	scanRulePriorityNone   ScanRulePriority = ""
+	ScanRulePriorityLow    ScanRulePriority = 0
+	ScanRulePriorityMedium ScanRulePriority = 1
+	ScanRulePriorityHigh   ScanRulePriority = 2
+	scanRulePriorityNone   ScanRulePriority = -1
 )
 
 var scanRulePriorities = sortEnum([]ScanRulePriority{
@@ -241,7 +241,7 @@ const (
 	ScanRuleSortID          ScanRuleSort = "id"
 	ScanRuleSortName        ScanRuleSort = "name"
 	ScanRuleSortPriority    ScanRuleSort = "priority"
-	ScanRuleSortCreatedDate ScanRuleSort = "created_date"
+	ScanRuleSortCreatedDate ScanRuleSort = "createdDate"
 	scanRuleSortNone        ScanRuleSort = ""
 )
 

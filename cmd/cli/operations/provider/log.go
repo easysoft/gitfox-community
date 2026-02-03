@@ -16,9 +16,15 @@ type APILog struct {
 	*logger.SugaredMateLogger
 }
 
+// JobLog Job日志
+type JobLog struct {
+	*logger.SugaredMateLogger
+}
+
 var LogWireSet = wire.NewSet(
 	NewSystemLogger,
 	NewAPILogger,
+	NewJobLogger,
 )
 
 func NewSystemLogger(config *config.Config) *SystemLog {
@@ -30,5 +36,11 @@ func NewSystemLogger(config *config.Config) *SystemLog {
 func NewAPILogger(config *config.Config) *APILog {
 	return &APILog{
 		logger.NewZapMateLogger(config.Logging, logger.LogTypeAPIServer).SetAsyncer(1000).Sugar(),
+	}
+}
+
+func NewJobLogger(config *config.Config) *JobLog {
+	return &JobLog{
+		logger.NewZapMateLogger(config.Logging, logger.LogTypeJob).SetAsyncer(1000).Sugar(),
 	}
 }

@@ -39,12 +39,8 @@ i18n:
 metric:
   enabled: true
 
-ci:
-  pluginsZipUrl: https://pkg.zentao.net/gitfox/20240513/plugins.zip
-
 gitspace:
   enable: true
-
 
 registry:
   http:
@@ -73,6 +69,8 @@ logging:
     filename: scan.log
   logSystemConf:
     filename: system.log
+  logJobConf:
+    filename: job.log
 
 middleware:
   logRequestBody: true
@@ -82,3 +80,8 @@ middleware:
 devops:
   url: "http://xxx/api.php/v1"
   authorization: "xxx"
+
+job:
+  instanceID: "gitfox-community"
+  maxRunning: 10
+  retentionTime: 120h

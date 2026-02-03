@@ -11,6 +11,7 @@ type Config struct {
 	SQLite     SQLiteConfig     `yaml:"sqlite"`
 	Docker     DockerConfig     `yaml:"docker"`
 	Git        GitConfig        `yaml:"git"`
+	Job        JobConfig        `yaml:"job"`
 	Webhook    WebhookConfig    `yaml:"webhook"`
 	SSH        SSHConfig        `yaml:"ssh"`
 	Metric     MetricConfig     `yaml:"metric"`
@@ -61,6 +62,13 @@ type GitConfig struct {
 	HookPath      string `yaml:"hookPath"`
 }
 
+// JobConfig holds configuration for job scheduler.
+type JobConfig struct {
+	InstanceID    string        `yaml:"instanceID"`
+	MaxRunning    int           `yaml:"maxRunning"`
+	RetentionTime time.Duration `yaml:"retentionTime"`
+}
+
 // WebhookConfig Webhook配置
 type WebhookConfig struct {
 	AllowLoopback       bool `yaml:"allowLoopback"`
@@ -94,7 +102,8 @@ type MetricConfig struct {
 
 // CiConfig CI配置
 type CiConfig struct {
-	PluginsZipUrl string `yaml:"pluginsZipUrl"`
+	PluginsZipUrl string `envconfig:"GITFOX_CI_PLUGINS_ZIP_URL"`
+	Runner        string `envconfig:"GITFOX_CI_RUNNER"`
 }
 
 // GitspaceConfig Gitspace配置
@@ -142,6 +151,7 @@ type LoggingConfig struct {
 	LogSSHConf       LogSSHConfig       `yaml:"logSSHConf"`
 	LogScanConf      LogScanConfig      `yaml:"logScanConf"`
 	LogSystemConf    LogSystemConfig    `yaml:"logSystemConf"`
+	LogJobConf       LogJobConfig       `yaml:"logJobConf"`
 }
 
 // LogAPIServerConfig
@@ -166,6 +176,11 @@ type LogScanConfig struct {
 
 // LogSystemConfig
 type LogSystemConfig struct {
+	Filename string `yaml:"filename"`
+}
+
+// LogJobConfig
+type LogJobConfig struct {
 	Filename string `yaml:"filename"`
 }
 

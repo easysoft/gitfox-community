@@ -31,6 +31,76 @@ func (s *Store) GetByID(ctx context.Context, targetRepoID uint, id uint) (*repoM
 	return mapPullRequestToModel(pr), nil
 }
 
+// List 根据过滤条件查询PR列表
+func (s *Store) List(ctx context.Context, filter *repoModel.PullRequestFilter) ([]*repoModel.PullRequest, error) {
+	var prs []PullRequest
+
+	query := s.db.WithContext(ctx).Model(&PullRequest{})
+
+	if filter.RepoID != 0 {
+		query = query.Where("repoID = ?", filter.RepoID)
+	}
+	if filter.SourceRepoID != 0 {
+		query = query.Where("sourceRepoID = ?", filter.SourceRepoID)
+	}
+	if filter.TargetRepoID != 0 {
+		query = query.Where("targetRepoID = ?", filter.TargetRepoID)
+	}
+	if filter.SourceBranch != "" {
+		query = query.Where("sourceBranch = ?", filter.SourceBranch)
+	}
+	if filter.TargetBranch != "" {
+		query = query.Where("targetBranch = ?", filter.TargetBranch)
+	}
+	if filter.Status != "" {
+		query = query.Where("status = ?", filter.Status)
+	}
+	if filter.CreatedBy != "" {
+		query = query.Where("createdBy = ?", filter.CreatedBy)
+	}
+
+	if filter.PageSize > 0 {
+		query = query.Limit(filter.PageSize)
+		if filter.Page > 0 {
+			query = query.Offset(filter.Page * filter.PageSize)
+		}
+	}
+
+	if err := query.Find(&prs).Error; err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
+	}
+
+	result := make([]*repoModel.PullRequest, len(prs))
+	for i, pr := range prs {
+		result[i] = mapPullRequestToModel(pr)
+	}
+	return result, nil
+}
+
+// UpdateOptLock 使用简化的更新方式更新PR（无乐观锁）
+func (s *Store) UpdateOptLock(
+	ctx context.Context,
+	pr *repoModel.PullRequest,
+	mutateFn func(pr *repoModel.PullRequest) error,
+) (*repoModel.PullRequest, error) {
+	dup := *pr
+
+	if err := mutateFn(&dup); err != nil {
+		return nil, err
+	}
+
+	storePR := mapModelToStore(&dup)
+	storePR.EditedDate = datetime.NowLocalTime()
+
+	if err := s.db.WithContext(ctx).Model(&PullRequest{}).
+		Where("targetRepoID = ? AND id = ?", dup.TargetRepoID, dup.ID).
+		Updates(storePR).Error; err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
+	}
+
+	return &dup, nil
+}
+
 // UpdateStatus 更新PR状态
 func (s *Store) UpdateStatus(ctx context.Context, targetRepoID uint, id uint, status repoModel.PullRequestStatus, editedBy string) error {
 	updates := map[string]interface{}{
@@ -106,6 +176,38 @@ func (s *Store) UpdateRebaseCheckStatus(
 	return nil
 }
 
+// ResetMergeCheckStatus resets the pull request's mergeability status to unchecked
+// for all PRs where target branch points to targetBranch.
+func (s *Store) ResetMergeCheckStatus(
+	ctx context.Context,
+	targetRepoID uint,
+	targetBranch string,
+) error {
+	updates := map[string]interface{}{
+		"editedDate":        datetime.NowLocalTime(),
+		"mergeTargetSHA":    "",
+		"mergeSHA":          "",
+		"mergeCheckStatus":  repoModel.MergeCheckStatusUnchecked,
+		"mergeConflicts":    nil,
+		"rebaseCheckStatus": repoModel.MergeCheckStatusUnchecked,
+		"rebaseConflicts":   nil,
+		"commitCount":       nil,
+		"fileCount":         nil,
+	}
+
+	err := s.db.WithContext(ctx).
+		Model(&PullRequest{}).
+		Where("targetRepoID = ? AND targetBranch = ? AND status NOT IN (?, ?)",
+			targetRepoID, targetBranch,
+			repoModel.PullRequestStatusClosed, repoModel.PullRequestStatusMerged).
+		Updates(updates).Error
+
+	if err != nil {
+		return database.ProcessSQLErrorf(ctx, err)
+	}
+	return nil
+}
+
 // UpdateDiffStats 安全的更新PR差异统计信息
 func (s *Store) UpdateDiffStatsSafe(
 	ctx context.Context,
@@ -166,7 +268,7 @@ func (s *Store) UpdateMergeAfterSafe(
 			"additions":   mergeAfter.Additions,
 			"deletions":   mergeAfter.Deletions,
 
-			"mergeDate":      mergeAfter.MergeDate,
+			"mergedDate":     mergeAfter.MergedDate,
 			"mergedBy":       mergeAfter.MergedBy,
 			"editedBy":       mergeAfter.MergedBy,
 			"editedDate":     datetime.NowLocalTime(),
@@ -236,6 +338,41 @@ func mapPullRequestToModel(data PullRequest) *repoModel.PullRequest {
 		Additions:         data.Additions,
 		Deletions:         data.Deletions,
 		Status:            repoModel.PullRequestStatus(data.Status),
+		CreatedBy:         data.CreatedBy,
+		CreatedDate:       data.CreatedDate,
+		EditedBy:          data.EditedBy,
+		EditedDate:        data.EditedDate,
+	}
+}
+
+// mapModelToStore 将 API 模型转换为 store 模型
+func mapModelToStore(data *repoModel.PullRequest) *PullRequest {
+	return &PullRequest{
+		ID:                data.ID,
+		Title:             data.Title,
+		Desc:              data.Desc,
+		RepoID:            data.RepoID,
+		SourceRepoID:      data.SourceRepoID,
+		SourceBranch:      data.SourceBranch,
+		SourceSHA:         data.SourceSHA,
+		TargetRepoID:      data.TargetRepoID,
+		TargetBranch:      data.TargetBranch,
+		MergedBy:          data.MergedBy,
+		MergeMethod:       string(data.MergeMethod),
+		MergeTargetSHA:    data.MergeTargetSHA,
+		MergeBaseSHA:      data.MergeBaseSHA,
+		MergeSHA:          data.MergeSHA,
+		MergeCheckStatus:  string(data.MergeCheckStatus),
+		MergeConflicts:    StringSlice(data.MergeConflicts),
+		RebaseCheckStatus: string(data.RebaseCheckStatus),
+		RebaseConflicts:   StringSlice(data.RebaseConflicts),
+		CommitCount:       data.CommitCount,
+		FileCount:         data.FileCount,
+		Flow:              data.Flow,
+		ReviewFlowID:      data.ReviewFlowID,
+		Additions:         data.Additions,
+		Deletions:         data.Deletions,
+		Status:            string(data.Status),
 		CreatedBy:         data.CreatedBy,
 		CreatedDate:       data.CreatedDate,
 		EditedBy:          data.EditedBy,

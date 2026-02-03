@@ -12,3 +12,13 @@ CREATE TABLE IF NOT EXISTS `ops_space` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB COMMENT='空间表';
 CREATE UNIQUE INDEX `uk_name` ON `ops_space`(`name`); -- 单独创建唯一索引
+
+
+CREATE TABLE IF NOT EXISTS `ops_spaceuser` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT COMMENT '编号',
+  `space` int unsigned NOT NULL DEFAULT 0 COMMENT '所属空间',
+  `role` varchar(10) NOT NULL DEFAULT '' COMMENT '角色',
+  `account` varchar(30) NOT NULL DEFAULT '' COMMENT '用户帐号',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB COMMENT='空间用户关联表';
+CREATE UNIQUE INDEX `uk_spaceuser` ON `ops_spaceuser` (`space`,`account`);

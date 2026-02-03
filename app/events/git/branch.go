@@ -50,11 +50,11 @@ func (r *Reporter) BranchUpdated(ctx context.Context, payload *BranchUpdatedPayl
 	logger := logger.GetLogger(ctx)
 	eventID, err := events.ReporterSendEvent(r.innerReporter, ctx, BranchUpdatedEvent, payload)
 	if err != nil {
-		logger.Error("failed to send branch updated event")
+		logger.Error("[event]: failed to send branch updated event")
 		return
 	}
 
-	logger.Infof("reported branch updated event with id '%s'", eventID)
+	logger.Infof("[event]: reported branch updated event with id '%s'", eventID)
 }
 
 func (r *Reader) RegisterBranchUpdated(fn events.HandlerFunc[*BranchUpdatedPayload],
@@ -75,11 +75,11 @@ func (r *Reporter) BranchDeleted(ctx context.Context, payload *BranchDeletedPayl
 	logger := logger.GetLogger(ctx)
 	eventID, err := events.ReporterSendEvent(r.innerReporter, ctx, BranchDeletedEvent, payload)
 	if err != nil {
-		logger.Error("failed to send branch deleted event")
+		logger.Error("[event]: failed to send branch deleted event")
 		return
 	}
 
-	logger.Infof("reported branch deleted event with id '%s'", eventID)
+	logger.Infof("[event]: reported branch deleted event with id '%s'", eventID)
 }
 
 func (r *Reader) RegisterBranchDeleted(fn events.HandlerFunc[*BranchDeletedPayload],

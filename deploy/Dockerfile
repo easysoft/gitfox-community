@@ -46,6 +46,8 @@ WORKDIR /app
 
 VOLUME /data
 
+# ENV GITFOX_CI_PLUGINS_ZIP_URL=https://pkg.zentao.net/gitfox/20260123/plugins.zip
+ENV GITFOX_CI_PLUGINS_ZIP_URL=/app/ciPlugins/plugins.zip
 
 ENV GITFOX_LOG_DIR=/data/logs/gitfox
 ENV GITFOX_GIT_ROOT_DIR=/data/gitfox/git
@@ -64,6 +66,7 @@ ENV GITFOX_URL_BASE=http://gitfox.oop.cc:3052
 COPY --from=build /app/bin/gitfox_linux /app/gitfox
 COPY --from=build /app/configs/dev.env /app/dev.env
 COPY --from=build /app/configs/dev.yaml /app/dev.yaml
+COPY --from=build /app/resources/ciPlugins/plugins.zip /app/ciPlugins/plugins.zip
 
 
 

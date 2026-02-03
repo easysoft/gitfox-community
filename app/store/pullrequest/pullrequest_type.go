@@ -45,7 +45,7 @@ func (ss StringSlice) Value() (driver.Value, error) {
 	return strings.Join(ss, "\n"), nil
 }
 
-// PullRequest 合并请求表（ops_ppmrequests）Store层结构体
+// PullRequest 合并请求表（ops_ppm）Store层结构体
 type PullRequest struct {
 	ID                uint            `gorm:"column:id;primaryKey;autoIncrement;comment:'自增主键'"`
 	Title             string          `gorm:"column:title;not null;comment:'PR 标题'"`
@@ -56,7 +56,7 @@ type PullRequest struct {
 	SourceSHA         string          `gorm:"column:sourceSHA;type:char(40);not null;comment:'源分支最新提交的SHA-1值'"`
 	TargetRepoID      uint            `gorm:"column:targetRepoID;not null;comment:'目标仓库ID'"`
 	TargetBranch      string          `gorm:"column:targetBranch;not null;comment:'目标分支名称'"`
-	MergeDate         *datetime.Local `gorm:"column:mergeDate;comment:'合并时间'"`
+	MergedDate        *datetime.Local `gorm:"column:mergedDate;comment:'合并时间'"`
 	MergedBy          *string         `gorm:"column:mergedBy;comment:'执行合并操作的用户ID'"`
 	MergeMethod       string          `gorm:"column:mergeMethod;comment:'合并方法'"`
 	MergeTargetSHA    string          `gorm:"column:mergeTargetSHA;type:char(40);comment:'合并时目标分支的SHA'"`
@@ -81,7 +81,7 @@ type PullRequest struct {
 
 // TableName 指定数据库表名
 func (p *PullRequest) TableName() string {
-	return "ops_ppmrequests"
+	return "ops_ppm"
 }
 
 // BeforeCreate GORM 钩子：创建前自动设置时间

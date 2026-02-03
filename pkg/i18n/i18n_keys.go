@@ -104,6 +104,13 @@ const (
 	ErrorGzipFailedToCloseReader  I18nKey = "error.gzip_failed_to_close_reader"  // gzip 关闭解压流失败
 	ErrorGzipFailedToCreateReader I18nKey = "error.gzip_failed_to_create_reader" // gzip 解压失败
 
+	// Execution 相关常量
+	ExecutionBodyParamError  I18nKey = "execution.body_param_error"  // Body 参数解析失败.
+	ExecutionPathParamError  I18nKey = "execution.path_param_error"  // Path 参数解析失败.
+	ExecutionQueryParamError I18nKey = "execution.query_param_error" // Query 参数解析失败.
+	ExecutionTriggerError    I18nKey = "execution.trigger_error"     // 执行触发失败
+	ExecutionTriggerSuccess  I18nKey = "execution.trigger_success"   // 执行触发成功
+
 	// Git 相关常量
 	GitAmbiguousRef                 I18nKey = "git.ambiguous_ref"                     // 引用不明确.
 	GitBranchAlreadyExists          I18nKey = "git.branch_already_exists"             // 分支已存在.
@@ -140,8 +147,30 @@ const (
 	GitTimeout                      I18nKey = "git.timeout"                           // Git 操作超时.
 	GitUnrelatedHistories           I18nKey = "git.unrelated_histories"               // 不相关的历史记录.
 
+	// Pipeline 相关常量
+	PipelineBodyParamError          I18nKey = "pipeline.body_param_error"           // Body 参数解析失败.
+	PipelinePathParamError          I18nKey = "pipeline.path_param_error"           // Path 参数解析失败.
+	PipelineQueryParamError         I18nKey = "pipeline.query_param_error"          // Query 参数解析失败.
+	PipelineQuerySchemaGroupSuccess I18nKey = "pipeline.query_schema_group_success" // 查询 schema 分组配置成功
+	PipelineQueryStepSchemaSuccess  I18nKey = "pipeline.query_step_schema_success"  // 查询 schema 配置成功
+	PipelineTriggerCreateError      I18nKey = "pipeline.trigger_create_error"       // 触发创建失败.
+	PipelineTriggerCreateSuccess    I18nKey = "pipeline.trigger_create_success"     // 触发创建成功.
+	PipelineTriggerDeleteError      I18nKey = "pipeline.trigger_delete_error"       // 触发删除失败.
+	PipelineTriggerDeleteSuccess    I18nKey = "pipeline.trigger_delete_success"     // 触发删除成功.
+	PipelineTriggerGetError         I18nKey = "pipeline.trigger_get_error"          // 触发获取失败.
+	PipelineTriggerGetSuccess       I18nKey = "pipeline.trigger_get_success"        // 触发获取成功.
+	PipelineTriggerListError        I18nKey = "pipeline.trigger_list_error"         // 触发列表获取失败.
+	PipelineTriggerListSuccess      I18nKey = "pipeline.trigger_list_success"       // 触发列表获取成功.
+	PipelineTriggerParamCronError   I18nKey = "pipeline.trigger_param_cron_error"   // 无效的 cron 表达式.
+	PipelineTriggerParamError       I18nKey = "pipeline.trigger_param_error"        // 触发参数解析失败.
+	PipelineTriggerUpdateError      I18nKey = "pipeline.trigger_update_error"       // 触发更新失败.
+	PipelineTriggerUpdateSuccess    I18nKey = "pipeline.trigger_update_success"     // 触发更新成功.
+
 	// Pullrequest 相关常量
 	PullrequestBodyParamError                I18nKey = "pullrequest.body_param_error"                   // Body 参数解析失败.
+	PullrequestEventTriggerError             I18nKey = "pullrequest.event_trigger_error"                // 事件触发失败
+	PullrequestEventTriggerInvalidType       I18nKey = "pullrequest.event_trigger_invalid_type"         // 事件触发类型无效,必须为 create、close、reopen 之一.
+	PullrequestEventTriggerSuccess           I18nKey = "pullrequest.event_trigger_success"              // 事件触发成功
 	PullrequestMergeAlreadyMerged            I18nKey = "pullrequest.merge_already_merged"               // Pull Request 已合并,无需重复操作.
 	PullrequestMergeCheckMergeabilityError   I18nKey = "pullrequest.merge_check_mergeability_error"     // 合并检查失败,可能是因为分支已被修改或合并冲突.请确认后再试.
 	PullrequestMergeCheckMethodError         I18nKey = "pullrequest.merge_check_method_error"           // 合并检查失败,如果不是dryrun模式,合并方式不能为空.且只能是 merge、squash、...

@@ -37,10 +37,10 @@ type RuleReqFilter struct {
 }
 
 type RuleListReqFilter struct {
-	RuleSetID    int64            `json:"ruleset_id,omitempty"`
+	RuleSetID    int64            `json:"rulesetID,omitempty"`
 	Name         string           `json:"name,omitempty"`
 	Lang         string           `json:"lang,omitempty"`
-	LangID       int64            `json:"lang_id,omitempty"`
+	LangID       int64            `json:"langID,omitempty"`
 	Plugin       string           `json:"plugin,omitempty"`
 	Tag          string           `json:"tag,omitempty"`
 	Priority     ScanRulePriority `json:"priority,omitempty"`
@@ -49,7 +49,7 @@ type RuleListReqFilter struct {
 	Sort         ScanRuleSort     `json:"sort"`
 	Order        Order            `json:"order"`
 	Bind         ScanRuleBind     `json:"bind,omitempty"`
-	ShowAllRules bool             `json:"-"`
+	ShowAllRules bool             `json:"showAllRules,omitempty"`
 	Page         int              `json:"page" form:"page"`
 	PageSize     int              `json:"pageSize" form:"pageSize"`
 }
@@ -64,7 +64,7 @@ func (f *RuleListReqFilter) Validater() error {
 	}
 
 	// 验证 Priority
-	if f.Priority != "" && !f.Priority.IsValid() {
+	if f.Priority != scanRulePriorityNone && !f.Priority.IsValid() {
 		return errors.Newf("priority %s is invalid", f.Priority)
 	}
 

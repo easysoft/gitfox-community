@@ -1,0 +1,32 @@
+package stage
+
+import (
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
+)
+
+// Stage 流水线执行阶段
+type Stage struct {
+	ID           uint              `json:"id"`
+	RepoID       uint              `json:"repoID"`
+	ExecutionID  uint              `json:"executionID"`
+	Parent       uint              `json:"parent"`
+	Name         string            `json:"name"`
+	Code         string            `json:"code"`
+	SN           int               `json:"sn"`
+	Type         string            `json:"type"`
+	Host         string            `json:"host"`
+	OS           string            `json:"os"`
+	Arch         string            `json:"arch"`
+	Labels       map[string]string `json:"labels"`
+	Depends      []string          `json:"depends"`
+	RunPolicy    string            `json:"runPolicy"`
+	CustomPolicy string            `json:"customPolicy"`
+	FailPolicy   string            `json:"failPolicy"`
+	Started      *datetime.Local   `json:"started"`
+	Finished     *datetime.Local   `json:"finished"`
+	Duration     uint              `json:"duration"`
+	Status       string            `json:"status"`
+	ErrorType    string            `json:"errorType"`
+	ErrorCode    int               `json:"errorCode"`
+	ErrorLog     string            `json:"errorLog"`
+}

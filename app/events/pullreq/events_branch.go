@@ -26,11 +26,11 @@ func (r *Reporter) BranchUpdated(ctx context.Context, payload *BranchUpdatedPayl
 
 	eventID, err := events.ReporterSendEvent(r.innerReporter, ctx, BranchUpdatedEvent, payload)
 	if err != nil {
-		logger.Error("failed to send pull request branch updated event")
+		logger.Error("[event]: failed to send pull request branch updated event")
 		return
 	}
 
-	logger.Infof("reported pull request branch updated event with id '%s'", eventID)
+	logger.Infof("[event]: reported pull request branch updated event with id '%s'", eventID)
 }
 
 func (r *Reader) RegisterBranchUpdated(fn events.HandlerFunc[*BranchUpdatedPayload],

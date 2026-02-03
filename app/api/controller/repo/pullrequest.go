@@ -291,7 +291,7 @@ func (ctl *Controller) Commits(ctx *gin.Context) {
 		return
 	}
 
-	var filter req.GitListFilter
+	var filter req.ListFilter
 	if err = ctx.ShouldBindQuery(&filter); err != nil {
 		err = errors.WithI18nKey(err, i18n.PullrequestPathParamError)
 		resp.BadRequest(ctx, err)
@@ -300,7 +300,7 @@ func (ctl *Controller) Commits(ctx *gin.Context) {
 
 	req.SetDefaults(&filter)
 
-	commits, totalCommits, err := ctl.pullrequestSvc.Commits(ctx.Request.Context(), session, repoID, pullreqID, uint(filter.Page), uint(filter.Limit))
+	commits, totalCommits, err := ctl.pullrequestSvc.Commits(ctx.Request.Context(), session, repoID, pullreqID, uint(filter.Page), uint(filter.PageSize))
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return
@@ -310,7 +310,7 @@ func (ctl *Controller) Commits(ctx *gin.Context) {
 		resp.ListArgs{
 			Total:    int64(totalCommits),
 			Page:     int64(filter.Page),
-			PageSize: int64(filter.Limit),
+			PageSize: int64(filter.PageSize),
 		}, i18n.PullrequestQuerySuccess, nil)
 }
 
@@ -359,7 +359,7 @@ func (ctl *Controller) Merge(ctx *gin.Context) {
 
 	mergeResp, mergeViolations, err := ctl.pullrequestSvc.Merge(ctx.Request.Context(), session, repoID, pullreqID, params)
 	if err != nil {
-		resp.InternalError(ctx, err)
+		resp.InternalError(ctx, err, err.Error())
 		return
 	}
 
@@ -369,6 +369,54 @@ func (ctl *Controller) Merge(ctx *gin.Context) {
 	}
 
 	resp.OK(ctx, i18n.PullrequestMergeSuccess, mergeResp)
+}
+
+// EventTrigger Pull Request 事件触发
+// @Summary Pull Request 创建，关闭，重新打开时调用
+// @Description 根据传入的仓库 ID 和 参数 触发 Pull Request 事件
+// @Tags pureq
+// @Accept application/json
+// @Produce application/json
+// @Param id path uint true "仓库 ID"
+// @Param pullrequestID path uint true "Pull Request 编号"
+// @Param request body repoModel.EventTrigger true "事件触发参数"
+// @Success 200 {object} resp.ObjectResponse{data=repoModel.MergeResponse} "触发成功"
+// @Success 200 {object} resp.ObjectResponse{data=repoModel.MergeViolations} "触发失败"
+// @Error 400 {object} resp.ObjectResponse "参数错误"
+// @Error 401 {object} resp.ObjectResponse "未授权（会话不存在或已过期）"
+// @Error 500 {object} resp.ObjectResponse "服务器内部错误（如Git服务调用失败、数据库异常等）"
+// @Router /repos/{id}/pullreq/{pullrequestID}/event-trigger [post]
+func (ctl *Controller) EventTrigger(ctx *gin.Context) {
+	var params repoModel.EventTrigger
+	var err error
+
+	session, ok := req.GetAuthSession(ctx.Request.Context())
+	if !ok {
+		err := errors.WithI18nKey(errors.New("get session failed"), i18n.AuthNoSession)
+		resp.Unauthorized(ctx, err)
+		return
+	}
+
+	repoID, pullreqID, err := GetReqQueryParamID(ctx)
+	if err != nil {
+		resp.BadRequest(ctx, err)
+		return
+	}
+
+	if err = ctx.ShouldBindJSON(&params); err != nil {
+		err = errors.WithI18nKey(err, i18n.PullrequestBodyParamError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
+	// 根据 params.Type 触发不同的事件
+	err = ctl.pullrequestSvc.TriggerEvent(ctx.Request.Context(), session, repoID, pullreqID, params)
+	if err != nil {
+		resp.InternalError(ctx, err)
+		return
+	}
+
+	resp.OK(ctx, i18n.PullrequestEventTriggerSuccess, nil)
 }
 
 // GetReqQueryParamID 从路径参数中获取仓库 ID 和 Pull Request 编号

@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -10,11 +11,28 @@ import (
 	"github.com/google/wire"
 )
 
+// EventContext holds a cancelable context for event system lifecycle management.
+// When the service shuts down, call Cancel() to stop all event consumers gracefully.
+type EventContext struct {
+	Ctx    context.Context
+	Cancel context.CancelFunc
+}
+
+// NewEventContext creates a new cancelable context for event system.
+func NewEventContext() *EventContext {
+	ctx, cancel := context.WithCancel(context.Background())
+	return &EventContext{
+		Ctx:    ctx,
+		Cancel: cancel,
+	}
+}
+
 // EventWireSet provides a wire set for this package.
 var EventWireSet = wire.NewSet(
 	ProvideEventSystem,
 	NewEventConfig,
 	NewEventRedisClient,
+	NewEventContext,
 )
 
 func NewEventConfig() events.Config {
