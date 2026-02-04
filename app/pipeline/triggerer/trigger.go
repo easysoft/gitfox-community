@@ -80,12 +80,12 @@ func (t *triggerer) Trigger(
 		"trigger.ref", base.Ref,
 	)
 
-	log.Info("trigger: received")
+	log.Info("[trigger]: received")
 	defer func() {
 		// taking the paranoid approach to recover from
 		// a panic that should absolutely never happen.
 		if r := recover(); r != nil {
-			log.Errorf("runner: unexpected panic: %s", r)
+			log.Errorf("[trigger]: unexpected panic: %s", r)
 			debug.PrintStack()
 		}
 	}()
@@ -93,7 +93,7 @@ func (t *triggerer) Trigger(
 	// 从数据库查询 pipeline yaml 内容
 	file, err := t.pipelineService.GetPipelineContent(ctx, int64(pipelineID))
 	if err != nil {
-		log.Errorf("trigger: could not find pipeline content: %v", err)
+		log.Errorf("[trigger]: could not find pipeline content: %v", err)
 		return nil, err
 	}
 
@@ -102,7 +102,7 @@ func (t *triggerer) Trigger(
 		Trigger:    string(base.Action), // 使用 action 取代原先的 event
 		CreatedBy:  base.Trigger,
 		Parent:     uint(base.Parent),
-		Status:     string(constant.CIStatusPending),
+		Status:     constant.CIStatusPending,
 		Ref:        base.Ref,
 		Params:     base.Params,
 	}
@@ -118,7 +118,7 @@ func (t *triggerer) Trigger(
 	}
 
 	for _, stage := range stages {
-		if stage.Status != string(constant.CIStatusPending) {
+		if stage.Status != constant.CIStatusPending {
 			continue
 		}
 		log.Infof("[trigger] scheduling stage code=%s name=%s", stage.Code, stage.Name)
@@ -233,7 +233,7 @@ func parseV1Stages(
 					Name:        stage.Name,
 					SN:          idx + 1,
 					Depends:     dependsOn,
-					Status:      string(status),
+					Status:      status,
 					RunPolicy:   runPolicy,
 				}
 

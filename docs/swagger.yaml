@@ -39,6 +39,30 @@ definitions:
       traceID:
         type: string
     type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.CIStatus:
+    enum:
+    - skipped
+    - waiting_on_dependencies
+    - pending
+    - running
+    - success
+    - failure
+    - killed
+    - error
+    - blocked
+    - declined
+    type: string
+    x-enum-varnames:
+    - CIStatusSkipped
+    - CIStatusWaitingOnDeps
+    - CIStatusPending
+    - CIStatusRunning
+    - CIStatusSuccess
+    - CIStatusFailure
+    - CIStatusKilled
+    - CIStatusError
+    - CIStatusBlocked
+    - CIStatusDeclined
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ContentEncodingType:
     enum:
     - utf8
@@ -508,7 +532,46 @@ definitions:
       started:
         type: string
       status:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.CIStatus'
+      trigger:
         type: string
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_execution.ExecutionWithStages:
+    properties:
+      commit:
+        type: string
+      createdBy:
+        type: string
+      createdDate:
+        type: string
+      duration:
+        type: integer
+      editedDate:
+        type: string
+      error:
+        type: string
+      finished:
+        type: string
+      id:
+        type: integer
+      params:
+        additionalProperties:
+          type: string
+        type: object
+      parent:
+        type: integer
+      pipelineID:
+        type: integer
+      ref:
+        type: string
+      stages:
+        items:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_stage.StageWithSteps'
+        type: array
+      started:
+        type: string
+      status:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.CIStatus'
       trigger:
         type: string
     type: object
@@ -1297,6 +1360,96 @@ definitions:
     - auth
     - editedBy
     type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_stage.StageWithSteps:
+    properties:
+      arch:
+        type: string
+      code:
+        type: string
+      customPolicy:
+        type: string
+      depends:
+        items:
+          type: string
+        type: array
+      duration:
+        type: integer
+      errorCode:
+        type: integer
+      errorLog:
+        type: string
+      errorType:
+        type: string
+      executionID:
+        type: integer
+      failPolicy:
+        type: string
+      finished:
+        type: string
+      host:
+        type: string
+      id:
+        type: integer
+      labels:
+        additionalProperties:
+          type: string
+        type: object
+      name:
+        type: string
+      os:
+        type: string
+      parent:
+        type: integer
+      repoID:
+        type: integer
+      runPolicy:
+        type: string
+      sn:
+        type: integer
+      started:
+        type: string
+      status:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.CIStatus'
+      steps:
+        items:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_step.Step'
+        type: array
+      type:
+        type: string
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_step.Step:
+    properties:
+      code:
+        type: string
+      depends:
+        type: string
+      duration:
+        type: integer
+      errorCode:
+        type: integer
+      errorLog:
+        type: string
+      failPolicy:
+        type: string
+      finished:
+        type: string
+      groupID:
+        type: integer
+      id:
+        type: integer
+      image:
+        type: string
+      name:
+        type: string
+      sn:
+        type: integer
+      stageID:
+        type: integer
+      started:
+        type: string
+      status:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.CIStatus'
+    type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_tag.ReqFilter:
     properties:
       includeCommit:
@@ -1625,6 +1778,69 @@ paths:
           schema:
             $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
       summary: 创建流水线执行
+      tags:
+      - executions
+  /pipeline/executions/{id}:
+    get:
+      consumes:
+      - application/json
+      description: 查询流水线执行的详细信息
+      parameters:
+      - description: 流水线执行ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 查询成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_execution.ExecutionWithStages'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 查询流水线执行详情
+      tags:
+      - executions
+  /pipeline/executions/{id}/cancel:
+    post:
+      consumes:
+      - application/json
+      description: 取消指定的流水线执行
+      parameters:
+      - description: 流水线执行ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 取消成功
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 取消流水线执行
       tags:
       - executions
   /pipeline/steps/{name}/schema:

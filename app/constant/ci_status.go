@@ -8,8 +8,6 @@ type CIStatus string
 
 const (
 	CIStatusSkipped       CIStatus = "skipped"
-	CIStatusBlocked       CIStatus = "blocked"
-	CIStatusDeclined      CIStatus = "declined"
 	CIStatusWaitingOnDeps CIStatus = "waiting_on_dependencies"
 	CIStatusPending       CIStatus = "pending"
 	CIStatusRunning       CIStatus = "running"
@@ -17,6 +15,8 @@ const (
 	CIStatusFailure       CIStatus = "failure"
 	CIStatusKilled        CIStatus = "killed"
 	CIStatusError         CIStatus = "error"
+	CIStatusBlocked       CIStatus = "blocked"
+	CIStatusDeclined      CIStatus = "declined"
 )
 
 // Enum returns all possible CIStatus values.
@@ -84,6 +84,11 @@ func (status CIStatus) IsFailed() bool {
 	return status == CIStatusFailure ||
 		status == CIStatusKilled ||
 		status == CIStatusError
+}
+
+// IsCancelable returns true if in a pending or running state.
+func (status CIStatus) IsCancelable() bool {
+	return status == CIStatusPending || status == CIStatusRunning
 }
 
 // List of all CIStatus values.

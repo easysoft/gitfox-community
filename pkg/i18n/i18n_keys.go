@@ -106,8 +106,12 @@ const (
 
 	// Execution 相关常量
 	ExecutionBodyParamError  I18nKey = "execution.body_param_error"  // Body 参数解析失败.
+	ExecutionCancelError     I18nKey = "execution.cancel_error"      // 执行取消失败
+	ExecutionCancelSuccess   I18nKey = "execution.cancel_success"    // 执行取消成功
 	ExecutionPathParamError  I18nKey = "execution.path_param_error"  // Path 参数解析失败.
+	ExecutionQueryError      I18nKey = "execution.query_error"       // 执行查询失败
 	ExecutionQueryParamError I18nKey = "execution.query_param_error" // Query 参数解析失败.
+	ExecutionQuerySuccess    I18nKey = "execution.query_success"     // 执行查询成功
 	ExecutionTriggerError    I18nKey = "execution.trigger_error"     // 执行触发失败
 	ExecutionTriggerSuccess  I18nKey = "execution.trigger_success"   // 执行触发成功
 

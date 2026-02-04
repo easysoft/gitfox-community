@@ -4,7 +4,9 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
 	executionModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/execution"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/canceler"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/triggerer"
+	executionService "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/execution"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	"github.com/gin-gonic/gin"
@@ -12,13 +14,17 @@ import (
 
 // Controller 处理与 pipeline 执行相关的 HTTP 请求
 type Controller struct {
-	triggerer triggerer.Triggerer
+	triggerer        triggerer.Triggerer
+	canceler         canceler.Canceler
+	executionService executionService.Interface
 }
 
 // NewController 创建流水线执行实例
-func NewController(triggerer triggerer.Triggerer) *Controller {
+func NewController(triggerer triggerer.Triggerer, canceler canceler.Canceler, executionService executionService.Interface) *Controller {
 	return &Controller{
-		triggerer: triggerer,
+		triggerer:        triggerer,
+		canceler:         canceler,
+		executionService: executionService,
 	}
 }
 
@@ -68,4 +74,68 @@ func (c *Controller) Create(ctx *gin.Context) {
 		return
 	}
 	resp.OK(ctx, i18n.ExecutionTriggerSuccess, executionOutput)
+}
+
+// @Summary 查询流水线执行详情
+// @Description 查询流水线执行的详细信息
+// @Tags executions
+// @Accept application/json
+// @Produce application/json
+// @Param id path uint true "流水线执行ID"
+// @Success 200 {object} resp.ObjectResponse{data=executionModel.ExecutionWithStages} "查询成功"
+// @Failure 400 {object} resp.ObjectResponse "参数错误"
+// @Failure 500 {object} resp.ObjectResponse "服务器错误"
+// @Router /pipeline/executions/{id} [get]
+func (c *Controller) Get(ctx *gin.Context) {
+	id, err := req.PathParamAsPositiveUint(ctx, "id")
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.ExecutionPathParamError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
+	result, err := c.executionService.GetWithStages(ctx, id)
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.ExecutionQueryError)
+		resp.InternalError(ctx, err)
+		return
+	}
+
+	resp.OK(ctx, i18n.ExecutionQuerySuccess, result)
+}
+
+// @Summary 取消流水线执行
+// @Description 取消指定的流水线执行
+// @Tags executions
+// @Accept application/json
+// @Produce application/json
+// @Param id path uint true "流水线执行ID"
+// @Success 200 {object} resp.ObjectResponse "取消成功"
+// @Failure 400 {object} resp.ObjectResponse "参数错误"
+// @Failure 500 {object} resp.ObjectResponse "服务器错误"
+// @Router /pipeline/executions/{id}/cancel [post]
+func (c *Controller) Cancel(ctx *gin.Context) {
+
+	var err error
+
+	session, ok := req.GetAuthSession(ctx.Request.Context())
+	if !ok {
+		resp.Unauthorized(ctx, errors.WithI18nKey(nil, i18n.AuthNoSession))
+		return
+	}
+
+	id, err := req.PathParamAsPositiveUint(ctx, "id")
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.ExecutionPathParamError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+	err = c.canceler.Cancel(ctx, id, session.User.Account)
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.ExecutionCancelError)
+		resp.InternalError(ctx, err)
+		return
+	}
+
+	resp.OK(ctx, i18n.ExecutionCancelSuccess, nil)
 }

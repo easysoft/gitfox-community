@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	executionModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/execution"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database/dbtx"
@@ -33,7 +34,7 @@ func (s *Store) Create(ctx context.Context, execution *executionModel.Execution)
 		Started:    execution.Started,
 		Finished:   execution.Finished,
 		Duration:   execution.Duration,
-		Status:     execution.Status,
+		Status:     string(execution.Status),
 		Error:      execution.Error,
 		CreatedBy:  execution.CreatedBy,
 	}
@@ -45,6 +46,41 @@ func (s *Store) Create(ctx context.Context, execution *executionModel.Execution)
 	execution.ID = dbExecution.ID
 	execution.CreatedDate = dbExecution.CreatedDate
 	execution.EditedDate = dbExecution.EditedDate
+	return nil
+}
+
+// Update updates an execution
+func (s *Store) Update(ctx context.Context, execution *executionModel.Execution) error {
+	db := dbtx.GetOrmAccessor(ctx, s.db)
+
+	var paramsJSON string
+	if execution.Params != nil {
+		bytes, err := json.Marshal(execution.Params)
+		if err != nil {
+			return err
+		}
+		paramsJSON = string(bytes)
+	}
+
+	dbExecution := &Execution{
+		PipelineID: execution.PipelineID,
+		Parent:     execution.Parent,
+		Trigger:    execution.Trigger,
+		Commit:     execution.Commit,
+		Ref:        execution.Ref,
+		Params:     paramsJSON,
+		Started:    execution.Started,
+		Finished:   execution.Finished,
+		Duration:   execution.Duration,
+		Status:     string(execution.Status),
+		Error:      execution.Error,
+		CreatedBy:  execution.CreatedBy,
+	}
+
+	if err := db.Model(&Execution{}).Where("id = ?", execution.ID).Updates(dbExecution).Error; err != nil {
+		return database.ProcessSQLErrorf(ctx, err)
+	}
+
 	return nil
 }
 
@@ -78,7 +114,7 @@ func mapToModel(e *Execution) *executionModel.Execution {
 		Started:     e.Started,
 		Finished:    e.Finished,
 		Duration:    e.Duration,
-		Status:      e.Status,
+		Status:      constant.CIStatus(e.Status),
 		Error:       e.Error,
 		CreatedBy:   e.CreatedBy,
 		CreatedDate: e.CreatedDate,

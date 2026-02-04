@@ -1,0 +1,34 @@
+package execution
+
+import (
+	"context"
+
+	executionModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/execution"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/execution"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/stage"
+)
+
+var _ Interface = (*Service)(nil)
+
+type Service struct {
+	executionStore execution.Interface
+	stageStore     stage.Interface
+}
+
+func NewExecutionService(executionStore execution.Interface, stageStore stage.Interface) *Service {
+	return &Service{
+		executionStore: executionStore,
+		stageStore:     stageStore,
+	}
+}
+
+type Interface interface {
+	// Create creates a new execution
+	Create(ctx context.Context, execution *executionModel.Execution) error
+	// Update updates an execution
+	Update(ctx context.Context, execution *executionModel.Execution) error
+	// GetByID gets execution by ID
+	GetByID(ctx context.Context, id uint) (*executionModel.Execution, error)
+	// GetWithStages gets execution with all stages and steps
+	GetWithStages(ctx context.Context, id uint) (*executionModel.ExecutionWithStages, error)
+}

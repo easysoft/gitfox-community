@@ -24,6 +24,8 @@ func NewExecutionStore(db *gorm.DB) *Store {
 type Interface interface {
 	// Create creates a new execution
 	Create(ctx context.Context, execution *executionModel.Execution) error
+	// Update updates an execution
+	Update(ctx context.Context, execution *executionModel.Execution) error
 	// GetByID gets execution by ID
 	GetByID(ctx context.Context, id uint) (*executionModel.Execution, error)
 }
