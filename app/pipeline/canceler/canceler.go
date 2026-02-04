@@ -88,11 +88,10 @@ func (s *service) Cancel(ctx context.Context, executionID uint, account string) 
 		}
 		if stage.Started != nil {
 			stage.Status = constant.CIStatusKilled
+			stage.Finished = now
 		} else {
 			stage.Status = constant.CIStatusSkipped
-			stage.Started = now
 		}
-		stage.Finished = now
 		err := s.stageStore.Update(ctx, &stage.Stage)
 		if err != nil {
 			log.Errorf("[canceler]: could not update stage %d status: %v", stage.ID, err)
@@ -106,11 +105,10 @@ func (s *service) Cancel(ctx context.Context, executionID uint, account string) 
 			}
 			if step.Started != nil {
 				step.Status = constant.CIStatusKilled
+				step.Finished = now
 			} else {
 				step.Status = constant.CIStatusSkipped
-				step.Started = now
 			}
-			step.Finished = now
 			err := s.stepStore.Update(ctx, &step)
 			if err != nil {
 				log.Errorf("[canceler]: could not update step %d status: %v", step.ID, err)
