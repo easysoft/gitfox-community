@@ -1,6 +1,8 @@
 package stage
 
 import (
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
+	stepModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/step"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
 )
 
@@ -25,8 +27,14 @@ type Stage struct {
 	Started      *datetime.Local   `json:"started"`
 	Finished     *datetime.Local   `json:"finished"`
 	Duration     uint              `json:"duration"`
-	Status       string            `json:"status"`
+	Status       constant.CIStatus `json:"status"`
 	ErrorType    string            `json:"errorType"`
 	ErrorCode    int               `json:"errorCode"`
 	ErrorLog     string            `json:"errorLog"`
+}
+
+// StageWithSteps
+type StageWithSteps struct {
+	Stage
+	Steps []stepModel.Step `json:"steps"`
 }

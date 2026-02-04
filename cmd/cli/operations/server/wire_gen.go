@@ -9,7 +9,7 @@ package server
 import (
 	branch3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/branch"
 	commit2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/commit"
-	execution2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/execution"
+	execution3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/execution"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/githook"
 	pipeline3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/pipeline"
 	repo3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/repo"
@@ -18,9 +18,11 @@ import (
 	tag2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/tag"
 	user3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/user"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/router"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/canceler"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/triggerer"
 	branch2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/branch"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/commit"
+	execution2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/execution"
 	jobs2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/jobs"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/locker"
 	pipeline2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/pipeline"
@@ -43,6 +45,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/settings"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/space"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/stage"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/step"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/user"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/cmd/cli/operations/provider"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/auth/authn"
@@ -126,7 +129,10 @@ func NewApp(mode string) (*App, func(), error) {
 	stageStore := stage.NewStageStore(db)
 	txRunnerImpl := dbtx.NewTxRunner(db)
 	triggererTriggerer := triggerer.New(pipelineService, executionStore, stageStore, txRunnerImpl)
-	executionController := execution2.NewController(triggererTriggerer)
+	stepStore := step.NewStepStore(db)
+	cancelerCanceler := canceler.New(executionStore, stageStore, stepStore)
+	executionService := execution2.NewExecutionService(executionStore, stageStore)
+	executionController := execution3.NewController(triggererTriggerer, cancelerCanceler, executionService)
 	tagService := tag.NewService(urlProvider, gitService)
 	tagController := tag2.NewController(tagService, repoService)
 	commitService := commit.NewService(urlProvider, gitService)

@@ -285,6 +285,106 @@
                 }
             }
         },
+        "/pipeline/executions/{id}": {
+            "get": {
+                "description": "查询流水线执行的详细信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "executions"
+                ],
+                "summary": "查询流水线执行详情",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "流水线执行ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "查询成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_execution.ExecutionWithStages"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/pipeline/executions/{id}/cancel": {
+            "post": {
+                "description": "取消指定的流水线执行",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "executions"
+                ],
+                "summary": "取消流水线执行",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "流水线执行ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "取消成功",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/pipeline/steps/grouped": {
             "get": {
                 "description": "查询流水线步骤分组",
@@ -4392,6 +4492,33 @@
                 }
             }
         },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.CIStatus": {
+            "type": "string",
+            "enum": [
+                "skipped",
+                "waiting_on_dependencies",
+                "pending",
+                "running",
+                "success",
+                "failure",
+                "killed",
+                "error",
+                "blocked",
+                "declined"
+            ],
+            "x-enum-varnames": [
+                "CIStatusSkipped",
+                "CIStatusWaitingOnDeps",
+                "CIStatusPending",
+                "CIStatusRunning",
+                "CIStatusSuccess",
+                "CIStatusFailure",
+                "CIStatusKilled",
+                "CIStatusError",
+                "CIStatusBlocked",
+                "CIStatusDeclined"
+            ]
+        },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ContentEncodingType": {
             "type": "string",
             "enum": [
@@ -5064,7 +5191,66 @@
                     "type": "string"
                 },
                 "status": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.CIStatus"
+                },
+                "trigger": {
                     "type": "string"
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_execution.ExecutionWithStages": {
+            "type": "object",
+            "properties": {
+                "commit": {
+                    "type": "string"
+                },
+                "createdBy": {
+                    "type": "string"
+                },
+                "createdDate": {
+                    "type": "string"
+                },
+                "duration": {
+                    "type": "integer"
+                },
+                "editedDate": {
+                    "type": "string"
+                },
+                "error": {
+                    "type": "string"
+                },
+                "finished": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "params": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "parent": {
+                    "type": "integer"
+                },
+                "pipelineID": {
+                    "type": "integer"
+                },
+                "ref": {
+                    "type": "string"
+                },
+                "stages": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_stage.StageWithSteps"
+                    }
+                },
+                "started": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.CIStatus"
                 },
                 "trigger": {
                     "type": "string"
@@ -6185,6 +6371,142 @@
                 },
                 "name": {
                     "type": "string"
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_stage.StageWithSteps": {
+            "type": "object",
+            "properties": {
+                "arch": {
+                    "type": "string"
+                },
+                "code": {
+                    "type": "string"
+                },
+                "customPolicy": {
+                    "type": "string"
+                },
+                "depends": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "duration": {
+                    "type": "integer"
+                },
+                "errorCode": {
+                    "type": "integer"
+                },
+                "errorLog": {
+                    "type": "string"
+                },
+                "errorType": {
+                    "type": "string"
+                },
+                "executionID": {
+                    "type": "integer"
+                },
+                "failPolicy": {
+                    "type": "string"
+                },
+                "finished": {
+                    "type": "string"
+                },
+                "host": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "labels": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "os": {
+                    "type": "string"
+                },
+                "parent": {
+                    "type": "integer"
+                },
+                "repoID": {
+                    "type": "integer"
+                },
+                "runPolicy": {
+                    "type": "string"
+                },
+                "sn": {
+                    "type": "integer"
+                },
+                "started": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.CIStatus"
+                },
+                "steps": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_step.Step"
+                    }
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_step.Step": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "depends": {
+                    "type": "string"
+                },
+                "duration": {
+                    "type": "integer"
+                },
+                "errorCode": {
+                    "type": "integer"
+                },
+                "errorLog": {
+                    "type": "string"
+                },
+                "failPolicy": {
+                    "type": "string"
+                },
+                "finished": {
+                    "type": "string"
+                },
+                "groupID": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "image": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "sn": {
+                    "type": "integer"
+                },
+                "stageID": {
+                    "type": "integer"
+                },
+                "started": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.CIStatus"
                 }
             }
         },

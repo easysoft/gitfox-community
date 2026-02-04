@@ -1,6 +1,8 @@
 package execution
 
 import (
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
+	stageModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/stage"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
 )
 
@@ -20,9 +22,14 @@ type Execution struct {
 	Started     *datetime.Local   `json:"started"`
 	Finished    *datetime.Local   `json:"finished"`
 	Duration    uint              `json:"duration"`
-	Status      string            `json:"status"`
+	Status      constant.CIStatus `json:"status"`
 	Error       string            `json:"error"`
 	CreatedBy   string            `json:"createdBy"`
 	CreatedDate *datetime.Local   `json:"createdDate"`
 	EditedDate  *datetime.Local   `json:"editedDate"`
+}
+
+type ExecutionWithStages struct {
+	Execution
+	Stages []*stageModel.StageWithSteps `json:"stages"`
 }
