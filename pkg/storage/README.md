@@ -208,6 +208,77 @@ func TestStorage(t *testing.T) {
 }
 ```
 
+## 依赖注入 (Wire)
+
+Storage 包支持通过 Google Wire 进行依赖注入，便于与项目其他模块集成。
+
+### 配置
+
+在 `config.yaml` 中添加存储配置：
+
+```yaml
+storage:
+  driver: filesystem           # 存储驱动: filesystem, inmemory
+  rootDirectory: /data/gitfox/storage  # 存储根目录
+  maxThreads: 100              # 最大并发线程数
+  pathPrefix: /uploads         # 路径前缀（可选）
+```
+
+或通过环境变量配置：
+
+```bash
+export GITFOX_STORAGE_ROOT_DIR=/data/gitfox/storage
+```
+
+### 在服务中使用
+
+1. 在 Wire 配置中引入 `StorageWireSet`：
+
+```go
+// cmd/cli/operations/server/wire.go
+func NewApp(mode string) (*App, func(), error) {
+    panic(wire.Build(
+        // ... 其他 WireSet
+        provider.StorageWireSet,
+        wire.Struct(new(App), "*")),
+    )
+}
+```
+
+2. 在 App 结构体中声明依赖：
+
+```go
+type App struct {
+    // ... 其他字段
+    ContentStorage storage.ContentStorage
+}
+```
+
+3. 在业务代码中直接使用注入的 `ContentStorage`：
+
+```go
+type MyService struct {
+    storage storage.ContentStorage
+}
+
+func NewMyService(cs storage.ContentStorage) *MyService {
+    return &MyService{storage: cs}
+}
+
+func (s *MyService) SaveFile(ctx context.Context, path string, data []byte) error {
+    return s.storage.Put(ctx, path, data)
+}
+```
+
+### WireSet 说明
+
+`storage.WireSet` 提供以下 Provider：
+
+| Provider | 输出类型 | 说明 |
+|----------|----------|------|
+| `ProvideStorageDriver` | `driver.StorageDriver` | 根据配置创建存储驱动 |
+| `ProvideContentStorage` | `ContentStorage` | 创建内容存储服务 |
+
 ## 路径规则
 
 所有路径必须符合以下正则表达式：

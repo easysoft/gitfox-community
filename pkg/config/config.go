@@ -23,6 +23,7 @@ type Config struct {
 	I18n       I18nConfig       `yaml:"i18n"`
 	Principal  PrincipalConfig  `yaml:"principal"`
 	Devops     DevopsConfig     `yaml:"devops"`
+	Storage    StorageConfig    `yaml:"storage"`
 }
 
 // ServerConfig HTTP服务配置
@@ -251,4 +252,12 @@ type PrincipalConfig struct {
 type DevopsConfig struct {
 	URL           string `yaml:"url"`           // DevOps 平台 API 地址
 	Authorization string `yaml:"authorization"` // DevOps 平台 API 授权密钥
+}
+
+// StorageConfig 通用存储配置
+type StorageConfig struct {
+	Driver        string `yaml:"driver" default:"filesystem"`                                    // 存储驱动类型: filesystem, inmemory
+	RootDirectory string `envconfig:"GITFOX_STORAGE_ROOT_DIR" default:"/data/gitfox/storage"`   // 存储根目录
+	MaxThreads    uint64 `yaml:"maxThreads" default:"100"`                                       // 最大并发线程数
+	PathPrefix    string `yaml:"pathPrefix"`                                                     // 路径前缀
 }
