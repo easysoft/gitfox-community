@@ -5,6 +5,7 @@ go 1.25.1
 require (
 	gitfox.zcorp.cc/git/Pangu/dm-gorm v1.0.0
 	github.com/antonmedv/expr v1.15.5
+	github.com/aws/aws-sdk-go v1.55.2
 	github.com/bmatcuk/doublestar v1.3.4
 	github.com/bmatcuk/doublestar/v4 v4.9.1
 	github.com/djherbis/buffer v1.2.0
@@ -100,6 +101,7 @@ require (
 	github.com/guregu/null v4.0.0+incompatible // indirect
 	github.com/h2non/filetype v1.1.3 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
+	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-runewidth v0.0.16 // indirect

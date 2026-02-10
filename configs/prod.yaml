@@ -100,3 +100,10 @@ job:
   instanceID: "gitfox-community"
   maxRunning: 10
   retentionTime: 120h
+
+s3:
+  bucket: "pangu"
+  prefix: "gitgox/test/"
+  endpoint: "http://cdn.zcorp.cc:9000"
+  region: "cn-qingdao"
+  pathStyle: true

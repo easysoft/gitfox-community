@@ -24,7 +24,7 @@ func (s *Store) CreateTrigger(ctx context.Context, trigger *pipelineModel.Trigge
 // UpdateTrigger 更新触发，如果 cron 和 trigger 都为空则硬删除
 func (s *Store) UpdateTrigger(ctx context.Context, trigger *pipelineModel.Trigger) error {
 	// 如果 cron 和 trigger 都为空，则硬删除
-	if trigger.Cron == "" && len(trigger.Trigger) == 0 {
+	if len(trigger.Cron) == 0 && len(trigger.Trigger) == 0 {
 		return s.DeleteTrigger(ctx, trigger.ID)
 	}
 
@@ -101,7 +101,7 @@ func mapTriggerToModel(t *Trigger) *pipelineModel.Trigger {
 		RepoID:      t.RepoID,
 		PipelineID:  t.PipelineID,
 		Trigger:     triggerList,
-		Cron:        t.Cron,
+		Cron:        strings.Split(t.Cron, ","),
 		CreatedBy:   t.CreatedBy,
 		CreatedDate: t.CreatedDate,
 		EditedBy:    t.EditedBy,
@@ -116,7 +116,7 @@ func mapTriggerToStore(t *pipelineModel.Trigger) *Trigger {
 		RepoID:      t.RepoID,
 		PipelineID:  t.PipelineID,
 		Trigger:     strings.Join(t.Trigger, ","),
-		Cron:        t.Cron,
+		Cron:        strings.Join(t.Cron, ","),
 		CreatedBy:   t.CreatedBy,
 		CreatedDate: t.CreatedDate,
 		EditedBy:    t.EditedBy,

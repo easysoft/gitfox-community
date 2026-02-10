@@ -14,7 +14,7 @@ type Trigger struct {
 	RepoID      int64           `json:"repoID"`
 	PipelineID  int64           `json:"pipelineID"`
 	Trigger     []string        `json:"trigger"`
-	Cron        string          `json:"cron"`
+	Cron        []string        `json:"cron"`
 	CreatedBy   string          `json:"createdBy"`
 	CreatedDate *datetime.Local `json:"createdDate"`
 	EditedBy    string          `json:"editedBy"`
@@ -29,11 +29,13 @@ func (t *Trigger) Validate() error {
 	}
 
 	// 校验 cron 表达式
-	if t.Cron != "" {
+	if len(t.Cron) != 0 {
 		// 使用带秒的解析器，与 CronManager 保持一致
 		parser := cron.NewParser(cron.Second | cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow)
-		if _, err := parser.Parse(t.Cron); err != nil {
-			return errors.WithI18nKey(errors.InvalidArgument.Newf("invalid cron expression: %s", err.Error()), i18n.PipelineTriggerParamCronError)
+		for _, cron := range t.Cron {
+			if _, err := parser.Parse(cron); err != nil {
+				return errors.WithI18nKey(errors.InvalidArgument.Newf("invalid cron expression: %s", err.Error()), i18n.PipelineTriggerParamCronError)
+			}
 		}
 	}
 
