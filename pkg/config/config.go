@@ -24,6 +24,7 @@ type Config struct {
 	Principal  PrincipalConfig  `yaml:"principal"`
 	Devops     DevopsConfig     `yaml:"devops"`
 	Storage    StorageConfig    `yaml:"storage"`
+	S3         S3Config         `yaml:"s3"`
 }
 
 // ServerConfig HTTP服务配置
@@ -256,8 +257,18 @@ type DevopsConfig struct {
 
 // StorageConfig 通用存储配置
 type StorageConfig struct {
-	Driver        string `yaml:"driver" default:"filesystem"`                                    // 存储驱动类型: filesystem, inmemory
-	RootDirectory string `envconfig:"GITFOX_STORAGE_ROOT_DIR" default:"/data/gitfox/storage"`   // 存储根目录
-	MaxThreads    uint64 `yaml:"maxThreads" default:"100"`                                       // 最大并发线程数
-	PathPrefix    string `yaml:"pathPrefix"`                                                     // 路径前缀
+	Driver        string `yaml:"driver" default:"filesystem"`                                 // 存储驱动类型: filesystem, inmemory
+	RootDirectory string `envconfig:"GITFOX_STORAGE_ROOT_DIR" default:"/data/gitfox/storage"` // 存储根目录
+	MaxThreads    uint64 `yaml:"maxThreads" default:"100"`                                    // 最大并发线程数
+	PathPrefix    string `yaml:"pathPrefix"`                                                  // 路径前缀
+}
+
+type S3Config struct {
+	Bucket    string `yaml:"bucket"`                    // S3 存储桶名称
+	Prefix    string `yaml:"prefix"`                    // S3 存储路径前缀
+	Endpoint  string `yaml:"endpoint"`                  // S3 服务端地址
+	Region    string `yaml:"region"`                    // S3 区域，如 cn-qingdao
+	PathStyle bool   `yaml:"pathStyle"`                 // 是否使用路径样式访问
+	AccessKey string `envconfig:"GITFOX_S3_ACCESS_KEY"` // S3 访问密钥
+	SecretKey string `envconfig:"GITFOX_S3_SECRET_KEY"` // S3 访问密钥
 }
