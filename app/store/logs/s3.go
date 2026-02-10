@@ -6,7 +6,6 @@ import (
 	"io"
 	"path"
 	"strings"
-	"time"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/pipeline"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
@@ -107,9 +106,6 @@ func (s *Store) Delete(_ context.Context, param *pipeline.S3Logs) error {
 
 // key 生成 S3 对象路径: {prefix}/YYMMDD/pipelineID/executionID/stageID/stepID.log
 func (s *Store) key(param *pipeline.S3Logs) string {
-	if param.Date == "" {
-		param.Date = time.Now().Format("20060102")
-	}
-	return path.Join("/", s.prefix, param.Date, param.PipelineID, param.ExecutionID, param.StageID,
+	return path.Join("/", s.prefix, param.PipelineID, param.ExecutionID, param.StageID,
 		fmt.Sprintf("%s.log", param.StepID))
 }
