@@ -9,8 +9,7 @@ import (
 	runnerStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/runner"
 	pkgJobs "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/jobs"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/lock"
-
-	"github.com/rs/zerolog/log"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 )
 
 const (
@@ -33,11 +32,12 @@ func newRunnerHeartbeatJob(runnerStore runnerStore.Interface, mxManager lock.Mut
 
 // Handle 检测 runner 心跳并更新离线状态
 func (j *runnerHeartbeatJob) Handle(ctx context.Context, _ string, reporter pkgJobs.ProgressReporter) (string, error) {
-	log.Ctx(ctx).Trace().Msg("starting runner heartbeat check")
+	log := logger.GetLogger(ctx)
+	log.Info("starting runner heartbeat check")
 
 	// 设置初始进度
 	if _, err := reporter(10, "initializing"); err != nil {
-		log.Ctx(ctx).Warn().Err(err).Msg("failed to report progress")
+		log.Errorf("failed to report progress: %v", err)
 	}
 
 	// 创建过滤器，查询所有未删除且在线的 runner
@@ -53,11 +53,11 @@ func (j *runnerHeartbeatJob) Handle(ctx context.Context, _ string, reporter pkgJ
 		return "", fmt.Errorf("failed to list runners: %w", err)
 	}
 
-	log.Ctx(ctx).Debug().Int("total_runners", len(res.Data)).Msg("found runners for heartbeat check")
+	log.Infof("total_runners: %d found runners for heartbeat check", len(res.Data))
 
 	// 设置进度
 	if _, err := reporter(30, "scanning runners"); err != nil {
-		log.Ctx(ctx).Warn().Err(err).Msg("failed to report progress")
+		log.Errorf("failed to report progress: %v", err)
 	}
 
 	// 当前时间戳
@@ -72,18 +72,11 @@ func (j *runnerHeartbeatJob) Handle(ctx context.Context, _ string, reporter pkgJ
 		if runner.HeartBeat == nil {
 			// 如果没有心跳时间，标记为离线
 			if err := j.updateRunnerOffline(ctx, int64(runner.ID)); err != nil {
-				log.Ctx(ctx).Error().
-					Err(err).
-					Uint("runner_id", runner.ID).
-					Str("runner_name", runner.Name).
-					Msg("failed to update runner to offline (no heartbeat)")
+				log.Errorf("failed to update runner to offline, runnerID: %d, runnerName: %s, err: %v", runner.ID, runner.Name, err)
 				continue
 			}
 			offlineCount++
-			log.Ctx(ctx).Debug().
-				Uint("runner_id", runner.ID).
-				Str("runner_name", runner.Name).
-				Msg("runner marked offline: no heartbeat")
+			log.Infof("runner marked offline, runnerID: %d, runnerName: %s", runner.ID, runner.Name)
 			continue
 		}
 
@@ -94,33 +87,21 @@ func (j *runnerHeartbeatJob) Handle(ctx context.Context, _ string, reporter pkgJ
 		// 如果超过30秒没有心跳，标记为离线
 		if timeSinceHeartbeat > heartbeatTimeoutSeconds*time.Second {
 			if err := j.updateRunnerOffline(ctx, int64(runner.ID)); err != nil {
-				log.Ctx(ctx).Error().
-					Err(err).
-					Uint("runner_id", runner.ID).
-					Str("runner_name", runner.Name).
-					Str("time_since_heartbeat", timeSinceHeartbeat.String()).
-					Msg("failed to update runner to offline")
+				log.Errorf("failed to update runner to offline, runnerID: %d, runnerName: %s, err: %v", runner.ID, runner.Name, err)
 				continue
 			}
 			offlineCount++
-			log.Ctx(ctx).Debug().
-				Uint("runner_id", runner.ID).
-				Str("runner_name", runner.Name).
-				Str("time_since_heartbeat", timeSinceHeartbeat.String()).
-				Msg("runner marked offline: heartbeat timeout")
+			log.Infof("runner marked offline, runnerID: %d, runnerName: %s", runner.ID, runner.Name)
 		}
 	}
 
 	// 设置最终进度
 	if _, err := reporter(100, "completed"); err != nil {
-		log.Ctx(ctx).Warn().Err(err).Msg("failed to report progress")
+		log.Errorf("failed to report progress: %v", err)
 	}
 
 	result := fmt.Sprintf("checked %d runners, marked %d as offline", len(res.Data), offlineCount)
-	log.Ctx(ctx).Info().
-		Int("total_checked", len(res.Data)).
-		Int("marked_offline", offlineCount).
-		Msg("completed runner heartbeat check")
+	log.Infof("completed runner heartbeat check, total_checked: %d, marked_offline: %d", len(res.Data), offlineCount)
 
 	return result, nil
 }
