@@ -2,12 +2,10 @@ package logs
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"path"
 	"strings"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/pipeline"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"github.com/aws/aws-sdk-go/aws"
@@ -67,11 +65,11 @@ func NewS3Store(s3cfg *config.S3Config) (*Store, error) {
 	}, nil
 }
 
-func (s *Store) Find(_ context.Context, param *pipeline.S3Logs) (io.ReadCloser, error) {
+func (s *Store) Find(_ context.Context, filePath string) (io.ReadCloser, error) {
 	svc := s3.New(s.session)
 	out, err := svc.GetObject(&s3.GetObjectInput{
 		Bucket: aws.String(s.bucket),
-		Key:    aws.String(s.key(param)),
+		Key:    aws.String(s.key(filePath)),
 	})
 	if err != nil {
 		return nil, err
@@ -79,33 +77,32 @@ func (s *Store) Find(_ context.Context, param *pipeline.S3Logs) (io.ReadCloser, 
 	return out.Body, nil
 }
 
-func (s *Store) Create(_ context.Context, param *pipeline.S3Logs, r io.Reader) error {
+func (s *Store) Create(_ context.Context, filePath string, r io.Reader) error {
 	uploader := s3manager.NewUploader(s.session)
 	input := &s3manager.UploadInput{
 		ACL:    aws.String("private"),
 		Bucket: aws.String(s.bucket),
-		Key:    aws.String(s.key(param)),
+		Key:    aws.String(s.key(filePath)),
 		Body:   r,
 	}
 	_, err := uploader.Upload(input)
 	return err
 }
 
-func (s *Store) Update(ctx context.Context, param *pipeline.S3Logs, r io.Reader) error {
-	return s.Create(ctx, param, r)
+func (s *Store) Update(ctx context.Context, filePath string, r io.Reader) error {
+	return s.Create(ctx, filePath, r)
 }
 
-func (s *Store) Delete(_ context.Context, param *pipeline.S3Logs) error {
+func (s *Store) Delete(_ context.Context, filePath string) error {
 	svc := s3.New(s.session)
 	_, err := svc.DeleteObject(&s3.DeleteObjectInput{
 		Bucket: aws.String(s.bucket),
-		Key:    aws.String(s.key(param)),
+		Key:    aws.String(s.key(filePath)),
 	})
 	return err
 }
 
 // key 生成 S3 对象路径: {prefix}/YYMMDD/pipelineID/executionID/stageID/stepID.log
-func (s *Store) key(param *pipeline.S3Logs) string {
-	return path.Join("/", s.prefix, param.PipelineID, param.ExecutionID, param.StageID,
-		fmt.Sprintf("%s.log", param.StepID))
+func (s *Store) key(filePath string) string {
+	return path.Join("/", s.prefix, filePath)
 }
