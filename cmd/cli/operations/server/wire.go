@@ -53,6 +53,7 @@ func NewApp(mode string) (*App, func(), error) {
 		provider.TagWireSet,
 		provider.PipelineWireSet,
 		provider.ExecutionWireSet,
+		provider.RunnerWireSet,
 		provider.ScanRuleSetWireSet,
 		provider.ScanRuleWireSet,
 		provider.CommitWireSet,

@@ -11,6 +11,7 @@ import (
 
 	jobModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/jobs"
 	jobsStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/jobs"
+	runnerStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/runner"
 	pkgJobs "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/jobs"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/lock"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
@@ -31,6 +32,7 @@ const (
 type Scheduler struct {
 	// dependencies 依赖项
 	jobStore      jobsStore.Interface
+	runnerStore   runnerStore.Interface
 	executor      *pkgJobs.Executor
 	mxManager     lock.MutexManager
 	pubsubService pubsub.PubSub
@@ -51,6 +53,7 @@ type Scheduler struct {
 
 func NewScheduler(
 	jobStore jobsStore.Interface,
+	runnerStore runnerStore.Interface,
 	mxManager lock.MutexManager,
 	pubsubService pubsub.PubSub,
 	log *logger.SugaredMateLogger,
@@ -66,6 +69,7 @@ func NewScheduler(
 
 	return &Scheduler{
 		jobStore:      jobStore,
+		runnerStore:   runnerStore,
 		executor:      executor,
 		mxManager:     mxManager,
 		pubsubService: pubsubService,
@@ -685,6 +689,12 @@ func (s *Scheduler) registerSystemJobs() error {
 		return fmt.Errorf("failed to register overdue job: %w", err)
 	}
 
+	// Register runner offline/online update
+	handlerRunnerHeartbeat := newRunnerHeartbeatJob(s.runnerStore, s.mxManager, s)
+	if err := s.executor.Register(jobTypeRunnerHeartbeat, handlerRunnerHeartbeat); err != nil {
+		return fmt.Errorf("failed to register runner job: %w", err)
+	}
+
 	s.log.Info("[JobScheduler] System jobs registered successfully")
 	return nil
 }
@@ -710,6 +720,11 @@ func (s *Scheduler) createSystemJobs(ctx context.Context) error {
 	// Create overdue job
 	if err := s.addRecurringJob(ctx, JobUIDOverdue, JobTypeOverdue, JobCronOverdue, 5*time.Second); err != nil {
 		return fmt.Errorf("failed to create overdue job: %w", err)
+	}
+
+	// Create runner job
+	if err := s.addRecurringJob(ctx, jobUIDRunnerHeartbeat, jobTypeRunnerHeartbeat, jobCronRunnerHeartbeat, jobMaxDurationRunnerHeartbeat); err != nil {
+		return fmt.Errorf("failed to create runner job: %w", err)
 	}
 
 	s.log.Info("[JobScheduler] System jobs created successfully")

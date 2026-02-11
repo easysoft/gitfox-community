@@ -9,6 +9,7 @@ import (
 	"github.com/google/wire"
 
 	jobsStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/jobs"
+	runnerStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/runner"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/lock"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
@@ -24,6 +25,7 @@ var WireSet = wire.NewSet(
 // ProvideScheduler provides a job scheduler instance.
 func ProvideScheduler(
 	jobStore jobsStore.Interface,
+	runnerStore runnerStore.Interface,
 	mxManager lock.MutexManager,
 	pubsubService pubsub.PubSub,
 	log *logger.SugaredMateLogger,
@@ -31,6 +33,7 @@ func ProvideScheduler(
 ) (*Scheduler, error) {
 	return NewScheduler(
 		jobStore,
+		runnerStore,
 		mxManager,
 		pubsubService,
 		log,
@@ -64,4 +67,3 @@ func ProvideJobConfig(cfg *config.Config) config.JobConfig {
 		RetentionTime: retentionTime,
 	}
 }
-

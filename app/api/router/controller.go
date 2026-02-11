@@ -7,6 +7,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/git"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/pipeline"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/repo"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/runner"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/scan"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/space"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/tag"
@@ -25,6 +26,7 @@ type Controller struct {
 	Repo      *repo.Controller
 	Scan      *scan.ScanController
 	Pipeline  *pipeline.Controller
+	Runner    *runner.Controller
 	Execution *execution.Controller
 	Test      *test.TestController
 }

@@ -13,6 +13,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/githook"
 	pipeline3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/pipeline"
 	repo3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/repo"
+	runner3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/runner"
 	scan3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/scan"
 	space3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/space"
 	tag2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/tag"
@@ -28,6 +29,7 @@ import (
 	pipeline2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/pipeline"
 	publickey2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/publickey"
 	repo2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
+	runner2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/runner"
 	scan2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/scan"
 	space2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/space"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/sse"
@@ -41,6 +43,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/publickey"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/pullrequest"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/runner"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/scan"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/settings"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/space"
@@ -133,6 +136,11 @@ func NewApp(mode string) (*App, func(), error) {
 	cancelerCanceler := canceler.New(executionStore, stageStore, stepStore)
 	executionService := execution2.NewExecutionService(executionStore, stageStore)
 	executionController := execution3.NewController(triggererTriggerer, cancelerCanceler, executionService)
+	tokenCache := runner.NewTokenCache(duration)
+	runnerStore := runner.NewStore(db, tokenCache)
+	runnerService := runner2.NewService(runnerStore)
+	url := provider.NewURLConfig(config)
+	runnerController := runner3.NewController(runnerService, url)
 	tagService := tag.NewService(urlProvider, gitService)
 	tagController := tag2.NewController(tagService, repoService)
 	commitService := commit.NewService(urlProvider, gitService)
@@ -196,7 +204,7 @@ func NewApp(mode string) (*App, func(), error) {
 	ruleSetService := scan2.NewRuleSetService(ruleSetStore, ruleStore)
 	ruleService := scan2.NewRuleService(ruleStore, membershipAuthorizer)
 	scanController := scan3.NewScanController(ruleSetService, ruleService)
-	routerController := provider.NewControllers(spaceController, controller, pipelineController, executionController, tagController, commitController, repoController, userController, gitController, scanController)
+	routerController := provider.NewControllers(spaceController, controller, pipelineController, executionController, runnerController, tagController, commitController, repoController, userController, gitController, scanController)
 	i18nManager, err := provider.NewI18nManager(config)
 	if err != nil {
 		cleanup2()
@@ -214,7 +222,7 @@ func NewApp(mode string) (*App, func(), error) {
 	jobsStore := jobs.NewScheduleJob(db)
 	jobLog := provider.NewJobLogger(config)
 	jobConfig := provider.ProvideJobConfig(config)
-	scheduler, err := provider.ProvideScheduler(jobsStore, mutexManager, pubSub, jobLog, jobConfig)
+	scheduler, err := provider.ProvideScheduler(jobsStore, runnerStore, mutexManager, pubSub, jobLog, jobConfig)
 	if err != nil {
 		cleanup2()
 		cleanup()

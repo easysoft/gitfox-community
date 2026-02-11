@@ -7,6 +7,7 @@ import (
 
 	jobsSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/jobs"
 	jobsStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/jobs"
+	runnerStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/runner"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/lock"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pubsub"
@@ -23,6 +24,7 @@ var JobWireSet = wire.NewSet(
 // ProvideScheduler provides a job scheduler instance.
 func ProvideScheduler(
 	jobStore jobsStore.Interface,
+	runnerStore runnerStore.Interface,
 	mxManager lock.MutexManager,
 	pubsubService pubsub.PubSub,
 	jobLog *JobLog,
@@ -30,6 +32,7 @@ func ProvideScheduler(
 ) (*jobsSvc.Scheduler, error) {
 	return jobsSvc.NewScheduler(
 		jobStore,
+		runnerStore,
 		mxManager,
 		pubsubService,
 		jobLog.SugaredMateLogger,

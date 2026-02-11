@@ -277,6 +277,26 @@ const (
 	RuleSetUpdateError        I18nKey = "ruleSet.update_error"         // 规则集更新失败.
 	RuleSetUpdateSuccess      I18nKey = "ruleSet.update_success"       // 规则集更新成功.
 
+	// Runner 相关常量
+	RunnerBodyParamError         I18nKey = "runner.body_param_error"          // Body 参数解析失败.
+	RunnerDeleteError            I18nKey = "runner.delete_error"              // 删除 Runner 失败.
+	RunnerDeleteSuccess          I18nKey = "runner.delete_success"            // 删除 Runner 成功.
+	RunnerGenerateTokenError     I18nKey = "runner.generate_token_error"      // 生成 Runner Token 失败.
+	RunnerGenerateTokenSuccess   I18nKey = "runner.generate_token_success"    // 生成 Runner Token 成功.
+	RunnerInvalidToken           I18nKey = "runner.invalid_token"             // Runner Token 无效或已过期.
+	RunnerListError              I18nKey = "runner.list_error"                // 查询 Runner 列表失败.
+	RunnerListSuccess            I18nKey = "runner.list_success"              // 查询 Runner 列表成功.
+	RunnerPathParamError         I18nKey = "runner.path_param_error"          // Path 参数解析失败.
+	RunnerQueryError             I18nKey = "runner.query_error"               // 查询 Runner 失败.
+	RunnerQueryParamError        I18nKey = "runner.query_param_error"         // Query 参数解析失败.
+	RunnerQuerySuccess           I18nKey = "runner.query_success"             // 查询 Runner 成功.
+	RunnerRegisterError          I18nKey = "runner.register_error"            // 注册 Runner 失败.
+	RunnerRegisterSuccess        I18nKey = "runner.register_success"          // 注册 Runner 成功.
+	RunnerUpdateError            I18nKey = "runner.update_error"              // 更新 Runner 失败.
+	RunnerUpdateHeartBeatError   I18nKey = "runner.update_heart_beat_error"   // 更新 Runner 心跳失败.
+	RunnerUpdateHeartBeatSuccess I18nKey = "runner.update_heart_beat_success" // 更新 Runner 心跳成功.
+	RunnerUpdateSuccess          I18nKey = "runner.update_success"            // 更新 Runner 成功.
+
 	// Space 相关常量
 	SpaceArtifactsTitleSuccess   I18nKey = "space.artifacts_title_success"   // 仓库设置保存成功
 	SpaceBodyParamError          I18nKey = "space.body_param_error"          // Body 参数解析失败.
