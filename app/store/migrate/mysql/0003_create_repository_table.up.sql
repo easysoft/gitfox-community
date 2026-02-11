@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS `ops_repository` (
+CREATE TABLE IF NOT EXISTS `ops_repo` (
 	`id` int unsigned NOT NULL AUTO_INCREMENT COMMENT '代码库ID',
 	`spaceID` int NOT NULL COMMENT '空间ID',
 	`identifier` varchar(255) NOT NULL COMMENT '代码库唯一标识',
@@ -18,9 +18,9 @@ CREATE TABLE IF NOT EXISTS `ops_repository` (
 	`deleted` tinyint NOT NULL DEFAULT 0 COMMENT '删除标识，0-未删除，1-已删除',
 	PRIMARY KEY (`id`) USING BTREE
 ) ENGINE=InnoDB COMMENT='代码库表';
-CREATE UNIQUE INDEX uk_repo_space_id ON ops_repository (identifier, spaceID);
-CREATE UNIQUE INDEX uk_gituid ON ops_repository (gitUID);
-CREATE INDEX idx_deleted ON ops_repository (deleted);
+CREATE UNIQUE INDEX uk_repo_space_id ON ops_repo (identifier, spaceID);
+CREATE UNIQUE INDEX uk_gituid ON ops_repo (gitUID);
+CREATE INDEX idx_deleted ON ops_repo (deleted);
 
 
 CREATE TABLE IF NOT EXISTS `ops_repouser` (

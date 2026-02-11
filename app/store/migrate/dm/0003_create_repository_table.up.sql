@@ -1,5 +1,5 @@
 -- 代码库表（达梦适配版：小驼峰命名）
-CREATE TABLE IF NOT EXISTS "ops_repository" (
+CREATE TABLE IF NOT EXISTS "ops_repo" (
 	"id" INT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '代码库ID',
 	"spaceID" INT NOT NULL COMMENT '空间ID',
 	"identifier" VARCHAR(255) NOT NULL COMMENT '代码库唯一标识',
@@ -21,10 +21,10 @@ CREATE TABLE IF NOT EXISTS "ops_repository" (
 ) ENGINE INNODB CHARACTER SET UTF8MB4 COMMENT '代码库表';
 
 -- 唯一索引：同一空间内代码库标识唯一（小驼峰索引名+字段名）
-CREATE UNIQUE INDEX "uk_repo_space_id" ON "ops_repository" ("identifier", "spaceID");
+CREATE UNIQUE INDEX "uk_repo_space_id" ON "ops_repo" ("identifier", "spaceID");
 
 -- 唯一索引：Git仓库唯一标识（修正原笔误：uid→gitUID，小驼峰字段名）
-CREATE UNIQUE INDEX "uk_gituid" ON "ops_repository" ("gitUID");
+CREATE UNIQUE INDEX "uk_gituid" ON "ops_repo" ("gitUID");
 
 -- 普通索引：软删除字段（小驼峰索引名+字段名）
-CREATE INDEX "idx_deleted" ON "ops_repository" ("deleted");
+CREATE INDEX "idx_deleted" ON "ops_repo" ("deleted");
