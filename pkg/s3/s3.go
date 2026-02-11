@@ -102,7 +102,7 @@ func (s *Store) Delete(_ context.Context, filePath string) error {
 	return err
 }
 
-// key 生成 S3 对象路径: {prefix}/YYMMDD/pipelineID/executionID/stageID/stepID.log
+// key 生成 S3 对象路径: {prefix}/pipelineID/executionID/stageID/stepID.log
 func (s *Store) key(filePath string) string {
 	return path.Join("/", s.prefix, filePath)
 }
