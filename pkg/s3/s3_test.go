@@ -41,13 +41,15 @@ func newTestStore(t *testing.T) *Store {
 	return store
 }
 
-func newTestParam(stepID string) *pipeline.S3Logs {
-	return &pipeline.S3Logs{
+func newTestParam(stepID string) string {
+	l := &pipeline.S3Logs{
 		PipelineID:  "pipeline-1",
 		ExecutionID: "exec-1",
 		StageID:     "stage-1",
 		StepID:      stepID,
 	}
+
+	return l.Key()
 }
 
 func TestStore_Create(t *testing.T) {
