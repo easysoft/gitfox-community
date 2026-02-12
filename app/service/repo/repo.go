@@ -69,6 +69,7 @@ func (s *Service) Create(ctx context.Context, session *auth.Session, params *rep
 		Identifier:    params.Identifier,
 		GitUID:        gitResp.UID,
 		Desc:          params.Desc,
+		Product:       params.Product,
 		CreatedBy:     session.User.Account,
 		ForkID:        params.ForkID,
 		DefaultBranch: params.DefaultBranch,
