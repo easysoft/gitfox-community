@@ -24,7 +24,6 @@ type Config struct {
 	Principal  PrincipalConfig  `yaml:"principal"`
 	Devops     DevopsConfig     `yaml:"devops"`
 	Storage    StorageConfig    `yaml:"storage"`
-	S3         S3Config         `yaml:"s3"`
 }
 
 // ServerConfig HTTP服务配置
@@ -132,7 +131,8 @@ type RegistryStorageConfig struct {
 
 // FilesystemStorageConfig 文件系统存储配置
 type FilesystemStorageConfig struct {
-	RootDirectory string `envconfig:"GITFOX_REGISTRY_FS_ROOT_DIR" default:"/data/gitfox/registry"`
+	RootDirectory      string `envconfig:"GITFOX_REGISTRY_FS_ROOT_DIR" default:"/data/gitfox/registry"`
+	PipelinedDirectory string `yaml:"pipelinedDirectory" default:"/data/gitfox/logs/pipelines"`
 }
 
 // LoggingConfig 日志配置
@@ -257,13 +257,18 @@ type DevopsConfig struct {
 
 // StorageConfig 通用存储配置
 type StorageConfig struct {
-	Driver        string `yaml:"driver" default:"filesystem"`                                 // 存储驱动类型: filesystem, inmemory
-	RootDirectory string `envconfig:"GITFOX_STORAGE_ROOT_DIR" default:"/data/gitfox/storage"` // 存储根目录
-	MaxThreads    uint64 `yaml:"maxThreads" default:"100"`                                    // 最大并发线程数
-	PathPrefix    string `yaml:"pathPrefix"`                                                  // 路径前缀
+	StorageType string           `yaml:"storageType" default:"filesystem"` // 存储驱动类型: filesystem, inmemory
+	Filesystem  FilesystemConfig `yaml:"filesystem"`                       // 文件系统存储配置
+	S3          S3Config         `yaml:"s3"`                               // S3 存储配置
 }
 
+type FilesystemConfig struct {
+	RootDirectory string `yaml:"rootDirectory" default:"/data/gitfox/storage"` // 存储根目录
+	MaxThreads    uint64 `yaml:"maxThreads" default:"100"`                     // 最大并发线程数
+	Prefix        string `yaml:"Prefix"`                                       // 路径前缀
+}
 type S3Config struct {
+	Enabled   bool   `yaml:"enabled" default:"false"`   // 开启 S3 存储
 	Bucket    string `yaml:"bucket"`                    // S3 存储桶名称
 	Prefix    string `yaml:"prefix"`                    // S3 存储路径前缀
 	Endpoint  string `yaml:"endpoint"`                  // S3 服务端地址

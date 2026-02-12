@@ -18,7 +18,6 @@ import (
 // WireSet 提供 storage 模块的依赖注入集合
 var WireSet = wire.NewSet(
 	ProvideStorageDriver,
-	ProvideContentStorage,
 )
 
 // ProvideStorageDriver 根据配置创建存储驱动
@@ -26,17 +25,17 @@ func ProvideStorageDriver(cfg *config.Config) (driver.StorageDriver, func(), err
 	storageCfg := cfg.Storage
 
 	// 设置默认值
-	driverName := storageCfg.Driver
+	driverName := storageCfg.StorageType
 	if driverName == "" {
 		driverName = "filesystem"
 	}
 
-	rootDir := storageCfg.RootDirectory
+	rootDir := storageCfg.Filesystem.RootDirectory
 	if rootDir == "" {
 		rootDir = "/data/gitfox/storage"
 	}
 
-	maxThreads := storageCfg.MaxThreads
+	maxThreads := storageCfg.Filesystem.MaxThreads
 	if maxThreads == 0 {
 		maxThreads = 100
 	}
@@ -58,16 +57,4 @@ func ProvideStorageDriver(cfg *config.Config) (driver.StorageDriver, func(), err
 	}
 
 	return d, cleanup, nil
-}
-
-// ProvideContentStorage 创建内容存储服务
-func ProvideContentStorage(cfg *config.Config, d driver.StorageDriver) (ContentStorage, error) {
-	ctx := context.Background()
-
-	var opts []CommonContentStoreOption
-	if cfg.Storage.PathPrefix != "" {
-		opts = append(opts, WithPrefix(cfg.Storage.PathPrefix))
-	}
-
-	return NewCommonContentStore(ctx, d, opts...)
 }

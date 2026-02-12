@@ -10,8 +10,11 @@ const (
 	QueryParamPipelineBuildEnvQuery    = "query"
 	QueryParamPipelineBuildEnvCategory = "category"
 
-	PathParamBuildEnvId = "env_id"
-	PathParamSchemaName = "name"
-	PathParamTriggerID  = "triggerID"
-	PathParamPipelineID = "pipelineID"
+	PathParamBuildEnvId  = "env_id"
+	PathParamSchemaName  = "name"
+	PathParamTriggerID   = "triggerID"
+	PathParamPipelineID  = "pipelineID"
+	PathParamExecutionID = "executionID"
+	PathParamStageID     = "stageID"
+	PathParamStepID      = "stepID"
 )

@@ -1,15 +1,32 @@
 package execution
 
 import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
+	"strconv"
+	"time"
+
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
 	executionModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/execution"
+	pipelineModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/pipeline"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/canceler"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/triggerer"
 	executionService "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/execution"
+	pipelineService "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/pipeline"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/livelog"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	"github.com/gin-gonic/gin"
+)
+
+var (
+	pingInterval = 30 * time.Second
+	tailMaxTime  = 1 * time.Hour
 )
 
 // Controller 处理与 pipeline 执行相关的 HTTP 请求
@@ -17,14 +34,21 @@ type Controller struct {
 	triggerer        triggerer.Triggerer
 	canceler         canceler.Canceler
 	executionService executionService.Interface
+	pipelineService  pipelineService.Interface
 }
 
 // NewController 创建流水线执行实例
-func NewController(triggerer triggerer.Triggerer, canceler canceler.Canceler, executionService executionService.Interface) *Controller {
+func NewController(
+	triggerer triggerer.Triggerer,
+	canceler canceler.Canceler,
+	executionService executionService.Interface,
+	pipelineService pipelineService.Interface,
+) *Controller {
 	return &Controller{
 		triggerer:        triggerer,
 		canceler:         canceler,
 		executionService: executionService,
+		pipelineService:  pipelineService,
 	}
 }
 
@@ -138,4 +162,240 @@ func (c *Controller) Cancel(ctx *gin.Context) {
 	}
 
 	resp.OK(ctx, i18n.ExecutionCancelSuccess, nil)
+}
+
+// @Summary 流式获取流水线执行日志
+// @Description 以 SSE 方式流式返回指定步骤的实时日志流
+// @Tags executions
+// @Accept application/json
+// @Produce text/event-stream
+// @Param pipelineID path string true "流水线ID"
+// @Param executionID path string true "执行ID"
+// @Param stageID path string true "阶段ID"
+// @Param stepID path string true "步骤ID"
+// @Success 200 {string} string "SSE 日志流"
+// @Failure 400 {object} resp.ObjectResponse "参数错误"
+// @Failure 500 {object} resp.ObjectResponse "服务器错误"
+// @Router /pipelines/{pipelineID}/executions/{executionID}/stream/{stageID}/{stepID} [get]
+func (c *Controller) GetLiveLogs(ctx *gin.Context) {
+	log := logger.GetLoggerFromGin(ctx)
+
+	stepID, err := req.PathParamAsPositiveUint(ctx, req.PathParamStepID)
+	if err != nil {
+		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.ExecutionPathParamError))
+		return
+	}
+
+	w := ctx.Writer
+
+	f, ok := w.(http.Flusher)
+	if !ok {
+		log.Errorf("http writer does not support flushing")
+		resp.InternalError(ctx, errors.WithI18nKey(nil, i18n.ExecutionLogQueryError))
+		return
+	}
+
+	// 设置 SSE 响应头
+	h := w.Header()
+	h.Set("Content-Type", "text/event-stream")
+	h.Set("Cache-Control", "no-cache")
+	h.Set("Connection", "keep-alive")
+	h.Set("X-Accel-Buffering", "no")
+	h.Set("Access-Control-Allow-Origin", "*")
+
+	// 发送初始 ping
+	io.WriteString(w, ": ping\n\n")
+	f.Flush()
+
+	reqCtx, cancel := context.WithTimeout(ctx.Request.Context(), tailMaxTime)
+	defer cancel()
+
+	// TailLogStream 内部会处理流尚未创建的等待逻辑，始终返回非 nil channel
+	linec, errc := c.pipelineService.TailLogStream(reqCtx, int64(stepID))
+
+	enc := json.NewEncoder(w)
+
+	pingTimer := time.NewTimer(pingInterval)
+	defer pingTimer.Stop()
+L:
+	for {
+		// 重置 ping 计时器
+		if !pingTimer.Stop() {
+			select {
+			case <-pingTimer.C:
+			default:
+			}
+		}
+		pingTimer.Reset(pingInterval)
+		select {
+		case <-reqCtx.Done():
+			break L
+		case err := <-errc:
+			log.Errorf("received error in the tail channel: %v", err)
+			break L
+		case <-pingTimer.C:
+			io.WriteString(w, ": ping\n\n")
+			f.Flush()
+		case line := <-linec:
+			io.WriteString(w, "data: ")
+			enc.Encode(line)
+			io.WriteString(w, "\n\n")
+			f.Flush()
+		}
+	}
+
+	// 发送 EOF 事件
+	io.WriteString(w, "event: error\ndata: eof\n\n")
+	f.Flush()
+}
+
+// @Summary 创建实时日志流
+// @Description 为指定步骤创建实时日志流
+// @Tags executions
+// @Accept application/json
+// @Produce application/json
+// @Param pipelineID path string true "流水线ID"
+// @Param executionID path string true "执行ID"
+// @Param stageID path string true "阶段ID"
+// @Param stepID path string true "步骤ID"
+// @Success 200 {object} resp.ObjectResponse "创建成功"
+// @Failure 400 {object} resp.ObjectResponse "参数错误"
+// @Failure 500 {object} resp.ObjectResponse "服务器错误"
+// @Router /pipelines/{pipelineID}/executions/{executionID}/stream/{stageID}/{stepID} [post]
+func (c *Controller) CreateLiveLogs(ctx *gin.Context) {
+	stepID, err := req.PathParamAsPositiveUint(ctx, req.PathParamStepID)
+	if err != nil {
+		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.ExecutionPathParamError))
+		return
+	}
+
+	sid := int64(stepID)
+
+	err = c.pipelineService.CreateLogStream(ctx, sid)
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.ExecutionLogCreateError)
+		resp.InternalError(ctx, err)
+		return
+	}
+
+	// TODO: 异步写入模拟日志，方便测试 tail 端实时接收
+	go func() {
+		for i := 1; i <= 10; i++ {
+			time.Sleep(1 * time.Second)
+			_ = c.pipelineService.WriteLogStream(context.Background(), sid, &livelog.Line{
+				Number:    i,
+				Message:   fmt.Sprintf("[step:%d] log line %d — pipeline is running...", sid, i),
+				Timestamp: time.Now().Unix(),
+			})
+		}
+		// 写完后删除流，tail 端会收到 EOF
+		_ = c.pipelineService.DeleteLogStream(context.Background(), sid)
+	}()
+
+	resp.OK(ctx, i18n.ExecutionLogCreateSuccess, nil)
+}
+
+// @Summary 获取文件日志
+// @Description 从文件存储中获取指定步骤的执行日志
+// @Tags executions
+// @Produce text/plain
+// @Param pipelineID path string true "流水线ID"
+// @Param executionID path string true "执行ID"
+// @Param stageID path string true "阶段ID"
+// @Param stepID path string true "步骤ID"
+// @Success 200 {string} string "日志内容"
+// @Failure 400 {object} resp.ObjectResponse "参数错误"
+// @Failure 500 {object} resp.ObjectResponse "服务器错误"
+// @Router /pipelines/{pipelineID}/executions/{executionID}/logs/{stageID}/{stepID} [get]
+func (c *Controller) GetFileLogs(ctx *gin.Context) {
+	pipelineID, err := req.PathParamAsPositiveUint(ctx, req.PathParamPipelineID)
+	if err != nil {
+		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.ExecutionPathParamError))
+		return
+	}
+	executionID, err := req.PathParamAsPositiveUint(ctx, req.PathParamExecutionID)
+	if err != nil {
+		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.ExecutionPathParamError))
+		return
+	}
+	stageID, err := req.PathParamAsPositiveUint(ctx, req.PathParamStageID)
+	if err != nil {
+		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.ExecutionPathParamError))
+		return
+	}
+	stepID, err := req.PathParamAsPositiveUint(ctx, req.PathParamStepID)
+	if err != nil {
+		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.ExecutionPathParamError))
+		return
+	}
+
+	param := &pipelineModel.S3Logs{
+		PipelineID:  strconv.FormatUint(uint64(pipelineID), 10),
+		ExecutionID: strconv.FormatUint(uint64(executionID), 10),
+		StageID:     strconv.FormatUint(uint64(stageID), 10),
+		StepID:      strconv.FormatUint(uint64(stepID), 10),
+	}
+
+	rc, err := c.pipelineService.GetLogs(ctx, param)
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.ExecutionLogQueryError)
+		resp.InternalError(ctx, err)
+		return
+	}
+	defer rc.Close()
+
+	ctx.Header("Content-Type", "text/plain; charset=utf-8")
+	io.Copy(ctx.Writer, rc)
+}
+
+// @Summary 上传文件日志
+// @Description 将请求体内容作为日志写入文件存储
+// @Tags executions
+// @Accept text/plain
+// @Produce application/json
+// @Param pipelineID path string true "流水线ID"
+// @Param executionID path string true "执行ID"
+// @Param stageID path string true "阶段ID"
+// @Param stepID path string true "步骤ID"
+// @Success 200 {object} resp.ObjectResponse "创建成功"
+// @Failure 400 {object} resp.ObjectResponse "参数错误"
+// @Failure 500 {object} resp.ObjectResponse "服务器错误"
+// @Router /pipelines/{pipelineID}/executions/{executionID}/logs/{stageID}/{stepID} [post]
+func (c *Controller) CreateFileLogs(ctx *gin.Context) {
+	pipelineID, err := req.PathParamAsPositiveUint(ctx, req.PathParamPipelineID)
+	if err != nil {
+		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.ExecutionPathParamError))
+		return
+	}
+	executionID, err := req.PathParamAsPositiveUint(ctx, req.PathParamExecutionID)
+	if err != nil {
+		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.ExecutionPathParamError))
+		return
+	}
+	stageID, err := req.PathParamAsPositiveUint(ctx, req.PathParamStageID)
+	if err != nil {
+		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.ExecutionPathParamError))
+		return
+	}
+	stepID, err := req.PathParamAsPositiveUint(ctx, req.PathParamStepID)
+	if err != nil {
+		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.ExecutionPathParamError))
+		return
+	}
+
+	param := &pipelineModel.S3Logs{
+		PipelineID:  strconv.FormatUint(uint64(pipelineID), 10),
+		ExecutionID: strconv.FormatUint(uint64(executionID), 10),
+		StageID:     strconv.FormatUint(uint64(stageID), 10),
+		StepID:      strconv.FormatUint(uint64(stepID), 10),
+	}
+
+	err = c.pipelineService.CreateLogs(ctx, param, ctx.Request.Body)
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.ExecutionLogCreateError)
+		resp.InternalError(ctx, err)
+		return
+	}
+
+	resp.OK(ctx, i18n.ExecutionLogCreateSuccess, nil)
 }

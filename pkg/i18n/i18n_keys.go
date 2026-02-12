@@ -112,6 +112,10 @@ const (
 	ExecutionQueryError      I18nKey = "execution.query_error"       // 执行查询失败
 	ExecutionQueryParamError I18nKey = "execution.query_param_error" // Query 参数解析失败.
 	ExecutionQuerySuccess    I18nKey = "execution.query_success"     // 执行查询成功
+	ExecutionLogCreateError  I18nKey = "execution.log_create_error"  // 日志创建失败
+	ExecutionLogCreateSuccess I18nKey = "execution.log_create_success" // 日志创建成功
+	ExecutionLogQueryError   I18nKey = "execution.log_query_error"   // 日志查询失败
+	ExecutionLogQuerySuccess I18nKey = "execution.log_query_success" // 日志查询成功
 	ExecutionTriggerError    I18nKey = "execution.trigger_error"     // 执行触发失败
 	ExecutionTriggerSuccess  I18nKey = "execution.trigger_success"   // 执行触发成功
 

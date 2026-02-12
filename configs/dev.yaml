@@ -45,8 +45,6 @@ gitspace:
 registry:
   http:
     secret: changeit
-  storage:
-    storageType: filesystem
     
 # 日志配置
 logging:
@@ -85,9 +83,14 @@ job:
   instanceID: "gitfox-community"
   maxRunning: 10
   retentionTime: 120h
-s3:
-  bucket: "pangu"
-  prefix: "gitgox/test/"
-  endpoint: "http://cdn.zcorp.cc:9000"
-  region: "cn-qingdao"
-  pathStyle: true
+  
+storage:
+  storageType: filesystem
+  filesystem:
+    rootDirectory: /data/gitfox/storage
+  s3:
+    enabled: true
+    bucket: "pangu"
+    endpoint: "http://cdn.zcorp.cc:9000"
+    region: "cn-qingdao"
+    pathStyle: true
