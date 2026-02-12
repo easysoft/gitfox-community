@@ -18,7 +18,7 @@ const (
 	RepoStateMigrateDataImport                  // 3-迁移-数据导入中
 )
 
-// Repository 代码库表（ops_repository）Store层结构体
+// Repository 代码库表（ops_repo）Store层结构体
 type Repository struct {
 	ID            uint            `gorm:"column:id;comment:'代码库ID'"`
 	SpaceID       uint            `gorm:"column:spaceID;comment:'空间ID'"`
@@ -41,7 +41,7 @@ type Repository struct {
 
 // TableName 指定数据库表名（GORM自动映射时使用）
 func (r *Repository) TableName() string {
-	return "ops_repository"
+	return "ops_repo"
 }
 
 func (r *Repository) BeforeCreate(tx *gorm.DB) error {
