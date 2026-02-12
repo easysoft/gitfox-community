@@ -81,7 +81,7 @@ type SSHConfig struct {
 	Enable      bool   `yaml:"enable"`
 	Host        string `yaml:"host"`
 	Port        int    `yaml:"port"`
-	DefaultUser string `yaml:"defaultUser" default:"git"`
+	DefaultUser string `yaml:"defaultUser"`
 	HostKeysDir string `envconfig:"GITFOX_SSH_HOST_KEYS_DIR" default:"/data/gitfox/ssh"`
 }
 
@@ -114,25 +114,12 @@ type GitspaceConfig struct {
 
 // RegistryConfig 注册中心配置
 type RegistryConfig struct {
-	Http    RegistryHttpConfig    `yaml:"http"`
-	Storage RegistryStorageConfig `yaml:"storage"`
+	Http RegistryHttpConfig `yaml:"http"`
 }
 
 // RegistryHttpConfig 注册中心HTTP配置
 type RegistryHttpConfig struct {
 	Secret string `yaml:"secret"`
-}
-
-// RegistryStorageConfig 注册中心存储配置
-type RegistryStorageConfig struct {
-	StorageType       string                  `yaml:"storageType"`
-	FilesystemStorage FilesystemStorageConfig `yaml:"filesystemStorage"`
-}
-
-// FilesystemStorageConfig 文件系统存储配置
-type FilesystemStorageConfig struct {
-	RootDirectory      string `envconfig:"GITFOX_REGISTRY_FS_ROOT_DIR" default:"/data/gitfox/registry"`
-	PipelinedDirectory string `yaml:"pipelinedDirectory" default:"/data/gitfox/logs/pipelines"`
 }
 
 // LoggingConfig 日志配置
@@ -242,8 +229,8 @@ type PrincipalConfig struct {
 	// NOTE: The admin user is only auto-created in case a password and an email is provided.
 	// 备注：只有在提供密码和电子邮件的情况下，才会自动创建管理员用户。
 	Admin struct {
-		UID         string `yaml:"uid"           default:"admin"`
-		DisplayName string `yaml:"name"  default:"Administrator"`
+		UID         string `yaml:"uid"`
+		DisplayName string `yaml:"name"`
 		Email       string `yaml:"email"`    // No default email
 		Password    string `yaml:"password"` // No default password
 	}
@@ -257,18 +244,18 @@ type DevopsConfig struct {
 
 // StorageConfig 通用存储配置
 type StorageConfig struct {
-	StorageType string           `yaml:"storageType" default:"filesystem"` // 存储驱动类型: filesystem, inmemory
-	Filesystem  FilesystemConfig `yaml:"filesystem"`                       // 文件系统存储配置
-	S3          S3Config         `yaml:"s3"`                               // S3 存储配置
+	StorageType string           `yaml:"storageType"` // 存储驱动类型: filesystem, inmemory
+	Filesystem  FilesystemConfig `yaml:"filesystem"`  // 文件系统存储配置
+	S3          S3Config         `yaml:"s3"`          // S3 存储配置
 }
 
 type FilesystemConfig struct {
-	RootDirectory string `yaml:"rootDirectory" default:"/data/gitfox/storage"` // 存储根目录
-	MaxThreads    uint64 `yaml:"maxThreads" default:"100"`                     // 最大并发线程数
+	RootDirectory string `yaml:"rootDirectory"` // 存储根目录
+	MaxThreads    uint64 `yaml:"maxThreads"`                                   // 最大并发线程数
 	Prefix        string `yaml:"Prefix"`                                       // 路径前缀
 }
 type S3Config struct {
-	Enabled   bool   `yaml:"enabled" default:"false"`   // 开启 S3 存储
+	Enabled   bool   `yaml:"enabled"`                   // 开启 S3 存储
 	Bucket    string `yaml:"bucket"`                    // S3 存储桶名称
 	Prefix    string `yaml:"prefix"`                    // S3 存储路径前缀
 	Endpoint  string `yaml:"endpoint"`                  // S3 服务端地址
