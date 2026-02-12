@@ -1,4 +1,4 @@
-package logs
+package s3
 
 import (
 	"bytes"

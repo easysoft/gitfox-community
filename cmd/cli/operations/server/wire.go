@@ -69,6 +69,7 @@ func NewApp(mode string) (*App, func(), error) {
 		provider.PubSubProvider,
 		provider.JobWireSet,
 		provider.AuthWireSet,
+		provider.StorageWireSet,
 		wire.Struct(new(App), "*")),
 	)
 }

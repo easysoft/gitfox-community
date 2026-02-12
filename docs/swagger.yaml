@@ -615,7 +615,9 @@ definitions:
       createdDate:
         type: string
       cron:
-        type: string
+        items:
+          type: string
+        type: array
       editedBy:
         type: string
       editedDate:
@@ -1841,6 +1843,64 @@ paths:
           schema:
             $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
       summary: 取消流水线执行
+      tags:
+      - executions
+  /pipeline/executions/steps/{stepID}/logs:
+    post:
+      consumes:
+      - application/json
+      description: 为指定步骤创建实时日志流
+      parameters:
+      - description: 步骤ID
+        in: path
+        name: stepID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 创建成功
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 创建实时日志流
+      tags:
+      - executions
+  /pipeline/executions/steps/{stepID}/logs/stream:
+    get:
+      consumes:
+      - application/json
+      description: 以 SSE 方式流式返回指定步骤的实时日志流
+      parameters:
+      - description: 步骤ID
+        in: path
+        name: stepID
+        required: true
+        type: integer
+      produces:
+      - text/event-stream
+      responses:
+        "200":
+          description: SSE 日志流
+          schema:
+            type: string
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 流式获取流水线执行日志
       tags:
       - executions
   /pipeline/steps/{name}/schema:

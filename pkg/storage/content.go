@@ -11,16 +11,15 @@ import (
 )
 
 type ContentStorage interface {
-	Get(ctx context.Context, path string) ([]byte, error)
-	Open(ctx context.Context, path string) (io.ReadCloser, error)
-	Put(ctx context.Context, path string, contents []byte) error
-	Save(ctx context.Context, path string, r io.Reader, size int64) error
-	GetWriter(ctx context.Context, path string, append bool) (storagedriver.FileWriter, error)
-	Stat(ctx context.Context, path string) (storagedriver.FileInfo, error)
-	Delete(ctx context.Context, path string) error
-	List(ctx context.Context, path string) ([]string, error)
-
-	PrefixDir() string
+	Get(ctx context.Context, path string) ([]byte, error)                                      // 一次性读取小文件到 []byte
+	Open(ctx context.Context, path string) (io.ReadCloser, error)                              // 流式读取大文件，返回 io.ReadCloser
+	Put(ctx context.Context, path string, contents []byte) error                               // 一次性写入小文件，传 []byte
+	Save(ctx context.Context, path string, r io.Reader, size int64) error                      // 流式写入大文件，传 io.Reader
+	GetWriter(ctx context.Context, path string, append bool) (storagedriver.FileWriter, error) // 获取底层 FileWriter，支持追加写
+	Stat(ctx context.Context, path string) (storagedriver.FileInfo, error)                     // 获取文件元信息（大小、修改时间、是否目录）
+	Delete(ctx context.Context, path string) error                                             // 删除文件或目录
+	List(ctx context.Context, path string) ([]string, error)                                   // 列出目录下的直接子项
+	PrefixDir() string                                                                         // 返回配置的路径前缀
 }
 
 type commonContentStore struct {
