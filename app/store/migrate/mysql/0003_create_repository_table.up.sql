@@ -3,6 +3,7 @@ CREATE TABLE IF NOT EXISTS `ops_repo` (
 	`spaceID` int NOT NULL COMMENT '空间ID',
 	`identifier` varchar(255) NOT NULL COMMENT '代码库唯一标识',
 	`desc` varchar(500) NOT NULL DEFAULT '' COMMENT '代码库描述',
+	`product` varchar(255) NOT NULL DEFAULT '',
 	`gitUID` char(42) NOT NULL COMMENT 'Git仓库唯一标识',
 	`defaultBranch` varchar(255) NOT NULL COMMENT '默认分支名',
 	`forkID` int unsigned NULL DEFAULT NULL COMMENT '派生来源代码库ID',
@@ -22,12 +23,53 @@ CREATE UNIQUE INDEX uk_repo_space_id ON ops_repo (identifier, spaceID);
 CREATE UNIQUE INDEX uk_gituid ON ops_repo (gitUID);
 CREATE INDEX idx_deleted ON ops_repo (deleted);
 
+/* 以下表为devops使用 */
 
 CREATE TABLE IF NOT EXISTS `ops_repouser` (
-  `id` int unsigned NOT NULL AUTO_INCREMENT COMMENT '编号',
+  `id` int unsigned NOT NULL AUTO_INCREMENT COMMENT 'id',
   `repo` int unsigned NOT NULL DEFAULT 0 COMMENT '所属代码库',
   `account` varchar(30) NOT NULL DEFAULT '' COMMENT '用户帐号',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB COMMENT='代码库用户关联表';
 CREATE UNIQUE INDEX `uk_repouser` ON `ops_repouser` (`repo`,`account`);
 
+CREATE TABLE IF NOT EXISTS `ops_repohistory` (
+	`id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+	`repo` int(10) unsigned NOT NULL DEFAULT '0',
+	`revision` varchar(40) NOT NULL DEFAULT '',
+	`commit` int(10) unsigned NOT NULL DEFAULT '0',
+	`comment` text NULL DEFAULT NULL,
+	`committer` varchar(100) NOT NULL DEFAULT '',
+	`time` DATETIME NULL DEFAULT NULL,
+	PRIMARY KEY (`id`),
+	INDEX `repo` (`repo`),
+	INDEX `revision` (`revision`)
+)ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS `ops_repofiles` (
+	`id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+	`repo` int(10) unsigned NOT NULL DEFAULT '0',
+	`revision` int(10) unsigned NOT NULL DEFAULT '0',
+	`path` varchar(255) NOT NULL DEFAULT '',
+	`oldPath` varchar(255) NOT NULL DEFAULT '',
+	`parent` varchar(255) NOT NULL DEFAULT '',
+	`type` varchar(20) NOT NULL DEFAULT '',
+	`action` char(1) NOT NULL DEFAULT '',
+	PRIMARY KEY (`id`),
+	INDEX `path` (`path`),
+	INDEX `parent` (`parent`),
+	INDEX `repo` (`repo`),
+	INDEX `revision` (`revision`)
+)ENGINE=InnoDB;
+
+
+CREATE TABLE IF NOT EXISTS `ops_repobranch` (
+	`id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+	`repo` int(10) unsigned NOT NULL DEFAULT '0',
+	`revision` int(10) unsigned NOT NULL DEFAULT '0',
+	`branch` varchar(100) NOT NULL DEFAULT '',
+	PRIMARY KEY (`id`),
+	UNIQUE INDEX `repo_revision_branch` (`repo`, `revision`, `branch`),
+	INDEX `branch` (`branch`),
+	INDEX `revision` (`revision`)
+)ENGINE=InnoDB;
