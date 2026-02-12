@@ -6512,6 +6512,9 @@ const docTemplate = `{
                 "status": {
                     "description": "状态码用 int 类型（兼容枚举映射）",
                     "type": "integer"
+                },
+                "synced": {
+                    "type": "integer"
                 }
             }
         },

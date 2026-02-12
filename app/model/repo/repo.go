@@ -81,6 +81,7 @@ type Repo struct {
 	Empty         bool   `json:"empty"`
 	ACL           string `json:"acl"`
 	Mirror        bool   `json:"mirror"`
+	Synced        uint8  `json:"synced"`
 	Status        int    `json:"status"` // 状态码用 int 类型（兼容枚举映射）
 	Mutex         int    `json:"mutex"`
 	// git urls

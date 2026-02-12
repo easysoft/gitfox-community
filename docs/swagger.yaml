@@ -940,6 +940,8 @@ definitions:
       status:
         description: 状态码用 int 类型（兼容枚举映射）
         type: integer
+      synced:
+        type: integer
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.ReqFilter:
     properties:
