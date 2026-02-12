@@ -6,11 +6,13 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	"time"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
 	executionModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/execution"
+	pipelineModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/pipeline"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/canceler"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/triggerer"
 	executionService "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/execution"
@@ -167,12 +169,15 @@ func (c *Controller) Cancel(ctx *gin.Context) {
 // @Tags executions
 // @Accept application/json
 // @Produce text/event-stream
-// @Param stepID path uint true "步骤ID"
+// @Param pipelineID path string true "流水线ID"
+// @Param executionID path string true "执行ID"
+// @Param stageID path string true "阶段ID"
+// @Param stepID path string true "步骤ID"
 // @Success 200 {string} string "SSE 日志流"
 // @Failure 400 {object} resp.ObjectResponse "参数错误"
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
-// @Router /pipeline/executions/steps/{stepID}/logs/stream [get]
-func (c *Controller) LogStream(ctx *gin.Context) {
+// @Router /pipelines/{pipelineID}/executions/{executionID}/stream/{stageID}/{stepID} [get]
+func (c *Controller) GetLiveLogs(ctx *gin.Context) {
 	log := logger.GetLoggerFromGin(ctx)
 
 	stepID, err := req.PathParamAsPositiveUint(ctx, req.PathParamStepID)
@@ -249,12 +254,15 @@ L:
 // @Tags executions
 // @Accept application/json
 // @Produce application/json
-// @Param stepID path uint true "步骤ID"
+// @Param pipelineID path string true "流水线ID"
+// @Param executionID path string true "执行ID"
+// @Param stageID path string true "阶段ID"
+// @Param stepID path string true "步骤ID"
 // @Success 200 {object} resp.ObjectResponse "创建成功"
 // @Failure 400 {object} resp.ObjectResponse "参数错误"
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
-// @Router /pipeline/executions/steps/{stepID}/logs [post]
-func (c *Controller) CreateLog(ctx *gin.Context) {
+// @Router /pipelines/{pipelineID}/executions/{executionID}/stream/{stageID}/{stepID} [post]
+func (c *Controller) CreateLiveLogs(ctx *gin.Context) {
 	stepID, err := req.PathParamAsPositiveUint(ctx, req.PathParamStepID)
 	if err != nil {
 		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.ExecutionPathParamError))
@@ -283,6 +291,111 @@ func (c *Controller) CreateLog(ctx *gin.Context) {
 		// 写完后删除流，tail 端会收到 EOF
 		_ = c.pipelineService.DeleteLogStream(context.Background(), sid)
 	}()
+
+	resp.OK(ctx, i18n.ExecutionLogCreateSuccess, nil)
+}
+
+// @Summary 获取文件日志
+// @Description 从文件存储中获取指定步骤的执行日志
+// @Tags executions
+// @Produce text/plain
+// @Param pipelineID path string true "流水线ID"
+// @Param executionID path string true "执行ID"
+// @Param stageID path string true "阶段ID"
+// @Param stepID path string true "步骤ID"
+// @Success 200 {string} string "日志内容"
+// @Failure 400 {object} resp.ObjectResponse "参数错误"
+// @Failure 500 {object} resp.ObjectResponse "服务器错误"
+// @Router /pipelines/{pipelineID}/executions/{executionID}/logs/{stageID}/{stepID} [get]
+func (c *Controller) GetFileLogs(ctx *gin.Context) {
+	pipelineID, err := req.PathParamAsPositiveUint(ctx, req.PathParamPipelineID)
+	if err != nil {
+		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.ExecutionPathParamError))
+		return
+	}
+	executionID, err := req.PathParamAsPositiveUint(ctx, req.PathParamExecutionID)
+	if err != nil {
+		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.ExecutionPathParamError))
+		return
+	}
+	stageID, err := req.PathParamAsPositiveUint(ctx, req.PathParamStageID)
+	if err != nil {
+		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.ExecutionPathParamError))
+		return
+	}
+	stepID, err := req.PathParamAsPositiveUint(ctx, req.PathParamStepID)
+	if err != nil {
+		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.ExecutionPathParamError))
+		return
+	}
+
+	param := &pipelineModel.S3Logs{
+		PipelineID:  strconv.FormatUint(uint64(pipelineID), 10),
+		ExecutionID: strconv.FormatUint(uint64(executionID), 10),
+		StageID:     strconv.FormatUint(uint64(stageID), 10),
+		StepID:      strconv.FormatUint(uint64(stepID), 10),
+	}
+
+	rc, err := c.pipelineService.GetLogs(ctx, param)
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.ExecutionLogQueryError)
+		resp.InternalError(ctx, err)
+		return
+	}
+	defer rc.Close()
+
+	ctx.Header("Content-Type", "text/plain; charset=utf-8")
+	io.Copy(ctx.Writer, rc)
+}
+
+// @Summary 上传文件日志
+// @Description 将请求体内容作为日志写入文件存储
+// @Tags executions
+// @Accept text/plain
+// @Produce application/json
+// @Param pipelineID path string true "流水线ID"
+// @Param executionID path string true "执行ID"
+// @Param stageID path string true "阶段ID"
+// @Param stepID path string true "步骤ID"
+// @Success 200 {object} resp.ObjectResponse "创建成功"
+// @Failure 400 {object} resp.ObjectResponse "参数错误"
+// @Failure 500 {object} resp.ObjectResponse "服务器错误"
+// @Router /pipelines/{pipelineID}/executions/{executionID}/logs/{stageID}/{stepID} [post]
+func (c *Controller) CreateFileLogs(ctx *gin.Context) {
+	pipelineID, err := req.PathParamAsPositiveUint(ctx, req.PathParamPipelineID)
+	if err != nil {
+		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.ExecutionPathParamError))
+		return
+	}
+	executionID, err := req.PathParamAsPositiveUint(ctx, req.PathParamExecutionID)
+	if err != nil {
+		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.ExecutionPathParamError))
+		return
+	}
+	stageID, err := req.PathParamAsPositiveUint(ctx, req.PathParamStageID)
+	if err != nil {
+		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.ExecutionPathParamError))
+		return
+	}
+	stepID, err := req.PathParamAsPositiveUint(ctx, req.PathParamStepID)
+	if err != nil {
+		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.ExecutionPathParamError))
+		return
+	}
+
+	param := &pipelineModel.S3Logs{
+		PipelineID:  strconv.FormatUint(uint64(pipelineID), 10),
+		ExecutionID: strconv.FormatUint(uint64(executionID), 10),
+		StageID:     strconv.FormatUint(uint64(stageID), 10),
+		StepID:      strconv.FormatUint(uint64(stepID), 10),
+	}
+
+	err = c.pipelineService.CreateLogs(ctx, param, ctx.Request.Body)
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.ExecutionLogCreateError)
+		resp.InternalError(ctx, err)
+		return
+	}
 
 	resp.OK(ctx, i18n.ExecutionLogCreateSuccess, nil)
 }

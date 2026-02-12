@@ -26,9 +26,14 @@ func registerPipelineRoutes(r *gin.RouterGroup, controller *Controller) {
 		}
 	}
 
-	logPath := fmt.Sprintf("/:%s/:%s/:%s/:%s", req.PathParamPipelineID, req.PathParamExecutionID, req.PathParamStageID, req.PathParamStepID)
-	r.GET(logPath+"/stream", controller.Execution.LogStream)
-	r.POST(logPath+"/logs", controller.Execution.CreateLog)
+	logs := r.Group(fmt.Sprintf("/pipelines/:%s/executions/:%s", req.PathParamPipelineID, req.PathParamExecutionID))
+	{
+		logs.GET(fmt.Sprintf("logs/:%s/:%s", req.PathParamStageID, req.PathParamStepID), controller.Execution.GetFileLogs)
+		logs.POST(fmt.Sprintf("logs/:%s/:%s", req.PathParamStageID, req.PathParamStepID), controller.Execution.CreateFileLogs)
+
+		logs.GET(fmt.Sprintf("stream/:%s/:%s", req.PathParamStageID, req.PathParamStepID), controller.Execution.GetLiveLogs)
+		logs.POST(fmt.Sprintf("stream/:%s/:%s", req.PathParamStageID, req.PathParamStepID), controller.Execution.CreateLiveLogs)
+	}
 
 	trigger := r.Group(fmt.Sprintf("/pipelines/:%s/triggers", req.PathParamPipelineID))
 	{

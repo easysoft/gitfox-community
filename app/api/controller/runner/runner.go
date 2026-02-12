@@ -103,7 +103,7 @@ func (ctl *Controller) GetByID(c *gin.Context) {
 // @Accept application/json
 // @Produce application/json
 // @Param id path int true "Runner ID" minimum(1)
-// @Param request body runnerModel.UpdateBasicInfoReq true "更新基础信息请求参数"
+// @Param request body runnerModel.ReqForUpdateBasicInfo true "更新基础信息请求参数"
 // @Success 200 {object} resp.ObjectResponse{data=runnerModel.Runner} "更新成功"
 // @Failure 400 {object} resp.ObjectResponse "参数错误"
 // @Failure 404 {object} resp.ObjectResponse "Runner不存在"
@@ -166,7 +166,7 @@ func (ctl *Controller) UpdateBasicInfo(c *gin.Context) {
 // @Accept application/json
 // @Produce application/json
 // @Param id path int true "Runner ID" minimum(1)
-// @Param request body runnerModel.UpdateStatusReq true "更新状态请求参数"
+// @Param request body runnerModel.ReqForUpdateStatus true "更新状态请求参数"
 // @Success 200 {object} resp.ObjectResponse{data=runnerModel.Runner} "更新成功"
 // @Failure 400 {object} resp.ObjectResponse "参数错误"
 // @Failure 404 {object} resp.ObjectResponse "Runner不存在"
@@ -354,7 +354,6 @@ func (ctl *Controller) Register(c *gin.Context) {
 // @Tags runners
 // @Accept application/json
 // @Produce application/json
-// @Param request body runnerModel.UpdateHeartBeatReq true "更新心跳请求参数"
 // @Success 200 {object} resp.ObjectResponse{data=runnerModel.Runner} "更新成功"
 // @Failure 400 {object} resp.ObjectResponse "参数错误"
 // @Failure 404 {object} resp.ObjectResponse "Runner不存在"
