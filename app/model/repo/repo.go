@@ -16,6 +16,7 @@ type CreateRepoReq struct {
 	Identifier    string `json:"identifier" binding:"required"`             // 仓库唯一标识
 	DefaultBranch string `json:"defaultBranch"`                             // 默认分支（默认main）
 	Desc          string `json:"desc" binding:"max=500"`                    // 仓库描述（最大500字符）
+	Product       string `json:"product"`                                   // 关联产品
 	ForkID        *uint  `json:"forkID" binding:"omitempty"`                // 派生来源ID（可选）
 	ACL           string `json:"acl" binding:"required,oneof=open private"` // 权限（仅支持open/private）
 	Ignore        string `json:"ignore"`                                    // GitIgnore类型（如go/java）
@@ -63,6 +64,7 @@ type ReqForUpdate struct {
 	SpaceID       uint   `json:"spaceID" binding:"required"`                // 空间ID（字符串类型，后续转int）
 	Identifier    string `json:"identifier" binding:"required"`             // 仓库唯一标识
 	DefaultBranch string `json:"defaultBranch"`                             // 默认分支（默认main）
+	Product       string `json:"product"`                                   // 关联产品
 	Desc          string `json:"desc" binding:"max=500"`                    // 仓库描述（最大500字符）
 	ACL           string `json:"acl" binding:"required,oneof=open private"` // 权限（仅支持open/private）
 }
@@ -72,6 +74,7 @@ type Repo struct {
 	SpaceID       uint   `json:"spaceID"`
 	Identifier    string `json:"identifier"`
 	Desc          string `json:"desc"`
+	Product       string `json:"product"`
 	GitUID        string `json:"gitUID"`
 	DefaultBranch string `json:"defaultBranch"`
 	ForkID        *uint  `json:"forkID"` // 允许 NULL，用指针类型
