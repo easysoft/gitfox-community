@@ -184,7 +184,6 @@ func (s *Service) Update(ctx context.Context, req *repoModel.ReqForUpdate, oldRe
 	// 构造更新的 repository 数据
 	repoData := &repo.Repository{
 		SpaceID:       req.SpaceID,
-		Identifier:    req.Identifier,
 		Desc:          req.Desc,
 		ACL:           req.ACL,
 		Product:       req.Product,
