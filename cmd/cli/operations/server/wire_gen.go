@@ -57,9 +57,11 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database/dbtx"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/events"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/livelog"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/lock"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pubsub"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/ssh"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/storage"
 	"gorm.io/gorm"
 )
 
@@ -126,7 +128,27 @@ func NewApp(mode string) (*App, func(), error) {
 	controller := branch3.NewController(branchService, repoService)
 	ciConfig := provider.NewCiConfig(config)
 	pipelineStore := pipeline.NewPipelineStore(db)
-	pipelineService := pipeline2.NewPipelineService(pipelineStore)
+	s3Store, err := provider.ProvidePipelineS3Store(config)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	storageDriver, cleanup3, err := storage.ProvideStorageDriver(config)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	contentStorage, err := provider.ProvidePipelineContentStorage(config, storageDriver)
+	if err != nil {
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	logStream := livelog.ProvideLogStream()
+	pipelineService := pipeline2.NewPipelineService(pipelineStore, s3Store, contentStorage, logStream)
 	pipelineController := pipeline3.NewController(ciConfig, pipelineService, repoService)
 	executionStore := execution.NewExecutionStore(db)
 	stageStore := stage.NewStageStore(db)
@@ -135,7 +157,7 @@ func NewApp(mode string) (*App, func(), error) {
 	stepStore := step.NewStepStore(db)
 	cancelerCanceler := canceler.New(executionStore, stageStore, stepStore)
 	executionService := execution2.NewExecutionService(executionStore, stageStore)
-	executionController := execution3.NewController(triggererTriggerer, cancelerCanceler, executionService)
+	executionController := execution3.NewController(triggererTriggerer, cancelerCanceler, executionService, pipelineService)
 	tokenCache := runner.NewTokenCache(duration)
 	runnerStore := runner.NewStore(db, tokenCache)
 	runnerService := runner2.NewService(runnerStore)
@@ -150,24 +172,28 @@ func NewApp(mode string) (*App, func(), error) {
 	universalClient := provider.NewEventRedisClient()
 	system, err := provider.ProvideEventSystem(eventsConfig, universalClient)
 	if err != nil {
+		cleanup3()
 		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
 	readerFactory, err := provider.ProvideGitEventReaderFactory(system)
 	if err != nil {
+		cleanup3()
 		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
 	eventsReaderFactory, err := provider.ProvidePullReqReaderFactory(system)
 	if err != nil {
+		cleanup3()
 		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
 	reporter, err := provider.ProvidePullReqReporter(system)
 	if err != nil {
+		cleanup3()
 		cleanup2()
 		cleanup()
 		return nil, nil, err
@@ -177,6 +203,7 @@ func NewApp(mode string) (*App, func(), error) {
 	pullrequestStore := pullrequest.NewPullRequestStore(db)
 	pullrequestService, err := provider.ProvidePullRequestSvc(eventContext, readerFactory, eventsReaderFactory, reporter, config, gitService, repoService, store, lockerLocker, pullrequestStore, streamer, pubSub, urlProvider)
 	if err != nil {
+		cleanup3()
 		cleanup2()
 		cleanup()
 		return nil, nil, err
@@ -193,6 +220,7 @@ func NewApp(mode string) (*App, func(), error) {
 	settingsService := provider.NewSettingsService(settingsInterface)
 	eventsReporter, err := provider.ProvideGitEventReporter(system)
 	if err != nil {
+		cleanup3()
 		cleanup2()
 		cleanup()
 		return nil, nil, err
@@ -207,6 +235,7 @@ func NewApp(mode string) (*App, func(), error) {
 	routerController := provider.NewControllers(spaceController, controller, pipelineController, executionController, runnerController, tagController, commitController, repoController, userController, gitController, scanController)
 	i18nManager, err := provider.NewI18nManager(config)
 	if err != nil {
+		cleanup3()
 		cleanup2()
 		cleanup()
 		return nil, nil, err
@@ -214,6 +243,7 @@ func NewApp(mode string) (*App, func(), error) {
 	server := provider.ProvideSSHServer(config, interface2, gitController)
 	triggerService, err := provider.ProvideTriggerService(eventContext, pipelineService, triggererTriggerer, readerFactory, eventsReaderFactory)
 	if err != nil {
+		cleanup3()
 		cleanup2()
 		cleanup()
 		return nil, nil, err
@@ -224,6 +254,7 @@ func NewApp(mode string) (*App, func(), error) {
 	jobConfig := provider.ProvideJobConfig(config)
 	scheduler, err := provider.ProvideScheduler(jobsStore, runnerStore, mutexManager, pubSub, jobLog, jobConfig)
 	if err != nil {
+		cleanup3()
 		cleanup2()
 		cleanup()
 		return nil, nil, err
@@ -247,6 +278,7 @@ func NewApp(mode string) (*App, func(), error) {
 		JobScheduler:    scheduler,
 	}
 	return app, func() {
+		cleanup3()
 		cleanup2()
 		cleanup()
 	}, nil
