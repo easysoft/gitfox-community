@@ -68,6 +68,7 @@ func mapToModel(data Repository) *repoModel.Repo {
 		Path:          path,
 		Empty:         data.Empty,
 		ACL:           data.ACL,
+		Synced:        data.Synced,
 		Mirror:        data.Mirror,
 		CreatedBy:     data.CreatedBy,
 		CreatedDate:   data.CreatedDate,
