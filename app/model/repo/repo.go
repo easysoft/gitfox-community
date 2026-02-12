@@ -61,12 +61,12 @@ func (req *CreateRepoReq) Validate() error {
 
 // ReqForUpdate 更新仓库的请求参数
 type ReqForUpdate struct {
-	SpaceID       uint   `json:"spaceID" binding:"required"`                // 空间ID（字符串类型，后续转int）
-	Identifier    string `json:"identifier" binding:"required"`             // 仓库唯一标识
-	DefaultBranch string `json:"defaultBranch"`                             // 默认分支（默认main）
-	Product       string `json:"product"`                                   // 关联产品
-	Desc          string `json:"desc" binding:"max=500"`                    // 仓库描述（最大500字符）
-	ACL           string `json:"acl" binding:"required,oneof=open private"` // 权限（仅支持open/private）
+	SpaceID       uint   `json:"spaceID" binding:"omitempty"`                 // 空间ID（字符串类型，后续转int）
+	Identifier    string `json:"identifier"`                                  // 仓库唯一标识
+	DefaultBranch string `json:"defaultBranch"`                               // 默认分支（默认main）
+	Product       string `json:"product"`                                     // 关联产品
+	Desc          string `json:"desc" binding:"max=500"`                      // 仓库描述（最大500字符）
+	ACL           string `json:"acl" ,binding:"omitempty,oneof=open private"` // 权限（仅支持open/private）
 }
 
 type Repo struct {
