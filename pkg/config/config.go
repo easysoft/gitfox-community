@@ -244,15 +244,15 @@ type DevopsConfig struct {
 
 // StorageConfig 通用存储配置
 type StorageConfig struct {
-	StorageType string           `yaml:"storageType"` // 存储驱动类型: filesystem, inmemory
-	Filesystem  FilesystemConfig `yaml:"filesystem"`  // 文件系统存储配置
-	S3          S3Config         `yaml:"s3"`          // S3 存储配置
+	StorageType string           `yaml:"storageType" envconfig:"GITFOX_STORAGE_TYPE"` // 存储驱动类型: filesystem, s3
+	Filesystem  FilesystemConfig `yaml:"filesystem"`                                  // 文件系统存储配置
+	S3          S3Config         `yaml:"s3"`                                          // S3 存储配置
 }
 
 type FilesystemConfig struct {
-	RootDirectory string `yaml:"rootDirectory"` // 存储根目录
-	MaxThreads    uint64 `yaml:"maxThreads"`                                   // 最大并发线程数
-	Prefix        string `yaml:"Prefix"`                                       // 路径前缀
+	RootDirectory string `yaml:"rootDirectory" envconfig:"GITFOX_FILESYSTEM_ROOT_DIRECTORY"` // 存储根目录
+	MaxThreads    uint64 `yaml:"maxThreads"`                                                 // 最大并发线程数
+	Prefix        string `yaml:"Prefix"`                                                     // 路径前缀
 }
 type S3Config struct {
 	Enabled   bool   `yaml:"enabled"`                   // 开启 S3 存储
