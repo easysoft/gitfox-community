@@ -148,7 +148,20 @@ func NewApp(mode string) (*App, func(), error) {
 		return nil, nil, err
 	}
 	logStream := livelog.ProvideLogStream()
-	pipelineService := pipeline2.NewPipelineService(pipelineStore, s3Store, contentStorage, logStream)
+	jobsStore := jobs.NewScheduleJob(db)
+	tokenCache := runner.NewTokenCache(duration)
+	runnerStore := runner.NewStore(db, tokenCache)
+	mutexManager := lock.ProvideMutexManager()
+	jobLog := provider.NewJobLogger(config)
+	jobConfig := provider.ProvideJobConfig(config)
+	scheduler, err := provider.ProvideScheduler(jobsStore, runnerStore, mutexManager, pubSub, jobLog, jobConfig)
+	if err != nil {
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	pipelineService := pipeline2.NewPipelineService(pipelineStore, s3Store, contentStorage, logStream, scheduler)
 	pipelineController := pipeline3.NewController(ciConfig, pipelineService, repoService)
 	executionStore := execution.NewExecutionStore(db)
 	stageStore := stage.NewStageStore(db)
@@ -158,8 +171,6 @@ func NewApp(mode string) (*App, func(), error) {
 	cancelerCanceler := canceler.New(executionStore, stageStore, stepStore)
 	executionService := execution2.NewExecutionService(executionStore, stageStore)
 	executionController := execution3.NewController(triggererTriggerer, cancelerCanceler, executionService, pipelineService)
-	tokenCache := runner.NewTokenCache(duration)
-	runnerStore := runner.NewStore(db, tokenCache)
 	runnerService := runner2.NewService(runnerStore)
 	url := provider.NewURLConfig(config)
 	runnerController := runner3.NewController(runnerService, url)
@@ -198,7 +209,6 @@ func NewApp(mode string) (*App, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	mutexManager := lock.ProvideMutexManager()
 	lockerLocker := locker.NewLocker(mutexManager)
 	pullrequestStore := pullrequest.NewPullRequestStore(db)
 	pullrequestService, err := provider.ProvidePullRequestSvc(eventContext, readerFactory, eventsReaderFactory, reporter, config, gitService, repoService, store, lockerLocker, pullrequestStore, streamer, pubSub, urlProvider)
@@ -249,16 +259,6 @@ func NewApp(mode string) (*App, func(), error) {
 		return nil, nil, err
 	}
 	authenticator := authn.ProvideAuthenticators(config, userStore, tokenInterface)
-	jobsStore := jobs.NewScheduleJob(db)
-	jobLog := provider.NewJobLogger(config)
-	jobConfig := provider.ProvideJobConfig(config)
-	scheduler, err := provider.ProvideScheduler(jobsStore, runnerStore, mutexManager, pubSub, jobLog, jobConfig)
-	if err != nil {
-		cleanup3()
-		cleanup2()
-		cleanup()
-		return nil, nil, err
-	}
 	app := &App{
 		SystemConfig:    config,
 		SystemLog:       systemLog,
@@ -276,6 +276,7 @@ func NewApp(mode string) (*App, func(), error) {
 		EventSystem:     system,
 		EventContext:    eventContext,
 		JobScheduler:    scheduler,
+		Triggerer:       triggererTriggerer,
 	}
 	return app, func() {
 		cleanup3()
@@ -303,4 +304,5 @@ type App struct {
 	EventSystem     *events.System
 	EventContext    *provider.EventContext
 	JobScheduler    *jobs2.Scheduler
+	Triggerer       triggerer.Triggerer
 }

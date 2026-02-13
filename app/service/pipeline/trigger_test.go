@@ -422,6 +422,12 @@ func TestDeleteTrigger(t *testing.T) {
 		{
 			name: "场景1：正常删除 - 删除触发成功",
 			mockPipelineStore: func(m *pipelineStoreMock.MockInterface) {
+				m.EXPECT().GetTriggerByID(gomock.Any(), int64(1)).Return(&pipelineModel.Trigger{
+					ID:         1,
+					PipelineID: 100,
+					Trigger:    []string{"push"},
+					Cron:       []string{},
+				}, nil)
 				m.EXPECT().DeleteTrigger(gomock.Any(), int64(1)).Return(nil)
 			},
 			inputID:     1,
@@ -430,7 +436,7 @@ func TestDeleteTrigger(t *testing.T) {
 		{
 			name: "场景2：触发不存在 - 返回错误",
 			mockPipelineStore: func(m *pipelineStoreMock.MockInterface) {
-				m.EXPECT().DeleteTrigger(gomock.Any(), int64(999)).Return(ErrDBNotFound)
+				m.EXPECT().GetTriggerByID(gomock.Any(), int64(999)).Return(nil, ErrDBNotFound)
 			},
 			inputID:     999,
 			expectedErr: ErrDBNotFound,
@@ -438,6 +444,10 @@ func TestDeleteTrigger(t *testing.T) {
 		{
 			name: "场景3：数据库删除失败 - 返回错误",
 			mockPipelineStore: func(m *pipelineStoreMock.MockInterface) {
+				m.EXPECT().GetTriggerByID(gomock.Any(), int64(1)).Return(&pipelineModel.Trigger{
+					ID:         1,
+					PipelineID: 100,
+				}, nil)
 				m.EXPECT().DeleteTrigger(gomock.Any(), int64(1)).Return(ErrDBQuery)
 			},
 			inputID:     1,

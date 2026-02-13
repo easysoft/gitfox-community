@@ -3,6 +3,7 @@ package pipeline
 import (
 	"context"
 	"io"
+	"time"
 
 	pipelineModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/pipeline"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/pipeline"
@@ -11,6 +12,14 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/storage"
 )
 
+// CronScheduler is the interface used by the pipeline service to manage
+// recurring cron jobs in the job scheduler. It is intentionally defined here
+// (rather than importing the jobs package) to avoid an import cycle.
+type CronScheduler interface {
+	AddRecurringWithData(ctx context.Context, jobName, jobType, jobData, cronDef string, maxDur time.Duration) error
+	RemoveRecurring(ctx context.Context, jobName string) error
+}
+
 var _ Interface = (*Service)(nil)
 
 type Service struct {
@@ -18,6 +27,7 @@ type Service struct {
 	s3Store        *pkgS3.Store           // S3 存储，配置开启时非 nil
 	contentStorage storage.ContentStorage // 文件存储，始终可用
 	logStream      livelog.LogStream      // 实时日志流
+	cronScheduler  CronScheduler          // 定时任务调度器，可为 nil
 }
 
 func NewPipelineService(
@@ -25,12 +35,14 @@ func NewPipelineService(
 	s3Store *pkgS3.Store,
 	contentStorage storage.ContentStorage,
 	logStream livelog.LogStream,
+	cronScheduler CronScheduler,
 ) *Service {
 	return &Service{
 		pipelineStore:  pipelineStore,
 		s3Store:        s3Store,
 		contentStorage: contentStorage,
 		logStream:      logStream,
+		cronScheduler:  cronScheduler,
 	}
 }
 
@@ -66,6 +78,10 @@ type Interface interface {
 	GetTriggers(ctx context.Context, filter *pipelineModel.TriggerFilter) ([]*pipelineModel.Trigger, error)
 	// DeleteTrigger 删除触发
 	DeleteTrigger(ctx context.Context, id int64) error
+	// SyncTriggerCronJobs 同步触发器的定时任务（按 triggerID 隔离，避免同 pipeline 多 trigger 互相覆盖）
+	SyncTriggerCronJobs(ctx context.Context, triggerID int64, pipelineID int64, newCronExprs []string) error
+	// ReconcileCronJobs 启动时对账：遍历所有 trigger，确保 schedule_jobs 表中的 cron job 与 trigger 表一致
+	ReconcileCronJobs(ctx context.Context) error
 
 	// --- 日志相关 ---
 	// CreateLogs 创建执行日志

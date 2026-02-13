@@ -675,6 +675,12 @@ func (s *Scheduler) RunJobs(ctx context.Context, groupID string, jobs []*jobMode
 	return nil
 }
 
+// RegisterHandler registers an external job handler for the given job type.
+// Must be called before Run() (which calls FinishRegistration()).
+func (s *Scheduler) RegisterHandler(jobType string, handler pkgJobs.Handler) error {
+	return s.executor.Register(jobType, handler)
+}
+
 // registerSystemJobs registers internal system jobs (purge, overdue).
 func (s *Scheduler) registerSystemJobs() error {
 	// Register purge job handler
