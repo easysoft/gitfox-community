@@ -100,7 +100,7 @@ func (s *Store) Delete(ctx context.Context, id uint) error {
 // GetBySpaceAndIdentifier 通过 spaceID 和 identifier 查找仓库
 func (s *Store) GetBySpaceAndIdentifier(ctx context.Context, spaceID uint, identifier string) (*repoModel.Repo, error) {
 	var repo Repository
-	err := s.db.WithContext(ctx).Where("spaceID = ? AND identifier = ? AND deleted = 0", spaceID, identifier).First(&repo).Error
+	err := s.db.WithContext(ctx).Where("spaceID = ? AND name = ? AND deleted = 0", spaceID, identifier).First(&repo).Error
 	if err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
@@ -116,7 +116,7 @@ func (s *Store) List(ctx context.Context, filter repoModel.ReqFilter) (*database
 
 	// 如果有 query 参数，模糊搜索 identifier
 	if filter.Query != "" {
-		tx = tx.Where("identifier LIKE ?", "%"+filter.Query+"%")
+		tx = tx.Where("name LIKE ?", "%"+filter.Query+"%")
 	}
 
 	// 按 ID 降序排序
