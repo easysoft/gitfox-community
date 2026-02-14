@@ -59,13 +59,13 @@ func (c *command) run(*kingpin.ParseContext) error {
 		panic(err)
 	}
 
-	// 启动时对账：确保所有 trigger 的 cron job 与 DB 一致（修复上次异常退出可能导致的不一致）
-	app.SystemLog.Info("[Server] Reconciling pipeline cron jobs...")
-	if err := app.PipelineService.ReconcileCronJobs(context.Background()); err != nil {
-		app.SystemLog.Errorw("[Server] Failed to reconcile pipeline cron jobs", "error", err)
-		panic(err)
-	}
-	app.SystemLog.Info("[Server] Pipeline cron jobs reconciled")
+	// TODO: 重新协商方案 启动时对账：确保所有 trigger 的 cron job 与 DB 一致（修复上次异常退出可能导致的不一致）
+	// app.SystemLog.Info("[Server] Reconciling pipeline cron jobs...")
+	// if err := app.PipelineService.ReconcileCronJobs(context.Background()); err != nil {
+	// 	app.SystemLog.Errorw("[Server] Failed to reconcile pipeline cron jobs", "error", err)
+	// 	panic(err)
+	// }
+	// app.SystemLog.Info("[Server] Pipeline cron jobs reconciled")
 
 	// 启动 Job Scheduler
 	app.SystemLog.Info("[Server] Starting job scheduler...")

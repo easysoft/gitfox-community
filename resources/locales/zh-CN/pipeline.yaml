@@ -6,6 +6,7 @@ pipeline:
   body_param_error: "Body 参数解析失败。"
   trigger_param_error: "触发参数解析失败。"
   trigger_param_cron_error: "无效的 cron 表达式。"
+  trigger_param_cron_limit_error: "cron 表达式数量超过限制，最多只能配置 5 个。"
   trigger_create_success: "触发创建成功。"
   trigger_create_error: "触发创建失败。"
   trigger_delete_success: "触发删除成功。"

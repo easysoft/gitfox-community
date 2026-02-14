@@ -7,6 +7,7 @@ import (
 	"time"
 
 	pipelineModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/pipeline"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"github.com/gorhill/cronexpr"
 )
 
@@ -15,7 +16,7 @@ const (
 	JobTypePipelineCron = "gitfox:pipeline:cron-trigger"
 
 	// maxCronExprs is the upper bound of cron expressions per trigger.
-	maxCronExprs = 10
+	maxCronExprs = 5
 
 	// cronJobMaxDuration is the maximum execution duration for a single cron trigger job.
 	cronJobMaxDuration = 5 * time.Minute
@@ -52,21 +53,26 @@ func (s *Service) SyncTriggerCronJobs(ctx context.Context, triggerID int64, pipe
 			break
 		}
 		if _, err := cronexpr.Parse(expr); err != nil {
-			return fmt.Errorf("invalid cron expression %q at index %d: %w", expr, i, err)
+			return errors.Newf("invalid cron expression %q at index %d: %w", expr, i, err)
 		}
 	}
 
 	// 1. Remove existing cron jobs for this trigger.
 	for i := 0; i < maxCronExprs; i++ {
 		if err := s.cronScheduler.RemoveRecurring(ctx, cronJobName(triggerID, i)); err != nil {
-			return fmt.Errorf("failed to remove cron job %s: %w", cronJobName(triggerID, i), err)
+			return errors.Newf("failed to remove cron job %s: %w", cronJobName(triggerID, i), err)
 		}
 	}
 
 	// 2. Add new cron jobs.
+	if len(newCronExprs) == 0 {
+		// No new cron expressions to add, just return after cleanup.
+		return nil
+	}
+
 	data, err := json.Marshal(cronJobData{PipelineID: pipelineID})
 	if err != nil {
-		return fmt.Errorf("failed to marshal cron job data: %w", err)
+		return errors.Newf("failed to marshal cron job data: %w", err)
 	}
 	jobData := string(data)
 
@@ -78,7 +84,7 @@ func (s *Service) SyncTriggerCronJobs(ctx context.Context, triggerID int64, pipe
 		if err := s.cronScheduler.AddRecurringWithData(
 			ctx, name, JobTypePipelineCron, jobData, cronExpr, cronJobMaxDuration,
 		); err != nil {
-			return fmt.Errorf("failed to add cron job %s: %w", name, err)
+			return errors.Newf("failed to add cron job %s: %w", name, err)
 		}
 	}
 
@@ -97,12 +103,15 @@ func (s *Service) ReconcileCronJobs(ctx context.Context) error {
 
 	triggers, err := s.pipelineStore.GetTriggers(ctx, &pipelineModel.TriggerFilter{})
 	if err != nil {
-		return fmt.Errorf("failed to list triggers for cron reconciliation: %w", err)
+		return errors.Newf("failed to list triggers for cron reconciliation: %w", err)
 	}
 
 	for _, t := range triggers {
+		// Always sync to handle all cases:
+		// 1. Triggers with cron: create/update scheduler jobs
+		// 2. Triggers without cron: clean up any orphaned jobs (e.g., user deleted cron)
 		if err := s.SyncTriggerCronJobs(ctx, t.ID, t.PipelineID, t.Cron); err != nil {
-			return fmt.Errorf("failed to reconcile cron jobs for trigger %d: %w", t.ID, err)
+			return errors.Newf("failed to reconcile cron jobs for trigger %d: %w", t.ID, err)
 		}
 	}
 

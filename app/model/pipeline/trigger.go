@@ -6,7 +6,13 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/slice"
 
-	"github.com/robfig/cron/v3"
+	"github.com/gorhill/cronexpr"
+)
+
+const (
+	// maxCronExprs is the upper bound of cron expressions per trigger.
+	// Must be in sync with app/service/pipeline/trigger_cron.go
+	maxCronExprs = 5
 )
 
 type Trigger struct {
@@ -28,12 +34,18 @@ func (t *Trigger) Validate() error {
 		return errors.WithI18nKey(errors.InvalidArgument.New("pipelineID is required"), i18n.PipelineTriggerParamError)
 	}
 
-	// 校验 cron 表达式
+	// 校验 cron 表达式数量
+	if len(t.Cron) > maxCronExprs {
+		return errors.WithI18nKey(
+			errors.InvalidArgument.Newf("cron expressions count exceeds maximum limit of %d", maxCronExprs),
+			i18n.PipelineTriggerParamCronLimitError,
+		)
+	}
+
+	// 校验 cron 表达式，使用与调度器相同的库确保验证和执行规则一致
 	if len(t.Cron) != 0 {
-		// 使用带秒的解析器，与 CronManager 保持一致
-		parser := cron.NewParser(cron.Second | cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow)
-		for _, cron := range t.Cron {
-			if _, err := parser.Parse(cron); err != nil {
+		for _, expr := range t.Cron {
+			if _, err := cronexpr.Parse(expr); err != nil {
 				return errors.WithI18nKey(errors.InvalidArgument.Newf("invalid cron expression: %s", err.Error()), i18n.PipelineTriggerParamCronError)
 			}
 		}
