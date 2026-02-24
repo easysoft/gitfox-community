@@ -52,7 +52,7 @@ func (s *Service) GetTriggers(ctx context.Context, filter *pipelineModel.Trigger
 func (s *Service) DeleteTrigger(ctx context.Context, id int64) error {
 	trigger, err := s.pipelineStore.GetTriggerByID(ctx, id)
 	if err != nil {
-		return errors.Newf("failed to get trigger before deleting: %v", err)
+		return err
 	}
 
 	// Delete from DB first. If this fails, the scheduler is untouched and
