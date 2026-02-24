@@ -2,9 +2,9 @@ package pipeline
 
 import (
 	"context"
-	"fmt"
 
 	pipelineModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/pipeline"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 )
 
 // CreateTrigger 创建触发
@@ -15,7 +15,7 @@ func (s *Service) CreateTrigger(ctx context.Context, trigger *pipelineModel.Trig
 
 	// trigger.ID is populated by the store after insert.
 	if err := s.SyncTriggerCronJobs(ctx, trigger.ID, trigger.PipelineID, trigger.Cron); err != nil {
-		return fmt.Errorf("failed to sync cron jobs after creating trigger: %w", err)
+		return errors.Newf("failed to sync cron jobs after creating trigger: %v", err)
 	}
 
 	return nil
@@ -32,7 +32,7 @@ func (s *Service) UpdateTrigger(ctx context.Context, trigger *pipelineModel.Trig
 	// SyncTriggerCronJobs already removes all existing cron jobs for this
 	// trigger before adding new ones — a single call is sufficient.
 	if err := s.SyncTriggerCronJobs(ctx, trigger.ID, trigger.PipelineID, trigger.Cron); err != nil {
-		return fmt.Errorf("failed to sync cron jobs after updating trigger: %w", err)
+		return errors.Newf("failed to sync cron jobs after updating trigger: %v", err)
 	}
 
 	return nil
@@ -52,7 +52,7 @@ func (s *Service) GetTriggers(ctx context.Context, filter *pipelineModel.Trigger
 func (s *Service) DeleteTrigger(ctx context.Context, id int64) error {
 	trigger, err := s.pipelineStore.GetTriggerByID(ctx, id)
 	if err != nil {
-		return fmt.Errorf("failed to get trigger before deleting: %w", err)
+		return errors.Newf("failed to get trigger before deleting: %v", err)
 	}
 
 	// Delete from DB first. If this fails, the scheduler is untouched and
@@ -64,7 +64,7 @@ func (s *Service) DeleteTrigger(ctx context.Context, id int64) error {
 	// Best-effort cleanup: remove cron jobs. Even if this fails, the orphan
 	// jobs will simply fail when they try to look up the deleted trigger.
 	if err := s.SyncTriggerCronJobs(ctx, trigger.ID, trigger.PipelineID, nil); err != nil {
-		return fmt.Errorf("failed to remove cron jobs after deleting trigger: %w", err)
+		return errors.Newf("failed to remove cron jobs after deleting trigger: %v", err)
 	}
 
 	return nil
