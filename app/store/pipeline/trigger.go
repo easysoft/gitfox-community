@@ -24,12 +24,13 @@ func (s *Store) CreateTrigger(ctx context.Context, trigger *pipelineModel.Trigge
 // UpdateTrigger 更新触发，如果 cron 和 trigger 都为空则硬删除
 func (s *Store) UpdateTrigger(ctx context.Context, trigger *pipelineModel.Trigger) error {
 	// 如果 cron 和 trigger 都为空，则硬删除
-	if len(trigger.Cron) == 0 && len(trigger.Trigger) == 0 {
-		return s.DeleteTrigger(ctx, trigger.ID)
-	}
+	// if len(trigger.Cron) == 0 && len(trigger.Trigger) == 0 {
+	// 	return s.DeleteTrigger(ctx, trigger.ID)
+	// }
 
 	storeTrigger := mapTriggerToStore(trigger)
-	if err := s.db.WithContext(ctx).Model(&Trigger{}).Where("id = ? AND deleted = 0", trigger.ID).Updates(&storeTrigger).Error; err != nil {
+	if err := s.db.WithContext(ctx).Model(&Trigger{}).Where("id = ? AND deleted = 0", trigger.ID).
+		Select("trigger", "cron", "editedBy", "editedDate").Updates(&storeTrigger).Error; err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
 	}
 	return nil

@@ -9,6 +9,10 @@ import (
 
 // CreateTrigger 创建触发
 func (s *Service) CreateTrigger(ctx context.Context, trigger *pipelineModel.Trigger) error {
+	trigger.ID = 0
+	trigger.EditedBy = ""
+	trigger.EditedDate = nil
+
 	if err := s.pipelineStore.CreateTrigger(ctx, trigger); err != nil {
 		return err
 	}
