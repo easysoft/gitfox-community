@@ -813,6 +813,7 @@ func (s *Scheduler) PurgeJobsByGroupID(ctx context.Context, jobGroupID string) (
 }
 
 // publishStateChange publishes a job state change message to the pubsub service.
+// 发布作业状态变更消息到 pubsub 服务
 func publishStateChange(ctx context.Context, ps pubsub.PubSub, job *jobModel.ScheduleJob) error {
 	payload := map[string]interface{}{
 		"name":     job.Name,

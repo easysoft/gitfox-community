@@ -16,7 +16,8 @@ func (s *Scheduler) AddRecurringWithData(ctx context.Context, jobName, jobType, 
 		return fmt.Errorf("invalid cron definition string for job type=%s: %w", jobType, err)
 	}
 
-	now := time.Now()
+	// 必须先转换为 CST 时区，确保 cron 计算基于正确的本地时间
+	now := time.Now().In(datetime.CST)
 	nowLocal := datetime.Local(now)
 	nextExec := cronExp.Next(now)
 	nextExecLocal := datetime.Local(nextExec)
