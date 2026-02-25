@@ -88,10 +88,6 @@ func (t *Trigger) Validate() error {
 		return errors.WithI18nKey(errors.InvalidArgument.New("pipelineID is required"), i18n.PipelineTriggerParamError)
 	}
 
-	if t.RepoID <= 0 {
-		return errors.WithI18nKey(errors.InvalidArgument.New("repoID is required"), i18n.PipelineTriggerParamError)
-	}
-
 	// 校验 cron 表达式数量
 	if len(t.Cron) > maxCronExprs {
 		return errors.WithI18nKey(
