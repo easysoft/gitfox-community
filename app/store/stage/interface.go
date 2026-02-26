@@ -28,6 +28,7 @@ type Interface interface {
 	Update(ctx context.Context, stage *stageModel.Stage) error
 	// GetByID gets stage by ID
 	GetByID(ctx context.Context, id uint) (*stageModel.Stage, error)
+	GetByIDWithSteps(ctx context.Context, id uint) (*stageModel.StageWithSteps, error)
 	// ListIncomplete returns a stage list where the stage is incomplete (pending or running)
 	ListIncomplete(ctx context.Context) ([]*stageModel.Stage, error)
 	// List returns a list of stages corresponding to an execution ID

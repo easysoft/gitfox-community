@@ -2,6 +2,7 @@ package manager
 
 import (
 	"context"
+	"errors"
 	"strings"
 
 	// "github.com/easysoft/gitfox/livelog"
@@ -12,6 +13,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	events "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/events/pipeline"
 	pullreqevents "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/events/pullreq"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/livelog"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
 
 	eventModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/event"
@@ -36,7 +38,7 @@ type teardown struct {
 	SSEStreamer  sse.Streamer
 	Reporter     events.Reporter
 	PRReporter   pullreqevents.Reporter
-	// Logs        livelog.LogStream
+	Logz         livelog.LogStream
 }
 
 //nolint:gocognit // refactor if needed.
@@ -92,12 +94,12 @@ func (t *teardown) do(ctx context.Context, stage *stageModel.StageWithSteps) err
 	}
 
 	// TODO: 等 live log
-	// for _, step := range stage.Steps {
-	// 	err = t.Logs.Delete(noContext, step.ID)
-	// 	if err != nil && !errors.Is(err, livelog.ErrStreamNotFound) {
-	// 		log.Warn().Err(err).Msgf("failed to delete log stream for step %d", step.ID)
-	// 	}
-	// }
+	for _, step := range stage.Steps {
+		err = t.Logz.Delete(noContext, int64(step.ID))
+		if err != nil && !errors.Is(err, livelog.ErrStreamNotFound) {
+			log.Warn().Err(err).Msgf("failed to delete log stream for step %d", step.ID)
+		}
+	}
 
 	stages, err := t.StageSvc.ListWithSteps(noContext, execution.ID)
 	if err != nil {

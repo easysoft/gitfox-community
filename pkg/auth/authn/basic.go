@@ -46,7 +46,6 @@ func (a *BasicAuthenticator) Authenticate(r *gin.Context) (*auth.Session, error)
 		if passwd != "cd65d97989fcb1fdb0d82471c3238a3c" {
 			return nil, constant.ErrUnauthorized
 		}
-	} else {
 		userInfo := principal.User{
 			Account: "pipeline",
 		}

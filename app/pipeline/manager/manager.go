@@ -4,8 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-
-	// "github.com/easysoft/gitfox/livelog"
+	"io"
 
 	"github.com/rs/zerolog/log"
 
@@ -25,6 +24,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/stage"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/step"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/livelog"
 	urlprovider "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/url"
 )
 
@@ -62,8 +62,8 @@ type (
 	// required by the runner to execute a build.
 	ExecutionContext struct {
 		Execution *executionModel.ExecutionWithStages `json:"build"`
-		Stage     *stageModel.Stage                   `json:"stage"`
-		Config    pipelineModel.PipelineFile          `json:"config"`
+		Stage     *stageModel.StageWithSteps          `json:"stage"`
+		Config    *pipelineModel.PipelineFile         `json:"config"`
 		Netrc     *Netrc                              `json:"netrc"`
 		// Secrets   []*types.Secret           `json:"secrets"`
 	}
@@ -81,13 +81,13 @@ type (
 		Accept(ctx context.Context, stage int64, machine string) (*stageModel.Stage, error)
 
 		// Write writes a line to the build logs.
-		// Write(ctx context.Context, step int64, line *livelog.Line) error
+		Write(ctx context.Context, step int64, line *livelog.Line) error
 
 		// Details returns details about stage.
 		Details(ctx context.Context, stageID int64) (*ExecutionContext, error)
 
 		// UploadLogs uploads the full logs.
-		// UploadLogs(ctx context.Context, step int64, r io.Reader) error
+		UploadLogs(ctx context.Context, stepID int64, r io.Reader) error
 
 		// BeforeStep signals the build step is about to start.
 		BeforeStep(ctx context.Context, step *stepModel.Step) error
@@ -117,22 +117,7 @@ type Manager struct {
 	StageSvc     stage.Interface
 	StepSvc      step.Interface
 	Scheduler    scheduler.Scheduler
-	// Logz         livelog.LogStream
-	// Logs         store.LogStore
-	// publicAccess publicaccess.Service
-	// ruleStore     store.RuleStore
-	// reviewerStore store.PullReqReviewerStore
-	// codeOwners    codeowners.Service
-	// Checks     store.CheckStore
-	// Converter  store.ConvertService
-	// Globals    store.GlobalSecretStore
-	// Netrcs     store.NetrcService
-	// Secrets store.SecretStore
-	// Status  store.StatusService
-	// Repos   store.RepoStore
-	// System  *store.System
-	// Users store.PrincipalStore
-	// Webhook store.WebhookSender
+	Logz         livelog.LogStream
 }
 
 func New(
@@ -225,24 +210,43 @@ func (m *Manager) Accept(_ context.Context, id int64, machine string) (*stageMod
 }
 
 // Write writes a line to the build logs.
-// func (m *Manager) Write(ctx context.Context, step int64, line *livelog.Line) error {
-// 	err := m.Logz.Write(ctx, step, line)
-// 	if err != nil {
-// 		log.Warn().Int64("step-id", step).Err(err).Msg("manager: cannot write to log stream")
-// 		return err
-// 	}
-// 	return nil
-// }
+func (m *Manager) Write(ctx context.Context, step int64, line *livelog.Line) error {
+	err := m.Logz.Write(ctx, step, line)
+	if err != nil {
+		log.Warn().Int64("step-id", step).Err(err).Msg("manager: cannot write to log stream")
+		return err
+	}
+	return nil
+}
 
 // UploadLogs uploads the full logs.
-// func (m *Manager) UploadLogs(ctx context.Context, step int64, r io.Reader) error {
-// 	err := m.Logs.Create(ctx, step, r)
-// 	if err != nil {
-// 		log.Error().Err(err).Int64("step-id", step).Msg("manager: cannot upload complete logs")
-// 		return err
-// 	}
-// 	return nil
-// }
+func (m *Manager) UploadLogs(ctx context.Context, stepID int64, r io.Reader) error {
+	step, err := m.StepSvc.GetByID(ctx, uint(stepID))
+	if err != nil {
+		log.Error().Err(err).Int64("step-id", stepID).Msg("manager: cannot upload complete logs")
+		return err
+	}
+	stage, err := m.StageSvc.GetByID(ctx, step.StageID)
+	if err != nil {
+		log.Error().Err(err).Int64("step-id", stepID).Msg("manager: cannot upload complete logs")
+		return err
+	}
+	execution, err := m.ExecutionSvc.GetByID(ctx, stage.ExecutionID)
+	if err != nil {
+		log.Error().Err(err).Int64("step-id", stepID).Msg("manager: cannot upload complete logs")
+		return err
+	}
+	if err := m.PipelineSvc.CreateLogs(ctx, &pipelineModel.S3Logs{
+		PipelineID:  fmt.Sprint(execution.PipelineID),
+		ExecutionID: fmt.Sprint(stage.ExecutionID),
+		StageID:     fmt.Sprint(step.StageID),
+		StepID:      fmt.Sprint(stepID),
+	}, r); err != nil {
+		log.Error().Err(err).Int64("step-id", stepID).Msg("manager: cannot upload complete logs")
+		return err
+	}
+	return nil
+}
 
 // Details provides details about the stage.
 func (m *Manager) Details(ctx context.Context, stageID int64) (*ExecutionContext, error) {
@@ -251,22 +255,17 @@ func (m *Manager) Details(ctx context.Context, stageID int64) (*ExecutionContext
 		Logger()
 	log.Debug().Msg("manager: fetching stage details")
 
-	stage, err := m.StageSvc.GetByID(noContext, uint(stageID))
+	stage, err := m.StageSvc.GetByIDWithSteps(noContext, uint(stageID))
 	if err != nil {
 		log.Warn().Err(err).Msg("manager: cannot find stage")
 		return nil, err
 	}
+
 	execution, err := m.ExecutionSvc.GetByID(noContext, stage.ExecutionID)
 	if err != nil {
 		log.Warn().Err(err).Msg("manager: cannot find build")
 		return nil, err
 	}
-	pipeline, err := m.PipelineSvc.GetPipelineByID(noContext, int64(execution.PipelineID))
-	if err != nil {
-		log.Warn().Err(err).Msg("manager: cannot find pipeline")
-		return nil, err
-	}
-
 	stages, err := m.StageSvc.ListWithSteps(noContext, stage.ExecutionID)
 	if err != nil {
 		log.Warn().Err(err).Msg("manager: cannot list stages")
@@ -288,6 +287,11 @@ func (m *Manager) Details(ctx context.Context, stageID int64) (*ExecutionContext
 	// 	return nil, err
 	// }
 
+	pipeline, err := m.PipelineSvc.GetPipelineByID(noContext, int64(execution.PipelineID))
+	if err != nil {
+		log.Warn().Err(err).Msg("manager: cannot find pipeline")
+		return nil, err
+	}
 	// Fetch contents of YAML from the execution ref at the pipeline config path.
 	file, err := m.PipelineSvc.GetPipelineContent(noContext, pipeline.ID)
 	if err != nil {
@@ -304,7 +308,7 @@ func (m *Manager) Details(ctx context.Context, stageID int64) (*ExecutionContext
 	return &ExecutionContext{
 		Execution: &executionDetails,
 		Stage:     stage,
-		Config:    *file,
+		Config:    file,
 		Netrc:     netrc,
 		// Secrets:   secrets,
 	}, nil
@@ -320,11 +324,11 @@ func (m *Manager) BeforeStep(_ context.Context, step *stepModel.Step) error {
 
 	log.Debug().Msg("manager: updating step status")
 
-	// err := m.Logz.Create(noContext, step.ID)
-	// if err != nil {
-	// 	log.Warn().Err(err).Msg("manager: cannot create log stream")
-	// 	return err
-	// }
+	err := m.Logz.Create(noContext, int64(step.ID))
+	if err != nil {
+		log.Warn().Err(err).Msg("manager: cannot create log stream")
+		return err
+	}
 	updater := &updater{
 		ExecutionSvc: m.ExecutionSvc,
 		SSEStreamer:  m.SSEStreamer,
@@ -356,9 +360,9 @@ func (m *Manager) AfterStep(_ context.Context, step *stepModel.Step) error {
 		log.Warn().Err(err).Msg("manager: cannot update step")
 	}
 
-	// if err := m.Logz.Delete(noContext, step.ID); err != nil && !errors.Is(err, livelog.ErrStreamNotFound) {
-	// 	log.Warn().Err(err).Msg("manager: cannot teardown log stream")
-	// }
+	if err := m.Logz.Delete(noContext, int64(step.ID)); err != nil && !errors.Is(err, livelog.ErrStreamNotFound) {
+		log.Warn().Err(err).Msg("manager: cannot teardown log stream")
+	}
 	return retErr
 }
 
@@ -381,13 +385,13 @@ func (m *Manager) AfterStage(_ context.Context, stage *stageModel.StageWithSteps
 		ExecutionSvc: m.ExecutionSvc,
 		PipelineSvc:  m.PipelineSvc,
 		SSEStreamer:  m.SSEStreamer,
-		// Logs:          m.Logz,
-		Scheduler:  m.Scheduler,
-		StepSvc:    m.StepSvc,
-		StageSvc:   m.StageSvc,
-		Reporter:   m.reporter,
-		PRReporter: m.prReporter,
-		PullReqSvc: m.pullReqSvc,
+		Logz:         m.Logz,
+		Scheduler:    m.Scheduler,
+		StepSvc:      m.StepSvc,
+		StageSvc:     m.StageSvc,
+		Reporter:     m.reporter,
+		PRReporter:   m.prReporter,
+		PullReqSvc:   m.pullReqSvc,
 	}
 	return t.do(noContext, stage)
 }

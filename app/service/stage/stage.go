@@ -21,6 +21,10 @@ func (s *Service) GetByID(ctx context.Context, id uint) (*stageModel.Stage, erro
 	return s.stageStore.GetByID(ctx, id)
 }
 
+func (s *Service) GetByIDWithSteps(ctx context.Context, id uint) (*stageModel.StageWithSteps, error) {
+	return s.stageStore.GetByIDWithSteps(ctx, id)
+}
+
 // ListIncomplete returns a stage list where the stage is incomplete (pending or running)
 func (s *Service) ListIncomplete(ctx context.Context) ([]*stageModel.Stage, error) {
 	return s.stageStore.ListIncomplete(ctx)
