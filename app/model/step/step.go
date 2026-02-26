@@ -13,7 +13,7 @@ type Step struct {
 	Code       string            `json:"code"`
 	SN         int               `json:"sn"`
 	Image      string            `json:"image"`
-	Depends    string            `json:"depends"`
+	Depends    []string          `json:"depends"`
 	GroupID    uint              `json:"groupID"`
 	FailPolicy string            `json:"failPolicy"`
 	Started    *datetime.Local   `json:"started"`

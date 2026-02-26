@@ -7,6 +7,7 @@ import (
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/pipeline"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
+	ciStorage "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/storage"
 	jobsSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/jobs"
 	pipelineSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/pipeline"
 	pipelineStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/pipeline"
@@ -26,6 +27,7 @@ var PipelineWireSet = wire.NewSet(
 	wire.Bind(new(pipelineSvc.CronScheduler), new(*jobsSvc.Scheduler)),
 	ProvidePipelineS3Store,
 	ProvidePipelineContentStorage,
+	ProvidePipelineCIStorage,
 	livelog.ProvideLogStream,
 )
 
@@ -46,4 +48,8 @@ func ProvidePipelineContentStorage(cfg *config.Config, d driver.StorageDriver) (
 	var opts []storage.CommonContentStoreOption
 	opts = append(opts, storage.WithPrefix(constant.PipelinePrefix))
 	return storage.NewCommonContentStore(ctx, d, opts...)
+}
+
+func ProvidePipelineCIStorage(ctx context.Context, storageConfig storage.Config) (ciStorage.PipelineStorage, error) {
+	return ciStorage.LoadPipelineStorage(ctx, storageConfig)
 }

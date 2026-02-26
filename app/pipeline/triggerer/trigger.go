@@ -13,6 +13,7 @@ import (
 	pipelineModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/pipeline"
 	stageModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/stage"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/manager"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/scheduler"
 
 	pipelineSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/pipeline"
 	executionStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/execution"
@@ -57,14 +58,16 @@ type triggerer struct {
 	pipelineService pipelineSvc.Interface
 	executionStore  executionStore.Interface
 	stageStore      stageStore.Interface
+	scheduler       scheduler.Scheduler
 	tx              dbtx.TxRunner
 }
 
-func New(pipelineService pipelineSvc.Interface, executionStore executionStore.Interface, stageStore stageStore.Interface, tx dbtx.TxRunner) Triggerer {
+func New(pipelineService pipelineSvc.Interface, executionStore executionStore.Interface, stageStore stageStore.Interface, scheduler scheduler.Scheduler, tx dbtx.TxRunner) Triggerer {
 	return &triggerer{
 		pipelineService: pipelineService,
 		executionStore:  executionStore,
 		stageStore:      stageStore,
+		scheduler:       scheduler,
 		tx:              tx,
 	}
 }
@@ -122,11 +125,11 @@ func (t *triggerer) Trigger(
 			continue
 		}
 		log.Infof("[trigger] scheduling stage code=%s name=%s", stage.Code, stage.Name)
-		// err = t.scheduler.Schedule(ctx, stage)
-		// if err != nil {
-		// 	log.Error().Err(err).Msg("trigger: cannot enqueue execution")
-		// 	return nil, err
-		// }
+		err = t.scheduler.Schedule()
+		if err != nil {
+			log.Errorf("[trigger]: cannot enqueue execution: %s", err)
+			return nil, err
+		}
 	}
 
 	return execution, nil

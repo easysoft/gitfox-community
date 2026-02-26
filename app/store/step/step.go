@@ -2,6 +2,7 @@ package step
 
 import (
 	"context"
+	"encoding/json"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	stepModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/step"
@@ -50,6 +51,12 @@ func (s *Store) GetByID(ctx context.Context, id uint) (*stepModel.Step, error) {
 
 // mapToDBModel converts business model to database model
 func mapToDBModel(step *stepModel.Step) *Step {
+
+	var dependsJSON string
+	if step.Depends != nil {
+		bytes, _ := json.Marshal(step.Depends)
+		dependsJSON = string(bytes)
+	}
 	return &Step{
 		ID:         step.ID,
 		StageID:    step.StageID,
@@ -57,7 +64,7 @@ func mapToDBModel(step *stepModel.Step) *Step {
 		Code:       step.Code,
 		SN:         step.SN,
 		Image:      step.Image,
-		Depends:    step.Depends,
+		Depends:    dependsJSON,
 		GroupID:    step.GroupID,
 		FailPolicy: step.FailPolicy,
 		Started:    step.Started,
@@ -71,6 +78,11 @@ func mapToDBModel(step *stepModel.Step) *Step {
 
 // mapToModel converts database model to business model
 func mapToModel(s *Step) *stepModel.Step {
+
+	var depends []string
+	if s.Depends != "" {
+		_ = json.Unmarshal([]byte(s.Depends), &depends)
+	}
 	return &stepModel.Step{
 		ID:         s.ID,
 		StageID:    s.StageID,
@@ -78,7 +90,7 @@ func mapToModel(s *Step) *stepModel.Step {
 		Code:       s.Code,
 		SN:         s.SN,
 		Image:      s.Image,
-		Depends:    s.Depends,
+		Depends:    depends,
 		GroupID:    s.GroupID,
 		FailPolicy: s.FailPolicy,
 		Started:    s.Started,
