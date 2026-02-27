@@ -72,6 +72,6 @@ CREATE TABLE IF NOT EXISTS `ops_repobranch` (
 	`branch` varchar(100) NOT NULL DEFAULT '',
 	PRIMARY KEY (`id`)
 )ENGINE=InnoDB;
-CREATE UNIQUE INDEX `uk_repo_revision_branch` ON `ops_repouser` (`repo`,`revision`,`branch`);
+CREATE UNIQUE INDEX `uk_repo_revision_branch` ON `ops_repobranch` (`repo`,`revision`,`branch`);
 CREATE INDEX `idx_branch` ON `ops_repobranch` (`branch`);
 CREATE INDEX `idx_revision` ON `ops_repobranch` (`revision`);
