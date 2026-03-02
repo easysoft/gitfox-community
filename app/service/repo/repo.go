@@ -69,6 +69,7 @@ func (s *Service) Create(ctx context.Context, session *auth.Session, params *rep
 		Identifier:    params.Identifier,
 		GitUID:        gitResp.UID,
 		Desc:          params.Desc,
+		Product:       params.Product,
 		CreatedBy:     session.User.Account,
 		ForkID:        params.ForkID,
 		DefaultBranch: params.DefaultBranch,
@@ -183,9 +184,9 @@ func (s *Service) Update(ctx context.Context, req *repoModel.ReqForUpdate, oldRe
 	// 构造更新的 repository 数据
 	repoData := &repo.Repository{
 		SpaceID:       req.SpaceID,
-		Identifier:    req.Identifier,
 		Desc:          req.Desc,
 		ACL:           req.ACL,
+		Product:       req.Product,
 		DefaultBranch: req.DefaultBranch,
 	}
 

@@ -1,6 +1,10 @@
 execution:
   trigger_success: "Execution triggered successfully"
   trigger_error: "Execution trigger failed"
+  cancel_success: "Execution cancelled successfully"
+  cancel_error: "Execution cancellation failed"
+  query_success: "Execution queried successfully"
+  query_error: "Execution query failed"
   path_param_error: "Path parameter parsing failed."
   query_param_error: "Query parameter parsing failed."
   body_param_error: "Body parameter parsing failed."

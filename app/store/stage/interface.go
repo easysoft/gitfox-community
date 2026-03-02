@@ -24,6 +24,17 @@ func NewStageStore(db *gorm.DB) *Store {
 type Interface interface {
 	// Create creates a new stage
 	Create(ctx context.Context, stage *stageModel.Stage) error
+	// Update updates a stage
+	Update(ctx context.Context, stage *stageModel.Stage) error
 	// GetByID gets stage by ID
 	GetByID(ctx context.Context, id uint) (*stageModel.Stage, error)
+	GetByIDWithSteps(ctx context.Context, id uint) (*stageModel.StageWithSteps, error)
+	// ListIncomplete returns a stage list where the stage is incomplete (pending or running)
+	ListIncomplete(ctx context.Context) ([]*stageModel.Stage, error)
+	// List returns a list of stages corresponding to an execution ID
+	List(ctx context.Context, executionID uint) ([]*stageModel.Stage, error)
+	// ListWithSteps returns a stage list with steps for an execution
+	ListWithSteps(ctx context.Context, executionID uint) ([]*stageModel.StageWithSteps, error)
+	// FindByNumber returns a stage by execution ID and stage number (sn)
+	FindByNumber(ctx context.Context, executionID int64, sn int) (*stageModel.Stage, error)
 }

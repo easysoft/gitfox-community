@@ -6,6 +6,7 @@ pipeline:
   body_param_error: "Failed to parse request body."
   trigger_param_error: "Failed to parse trigger parameter."
   trigger_param_cron_error: "Invalid cron expression."
+  trigger_param_cron_limit_error: "Timed triggers cannot exceed 5."
   trigger_create_success: "Trigger created successfully."
   trigger_create_error: "Failed to create trigger."
   trigger_delete_success: "Trigger deleted successfully."

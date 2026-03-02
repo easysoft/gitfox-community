@@ -60,6 +60,7 @@ func NewRouter(mode string, logger *logger.SugaredMateLogger, controller *Contro
 	registerRepoRoutes(authGroup, controller)     // 仓库相关路由
 	registerScanRoutes(authGroup, controller)     // 扫描相关路由
 	registerPipelineRoutes(authGroup, controller) // 流水线相关路由
+	registerRunnerRoutes(authGroup, controller)   // Runner 管理相关路由
 	registerUserRoutes(authGroup, controller)     // 用户相关路由
 
 	// 创建需要 Basic 认证的路由组（用于 Git 操作）
@@ -70,6 +71,10 @@ func NewRouter(mode string, logger *logger.SugaredMateLogger, controller *Contro
 	// 注册 Git 钩子路由 内部使用无需鉴权
 	internalGroup := r.Group("/api/v2/internal")
 	registerGitHookRoutes(internalGroup, controller)
+
+	// 注册 Runner client 相关路由使用 token 鉴权
+	runnerClientGroup := r.Group("/api/v2/runner-client")
+	registerRunnerClientRoutes(runnerClientGroup, controller)
 
 	return r
 }

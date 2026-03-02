@@ -13,9 +13,10 @@ import (
 // CreateRemoteRepoRequest 创建远端仓库请求参数
 type CreateRepoReq struct {
 	SpaceID       uint   `json:"spaceID" binding:"required"`                // 空间ID（字符串类型，后续转int）
-	Identifier    string `json:"identifier" binding:"required"`             // 仓库唯一标识
+	Identifier    string `json:"name" binding:"required"`             // 仓库唯一标识
 	DefaultBranch string `json:"defaultBranch"`                             // 默认分支（默认main）
 	Desc          string `json:"desc" binding:"max=500"`                    // 仓库描述（最大500字符）
+	Product       string `json:"product"`                                   // 关联产品
 	ForkID        *uint  `json:"forkID" binding:"omitempty"`                // 派生来源ID（可选）
 	ACL           string `json:"acl" binding:"required,oneof=open private"` // 权限（仅支持open/private）
 	Ignore        string `json:"ignore"`                                    // GitIgnore类型（如go/java）
@@ -60,24 +61,26 @@ func (req *CreateRepoReq) Validate() error {
 
 // ReqForUpdate 更新仓库的请求参数
 type ReqForUpdate struct {
-	SpaceID       uint   `json:"spaceID" binding:"required"`                // 空间ID（字符串类型，后续转int）
-	Identifier    string `json:"identifier" binding:"required"`             // 仓库唯一标识
-	DefaultBranch string `json:"defaultBranch"`                             // 默认分支（默认main）
-	Desc          string `json:"desc" binding:"max=500"`                    // 仓库描述（最大500字符）
-	ACL           string `json:"acl" binding:"required,oneof=open private"` // 权限（仅支持open/private）
+	SpaceID       uint   `json:"spaceID" binding:"omitempty"`                // 空间ID（字符串类型，后续转int）
+	DefaultBranch string `json:"defaultBranch" binding:"omitempty"`          // 默认分支（默认main）
+	Product       string `json:"product" binding:"omitempty"`                // 关联产品
+	Desc          string `json:"desc" binding:"omitempty,max=500"`           // 仓库描述（最大500字符）
+	ACL           string `json:"acl" binding:"omitempty,oneof=open private"` // 权限（仅支持open/private）
 }
 
 type Repo struct {
 	ID            uint   `json:"id"`
 	SpaceID       uint   `json:"spaceID"`
-	Identifier    string `json:"identifier"`
+	Identifier    string `json:"name"`
 	Desc          string `json:"desc"`
+	Product       string `json:"product"`
 	GitUID        string `json:"gitUID"`
 	DefaultBranch string `json:"defaultBranch"`
 	ForkID        *uint  `json:"forkID"` // 允许 NULL，用指针类型
 	Empty         bool   `json:"empty"`
 	ACL           string `json:"acl"`
 	Mirror        bool   `json:"mirror"`
+	Synced        uint8  `json:"synced"`
 	Status        int    `json:"status"` // 状态码用 int 类型（兼容枚举映射）
 	Mutex         int    `json:"mutex"`
 	// git urls

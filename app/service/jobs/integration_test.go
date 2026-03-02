@@ -26,6 +26,7 @@ func TestIntegration_SimpleJobExecution(t *testing.T) {
 
 	scheduler, err := NewScheduler(
 		mockJobStore,
+		nil,
 		mockMxManager,
 		mockPubsubService,
 		testLog,
@@ -91,6 +92,7 @@ func TestIntegration_RecurringJobCronCalculation(t *testing.T) {
 
 	scheduler, _ := NewScheduler(
 		mockJobStore,
+		nil,
 		mockMxManager,
 		mockPubsubService,
 		testLog,
@@ -204,6 +206,7 @@ func TestIntegration_JobLifecycle(t *testing.T) {
 
 	scheduler, _ := NewScheduler(
 		mockJobStore,
+		nil,
 		mockMxManager,
 		mockPubsubService,
 		testLog,

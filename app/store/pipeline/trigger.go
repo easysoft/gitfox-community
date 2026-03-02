@@ -24,12 +24,13 @@ func (s *Store) CreateTrigger(ctx context.Context, trigger *pipelineModel.Trigge
 // UpdateTrigger 更新触发，如果 cron 和 trigger 都为空则硬删除
 func (s *Store) UpdateTrigger(ctx context.Context, trigger *pipelineModel.Trigger) error {
 	// 如果 cron 和 trigger 都为空，则硬删除
-	if trigger.Cron == "" && len(trigger.Trigger) == 0 {
-		return s.DeleteTrigger(ctx, trigger.ID)
-	}
+	// if len(trigger.Cron) == 0 && len(trigger.Trigger) == 0 {
+	// 	return s.DeleteTrigger(ctx, trigger.ID)
+	// }
 
 	storeTrigger := mapTriggerToStore(trigger)
-	if err := s.db.WithContext(ctx).Model(&Trigger{}).Where("id = ? AND deleted = 0", trigger.ID).Updates(&storeTrigger).Error; err != nil {
+	if err := s.db.WithContext(ctx).Model(&Trigger{}).Where("id = ? AND deleted = 0", trigger.ID).
+		Select("trigger", "cron", "editedBy", "editedDate").Updates(&storeTrigger).Error; err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
 	}
 	return nil
@@ -90,18 +91,25 @@ func (s *Store) DeleteTrigger(ctx context.Context, id int64) error {
 	return nil
 }
 
+// cronSeparator 用于多条 cron 表达式的分隔符，不能用逗号（cron 表达式内部使用逗号）
+const cronSeparator = "|"
+
 // mapTriggerToModel 将 Store 层结构转换为 Model 层结构
 func mapTriggerToModel(t *Trigger) *pipelineModel.Trigger {
 	var triggerList []string
 	if t.Trigger != "" {
 		triggerList = strings.Split(t.Trigger, ",")
 	}
+	var cronList []string
+	if t.Cron != "" {
+		cronList = strings.Split(t.Cron, cronSeparator)
+	}
 	return &pipelineModel.Trigger{
 		ID:          t.ID,
 		RepoID:      t.RepoID,
 		PipelineID:  t.PipelineID,
 		Trigger:     triggerList,
-		Cron:        t.Cron,
+		Cron:        cronList,
 		CreatedBy:   t.CreatedBy,
 		CreatedDate: t.CreatedDate,
 		EditedBy:    t.EditedBy,
@@ -116,7 +124,7 @@ func mapTriggerToStore(t *pipelineModel.Trigger) *Trigger {
 		RepoID:      t.RepoID,
 		PipelineID:  t.PipelineID,
 		Trigger:     strings.Join(t.Trigger, ","),
-		Cron:        t.Cron,
+		Cron:        strings.Join(t.Cron, cronSeparator),
 		CreatedBy:   t.CreatedBy,
 		CreatedDate: t.CreatedDate,
 		EditedBy:    t.EditedBy,

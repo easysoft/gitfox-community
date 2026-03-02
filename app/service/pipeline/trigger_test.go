@@ -36,7 +36,7 @@ func TestCreateTrigger(t *testing.T) {
 			inputTrigger: &pipelineModel.Trigger{
 				PipelineID: 100,
 				Trigger:    []string{"push", "pull_request"},
-				Cron:       "0 0 * * *",
+				Cron:       []string{"0 0 * * *"},
 				CreatedBy:  "admin",
 			},
 			expectedErr: nil,
@@ -52,6 +52,73 @@ func TestCreateTrigger(t *testing.T) {
 				CreatedBy:  "admin",
 			},
 			expectedErr: ErrDBQuery,
+		},
+		{
+			name: "场景3：含逗号的cron表达式 - 创建成功",
+			mockPipelineStore: func(m *pipelineStoreMock.MockInterface) {
+				m.EXPECT().CreateTrigger(gomock.Any(), gomock.Any()).Return(nil)
+			},
+			inputTrigger: &pipelineModel.Trigger{
+				PipelineID: 100,
+				Trigger:    []string{"push"},
+				Cron:       []string{"0 0 10,14,16 * * ?"},
+				CreatedBy:  "admin",
+			},
+			expectedErr: nil,
+		},
+		{
+			name: "场景4：多条cron表达式 - 创建成功",
+			mockPipelineStore: func(m *pipelineStoreMock.MockInterface) {
+				m.EXPECT().CreateTrigger(gomock.Any(), gomock.Any()).Return(nil)
+			},
+			inputTrigger: &pipelineModel.Trigger{
+				PipelineID: 200,
+				Trigger:    []string{"cron"},
+				Cron: []string{
+					"0 15 10 ? * MON-FRI",
+					"0 0 10,14,16 * * ?",
+					"0 0/30 9-17 * * ?",
+				},
+				CreatedBy: "admin",
+			},
+			expectedErr: nil,
+		},
+		{
+			name: "场景5：仅cron无trigger - 创建成功",
+			mockPipelineStore: func(m *pipelineStoreMock.MockInterface) {
+				m.EXPECT().CreateTrigger(gomock.Any(), gomock.Any()).Return(nil)
+			},
+			inputTrigger: &pipelineModel.Trigger{
+				PipelineID: 100,
+				Cron:       []string{"0 0 * * *"},
+				CreatedBy:  "admin",
+			},
+			expectedErr: nil,
+		},
+		{
+			name: "场景6：仅trigger无cron - 创建成功",
+			mockPipelineStore: func(m *pipelineStoreMock.MockInterface) {
+				m.EXPECT().CreateTrigger(gomock.Any(), gomock.Any()).Return(nil)
+			},
+			inputTrigger: &pipelineModel.Trigger{
+				PipelineID: 100,
+				Trigger:    []string{"push", "tag"},
+				CreatedBy:  "admin",
+			},
+			expectedErr: nil,
+		},
+		{
+			name: "场景7：空cron数组 - 创建成功",
+			mockPipelineStore: func(m *pipelineStoreMock.MockInterface) {
+				m.EXPECT().CreateTrigger(gomock.Any(), gomock.Any()).Return(nil)
+			},
+			inputTrigger: &pipelineModel.Trigger{
+				PipelineID: 100,
+				Trigger:    []string{"push"},
+				Cron:       []string{},
+				CreatedBy:  "admin",
+			},
+			expectedErr: nil,
 		},
 	}
 
@@ -107,7 +174,7 @@ func TestUpdateTrigger(t *testing.T) {
 				ID:         1,
 				PipelineID: 100,
 				Trigger:    []string{"push", "tag"},
-				Cron:       "0 12 * * *",
+				Cron:       []string{"0 12 * * *"},
 				EditedBy:   "admin",
 			},
 			expectedErr: nil,
@@ -124,6 +191,48 @@ func TestUpdateTrigger(t *testing.T) {
 				EditedBy:   "admin",
 			},
 			expectedErr: ErrDBQuery,
+		},
+		{
+			name: "场景3：更新cron为含逗号的表达式 - 更新成功",
+			mockPipelineStore: func(m *pipelineStoreMock.MockInterface) {
+				m.EXPECT().UpdateTrigger(gomock.Any(), gomock.Any()).Return(nil)
+			},
+			inputTrigger: &pipelineModel.Trigger{
+				ID:         1,
+				PipelineID: 100,
+				Trigger:    []string{"push"},
+				Cron:       []string{"0 0 10,14,16 * * ?", "0 0/30 9-17 * * ?"},
+				EditedBy:   "admin",
+			},
+			expectedErr: nil,
+		},
+		{
+			name: "场景4：清空cron保留trigger - 更新成功",
+			mockPipelineStore: func(m *pipelineStoreMock.MockInterface) {
+				m.EXPECT().UpdateTrigger(gomock.Any(), gomock.Any()).Return(nil)
+			},
+			inputTrigger: &pipelineModel.Trigger{
+				ID:         1,
+				PipelineID: 100,
+				Trigger:    []string{"push"},
+				Cron:       []string{},
+				EditedBy:   "admin",
+			},
+			expectedErr: nil,
+		},
+		{
+			name: "场景5：cron和trigger都为空 - store层会硬删除",
+			mockPipelineStore: func(m *pipelineStoreMock.MockInterface) {
+				m.EXPECT().UpdateTrigger(gomock.Any(), gomock.Any()).Return(nil)
+			},
+			inputTrigger: &pipelineModel.Trigger{
+				ID:         1,
+				PipelineID: 100,
+				Trigger:    []string{},
+				Cron:       []string{},
+				EditedBy:   "admin",
+			},
+			expectedErr: nil,
 		},
 	}
 
@@ -178,7 +287,7 @@ func TestGetTriggerByID(t *testing.T) {
 					ID:         1,
 					PipelineID: 100,
 					Trigger:    []string{"push", "pull_request"},
-					Cron:       "0 0 * * *",
+					Cron:       []string{"0 0 * * *"},
 					CreatedBy:  "admin",
 				}
 				m.EXPECT().GetTriggerByID(gomock.Any(), int64(1)).Return(mockTrigger, nil)
@@ -188,7 +297,7 @@ func TestGetTriggerByID(t *testing.T) {
 				ID:         1,
 				PipelineID: 100,
 				Trigger:    []string{"push", "pull_request"},
-				Cron:       "0 0 * * *",
+				Cron:       []string{"0 0 * * *"},
 				CreatedBy:  "admin",
 			},
 			expectedErr: nil,
@@ -210,6 +319,58 @@ func TestGetTriggerByID(t *testing.T) {
 			inputID:        1,
 			expectedResult: nil,
 			expectedErr:    ErrDBQuery,
+		},
+		{
+			name: "场景4：查询含逗号cron表达式的触发 - 返回正确数据",
+			mockPipelineStore: func(m *pipelineStoreMock.MockInterface) {
+				mockTrigger := &pipelineModel.Trigger{
+					ID:         2,
+					PipelineID: 200,
+					Trigger:    []string{"cron"},
+					Cron: []string{
+						"0 0 10,14,16 * * ?",
+						"0 0/30 9-17 * * ?",
+						"0 15 10 ? 6L 2002-2006",
+					},
+					CreatedBy: "admin",
+				}
+				m.EXPECT().GetTriggerByID(gomock.Any(), int64(2)).Return(mockTrigger, nil)
+			},
+			inputID: 2,
+			expectedResult: &pipelineModel.Trigger{
+				ID:         2,
+				PipelineID: 200,
+				Trigger:    []string{"cron"},
+				Cron: []string{
+					"0 0 10,14,16 * * ?",
+					"0 0/30 9-17 * * ?",
+					"0 15 10 ? 6L 2002-2006",
+				},
+				CreatedBy: "admin",
+			},
+			expectedErr: nil,
+		},
+		{
+			name: "场景5：查询cron为空的触发 - 返回空cron数组",
+			mockPipelineStore: func(m *pipelineStoreMock.MockInterface) {
+				mockTrigger := &pipelineModel.Trigger{
+					ID:         3,
+					PipelineID: 300,
+					Trigger:    []string{"push"},
+					Cron:       nil,
+					CreatedBy:  "admin",
+				}
+				m.EXPECT().GetTriggerByID(gomock.Any(), int64(3)).Return(mockTrigger, nil)
+			},
+			inputID: 3,
+			expectedResult: &pipelineModel.Trigger{
+				ID:         3,
+				PipelineID: 300,
+				Trigger:    []string{"push"},
+				Cron:       nil,
+				CreatedBy:  "admin",
+			},
+			expectedErr: nil,
 		},
 	}
 
@@ -261,6 +422,12 @@ func TestDeleteTrigger(t *testing.T) {
 		{
 			name: "场景1：正常删除 - 删除触发成功",
 			mockPipelineStore: func(m *pipelineStoreMock.MockInterface) {
+				m.EXPECT().GetTriggerByID(gomock.Any(), int64(1)).Return(&pipelineModel.Trigger{
+					ID:         1,
+					PipelineID: 100,
+					Trigger:    []string{"push"},
+					Cron:       []string{},
+				}, nil)
 				m.EXPECT().DeleteTrigger(gomock.Any(), int64(1)).Return(nil)
 			},
 			inputID:     1,
@@ -269,7 +436,7 @@ func TestDeleteTrigger(t *testing.T) {
 		{
 			name: "场景2：触发不存在 - 返回错误",
 			mockPipelineStore: func(m *pipelineStoreMock.MockInterface) {
-				m.EXPECT().DeleteTrigger(gomock.Any(), int64(999)).Return(ErrDBNotFound)
+				m.EXPECT().GetTriggerByID(gomock.Any(), int64(999)).Return(nil, ErrDBNotFound)
 			},
 			inputID:     999,
 			expectedErr: ErrDBNotFound,
@@ -277,6 +444,10 @@ func TestDeleteTrigger(t *testing.T) {
 		{
 			name: "场景3：数据库删除失败 - 返回错误",
 			mockPipelineStore: func(m *pipelineStoreMock.MockInterface) {
+				m.EXPECT().GetTriggerByID(gomock.Any(), int64(1)).Return(&pipelineModel.Trigger{
+					ID:         1,
+					PipelineID: 100,
+				}, nil)
 				m.EXPECT().DeleteTrigger(gomock.Any(), int64(1)).Return(ErrDBQuery)
 			},
 			inputID:     1,
@@ -329,41 +500,40 @@ func TestGetTriggers(t *testing.T) {
 
 	testCases := []GetTriggersTestCase{
 		{
-			name: "场景1：正常查询 - 获取触发列表成功",
+			name: "场景1：无过滤条件 - 获取全部触发列表",
 			mockPipelineStore: func(m *pipelineStoreMock.MockInterface) {
 				mockResult := []*pipelineModel.Trigger{
 					{
 						ID:         1,
 						PipelineID: 100,
 						Trigger:    []string{"push"},
-						Cron:       "0 0 * * *",
+						Cron:       []string{"0 0 * * *"},
 						CreatedBy:  "admin",
 					},
 					{
 						ID:         2,
 						PipelineID: 101,
 						Trigger:    []string{"tag"},
-						Cron:       "",
+						Cron:       []string{"0 0 10,14,16 * * ?"},
 						CreatedBy:  "user1",
 					},
 				}
 				m.EXPECT().GetTriggers(gomock.Any(), gomock.Any()).Return(mockResult, nil)
 			},
-			inputFilter: &pipelineModel.TriggerFilter{
-			},
+			inputFilter: &pipelineModel.TriggerFilter{},
 			expectedResult: []*pipelineModel.Trigger{
 				{
 					ID:         1,
 					PipelineID: 100,
 					Trigger:    []string{"push"},
-					Cron:       "0 0 * * *",
+					Cron:       []string{"0 0 * * *"},
 					CreatedBy:  "admin",
 				},
 				{
 					ID:         2,
 					PipelineID: 101,
 					Trigger:    []string{"tag"},
-					Cron:       "",
+					Cron:       []string{"0 0 10,14,16 * * ?"},
 					CreatedBy:  "user1",
 				},
 			},
@@ -377,7 +547,7 @@ func TestGetTriggers(t *testing.T) {
 						ID:         1,
 						PipelineID: 100,
 						Trigger:    []string{"push"},
-						Cron:       "0 0 * * *",
+						Cron:       []string{"0 0 * * *"},
 						CreatedBy:  "admin",
 					},
 				}
@@ -391,32 +561,122 @@ func TestGetTriggers(t *testing.T) {
 					ID:         1,
 					PipelineID: 100,
 					Trigger:    []string{"push"},
-					Cron:       "0 0 * * *",
+					Cron:       []string{"0 0 * * *"},
 					CreatedBy:  "admin",
 				},
 			},
 			expectedErr: nil,
 		},
 		{
-			name: "场景3：空列表 - 返回空数组",
+			name: "场景3：按仓库ID过滤 - 获取触发列表成功",
+			mockPipelineStore: func(m *pipelineStoreMock.MockInterface) {
+				mockResult := []*pipelineModel.Trigger{
+					{
+						ID:         1,
+						RepoID:     10,
+						PipelineID: 100,
+						Trigger:    []string{"push"},
+						Cron:       []string{"0 0/30 9-17 * * ?"},
+						CreatedBy:  "admin",
+					},
+				}
+				m.EXPECT().GetTriggers(gomock.Any(), gomock.Any()).Return(mockResult, nil)
+			},
+			inputFilter: &pipelineModel.TriggerFilter{
+				RepoID: 10,
+			},
+			expectedResult: []*pipelineModel.Trigger{
+				{
+					ID:         1,
+					RepoID:     10,
+					PipelineID: 100,
+					Trigger:    []string{"push"},
+					Cron:       []string{"0 0/30 9-17 * * ?"},
+					CreatedBy:  "admin",
+				},
+			},
+			expectedErr: nil,
+		},
+		{
+			name: "场景4：按触发类型过滤 - 获取触发列表成功",
+			mockPipelineStore: func(m *pipelineStoreMock.MockInterface) {
+				mockResult := []*pipelineModel.Trigger{
+					{
+						ID:         1,
+						PipelineID: 100,
+						Trigger:    []string{"push"},
+						Cron:       []string{"0 0 * * *"},
+						CreatedBy:  "admin",
+					},
+				}
+				m.EXPECT().GetTriggers(gomock.Any(), gomock.Any()).Return(mockResult, nil)
+			},
+			inputFilter: &pipelineModel.TriggerFilter{
+				Trigger: []string{"push"},
+			},
+			expectedResult: []*pipelineModel.Trigger{
+				{
+					ID:         1,
+					PipelineID: 100,
+					Trigger:    []string{"push"},
+					Cron:       []string{"0 0 * * *"},
+					CreatedBy:  "admin",
+				},
+			},
+			expectedErr: nil,
+		},
+		{
+			name: "场景5：空列表 - 返回空数组",
 			mockPipelineStore: func(m *pipelineStoreMock.MockInterface) {
 				mockResult := []*pipelineModel.Trigger{}
 				m.EXPECT().GetTriggers(gomock.Any(), gomock.Any()).Return(mockResult, nil)
 			},
-			inputFilter: &pipelineModel.TriggerFilter{
-			},
+			inputFilter:    &pipelineModel.TriggerFilter{},
 			expectedResult: []*pipelineModel.Trigger{},
 			expectedErr:    nil,
 		},
 		{
-			name: "场景4：数据库查询失败 - 返回错误",
+			name: "场景6：数据库查询失败 - 返回错误",
 			mockPipelineStore: func(m *pipelineStoreMock.MockInterface) {
 				m.EXPECT().GetTriggers(gomock.Any(), gomock.Any()).Return(nil, ErrDBQuery)
 			},
-			inputFilter: &pipelineModel.TriggerFilter{
-			},
+			inputFilter:    &pipelineModel.TriggerFilter{},
 			expectedResult: nil,
 			expectedErr:    ErrDBQuery,
+		},
+		{
+			name: "场景7：返回含多条复杂cron表达式的触发",
+			mockPipelineStore: func(m *pipelineStoreMock.MockInterface) {
+				mockResult := []*pipelineModel.Trigger{
+					{
+						ID:         1,
+						PipelineID: 100,
+						Trigger:    []string{"cron"},
+						Cron: []string{
+							"0 15 10 ? * MON-FRI",
+							"0 0 10,14,16 * * ?",
+							"0 0/30 9-17 * * ?",
+						},
+						CreatedBy: "admin",
+					},
+				}
+				m.EXPECT().GetTriggers(gomock.Any(), gomock.Any()).Return(mockResult, nil)
+			},
+			inputFilter: &pipelineModel.TriggerFilter{PipelineID: 100},
+			expectedResult: []*pipelineModel.Trigger{
+				{
+					ID:         1,
+					PipelineID: 100,
+					Trigger:    []string{"cron"},
+					Cron: []string{
+						"0 15 10 ? * MON-FRI",
+						"0 0 10,14,16 * * ?",
+						"0 0/30 9-17 * * ?",
+					},
+					CreatedBy: "admin",
+				},
+			},
+			expectedErr: nil,
 		},
 	}
 

@@ -30,7 +30,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/enum"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/sha"
 	"github.com/easysoft/gitfox/errors"
-	"github.com/easysoft/gitfox/pkg/util/common"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/common"
 	"github.com/easysoft/gitfox/types"
 
 	"github.com/golang-module/carbon/v2"

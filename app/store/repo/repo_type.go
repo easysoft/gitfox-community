@@ -18,12 +18,13 @@ const (
 	RepoStateMigrateDataImport                  // 3-迁移-数据导入中
 )
 
-// Repository 代码库表（ops_repository）Store层结构体
+// Repository 代码库表（ops_repo）Store层结构体
 type Repository struct {
 	ID            uint            `gorm:"column:id;comment:'代码库ID'"`
 	SpaceID       uint            `gorm:"column:spaceID;comment:'空间ID'"`
-	Identifier    string          `gorm:"column:identifier;comment:'代码库唯一标识'"`
+	Identifier    string          `gorm:"column:name;comment:'代码库唯一标识'"`
 	Desc          string          `gorm:"column:desc;comment:'代码库描述'"` // 关键字兼容：映射数据库 desc 字段
+	Product       string          `gorm:"column:product;comment:'关联产品'"`
 	GitUID        string          `gorm:"column:gitUID;comment:'Git仓库唯一标识'"`
 	DefaultBranch string          `gorm:"column:defaultBranch;comment:'默认分支名'"`
 	ForkID        *uint           `gorm:"column:forkID;comment:'派生来源代码库ID'"` // 指针类型：兼容数据库 NULL
@@ -32,6 +33,7 @@ type Repository struct {
 	Mirror        bool            `gorm:"column:mirror;comment:'是否为镜像库（0=普通库，1=镜像库）'"`
 	Status        int             `gorm:"column:status;comment:'代码库状态（0=正常，1=Git导入中，2=迁移Git推送中，3=迁移数据导入中）'"`
 	Mutex         int             `gorm:"column:mutex;comment:'乐观锁版本号'"`
+	Synced        uint8           `gorm:"column:synced;comment:'是否已同步'"`
 	CreatedBy     string          `gorm:"column:createdBy;comment:'创建人'"`
 	CreatedDate   *datetime.Local `gorm:"column:createdDate;comment:'创建时间'"`
 	EditedBy      string          `gorm:"column:editedBy;comment:'更新人'"`
@@ -41,7 +43,7 @@ type Repository struct {
 
 // TableName 指定数据库表名（GORM自动映射时使用）
 func (r *Repository) TableName() string {
-	return "ops_repository"
+	return "ops_repo"
 }
 
 func (r *Repository) BeforeCreate(tx *gorm.DB) error {

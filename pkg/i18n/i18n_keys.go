@@ -106,8 +106,16 @@ const (
 
 	// Execution 相关常量
 	ExecutionBodyParamError  I18nKey = "execution.body_param_error"  // Body 参数解析失败.
+	ExecutionCancelError     I18nKey = "execution.cancel_error"      // 执行取消失败
+	ExecutionCancelSuccess   I18nKey = "execution.cancel_success"    // 执行取消成功
 	ExecutionPathParamError  I18nKey = "execution.path_param_error"  // Path 参数解析失败.
+	ExecutionQueryError      I18nKey = "execution.query_error"       // 执行查询失败
 	ExecutionQueryParamError I18nKey = "execution.query_param_error" // Query 参数解析失败.
+	ExecutionQuerySuccess    I18nKey = "execution.query_success"     // 执行查询成功
+	ExecutionLogCreateError  I18nKey = "execution.log_create_error"  // 日志创建失败
+	ExecutionLogCreateSuccess I18nKey = "execution.log_create_success" // 日志创建成功
+	ExecutionLogQueryError   I18nKey = "execution.log_query_error"   // 日志查询失败
+	ExecutionLogQuerySuccess I18nKey = "execution.log_query_success" // 日志查询成功
 	ExecutionTriggerError    I18nKey = "execution.trigger_error"     // 执行触发失败
 	ExecutionTriggerSuccess  I18nKey = "execution.trigger_success"   // 执行触发成功
 
@@ -161,7 +169,8 @@ const (
 	PipelineTriggerGetSuccess       I18nKey = "pipeline.trigger_get_success"        // 触发获取成功.
 	PipelineTriggerListError        I18nKey = "pipeline.trigger_list_error"         // 触发列表获取失败.
 	PipelineTriggerListSuccess      I18nKey = "pipeline.trigger_list_success"       // 触发列表获取成功.
-	PipelineTriggerParamCronError   I18nKey = "pipeline.trigger_param_cron_error"   // 无效的 cron 表达式.
+	PipelineTriggerParamCronError      I18nKey = "pipeline.trigger_param_cron_error"      // 无效的 cron 表达式.
+	PipelineTriggerParamCronLimitError I18nKey = "pipeline.trigger_param_cron_limit_error" // cron 表达式数量超过限制.
 	PipelineTriggerParamError       I18nKey = "pipeline.trigger_param_error"        // 触发参数解析失败.
 	PipelineTriggerUpdateError      I18nKey = "pipeline.trigger_update_error"       // 触发更新失败.
 	PipelineTriggerUpdateSuccess    I18nKey = "pipeline.trigger_update_success"     // 触发更新成功.
@@ -272,6 +281,26 @@ const (
 	RuleSetUnbindSuccess      I18nKey = "ruleSet.unbind_success"       // 规则集解绑规则成功.
 	RuleSetUpdateError        I18nKey = "ruleSet.update_error"         // 规则集更新失败.
 	RuleSetUpdateSuccess      I18nKey = "ruleSet.update_success"       // 规则集更新成功.
+
+	// Runner 相关常量
+	RunnerBodyParamError         I18nKey = "runner.body_param_error"          // Body 参数解析失败.
+	RunnerDeleteError            I18nKey = "runner.delete_error"              // 删除 Runner 失败.
+	RunnerDeleteSuccess          I18nKey = "runner.delete_success"            // 删除 Runner 成功.
+	RunnerGenerateTokenError     I18nKey = "runner.generate_token_error"      // 生成 Runner Token 失败.
+	RunnerGenerateTokenSuccess   I18nKey = "runner.generate_token_success"    // 生成 Runner Token 成功.
+	RunnerInvalidToken           I18nKey = "runner.invalid_token"             // Runner Token 无效或已过期.
+	RunnerListError              I18nKey = "runner.list_error"                // 查询 Runner 列表失败.
+	RunnerListSuccess            I18nKey = "runner.list_success"              // 查询 Runner 列表成功.
+	RunnerPathParamError         I18nKey = "runner.path_param_error"          // Path 参数解析失败.
+	RunnerQueryError             I18nKey = "runner.query_error"               // 查询 Runner 失败.
+	RunnerQueryParamError        I18nKey = "runner.query_param_error"         // Query 参数解析失败.
+	RunnerQuerySuccess           I18nKey = "runner.query_success"             // 查询 Runner 成功.
+	RunnerRegisterError          I18nKey = "runner.register_error"            // 注册 Runner 失败.
+	RunnerRegisterSuccess        I18nKey = "runner.register_success"          // 注册 Runner 成功.
+	RunnerUpdateError            I18nKey = "runner.update_error"              // 更新 Runner 失败.
+	RunnerUpdateHeartBeatError   I18nKey = "runner.update_heart_beat_error"   // 更新 Runner 心跳失败.
+	RunnerUpdateHeartBeatSuccess I18nKey = "runner.update_heart_beat_success" // 更新 Runner 心跳成功.
+	RunnerUpdateSuccess          I18nKey = "runner.update_success"            // 更新 Runner 成功.
 
 	// Space 相关常量
 	SpaceArtifactsTitleSuccess   I18nKey = "space.artifacts_title_success"   // 仓库设置保存成功

@@ -23,6 +23,7 @@ type Config struct {
 	I18n       I18nConfig       `yaml:"i18n"`
 	Principal  PrincipalConfig  `yaml:"principal"`
 	Devops     DevopsConfig     `yaml:"devops"`
+	Storage    StorageConfig    `yaml:"storage"`
 }
 
 // ServerConfig HTTP服务配置
@@ -80,7 +81,7 @@ type SSHConfig struct {
 	Enable      bool   `yaml:"enable"`
 	Host        string `yaml:"host"`
 	Port        int    `yaml:"port"`
-	DefaultUser string `yaml:"defaultUser" default:"git"`
+	DefaultUser string `yaml:"defaultUser"`
 	HostKeysDir string `envconfig:"GITFOX_SSH_HOST_KEYS_DIR" default:"/data/gitfox/ssh"`
 }
 
@@ -102,8 +103,10 @@ type MetricConfig struct {
 
 // CiConfig CI配置
 type CiConfig struct {
-	PluginsZipUrl string `envconfig:"GITFOX_CI_PLUGINS_ZIP_URL"`
-	Runner        string `envconfig:"GITFOX_CI_RUNNER"`
+	PluginsZipUrl     string   `envconfig:"GITFOX_CI_PLUGINS_ZIP_URL"`
+	Runner            string   `envconfig:"GITFOX_CI_RUNNER"`
+	ParallelWorkers   uint     `envconfig:"GITFOX_CI_ParallelWorkers" default:"2"`
+	ContainerNetworks []string `envconfig:"GITFOX_CI_CONTAINER_NETWORKS"`
 }
 
 // GitspaceConfig Gitspace配置
@@ -113,24 +116,12 @@ type GitspaceConfig struct {
 
 // RegistryConfig 注册中心配置
 type RegistryConfig struct {
-	Http    RegistryHttpConfig    `yaml:"http"`
-	Storage RegistryStorageConfig `yaml:"storage"`
+	Http RegistryHttpConfig `yaml:"http"`
 }
 
 // RegistryHttpConfig 注册中心HTTP配置
 type RegistryHttpConfig struct {
 	Secret string `yaml:"secret"`
-}
-
-// RegistryStorageConfig 注册中心存储配置
-type RegistryStorageConfig struct {
-	StorageType       string                  `yaml:"storageType"`
-	FilesystemStorage FilesystemStorageConfig `yaml:"filesystemStorage"`
-}
-
-// FilesystemStorageConfig 文件系统存储配置
-type FilesystemStorageConfig struct {
-	RootDirectory string `envconfig:"GITFOX_REGISTRY_FS_ROOT_DIR" default:"/data/gitfox/registry"`
 }
 
 // LoggingConfig 日志配置
@@ -240,8 +231,8 @@ type PrincipalConfig struct {
 	// NOTE: The admin user is only auto-created in case a password and an email is provided.
 	// 备注：只有在提供密码和电子邮件的情况下，才会自动创建管理员用户。
 	Admin struct {
-		UID         string `yaml:"uid"           default:"admin"`
-		DisplayName string `yaml:"name"  default:"Administrator"`
+		UID         string `yaml:"uid"`
+		DisplayName string `yaml:"name"`
 		Email       string `yaml:"email"`    // No default email
 		Password    string `yaml:"password"` // No default password
 	}
@@ -251,4 +242,27 @@ type PrincipalConfig struct {
 type DevopsConfig struct {
 	URL           string `yaml:"url"`           // DevOps 平台 API 地址
 	Authorization string `yaml:"authorization"` // DevOps 平台 API 授权密钥
+}
+
+// StorageConfig 通用存储配置
+type StorageConfig struct {
+	StorageType string           `yaml:"storageType" envconfig:"GITFOX_STORAGE_TYPE"` // 存储驱动类型: filesystem, s3
+	Filesystem  FilesystemConfig `yaml:"filesystem"`                                  // 文件系统存储配置
+	S3          S3Config         `yaml:"s3"`                                          // S3 存储配置
+}
+
+type FilesystemConfig struct {
+	RootDirectory string `yaml:"rootDirectory" envconfig:"GITFOX_FILESYSTEM_ROOT_DIRECTORY"` // 存储根目录
+	MaxThreads    uint64 `yaml:"maxThreads"`                                                 // 最大并发线程数
+	Prefix        string `yaml:"Prefix"`                                                     // 路径前缀
+}
+type S3Config struct {
+	Enabled   bool   `yaml:"enabled"`                   // 开启 S3 存储
+	Bucket    string `yaml:"bucket"`                    // S3 存储桶名称
+	Prefix    string `yaml:"prefix"`                    // S3 存储路径前缀
+	Endpoint  string `yaml:"endpoint"`                  // S3 服务端地址
+	Region    string `yaml:"region"`                    // S3 区域，如 cn-qingdao
+	PathStyle bool   `yaml:"pathStyle"`                 // 是否使用路径样式访问
+	AccessKey string `envconfig:"GITFOX_S3_ACCESS_KEY"` // S3 访问密钥
+	SecretKey string `envconfig:"GITFOX_S3_SECRET_KEY"` // S3 访问密钥
 }

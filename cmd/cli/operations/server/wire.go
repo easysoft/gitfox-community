@@ -8,6 +8,7 @@ import (
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/githook"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/router"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/triggerer"
 	jobsSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/jobs"
 	pipelineSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/pipeline"
 	triggerSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/trigger"
@@ -38,6 +39,7 @@ type App struct {
 	EventSystem     *events.System
 	EventContext    *provider.EventContext
 	JobScheduler    *jobsSvc.Scheduler
+	Triggerer       triggerer.Triggerer
 }
 
 func NewApp(mode string) (*App, func(), error) {
@@ -53,6 +55,7 @@ func NewApp(mode string) (*App, func(), error) {
 		provider.TagWireSet,
 		provider.PipelineWireSet,
 		provider.ExecutionWireSet,
+		provider.RunnerWireSet,
 		provider.ScanRuleSetWireSet,
 		provider.ScanRuleWireSet,
 		provider.CommitWireSet,
@@ -64,10 +67,12 @@ func NewApp(mode string) (*App, func(), error) {
 		provider.EventWireSet,
 		provider.GitEventWireSet,
 		provider.PullReqEventWireSet,
+		// provider.PipelineEventWireSet,
 		provider.TriggerWireSet,
 		provider.PubSubProvider,
 		provider.JobWireSet,
 		provider.AuthWireSet,
+		provider.StorageWireSet,
 		wire.Struct(new(App), "*")),
 	)
 }

@@ -9,23 +9,28 @@ package server
 import (
 	branch3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/branch"
 	commit2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/commit"
-	execution2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/execution"
+	execution3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/execution"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/githook"
 	pipeline3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/pipeline"
 	repo3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/repo"
+	runner3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/runner"
 	scan3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/scan"
 	space3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/space"
 	tag2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/tag"
 	user3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/user"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/router"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/canceler"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/scheduler"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/triggerer"
 	branch2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/branch"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/commit"
+	execution2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/execution"
 	jobs2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/jobs"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/locker"
 	pipeline2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/pipeline"
 	publickey2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/publickey"
 	repo2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
+	runner2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/runner"
 	scan2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/scan"
 	space2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/space"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/sse"
@@ -39,10 +44,12 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/publickey"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/pullrequest"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/runner"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/scan"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/settings"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/space"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/stage"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/step"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/user"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/cmd/cli/operations/provider"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/auth/authn"
@@ -51,9 +58,11 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database/dbtx"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/events"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/livelog"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/lock"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pubsub"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/ssh"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/storage"
 	"gorm.io/gorm"
 )
 
@@ -120,13 +129,59 @@ func NewApp(mode string) (*App, func(), error) {
 	controller := branch3.NewController(branchService, repoService)
 	ciConfig := provider.NewCiConfig(config)
 	pipelineStore := pipeline.NewPipelineStore(db)
-	pipelineService := pipeline2.NewPipelineService(pipelineStore)
+	s3Store, err := provider.ProvidePipelineS3Store(config)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	storageDriver, cleanup3, err := storage.ProvideStorageDriver(config)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	contentStorage, err := provider.ProvidePipelineContentStorage(config, storageDriver)
+	if err != nil {
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	logStream := livelog.ProvideLogStream()
+	jobsStore := jobs.NewScheduleJob(db)
+	tokenCache := runner.NewTokenCache(duration)
+	runnerStore := runner.NewStore(db, tokenCache)
+	mutexManager := lock.ProvideMutexManager()
+	jobLog := provider.NewJobLogger(config)
+	jobConfig := provider.ProvideJobConfig(config)
+	jobsScheduler, err := provider.ProvideScheduler(jobsStore, runnerStore, mutexManager, pubSub, jobLog, jobConfig)
+	if err != nil {
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	pipelineService := pipeline2.NewPipelineService(pipelineStore, s3Store, contentStorage, logStream, jobsScheduler)
 	pipelineController := pipeline3.NewController(ciConfig, pipelineService, repoService)
 	executionStore := execution.NewExecutionStore(db)
 	stageStore := stage.NewStageStore(db)
+	schedulerScheduler, err := scheduler.New(stageStore, runnerStore, mutexManager)
+	if err != nil {
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
 	txRunnerImpl := dbtx.NewTxRunner(db)
-	triggererTriggerer := triggerer.New(pipelineService, executionStore, stageStore, txRunnerImpl)
-	executionController := execution2.NewController(triggererTriggerer)
+	triggererTriggerer := triggerer.New(pipelineService, executionStore, stageStore, schedulerScheduler, txRunnerImpl)
+	stepStore := step.NewStepStore(db)
+	cancelerCanceler := canceler.New(executionStore, stageStore, stepStore)
+	executionService := execution2.NewExecutionService(executionStore, stageStore)
+	executionController := execution3.NewController(triggererTriggerer, cancelerCanceler, executionService, pipelineService)
+	runnerService := runner2.NewService(runnerStore)
+	url := provider.NewURLConfig(config)
+	runnerController := runner3.NewController(runnerService, url)
 	tagService := tag.NewService(urlProvider, gitService)
 	tagController := tag2.NewController(tagService, repoService)
 	commitService := commit.NewService(urlProvider, gitService)
@@ -136,33 +191,37 @@ func NewApp(mode string) (*App, func(), error) {
 	universalClient := provider.NewEventRedisClient()
 	system, err := provider.ProvideEventSystem(eventsConfig, universalClient)
 	if err != nil {
+		cleanup3()
 		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
 	readerFactory, err := provider.ProvideGitEventReaderFactory(system)
 	if err != nil {
+		cleanup3()
 		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
 	eventsReaderFactory, err := provider.ProvidePullReqReaderFactory(system)
 	if err != nil {
+		cleanup3()
 		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
 	reporter, err := provider.ProvidePullReqReporter(system)
 	if err != nil {
+		cleanup3()
 		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
-	mutexManager := lock.ProvideMutexManager()
 	lockerLocker := locker.NewLocker(mutexManager)
 	pullrequestStore := pullrequest.NewPullRequestStore(db)
 	pullrequestService, err := provider.ProvidePullRequestSvc(eventContext, readerFactory, eventsReaderFactory, reporter, config, gitService, repoService, store, lockerLocker, pullrequestStore, streamer, pubSub, urlProvider)
 	if err != nil {
+		cleanup3()
 		cleanup2()
 		cleanup()
 		return nil, nil, err
@@ -179,6 +238,7 @@ func NewApp(mode string) (*App, func(), error) {
 	settingsService := provider.NewSettingsService(settingsInterface)
 	eventsReporter, err := provider.ProvideGitEventReporter(system)
 	if err != nil {
+		cleanup3()
 		cleanup2()
 		cleanup()
 		return nil, nil, err
@@ -190,9 +250,10 @@ func NewApp(mode string) (*App, func(), error) {
 	ruleSetService := scan2.NewRuleSetService(ruleSetStore, ruleStore)
 	ruleService := scan2.NewRuleService(ruleStore, membershipAuthorizer)
 	scanController := scan3.NewScanController(ruleSetService, ruleService)
-	routerController := provider.NewControllers(spaceController, controller, pipelineController, executionController, tagController, commitController, repoController, userController, gitController, scanController)
+	routerController := provider.NewControllers(spaceController, controller, pipelineController, executionController, runnerController, tagController, commitController, repoController, userController, gitController, scanController)
 	i18nManager, err := provider.NewI18nManager(config)
 	if err != nil {
+		cleanup3()
 		cleanup2()
 		cleanup()
 		return nil, nil, err
@@ -200,20 +261,12 @@ func NewApp(mode string) (*App, func(), error) {
 	server := provider.ProvideSSHServer(config, interface2, gitController)
 	triggerService, err := provider.ProvideTriggerService(eventContext, pipelineService, triggererTriggerer, readerFactory, eventsReaderFactory)
 	if err != nil {
+		cleanup3()
 		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
 	authenticator := authn.ProvideAuthenticators(config, userStore, tokenInterface)
-	jobsStore := jobs.NewScheduleJob(db)
-	jobLog := provider.NewJobLogger(config)
-	jobConfig := provider.ProvideJobConfig(config)
-	scheduler, err := provider.ProvideScheduler(jobsStore, mutexManager, pubSub, jobLog, jobConfig)
-	if err != nil {
-		cleanup2()
-		cleanup()
-		return nil, nil, err
-	}
 	app := &App{
 		SystemConfig:    config,
 		SystemLog:       systemLog,
@@ -230,9 +283,11 @@ func NewApp(mode string) (*App, func(), error) {
 		Authenticator:   authenticator,
 		EventSystem:     system,
 		EventContext:    eventContext,
-		JobScheduler:    scheduler,
+		JobScheduler:    jobsScheduler,
+		Triggerer:       triggererTriggerer,
 	}
 	return app, func() {
+		cleanup3()
 		cleanup2()
 		cleanup()
 	}, nil
@@ -257,4 +312,5 @@ type App struct {
 	EventSystem     *events.System
 	EventContext    *provider.EventContext
 	JobScheduler    *jobs2.Scheduler
+	Triggerer       triggerer.Triggerer
 }

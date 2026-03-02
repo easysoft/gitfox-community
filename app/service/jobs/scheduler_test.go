@@ -35,7 +35,7 @@ type mockConsumer struct{}
 
 func (m *mockConsumer) Subscribe(ctx context.Context, topics ...string) error   { return nil }
 func (m *mockConsumer) Unsubscribe(ctx context.Context, topics ...string) error { return nil }
-func (m *mockConsumer) Close() error                                             { return nil }
+func (m *mockConsumer) Close() error                                            { return nil }
 
 // mockMutexManager is a minimal mock implementation of lock.MutexManager
 type mockMutexManager struct{}
@@ -74,6 +74,7 @@ func TestNewScheduler(t *testing.T) {
 	testLog := logger.NewNopLogger()
 	scheduler, err := NewScheduler(
 		mockJobStore,
+		nil,
 		mockMxManager,
 		mockPubsubService,
 		testLog,
@@ -123,6 +124,7 @@ func TestNewScheduler_MinMaxRunning(t *testing.T) {
 	testLog := logger.NewNopLogger()
 	scheduler, err := NewScheduler(
 		mockJobStore,
+		nil,
 		mockMxManager,
 		mockPubsubService,
 		testLog,
@@ -151,6 +153,7 @@ func TestScheduler_addRecurringJob(t *testing.T) {
 	testLog := logger.NewNopLogger()
 	scheduler, _ := NewScheduler(
 		mockJobStore,
+		nil,
 		mockMxManager,
 		mockPubsubService,
 		testLog,
@@ -257,6 +260,7 @@ func TestScheduler_preExec(t *testing.T) {
 	testLog := logger.NewNopLogger()
 	scheduler, _ := NewScheduler(
 		mockJobStore,
+		nil,
 		mockMxManager,
 		mockPubsubService,
 		testLog,
@@ -590,6 +594,7 @@ func TestScheduler_RunJob(t *testing.T) {
 	testLog := logger.NewNopLogger()
 	scheduler, _ := NewScheduler(
 		mockJobStore,
+		nil,
 		mockMxManager,
 		mockPubsubService,
 		testLog,

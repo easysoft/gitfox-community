@@ -12,6 +12,7 @@ import (
 	"github.com/quicklyon/kingpin/v2"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/router"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/cmd/cli/operations/provider"
 )
 
 type command struct {
@@ -50,6 +51,21 @@ func (c *command) run(*kingpin.ParseContext) error {
 		app.SystemLog.Errorw("[Server] Failed to migrate plugins", "error", err)
 		panic(err)
 	}
+
+	// 注册 Pipeline Cron 触发器处理器
+	if err := provider.RegisterPipelineCronHandler(
+		app.JobScheduler, app.Triggerer, app.PipelineService); err != nil {
+		app.SystemLog.Errorw("[Server] Failed to register pipeline cron handler", "error", err)
+		panic(err)
+	}
+
+	// TODO: 重新协商方案 启动时对账：确保所有 trigger 的 cron job 与 DB 一致（修复上次异常退出可能导致的不一致）
+	// app.SystemLog.Info("[Server] Reconciling pipeline cron jobs...")
+	// if err := app.PipelineService.ReconcileCronJobs(context.Background()); err != nil {
+	// 	app.SystemLog.Errorw("[Server] Failed to reconcile pipeline cron jobs", "error", err)
+	// 	panic(err)
+	// }
+	// app.SystemLog.Info("[Server] Pipeline cron jobs reconciled")
 
 	// 启动 Job Scheduler
 	app.SystemLog.Info("[Server] Starting job scheduler...")
