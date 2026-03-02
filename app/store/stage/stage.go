@@ -130,7 +130,66 @@ func (s *Store) GetByID(ctx context.Context, id uint) (*stageModel.Stage, error)
 	return mapToModel(&dbStage), nil
 }
 
-// mapToModel converts database model to business model
+// GetByIDWithSteps gets stage by ID
+func (s *Store) GetByIDWithSteps(ctx context.Context, id uint) (*stageModel.StageWithSteps, error) {
+	db := dbtx.GetOrmAccessor(ctx, s.db)
+
+	var dbStage Stage
+	if err := db.Where("id = ?", id).First(&dbStage).Error; err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
+	}
+	stage := mapToModel(&dbStage)
+
+	var dbSteps []stepStore.Step
+	if err := db.Where("stageID = ?", id).Order("sn ASC").Find(&dbSteps).Error; err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
+	}
+
+	steps := make([]stepModel.Step, len(dbSteps))
+	for _, dbStep := range dbSteps {
+		var depends []string
+		if dbStep.Depends != "" {
+			_ = json.Unmarshal([]byte(dbStep.Depends), &depends)
+		}
+		step := stepModel.Step{
+			ID:         dbStep.ID,
+			StageID:    dbStep.StageID,
+			Name:       dbStep.Name,
+			Code:       dbStep.Code,
+			SN:         dbStep.SN,
+			Image:      dbStep.Image,
+			Depends:    depends,
+			GroupID:    dbStep.GroupID,
+			FailPolicy: dbStep.FailPolicy,
+			Started:    dbStep.Started,
+			Finished:   dbStep.Finished,
+			Duration:   dbStep.Duration,
+			Status:     constant.CIStatus(dbStep.Status),
+			ErrorCode:  dbStep.ErrorCode,
+			ErrorLog:   dbStep.ErrorLog,
+		}
+		steps = append(steps, step)
+	}
+
+	result := stageModel.StageWithSteps{
+		Stage: *stage,
+		Steps: steps,
+	}
+	return &result, nil
+}
+
+// FindByNumber returns a stage by execution ID and stage number (sn)
+func (s *Store) FindByNumber(ctx context.Context, executionID int64, sn int) (*stageModel.Stage, error) {
+	db := dbtx.GetOrmAccessor(ctx, s.db)
+
+	var dbStage Stage
+	if err := db.Where("executionID = ? AND sn = ?", executionID, sn).First(&dbStage).Error; err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
+	}
+
+	return mapToModel(&dbStage), nil
+}
+
 func mapToModel(s *Stage) *stageModel.Stage {
 	var labels map[string]string
 	var depends []string
@@ -230,6 +289,10 @@ func (s *Store) ListWithSteps(ctx context.Context, executionID uint) ([]*stageMo
 	// Group steps by stageID
 	stepsByStageID := make(map[uint][]stepModel.Step)
 	for _, dbStep := range dbSteps {
+		var depends []string
+		if dbStep.Depends != "" {
+			_ = json.Unmarshal([]byte(dbStep.Depends), &depends)
+		}
 		step := stepModel.Step{
 			ID:         dbStep.ID,
 			StageID:    dbStep.StageID,
@@ -237,7 +300,7 @@ func (s *Store) ListWithSteps(ctx context.Context, executionID uint) ([]*stageMo
 			Code:       dbStep.Code,
 			SN:         dbStep.SN,
 			Image:      dbStep.Image,
-			Depends:    dbStep.Depends,
+			Depends:    depends,
 			GroupID:    dbStep.GroupID,
 			FailPolicy: dbStep.FailPolicy,
 			Started:    dbStep.Started,

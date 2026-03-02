@@ -5,6 +5,8 @@ import (
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/execution"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/canceler"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/manager"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/scheduler"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/triggerer"
 	executionSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/execution"
 	stageSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/stage"
@@ -18,7 +20,10 @@ import (
 var ExecutionWireSet = wire.NewSet(
 	execution.NewController,
 	triggerer.New,
+	scheduler.New,
 	canceler.New,
+	manager.New,
+	manager.NewEmbeddedClient,
 
 	// Execution service
 	wire.Bind(new(executionSvc.Interface), new(*executionSvc.Service)),

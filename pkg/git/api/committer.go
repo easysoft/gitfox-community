@@ -14,7 +14,7 @@ import (
 	"strings"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/command"
-	"github.com/easysoft/gitfox/pkg/util/common"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/common"
 
 	"github.com/golang-module/carbon/v2"
 	"golang.org/x/exp/slices"
