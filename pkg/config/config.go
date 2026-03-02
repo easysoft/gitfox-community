@@ -103,9 +103,10 @@ type MetricConfig struct {
 
 // CiConfig CI配置
 type CiConfig struct {
-	PluginsZipUrl   string `envconfig:"GITFOX_CI_PLUGINS_ZIP_URL"`
-	Runner          string `envconfig:"GITFOX_CI_RUNNER"`
-	ParallelWorkers uint   `envconfig:"GITFOX_CI_ParallelWorkers" default:"2"`
+	PluginsZipUrl     string   `envconfig:"GITFOX_CI_PLUGINS_ZIP_URL"`
+	Runner            string   `envconfig:"GITFOX_CI_RUNNER"`
+	ParallelWorkers   uint     `envconfig:"GITFOX_CI_ParallelWorkers" default:"2"`
+	ContainerNetworks []string `envconfig:"GITFOX_CI_CONTAINER_NETWORKS"`
 }
 
 // GitspaceConfig Gitspace配置

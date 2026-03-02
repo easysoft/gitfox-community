@@ -10,7 +10,7 @@ vars:
   GOOS: $(go env GOOS)
   GOARCH: $(go env GOARCH)
 
-  VERSION_PKG: github.com/easysoft/gitfox/pkg/util/common
+  VERSION_PKG: gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/common
   LDFLAGS: "-w -s \
     -X '{{.VERSION_PKG}}.Version={{.BUILD_RELEASE}}' \
     -X '{{.VERSION_PKG}}.BuildDate={{.BUILD_DATE}}' \

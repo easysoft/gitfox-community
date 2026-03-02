@@ -35,4 +35,6 @@ type Interface interface {
 	List(ctx context.Context, executionID uint) ([]*stageModel.Stage, error)
 	// ListWithSteps returns a stage list with steps for an execution
 	ListWithSteps(ctx context.Context, executionID uint) ([]*stageModel.StageWithSteps, error)
+	// FindByNumber returns a stage by execution ID and stage number (sn)
+	FindByNumber(ctx context.Context, executionID int64, sn int) (*stageModel.Stage, error)
 }

@@ -7,6 +7,7 @@ import (
 
 	jobsSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/jobs"
 	jobsStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/jobs"
+	pipelineSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/pipeline"
 	runnerStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/runner"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/lock"
@@ -18,6 +19,7 @@ var JobWireSet = wire.NewSet(
 	jobsStore.NewScheduleJob,
 	wire.Bind(new(jobsStore.Interface), new(*jobsStore.Store)),
 	ProvideScheduler,
+	wire.Bind(new(pipelineSvc.CronScheduler), new(*jobsSvc.Scheduler)),
 	ProvideJobConfig,
 )
 

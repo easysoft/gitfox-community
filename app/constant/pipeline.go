@@ -15,3 +15,6 @@ var RunPolicyList = []string{
 	string(RunPolicyOnFailure),
 	string(RunPolicyAlways),
 }
+
+// UserAgentPipeline is the HTTP user agent used by pipeline clone steps.
+const UserAgentPipeline = "gitfox-pipeline"
