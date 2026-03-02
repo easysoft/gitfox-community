@@ -5,24 +5,23 @@ import (
 	"context"
 	"errors"
 
-	stageModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/stage"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/stage"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/storage"
+	stageStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/stage"
 	schema "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pipeline/spec"
-	"github.com/easysoft/gitfox/app/pipeline/storage"
 
 	"github.com/drone/runner-go/environ/provider"
 	"github.com/rs/zerolog/log"
 )
 
 type StageDynamicEnvProvider struct {
-	store    storage.PipelineStorage
-	stageSvc stage.Interface
+	store      storage.PipelineStorage
+	stageStore stageStore.Interface
 }
 
-func NewStageDynamicEnvProvider(store storage.PipelineStorage, stageSvc stage.Interface) *StageDynamicEnvProvider {
+func NewStageDynamicEnvProvider(store storage.PipelineStorage, stageStore stageStore.Interface) *StageDynamicEnvProvider {
 	return &StageDynamicEnvProvider{
-		store:    store,
-		stageSvc: stageSvc,
+		store:      store,
+		stageStore: stageStore,
 	}
 }
 
@@ -56,14 +55,8 @@ func (p *StageDynamicEnvProvider) List(ctx context.Context, in *provider.Request
 			continue
 		}
 
-		stageList, _ := p.stageSvc.List(ctx, uint(in.Build.ID))
-		var stageInfo *stageModel.Stage
-		for _, stage := range stageList {
-			if stage.SN == stageNum {
-				stageInfo = stage
-			}
-		}
-		envBytes, e := p.store.GetStageFile(ctx, int64(stageInfo.ExecutionID), int64(stageInfo.ID), ".custom_env")
+		dbStage, _ := p.stageStore.FindByNumber(ctx, in.Build.ID, stageNum)
+		envBytes, e := p.store.GetStageFile(ctx, int64(dbStage.ExecutionID), int64(dbStage.ID), ".custom_env")
 		if e != nil {
 			return nil, e
 		}

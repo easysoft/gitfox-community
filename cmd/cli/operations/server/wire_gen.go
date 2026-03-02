@@ -20,6 +20,7 @@ import (
 	user3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/user"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/router"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/canceler"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/scheduler"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/triggerer"
 	branch2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/branch"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/commit"
@@ -154,19 +155,26 @@ func NewApp(mode string) (*App, func(), error) {
 	mutexManager := lock.ProvideMutexManager()
 	jobLog := provider.NewJobLogger(config)
 	jobConfig := provider.ProvideJobConfig(config)
-	scheduler, err := provider.ProvideScheduler(jobsStore, runnerStore, mutexManager, pubSub, jobLog, jobConfig)
+	jobsScheduler, err := provider.ProvideScheduler(jobsStore, runnerStore, mutexManager, pubSub, jobLog, jobConfig)
 	if err != nil {
 		cleanup3()
 		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
-	pipelineService := pipeline2.NewPipelineService(pipelineStore, s3Store, contentStorage, logStream, scheduler)
+	pipelineService := pipeline2.NewPipelineService(pipelineStore, s3Store, contentStorage, logStream, jobsScheduler)
 	pipelineController := pipeline3.NewController(ciConfig, pipelineService, repoService)
 	executionStore := execution.NewExecutionStore(db)
 	stageStore := stage.NewStageStore(db)
+	schedulerScheduler, err := scheduler.New(stageStore, runnerStore, mutexManager)
+	if err != nil {
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
 	txRunnerImpl := dbtx.NewTxRunner(db)
-	triggererTriggerer := triggerer.New(pipelineService, executionStore, stageStore, txRunnerImpl)
+	triggererTriggerer := triggerer.New(pipelineService, executionStore, stageStore, schedulerScheduler, txRunnerImpl)
 	stepStore := step.NewStepStore(db)
 	cancelerCanceler := canceler.New(executionStore, stageStore, stepStore)
 	executionService := execution2.NewExecutionService(executionStore, stageStore)
@@ -275,7 +283,7 @@ func NewApp(mode string) (*App, func(), error) {
 		Authenticator:   authenticator,
 		EventSystem:     system,
 		EventContext:    eventContext,
-		JobScheduler:    scheduler,
+		JobScheduler:    jobsScheduler,
 		Triggerer:       triggererTriggerer,
 	}
 	return app, func() {

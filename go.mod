@@ -10,8 +10,11 @@ require (
 	github.com/aws/aws-sdk-go v1.55.2
 	github.com/bmatcuk/doublestar v1.3.4
 	github.com/bmatcuk/doublestar/v4 v4.9.1
+	github.com/buildkite/yaml v2.1.0+incompatible
+	github.com/dchest/uniuri v1.2.0
 	github.com/djherbis/buffer v1.2.0
 	github.com/djherbis/nio/v3 v3.0.1
+	github.com/docker/distribution v2.8.1+incompatible
 	github.com/docker/docker v24.0.7+incompatible
 	github.com/docker/go-units v0.5.0
 	github.com/drone/drone-go v1.7.1
@@ -36,7 +39,9 @@ require (
 	github.com/mailru/easyjson v0.9.1
 	github.com/matoous/go-nanoid v1.5.0
 	github.com/matoous/go-nanoid/v2 v2.1.0
+	github.com/natessilva/dag v0.0.0-20180124060714-7194b8dcc5c4
 	github.com/opencontainers/go-digest v1.0.0
+	github.com/opencontainers/image-spec v1.1.0
 	github.com/pkg/errors v0.9.1
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/rs/zerolog v1.34.0
@@ -77,14 +82,12 @@ require (
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bradrydzewski/spec v1.0.1-0.20240721144557-91d495656d51 // indirect
-	github.com/buildkite/yaml v2.1.0+incompatible // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/charmbracelet/lipgloss v0.12.1 // indirect
 	github.com/charmbracelet/x/ansi v0.1.4 // indirect
 	github.com/coreos/go-semver v0.3.1 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
-	github.com/docker/distribution v2.8.1+incompatible // indirect
 	github.com/docker/go-connections v0.5.0 // indirect
 	github.com/drone/envsubst v1.0.3 // indirect
 	github.com/fatih/semgroup v1.2.0 // indirect
@@ -120,15 +123,12 @@ require (
 	github.com/morikuni/aec v1.1.0 // indirect
 	github.com/muesli/termenv v0.15.2 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
-	github.com/natessilva/dag v0.0.0-20180124060714-7194b8dcc5c4 // indirect
-	github.com/opencontainers/image-spec v1.1.0 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/prometheus/client_golang v1.19.1 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
 	github.com/prometheus/common v0.55.0 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
-	github.com/sashabaranov/go-openai v1.36.0 // indirect
 	github.com/spf13/viper v1.21.0 // indirect
 	github.com/swaggest/refl v1.4.0 // indirect
 	go.opencensus.io v0.24.0 // indirect

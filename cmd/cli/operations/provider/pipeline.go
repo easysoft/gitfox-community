@@ -8,7 +8,6 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/pipeline"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	ciStorage "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/storage"
-	jobsSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/jobs"
 	pipelineSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/pipeline"
 	pipelineStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/pipeline"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
@@ -24,7 +23,6 @@ var PipelineWireSet = wire.NewSet(
 	pipelineSvc.NewPipelineService,
 	wire.Bind(new(pipelineStore.Interface), new(*pipelineStore.Store)),
 	pipelineStore.NewPipelineStore,
-	wire.Bind(new(pipelineSvc.CronScheduler), new(*jobsSvc.Scheduler)),
 	ProvidePipelineS3Store,
 	ProvidePipelineContentStorage,
 	ProvidePipelineCIStorage,

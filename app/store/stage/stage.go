@@ -178,7 +178,18 @@ func (s *Store) GetByIDWithSteps(ctx context.Context, id uint) (*stageModel.Stag
 	return &result, nil
 }
 
-// mapToModel converts database model to business model
+// FindByNumber returns a stage by execution ID and stage number (sn)
+func (s *Store) FindByNumber(ctx context.Context, executionID int64, sn int) (*stageModel.Stage, error) {
+	db := dbtx.GetOrmAccessor(ctx, s.db)
+
+	var dbStage Stage
+	if err := db.Where("executionID = ? AND sn = ?", executionID, sn).First(&dbStage).Error; err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
+	}
+
+	return mapToModel(&dbStage), nil
+}
+
 func mapToModel(s *Stage) *stageModel.Stage {
 	var labels map[string]string
 	var depends []string
