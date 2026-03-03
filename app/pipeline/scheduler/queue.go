@@ -101,7 +101,7 @@ func (q *queue) Request(ctx context.Context, params Filter) (*stageModel.Stage, 
 		channel:  make(chan *stageModel.Stage),
 		done:     ctx.Done(),
 	}
-	log.Ctx(ctx).Debug().Msgf("[queue]: add new worker %+v", w)
+	log.Info().Msgf("[测试]: worker=%s ready to exe stage", w.token)
 	q.Lock()
 	q.workers[w] = struct{}{}
 	q.Unlock()
@@ -118,13 +118,16 @@ func (q *queue) Request(ctx context.Context, params Filter) (*stageModel.Stage, 
 		q.Unlock()
 		return nil, ctx.Err()
 	case b := <-w.channel:
+		log.Info().Msgf("[测试]: worker=%s received stageID=%d", w.token, b.ID)
 		return b, nil
 	}
 }
 
 //nolint:gocognit // refactor if needed.
 func (q *queue) signal(ctx context.Context) error {
+	log.Info().Msg("[测试]: queue signal triggered")
 	if err := q.globMx.Lock(ctx); err != nil {
+		log.Info().Err(err).Msg("[测试]: failed to acquire global lock")
 		return err
 	}
 	defer func() {
@@ -137,89 +140,107 @@ func (q *queue) signal(ctx context.Context) error {
 	count := len(q.workers)
 	pause := q.paused
 	q.Unlock()
+	log.Info().Msgf("[测试]: queue state snapshot, workers=%d, paused=%v", count, pause)
 	if pause {
+		log.Info().Msg("[测试]: queue is paused, skipping signal")
 		return nil
 	}
 	if count == 0 {
+		log.Info().Msg("[测试]: no workers available, skipping signal")
 		return nil
 	}
 	items, err := q.store.ListIncomplete(ctx)
 	if err != nil {
+		log.Info().Err(err).Msg("[测试]: failed to list incomplete stages")
 		return err
 	}
-	log.Ctx(ctx).Info().Msgf("skip signal for now: %d incomplete stages", len(items))
-	items = []*stageModel.Stage{} // TODO: remove this line after testing
+	log.Info().Msgf("[测试]: incomplete stages fetched from DB, count=%d", len(items))
 
-	// 查找数据库 runners 表中所有未删除，未停用，在线的 runner
+	// 查找数据库 runners 表中所有未删除，未停用，在线的 agent runner
 	availableRunners, err := q.getAvailableRunners(ctx)
 	if err != nil {
-		log.Ctx(ctx).Error().Err(err).Msg("failed to get available runners")
+		log.Info().Err(err).Msg("[测试]: failed to get available runners")
 		return err
 	}
 
 	// 初始化可用 runner token 列表
 	var availableRunnerTokenList []string
 	if len(availableRunners) != 0 {
-		// 遍历可用 runners，提取每个 runner 的 token 并拼装至 availableRunnerTokenList
 		for _, runner := range availableRunners {
 			if runner.Token != "" {
 				availableRunnerTokenList = append(availableRunnerTokenList, runner.Token)
 			}
 		}
 	}
+	log.Info().Msgf("[测试]: available agent runner tokens, count=%d", len(availableRunnerTokenList))
 
 	q.Lock()
 	defer q.Unlock()
+	log.Info().Msgf("[测试]: starting stage-worker matching, stages=%d, workers=%d", len(items), len(q.workers))
 	for _, item := range items {
 		if item.Status == constant.CIStatusRunning {
+			log.Info().Msgf("[测试]: skip stage (already running), stage_id=%d", item.ID)
 			continue
 		}
+		log.Info().Msgf("[测试]: trying to match stage, stage_id=%d, type=%s, os=%s, arch=%s", item.ID, item.Type, item.OS, item.Arch)
 
+		matched := false
 	loop:
 		for w := range q.workers {
 			// the worker must match the resource kind and type
 			if !matchResource(w.typ, item.Type) {
+				log.Info().Msgf("[测试]: worker skipped (type mismatch), stage_id=%d, worker_type=%s, stage_type=%s", item.ID, w.typ, item.Type)
 				continue
 			}
 
 			// agent 类型的 runner 增加校验逻辑
 			if w.typ == "agent" {
 				if len(availableRunnerTokenList) == 0 {
+					log.Info().Msgf("[测试]: worker skipped (agent type but no available runner tokens), stage_id=%d", item.ID)
 					continue
 				}
 				if !slices.Contains(availableRunnerTokenList, w.token) {
+					log.Info().Msgf("[测试]: worker skipped (agent token not in available list), stage_id=%d, worker_token=%s", item.ID, w.token)
 					continue
 				}
 			}
 
 			if w.os != "" || w.arch != "" {
-				// the worker is platform-specific. check to ensure
-				// the queue item matches the worker platform.
 				if w.os != item.OS {
+					log.Info().Msgf("[测试]: worker skipped (OS mismatch), stage_id=%d, worker_os=%s, stage_os=%s", item.ID, w.os, item.OS)
 					continue
 				}
 				if w.arch != item.Arch {
+					log.Info().Msgf("[测试]: worker skipped (arch mismatch), stage_id=%d, worker_arch=%s, stage_arch=%s", item.ID, w.arch, item.Arch)
 					continue
 				}
 			}
 
 			if len(item.Labels) > 0 || len(w.labels) > 0 {
 				if !checkLabels(item.Labels, w.labels) {
+					log.Info().Msgf("[测试]: worker skipped (labels mismatch), stage_id=%d", item.ID)
 					continue
 				}
 			}
 
-			log.Info().Msgf("Runner[%s] stage[%d] selected to exec stage", w.token, item.ID)
+			log.Info().Msgf("[测试]: worker matched, dispatching stage, worker_token=%s, stage_id=%d, type=%s", w.token, item.ID, w.typ)
 
 			select {
 			case w.channel <- item:
+				log.Info().Msgf("[测试]: stage dispatched to worker successfully, worker_token=%s, stage_id=%d", w.token, item.ID)
 			case <-w.done:
+				log.Info().Msgf("[测试]: worker cancelled before dispatch, worker_token=%s, stage_id=%d", w.token, item.ID)
 			}
 
 			delete(q.workers, w)
+			matched = true
 			break loop
 		}
+		if !matched {
+			log.Info().Msgf("[测试]: no matching worker found for stage, stage_id=%d", item.ID)
+		}
 	}
+	log.Info().Msgf("[测试]: signal completed, remaining_workers=%d", len(q.workers))
 	return nil
 }
 
