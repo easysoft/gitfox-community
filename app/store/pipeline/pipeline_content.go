@@ -31,8 +31,8 @@ func mapPipelineContentToModel(content PipelineContent) *pipelineModel.PipelineC
 		ID:          content.ID,
 		PipelineID:  content.PipelineID,
 		Version:     content.Version,
-		Data:        decodedData,              // 解码后的原始字节数据
-		DataStr:     string(content.Data),     // 数据库中的 base64 字符串
+		Data:        decodedData,          // 解码后的原始字节数据
+		DataStr:     string(content.Data), // 数据库中的 base64 字符串
 		Variables:   content.Variables,
 		CreatedBy:   content.CreatedBy,
 		CreatedDate: content.CreatedDate,

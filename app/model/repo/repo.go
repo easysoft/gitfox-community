@@ -13,7 +13,7 @@ import (
 // CreateRemoteRepoRequest 创建远端仓库请求参数
 type CreateRepoReq struct {
 	SpaceID       uint   `json:"spaceID" binding:"required"`                // 空间ID（字符串类型，后续转int）
-	Identifier    string `json:"name" binding:"required"`             // 仓库唯一标识
+	Identifier    string `json:"name" binding:"required"`                   // 仓库唯一标识
 	DefaultBranch string `json:"defaultBranch"`                             // 默认分支（默认main）
 	Desc          string `json:"desc" binding:"max=500"`                    // 仓库描述（最大500字符）
 	Product       string `json:"product"`                                   // 关联产品

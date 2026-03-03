@@ -95,7 +95,7 @@ func (s *SpaceStore) List(ctx context.Context, filter spaceModel.ListSpaceFilter
 		if len(filter.IDs) > 0 {
 			tx = tx.Where("acl = ? OR id IN ?", "open", ids)
 		} else {
-			tx = tx.Where("acl = ?", "open")	
+			tx = tx.Where("acl = ?", "open")
 		}
 	} else if len(filter.IDs) > 0 {
 		tx = tx.Where("id IN ?", ids)
@@ -111,7 +111,6 @@ func (s *SpaceStore) List(ctx context.Context, filter spaceModel.ListSpaceFilter
 	}
 	return pageResult, nil
 }
-
 
 // GetByID 根据ID查询单个空间
 func (r *SpaceStore) GetByID(ctx context.Context, id uint) (*Space, error) {

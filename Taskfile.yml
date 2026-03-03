@@ -20,10 +20,8 @@ vars:
   PLATFORMS_ARCHS:
   - os: linux
     arches: [amd64, arm64]  # Linux支持的架构
-  - os: darwin
-    arches: [amd64, arm64]       # macOS支持的架构（Intel和M系列）
   - os: windows
-    arches: [amd64, arm64]       # Windows支持的架构
+    arches: [amd64]       # Windows支持的架构
 
 
 tasks:
@@ -221,7 +219,7 @@ tasks:
 
   cross-build:
     desc: 交叉编译应用
-    deps: [clean]  # 先执行清理
+    deps: [clean, download-ci-plugins]  # 先执行清理
     cmds:
       - for: { var: PLATFORMS_ARCHS, as: item }
         cmd: |
@@ -230,8 +228,13 @@ tasks:
             GOARCH={{.}}          
             # 执行交叉编译
             echo "编译: $GOOS/$GOARCH"
-            CGO_ENABLED=1 GOOS=$GOOS GOARCH=$GOARCH \
-            go build -o "{{$.BIN_DIR}}/gitfox-$GOOS-$GOARCH" -ldflags "{{$.LDFLAGS}}" \
+            # windows 平台需要 .exe 后缀
+            suffix=""
+            if [ "$GOOS" = "windows" ]; then
+              suffix=".exe"
+            fi
+            CGO_ENABLED=0 GOOS=$GOOS GOARCH=$GOARCH \
+            go build -o "{{$.BIN_DIR}}/gitfox-$GOOS-$GOARCH"$suffix -ldflags "{{$.LDFLAGS}}" \
             ./cmd/cli/main.go
           {{end}}
     parallel: true

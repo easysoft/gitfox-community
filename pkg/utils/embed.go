@@ -3,6 +3,7 @@ package utils
 import (
 	"embed"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -18,6 +19,9 @@ func CopyEmbeddedDir(embeddedFS embed.FS, srcDir, dstDir string) error {
 		return errors.WithI18nKey(errors.Wrap(err, "[embed]failed to mkdir"), i18n.ErrorEmbedFailedToMkdir)
 	}
 
+	// 规范化嵌入 FS 的源路径为 POSIX 风格（embed.FS 使用 '/'）
+	srcDir = path.Clean(strings.ReplaceAll(srcDir, "\\", "/"))
+
 	// 读取目录内容
 	entries, err := embeddedFS.ReadDir(srcDir)
 	if err != nil {
@@ -25,7 +29,8 @@ func CopyEmbeddedDir(embeddedFS embed.FS, srcDir, dstDir string) error {
 	}
 
 	for _, entry := range entries {
-		srcPath := filepath.Join(srcDir, entry.Name())
+		// 对嵌入 FS 使用 POSIX 路径拼接
+		srcPath := path.Join(srcDir, entry.Name())
 		dstPath := filepath.Join(dstDir, entry.Name())
 
 		if entry.IsDir() {

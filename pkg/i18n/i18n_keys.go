@@ -105,19 +105,19 @@ const (
 	ErrorGzipFailedToCreateReader I18nKey = "error.gzip_failed_to_create_reader" // gzip 解压失败
 
 	// Execution 相关常量
-	ExecutionBodyParamError  I18nKey = "execution.body_param_error"  // Body 参数解析失败.
-	ExecutionCancelError     I18nKey = "execution.cancel_error"      // 执行取消失败
-	ExecutionCancelSuccess   I18nKey = "execution.cancel_success"    // 执行取消成功
-	ExecutionPathParamError  I18nKey = "execution.path_param_error"  // Path 参数解析失败.
-	ExecutionQueryError      I18nKey = "execution.query_error"       // 执行查询失败
-	ExecutionQueryParamError I18nKey = "execution.query_param_error" // Query 参数解析失败.
-	ExecutionQuerySuccess    I18nKey = "execution.query_success"     // 执行查询成功
-	ExecutionLogCreateError  I18nKey = "execution.log_create_error"  // 日志创建失败
+	ExecutionBodyParamError   I18nKey = "execution.body_param_error"   // Body 参数解析失败.
+	ExecutionCancelError      I18nKey = "execution.cancel_error"       // 执行取消失败
+	ExecutionCancelSuccess    I18nKey = "execution.cancel_success"     // 执行取消成功
+	ExecutionPathParamError   I18nKey = "execution.path_param_error"   // Path 参数解析失败.
+	ExecutionQueryError       I18nKey = "execution.query_error"        // 执行查询失败
+	ExecutionQueryParamError  I18nKey = "execution.query_param_error"  // Query 参数解析失败.
+	ExecutionQuerySuccess     I18nKey = "execution.query_success"      // 执行查询成功
+	ExecutionLogCreateError   I18nKey = "execution.log_create_error"   // 日志创建失败
 	ExecutionLogCreateSuccess I18nKey = "execution.log_create_success" // 日志创建成功
-	ExecutionLogQueryError   I18nKey = "execution.log_query_error"   // 日志查询失败
-	ExecutionLogQuerySuccess I18nKey = "execution.log_query_success" // 日志查询成功
-	ExecutionTriggerError    I18nKey = "execution.trigger_error"     // 执行触发失败
-	ExecutionTriggerSuccess  I18nKey = "execution.trigger_success"   // 执行触发成功
+	ExecutionLogQueryError    I18nKey = "execution.log_query_error"    // 日志查询失败
+	ExecutionLogQuerySuccess  I18nKey = "execution.log_query_success"  // 日志查询成功
+	ExecutionTriggerError     I18nKey = "execution.trigger_error"      // 执行触发失败
+	ExecutionTriggerSuccess   I18nKey = "execution.trigger_success"    // 执行触发成功
 
 	// Git 相关常量
 	GitAmbiguousRef                 I18nKey = "git.ambiguous_ref"                     // 引用不明确.
@@ -156,24 +156,24 @@ const (
 	GitUnrelatedHistories           I18nKey = "git.unrelated_histories"               // 不相关的历史记录.
 
 	// Pipeline 相关常量
-	PipelineBodyParamError          I18nKey = "pipeline.body_param_error"           // Body 参数解析失败.
-	PipelinePathParamError          I18nKey = "pipeline.path_param_error"           // Path 参数解析失败.
-	PipelineQueryParamError         I18nKey = "pipeline.query_param_error"          // Query 参数解析失败.
-	PipelineQuerySchemaGroupSuccess I18nKey = "pipeline.query_schema_group_success" // 查询 schema 分组配置成功
-	PipelineQueryStepSchemaSuccess  I18nKey = "pipeline.query_step_schema_success"  // 查询 schema 配置成功
-	PipelineTriggerCreateError      I18nKey = "pipeline.trigger_create_error"       // 触发创建失败.
-	PipelineTriggerCreateSuccess    I18nKey = "pipeline.trigger_create_success"     // 触发创建成功.
-	PipelineTriggerDeleteError      I18nKey = "pipeline.trigger_delete_error"       // 触发删除失败.
-	PipelineTriggerDeleteSuccess    I18nKey = "pipeline.trigger_delete_success"     // 触发删除成功.
-	PipelineTriggerGetError         I18nKey = "pipeline.trigger_get_error"          // 触发获取失败.
-	PipelineTriggerGetSuccess       I18nKey = "pipeline.trigger_get_success"        // 触发获取成功.
-	PipelineTriggerListError        I18nKey = "pipeline.trigger_list_error"         // 触发列表获取失败.
-	PipelineTriggerListSuccess      I18nKey = "pipeline.trigger_list_success"       // 触发列表获取成功.
-	PipelineTriggerParamCronError      I18nKey = "pipeline.trigger_param_cron_error"      // 无效的 cron 表达式.
+	PipelineBodyParamError             I18nKey = "pipeline.body_param_error"               // Body 参数解析失败.
+	PipelinePathParamError             I18nKey = "pipeline.path_param_error"               // Path 参数解析失败.
+	PipelineQueryParamError            I18nKey = "pipeline.query_param_error"              // Query 参数解析失败.
+	PipelineQuerySchemaGroupSuccess    I18nKey = "pipeline.query_schema_group_success"     // 查询 schema 分组配置成功
+	PipelineQueryStepSchemaSuccess     I18nKey = "pipeline.query_step_schema_success"      // 查询 schema 配置成功
+	PipelineTriggerCreateError         I18nKey = "pipeline.trigger_create_error"           // 触发创建失败.
+	PipelineTriggerCreateSuccess       I18nKey = "pipeline.trigger_create_success"         // 触发创建成功.
+	PipelineTriggerDeleteError         I18nKey = "pipeline.trigger_delete_error"           // 触发删除失败.
+	PipelineTriggerDeleteSuccess       I18nKey = "pipeline.trigger_delete_success"         // 触发删除成功.
+	PipelineTriggerGetError            I18nKey = "pipeline.trigger_get_error"              // 触发获取失败.
+	PipelineTriggerGetSuccess          I18nKey = "pipeline.trigger_get_success"            // 触发获取成功.
+	PipelineTriggerListError           I18nKey = "pipeline.trigger_list_error"             // 触发列表获取失败.
+	PipelineTriggerListSuccess         I18nKey = "pipeline.trigger_list_success"           // 触发列表获取成功.
+	PipelineTriggerParamCronError      I18nKey = "pipeline.trigger_param_cron_error"       // 无效的 cron 表达式.
 	PipelineTriggerParamCronLimitError I18nKey = "pipeline.trigger_param_cron_limit_error" // cron 表达式数量超过限制.
-	PipelineTriggerParamError       I18nKey = "pipeline.trigger_param_error"        // 触发参数解析失败.
-	PipelineTriggerUpdateError      I18nKey = "pipeline.trigger_update_error"       // 触发更新失败.
-	PipelineTriggerUpdateSuccess    I18nKey = "pipeline.trigger_update_success"     // 触发更新成功.
+	PipelineTriggerParamError          I18nKey = "pipeline.trigger_param_error"            // 触发参数解析失败.
+	PipelineTriggerUpdateError         I18nKey = "pipeline.trigger_update_error"           // 触发更新失败.
+	PipelineTriggerUpdateSuccess       I18nKey = "pipeline.trigger_update_success"         // 触发更新成功.
 
 	// Pullrequest 相关常量
 	PullrequestBodyParamError                I18nKey = "pullrequest.body_param_error"                   // Body 参数解析失败.
