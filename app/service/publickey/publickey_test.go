@@ -135,7 +135,7 @@ func TestServiceUpdatePublicKey(t *testing.T) {
 		wantErr   bool
 	}{
 		{
-			name: "update success",
+			name: "update identifier and content success",
 			id:   1001,
 			params: &publickeyModel.UpdatePublicKeyInput{
 				Identifier: "new-key",
@@ -146,6 +146,40 @@ func TestServiceUpdatePublicKey(t *testing.T) {
 					assert.Equal(t, "new-key", key.Identifier)
 					assert.Equal(t, "ssh-ed25519", key.Type)
 					assert.NotEmpty(t, key.Fingerprint)
+					assert.Equal(t, "user@test", key.Comment)
+					return nil
+				})
+			},
+		},
+		{
+			name: "update identifier only success",
+			id:   1002,
+			params: &publickeyModel.UpdatePublicKeyInput{
+				Identifier: "rename-only",
+			},
+			setupMock: func(m *publickeyStoreMock.MockInterface) {
+				m.EXPECT().UpdateByID(gomock.Any(), "tester", int64(1002), gomock.Any()).DoAndReturn(func(ctx context.Context, account string, id int64, key storePublicKey.PublicKey) error {
+					assert.Equal(t, "rename-only", key.Identifier)
+					assert.Empty(t, key.Content)
+					assert.Empty(t, key.Fingerprint)
+					assert.Empty(t, key.Type)
+					return nil
+				})
+			},
+		},
+		{
+			name: "update content only success",
+			id:   1003,
+			params: &publickeyModel.UpdatePublicKeyInput{
+				Content: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKRHkkiUQkU0nkdkSOWuU4+8IMWLoeM8XdrjHDSj7zSu content-only@test",
+			},
+			setupMock: func(m *publickeyStoreMock.MockInterface) {
+				m.EXPECT().UpdateByID(gomock.Any(), "tester", int64(1003), gomock.Any()).DoAndReturn(func(ctx context.Context, account string, id int64, key storePublicKey.PublicKey) error {
+					assert.Empty(t, key.Identifier)
+					assert.Equal(t, "ssh-ed25519", key.Type)
+					assert.NotEmpty(t, key.Fingerprint)
+					assert.Equal(t, "content-only@test", key.Comment)
+					assert.NotEmpty(t, key.Content)
 					return nil
 				})
 			},

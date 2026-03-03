@@ -702,9 +702,6 @@ definitions:
       identifier:
         description: 公钥标识符
         type: string
-    required:
-    - content
-    - identifier
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.ContentType:
     enum:

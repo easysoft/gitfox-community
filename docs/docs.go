@@ -6345,10 +6345,6 @@ const docTemplate = `{
         },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_publickey.UpdatePublicKeyInput": {
             "type": "object",
-            "required": [
-                "content",
-                "identifier"
-            ],
             "properties": {
                 "content": {
                     "description": "公钥内容",
