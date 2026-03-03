@@ -4,6 +4,7 @@
 package server
 
 import (
+	"github.com/drone/runner-go/poller"
 	"github.com/google/wire"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/githook"
@@ -40,6 +41,7 @@ type App struct {
 	EventContext    *provider.EventContext
 	JobScheduler    *jobsSvc.Scheduler
 	Triggerer       triggerer.Triggerer
+	Poller          *poller.Poller
 }
 
 func NewApp(mode string) (*App, func(), error) {
@@ -56,6 +58,7 @@ func NewApp(mode string) (*App, func(), error) {
 		provider.PipelineWireSet,
 		provider.ExecutionWireSet,
 		provider.RunnerWireSet,
+		provider.DockerRunnerWireSet,
 		provider.ScanRuleSetWireSet,
 		provider.ScanRuleWireSet,
 		provider.CommitWireSet,
@@ -67,7 +70,7 @@ func NewApp(mode string) (*App, func(), error) {
 		provider.EventWireSet,
 		provider.GitEventWireSet,
 		provider.PullReqEventWireSet,
-		// provider.PipelineEventWireSet,
+		provider.PipelineEventWireSet,
 		provider.TriggerWireSet,
 		provider.PubSubProvider,
 		provider.JobWireSet,

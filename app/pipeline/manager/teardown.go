@@ -37,7 +37,7 @@ type teardown struct {
 	Scheduler    scheduler.Scheduler
 	SSEStreamer  sse.Streamer
 	Reporter     events.Reporter
-	PRReporter   pullreqevents.Reporter
+	PRReporter   *pullreqevents.Reporter
 	Logz         livelog.LogStream
 }
 

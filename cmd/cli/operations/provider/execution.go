@@ -22,6 +22,7 @@ var ExecutionWireSet = wire.NewSet(
 	triggerer.New,
 	scheduler.New,
 	canceler.New,
+	wire.Bind(new(manager.ExecutionManager), new(*manager.Manager)),
 	manager.New,
 	manager.NewEmbeddedClient,
 

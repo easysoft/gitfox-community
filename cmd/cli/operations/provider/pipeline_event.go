@@ -17,6 +17,10 @@ func ProvidePipelineEventReaderFactory(eventsSystem *events.System) (*events.Rea
 	return pipelineevents.NewReaderFactory(eventsSystem)
 }
 
-func ProvidePipelineEventReporter(eventsSystem *events.System) (*pipelineevents.Reporter, error) {
-	return pipelineevents.NewReporter(eventsSystem)
+func ProvidePipelineEventReporter(eventsSystem *events.System) (pipelineevents.Reporter, error) {
+	r, err := pipelineevents.NewReporter(eventsSystem)
+	if err != nil {
+		return pipelineevents.Reporter{}, err
+	}
+	return *r, nil
 }

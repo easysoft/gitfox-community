@@ -1,11 +1,19 @@
 package provider
 
 import (
+	runnerclient "github.com/drone/runner-go/client"
+	"github.com/drone/runner-go/poller"
 	"github.com/google/wire"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/runner"
+	dockerRunner "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/runner"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/storage"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/pipeline"
 	runnerSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/runner"
 	runnerStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/runner"
+	stageStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/stage"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/runner/extend"
 )
 
 var RunnerWireSet = wire.NewSet(
@@ -19,3 +27,37 @@ var RunnerWireSet = wire.NewSet(
 	// Runner token cache
 	runnerStore.NewTokenCache,
 )
+
+// DockerRunnerWireSet provides a wire set for this package.
+var DockerRunnerWireSet = wire.NewSet(
+	ProvideDynamicStageProvider,
+	ProvideExecutionRunner,
+	ProvideExecutionPoller,
+)
+
+// ProvideDynamicStageProvider provides an stage dynamic env provider.
+func ProvideDynamicStageProvider(
+	store storage.PipelineStorage,
+	stageStore stageStore.Interface,
+) *extend.StageDynamicEnvProvider {
+	return extend.NewStageDynamicEnvProvider(store, stageStore)
+}
+
+// ProvideExecutionRunner provides an execution runner.
+func ProvideExecutionRunner(
+	config *config.Config,
+	client runnerclient.Client,
+	stageEnvProvider *extend.StageDynamicEnvProvider,
+	pipelineSvc *pipeline.Service,
+) (dockerRunner.Runner, error) {
+	return dockerRunner.NewExecutionRunner(config, client, stageEnvProvider, pipelineSvc)
+}
+
+// ProvideExecutionPoller provides a poller which can poll the manager
+// for new builds and execute them.
+func ProvideExecutionPoller(
+	runner dockerRunner.Runner,
+	client runnerclient.Client,
+) *poller.Poller {
+	return dockerRunner.NewExecutionPoller(runner, client)
+}
