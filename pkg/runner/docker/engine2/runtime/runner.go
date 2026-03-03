@@ -93,11 +93,11 @@ func (s *Runner) Run(ctx context.Context, stage *drone.Stage) error {
 		return err
 	}
 
-	log = log.WithField("repo.id", data.Repo.ID).
-		WithField("repo.namespace", data.Repo.Namespace).
-		WithField("repo.name", data.Repo.Name).
-		WithField("build.id", data.Build.ID).
-		WithField("build.number", data.Build.Number)
+	// log = log.WithField("repo.id", data.Repo.ID).
+	// 	WithField("repo.namespace", data.Repo.Namespace).
+	// 	WithField("repo.name", data.Repo.Name).
+	// 	WithField("build.id", data.Build.ID).
+	// 	WithField("build.number", data.Build.Number)
 
 	log.Debug("stage details fetched")
 
@@ -112,19 +112,14 @@ func (s *Runner) Run(ctx context.Context, stage *drone.Stage) error {
 
 func (s *Runner) run(ctx context.Context, stage *drone.Stage, data *client.Context) error {
 	log := logger.FromContext(ctx).
-		WithField("repo.id", data.Repo.ID).
 		WithField("stage.id", stage.ID).
 		WithField("stage.name", stage.Name).
-		WithField("stage.number", stage.Number).
-		WithField("repo.namespace", data.Repo.Namespace).
-		WithField("repo.name", data.Repo.Name).
-		WithField("build.id", data.Build.ID).
-		WithField("build.number", data.Build.Number)
+		WithField("stage.number", stage.Number)
 
 	ctxdone, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	timeout := time.Duration(data.Repo.Timeout) * time.Minute
+	timeout := time.Duration(int64((10 * time.Hour).Seconds())) * time.Minute
 	ctxtimeout, cancel := context.WithTimeout(ctxdone, timeout)
 	defer cancel()
 
@@ -146,10 +141,10 @@ func (s *Runner) run(ctx context.Context, stage *drone.Stage, data *client.Conte
 
 	envs := environ.Combine(
 		environ.System(data.System),
-		environ.Repo(data.Repo),
+		// environ.Repo(data.Repo),
 		environ.Build(data.Build),
 		environ.Stage(stage),
-		environ.Link(data.Repo, data.Build, data.System),
+		// environ.Link(data.Repo, data.Build, data.System), TODO:  pipeline 执行详情链接后续重新实现
 		data.Build.Params,
 		extend.Envs(data.Stage, data.Repo),
 	)
@@ -204,7 +199,7 @@ func (s *Runner) run(ctx context.Context, stage *drone.Stage, data *client.Conte
 	// create the expressions context that is used
 	// to evaluate expressions in the yaml.
 	inputParams := map[string]interface{}{}
-	inputParams["repo"] = inputs.Repo(data.Repo)
+	// inputParams["repo"] = inputs.Repo(data.Repo)
 	inputParams["build"] = inputs.Build(data.Build)
 	inputParams["matrix"] = map[string]interface{}{}
 	inputParams["inputs"] = map[string]interface{}{}
@@ -256,6 +251,8 @@ func (s *Runner) run(ctx context.Context, stage *drone.Stage, data *client.Conte
 		return s.Reporter.ReportStage(noContext, state)
 	}
 
+	// 这里先去遍历了 spec.Steps, 但是数据库的 steps 写入是在后面的 s.Client.Update
+	// 这里的 Steps 数据是哪里的？应该是 yaml content 里的
 	for _, src := range spec.Steps {
 		// steps that are skipped are ignored and are not stored
 		// in the drone database, nor displayed in the UI.
