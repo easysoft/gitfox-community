@@ -12,6 +12,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/triggerer"
 	jobsSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/jobs"
 	pipelineSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/pipeline"
+	scanSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/scan"
 	triggerSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/trigger"
 	userSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/user"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/cmd/cli/operations/provider"
@@ -42,6 +43,7 @@ type App struct {
 	JobScheduler    *jobsSvc.Scheduler
 	Triggerer       triggerer.Triggerer
 	Poller          *poller.Poller
+	ScanRuleSvc     scanSvc.IRule
 }
 
 func NewApp(mode string) (*App, func(), error) {

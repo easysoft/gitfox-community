@@ -48,6 +48,12 @@ func (c *command) run(*kingpin.ParseContext) error {
 	// 	app.SystemLog.Info("[Server] System health check cron job started (runs every minute)")
 	// }
 
+	err = app.ScanRuleSvc.Migrate(context.Background())
+	if err != nil {
+		app.SystemLog.Errorw("[Server] Failed to migrate scan rules", "error", err)
+		panic(err)
+	}
+
 	err = app.PipelineService.Migrate(context.Background(), app.SystemConfig.Ci.PluginsZipUrl)
 	if err != nil {
 		app.SystemLog.Errorw("[Server] Failed to migrate plugins", "error", err)
