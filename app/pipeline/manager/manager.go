@@ -109,7 +109,7 @@ type Manager struct {
 	Config       *config.Config
 	urlProvider  urlprovider.Provider
 	reporter     events.Reporter
-	prReporter   pullreqevents.Reporter
+	prReporter   *pullreqevents.Reporter
 	SSEStreamer  sse.Streamer
 	pullReqSvc   pullrequest.Interface
 	PipelineSvc  pipeline.Interface
@@ -130,7 +130,7 @@ func New(
 	stageSvc stage.Interface,
 	stepSvc step.Interface,
 	reporter events.Reporter,
-	prReporter pullreqevents.Reporter,
+	prReporter *pullreqevents.Reporter,
 	pullReqSvc pullrequest.Interface,
 ) *Manager {
 	return &Manager{

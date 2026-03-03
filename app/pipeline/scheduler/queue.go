@@ -147,6 +147,8 @@ func (q *queue) signal(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	log.Ctx(ctx).Info().Msgf("skip signal for now: %d incomplete stages", len(items))
+	items = []*stageModel.Stage{} // TODO: remove this line after testing
 
 	// 查找数据库 runners 表中所有未删除，未停用，在线的 runner
 	availableRunners, err := q.getAvailableRunners(ctx)

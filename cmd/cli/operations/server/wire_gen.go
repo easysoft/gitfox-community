@@ -20,6 +20,7 @@ import (
 	user3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/user"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/router"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/canceler"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/manager"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/scheduler"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/triggerer"
 	branch2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/branch"
@@ -34,6 +35,8 @@ import (
 	scan2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/scan"
 	space2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/space"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/sse"
+	stage2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/stage"
+	step2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/step"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/tag"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/trigger"
 	user2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/user"
@@ -63,6 +66,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pubsub"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/ssh"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/storage"
+	"github.com/drone/runner-go/poller"
 	"gorm.io/gorm"
 )
 
@@ -267,6 +271,33 @@ func NewApp(mode string) (*App, func(), error) {
 		return nil, nil, err
 	}
 	authenticator := authn.ProvideAuthenticators(config, userStore, tokenInterface)
+	stageService := stage2.NewStageService(stageStore)
+	stepService := step2.NewStepService(stepStore)
+	reporter2, err := provider.ProvidePipelineEventReporter(system)
+	if err != nil {
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	managerManager := manager.New(config, executionService, pipelineService, urlProvider, streamer, schedulerScheduler, stageService, stepService, reporter2, reporter, pullrequestService)
+	client := manager.NewEmbeddedClient(managerManager, urlProvider, config)
+	pipelineStorage, err := provider.ProvidePipelineCIStorage(config)
+	if err != nil {
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	stageDynamicEnvProvider := provider.ProvideDynamicStageProvider(pipelineStorage, stageStore)
+	runnerRunner, err := provider.ProvideExecutionRunner(config, client, stageDynamicEnvProvider, pipelineService)
+	if err != nil {
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	poller := provider.ProvideExecutionPoller(runnerRunner, client)
 	app := &App{
 		SystemConfig:    config,
 		SystemLog:       systemLog,
@@ -285,6 +316,7 @@ func NewApp(mode string) (*App, func(), error) {
 		EventContext:    eventContext,
 		JobScheduler:    jobsScheduler,
 		Triggerer:       triggererTriggerer,
+		Poller:          poller,
 	}
 	return app, func() {
 		cleanup3()
@@ -313,4 +345,5 @@ type App struct {
 	EventContext    *provider.EventContext
 	JobScheduler    *jobs2.Scheduler
 	Triggerer       triggerer.Triggerer
+	Poller          *poller.Poller
 }
