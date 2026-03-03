@@ -18,5 +18,7 @@ type Interface interface {
 	MarkKeyAsVerified(ctx context.Context, keyID int64) error
 
 	CreatePublicKey(ctx context.Context, session *auth.Session, params *publickey.AddPublicKeyInput) error
+	UpdatePublicKey(ctx context.Context, session *auth.Session, id int64, params *publickey.UpdatePublicKeyInput) error
+	DeletePublicKey(ctx context.Context, session *auth.Session, id int64) error
 	ListPublicKeys(ctx context.Context, session *auth.Session, params req.ListFilter) (*database.PageResult[*publickey.PublicKey], error)
 }

@@ -12,6 +12,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/publickey"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 
 	"github.com/gliderlabs/ssh"
 )
@@ -96,6 +97,46 @@ func (s Service) CreatePublicKey(ctx context.Context, session *auth.Session, par
 	err = s.publicKeyStore.Create(ctx, input)
 	if err != nil {
 		return errors.Wrap(err, "failed to create public key")
+	}
+	return nil
+}
+
+func (s Service) UpdatePublicKey(ctx context.Context, session *auth.Session, id int64, params *PublicKeyModel.UpdatePublicKeyInput) error {
+	input := publickey.PublicKey{}
+
+	if params.Content != "" {
+		key, comment, err := ParseString(params.Content)
+		if err != nil {
+			err = errors.Wrap(err, "could not parse public key")
+			err = errors.WithI18nKey(err, i18n.AuthPubKeyContentError)
+			return err
+		}
+
+		input = publickey.PublicKey{
+			Identifier:  params.Identifier,
+			Fingerprint: key.Fingerprint(),
+			Content:     params.Content,
+			Comment:     comment,
+			Type:        key.Type(),
+		}
+	}
+
+	if params.Identifier != "" {
+		input.Identifier = params.Identifier
+	}
+
+	err := s.publicKeyStore.UpdateByID(ctx, session.User.Account, id, input)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s Service) DeletePublicKey(ctx context.Context, session *auth.Session, id int64) error {
+	err := s.publicKeyStore.DeleteByID(ctx, session.User.Account, id)
+	if err != nil {
+		return errors.Wrap(err, "failed to delete public key")
 	}
 	return nil
 }

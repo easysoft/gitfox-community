@@ -316,7 +316,7 @@ func NewApp(mode string) (*App, func(), error) {
 		EventContext:    eventContext,
 		JobScheduler:    jobsScheduler,
 		Triggerer:       triggererTriggerer,
-	Poller:          poller,
+		Poller:          poller,
 		ScanRuleSvc:     ruleService,
 	}
 	return app, func() {

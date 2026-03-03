@@ -2,7 +2,6 @@ package provider
 
 import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/user"
-	publickeySvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/publickey"
 	userSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/user"
 	tokenStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/token"
 	userStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/user"
@@ -25,8 +24,8 @@ var PrincipalWireSet = wire.NewSet(
 	// Token Store
 	NewTokenStoreProvider,
 
-	// Public Key Service (from publickey/wire.go)
-	publickeySvc.WireSet,
+	// Public Key Service
+	PublicKeyWireSet,
 )
 
 // NewTokenStoreProvider creates a token store and returns it as Interface

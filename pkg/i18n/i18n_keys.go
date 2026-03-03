@@ -13,8 +13,10 @@ const (
 	AuthNoSession                   I18nKey = "auth.no_session"                       // 请求不包含任何会话数据,无法进行授权
 	AuthPubKeyAddAlreadyInUse       I18nKey = "auth.pub_key_add_already_in_use"       // 公钥已存在
 	AuthPubKeyAddError              I18nKey = "auth.pub_key_add_error"                // 公钥添加失败
+	AuthPubKeyAddIdentifierInUse    I18nKey = "auth.pub_key_add_identifier_in_use"    // 公钥标识符已存在
 	AuthPubKeyAddParamError         I18nKey = "auth.pub_key_add_param_error"          // 公钥参数错误
 	AuthPubKeyAddSuccess            I18nKey = "auth.pub_key_add_success"              // 公钥添加成功
+	AuthPubKeyContentError          I18nKey = "auth.pub_key_content_error"            // 公钥内容校验错误
 	AuthPubKeyDeleteError           I18nKey = "auth.pub_key_delete_error"             // 公钥删除失败
 	AuthPubKeyDeleteParamError      I18nKey = "auth.pub_key_delete_param_error"       // 公钥删除参数校验错误
 	AuthPubKeyDeleteSuccess         I18nKey = "auth.pub_key_delete_success"           // 公钥删除成功
@@ -23,6 +25,9 @@ const (
 	AuthPubKeyListParamError        I18nKey = "auth.pub_key_list_param_error"         // 公钥列表参数校验错误
 	AuthPubKeyListSuccess           I18nKey = "auth.pub_key_list_success"             // 公钥列表成功
 	AuthPubKeyNotFoundByFingerprint I18nKey = "auth.pub_key_not_found_by_fingerprint" // 公钥未找到
+	AuthPubKeyUpdateError           I18nKey = "auth.pub_key_update_error"             // 公钥更新失败
+	AuthPubKeyUpdateParamError      I18nKey = "auth.pub_key_update_param_error"       // 公钥更新参数校验错误
+	AuthPubKeyUpdateSuccess         I18nKey = "auth.pub_key_update_success"           // 公钥更新成功
 	AuthSessionTokenNotAllowed      I18nKey = "auth.session_token_not_allowed"        // 会话令牌不允许用于与 Git 交互
 	AuthUserIssuePatError           I18nKey = "auth.user_issue_pat_error"             // 用户创建访问令牌失败
 	AuthUserIssueTokenError         I18nKey = "auth.user_issue_token_error"           // 用户创建会话令牌失败
@@ -105,19 +110,18 @@ const (
 	ErrorGzipFailedToCreateReader I18nKey = "error.gzip_failed_to_create_reader" // gzip 解压失败
 
 	// Execution 相关常量
-	ExecutionBodyParamError  I18nKey = "execution.body_param_error"  // Body 参数解析失败.
-	ExecutionCancelError     I18nKey = "execution.cancel_error"      // 执行取消失败
-	ExecutionCancelSuccess   I18nKey = "execution.cancel_success"    // 执行取消成功
-	ExecutionPathParamError  I18nKey = "execution.path_param_error"  // Path 参数解析失败.
-	ExecutionQueryError      I18nKey = "execution.query_error"       // 执行查询失败
-	ExecutionQueryParamError I18nKey = "execution.query_param_error" // Query 参数解析失败.
-	ExecutionQuerySuccess    I18nKey = "execution.query_success"     // 执行查询成功
-	ExecutionLogCreateError  I18nKey = "execution.log_create_error"  // 日志创建失败
-	ExecutionLogCreateSuccess I18nKey = "execution.log_create_success" // 日志创建成功
-	ExecutionLogQueryError   I18nKey = "execution.log_query_error"   // 日志查询失败
-	ExecutionLogQuerySuccess I18nKey = "execution.log_query_success" // 日志查询成功
-	ExecutionTriggerError    I18nKey = "execution.trigger_error"     // 执行触发失败
-	ExecutionTriggerSuccess  I18nKey = "execution.trigger_success"   // 执行触发成功
+	ExecutionBodyParamError   I18nKey = "execution.body_param_error"   // Body 参数解析失败.
+	ExecutionCancelError      I18nKey = "execution.cancel_error"       // 执行取消失败
+	ExecutionCancelSuccess    I18nKey = "execution.cancel_success"     // 执行取消成功
+	ExecutionLogCreateError   I18nKey = "execution.log_create_error"   // 执行日志创建失败
+	ExecutionLogCreateSuccess I18nKey = "execution.log_create_success" // 执行日志创建成功
+	ExecutionLogQueryError    I18nKey = "execution.log_query_error"    // 执行日志查询失败
+	ExecutionPathParamError   I18nKey = "execution.path_param_error"   // Path 参数解析失败.
+	ExecutionQueryError       I18nKey = "execution.query_error"        // 执行查询失败
+	ExecutionQueryParamError  I18nKey = "execution.query_param_error"  // Query 参数解析失败.
+	ExecutionQuerySuccess     I18nKey = "execution.query_success"      // 执行查询成功
+	ExecutionTriggerError     I18nKey = "execution.trigger_error"      // 执行触发失败
+	ExecutionTriggerSuccess   I18nKey = "execution.trigger_success"    // 执行触发成功
 
 	// Git 相关常量
 	GitAmbiguousRef                 I18nKey = "git.ambiguous_ref"                     // 引用不明确.
@@ -156,24 +160,24 @@ const (
 	GitUnrelatedHistories           I18nKey = "git.unrelated_histories"               // 不相关的历史记录.
 
 	// Pipeline 相关常量
-	PipelineBodyParamError          I18nKey = "pipeline.body_param_error"           // Body 参数解析失败.
-	PipelinePathParamError          I18nKey = "pipeline.path_param_error"           // Path 参数解析失败.
-	PipelineQueryParamError         I18nKey = "pipeline.query_param_error"          // Query 参数解析失败.
-	PipelineQuerySchemaGroupSuccess I18nKey = "pipeline.query_schema_group_success" // 查询 schema 分组配置成功
-	PipelineQueryStepSchemaSuccess  I18nKey = "pipeline.query_step_schema_success"  // 查询 schema 配置成功
-	PipelineTriggerCreateError      I18nKey = "pipeline.trigger_create_error"       // 触发创建失败.
-	PipelineTriggerCreateSuccess    I18nKey = "pipeline.trigger_create_success"     // 触发创建成功.
-	PipelineTriggerDeleteError      I18nKey = "pipeline.trigger_delete_error"       // 触发删除失败.
-	PipelineTriggerDeleteSuccess    I18nKey = "pipeline.trigger_delete_success"     // 触发删除成功.
-	PipelineTriggerGetError         I18nKey = "pipeline.trigger_get_error"          // 触发获取失败.
-	PipelineTriggerGetSuccess       I18nKey = "pipeline.trigger_get_success"        // 触发获取成功.
-	PipelineTriggerListError        I18nKey = "pipeline.trigger_list_error"         // 触发列表获取失败.
-	PipelineTriggerListSuccess      I18nKey = "pipeline.trigger_list_success"       // 触发列表获取成功.
-	PipelineTriggerParamCronError      I18nKey = "pipeline.trigger_param_cron_error"      // 无效的 cron 表达式.
-	PipelineTriggerParamCronLimitError I18nKey = "pipeline.trigger_param_cron_limit_error" // cron 表达式数量超过限制.
-	PipelineTriggerParamError       I18nKey = "pipeline.trigger_param_error"        // 触发参数解析失败.
-	PipelineTriggerUpdateError      I18nKey = "pipeline.trigger_update_error"       // 触发更新失败.
-	PipelineTriggerUpdateSuccess    I18nKey = "pipeline.trigger_update_success"     // 触发更新成功.
+	PipelineBodyParamError             I18nKey = "pipeline.body_param_error"               // Body 参数解析失败.
+	PipelinePathParamError             I18nKey = "pipeline.path_param_error"               // Path 参数解析失败.
+	PipelineQueryParamError            I18nKey = "pipeline.query_param_error"              // Query 参数解析失败.
+	PipelineQuerySchemaGroupSuccess    I18nKey = "pipeline.query_schema_group_success"     // 查询 schema 分组配置成功
+	PipelineQueryStepSchemaSuccess     I18nKey = "pipeline.query_step_schema_success"      // 查询 schema 配置成功
+	PipelineTriggerCreateError         I18nKey = "pipeline.trigger_create_error"           // 触发创建失败.
+	PipelineTriggerCreateSuccess       I18nKey = "pipeline.trigger_create_success"         // 触发创建成功.
+	PipelineTriggerDeleteError         I18nKey = "pipeline.trigger_delete_error"           // 触发删除失败.
+	PipelineTriggerDeleteSuccess       I18nKey = "pipeline.trigger_delete_success"         // 触发删除成功.
+	PipelineTriggerGetError            I18nKey = "pipeline.trigger_get_error"              // 触发获取失败.
+	PipelineTriggerGetSuccess          I18nKey = "pipeline.trigger_get_success"            // 触发获取成功.
+	PipelineTriggerListError           I18nKey = "pipeline.trigger_list_error"             // 触发列表获取失败.
+	PipelineTriggerListSuccess         I18nKey = "pipeline.trigger_list_success"           // 触发列表获取成功.
+	PipelineTriggerParamCronError      I18nKey = "pipeline.trigger_param_cron_error"       // 无效的 cron 表达式.
+	PipelineTriggerParamCronLimitError I18nKey = "pipeline.trigger_param_cron_limit_error" // 定时触发器不能超过5个.
+	PipelineTriggerParamError          I18nKey = "pipeline.trigger_param_error"            // 触发参数解析失败.
+	PipelineTriggerUpdateError         I18nKey = "pipeline.trigger_update_error"           // 触发更新失败.
+	PipelineTriggerUpdateSuccess       I18nKey = "pipeline.trigger_update_success"         // 触发更新成功.
 
 	// Pullrequest 相关常量
 	PullrequestBodyParamError                I18nKey = "pullrequest.body_param_error"                   // Body 参数解析失败.

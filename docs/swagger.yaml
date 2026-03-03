@@ -661,6 +661,48 @@ definitions:
     - content
     - identifier
     type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_publickey.PublicKey:
+    properties:
+      account:
+        description: 关联的账号
+        type: string
+      comment:
+        description: '公钥注释 eg: "user@example.com"'
+        type: string
+      createdBy:
+        description: 创建人
+        type: string
+      createdDate:
+        description: 创建时间
+        type: string
+      editedBy:
+        description: 最后编辑人
+        type: string
+      editedDate:
+        description: 最后编辑时间
+        type: string
+      fingerprint:
+        description: 公钥指纹
+        type: string
+      identifier:
+        description: 公钥标识符
+        type: string
+      type:
+        description: '公钥类型 eg: "ssh-rsa"'
+        type: string
+      verifiedDate:
+        description: 公钥是否已验证
+        type: string
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_publickey.UpdatePublicKeyInput:
+    properties:
+      content:
+        description: 公钥内容
+        type: string
+      identifier:
+        description: 公钥标识符
+        type: string
+    type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.ContentType:
     enum:
     - file
@@ -691,14 +733,14 @@ definitions:
       forkID:
         description: 派生来源ID（可选）
         type: integer
-      identifier:
-        description: 仓库唯一标识
-        type: string
       ignore:
         description: GitIgnore类型（如go/java）
         type: string
       license:
         description: 许可证类型（如mit/apache）
+        type: string
+      name:
+        description: 仓库唯一标识
         type: string
       product:
         description: 关联产品
@@ -711,7 +753,7 @@ definitions:
         type: integer
     required:
     - acl
-    - identifier
+    - name
     - spaceID
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.DiffStats:
@@ -925,12 +967,12 @@ definitions:
         type: string
       id:
         type: integer
-      identifier:
-        type: string
       mirror:
         type: boolean
       mutex:
         type: integer
+      name:
+        type: string
       path:
         type: string
       product:
@@ -978,19 +1020,12 @@ definitions:
         description: 仓库描述（最大500字符）
         maxLength: 500
         type: string
-      identifier:
-        description: 仓库唯一标识
-        type: string
       product:
         description: 关联产品
         type: string
       spaceID:
         description: 空间ID（字符串类型，后续转int）
         type: integer
-    required:
-    - acl
-    - identifier
-    - spaceID
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.RuleInfo:
     properties:
@@ -1562,7 +1597,9 @@ definitions:
       code:
         type: string
       depends:
-        type: string
+        items:
+          type: string
+        type: array
       duration:
         type: integer
       errorCode:
@@ -4956,27 +4993,53 @@ paths:
     get:
       consumes:
       - application/json
-      description: 获取用户公钥列表
+      description: 分页查询当前登录用户的 SSH 公钥列表
+      parameters:
+      - description: 页码（默认1）
+        in: query
+        name: page
+        type: integer
+      - description: 每页数量（默认20）
+        in: query
+        name: pageSize
+        type: integer
       produces:
       - application/json
       responses:
         "200":
-          description: 获取用户公钥列表成功
+          description: 查询成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_publickey.PublicKey'
+                  type: array
+                listArgs:
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListArgs'
+              type: object
+        "400":
+          description: 参数错误
           schema:
             $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
-        "400":
-          description: 获取用户公钥列表失败
+        "401":
+          description: 未授权（会话不存在或已过期）
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
           schema:
             $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
       summary: 获取用户公钥列表
       tags:
-      - 用户
+      - users
     post:
       consumes:
       - application/json
-      description: 添加用户公钥
+      description: 为当前登录用户添加一条 SSH 公钥
       parameters:
-      - description: 创建用户公钥参数
+      - description: 添加用户公钥参数
         in: body
         name: input
         required: true
@@ -4986,16 +5049,103 @@ paths:
       - application/json
       responses:
         "200":
-          description: 创建用户公钥成功
+          description: 添加成功
           schema:
             $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
         "400":
-          description: 创建用户公钥失败
+          description: 参数错误或业务校验失败
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "401":
+          description: 未授权（会话不存在或已过期）
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
           schema:
             $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
       summary: 添加用户公钥
       tags:
-      - 用户
+      - users
+  /user/keys/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: 按ID硬删除当前登录用户的 SSH 公钥
+      parameters:
+      - description: 公钥ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 删除成功
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "400":
+          description: 参数错误或业务校验失败
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "401":
+          description: 未授权（会话不存在或已过期）
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "404":
+          description: 公钥不存在
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 删除用户公钥
+      tags:
+      - users
+    put:
+      consumes:
+      - application/json
+      description: 按ID修改当前登录用户的 SSH 公钥，仅允许修改标识符和公钥内容
+      parameters:
+      - description: 公钥ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 修改用户公钥参数
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_publickey.UpdatePublicKeyInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 修改成功
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "400":
+          description: 参数错误或业务校验失败
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "401":
+          description: 未授权（会话不存在或已过期）
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "404":
+          description: 公钥不存在
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 修改用户公钥
+      tags:
+      - users
 securityDefinitions:
   ApiKeyAuth:
     in: header

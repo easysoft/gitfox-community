@@ -16,6 +16,7 @@ func registerUserRoutes(r *gin.RouterGroup, controller *Controller) {
 	{
 		keys.GET("/", controller.User.ListKeys)
 		keys.POST("/", controller.User.AddKey)
-		// keys.DELETE(fmt.Sprintf("/{%s}", req.PathParamPublicKeyIdentifier), controller.User.Login)
+		keys.PUT("/:id", controller.User.UpdateKey)
+		keys.DELETE("/:id", controller.User.DeleteKey)
 	}
 }

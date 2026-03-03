@@ -52,5 +52,9 @@ func (pk *PublicKey) toModel() publickey.PublicKey {
 		Content:      pk.Content,
 		Comment:      pk.Comment,
 		Type:         pk.Type,
+		CreatedBy:    pk.CreatedBy,
+		CreatedDate:  pk.CreatedDate,
+		EditedBy:     pk.EditedBy,
+		EditedDate:   pk.EditedDate,
 	}
 }
