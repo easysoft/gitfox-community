@@ -316,7 +316,8 @@ func NewApp(mode string) (*App, func(), error) {
 		EventContext:    eventContext,
 		JobScheduler:    jobsScheduler,
 		Triggerer:       triggererTriggerer,
-		Poller:          poller,
+	Poller:          poller,
+		ScanRuleSvc:     ruleService,
 	}
 	return app, func() {
 		cleanup3()
@@ -346,4 +347,5 @@ type App struct {
 	JobScheduler    *jobs2.Scheduler
 	Triggerer       triggerer.Triggerer
 	Poller          *poller.Poller
+	ScanRuleSvc     scan2.IRule
 }
