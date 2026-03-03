@@ -58,7 +58,6 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/auth/authn"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/auth/authz"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database/dbtx"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/events"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/livelog"
@@ -84,11 +83,6 @@ func NewApp(mode string) (*App, func(), error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	sqliteDB, cleanup2, err := provider.NewSqliteDB(config, systemLog)
-	if err != nil {
-		cleanup()
-		return nil, nil, err
-	}
 	spaceStore := space.NewSpaceStore(db)
 	store := repo.NewRepoStore(db)
 	duration := authz.ProvideCacheDuration()
@@ -102,28 +96,24 @@ func NewApp(mode string) (*App, func(), error) {
 	spaceController := space3.NewSpaceController(service)
 	urlProvider, err := provider.NewURLProvider(config)
 	if err != nil {
-		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
 	typesConfig := provider.NewGitConfig(config)
 	cache, err := provider.NewLastCommitCache(typesConfig)
 	if err != nil {
-		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
 	clientFactory := provider.NewGitClientFactory()
 	git, err := provider.NewGitAdapter(typesConfig, cache, clientFactory)
 	if err != nil {
-		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
 	storageStore := provider.NewGitLocalStore()
 	gitService, err := provider.NewGit(typesConfig, git, clientFactory, storageStore)
 	if err != nil {
-		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
@@ -135,19 +125,16 @@ func NewApp(mode string) (*App, func(), error) {
 	pipelineStore := pipeline.NewPipelineStore(db)
 	s3Store, err := provider.ProvidePipelineS3Store(config)
 	if err != nil {
-		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
-	storageDriver, cleanup3, err := storage.ProvideStorageDriver(config)
+	storageDriver, cleanup2, err := storage.ProvideStorageDriver(config)
 	if err != nil {
-		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
 	contentStorage, err := provider.ProvidePipelineContentStorage(config, storageDriver)
 	if err != nil {
-		cleanup3()
 		cleanup2()
 		cleanup()
 		return nil, nil, err
@@ -161,7 +148,6 @@ func NewApp(mode string) (*App, func(), error) {
 	jobConfig := provider.ProvideJobConfig(config)
 	jobsScheduler, err := provider.ProvideScheduler(jobsStore, runnerStore, mutexManager, pubSub, jobLog, jobConfig)
 	if err != nil {
-		cleanup3()
 		cleanup2()
 		cleanup()
 		return nil, nil, err
@@ -172,7 +158,6 @@ func NewApp(mode string) (*App, func(), error) {
 	stageStore := stage.NewStageStore(db)
 	schedulerScheduler, err := scheduler.New(stageStore, runnerStore, mutexManager)
 	if err != nil {
-		cleanup3()
 		cleanup2()
 		cleanup()
 		return nil, nil, err
@@ -195,28 +180,24 @@ func NewApp(mode string) (*App, func(), error) {
 	universalClient := provider.NewEventRedisClient()
 	system, err := provider.ProvideEventSystem(eventsConfig, universalClient)
 	if err != nil {
-		cleanup3()
 		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
 	readerFactory, err := provider.ProvideGitEventReaderFactory(system)
 	if err != nil {
-		cleanup3()
 		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
 	eventsReaderFactory, err := provider.ProvidePullReqReaderFactory(system)
 	if err != nil {
-		cleanup3()
 		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
 	reporter, err := provider.ProvidePullReqReporter(system)
 	if err != nil {
-		cleanup3()
 		cleanup2()
 		cleanup()
 		return nil, nil, err
@@ -225,7 +206,6 @@ func NewApp(mode string) (*App, func(), error) {
 	pullrequestStore := pullrequest.NewPullRequestStore(db)
 	pullrequestService, err := provider.ProvidePullRequestSvc(eventContext, readerFactory, eventsReaderFactory, reporter, config, gitService, repoService, store, lockerLocker, pullrequestStore, streamer, pubSub, urlProvider)
 	if err != nil {
-		cleanup3()
 		cleanup2()
 		cleanup()
 		return nil, nil, err
@@ -242,7 +222,6 @@ func NewApp(mode string) (*App, func(), error) {
 	settingsService := provider.NewSettingsService(settingsInterface)
 	eventsReporter, err := provider.ProvideGitEventReporter(system)
 	if err != nil {
-		cleanup3()
 		cleanup2()
 		cleanup()
 		return nil, nil, err
@@ -257,7 +236,6 @@ func NewApp(mode string) (*App, func(), error) {
 	routerController := provider.NewControllers(spaceController, controller, pipelineController, executionController, runnerController, tagController, commitController, repoController, userController, gitController, scanController)
 	i18nManager, err := provider.NewI18nManager(config)
 	if err != nil {
-		cleanup3()
 		cleanup2()
 		cleanup()
 		return nil, nil, err
@@ -265,7 +243,6 @@ func NewApp(mode string) (*App, func(), error) {
 	server := provider.ProvideSSHServer(config, interface2, gitController)
 	triggerService, err := provider.ProvideTriggerService(eventContext, pipelineService, triggererTriggerer, readerFactory, eventsReaderFactory)
 	if err != nil {
-		cleanup3()
 		cleanup2()
 		cleanup()
 		return nil, nil, err
@@ -275,7 +252,6 @@ func NewApp(mode string) (*App, func(), error) {
 	stepService := step2.NewStepService(stepStore)
 	reporter2, err := provider.ProvidePipelineEventReporter(system)
 	if err != nil {
-		cleanup3()
 		cleanup2()
 		cleanup()
 		return nil, nil, err
@@ -284,7 +260,6 @@ func NewApp(mode string) (*App, func(), error) {
 	client := manager.NewEmbeddedClient(managerManager, urlProvider, config)
 	pipelineStorage, err := provider.ProvidePipelineCIStorage(config)
 	if err != nil {
-		cleanup3()
 		cleanup2()
 		cleanup()
 		return nil, nil, err
@@ -292,7 +267,6 @@ func NewApp(mode string) (*App, func(), error) {
 	stageDynamicEnvProvider := provider.ProvideDynamicStageProvider(pipelineStorage, stageStore)
 	runnerRunner, err := provider.ProvideExecutionRunner(config, client, stageDynamicEnvProvider, pipelineService)
 	if err != nil {
-		cleanup3()
 		cleanup2()
 		cleanup()
 		return nil, nil, err
@@ -303,7 +277,6 @@ func NewApp(mode string) (*App, func(), error) {
 		SystemLog:       systemLog,
 		APILog:          apiLog,
 		DB:              db,
-		SqliteDB:        sqliteDB,
 		Controller:      routerController,
 		I18nManager:     i18nManager,
 		GithookCtrl:     githookController,
@@ -319,7 +292,6 @@ func NewApp(mode string) (*App, func(), error) {
 		Poller:          poller,
 	}
 	return app, func() {
-		cleanup3()
 		cleanup2()
 		cleanup()
 	}, nil
@@ -332,7 +304,6 @@ type App struct {
 	SystemLog       *provider.SystemLog
 	APILog          *provider.APILog
 	DB              *gorm.DB
-	SqliteDB        *database.SqliteDB
 	Controller      *router.Controller
 	I18nManager     *provider.I18nManager
 	GithookCtrl     *githook.Controller

@@ -17,7 +17,6 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/cmd/cli/operations/provider"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/auth/authn"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/events"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/ssh"
 	"gorm.io/gorm"
@@ -28,7 +27,6 @@ type App struct {
 	SystemLog       *provider.SystemLog
 	APILog          *provider.APILog
 	DB              *gorm.DB
-	SqliteDB        *database.SqliteDB
 	Controller      *router.Controller
 	I18nManager     *provider.I18nManager
 	GithookCtrl     *githook.Controller
