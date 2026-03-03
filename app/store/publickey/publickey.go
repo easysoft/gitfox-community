@@ -39,15 +39,40 @@ func (s *Store) ListByFingerprint(ctx context.Context, fingerprint string) ([]pu
 	return result, nil
 }
 
+// ListByIdentifier 根据标识符查询公钥列表
+func (s *Store) ListByIdentifier(ctx context.Context, identifier string, account string) ([]publickey.PublicKey, error) {
+	var publicKeys []PublicKey
+	if err := s.db.WithContext(ctx).Where("identifier = ? and account = ?", identifier, account).Find(&publicKeys).Error; err != nil {
+		return nil, err
+	}
+
+	result := make([]publickey.PublicKey, len(publicKeys))
+	for i := range publicKeys {
+		result[i] = publicKeys[i].toModel()
+	}
+
+	return result, nil
+}
+
 func (s *Store) Create(ctx context.Context, publicKey PublicKey) error {
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 
-		// 先查询是否存在相同指纹的公钥
-		existingKeys, err := s.ListByFingerprint(ctx, publicKey.Fingerprint)
+		// 校验标识符是否已存在
+		existingKeys, err := s.ListByIdentifier(ctx, publicKey.Identifier, publicKey.Account)
 		if err != nil {
-			err = errors.Wrap(err, "failed to read keys by fingerprint")
-			err = errors.WithI18nKey(err, i18n.AuthPubKeyNotFoundByFingerprint)
+			return database.ProcessSQLErrorf(ctx, err)
+		}
+
+		if len(existingKeys) > 0 {
+			err = errors.New("Identifier is already in use")
+			err = errors.WithI18nKey(err, i18n.AuthPubKeyAddIdentifierInUse)
 			return err
+		}
+
+		// 先查询是否存在相同指纹的公钥
+		existingKeys, err = s.ListByFingerprint(ctx, publicKey.Fingerprint)
+		if err != nil {
+			return database.ProcessSQLErrorf(ctx, err)
 		}
 
 		// 校验是否已存在相同内容的公钥
@@ -70,6 +95,62 @@ func (s *Store) Create(ctx context.Context, publicKey PublicKey) error {
 	})
 }
 
+func (s *Store) UpdateByID(ctx context.Context, account string, id int64, publicKey PublicKey) error {
+	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+
+		if publicKey.Identifier != "" {
+			// 校验标识符是否已存在
+			existingKeys, err := s.ListByIdentifier(ctx, publicKey.Identifier, account)
+			if err != nil {
+				return database.ProcessSQLErrorf(ctx, err)
+			}
+
+			if len(existingKeys) > 0 {
+				err = errors.New("Identifier is already in use")
+				err = errors.WithI18nKey(err, i18n.AuthPubKeyAddIdentifierInUse)
+				return err
+			}
+		}
+
+		if publicKey.Fingerprint != "" {
+			// 校验是否已存在相同内容的公钥
+			existingKeys, err := s.ListByFingerprint(ctx, publicKey.Fingerprint)
+			if err != nil {
+				return database.ProcessSQLErrorf(ctx, err)
+			}
+			for _, existingKey := range existingKeys {
+				if existingKey.Content == publicKey.Content {
+					err = errors.New("Key is already in use")
+					err = errors.WithI18nKey(err, i18n.AuthPubKeyAddAlreadyInUse)
+					return err
+				}
+			}
+		}
+
+		result := tx.Model(&PublicKey{}).Where("account = ? and id = ?", account, id).Updates(&publicKey)
+		if result.Error != nil {
+			return database.ProcessSQLErrorf(ctx, result.Error)
+		}
+		if result.RowsAffected == 0 {
+			return errors.NotFound.Newf("public key id %d not found", id)
+		}
+		return nil
+	})
+}
+
+func (s *Store) DeleteByID(ctx context.Context, account string, id int64) error {
+	result := s.db.WithContext(ctx).
+		Where("account = ? and id = ?", account, id).
+		Delete(&PublicKey{})
+	if result.Error != nil {
+		return database.ProcessSQLErrorf(ctx, result.Error)
+	}
+	if result.RowsAffected == 0 {
+		return errors.NotFound.Newf("public key id %d not found", id)
+	}
+	return nil
+}
+
 // MarkAsVerified updates the public key to mark it as verified.
 // MarkAsVerified更新公钥标记为已验证。
 func (s *Store) MarkAsVerified(ctx context.Context, id int64) error {
@@ -81,7 +162,10 @@ func (s *Store) MarkAsVerified(ctx context.Context, id int64) error {
 }
 
 func (s *Store) ListByAccount(ctx context.Context, account string, params req.ListFilter) (*database.PageResult[*publickey.PublicKey], error) {
-	tx := s.db.WithContext(ctx).Model(&PublicKey{}).Where("account = ? AND deleted = ?", account, 0)
+	tx := s.db.WithContext(ctx).Model(&PublicKey{}).Where("account = ?", account)
+
+	// 按 创建时间倒序排序，确保最新的公钥排在前面
+	tx.Order("createdDate DESC")
 
 	var keys []*PublicKey
 	pageResult, err := database.PaginateDefault(ctx, tx, params.Page, params.PageSize, &keys)
