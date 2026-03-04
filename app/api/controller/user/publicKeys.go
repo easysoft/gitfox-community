@@ -35,8 +35,7 @@ func (c *Controller) AddKey(ctx *gin.Context) {
 
 	session, ok := req.GetAuthSession(ctx.Request.Context())
 	if !ok {
-		err = errors.WithI18nKey(errors.New("session not found"), i18n.AuthPubKeyAddError)
-		resp.BadRequest(ctx, err)
+		resp.Unauthorized(ctx, errors.WithI18nKey(nil, i18n.AuthNoSession))
 		return
 	}
 
@@ -66,46 +65,75 @@ func (c *Controller) AddKey(ctx *gin.Context) {
 
 // ListKeys 获取用户公钥列表
 // @Summary 获取用户公钥列表
-// @Description 分页查询当前登录用户的 SSH 公钥列表
+// @Description 查询当前登录用户的 SSH 公钥列表（按创建时间倒序）
 // @Tags users
 // @Accept application/json
 // @Produce application/json
-// @Param page query int false "页码（默认1）"
-// @Param pageSize query int false "每页数量（默认20）"
 // @Success 200 {object} resp.ListResponse{data=[]publickey.PublicKey,listArgs=resp.ListArgs} "查询成功"
 // @Failure 400 {object} resp.ObjectResponse "参数错误"
 // @Failure 401 {object} resp.ObjectResponse "未授权（会话不存在或已过期）"
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
 // @Router /user/keys [get]
 func (c *Controller) ListKeys(ctx *gin.Context) {
-	var params req.ListFilter
 	var err error
 
 	session, ok := req.GetAuthSession(ctx.Request.Context())
 	if !ok {
-		err = errors.WithI18nKey(errors.New("session not found"), i18n.AuthNoSession)
-		resp.BadRequest(ctx, err)
-		return
-	}
-	if err = ctx.ShouldBindQuery(&params); err != nil {
-		err = errors.WithI18nKey(err, i18n.AuthPubKeyListParamError)
-		resp.BadRequest(ctx, err)
+		resp.Unauthorized(ctx, errors.WithI18nKey(nil, i18n.AuthNoSession))
 		return
 	}
 
-	keys, err := c.publicKeySvc.ListPublicKeys(ctx, session, params)
+	keys, _, err := c.publicKeySvc.ListPublicKeysWithTotal(ctx, session)
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.AuthPubKeyListError)
 		resp.BadRequest(ctx, err)
 		return
 	}
 
-	resp.ListSuccess(ctx, keys.Data,
-		resp.ListArgs{
-			Total:    keys.Total,
-			Page:     int64(keys.Page),
-			PageSize: int64(keys.PageSize),
-		}, i18n.AuthPubKeyListSuccess, nil)
+	resp.OK(ctx, i18n.AuthPubKeyListSuccess, keys)
+}
+
+// GetKey 获取用户公钥详情
+// @Summary 获取用户公钥详情
+// @Description 按ID获取当前登录用户的 SSH 公钥详情
+// @Tags users
+// @Accept application/json
+// @Produce application/json
+// @Param id path int true "公钥ID"
+// @Success 200 {object} resp.ObjectResponse{data=publickey.PublicKey} "查询成功"
+// @Failure 400 {object} resp.ObjectResponse "参数错误"
+// @Failure 401 {object} resp.ObjectResponse "未授权（会话不存在或已过期）"
+// @Failure 404 {object} resp.ObjectResponse "公钥不存在"
+// @Failure 500 {object} resp.ObjectResponse "服务器错误"
+// @Router /user/keys/{id} [get]
+func (c *Controller) GetKey(ctx *gin.Context) {
+	var err error
+
+	id, err := req.PathParamAsPositiveInt64(ctx, "id")
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.AuthPubKeyListParamError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
+	session, ok := req.GetAuthSession(ctx.Request.Context())
+	if !ok {
+		resp.Unauthorized(ctx, errors.WithI18nKey(nil, i18n.AuthNoSession))
+		return
+	}
+
+	key, err := c.publicKeySvc.GetPublicKeyByID(ctx, session, id)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			resp.NotFound(ctx, err)
+			return
+		}
+		err = errors.WithI18nKey(err, i18n.AuthPubKeyListError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
+	resp.OK(ctx, i18n.AuthPubKeyListSuccess, key)
 }
 
 // UpdateKey 修改用户公钥
@@ -141,25 +169,17 @@ func (c *Controller) UpdateKey(ctx *gin.Context) {
 
 	session, ok := req.GetAuthSession(ctx.Request.Context())
 	if !ok {
-		err = errors.WithI18nKey(errors.New("session not found"), i18n.AuthPubKeyUpdateError)
-		resp.BadRequest(ctx, err)
+		resp.Unauthorized(ctx, errors.WithI18nKey(nil, i18n.AuthNoSession))
 		return
 	}
 
 	if err = params.Check(); err != nil {
-		err = errors.WithI18nKey(err, i18n.AuthPubKeyAddParamError)
 		resp.BadRequest(ctx, err)
 		return
 	}
 
 	if params.Content != "" {
 		params.Content = strings.TrimSpace(params.Content)
-		if params.Content == "" {
-			err = errors.WithI18nKey(errors.New("public key not provided"), i18n.AuthPubKeyUpdateError)
-			resp.BadRequest(ctx, err)
-			return
-		}
-
 	}
 
 	err = c.publicKeySvc.UpdatePublicKey(ctx, session, id, &params)
@@ -200,8 +220,7 @@ func (c *Controller) DeleteKey(ctx *gin.Context) {
 
 	session, ok := req.GetAuthSession(ctx.Request.Context())
 	if !ok {
-		err = errors.WithI18nKey(errors.New("session not found"), i18n.AuthPubKeyDeleteError)
-		resp.BadRequest(ctx, err)
+		resp.Unauthorized(ctx, errors.WithI18nKey(nil, i18n.AuthNoSession))
 		return
 	}
 

@@ -2,9 +2,11 @@ package publickey
 
 import (
 	"context"
+	"net/http/httptest"
 	"testing"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 
@@ -15,6 +17,7 @@ import (
 	storePublicKey "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/publickey"
 	publickeyStoreMock "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/publickey/mock"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
 )
 
 type fakeUserStore struct {
@@ -296,4 +299,64 @@ func TestServiceListPublicKeys(t *testing.T) {
 	result, err := svc.ListPublicKeys(context.Background(), newSession("tester"), req.ListFilter{Page: 1, PageSize: 20})
 	assert.NoError(t, err)
 	assert.Equal(t, expected, result)
+}
+
+func TestServiceGetPublicKeyByID(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name      string
+		id        int64
+		setupMock func(m *publickeyStoreMock.MockInterface)
+		wantErr   bool
+	}{
+		{
+			name: "get by id success",
+			id:   1001,
+			setupMock: func(m *publickeyStoreMock.MockInterface) {
+				created := datetime.Local(time.Date(2026, 3, 1, 10, 0, 0, 0, time.UTC))
+				verified := datetime.Local(time.Date(2026, 3, 1, 10, 1, 1, 0, time.UTC))
+				m.EXPECT().GetByID(gomock.Any(), "tester", int64(1001)).Return(&publickeyModel.PublicKey{
+					Identifier:  "key-1",
+					Type:        "ssh-ed25519",
+					CreatedDate: &created,
+					VerifiedDate: &verified,
+				}, nil)
+			},
+		},
+		{
+			name: "get by id failed",
+			id:   1001,
+			setupMock: func(m *publickeyStoreMock.MockInterface) {
+				m.EXPECT().GetByID(gomock.Any(), "tester", int64(1001)).Return(nil, assert.AnError)
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			gin.SetMode(gin.TestMode)
+			ctx, _ := gin.CreateTestContext(httptest.NewRecorder())
+			ctx.Request = httptest.NewRequest("GET", "/", nil)
+
+			mockStore := publickeyStoreMock.NewMockInterface(ctrl)
+			tc.setupMock(mockStore)
+
+			svc := Service{publicKeyStore: mockStore, userStore: &fakeUserStore{}}
+			key, err := svc.GetPublicKeyByID(ctx, newSession("tester"), tc.id)
+			if tc.wantErr {
+				assert.Error(t, err)
+				return
+			}
+
+			assert.NoError(t, err)
+			assert.Equal(t, "key-1", key.Identifier)
+			assert.NotEmpty(t, key.LastUsedDate)
+		})
+	}
 }

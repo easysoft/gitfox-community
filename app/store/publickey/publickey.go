@@ -2,13 +2,13 @@ package publickey
 
 import (
 	"context"
-	"time"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/publickey"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
 	"gorm.io/gorm"
 )
 
@@ -95,6 +95,17 @@ func (s *Store) Create(ctx context.Context, publicKey PublicKey) error {
 	})
 }
 
+func (s *Store) GetByID(ctx context.Context, account string, id int64) (*publickey.PublicKey, error) {
+	var key PublicKey
+	err := s.db.WithContext(ctx).Where("account = ? and id = ?", account, id).First(&key).Error
+	if err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
+	}
+
+	model := key.toModel()
+	return &model, nil
+}
+
 func (s *Store) UpdateByID(ctx context.Context, account string, id int64, publicKey PublicKey) error {
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 
@@ -154,18 +165,18 @@ func (s *Store) DeleteByID(ctx context.Context, account string, id int64) error 
 // MarkAsVerified updates the public key to mark it as verified.
 // MarkAsVerified更新公钥标记为已验证。
 func (s *Store) MarkAsVerified(ctx context.Context, id int64) error {
-	now := time.Now()
+	now := datetime.NowLocalTime()
 	return s.db.WithContext(ctx).
 		Model(&PublicKey{}).
 		Where("id = ?", id).
-		Updates(&PublicKey{VerifiedDate: &now}).Error
+		Updates(&PublicKey{VerifiedDate: now}).Error
 }
 
 func (s *Store) ListByAccount(ctx context.Context, account string, params req.ListFilter) (*database.PageResult[*publickey.PublicKey], error) {
 	tx := s.db.WithContext(ctx).Model(&PublicKey{}).Where("account = ?", account)
 
 	// 按 创建时间倒序排序，确保最新的公钥排在前面
-	tx.Order("createdDate DESC")
+	tx = tx.Order("createdDate DESC")
 
 	var keys []*PublicKey
 	pageResult, err := database.PaginateDefault(ctx, tx, params.Page, params.PageSize, &keys)
@@ -186,4 +197,27 @@ func (s *Store) ListByAccount(ctx context.Context, account string, params req.Li
 		PageSize: pageResult.PageSize,
 		Data:     result,
 	}, nil
+}
+
+func (s *Store) ListByAccountWithTotal(ctx context.Context, account string) ([]*publickey.PublicKey, int64, error) {
+	query := s.db.WithContext(ctx).Model(&PublicKey{}).Where("account = ?", account)
+
+	var total int64
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, database.ProcessSQLErrorf(ctx, err)
+	}
+
+	var keys []*PublicKey
+	if err := query.Order("createdDate DESC").Find(&keys).Error; err != nil {
+		return nil, 0, database.ProcessSQLErrorf(ctx, err)
+	}
+
+	result := make([]*publickey.PublicKey, len(keys))
+	for i := range keys {
+		model := keys[i].toModel()
+		result[i] = &model
+	}
+
+	return result, total, nil
+
 }

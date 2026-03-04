@@ -14,6 +14,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 
+	"github.com/gin-gonic/gin"
 	"github.com/gliderlabs/ssh"
 )
 
@@ -147,4 +148,25 @@ func (s Service) ListPublicKeys(ctx context.Context, session *auth.Session, para
 		return nil, errors.Wrap(err, "failed to list public keys")
 	}
 	return keys, nil
+}
+
+func (s Service) GetPublicKeyByID(ctx *gin.Context, session *auth.Session, id int64) (*PublicKeyModel.PublicKey, error) {
+	key, err := s.publicKeyStore.GetByID(ctx, session.User.Account, id)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get public key")
+	}
+	key.FillLastUsedDate(ctx)
+	return key, nil
+}
+
+func (s Service) ListPublicKeysWithTotal(ctx *gin.Context, session *auth.Session) ([]*PublicKeyModel.PublicKey, int64, error) {
+	keys, total, err := s.publicKeyStore.ListByAccountWithTotal(ctx, session.User.Account)
+	if err != nil {
+		return nil, 0, errors.Wrap(err, "failed to list public keys")
+	}
+
+	for _, key := range keys {
+		key.FillLastUsedDate(ctx)
+	}
+	return keys, total, nil
 }
