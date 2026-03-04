@@ -14,6 +14,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 
+	"github.com/gin-gonic/gin"
 	"github.com/gliderlabs/ssh"
 )
 
@@ -78,7 +79,7 @@ func (s Service) MarkKeyAsVerified(ctx context.Context, keyID int64) error {
 	return nil
 }
 
-func (s Service) CreatePublicKey(ctx context.Context, session *auth.Session, params *PublicKeyModel.AddPublicKeyInput) error {
+func (s Service) Create(ctx context.Context, session *auth.Session, params *PublicKeyModel.AddPublicKeyInput) error {
 	key, comment, err := ParseString(params.Content)
 	if err != nil {
 		err = errors.Wrap(err, "could not parse public key")
@@ -101,7 +102,7 @@ func (s Service) CreatePublicKey(ctx context.Context, session *auth.Session, par
 	return nil
 }
 
-func (s Service) UpdatePublicKey(ctx context.Context, session *auth.Session, id int64, params *PublicKeyModel.UpdatePublicKeyInput) error {
+func (s Service) Update(ctx context.Context, session *auth.Session, id int64, params *PublicKeyModel.UpdatePublicKeyInput) error {
 	input := publickey.PublicKey{}
 
 	if params.Content != "" {
@@ -133,7 +134,7 @@ func (s Service) UpdatePublicKey(ctx context.Context, session *auth.Session, id 
 	return nil
 }
 
-func (s Service) DeletePublicKey(ctx context.Context, session *auth.Session, id int64) error {
+func (s Service) Delete(ctx context.Context, session *auth.Session, id int64) error {
 	err := s.publicKeyStore.DeleteByID(ctx, session.User.Account, id)
 	if err != nil {
 		return errors.Wrap(err, "failed to delete public key")
@@ -141,10 +142,31 @@ func (s Service) DeletePublicKey(ctx context.Context, session *auth.Session, id 
 	return nil
 }
 
-func (s Service) ListPublicKeys(ctx context.Context, session *auth.Session, params req.ListFilter) (*database.PageResult[*PublicKeyModel.PublicKey], error) {
+func (s Service) List(ctx context.Context, session *auth.Session, params req.ListFilter) (*database.PageResult[*PublicKeyModel.PublicKey], error) {
 	keys, err := s.publicKeyStore.ListByAccount(ctx, session.User.Account, params)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to list public keys")
 	}
 	return keys, nil
+}
+
+func (s Service) GetByID(ctx *gin.Context, session *auth.Session, id int64) (*PublicKeyModel.PublicKey, error) {
+	key, err := s.publicKeyStore.GetByID(ctx, session.User.Account, id)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get public key")
+	}
+	key.FillLastUsedDate(ctx)
+	return key, nil
+}
+
+func (s Service) ListWithTotal(ctx *gin.Context, session *auth.Session) ([]*PublicKeyModel.PublicKey, int64, error) {
+	keys, total, err := s.publicKeyStore.ListByAccountWithTotal(ctx, session.User.Account)
+	if err != nil {
+		return nil, 0, errors.Wrap(err, "failed to list public keys")
+	}
+
+	for _, key := range keys {
+		key.FillLastUsedDate(ctx)
+	}
+	return keys, total, nil
 }

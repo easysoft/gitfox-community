@@ -2,9 +2,11 @@ package publickey
 
 import (
 	"context"
+	"net/http/httptest"
 	"testing"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 
@@ -15,6 +17,7 @@ import (
 	storePublicKey "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/publickey"
 	publickeyStoreMock "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/publickey/mock"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
 )
 
 type fakeUserStore struct {
@@ -56,7 +59,7 @@ func newSession(account string) *auth.Session {
 	return &auth.Session{User: &principal.User{Account: account}}
 }
 
-func TestServiceCreatePublicKey(t *testing.T) {
+func TestServiceCreate(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
@@ -114,7 +117,7 @@ func TestServiceCreatePublicKey(t *testing.T) {
 			tc.setupMock(mockStore)
 
 			svc := Service{publicKeyStore: mockStore, userStore: &fakeUserStore{}}
-			err := svc.CreatePublicKey(context.Background(), newSession("tester"), tc.params)
+			err := svc.Create(context.Background(), newSession("tester"), tc.params)
 			if tc.wantErr {
 				assert.Error(t, err)
 				return
@@ -124,7 +127,7 @@ func TestServiceCreatePublicKey(t *testing.T) {
 	}
 }
 
-func TestServiceUpdatePublicKey(t *testing.T) {
+func TestServiceUpdate(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
@@ -218,7 +221,7 @@ func TestServiceUpdatePublicKey(t *testing.T) {
 			tc.setupMock(mockStore)
 
 			svc := Service{publicKeyStore: mockStore, userStore: &fakeUserStore{}}
-			err := svc.UpdatePublicKey(context.Background(), newSession("tester"), tc.id, tc.params)
+			err := svc.Update(context.Background(), newSession("tester"), tc.id, tc.params)
 			if tc.wantErr {
 				assert.Error(t, err)
 				return
@@ -228,7 +231,7 @@ func TestServiceUpdatePublicKey(t *testing.T) {
 	}
 }
 
-func TestServiceDeletePublicKey(t *testing.T) {
+func TestServiceDelete(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
@@ -264,7 +267,7 @@ func TestServiceDeletePublicKey(t *testing.T) {
 			tc.setupMock(mockStore)
 
 			svc := Service{publicKeyStore: mockStore, userStore: &fakeUserStore{}}
-			err := svc.DeletePublicKey(context.Background(), newSession("tester"), tc.id)
+			err := svc.Delete(context.Background(), newSession("tester"), tc.id)
 			if tc.wantErr {
 				assert.Error(t, err)
 				return
@@ -274,7 +277,7 @@ func TestServiceDeletePublicKey(t *testing.T) {
 	}
 }
 
-func TestServiceListPublicKeys(t *testing.T) {
+func TestServiceList(t *testing.T) {
 	t.Parallel()
 
 	ctrl := gomock.NewController(t)
@@ -293,7 +296,67 @@ func TestServiceListPublicKeys(t *testing.T) {
 	mockStore.EXPECT().ListByAccount(gomock.Any(), "tester", req.ListFilter{Page: 1, PageSize: 20}).Return(expected, nil)
 
 	svc := Service{publicKeyStore: mockStore, userStore: &fakeUserStore{}}
-	result, err := svc.ListPublicKeys(context.Background(), newSession("tester"), req.ListFilter{Page: 1, PageSize: 20})
+	result, err := svc.List(context.Background(), newSession("tester"), req.ListFilter{Page: 1, PageSize: 20})
 	assert.NoError(t, err)
 	assert.Equal(t, expected, result)
+}
+
+func TestServiceGetByID(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name      string
+		id        int64
+		setupMock func(m *publickeyStoreMock.MockInterface)
+		wantErr   bool
+	}{
+		{
+			name: "get by id success",
+			id:   1001,
+			setupMock: func(m *publickeyStoreMock.MockInterface) {
+				created := datetime.Local(time.Date(2026, 3, 1, 10, 0, 0, 0, time.UTC))
+				verified := datetime.Local(time.Date(2026, 3, 1, 10, 1, 1, 0, time.UTC))
+				m.EXPECT().GetByID(gomock.Any(), "tester", int64(1001)).Return(&publickeyModel.PublicKey{
+					Identifier:  "key-1",
+					Type:        "ssh-ed25519",
+					CreatedDate: &created,
+					VerifiedDate: &verified,
+				}, nil)
+			},
+		},
+		{
+			name: "get by id failed",
+			id:   1001,
+			setupMock: func(m *publickeyStoreMock.MockInterface) {
+				m.EXPECT().GetByID(gomock.Any(), "tester", int64(1001)).Return(nil, assert.AnError)
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			gin.SetMode(gin.TestMode)
+			ctx, _ := gin.CreateTestContext(httptest.NewRecorder())
+			ctx.Request = httptest.NewRequest("GET", "/", nil)
+
+			mockStore := publickeyStoreMock.NewMockInterface(ctrl)
+			tc.setupMock(mockStore)
+
+			svc := Service{publicKeyStore: mockStore, userStore: &fakeUserStore{}}
+			key, err := svc.GetByID(ctx, newSession("tester"), tc.id)
+			if tc.wantErr {
+				assert.Error(t, err)
+				return
+			}
+
+			assert.NoError(t, err)
+			assert.Equal(t, "key-1", key.Identifier)
+			assert.NotEmpty(t, key.LastUsedDate)
+		})
+	}
 }

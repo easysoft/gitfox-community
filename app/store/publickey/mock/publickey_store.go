@@ -72,6 +72,21 @@ func (mr *MockInterfaceMockRecorder) DeleteByID(ctx, account, id any) *gomock.Ca
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteByID", reflect.TypeOf((*MockInterface)(nil).DeleteByID), ctx, account, id)
 }
 
+// GetByID mocks base method.
+func (m *MockInterface) GetByID(ctx context.Context, account string, id int64) (*publickey.PublicKey, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetByID", ctx, account, id)
+	ret0, _ := ret[0].(*publickey.PublicKey)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetByID indicates an expected call of GetByID.
+func (mr *MockInterfaceMockRecorder) GetByID(ctx, account, id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByID", reflect.TypeOf((*MockInterface)(nil).GetByID), ctx, account, id)
+}
+
 // ListByAccount mocks base method.
 func (m *MockInterface) ListByAccount(ctx context.Context, account string, params req.ListFilter) (*database.PageResult[*publickey.PublicKey], error) {
 	m.ctrl.T.Helper()
@@ -85,6 +100,22 @@ func (m *MockInterface) ListByAccount(ctx context.Context, account string, param
 func (mr *MockInterfaceMockRecorder) ListByAccount(ctx, account, params any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListByAccount", reflect.TypeOf((*MockInterface)(nil).ListByAccount), ctx, account, params)
+}
+
+// ListByAccountWithTotal mocks base method.
+func (m *MockInterface) ListByAccountWithTotal(ctx context.Context, account string) ([]*publickey.PublicKey, int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListByAccountWithTotal", ctx, account)
+	ret0, _ := ret[0].([]*publickey.PublicKey)
+	ret1, _ := ret[1].(int64)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// ListByAccountWithTotal indicates an expected call of ListByAccountWithTotal.
+func (mr *MockInterfaceMockRecorder) ListByAccountWithTotal(ctx, account any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListByAccountWithTotal", reflect.TypeOf((*MockInterface)(nil).ListByAccountWithTotal), ctx, account)
 }
 
 // ListByFingerprint mocks base method.

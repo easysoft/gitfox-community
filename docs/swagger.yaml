@@ -687,6 +687,9 @@ definitions:
       identifier:
         description: 公钥标识符
         type: string
+      lastUsedDate:
+        description: 最后使用时间
+        type: string
       type:
         description: '公钥类型 eg: "ssh-rsa"'
         type: string
@@ -4993,16 +4996,7 @@ paths:
     get:
       consumes:
       - application/json
-      description: 分页查询当前登录用户的 SSH 公钥列表
-      parameters:
-      - description: 页码（默认1）
-        in: query
-        name: page
-        type: integer
-      - description: 每页数量（默认20）
-        in: query
-        name: pageSize
-        type: integer
+      description: 查询当前登录用户的 SSH 公钥列表（按创建时间倒序）
       produces:
       - application/json
       responses:
@@ -5102,6 +5096,47 @@ paths:
           schema:
             $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
       summary: 删除用户公钥
+      tags:
+      - users
+    get:
+      consumes:
+      - application/json
+      description: 按ID获取当前登录用户的 SSH 公钥详情
+      parameters:
+      - description: 公钥ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 查询成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_publickey.PublicKey'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "401":
+          description: 未授权（会话不存在或已过期）
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "404":
+          description: 公钥不存在
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 获取用户公钥详情
       tags:
       - users
     put:

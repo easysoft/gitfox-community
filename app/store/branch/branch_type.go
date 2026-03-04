@@ -25,7 +25,7 @@ type BranchType struct {
 
 // TableName 显式指定结构体对应的数据表名为 ops_branch_type
 func (BranchType) TableName() string {
-	return "zt_ops_branch_type"
+	return "ops_branch_type"
 }
 
 // BeforeCreate GORM钩子：创建前自动填充创建时间与更新时间

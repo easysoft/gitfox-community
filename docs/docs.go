@@ -5104,7 +5104,7 @@ const docTemplate = `{
         },
         "/user/keys": {
             "get": {
-                "description": "分页查询当前登录用户的 SSH 公钥列表",
+                "description": "查询当前登录用户的 SSH 公钥列表（按创建时间倒序）",
                 "consumes": [
                     "application/json"
                 ],
@@ -5115,20 +5115,6 @@ const docTemplate = `{
                     "users"
                 ],
                 "summary": "获取用户公钥列表",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "页码（默认1）",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "每页数量（默认20）",
-                        "name": "pageSize",
-                        "in": "query"
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "查询成功",
@@ -5226,6 +5212,72 @@ const docTemplate = `{
             }
         },
         "/user/keys/{id}": {
+            "get": {
+                "description": "按ID获取当前登录用户的 SSH 公钥详情",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "获取用户公钥详情",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "公钥ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "查询成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_publickey.PublicKey"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权（会话不存在或已过期）",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "公钥不存在",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            },
             "put": {
                 "description": "按ID修改当前登录用户的 SSH 公钥，仅允许修改标识符和公钥内容",
                 "consumes": [
@@ -6331,6 +6383,10 @@ const docTemplate = `{
                 },
                 "identifier": {
                     "description": "公钥标识符",
+                    "type": "string"
+                },
+                "lastUsedDate": {
+                    "description": "最后使用时间",
                     "type": "string"
                 },
                 "type": {
