@@ -252,8 +252,6 @@ func (s *Runner) run(ctx context.Context, stage *drone.Stage, data *client.Conte
 		return s.Reporter.ReportStage(noContext, state)
 	}
 
-	// 这里先去遍历了 spec.Steps, 但是数据库的 steps 写入是在后面的 s.Client.Update
-	// 这里的 Steps 数据是哪里的？应该是 yaml content 里的
 	for _, src := range spec.Steps {
 		// steps that are skipped are ignored and are not stored
 		// in the drone database, nor displayed in the UI.
