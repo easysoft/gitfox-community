@@ -52,7 +52,7 @@ func (c *Controller) AddKey(ctx *gin.Context) {
 		return
 	}
 
-	err = c.publicKeySvc.CreatePublicKey(ctx, session, &params)
+	err = c.publicKeySvc.Create(ctx, session, &params)
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.AuthPubKeyAddError)
 		resp.BadRequest(ctx, err)
@@ -122,7 +122,7 @@ func (c *Controller) GetKey(ctx *gin.Context) {
 		return
 	}
 
-	key, err := c.publicKeySvc.GetPublicKeyByID(ctx, session, id)
+	key, err := c.publicKeySvc.GetByID(ctx, session, id)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			resp.NotFound(ctx, err)
@@ -182,7 +182,7 @@ func (c *Controller) UpdateKey(ctx *gin.Context) {
 		params.Content = strings.TrimSpace(params.Content)
 	}
 
-	err = c.publicKeySvc.UpdatePublicKey(ctx, session, id, &params)
+	err = c.publicKeySvc.Update(ctx, session, id, &params)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			resp.NotFound(ctx, err)

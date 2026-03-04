@@ -59,7 +59,7 @@ func newSession(account string) *auth.Session {
 	return &auth.Session{User: &principal.User{Account: account}}
 }
 
-func TestServiceCreatePublicKey(t *testing.T) {
+func TestServiceCreate(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
@@ -117,7 +117,7 @@ func TestServiceCreatePublicKey(t *testing.T) {
 			tc.setupMock(mockStore)
 
 			svc := Service{publicKeyStore: mockStore, userStore: &fakeUserStore{}}
-			err := svc.CreatePublicKey(context.Background(), newSession("tester"), tc.params)
+			err := svc.Create(context.Background(), newSession("tester"), tc.params)
 			if tc.wantErr {
 				assert.Error(t, err)
 				return
@@ -127,7 +127,7 @@ func TestServiceCreatePublicKey(t *testing.T) {
 	}
 }
 
-func TestServiceUpdatePublicKey(t *testing.T) {
+func TestServiceUpdate(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
@@ -221,7 +221,7 @@ func TestServiceUpdatePublicKey(t *testing.T) {
 			tc.setupMock(mockStore)
 
 			svc := Service{publicKeyStore: mockStore, userStore: &fakeUserStore{}}
-			err := svc.UpdatePublicKey(context.Background(), newSession("tester"), tc.id, tc.params)
+			err := svc.Update(context.Background(), newSession("tester"), tc.id, tc.params)
 			if tc.wantErr {
 				assert.Error(t, err)
 				return
@@ -301,7 +301,7 @@ func TestServiceList(t *testing.T) {
 	assert.Equal(t, expected, result)
 }
 
-func TestServiceGetPublicKeyByID(t *testing.T) {
+func TestServiceGetByID(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
@@ -348,7 +348,7 @@ func TestServiceGetPublicKeyByID(t *testing.T) {
 			tc.setupMock(mockStore)
 
 			svc := Service{publicKeyStore: mockStore, userStore: &fakeUserStore{}}
-			key, err := svc.GetPublicKeyByID(ctx, newSession("tester"), tc.id)
+			key, err := svc.GetByID(ctx, newSession("tester"), tc.id)
 			if tc.wantErr {
 				assert.Error(t, err)
 				return

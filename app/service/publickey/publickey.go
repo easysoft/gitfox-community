@@ -79,7 +79,7 @@ func (s Service) MarkKeyAsVerified(ctx context.Context, keyID int64) error {
 	return nil
 }
 
-func (s Service) CreatePublicKey(ctx context.Context, session *auth.Session, params *PublicKeyModel.AddPublicKeyInput) error {
+func (s Service) Create(ctx context.Context, session *auth.Session, params *PublicKeyModel.AddPublicKeyInput) error {
 	key, comment, err := ParseString(params.Content)
 	if err != nil {
 		err = errors.Wrap(err, "could not parse public key")
@@ -102,7 +102,7 @@ func (s Service) CreatePublicKey(ctx context.Context, session *auth.Session, par
 	return nil
 }
 
-func (s Service) UpdatePublicKey(ctx context.Context, session *auth.Session, id int64, params *PublicKeyModel.UpdatePublicKeyInput) error {
+func (s Service) Update(ctx context.Context, session *auth.Session, id int64, params *PublicKeyModel.UpdatePublicKeyInput) error {
 	input := publickey.PublicKey{}
 
 	if params.Content != "" {
@@ -150,7 +150,7 @@ func (s Service) List(ctx context.Context, session *auth.Session, params req.Lis
 	return keys, nil
 }
 
-func (s Service) GetPublicKeyByID(ctx *gin.Context, session *auth.Session, id int64) (*PublicKeyModel.PublicKey, error) {
+func (s Service) GetByID(ctx *gin.Context, session *auth.Session, id int64) (*PublicKeyModel.PublicKey, error) {
 	key, err := s.publicKeyStore.GetByID(ctx, session.User.Account, id)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get public key")
