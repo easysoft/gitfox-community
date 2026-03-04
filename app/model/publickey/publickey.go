@@ -14,7 +14,7 @@ import (
 const lastUsedDateI18nPrefix = "auth.pub_key_use_"
 
 type PublicKey struct {
-	ID           int64           `json:"-"`
+	ID           int64           `json:"id"`
 	Account      string          `json:"account"`      // 关联的账号
 	VerifiedDate *datetime.Local `json:"verifiedDate"` // 公钥是否已验证
 	Identifier   string          `json:"identifier"`   // 公钥标识符

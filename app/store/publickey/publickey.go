@@ -116,10 +116,12 @@ func (s *Store) UpdateByID(ctx context.Context, account string, id int64, public
 				return database.ProcessSQLErrorf(ctx, err)
 			}
 
-			if len(existingKeys) > 0 {
-				err = errors.New("Identifier is already in use")
-				err = errors.WithI18nKey(err, i18n.AuthPubKeyAddIdentifierInUse)
-				return err
+			for _, existingKey := range existingKeys {
+				if existingKey.ID != id {
+					err = errors.New("Identifier is already in use")
+					err = errors.WithI18nKey(err, i18n.AuthPubKeyAddIdentifierInUse)
+					return err
+				}
 			}
 		}
 
@@ -130,7 +132,7 @@ func (s *Store) UpdateByID(ctx context.Context, account string, id int64, public
 				return database.ProcessSQLErrorf(ctx, err)
 			}
 			for _, existingKey := range existingKeys {
-				if existingKey.Content == publicKey.Content {
+				if existingKey.ID != id {
 					err = errors.New("Key is already in use")
 					err = errors.WithI18nKey(err, i18n.AuthPubKeyAddAlreadyInUse)
 					return err
