@@ -168,7 +168,7 @@ func (c *CompilerImpl) Compile(ctx context.Context, args Args) (*engine.Spec, er
 	// create system labels
 	stageLabels := labels.Combine(
 		c.Labels,
-		labels.FromRepo(args.Repo),
+		// labels.FromRepo(args.Repo),
 		labels.FromBuild(args.Build),
 		labels.FromStage(args.Stage),
 		labels.FromSystem(args.System),
@@ -236,7 +236,7 @@ func (c *CompilerImpl) Compile(ctx context.Context, args Args) (*engine.Spec, er
 		stageSpec.Envs, // environment from stage
 		environ.Proxy(),
 		environ.System(args.System),
-		environ.Repo(args.Repo),
+		// environ.Repo(args.Repo),
 		environ.Build(args.Build),
 		environ.Stage(args.Stage),
 		environ.Netrc(args.Netrc),
@@ -312,7 +312,7 @@ func (c *CompilerImpl) Compile(ctx context.Context, args Args) (*engine.Spec, er
 
 	// collate the input params
 	inputs := map[string]interface{}{
-		"repo":   inputs.Repo(args.Repo),
+		// "repo":   inputs.Repo(args.Repo),
 		"build":  inputs.Build(args.Build),
 		"inputs": inputs.Inputs(pipeline.Inputs, args.Build.Params),
 		"secrets": map[string]interface{}{
@@ -357,22 +357,22 @@ func (c *CompilerImpl) Compile(ctx context.Context, args Args) (*engine.Spec, er
 				step_.ExtraHosts = append(step_.ExtraHosts, c.ExtraHosts...)
 				step_.Privileged = c.isPrivileged(step_)
 
-				if src.When != nil {
-					// 处理when.eval条件
-					if when := src.When.Eval; when != "" {
-						onSuccess, onFailure, _ := evalif(when, inputs)
-						switch {
-						case onSuccess && onFailure:
-							step_.RunPolicy = engine.RunAlways
-						case onSuccess:
-							step_.RunPolicy = engine.RunOnSuccess
-						case onFailure:
-							step_.RunPolicy = engine.RunOnFailure
-						default:
-							step_.RunPolicy = engine.RunNever
-						}
-					}
-				}
+				// if src.When != nil {
+				// 	// 处理when.eval条件
+				// 	if when := src.When.Eval; when != "" {
+				// 		onSuccess, onFailure, _ := evalif(when, inputs)
+				// 		switch {
+				// 		case onSuccess && onFailure:
+				// 			step_.RunPolicy = engine.RunAlways
+				// 		case onSuccess:
+				// 			step_.RunPolicy = engine.RunOnSuccess
+				// 		case onFailure:
+				// 			step_.RunPolicy = engine.RunOnFailure
+				// 		default:
+				// 			step_.RunPolicy = engine.RunNever
+				// 		}
+				// 	}
+				// }
 				spec.Steps = append(spec.Steps, step_)
 			}
 		}

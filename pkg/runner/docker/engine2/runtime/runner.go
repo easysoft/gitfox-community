@@ -218,7 +218,8 @@ func (s *Runner) run(ctx context.Context, stage *drone.Stage, data *client.Conte
 	walk.Walk(config, func(v interface{}) error {
 		switch vv := v.(type) {
 		case *harness.Pipeline:
-			inputParams["inputs"] = inputs.Inputs(vv.Inputs, data.Build.Params)
+			// inputParams["parameters"] = data.Build.Params
+			inputParams["parameters"] = inputs.Inputs(vv.Inputs, data.Build.Params)
 		}
 		return nil
 	})
