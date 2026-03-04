@@ -231,7 +231,7 @@ func TestServiceUpdatePublicKey(t *testing.T) {
 	}
 }
 
-func TestServiceDeletePublicKey(t *testing.T) {
+func TestServiceDelete(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
@@ -267,7 +267,7 @@ func TestServiceDeletePublicKey(t *testing.T) {
 			tc.setupMock(mockStore)
 
 			svc := Service{publicKeyStore: mockStore, userStore: &fakeUserStore{}}
-			err := svc.DeletePublicKey(context.Background(), newSession("tester"), tc.id)
+			err := svc.Delete(context.Background(), newSession("tester"), tc.id)
 			if tc.wantErr {
 				assert.Error(t, err)
 				return
@@ -277,7 +277,7 @@ func TestServiceDeletePublicKey(t *testing.T) {
 	}
 }
 
-func TestServiceListPublicKeys(t *testing.T) {
+func TestServiceList(t *testing.T) {
 	t.Parallel()
 
 	ctrl := gomock.NewController(t)
@@ -296,7 +296,7 @@ func TestServiceListPublicKeys(t *testing.T) {
 	mockStore.EXPECT().ListByAccount(gomock.Any(), "tester", req.ListFilter{Page: 1, PageSize: 20}).Return(expected, nil)
 
 	svc := Service{publicKeyStore: mockStore, userStore: &fakeUserStore{}}
-	result, err := svc.ListPublicKeys(context.Background(), newSession("tester"), req.ListFilter{Page: 1, PageSize: 20})
+	result, err := svc.List(context.Background(), newSession("tester"), req.ListFilter{Page: 1, PageSize: 20})
 	assert.NoError(t, err)
 	assert.Equal(t, expected, result)
 }

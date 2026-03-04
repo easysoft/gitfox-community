@@ -134,7 +134,7 @@ func (s Service) UpdatePublicKey(ctx context.Context, session *auth.Session, id 
 	return nil
 }
 
-func (s Service) DeletePublicKey(ctx context.Context, session *auth.Session, id int64) error {
+func (s Service) Delete(ctx context.Context, session *auth.Session, id int64) error {
 	err := s.publicKeyStore.DeleteByID(ctx, session.User.Account, id)
 	if err != nil {
 		return errors.Wrap(err, "failed to delete public key")
@@ -142,7 +142,7 @@ func (s Service) DeletePublicKey(ctx context.Context, session *auth.Session, id 
 	return nil
 }
 
-func (s Service) ListPublicKeys(ctx context.Context, session *auth.Session, params req.ListFilter) (*database.PageResult[*PublicKeyModel.PublicKey], error) {
+func (s Service) List(ctx context.Context, session *auth.Session, params req.ListFilter) (*database.PageResult[*PublicKeyModel.PublicKey], error) {
 	keys, err := s.publicKeyStore.ListByAccount(ctx, session.User.Account, params)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to list public keys")
@@ -159,7 +159,7 @@ func (s Service) GetPublicKeyByID(ctx *gin.Context, session *auth.Session, id in
 	return key, nil
 }
 
-func (s Service) ListPublicKeysWithTotal(ctx *gin.Context, session *auth.Session) ([]*PublicKeyModel.PublicKey, int64, error) {
+func (s Service) ListWithTotal(ctx *gin.Context, session *auth.Session) ([]*PublicKeyModel.PublicKey, int64, error) {
 	keys, total, err := s.publicKeyStore.ListByAccountWithTotal(ctx, session.User.Account)
 	if err != nil {
 		return nil, 0, errors.Wrap(err, "failed to list public keys")

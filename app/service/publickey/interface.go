@@ -20,8 +20,8 @@ type Interface interface {
 
 	CreatePublicKey(ctx context.Context, session *auth.Session, params *publickey.AddPublicKeyInput) error
 	UpdatePublicKey(ctx context.Context, session *auth.Session, id int64, params *publickey.UpdatePublicKeyInput) error
-	DeletePublicKey(ctx context.Context, session *auth.Session, id int64) error
-	ListPublicKeys(ctx context.Context, session *auth.Session, params req.ListFilter) (*database.PageResult[*publickey.PublicKey], error)
-	ListPublicKeysWithTotal(ctx *gin.Context, session *auth.Session) ([]*publickey.PublicKey, int64, error)
+	Delete(ctx context.Context, session *auth.Session, id int64) error
+	List(ctx context.Context, session *auth.Session, params req.ListFilter) (*database.PageResult[*publickey.PublicKey], error)
+	ListWithTotal(ctx *gin.Context, session *auth.Session) ([]*publickey.PublicKey, int64, error)
 	GetPublicKeyByID(ctx *gin.Context, session *auth.Session, id int64) (*publickey.PublicKey, error)
 }

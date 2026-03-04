@@ -83,7 +83,7 @@ func (c *Controller) ListKeys(ctx *gin.Context) {
 		return
 	}
 
-	keys, _, err := c.publicKeySvc.ListPublicKeysWithTotal(ctx, session)
+	keys, _, err := c.publicKeySvc.ListWithTotal(ctx, session)
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.AuthPubKeyListError)
 		resp.BadRequest(ctx, err)
@@ -224,7 +224,7 @@ func (c *Controller) DeleteKey(ctx *gin.Context) {
 		return
 	}
 
-	err = c.publicKeySvc.DeletePublicKey(ctx, session, id)
+	err = c.publicKeySvc.Delete(ctx, session, id)
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.AuthPubKeyDeleteError)
 		if errors.IsNotFound(err) {
