@@ -669,6 +669,9 @@ definitions:
       comment:
         description: '公钥注释 eg: "user@example.com"'
         type: string
+      content:
+        description: '公钥内容 eg: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDB...'
+        type: string
       createdBy:
         description: 创建人
         type: string
@@ -684,6 +687,8 @@ definitions:
       fingerprint:
         description: 公钥指纹
         type: string
+      id:
+        type: integer
       identifier:
         description: 公钥标识符
         type: string
@@ -1466,6 +1471,94 @@ definitions:
     - ScanRuleTypeComplian
     - ScanRuleTypeOptimize
     - scanRuleTypeNone
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.Solution:
+    properties:
+      createdBy:
+        type: string
+      createdDate:
+        type: string
+      deleted:
+        type: boolean
+      desc:
+        type: string
+      descEn:
+        type: string
+      editedBy:
+        type: string
+      editedDate:
+        type: string
+      id:
+        type: integer
+      isCustom:
+        type: boolean
+      name:
+        type: string
+      ruleSets:
+        items:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.RuleSet'
+        type: array
+      rulesCount:
+        type: integer
+      status:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleStatus'
+      tag:
+        type: string
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.SolutionReqFilter:
+    properties:
+      name:
+        type: string
+      order:
+        default: asc
+        type: string
+      page:
+        default: 1
+        type: integer
+      pageSize:
+        default: 30
+        type: integer
+      sort:
+        default: id
+        type: string
+      status:
+        type: string
+      tag:
+        type: string
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.SolutionReqForBind:
+    properties:
+      rulesetIDList:
+        items:
+          type: integer
+        type: array
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.SolutionReqForCreate:
+    properties:
+      desc:
+        type: string
+      descEn:
+        type: string
+      isCustom:
+        type: boolean
+      name:
+        maxLength: 100
+        type: string
+      tag:
+        type: string
+    required:
+    - name
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.SolutionReqForUpdate:
+    properties:
+      desc:
+        type: string
+      descEn:
+        type: string
+      name:
+        type: string
+      tag:
+        type: string
+    type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.CreateSpaceRequest:
     properties:
       acl:
@@ -4655,6 +4748,375 @@ paths:
                   $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListArgs'
               type: object
       summary: 查询规则集列表
+      tags:
+      - scan
+  /scan/solutions:
+    post:
+      consumes:
+      - application/json
+      description: 基于传入参数创建扫描方案
+      parameters:
+      - description: 创建扫描方案请求参数
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.SolutionReqForCreate'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: 创建成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.Solution'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "401":
+          description: 未授权（会话不存在或已过期）
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 创建扫描方案
+      tags:
+      - scan
+  /scan/solutions/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: 根据扫描方案 ID 删除扫描方案及其关联的规则集绑定关系
+      parameters:
+      - description: 扫描方案 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 删除成功
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 删除扫描方案
+      tags:
+      - scan
+    get:
+      consumes:
+      - application/json
+      description: 根据传入的扫描方案 ID 获取扫描方案详细信息
+      parameters:
+      - description: 扫描方案 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.Solution'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "404":
+          description: 扫描方案不存在
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 获取扫描方案详情
+      tags:
+      - scan
+    put:
+      consumes:
+      - application/json
+      description: 根据扫描方案 ID 更新扫描方案信息
+      parameters:
+      - description: 扫描方案 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 更新请求参数
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.SolutionReqForUpdate'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.Solution'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "401":
+          description: 未授权（会话不存在或已过期）
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "404":
+          description: 扫描方案不存在
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 更新扫描方案
+      tags:
+      - scan
+  /scan/solutions/{id}/rulesets:
+    get:
+      consumes:
+      - application/json
+      description: 根据扫描方案 ID 查询已绑定的规则集列表
+      parameters:
+      - description: 扫描方案 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 查询成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.RuleSet'
+                  type: array
+                listArgs:
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListArgs'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 获取扫描方案已绑定的规则集列表
+      tags:
+      - scan
+  /scan/solutions/{id}/rulesets/bind:
+    post:
+      consumes:
+      - application/json
+      description: 将指定规则集绑定到扫描方案，建立关联关系
+      parameters:
+      - description: 扫描方案 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 绑定请求参数
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.SolutionReqForBind'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 绑定成功
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 为扫描方案绑定规则集
+      tags:
+      - scan
+  /scan/solutions/{id}/rulesets/unbind:
+    get:
+      consumes:
+      - application/json
+      description: 根据扫描方案 ID 查询未绑定的规则集列表（可用于绑定）
+      parameters:
+      - description: 扫描方案 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 查询成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.RuleSet'
+                  type: array
+                listArgs:
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListArgs'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 获取扫描方案未绑定的规则集列表
+      tags:
+      - scan
+    post:
+      consumes:
+      - application/json
+      description: 解除扫描方案与指定规则集的关联关系
+      parameters:
+      - description: 扫描方案 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 解绑请求参数
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.SolutionReqForBind'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 解绑成功
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 解除扫描方案与规则集的绑定
+      tags:
+      - scan
+  /scan/solutions/{id}/status:
+    patch:
+      consumes:
+      - application/json
+      description: 切换扫描方案的启用/禁用状态，enabled ↔ disabled 互相切换
+      parameters:
+      - description: 扫描方案 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 切换成功
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "401":
+          description: 未授权（会话不存在或已过期）
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 切换扫描方案状态
+      tags:
+      - scan
+  /scan/solutions/list:
+    post:
+      consumes:
+      - application/json
+      description: 根据过滤条件查询扫描方案列表，支持分页
+      parameters:
+      - description: 查询过滤条件
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.SolutionReqFilter'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 查询成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.Solution'
+                  type: array
+                listArgs:
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListArgs'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 查询扫描方案列表
       tags:
       - scan
   /scan/tags:

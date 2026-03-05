@@ -19,7 +19,7 @@ type PublicKey struct {
 	VerifiedDate *datetime.Local `json:"verifiedDate"` // 公钥是否已验证
 	Identifier   string          `json:"identifier"`   // 公钥标识符
 	Fingerprint  string          `json:"fingerprint"`  // 公钥指纹
-	Content      string          `json:"-"`            // 公钥内容 eg: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDB...
+	Content      string          `json:"content"`      // 公钥内容 eg: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDB...
 	Comment      string          `json:"comment"`      // 公钥注释 eg: "user@example.com"
 	Type         string          `json:"type"`         // 公钥类型 eg: "ssh-rsa"
 	LastUsedDate string          `json:"lastUsedDate"` // 最后使用时间

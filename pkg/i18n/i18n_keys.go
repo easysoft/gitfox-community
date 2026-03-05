@@ -317,6 +317,31 @@ const (
 	RunnerUpdateHeartBeatSuccess I18nKey = "runner.update_heart_beat_success" // 更新 Runner 心跳成功.
 	RunnerUpdateSuccess          I18nKey = "runner.update_success"            // 更新 Runner 成功.
 
+	// Solution 相关常量
+	SolutionAlreadyExists       I18nKey = "solution.already_exists"        // 扫描方案名称已存在.
+	SolutionBindError           I18nKey = "solution.bind_error"            // 扫描方案绑定规则集失败.
+	SolutionBindSuccess         I18nKey = "solution.bind_success"          // 扫描方案绑定规则集成功.
+	SolutionBodyParamError      I18nKey = "solution.body_param_error"      // 请求体参数解析失败.
+	SolutionBuiltinDeleteError  I18nKey = "solution.builtin_delete_error"  // 内置扫描方案不允许删除.
+	SolutionCreateError         I18nKey = "solution.create_error"          // 扫描方案创建失败.
+	SolutionCreateSuccess       I18nKey = "solution.create_success"        // 扫描方案创建成功.
+	SolutionDeleteError         I18nKey = "solution.delete_error"          // 扫描方案删除失败.
+	SolutionDeleteSuccess       I18nKey = "solution.delete_success"        // 扫描方案删除成功.
+	SolutionInUseError          I18nKey = "solution.in_use_error"          // 扫描方案已被扫描计划使用,无法删除.
+	SolutionListError           I18nKey = "solution.list_error"            // 扫描方案列表查询失败.
+	SolutionListSuccess         I18nKey = "solution.list_success"          // 扫描方案列表查询成功.
+	SolutionPathParamError      I18nKey = "solution.path_param_error"      // 路径参数解析失败.
+	SolutionQueryError          I18nKey = "solution.query_error"           // 扫描方案详情查询失败.
+	SolutionQuerySuccess        I18nKey = "solution.query_success"         // 扫描方案详情查询成功.
+	SolutionRulesetListError    I18nKey = "solution.ruleset_list_error"    // 扫描方案规则集列表查询失败.
+	SolutionRulesetListSuccess  I18nKey = "solution.ruleset_list_success"  // 扫描方案规则集列表查询成功.
+	SolutionStatusUpdateError   I18nKey = "solution.status_update_error"   // 扫描方案状态更新失败.
+	SolutionStatusUpdateSuccess I18nKey = "solution.status_update_success" // 扫描方案状态更新成功.
+	SolutionUnbindError         I18nKey = "solution.unbind_error"          // 扫描方案解绑规则集失败.
+	SolutionUnbindSuccess       I18nKey = "solution.unbind_success"        // 扫描方案解绑规则集成功.
+	SolutionUpdateError         I18nKey = "solution.update_error"          // 扫描方案更新失败.
+	SolutionUpdateSuccess       I18nKey = "solution.update_success"        // 扫描方案更新成功.
+
 	// Space 相关常量
 	SpaceArtifactsTitleSuccess   I18nKey = "space.artifacts_title_success"   // 仓库设置保存成功
 	SpaceBodyParamError          I18nKey = "space.body_param_error"          // Body 参数解析失败.
