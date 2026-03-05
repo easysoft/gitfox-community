@@ -1296,6 +1296,10 @@ definitions:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanLangName'
       name:
         type: string
+      plugin:
+        type: string
+      rulesCount:
+        type: integer
       status:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleStatus'
       tag:
@@ -1400,6 +1404,160 @@ definitions:
       type:
         type: string
     type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanCondition:
+    properties:
+      createdBy:
+        type: string
+      createdDate:
+        type: string
+      deleted:
+        type: boolean
+      editedBy:
+        type: string
+      editedDate:
+        type: string
+      id:
+        type: integer
+      planID:
+        type: integer
+      priority:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRulePriority'
+      repoID:
+        type: integer
+      threshold:
+        type: integer
+      triggerID:
+        type: integer
+      type:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRuleType'
+      unit:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRuleUnit'
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanConditionItem:
+    properties:
+      priority:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRulePriority'
+      threshold:
+        type: integer
+      type:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRuleType'
+      unit:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRuleUnit'
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanConditionReqForBatchCreate:
+    properties:
+      conditions:
+        items:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanConditionItem'
+        type: array
+    required:
+    - conditions
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanConditionReqForBatchDelete:
+    properties:
+      ids:
+        items:
+          type: integer
+        type: array
+    required:
+    - ids
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanPlan:
+    properties:
+      branches:
+        type: string
+      createdBy:
+        type: string
+      createdDate:
+        type: string
+      deleted:
+        type: boolean
+      desc:
+        type: string
+      editedBy:
+        type: string
+      editedDate:
+        type: string
+      files:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      repoID:
+        type: integer
+      scanType:
+        type: string
+      solutionCount:
+        type: integer
+      solutionIDs:
+        items:
+          type: integer
+        type: array
+      solutions:
+        items:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.Solution'
+        type: array
+      triggerCount:
+        type: integer
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanPlanReqFilter:
+    properties:
+      name:
+        type: string
+      order:
+        default: desc
+        type: string
+      page:
+        default: 1
+        type: integer
+      pageSize:
+        default: 30
+        type: integer
+      sort:
+        default: id
+        type: string
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanPlanReqForBind:
+    properties:
+      solutionIDs:
+        items:
+          type: integer
+        type: array
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanPlanReqForCreate:
+    properties:
+      branches:
+        type: string
+      desc:
+        type: string
+      files:
+        type: string
+      name:
+        maxLength: 100
+        type: string
+      scanType:
+        type: string
+      solutionIDs:
+        items:
+          type: integer
+        type: array
+    required:
+    - name
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanPlanReqForUpdate:
+    properties:
+      branches:
+        type: string
+      desc:
+        type: string
+      files:
+        type: string
+      name:
+        type: string
+      scanType:
+        type: string
+    type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRuleBind:
     enum:
     - bind
@@ -1471,6 +1629,100 @@ definitions:
     - ScanRuleTypeComplian
     - ScanRuleTypeOptimize
     - scanRuleTypeNone
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRuleUnit:
+    enum:
+    - count
+    - percent
+    type: string
+    x-enum-varnames:
+    - ScanRuleUnitCount
+    - ScanRuleUnitPercent
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTrigger:
+    properties:
+      actions:
+        type: string
+      createdBy:
+        type: string
+      createdDate:
+        type: string
+      cron:
+        type: string
+      cronBranch:
+        type: string
+      deleted:
+        type: boolean
+      desc:
+        type: string
+      disabled:
+        type: boolean
+      editedBy:
+        type: string
+      editedDate:
+        type: string
+      id:
+        type: integer
+      keywords:
+        type: string
+      name:
+        type: string
+      planID:
+        type: integer
+      repoID:
+        type: integer
+      type:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTriggerType'
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTriggerReqForCreate:
+    properties:
+      actions:
+        type: string
+      cron:
+        type: string
+      cronBranch:
+        type: string
+      desc:
+        type: string
+      disabled:
+        type: boolean
+      keywords:
+        type: string
+      name:
+        maxLength: 100
+        type: string
+      type:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTriggerType'
+    required:
+    - name
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTriggerReqForUpdate:
+    properties:
+      actions:
+        type: string
+      cron:
+        type: string
+      cronBranch:
+        type: string
+      desc:
+        type: string
+      disabled:
+        type: boolean
+      keywords:
+        type: string
+      name:
+        type: string
+      type:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTriggerType'
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTriggerType:
+    enum:
+    - cron
+    - manual
+    - event
+    type: string
+    x-enum-varnames:
+    - ScanTriggerTypeCron
+    - ScanTriggerTypeManual
+    - ScanTriggerTypeEvent
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.Solution:
     properties:
       createdBy:
@@ -1491,12 +1743,22 @@ definitions:
         type: integer
       isCustom:
         type: boolean
+      langs:
+        items:
+          type: string
+        type: array
       name:
         type: string
+      plugins:
+        items:
+          type: string
+        type: array
       ruleSets:
         items:
           $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.RuleSet'
         type: array
+      ruleSetsCount:
+        type: integer
       rulesCount:
         type: integer
       status:
@@ -1538,8 +1800,6 @@ definitions:
         type: string
       descEn:
         type: string
-      isCustom:
-        type: boolean
       name:
         maxLength: 100
         type: string
@@ -4335,6 +4595,704 @@ paths:
                   type: array
               type: object
       summary: 查询所有扫描插件
+      tags:
+      - scan
+  /scan/repos/{repoID}/scanplans:
+    post:
+      consumes:
+      - application/json
+      description: 在指定仓库下创建扫描计划，并可选绑定扫描方案
+      parameters:
+      - description: 仓库 ID
+        in: path
+        name: repoID
+        required: true
+        type: integer
+      - description: 创建请求参数
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanPlanReqForCreate'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: 创建成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanPlan'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "401":
+          description: 未授权（会话不存在或已过期）
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 仓库创建新的扫描计划
+      tags:
+      - scan
+  /scan/repos/{repoID}/scanplans/{planID}:
+    delete:
+      consumes:
+      - application/json
+      description: 根据计划 ID 删除扫描计划及其绑定关系
+      parameters:
+      - description: 仓库 ID
+        in: path
+        name: repoID
+        required: true
+        type: integer
+      - description: 计划 ID
+        in: path
+        name: planID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 删除成功
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 删除指定仓库扫描计划
+      tags:
+      - scan
+    get:
+      consumes:
+      - application/json
+      description: 根据计划 ID 查询扫描计划详情
+      parameters:
+      - description: 仓库 ID
+        in: path
+        name: repoID
+        required: true
+        type: integer
+      - description: 计划 ID
+        in: path
+        name: planID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 查询成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanPlan'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 获取指定仓库扫描计划
+      tags:
+      - scan
+    patch:
+      consumes:
+      - application/json
+      description: 根据计划 ID 更新扫描计划配置
+      parameters:
+      - description: 仓库 ID
+        in: path
+        name: repoID
+        required: true
+        type: integer
+      - description: 计划 ID
+        in: path
+        name: planID
+        required: true
+        type: integer
+      - description: 更新请求参数
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanPlanReqForUpdate'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanPlan'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "401":
+          description: 未授权（会话不存在或已过期）
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 更新仓库扫描计划信息
+      tags:
+      - scan
+  /scan/repos/{repoID}/scanplans/{planID}/bind:
+    post:
+      consumes:
+      - application/json
+      description: 将指定扫描方案绑定到扫描计划
+      parameters:
+      - description: 仓库 ID
+        in: path
+        name: repoID
+        required: true
+        type: integer
+      - description: 计划 ID
+        in: path
+        name: planID
+        required: true
+        type: integer
+      - description: 绑定请求参数
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanPlanReqForBind'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 绑定成功
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 为扫描计划绑定扫描方案
+      tags:
+      - scan
+  /scan/repos/{repoID}/scanplans/{planID}/triggers:
+    get:
+      consumes:
+      - application/json
+      description: 根据扫描计划 ID 查询触发器列表
+      parameters:
+      - description: 仓库 ID
+        in: path
+        name: repoID
+        required: true
+        type: integer
+      - description: 计划 ID
+        in: path
+        name: planID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 查询成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTrigger'
+                  type: array
+                listArgs:
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListArgs'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 获取扫描计划的触发器列表
+      tags:
+      - scan
+    post:
+      consumes:
+      - application/json
+      description: 在指定扫描计划下创建触发器配置
+      parameters:
+      - description: 仓库 ID
+        in: path
+        name: repoID
+        required: true
+        type: integer
+      - description: 计划 ID
+        in: path
+        name: planID
+        required: true
+        type: integer
+      - description: 创建请求参数
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTriggerReqForCreate'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: 创建成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTrigger'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "401":
+          description: 未授权（会话不存在或已过期）
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 为扫描计划创建触发器
+      tags:
+      - scan
+  /scan/repos/{repoID}/scanplans/{planID}/triggers/{triggerID}:
+    delete:
+      consumes:
+      - application/json
+      description: 根据触发器 ID 删除触发器
+      parameters:
+      - description: 仓库 ID
+        in: path
+        name: repoID
+        required: true
+        type: integer
+      - description: 计划 ID
+        in: path
+        name: planID
+        required: true
+        type: integer
+      - description: 触发器 ID
+        in: path
+        name: triggerID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 删除成功
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 删除指定触发器
+      tags:
+      - scan
+    get:
+      consumes:
+      - application/json
+      description: 根据触发器 ID 查询触发器详情
+      parameters:
+      - description: 仓库 ID
+        in: path
+        name: repoID
+        required: true
+        type: integer
+      - description: 计划 ID
+        in: path
+        name: planID
+        required: true
+        type: integer
+      - description: 触发器 ID
+        in: path
+        name: triggerID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 查询成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTrigger'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 获取触发器详细信息
+      tags:
+      - scan
+    patch:
+      consumes:
+      - application/json
+      description: 根据触发器 ID 更新触发器配置
+      parameters:
+      - description: 仓库 ID
+        in: path
+        name: repoID
+        required: true
+        type: integer
+      - description: 计划 ID
+        in: path
+        name: planID
+        required: true
+        type: integer
+      - description: 触发器 ID
+        in: path
+        name: triggerID
+        required: true
+        type: integer
+      - description: 更新请求参数
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTriggerReqForUpdate'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTrigger'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "401":
+          description: 未授权（会话不存在或已过期）
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 更新触发器配置
+      tags:
+      - scan
+  /scan/repos/{repoID}/scanplans/{planID}/triggers/{triggerID}/conditions:
+    get:
+      consumes:
+      - application/json
+      description: 根据触发器 ID 查询条件列表
+      parameters:
+      - description: 仓库 ID
+        in: path
+        name: repoID
+        required: true
+        type: integer
+      - description: 计划 ID
+        in: path
+        name: planID
+        required: true
+        type: integer
+      - description: 触发器 ID
+        in: path
+        name: triggerID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 查询成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanCondition'
+                  type: array
+                listArgs:
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListArgs'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 获取触发器的条件列表
+      tags:
+      - scan
+  /scan/repos/{repoID}/scanplans/{planID}/triggers/{triggerID}/conditions/delete:
+    post:
+      consumes:
+      - application/json
+      description: 按条件 ID 列表批量删除触发器条件
+      parameters:
+      - description: 仓库 ID
+        in: path
+        name: repoID
+        required: true
+        type: integer
+      - description: 计划 ID
+        in: path
+        name: planID
+        required: true
+        type: integer
+      - description: 触发器 ID
+        in: path
+        name: triggerID
+        required: true
+        type: integer
+      - description: 批量删除请求参数
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanConditionReqForBatchDelete'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 删除成功
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 删除触发器条件
+      tags:
+      - scan
+  /scan/repos/{repoID}/scanplans/{planID}/triggers/{triggerID}/conditions/new:
+    post:
+      consumes:
+      - application/json
+      description: 为指定触发器批量创建条件
+      parameters:
+      - description: 仓库 ID
+        in: path
+        name: repoID
+        required: true
+        type: integer
+      - description: 计划 ID
+        in: path
+        name: planID
+        required: true
+        type: integer
+      - description: 触发器 ID
+        in: path
+        name: triggerID
+        required: true
+        type: integer
+      - description: 批量创建请求参数
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanConditionReqForBatchCreate'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 创建成功
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "401":
+          description: 未授权（会话不存在或已过期）
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 为触发器添加条件
+      tags:
+      - scan
+  /scan/repos/{repoID}/scanplans/{planID}/unbind:
+    get:
+      consumes:
+      - application/json
+      description: 查询指定扫描计划未绑定的扫描方案列表
+      parameters:
+      - description: 仓库 ID
+        in: path
+        name: repoID
+        required: true
+        type: integer
+      - description: 计划 ID
+        in: path
+        name: planID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 查询成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.Solution'
+                  type: array
+                listArgs:
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListArgs'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 获取扫描计划可绑定的扫描方案列表
+      tags:
+      - scan
+    post:
+      consumes:
+      - application/json
+      description: 解除扫描计划与指定扫描方案的关联关系
+      parameters:
+      - description: 仓库 ID
+        in: path
+        name: repoID
+        required: true
+        type: integer
+      - description: 计划 ID
+        in: path
+        name: planID
+        required: true
+        type: integer
+      - description: 解绑请求参数
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanPlanReqForBind'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 解绑成功
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 解除扫描计划与扫描方案的绑定
+      tags:
+      - scan
+  /scan/repos/{repoID}/scanplans/list:
+    post:
+      consumes:
+      - application/json
+      description: 根据仓库 ID 和过滤条件查询扫描计划列表，支持分页
+      parameters:
+      - description: 仓库 ID
+        in: path
+        name: repoID
+        required: true
+        type: integer
+      - description: 查询过滤条件
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanPlanReqFilter'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 查询成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanPlan'
+                  type: array
+                listArgs:
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListArgs'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 获取指定仓库的扫描计划列表
       tags:
       - scan
   /scan/rules/{id}:
