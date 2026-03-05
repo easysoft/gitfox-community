@@ -160,6 +160,7 @@ func (s *Runner) run(ctx context.Context, stage *drone.Stage, data *client.Conte
 	// 	return v
 	// }
 
+	// 临时兼容
 	stageRepo := &drone.Repo{}
 	if data.Repo != nil {
 		stageRepo = data.Repo
@@ -237,13 +238,20 @@ func (s *Runner) run(ctx context.Context, stage *drone.Stage, data *client.Conte
 	// all steps have an identifier
 	normalize.Normalize(config)
 
+	// 临时兼容
+	argsRepo := &drone.Repo{
+		Timeout: int64((10 * time.Hour).Seconds()),
+	}
+	if data.Repo != nil {
+		argsRepo = data.Repo
+	}
 	// compile the yaml configuration file to an intermediate
 	// representation, and then
 	args := compiler.Args{
 		Config: config,
 		Build:  data.Build,
 		Stage:  stage,
-		Repo:   data.Repo,
+		Repo:   argsRepo,
 		System: data.System,
 		Netrc:  data.Netrc,
 		Secret: secret.Static(data.Secrets),
