@@ -8,7 +8,18 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/resources"
 )
 
-//go:generate mockgen -source=$GOFILE -destination=mock/_store.go -package=mock
+//go:generate mockgen -source=$GOFILE -destination=mock/scan_store.go -package=mock
+
+type IRule interface {
+	ListByRuleSetID(ctx context.Context, ruleIDs []int64, filter scanModel.RuleReqFilter) (*database.PageResult[*scanModel.Rule], error)
+	ExcludeByRuleSetID(ctx context.Context, excludeIDs []int64, filter scanModel.RuleReqFilter) (*database.PageResult[*scanModel.Rule], error)
+
+	GetByID(ctx context.Context, id uint) (*scanModel.Rule, error)
+	UpdateStatus(ctx context.Context, id uint) error
+	List(ctx context.Context, filter scanModel.RuleListReqFilter) (*database.PageResult[*scanModel.Rule], error)
+	AllScanBaseByField(ctx context.Context, field string) ([]scanModel.ScanBaseResp, error)
+	Migrate(ctx context.Context, rulesFile *resources.RulesFile) error
+}
 
 type IRuleSet interface {
 	Create(ctx context.Context, ruleSet *RuleSet) (*scanModel.RuleSet, error)
@@ -36,13 +47,35 @@ type ISolution interface {
 	ListRulesets(ctx context.Context, solutionID uint) ([]*scanModel.RuleSet, error)
 	ListUnbindRulesets(ctx context.Context, solutionID uint) ([]*scanModel.RuleSet, error)
 }
-type IRule interface {
-	ListByRuleSetID(ctx context.Context, ruleIDs []int64, filter scanModel.RuleReqFilter) (*database.PageResult[*scanModel.Rule], error)
-	ExcludeByRuleSetID(ctx context.Context, excludeIDs []int64, filter scanModel.RuleReqFilter) (*database.PageResult[*scanModel.Rule], error)
 
-	GetByID(ctx context.Context, id uint) (*scanModel.Rule, error)
-	UpdateStatus(ctx context.Context, id uint) error
-	List(ctx context.Context, filter scanModel.RuleListReqFilter) (*database.PageResult[*scanModel.Rule], error)
-	AllScanBaseByField(ctx context.Context, field string) ([]scanModel.ScanBaseResp, error)
-	Migrate(ctx context.Context, rulesFile *resources.RulesFile) error
+// IScanPlan 扫描计划 store 接口
+type IScanPlan interface {
+	Create(ctx context.Context, plan *ScanPlan) (*scanModel.ScanPlan, error)
+	GetByID(ctx context.Context, id uint) (*scanModel.ScanPlan, error)
+	GetByRepoIDAndID(ctx context.Context, repoID uint, id uint) (*scanModel.ScanPlan, error)
+	FindByName(ctx context.Context, repoID uint, name string) (*scanModel.ScanPlan, error)
+	Update(ctx context.Context, plan *ScanPlan) error
+	Delete(ctx context.Context, id uint) error
+	List(ctx context.Context, repoID uint, filter scanModel.ScanPlanReqFilter) (*database.PageResult[*scanModel.ScanPlan], error)
+	GetSolutionIDList(ctx context.Context, planID uint) ([]int64, error)
+	BindSolutions(ctx context.Context, planID uint, solutionIDs []uint) error
+	UnbindSolutions(ctx context.Context, planID uint, solutionIDs []uint) error
+	ListUnbindSolutions(ctx context.Context, planID uint) ([]*scanModel.Solution, error)
+}
+
+// IScanTrigger 触发器 store 接口
+type IScanTrigger interface {
+	Create(ctx context.Context, trigger *ScanPlanTrigger) (*scanModel.ScanTrigger, error)
+	GetByID(ctx context.Context, id uint) (*scanModel.ScanTrigger, error)
+	GetByRepoPlanAndID(ctx context.Context, repoID uint, planID uint, id uint) (*scanModel.ScanTrigger, error)
+	Update(ctx context.Context, trigger *ScanPlanTrigger) error
+	Delete(ctx context.Context, id uint) error
+	List(ctx context.Context, planID uint) ([]*scanModel.ScanTrigger, error)
+}
+
+// IScanCondition 触发器条件 store 接口
+type IScanCondition interface {
+	BatchCreate(ctx context.Context, conditions []*ScanPlanCondition) error
+	BatchDelete(ctx context.Context, repoID uint, planID uint, triggerID uint, ids []uint) error
+	List(ctx context.Context, triggerID uint) ([]*scanModel.ScanCondition, error)
 }

@@ -16,7 +16,19 @@ var scanRulePriorities = sortEnum([]ScanRulePriority{
 	ScanRulePriorityHigh,
 })
 
-func (s ScanRulePriority) String() string    { return string(s) }
+func (s ScanRulePriority) String() string    { return s.ToString() }
+func (s ScanRulePriority) ToString() string {
+	switch s {
+	case ScanRulePriorityLow:
+		return "low"
+	case ScanRulePriorityMedium:
+		return "medium"
+	case ScanRulePriorityHigh:
+		return "high"
+	default:
+		return ""
+	}
+}
 func (ScanRulePriority) Enum() []interface{} { return toInterfaceSlice(scanRulePriorities) }
 func (s ScanRulePriority) Sanitize() (ScanRulePriority, bool) {
 	return Sanitize(s, GetAllScanRulePriorities)
