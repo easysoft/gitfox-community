@@ -16,6 +16,6 @@ CREATE TABLE IF NOT EXISTS `ops_scan_plans` (
 ENGINE=InnoDB COMMENT='扫描计划表';
 
 CREATE UNIQUE INDEX uk_name_repo_deleted ON ops_scan_plans (`repoID`, `name`, `deleted`);
-CREATE INDEX idx_repoID ON ops_scan_plans (`repoID`);
+CREATE INDEX idx_repoID_deleted ON ops_scan_plans (`repoID`, `deleted`);
 CREATE INDEX idx_name ON ops_scan_plans (`name`);
 CREATE INDEX idx_deleted ON ops_scan_plans (`deleted`);

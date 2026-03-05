@@ -16,6 +16,6 @@ CREATE TABLE IF NOT EXISTS `ops_scan_plan_conditions` (
 )
 ENGINE=InnoDB COMMENT='扫描计划触发条件表';
 
-CREATE INDEX idx_triggerID ON ops_scan_plan_conditions (`triggerID`);
+CREATE INDEX idx_triggerID_deleted ON ops_scan_plan_conditions (`triggerID`, `deleted`);
 CREATE INDEX idx_repo_plan_trigger_deleted ON ops_scan_plan_conditions (`repoID`, `planID`, `triggerID`, `deleted`);
 CREATE INDEX idx_deleted ON ops_scan_plan_conditions (`deleted`);

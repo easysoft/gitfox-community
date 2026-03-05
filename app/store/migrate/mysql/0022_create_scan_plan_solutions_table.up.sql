@@ -13,5 +13,6 @@ ENGINE=InnoDB COMMENT='扫描计划与扫描方案关联表';
 
 CREATE UNIQUE INDEX uk_plan_solution_deleted ON ops_scan_plan_solutions (`planID`, `solutionID`, `deleted`);
 CREATE INDEX idx_planID ON ops_scan_plan_solutions (`planID`);
+CREATE INDEX idx_planID_deleted ON ops_scan_plan_solutions (`planID`, `deleted`);
 CREATE INDEX idx_solutionID ON ops_scan_plan_solutions (`solutionID`);
 CREATE INDEX idx_deleted ON ops_scan_plan_solutions (`deleted`);
