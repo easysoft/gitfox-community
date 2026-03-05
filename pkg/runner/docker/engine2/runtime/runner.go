@@ -119,7 +119,7 @@ func (s *Runner) run(ctx context.Context, stage *drone.Stage, data *client.Conte
 	ctxdone, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	timeout := time.Duration(int64((10 * time.Hour).Seconds())) * time.Minute
+	timeout := time.Duration(int64((10 * time.Hour).Seconds())) * time.Second
 	ctxtimeout, cancel := context.WithTimeout(ctxdone, timeout)
 	defer cancel()
 
@@ -160,10 +160,14 @@ func (s *Runner) run(ctx context.Context, stage *drone.Stage, data *client.Conte
 	// 	return v
 	// }
 
+	stageRepo := &drone.Repo{}
+	if data.Repo != nil {
+		stageRepo = data.Repo
+	}
 	state := &pipeline.State{
 		Build:  data.Build,
 		Stage:  stage,
-		Repo:   data.Repo,
+		Repo:   stageRepo,
 		System: data.System,
 	}
 

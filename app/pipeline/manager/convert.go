@@ -114,10 +114,10 @@ func ConvertToDroneStage(stage *stageModel.StageWithSteps) *drone.Stage {
 	}
 }
 
-func ConvertToDroneSteps(steps []stepModel.Step) []*drone.Step {
+func ConvertToDroneSteps(steps []*stepModel.Step) []*drone.Step {
 	droneSteps := make([]*drone.Step, len(steps))
 	for i, step := range steps {
-		droneSteps[i] = ConvertToDroneStep(&step)
+		droneSteps[i] = ConvertToDroneStep(step)
 	}
 	return droneSteps
 }
@@ -170,10 +170,10 @@ func ConvertFromDroneStep(step *drone.Step) *stepModel.Step {
 	}
 }
 
-func ConvertFromDroneSteps(steps []*drone.Step) []stepModel.Step {
-	typesSteps := make([]stepModel.Step, len(steps))
+func ConvertFromDroneSteps(steps []*drone.Step) []*stepModel.Step {
+	typesSteps := make([]*stepModel.Step, len(steps))
 	for i, step := range steps {
-		typesSteps[i] = stepModel.Step{
+		typesSteps[i] = &stepModel.Step{
 			ID:       uint(step.ID),
 			StageID:  uint(step.StageID),
 			SN:       step.Number,
