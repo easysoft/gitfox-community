@@ -81,7 +81,7 @@ type SSHConfig struct {
 	Enable      bool   `yaml:"enable"`
 	Host        string `yaml:"host"`
 	Port        int    `yaml:"port"`
-	DefaultUser string `yaml:"defaultUser"`
+	DefaultUser string `yaml:"defaultUser" default:"git"`
 	HostKeysDir string `envconfig:"GITFOX_SSH_HOST_KEYS_DIR" default:"/data/gitfox/ssh"`
 }
 
