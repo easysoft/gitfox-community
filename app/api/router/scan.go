@@ -37,5 +37,22 @@ func registerScanRoutes(r *gin.RouterGroup, controller *Controller) {
 			ruleSetsWithID.POST("/rules/bind", controller.Scan.BindRule)
 			ruleSetsWithID.POST("/rules/unbind", controller.Scan.UnBindRule)
 		}
+
+		// 扫描方案相关路由
+		solutions := rule.Group("/solutions")
+		solutions.POST("", controller.Scan.SolutionCreate)
+		solutions.POST("/list", controller.Scan.SolutionList)
+		solutionsWithID := solutions.Group(":id")
+		{
+			solutionsWithID.GET("", controller.Scan.SolutionGet)
+			solutionsWithID.PUT("", controller.Scan.SolutionUpdate)
+			solutionsWithID.DELETE("", controller.Scan.SolutionDelete)
+			solutionsWithID.PATCH("/status", controller.Scan.SolutionUpdateStatus)
+			solutionsWithID.PATCH("/draft", controller.Scan.SolutionUpdateStatus)
+			solutionsWithID.GET("/rulesets", controller.Scan.SolutionListRulesets)
+			solutionsWithID.GET("/rulesets/unbind", controller.Scan.SolutionListUnbindRulesets)
+			solutionsWithID.POST("/rulesets/bind", controller.Scan.SolutionBindRulesets)
+			solutionsWithID.POST("/rulesets/unbind", controller.Scan.SolutionUnbindRulesets)
+		}
 	}
 }

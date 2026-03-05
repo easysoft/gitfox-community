@@ -8,6 +8,8 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/resources"
 )
 
+//go:generate mockgen -source=$GOFILE -destination=mock/_store.go -package=mock
+
 type IRuleSet interface {
 	Create(ctx context.Context, ruleSet *RuleSet) (*scanModel.RuleSet, error)
 	GetByID(ctx context.Context, id uint) (*scanModel.RuleSet, error)
@@ -20,6 +22,20 @@ type IRuleSet interface {
 	UnBindRule(ctx context.Context, ruleSetID uint, ruleIDs []uint) error
 }
 
+// ISolution 扫描方案 store 接口
+type ISolution interface {
+	Create(ctx context.Context, solution *SolutionRules) (*scanModel.Solution, error)
+	GetByID(ctx context.Context, id uint) (*scanModel.Solution, error)
+	Find(ctx context.Context, name string) (*scanModel.Solution, error)
+	Update(ctx context.Context, solution *SolutionRules) error
+	Delete(ctx context.Context, id uint) error
+	List(ctx context.Context, filter scanModel.SolutionReqFilter) (*database.PageResult[*scanModel.Solution], error)
+	GetRulesetIDList(ctx context.Context, solutionID uint) ([]int64, error)
+	BindRulesets(ctx context.Context, solutionID uint, rulesetIDs []uint) error
+	UnbindRulesets(ctx context.Context, solutionID uint, rulesetIDs []uint) error
+	ListRulesets(ctx context.Context, solutionID uint) ([]*scanModel.RuleSet, error)
+	ListUnbindRulesets(ctx context.Context, solutionID uint) ([]*scanModel.RuleSet, error)
+}
 type IRule interface {
 	ListByRuleSetID(ctx context.Context, ruleIDs []int64, filter scanModel.RuleReqFilter) (*database.PageResult[*scanModel.Rule], error)
 	ExcludeByRuleSetID(ctx context.Context, excludeIDs []int64, filter scanModel.RuleReqFilter) (*database.PageResult[*scanModel.Rule], error)

@@ -46,6 +46,7 @@ type RuleSet struct {
 	Desc        string                  `json:"desc"`
 	DescEn      string                  `json:"descEn,omitempty"`
 	Lang        constant.ScanLangName   `json:"lang"`
+	Plugin      string                  `json:"plugin,omitempty"`
 	Tag         string                  `json:"tag"`
 	IsCustom    bool                    `json:"isCustom"`
 	Status      constant.ScanRuleStatus `json:"status"`
@@ -54,6 +55,7 @@ type RuleSet struct {
 	EditedBy    string                  `json:"editedBy"`
 	EditedDate  *time.Time              `json:"editedDate"` // 允许 NULL，用指针类型
 	Deleted     bool                    `json:"deleted"`
+	RulesCount  int64                   `json:"rulesCount"`
 }
 
 type RuleSetReqForBind struct {

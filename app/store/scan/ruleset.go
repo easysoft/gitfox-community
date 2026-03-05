@@ -130,6 +130,7 @@ func mapToModel(data RuleSet) *scanModel.RuleSet {
 		Desc:        data.Desc,
 		DescEn:      data.DescEn,
 		Lang:        data.Lang,
+		Plugin:      data.Plugin,
 		Tag:         data.Tag,
 		Status:      data.Status,
 		CreatedBy:   data.CreatedBy,

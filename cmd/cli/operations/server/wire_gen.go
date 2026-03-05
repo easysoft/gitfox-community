@@ -253,7 +253,9 @@ func NewApp(mode string) (*App, func(), error) {
 	ruleStore := scan.NewRuleStore(db)
 	ruleSetService := scan2.NewRuleSetService(ruleSetStore, ruleStore)
 	ruleService := scan2.NewRuleService(ruleStore, membershipAuthorizer)
-	scanController := scan3.NewScanController(ruleSetService, ruleService)
+	solutionStore := scan.NewSolutionStore(db)
+	solutionService := scan2.NewSolutionService(solutionStore)
+	scanController := scan3.NewScanController(ruleSetService, ruleService, solutionService)
 	routerController := provider.NewControllers(spaceController, controller, pipelineController, executionController, runnerController, tagController, commitController, repoController, userController, gitController, scanController)
 	i18nManager, err := provider.NewI18nManager(config)
 	if err != nil {
