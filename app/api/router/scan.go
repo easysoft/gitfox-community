@@ -54,5 +54,40 @@ func registerScanRoutes(r *gin.RouterGroup, controller *Controller) {
 			solutionsWithID.POST("/rulesets/bind", controller.Scan.SolutionBindRulesets)
 			solutionsWithID.POST("/rulesets/unbind", controller.Scan.SolutionUnbindRulesets)
 		}
+		// 仓库维度扫描计划路由：/scan/repos/:repoID/scanplans/...
+		repos := rule.Group("/repos/:repoID")
+		{
+			scanPlans := repos.Group("/scanplans")
+			scanPlans.POST("", controller.Scan.ScanPlanCreate)
+			scanPlans.POST("/list", controller.Scan.ScanPlanList)
+
+			planWithID := scanPlans.Group("/:planID")
+			{
+				planWithID.GET("", controller.Scan.ScanPlanGet)
+				planWithID.PATCH("", controller.Scan.ScanPlanUpdate)
+				planWithID.DELETE("", controller.Scan.ScanPlanDelete)
+				planWithID.POST("/bind", controller.Scan.ScanPlanBindSolution)
+				planWithID.POST("/unbind", controller.Scan.ScanPlanUnbindSolution)
+				planWithID.GET("/unbind", controller.Scan.ScanPlanListUnbindSolution)
+
+				// 触发器路由
+				triggers := planWithID.Group("/triggers")
+				triggers.GET("", controller.Scan.ScanTriggerList)
+				triggers.POST("", controller.Scan.ScanTriggerCreate)
+
+				triggerWithID := triggers.Group("/:triggerID")
+				{
+					triggerWithID.GET("", controller.Scan.ScanTriggerGet)
+					triggerWithID.PATCH("", controller.Scan.ScanTriggerUpdate)
+					triggerWithID.DELETE("", controller.Scan.ScanTriggerDelete)
+
+					// 触发器条件路由
+					conditions := triggerWithID.Group("/conditions")
+					conditions.GET("", controller.Scan.ScanConditionList)
+					conditions.POST("/new", controller.Scan.ScanConditionBatchCreate)
+					conditions.POST("/delete", controller.Scan.ScanConditionBatchDelete)
+				}
+			}
+		}
 	}
 }

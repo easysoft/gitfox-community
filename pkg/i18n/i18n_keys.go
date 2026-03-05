@@ -96,6 +96,16 @@ const (
 	CommitPathParamError       I18nKey = "commit.path_param_error"       // Path 参数解析失败.
 	CommitQueryParamError      I18nKey = "commit.query_param_error"      // Query 参数解析失败.
 
+	// Condition 相关常量
+	ConditionBatchCreateError   I18nKey = "condition.batch_create_error"   // 触发器条件批量创建失败.
+	ConditionBatchCreateSuccess I18nKey = "condition.batch_create_success" // 触发器条件批量创建成功.
+	ConditionBatchDeleteError   I18nKey = "condition.batch_delete_error"   // 触发器条件批量删除失败.
+	ConditionBatchDeleteSuccess I18nKey = "condition.batch_delete_success" // 触发器条件批量删除成功.
+	ConditionBodyParamError     I18nKey = "condition.body_param_error"     // 请求体参数解析失败.
+	ConditionListError          I18nKey = "condition.list_error"           // 触发器条件列表查询失败.
+	ConditionListSuccess        I18nKey = "condition.list_success"         // 触发器条件列表查询成功.
+	ConditionPathParamError     I18nKey = "condition.path_param_error"     // 路径参数解析失败.
+
 	// Db 相关常量
 	DbCheckConstraintViolation I18nKey = "db.check_constraint_violation" // 检查约束冲突.
 	DbConnectionFailed         I18nKey = "db.connection_failed"          // 数据库连接失败.
@@ -189,6 +199,27 @@ const (
 	PipelineTriggerParamError          I18nKey = "pipeline.trigger_param_error"            // 触发参数解析失败.
 	PipelineTriggerUpdateError         I18nKey = "pipeline.trigger_update_error"           // 触发更新失败.
 	PipelineTriggerUpdateSuccess       I18nKey = "pipeline.trigger_update_success"         // 触发更新成功.
+
+	// Plan 相关常量
+	PlanAlreadyExists       I18nKey = "plan.already_exists"        // 扫描计划名称已存在.
+	PlanBindError           I18nKey = "plan.bind_error"            // 扫描计划绑定扫描方案失败.
+	PlanBindSuccess         I18nKey = "plan.bind_success"          // 扫描计划绑定扫描方案成功.
+	PlanBodyParamError      I18nKey = "plan.body_param_error"      // 请求体参数解析失败.
+	PlanCreateError         I18nKey = "plan.create_error"          // 扫描计划创建失败.
+	PlanCreateSuccess       I18nKey = "plan.create_success"        // 扫描计划创建成功.
+	PlanDeleteError         I18nKey = "plan.delete_error"          // 扫描计划删除失败.
+	PlanDeleteSuccess       I18nKey = "plan.delete_success"        // 扫描计划删除成功.
+	PlanListError           I18nKey = "plan.list_error"            // 扫描计划列表查询失败.
+	PlanListSuccess         I18nKey = "plan.list_success"          // 扫描计划列表查询成功.
+	PlanPathParamError      I18nKey = "plan.path_param_error"      // 路径参数解析失败.
+	PlanQueryError          I18nKey = "plan.query_error"           // 扫描计划详情查询失败.
+	PlanQuerySuccess        I18nKey = "plan.query_success"         // 扫描计划详情查询成功.
+	PlanSolutionListError   I18nKey = "plan.solution_list_error"   // 扫描计划可绑定方案列表查询失败.
+	PlanSolutionListSuccess I18nKey = "plan.solution_list_success" // 扫描计划可绑定方案列表查询成功.
+	PlanUnbindError         I18nKey = "plan.unbind_error"          // 扫描计划解绑扫描方案失败.
+	PlanUnbindSuccess       I18nKey = "plan.unbind_success"        // 扫描计划解绑扫描方案成功.
+	PlanUpdateError         I18nKey = "plan.update_error"          // 扫描计划更新失败.
+	PlanUpdateSuccess       I18nKey = "plan.update_success"        // 扫描计划更新成功.
 
 	// Pullrequest 相关常量
 	PullrequestBodyParamError                I18nKey = "pullrequest.body_param_error"                   // Body 参数解析失败.
@@ -375,4 +406,18 @@ const (
 	TagListSuccess     I18nKey = "tag.list_success"      // 查询标签列表成功.
 	TagPathParamError  I18nKey = "tag.path_param_error"  // Path 参数解析失败.
 	TagQueryParamError I18nKey = "tag.query_param_error" // Query 参数解析失败.
+
+	// Trigger 相关常量
+	TriggerBodyParamError I18nKey = "trigger.body_param_error" // 请求体参数解析失败.
+	TriggerCreateError    I18nKey = "trigger.create_error"     // 触发器创建失败.
+	TriggerCreateSuccess  I18nKey = "trigger.create_success"   // 触发器创建成功.
+	TriggerDeleteError    I18nKey = "trigger.delete_error"     // 触发器删除失败.
+	TriggerDeleteSuccess  I18nKey = "trigger.delete_success"   // 触发器删除成功.
+	TriggerListError      I18nKey = "trigger.list_error"       // 触发器列表查询失败.
+	TriggerListSuccess    I18nKey = "trigger.list_success"     // 触发器列表查询成功.
+	TriggerPathParamError I18nKey = "trigger.path_param_error" // 路径参数解析失败.
+	TriggerQueryError     I18nKey = "trigger.query_error"      // 触发器详情查询失败.
+	TriggerQuerySuccess   I18nKey = "trigger.query_success"    // 触发器详情查询成功.
+	TriggerUpdateError    I18nKey = "trigger.update_error"     // 触发器更新失败.
+	TriggerUpdateSuccess  I18nKey = "trigger.update_success"   // 触发器更新成功.
 )
