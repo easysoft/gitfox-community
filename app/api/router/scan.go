@@ -37,5 +37,57 @@ func registerScanRoutes(r *gin.RouterGroup, controller *Controller) {
 			ruleSetsWithID.POST("/rules/bind", controller.Scan.BindRule)
 			ruleSetsWithID.POST("/rules/unbind", controller.Scan.UnBindRule)
 		}
+
+		// 扫描方案相关路由
+		solutions := rule.Group("/solutions")
+		solutions.POST("", controller.Scan.SolutionCreate)
+		solutions.POST("/list", controller.Scan.SolutionList)
+		solutionsWithID := solutions.Group(":id")
+		{
+			solutionsWithID.GET("", controller.Scan.SolutionGet)
+			solutionsWithID.PUT("", controller.Scan.SolutionUpdate)
+			solutionsWithID.DELETE("", controller.Scan.SolutionDelete)
+			solutionsWithID.PATCH("/status", controller.Scan.SolutionUpdateStatus)
+			solutionsWithID.PATCH("/draft", controller.Scan.SolutionUpdateStatus)
+			solutionsWithID.GET("/rulesets", controller.Scan.SolutionListRulesets)
+			solutionsWithID.GET("/rulesets/unbind", controller.Scan.SolutionListUnbindRulesets)
+			solutionsWithID.POST("/rulesets/bind", controller.Scan.SolutionBindRulesets)
+			solutionsWithID.POST("/rulesets/unbind", controller.Scan.SolutionUnbindRulesets)
+		}
+		// 仓库维度扫描计划路由：/scan/repos/:repoID/scanplans/...
+		repos := rule.Group("/repos/:repoID")
+		{
+			scanPlans := repos.Group("/scanplans")
+			scanPlans.POST("", controller.Scan.ScanPlanCreate)
+			scanPlans.POST("/list", controller.Scan.ScanPlanList)
+
+			planWithID := scanPlans.Group("/:planID")
+			{
+				planWithID.GET("", controller.Scan.ScanPlanGet)
+				planWithID.PATCH("", controller.Scan.ScanPlanUpdate)
+				planWithID.DELETE("", controller.Scan.ScanPlanDelete)
+				planWithID.POST("/bind", controller.Scan.ScanPlanBindSolution)
+				planWithID.POST("/unbind", controller.Scan.ScanPlanUnbindSolution)
+				planWithID.GET("/unbind", controller.Scan.ScanPlanListUnbindSolution)
+
+				// 触发器路由
+				triggers := planWithID.Group("/triggers")
+				triggers.GET("", controller.Scan.ScanTriggerList)
+				triggers.POST("", controller.Scan.ScanTriggerCreate)
+
+				triggerWithID := triggers.Group("/:triggerID")
+				{
+					triggerWithID.GET("", controller.Scan.ScanTriggerGet)
+					triggerWithID.PATCH("", controller.Scan.ScanTriggerUpdate)
+					triggerWithID.DELETE("", controller.Scan.ScanTriggerDelete)
+
+					// 触发器条件路由
+					conditions := triggerWithID.Group("/conditions")
+					conditions.GET("", controller.Scan.ScanConditionList)
+					conditions.POST("/new", controller.Scan.ScanConditionBatchCreate)
+					conditions.POST("/delete", controller.Scan.ScanConditionBatchDelete)
+				}
+			}
+		}
 	}
 }

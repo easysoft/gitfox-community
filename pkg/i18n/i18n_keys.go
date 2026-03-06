@@ -11,18 +11,34 @@ const (
 	AuthFailed                      I18nKey = "auth.failed"                           // 尝试认证失败
 	AuthNoData                      I18nKey = "auth.no_data"                          // 请求不包含任何可用于 Authorizer 的认证数据
 	AuthNoSession                   I18nKey = "auth.no_session"                       // 请求不包含任何会话数据,无法进行授权
-	AuthPubKeyAddAlreadyInUse       I18nKey = "auth.pub_key_add_already_in_use"       // 公钥已存在
+	AuthPubKeyAddAlreadyInUse       I18nKey = "auth.pub_key_add_already_in_use"       // key-公钥已存在
 	AuthPubKeyAddError              I18nKey = "auth.pub_key_add_error"                // 公钥添加失败
+	AuthPubKeyAddIdentifierInUse    I18nKey = "auth.pub_key_add_identifier_in_use"    // name-公钥标识符已存在
 	AuthPubKeyAddParamError         I18nKey = "auth.pub_key_add_param_error"          // 公钥参数错误
 	AuthPubKeyAddSuccess            I18nKey = "auth.pub_key_add_success"              // 公钥添加成功
+	AuthPubKeyContentError          I18nKey = "auth.pub_key_content_error"            // key-公钥内容格式错误
 	AuthPubKeyDeleteError           I18nKey = "auth.pub_key_delete_error"             // 公钥删除失败
 	AuthPubKeyDeleteParamError      I18nKey = "auth.pub_key_delete_param_error"       // 公钥删除参数校验错误
 	AuthPubKeyDeleteSuccess         I18nKey = "auth.pub_key_delete_success"           // 公钥删除成功
 	AuthPubKeyIdentifierError       I18nKey = "auth.pub_key_identifier_error"         // 公钥标识符校验错误
+	AuthPubKeyIdentifierFormatError I18nKey = "auth.pub_key_identifier_format_error"  // name-公钥标识符格式校验失败,仅支持字母、数字、.、_、-、$
+	AuthPubKeyIdentifierLengthError I18nKey = "auth.pub_key_identifier_length_error"  // name-公钥标识符长度校验失败,长度需在 1-100 个字符之间
+	AuthPubKeyLastUseDateError      I18nKey = "auth.pub_key_last_use_date_error"      // 公钥最后验证时间数据异常
 	AuthPubKeyListError             I18nKey = "auth.pub_key_list_error"               // 公钥列表失败
 	AuthPubKeyListParamError        I18nKey = "auth.pub_key_list_param_error"         // 公钥列表参数校验错误
 	AuthPubKeyListSuccess           I18nKey = "auth.pub_key_list_success"             // 公钥列表成功
+	AuthPubKeyNoUse                 I18nKey = "auth.pub_key_no_use"                   // 未使用
 	AuthPubKeyNotFoundByFingerprint I18nKey = "auth.pub_key_not_found_by_fingerprint" // 公钥未找到
+	AuthPubKeyUpdateEmptyError      I18nKey = "auth.pub_key_update_empty_error"       // 公钥更新参数不能为空,identifier 或 content 至少传一个
+	AuthPubKeyUpdateError           I18nKey = "auth.pub_key_update_error"             // 公钥更新失败
+	AuthPubKeyUpdateParamError      I18nKey = "auth.pub_key_update_param_error"       // 公钥更新参数校验错误
+	AuthPubKeyUpdateSuccess         I18nKey = "auth.pub_key_update_success"           // 公钥更新成功
+	AuthPubKeyUseDay                I18nKey = "auth.pub_key_use_day"                  // 天前
+	AuthPubKeyUseHour               I18nKey = "auth.pub_key_use_hour"                 // 小时前
+	AuthPubKeyUseMinute             I18nKey = "auth.pub_key_use_minute"               // 分钟前
+	AuthPubKeyUseMonth              I18nKey = "auth.pub_key_use_month"                // 月前
+	AuthPubKeyUseSecond             I18nKey = "auth.pub_key_use_second"               // 秒前
+	AuthPubKeyUseYear               I18nKey = "auth.pub_key_use_year"                 // 年前
 	AuthSessionTokenNotAllowed      I18nKey = "auth.session_token_not_allowed"        // 会话令牌不允许用于与 Git 交互
 	AuthUserIssuePatError           I18nKey = "auth.user_issue_pat_error"             // 用户创建访问令牌失败
 	AuthUserIssueTokenError         I18nKey = "auth.user_issue_token_error"           // 用户创建会话令牌失败
@@ -80,6 +96,16 @@ const (
 	CommitPathParamError       I18nKey = "commit.path_param_error"       // Path 参数解析失败.
 	CommitQueryParamError      I18nKey = "commit.query_param_error"      // Query 参数解析失败.
 
+	// Condition 相关常量
+	ConditionBatchCreateError   I18nKey = "condition.batch_create_error"   // 触发器条件批量创建失败.
+	ConditionBatchCreateSuccess I18nKey = "condition.batch_create_success" // 触发器条件批量创建成功.
+	ConditionBatchDeleteError   I18nKey = "condition.batch_delete_error"   // 触发器条件批量删除失败.
+	ConditionBatchDeleteSuccess I18nKey = "condition.batch_delete_success" // 触发器条件批量删除成功.
+	ConditionBodyParamError     I18nKey = "condition.body_param_error"     // 请求体参数解析失败.
+	ConditionListError          I18nKey = "condition.list_error"           // 触发器条件列表查询失败.
+	ConditionListSuccess        I18nKey = "condition.list_success"         // 触发器条件列表查询成功.
+	ConditionPathParamError     I18nKey = "condition.path_param_error"     // 路径参数解析失败.
+
 	// Db 相关常量
 	DbCheckConstraintViolation I18nKey = "db.check_constraint_violation" // 检查约束冲突.
 	DbConnectionFailed         I18nKey = "db.connection_failed"          // 数据库连接失败.
@@ -108,14 +134,13 @@ const (
 	ExecutionBodyParamError   I18nKey = "execution.body_param_error"   // Body 参数解析失败.
 	ExecutionCancelError      I18nKey = "execution.cancel_error"       // 执行取消失败
 	ExecutionCancelSuccess    I18nKey = "execution.cancel_success"     // 执行取消成功
+	ExecutionLogCreateError   I18nKey = "execution.log_create_error"   // 执行日志创建失败
+	ExecutionLogCreateSuccess I18nKey = "execution.log_create_success" // 执行日志创建成功
+	ExecutionLogQueryError    I18nKey = "execution.log_query_error"    // 执行日志查询失败
 	ExecutionPathParamError   I18nKey = "execution.path_param_error"   // Path 参数解析失败.
 	ExecutionQueryError       I18nKey = "execution.query_error"        // 执行查询失败
 	ExecutionQueryParamError  I18nKey = "execution.query_param_error"  // Query 参数解析失败.
 	ExecutionQuerySuccess     I18nKey = "execution.query_success"      // 执行查询成功
-	ExecutionLogCreateError   I18nKey = "execution.log_create_error"   // 日志创建失败
-	ExecutionLogCreateSuccess I18nKey = "execution.log_create_success" // 日志创建成功
-	ExecutionLogQueryError    I18nKey = "execution.log_query_error"    // 日志查询失败
-	ExecutionLogQuerySuccess  I18nKey = "execution.log_query_success"  // 日志查询成功
 	ExecutionTriggerError     I18nKey = "execution.trigger_error"      // 执行触发失败
 	ExecutionTriggerSuccess   I18nKey = "execution.trigger_success"    // 执行触发成功
 
@@ -170,10 +195,31 @@ const (
 	PipelineTriggerListError           I18nKey = "pipeline.trigger_list_error"             // 触发列表获取失败.
 	PipelineTriggerListSuccess         I18nKey = "pipeline.trigger_list_success"           // 触发列表获取成功.
 	PipelineTriggerParamCronError      I18nKey = "pipeline.trigger_param_cron_error"       // 无效的 cron 表达式.
-	PipelineTriggerParamCronLimitError I18nKey = "pipeline.trigger_param_cron_limit_error" // cron 表达式数量超过限制.
+	PipelineTriggerParamCronLimitError I18nKey = "pipeline.trigger_param_cron_limit_error" // 定时触发器不能超过5个.
 	PipelineTriggerParamError          I18nKey = "pipeline.trigger_param_error"            // 触发参数解析失败.
 	PipelineTriggerUpdateError         I18nKey = "pipeline.trigger_update_error"           // 触发更新失败.
 	PipelineTriggerUpdateSuccess       I18nKey = "pipeline.trigger_update_success"         // 触发更新成功.
+
+	// Plan 相关常量
+	PlanAlreadyExists       I18nKey = "plan.already_exists"        // 扫描计划名称已存在.
+	PlanBindError           I18nKey = "plan.bind_error"            // 扫描计划绑定扫描方案失败.
+	PlanBindSuccess         I18nKey = "plan.bind_success"          // 扫描计划绑定扫描方案成功.
+	PlanBodyParamError      I18nKey = "plan.body_param_error"      // 请求体参数解析失败.
+	PlanCreateError         I18nKey = "plan.create_error"          // 扫描计划创建失败.
+	PlanCreateSuccess       I18nKey = "plan.create_success"        // 扫描计划创建成功.
+	PlanDeleteError         I18nKey = "plan.delete_error"          // 扫描计划删除失败.
+	PlanDeleteSuccess       I18nKey = "plan.delete_success"        // 扫描计划删除成功.
+	PlanListError           I18nKey = "plan.list_error"            // 扫描计划列表查询失败.
+	PlanListSuccess         I18nKey = "plan.list_success"          // 扫描计划列表查询成功.
+	PlanPathParamError      I18nKey = "plan.path_param_error"      // 路径参数解析失败.
+	PlanQueryError          I18nKey = "plan.query_error"           // 扫描计划详情查询失败.
+	PlanQuerySuccess        I18nKey = "plan.query_success"         // 扫描计划详情查询成功.
+	PlanSolutionListError   I18nKey = "plan.solution_list_error"   // 扫描计划可绑定方案列表查询失败.
+	PlanSolutionListSuccess I18nKey = "plan.solution_list_success" // 扫描计划可绑定方案列表查询成功.
+	PlanUnbindError         I18nKey = "plan.unbind_error"          // 扫描计划解绑扫描方案失败.
+	PlanUnbindSuccess       I18nKey = "plan.unbind_success"        // 扫描计划解绑扫描方案成功.
+	PlanUpdateError         I18nKey = "plan.update_error"          // 扫描计划更新失败.
+	PlanUpdateSuccess       I18nKey = "plan.update_success"        // 扫描计划更新成功.
 
 	// Pullrequest 相关常量
 	PullrequestBodyParamError                I18nKey = "pullrequest.body_param_error"                   // Body 参数解析失败.
@@ -302,6 +348,31 @@ const (
 	RunnerUpdateHeartBeatSuccess I18nKey = "runner.update_heart_beat_success" // 更新 Runner 心跳成功.
 	RunnerUpdateSuccess          I18nKey = "runner.update_success"            // 更新 Runner 成功.
 
+	// Solution 相关常量
+	SolutionAlreadyExists       I18nKey = "solution.already_exists"        // 扫描方案名称已存在.
+	SolutionBindError           I18nKey = "solution.bind_error"            // 扫描方案绑定规则集失败.
+	SolutionBindSuccess         I18nKey = "solution.bind_success"          // 扫描方案绑定规则集成功.
+	SolutionBodyParamError      I18nKey = "solution.body_param_error"      // 请求体参数解析失败.
+	SolutionBuiltinDeleteError  I18nKey = "solution.builtin_delete_error"  // 内置扫描方案不允许删除.
+	SolutionCreateError         I18nKey = "solution.create_error"          // 扫描方案创建失败.
+	SolutionCreateSuccess       I18nKey = "solution.create_success"        // 扫描方案创建成功.
+	SolutionDeleteError         I18nKey = "solution.delete_error"          // 扫描方案删除失败.
+	SolutionDeleteSuccess       I18nKey = "solution.delete_success"        // 扫描方案删除成功.
+	SolutionInUseError          I18nKey = "solution.in_use_error"          // 扫描方案已被扫描计划使用,无法删除.
+	SolutionListError           I18nKey = "solution.list_error"            // 扫描方案列表查询失败.
+	SolutionListSuccess         I18nKey = "solution.list_success"          // 扫描方案列表查询成功.
+	SolutionPathParamError      I18nKey = "solution.path_param_error"      // 路径参数解析失败.
+	SolutionQueryError          I18nKey = "solution.query_error"           // 扫描方案详情查询失败.
+	SolutionQuerySuccess        I18nKey = "solution.query_success"         // 扫描方案详情查询成功.
+	SolutionRulesetListError    I18nKey = "solution.ruleset_list_error"    // 扫描方案规则集列表查询失败.
+	SolutionRulesetListSuccess  I18nKey = "solution.ruleset_list_success"  // 扫描方案规则集列表查询成功.
+	SolutionStatusUpdateError   I18nKey = "solution.status_update_error"   // 扫描方案状态更新失败.
+	SolutionStatusUpdateSuccess I18nKey = "solution.status_update_success" // 扫描方案状态更新成功.
+	SolutionUnbindError         I18nKey = "solution.unbind_error"          // 扫描方案解绑规则集失败.
+	SolutionUnbindSuccess       I18nKey = "solution.unbind_success"        // 扫描方案解绑规则集成功.
+	SolutionUpdateError         I18nKey = "solution.update_error"          // 扫描方案更新失败.
+	SolutionUpdateSuccess       I18nKey = "solution.update_success"        // 扫描方案更新成功.
+
 	// Space 相关常量
 	SpaceArtifactsTitleSuccess   I18nKey = "space.artifacts_title_success"   // 仓库设置保存成功
 	SpaceBodyParamError          I18nKey = "space.body_param_error"          // Body 参数解析失败.
@@ -335,4 +406,18 @@ const (
 	TagListSuccess     I18nKey = "tag.list_success"      // 查询标签列表成功.
 	TagPathParamError  I18nKey = "tag.path_param_error"  // Path 参数解析失败.
 	TagQueryParamError I18nKey = "tag.query_param_error" // Query 参数解析失败.
+
+	// Trigger 相关常量
+	TriggerBodyParamError I18nKey = "trigger.body_param_error" // 请求体参数解析失败.
+	TriggerCreateError    I18nKey = "trigger.create_error"     // 触发器创建失败.
+	TriggerCreateSuccess  I18nKey = "trigger.create_success"   // 触发器创建成功.
+	TriggerDeleteError    I18nKey = "trigger.delete_error"     // 触发器删除失败.
+	TriggerDeleteSuccess  I18nKey = "trigger.delete_success"   // 触发器删除成功.
+	TriggerListError      I18nKey = "trigger.list_error"       // 触发器列表查询失败.
+	TriggerListSuccess    I18nKey = "trigger.list_success"     // 触发器列表查询成功.
+	TriggerPathParamError I18nKey = "trigger.path_param_error" // 路径参数解析失败.
+	TriggerQueryError     I18nKey = "trigger.query_error"      // 触发器详情查询失败.
+	TriggerQuerySuccess   I18nKey = "trigger.query_success"    // 触发器详情查询成功.
+	TriggerUpdateError    I18nKey = "trigger.update_error"     // 触发器更新失败.
+	TriggerUpdateSuccess  I18nKey = "trigger.update_success"   // 触发器更新成功.
 )

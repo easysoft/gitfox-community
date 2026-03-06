@@ -232,7 +232,15 @@ func NewApp(mode string) (*App, func(), error) {
 	ruleStore := scan.NewRuleStore(db)
 	ruleSetService := scan2.NewRuleSetService(ruleSetStore, ruleStore)
 	ruleService := scan2.NewRuleService(ruleStore, membershipAuthorizer)
-	scanController := scan3.NewScanController(ruleSetService, ruleService)
+	solutionStore := scan.NewSolutionStore(db)
+	solutionService := scan2.NewSolutionService(solutionStore)
+	scanPlanStore := scan.NewScanPlanStore(db)
+	scanPlanService := scan2.NewScanPlanService(scanPlanStore)
+	scanTriggerStore := scan.NewScanTriggerStore(db)
+	scanTriggerService := scan2.NewScanTriggerService(scanTriggerStore)
+	scanConditionStore := scan.NewScanConditionStore(db)
+	scanConditionService := scan2.NewScanConditionService(scanConditionStore)
+	scanController := scan3.NewScanController(ruleSetService, ruleService, solutionService, scanPlanService, scanTriggerService, scanConditionService)
 	routerController := provider.NewControllers(spaceController, controller, pipelineController, executionController, runnerController, tagController, commitController, repoController, userController, gitController, scanController)
 	i18nManager, err := provider.NewI18nManager(config)
 	if err != nil {
@@ -290,6 +298,7 @@ func NewApp(mode string) (*App, func(), error) {
 		JobScheduler:    jobsScheduler,
 		Triggerer:       triggererTriggerer,
 		Poller:          poller,
+		ScanRuleSvc:     ruleService,
 	}
 	return app, func() {
 		cleanup2()
@@ -317,4 +326,5 @@ type App struct {
 	JobScheduler    *jobs2.Scheduler
 	Triggerer       triggerer.Triggerer
 	Poller          *poller.Poller
+	ScanRuleSvc     scan2.IRule
 }

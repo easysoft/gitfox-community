@@ -155,6 +155,23 @@ func ExampleAddYear() {
 	// 2023-01-01
 	// 2019-01-01
 }
+func ExampleBetweenWithUnit() {
+	start := time.Date(2026, 3, 4, 10, 0, 0, 0, time.UTC)
+
+	value1, unit1 := BetweenWithUnit(start, start.Add(10*time.Second))
+	value2, unit2 := BetweenWithUnit(start, start.Add(61*time.Second))
+	value3, unit3 := BetweenWithUnit(start, start.Add(25*time.Hour))
+
+	fmt.Println(value1, unit1)
+	fmt.Println(value2, unit2)
+	fmt.Println(value3, unit3)
+
+	// Output:
+	// 10 second
+	// 2 minute
+	// 2 day
+}
+
 func ExampleFormatStrToTime() {
 	result1, _ := FormatStrToTime("2021-01-02 16:04:08", "yyyy-mm-dd hh:mm:ss")
 	result2, _ := FormatStrToTime("2021-01-02", "yyyy-mm-dd")

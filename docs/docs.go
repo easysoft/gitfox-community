@@ -3910,6 +3910,1093 @@ const docTemplate = `{
                 }
             }
         },
+        "/scan/repos/{repoID}/scanplans": {
+            "post": {
+                "description": "在指定仓库下创建扫描计划，并可选绑定扫描方案",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scan"
+                ],
+                "summary": "仓库创建新的扫描计划",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "仓库 ID",
+                        "name": "repoID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "创建请求参数",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanPlanReqForCreate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "创建成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanPlan"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权（会话不存在或已过期）",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/scan/repos/{repoID}/scanplans/list": {
+            "post": {
+                "description": "根据仓库 ID 和过滤条件查询扫描计划列表，支持分页",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scan"
+                ],
+                "summary": "获取指定仓库的扫描计划列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "仓库 ID",
+                        "name": "repoID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "查询过滤条件",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanPlanReqFilter"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "查询成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanPlan"
+                                            }
+                                        },
+                                        "listArgs": {
+                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListArgs"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/scan/repos/{repoID}/scanplans/{planID}": {
+            "get": {
+                "description": "根据计划 ID 查询扫描计划详情",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scan"
+                ],
+                "summary": "获取指定仓库扫描计划",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "仓库 ID",
+                        "name": "repoID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "计划 ID",
+                        "name": "planID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "查询成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanPlan"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "根据计划 ID 删除扫描计划及其绑定关系",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scan"
+                ],
+                "summary": "删除指定仓库扫描计划",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "仓库 ID",
+                        "name": "repoID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "计划 ID",
+                        "name": "planID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "删除成功",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "description": "根据计划 ID 更新扫描计划配置",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scan"
+                ],
+                "summary": "更新仓库扫描计划信息",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "仓库 ID",
+                        "name": "repoID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "计划 ID",
+                        "name": "planID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "更新请求参数",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanPlanReqForUpdate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "更新成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanPlan"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权（会话不存在或已过期）",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/scan/repos/{repoID}/scanplans/{planID}/bind": {
+            "post": {
+                "description": "将指定扫描方案绑定到扫描计划",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scan"
+                ],
+                "summary": "为扫描计划绑定扫描方案",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "仓库 ID",
+                        "name": "repoID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "计划 ID",
+                        "name": "planID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "绑定请求参数",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanPlanReqForBind"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "绑定成功",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/scan/repos/{repoID}/scanplans/{planID}/triggers": {
+            "get": {
+                "description": "根据扫描计划 ID 查询触发器列表",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scan"
+                ],
+                "summary": "获取扫描计划的触发器列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "仓库 ID",
+                        "name": "repoID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "计划 ID",
+                        "name": "planID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "查询成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTrigger"
+                                            }
+                                        },
+                                        "listArgs": {
+                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListArgs"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "在指定扫描计划下创建触发器配置",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scan"
+                ],
+                "summary": "为扫描计划创建触发器",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "仓库 ID",
+                        "name": "repoID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "计划 ID",
+                        "name": "planID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "创建请求参数",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTriggerReqForCreate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "创建成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTrigger"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权（会话不存在或已过期）",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/scan/repos/{repoID}/scanplans/{planID}/triggers/{triggerID}": {
+            "get": {
+                "description": "根据触发器 ID 查询触发器详情",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scan"
+                ],
+                "summary": "获取触发器详细信息",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "仓库 ID",
+                        "name": "repoID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "计划 ID",
+                        "name": "planID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "触发器 ID",
+                        "name": "triggerID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "查询成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTrigger"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "根据触发器 ID 删除触发器",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scan"
+                ],
+                "summary": "删除指定触发器",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "仓库 ID",
+                        "name": "repoID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "计划 ID",
+                        "name": "planID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "触发器 ID",
+                        "name": "triggerID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "删除成功",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "description": "根据触发器 ID 更新触发器配置",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scan"
+                ],
+                "summary": "更新触发器配置",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "仓库 ID",
+                        "name": "repoID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "计划 ID",
+                        "name": "planID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "触发器 ID",
+                        "name": "triggerID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "更新请求参数",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTriggerReqForUpdate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "更新成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTrigger"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权（会话不存在或已过期）",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/scan/repos/{repoID}/scanplans/{planID}/triggers/{triggerID}/conditions": {
+            "get": {
+                "description": "根据触发器 ID 查询条件列表",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scan"
+                ],
+                "summary": "获取触发器的条件列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "仓库 ID",
+                        "name": "repoID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "计划 ID",
+                        "name": "planID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "触发器 ID",
+                        "name": "triggerID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "查询成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanCondition"
+                                            }
+                                        },
+                                        "listArgs": {
+                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListArgs"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/scan/repos/{repoID}/scanplans/{planID}/triggers/{triggerID}/conditions/delete": {
+            "post": {
+                "description": "按条件 ID 列表批量删除触发器条件",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scan"
+                ],
+                "summary": "删除触发器条件",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "仓库 ID",
+                        "name": "repoID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "计划 ID",
+                        "name": "planID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "触发器 ID",
+                        "name": "triggerID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "批量删除请求参数",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanConditionReqForBatchDelete"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "删除成功",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/scan/repos/{repoID}/scanplans/{planID}/triggers/{triggerID}/conditions/new": {
+            "post": {
+                "description": "为指定触发器批量创建条件",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scan"
+                ],
+                "summary": "为触发器添加条件",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "仓库 ID",
+                        "name": "repoID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "计划 ID",
+                        "name": "planID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "触发器 ID",
+                        "name": "triggerID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "批量创建请求参数",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanConditionReqForBatchCreate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "创建成功",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权（会话不存在或已过期）",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/scan/repos/{repoID}/scanplans/{planID}/unbind": {
+            "get": {
+                "description": "查询指定扫描计划未绑定的扫描方案列表",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scan"
+                ],
+                "summary": "获取扫描计划可绑定的扫描方案列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "仓库 ID",
+                        "name": "repoID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "计划 ID",
+                        "name": "planID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "查询成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.Solution"
+                                            }
+                                        },
+                                        "listArgs": {
+                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListArgs"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "解除扫描计划与指定扫描方案的关联关系",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scan"
+                ],
+                "summary": "解除扫描计划与扫描方案的绑定",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "仓库 ID",
+                        "name": "repoID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "计划 ID",
+                        "name": "planID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "解绑请求参数",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanPlanReqForBind"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "解绑成功",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/scan/rules/list": {
             "post": {
                 "description": "根据传入的查询参数分页查询扫描规则列表，支持按规则集、语言、插件等条件过滤",
@@ -4574,6 +5661,591 @@ const docTemplate = `{
                 }
             }
         },
+        "/scan/solutions": {
+            "post": {
+                "description": "基于传入参数创建扫描方案",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scan"
+                ],
+                "summary": "创建扫描方案",
+                "parameters": [
+                    {
+                        "description": "创建扫描方案请求参数",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.SolutionReqForCreate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "创建成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.Solution"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权（会话不存在或已过期）",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/scan/solutions/list": {
+            "post": {
+                "description": "根据过滤条件查询扫描方案列表，支持分页",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scan"
+                ],
+                "summary": "查询扫描方案列表",
+                "parameters": [
+                    {
+                        "description": "查询过滤条件",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.SolutionReqFilter"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "查询成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.Solution"
+                                            }
+                                        },
+                                        "listArgs": {
+                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListArgs"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/scan/solutions/{id}": {
+            "get": {
+                "description": "根据传入的扫描方案 ID 获取扫描方案详细信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scan"
+                ],
+                "summary": "获取扫描方案详情",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "扫描方案 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "获取成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.Solution"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "扫描方案不存在",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "根据扫描方案 ID 更新扫描方案信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scan"
+                ],
+                "summary": "更新扫描方案",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "扫描方案 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "更新请求参数",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.SolutionReqForUpdate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "更新成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.Solution"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权（会话不存在或已过期）",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "扫描方案不存在",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "根据扫描方案 ID 删除扫描方案及其关联的规则集绑定关系",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scan"
+                ],
+                "summary": "删除扫描方案",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "扫描方案 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "删除成功",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/scan/solutions/{id}/rulesets": {
+            "get": {
+                "description": "根据扫描方案 ID 查询已绑定的规则集列表",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scan"
+                ],
+                "summary": "获取扫描方案已绑定的规则集列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "扫描方案 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "查询成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.RuleSet"
+                                            }
+                                        },
+                                        "listArgs": {
+                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListArgs"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/scan/solutions/{id}/rulesets/bind": {
+            "post": {
+                "description": "将指定规则集绑定到扫描方案，建立关联关系",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scan"
+                ],
+                "summary": "为扫描方案绑定规则集",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "扫描方案 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "绑定请求参数",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.SolutionReqForBind"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "绑定成功",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/scan/solutions/{id}/rulesets/unbind": {
+            "get": {
+                "description": "根据扫描方案 ID 查询未绑定的规则集列表（可用于绑定）",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scan"
+                ],
+                "summary": "获取扫描方案未绑定的规则集列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "扫描方案 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "查询成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.RuleSet"
+                                            }
+                                        },
+                                        "listArgs": {
+                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListArgs"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "解除扫描方案与指定规则集的关联关系",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scan"
+                ],
+                "summary": "解除扫描方案与规则集的绑定",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "扫描方案 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "解绑请求参数",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.SolutionReqForBind"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "解绑成功",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/scan/solutions/{id}/status": {
+            "patch": {
+                "description": "切换扫描方案的启用/禁用状态，enabled ↔ disabled 互相切换",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scan"
+                ],
+                "summary": "切换扫描方案状态",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "扫描方案 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "切换成功",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权（会话不存在或已过期）",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/scan/tags": {
             "get": {
                 "description": "获取所有可用的扫描标签列表",
@@ -5104,7 +6776,7 @@ const docTemplate = `{
         },
         "/user/keys": {
             "get": {
-                "description": "获取用户公钥列表",
+                "description": "查询当前登录用户的 SSH 公钥列表（按创建时间倒序）",
                 "consumes": [
                     "application/json"
                 ],
@@ -5112,18 +6784,48 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "用户"
+                    "users"
                 ],
                 "summary": "获取用户公钥列表",
                 "responses": {
                     "200": {
-                        "description": "获取用户公钥列表成功",
+                        "description": "查询成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_publickey.PublicKey"
+                                            }
+                                        },
+                                        "listArgs": {
+                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListArgs"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
                         "schema": {
                             "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
                         }
                     },
-                    "400": {
-                        "description": "获取用户公钥列表失败",
+                    "401": {
+                        "description": "未授权（会话不存在或已过期）",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
                         "schema": {
                             "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
                         }
@@ -5131,7 +6833,7 @@ const docTemplate = `{
                 }
             },
             "post": {
-                "description": "添加用户公钥",
+                "description": "为当前登录用户添加一条 SSH 公钥",
                 "consumes": [
                     "application/json"
                 ],
@@ -5139,12 +6841,12 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "用户"
+                    "users"
                 ],
                 "summary": "添加用户公钥",
                 "parameters": [
                     {
-                        "description": "创建用户公钥参数",
+                        "description": "添加用户公钥参数",
                         "name": "input",
                         "in": "body",
                         "required": true,
@@ -5155,13 +6857,210 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "创建用户公钥成功",
+                        "description": "添加成功",
                         "schema": {
                             "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
                         }
                     },
                     "400": {
-                        "description": "创建用户公钥失败",
+                        "description": "参数错误或业务校验失败",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权（会话不存在或已过期）",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/keys/{id}": {
+            "get": {
+                "description": "按ID获取当前登录用户的 SSH 公钥详情",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "获取用户公钥详情",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "公钥ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "查询成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_publickey.PublicKey"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权（会话不存在或已过期）",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "公钥不存在",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "按ID修改当前登录用户的 SSH 公钥，仅允许修改标识符和公钥内容",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "修改用户公钥",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "公钥ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "修改用户公钥参数",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_publickey.UpdatePublicKeyInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "修改成功",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误或业务校验失败",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权（会话不存在或已过期）",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "公钥不存在",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "按ID硬删除当前登录用户的 SSH 公钥",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "删除用户公钥",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "公钥ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "删除成功",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误或业务校验失败",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权（会话不存在或已过期）",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "公钥不存在",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
                         "schema": {
                             "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
                         }
@@ -6123,6 +8022,75 @@ const docTemplate = `{
                 }
             }
         },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_publickey.PublicKey": {
+            "type": "object",
+            "properties": {
+                "account": {
+                    "description": "关联的账号",
+                    "type": "string"
+                },
+                "comment": {
+                    "description": "公钥注释 eg: \"user@example.com\"",
+                    "type": "string"
+                },
+                "content": {
+                    "description": "公钥内容 eg: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDB...",
+                    "type": "string"
+                },
+                "createdBy": {
+                    "description": "创建人",
+                    "type": "string"
+                },
+                "createdDate": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "editedBy": {
+                    "description": "最后编辑人",
+                    "type": "string"
+                },
+                "editedDate": {
+                    "description": "最后编辑时间",
+                    "type": "string"
+                },
+                "fingerprint": {
+                    "description": "公钥指纹",
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "identifier": {
+                    "description": "公钥标识符",
+                    "type": "string"
+                },
+                "lastUsedDate": {
+                    "description": "最后使用时间",
+                    "type": "string"
+                },
+                "type": {
+                    "description": "公钥类型 eg: \"ssh-rsa\"",
+                    "type": "string"
+                },
+                "verifiedDate": {
+                    "description": "公钥是否已验证",
+                    "type": "string"
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_publickey.UpdatePublicKeyInput": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "description": "公钥内容",
+                    "type": "string"
+                },
+                "identifier": {
+                    "description": "公钥标识符",
+                    "type": "string"
+                }
+            }
+        },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.ContentType": {
             "type": "string",
             "enum": [
@@ -6142,7 +8110,7 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "acl",
-                "identifier",
+                "name",
                 "spaceID"
             ],
             "properties": {
@@ -6167,16 +8135,16 @@ const docTemplate = `{
                     "description": "派生来源ID（可选）",
                     "type": "integer"
                 },
-                "identifier": {
-                    "description": "仓库唯一标识",
-                    "type": "string"
-                },
                 "ignore": {
                     "description": "GitIgnore类型（如go/java）",
                     "type": "string"
                 },
                 "license": {
                     "description": "许可证类型（如mit/apache）",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "仓库唯一标识",
                     "type": "string"
                 },
                 "product": {
@@ -6491,14 +8459,14 @@ const docTemplate = `{
                 "id": {
                     "type": "integer"
                 },
-                "identifier": {
-                    "type": "string"
-                },
                 "mirror": {
                     "type": "boolean"
                 },
                 "mutex": {
                     "type": "integer"
+                },
+                "name": {
+                    "type": "string"
                 },
                 "path": {
                     "type": "string"
@@ -6550,11 +8518,6 @@ const docTemplate = `{
         },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.ReqForUpdate": {
             "type": "object",
-            "required": [
-                "acl",
-                "identifier",
-                "spaceID"
-            ],
             "properties": {
                 "acl": {
                     "description": "权限（仅支持open/private）",
@@ -6572,10 +8535,6 @@ const docTemplate = `{
                     "description": "仓库描述（最大500字符）",
                     "type": "string",
                     "maxLength": 500
-                },
-                "identifier": {
-                    "description": "仓库唯一标识",
-                    "type": "string"
                 },
                 "product": {
                     "description": "关联产品",
@@ -6979,6 +8938,12 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
+                "plugin": {
+                    "type": "string"
+                },
+                "rulesCount": {
+                    "type": "integer"
+                },
                 "status": {
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleStatus"
                 },
@@ -7132,6 +9097,239 @@ const docTemplate = `{
                 }
             }
         },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanCondition": {
+            "type": "object",
+            "properties": {
+                "createdBy": {
+                    "type": "string"
+                },
+                "createdDate": {
+                    "type": "string"
+                },
+                "deleted": {
+                    "type": "boolean"
+                },
+                "editedBy": {
+                    "type": "string"
+                },
+                "editedDate": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "planID": {
+                    "type": "integer"
+                },
+                "priority": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRulePriority"
+                },
+                "repoID": {
+                    "type": "integer"
+                },
+                "threshold": {
+                    "type": "integer"
+                },
+                "triggerID": {
+                    "type": "integer"
+                },
+                "type": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRuleType"
+                },
+                "unit": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRuleUnit"
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanConditionItem": {
+            "type": "object",
+            "properties": {
+                "priority": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRulePriority"
+                },
+                "threshold": {
+                    "type": "integer"
+                },
+                "type": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRuleType"
+                },
+                "unit": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRuleUnit"
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanConditionReqForBatchCreate": {
+            "type": "object",
+            "required": [
+                "conditions"
+            ],
+            "properties": {
+                "conditions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanConditionItem"
+                    }
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanConditionReqForBatchDelete": {
+            "type": "object",
+            "required": [
+                "ids"
+            ],
+            "properties": {
+                "ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanPlan": {
+            "type": "object",
+            "properties": {
+                "branches": {
+                    "type": "string"
+                },
+                "createdBy": {
+                    "type": "string"
+                },
+                "createdDate": {
+                    "type": "string"
+                },
+                "deleted": {
+                    "type": "boolean"
+                },
+                "desc": {
+                    "type": "string"
+                },
+                "editedBy": {
+                    "type": "string"
+                },
+                "editedDate": {
+                    "type": "string"
+                },
+                "files": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "repoID": {
+                    "type": "integer"
+                },
+                "scanType": {
+                    "type": "string"
+                },
+                "solutionCount": {
+                    "type": "integer"
+                },
+                "solutionIDs": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "solutions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.Solution"
+                    }
+                },
+                "triggerCount": {
+                    "type": "integer"
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanPlanReqFilter": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "order": {
+                    "type": "string",
+                    "default": "desc"
+                },
+                "page": {
+                    "type": "integer",
+                    "default": 1
+                },
+                "pageSize": {
+                    "type": "integer",
+                    "default": 30
+                },
+                "sort": {
+                    "type": "string",
+                    "default": "id"
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanPlanReqForBind": {
+            "type": "object",
+            "properties": {
+                "solutionIDs": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanPlanReqForCreate": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "branches": {
+                    "type": "string"
+                },
+                "desc": {
+                    "type": "string"
+                },
+                "files": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "scanType": {
+                    "type": "string"
+                },
+                "solutionIDs": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanPlanReqForUpdate": {
+            "type": "object",
+            "properties": {
+                "branches": {
+                    "type": "string"
+                },
+                "desc": {
+                    "type": "string"
+                },
+                "files": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "scanType": {
+                    "type": "string"
+                }
+            }
+        },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRuleBind": {
             "type": "string",
             "enum": [
@@ -7219,6 +9417,289 @@ const docTemplate = `{
                 "ScanRuleTypeOptimize",
                 "scanRuleTypeNone"
             ]
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRuleUnit": {
+            "type": "string",
+            "enum": [
+                "count",
+                "percent"
+            ],
+            "x-enum-varnames": [
+                "ScanRuleUnitCount",
+                "ScanRuleUnitPercent"
+            ]
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTrigger": {
+            "type": "object",
+            "properties": {
+                "actions": {
+                    "type": "string"
+                },
+                "createdBy": {
+                    "type": "string"
+                },
+                "createdDate": {
+                    "type": "string"
+                },
+                "cron": {
+                    "type": "string"
+                },
+                "cronBranch": {
+                    "type": "string"
+                },
+                "deleted": {
+                    "type": "boolean"
+                },
+                "desc": {
+                    "type": "string"
+                },
+                "disabled": {
+                    "type": "boolean"
+                },
+                "editedBy": {
+                    "type": "string"
+                },
+                "editedDate": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "keywords": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "planID": {
+                    "type": "integer"
+                },
+                "repoID": {
+                    "type": "integer"
+                },
+                "type": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTriggerType"
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTriggerReqForCreate": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "actions": {
+                    "type": "string"
+                },
+                "cron": {
+                    "type": "string"
+                },
+                "cronBranch": {
+                    "type": "string"
+                },
+                "desc": {
+                    "type": "string"
+                },
+                "disabled": {
+                    "type": "boolean"
+                },
+                "keywords": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "type": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTriggerType"
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTriggerReqForUpdate": {
+            "type": "object",
+            "properties": {
+                "actions": {
+                    "type": "string"
+                },
+                "cron": {
+                    "type": "string"
+                },
+                "cronBranch": {
+                    "type": "string"
+                },
+                "desc": {
+                    "type": "string"
+                },
+                "disabled": {
+                    "type": "boolean"
+                },
+                "keywords": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "type": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTriggerType"
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTriggerType": {
+            "type": "string",
+            "enum": [
+                "cron",
+                "manual",
+                "event"
+            ],
+            "x-enum-varnames": [
+                "ScanTriggerTypeCron",
+                "ScanTriggerTypeManual",
+                "ScanTriggerTypeEvent"
+            ]
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.Solution": {
+            "type": "object",
+            "properties": {
+                "createdBy": {
+                    "type": "string"
+                },
+                "createdDate": {
+                    "type": "string"
+                },
+                "deleted": {
+                    "type": "boolean"
+                },
+                "desc": {
+                    "type": "string"
+                },
+                "descEn": {
+                    "type": "string"
+                },
+                "editedBy": {
+                    "type": "string"
+                },
+                "editedDate": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "isCustom": {
+                    "type": "boolean"
+                },
+                "langs": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "plugins": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "ruleSets": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.RuleSet"
+                    }
+                },
+                "ruleSetsCount": {
+                    "type": "integer"
+                },
+                "rulesCount": {
+                    "type": "integer"
+                },
+                "status": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleStatus"
+                },
+                "tag": {
+                    "type": "string"
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.SolutionReqFilter": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "order": {
+                    "type": "string",
+                    "default": "asc"
+                },
+                "page": {
+                    "type": "integer",
+                    "default": 1
+                },
+                "pageSize": {
+                    "type": "integer",
+                    "default": 30
+                },
+                "sort": {
+                    "type": "string",
+                    "default": "id"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "tag": {
+                    "type": "string"
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.SolutionReqForBind": {
+            "type": "object",
+            "properties": {
+                "rulesetIDList": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.SolutionReqForCreate": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "desc": {
+                    "type": "string"
+                },
+                "descEn": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100
+                },
+                "tag": {
+                    "type": "string"
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.SolutionReqForUpdate": {
+            "type": "object",
+            "properties": {
+                "desc": {
+                    "type": "string"
+                },
+                "descEn": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "tag": {
+                    "type": "string"
+                }
+            }
         },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.CreateSpaceRequest": {
             "type": "object",
@@ -7416,7 +9897,10 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "depends": {
-                    "type": "string"
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "duration": {
                     "type": "integer"
