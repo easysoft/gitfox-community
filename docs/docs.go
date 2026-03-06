@@ -9679,6 +9679,9 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 100
                 },
+                "status": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleStatus"
+                },
                 "tag": {
                     "type": "string"
                 }
@@ -9695,6 +9698,9 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleStatus"
                 },
                 "tag": {
                     "type": "string"
