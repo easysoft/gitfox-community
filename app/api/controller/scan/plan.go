@@ -37,7 +37,7 @@ func (c *ScanController) ScanPlanList(ctx *gin.Context) {
 
 	result, err := c.planSvc.List(ctx.Request.Context(), repoID, filter)
 	if err != nil {
-		resp.InternalError(ctx, errors.WithI18nKey(err, i18n.PlanListError))
+		resp.InternalError(ctx, err)
 		return
 	}
 	resp.ListSuccess(ctx, result.Data,
@@ -79,7 +79,7 @@ func (c *ScanController) ScanPlanCreate(ctx *gin.Context) {
 
 	data, err := c.planSvc.Create(ctx.Request.Context(), session, repoID, reqData)
 	if err != nil {
-		resp.InternalError(ctx, errors.WithI18nKey(err, i18n.PlanCreateError))
+		resp.InternalError(ctx, err)
 		return
 	}
 	resp.Created(ctx, i18n.PlanCreateSuccess, data)
@@ -112,7 +112,7 @@ func (c *ScanController) ScanPlanGet(ctx *gin.Context) {
 
 	obj, err := c.planSvc.GetByID(ctx.Request.Context(), repoID, planID)
 	if err != nil {
-		resp.InternalError(ctx, errors.WithI18nKey(err, i18n.PlanQueryError))
+		resp.InternalError(ctx, err)
 		return
 	}
 	resp.OK(ctx, i18n.PlanQuerySuccess, obj)
@@ -159,7 +159,7 @@ func (c *ScanController) ScanPlanUpdate(ctx *gin.Context) {
 
 	data, err := c.planSvc.Update(ctx.Request.Context(), session, repoID, planID, reqBody)
 	if err != nil {
-		resp.InternalError(ctx, errors.WithI18nKey(err, i18n.PlanUpdateError))
+		resp.InternalError(ctx, err)
 		return
 	}
 	resp.OK(ctx, i18n.PlanUpdateSuccess, data)
@@ -191,7 +191,7 @@ func (c *ScanController) ScanPlanDelete(ctx *gin.Context) {
 	}
 
 	if err := c.planSvc.Delete(ctx.Request.Context(), repoID, planID); err != nil {
-		resp.InternalError(ctx, errors.WithI18nKey(err, i18n.PlanDeleteError))
+		resp.InternalError(ctx, err)
 		return
 	}
 	resp.OK(ctx, i18n.PlanDeleteSuccess, nil)
@@ -230,7 +230,7 @@ func (c *ScanController) ScanPlanBindSolution(ctx *gin.Context) {
 	}
 
 	if err := c.planSvc.BindSolutions(ctx.Request.Context(), repoID, planID, reqData); err != nil {
-		resp.InternalError(ctx, errors.WithI18nKey(err, i18n.PlanBindError))
+		resp.InternalError(ctx, err)
 		return
 	}
 	resp.OK(ctx, i18n.PlanBindSuccess, nil)
@@ -269,7 +269,7 @@ func (c *ScanController) ScanPlanUnbindSolution(ctx *gin.Context) {
 	}
 
 	if err := c.planSvc.UnbindSolutions(ctx.Request.Context(), repoID, planID, reqData); err != nil {
-		resp.InternalError(ctx, errors.WithI18nKey(err, i18n.PlanUnbindError))
+		resp.InternalError(ctx, err)
 		return
 	}
 	resp.OK(ctx, i18n.PlanUnbindSuccess, nil)
@@ -302,7 +302,7 @@ func (c *ScanController) ScanPlanListUnbindSolution(ctx *gin.Context) {
 
 	solutions, err := c.planSvc.ListUnbindSolutions(ctx.Request.Context(), repoID, planID)
 	if err != nil {
-		resp.InternalError(ctx, errors.WithI18nKey(err, i18n.PlanSolutionListError))
+		resp.InternalError(ctx, err)
 		return
 	}
 	resp.ListSuccess(ctx, solutions,
