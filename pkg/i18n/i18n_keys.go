@@ -104,6 +104,7 @@ const (
 	ConditionBodyParamError     I18nKey = "condition.body_param_error"     // 请求体参数解析失败.
 	ConditionListError          I18nKey = "condition.list_error"           // 触发器条件列表查询失败.
 	ConditionListSuccess        I18nKey = "condition.list_success"         // 触发器条件列表查询成功.
+	ConditionNotFound           I18nKey = "condition.not_found"            // 触发器条件不存在.
 	ConditionPathParamError     I18nKey = "condition.path_param_error"     // 路径参数解析失败.
 
 	// Db 相关常量
@@ -201,25 +202,34 @@ const (
 	PipelineTriggerUpdateSuccess       I18nKey = "pipeline.trigger_update_success"         // 触发更新成功.
 
 	// Plan 相关常量
-	PlanAlreadyExists       I18nKey = "plan.already_exists"        // 扫描计划名称已存在.
-	PlanBindError           I18nKey = "plan.bind_error"            // 扫描计划绑定扫描方案失败.
-	PlanBindSuccess         I18nKey = "plan.bind_success"          // 扫描计划绑定扫描方案成功.
-	PlanBodyParamError      I18nKey = "plan.body_param_error"      // 请求体参数解析失败.
-	PlanCreateError         I18nKey = "plan.create_error"          // 扫描计划创建失败.
-	PlanCreateSuccess       I18nKey = "plan.create_success"        // 扫描计划创建成功.
-	PlanDeleteError         I18nKey = "plan.delete_error"          // 扫描计划删除失败.
-	PlanDeleteSuccess       I18nKey = "plan.delete_success"        // 扫描计划删除成功.
-	PlanListError           I18nKey = "plan.list_error"            // 扫描计划列表查询失败.
-	PlanListSuccess         I18nKey = "plan.list_success"          // 扫描计划列表查询成功.
-	PlanPathParamError      I18nKey = "plan.path_param_error"      // 路径参数解析失败.
-	PlanQueryError          I18nKey = "plan.query_error"           // 扫描计划详情查询失败.
-	PlanQuerySuccess        I18nKey = "plan.query_success"         // 扫描计划详情查询成功.
-	PlanSolutionListError   I18nKey = "plan.solution_list_error"   // 扫描计划可绑定方案列表查询失败.
-	PlanSolutionListSuccess I18nKey = "plan.solution_list_success" // 扫描计划可绑定方案列表查询成功.
-	PlanUnbindError         I18nKey = "plan.unbind_error"          // 扫描计划解绑扫描方案失败.
-	PlanUnbindSuccess       I18nKey = "plan.unbind_success"        // 扫描计划解绑扫描方案成功.
-	PlanUpdateError         I18nKey = "plan.update_error"          // 扫描计划更新失败.
-	PlanUpdateSuccess       I18nKey = "plan.update_success"        // 扫描计划更新成功.
+	PlanAlreadyExists             I18nKey = "plan.already_exists"                 // 扫描计划名称已存在.
+	PlanBindError                 I18nKey = "plan.bind_error"                     // 扫描计划绑定扫描方案失败.
+	PlanBindSuccess               I18nKey = "plan.bind_success"                   // 扫描计划绑定扫描方案成功.
+	PlanBodyParamError            I18nKey = "plan.body_param_error"               // 请求体参数解析失败.
+	PlanBranchesExcludeError      I18nKey = "plan.branches_exclude_error"         // 扫描计划分支排除模式无效.
+	PlanBranchesIncludeError      I18nKey = "plan.branches_include_error"         // 扫描计划分支包含模式无效.
+	PlanBranchesPatternJSONError  I18nKey = "plan.branches_pattern_json_error"    // 扫描计划分支模式JSON无效.
+	PlanCreateError               I18nKey = "plan.create_error"                   // 扫描计划创建失败.
+	PlanCreateSuccess             I18nKey = "plan.create_success"                 // 扫描计划创建成功.
+	PlanDeleteError               I18nKey = "plan.delete_error"                   // 扫描计划删除失败.
+	PlanDeleteSuccess             I18nKey = "plan.delete_success"                 // 扫描计划删除成功.
+	PlanFilesExcludeError         I18nKey = "plan.files_exclude_error"            // 扫描计划文件排除模式无效.
+	PlanFilesIncludeError         I18nKey = "plan.files_include_error"            // 扫描计划文件包含模式无效.
+	PlanFilesPatternJSONError     I18nKey = "plan.files_pattern_json_error"       // 扫描计划文件模式JSON无效.
+	PlanListError                 I18nKey = "plan.list_error"                     // 扫描计划列表查询失败.
+	PlanListSuccess               I18nKey = "plan.list_success"                   // 扫描计划列表查询成功.
+	PlanPathParamError            I18nKey = "plan.path_param_error"               // 路径参数解析失败.
+	PlanPatternEmptyError         I18nKey = "plan.pattern_empty_error"            // 扫描计划模式不能为空.
+	PlanNotFound                  I18nKey = "plan.not_found"                      // 扫描计划不存在.
+	PlanQueryError                I18nKey = "plan.query_error"                    // 扫描计划详情查询失败.
+	PlanQuerySuccess              I18nKey = "plan.query_success"                  // 扫描计划详情查询成功.
+	PlanSolutionIDsRequired       I18nKey = "plan.solution_ids_required"          // 扫描计划必须至少绑定一个扫描方案.
+	PlanSolutionListError         I18nKey = "plan.solution_list_error"            // 扫描计划可绑定方案列表查询失败.
+	PlanSolutionListSuccess       I18nKey = "plan.solution_list_success"          // 扫描计划可绑定方案列表查询成功.
+	PlanUnbindError               I18nKey = "plan.unbind_error"                   // 扫描计划解绑扫描方案失败.
+	PlanUnbindSuccess             I18nKey = "plan.unbind_success"                 // 扫描计划解绑扫描方案成功.
+	PlanUpdateError               I18nKey = "plan.update_error"                   // 扫描计划更新失败.
+	PlanUpdateSuccess             I18nKey = "plan.update_success"                 // 扫描计划更新成功.
 
 	// Pullrequest 相关常量
 	PullrequestBodyParamError                I18nKey = "pullrequest.body_param_error"                   // Body 参数解析失败.
@@ -258,6 +268,7 @@ const (
 	RepoIdentifierInvalid         I18nKey = "repo.identifier_invalid"           // 仓库名称不合法,identifier仅支持字母、数字、下划线(_)、连字符(-)、点号(.)
 	RepoLineNumberError           I18nKey = "repo.line_number_error"            // 行号必须大于0, 且结束行号必须大于起始行号
 	RepoMirrorReadOnly            I18nKey = "repo.mirror_read_only"             // 镜像仓库只读.
+	RepoNotFound                  I18nKey = "repo.not_found"                    // 仓库不存在.
 	RepoPathParamError            I18nKey = "repo.path_param_error"             // Path 参数解析失败.
 	RepoPullPermissionError       I18nKey = "repo.pull_permission_error"        // 您没有权限拉取此仓库.
 	RepoPushPermissionError       I18nKey = "repo.push_permission_error"        // 您没有权限推送此仓库.
@@ -349,29 +360,31 @@ const (
 	RunnerUpdateSuccess          I18nKey = "runner.update_success"            // 更新 Runner 成功.
 
 	// Solution 相关常量
-	SolutionAlreadyExists       I18nKey = "solution.already_exists"        // 扫描方案名称已存在.
-	SolutionBindError           I18nKey = "solution.bind_error"            // 扫描方案绑定规则集失败.
-	SolutionBindSuccess         I18nKey = "solution.bind_success"          // 扫描方案绑定规则集成功.
-	SolutionBodyParamError      I18nKey = "solution.body_param_error"      // 请求体参数解析失败.
-	SolutionBuiltinDeleteError  I18nKey = "solution.builtin_delete_error"  // 内置扫描方案不允许删除.
-	SolutionCreateError         I18nKey = "solution.create_error"          // 扫描方案创建失败.
-	SolutionCreateSuccess       I18nKey = "solution.create_success"        // 扫描方案创建成功.
-	SolutionDeleteError         I18nKey = "solution.delete_error"          // 扫描方案删除失败.
-	SolutionDeleteSuccess       I18nKey = "solution.delete_success"        // 扫描方案删除成功.
-	SolutionInUseError          I18nKey = "solution.in_use_error"          // 扫描方案已被扫描计划使用,无法删除.
-	SolutionListError           I18nKey = "solution.list_error"            // 扫描方案列表查询失败.
-	SolutionListSuccess         I18nKey = "solution.list_success"          // 扫描方案列表查询成功.
-	SolutionPathParamError      I18nKey = "solution.path_param_error"      // 路径参数解析失败.
-	SolutionQueryError          I18nKey = "solution.query_error"           // 扫描方案详情查询失败.
-	SolutionQuerySuccess        I18nKey = "solution.query_success"         // 扫描方案详情查询成功.
-	SolutionRulesetListError    I18nKey = "solution.ruleset_list_error"    // 扫描方案规则集列表查询失败.
-	SolutionRulesetListSuccess  I18nKey = "solution.ruleset_list_success"  // 扫描方案规则集列表查询成功.
-	SolutionStatusUpdateError   I18nKey = "solution.status_update_error"   // 扫描方案状态更新失败.
-	SolutionStatusUpdateSuccess I18nKey = "solution.status_update_success" // 扫描方案状态更新成功.
-	SolutionUnbindError         I18nKey = "solution.unbind_error"          // 扫描方案解绑规则集失败.
-	SolutionUnbindSuccess       I18nKey = "solution.unbind_success"        // 扫描方案解绑规则集成功.
-	SolutionUpdateError         I18nKey = "solution.update_error"          // 扫描方案更新失败.
-	SolutionUpdateSuccess       I18nKey = "solution.update_success"        // 扫描方案更新成功.
+	SolutionAlreadyExists       I18nKey = "solution.already_exists"         // 扫描方案名称已存在.
+	SolutionBindError           I18nKey = "solution.bind_error"             // 扫描方案绑定规则集失败.
+	SolutionBindSuccess         I18nKey = "solution.bind_success"           // 扫描方案绑定规则集成功.
+	SolutionBodyParamError      I18nKey = "solution.body_param_error"       // 请求体参数解析失败.
+	SolutionBuiltinDeleteError  I18nKey = "solution.builtin_delete_error"   // 内置扫描方案不允许删除.
+	SolutionCreateError         I18nKey = "solution.create_error"           // 扫描方案创建失败.
+	SolutionCreateSuccess       I18nKey = "solution.create_success"         // 扫描方案创建成功.
+	SolutionDeleteError         I18nKey = "solution.delete_error"           // 扫描方案删除失败.
+	SolutionDeleteSuccess       I18nKey = "solution.delete_success"         // 扫描方案删除成功.
+	SolutionInUseError          I18nKey = "solution.in_use_error"           // 扫描方案已被扫描计划使用,无法删除.
+	SolutionListError           I18nKey = "solution.list_error"             // 扫描方案列表查询失败.
+	SolutionListSuccess         I18nKey = "solution.list_success"           // 扫描方案列表查询成功.
+	SolutionPathParamError      I18nKey = "solution.path_param_error"       // 路径参数解析失败.
+	SolutionNotFound           I18nKey = "solution.not_found"             // 扫描方案不存在.
+	SolutionQueryError         I18nKey = "solution.query_error"            // 扫描方案详情查询失败.
+	SolutionQuerySuccess        I18nKey = "solution.query_success"          // 扫描方案详情查询成功.
+	SolutionRulesetIDsRequired  I18nKey = "solution.ruleset_ids_required"   // 扫描方案必须至少包含一个规则集ID.
+	SolutionRulesetListError    I18nKey = "solution.ruleset_list_error"     // 扫描方案规则集列表查询失败.
+	SolutionRulesetListSuccess  I18nKey = "solution.ruleset_list_success"   // 扫描方案规则集列表查询成功.
+	SolutionStatusUpdateError   I18nKey = "solution.status_update_error"    // 扫描方案状态更新失败.
+	SolutionStatusUpdateSuccess I18nKey = "solution.status_update_success"  // 扫描方案状态更新成功.
+	SolutionUnbindError         I18nKey = "solution.unbind_error"           // 扫描方案解绑规则集失败.
+	SolutionUnbindSuccess       I18nKey = "solution.unbind_success"         // 扫描方案解绑规则集成功.
+	SolutionUpdateError         I18nKey = "solution.update_error"           // 扫描方案更新失败.
+	SolutionUpdateSuccess       I18nKey = "solution.update_success"         // 扫描方案更新成功.
 
 	// Space 相关常量
 	SpaceArtifactsTitleSuccess   I18nKey = "space.artifacts_title_success"   // 仓库设置保存成功
@@ -408,16 +421,24 @@ const (
 	TagQueryParamError I18nKey = "tag.query_param_error" // Query 参数解析失败.
 
 	// Trigger 相关常量
-	TriggerBodyParamError I18nKey = "trigger.body_param_error" // 请求体参数解析失败.
-	TriggerCreateError    I18nKey = "trigger.create_error"     // 触发器创建失败.
-	TriggerCreateSuccess  I18nKey = "trigger.create_success"   // 触发器创建成功.
-	TriggerDeleteError    I18nKey = "trigger.delete_error"     // 触发器删除失败.
-	TriggerDeleteSuccess  I18nKey = "trigger.delete_success"   // 触发器删除成功.
-	TriggerListError      I18nKey = "trigger.list_error"       // 触发器列表查询失败.
-	TriggerListSuccess    I18nKey = "trigger.list_success"     // 触发器列表查询成功.
-	TriggerPathParamError I18nKey = "trigger.path_param_error" // 路径参数解析失败.
-	TriggerQueryError     I18nKey = "trigger.query_error"      // 触发器详情查询失败.
-	TriggerQuerySuccess   I18nKey = "trigger.query_success"    // 触发器详情查询成功.
-	TriggerUpdateError    I18nKey = "trigger.update_error"     // 触发器更新失败.
-	TriggerUpdateSuccess  I18nKey = "trigger.update_success"   // 触发器更新成功.
+	TriggerActionsRequiredError    I18nKey = "trigger.actions_required_error"     // 触发器动作不能为空.
+	TriggerBodyParamError          I18nKey = "trigger.body_param_error"           // 请求体参数解析失败.
+	TriggerCreateError             I18nKey = "trigger.create_error"               // 触发器创建失败.
+	TriggerCreateSuccess           I18nKey = "trigger.create_success"             // 触发器创建成功.
+	TriggerCronBranchRequiredError I18nKey = "trigger.cron_branch_required_error" // 定时触发器分支不能为空.
+	TriggerCronRequiredError       I18nKey = "trigger.cron_required_error"        // 定时触发器cron不能为空.
+	TriggerDeleteError             I18nKey = "trigger.delete_error"               // 触发器删除失败.
+	TriggerDeleteSuccess           I18nKey = "trigger.delete_success"             // 触发器删除成功.
+	TriggerNotFound                I18nKey = "trigger.not_found"                 // 触发器不存在.
+	TriggerInvalidCronError        I18nKey = "trigger.invalid_cron_error"         // 无效的cron表达式.
+	TriggerInvalidTypeError        I18nKey = "trigger.invalid_type_error"         // 无效的触发器类型.
+	TriggerListError               I18nKey = "trigger.list_error"                 // 触发器列表查询失败.
+	TriggerListSuccess             I18nKey = "trigger.list_success"               // 触发器列表查询成功.
+	TriggerPathParamError          I18nKey = "trigger.path_param_error"           // 路径参数解析失败.
+	TriggerQueryError              I18nKey = "trigger.query_error"                // 触发器详情查询失败.
+	TriggerQuerySuccess            I18nKey = "trigger.query_success"              // 触发器详情查询成功.
+	TriggerRetainOneError          I18nKey = "trigger.retain_one_error"           // 至少保留一个触发器.
+	TriggerTypeRequiredError       I18nKey = "trigger.type_required_error"        // 触发器类型不能为空.
+	TriggerUpdateError             I18nKey = "trigger.update_error"               // 触发器更新失败.
+	TriggerUpdateSuccess           I18nKey = "trigger.update_success"             // 触发器更新成功.
 )

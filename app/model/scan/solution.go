@@ -8,18 +8,20 @@ import (
 
 // SolutionReqForCreate 创建扫描方案请求
 type SolutionReqForCreate struct {
-	Name   string `json:"name" binding:"required,max=100"`
-	Desc   string `json:"desc"`
-	DescEn string `json:"descEn,omitempty"`
-	Tag    string `json:"tag"`
+	Name   string                  `json:"name" binding:"required,max=100"`
+	Desc   string                  `json:"desc"`
+	DescEn string                  `json:"descEn,omitempty"`
+	Tag    string                  `json:"tag"`
+	Status constant.ScanRuleStatus `json:"status,omitempty"`
 }
 
 // SolutionReqForUpdate 更新扫描方案请求
 type SolutionReqForUpdate struct {
-	Name   string `json:"name,omitempty"`
-	Desc   string `json:"desc,omitempty"`
-	DescEn string `json:"descEn,omitempty"`
-	Tag    string `json:"tag,omitempty"`
+	Name   string                  `json:"name,omitempty"`
+	Desc   string                  `json:"desc,omitempty"`
+	DescEn string                  `json:"descEn,omitempty"`
+	Tag    string                  `json:"tag,omitempty"`
+	Status constant.ScanRuleStatus `json:"status,omitempty"`
 }
 
 // SolutionReqFilter 查询扫描方案过滤条件

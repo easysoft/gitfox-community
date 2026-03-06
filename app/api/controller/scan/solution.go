@@ -36,7 +36,7 @@ func (c *ScanController) SolutionCreate(ctx *gin.Context) {
 
 	data, err := c.solutionSvc.Create(ctx.Request.Context(), session, reqData)
 	if err != nil {
-		resp.InternalError(ctx, errors.WithI18nKey(err, i18n.SolutionCreateError))
+		resp.InternalError(ctx, err)
 		return
 	}
 	resp.Created(ctx, i18n.SolutionCreateSuccess, data)
@@ -63,7 +63,7 @@ func (c *ScanController) SolutionList(ctx *gin.Context) {
 
 	result, err := c.solutionSvc.List(ctx.Request.Context(), reqQuery)
 	if err != nil {
-		resp.InternalError(ctx, errors.WithI18nKey(err, i18n.SolutionListError))
+		resp.InternalError(ctx, err)
 		return
 	}
 	resp.ListSuccess(ctx, result.Data,
@@ -92,7 +92,7 @@ func (c *ScanController) SolutionGet(ctx *gin.Context) {
 
 	obj, err := c.solutionSvc.GetByID(ctx.Request.Context(), id)
 	if err != nil {
-		resp.InternalError(ctx, errors.WithI18nKey(err, i18n.SolutionQueryError))
+		resp.InternalError(ctx, err)
 		return
 	}
 	resp.OK(ctx, i18n.SolutionQuerySuccess, obj)
@@ -133,7 +133,7 @@ func (c *ScanController) SolutionUpdate(ctx *gin.Context) {
 
 	data, err := c.solutionSvc.Update(ctx.Request.Context(), session, id, reqBody)
 	if err != nil {
-		resp.InternalError(ctx, errors.WithI18nKey(err, i18n.SolutionUpdateError))
+		resp.InternalError(ctx, err)
 		return
 	}
 	resp.OK(ctx, i18n.SolutionUpdateSuccess, data)
@@ -158,7 +158,7 @@ func (c *ScanController) SolutionDelete(ctx *gin.Context) {
 	}
 
 	if err := c.solutionSvc.Delete(ctx.Request.Context(), id); err != nil {
-		resp.InternalError(ctx, errors.WithI18nKey(err, i18n.SolutionDeleteError))
+		resp.InternalError(ctx, err)
 		return
 	}
 	resp.OK(ctx, i18n.SolutionDeleteSuccess, nil)
@@ -190,7 +190,7 @@ func (c *ScanController) SolutionUpdateStatus(ctx *gin.Context) {
 	}
 
 	if err := c.solutionSvc.UpdateStatus(ctx.Request.Context(), session, id); err != nil {
-		resp.InternalError(ctx, errors.WithI18nKey(err, i18n.SolutionStatusUpdateError))
+		resp.InternalError(ctx, err)
 		return
 	}
 	resp.OK(ctx, i18n.SolutionStatusUpdateSuccess, nil)
@@ -216,7 +216,7 @@ func (c *ScanController) SolutionListRulesets(ctx *gin.Context) {
 
 	rulesets, err := c.solutionSvc.ListRulesets(ctx.Request.Context(), id)
 	if err != nil {
-		resp.InternalError(ctx, errors.WithI18nKey(err, i18n.SolutionRulesetListError))
+		resp.InternalError(ctx, err)
 		return
 	}
 	resp.ListSuccess(ctx, rulesets,
@@ -244,7 +244,7 @@ func (c *ScanController) SolutionListUnbindRulesets(ctx *gin.Context) {
 
 	rulesets, err := c.solutionSvc.ListUnbindRulesets(ctx.Request.Context(), id)
 	if err != nil {
-		resp.InternalError(ctx, errors.WithI18nKey(err, i18n.SolutionRulesetListError))
+		resp.InternalError(ctx, err)
 		return
 	}
 	resp.ListSuccess(ctx, rulesets,
@@ -278,7 +278,7 @@ func (c *ScanController) SolutionBindRulesets(ctx *gin.Context) {
 	}
 
 	if err := c.solutionSvc.BindRulesets(ctx.Request.Context(), id, reqData); err != nil {
-		resp.InternalError(ctx, errors.WithI18nKey(err, i18n.SolutionBindError))
+		resp.InternalError(ctx, err)
 		return
 	}
 	resp.OK(ctx, i18n.SolutionBindSuccess, nil)
@@ -310,7 +310,7 @@ func (c *ScanController) SolutionUnbindRulesets(ctx *gin.Context) {
 	}
 
 	if err := c.solutionSvc.UnbindRulesets(ctx.Request.Context(), id, reqData); err != nil {
-		resp.InternalError(ctx, errors.WithI18nKey(err, i18n.SolutionUnbindError))
+		resp.InternalError(ctx, err)
 		return
 	}
 	resp.OK(ctx, i18n.SolutionUnbindSuccess, nil)

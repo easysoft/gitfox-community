@@ -36,7 +36,7 @@ func (c *ScanController) ScanTriggerList(ctx *gin.Context) {
 
 	triggers, err := c.triggerSvc.List(ctx.Request.Context(), repoID, planID)
 	if err != nil {
-		resp.InternalError(ctx, errors.WithI18nKey(err, i18n.TriggerListError))
+		resp.InternalError(ctx, err)
 		return
 	}
 	resp.ListSuccess(ctx, triggers,
@@ -85,7 +85,7 @@ func (c *ScanController) ScanTriggerCreate(ctx *gin.Context) {
 
 	data, err := c.triggerSvc.Create(ctx.Request.Context(), session, planID, repoID, reqData)
 	if err != nil {
-		resp.InternalError(ctx, errors.WithI18nKey(err, i18n.TriggerCreateError))
+		resp.InternalError(ctx, err)
 		return
 	}
 	resp.Created(ctx, i18n.TriggerCreateSuccess, data)
@@ -125,7 +125,7 @@ func (c *ScanController) ScanTriggerGet(ctx *gin.Context) {
 
 	obj, err := c.triggerSvc.GetByID(ctx.Request.Context(), repoID, planID, triggerID)
 	if err != nil {
-		resp.InternalError(ctx, errors.WithI18nKey(err, i18n.TriggerQueryError))
+		resp.InternalError(ctx, err)
 		return
 	}
 	resp.OK(ctx, i18n.TriggerQuerySuccess, obj)
@@ -179,7 +179,7 @@ func (c *ScanController) ScanTriggerUpdate(ctx *gin.Context) {
 
 	data, err := c.triggerSvc.Update(ctx.Request.Context(), session, repoID, planID, triggerID, reqBody)
 	if err != nil {
-		resp.InternalError(ctx, errors.WithI18nKey(err, i18n.TriggerUpdateError))
+		resp.InternalError(ctx, err)
 		return
 	}
 	resp.OK(ctx, i18n.TriggerUpdateSuccess, data)
@@ -218,7 +218,7 @@ func (c *ScanController) ScanTriggerDelete(ctx *gin.Context) {
 	}
 
 	if err := c.triggerSvc.Delete(ctx.Request.Context(), repoID, planID, triggerID); err != nil {
-		resp.InternalError(ctx, errors.WithI18nKey(err, i18n.TriggerDeleteError))
+		resp.InternalError(ctx, err)
 		return
 	}
 	resp.OK(ctx, i18n.TriggerDeleteSuccess, nil)
@@ -258,7 +258,7 @@ func (c *ScanController) ScanConditionList(ctx *gin.Context) {
 
 	conditions, err := c.conditionSvc.List(ctx.Request.Context(), repoID, planID, triggerID)
 	if err != nil {
-		resp.InternalError(ctx, errors.WithI18nKey(err, i18n.ConditionListError))
+		resp.InternalError(ctx, err)
 		return
 	}
 	resp.ListSuccess(ctx, conditions,
@@ -313,7 +313,7 @@ func (c *ScanController) ScanConditionBatchCreate(ctx *gin.Context) {
 	}
 
 	if err := c.conditionSvc.BatchCreate(ctx.Request.Context(), session, planID, triggerID, repoID, reqData); err != nil {
-		resp.InternalError(ctx, errors.WithI18nKey(err, i18n.ConditionBatchCreateError))
+		resp.InternalError(ctx, err)
 		return
 	}
 	resp.OK(ctx, i18n.ConditionBatchCreateSuccess, nil)
@@ -359,7 +359,7 @@ func (c *ScanController) ScanConditionBatchDelete(ctx *gin.Context) {
 	}
 
 	if err := c.conditionSvc.BatchDelete(ctx.Request.Context(), repoID, planID, triggerID, reqData); err != nil {
-		resp.InternalError(ctx, errors.WithI18nKey(err, i18n.ConditionBatchDeleteError))
+		resp.InternalError(ctx, err)
 		return
 	}
 	resp.OK(ctx, i18n.ConditionBatchDeleteSuccess, nil)

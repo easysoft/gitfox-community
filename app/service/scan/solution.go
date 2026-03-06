@@ -37,7 +37,7 @@ func (s *SolutionService) Create(ctx context.Context, session *authModel.Session
 		DescEn:    req.DescEn,
 		Tag:       req.Tag,
 		IsCustom:  true,
-		Status:    constant.ScanRuleStatusEnabled,
+		Status:    req.Status,
 		CreatedBy: session.User.Account,
 		EditedBy:  session.User.Account,
 	}
@@ -46,7 +46,7 @@ func (s *SolutionService) Create(ctx context.Context, session *authModel.Session
 }
 
 func (s *SolutionService) GetByID(ctx context.Context, id uint) (*scanModel.Solution, error) {
-	solution, err := s.solutionStore.GetByID(ctx, id)
+	solution, err := s.getSolutionByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -98,14 +98,18 @@ func (s *SolutionService) Update(ctx context.Context, session *authModel.Session
 		solution.Tag = req.Tag
 	}
 
+	if req.Status != "" {
+		solution.Status = req.Status
+	}
+
 	if err := s.solutionStore.Update(ctx, solution); err != nil {
 		return nil, err
 	}
-	return s.solutionStore.GetByID(ctx, id)
+	return s.getSolutionByID(ctx, id)
 }
 
 func (s *SolutionService) Delete(ctx context.Context, id uint) error {
-	obj, err := s.solutionStore.GetByID(ctx, id)
+	obj, err := s.getSolutionByID(ctx, id)
 	if err != nil {
 		return err
 	}
@@ -121,7 +125,7 @@ func (s *SolutionService) List(ctx context.Context, filter scanModel.SolutionReq
 
 // UpdateStatus 切换扫描方案的状态（enabled ↔ disabled），适用于 /status 和 /draft 两个接口
 func (s *SolutionService) UpdateStatus(ctx context.Context, session *authModel.Session, id uint) error {
-	obj, err := s.solutionStore.GetByID(ctx, id)
+	obj, err := s.getSolutionByID(ctx, id)
 	if err != nil {
 		return err
 	}
@@ -140,19 +144,24 @@ func (s *SolutionService) UpdateStatus(ctx context.Context, session *authModel.S
 }
 
 func (s *SolutionService) ListRulesets(ctx context.Context, solutionID uint) ([]*scanModel.RuleSet, error) {
+	if _, err := s.getSolutionByID(ctx, solutionID); err != nil {
+		return nil, err
+	}
 	return s.solutionStore.ListRulesets(ctx, solutionID)
 }
 
 func (s *SolutionService) ListUnbindRulesets(ctx context.Context, solutionID uint) ([]*scanModel.RuleSet, error) {
+	if _, err := s.getSolutionByID(ctx, solutionID); err != nil {
+		return nil, err
+	}
 	return s.solutionStore.ListUnbindRulesets(ctx, solutionID)
 }
 
 func (s *SolutionService) BindRulesets(ctx context.Context, solutionID uint, req scanModel.SolutionReqForBind) error {
 	if len(req.IDs) == 0 {
-		return errors.New("rulesetIDList is required")
+		return errors.WithI18nKey(errors.New("rulesetIDList is required"), i18n.SolutionRulesetIDsRequired)
 	}
-	_, err := s.solutionStore.GetByID(ctx, solutionID)
-	if err != nil {
+	if _, err := s.getSolutionByID(ctx, solutionID); err != nil {
 		return err
 	}
 	return s.solutionStore.BindRulesets(ctx, solutionID, req.IDs)
@@ -160,11 +169,22 @@ func (s *SolutionService) BindRulesets(ctx context.Context, solutionID uint, req
 
 func (s *SolutionService) UnbindRulesets(ctx context.Context, solutionID uint, req scanModel.SolutionReqForBind) error {
 	if len(req.IDs) == 0 {
-		return errors.New("rulesetIDList is required")
+		return errors.WithI18nKey(errors.New("rulesetIDList is required"), i18n.SolutionRulesetIDsRequired)
 	}
-	_, err := s.solutionStore.GetByID(ctx, solutionID)
-	if err != nil {
+	if _, err := s.getSolutionByID(ctx, solutionID); err != nil {
 		return err
 	}
 	return s.solutionStore.UnbindRulesets(ctx, solutionID, req.IDs)
+}
+
+// getSolutionByID 加载扫描方案，并把底层 not found 转成 SolutionNotFound.
+func (s *SolutionService) getSolutionByID(ctx context.Context, id uint) (*scanModel.Solution, error) {
+	solution, err := s.solutionStore.GetByID(ctx, id)
+	if err != nil {
+		if isDBNotFoundError(err) {
+			return nil, errors.WithI18nKey(err, i18n.SolutionNotFound)
+		}
+		return nil, err
+	}
+	return solution, nil
 }

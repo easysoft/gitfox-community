@@ -8,6 +8,8 @@ import (
 	scanModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
 	scanStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/scan"
 	scanStoreMock "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/scan/mock"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -26,6 +28,19 @@ func TestSolutionServiceCreateAndGet(t *testing.T) {
 		svc := NewSolutionService(store)
 		_, err := svc.Create(context.Background(), newTestSession("tester"), scanModel.SolutionReqForCreate{Name: "sol-a"})
 		require.Error(t, err)
+	})
+
+	t.Run("get by id not found", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		store := scanStoreMock.NewMockISolution(ctrl)
+		store.EXPECT().GetByID(gomock.Any(), uint(10)).Return(nil, errors.ErrResourceNotFound)
+
+		svc := NewSolutionService(store)
+		_, err := svc.GetByID(context.Background(), 10)
+		require.Error(t, err)
+		assert.Equal(t, i18n.SolutionNotFound, errors.GetI18nKey(err))
 	})
 
 	t.Run("get by id aggregates fields", func(t *testing.T) {
