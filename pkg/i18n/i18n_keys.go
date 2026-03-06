@@ -216,6 +216,7 @@ const (
 	PlanFilesExcludeError         I18nKey = "plan.files_exclude_error"            // 扫描计划文件排除模式无效.
 	PlanFilesIncludeError         I18nKey = "plan.files_include_error"            // 扫描计划文件包含模式无效.
 	PlanFilesPatternJSONError     I18nKey = "plan.files_pattern_json_error"       // 扫描计划文件模式JSON无效.
+	PlanInvalidScanTypeError      I18nKey = "plan.invalid_scan_type_error"        // 扫描计划扫描类型无效.
 	PlanListError                 I18nKey = "plan.list_error"                     // 扫描计划列表查询失败.
 	PlanListSuccess               I18nKey = "plan.list_success"                   // 扫描计划列表查询成功.
 	PlanPathParamError            I18nKey = "plan.path_param_error"               // 路径参数解析失败.
