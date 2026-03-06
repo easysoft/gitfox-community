@@ -6,6 +6,7 @@ package runtime
 
 import (
 	"context"
+	"fmt"
 	"regexp"
 	"time"
 
@@ -271,7 +272,7 @@ func (s *Runner) run(ctx context.Context, stage *drone.Stage, data *client.Conte
 			continue
 		}
 		stage.Steps = append(stage.Steps, &drone.Step{
-			Name:      src.Name,
+			Name:      fmt.Sprintf("%s::%s", src.ID, src.Name),
 			Number:    len(stage.Steps) + 1,
 			StageID:   stage.ID,
 			Status:    drone.StatusPending,

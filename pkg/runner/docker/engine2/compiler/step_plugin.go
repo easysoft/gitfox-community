@@ -11,8 +11,8 @@ import (
 
 func createStepPlugin(src *harness.Step, spec *harness.StepPlugin) *engine.Step {
 	dst := &engine.Step{
-		ID:    random(),
-		Name:  src.Id,
+		ID:    src.Id,
+		Name:  src.Name,
 		Image: "alpine",
 
 		// TODO re-enable

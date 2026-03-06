@@ -14,8 +14,8 @@ import (
 
 func createStep(src *harness.Step, spec *harness.StepScript) *engine.Step {
 	dst := &engine.Step{
-		ID:         random(),
-		Name:       src.Id,
+		ID:         src.Id,
+		Name:       src.Name,
 		Image:      image.Expand(spec.Image),
 		Command:    spec.Args,
 		Entrypoint: nil,
@@ -143,8 +143,8 @@ func createStep(src *harness.Step, spec *harness.StepScript) *engine.Step {
 
 func createRunStep(src *harness.Step, spec *harness.StepRun) *engine.Step {
 	dst := &engine.Step{
-		ID:         random(),
-		Name:       src.Id,
+		ID:         src.Id,
+		Name:       src.Name,
 		Image:      "",
 		Command:    nil,
 		Entrypoint: nil,
