@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	authModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
 	scanModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
 	repoStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
@@ -36,6 +37,9 @@ func (s *ScanPlanService) Create(ctx context.Context, session *authModel.Session
 		return nil, errors.WithI18nKey(errors.New("solutionIDs is required"), i18n.PlanSolutionIDsRequired)
 	}
 	if err := validateScanPlanPatterns(req.Branches, req.Files); err != nil {
+		return nil, err
+	}
+	if err := validateScanType(req.ScanType); err != nil {
 		return nil, err
 	}
 	if err := s.validateSolutionIDsExist(ctx, req.SolutionIDs); err != nil {
@@ -99,6 +103,11 @@ func (s *ScanPlanService) Update(ctx context.Context, session *authModel.Session
 	}
 	if err := validateScanPlanPatterns(req.Branches, req.Files); err != nil {
 		return nil, err
+	}
+	if req.ScanType != "" {
+		if err := validateScanType(req.ScanType); err != nil {
+			return nil, err
+		}
 	}
 
 	if _, err := s.getPlanByRepoAndID(ctx, repoID, id); err != nil {
@@ -262,6 +271,19 @@ func planPatternError(field string, patternType string, err error) error {
 		}
 	}
 	return errors.WithI18nKey(err, key)
+}
+
+func validateScanType(scanType string) error {
+	if scanType == "" {
+		return nil
+	}
+
+	switch constant.ScanType(scanType) {
+	case constant.ScanTypeFull, constant.ScanTypeIncremental:
+		return nil
+	default:
+		return errors.WithI18nKey(fmt.Errorf("invalid scan type: %s", scanType), i18n.PlanInvalidScanTypeError)
+	}
 }
 
 func (s *ScanPlanService) validateSolutionIDsExist(ctx context.Context, solutionIDs []uint) error {

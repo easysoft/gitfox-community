@@ -2,6 +2,7 @@ package scan
 
 import (
 	"context"
+	"strings"
 
 	scanModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
@@ -82,7 +83,13 @@ func (s *ScanPlanStore) List(ctx context.Context, repoID uint, filter scanModel.
 	}
 
 	var plans []*ScanPlan
-	pageResult, err := database.PaginateDefault(ctx, tx, filter.Page, filter.PageSize, &plans)
+	pageResult, err := database.Paginate(ctx, tx, database.PageParam{
+		Page:      filter.Page,
+		PageSize:  filter.PageSize,
+		Sort:      normalizeScanPlanSortField(filter.Sort),
+		Order:     normalizeSortOrder(filter.Order, "desc"),
+		NeedTotal: true,
+	}, &plans)
 	if err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
@@ -117,6 +124,25 @@ func (s *ScanPlanStore) List(ctx context.Context, repoID uint, filter scanModel.
 		Page:     pageResult.Page,
 		PageSize: pageResult.PageSize,
 	}, nil
+}
+
+func normalizeScanPlanSortField(sort string) string {
+	switch strings.TrimSpace(sort) {
+	case "", "id":
+		return "id"
+	case "name":
+		return "name"
+	case "createdBy":
+		return "createdBy"
+	case "createdDate":
+		return "createdDate"
+	case "editedBy":
+		return "editedBy"
+	case "editedDate":
+		return "editedDate"
+	default:
+		return "id"
+	}
 }
 
 // GetSolutionIDList 获取计划关联的方案ID列表

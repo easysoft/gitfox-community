@@ -83,6 +83,7 @@ plan:
   branches_include_error: "分支包含规则无效，请检查 branches.include 中的通配模式。"
   branches_exclude_error: "分支排除规则无效，请检查 branches.exclude 中的通配模式。"
   files_pattern_json_error: "文件匹配配置格式无效，请检查 files 的 JSON 结构。"
+  invalid_scan_type_error: "扫描类型无效，仅支持 full 或 incremental。"
   files_include_error: "文件包含规则无效，请检查 files.include 中的通配模式。"
   files_exclude_error: "文件排除规则无效，请检查 files.exclude 中的通配模式。"
   pattern_empty_error: "匹配规则中不允许出现空字符串。"

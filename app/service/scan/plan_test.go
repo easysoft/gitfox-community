@@ -82,6 +82,17 @@ func TestScanPlanServiceCreate(t *testing.T) {
 		require.Error(t, err)
 	})
 
+	t.Run("invalid scan type", func(t *testing.T) {
+		svc := NewScanPlanService(nil, &fakeRepoStore{}, nil)
+		_, err := svc.Create(context.Background(), newTestSession("tester"), 1, scanModel.ScanPlanReqForCreate{
+			Name:        "plan-a",
+			SolutionIDs: []uint{1},
+			ScanType:    "delta",
+		})
+		require.Error(t, err)
+		assert.Equal(t, i18n.PlanInvalidScanTypeError, errors.GetI18nKey(err))
+	})
+
 	t.Run("solution not found", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
@@ -122,6 +133,7 @@ func TestScanPlanServiceCreate(t *testing.T) {
 		planStore.EXPECT().Create(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, plan *scanStore.ScanPlan) (*scanModel.ScanPlan, error) {
 			assert.Equal(t, uint64(1), plan.RepoID)
 			assert.Equal(t, "tester", plan.CreatedBy)
+			assert.Equal(t, "full", plan.ScanType)
 			return &scanModel.ScanPlan{ID: 11, RepoID: 1}, nil
 		})
 		planStore.EXPECT().BindSolutions(gomock.Any(), uint(11), []uint{2, 3}).Return(nil)
@@ -129,7 +141,7 @@ func TestScanPlanServiceCreate(t *testing.T) {
 		planStore.EXPECT().GetSolutionIDList(gomock.Any(), uint(11)).Return([]int64{2, 3}, nil)
 
 		svc := NewScanPlanService(planStore, &fakeRepoStore{}, solutionStore)
-		got, err := svc.Create(context.Background(), newTestSession("tester"), 1, scanModel.ScanPlanReqForCreate{Name: "plan-a", SolutionIDs: []uint{2, 3}})
+		got, err := svc.Create(context.Background(), newTestSession("tester"), 1, scanModel.ScanPlanReqForCreate{Name: "plan-a", SolutionIDs: []uint{2, 3}, ScanType: "full"})
 		require.NoError(t, err)
 		require.NotNil(t, got)
 		assert.Equal(t, []int64{2, 3}, got.SolutionIDs)
@@ -145,4 +157,15 @@ func TestScanPlanServiceUpdateValidatePatterns(t *testing.T) {
 		Branches: "{bad-json}",
 	})
 	require.Error(t, err)
+}
+
+func TestScanPlanServiceUpdateInvalidScanType(t *testing.T) {
+	t.Parallel()
+
+	svc := NewScanPlanService(nil, &fakeRepoStore{}, nil)
+	_, err := svc.Update(context.Background(), newTestSession("tester"), 1, 1, scanModel.ScanPlanReqForUpdate{
+		ScanType: "delta",
+	})
+	require.Error(t, err)
+	assert.Equal(t, i18n.PlanInvalidScanTypeError, errors.GetI18nKey(err))
 }

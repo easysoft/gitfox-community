@@ -3,6 +3,7 @@ package scan
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"gorm.io/gorm"
 
@@ -34,7 +35,13 @@ func (s *RuleStore) ListByRuleSetID(
 
 	// 分页查询
 	var rules []*Rule
-	pageResult, err := database.PaginateDefault(ctx, tx, filter.Page, filter.Size, &rules)
+	pageResult, err := database.Paginate(ctx, tx, database.PageParam{
+		Page:      filter.Page,
+		PageSize:  filter.Size,
+		Sort:      normalizeRuleSortField(filter.Sort),
+		Order:     normalizeSortOrder(filter.Order, "asc"),
+		NeedTotal: true,
+	}, &rules)
 	if err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
@@ -96,7 +103,13 @@ func (s *RuleStore) ExcludeByRuleSetID(
 
 	// 分页查询
 	var rules []*Rule
-	pageResult, err := database.PaginateDefault(ctx, tx, filter.Page, filter.Size, &rules)
+	pageResult, err := database.Paginate(ctx, tx, database.PageParam{
+		Page:      filter.Page,
+		PageSize:  filter.Size,
+		Sort:      normalizeRuleSortField(filter.Sort),
+		Order:     normalizeSortOrder(filter.Order, "asc"),
+		NeedTotal: true,
+	}, &rules)
 	if err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
@@ -196,6 +209,38 @@ func (s *RuleStore) List(ctx context.Context, filter scanModel.RuleListReqFilter
 		Page:     pageResult.Page,
 		PageSize: pageResult.PageSize,
 	}, nil
+}
+
+func normalizeRuleSortField(sort string) string {
+	switch strings.TrimSpace(sort) {
+	case "", "id":
+		return "id"
+	case "name":
+		return "name"
+	case "priority":
+		return "priority"
+	case "createdBy":
+		return "createdBy"
+	case "createdDate":
+		return "createdDate"
+	case "editedBy":
+		return "editedBy"
+	case "editedDate":
+		return "editedDate"
+	default:
+		return "id"
+	}
+}
+
+func normalizeSortOrder(order string, defaultOrder string) string {
+	switch strings.ToLower(strings.TrimSpace(order)) {
+	case "asc":
+		return "asc"
+	case "desc":
+		return "desc"
+	default:
+		return strings.ToLower(defaultOrder)
+	}
 }
 
 // UpdateStatus 切换规则状态（enabled ↔ disabled）
