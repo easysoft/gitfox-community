@@ -1803,6 +1803,8 @@ definitions:
       name:
         maxLength: 100
         type: string
+      status:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleStatus'
       tag:
         type: string
     required:
@@ -1816,6 +1818,8 @@ definitions:
         type: string
       name:
         type: string
+      status:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleStatus'
       tag:
         type: string
     type: object
