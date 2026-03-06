@@ -6,6 +6,7 @@ package runtime
 
 import (
 	"context"
+	"fmt"
 	"regexp"
 	"time"
 
@@ -119,7 +120,7 @@ func (s *Runner) run(ctx context.Context, stage *drone.Stage, data *client.Conte
 	ctxdone, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	timeout := time.Duration(int64((10 * time.Hour).Seconds())) * time.Minute
+	timeout := time.Duration(int64((10 * time.Hour).Seconds())) * time.Second
 	ctxtimeout, cancel := context.WithTimeout(ctxdone, timeout)
 	defer cancel()
 
@@ -160,10 +161,15 @@ func (s *Runner) run(ctx context.Context, stage *drone.Stage, data *client.Conte
 	// 	return v
 	// }
 
+	// 临时兼容
+	stageRepo := &drone.Repo{}
+	if data.Repo != nil {
+		stageRepo = data.Repo
+	}
 	state := &pipeline.State{
 		Build:  data.Build,
 		Stage:  stage,
-		Repo:   data.Repo,
+		Repo:   stageRepo,
 		System: data.System,
 	}
 
@@ -233,13 +239,20 @@ func (s *Runner) run(ctx context.Context, stage *drone.Stage, data *client.Conte
 	// all steps have an identifier
 	normalize.Normalize(config)
 
+	// 临时兼容
+	argsRepo := &drone.Repo{
+		Timeout: int64((10 * time.Hour).Seconds()),
+	}
+	if data.Repo != nil {
+		argsRepo = data.Repo
+	}
 	// compile the yaml configuration file to an intermediate
 	// representation, and then
 	args := compiler.Args{
 		Config: config,
 		Build:  data.Build,
 		Stage:  stage,
-		Repo:   data.Repo,
+		Repo:   argsRepo,
 		System: data.System,
 		Netrc:  data.Netrc,
 		Secret: secret.Static(data.Secrets),
@@ -252,8 +265,6 @@ func (s *Runner) run(ctx context.Context, stage *drone.Stage, data *client.Conte
 		return s.Reporter.ReportStage(noContext, state)
 	}
 
-	// 这里先去遍历了 spec.Steps, 但是数据库的 steps 写入是在后面的 s.Client.Update
-	// 这里的 Steps 数据是哪里的？应该是 yaml content 里的
 	for _, src := range spec.Steps {
 		// steps that are skipped are ignored and are not stored
 		// in the drone database, nor displayed in the UI.
@@ -261,7 +272,7 @@ func (s *Runner) run(ctx context.Context, stage *drone.Stage, data *client.Conte
 			continue
 		}
 		stage.Steps = append(stage.Steps, &drone.Step{
-			Name:      src.Name,
+			Name:      fmt.Sprintf("%s::%s", src.ID, src.Name),
 			Number:    len(stage.Steps) + 1,
 			StageID:   stage.ID,
 			Status:    drone.StatusPending,

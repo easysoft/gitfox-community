@@ -288,7 +288,7 @@ func NewApp(mode string) (*App, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	managerManager := manager.New(config, executionService, pipelineService, urlProvider, streamer, schedulerScheduler, stageService, stepService, reporter2, reporter, pullrequestService)
+	managerManager := manager.New(config, executionService, pipelineService, urlProvider, streamer, schedulerScheduler, stageService, stepService, reporter2, reporter, pullrequestService, logStream)
 	client := manager.NewEmbeddedClient(managerManager, urlProvider, config)
 	pipelineStorage, err := provider.ProvidePipelineCIStorage(config)
 	if err != nil {

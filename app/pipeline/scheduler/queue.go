@@ -225,12 +225,12 @@ func (q *queue) signal(ctx context.Context) error {
 
 			log.Info().Msgf("[测试]: worker matched, dispatching stage, worker_token=%s, stage_id=%d, type=%s", w.token, item.ID, w.typ)
 
-			// select {
-			// case w.channel <- item:
-			// 	log.Info().Msgf("[测试]: stage dispatched to worker successfully, worker_token=%s, stage_id=%d", w.token, item.ID)
-			// case <-w.done:
-			// 	log.Info().Msgf("[测试]: worker cancelled before dispatch, worker_token=%s, stage_id=%d", w.token, item.ID)
-			// }
+			select {
+			case w.channel <- item:
+				log.Info().Msgf("[测试]: stage dispatched to worker successfully, worker_token=%s, stage_id=%d", w.token, item.ID)
+			case <-w.done:
+				log.Info().Msgf("[测试]: worker cancelled before dispatch, worker_token=%s, stage_id=%d", w.token, item.ID)
+			}
 
 			delete(q.workers, w)
 			matched = true

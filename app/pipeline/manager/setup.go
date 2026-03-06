@@ -53,7 +53,7 @@ func (s *setup) do(ctx context.Context, stage *stageModel.StageWithSteps) error 
 		if len(step.ErrorLog) > 500 {
 			step.ErrorLog = step.ErrorLog[:500]
 		}
-		err := s.StepSvc.Create(noContext, &step)
+		err := s.StepSvc.Create(noContext, step)
 		if err != nil {
 			log.Error().Err(err).
 				Str("stage.status", string(stage.Status)).
