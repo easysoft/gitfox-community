@@ -5,8 +5,8 @@ import (
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/scan"
 	scanSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/scan"
-	scanStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/scan"
 	repoStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
+	scanStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/scan"
 )
 
 var ScanRuleSetWireSet = wire.NewSet(

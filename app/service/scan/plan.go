@@ -2,9 +2,7 @@ package scan
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"strings"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	authModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
@@ -14,7 +12,6 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
-	"github.com/bmatcuk/doublestar/v4"
 )
 
 var _ IScanPlan = (*ScanPlanService)(nil)
@@ -23,10 +20,27 @@ type ScanPlanService struct {
 	planStore     scanStore.IScanPlan
 	repoStore     repoStore.Interface
 	solutionStore scanStore.ISolution
+	ruleSetStore  scanStore.IRuleSet
+	ruleStore     scanStore.IRule
+	triggerStore  scanStore.IScanTrigger
 }
 
-func NewScanPlanService(planStore scanStore.IScanPlan, repoStore repoStore.Interface, solutionStore scanStore.ISolution) *ScanPlanService {
-	return &ScanPlanService{planStore: planStore, repoStore: repoStore, solutionStore: solutionStore}
+func NewScanPlanService(
+	planStore scanStore.IScanPlan,
+	repoStore repoStore.Interface,
+	solutionStore scanStore.ISolution,
+	ruleSetStore scanStore.IRuleSet,
+	ruleStore scanStore.IRule,
+	triggerStore scanStore.IScanTrigger,
+) *ScanPlanService {
+	return &ScanPlanService{
+		planStore:     planStore,
+		repoStore:     repoStore,
+		solutionStore: solutionStore,
+		ruleSetStore:  ruleSetStore,
+		ruleStore:     ruleStore,
+		triggerStore:  triggerStore,
+	}
 }
 
 func (s *ScanPlanService) Create(ctx context.Context, session *authModel.Session, repoID uint, req scanModel.ScanPlanReqForCreate) (*scanModel.ScanPlan, error) {
@@ -36,7 +50,12 @@ func (s *ScanPlanService) Create(ctx context.Context, session *authModel.Session
 	if len(req.SolutionIDs) == 0 {
 		return nil, errors.WithI18nKey(errors.New("solutionIDs is required"), i18n.PlanSolutionIDsRequired)
 	}
-	if err := validateScanPlanPatterns(req.Branches, req.Files); err != nil {
+	branches, err := validateAndMarshalScanPlanPattern("branches", req.Branches)
+	if err != nil {
+		return nil, err
+	}
+	files, err := validateAndMarshalScanPlanPattern("files", req.Files)
+	if err != nil {
 		return nil, err
 	}
 	if err := validateScanType(req.ScanType); err != nil {
@@ -59,8 +78,8 @@ func (s *ScanPlanService) Create(ctx context.Context, session *authModel.Session
 		Name:      req.Name,
 		Desc:      req.Desc,
 		ScanType:  req.ScanType,
-		Branches:  req.Branches,
-		Files:     req.Files,
+		Branches:  branches,
+		Files:     files,
 		CreatedBy: session.User.Account,
 		EditedBy:  session.User.Account,
 	}
@@ -101,8 +120,15 @@ func (s *ScanPlanService) Update(ctx context.Context, session *authModel.Session
 	if err := s.ensureRepoExists(ctx, repoID); err != nil {
 		return nil, err
 	}
-	if err := validateScanPlanPatterns(req.Branches, req.Files); err != nil {
-		return nil, err
+	if req.Branches != nil {
+		if _, err := validateAndMarshalScanPlanPattern("branches", *req.Branches); err != nil {
+			return nil, err
+		}
+	}
+	if req.Files != nil {
+		if _, err := validateAndMarshalScanPlanPattern("files", *req.Files); err != nil {
+			return nil, err
+		}
 	}
 	if req.ScanType != "" {
 		if err := validateScanType(req.ScanType); err != nil {
@@ -136,11 +162,19 @@ func (s *ScanPlanService) Update(ctx context.Context, session *authModel.Session
 	if req.ScanType != "" {
 		plan.ScanType = req.ScanType
 	}
-	if req.Branches != "" {
-		plan.Branches = req.Branches
+	if req.Branches != nil {
+		branches, err := validateAndMarshalScanPlanPattern("branches", *req.Branches)
+		if err != nil {
+			return nil, err
+		}
+		plan.Branches = branches
 	}
-	if req.Files != "" {
-		plan.Files = req.Files
+	if req.Files != nil {
+		files, err := validateAndMarshalScanPlanPattern("files", *req.Files)
+		if err != nil {
+			return nil, err
+		}
+		plan.Files = files
 	}
 
 	if err := s.planStore.Update(ctx, plan); err != nil {
@@ -164,6 +198,79 @@ func (s *ScanPlanService) List(ctx context.Context, repoID uint, filter scanMode
 		return nil, err
 	}
 	return s.planStore.List(ctx, repoID, filter)
+}
+
+func (s *ScanPlanService) ListRules(ctx context.Context, repoID uint, planID uint, triggerID uint) ([]*scanModel.Rule, error) {
+	if err := s.ensureRepoExists(ctx, repoID); err != nil {
+		return nil, err
+	}
+	if _, err := s.getPlanByRepoAndID(ctx, repoID, planID); err != nil {
+		return nil, err
+	}
+	if triggerID != 0 {
+		if _, err := s.getTriggerByRepoPlanAndID(ctx, repoID, planID, triggerID); err != nil {
+			return nil, err
+		}
+	}
+
+	solutionIDs, err := s.planStore.GetSolutionIDList(ctx, planID)
+	if err != nil {
+		return nil, err
+	}
+	if len(solutionIDs) == 0 {
+		return []*scanModel.Rule{}, nil
+	}
+
+	ruleIDs := make([]int64, 0)
+	seenRuleIDs := make(map[int64]struct{})
+	for _, solutionID := range solutionIDs {
+		solution, err := s.getSolutionByID(ctx, uint(solutionID))
+		if err != nil {
+			return nil, err
+		}
+		if solution.Status != constant.ScanRuleStatusEnabled {
+			continue
+		}
+
+		rulesets, err := s.solutionStore.ListRulesets(ctx, uint(solutionID))
+		if err != nil {
+			return nil, err
+		}
+		for _, ruleset := range rulesets {
+			if ruleset == nil || ruleset.Deleted || ruleset.Status != constant.ScanRuleStatusEnabled {
+				continue
+			}
+
+			rulesetRuleIDs, err := s.ruleSetStore.GetRuleIDList(ctx, uint(ruleset.ID))
+			if err != nil {
+				return nil, err
+			}
+			for _, ruleID := range rulesetRuleIDs {
+				if _, ok := seenRuleIDs[ruleID]; ok {
+					continue
+				}
+				seenRuleIDs[ruleID] = struct{}{}
+				ruleIDs = append(ruleIDs, ruleID)
+			}
+		}
+	}
+	if len(ruleIDs) == 0 {
+		return []*scanModel.Rule{}, nil
+	}
+
+	rules, err := s.ruleStore.ListByIDs(ctx, ruleIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]*scanModel.Rule, 0, len(rules))
+	for _, rule := range rules {
+		if rule == nil || rule.Status != constant.ScanRuleStatusEnabled {
+			continue
+		}
+		result = append(result, rule)
+	}
+	return result, nil
 }
 
 func (s *ScanPlanService) BindSolutions(ctx context.Context, repoID uint, planID uint, req scanModel.ScanPlanReqForBind) error {
@@ -205,81 +312,12 @@ func (s *ScanPlanService) ListUnbindSolutions(ctx context.Context, repoID uint, 
 	return s.planStore.ListUnbindSolutions(ctx, planID)
 }
 
-type scanPlanPattern struct {
-	Default bool     `json:"default,omitempty"`
-	Include []string `json:"include,omitempty"`
-	Exclude []string `json:"exclude,omitempty"`
-}
-
-// validateScanPlanPatterns 校验扫描计划中的分支和文件模式配置，避免落库前写入非法规则。
-func validateScanPlanPatterns(branches string, files string) error {
-	if err := validateScanPlanPatternField("branches", branches); err != nil {
-		return err
-	}
-	if err := validateScanPlanPatternField("files", files); err != nil {
-		return err
-	}
-	return nil
-}
-
-// validateScanPlanPatternField 解析并校验单个模式字段的 JSON 与 include/exclude 规则。
-func validateScanPlanPatternField(field string, raw string) error {
-	if raw == "" {
-		return nil
+func validateAndMarshalScanPlanPattern(field string, pattern scanModel.Pattern) (string, error) {
+	if err := pattern.Validate(field); err != nil {
+		return "", err
 	}
 
-	var pattern scanPlanPattern
-	if err := json.Unmarshal([]byte(raw), &pattern); err != nil {
-		return planPatternError(field, "pattern_json", fmt.Errorf("invalid %s pattern json: %w", field, err))
-	}
-
-	if err := validateGlobPatterns(field, "include", pattern.Include); err != nil {
-		return err
-	}
-	if err := validateGlobPatterns(field, "exclude", pattern.Exclude); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// validateGlobPatterns 逐个校验 glob 模式，并把错误映射成对应字段的 i18n key。
-func validateGlobPatterns(field string, patternType string, patterns []string) error {
-	for _, pattern := range patterns {
-		if pattern == "" {
-			return errors.WithI18nKey(fmt.Errorf("%s %s pattern cannot be empty", field, patternType), i18n.PlanPatternEmptyError)
-		}
-		if _, err := doublestar.Match(pattern, "test"); err != nil {
-			return planPatternError(field, patternType, fmt.Errorf("invalid %s %s pattern: %w", field, patternType, err))
-		}
-	}
-	return nil
-}
-
-// planPatternError 根据字段和模式类型选择对应的多语言错误 key 并包装原始错误。
-func planPatternError(field string, patternType string, err error) error {
-	key := i18n.PlanPatternEmptyError
-	switch strings.ToLower(field) {
-	case "branches":
-		switch patternType {
-		case "pattern_json":
-			key = i18n.PlanBranchesPatternJSONError
-		case "include":
-			key = i18n.PlanBranchesIncludeError
-		case "exclude":
-			key = i18n.PlanBranchesExcludeError
-		}
-	case "files":
-		switch patternType {
-		case "pattern_json":
-			key = i18n.PlanFilesPatternJSONError
-		case "include":
-			key = i18n.PlanFilesIncludeError
-		case "exclude":
-			key = i18n.PlanFilesExcludeError
-		}
-	}
-	return errors.WithI18nKey(err, key)
+	return pattern.JSONString()
 }
 
 func validateScanType(scanType string) error {
@@ -337,6 +375,18 @@ func (s *ScanPlanService) getSolutionByID(ctx context.Context, solutionID uint) 
 		return nil, err
 	}
 	return solution, nil
+}
+
+// getTriggerByRepoPlanAndID 按 repo 和 plan 作用域加载触发器，并把底层 not found 转成 TriggerNotFound.
+func (s *ScanPlanService) getTriggerByRepoPlanAndID(ctx context.Context, repoID uint, planID uint, triggerID uint) (*scanModel.ScanTrigger, error) {
+	trigger, err := s.triggerStore.GetByRepoPlanAndID(ctx, repoID, planID, triggerID)
+	if err != nil {
+		if isDBNotFoundError(err) {
+			return nil, errors.WithI18nKey(err, i18n.TriggerNotFound)
+		}
+		return nil, err
+	}
+	return trigger, nil
 }
 
 // isDBNotFoundError 判断错误是否应视为项目内统一的数据库 not found 错误。
