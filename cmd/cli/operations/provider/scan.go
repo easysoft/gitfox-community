@@ -5,7 +5,6 @@ import (
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/scan"
 	scanSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/scan"
-	repoStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
 	scanStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/scan"
 )
 
@@ -25,8 +24,6 @@ var ScanRuleSetWireSet = wire.NewSet(
 	scanSvc.NewScanPlanService,
 	wire.Bind(new(scanStore.IScanPlan), new(*scanStore.ScanPlanStore)),
 	scanStore.NewScanPlanStore,
-	wire.Bind(new(repoStore.Interface), new(*repoStore.Store)),
-	repoStore.NewRepoStore,
 	wire.Bind(new(scanSvc.IScanTrigger), new(*scanSvc.ScanTriggerService)),
 	scanSvc.NewScanTriggerService,
 	wire.Bind(new(scanStore.IScanTrigger), new(*scanStore.ScanTriggerStore)),
