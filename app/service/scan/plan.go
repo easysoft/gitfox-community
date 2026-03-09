@@ -113,6 +113,15 @@ func (s *ScanPlanService) Update(ctx context.Context, session *authModel.Session
 	if _, err := s.getPlanByRepoAndID(ctx, repoID, id); err != nil {
 		return nil, err
 	}
+	if req.Name != "" {
+		existing, err := s.planStore.FindByName(ctx, repoID, req.Name)
+		if err != nil {
+			return nil, err
+		}
+		if existing != nil && uint(existing.ID) != id {
+			return nil, errors.WithI18nKey(errors.New("scan plan name already exists"), i18n.PlanAlreadyExists)
+		}
+	}
 
 	plan := &scanStore.ScanPlan{
 		ID:       uint64(id),

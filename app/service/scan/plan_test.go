@@ -149,6 +149,24 @@ func TestScanPlanServiceCreate(t *testing.T) {
 	})
 }
 
+func TestScanPlanServiceUpdateDuplicateName(t *testing.T) {
+	t.Parallel()
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	planStore := scanStoreMock.NewMockIScanPlan(ctrl)
+	planStore.EXPECT().GetByRepoIDAndID(gomock.Any(), uint(1), uint(1)).Return(&scanModel.ScanPlan{ID: 1, RepoID: 1, Name: "plan-a"}, nil)
+	planStore.EXPECT().FindByName(gomock.Any(), uint(1), "plan-b").Return(&scanModel.ScanPlan{ID: 2, RepoID: 1, Name: "plan-b"}, nil)
+
+	svc := NewScanPlanService(planStore, &fakeRepoStore{}, nil)
+	_, err := svc.Update(context.Background(), newTestSession("tester"), 1, 1, scanModel.ScanPlanReqForUpdate{
+		Name: "plan-b",
+	})
+	require.Error(t, err)
+	assert.Equal(t, i18n.PlanAlreadyExists, errors.GetI18nKey(err))
+}
+
 func TestScanPlanServiceUpdateValidatePatterns(t *testing.T) {
 	t.Parallel()
 

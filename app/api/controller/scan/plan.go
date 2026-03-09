@@ -22,9 +22,8 @@ import (
 // @Failure 500 {object} resp.ObjectResponse "服务器内部错误"
 // @Router /scan/repos/{repoID}/scanplans/list [post]
 func (c *ScanController) ScanPlanList(ctx *gin.Context) {
-	repoID, err := req.PathParamAsPositiveUint(ctx, "repoID")
-	if err != nil {
-		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.PlanPathParamError))
+	repoID, ok := c.pathRepoID(ctx, i18n.PlanPathParamError)
+	if !ok {
 		return
 	}
 
@@ -59,9 +58,8 @@ func (c *ScanController) ScanPlanList(ctx *gin.Context) {
 // @Failure 500 {object} resp.ObjectResponse "服务器内部错误"
 // @Router /scan/repos/{repoID}/scanplans [post]
 func (c *ScanController) ScanPlanCreate(ctx *gin.Context) {
-	repoID, err := req.PathParamAsPositiveUint(ctx, "repoID")
-	if err != nil {
-		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.PlanPathParamError))
+	repoID, ok := c.pathRepoID(ctx, i18n.PlanPathParamError)
+	if !ok {
 		return
 	}
 
@@ -98,15 +96,8 @@ func (c *ScanController) ScanPlanCreate(ctx *gin.Context) {
 // @Failure 500 {object} resp.ObjectResponse "服务器内部错误"
 // @Router /scan/repos/{repoID}/scanplans/{planID} [get]
 func (c *ScanController) ScanPlanGet(ctx *gin.Context) {
-	repoID, err := req.PathParamAsPositiveUint(ctx, "repoID")
-	if err != nil {
-		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.PlanPathParamError))
-		return
-	}
-
-	planID, err := req.PathParamAsPositiveUint(ctx, "planID")
-	if err != nil {
-		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.PlanPathParamError))
+	repoID, planID, ok := c.pathRepoAndPlanID(ctx, i18n.PlanPathParamError)
+	if !ok {
 		return
 	}
 
@@ -133,15 +124,8 @@ func (c *ScanController) ScanPlanGet(ctx *gin.Context) {
 // @Failure 500 {object} resp.ObjectResponse "服务器内部错误"
 // @Router /scan/repos/{repoID}/scanplans/{planID} [patch]
 func (c *ScanController) ScanPlanUpdate(ctx *gin.Context) {
-	repoID, err := req.PathParamAsPositiveUint(ctx, "repoID")
-	if err != nil {
-		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.PlanPathParamError))
-		return
-	}
-
-	planID, err := req.PathParamAsPositiveUint(ctx, "planID")
-	if err != nil {
-		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.PlanPathParamError))
+	repoID, planID, ok := c.pathRepoAndPlanID(ctx, i18n.PlanPathParamError)
+	if !ok {
 		return
 	}
 
@@ -178,15 +162,8 @@ func (c *ScanController) ScanPlanUpdate(ctx *gin.Context) {
 // @Failure 500 {object} resp.ObjectResponse "服务器内部错误"
 // @Router /scan/repos/{repoID}/scanplans/{planID} [delete]
 func (c *ScanController) ScanPlanDelete(ctx *gin.Context) {
-	repoID, err := req.PathParamAsPositiveUint(ctx, "repoID")
-	if err != nil {
-		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.PlanPathParamError))
-		return
-	}
-
-	planID, err := req.PathParamAsPositiveUint(ctx, "planID")
-	if err != nil {
-		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.PlanPathParamError))
+	repoID, planID, ok := c.pathRepoAndPlanID(ctx, i18n.PlanPathParamError)
+	if !ok {
 		return
 	}
 
@@ -211,15 +188,8 @@ func (c *ScanController) ScanPlanDelete(ctx *gin.Context) {
 // @Failure 500 {object} resp.ObjectResponse "服务器内部错误"
 // @Router /scan/repos/{repoID}/scanplans/{planID}/bind [post]
 func (c *ScanController) ScanPlanBindSolution(ctx *gin.Context) {
-	repoID, err := req.PathParamAsPositiveUint(ctx, "repoID")
-	if err != nil {
-		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.PlanPathParamError))
-		return
-	}
-
-	planID, err := req.PathParamAsPositiveUint(ctx, "planID")
-	if err != nil {
-		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.PlanPathParamError))
+	repoID, planID, ok := c.pathRepoAndPlanID(ctx, i18n.PlanPathParamError)
+	if !ok {
 		return
 	}
 
@@ -250,15 +220,8 @@ func (c *ScanController) ScanPlanBindSolution(ctx *gin.Context) {
 // @Failure 500 {object} resp.ObjectResponse "服务器内部错误"
 // @Router /scan/repos/{repoID}/scanplans/{planID}/unbind [post]
 func (c *ScanController) ScanPlanUnbindSolution(ctx *gin.Context) {
-	repoID, err := req.PathParamAsPositiveUint(ctx, "repoID")
-	if err != nil {
-		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.PlanPathParamError))
-		return
-	}
-
-	planID, err := req.PathParamAsPositiveUint(ctx, "planID")
-	if err != nil {
-		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.PlanPathParamError))
+	repoID, planID, ok := c.pathRepoAndPlanID(ctx, i18n.PlanPathParamError)
+	if !ok {
 		return
 	}
 
@@ -288,15 +251,8 @@ func (c *ScanController) ScanPlanUnbindSolution(ctx *gin.Context) {
 // @Failure 500 {object} resp.ObjectResponse "服务器内部错误"
 // @Router /scan/repos/{repoID}/scanplans/{planID}/unbind [get]
 func (c *ScanController) ScanPlanListUnbindSolution(ctx *gin.Context) {
-	repoID, err := req.PathParamAsPositiveUint(ctx, "repoID")
-	if err != nil {
-		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.PlanPathParamError))
-		return
-	}
-
-	planID, err := req.PathParamAsPositiveUint(ctx, "planID")
-	if err != nil {
-		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.PlanPathParamError))
+	repoID, planID, ok := c.pathRepoAndPlanID(ctx, i18n.PlanPathParamError)
+	if !ok {
 		return
 	}
 
