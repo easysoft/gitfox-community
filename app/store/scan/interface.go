@@ -13,6 +13,7 @@ import (
 type IRule interface {
 	ListByRuleSetID(ctx context.Context, ruleIDs []int64, filter scanModel.RuleReqFilter) (*database.PageResult[*scanModel.Rule], error)
 	ExcludeByRuleSetID(ctx context.Context, excludeIDs []int64, filter scanModel.RuleReqFilter) (*database.PageResult[*scanModel.Rule], error)
+	ListByIDs(ctx context.Context, ruleIDs []int64) ([]*scanModel.Rule, error)
 
 	GetByID(ctx context.Context, id uint) (*scanModel.Rule, error)
 	UpdateStatus(ctx context.Context, id uint) error

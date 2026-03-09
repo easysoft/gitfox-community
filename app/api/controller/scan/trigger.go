@@ -22,15 +22,8 @@ import (
 // @Failure 500 {object} resp.ObjectResponse "服务器内部错误"
 // @Router /scan/repos/{repoID}/scanplans/{planID}/triggers [get]
 func (c *ScanController) ScanTriggerList(ctx *gin.Context) {
-	repoID, err := req.PathParamAsPositiveUint(ctx, "repoID")
-	if err != nil {
-		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.TriggerPathParamError))
-		return
-	}
-
-	planID, err := req.PathParamAsPositiveUint(ctx, "planID")
-	if err != nil {
-		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.TriggerPathParamError))
+	repoID, planID, ok := c.pathRepoAndPlanID(ctx, i18n.TriggerPathParamError)
+	if !ok {
 		return
 	}
 
@@ -59,15 +52,8 @@ func (c *ScanController) ScanTriggerList(ctx *gin.Context) {
 // @Failure 500 {object} resp.ObjectResponse "服务器内部错误"
 // @Router /scan/repos/{repoID}/scanplans/{planID}/triggers [post]
 func (c *ScanController) ScanTriggerCreate(ctx *gin.Context) {
-	repoID, err := req.PathParamAsPositiveUint(ctx, "repoID")
-	if err != nil {
-		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.TriggerPathParamError))
-		return
-	}
-
-	planID, err := req.PathParamAsPositiveUint(ctx, "planID")
-	if err != nil {
-		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.TriggerPathParamError))
+	repoID, planID, ok := c.pathRepoAndPlanID(ctx, i18n.TriggerPathParamError)
+	if !ok {
 		return
 	}
 
@@ -105,21 +91,8 @@ func (c *ScanController) ScanTriggerCreate(ctx *gin.Context) {
 // @Failure 500 {object} resp.ObjectResponse "服务器内部错误"
 // @Router /scan/repos/{repoID}/scanplans/{planID}/triggers/{triggerID} [get]
 func (c *ScanController) ScanTriggerGet(ctx *gin.Context) {
-	repoID, err := req.PathParamAsPositiveUint(ctx, "repoID")
-	if err != nil {
-		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.TriggerPathParamError))
-		return
-	}
-
-	planID, err := req.PathParamAsPositiveUint(ctx, "planID")
-	if err != nil {
-		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.TriggerPathParamError))
-		return
-	}
-
-	triggerID, err := req.PathParamAsPositiveUint(ctx, "triggerID")
-	if err != nil {
-		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.TriggerPathParamError))
+	repoID, planID, triggerID, ok := c.pathRepoPlanAndTriggerID(ctx, i18n.TriggerPathParamError)
+	if !ok {
 		return
 	}
 
@@ -147,21 +120,8 @@ func (c *ScanController) ScanTriggerGet(ctx *gin.Context) {
 // @Failure 500 {object} resp.ObjectResponse "服务器内部错误"
 // @Router /scan/repos/{repoID}/scanplans/{planID}/triggers/{triggerID} [patch]
 func (c *ScanController) ScanTriggerUpdate(ctx *gin.Context) {
-	repoID, err := req.PathParamAsPositiveUint(ctx, "repoID")
-	if err != nil {
-		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.TriggerPathParamError))
-		return
-	}
-
-	planID, err := req.PathParamAsPositiveUint(ctx, "planID")
-	if err != nil {
-		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.TriggerPathParamError))
-		return
-	}
-
-	triggerID, err := req.PathParamAsPositiveUint(ctx, "triggerID")
-	if err != nil {
-		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.TriggerPathParamError))
+	repoID, planID, triggerID, ok := c.pathRepoPlanAndTriggerID(ctx, i18n.TriggerPathParamError)
+	if !ok {
 		return
 	}
 
@@ -199,21 +159,8 @@ func (c *ScanController) ScanTriggerUpdate(ctx *gin.Context) {
 // @Failure 500 {object} resp.ObjectResponse "服务器内部错误"
 // @Router /scan/repos/{repoID}/scanplans/{planID}/triggers/{triggerID} [delete]
 func (c *ScanController) ScanTriggerDelete(ctx *gin.Context) {
-	repoID, err := req.PathParamAsPositiveUint(ctx, "repoID")
-	if err != nil {
-		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.TriggerPathParamError))
-		return
-	}
-
-	planID, err := req.PathParamAsPositiveUint(ctx, "planID")
-	if err != nil {
-		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.TriggerPathParamError))
-		return
-	}
-
-	triggerID, err := req.PathParamAsPositiveUint(ctx, "triggerID")
-	if err != nil {
-		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.TriggerPathParamError))
+	repoID, planID, triggerID, ok := c.pathRepoPlanAndTriggerID(ctx, i18n.TriggerPathParamError)
+	if !ok {
 		return
 	}
 
@@ -238,21 +185,8 @@ func (c *ScanController) ScanTriggerDelete(ctx *gin.Context) {
 // @Failure 500 {object} resp.ObjectResponse "服务器内部错误"
 // @Router /scan/repos/{repoID}/scanplans/{planID}/triggers/{triggerID}/conditions [get]
 func (c *ScanController) ScanConditionList(ctx *gin.Context) {
-	repoID, err := req.PathParamAsPositiveUint(ctx, "repoID")
-	if err != nil {
-		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.ConditionPathParamError))
-		return
-	}
-
-	planID, err := req.PathParamAsPositiveUint(ctx, "planID")
-	if err != nil {
-		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.ConditionPathParamError))
-		return
-	}
-
-	triggerID, err := req.PathParamAsPositiveUint(ctx, "triggerID")
-	if err != nil {
-		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.ConditionPathParamError))
+	repoID, planID, triggerID, ok := c.pathRepoPlanAndTriggerID(ctx, i18n.ConditionPathParamError)
+	if !ok {
 		return
 	}
 
@@ -282,21 +216,8 @@ func (c *ScanController) ScanConditionList(ctx *gin.Context) {
 // @Failure 500 {object} resp.ObjectResponse "服务器内部错误"
 // @Router /scan/repos/{repoID}/scanplans/{planID}/triggers/{triggerID}/conditions/new [post]
 func (c *ScanController) ScanConditionBatchCreate(ctx *gin.Context) {
-	repoID, err := req.PathParamAsPositiveUint(ctx, "repoID")
-	if err != nil {
-		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.ConditionPathParamError))
-		return
-	}
-
-	planID, err := req.PathParamAsPositiveUint(ctx, "planID")
-	if err != nil {
-		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.ConditionPathParamError))
-		return
-	}
-
-	triggerID, err := req.PathParamAsPositiveUint(ctx, "triggerID")
-	if err != nil {
-		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.ConditionPathParamError))
+	repoID, planID, triggerID, ok := c.pathRepoPlanAndTriggerID(ctx, i18n.ConditionPathParamError)
+	if !ok {
 		return
 	}
 
@@ -334,21 +255,8 @@ func (c *ScanController) ScanConditionBatchCreate(ctx *gin.Context) {
 // @Failure 500 {object} resp.ObjectResponse "服务器内部错误"
 // @Router /scan/repos/{repoID}/scanplans/{planID}/triggers/{triggerID}/conditions/delete [post]
 func (c *ScanController) ScanConditionBatchDelete(ctx *gin.Context) {
-	repoID, err := req.PathParamAsPositiveUint(ctx, "repoID")
-	if err != nil {
-		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.ConditionPathParamError))
-		return
-	}
-
-	planID, err := req.PathParamAsPositiveUint(ctx, "planID")
-	if err != nil {
-		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.ConditionPathParamError))
-		return
-	}
-
-	triggerID, err := req.PathParamAsPositiveUint(ctx, "triggerID")
-	if err != nil {
-		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.ConditionPathParamError))
+	repoID, planID, triggerID, ok := c.pathRepoPlanAndTriggerID(ctx, i18n.ConditionPathParamError)
+	if !ok {
 		return
 	}
 

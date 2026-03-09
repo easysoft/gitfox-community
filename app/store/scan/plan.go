@@ -2,6 +2,7 @@ package scan
 
 import (
 	"context"
+	"strconv"
 	"strings"
 
 	scanModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
@@ -76,10 +77,25 @@ func (s *ScanPlanStore) Delete(ctx context.Context, id uint) error {
 
 // List 查询指定仓库的扫描计划列表
 func (s *ScanPlanStore) List(ctx context.Context, repoID uint, filter scanModel.ScanPlanReqFilter) (*database.PageResult[*scanModel.ScanPlan], error) {
-	tx := s.db.WithContext(ctx).Model(&ScanPlan{}).Where("repoID = ? AND deleted = ?", repoID, false)
+	tx := s.db.WithContext(ctx).Model(&ScanPlan{}).Where("ops_scan_plans.repoID = ? AND ops_scan_plans.deleted = ?", repoID, false)
 
 	if filter.Name != "" {
-		tx = tx.Where("name LIKE ?", "%"+filter.Name+"%")
+		tx = tx.Where("ops_scan_plans.name LIKE ?", "%"+filter.Name+"%")
+	}
+	if parsedRepoID, ok := parseUintFilter(filter.RepoID); ok {
+		tx = tx.Where("ops_scan_plans.repoID = ?", parsedRepoID)
+	}
+	if parsedSpaceID, ok := parseUintFilter(filter.SpaceID); ok {
+		tx = tx.Joins("JOIN ops_repo ON ops_repo.id = ops_scan_plans.repoID AND ops_repo.deleted = ?", 0).
+			Where("ops_repo.spaceID = ?", parsedSpaceID)
+	}
+	if filter.LatestTaskResult != "" {
+		// 社区版当前尚未落库 scan task 历史，参考项目的 latest task 过滤暂以空结果兜底，避免误返回未过滤数据。
+		tx = tx.Where("1 = 0")
+	}
+	if filter.LatestTaskStatus != "" {
+		// 社区版当前尚未落库 scan task 历史，参考项目的 latest task 过滤暂以空结果兜底，避免误返回未过滤数据。
+		tx = tx.Where("1 = 0")
 	}
 
 	var plans []*ScanPlan
@@ -124,6 +140,19 @@ func (s *ScanPlanStore) List(ctx context.Context, repoID uint, filter scanModel.
 		Page:     pageResult.Page,
 		PageSize: pageResult.PageSize,
 	}, nil
+}
+
+func parseUintFilter(raw string) (uint64, bool) {
+	trimmed := strings.TrimSpace(raw)
+	if trimmed == "" {
+		return 0, false
+	}
+
+	value, err := strconv.ParseUint(trimmed, 10, 64)
+	if err != nil {
+		return 0, false
+	}
+	return value, true
 }
 
 func normalizeScanPlanSortField(sort string) string {
@@ -228,14 +257,23 @@ func (s *ScanPlanStore) ListUnbindSolutions(ctx context.Context, planID uint) ([
 }
 
 func mapScanPlanToModel(data ScanPlan) *scanModel.ScanPlan {
+	branches, err := scanModel.ParsePattern(data.Branches)
+	if err != nil {
+		branches = &scanModel.Pattern{}
+	}
+	files, err := scanModel.ParsePattern(data.Files)
+	if err != nil {
+		files = &scanModel.Pattern{}
+	}
+
 	return &scanModel.ScanPlan{
 		ID:          int64(data.ID),
 		RepoID:      int64(data.RepoID),
 		Name:        data.Name,
 		Desc:        data.Desc,
 		ScanType:    data.ScanType,
-		Branches:    data.Branches,
-		Files:       data.Files,
+		Branches:    branches,
+		Files:       files,
 		CreatedBy:   data.CreatedBy,
 		CreatedDate: data.CreatedDate,
 		EditedBy:    data.EditedBy,

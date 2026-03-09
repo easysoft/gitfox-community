@@ -60,6 +60,28 @@ func (s *RuleStore) ListByRuleSetID(
 	}, nil
 }
 
+// ListByIDs 根据规则 ID 列表查询规则实体，按 ID 升序返回未删除记录。
+func (s *RuleStore) ListByIDs(ctx context.Context, ruleIDs []int64) ([]*scanModel.Rule, error) {
+	if len(ruleIDs) == 0 {
+		return []*scanModel.Rule{}, nil
+	}
+
+	var rules []*Rule
+	if err := s.db.WithContext(ctx).
+		Model(&Rule{}).
+		Where("id IN ? AND deleted = ?", ruleIDs, false).
+		Order("id ASC").
+		Find(&rules).Error; err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
+	}
+
+	modelData := make([]*scanModel.Rule, 0, len(rules))
+	for _, item := range rules {
+		modelData = append(modelData, mapRuleToModel(item))
+	}
+	return modelData, nil
+}
+
 // mapRuleToModel 将 store.Rule 转换为 scanModel.Rule
 func mapRuleToModel(data *Rule) *scanModel.Rule {
 	if data == nil {

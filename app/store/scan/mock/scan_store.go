@@ -89,6 +89,21 @@ func (mr *MockIRuleMockRecorder) GetByID(ctx, id any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByID", reflect.TypeOf((*MockIRule)(nil).GetByID), ctx, id)
 }
 
+// ListByIDs mocks base method.
+func (m *MockIRule) ListByIDs(ctx context.Context, ruleIDs []int64) ([]*scan.Rule, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListByIDs", ctx, ruleIDs)
+	ret0, _ := ret[0].([]*scan.Rule)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListByIDs indicates an expected call of ListByIDs.
+func (mr *MockIRuleMockRecorder) ListByIDs(ctx, ruleIDs any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListByIDs", reflect.TypeOf((*MockIRule)(nil).ListByIDs), ctx, ruleIDs)
+}
+
 // List mocks base method.
 func (m *MockIRule) List(ctx context.Context, filter scan.RuleListReqFilter) (*database.PageResult[*scan.Rule], error) {
 	m.ctrl.T.Helper()
