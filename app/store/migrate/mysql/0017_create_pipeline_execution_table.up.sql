@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS `ops_pipeline_executions` (
 	`trigger` varchar(50) NOT NULL COMMENT '触发方式：manual,branch_updated',
 	`commit` char(40) NOT NULL DEFAULT '' COMMENT 'CommitID',
 	`ref` varchar(255) NOT NULL DEFAULT '' COMMENT '分支/tag/commit，如refs/heads/main,refs/tags/v1.0,commit',
-	`params` text NOT NULL DEFAULT '' COMMENT '执行入参（JSON格式）',
+	`params` text NOT NULL  COMMENT '执行入参（JSON格式）',
 	`started` datetime NULL COMMENT '执行开始时间',
 	`finished` datetime NULL COMMENT '执行结束时间',
 	`duration` int NOT NULL DEFAULT 0 COMMENT '执行时长(s)',
