@@ -10,13 +10,13 @@ import (
 )
 
 type ScanController struct {
-	ruleSetSvc        scanService.IRuleSet
-	ruleSvc           scanService.IRule
-	solutionSvc       scanService.ISolution
-	planSvc           scanService.IScanPlan
-	triggerSvc        scanService.IScanTrigger
-	conditionSvc      scanService.IScanCondition
-	planConditionSvc  scanService.IScanPlanCondition
+	ruleSetSvc       scanService.IRuleSet
+	ruleSvc          scanService.IRule
+	solutionSvc      scanService.ISolution
+	planSvc          scanService.IScanPlan
+	triggerSvc       scanService.IScanTrigger
+	conditionSvc     scanService.IScanCondition
+	planConditionSvc scanService.IScanPlanCondition
 }
 
 // NewScanController 创建扫描处理器实例
@@ -41,7 +41,7 @@ func NewScanController(
 }
 
 func (c *ScanController) pathRepoID(ctx *gin.Context, errKey i18n.I18nKey) (uint, bool) {
-	repoID, err := req.PathParamAsPositiveUint(ctx, "repoID")
+	repoID, err := req.PathParamAsNaturalNum(ctx, "repoID")
 	if err != nil {
 		resp.BadRequest(ctx, errors.WithI18nKey(err, errKey))
 		return 0, false
