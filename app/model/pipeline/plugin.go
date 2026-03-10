@@ -79,6 +79,12 @@ func (p *Plugin) Matches(v *Plugin) bool {
 	if p.Logo != v.Logo {
 		return false
 	}
+	if p.Type != v.Type {
+		return false
+	}
+	if p.Kind != v.Kind {
+		return false
+	}
 	return true
 }
 
