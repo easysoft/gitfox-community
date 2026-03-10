@@ -38,6 +38,9 @@ var ScanRuleSetWireSet = wire.NewSet(
 	scanSvc.NewScanConditionService,
 	wire.Bind(new(scanStore.IScanCondition), new(*scanStore.ScanConditionStore)),
 	scanStore.NewScanConditionStore,
+	wire.Bind(new(scanSvc.IScanPlanCondition), new(*scanSvc.ScanPlanConditionService)),
+	scanSvc.NewScanPlanConditionService,
+	wire.Bind(new(scanStore.IScanPlanCondition), new(*scanStore.ScanConditionStore)),
 )
 
 var ScanRuleWireSet = wire.NewSet(

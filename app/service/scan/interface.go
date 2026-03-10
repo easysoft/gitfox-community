@@ -74,8 +74,20 @@ type IScanTrigger interface {
 }
 
 // IScanCondition 触发器条件 service 接口
+// NOTE: this is trigger-scoped conditions.
 type IScanCondition interface {
 	BatchCreate(ctx context.Context, session *authModel.Session, planID uint, triggerID uint, repoID uint, req scanModel.ScanConditionReqForBatchCreate) error
 	BatchDelete(ctx context.Context, repoID uint, planID uint, triggerID uint, req scanModel.ScanConditionReqForBatchDelete) error
 	List(ctx context.Context, repoID uint, planID uint, triggerID uint) ([]*scanModel.ScanCondition, error)
+}
+
+// IScanPlanCondition 计划级条件 service 接口（triggerID=0）
+type IScanPlanCondition interface {
+	Create(ctx context.Context, session *authModel.Session, repoID uint, planID uint, req scanModel.ScanPlanConditionReqForCreate) (*scanModel.ScanCondition, error)
+	List(ctx context.Context, repoID uint, planID uint) ([]*scanModel.ScanCondition, error)
+	Find(ctx context.Context, repoID uint, planID uint, conditionID uint) (*scanModel.ScanCondition, error)
+	Update(ctx context.Context, session *authModel.Session, repoID uint, planID uint, conditionID uint, req scanModel.ScanPlanConditionReqForUpdate) (*scanModel.ScanCondition, error)
+	Delete(ctx context.Context, repoID uint, planID uint, conditionID uint) error
+	BatchCreate(ctx context.Context, session *authModel.Session, repoID uint, planID uint, req scanModel.ScanPlanConditionReqForBatchCreate) error
+	BatchDelete(ctx context.Context, repoID uint, planID uint, req scanModel.ScanPlanConditionReqForBatchDelete) error
 }
