@@ -4,6 +4,23 @@ import (
 	"strings"
 )
 
+type ScanLangID int
+
+const (
+	ScanLangIDCustom ScanLangID = iota
+	ScanLangGo
+	ScanLangJava
+	ScanLangJavaScript
+	ScanLangKotlin
+	ScanLangPHP
+	ScanLangPython
+	ScanLangRuby
+	ScanLangRust
+	ScanLangTypeScript
+	ScanLangC
+	ScanLangCsharp
+)
+
 type ScanLangName string
 
 const (
@@ -27,6 +44,37 @@ func (s ScanLangName) String() string {
 
 func (s ScanLangName) LowerString() string {
 	return strings.ToLower(string(s))
+}
+
+func (s ScanLangName) ID() ScanLangID {
+	switch s {
+	case ScanLangCustomName:
+		return ScanLangIDCustom
+	case ScanLangGoName:
+		return ScanLangGo
+	case ScanLangJavaName:
+		return ScanLangJava
+	case ScanLangJavaScriptName:
+		return ScanLangJavaScript
+	case ScanLangKotlinName:
+		return ScanLangKotlin
+	case ScanLangPHPName:
+		return ScanLangPHP
+	case ScanLangPythonName:
+		return ScanLangPython
+	case ScanLangRubyName:
+		return ScanLangRuby
+	case ScanLangRustName:
+		return ScanLangRust
+	case ScanLangTypeScriptName:
+		return ScanLangTypeScript
+	case ScanLangCName:
+		return ScanLangC
+	case ScanLangCsharpName:
+		return ScanLangCsharp
+	default:
+		return ScanLangIDCustom
+	}
 }
 
 var scanLangs = sortEnum([]ScanLangName{
