@@ -187,6 +187,7 @@ func (s *Service) Update(ctx context.Context, req *repoModel.ReqForUpdate, oldRe
 		Desc:          req.Desc,
 		ACL:           req.ACL,
 		Product:       req.Product,
+		Identifier:    req.Identifier,
 		DefaultBranch: req.DefaultBranch,
 	}
 
