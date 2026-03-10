@@ -100,8 +100,10 @@ func (s *ScanPlanService) Create(ctx context.Context, session *authModel.Session
 }
 
 func (s *ScanPlanService) GetByID(ctx context.Context, repoID uint, id uint) (*scanModel.ScanPlan, error) {
-	if err := s.ensureRepoExists(ctx, repoID); err != nil {
-		return nil, err
+	if repoID != 0 {
+		if err := s.ensureRepoExists(ctx, repoID); err != nil {
+			return nil, err
+		}
 	}
 	plan, err := s.getPlanByRepoAndID(ctx, repoID, id)
 	if err != nil {
@@ -194,9 +196,12 @@ func (s *ScanPlanService) Delete(ctx context.Context, repoID uint, id uint) erro
 }
 
 func (s *ScanPlanService) List(ctx context.Context, repoID uint, filter scanModel.ScanPlanReqFilter) (*database.PageResult[*scanModel.ScanPlan], error) {
-	if err := s.ensureRepoExists(ctx, repoID); err != nil {
-		return nil, err
+	if repoID != 0 {
+		if err := s.ensureRepoExists(ctx, repoID); err != nil {
+			return nil, err
+		}
 	}
+
 	return s.planStore.List(ctx, repoID, filter)
 }
 
