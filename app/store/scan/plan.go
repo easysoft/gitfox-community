@@ -76,7 +76,7 @@ func (s *ScanPlanStore) Delete(ctx context.Context, id uint) error {
 
 // List 查询指定仓库的扫描计划列表
 func (s *ScanPlanStore) List(ctx context.Context, repoID uint, filter scanModel.ScanPlanReqFilter) (*database.PageResult[*scanModel.ScanPlan], error) {
-	tx := s.db.WithContext(ctx).Model(&ScanPlan{}).Where("ops_scan_plans.repoID = ? AND ops_scan_plans.deleted = ?", repoID, false)
+	tx := s.db.WithContext(ctx).Model(&ScanPlan{}).Where("ops_scan_plans.deleted = ?", false)
 
 	if filter.Name != "" {
 		tx = tx.Where("ops_scan_plans.name LIKE ?", "%"+filter.Name+"%")
