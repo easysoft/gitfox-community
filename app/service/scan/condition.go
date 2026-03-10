@@ -19,10 +19,11 @@ type ScanConditionService struct {
 	repoStore      repoStore.Interface
 	planStore      scanStore.IScanPlan
 	triggerStore   scanStore.IScanTrigger
+	cronScheduler  CronScheduler
 }
 
-func NewScanConditionService(conditionStore scanStore.IScanCondition, repoStore repoStore.Interface, planStore scanStore.IScanPlan, triggerStore scanStore.IScanTrigger) *ScanConditionService {
-	return &ScanConditionService{conditionStore: conditionStore, repoStore: repoStore, planStore: planStore, triggerStore: triggerStore}
+func NewScanConditionService(conditionStore scanStore.IScanCondition, repoStore repoStore.Interface, planStore scanStore.IScanPlan, triggerStore scanStore.IScanTrigger, cronScheduler CronScheduler) *ScanConditionService {
+	return &ScanConditionService{conditionStore: conditionStore, repoStore: repoStore, planStore: planStore, triggerStore: triggerStore, cronScheduler: cronScheduler}
 }
 
 func (s *ScanConditionService) BatchCreate(ctx context.Context, session *authModel.Session, planID uint, triggerID uint, repoID uint, req scanModel.ScanConditionReqForBatchCreate) error {
@@ -50,7 +51,14 @@ func (s *ScanConditionService) BatchCreate(ctx context.Context, session *authMod
 			EditedBy:  session.User.Account,
 		})
 	}
-	return s.conditionStore.BatchCreate(ctx, conditions)
+	if err := s.conditionStore.BatchCreate(ctx, conditions); err != nil {
+		return err
+	}
+	trigger, err := s.getTriggerByRepoPlanAndID(ctx, repoID, planID, triggerID)
+	if err != nil {
+		return err
+	}
+	return s.syncTriggerCronJob(ctx, trigger)
 }
 
 func (s *ScanConditionService) BatchDelete(ctx context.Context, repoID uint, planID uint, triggerID uint, req scanModel.ScanConditionReqForBatchDelete) error {
@@ -83,7 +91,14 @@ func (s *ScanConditionService) BatchDelete(ctx context.Context, repoID uint, pla
 	if len(conditionIDs) > 0 {
 		return errors.WithI18nKey(errors.New("condition not found"), i18n.ConditionNotFound)
 	}
-	return s.conditionStore.BatchDelete(ctx, repoID, planID, triggerID, req.IDs)
+	if err := s.conditionStore.BatchDelete(ctx, repoID, planID, triggerID, req.IDs); err != nil {
+		return err
+	}
+	trigger, err := s.getTriggerByRepoPlanAndID(ctx, repoID, planID, triggerID)
+	if err != nil {
+		return err
+	}
+	return s.syncTriggerCronJob(ctx, trigger)
 }
 
 func (s *ScanConditionService) List(ctx context.Context, repoID uint, planID uint, triggerID uint) ([]*scanModel.ScanCondition, error) {
