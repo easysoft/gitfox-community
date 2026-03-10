@@ -171,6 +171,7 @@ func mapPluginToStore(p *pipelineModel.Plugin) *Plugin {
 		Yaml:        []byte(p.Yaml),
 		Json:        []byte(p.Json),
 		Type:        string(p.Type),
+		Kind:        p.Kind,
 		CreatedBy:   p.CreatedBy,
 		CreatedDate: p.CreatedDate,
 		EditedBy:    p.EditedBy,

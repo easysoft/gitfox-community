@@ -28,6 +28,7 @@ type Plugin struct {
 	Yaml        string          `json:"yaml"`    // YAML 格式配置
 	Json        string          `json:"json"`    // JSON 格式配置
 	Type        PluginType      `json:"type"`    // 插件类型
+	Kind        string          `json:"kind"`    //
 	CreatedBy   string          `json:"createdBy"`
 	CreatedDate *datetime.Local `json:"createdDate"`
 	EditedBy    string          `json:"editedBy"`
