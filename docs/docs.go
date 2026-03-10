@@ -9910,15 +9910,12 @@ const docTemplate = `{
                     "type": "integer",
                     "default": 30
                 },
-                "repo_id": {
-                    "type": "string"
-                },
                 "sort": {
                     "type": "string",
                     "default": "id"
                 },
                 "space_id": {
-                    "type": "string"
+                    "type": "integer"
                 }
             }
         },

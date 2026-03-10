@@ -28,6 +28,7 @@ type Plugin struct {
 	Yaml        string          `json:"yaml"`    // YAML 格式配置
 	Json        string          `json:"json"`    // JSON 格式配置
 	Type        PluginType      `json:"type"`    // 插件类型
+	Kind        string          `json:"kind"`    //
 	CreatedBy   string          `json:"createdBy"`
 	CreatedDate *datetime.Local `json:"createdDate"`
 	EditedBy    string          `json:"editedBy"`
@@ -76,6 +77,12 @@ func (p *Plugin) Matches(v *Plugin) bool {
 		return false
 	}
 	if p.Logo != v.Logo {
+		return false
+	}
+	if p.Type != v.Type {
+		return false
+	}
+	if p.Kind != v.Kind {
 		return false
 	}
 	return true

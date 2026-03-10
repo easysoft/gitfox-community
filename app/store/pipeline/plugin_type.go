@@ -15,6 +15,7 @@ type Plugin struct {
 	Yaml        []byte          `gorm:"column:yaml;type:longtext;not null;comment:'插件规范配置（YAML格式）'"`
 	Json        []byte          `gorm:"column:json;type:longtext;not null;comment:'插件规范配置（JSON格式）'"`
 	Type        string          `gorm:"column:type;not null;default:'';index:idx_plugin_type;comment:'插件类型：step/stage'"`
+	Kind        string          `gorm:"column:kind;not null;default:'';comment:'插件 kind'"`
 	CreatedBy   string          `gorm:"column:createdBy;not null;default:'';comment:'创建人'"`
 	CreatedDate *datetime.Local `gorm:"column:createdDate;comment:'创建时间'"`
 	EditedBy    string          `gorm:"column:editedBy;not null;default:'';comment:'更新人'"`
