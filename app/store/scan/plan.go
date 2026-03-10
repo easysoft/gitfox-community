@@ -2,7 +2,6 @@ package scan
 
 import (
 	"context"
-	"strconv"
 	"strings"
 
 	scanModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
@@ -82,13 +81,16 @@ func (s *ScanPlanStore) List(ctx context.Context, repoID uint, filter scanModel.
 	if filter.Name != "" {
 		tx = tx.Where("ops_scan_plans.name LIKE ?", "%"+filter.Name+"%")
 	}
-	if parsedRepoID, ok := parseUintFilter(filter.RepoID); ok {
-		tx = tx.Where("ops_scan_plans.repoID = ?", parsedRepoID)
+
+	if repoID != 0 {
+		tx = tx.Where("ops_scan_plans.repoID = ?", repoID)
 	}
-	if parsedSpaceID, ok := parseUintFilter(filter.SpaceID); ok {
+
+	if filter.SpaceID != 0 {
 		tx = tx.Joins("JOIN ops_repo ON ops_repo.id = ops_scan_plans.repoID AND ops_repo.deleted = ?", 0).
-			Where("ops_repo.spaceID = ?", parsedSpaceID)
+			Where("ops_repo.spaceID = ?", filter.SpaceID)
 	}
+
 	if filter.LatestTaskResult != "" {
 		// 社区版当前尚未落库 scan task 历史，参考项目的 latest task 过滤暂以空结果兜底，避免误返回未过滤数据。
 		tx = tx.Where("1 = 0")
@@ -140,19 +142,6 @@ func (s *ScanPlanStore) List(ctx context.Context, repoID uint, filter scanModel.
 		Page:     pageResult.Page,
 		PageSize: pageResult.PageSize,
 	}, nil
-}
-
-func parseUintFilter(raw string) (uint64, bool) {
-	trimmed := strings.TrimSpace(raw)
-	if trimmed == "" {
-		return 0, false
-	}
-
-	value, err := strconv.ParseUint(trimmed, 10, 64)
-	if err != nil {
-		return 0, false
-	}
-	return value, true
 }
 
 func normalizeScanPlanSortField(sort string) string {

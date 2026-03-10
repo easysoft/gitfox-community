@@ -1574,13 +1574,11 @@ definitions:
       pageSize:
         default: 30
         type: integer
-      repo_id:
-        type: string
       sort:
         default: id
         type: string
       space_id:
-        type: string
+        type: integer
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanPlanReqForBind:
     properties:
