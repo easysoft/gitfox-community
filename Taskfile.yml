@@ -20,6 +20,8 @@ vars:
   PLATFORMS_ARCHS:
   - os: linux
     arches: [amd64, arm64]  # Linux支持的架构
+  - os: darwin
+    arches: [amd64, arm64]       # macOS支持的架构（Intel和M系列）
   - os: windows
     arches: [amd64]       # Windows支持的架构
 

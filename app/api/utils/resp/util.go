@@ -109,7 +109,7 @@ func listSuccess(c *gin.Context, data interface{}, listArgs interface{}, code i1
 // data: object data
 func objectErr(c *gin.Context, err error, httpStatus int, args ...interface{}) {
 	code := errors.GetI18nKey(err)
-	message := i18n.TGin(c, code, args...) + fmt.Sprintf(";%s", err.Error())
+	message := i18n.TGin(c, code, args...)
 	traceID := getTraceID(c)
 	c.JSON(httpStatus, ObjectResponse{
 		Code:    constant.RespFailCode,
