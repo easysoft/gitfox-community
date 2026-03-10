@@ -28,9 +28,9 @@ type Config struct {
 
 // ServerConfig HTTP服务配置
 type ServerConfig struct {
-	Port            int           `yaml:"port"`
-	Host            string        `yaml:"host"`
-	Proto           string        `yaml:"proto"`
+	Port            int           `envconfig:"GITFOX_HTTP_PORT" default:"3000" yaml:"port"`
+	Host            string        `envconfig:"GITFOX_SERVER_HOST" yaml:"host"`
+	Proto           string        `envconfig:"GITFOX_SERVER_PROTO" yaml:"proto" default:"http"`
 	ShutdownTimeout time.Duration `yaml:"shutdownTimeout"` // 优雅关闭超时时间，默认 5s
 }
 
@@ -79,8 +79,8 @@ type WebhookConfig struct {
 // SSHConfig SSH服务配置
 type SSHConfig struct {
 	Enable      bool   `yaml:"enable"`
-	Host        string `yaml:"host"`
-	Port        int    `yaml:"port"`
+	Host        string `envconfig:"GITFOX_SERVER_HOST" yaml:"host"`
+	Port        int    `envconfig:"GITFOX_SSH_PORT" yaml:"port" default:"22"`
 	DefaultUser string `yaml:"defaultUser" default:"git"`
 	HostKeysDir string `envconfig:"GITFOX_SSH_HOST_KEYS_DIR" default:"/data/gitfox/ssh"`
 }
@@ -198,7 +198,7 @@ type URL struct {
 
 	// GitSSH defines the external URL via which the GIT SSH server is reachable.
 	// Value is derived from Base or SSH Config unless explicitly specified (e.g. ssh://localhost).
-	GitSSH string
+	GitSSH string `envconfig:"GITFOX_URL_GIT_SSH"`
 
 	// API defines the external URL via which the rest API is reachable.
 	// NOTE: for routing to work properly, the request path reaching gitfox has to end with `/api`
@@ -240,8 +240,8 @@ type PrincipalConfig struct {
 
 // DevopsConfig DevOps 平台配置
 type DevopsConfig struct {
-	URL           string `yaml:"url"`           // DevOps 平台 API 地址
-	Authorization string `yaml:"authorization"` // DevOps 平台 API 授权密钥
+	URL           string `envconfig:"GITFOX_DEVOPS_URL" yaml:"url"`                     // DevOps 平台 API 地址
+	Authorization string `envconfig:"GITFOX_DEVOPS_AUTHORIZATION" yaml:"authorization"` // DevOps 平台 API 授权密钥
 }
 
 // StorageConfig 通用存储配置

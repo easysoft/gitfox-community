@@ -213,7 +213,7 @@ func backfillURLs(config *Config) error {
 
 	// backfil internal URLS before continuing override with user provided base (which is external facing)
 	if config.URL.Internal == "" {
-		config.URL.Internal = combineToRawURL(scheme, "localhost", port, "")
+		config.URL.Internal = combineToRawURL(scheme, host, port, "")
 	}
 	if config.URL.Container == "" {
 		config.URL.Container = combineToRawURL(scheme, "host.docker.internal", port, "")
