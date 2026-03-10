@@ -103,7 +103,13 @@ func (s *RuleSetStore) List(ctx context.Context, filter scanModel.RuleSetReqFilt
 
 	// 分页查询
 	var ruleSets []*RuleSet
-	pageResult, err := database.PaginateDefault(ctx, tx, filter.Page, filter.PageSize, &ruleSets)
+	pageResult, err := database.Paginate(ctx, tx, database.PageParam{
+		Page:      filter.Page,
+		PageSize:  filter.PageSize,
+		Sort:      normalizeRuleSetSortField(filter.Sort),
+		Order:     normalizeSortOrder(filter.Order, "asc"),
+		NeedTotal: true,
+	}, &ruleSets)
 	if err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
@@ -120,6 +126,33 @@ func (s *RuleSetStore) List(ctx context.Context, filter scanModel.RuleSetReqFilt
 		Page:     pageResult.Page,
 		PageSize: pageResult.PageSize,
 	}, nil
+}
+
+func normalizeRuleSetSortField(sort string) string {
+	switch strings.TrimSpace(sort) {
+	case "", "id":
+		return "id"
+	case "name":
+		return "name"
+	case "lang":
+		return "lang"
+	case "tag":
+		return "tag"
+	case "type":
+		return "type"
+	case "status":
+		return "status"
+	case "createdBy":
+		return "createdBy"
+	case "createdDate":
+		return "createdDate"
+	case "editedBy":
+		return "editedBy"
+	case "editedDate":
+		return "editedDate"
+	default:
+		return "id"
+	}
 }
 
 // mapToModel 将 RuleSet 转换为 scanModel.RuleSet

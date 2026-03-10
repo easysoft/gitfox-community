@@ -4,12 +4,18 @@ import (
 	"github.com/google/wire"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/scan"
+	jobsSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/jobs"
 	scanSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/scan"
 	scanStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/scan"
 )
 
+func ProvideScanCronScheduler(scheduler *jobsSvc.Scheduler) scanSvc.CronScheduler {
+	return scheduler
+}
+
 var ScanRuleSetWireSet = wire.NewSet(
 	scan.NewScanController,
+	ProvideScanCronScheduler,
 	wire.Bind(new(scanSvc.IRuleSet), new(*scanSvc.RuleSetService)),
 	scanSvc.NewRuleSetService,
 	wire.Bind(new(scanSvc.IRule), new(*scanSvc.RuleService)),

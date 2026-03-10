@@ -37,7 +37,7 @@ func (s *SolutionService) Create(ctx context.Context, session *authModel.Session
 		DescEn:    req.DescEn,
 		Tag:       req.Tag,
 		IsCustom:  true,
-		Status:    constant.ScanRuleStatusEnabled,
+		Status:    req.Status,
 		CreatedBy: session.User.Account,
 		EditedBy:  session.User.Account,
 	}
@@ -46,37 +46,17 @@ func (s *SolutionService) Create(ctx context.Context, session *authModel.Session
 }
 
 func (s *SolutionService) GetByID(ctx context.Context, id uint) (*scanModel.Solution, error) {
-	solution, err := s.solutionStore.GetByID(ctx, id)
+	solution, err := s.getSolutionByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
-	// 聚合关联的规则集信息
+
 	rulesets, err := s.solutionStore.ListRulesets(ctx, id)
 	if err != nil {
 		return nil, err
 	}
-	solution.RuleSets = rulesets
-	solution.RuleSetsCount = int64(len(rulesets))
 
-	// 聚合 RulesCount、Plugins、Langs
-	pluginMap := make(map[string]struct{})
-	langMap := make(map[string]struct{})
-	for _, rs := range rulesets {
-		solution.RulesCount += rs.RulesCount
-		if rs.Plugin != "" {
-			pluginMap[rs.Plugin] = struct{}{}
-		}
-		if rs.Lang != "" {
-			langMap[string(rs.Lang)] = struct{}{}
-		}
-	}
-	for plugin := range pluginMap {
-		solution.Plugins = append(solution.Plugins, plugin)
-	}
-	for lang := range langMap {
-		solution.Langs = append(solution.Langs, lang)
-	}
-
+	s.aggregateSolutionRulesetInfo(solution, rulesets, true)
 	return solution, nil
 }
 
@@ -98,14 +78,18 @@ func (s *SolutionService) Update(ctx context.Context, session *authModel.Session
 		solution.Tag = req.Tag
 	}
 
+	if req.Status != "" {
+		solution.Status = req.Status
+	}
+
 	if err := s.solutionStore.Update(ctx, solution); err != nil {
 		return nil, err
 	}
-	return s.solutionStore.GetByID(ctx, id)
+	return s.getSolutionByID(ctx, id)
 }
 
 func (s *SolutionService) Delete(ctx context.Context, id uint) error {
-	obj, err := s.solutionStore.GetByID(ctx, id)
+	obj, err := s.getSolutionByID(ctx, id)
 	if err != nil {
 		return err
 	}
@@ -116,12 +100,58 @@ func (s *SolutionService) Delete(ctx context.Context, id uint) error {
 }
 
 func (s *SolutionService) List(ctx context.Context, filter scanModel.SolutionReqFilter) (*database.PageResult[*scanModel.Solution], error) {
-	return s.solutionStore.List(ctx, filter)
+	result, err := s.solutionStore.List(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, solution := range result.Data {
+		rulesets, err := s.solutionStore.ListRulesets(ctx, uint(solution.ID))
+		if err != nil {
+			return nil, err
+		}
+		s.aggregateSolutionRulesetInfo(solution, rulesets, false)
+	}
+
+	return result, nil
+}
+
+// aggregateSolutionRulesetInfo 聚合扫描方案的规则集信息
+func (s *SolutionService) aggregateSolutionRulesetInfo(solution *scanModel.Solution, rulesets []*scanModel.RuleSet, includeRuleSets bool) {
+	if solution == nil {
+		return
+	}
+
+	solution.RulesCount = 0
+	solution.Plugins = nil
+	solution.Langs = nil
+	solution.RuleSetsCount = int64(len(rulesets))
+	if includeRuleSets {
+		solution.RuleSets = rulesets
+	}
+
+	pluginMap := make(map[string]struct{})
+	langMap := make(map[string]struct{})
+	for _, ruleset := range rulesets {
+		solution.RulesCount += ruleset.RulesCount
+		if ruleset.Plugin != "" {
+			pluginMap[ruleset.Plugin] = struct{}{}
+		}
+		if ruleset.Lang != "" {
+			langMap[string(ruleset.Lang)] = struct{}{}
+		}
+	}
+	for plugin := range pluginMap {
+		solution.Plugins = append(solution.Plugins, plugin)
+	}
+	for lang := range langMap {
+		solution.Langs = append(solution.Langs, lang)
+	}
 }
 
 // UpdateStatus 切换扫描方案的状态（enabled ↔ disabled），适用于 /status 和 /draft 两个接口
 func (s *SolutionService) UpdateStatus(ctx context.Context, session *authModel.Session, id uint) error {
-	obj, err := s.solutionStore.GetByID(ctx, id)
+	obj, err := s.getSolutionByID(ctx, id)
 	if err != nil {
 		return err
 	}
@@ -140,19 +170,24 @@ func (s *SolutionService) UpdateStatus(ctx context.Context, session *authModel.S
 }
 
 func (s *SolutionService) ListRulesets(ctx context.Context, solutionID uint) ([]*scanModel.RuleSet, error) {
+	if _, err := s.getSolutionByID(ctx, solutionID); err != nil {
+		return nil, err
+	}
 	return s.solutionStore.ListRulesets(ctx, solutionID)
 }
 
 func (s *SolutionService) ListUnbindRulesets(ctx context.Context, solutionID uint) ([]*scanModel.RuleSet, error) {
+	if _, err := s.getSolutionByID(ctx, solutionID); err != nil {
+		return nil, err
+	}
 	return s.solutionStore.ListUnbindRulesets(ctx, solutionID)
 }
 
 func (s *SolutionService) BindRulesets(ctx context.Context, solutionID uint, req scanModel.SolutionReqForBind) error {
 	if len(req.IDs) == 0 {
-		return errors.New("rulesetIDList is required")
+		return errors.WithI18nKey(errors.New("rulesetIDList is required"), i18n.SolutionRulesetIDsRequired)
 	}
-	_, err := s.solutionStore.GetByID(ctx, solutionID)
-	if err != nil {
+	if _, err := s.getSolutionByID(ctx, solutionID); err != nil {
 		return err
 	}
 	return s.solutionStore.BindRulesets(ctx, solutionID, req.IDs)
@@ -160,11 +195,22 @@ func (s *SolutionService) BindRulesets(ctx context.Context, solutionID uint, req
 
 func (s *SolutionService) UnbindRulesets(ctx context.Context, solutionID uint, req scanModel.SolutionReqForBind) error {
 	if len(req.IDs) == 0 {
-		return errors.New("rulesetIDList is required")
+		return errors.WithI18nKey(errors.New("rulesetIDList is required"), i18n.SolutionRulesetIDsRequired)
 	}
-	_, err := s.solutionStore.GetByID(ctx, solutionID)
-	if err != nil {
+	if _, err := s.getSolutionByID(ctx, solutionID); err != nil {
 		return err
 	}
 	return s.solutionStore.UnbindRulesets(ctx, solutionID, req.IDs)
+}
+
+// getSolutionByID 加载扫描方案，并把底层 not found 转成 SolutionNotFound.
+func (s *SolutionService) getSolutionByID(ctx context.Context, id uint) (*scanModel.Solution, error) {
+	solution, err := s.solutionStore.GetByID(ctx, id)
+	if err != nil {
+		if isDBNotFoundError(err) {
+			return nil, errors.WithI18nKey(err, i18n.SolutionNotFound)
+		}
+		return nil, err
+	}
+	return solution, nil
 }

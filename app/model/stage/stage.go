@@ -36,5 +36,5 @@ type Stage struct {
 // StageWithSteps
 type StageWithSteps struct {
 	Stage
-	Steps []stepModel.Step `json:"steps"`
+	Steps []*stepModel.Step `json:"steps"`
 }

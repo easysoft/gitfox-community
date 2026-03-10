@@ -235,11 +235,12 @@ func NewApp(mode string) (*App, func(), error) {
 	solutionStore := scan.NewSolutionStore(db)
 	solutionService := scan2.NewSolutionService(solutionStore)
 	scanPlanStore := scan.NewScanPlanStore(db)
-	scanPlanService := scan2.NewScanPlanService(scanPlanStore)
 	scanTriggerStore := scan.NewScanTriggerStore(db)
-	scanTriggerService := scan2.NewScanTriggerService(scanTriggerStore)
+	scanPlanService := scan2.NewScanPlanService(scanPlanStore, store, solutionStore, ruleSetStore, ruleStore, scanTriggerStore)
+	cronScheduler := provider.ProvideScanCronScheduler(jobsScheduler)
+	scanTriggerService := scan2.NewScanTriggerService(scanTriggerStore, store, scanPlanStore, cronScheduler)
 	scanConditionStore := scan.NewScanConditionStore(db)
-	scanConditionService := scan2.NewScanConditionService(scanConditionStore)
+	scanConditionService := scan2.NewScanConditionService(scanConditionStore, store, scanPlanStore, scanTriggerStore, cronScheduler)
 	scanController := scan3.NewScanController(ruleSetService, ruleService, solutionService, scanPlanService, scanTriggerService, scanConditionService)
 	routerController := provider.NewControllers(spaceController, controller, pipelineController, executionController, runnerController, tagController, commitController, repoController, userController, gitController, scanController)
 	i18nManager, err := provider.NewI18nManager(config)
@@ -264,7 +265,7 @@ func NewApp(mode string) (*App, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	managerManager := manager.New(config, executionService, pipelineService, urlProvider, streamer, schedulerScheduler, stageService, stepService, reporter2, reporter, pullrequestService)
+	managerManager := manager.New(config, executionService, pipelineService, urlProvider, streamer, schedulerScheduler, stageService, stepService, reporter2, reporter, pullrequestService, logStream)
 	client := manager.NewEmbeddedClient(managerManager, urlProvider, config)
 	pipelineStorage, err := provider.ProvidePipelineCIStorage(config)
 	if err != nil {

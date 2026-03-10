@@ -145,13 +145,13 @@ func (s *Store) GetByIDWithSteps(ctx context.Context, id uint) (*stageModel.Stag
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
 
-	steps := make([]stepModel.Step, len(dbSteps))
+	steps := make([]*stepModel.Step, len(dbSteps))
 	for _, dbStep := range dbSteps {
 		var depends []string
 		if dbStep.Depends != "" {
 			_ = json.Unmarshal([]byte(dbStep.Depends), &depends)
 		}
-		step := stepModel.Step{
+		step := &stepModel.Step{
 			ID:         dbStep.ID,
 			StageID:    dbStep.StageID,
 			Name:       dbStep.Name,
@@ -287,13 +287,13 @@ func (s *Store) ListWithSteps(ctx context.Context, executionID uint) ([]*stageMo
 	}
 
 	// Group steps by stageID
-	stepsByStageID := make(map[uint][]stepModel.Step)
+	stepsByStageID := make(map[uint][]*stepModel.Step)
 	for _, dbStep := range dbSteps {
 		var depends []string
 		if dbStep.Depends != "" {
 			_ = json.Unmarshal([]byte(dbStep.Depends), &depends)
 		}
-		step := stepModel.Step{
+		step := &stepModel.Step{
 			ID:         dbStep.ID,
 			StageID:    dbStep.StageID,
 			Name:       dbStep.Name,
@@ -319,7 +319,7 @@ func (s *Store) ListWithSteps(ctx context.Context, executionID uint) ([]*stageMo
 		stage := mapToModel(&dbStages[i])
 		steps := stepsByStageID[dbStages[i].ID]
 		if steps == nil {
-			steps = []stepModel.Step{}
+			steps = []*stepModel.Step{}
 		}
 		result[i] = &stageModel.StageWithSteps{
 			Stage: *stage,

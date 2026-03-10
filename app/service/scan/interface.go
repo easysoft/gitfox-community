@@ -2,11 +2,20 @@ package scan
 
 import (
 	"context"
+	"time"
 
 	authModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
 	scanModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
 )
+
+// CronScheduler is the interface used by the scan service to manage
+// recurring cron jobs in the job scheduler. It is defined locally to avoid
+// an import cycle with the jobs package.
+type CronScheduler interface {
+	AddRecurringWithData(ctx context.Context, jobName, jobType, jobData, cronDef string, maxDur time.Duration) error
+	RemoveRecurring(ctx context.Context, jobName string) error
+}
 
 type IRule interface {
 	GetByID(ctx context.Context, session *authModel.Session, id uint) (*scanModel.Rule, error)
@@ -49,6 +58,7 @@ type IScanPlan interface {
 	Update(ctx context.Context, session *authModel.Session, repoID uint, id uint, req scanModel.ScanPlanReqForUpdate) (*scanModel.ScanPlan, error)
 	Delete(ctx context.Context, repoID uint, id uint) error
 	List(ctx context.Context, repoID uint, filter scanModel.ScanPlanReqFilter) (*database.PageResult[*scanModel.ScanPlan], error)
+	ListRules(ctx context.Context, repoID uint, planID uint, triggerID uint) ([]*scanModel.Rule, error)
 	BindSolutions(ctx context.Context, repoID uint, planID uint, req scanModel.ScanPlanReqForBind) error
 	UnbindSolutions(ctx context.Context, repoID uint, planID uint, req scanModel.ScanPlanReqForBind) error
 	ListUnbindSolutions(ctx context.Context, repoID uint, planID uint) ([]*scanModel.Solution, error)

@@ -4300,6 +4300,81 @@ const docTemplate = `{
                 }
             }
         },
+        "/scan/repos/{repoID}/scanplans/{planID}/rules": {
+            "get": {
+                "description": "根据计划 ID 查询最终生效的规则列表，可选传 triggerID 做作用域校验",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scan"
+                ],
+                "summary": "获取扫描计划展开后的有效规则列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "仓库 ID",
+                        "name": "repoID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "计划 ID",
+                        "name": "planID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "触发器 ID",
+                        "name": "triggerID",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "查询成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.Rule"
+                                            }
+                                        },
+                                        "listArgs": {
+                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListArgs"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/scan/repos/{repoID}/scanplans/{planID}/triggers": {
             "get": {
                 "description": "根据扫描计划 ID 查询触发器列表",
@@ -8786,6 +8861,26 @@ const docTemplate = `{
                 "orderNone"
             ]
         },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.Pattern": {
+            "type": "object",
+            "properties": {
+                "default": {
+                    "type": "boolean"
+                },
+                "exclude": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "include": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.Rule": {
             "type": "object",
             "properties": {
@@ -9190,7 +9285,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "branches": {
-                    "type": "string"
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.Pattern"
                 },
                 "createdBy": {
                     "type": "string"
@@ -9211,7 +9306,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "files": {
-                    "type": "string"
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.Pattern"
                 },
                 "id": {
                     "type": "integer"
@@ -9248,6 +9343,12 @@ const docTemplate = `{
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanPlanReqFilter": {
             "type": "object",
             "properties": {
+                "latest_task_result": {
+                    "type": "string"
+                },
+                "latest_task_status": {
+                    "type": "string"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -9263,9 +9364,15 @@ const docTemplate = `{
                     "type": "integer",
                     "default": 30
                 },
+                "repo_id": {
+                    "type": "string"
+                },
                 "sort": {
                     "type": "string",
                     "default": "id"
+                },
+                "space_id": {
+                    "type": "string"
                 }
             }
         },
@@ -9287,13 +9394,13 @@ const docTemplate = `{
             ],
             "properties": {
                 "branches": {
-                    "type": "string"
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.Pattern"
                 },
                 "desc": {
                     "type": "string"
                 },
                 "files": {
-                    "type": "string"
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.Pattern"
                 },
                 "name": {
                     "type": "string",
@@ -9314,13 +9421,13 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "branches": {
-                    "type": "string"
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.Pattern"
                 },
                 "desc": {
                     "type": "string"
                 },
                 "files": {
-                    "type": "string"
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.Pattern"
                 },
                 "name": {
                     "type": "string"
@@ -9679,6 +9786,9 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 100
                 },
+                "status": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleStatus"
+                },
                 "tag": {
                     "type": "string"
                 }
@@ -9695,6 +9805,9 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleStatus"
                 },
                 "tag": {
                     "type": "string"

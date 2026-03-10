@@ -132,6 +132,7 @@ func New(
 	reporter events.Reporter,
 	prReporter *pullreqevents.Reporter,
 	pullReqSvc pullrequest.Interface,
+	logz livelog.LogStream,
 ) *Manager {
 	return &Manager{
 		Config:       config,
@@ -145,6 +146,7 @@ func New(
 		reporter:     reporter,
 		prReporter:   prReporter,
 		pullReqSvc:   pullReqSvc,
+		Logz:         logz,
 	}
 }
 
@@ -334,6 +336,7 @@ func (m *Manager) BeforeStep(_ context.Context, step *stepModel.Step) error {
 		SSEStreamer:  m.SSEStreamer,
 		StepSvc:      m.StepSvc,
 		StageSvc:     m.StageSvc,
+		PipelineSvc:  m.PipelineSvc,
 	}
 	return updater.do(noContext, step)
 }
@@ -353,6 +356,7 @@ func (m *Manager) AfterStep(_ context.Context, step *stepModel.Step) error {
 		SSEStreamer:  m.SSEStreamer,
 		StepSvc:      m.StepSvc,
 		StageSvc:     m.StageSvc,
+		PipelineSvc:  m.PipelineSvc,
 	}
 
 	if err := updater.do(noContext, step); err != nil {
