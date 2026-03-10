@@ -312,6 +312,7 @@ func (s *ScanPlanService) ListUnbindSolutions(ctx context.Context, repoID uint, 
 	return s.planStore.ListUnbindSolutions(ctx, planID)
 }
 
+// validateAndMarshalScanPlanPattern 校验并序列化 ScanPlan 的 Pattern 字段
 func validateAndMarshalScanPlanPattern(field string, pattern scanModel.Pattern) (string, error) {
 	if err := pattern.Validate(field); err != nil {
 		return "", err
@@ -320,6 +321,7 @@ func validateAndMarshalScanPlanPattern(field string, pattern scanModel.Pattern) 
 	return pattern.JSONString()
 }
 
+// validateScanType 校验 ScanPlan 的 ScanType 是否有效
 func validateScanType(scanType string) error {
 	if scanType == "" {
 		return nil
@@ -333,6 +335,7 @@ func validateScanType(scanType string) error {
 	}
 }
 
+// validateSolutionIDsExist 校验扫描方案是否存在，并把底层 not found 转成 SolutionNotFound。
 func (s *ScanPlanService) validateSolutionIDsExist(ctx context.Context, solutionIDs []uint) error {
 	for _, solutionID := range solutionIDs {
 		if _, err := s.getSolutionByID(ctx, solutionID); err != nil {

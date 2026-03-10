@@ -2,11 +2,20 @@ package scan
 
 import (
 	"context"
+	"time"
 
 	authModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
 	scanModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
 )
+
+// CronScheduler is the interface used by the scan service to manage
+// recurring cron jobs in the job scheduler. It is defined locally to avoid
+// an import cycle with the jobs package.
+type CronScheduler interface {
+	AddRecurringWithData(ctx context.Context, jobName, jobType, jobData, cronDef string, maxDur time.Duration) error
+	RemoveRecurring(ctx context.Context, jobName string) error
+}
 
 type IRule interface {
 	GetByID(ctx context.Context, session *authModel.Session, id uint) (*scanModel.Rule, error)

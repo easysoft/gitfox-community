@@ -19,6 +19,7 @@ type Pattern struct {
 	Exclude []string `json:"exclude,omitempty"`
 }
 
+// JSONString 将 Pattern 转换为 JSON 字符串
 func (p Pattern) JSONString() (string, error) {
 	data, err := json.Marshal(p)
 	if err != nil {
@@ -27,6 +28,7 @@ func (p Pattern) JSONString() (string, error) {
 	return string(data), nil
 }
 
+// ParsePattern 解析 JSON 字符串为 Pattern 结构体
 func ParsePattern(raw string) (*Pattern, error) {
 	if raw == "" {
 		return &Pattern{}, nil
@@ -39,6 +41,7 @@ func ParsePattern(raw string) (*Pattern, error) {
 	return &pattern, nil
 }
 
+// Matches 检查分支是否匹配 Pattern
 func (p Pattern) Matches(name, defaultName string) bool {
 	matches := !p.Default && len(p.Include) == 0
 	matches = matches || p.Default && name == defaultName
@@ -58,6 +61,7 @@ func (p Pattern) Matches(name, defaultName string) bool {
 	return matches
 }
 
+// Validate 验证 Pattern 是否有效
 func (p Pattern) Validate(field string) error {
 	if err := p.validatePatterns(field, "include", p.Include); err != nil {
 		return err
@@ -68,6 +72,7 @@ func (p Pattern) Validate(field string) error {
 	return nil
 }
 
+// validatePatterns 验证 Pattern 中的每个模式是否有效
 func (p Pattern) validatePatterns(field string, patternType string, patterns []string) error {
 	for _, pattern := range patterns {
 		if err := validatePatternValue(pattern); err != nil {
@@ -77,6 +82,7 @@ func (p Pattern) validatePatterns(field string, patternType string, patterns []s
 	return nil
 }
 
+// validatePatternValue 验证单个模式是否有效
 func validatePatternValue(pattern string) error {
 	if pattern == "" {
 		return fmt.Errorf("pattern cannot be empty")
@@ -87,11 +93,13 @@ func validatePatternValue(pattern string) error {
 	return nil
 }
 
+// patternMatches 检查分支/文件名是否匹配模式
 func patternMatches(pattern, name string) bool {
 	ok, _ := doublestar.Match(pattern, name)
 	return ok
 }
 
+// wrapPatternError 包装 Pattern 错误信息
 func wrapPatternError(field string, patternType string, err error) error {
 	if err.Error() == "pattern cannot be empty" {
 		return errors.WithI18nKey(err, i18n.PlanPatternEmptyError)
