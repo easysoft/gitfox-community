@@ -10,12 +10,13 @@ import (
 )
 
 type ScanController struct {
-	ruleSetSvc   scanService.IRuleSet
-	ruleSvc      scanService.IRule
-	solutionSvc  scanService.ISolution
-	planSvc      scanService.IScanPlan
-	triggerSvc   scanService.IScanTrigger
-	conditionSvc scanService.IScanCondition
+	ruleSetSvc        scanService.IRuleSet
+	ruleSvc           scanService.IRule
+	solutionSvc       scanService.ISolution
+	planSvc           scanService.IScanPlan
+	triggerSvc        scanService.IScanTrigger
+	conditionSvc      scanService.IScanCondition
+	planConditionSvc  scanService.IScanPlanCondition
 }
 
 // NewScanController 创建扫描处理器实例
@@ -26,14 +27,16 @@ func NewScanController(
 	planSvc scanService.IScanPlan,
 	triggerSvc scanService.IScanTrigger,
 	conditionSvc scanService.IScanCondition,
+	planConditionSvc scanService.IScanPlanCondition,
 ) *ScanController {
 	return &ScanController{
-		ruleSetSvc:   ruleSetSvc,
-		ruleSvc:      ruleSvc,
-		solutionSvc:  solutionSvc,
-		planSvc:      planSvc,
-		triggerSvc:   triggerSvc,
-		conditionSvc: conditionSvc,
+		ruleSetSvc:       ruleSetSvc,
+		ruleSvc:          ruleSvc,
+		solutionSvc:      solutionSvc,
+		planSvc:          planSvc,
+		triggerSvc:       triggerSvc,
+		conditionSvc:     conditionSvc,
+		planConditionSvc: planConditionSvc,
 	}
 }
 
@@ -70,4 +73,17 @@ func (c *ScanController) pathRepoPlanAndTriggerID(ctx *gin.Context, errKey i18n.
 		return 0, 0, 0, false
 	}
 	return repoID, planID, triggerID, true
+}
+
+func (c *ScanController) pathRepoPlanAndConditionID(ctx *gin.Context, errKey i18n.I18nKey) (uint, uint, uint, bool) {
+	repoID, planID, ok := c.pathRepoAndPlanID(ctx, errKey)
+	if !ok {
+		return 0, 0, 0, false
+	}
+	conditionID, err := req.PathParamAsPositiveUint(ctx, "conditionID")
+	if err != nil {
+		resp.BadRequest(ctx, errors.WithI18nKey(err, errKey))
+		return 0, 0, 0, false
+	}
+	return repoID, planID, conditionID, true
 }

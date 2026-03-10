@@ -241,7 +241,8 @@ func NewApp(mode string) (*App, func(), error) {
 	scanTriggerService := scan2.NewScanTriggerService(scanTriggerStore, store, scanPlanStore, cronScheduler)
 	scanConditionStore := scan.NewScanConditionStore(db)
 	scanConditionService := scan2.NewScanConditionService(scanConditionStore, store, scanPlanStore, scanTriggerStore, cronScheduler)
-	scanController := scan3.NewScanController(ruleSetService, ruleService, solutionService, scanPlanService, scanTriggerService, scanConditionService)
+	scanPlanConditionService := scan2.NewScanPlanConditionService(store, scanPlanStore, scanConditionStore)
+	scanController := scan3.NewScanController(ruleSetService, ruleService, solutionService, scanPlanService, scanTriggerService, scanConditionService, scanPlanConditionService)
 	routerController := provider.NewControllers(spaceController, controller, pipelineController, executionController, runnerController, tagController, commitController, repoController, userController, gitController, scanController)
 	i18nManager, err := provider.NewI18nManager(config)
 	if err != nil {

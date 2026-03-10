@@ -48,7 +48,7 @@ func (s *ScanPlanService) Create(ctx context.Context, session *authModel.Session
 		return nil, err
 	}
 	if len(req.SolutionIDs) == 0 {
-		return nil, errors.WithI18nKey(errors.New("solutionIDs is required"), i18n.PlanSolutionIDsRequired)
+		return nil, errors.WithI18nKey(errors.New("solutionIDs is required"), i18n.PlanSolutionIdsRequired)
 	}
 	branches, err := validateAndMarshalScanPlanPattern("branches", req.Branches)
 	if err != nil {
@@ -278,7 +278,7 @@ func (s *ScanPlanService) BindSolutions(ctx context.Context, repoID uint, planID
 		return err
 	}
 	if len(req.SolutionIDs) == 0 {
-		return errors.WithI18nKey(errors.New("solutionIDs is required"), i18n.PlanSolutionIDsRequired)
+		return errors.WithI18nKey(errors.New("solutionIDs is required"), i18n.PlanSolutionIdsRequired)
 	}
 	if err := s.validateSolutionIDsExist(ctx, req.SolutionIDs); err != nil {
 		return err
@@ -294,7 +294,7 @@ func (s *ScanPlanService) UnbindSolutions(ctx context.Context, repoID uint, plan
 		return err
 	}
 	if len(req.SolutionIDs) == 0 {
-		return errors.WithI18nKey(errors.New("solutionIDs is required"), i18n.PlanSolutionIDsRequired)
+		return errors.WithI18nKey(errors.New("solutionIDs is required"), i18n.PlanSolutionIdsRequired)
 	}
 	if _, err := s.getPlanByRepoAndID(ctx, repoID, planID); err != nil {
 		return err

@@ -75,8 +75,25 @@ type IScanTrigger interface {
 }
 
 // IScanCondition 触发器条件 store 接口
+//
+// Note: ops_scan_plan_conditions 同时承载 trigger-scoped 与 plan-scoped 条件。
+// trigger-scoped 使用 IScanCondition；plan-scoped 使用 IScanPlanCondition.
 type IScanCondition interface {
 	BatchCreate(ctx context.Context, conditions []*ScanPlanCondition) error
 	BatchDelete(ctx context.Context, repoID uint, planID uint, triggerID uint, ids []uint) error
 	List(ctx context.Context, triggerID uint) ([]*scanModel.ScanCondition, error)
+}
+
+// IScanPlanCondition 扫描计划级条件 store 接口（triggerID=0）
+//
+// This is intentionally separate from IScanCondition to avoid changing existing
+// trigger-scoped condition APIs.
+type IScanPlanCondition interface {
+	Create(ctx context.Context, condition *ScanPlanCondition) (*scanModel.ScanCondition, error)
+	GetByID(ctx context.Context, id uint) (*scanModel.ScanCondition, error)
+	Update(ctx context.Context, condition *ScanPlanCondition) error
+	Delete(ctx context.Context, id uint) error
+	ListByPlan(ctx context.Context, repoID, planID uint) ([]*scanModel.ScanCondition, error)
+	BatchCreateByPlan(ctx context.Context, conditions []*ScanPlanCondition) error
+	BatchDeleteByIDs(ctx context.Context, repoID, planID uint, ids []uint) error
 }
