@@ -147,8 +147,7 @@ type ScanPlanReqForUpdate struct {
 // ScanPlanReqFilter 查询扫描计划过滤条件
 type ScanPlanReqFilter struct {
 	Name             string `json:"name"`
-	RepoID           string `json:"repo_id,omitempty"`
-	SpaceID          string `json:"space_id,omitempty"`
+	SpaceID          int64  `json:"space_id,omitempty"`
 	LatestTaskResult string `json:"latest_task_result,omitempty"`
 	LatestTaskStatus string `json:"latest_task_status,omitempty"`
 	Sort             string `json:"sort" form:"sort" default:"id"`

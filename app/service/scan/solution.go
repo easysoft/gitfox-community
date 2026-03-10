@@ -185,7 +185,7 @@ func (s *SolutionService) ListUnbindRulesets(ctx context.Context, solutionID uin
 
 func (s *SolutionService) BindRulesets(ctx context.Context, solutionID uint, req scanModel.SolutionReqForBind) error {
 	if len(req.IDs) == 0 {
-		return errors.WithI18nKey(errors.New("rulesetIDList is required"), i18n.SolutionRulesetIDsRequired)
+		return errors.WithI18nKey(errors.New("rulesetIDList is required"), i18n.SolutionRulesetIdsRequired)
 	}
 	if _, err := s.getSolutionByID(ctx, solutionID); err != nil {
 		return err
@@ -195,7 +195,7 @@ func (s *SolutionService) BindRulesets(ctx context.Context, solutionID uint, req
 
 func (s *SolutionService) UnbindRulesets(ctx context.Context, solutionID uint, req scanModel.SolutionReqForBind) error {
 	if len(req.IDs) == 0 {
-		return errors.WithI18nKey(errors.New("rulesetIDList is required"), i18n.SolutionRulesetIDsRequired)
+		return errors.WithI18nKey(errors.New("rulesetIDList is required"), i18n.SolutionRulesetIdsRequired)
 	}
 	if _, err := s.getSolutionByID(ctx, solutionID); err != nil {
 		return err

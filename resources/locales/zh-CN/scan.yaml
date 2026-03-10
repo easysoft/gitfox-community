@@ -135,4 +135,23 @@ condition:
   batch_delete_error: "触发器条件批量删除失败。"
   not_found: "触发器条件不存在。"
 
+planCondition:
+  path_param_error: "路径参数解析失败。"
+  body_param_error: "请求体参数解析失败。"
+  create_success: "计划级条件创建成功。"
+  create_error: "计划级条件创建失败。"
+  list_success: "计划级条件列表查询成功。"
+  list_error: "计划级条件列表查询失败。"
+  query_success: "计划级条件详情查询成功。"
+  query_error: "计划级条件详情查询失败。"
+  update_success: "计划级条件更新成功。"
+  update_error: "计划级条件更新失败。"
+  delete_success: "计划级条件删除成功。"
+  delete_error: "计划级条件删除失败。"
+  batch_create_success: "计划级条件批量创建成功。"
+  batch_create_error: "计划级条件批量创建失败。"
+  batch_delete_success: "计划级条件批量删除成功。"
+  batch_delete_error: "计划级条件批量删除失败。"
+  not_found: "计划级条件不存在。"
+
 

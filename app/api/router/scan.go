@@ -71,6 +71,20 @@ func registerScanRoutes(r *gin.RouterGroup, controller *Controller) {
 				planWithID.POST("/unbind", controller.Scan.ScanPlanUnbindSolution)
 				planWithID.GET("/unbind", controller.Scan.ScanPlanListUnbindSolution)
 
+				// 扫描计划级条件路由（triggerID=0）
+				conditions := planWithID.Group("/conditions")
+				conditions.POST("", controller.Scan.ScanPlanConditionCreate)
+				conditions.GET("", controller.Scan.ScanPlanConditionList)
+				conditions.POST("/batch/new", controller.Scan.ScanPlanConditionBatchCreate)
+				conditions.POST("/batch/delete", controller.Scan.ScanPlanConditionBatchDelete)
+
+				conditionWithID := conditions.Group("/:conditionID")
+				{
+					conditionWithID.GET("", controller.Scan.ScanPlanConditionFind)
+					conditionWithID.PATCH("", controller.Scan.ScanPlanConditionUpdate)
+					conditionWithID.DELETE("", controller.Scan.ScanPlanConditionDelete)
+				}
+
 				// 触发器路由
 				triggers := planWithID.Group("/triggers")
 				triggers.GET("", controller.Scan.ScanTriggerList)
