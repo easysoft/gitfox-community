@@ -211,7 +211,7 @@ type URL struct {
 
 	// Internal defines the internal URL via which the service is reachable.
 	// Value is derived from HTTP.Server unless explicitly specified (e.g. http://localhost:3000).
-	Internal string
+	Internal string `envconfig:"GITFOX_URL_BASE"`
 
 	// Container is the endpoint that can be used by running container builds to communicate
 	// with Gitfox (for example while performing a clone on a local repo).
