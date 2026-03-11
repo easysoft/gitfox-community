@@ -109,12 +109,13 @@ func (s *ScanPlanService) GetByID(ctx context.Context, repoID uint, id uint) (*s
 	if err != nil {
 		return nil, err
 	}
-	solutionIDs, err := s.planStore.GetSolutionIDList(ctx, id)
+	solutions, solutionIDs, err := s.solutionStore.GetSolutionsByPlanID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 	plan.SolutionIDs = solutionIDs
 	plan.SolutionCount = len(solutionIDs)
+	plan.Solutions = solutions
 	return plan, nil
 }
 

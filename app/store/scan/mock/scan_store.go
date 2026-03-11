@@ -430,6 +430,22 @@ func (mr *MockISolutionMockRecorder) GetRulesetIDList(ctx, solutionID any) *gomo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRulesetIDList", reflect.TypeOf((*MockISolution)(nil).GetRulesetIDList), ctx, solutionID)
 }
 
+// GetSolutionsByPlanID mocks base method.
+func (m *MockISolution) GetSolutionsByPlanID(ctx context.Context, planID uint) ([]*scan.Solution, []int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSolutionsByPlanID", ctx, planID)
+	ret0, _ := ret[0].([]*scan.Solution)
+	ret1, _ := ret[1].([]int64)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GetSolutionsByPlanID indicates an expected call of GetSolutionsByPlanID.
+func (mr *MockISolutionMockRecorder) GetSolutionsByPlanID(ctx, planID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSolutionsByPlanID", reflect.TypeOf((*MockISolution)(nil).GetSolutionsByPlanID), ctx, planID)
+}
+
 // List mocks base method.
 func (m *MockISolution) List(ctx context.Context, filter scan.SolutionReqFilter) (*database.PageResult[*scan.Solution], error) {
 	m.ctrl.T.Helper()
