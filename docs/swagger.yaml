@@ -71,6 +71,16 @@ definitions:
     x-enum-varnames:
     - ContentEncodingTypeUTF8
     - ContentEncodingTypeBase64
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.Order:
+    enum:
+    - asc
+    - desc
+    - ""
+    type: string
+    x-enum-varnames:
+    - OrderAsc
+    - OrderDesc
+    - orderNone
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.RespCode:
     enum:
     - success
@@ -123,16 +133,52 @@ definitions:
     - ScanLangTypeScriptName
     - ScanLangCName
     - ScanLangCsharpName
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanPlanTriggerType:
+    enum:
+    - manual
+    - cron
+    - action
+    type: string
+    x-enum-varnames:
+    - ScanPlanTriggerTypeManual
+    - ScanPlanTriggerTypeCron
+    - ScanPlanTriggerTypeAction
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleBind:
+    enum:
+    - bind
+    - unbind
+    - ""
+    type: string
+    x-enum-varnames:
+    - ScanRuleBindBind
+    - ScanRuleBindUnbind
+    - scanRuleBindNone
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRulePriority:
     enum:
-    - 0
-    - 1
-    - 2
-    type: integer
+    - low
+    - medium
+    - high
+    - ""
+    type: string
     x-enum-varnames:
     - ScanRulePriorityLow
     - ScanRulePriorityMedium
     - ScanRulePriorityHigh
+    - scanRulePriorityNone
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleSort:
+    enum:
+    - id
+    - name
+    - priority
+    - createdDate
+    - ""
+    type: string
+    x-enum-varnames:
+    - ScanRuleSortID
+    - ScanRuleSortName
+    - ScanRuleSortPriority
+    - ScanRuleSortCreatedDate
+    - scanRuleSortNone
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleStatus:
     enum:
     - enabled
@@ -168,6 +214,42 @@ definitions:
     - ScanRuleTypeComplian
     - ScanRuleTypeOptimize
     - scanRuleTypeNone
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleUnit:
+    enum:
+    - count
+    - percent
+    type: string
+    x-enum-varnames:
+    - ScanRuleUnitCount
+    - ScanRuleUnitPercent
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanTaskResult:
+    enum:
+    - pass
+    - no-pass
+    - '-'
+    type: string
+    x-enum-varnames:
+    - ScanTaskResultPass
+    - ScanTaskResultNoPass
+    - ScanTaskResultNull
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanTaskStatus:
+    enum:
+    - in_progress
+    - success
+    - failed
+    type: string
+    x-enum-varnames:
+    - ScanTaskStatusInProgress
+    - ScanTaskStatusSuccess
+    - ScanTaskStatusFailed
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanType:
+    enum:
+    - full
+    - incremental
+    type: string
+    x-enum-varnames:
+    - ScanTypeFull
+    - ScanTypeIncremental
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.Branch:
     properties:
       commit:
@@ -618,6 +700,8 @@ definitions:
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_pipeline.SimpleStep:
     properties:
       alias:
+        type: string
+      kind:
         type: string
       name:
         type: string
@@ -1187,16 +1271,6 @@ definitions:
       version:
         type: string
     type: object
-  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.Order:
-    enum:
-    - asc
-    - desc
-    - ""
-    type: string
-    x-enum-varnames:
-    - OrderAsc
-    - OrderDesc
-    - orderNone
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.Pattern:
     properties:
       default:
@@ -1256,7 +1330,7 @@ definitions:
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.RuleListReqFilter:
     properties:
       bind:
-        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRuleBind'
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleBind'
       lang:
         type: string
       langID:
@@ -1264,7 +1338,7 @@ definitions:
       name:
         type: string
       order:
-        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.Order'
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.Order'
       page:
         type: integer
       pageSize:
@@ -1272,19 +1346,19 @@ definitions:
       plugin:
         type: string
       priority:
-        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRulePriority'
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRulePriority'
       rulesetID:
         type: integer
       showAllRules:
         type: boolean
       sort:
-        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRuleSort'
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleSort'
       status:
-        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRuleStatus'
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleStatus'
       tag:
         type: string
       type:
-        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRuleType'
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleType'
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.RuleSet:
     properties:
@@ -1437,7 +1511,7 @@ definitions:
       planID:
         type: integer
       priority:
-        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRulePriority'
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRulePriority'
       repoID:
         type: integer
       threshold:
@@ -1445,20 +1519,20 @@ definitions:
       triggerID:
         type: integer
       type:
-        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRuleType'
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleType'
       unit:
-        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRuleUnit'
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleUnit'
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanConditionItem:
     properties:
       priority:
-        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRulePriority'
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRulePriority'
       threshold:
         type: integer
       type:
-        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRuleType'
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleType'
       unit:
-        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRuleUnit'
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleUnit'
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanConditionReqForBatchCreate:
     properties:
@@ -1538,24 +1612,24 @@ definitions:
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanPlanConditionReqForCreate:
     properties:
       priority:
-        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRulePriority'
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRulePriority'
       threshold:
         type: integer
       type:
-        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRuleType'
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleType'
       unit:
-        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRuleUnit'
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleUnit'
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanPlanConditionReqForUpdate:
     properties:
       priority:
-        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRulePriority'
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRulePriority'
       threshold:
         type: integer
       type:
-        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRuleType'
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleType'
       unit:
-        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRuleUnit'
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleUnit'
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanPlanReqFilter:
     properties:
@@ -1620,85 +1694,127 @@ definitions:
       scanType:
         type: string
     type: object
-  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRuleBind:
-    enum:
-    - bind
-    - unbind
-    - ""
-    type: string
-    x-enum-varnames:
-    - ScanRuleBindBind
-    - ScanRuleBindUnbind
-    - scanRuleBindNone
-  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRulePriority:
-    enum:
-    - 0
-    - 1
-    - 2
-    - -1
-    type: integer
-    x-enum-varnames:
-    - ScanRulePriorityLow
-    - ScanRulePriorityMedium
-    - ScanRulePriorityHigh
-    - scanRulePriorityNone
-  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRuleSort:
-    enum:
-    - id
-    - name
-    - priority
-    - createdDate
-    - ""
-    type: string
-    x-enum-varnames:
-    - ScanRuleSortID
-    - ScanRuleSortName
-    - ScanRuleSortPriority
-    - ScanRuleSortCreatedDate
-    - scanRuleSortNone
-  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRuleStatus:
-    enum:
-    - enabled
-    - disabled
-    - ""
-    type: string
-    x-enum-varnames:
-    - ScanRuleStatusEnabled
-    - ScanRuleStatusDisabled
-    - scanRuleStatusNone
-  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRuleType:
-    enum:
-    - defect
-    - security
-    - compliance
-    - optimize
-    - ""
-    type: string
-    x-enum-comments:
-      ScanRuleTypeComplian: 合规
-      ScanRuleTypeDefect: 缺陷
-      ScanRuleTypeOptimize: 优化 // 代码异味
-      ScanRuleTypeVuln: 安全
-    x-enum-descriptions:
-    - 缺陷
-    - 安全
-    - 合规
-    - 优化 // 代码异味
-    - ""
-    x-enum-varnames:
-    - ScanRuleTypeDefect
-    - ScanRuleTypeVuln
-    - ScanRuleTypeComplian
-    - ScanRuleTypeOptimize
-    - scanRuleTypeNone
-  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRuleUnit:
-    enum:
-    - count
-    - percent
-    type: string
-    x-enum-varnames:
-    - ScanRuleUnitCount
-    - ScanRuleUnitPercent
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTask:
+    properties:
+      createdBy:
+        type: string
+      createdDate:
+        type: string
+      editedDate:
+        type: string
+      executionID:
+        type: integer
+      id:
+        type: integer
+      planID:
+        type: integer
+      planNumber:
+        type: integer
+      repoNumber:
+        type: integer
+      result:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanTaskResult'
+      scanType:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanType'
+      status:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanTaskStatus'
+      triggerID:
+        type: integer
+      triggerType:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanPlanTriggerType'
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTaskInfo:
+    properties:
+      cost:
+        type: integer
+      createdBy:
+        type: string
+      createdDate:
+        type: string
+      editedDate:
+        type: string
+      executionID:
+        type: integer
+      executionNumber:
+        type: integer
+      executionRef:
+        type: string
+      finished:
+        type: integer
+      id:
+        type: integer
+      issueNumber:
+        type: integer
+      pipelineName:
+        type: string
+      planID:
+        type: integer
+      planName:
+        type: string
+      planNumber:
+        type: integer
+      repoID:
+        type: integer
+      repoName:
+        type: string
+      repoNumber:
+        type: integer
+      result:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanTaskResult'
+      scanType:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanType'
+      started:
+        type: integer
+      status:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanTaskStatus'
+      trigger:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTaskTrigger'
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTaskInfoReqFilter:
+    properties:
+      branch:
+        type: string
+      order:
+        type: string
+      page:
+        default: 1
+        type: integer
+      pageSize:
+        default: 20
+        type: integer
+      planID:
+        type: integer
+      repoID:
+        type: integer
+      result:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanTaskResult'
+      sort:
+        type: string
+      status:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanTaskStatus'
+      taskID:
+        type: integer
+      triggerID:
+        type: integer
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTaskReqForCreate:
+    properties:
+      branch:
+        type: string
+      planID:
+        type: integer
+      repoID:
+        type: integer
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTaskTrigger:
+    properties:
+      triggerID:
+        type: integer
+      triggerName:
+        type: string
+      triggerType:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanPlanTriggerType'
+    type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTrigger:
     properties:
       actions:
@@ -6520,6 +6636,118 @@ paths:
                   type: array
               type: object
       summary: 查询所有扫描标签
+      tags:
+      - scan
+  /scan/tasks:
+    post:
+      consumes:
+      - application/json
+      description: 创建一个扫描任务，触发流水线执行
+      parameters:
+      - description: 扫描任务信息
+        in: body
+        name: taskInfo
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTaskReqForCreate'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 创建成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTask'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "401":
+          description: 未授权（会话不存在或已过期）
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 创建扫描任务
+      tags:
+      - scan
+  /scan/tasks/{taskID}:
+    get:
+      consumes:
+      - application/json
+      description: 根据扫描任务 ID 获取扫描任务的详细信息
+      parameters:
+      - description: 扫描任务 ID
+        in: path
+        name: taskID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 查询成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTaskInfo'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 获取扫描任务详情
+      tags:
+      - scan
+  /scan/tasks/list:
+    post:
+      consumes:
+      - application/json
+      description: 根据过滤条件查询扫描任务详情列表，支持分页
+      parameters:
+      - description: 查询过滤条件
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTaskInfoReqFilter'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 查询成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTaskInfo'
+                  type: array
+                listArgs:
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListArgs'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 查询扫描任务列表
       tags:
       - scan
   /scan/types:
