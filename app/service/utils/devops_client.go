@@ -17,8 +17,8 @@ type BranchPermissionResult struct {
 	TargetBranch  []string `json:"targetBranch"`
 }
 
-// GetBranchRermission 获取分支权限
-func GetBranchRermission(ctx context.Context, baseURL string, repoID int64, branchName string, authorization string) (*BranchPermissionResult, error) {
+// GetBranchPermission 获取分支权限
+func GetBranchPermission(ctx context.Context, baseURL string, repoID int64, branchName string, authorization string) (*BranchPermissionResult, error) {
 	url := fmt.Sprintf("%s/branchrules?id=%d&branchName=%s", baseURL, repoID, branchName)
 	headers := map[string]string{
 		"Authorization": authorization,

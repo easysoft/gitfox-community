@@ -176,8 +176,15 @@ func (c *Controller) checkProtectionRules(
 		if len(check.branches) == 0 {
 			continue
 		}
+
+		// 从数据库获取 DevOps Token
+		entry, err := c.tokenStore.GetDevopsToken(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to get devops token")
+		}
+
 		for _, branchName := range check.branches {
-			rule, err := utils.GetBranchRermission(ctx, c.devopsConfig.URL, int64(repo.ID), branchName, c.devopsConfig.Authorization)
+			rule, err := utils.GetBranchPermission(ctx, c.devopsConfig.URL, int64(repo.ID), branchName, entry.Key)
 			if err != nil {
 				return errors.Wrapf(err, "failed to get branch rule for %s", branchName)
 			}
