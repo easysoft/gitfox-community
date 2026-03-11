@@ -1,0 +1,22 @@
+version: 1
+kind: pipeline
+spec:
+  stages:
+    - name: codescan
+      type: ci
+      spec:
+        clone:
+          depth: 5
+        steps:
+          - name: dotnet
+            type: background
+            spec:
+              container:
+                image: hub.zentao.net/ci/dotnet-scanner
+                pull: always
+          - name: codescan
+            type: run
+            spec:
+              container:
+                image: hub.zentao.net/ci/gitfoxscan:main
+                pull: always

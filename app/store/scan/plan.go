@@ -36,7 +36,11 @@ func (s *ScanPlanStore) GetByID(ctx context.Context, id uint) (*scanModel.ScanPl
 
 func (s *ScanPlanStore) GetByRepoIDAndID(ctx context.Context, repoID uint, id uint) (*scanModel.ScanPlan, error) {
 	var plan ScanPlan
-	if err := s.db.WithContext(ctx).Where("repoID = ? AND id = ? AND deleted = ?", repoID, id, false).First(&plan).Error; err != nil {
+	tx := s.db.WithContext(ctx).Where("id = ? AND deleted = ?", id, false)
+	if repoID != 0 {
+		tx = tx.Where("repoID = ?", repoID)
+	}
+	if err := tx.First(&plan).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
 	return mapScanPlanToModel(plan), nil

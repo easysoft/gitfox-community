@@ -37,8 +37,8 @@ ruleSet:
   update_error: "规则集更新失败。"
   list_error: "规则集列表查询失败。"
   list_success: "规则集列表查询成功。"
-  delete_error: "规则集列表删除失败。"
-  delete_success: "规则集列表删除成功。"
+  delete_error: "规则集删除失败。"
+  delete_success: "规则集删除成功。"
   in_use_error: "规则集已被扫描解决方案使用。"
   builtin_delete_error: "内置规则集不允许删除。"
   builtin_bind_error: "内置规则集禁止绑定规则。"
@@ -123,6 +123,16 @@ trigger:
   invalid_type_error: "触发器类型无效。"
   retain_one_error: "至少需要保留一个触发器。"
   type_required_error: "触发器类型不能为空。"
+
+scanTask:
+  path_param_error: "路径参数解析失败。"
+  body_param_error: "请求体参数解析失败。"
+  list_success: "扫描任务列表查询成功。"
+  list_error: "扫描任务列表查询失败。"
+  query_success: "扫描任务详情查询成功。"
+  query_error: "扫描任务详情查询失败。"
+  create_success: "扫描任务创建成功。"
+  create_error: "扫描任务创建失败。"
 
 condition:
   path_param_error: "路径参数解析失败。"

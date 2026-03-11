@@ -22,6 +22,7 @@ import (
 	pullreqevents "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/events/pullreq"
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/token"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/user"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
@@ -35,6 +36,7 @@ import (
 type Controller struct {
 	userStore    user.Interface
 	repoStore    repo.Interface
+	tokenStore   token.Interface
 	git          git.Interface
 	urlProvider  url.Provider
 	devopsConfig config.DevopsConfig
@@ -45,6 +47,7 @@ type Controller struct {
 func NewController(
 	userStore user.Interface,
 	repoStore repo.Interface,
+	tokenStore token.Interface,
 	git git.Interface,
 	urlProvider url.Provider,
 	devopsConfig config.DevopsConfig,
@@ -54,6 +57,7 @@ func NewController(
 	return &Controller{
 		userStore:    userStore,
 		repoStore:    repoStore,
+		tokenStore:   tokenStore,
 		git:          git,
 		urlProvider:  urlProvider,
 		devopsConfig: devopsConfig,

@@ -5,7 +5,9 @@ import (
 	"time"
 
 	authModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
+	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 	scanModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/triggerer"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
 )
 
@@ -90,4 +92,17 @@ type IScanPlanCondition interface {
 	Delete(ctx context.Context, repoID uint, planID uint, conditionID uint) error
 	BatchCreate(ctx context.Context, session *authModel.Session, repoID uint, planID uint, req scanModel.ScanPlanConditionReqForBatchCreate) error
 	BatchDelete(ctx context.Context, repoID uint, planID uint, req scanModel.ScanPlanConditionReqForBatchDelete) error
+}
+
+// IScanTask 扫描任务 service 接口
+type IScanTask interface {
+	Create(ctx context.Context, in *ScanTaskInput) (*scanModel.ScanTask, error)
+	CreateBranchHook(ctx context.Context, repo *repoModel.Repo, branch string, principal *authModel.Session) (*triggerer.Hook, error)
+	Retry(ctx context.Context, session *authModel.Session, taskID uint) (*scanModel.ScanTask, error)
+	GetTaskInfo(ctx context.Context, taskID uint) (*scanModel.ScanTaskInfo, error)
+	ListTaskInfos(ctx context.Context, filter scanModel.ScanTaskInfoReqFilter) (*database.PageResult[*scanModel.ScanTaskInfo], error)
+	CountTaskInfos(ctx context.Context, filter scanModel.ScanTaskInfoReqFilter) (int64, error)
+	Delete(ctx context.Context, id uint) error
+	SetupCron(ctx context.Context, trigger *scanModel.ScanTrigger) error
+	RecycleCron(ctx context.Context, trigger *scanModel.ScanTrigger) error
 }

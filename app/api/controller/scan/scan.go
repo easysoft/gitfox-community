@@ -3,6 +3,7 @@ package scan
 import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
+	repoService "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
 	scanService "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/scan"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
@@ -10,13 +11,15 @@ import (
 )
 
 type ScanController struct {
-	ruleSetSvc        scanService.IRuleSet
-	ruleSvc           scanService.IRule
-	solutionSvc       scanService.ISolution
-	planSvc           scanService.IScanPlan
-	triggerSvc        scanService.IScanTrigger
-	conditionSvc      scanService.IScanCondition
-	planConditionSvc  scanService.IScanPlanCondition
+	ruleSetSvc       scanService.IRuleSet
+	ruleSvc          scanService.IRule
+	solutionSvc      scanService.ISolution
+	planSvc          scanService.IScanPlan
+	triggerSvc       scanService.IScanTrigger
+	conditionSvc     scanService.IScanCondition
+	planConditionSvc scanService.IScanPlanCondition
+	taskSvc          scanService.IScanTask
+	repoSvc          repoService.Interface
 }
 
 // NewScanController 创建扫描处理器实例
@@ -24,10 +27,12 @@ func NewScanController(
 	ruleSetSvc scanService.IRuleSet,
 	ruleSvc scanService.IRule,
 	solutionSvc scanService.ISolution,
+	taskSvc scanService.IScanTask,
 	planSvc scanService.IScanPlan,
 	triggerSvc scanService.IScanTrigger,
 	conditionSvc scanService.IScanCondition,
 	planConditionSvc scanService.IScanPlanCondition,
+	repoSvc repoService.Interface,
 ) *ScanController {
 	return &ScanController{
 		ruleSetSvc:       ruleSetSvc,
@@ -37,11 +42,13 @@ func NewScanController(
 		triggerSvc:       triggerSvc,
 		conditionSvc:     conditionSvc,
 		planConditionSvc: planConditionSvc,
+		repoSvc:          repoSvc,
+		taskSvc:          taskSvc,
 	}
 }
 
 func (c *ScanController) pathRepoID(ctx *gin.Context, errKey i18n.I18nKey) (uint, bool) {
-	repoID, err := req.PathParamAsPositiveUint(ctx, "repoID")
+	repoID, err := req.PathParamAsNaturalNum(ctx, "repoID")
 	if err != nil {
 		resp.BadRequest(ctx, errors.WithI18nKey(err, errKey))
 		return 0, false

@@ -8,6 +8,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
 	principal "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/user"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/user"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	"github.com/gin-gonic/gin"
@@ -18,14 +19,16 @@ var _ Authenticator = (*BasicAuthenticator)(nil)
 // BasicAuthenticator uses the provided JWT to authenticate the caller.
 // BasicAuthenticator 使用提供的JWT来验证调用者。
 type BasicAuthenticator struct {
-	userStore user.Interface
+	userStore    user.Interface
+	pipelineAuth config.PipelineAuthConfig
 }
 
 // NewBasicAuthenticator creates a new BasicAuthenticator.
 // NewBasicAuthenticator 创建一个新的BasicAuthenticator。
-func NewBasicAuthenticator(userStore user.Interface) *BasicAuthenticator {
+func NewBasicAuthenticator(userStore user.Interface, pipelineAuth config.PipelineAuthConfig) *BasicAuthenticator {
 	return &BasicAuthenticator{
-		userStore: userStore,
+		userStore:    userStore,
+		pipelineAuth: pipelineAuth,
 	}
 }
 
@@ -42,12 +45,12 @@ func (a *BasicAuthenticator) Authenticate(r *gin.Context) (*auth.Session, error)
 		return nil, constant.ErrAuthNoData
 	}
 
-	if userName == "pipeline" {
-		if passwd != "cd65d97989fcb1fdb0d82471c3238a3c" {
+	if userName == a.pipelineAuth.UserName {
+		if passwd != a.pipelineAuth.Password {
 			return nil, constant.ErrUnauthorized
 		}
 		userInfo := principal.User{
-			Account: "pipeline",
+			Account: a.pipelineAuth.UserName,
 		}
 		return &auth.Session{User: &userInfo}, nil
 	}

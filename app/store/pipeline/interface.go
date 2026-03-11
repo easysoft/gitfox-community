@@ -27,10 +27,16 @@ func NewPipelineStore(db *gorm.DB) *Store {
 type Interface interface {
 
 	// --- 流水线相关 ---
+	// CreatePipeline 创建流水线
+	CreatePipeline(ctx context.Context, pipeline *pipelineModel.Pipeline) (*pipelineModel.Pipeline, error)
 	// GetPipelineByID 根据流水线ID获取流水线（deleted=0）
 	GetPipelineByID(ctx context.Context, id int64) (*pipelineModel.Pipeline, error)
+	// GetPipelineByRepoIDAndName 根据仓库ID和流水线名称获取流水线（deleted=0）
+	GetPipelineByRepoIDAndName(ctx context.Context, repoID int64, name string) (*pipelineModel.Pipeline, error)
 
 	// --- 流水线内容相关 ---
+	// CreatePipelineContent 创建流水线内容
+	CreatePipelineContent(ctx context.Context, content *pipelineModel.PipelineContent) (*pipelineModel.PipelineContent, error)
 	// GetPipelineContentByPipelineID 根据流水线ID获取流水线内容
 	GetPipelineContentByPipelineID(ctx context.Context, pipelineID int64) (*pipelineModel.PipelineContent, error)
 

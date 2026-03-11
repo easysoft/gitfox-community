@@ -34,6 +34,7 @@ type SimpleStep struct {
 	Name   string `json:"name"`
 	NameCn string `json:"alias"`
 	Svg    string `json:"svg"`
+	Kind   string `json:"kind"`
 }
 
 // GroupedPlugins 按分组归类的插件

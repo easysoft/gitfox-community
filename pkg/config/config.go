@@ -4,27 +4,34 @@ import "time"
 
 // Config 顶级配置结构体，对应整个YAML文件
 type Config struct {
-	InstanceID string           `yaml:"-"`
-	URL        URL              `yaml:"-"`
+	InstanceID   string             `yaml:"-"`
+	URL          URL                `yaml:"-"`
 	WorkSpace  WorkSpace        `yaml:"workspace" envconfig:"GITFOX_WORKSPACE_ROOT_DIR"`
-	Server     ServerConfig     `yaml:"server"`
-	Database   DatabaseConfig   `yaml:"database"`
-	SQLite     SQLiteConfig     `yaml:"sqlite"`
-	Docker     DockerConfig     `yaml:"docker"`
-	Git        GitConfig        `yaml:"git"`
-	Job        JobConfig        `yaml:"job"`
-	Webhook    WebhookConfig    `yaml:"webhook"`
-	SSH        SSHConfig        `yaml:"ssh"`
-	Metric     MetricConfig     `yaml:"metric"`
-	Ci         CiConfig         `yaml:"ci"`
-	Gitspace   GitspaceConfig   `yaml:"gitspace"`
-	Registry   RegistryConfig   `yaml:"registry"`
-	Logging    LoggingConfig    `yaml:"logging"`
-	Middleware MiddlewareConfig `yaml:"middleware"`
-	I18n       I18nConfig       `yaml:"i18n"`
-	Principal  PrincipalConfig  `yaml:"principal"`
-	Devops     DevopsConfig     `yaml:"devops"`
-	Storage    StorageConfig    `yaml:"storage"`
+	Server       ServerConfig       `yaml:"server"`
+	Database     DatabaseConfig     `yaml:"database"`
+	SQLite       SQLiteConfig       `yaml:"sqlite"`
+	Docker       DockerConfig       `yaml:"docker"`
+	Git          GitConfig          `yaml:"git"`
+	Job          JobConfig          `yaml:"job"`
+	Webhook      WebhookConfig      `yaml:"webhook"`
+	SSH          SSHConfig          `yaml:"ssh"`
+	Metric       MetricConfig       `yaml:"metric"`
+	Ci           CiConfig           `yaml:"ci"`
+	Gitspace     GitspaceConfig     `yaml:"gitspace"`
+	Registry     RegistryConfig     `yaml:"registry"`
+	Logging      LoggingConfig      `yaml:"logging"`
+	Middleware   MiddlewareConfig   `yaml:"middleware"`
+	I18n         I18nConfig         `yaml:"i18n"`
+	Principal    PrincipalConfig    `yaml:"principal"`
+	Devops       DevopsConfig       `yaml:"devops"`
+	Storage      StorageConfig      `yaml:"storage"`
+	PipelineAuth PipelineAuthConfig `yaml:"pipelineAuth"`
+}
+
+// PipelineAuthConfig 流水线内部认证配置
+type PipelineAuthConfig struct {
+	UserName string `envconfig:"GITFOX_PIPELINE_AUTH_USERNAME" default:"pipeline"`
+	Password string `envconfig:"GITFOX_PIPELINE_AUTH_PASSWORD" default:"cd65d97989fcb1fdb0d82471c3238a3c"`
 }
 
 type WorkSpace struct {
@@ -246,8 +253,7 @@ type PrincipalConfig struct {
 
 // DevopsConfig DevOps 平台配置
 type DevopsConfig struct {
-	URL           string `envconfig:"GITFOX_DEVOPS_URL" yaml:"url"`                     // DevOps 平台 API 地址
-	Authorization string `envconfig:"GITFOX_DEVOPS_AUTHORIZATION" yaml:"authorization"` // DevOps 平台 API 授权密钥
+	URL string `yaml:"url"` // DevOps 平台 API 地址
 }
 
 // StorageConfig 通用存储配置
