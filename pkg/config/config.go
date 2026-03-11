@@ -6,6 +6,7 @@ import "time"
 type Config struct {
 	InstanceID string           `yaml:"-"`
 	URL        URL              `yaml:"-"`
+	WorkSpace  WorkSpace        `yaml:"workspace" envconfig:"GITFOX_WORKSPACE_ROOT_DIR"`
 	Server     ServerConfig     `yaml:"server"`
 	Database   DatabaseConfig   `yaml:"database"`
 	SQLite     SQLiteConfig     `yaml:"sqlite"`
@@ -26,6 +27,10 @@ type Config struct {
 	Storage    StorageConfig    `yaml:"storage"`
 }
 
+type WorkSpace struct {
+	Root string `yaml:"root" envconfig:"GITFOX_WORKSPACE_ROOT_DIR" default:"/data/gitfox-community"` 
+}
+
 // ServerConfig HTTP服务配置
 type ServerConfig struct {
 	Port            int           `envconfig:"GITFOX_HTTP_PORT" default:"3000" yaml:"port"`
@@ -38,6 +43,7 @@ type ServerConfig struct {
 type DatabaseConfig struct {
 	Driver          string        `envconfig:"GITFOX_DB_DRIVER" default:"mysql"`
 	Datasource      string        `envconfig:"GITFOX_DB_DATASOURCE" required:"true"`
+	
 	PrintSQL        bool          `yaml:"printSQL"`
 	MaxIdleConn     int           `yaml:"maxIdleConn"`
 	MaxOpenConn     int           `yaml:"maxOpenConn"`
@@ -59,7 +65,7 @@ type GitConfig struct {
 	Trace         bool   `yaml:"trace"`
 	TmpDir        string `yaml:"tmpDir"`
 	DefaultBranch string `yaml:"defaultBranch"`
-	Root          string `envconfig:"GITFOX_GIT_ROOT_DIR" default:"/data/gitfox/git"`
+	Root          string `envconfig:"GITFOX_GIT_ROOT_DIR" yaml:"root"`
 	HookPath      string `yaml:"hookPath"`
 }
 
@@ -82,7 +88,7 @@ type SSHConfig struct {
 	Host        string `envconfig:"GITFOX_SERVER_HOST" yaml:"host"`
 	Port        int    `envconfig:"GITFOX_SSH_PORT" yaml:"port" default:"22"`
 	DefaultUser string `yaml:"defaultUser" default:"git"`
-	HostKeysDir string `envconfig:"GITFOX_SSH_HOST_KEYS_DIR" default:"/data/gitfox/ssh"`
+	HostKeysDir string `envconfig:"GITFOX_SSH_HOST_KEYS_DIR"`
 }
 
 type I18nConfig struct {
@@ -127,7 +133,7 @@ type RegistryHttpConfig struct {
 // LoggingConfig 日志配置
 type LoggingConfig struct {
 	Level            int                `envconfig:"GITFOX_LOG_LEVEL" default:"-1"`
-	LogDir           string             `envconfig:"GITFOX_LOG_DIR" default:"/data/gitfox/logs"`
+	LogDir           string             `envconfig:"GITFOX_LOG_DIR"`
 	Stdout           bool               `yaml:"stdout"`
 	Caller           bool               `yaml:"caller"`
 	Encoder          string             `yaml:"encoder"`
