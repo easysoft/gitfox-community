@@ -148,6 +148,7 @@ func mapPluginToModel(p Plugin) *pipelineModel.Plugin {
 		ID:          p.ID,
 		GroupID:     p.GroupID,
 		Name:        p.Name,
+		Kind:        p.Kind,
 		Desc:        string(p.Desc),
 		Logo:        string(p.Logo),
 		Yaml:        string(p.Yaml),

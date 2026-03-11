@@ -5,7 +5,17 @@ import (
 
 	pipelineModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/pipeline"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 )
+
+// CreatePipeline 创建流水线
+func (s *Store) CreatePipeline(ctx context.Context, pipeline *pipelineModel.Pipeline) (*pipelineModel.Pipeline, error) {
+	dbPipeline := mapModelToPipeline(pipeline)
+	if err := s.db.WithContext(ctx).Create(dbPipeline).Error; err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
+	}
+	return mapPipelineToModel(dbPipeline), nil
+}
 
 // GetPipelineByID 根据流水线ID获取流水线（deleted=0）
 func (s *Store) GetPipelineByID(ctx context.Context, id int64) (*pipelineModel.Pipeline, error) {
@@ -14,6 +24,40 @@ func (s *Store) GetPipelineByID(ctx context.Context, id int64) (*pipelineModel.P
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
 	return mapPipelineToModel(&pipeline), nil
+}
+
+// GetPipelineByRepoIDAndName 根据仓库ID和流水线名称获取流水线（deleted=0）
+func (s *Store) GetPipelineByRepoIDAndName(ctx context.Context, repoID int64, name string) (*pipelineModel.Pipeline, error) {
+	var pipeline Pipeline
+	if err := s.db.WithContext(ctx).Where("repoID = ? AND name = ? AND deleted = 0", repoID, name).First(&pipeline).Error; err != nil {
+		sqlErr := database.ProcessSQLErrorf(ctx, err)
+		if errors.Is(sqlErr, errors.ErrResourceNotFound) {
+			return nil, nil
+		}
+		return nil, database.ProcessSQLErrorf(ctx, err)
+	}
+	return mapPipelineToModel(&pipeline), nil
+}
+
+// mapModelToPipeline 将流水线模型映射为数据库模型
+func mapModelToPipeline(p *pipelineModel.Pipeline) *Pipeline {
+	return &Pipeline{
+		ID:            p.ID,
+		Name:          p.Name,
+		Type:          p.Type,
+		SpaceID:       p.SpaceID,
+		RepoID:        p.RepoID,
+		Desc:          p.Desc,
+		Status:        p.Status,
+		LatestVersion: p.LatestVersion,
+		DefaultBranch: p.DefaultBranch,
+		YamlPath:      p.YamlPath,
+		CreatedBy:     p.CreatedBy,
+		CreatedDate:   p.CreatedDate,
+		EditedBy:      p.EditedBy,
+		EditedDate:    p.EditedDate,
+		Deleted:       p.Deleted,
+	}
 }
 
 // mapPipelineToModel 将数据库模型映射为流水线模型

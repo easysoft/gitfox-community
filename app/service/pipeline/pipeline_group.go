@@ -40,6 +40,7 @@ func (s *Service) GetGroupedPlugins(ctx context.Context) ([]*pipelineModel.Group
 			Name:   p.Name,
 			NameCn: p.Desc,
 			Svg:    p.Logo,
+			Kind:   p.Kind,
 		})
 	}
 

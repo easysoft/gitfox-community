@@ -38,6 +38,12 @@ func registerScanRoutes(r *gin.RouterGroup, controller *Controller) {
 			ruleSetsWithID.POST("/rules/unbind", controller.Scan.UnBindRule)
 		}
 
+		// 扫描任务相关路由
+		tasks := rule.Group("/tasks")
+		tasks.POST("", controller.Scan.ScanTaskCreate)
+		tasks.POST("/list", controller.Scan.ScanTaskList)
+		tasks.GET("/:id", controller.Scan.ScanTaskGet)
+
 		// 扫描方案相关路由
 		solutions := rule.Group("/solutions")
 		solutions.POST("", controller.Scan.SolutionCreate)

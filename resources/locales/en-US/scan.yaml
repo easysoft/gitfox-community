@@ -124,6 +124,16 @@ trigger:
   retain_one_error: "At least one trigger must be retained."
   type_required_error: "Trigger type is required."
 
+scanTask:
+  path_param_error: "Path param parsing failed."
+  body_param_error: "Body param parsing failed."
+  list_success: "Scan task list queried successfully."
+  list_error: "Failed to query scan task list."
+  query_success: "Scan task details queried successfully."
+  query_error: "Failed to query scan task details."
+  create_success: "Scan task created successfully."
+  create_error: "Failed to create scan task."
+
 condition:
   path_param_error: "Path param parsing failed."
   body_param_error: "Body param parsing failed."

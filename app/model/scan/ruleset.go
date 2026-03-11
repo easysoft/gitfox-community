@@ -23,7 +23,7 @@ type RuleSetReqForUpdate struct {
 	DescEn string `json:"descEn,omitempty"`
 	Lang   string `json:"lang,omitempty"`
 	Tag    string `json:"tag,omitempty"`
-	Type   string `json:"type,omitempty" binding:"oneof=defect security compliance optimize"`
+	Type   string `json:"type,omitempty" binding:"omitempty,oneof=defect security compliance optimize"`
 	Plugin string `json:"plugin,omitempty"`
 	Status string `json:"status,omitempty"`
 }
