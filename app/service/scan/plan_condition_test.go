@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	scanModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
 	scanStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/scan"
 	scanStoreMock "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/scan/mock"
@@ -31,13 +32,13 @@ func TestScanPlanConditionService(t *testing.T) {
 			assert.Equal(t, uint64(0), c.TriggerID)
 			assert.Equal(t, "count", string(c.Unit))
 			assert.Equal(t, "tester", c.CreatedBy)
-			return &scanModel.ScanCondition{ID: 10, RepoID: 2, PlanID: 1, TriggerID: 0, Unit: scanModel.ScanRuleUnitCount, Threshold: 1}, nil
+			return &scanModel.ScanCondition{ID: 10, RepoID: 2, PlanID: 1, TriggerID: 0, Unit: constant.ScanRuleUnitCount, Threshold: 1}, nil
 		})
 
 		svc := NewScanPlanConditionService(&fakeRepoStore{}, planStore, conditionStore)
 		got, err := svc.Create(context.Background(), newTestSession("tester"), 2, 1, scanModel.ScanPlanConditionReqForCreate{
-			Priority:  scanModel.ScanRulePriorityLow,
-			Type:      scanModel.ScanRuleTypeDefect,
+			Priority:  constant.ScanRulePriorityLow,
+			Type:      constant.ScanRuleTypeDefect,
 			Unit:      "",
 			Threshold: 1,
 		})
@@ -57,9 +58,9 @@ func TestScanPlanConditionService(t *testing.T) {
 
 		svc := NewScanPlanConditionService(&fakeRepoStore{}, planStore, conditionStore)
 		_, err := svc.Create(context.Background(), newTestSession("tester"), 2, 1, scanModel.ScanPlanConditionReqForCreate{
-			Priority:  scanModel.ScanRulePriorityLow,
-			Type:      scanModel.ScanRuleTypeDefect,
-			Unit:      scanModel.ScanRuleUnitCount,
+			Priority:  constant.ScanRulePriorityLow,
+			Type:      constant.ScanRuleTypeDefect,
+			Unit:      constant.ScanRuleUnitCount,
 			Threshold: 0,
 		})
 		require.Error(t, err)
@@ -77,9 +78,9 @@ func TestScanPlanConditionService(t *testing.T) {
 
 		svc := NewScanPlanConditionService(&fakeRepoStore{}, planStore, conditionStore)
 		_, err := svc.Create(context.Background(), newTestSession("tester"), 2, 1, scanModel.ScanPlanConditionReqForCreate{
-			Priority:  scanModel.ScanRulePriorityLow,
-			Type:      scanModel.ScanRuleTypeDefect,
-			Unit:      scanModel.ScanRuleUnitPercent,
+			Priority:  constant.ScanRulePriorityLow,
+			Type:      constant.ScanRuleTypeDefect,
+			Unit:      constant.ScanRuleUnitPercent,
 			Threshold: 101,
 		})
 		require.Error(t, err)
@@ -128,11 +129,11 @@ func TestScanPlanConditionService(t *testing.T) {
 		planStore := scanStoreMock.NewMockIScanPlan(ctrl)
 		conditionStore := scanStoreMock.NewMockIScanPlanCondition(ctrl)
 
-		unit := scanModel.ScanRuleUnitPercent
+		unit := constant.ScanRuleUnitPercent
 		threshold := int64(90)
 
 		planStore.EXPECT().GetByRepoIDAndID(gomock.Any(), uint(2), uint(1)).Return(&scanModel.ScanPlan{ID: 1, RepoID: 2}, nil).Times(1)
-		conditionStore.EXPECT().GetByID(gomock.Any(), uint(9)).Return(&scanModel.ScanCondition{ID: 9, RepoID: 2, PlanID: 1, TriggerID: 0, Unit: scanModel.ScanRuleUnitCount, Threshold: 10}, nil).Times(2)
+		conditionStore.EXPECT().GetByID(gomock.Any(), uint(9)).Return(&scanModel.ScanCondition{ID: 9, RepoID: 2, PlanID: 1, TriggerID: 0, Unit: constant.ScanRuleUnitCount, Threshold: 10}, nil).Times(2)
 		conditionStore.EXPECT().Update(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, c *scanStore.ScanPlanCondition) error {
 			assert.Equal(t, uint64(9), c.ID)
 			assert.Equal(t, "tester", c.EditedBy)
@@ -158,11 +159,11 @@ func TestScanPlanConditionService(t *testing.T) {
 		planStore := scanStoreMock.NewMockIScanPlan(ctrl)
 		conditionStore := scanStoreMock.NewMockIScanPlanCondition(ctrl)
 
-		unit := scanModel.ScanRuleUnitPercent
+		unit := constant.ScanRuleUnitPercent
 		threshold := int64(200)
 
 		planStore.EXPECT().GetByRepoIDAndID(gomock.Any(), uint(2), uint(1)).Return(&scanModel.ScanPlan{ID: 1, RepoID: 2}, nil)
-		conditionStore.EXPECT().GetByID(gomock.Any(), uint(9)).Return(&scanModel.ScanCondition{ID: 9, RepoID: 2, PlanID: 1, TriggerID: 0, Unit: scanModel.ScanRuleUnitCount, Threshold: 10}, nil)
+		conditionStore.EXPECT().GetByID(gomock.Any(), uint(9)).Return(&scanModel.ScanCondition{ID: 9, RepoID: 2, PlanID: 1, TriggerID: 0, Unit: constant.ScanRuleUnitCount, Threshold: 10}, nil)
 
 		svc := NewScanPlanConditionService(&fakeRepoStore{}, planStore, conditionStore)
 		_, err := svc.Update(context.Background(), newTestSession("tester"), 2, 1, 9, scanModel.ScanPlanConditionReqForUpdate{

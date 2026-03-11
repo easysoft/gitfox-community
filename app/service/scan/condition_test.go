@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	scanModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
 	scanStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/scan"
 	scanStoreMock "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/scan/mock"
@@ -39,7 +40,7 @@ func TestScanConditionService(t *testing.T) {
 
 		svc := NewScanConditionService(conditionStore, &fakeRepoStore{}, planStore, triggerStore, cronScheduler)
 		err := svc.BatchCreate(context.Background(), newTestSession("tester"), 1, 2, 3, scanModel.ScanConditionReqForBatchCreate{
-			Conditions: []scanModel.ScanConditionItem{{Priority: scanModel.ScanRulePriorityLow, Type: scanModel.ScanRuleTypeDefect, Unit: scanModel.ScanRuleUnitCount, Threshold: 10}},
+			Conditions: []scanModel.ScanConditionItem{{Priority: constant.ScanRulePriorityLow, Type: constant.ScanRuleTypeDefect, Unit: constant.ScanRuleUnitCount, Threshold: 10}},
 		})
 		require.NoError(t, err)
 		require.Len(t, cronScheduler.addCalls, 1)
@@ -111,7 +112,7 @@ func TestScanConditionService(t *testing.T) {
 
 		svc := NewScanConditionService(conditionStore, &fakeRepoStore{}, planStore, triggerStore, nil)
 		err := svc.BatchCreate(context.Background(), newTestSession("tester"), 1, 2, 3, scanModel.ScanConditionReqForBatchCreate{
-			Conditions: []scanModel.ScanConditionItem{{Priority: scanModel.ScanRulePriorityLow, Type: scanModel.ScanRuleTypeDefect, Unit: scanModel.ScanRuleUnitCount, Threshold: 10}},
+			Conditions: []scanModel.ScanConditionItem{{Priority: constant.ScanRulePriorityLow, Type: constant.ScanRuleTypeDefect, Unit: constant.ScanRuleUnitCount, Threshold: 10}},
 		})
 		require.NoError(t, err)
 	})

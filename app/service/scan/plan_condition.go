@@ -35,7 +35,7 @@ func (s *ScanPlanConditionService) Create(ctx context.Context, session *authMode
 
 	unit := req.Unit
 	if unit == "" {
-		unit = scanModel.ScanRuleUnitCount
+		unit = constant.ScanRuleUnitCount
 	}
 
 	condition := &scanStore.ScanPlanCondition{
@@ -138,7 +138,7 @@ func (s *ScanPlanConditionService) BatchCreate(ctx context.Context, session *aut
 		}
 		unit := item.Unit
 		if unit == "" {
-			unit = scanModel.ScanRuleUnitCount
+			unit = constant.ScanRuleUnitCount
 		}
 		conditions = append(conditions, &scanStore.ScanPlanCondition{
 			RepoID:    uint64(repoID),
@@ -186,14 +186,14 @@ func validatePlanConditionCreate(req *scanModel.ScanPlanConditionReqForCreate) e
 	}
 	unit := req.Unit
 	if unit == "" {
-		unit = scanModel.ScanRuleUnitCount
+		unit = constant.ScanRuleUnitCount
 	}
 	switch unit {
-	case scanModel.ScanRuleUnitCount:
+	case constant.ScanRuleUnitCount:
 		if req.Threshold <= 0 {
 			return errors.WithI18nKey(fmt.Errorf("threshold must be greater than 0 for unit count"), i18n.PlanConditionBodyParamError)
 		}
-	case scanModel.ScanRuleUnitPercent:
+	case constant.ScanRuleUnitPercent:
 		if req.Threshold < 0 || req.Threshold > 100 {
 			return errors.WithI18nKey(fmt.Errorf("threshold must be between 0 and 100 for unit percent"), i18n.PlanConditionBodyParamError)
 		}
@@ -217,11 +217,11 @@ func validatePlanConditionUpdate(req *scanModel.ScanPlanConditionReqForUpdate, c
 		threshold = *req.Threshold
 	}
 	switch unit {
-	case scanModel.ScanRuleUnitCount:
+	case constant.ScanRuleUnitCount:
 		if threshold <= 0 {
 			return errors.WithI18nKey(fmt.Errorf("threshold must be greater than 0 for unit count"), i18n.PlanConditionBodyParamError)
 		}
-	case scanModel.ScanRuleUnitPercent:
+	case constant.ScanRuleUnitPercent:
 		if threshold < 0 || threshold > 100 {
 			return errors.WithI18nKey(fmt.Errorf("threshold must be between 0 and 100 for unit percent"), i18n.PlanConditionBodyParamError)
 		}
