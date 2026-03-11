@@ -274,3 +274,75 @@ func (s ScanRuleUnit) Sanitize() (ScanRuleUnit, bool) {
 func GetAllScanRuleUnits() ([]ScanRuleUnit, ScanRuleUnit) {
 	return scanRuleUnits, ScanRuleUnitCount
 }
+
+type ScanPlanTriggerType string
+
+const (
+	ScanPlanTriggerTypeManual ScanPlanTriggerType = "manual"
+	ScanPlanTriggerTypeCron   ScanPlanTriggerType = "cron"
+	ScanPlanTriggerTypeAction ScanPlanTriggerType = "action"
+)
+
+type ScanTaskSort string
+
+func (ScanTaskSort) Enum() []interface{}                  { return toInterfaceSlice(scanTaskSorts) }
+func (s ScanTaskSort) Sanitize() (ScanTaskSort, bool)     { return Sanitize(s, GetAllScanTaskSorts) }
+func GetAllScanTaskSorts() ([]ScanTaskSort, ScanTaskSort) { return scanTaskSorts, ScanTaskSortId }
+
+const (
+	ScanTaskSortId       ScanTaskSort = "id"
+	ScanTaskSortStarted  ScanTaskSort = "started"
+	ScanTaskSortFinished ScanTaskSort = "finished"
+	ScanTaskSortRepoId   ScanTaskSort = "repo_id"
+	ScanTaskSortStatus   ScanTaskSort = "status"
+	ScanTaskSortResult   ScanTaskSort = "result"
+)
+
+var scanTaskSorts = sortEnum([]ScanTaskSort{
+	ScanTaskSortId,
+	ScanTaskSortStarted,
+	ScanTaskSortFinished,
+	ScanTaskSortRepoId,
+	ScanTaskSortStatus,
+	ScanTaskSortResult,
+})
+
+type ScanTaskStatus string
+
+func (ScanTaskStatus) Enum() []interface{}                { return toInterfaceSlice(scanTaskStatuses) }
+func (s ScanTaskStatus) Sanitize() (ScanTaskStatus, bool) { return Sanitize(s, GetAllScanTaskStatuses) }
+func GetAllScanTaskStatuses() ([]ScanTaskStatus, ScanTaskStatus) {
+	return scanTaskStatuses, ""
+}
+
+const (
+	ScanTaskStatusInProgress ScanTaskStatus = "in_progress"
+	ScanTaskStatusSuccess    ScanTaskStatus = "success"
+	ScanTaskStatusFailed     ScanTaskStatus = "failed"
+)
+
+var scanTaskStatuses = sortEnum([]ScanTaskStatus{
+	ScanTaskStatusInProgress,
+	ScanTaskStatusSuccess,
+	ScanTaskStatusFailed,
+})
+
+type ScanTaskResult string
+
+func (ScanTaskResult) Enum() []interface{}                { return toInterfaceSlice(scanTaskResults) }
+func (s ScanTaskResult) Sanitize() (ScanTaskResult, bool) { return Sanitize(s, GetAllScanTaskResults) }
+func GetAllScanTaskResults() ([]ScanTaskResult, ScanTaskResult) {
+	return scanTaskResults, ""
+}
+
+const (
+	ScanTaskResultPass   ScanTaskResult = "pass"
+	ScanTaskResultNoPass ScanTaskResult = "no-pass"
+	ScanTaskResultNull   ScanTaskResult = "-"
+)
+
+var scanTaskResults = sortEnum([]ScanTaskResult{
+	ScanTaskResultPass,
+	ScanTaskResultNoPass,
+	ScanTaskResultNull,
+})

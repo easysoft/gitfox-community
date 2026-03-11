@@ -379,6 +379,16 @@ const (
 	RunnerUpdateHeartBeatSuccess I18nKey = "runner.update_heart_beat_success" // 更新 Runner 心跳成功.
 	RunnerUpdateSuccess          I18nKey = "runner.update_success"            // 更新 Runner 成功.
 
+	// ScanTask 相关常量
+	ScanTaskBodyParamError I18nKey = "scanTask.body_param_error" // 请求体参数解析失败.
+	ScanTaskCreateError    I18nKey = "scanTask.create_error"     // 扫描任务创建失败.
+	ScanTaskCreateSuccess  I18nKey = "scanTask.create_success"   // 扫描任务创建成功.
+	ScanTaskListError      I18nKey = "scanTask.list_error"       // 扫描任务列表查询失败.
+	ScanTaskListSuccess    I18nKey = "scanTask.list_success"     // 扫描任务列表查询成功.
+	ScanTaskPathParamError I18nKey = "scanTask.path_param_error" // 路径参数解析失败.
+	ScanTaskQueryError     I18nKey = "scanTask.query_error"      // 扫描任务详情查询失败.
+	ScanTaskQuerySuccess   I18nKey = "scanTask.query_success"    // 扫描任务详情查询成功.
+
 	// Solution 相关常量
 	SolutionAlreadyExists       I18nKey = "solution.already_exists"        // 扫描方案名称已存在.
 	SolutionBindError           I18nKey = "solution.bind_error"            // 扫描方案绑定规则集失败.

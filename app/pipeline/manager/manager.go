@@ -436,7 +436,7 @@ func (m *Manager) Watch(ctx context.Context, executionID int64) (bool, error) {
 func (m *Manager) createNetrc(ctx context.Context) (*Netrc, error) {
 	return &Netrc{
 		Machine:  m.urlProvider.GetGITHostname(ctx),
-		Login:    "pipeline",
-		Password: "cd65d97989fcb1fdb0d82471c3238a3c",
+		Login:    m.Config.PipelineAuth.UserName,
+		Password: m.Config.PipelineAuth.Password,
 	}, nil
 }

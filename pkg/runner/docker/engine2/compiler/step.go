@@ -34,6 +34,10 @@ func (c *CompilerImpl) convertStep(stage *harness.Stage, step *harness.Step, arg
 	case *harness.StepPlugin:
 		dst := createStepPlugin(step, v)
 		return []*engine.Step{dst}, nil
+	case *harness.StepBackground:
+		dst := createStepBackground(step, v)
+		setupScript(dst, v.Run, "linux")
+		return []*engine.Step{dst}, nil
 	}
 	return nil, fmt.Errorf("unknown step type: %s", step.Type)
 }

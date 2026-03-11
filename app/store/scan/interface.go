@@ -3,6 +3,7 @@ package scan
 import (
 	"context"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	scanModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/resources"
@@ -96,4 +97,22 @@ type IScanPlanCondition interface {
 	ListByPlan(ctx context.Context, repoID, planID uint) ([]*scanModel.ScanCondition, error)
 	BatchCreateByPlan(ctx context.Context, conditions []*ScanPlanCondition) error
 	BatchDeleteByIDs(ctx context.Context, repoID, planID uint, ids []uint) error
+}
+
+// IScanTask 扫描任务 store 接口
+type IScanTask interface {
+	Create(ctx context.Context, task *ScanTask) (*scanModel.ScanTask, error)
+	GetByID(ctx context.Context, id uint) (*scanModel.ScanTask, error)
+	FindByExecID(ctx context.Context, execID uint) (*scanModel.ScanTask, error)
+	GetTaskInfo(ctx context.Context, taskID uint) (*scanModel.ScanTaskInfo, error)
+	List(ctx context.Context, planID uint) ([]*scanModel.ScanTask, error)
+	ListTaskInfos(ctx context.Context, filter scanModel.ScanTaskInfoReqFilter) (*database.PageResult[*scanModel.ScanTaskInfo], error)
+	ListBatch(ctx context.Context, repoID int64, batchSize int, fn func(task *scanModel.ScanTaskInfo) error) error
+	CountTaskInfos(ctx context.Context, filter scanModel.ScanTaskInfoReqFilter) (int64, error)
+	Update(ctx context.Context, task *ScanTask) error
+	UpdateResult(ctx context.Context, taskID uint, result constant.ScanTaskResult) error
+	UpdateIssueNumber(ctx context.Context, taskID uint, issueNumber int64) error
+	Delete(ctx context.Context, id uint) error
+	NextPlanNumber(ctx context.Context, planID uint64) (int64, error)
+	NextRepoNumber(ctx context.Context, repoID int64) (int64, error)
 }

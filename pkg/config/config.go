@@ -22,8 +22,15 @@ type Config struct {
 	Middleware MiddlewareConfig `yaml:"middleware"`
 	I18n       I18nConfig       `yaml:"i18n"`
 	Principal  PrincipalConfig  `yaml:"principal"`
-	Devops     DevopsConfig     `yaml:"devops"`
-	Storage    StorageConfig    `yaml:"storage"`
+	Devops       DevopsConfig       `yaml:"devops"`
+	Storage      StorageConfig      `yaml:"storage"`
+	PipelineAuth PipelineAuthConfig `yaml:"pipelineAuth"`
+}
+
+// PipelineAuthConfig 流水线内部认证配置
+type PipelineAuthConfig struct {
+	UserName string `envconfig:"GITFOX_PIPELINE_AUTH_USERNAME" default:"pipeline"`
+	Password string `envconfig:"GITFOX_PIPELINE_AUTH_PASSWORD" default:"cd65d97989fcb1fdb0d82471c3238a3c"`
 }
 
 // ServerConfig HTTP服务配置
