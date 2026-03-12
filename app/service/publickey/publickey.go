@@ -83,6 +83,7 @@ func (s Service) Create(ctx context.Context, session *auth.Session, params *Publ
 	key, comment, err := ParseString(params.Content)
 	if err != nil {
 		err = errors.Wrap(err, "could not parse public key")
+		err = errors.WithI18nKey(err, i18n.AuthPubKeyContentError)
 		return err
 	}
 
@@ -97,7 +98,10 @@ func (s Service) Create(ctx context.Context, session *auth.Session, params *Publ
 
 	err = s.publicKeyStore.Create(ctx, input)
 	if err != nil {
-		return errors.Wrap(err, "failed to create public key")
+		if key := errors.GetI18nKey(err); key == "" || key == i18n.ErrorDefault {
+			err = errors.WithI18nKey(err, i18n.AuthPubKeyAddError)
+		}
+		return err
 	}
 	return nil
 }
@@ -128,32 +132,43 @@ func (s Service) Update(ctx context.Context, session *auth.Session, id int64, pa
 
 	err := s.publicKeyStore.UpdateByID(ctx, session.User.Account, id, input)
 	if err != nil {
+		if key := errors.GetI18nKey(err); key == "" || key == i18n.ErrorDefault {
+			err = errors.WithI18nKey(err, i18n.AuthPubKeyUpdateError)
+		}
 		return err
 	}
-
 	return nil
 }
 
 func (s Service) Delete(ctx context.Context, session *auth.Session, id int64) error {
 	err := s.publicKeyStore.DeleteByID(ctx, session.User.Account, id)
 	if err != nil {
-		return errors.Wrap(err, "failed to delete public key")
+		if key := errors.GetI18nKey(err); key == "" || key == i18n.ErrorDefault {
+			err = errors.WithI18nKey(err, i18n.AuthPubKeyDeleteError)
+		}
+		return err
 	}
 	return nil
 }
 
 func (s Service) List(ctx context.Context, session *auth.Session, params req.ListFilter) (*database.PageResult[*PublicKeyModel.PublicKey], error) {
-	keys, err := s.publicKeyStore.ListByAccount(ctx, session.User.Account, params)
+	result, err := s.publicKeyStore.ListByAccount(ctx, session.User.Account, params)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to list public keys")
+		if key := errors.GetI18nKey(err); key == "" || key == i18n.ErrorDefault {
+			err = errors.WithI18nKey(err, i18n.AuthPubKeyListError)
+		}
+		return nil, err
 	}
-	return keys, nil
+	return result, nil
 }
 
 func (s Service) GetByID(ctx *gin.Context, session *auth.Session, id int64) (*PublicKeyModel.PublicKey, error) {
 	key, err := s.publicKeyStore.GetByID(ctx, session.User.Account, id)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get public key")
+		if k := errors.GetI18nKey(err); k == "" || k == i18n.ErrorDefault {
+			err = errors.WithI18nKey(err, i18n.AuthPubKeyQueryError)
+		}
+		return nil, err
 	}
 	key.FillLastUsedDate(ctx)
 	return key, nil
@@ -162,7 +177,10 @@ func (s Service) GetByID(ctx *gin.Context, session *auth.Session, id int64) (*Pu
 func (s Service) ListWithTotal(ctx *gin.Context, session *auth.Session) ([]*PublicKeyModel.PublicKey, int64, error) {
 	keys, total, err := s.publicKeyStore.ListByAccountWithTotal(ctx, session.User.Account)
 	if err != nil {
-		return nil, 0, errors.Wrap(err, "failed to list public keys")
+		if key := errors.GetI18nKey(err); key == "" || key == i18n.ErrorDefault {
+			err = errors.WithI18nKey(err, i18n.AuthPubKeyListError)
+		}
+		return nil, 0, err
 	}
 
 	for _, key := range keys {

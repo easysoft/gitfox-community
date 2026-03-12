@@ -28,7 +28,7 @@ func (c *Controller) AddKey(ctx *gin.Context) {
 	var params publickey.AddPublicKeyInput
 	var err error
 	if err = ctx.ShouldBindJSON(&params); err != nil {
-		err = errors.WithI18nKey(err, i18n.AuthPubKeyAddParamError)
+		err = errors.WithI18nKey(err, i18n.AuthPubKeyAddBodyParamError)
 		resp.BadRequest(ctx, err)
 		return
 	}
@@ -40,27 +40,24 @@ func (c *Controller) AddKey(ctx *gin.Context) {
 	}
 
 	if err = params.Check(); err != nil {
-		err = errors.WithI18nKey(err, i18n.AuthPubKeyIdentifierError)
 		resp.BadRequest(ctx, err)
 		return
 	}
 
 	params.Content = strings.TrimSpace(params.Content)
 	if params.Content == "" {
-		err = errors.WithI18nKey(errors.New("public key not provided"), i18n.AuthPubKeyAddError)
+		err = errors.WithI18nKey(errors.New("public key not provided"), i18n.AuthPubKeyAddContentEmpty)
 		resp.BadRequest(ctx, err)
 		return
 	}
 
 	err = c.publicKeySvc.Create(ctx, session, &params)
 	if err != nil {
-		err = errors.WithI18nKey(err, i18n.AuthPubKeyAddError)
 		resp.BadRequest(ctx, err)
 		return
 	}
 
 	resp.OK(ctx, i18n.AuthPubKeyAddSuccess, nil)
-
 }
 
 // ListKeys 获取用户公钥列表
@@ -85,8 +82,7 @@ func (c *Controller) ListKeys(ctx *gin.Context) {
 
 	keys, _, err := c.publicKeySvc.ListWithTotal(ctx, session)
 	if err != nil {
-		err = errors.WithI18nKey(err, i18n.AuthPubKeyListError)
-		resp.BadRequest(ctx, err)
+		resp.InternalError(ctx, err)
 		return
 	}
 
@@ -111,7 +107,7 @@ func (c *Controller) GetKey(ctx *gin.Context) {
 
 	id, err := req.PathParamAsPositiveInt64(ctx, "id")
 	if err != nil {
-		err = errors.WithI18nKey(err, i18n.AuthPubKeyListParamError)
+		err = errors.WithI18nKey(err, i18n.AuthPubKeyQueryPathParamError)
 		resp.BadRequest(ctx, err)
 		return
 	}
@@ -128,12 +124,11 @@ func (c *Controller) GetKey(ctx *gin.Context) {
 			resp.NotFound(ctx, err)
 			return
 		}
-		err = errors.WithI18nKey(err, i18n.AuthPubKeyListError)
-		resp.BadRequest(ctx, err)
+		resp.InternalError(ctx, err)
 		return
 	}
 
-	resp.OK(ctx, i18n.AuthPubKeyListSuccess, key)
+	resp.OK(ctx, i18n.AuthPubKeyQuerySuccess, key)
 }
 
 // UpdateKey 修改用户公钥
@@ -156,13 +151,13 @@ func (c *Controller) UpdateKey(ctx *gin.Context) {
 
 	id, err := req.PathParamAsPositiveInt64(ctx, "id")
 	if err != nil {
-		err = errors.WithI18nKey(err, i18n.AuthPubKeyUpdateParamError)
+		err = errors.WithI18nKey(err, i18n.AuthPubKeyUpdatePathParamError)
 		resp.BadRequest(ctx, err)
 		return
 	}
 
 	if err = ctx.ShouldBindJSON(&params); err != nil {
-		err = errors.WithI18nKey(err, i18n.AuthPubKeyUpdateParamError)
+		err = errors.WithI18nKey(err, i18n.AuthPubKeyUpdateBodyParamError)
 		resp.BadRequest(ctx, err)
 		return
 	}
@@ -213,7 +208,7 @@ func (c *Controller) DeleteKey(ctx *gin.Context) {
 
 	id, err := req.PathParamAsPositiveInt64(ctx, "id")
 	if err != nil {
-		err = errors.WithI18nKey(err, i18n.AuthPubKeyDeleteParamError)
+		err = errors.WithI18nKey(err, i18n.AuthPubKeyDeletePathParamError)
 		resp.BadRequest(ctx, err)
 		return
 	}
@@ -226,12 +221,11 @@ func (c *Controller) DeleteKey(ctx *gin.Context) {
 
 	err = c.publicKeySvc.Delete(ctx, session, id)
 	if err != nil {
-		err = errors.WithI18nKey(err, i18n.AuthPubKeyDeleteError)
 		if errors.IsNotFound(err) {
 			resp.NotFound(ctx, err)
 			return
 		}
-		resp.BadRequest(ctx, err)
+		resp.InternalError(ctx, err)
 		return
 	}
 
