@@ -160,7 +160,7 @@ func TestScanPlanServiceCreate(t *testing.T) {
 			Branches: &scanModel.Pattern{Default: true, Include: []string{"main"}, Exclude: []string{"release/*"}},
 			Files:    &scanModel.Pattern{Include: []string{"**/*.go"}},
 		}, nil)
-		planStore.EXPECT().GetSolutionIDList(gomock.Any(), uint(11)).Return([]int64{2, 3}, nil)
+		solutionStore.EXPECT().GetSolutionsByPlanID(gomock.Any(), uint(11)).Return([]*scanModel.Solution{{ID: 2}, {ID: 3}}, []int64{2, 3}, nil)
 
 		svc := NewScanPlanService(planStore, &fakeRepoStore{}, solutionStore, nil, nil, nil)
 		got, err := svc.Create(context.Background(), newTestSession("tester"), 1, scanModel.ScanPlanReqForCreate{

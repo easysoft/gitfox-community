@@ -284,6 +284,28 @@ func (s *SolutionStore) UnbindRulesets(ctx context.Context, solutionID uint, rul
 	return nil
 }
 
+// GetSolutionsByPlanID 获取计划关联的方案ID列表
+func (s *SolutionStore) GetSolutionsByPlanID(ctx context.Context, planID uint) ([]*scanModel.Solution, []int64, error) {
+	var ids []int64
+	var solutions []*scanModel.Solution
+	err := s.db.WithContext(ctx).Model(&ScanPlanSolution{}).
+		Where("planID = ? AND deleted = ?", planID, false).
+		Pluck("solutionID", &ids).Error
+	if err != nil {
+		return nil, nil, database.ProcessSQLErrorf(ctx, err)
+	}
+
+	for _, id := range ids {
+		solution, err := s.GetByID(ctx, uint(id))
+		if err != nil {
+			return nil, nil, err
+		}
+		solutions = append(solutions, solution)
+	}
+
+	return solutions, ids, nil
+}
+
 func mapSolutionToModel(data SolutionRules) *scanModel.Solution {
 	return &scanModel.Solution{
 		ID:          int64(data.ID),

@@ -48,6 +48,7 @@ type ISolution interface {
 	UnbindRulesets(ctx context.Context, solutionID uint, rulesetIDs []uint) error
 	ListRulesets(ctx context.Context, solutionID uint) ([]*scanModel.RuleSet, error)
 	ListUnbindRulesets(ctx context.Context, solutionID uint) ([]*scanModel.RuleSet, error)
+	GetSolutionsByPlanID(ctx context.Context, planID uint) ([]*scanModel.Solution, []int64, error)
 }
 
 // IScanPlan 扫描计划 store 接口

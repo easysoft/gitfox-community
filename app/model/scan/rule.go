@@ -37,21 +37,21 @@ type RuleReqFilter struct {
 }
 
 type RuleListReqFilter struct {
-	RuleSetID    int64            `json:"rulesetID,omitempty"`
-	Name         string           `json:"name,omitempty"`
-	Lang         string           `json:"lang,omitempty"`
-	LangID       int64            `json:"langID,omitempty"`
-	Plugin       string           `json:"plugin,omitempty"`
-	Tag          string           `json:"tag,omitempty"`
-	Priority     ScanRulePriority `json:"priority,omitempty"`
-	Status       ScanRuleStatus   `json:"status,omitempty"`
-	Type         ScanRuleType     `json:"type,omitempty"`
-	Sort         ScanRuleSort     `json:"sort"`
-	Order        Order            `json:"order"`
-	Bind         ScanRuleBind     `json:"bind,omitempty"`
-	ShowAllRules bool             `json:"showAllRules,omitempty"`
-	Page         int              `json:"page" form:"page"`
-	PageSize     int              `json:"pageSize" form:"pageSize"`
+	RuleSetID    int64                     `json:"rulesetID,omitempty"`
+	Name         string                    `json:"name,omitempty"`
+	Lang         string                    `json:"lang,omitempty"`
+	LangID       int64                     `json:"langID,omitempty"`
+	Plugin       string                    `json:"plugin,omitempty"`
+	Tag          string                    `json:"tag,omitempty"`
+	Priority     constant.ScanRulePriority `json:"priority,omitempty"`
+	Status       constant.ScanRuleStatus   `json:"status,omitempty"`
+	Type         constant.ScanRuleType     `json:"type,omitempty"`
+	Sort         constant.ScanRuleSort     `json:"sort"`
+	Order        constant.Order            `json:"order"`
+	Bind         constant.ScanRuleBind     `json:"bind,omitempty"`
+	ShowAllRules bool                      `json:"showAllRules,omitempty"`
+	Page         int                       `json:"page" form:"page"`
+	PageSize     int                       `json:"pageSize" form:"pageSize"`
 }
 
 func (f *RuleListReqFilter) Validater() error {
@@ -64,7 +64,7 @@ func (f *RuleListReqFilter) Validater() error {
 	}
 
 	// 验证 Priority
-	if f.Priority != scanRulePriorityNone && !f.Priority.IsValid() {
+	if f.Priority != "" && !f.Priority.IsValid() {
 		return errors.Newf("priority %s is invalid", f.Priority)
 	}
 
@@ -80,7 +80,7 @@ func (f *RuleListReqFilter) Validater() error {
 
 	// 验证和设置 Sort 默认值
 	if f.Sort == "" {
-		f.Sort = ScanRuleSortID
+		f.Sort = constant.ScanRuleSortID
 	}
 	if !f.Sort.IsValid() {
 		return errors.Newf("sort %s is invalid", f.Sort)
@@ -88,7 +88,7 @@ func (f *RuleListReqFilter) Validater() error {
 
 	// 验证和设置 Order 默认值
 	if f.Order == "" {
-		f.Order = OrderDesc
+		f.Order = constant.OrderDesc
 	}
 	if !f.Order.IsValid() {
 		return errors.Newf("order %s is invalid", f.Order)

@@ -6839,6 +6839,190 @@ const docTemplate = `{
                 }
             }
         },
+        "/scan/tasks": {
+            "post": {
+                "description": "创建一个扫描任务，触发流水线执行",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scan"
+                ],
+                "summary": "创建扫描任务",
+                "parameters": [
+                    {
+                        "description": "扫描任务信息",
+                        "name": "taskInfo",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTaskReqForCreate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "创建成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTask"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权（会话不存在或已过期）",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/scan/tasks/list": {
+            "post": {
+                "description": "根据过滤条件查询扫描任务详情列表，支持分页",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scan"
+                ],
+                "summary": "查询扫描任务列表",
+                "parameters": [
+                    {
+                        "description": "查询过滤条件",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTaskInfoReqFilter"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "查询成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTaskInfo"
+                                            }
+                                        },
+                                        "listArgs": {
+                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListArgs"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/scan/tasks/{taskID}": {
+            "get": {
+                "description": "根据扫描任务 ID 获取扫描任务的详细信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scan"
+                ],
+                "summary": "获取扫描任务详情",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "扫描任务 ID",
+                        "name": "taskID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "查询成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTaskInfo"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/scan/types": {
             "get": {
                 "description": "获取所有可用的扫描类型列表",
@@ -7722,6 +7906,19 @@ const docTemplate = `{
                 "ContentEncodingTypeBase64"
             ]
         },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.Order": {
+            "type": "string",
+            "enum": [
+                "asc",
+                "desc",
+                ""
+            ],
+            "x-enum-varnames": [
+                "OrderAsc",
+                "OrderDesc",
+                "orderNone"
+            ]
+        },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.RespCode": {
             "type": "string",
             "enum": [
@@ -7786,17 +7983,62 @@ const docTemplate = `{
                 "ScanLangCsharpName"
             ]
         },
-        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRulePriority": {
-            "type": "integer",
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanPlanTriggerType": {
+            "type": "string",
             "enum": [
-                0,
-                1,
-                2
+                "manual",
+                "cron",
+                "action"
+            ],
+            "x-enum-varnames": [
+                "ScanPlanTriggerTypeManual",
+                "ScanPlanTriggerTypeCron",
+                "ScanPlanTriggerTypeAction"
+            ]
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleBind": {
+            "type": "string",
+            "enum": [
+                "bind",
+                "unbind",
+                ""
+            ],
+            "x-enum-varnames": [
+                "ScanRuleBindBind",
+                "ScanRuleBindUnbind",
+                "scanRuleBindNone"
+            ]
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRulePriority": {
+            "type": "string",
+            "enum": [
+                "low",
+                "medium",
+                "high",
+                ""
             ],
             "x-enum-varnames": [
                 "ScanRulePriorityLow",
                 "ScanRulePriorityMedium",
-                "ScanRulePriorityHigh"
+                "ScanRulePriorityHigh",
+                "scanRulePriorityNone"
+            ]
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleSort": {
+            "type": "string",
+            "enum": [
+                "id",
+                "name",
+                "priority",
+                "createdDate",
+                ""
+            ],
+            "x-enum-varnames": [
+                "ScanRuleSortID",
+                "ScanRuleSortName",
+                "ScanRuleSortPriority",
+                "ScanRuleSortCreatedDate",
+                "scanRuleSortNone"
             ]
         },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleStatus": {
@@ -7840,6 +8082,54 @@ const docTemplate = `{
                 "ScanRuleTypeComplian",
                 "ScanRuleTypeOptimize",
                 "scanRuleTypeNone"
+            ]
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleUnit": {
+            "type": "string",
+            "enum": [
+                "count",
+                "percent"
+            ],
+            "x-enum-varnames": [
+                "ScanRuleUnitCount",
+                "ScanRuleUnitPercent"
+            ]
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanTaskResult": {
+            "type": "string",
+            "enum": [
+                "pass",
+                "no-pass",
+                "-"
+            ],
+            "x-enum-varnames": [
+                "ScanTaskResultPass",
+                "ScanTaskResultNoPass",
+                "ScanTaskResultNull"
+            ]
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanTaskStatus": {
+            "type": "string",
+            "enum": [
+                "in_progress",
+                "success",
+                "failed"
+            ],
+            "x-enum-varnames": [
+                "ScanTaskStatusInProgress",
+                "ScanTaskStatusSuccess",
+                "ScanTaskStatusFailed"
+            ]
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanType": {
+            "type": "string",
+            "enum": [
+                "full",
+                "incremental"
+            ],
+            "x-enum-varnames": [
+                "ScanTypeFull",
+                "ScanTypeIncremental"
             ]
         },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.Branch": {
@@ -8512,6 +8802,9 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "alias": {
+                    "type": "string"
+                },
+                "kind": {
                     "type": "string"
                 },
                 "name": {
@@ -9332,19 +9625,6 @@ const docTemplate = `{
                 }
             }
         },
-        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.Order": {
-            "type": "string",
-            "enum": [
-                "asc",
-                "desc",
-                ""
-            ],
-            "x-enum-varnames": [
-                "OrderAsc",
-                "OrderDesc",
-                "orderNone"
-            ]
-        },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.Pattern": {
             "type": "object",
             "properties": {
@@ -9433,7 +9713,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "bind": {
-                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRuleBind"
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleBind"
                 },
                 "lang": {
                     "type": "string"
@@ -9445,7 +9725,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "order": {
-                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.Order"
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.Order"
                 },
                 "page": {
                     "type": "integer"
@@ -9457,7 +9737,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "priority": {
-                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRulePriority"
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRulePriority"
                 },
                 "rulesetID": {
                     "type": "integer"
@@ -9466,16 +9746,16 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "sort": {
-                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRuleSort"
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleSort"
                 },
                 "status": {
-                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRuleStatus"
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleStatus"
                 },
                 "tag": {
                     "type": "string"
                 },
                 "type": {
-                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRuleType"
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleType"
                 }
             }
         },
@@ -9701,7 +9981,7 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "priority": {
-                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRulePriority"
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRulePriority"
                 },
                 "repoID": {
                     "type": "integer"
@@ -9713,10 +9993,10 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "type": {
-                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRuleType"
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleType"
                 },
                 "unit": {
-                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRuleUnit"
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleUnit"
                 }
             }
         },
@@ -9724,16 +10004,16 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "priority": {
-                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRulePriority"
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRulePriority"
                 },
                 "threshold": {
                     "type": "integer"
                 },
                 "type": {
-                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRuleType"
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleType"
                 },
                 "unit": {
-                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRuleUnit"
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleUnit"
                 }
             }
         },
@@ -9856,16 +10136,16 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "priority": {
-                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRulePriority"
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRulePriority"
                 },
                 "threshold": {
                     "type": "integer"
                 },
                 "type": {
-                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRuleType"
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleType"
                 },
                 "unit": {
-                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRuleUnit"
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleUnit"
                 }
             }
         },
@@ -9873,16 +10153,16 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "priority": {
-                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRulePriority"
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRulePriority"
                 },
                 "threshold": {
                     "type": "integer"
                 },
                 "type": {
-                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRuleType"
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleType"
                 },
                 "unit": {
-                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRuleUnit"
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleUnit"
                 }
             }
         },
@@ -9980,104 +10260,188 @@ const docTemplate = `{
                 }
             }
         },
-        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRuleBind": {
-            "type": "string",
-            "enum": [
-                "bind",
-                "unbind",
-                ""
-            ],
-            "x-enum-varnames": [
-                "ScanRuleBindBind",
-                "ScanRuleBindUnbind",
-                "scanRuleBindNone"
-            ]
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTask": {
+            "type": "object",
+            "properties": {
+                "createdBy": {
+                    "type": "string"
+                },
+                "createdDate": {
+                    "type": "string"
+                },
+                "editedDate": {
+                    "type": "string"
+                },
+                "executionID": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "planID": {
+                    "type": "integer"
+                },
+                "planNumber": {
+                    "type": "integer"
+                },
+                "repoNumber": {
+                    "type": "integer"
+                },
+                "result": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanTaskResult"
+                },
+                "scanType": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanType"
+                },
+                "status": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanTaskStatus"
+                },
+                "triggerID": {
+                    "type": "integer"
+                },
+                "triggerType": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanPlanTriggerType"
+                }
+            }
         },
-        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRulePriority": {
-            "type": "integer",
-            "enum": [
-                0,
-                1,
-                2,
-                -1
-            ],
-            "x-enum-varnames": [
-                "ScanRulePriorityLow",
-                "ScanRulePriorityMedium",
-                "ScanRulePriorityHigh",
-                "scanRulePriorityNone"
-            ]
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTaskInfo": {
+            "type": "object",
+            "properties": {
+                "cost": {
+                    "type": "integer"
+                },
+                "createdBy": {
+                    "type": "string"
+                },
+                "createdDate": {
+                    "type": "string"
+                },
+                "editedDate": {
+                    "type": "string"
+                },
+                "executionID": {
+                    "type": "integer"
+                },
+                "executionNumber": {
+                    "type": "integer"
+                },
+                "executionRef": {
+                    "type": "string"
+                },
+                "finished": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "issueNumber": {
+                    "type": "integer"
+                },
+                "pipelineName": {
+                    "type": "string"
+                },
+                "planID": {
+                    "type": "integer"
+                },
+                "planName": {
+                    "type": "string"
+                },
+                "planNumber": {
+                    "type": "integer"
+                },
+                "repoID": {
+                    "type": "integer"
+                },
+                "repoName": {
+                    "type": "string"
+                },
+                "repoNumber": {
+                    "type": "integer"
+                },
+                "result": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanTaskResult"
+                },
+                "scanType": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanType"
+                },
+                "started": {
+                    "type": "integer"
+                },
+                "status": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanTaskStatus"
+                },
+                "trigger": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTaskTrigger"
+                }
+            }
         },
-        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRuleSort": {
-            "type": "string",
-            "enum": [
-                "id",
-                "name",
-                "priority",
-                "createdDate",
-                ""
-            ],
-            "x-enum-varnames": [
-                "ScanRuleSortID",
-                "ScanRuleSortName",
-                "ScanRuleSortPriority",
-                "ScanRuleSortCreatedDate",
-                "scanRuleSortNone"
-            ]
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTaskInfoReqFilter": {
+            "type": "object",
+            "properties": {
+                "branch": {
+                    "type": "string"
+                },
+                "order": {
+                    "type": "string"
+                },
+                "page": {
+                    "type": "integer",
+                    "default": 1
+                },
+                "pageSize": {
+                    "type": "integer",
+                    "default": 20
+                },
+                "planID": {
+                    "type": "integer"
+                },
+                "repoID": {
+                    "type": "integer"
+                },
+                "result": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanTaskResult"
+                },
+                "sort": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanTaskStatus"
+                },
+                "taskID": {
+                    "type": "integer"
+                },
+                "triggerID": {
+                    "type": "integer"
+                }
+            }
         },
-        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRuleStatus": {
-            "type": "string",
-            "enum": [
-                "enabled",
-                "disabled",
-                ""
-            ],
-            "x-enum-varnames": [
-                "ScanRuleStatusEnabled",
-                "ScanRuleStatusDisabled",
-                "scanRuleStatusNone"
-            ]
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTaskReqForCreate": {
+            "type": "object",
+            "properties": {
+                "branch": {
+                    "type": "string"
+                },
+                "planID": {
+                    "type": "integer"
+                },
+                "repoID": {
+                    "type": "integer"
+                }
+            }
         },
-        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRuleType": {
-            "type": "string",
-            "enum": [
-                "defect",
-                "security",
-                "compliance",
-                "optimize",
-                ""
-            ],
-            "x-enum-comments": {
-                "ScanRuleTypeComplian": "合规",
-                "ScanRuleTypeDefect": "缺陷",
-                "ScanRuleTypeOptimize": "优化 // 代码异味",
-                "ScanRuleTypeVuln": "安全"
-            },
-            "x-enum-descriptions": [
-                "缺陷",
-                "安全",
-                "合规",
-                "优化 // 代码异味",
-                ""
-            ],
-            "x-enum-varnames": [
-                "ScanRuleTypeDefect",
-                "ScanRuleTypeVuln",
-                "ScanRuleTypeComplian",
-                "ScanRuleTypeOptimize",
-                "scanRuleTypeNone"
-            ]
-        },
-        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanRuleUnit": {
-            "type": "string",
-            "enum": [
-                "count",
-                "percent"
-            ],
-            "x-enum-varnames": [
-                "ScanRuleUnitCount",
-                "ScanRuleUnitPercent"
-            ]
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTaskTrigger": {
+            "type": "object",
+            "properties": {
+                "triggerID": {
+                    "type": "integer"
+                },
+                "triggerName": {
+                    "type": "string"
+                },
+                "triggerType": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanPlanTriggerType"
+                }
+            }
         },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTrigger": {
             "type": "object",

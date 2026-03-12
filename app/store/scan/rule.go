@@ -7,6 +7,7 @@ import (
 
 	"gorm.io/gorm"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	scanModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
 )
@@ -164,7 +165,7 @@ func (s *RuleStore) GetByID(ctx context.Context, id uint) (*scanModel.Rule, erro
 func (s *RuleStore) List(ctx context.Context, filter scanModel.RuleListReqFilter) (*database.PageResult[*scanModel.Rule], error) {
 	tx := s.db.WithContext(ctx).Model(&Rule{}).Where("deleted = ?", false)
 
-	if filter.Bind == scanModel.ScanRuleBindBind {
+	if filter.Bind == constant.ScanRuleBindBind {
 		if filter.RuleSetID > 0 {
 			subQuery := s.db.Model(&RuleSetRules{}).
 				Select("ruleID").
@@ -195,7 +196,7 @@ func (s *RuleStore) List(ctx context.Context, filter scanModel.RuleListReqFilter
 		tx = tx.Where("tag = ?", filter.Tag)
 	}
 
-	if filter.Priority != -1 || filter.ShowAllRules {
+	if filter.Priority != "" {
 		tx = tx.Where("priority = ?", filter.Priority)
 	}
 
