@@ -72,7 +72,7 @@ type IScanTrigger interface {
 	GetByID(ctx context.Context, repoID uint, planID uint, id uint) (*scanModel.ScanTrigger, error)
 	Update(ctx context.Context, session *authModel.Session, repoID uint, planID uint, id uint, req scanModel.ScanTriggerReqForUpdate) (*scanModel.ScanTrigger, error)
 	Delete(ctx context.Context, repoID uint, planID uint, id uint) error
-	List(ctx context.Context, repoID uint, planID uint) ([]*scanModel.ScanTrigger, error)
+	List(ctx context.Context, repoID uint, planID uint, filter scanModel.ScanTriggerReqFilter) (*database.PageResult[*scanModel.ScanTrigger], error)
 }
 
 // IScanCondition 触发器条件 service 接口

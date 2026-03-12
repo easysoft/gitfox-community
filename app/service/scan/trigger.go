@@ -8,6 +8,7 @@ import (
 	scanModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
 	repoStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
 	scanStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/scan"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	"github.com/gorhill/cronexpr"
@@ -137,11 +138,11 @@ func (s *ScanTriggerService) Delete(ctx context.Context, repoID uint, planID uin
 	if _, err := s.getTriggerByRepoPlanAndID(ctx, repoID, planID, id); err != nil {
 		return err
 	}
-	triggers, err := s.List(ctx, repoID, planID)
+	count, err := s.triggerStore.Count(ctx, repoID, planID)
 	if err != nil {
 		return err
 	}
-	if len(triggers) <= 1 {
+	if count <= 1 {
 		return errors.WithI18nKey(fmt.Errorf("at least one trigger must be retained"), i18n.TriggerRetainOneError)
 	}
 	if err := s.triggerStore.Delete(ctx, id); err != nil {
@@ -150,24 +151,14 @@ func (s *ScanTriggerService) Delete(ctx context.Context, repoID uint, planID uin
 	return s.removeTriggerCronJob(ctx, int64(id))
 }
 
-func (s *ScanTriggerService) List(ctx context.Context, repoID uint, planID uint) ([]*scanModel.ScanTrigger, error) {
+func (s *ScanTriggerService) List(ctx context.Context, repoID uint, planID uint, filter scanModel.ScanTriggerReqFilter) (*database.PageResult[*scanModel.ScanTrigger], error) {
 	if err := s.ensureRepoExists(ctx, repoID); err != nil {
 		return nil, err
 	}
 	if _, err := s.getPlanByRepoAndID(ctx, repoID, planID); err != nil {
 		return nil, err
 	}
-	triggers, err := s.triggerStore.List(ctx, planID)
-	if err != nil {
-		return nil, err
-	}
-	filtered := make([]*scanModel.ScanTrigger, 0, len(triggers))
-	for _, trigger := range triggers {
-		if uint(trigger.RepoID) == repoID {
-			filtered = append(filtered, trigger)
-		}
-	}
-	return filtered, nil
+	return s.triggerStore.List(ctx, repoID, planID, filter)
 }
 
 func validateTriggerCreate(req scanModel.ScanTriggerReqForCreate) error {

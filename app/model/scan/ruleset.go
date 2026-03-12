@@ -1,9 +1,8 @@
 package scan
 
 import (
-	"time"
-
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
 )
 
 type RuleSetReqForCreate struct {
@@ -51,9 +50,9 @@ type RuleSet struct {
 	IsCustom    bool                    `json:"isCustom"`
 	Status      constant.ScanRuleStatus `json:"status"`
 	CreatedBy   string                  `json:"createdBy,omitempty"`
-	CreatedDate *time.Time              `json:"createdDate"` // 允许 NULL，用指针类型
+	CreatedDate *datetime.Local         `json:"createdDate"` // 允许 NULL，用指针类型
 	EditedBy    string                  `json:"editedBy"`
-	EditedDate  *time.Time              `json:"editedDate"` // 允许 NULL，用指针类型
+	EditedDate  *datetime.Local         `json:"editedDate"` // 允许 NULL，用指针类型
 	Deleted     bool                    `json:"deleted"`
 	RulesCount  int64                   `json:"rulesCount"`
 }

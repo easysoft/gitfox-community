@@ -1,7 +1,8 @@
 package scan
 
 import (
-	"time"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
 )
 
 // ScanTriggerType 触发器类型
@@ -15,14 +16,14 @@ const (
 
 // ScanTriggerReqForCreate 创建触发器请求
 type ScanTriggerReqForCreate struct {
-	Name        string          `json:"name" binding:"required,max=100"`
-	Desc        string          `json:"desc"`
-	Type        ScanTriggerType `json:"type"`
-	Cron        string          `json:"cron,omitempty"`
-	CronBranch  string          `json:"cronBranch,omitempty"`
-	Keywords    string          `json:"keywords,omitempty"`
-	Actions     string          `json:"actions,omitempty"`
-	Disabled    bool            `json:"disabled"`
+	Name       string          `json:"name" binding:"required,max=100"`
+	Desc       string          `json:"desc"`
+	Type       ScanTriggerType `json:"type"`
+	Cron       string          `json:"cron,omitempty"`
+	CronBranch string          `json:"cronBranch,omitempty"`
+	Keywords   string          `json:"keywords,omitempty"`
+	Actions    string          `json:"actions,omitempty"`
+	Disabled   bool            `json:"disabled"`
 }
 
 // ScanTriggerReqForUpdate 更新触发器请求
@@ -37,22 +38,37 @@ type ScanTriggerReqForUpdate struct {
 	Disabled   *bool           `json:"disabled,omitempty"`
 }
 
+// ScanTriggerReqFilter 触发器列表查询过滤条件
+type ScanTriggerReqFilter struct {
+	Sort     string `json:"sort" form:"sort" default:"id"`
+	Order    string `json:"order" form:"order" default:"desc"`
+	Page     int    `json:"page" form:"page" default:"1"`
+	PageSize int    `json:"pageSize" form:"pageSize" default:"30"`
+}
+
 // ScanTrigger 触发器响应模型
 type ScanTrigger struct {
-	ID          int64           `json:"id"`
-	PlanID      int64           `json:"planID"`
-	RepoID      int64           `json:"repoID"`
-	Name        string          `json:"name"`
-	Desc        string          `json:"desc"`
-	Type        ScanTriggerType `json:"type"`
-	Cron        string          `json:"cron,omitempty"`
-	CronBranch  string          `json:"cronBranch,omitempty"`
-	Keywords    string          `json:"keywords,omitempty"`
-	Actions     string          `json:"actions,omitempty"`
-	Disabled    bool            `json:"disabled"`
-	CreatedBy   string          `json:"createdBy,omitempty"`
-	CreatedDate *time.Time      `json:"createdDate"`
-	EditedBy    string          `json:"editedBy"`
-	EditedDate  *time.Time      `json:"editedDate"`
-	Deleted     bool            `json:"deleted"`
+	ID             int64           `json:"id"`
+	PlanID         int64           `json:"planID"`
+	RepoID         int64           `json:"repoID"`
+	Name           string          `json:"name"`
+	Desc           string          `json:"desc"`
+	Type           ScanTriggerType `json:"type"`
+	Cron           string          `json:"cron,omitempty"`
+	CronBranch     string          `json:"cronBranch,omitempty"`
+	Keywords       string          `json:"keywords,omitempty"`
+	Actions        string          `json:"actions,omitempty"`
+	Disabled       bool            `json:"disabled"`
+	CreatedBy      string          `json:"createdBy,omitempty"`
+	CreatedDate    *datetime.Local  `json:"createdDate"`
+	EditedBy       string          `json:"editedBy"`
+	EditedDate     *datetime.Local `json:"editedDate"`
+	Deleted        bool            `json:"deleted"`
+	ConditionIDs   []int64         `json:"conditionIDs,omitempty"`
+	ConditionCount int             `json:"conditionCount,omitempty"`
+
+	LatestTaskID      *int64                   `json:"latestTaskID,omitempty"`
+	LatestTaskCreated *datetime.Local          `json:"latestTaskCreated,omitempty"`
+	LatestTaskResult  *constant.ScanTaskResult `json:"latestTaskResult,omitempty"`
+	LatestTaskStatus  *constant.ScanTaskStatus `json:"latestTaskStatus,omitempty"`
 }

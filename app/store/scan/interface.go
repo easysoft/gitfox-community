@@ -73,7 +73,8 @@ type IScanTrigger interface {
 	GetByRepoPlanAndID(ctx context.Context, repoID uint, planID uint, id uint) (*scanModel.ScanTrigger, error)
 	Update(ctx context.Context, trigger *ScanPlanTrigger) error
 	Delete(ctx context.Context, id uint) error
-	List(ctx context.Context, planID uint) ([]*scanModel.ScanTrigger, error)
+	List(ctx context.Context, repoID uint, planID uint, filter scanModel.ScanTriggerReqFilter) (*database.PageResult[*scanModel.ScanTrigger], error)
+	Count(ctx context.Context, repoID uint, planID uint) (int64, error)
 }
 
 // IScanCondition 触发器条件 store 接口

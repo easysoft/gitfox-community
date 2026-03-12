@@ -1,9 +1,8 @@
 package scan
 
 import (
-	"time"
-
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
 )
 
 // SolutionReqForCreate 创建扫描方案请求
@@ -50,9 +49,9 @@ type Solution struct {
 	IsCustom      bool                    `json:"isCustom"`
 	Status        constant.ScanRuleStatus `json:"status"`
 	CreatedBy     string                  `json:"createdBy,omitempty"`
-	CreatedDate   *time.Time              `json:"createdDate"`
+	CreatedDate   *datetime.Local         `json:"createdDate"`
 	EditedBy      string                  `json:"editedBy"`
-	EditedDate    *time.Time              `json:"editedDate"`
+	EditedDate    *datetime.Local         `json:"editedDate"`
 	Deleted       bool                    `json:"deleted"`
 	RuleSets      []*RuleSet              `json:"ruleSets,omitempty"`
 	RuleSetsCount int64                   `json:"ruleSetsCount"`
