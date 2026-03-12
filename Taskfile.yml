@@ -300,4 +300,5 @@ tasks:
   download-ci-plugins:
     desc: download ci plugin
     cmds:
+      - mkdir -p resources/ciPlugins
       - wget -O resources/ciPlugins/plugins.zip https://pkg.zentao.net/gitfox/20260123/plugins.zip

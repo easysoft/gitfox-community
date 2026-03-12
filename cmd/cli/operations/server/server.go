@@ -88,7 +88,7 @@ func (c *command) run(*kingpin.ParseContext) error {
 		}
 	}()
 	app.SystemLog.Info("[Server] Job scheduler started")
-	app.SystemConfig.Server.Host = "10.0.4.2"
+
 	// 启动 HTTP 服务器
 	addr := fmt.Sprintf("%s:%d", app.SystemConfig.Server.Host, app.SystemConfig.Server.Port)
 	srv := &http.Server{
