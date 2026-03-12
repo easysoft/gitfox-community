@@ -2,6 +2,7 @@ package execution
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -442,16 +443,27 @@ func (c *Controller) GetLogStream(ctx *gin.Context) {
 	rc, fileErr := c.pipelineService.GetLogs(ctx, buildS3LogsParam(pipelineID, executionID, stageID, stepID))
 	if fileErr == nil {
 		defer rc.Close()
-		scanner := bufio.NewScanner(rc)
-		for scanner.Scan() {
-			raw := scanner.Bytes()
-			var line livelog.Line
-			if json.Unmarshal(raw, &line) == nil {
-				writeLineAsText(w, &line)
-			} else {
-				fmt.Fprintf(w, "data: %s\n\n", raw)
+		data, _ := io.ReadAll(rc)
+		// 尝试 JSON 数组格式 [{...},{...}]
+		var lines []*livelog.Line
+		if json.Unmarshal(data, &lines) == nil {
+			for _, line := range lines {
+				writeLineAsText(w, line)
+				f.Flush()
 			}
-			f.Flush()
+		} else {
+			// 回退到按行扫描（JSON Lines 或纯文本）
+			scanner := bufio.NewScanner(bytes.NewReader(data))
+			for scanner.Scan() {
+				raw := scanner.Bytes()
+				var line livelog.Line
+				if json.Unmarshal(raw, &line) == nil {
+					writeLineAsText(w, &line)
+				} else {
+					fmt.Fprintf(w, "data: %s\n\n", raw)
+				}
+				f.Flush()
+			}
 		}
 		io.WriteString(w, "event: error\ndata: eof\n\n")
 		f.Flush()
