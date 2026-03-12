@@ -1,0 +1,83 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "s3",
+  "spec": {
+    "name": "AWS S3",
+    "description": "The S3 plugin uploads files and build artifacts to your S3 bucket, or S3-compatible bucket such as Minio.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "plugins/s3",
+        "envs": {
+          "PLUGIN_ACCESS_KEY": "${{ inputs.access_key }}",
+          "PLUGIN_ACL": "${{ inputs.acl }}",
+          "PLUGIN_BUCKET": "${{ inputs.bucket }}",
+          "PLUGIN_ENCRYPTION": "${{ inputs.encryption }}",
+          "PLUGIN_ENDPOINT": "${{ inputs.endpoint }}",
+          "PLUGIN_EXCLUDE": "${{ inputs.exclude }}",
+          "PLUGIN_PATH_STYLE": "${{ inputs.path_style }}",
+          "PLUGIN_REGION": "${{ inputs.region }}",
+          "PLUGIN_SECRET_KEY": "${{ inputs.secret_key }}",
+          "PLUGIN_SOURCE": "${{ inputs.source }}",
+          "PLUGIN_STRIP_PREFIX": "${{ inputs.strip_prefix }}",
+          "PLUGIN_TARGET": "${{ inputs.target }}"
+        }
+      }
+    },
+    "inputs": {
+      "access_key": {
+        "type": "string",
+        "description": "amazon key"
+      },
+      "acl": {
+        "type": "string",
+        "description": "bucket acl (public-read, private, etc)"
+      },
+      "bucket": {
+        "type": "string",
+        "description": "bucket name",
+        "required": true
+      },
+      "encryption": {
+        "type": "string",
+        "description": "if provided, use server-side encryption"
+      },
+      "endpoint": {
+        "type": "string",
+        "description": "custom endpoint URL (optional, to use a S3 compatible non-Amazon service)"
+      },
+      "exclude": {
+        "type": "string",
+        "description": "glob exclusion patterns"
+      },
+      "path_style": {
+        "type": "boolean",
+        "description": "whether path style URLs should be used (true for minio)"
+      },
+      "region": {
+        "type": "string",
+        "description": "bucket region (us-east-1, eu-west-1, etc)"
+      },
+      "secret_key": {
+        "type": "string",
+        "description": "amazon secret",
+        "mask": true
+      },
+      "source": {
+        "type": "string",
+        "description": "source location of the files, using a glob matching pattern. Location must be within the drone workspace.",
+        "required": true
+      },
+      "strip_prefix": {
+        "type": "string",
+        "description": "strip the prefix from source path"
+      },
+      "target": {
+        "type": "string",
+        "description": "target location of files in the bucket.",
+        "required": true
+      }
+    }
+  }
+}

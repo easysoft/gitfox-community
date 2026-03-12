@@ -1,0 +1,42 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "gcr",
+  "spec": {
+    "name": "Google Container Registry",
+    "description": "The GCR plugin can be used to build and publish images to the Google Container Registry.\n",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "plugins/gcr",
+        "envs": {
+          "PLUGIN_JSON_KEY": "${{ inputs.json_key }}",
+          "PLUGIN_REGISTRY": "${{ inputs.registry }}",
+          "PLUGIN_REPO": "${{ inputs.repo }}",
+          "PLUGIN_WORKLOAD_IDENTITY": "${{ inputs.workload_identity }}"
+        }
+      }
+    },
+    "inputs": {
+      "json_key": {
+        "type": "string",
+        "description": "json key - can be inline or base64 encoded",
+        "required": true,
+        "mask": true
+      },
+      "registry": {
+        "type": "string",
+        "description": "authenticates to this registry",
+        "default": "gcr.io"
+      },
+      "repo": {
+        "type": "string",
+        "description": "repository name for the image"
+      },
+      "workload_identity": {
+        "type": "boolean",
+        "description": "flag if key is a workload identity key"
+      }
+    }
+  }
+}

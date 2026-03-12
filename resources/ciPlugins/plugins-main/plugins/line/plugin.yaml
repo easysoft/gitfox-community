@@ -1,0 +1,74 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "line",
+  "spec": {
+    "name": "Line",
+    "description": "The Line plugin posts build status messages to your channel.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "appleboy/drone-line",
+        "envs": {
+          "PLUGIN_AUDIOS": "${{ inputs.audios }}",
+          "PLUGIN_CHANNEL_SECRET": "${{ inputs.channel_secret }}",
+          "PLUGIN_CHANNEL_TOKEN": "${{ inputs.channel_token }}",
+          "PLUGIN_IMAGES": "${{ inputs.images }}",
+          "PLUGIN_LOCATIONS": "${{ inputs.locations }}",
+          "PLUGIN_MESSAGE": "${{ inputs.message }}",
+          "PLUGIN_STICKERS": "${{ inputs.stickers }}",
+          "PLUGIN_TO": "${{ inputs.to }}",
+          "PLUGIN_VIDEOS": "${{ inputs.videos }}"
+        }
+      }
+    },
+    "inputs": {
+      "audios": {
+        "type": "array",
+        "description": "Valid audio URLs",
+        "default": "[]"
+      },
+      "channel_secret": {
+        "type": "string",
+        "description": "The channel secret",
+        "required": true,
+        "mask": true
+      },
+      "channel_token": {
+        "type": "string",
+        "description": "The channel token",
+        "required": true,
+        "mask": true
+      },
+      "images": {
+        "type": "array",
+        "description": "Valid image URLs",
+        "default": "[]"
+      },
+      "locations": {
+        "type": "array",
+        "description": "Valid location lat/lng",
+        "default": "[]"
+      },
+      "message": {
+        "type": "string",
+        "description": "Overwrite the default message template.",
+        "required": true
+      },
+      "stickers": {
+        "type": "array",
+        "description": "Valid stickers",
+        "default": "[]"
+      },
+      "to": {
+        "type": "string",
+        "description": "The user ID to send a message to"
+      },
+      "videos": {
+        "type": "array",
+        "description": "Valid video URLs",
+        "default": "[]"
+      }
+    }
+  }
+}

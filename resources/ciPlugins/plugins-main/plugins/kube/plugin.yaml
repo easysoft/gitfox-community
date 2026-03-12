@@ -1,0 +1,37 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "kube",
+  "spec": {
+    "name": "Drone Kube",
+    "description": "Drone kubernetes plugin.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "vallard/drone-kube",
+        "envs": {
+          "PLUGIN_NAMESPACE": "${{ inputs.namespace }}",
+          "PLUGIN_SERVER": "${{ inputs.server }}",
+          "PLUGIN_TEMPLATE": "${{ inputs.template }}"
+        }
+      }
+    },
+    "inputs": {
+      "namespace": {
+        "type": "string",
+        "description": "The namespace to deploy the template in",
+        "required": true
+      },
+      "server": {
+        "type": "string",
+        "description": "The kubernetes server to deploy the template in",
+        "required": true
+      },
+      "template": {
+        "type": "string",
+        "description": "The template to use",
+        "required": true
+      }
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "metronome",
+  "spec": {
+    "name": "Metronome",
+    "description": "This plugin can be used to deploy applications to a Metronome server, it will create\\update the given Metronome tasks as needed.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "naorlivne/drone-metronome",
+        "envs": {
+          "PLUGIN_METRONOME_HOST": "${{ inputs.metronome_host }}",
+          "PLUGIN_METRONOME_JOB_FILE": "${{ inputs.metronome_job_file }}"
+        }
+      }
+    },
+    "inputs": {
+      "metronome_host": {
+        "type": "string",
+        "description": "The Metronome server URL (no trailing slash should be used).",
+        "default": "http://metronome.mesos:9000"
+      },
+      "metronome_job_file": {
+        "type": "string",
+        "description": "The Metronome configuration file location relative to the root folder of the repo.",
+        "default": "metronome.json",
+        "required": true
+      }
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "qodana-jvm-community-plugin",
+  "spec": {
+    "name": "Qodana JVM Community",
+    "description": "This plugin allows you to run the Qodana JVM Community linter in Drone and publish the results to Qodana Cloud. The Community license is enough.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "2martens/qodana-jvm-community-drone-plugin",
+        "envs": {
+          "PLUGIN_ARGS": "${{ inputs.args }}",
+          "PLUGIN_QODANA_TOKEN": "${{ inputs.qodana_token }}"
+        }
+      }
+    },
+    "inputs": {
+      "args": {
+        "type": "string",
+        "description": "Arguments passed to Qodana command. For example --baseline or --failure-threshold",
+        "required": true
+      },
+      "qodana_token": {
+        "type": "string",
+        "description": "Qodana token used to publish analysis results to Qodana cloud.",
+        "required": true,
+        "mask": true
+      }
+    }
+  }
+}

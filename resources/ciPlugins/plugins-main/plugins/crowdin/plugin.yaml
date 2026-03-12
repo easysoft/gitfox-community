@@ -1,0 +1,60 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "crowdin",
+  "spec": {
+    "name": "Crowdin",
+    "description": "The Crowdin plugin allows you to submit translation files to Crowdin.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "jonasfranz/crowdin",
+        "envs": {
+          "PLUGIN_DOWNLOAD": "${{ inputs.download }}",
+          "PLUGIN_EXPORT_DIR": "${{ inputs.export_dir }}",
+          "PLUGIN_FILES": "${{ inputs.files }}",
+          "PLUGIN_IGNORE_BRANCH": "${{ inputs.ignore_branch }}",
+          "PLUGIN_LANGUAGES": "${{ inputs.languages }}",
+          "PLUGIN_PROJECT_IDENTIFIER": "${{ inputs.project_identifier }}",
+          "PLUGIN_PROJECT_KEY": "${{ inputs.project_key }}"
+        }
+      }
+    },
+    "inputs": {
+      "download": {
+        "type": "boolean",
+        "description": "Downloads translated files from Crowdin if it is true.",
+        "default": "true"
+      },
+      "export_dir": {
+        "type": "string",
+        "description": "Export directory of the translated strings."
+      },
+      "files": {
+        "type": "object",
+        "description": "Map of translatable files with the Crowdin file name as key and the real filepath as value. The plugin will not upload any files if this list is empty.",
+        "required": true
+      },
+      "ignore_branch": {
+        "type": "boolean",
+        "description": "It will send the Drone branch to Crowdin if it is false."
+      },
+      "languages": {
+        "type": "array",
+        "description": "Languages which should be downloaded/exported from Crowdin.",
+        "default": "all"
+      },
+      "project_identifier": {
+        "type": "string",
+        "description": "Identifier provided by Crowdin.",
+        "required": true
+      },
+      "project_key": {
+        "type": "string",
+        "description": "API key provided by Crowdin.",
+        "required": true,
+        "mask": true
+      }
+    }
+  }
+}

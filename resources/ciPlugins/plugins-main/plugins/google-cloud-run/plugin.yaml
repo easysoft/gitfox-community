@@ -1,0 +1,62 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "google-cloud-run",
+  "spec": {
+    "name": "Google Cloud Run",
+    "description": "Plugin to build and manage Google Cloud Run services.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "https://hub.docker.com/repository/docker/kameshsampath/drone-gcloud-run",
+        "envs": {
+          "PLUGIN_ALLOW_UNAUTHENTICATED": "${{ inputs.allow_unauthenticated }}",
+          "PLUGIN_DELETE": "${{ inputs.delete }}",
+          "PLUGIN_IMAGE": "${{ inputs.image }}",
+          "PLUGIN_PROJECT": "${{ inputs.project }}",
+          "PLUGIN_REGION": "${{ inputs.region }}",
+          "PLUGIN_SERVICE_ACCOUNT_JSON": "${{ inputs.service_account_json }}",
+          "PLUGIN_SERVICE_NAME": "${{ inputs.service_name }}"
+        }
+      }
+    },
+    "inputs": {
+      "allow_unauthenticated": {
+        "type": "boolean",
+        "description": "Allow public access to the service."
+      },
+      "delete": {
+        "type": "boolean",
+        "description": "If the service needs to be deleted."
+      },
+      "image": {
+        "type": "string",
+        "description": "The container image that will be used for the service.",
+        "required": true
+      },
+      "project": {
+        "type": "string",
+        "description": "The Google project where the Google Cloud Run service will be deployed.",
+        "required": true,
+        "mask": true
+      },
+      "region": {
+        "type": "string",
+        "description": "The Google Cloud region e.g asia-south1 where the Google Cloud Run service will be deployed.",
+        "required": true,
+        "mask": true
+      },
+      "service_account_json": {
+        "type": "string",
+        "description": "The Google Cloud Service Account JSON that has required permissions to create, update and delete Google Cloud Run services .",
+        "required": true,
+        "mask": true
+      },
+      "service_name": {
+        "type": "string",
+        "description": "The name of the Google Cloud Run service.",
+        "required": true
+      }
+    }
+  }
+}

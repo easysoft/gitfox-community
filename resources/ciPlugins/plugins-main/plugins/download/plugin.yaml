@@ -1,0 +1,57 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "download",
+  "spec": {
+    "name": "Download",
+    "description": "Use the Download plugin to download archives required for your builds, it also integrates a secure way to inject basic authentication credentials and checking by md5 or sha256 checksums.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "plugins/download",
+        "envs": {
+          "PLUGIN_DESTINATION": "${{ inputs.destination }}",
+          "PLUGIN_MD5": "${{ inputs.md5 }}",
+          "PLUGIN_PASSWORD": "${{ inputs.password }}",
+          "PLUGIN_SHA256": "${{ inputs.sha256 }}",
+          "PLUGIN_SKIP_VERIFY": "${{ inputs.skip_verify }}",
+          "PLUGIN_SOURCE": "${{ inputs.source }}",
+          "PLUGIN_USERNAME": "${{ inputs.username }}"
+        }
+      }
+    },
+    "inputs": {
+      "destination": {
+        "type": "string",
+        "description": "The destination path for the download."
+      },
+      "md5": {
+        "type": "string",
+        "description": "The md5 checksum."
+      },
+      "password": {
+        "type": "string",
+        "description": "The password for basic auth.",
+        "mask": true
+      },
+      "sha256": {
+        "type": "string",
+        "description": "The sha256 checksum."
+      },
+      "skip_verify": {
+        "type": "boolean",
+        "description": "Skip SSL verification."
+      },
+      "source": {
+        "type": "string",
+        "description": "The source URL for the download.",
+        "required": true
+      },
+      "username": {
+        "type": "string",
+        "description": "The username for basic auth.",
+        "mask": true
+      }
+    }
+  }
+}

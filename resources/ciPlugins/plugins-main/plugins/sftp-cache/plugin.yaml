@@ -1,0 +1,62 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "sftp-cache",
+  "spec": {
+    "name": "SFTP Cache",
+    "description": "Use this plugin for caching build artifacts to speed up your build times. This plugin can create and restore caches of any folders.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "appleboy/drone-sftp-cache",
+        "envs": {
+          "PLUGIN_IGNORE_BRANCH": "${{ inputs.ignore_branch }}",
+          "PLUGIN_KEY": "${{ inputs.key }}",
+          "PLUGIN_PASSWORD": "${{ inputs.password }}",
+          "PLUGIN_PORT": "${{ inputs.port }}",
+          "PLUGIN_REBUILD": "${{ inputs.rebuild }}",
+          "PLUGIN_RESTOE": "${{ inputs.restoe }}",
+          "PLUGIN_SERVER": "${{ inputs.server }}",
+          "PLUGIN_USERNAME": "${{ inputs.username }}"
+        }
+      }
+    },
+    "inputs": {
+      "ignore_branch": {
+        "type": "boolean",
+        "description": "flag to ignore commit branch name on hash value"
+      },
+      "key": {
+        "type": "string",
+        "description": "plain text of user private key",
+        "mask": true
+      },
+      "password": {
+        "type": "string",
+        "description": "password for target host user",
+        "mask": true
+      },
+      "port": {
+        "type": "string",
+        "description": "ssh port of target host"
+      },
+      "rebuild": {
+        "type": "boolean",
+        "description": "flag to trigger a rebuild"
+      },
+      "restoe": {
+        "type": "boolean",
+        "description": "flag to trigger a restore"
+      },
+      "server": {
+        "type": "string",
+        "description": "target hostname or IP",
+        "required": true
+      },
+      "username": {
+        "type": "string",
+        "description": "account for target host user"
+      }
+    }
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "anynines",
+  "spec": {
+    "name": "Anynines",
+    "description": "This plugin deploys your application on the Anynines platform.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "plugins/anynines",
+        "envs": {
+          "PLUGIN_ORGANIZATION": "${{ inputs.organization }}",
+          "PLUGIN_PASSWORD": "${{ inputs.password }}",
+          "PLUGIN_SKIP_CLEANUP": "${{ inputs.skip_cleanup }}",
+          "PLUGIN_SPACE": "${{ inputs.space }}",
+          "PLUGIN_USERNAME": "${{ inputs.username }}"
+        }
+      }
+    },
+    "inputs": {
+      "organization": {
+        "type": "string",
+        "description": "Organization on Anynines.",
+        "required": true
+      },
+      "password": {
+        "type": "string",
+        "description": "Password for Anynines auth.",
+        "required": true,
+        "mask": true
+      },
+      "skip_cleanup": {
+        "type": "boolean",
+        "description": "Skip cleanup of workspace."
+      },
+      "space": {
+        "type": "string",
+        "description": "Space within Anynines organization."
+      },
+      "username": {
+        "type": "string",
+        "description": "Username for Anynines auth.",
+        "required": true
+      }
+    }
+  }
+}

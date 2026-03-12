@@ -1,0 +1,73 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "kaniko",
+  "spec": {
+    "name": "Kaniko",
+    "description": "This plugin can be used to build and publish images to the Docker registry, using the Kaniko image builder. Unlike the Docker plugin you are not required you to run your agent in privileged mode.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "plugins/kaniko",
+        "envs": {
+          "PLUGIN_BUILD_ARGS": "${{ inputs.build_args }}",
+          "PLUGIN_CONTEXT": "${{ inputs.context }}",
+          "PLUGIN_DOCKERFILE": "${{ inputs.dockerfile }}",
+          "PLUGIN_PASSWORD": "${{ inputs.password }}",
+          "PLUGIN_REGISTRY": "${{ inputs.registry }}",
+          "PLUGIN_REPO": "${{ inputs.repo }}",
+          "PLUGIN_TAGS": "${{ inputs.tags }}",
+          "PLUGIN_TARGET": "${{ inputs.target }}",
+          "PLUGIN_USERNAME": "${{ inputs.username }}"
+        }
+      }
+    },
+    "inputs": {
+      "build_args": {
+        "type": "array",
+        "description": "custom arguments passed to docker build.",
+        "default": "[]"
+      },
+      "context": {
+        "type": "string",
+        "description": "path to the context directory",
+        "default": "git repo root"
+      },
+      "dockerfile": {
+        "type": "string",
+        "description": "path to the Dockerfile",
+        "default": "Dockerfile"
+      },
+      "password": {
+        "type": "string",
+        "description": "authenticates with this password",
+        "required": true,
+        "mask": true
+      },
+      "registry": {
+        "type": "string",
+        "description": "authenticates to this registry",
+        "required": true
+      },
+      "repo": {
+        "type": "string",
+        "description": "repository name for the image",
+        "required": true
+      },
+      "tags": {
+        "type": "array",
+        "description": "repository tags to apply to the image",
+        "default": "[]"
+      },
+      "target": {
+        "type": "string",
+        "description": "the build target to use, must be defined in the docker file"
+      },
+      "username": {
+        "type": "string",
+        "description": "authenticates with this username",
+        "required": true
+      }
+    }
+  }
+}

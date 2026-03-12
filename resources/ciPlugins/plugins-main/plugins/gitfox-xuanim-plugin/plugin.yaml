@@ -1,0 +1,79 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "gitfox-xuanim-plugin",
+  "spec": {
+    "name": "喧喧IM消息通知",
+    "description": "gitfox 喧喧IM plugin.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "hub.zentao.net/ci/gitfox-xuanim-plugin",
+        "envs": {
+          "PLUGIN_DEBUG": "${{ inputs.debug }}",
+          "PLUGIN_TOKEN": "${{ inputs.token }}",
+          "PLUGIN_CALLER": "${{ inputs.caller }}",
+          "PLUGIN_API": "${{ inputs.api }}",
+          "PLUGIN_CUSTOM": "${{ inputs.custom }}",
+          "PLUGIN_GROUPS": "${{ inputs.groups }}",
+          "PLUGIN_USERS": "${{ inputs.users }}",
+          "PLUGIN_TITLE": "${{ inputs.title }}",
+          "PLUGIN_CONTENT": "${{ inputs.content }}",
+          "PLUGIN_CONTENT_FILE": "${{ inputs.content_file }}",
+          "PLUGIN_URL": "${{ inputs.url }}"
+        }
+      }
+    },
+    "inputs": {
+      "debug": {
+        "type": "boolean",
+        "description": "debug mode",
+      },
+      "token": {
+        "type": "string",
+        "description": "token.",
+        "required": true,
+        "mask": true
+      },
+      "caller": {
+        "type": "string",
+        "description": "caller.",
+        "required": true,
+        "mask": true
+      },
+      "api": {
+        "type": "string",
+        "description": "api.",
+        "required": true,
+      },
+      "custom": {
+        "type": "boolean",
+        "description": "custom.",
+      },
+      "groups": {
+        "type": "array",
+        "description": "groups.",
+      },
+      "users": {
+        "type": "array",
+        "description": "users.",
+      },
+      "title": {
+        "type": "string",
+        "description": "title.",
+      },
+      "content": {
+        "type": "string",
+        "description": "content.",
+      },
+      "content_file": {
+        "type": "string",
+        "description": "content file.",
+      },
+      "url": {
+        "type": "string",
+        "description": "url.",
+      },
+    }
+  }
+}

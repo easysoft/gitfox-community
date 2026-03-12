@@ -1,0 +1,90 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "gcs-cache",
+  "spec": {
+    "name": "Google Cloud Storage Cache",
+    "description": "The GCS cache plugin can be used to preserve files and directories between builds.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "homerovalle/drone-gcs-cache",
+        "envs": {
+          "PLUGIN_BUCKET": "${{ inputs.bucket }}",
+          "PLUGIN_DEBUG": "${{ inputs.debug }}",
+          "PLUGIN_FALLBACK_PATH": "${{ inputs.fallback_path }}",
+          "PLUGIN_FILENAME": "${{ inputs.filename }}",
+          "PLUGIN_FLUSH": "${{ inputs.flush }}",
+          "PLUGIN_FLUSH_AGE": "${{ inputs.flush_age }}",
+          "PLUGIN_FLUSH_PATH": "${{ inputs.flush_path }}",
+          "PLUGIN_JSON_KEY": "${{ inputs.json_key }}",
+          "PLUGIN_MOUNT": "${{ inputs.mount }}",
+          "PLUGIN_PATH": "${{ inputs.path }}",
+          "PLUGIN_REBUILD": "${{ inputs.rebuild }}",
+          "PLUGIN_RESTORE": "${{ inputs.restore }}"
+        }
+      }
+    },
+    "inputs": {
+      "bucket": {
+        "type": "string",
+        "description": "bucket to use to rebuild and restore cache.",
+        "required": true
+      },
+      "debug": {
+        "type": "boolean",
+        "description": "enabling more logging for debugging."
+      },
+      "fallback_path": {
+        "type": "string",
+        "description": "fallback path for the cache file.",
+        "default": "[bucket]/<owner>/<repo>/<branch>/",
+        "required": true
+      },
+      "filename": {
+        "type": "string",
+        "description": "filename to use for cache."
+      },
+      "flush": {
+        "type": "boolean",
+        "description": "mode to flush the cache of old cache items (please be sure to set this so we don't waste storage)."
+      },
+      "flush_age": {
+        "type": "number",
+        "description": "flush cache files older then x days.",
+        "default": "30"
+      },
+      "flush_path": {
+        "type": "string",
+        "description": "path to search for flushable cache files.",
+        "default": "[bucket]/<owner>/<repo>/",
+        "required": true
+      },
+      "json_key": {
+        "type": "string",
+        "description": "service account json key.",
+        "required": true,
+        "mask": true
+      },
+      "mount": {
+        "type": "array",
+        "description": "list of files/directories to cache.",
+        "default": "[]"
+      },
+      "path": {
+        "type": "string",
+        "description": "path to store the cache file.",
+        "default": "[bucket]/<owner>/<repo>/<branch>/",
+        "required": true
+      },
+      "rebuild": {
+        "type": "boolean",
+        "description": "mode to rebuild the cache from the build environment and specified mounts."
+      },
+      "restore": {
+        "type": "boolean",
+        "description": "mode to restore the build environment from cache."
+      }
+    }
+  }
+}

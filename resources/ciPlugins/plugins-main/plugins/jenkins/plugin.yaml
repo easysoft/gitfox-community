@@ -1,0 +1,44 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "jenkins",
+  "spec": {
+    "name": "Jenkins",
+    "description": "The Jenkins plugin allows you to trigger Jenkins job automatically.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "appleboy/drone-jenkins",
+        "envs": {
+          "PLUGIN_JOB": "${{ inputs.job }}",
+          "PLUGIN_TOKEN": "${{ inputs.token }}",
+          "PLUGIN_URL": "${{ inputs.url }}",
+          "PLUGIN_USER": "${{ inputs.user }}"
+        }
+      }
+    },
+    "inputs": {
+      "job": {
+        "type": "string",
+        "description": "The Jenkins job name",
+        "required": true
+      },
+      "token": {
+        "type": "string",
+        "description": "The Jenkins token",
+        "required": true,
+        "mask": true
+      },
+      "url": {
+        "type": "string",
+        "description": "The Jenkins URL",
+        "required": true
+      },
+      "user": {
+        "type": "string",
+        "description": "The Jenkins user",
+        "required": true
+      }
+    }
+  }
+}

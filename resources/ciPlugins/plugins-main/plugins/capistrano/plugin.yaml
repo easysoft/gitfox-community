@@ -1,0 +1,39 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "capistrano",
+  "spec": {
+    "name": "Capistrano",
+    "description": "The Capistrano plugin deploys applications via the Capistrano ruby gem.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "glaszig/drone-capistrano",
+        "envs": {
+          "PLUGIN_CAPISTRANO_PRIVATE_KEY": "${{ inputs.capistrano_private_key }}",
+          "PLUGIN_CAPISTRANO_PUBLIC_KEY": "${{ inputs.capistrano_public_key }}",
+          "PLUGIN_TASKS": "${{ inputs.tasks }}"
+        }
+      }
+    },
+    "inputs": {
+      "capistrano_private_key": {
+        "type": "string",
+        "description": "Private SSH deploy key",
+        "required": true,
+        "mask": true
+      },
+      "capistrano_public_key": {
+        "type": "string",
+        "description": "Public SSH deploy key",
+        "required": true,
+        "mask": true
+      },
+      "tasks": {
+        "type": "string",
+        "description": "The Capistrano tasks to run",
+        "required": true
+      }
+    }
+  }
+}

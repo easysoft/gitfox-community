@@ -1,0 +1,41 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "chef-supermarket",
+  "spec": {
+    "name": "Chef Supermarket",
+    "description": "The Chef Supermarket plugin can publish cookbooks to Supermarket (internal or public).",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "jmccann/drone-chef-supermarket",
+        "envs": {
+          "PLUGIN_PRIVATE_KEY": "${{ inputs.private_key }}",
+          "PLUGIN_SERVER": "${{ inputs.server }}",
+          "PLUGIN_SSL_VERIFY": "${{ inputs.ssl_verify }}",
+          "PLUGIN_USER": "${{ inputs.user }}"
+        }
+      }
+    },
+    "inputs": {
+      "private_key": {
+        "type": "string",
+        "description": "private key contents to auth to server with"
+      },
+      "server": {
+        "type": "string",
+        "description": "Supermarket server to connect to",
+        "default": "https://supermarket.chef.io"
+      },
+      "ssl_verify": {
+        "type": "boolean",
+        "description": "Enable/Disable SSL verify",
+        "default": "true"
+      },
+      "user": {
+        "type": "string",
+        "description": "connects as this user"
+      }
+    }
+  }
+}

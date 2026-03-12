@@ -1,0 +1,75 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "wechat-2",
+  "spec": {
+    "name": "Wechat for Work",
+    "description": "Drone plugin for WeChat for Work to show build notifications.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "clem109/drone-wechat",
+        "envs": {
+          "PLUGIN_AGENT_ID": "${{ inputs.agent_id }}",
+          "PLUGIN_BTNTXT": "${{ inputs.btntxt }}",
+          "PLUGIN_CORPID": "${{ inputs.corpid }}",
+          "PLUGIN_CORP_SECRET": "${{ inputs.corp_secret }}",
+          "PLUGIN_DESCRIPTION": "${{ inputs.description }}",
+          "PLUGIN_MSG_URL": "${{ inputs.msg_url }}",
+          "PLUGIN_TITLE": "${{ inputs.title }}",
+          "PLUGIN_TO_PARTY": "${{ inputs.to_party }}",
+          "PLUGIN_TO_TAG": "${{ inputs.to_tag }}",
+          "PLUGIN_TO_USER": "${{ inputs.to_user }}"
+        }
+      }
+    },
+    "inputs": {
+      "agent_id": {
+        "type": "string",
+        "description": "The agent id to send the message",
+        "required": true
+      },
+      "btntxt": {
+        "type": "string",
+        "description": "The text for the button on the card"
+      },
+      "corp_secret": {
+        "type": "string",
+        "description": "The corp_secret for authorization",
+        "required": true,
+        "mask": true
+      },
+      "corpid": {
+        "type": "string",
+        "description": "The corpid for authorization",
+        "required": true,
+        "mask": true
+      },
+      "description": {
+        "type": "string",
+        "description": "Text description of the card",
+        "required": true
+      },
+      "msg_url": {
+        "type": "string",
+        "description": "The link for the text card click"
+      },
+      "title": {
+        "type": "string",
+        "description": "Notification title"
+      },
+      "to_party": {
+        "type": "string",
+        "description": "The party id to send the message"
+      },
+      "to_tag": {
+        "type": "string",
+        "description": "The tag id to send the message"
+      },
+      "to_user": {
+        "type": "string",
+        "description": "The user id to send the message"
+      }
+    }
+  }
+}

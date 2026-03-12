@@ -1,0 +1,74 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "jira",
+  "spec": {
+    "name": "Jira",
+    "description": "A plugin to attach build and deployment details to a Jira issue. It can use oauth client id / oauth secret OR use Jira connect key. For further information on how to use the plugin with harness there is a video `https://www.youtube.com/watch?v=YIKbLeY1-gI`.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "plugins/jira",
+        "envs": {
+          "PLUGIN_CLIENT_ID": "${{ inputs.client_id }}",
+          "PLUGIN_CLIENT_SECRET": "${{ inputs.client_secret }}",
+          "PLUGIN_CONNECT_KEY": "${{ inputs.connect_key }}",
+          "PLUGIN_ENVIRONMENT_NAME": "${{ inputs.environment_name }}",
+          "PLUGIN_INSTANCE": "${{ inputs.instance }}",
+          "PLUGIN_LINK": "${{ inputs.link }}",
+          "PLUGIN_LOG_LEVEL": "${{ inputs.log_level }}",
+          "PLUGIN_PIPELINE": "${{ inputs.pipeline }}",
+          "PLUGIN_PROJECT": "${{ inputs.project }}"
+        }
+      }
+    },
+    "inputs": {
+      "client_id": {
+        "type": "string",
+        "description": "The Jira Oauth2 client ID. You must also pass the client secret.",
+        "required": true,
+        "mask": true
+      },
+      "client_secret": {
+        "type": "string",
+        "description": "The Jira Oauth2 client secret. You must also pass the client id.",
+        "required": true,
+        "mask": true
+      },
+      "connect_key": {
+        "type": "string",
+        "description": "The Jira Connect key. This is instead of passing oauth information.",
+        "required": true,
+        "mask": true
+      },
+      "environment_name": {
+        "type": "string",
+        "description": "The Jira environment name.",
+        "required": true
+      },
+      "instance": {
+        "type": "string",
+        "description": "The Jira instance. The prefix on your atlassian hostname.",
+        "required": true
+      },
+      "link": {
+        "type": "string",
+        "description": "The link to the Jira deployment."
+      },
+      "log_level": {
+        "type": "string",
+        "description": "debug/info Level defines the plugin log level. Set this to debug to see the response from jira"
+      },
+      "pipeline": {
+        "type": "string",
+        "description": "The pipeline name.",
+        "required": true
+      },
+      "project": {
+        "type": "string",
+        "description": "The Jira project. eg TEST",
+        "required": true
+      }
+    }
+  }
+}

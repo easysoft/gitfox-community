@@ -1,0 +1,62 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "kubernetes",
+  "spec": {
+    "name": "Kubernetes Deployments",
+    "description": "The Kubernetes plugin can be used to upgrade a Kubernetes deployment with a newer version of an image.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "https://quay.io/honestbee/drone-kubernetes",
+        "envs": {
+          "PLUGIN_CONTAINER": "${{ inputs.container }}",
+          "PLUGIN_DEPLOYMENT": "${{ inputs.deployment }}",
+          "PLUGIN_KUBERNETES_SERVER": "${{ inputs.kubernetes_server }}",
+          "PLUGIN_KUBERNETES_TOKEN": "${{ inputs.kubernetes_token }}",
+          "PLUGIN_NAMESPACE": "${{ inputs.namespace }}",
+          "PLUGIN_REPO": "${{ inputs.repo }}",
+          "PLUGIN_TAG": "${{ inputs.tag }}"
+        }
+      }
+    },
+    "inputs": {
+      "container": {
+        "type": "array",
+        "description": "Container name (setup with the name option in the kubernetes manifest).",
+        "required": true
+      },
+      "deployment": {
+        "type": "array",
+        "description": "Deployment name.",
+        "required": true
+      },
+      "kubernetes_server": {
+        "type": "string",
+        "description": "Kubernetes server URL.",
+        "required": true
+      },
+      "kubernetes_token": {
+        "type": "string",
+        "description": "Kubernetes token.",
+        "required": true,
+        "mask": true
+      },
+      "namespace": {
+        "type": "string",
+        "description": "Kubernetes namespace.",
+        "required": true
+      },
+      "repo": {
+        "type": "string",
+        "description": "Image to update full name (with registry path).",
+        "required": true
+      },
+      "tag": {
+        "type": "string",
+        "description": "Image tag to update.",
+        "required": true
+      }
+    }
+  }
+}

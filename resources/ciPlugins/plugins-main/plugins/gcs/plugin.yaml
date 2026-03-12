@@ -1,0 +1,64 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "gcs",
+  "spec": {
+    "name": "Google Cloud Storage",
+    "description": "The GCS plugin can be used to publish files and artifacts to Google Cloud Storage.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "plugins/gcs",
+        "envs": {
+          "PLUGIN_ACL": "${{ inputs.acl }}",
+          "PLUGIN_CACHE_CONTROL": "${{ inputs.cache_control }}",
+          "PLUGIN_GZIP": "${{ inputs.gzip }}",
+          "PLUGIN_IGNORE": "${{ inputs.ignore }}",
+          "PLUGIN_METADATA": "${{ inputs.metadata }}",
+          "PLUGIN_SOURCE": "${{ inputs.source }}",
+          "PLUGIN_TARGET": "${{ inputs.target }}",
+          "PLUGIN_TOKEN": "${{ inputs.token }}"
+        }
+      }
+    },
+    "inputs": {
+      "acl": {
+        "type": "array",
+        "description": "a list of access rules applied to the uploaded files, in a form of entity:role",
+        "default": "[]"
+      },
+      "cache_control": {
+        "type": "string",
+        "description": "Cache-Control header"
+      },
+      "gzip": {
+        "type": "string",
+        "description": "files with the specified extensions will be gzipped and uploaded with \"gzip\" Content-Encoding header e.g. js,css,html"
+      },
+      "ignore": {
+        "type": "string",
+        "description": "skip files matching this pattern, relative to source"
+      },
+      "metadata": {
+        "type": "string",
+        "description": "an arbitrary dictionary with custom metadata applied to all objects"
+      },
+      "source": {
+        "type": "string",
+        "description": "location of files to upload",
+        "required": true
+      },
+      "target": {
+        "type": "string",
+        "description": "destination to copy files to, including bucket name",
+        "required": true
+      },
+      "token": {
+        "type": "string",
+        "description": "credentials to access Google Cloud Storage",
+        "required": true,
+        "mask": true
+      }
+    }
+  }
+}

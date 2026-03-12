@@ -1,0 +1,35 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "upx",
+  "spec": {
+    "name": "UPX",
+    "description": "The UPX plugin can be used to pack executables.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "cnbattle/drone-upx",
+        "envs": {
+          "PLUGIN_LEVEL": "${{ inputs.level }}",
+          "PLUGIN_ORIGINAL_FILE": "${{ inputs.original_file }}",
+          "PLUGIN_SAVE_FILE": "${{ inputs.save_file }}"
+        }
+      }
+    },
+    "inputs": {
+      "level": {
+        "type": "string",
+        "description": "Compression level, a value between 1 and 9, the bigger the better.",
+        "default": "5"
+      },
+      "original_file": {
+        "type": "string",
+        "description": "The path to the file to save the original file."
+      },
+      "save_file": {
+        "type": "string",
+        "description": "The path to the file to save the upx file."
+      }
+    }
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "rocket",
+  "spec": {
+    "name": "Rocket.Chat",
+    "description": "Drone plugin for sending message to Rocket.Chant channel using API.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "mike1pol/drone-rocket",
+        "envs": {
+          "PLUGIN_AVATAR_URL": "${{ inputs.avatar_url }}",
+          "PLUGIN_CHANNEL": "${{ inputs.channel }}",
+          "PLUGIN_MESSAGE": "${{ inputs.message }}",
+          "PLUGIN_TOKEN": "${{ inputs.token }}",
+          "PLUGIN_URL": "${{ inputs.url }}",
+          "PLUGIN_USER_ID": "${{ inputs.user_id }}"
+        }
+      }
+    },
+    "inputs": {
+      "avatar_url": {
+        "type": "string",
+        "description": "override the default avatar of the user"
+      },
+      "channel": {
+        "type": "string",
+        "description": "Rocket.chat channel",
+        "required": true
+      },
+      "message": {
+        "type": "string",
+        "description": "the message contents (up to 2000 characters)",
+        "required": true
+      },
+      "token": {
+        "type": "string",
+        "description": "Rocket.chat token",
+        "required": true,
+        "mask": true
+      },
+      "url": {
+        "type": "string",
+        "description": "Rocket.chat url",
+        "required": true
+      },
+      "user_id": {
+        "type": "string",
+        "description": "Rocket.chat user id",
+        "required": true
+      }
+    }
+  }
+}

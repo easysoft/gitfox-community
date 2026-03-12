@@ -1,0 +1,47 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "gcf",
+  "spec": {
+    "name": "Google Cloud Functions",
+    "description": "The GCF plugin can be used to deploy, list, and delete Google Cloud Functions.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "oliver006/drone-gcf",
+        "envs": {
+          "PLUGIN_ACTION": "${{ inputs.action }}",
+          "PLUGIN_FUNCTIONS": "${{ inputs.functions }}",
+          "PLUGIN_PROJECT": "${{ inputs.project }}",
+          "PLUGIN_RUNTIME": "${{ inputs.runtime }}",
+          "PLUGIN_TOKEN": "${{ inputs.token }}"
+        }
+      }
+    },
+    "inputs": {
+      "action": {
+        "type": "string",
+        "description": "can be either deploy, delete, or list."
+      },
+      "functions": {
+        "type": "array",
+        "description": "list of functions to be deployed, each needs to at least provide a trigger but can also set memory, runtime, and source.",
+        "default": "[]"
+      },
+      "project": {
+        "type": "string",
+        "description": "name of the GCP project.",
+        "default": "the project of the service account"
+      },
+      "runtime": {
+        "type": "string",
+        "description": "runtime of the functions to be deployed. Can be specified once or one a per function basis."
+      },
+      "token": {
+        "type": "string",
+        "description": "json credentials of the service account to access Google Cloud Functions.",
+        "mask": true
+      }
+    }
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "acr",
+  "spec": {
+    "name": "Azure container Registry",
+    "description": "The ACR plugin can be used to build and publish images to the Azure ECR\nregistry.\n",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "plugins/acr",
+        "envs": {
+          "PLUGIN_REGISTRY": "${{ inputs.registry }}",
+          "PLUGIN_REPO": "${{ inputs.repo }}",
+          "PLUGIN_SERVICE_PRINCIPAL_CLIENT_ID": "${{ inputs.service_principal_client_id }}",
+          "PLUGIN_SERVICE_PRINCIPAL_CLIENT_SECRET": "${{ inputs.service_principal_client_secret }}"
+        }
+      }
+    },
+    "inputs": {
+      "registry": {
+        "type": "string",
+        "description": "authenticates to this registry",
+        "default": "azurecr.io"
+      },
+      "repo": {
+        "type": "string",
+        "description": "repository name for the image"
+      },
+      "service_principal_client_id": {
+        "type": "string",
+        "description": "authenticates with this username"
+      },
+      "service_principal_client_secret": {
+        "type": "string",
+        "description": "authenticates with this password",
+        "mask": true
+      }
+    }
+  }
+}

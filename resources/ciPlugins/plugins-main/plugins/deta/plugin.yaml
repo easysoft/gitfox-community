@@ -1,0 +1,43 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "deta",
+  "spec": {
+    "name": "Deta",
+    "description": "The Deta plugin deploy your build to deta.sh(https://deta.sh).\n",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "lizheming/drone-deta",
+        "envs": {
+          "PLUGIN_ACCESS_TOKEN": "${{ inputs.access_token }}",
+          "PLUGIN_NAME": "${{ inputs.name }}",
+          "PLUGIN_PROJECT": "${{ inputs.project }}",
+          "PLUGIN_PROJECT_DIR": "${{ inputs.project_dir }}"
+        }
+      }
+    },
+    "inputs": {
+      "access_token": {
+        "type": "string",
+        "description": "Deta access token. \nHow to get Deta access token? https://docs.deta.sh/docs/cli/auth#deta-access-tokens\n",
+        "mask": true
+      },
+      "name": {
+        "type": "string",
+        "description": "Deta micro name",
+        "required": true
+      },
+      "project": {
+        "type": "string",
+        "description": "Deta project name",
+        "default": "default"
+      },
+      "project_dir": {
+        "type": "string",
+        "description": "irectory of the project",
+        "default": "."
+      }
+    }
+  }
+}

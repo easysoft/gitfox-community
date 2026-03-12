@@ -1,0 +1,15 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "diagnostics",
+  "spec": {
+    "name": "diagnostics",
+    "description": "A plugin with cli network tools (dig / ping / traceroute) to diagnose issues in a build. It does not accept any properties.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "plugins/drone-diagnostics"
+      }
+    }
+  }
+}

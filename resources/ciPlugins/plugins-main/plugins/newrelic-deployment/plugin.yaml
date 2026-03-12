@@ -1,0 +1,33 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "newrelic-deployment",
+  "spec": {
+    "name": "Newrelic Deployment",
+    "description": "The Newrelic deployment plugin reports/logs your deployment to your dashboard to make it easy to track changes.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "cityfurniture/drone-newrelic-deployment",
+        "envs": {
+          "PLUGIN_API_KEY": "${{ inputs.api_key }}",
+          "PLUGIN_APP_NAME": "${{ inputs.app_name }}"
+        }
+      }
+    },
+    "inputs": {
+      "api_key": {
+        "type": "string",
+        "description": "Your Newrelic API key.",
+        "required": true,
+        "mask": true
+      },
+      "app_name": {
+        "type": "string",
+        "description": "Your Newrelic application name.",
+        "required": true,
+        "mask": true
+      }
+    }
+  }
+}

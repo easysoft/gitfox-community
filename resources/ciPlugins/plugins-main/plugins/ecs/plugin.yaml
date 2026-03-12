@@ -1,0 +1,73 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "ecs",
+  "spec": {
+    "name": "AWS ECS",
+    "description": "The ECS plugin can be used to deploy a Docker image to an ECS environment.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "pelotech/drone-ecs",
+        "envs": {
+          "PLUGIN_ACCESS_KEY": "${{ inputs.access_key }}",
+          "PLUGIN_ENVIRONMENT_VARIABLES": "${{ inputs.environment_variables }}",
+          "PLUGIN_FAMILY": "${{ inputs.family }}",
+          "PLUGIN_IMAGE_NAME": "${{ inputs.image_name }}",
+          "PLUGIN_IMAGE_TAG": "${{ inputs.image_tag }}",
+          "PLUGIN_MEMORY": "${{ inputs.memory }}",
+          "PLUGIN_PORT_MAPPINGS": "${{ inputs.port_mappings }}",
+          "PLUGIN_REGION": "${{ inputs.region }}",
+          "PLUGIN_SECRET_KEY": "${{ inputs.secret_key }}",
+          "PLUGIN_SERVICE": "${{ inputs.service }}"
+        }
+      }
+    },
+    "inputs": {
+      "access_key": {
+        "type": "string",
+        "description": "AWS access key.",
+        "mask": true
+      },
+      "environment_variables": {
+        "type": "array",
+        "description": "list of environment variables to pass to ecs.",
+        "default": "[]"
+      },
+      "family": {
+        "type": "string",
+        "description": "ECS task."
+      },
+      "image_name": {
+        "type": "string",
+        "description": "docker image to use."
+      },
+      "image_tag": {
+        "type": "string",
+        "description": "docker image tag to use."
+      },
+      "memory": {
+        "type": "number",
+        "description": "memory to assign to the service."
+      },
+      "port_mappings": {
+        "type": "array",
+        "description": "list of port mappings to pass to ecs.",
+        "default": "[]"
+      },
+      "region": {
+        "type": "string",
+        "description": "AWS region."
+      },
+      "secret_key": {
+        "type": "string",
+        "description": "AWS secret key.",
+        "mask": true
+      },
+      "service": {
+        "type": "string",
+        "description": "ecs service on that environment to upgrade."
+      }
+    }
+  }
+}

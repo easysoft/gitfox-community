@@ -1,0 +1,63 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "github-app",
+  "spec": {
+    "name": "Github App",
+    "description": "A plugin to get a jwt or installation token for a github app.\n",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "rssnyder/drone-github-app",
+        "envs": {
+          "PLUGIN_APP_ID": "${{ inputs.app_id }}",
+          "PLUGIN_INSTALLATION": "${{ inputs.installation }}",
+          "PLUGIN_JSON_FILE": "${{ inputs.json_file }}",
+          "PLUGIN_JWT_FILE": "${{ inputs.jwt_file }}",
+          "PLUGIN_PEM": "${{ inputs.pem }}",
+          "PLUGIN_PEM_B64": "${{ inputs.pem_b64 }}",
+          "PLUGIN_PEM_FILE": "${{ inputs.pem_file }}",
+          "PLUGIN_TOKEN_FILE": "${{ inputs.token_file }}"
+        }
+      }
+    },
+    "inputs": {
+      "app_id": {
+        "type": "string",
+        "description": "github app id",
+        "required": true
+      },
+      "installation": {
+        "type": "string",
+        "description": "installation id"
+      },
+      "json_file": {
+        "type": "string",
+        "description": "output file for both jwt and token in json"
+      },
+      "jwt_file": {
+        "type": "string",
+        "description": "output file for jwt"
+      },
+      "pem": {
+        "type": "string",
+        "description": "rsa private key",
+        "mask": true
+      },
+      "pem_b64": {
+        "type": "string",
+        "description": "local file path of base64 encoded rsa private key",
+        "mask": true
+      },
+      "pem_file": {
+        "type": "string",
+        "description": "local file path of rsa private key",
+        "mask": true
+      },
+      "token_file": {
+        "type": "string",
+        "description": "output file for token"
+      }
+    }
+  }
+}

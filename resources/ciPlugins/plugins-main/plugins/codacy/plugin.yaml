@@ -1,0 +1,32 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "codacy",
+  "spec": {
+    "name": "Codacy",
+    "description": "This plugin can upload coverage reports to Codacy, currently it's limited to Golang coverage reports.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "plugins/codacy",
+        "envs": {
+          "PLUGIN_PATTERN": "${{ inputs.pattern }}",
+          "PLUGIN_TOKEN": "${{ inputs.token }}"
+        }
+      }
+    },
+    "inputs": {
+      "pattern": {
+        "type": "string",
+        "description": "Coverage search pattern.",
+        "default": "**/*.out"
+      },
+      "token": {
+        "type": "string",
+        "description": "Codacy authentication token.",
+        "required": true,
+        "mask": true
+      }
+    }
+  }
+}

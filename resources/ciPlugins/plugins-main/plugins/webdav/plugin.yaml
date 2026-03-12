@@ -1,0 +1,43 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "webdav",
+  "spec": {
+    "name": "WebDAV",
+    "description": "The WebDAV plugin will allow pushing build artifacts to any WebDAV server, including Nextcloud or ownCloud.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "vividboarder/drone-webdav",
+        "envs": {
+          "PLUGIN_DESTINATION": "${{ inputs.destination }}",
+          "PLUGIN_FILE": "${{ inputs.file }}",
+          "PLUGIN_PASSWORD": "${{ inputs.password }}",
+          "PLUGIN_USERNAME": "${{ inputs.username }}"
+        }
+      }
+    },
+    "inputs": {
+      "destination": {
+        "type": "string",
+        "description": "The destination URL.",
+        "required": true
+      },
+      "file": {
+        "type": "string",
+        "description": "The path to the file to upload.",
+        "required": true
+      },
+      "password": {
+        "type": "string",
+        "description": "The password to authenticate with.",
+        "mask": true
+      },
+      "username": {
+        "type": "string",
+        "description": "The username to authenticate with.",
+        "required": true
+      }
+    }
+  }
+}

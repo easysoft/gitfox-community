@@ -1,0 +1,90 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "manifest",
+  "spec": {
+    "name": "Manifest",
+    "description": "This plugin can push manifests for multi-arch Docker images.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "plugins/manifest",
+        "envs": {
+          "PLUGIN_AUTO_TAG": "${{ inputs.auto_tag }}",
+          "PLUGIN_DEFAULT_TAGS": "${{ inputs.default_tags }}",
+          "PLUGIN_IGNORE_MISSING": "${{ inputs.ignore_missing }}",
+          "PLUGIN_INSECURE": "${{ inputs.insecure }}",
+          "PLUGIN_PASSWORD": "${{ inputs.password }}",
+          "PLUGIN_PLATFORMS": "${{ inputs.platforms }}",
+          "PLUGIN_SPEC": "${{ inputs.spec }}",
+          "PLUGIN_TAG": "${{ inputs.tag }}",
+          "PLUGIN_TAGS": "${{ inputs.tags }}",
+          "PLUGIN_TARGET": "${{ inputs.target }}",
+          "PLUGIN_TEMPLATE": "${{ inputs.template }}",
+          "PLUGIN_USERNAME": "${{ inputs.username }}"
+        }
+      }
+    },
+    "inputs": {
+      "auto_tag": {
+        "type": "boolean",
+        "description": "Auto tags, only used with spec."
+      },
+      "default_tags": {
+        "type": "boolean",
+        "description": "Default tags, only used with spec."
+      },
+      "ignore_missing": {
+        "type": "boolean",
+        "description": "Ignore missing source images."
+      },
+      "insecure": {
+        "type": "boolean",
+        "description": "Enable insecure (not TLS) registry support."
+      },
+      "password": {
+        "type": "string",
+        "description": "Password for DockerHub authentication",
+        "default": "Anonymous access",
+        "required": true,
+        "mask": true
+      },
+      "platforms": {
+        "type": "array",
+        "description": "List of platforms in format OS/ARCH.",
+        "default": "[]",
+        "required": true
+      },
+      "spec": {
+        "type": "string",
+        "description": "Path to a manifest specification file.",
+        "required": true
+      },
+      "tag": {
+        "type": "string",
+        "description": "Tag, only used with spec."
+      },
+      "tags": {
+        "type": "array",
+        "description": "Tags, only used with manifest.",
+        "default": "[]"
+      },
+      "target": {
+        "type": "string",
+        "description": "Target image for manifest.",
+        "required": true
+      },
+      "template": {
+        "type": "string",
+        "description": "Template for manifest sources, OS and ARCH are replaced.",
+        "required": true
+      },
+      "username": {
+        "type": "string",
+        "description": "Username for DockerHub authentication",
+        "default": "Anonymous access",
+        "required": true
+      }
+    }
+  }
+}

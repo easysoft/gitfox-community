@@ -1,0 +1,97 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "git-push",
+  "spec": {
+    "name": "Git Push",
+    "description": "Use this plugin for deploying an application via `git push`. You will need to supply Drone with a private SSH key or use the same credentials as the cloned repo to being able to push changes.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "appleboy/drone-git-push",
+        "envs": {
+          "PLUGIN_AUTHOR_EMAIL": "${{ inputs.author_email }}",
+          "PLUGIN_AUTHOR_NAME": "${{ inputs.author_name }}",
+          "PLUGIN_BRANCH": "${{ inputs.branch }}",
+          "PLUGIN_COMMIT": "${{ inputs.commit }}",
+          "PLUGIN_COMMIT_MESSAGE": "${{ inputs.commit_message }}",
+          "PLUGIN_EMPTY_COMMIT": "${{ inputs.empty_commit }}",
+          "PLUGIN_FOLLOWTAGS": "${{ inputs.followtags }}",
+          "PLUGIN_FORCE": "${{ inputs.force }}",
+          "PLUGIN_LOCAL_BRANCH": "${{ inputs.local_branch }}",
+          "PLUGIN_PATH": "${{ inputs.path }}",
+          "PLUGIN_REMOTE": "${{ inputs.remote }}",
+          "PLUGIN_REMOTE_NAME": "${{ inputs.remote_name }}",
+          "PLUGIN_SKIP_VERIFY": "${{ inputs.skip_verify }}",
+          "PLUGIN_SSH_KEY": "${{ inputs.ssh_key }}"
+        }
+      }
+    },
+    "inputs": {
+      "author_email": {
+        "type": "string",
+        "description": "author email for commit.",
+        "default": "commiter email"
+      },
+      "author_name": {
+        "type": "string",
+        "description": "author name for commit.",
+        "default": "commiter name"
+      },
+      "branch": {
+        "type": "string",
+        "description": "target branch to push to.",
+        "default": "master"
+      },
+      "commit": {
+        "type": "boolean",
+        "description": "add and commit the contents of the repo before pushing."
+      },
+      "commit_message": {
+        "type": "string",
+        "description": "add a custom message for commit.",
+        "default": "[skip ci] Commit dirty state"
+      },
+      "empty_commit": {
+        "type": "boolean",
+        "description": "create an empty commit if there are no changes."
+      },
+      "followtags": {
+        "type": "boolean",
+        "description": "push with --follow-tags option."
+      },
+      "force": {
+        "type": "boolean",
+        "description": "force push using the --force flag."
+      },
+      "local_branch": {
+        "type": "string",
+        "description": "local branch or ref to push from.",
+        "default": "HEAD"
+      },
+      "path": {
+        "type": "string",
+        "description": "path to the repository.",
+        "default": "current repo"
+      },
+      "remote": {
+        "type": "string",
+        "description": "target remote repository (if blank, assume exists).",
+        "required": true
+      },
+      "remote_name": {
+        "type": "string",
+        "description": "name of the remote to use locally.",
+        "default": "deploy"
+      },
+      "skip_verify": {
+        "type": "boolean",
+        "description": "skip verification of HTTPS certs."
+      },
+      "ssh_key": {
+        "type": "string",
+        "description": "Private SSH key for the remote machine."
+      }
+    }
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "gitleaks",
+  "spec": {
+    "name": "Gitleaks",
+    "description": "A plugin to detect hard-coded secrets and sensitive data in your source code files.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "plugins/gitleaks",
+        "envs": {
+          "PLUGIN_CONFIG": "${{ inputs.config }}",
+          "PLUGIN_PATH": "${{ inputs.path }}"
+        }
+      }
+    },
+    "inputs": {
+      "config": {
+        "type": "string",
+        "description": "The path to the gitleaks config file."
+      },
+      "path": {
+        "type": "string",
+        "description": "The path to the directory containing the source code files.",
+        "default": "."
+      }
+    }
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "hugo",
+  "spec": {
+    "name": "Hugo",
+    "description": "The Hugo plugin automatically generates static web page files, which can be published afterwards!",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "plugins/hugo",
+        "envs": {
+          "PLUGIN_BUILDDRAFTS": "${{ inputs.buildDrafts }}",
+          "PLUGIN_BUILDEXPIRED": "${{ inputs.buildExpired }}",
+          "PLUGIN_BUILDFUTURE": "${{ inputs.buildFuture }}",
+          "PLUGIN_CONFIG": "${{ inputs.config }}",
+          "PLUGIN_CONTENT": "${{ inputs.content }}",
+          "PLUGIN_LAYOUT": "${{ inputs.layout }}",
+          "PLUGIN_OUTPUT": "${{ inputs.output }}",
+          "PLUGIN_SOURCE": "${{ inputs.source }}",
+          "PLUGIN_THEME": "${{ inputs.theme }}",
+          "PLUGIN_URL": "${{ inputs.url }}",
+          "PLUGIN_VALIDATE": "${{ inputs.validate }}"
+        }
+      }
+    },
+    "inputs": {
+      "buildDrafts": {
+        "type": "boolean",
+        "description": "Include content marked as draft."
+      },
+      "buildExpired": {
+        "type": "boolean",
+        "description": "Include expired content."
+      },
+      "buildFuture": {
+        "type": "boolean",
+        "description": "include content with publishdate in the future."
+      },
+      "config": {
+        "type": "string",
+        "description": "The path to the config file.",
+        "default": "path/config.yaml|json|toml"
+      },
+      "content": {
+        "type": "string",
+        "description": "The path to the content directory."
+      },
+      "layout": {
+        "type": "string",
+        "description": "The path to the layout directory."
+      },
+      "output": {
+        "type": "string",
+        "description": "The path to the output directory."
+      },
+      "source": {
+        "type": "string",
+        "description": "The path to read files relative from."
+      },
+      "theme": {
+        "type": "string",
+        "description": "theme to use (located in /themes/THEMENAME/)."
+      },
+      "url": {
+        "type": "string",
+        "description": "hostname (and path) to the root."
+      },
+      "validate": {
+        "type": "boolean",
+        "description": "Validate config file before generation."
+      }
+    }
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "gh-pages",
+  "spec": {
+    "name": "GitHub Pages",
+    "description": "The GitHub Pages plugin is used to publish static websites to GitHub. The following configuration uses the gh-pages plugin to publish a website.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "plugins/gh-pages",
+        "envs": {
+          "PLUGIN_PAGES_DIRECTORY": "${{ inputs.pages_directory }}",
+          "PLUGIN_PASSWORD": "${{ inputs.password }}",
+          "PLUGIN_SSH_KEY": "${{ inputs.ssh_key }}",
+          "PLUGIN_TARGET_BRANCH": "${{ inputs.target_branch }}",
+          "PLUGIN_TEMPORARY_BASE": "${{ inputs.temporary_base }}",
+          "PLUGIN_UPSTREAM_NAME": "${{ inputs.upstream_name }}",
+          "PLUGIN_USERNAME": "${{ inputs.username }}"
+        }
+      }
+    },
+    "inputs": {
+      "pages_directory": {
+        "type": "string",
+        "description": "The directory of content to publish",
+        "default": "docs",
+        "required": true
+      },
+      "password": {
+        "type": "string",
+        "description": "GitHub password for pushing changes",
+        "required": true,
+        "mask": true
+      },
+      "ssh_key": {
+        "type": "string",
+        "description": "SSH key to use for pushing changes",
+        "mask": true
+      },
+      "target_branch": {
+        "type": "string",
+        "description": "GitHub target branch",
+        "default": "gh-pages"
+      },
+      "temporary_base": {
+        "type": "string",
+        "description": "Temporary directory to pull gh-pages branch",
+        "default": ".tmp"
+      },
+      "upstream_name": {
+        "type": "string",
+        "description": "GitHub upstream target",
+        "default": "origin"
+      },
+      "username": {
+        "type": "string",
+        "description": "GitHub username for pushing changes",
+        "required": true
+      }
+    }
+  }
+}

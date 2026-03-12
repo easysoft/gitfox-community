@@ -1,0 +1,107 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "cache",
+  "spec": {
+    "name": "Drone Cache",
+    "description": "A Drone plugin for caching current workspace files between builds to reduce your build times. `drone-cache` is a small CLI program, written in Go without any external OS dependencies (such as tar, etc).",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "meltwater/drone-cache",
+        "envs": {
+          "PLUGIN_ACCESS-KEY": "${{ inputs.access-key }}",
+          "PLUGIN_ACL": "${{ inputs.acl }}",
+          "PLUGIN_ARCHIVE-FORMAT": "${{ inputs.archive-format }}",
+          "PLUGIN_BACKEND": "${{ inputs.backend }}",
+          "PLUGIN_BUCKET": "${{ inputs.bucket }}",
+          "PLUGIN_CACHE-KEY": "${{ inputs.cache-key }}",
+          "PLUGIN_DEBUG": "${{ inputs.debug }}",
+          "PLUGIN_ENCRYPTION": "${{ inputs.encryption }}",
+          "PLUGIN_ENDPOINT": "${{ inputs.endpoint }}",
+          "PLUGIN_FILESYSTEM-CACHE-ROUTE": "${{ inputs.filesystem-cache-route }}",
+          "PLUGIN_MOUNT": "${{ inputs.mount }}",
+          "PLUGIN_PATH-STYLE": "${{ inputs.path-style }}",
+          "PLUGIN_REBUILD": "${{ inputs.rebuild }}",
+          "PLUGIN_REGION": "${{ inputs.region }}",
+          "PLUGIN_RESTORE": "${{ inputs.restore }}",
+          "PLUGIN_SECRET-KEY": "${{ inputs.secret-key }}"
+        }
+      }
+    },
+    "inputs": {
+      "access-key": {
+        "type": "string",
+        "description": "AWS access key.",
+        "mask": true
+      },
+      "acl": {
+        "type": "string",
+        "description": "upload files with acl (private, public-read, ...).",
+        "default": "private"
+      },
+      "archive-format": {
+        "type": "string",
+        "description": "archive format to use for the cache directories (tar, gzip).",
+        "default": "tar"
+      },
+      "backend": {
+        "type": "string",
+        "description": "cache backend to use in plugin (s3, filesystem).",
+        "default": "s3"
+      },
+      "bucket": {
+        "type": "string",
+        "description": "AWS bucket name."
+      },
+      "cache-key": {
+        "type": "string",
+        "description": "cache key to use for the cache directories."
+      },
+      "debug": {
+        "type": "boolean",
+        "description": "whether to enable debug mode."
+      },
+      "encryption": {
+        "type": "string",
+        "description": "server-side encryption algorithm (AES256, aws:kms).",
+        "default": "none"
+      },
+      "endpoint": {
+        "type": "string",
+        "description": "endpoint for the s3 connection."
+      },
+      "filesystem-cache-route": {
+        "type": "string",
+        "description": "local filesystem root directory for the filesystem cache.",
+        "default": "/tmp/cache"
+      },
+      "mount": {
+        "type": "array",
+        "description": "cache directories, an array of folders to cache.",
+        "default": "[]"
+      },
+      "path-style": {
+        "type": "boolean",
+        "description": "use path style for bucket paths. (true for minio, false for aws)."
+      },
+      "rebuild": {
+        "type": "boolean",
+        "description": "whether to rebuild the cache directories."
+      },
+      "region": {
+        "type": "string",
+        "description": "AWS bucket region."
+      },
+      "restore": {
+        "type": "boolean",
+        "description": "whether to restore the cache directories."
+      },
+      "secret-key": {
+        "type": "string",
+        "description": "AWS secret key.",
+        "mask": true
+      }
+    }
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "circleci",
+  "spec": {
+    "name": "CircleCI",
+    "description": "The CircleCI plugin allows you to trigger builds automatically.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "wesleimp/drone-circleci",
+        "envs": {
+          "PLUGIN_BRANCH": "${{ inputs.branch }}",
+          "PLUGIN_REPO": "${{ inputs.repo }}",
+          "PLUGIN_TOKEN": "${{ inputs.token }}",
+          "PLUGIN_USER": "${{ inputs.user }}"
+        }
+      }
+    },
+    "inputs": {
+      "branch": {
+        "type": "string",
+        "description": "CircleCI branch.",
+        "default": "default"
+      },
+      "repo": {
+        "type": "string",
+        "description": "CircleCI repo."
+      },
+      "token": {
+        "type": "string",
+        "description": "CircleCI user token.",
+        "mask": true
+      },
+      "user": {
+        "type": "string",
+        "description": "CircleCI user.",
+        "mask": true
+      }
+    }
+  }
+}

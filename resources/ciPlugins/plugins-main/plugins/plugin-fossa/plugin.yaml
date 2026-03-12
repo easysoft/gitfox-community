@@ -1,0 +1,31 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "plugin-fossa",
+  "spec": {
+    "name": "fossa",
+    "description": "By default, this plugin will run the analyze command per the generic CI documentation for FOSSA.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "rancher/drone-fossa",
+        "envs": {
+          "PLUGIN_API_KEY": "${{ inputs.api_key }}",
+          "PLUGIN_DEBUG": "${{ inputs.debug }}"
+        }
+      }
+    },
+    "inputs": {
+      "api_key": {
+        "type": "string",
+        "description": "FOSSA API key.",
+        "required": true,
+        "mask": true
+      },
+      "debug": {
+        "type": "boolean",
+        "description": "Enable debug mode."
+      }
+    }
+  }
+}

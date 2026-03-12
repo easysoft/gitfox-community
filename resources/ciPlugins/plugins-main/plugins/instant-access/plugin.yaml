@@ -1,0 +1,37 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "instant-access",
+  "spec": {
+    "name": "InstantAccess(即时达)",
+    "description": "The InstantAccess plugin posts build status messages to your account.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "erguotou/drone-instant-access",
+        "envs": {
+          "PLUGIN_BODY": "${{ inputs.body }}",
+          "PLUGIN_CHANNEL": "${{ inputs.channel }}",
+          "PLUGIN_HEAD": "${{ inputs.head }}"
+        }
+      }
+    },
+    "inputs": {
+      "body": {
+        "type": "string",
+        "description": "Notification body, supports markdown",
+        "required": true
+      },
+      "channel": {
+        "type": "string",
+        "description": "The InstantAccess(即时达) channel key, get key by http://push.ijingniu.cn/push/channel/",
+        "required": true
+      },
+      "head": {
+        "type": "string",
+        "description": "Notification title",
+        "required": true
+      }
+    }
+  }
+}

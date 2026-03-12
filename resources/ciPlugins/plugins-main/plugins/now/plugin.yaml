@@ -1,0 +1,72 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "now",
+  "spec": {
+    "name": "Now",
+    "description": "The Now plugin deploy your build to now.sh.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "lucap/drone-now",
+        "envs": {
+          "PLUGIN_ALIAS": "${{ inputs.alias }}",
+          "PLUGIN_CLEANUP": "${{ inputs.cleanup }}",
+          "PLUGIN_DEPLOY_NAME": "${{ inputs.deploy_name }}",
+          "PLUGIN_DIRECTORY": "${{ inputs.directory }}",
+          "PLUGIN_NOW_TOKEN": "${{ inputs.now_token }}",
+          "PLUGIN_RULES_DOMAIN": "${{ inputs.rules_domain }}",
+          "PLUGIN_RULES_FILE": "${{ inputs.rules_file }}",
+          "PLUGIN_SCALE": "${{ inputs.scale }}",
+          "PLUGIN_TEAM": "${{ inputs.team }}",
+          "PLUGIN_TYPE": "${{ inputs.type }}"
+        }
+      }
+    },
+    "inputs": {
+      "alias": {
+        "type": "string",
+        "description": "Target now.sh subdomain or domain"
+      },
+      "cleanup": {
+        "type": "boolean",
+        "description": "Equivalent to now rm --safe --yes $alias"
+      },
+      "deploy_name": {
+        "type": "string",
+        "description": "The deployment name",
+        "default": "working directory"
+      },
+      "directory": {
+        "type": "string",
+        "description": "The directory to deploy"
+      },
+      "now_token": {
+        "type": "string",
+        "description": "The now.sh token",
+        "required": true,
+        "mask": true
+      },
+      "rules_domain": {
+        "type": "string",
+        "description": "Your domain"
+      },
+      "rules_file": {
+        "type": "string",
+        "description": "File that contain set of rules"
+      },
+      "scale": {
+        "type": "string",
+        "description": "Min and Max scaling values"
+      },
+      "team": {
+        "type": "string",
+        "description": "Set the team scope"
+      },
+      "type": {
+        "type": "string",
+        "description": "Deployment type (docker, npm, static)."
+      }
+    }
+  }
+}

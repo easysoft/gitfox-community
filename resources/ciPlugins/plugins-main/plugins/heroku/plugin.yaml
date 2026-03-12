@@ -1,0 +1,50 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "heroku",
+  "spec": {
+    "name": "Heroku",
+    "description": "The heroku plugin can be used to build and publish images to the Heroku container registry.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "plugins/heroku",
+        "envs": {
+          "PLUGIN_API_KEY": "${{ inputs.api_key }}",
+          "PLUGIN_APP": "${{ inputs.app }}",
+          "PLUGIN_EMAIL": "${{ inputs.email }}",
+          "PLUGIN_PROCESS_TYPE": "${{ inputs.process_type }}",
+          "PLUGIN_REGISTRY": "${{ inputs.registry }}"
+        }
+      }
+    },
+    "inputs": {
+      "api_key": {
+        "type": "string",
+        "description": "heroku api key",
+        "required": true,
+        "mask": true
+      },
+      "app": {
+        "type": "string",
+        "description": "app name",
+        "required": true
+      },
+      "email": {
+        "type": "string",
+        "description": "auth email",
+        "required": true
+      },
+      "process_type": {
+        "type": "string",
+        "description": "process type",
+        "required": true
+      },
+      "registry": {
+        "type": "string",
+        "description": "authenticates to this registry",
+        "default": "registry.heroku.com"
+      }
+    }
+  }
+}

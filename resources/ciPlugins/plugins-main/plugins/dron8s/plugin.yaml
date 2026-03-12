@@ -1,0 +1,30 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "dron8s",
+  "spec": {
+    "name": "Dron8s",
+    "description": "Yet another Kubernetes plugin for Drone using dynamic Server Side Apply to achieve `kubectl apply -f multi-configs.yaml` parity for your CI-CD pipelines.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "bh90210/dron8s",
+        "envs": {
+          "PLUGIN_KUBECONFIG": "${{ inputs.kubeconfig }}",
+          "PLUGIN_YAML": "${{ inputs.yaml }}"
+        }
+      }
+    },
+    "inputs": {
+      "kubeconfig": {
+        "type": "string",
+        "description": "Needed for out-of-cluster use. If not present plugin will default to in-cluster configuration. You can find kubeconfig under ~/.kube/config"
+      },
+      "yaml": {
+        "type": "string",
+        "description": "Yaml containing configs",
+        "required": true
+      }
+    }
+  }
+}

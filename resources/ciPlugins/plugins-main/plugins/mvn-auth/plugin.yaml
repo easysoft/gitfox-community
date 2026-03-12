@@ -1,0 +1,42 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "mvn-auth",
+  "spec": {
+    "name": "Maven Auth",
+    "description": "The Maven Auth plugin can be used for generating the settings.xml with server authentication for a Maven repository. Please note that dependencies are saved in the .m2 directory.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "robertstettner/drone-mvn-auth",
+        "envs": {
+          "PLUGIN_ACTIVE_PROFILES": "${{ inputs.active_profiles }}",
+          "PLUGIN_DEBUG": "${{ inputs.debug }}",
+          "PLUGIN_PROFILES": "${{ inputs.profiles }}",
+          "PLUGIN_SERVERS": "${{ inputs.servers }}"
+        }
+      }
+    },
+    "inputs": {
+      "active_profiles": {
+        "type": "array",
+        "description": "The list of active profiles",
+        "default": "[]"
+      },
+      "debug": {
+        "type": "boolean",
+        "description": "Enable debug mode"
+      },
+      "profiles": {
+        "type": "array",
+        "description": "The list of profiles",
+        "default": "[]"
+      },
+      "servers": {
+        "type": "array",
+        "description": "The list of servers",
+        "default": "[]"
+      }
+    }
+  }
+}

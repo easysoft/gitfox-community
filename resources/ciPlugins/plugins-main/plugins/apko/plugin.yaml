@@ -1,0 +1,84 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "apko",
+  "spec": {
+    "name": "APKO",
+    "description": "Plugin to build OCI images from APK packages without Dockerfile. Learn more about apko at https://github.com/chainguard-dev/apko.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "https://hub.docker.com/repository/docker/kameshsampath/apko-drone-plugin",
+        "envs": {
+          "PLUGIN_ARCHS": "${{ inputs.archs }}",
+          "PLUGIN_AWS_ACCESS_KEY_ID": "${{ inputs.aws_access_key_id }}",
+          "PLUGIN_AWS_SECRET_ACCESS_KEY": "${{ inputs.aws_secret_access_key }}",
+          "PLUGIN_BUILD_OUTPUT_DIR": "${{ inputs.build_output_dir }}",
+          "PLUGIN_CONFIG_FILE": "${{ inputs.config_file }}",
+          "PLUGIN_GOOGLE_APPLICATION_CREDENTIALS": "${{ inputs.google_application_credentials }}",
+          "PLUGIN_IMAGE_REGISTRY_PASSWORD": "${{ inputs.image_registry_password }}",
+          "PLUGIN_IMAGE_REGISTRY_USERNAME": "${{ inputs.image_registry_username }}",
+          "PLUGIN_IMAGE_REPO": "${{ inputs.image_repo }}",
+          "PLUGIN_INSECURE": "${{ inputs.insecure }}",
+          "PLUGIN_PUBLISH": "${{ inputs.publish }}"
+        }
+      }
+    },
+    "inputs": {
+      "archs": {
+        "type": "array",
+        "description": "The \"linux\" architecture for which the images will be built. Defaults \"$(uname -m)\". Valid values are: \"amd64\", \"arm64\".",
+        "default": "$(uname -m)"
+      },
+      "aws_access_key_id": {
+        "type": "string",
+        "description": "The AWS \"AWS_ACCESS_KEY_ID\" that will be used to authenticate \"image_repo\". Valid only if \"publish is true\" and \"image_repo\" is a ECR repo",
+        "mask": true
+      },
+      "aws_secret_access_key": {
+        "type": "string",
+        "description": "The AWS \"AWS_SECRET_ACCESS_KEY\" that will be used to authenticate \"image_repo\". Valid only if \"publish is true\" and \"image_repo\" is a ECR repo",
+        "mask": true
+      },
+      "build_output_dir": {
+        "type": "string",
+        "description": "The output directory relative to `config_file` where the build artifacts will be generated.",
+        "default": "dist"
+      },
+      "config_file": {
+        "type": "string",
+        "description": "The apko configuration YAML file, a path relative to drone pipeline. https://github.com/chainguard-dev/apko/blob/main/docs/apko_file.md\">",
+        "required": true
+      },
+      "google_application_credentials": {
+        "type": "string",
+        "description": "The base64 encoded Google application credentials i.e. SA key.json. This parameter is useful only when your \"image_repo\" is [Google Artifact registry](https://cloud.google.com/artifact-registry/docs). NOTE: Use GNU base64 when encoding key.json e.g using jq tool `cat \"$GOOGLE_APPLICATION_CREDENTIALS\" | jq -r -c . | gbase64 --wrap=0 | pbcopy`",
+        "mask": true
+      },
+      "image_registry_password": {
+        "type": "string",
+        "description": "The user password that will be used to push the image to `image_repo`. Applicable when the `image_repo` is not GAR, ECR.",
+        "mask": true
+      },
+      "image_registry_username": {
+        "type": "string",
+        "description": "The user name that will be used to push the image to `image_repo`. Applicable when the `image_repo` is not GAR, ECR.",
+        "mask": true
+      },
+      "image_repo": {
+        "type": "string",
+        "description": "The fully qualified image repository where the built OCI image will be pushed. e.g. quay.io/kameshsampath/my-app:1.0.0",
+        "required": true,
+        "mask": true
+      },
+      "insecure": {
+        "type": "boolean",
+        "description": "Push to insecure registry."
+      },
+      "publish": {
+        "type": "boolean",
+        "description": "Whether to publish the image to \"image_repo\". Defaults to \"false\" which will just build the image tarball in \"$PROJECT_HOME/dist\" folder."
+      }
+    }
+  }
+}

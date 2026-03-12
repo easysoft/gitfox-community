@@ -1,0 +1,38 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "github-changelog-generator",
+  "spec": {
+    "name": "Github-changelog-generator",
+    "description": "This plugin can be used to create a changelog file based on GitHub tags, it will not auto-push it into the repo but rather create a changelog file for you to upload into your desired location via other Drone plugins.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "naorlivne/drone-github-changelog-generator",
+        "envs": {
+          "PLUGIN_GITHUB_PROJECT": "${{ inputs.github_project }}",
+          "PLUGIN_GITHUB_USER": "${{ inputs.github_user }}",
+          "PLUGIN_OUTPUT_PATH": "${{ inputs.output_path }}"
+        }
+      }
+    },
+    "inputs": {
+      "github_project": {
+        "type": "string",
+        "description": "Github project name",
+        "required": true
+      },
+      "github_user": {
+        "type": "string",
+        "description": "Github username",
+        "required": true
+      },
+      "output_path": {
+        "type": "string",
+        "description": "The changelog file path to be created in the current working directory (repo root by default)",
+        "default": "CHANGELOG.md",
+        "required": true
+      }
+    }
+  }
+}

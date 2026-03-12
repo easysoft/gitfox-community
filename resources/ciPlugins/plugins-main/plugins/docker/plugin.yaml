@@ -1,0 +1,223 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "docker",
+  "spec": {
+    "name": "Docker",
+    "description": "The Docker plugin can be used to build and publish images to the Docker\nregistry.\n",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "plugins/docker",
+        "envs": {
+          "PLUGIN_ADD_HOST": "${{ inputs.add_host }}",
+          "PLUGIN_AUTO_TAG": "${{ inputs.auto_tag }}",
+          "PLUGIN_AUTO_TAG_SUFFIX": "${{ inputs.auto_tag_suffix }}",
+          "PLUGIN_BIP": "${{ inputs.bip }}",
+          "PLUGIN_BUILD_ARGS": "${{ inputs.build_args }}",
+          "PLUGIN_BUILD_ARGS_FROM_ENV": "${{ inputs.build_args_from_env }}",
+          "PLUGIN_CACHE_FROM": "${{ inputs.cache_from }}",
+          "PLUGIN_COMPRESS": "${{ inputs.compress }}",
+          "PLUGIN_CONTEXT": "${{ inputs.context }}",
+          "PLUGIN_CUSTOM_DNS": "${{ inputs.custom_dns }}",
+          "PLUGIN_CUSTOM_DNS_SEARCH": "${{ inputs.custom_dns_search }}",
+          "PLUGIN_CUSTOM_LABELS": "${{ inputs.custom_labels }}",
+          "PLUGIN_DAEMON_OFF": "${{ inputs.daemon_off }}",
+          "PLUGIN_DEBUG": "${{ inputs.debug }}",
+          "PLUGIN_DOCKERFILE": "${{ inputs.dockerfile }}",
+          "PLUGIN_DRY_RUN": "${{ inputs.dry_run }}",
+          "PLUGIN_EMAIL": "${{ inputs.email }}",
+          "PLUGIN_EXPERIMENTAL": "${{ inputs.experimental }}",
+          "PLUGIN_FORCE_TAG": "${{ inputs.force_tag }}",
+          "PLUGIN_INSECURE": "${{ inputs.insecure }}",
+          "PLUGIN_IPV6": "${{ inputs.ipv6 }}",
+          "PLUGIN_LABEL_SCHEMA": "${{ inputs.label_schema }}",
+          "PLUGIN_LAUNCH_DEBUG": "${{ inputs.launch_debug }}",
+          "PLUGIN_MIRROR": "${{ inputs.mirror }}",
+          "PLUGIN_MTU": "${{ inputs.mtu }}",
+          "PLUGIN_NO_CACHE": "${{ inputs.no_cache }}",
+          "PLUGIN_PASSWORD": "${{ inputs.password }}",
+          "PLUGIN_PLATFORM": "${{ inputs.platform }}",
+          "PLUGIN_PULL_IMAGE": "${{ inputs.pull_image }}",
+          "PLUGIN_PURGE": "${{ inputs.purge }}",
+          "PLUGIN_REGISTRY": "${{ inputs.registry }}",
+          "PLUGIN_REPO": "${{ inputs.repo }}",
+          "PLUGIN_SECRET": "${{ inputs.secret }}",
+          "PLUGIN_SQUASH": "${{ inputs.squash }}",
+          "PLUGIN_SSH-AGENT-KEY": "${{ inputs.ssh-agent-key }}",
+          "PLUGIN_STORAGE_DRIVER": "${{ inputs.storage_driver }}",
+          "PLUGIN_STORAGE_PATH": "${{ inputs.storage_path }}",
+          "PLUGIN_TAGS": "${{ inputs.tags }}",
+          "PLUGIN_TARGET": "${{ inputs.target }}",
+          "PLUGIN_USERNAME": "${{ inputs.username }}"
+        }
+      }
+    },
+    "inputs": {
+      "add_host": {
+        "type": "string",
+        "description": "additional host:IP mapping"
+      },
+      "auto_tag": {
+        "type": "boolean",
+        "description": "generate tag names automatically based on git branch and git tag"
+      },
+      "auto_tag_suffix": {
+        "type": "string",
+        "description": "generate tag names with this suffix"
+      },
+      "bip": {
+        "type": "boolean",
+        "description": "use for pass bridge ip"
+      },
+      "build_args": {
+        "type": "string",
+        "description": "pass custom arguments to docker build"
+      },
+      "build_args_from_env": {
+        "type": "string",
+        "description": "pass the envvars as custom arguments to docker build"
+      },
+      "cache_from": {
+        "type": "string",
+        "description": "images to consider as cache sources"
+      },
+      "compress": {
+        "type": "boolean",
+        "description": "compress the build context using gzip"
+      },
+      "context": {
+        "type": "string",
+        "description": "the context path to use, defaults to root of the git repo"
+      },
+      "custom_dns": {
+        "type": "string",
+        "description": "set custom dns servers for the container"
+      },
+      "custom_dns_search": {
+        "type": "string",
+        "description": "docker daemon dns search domains"
+      },
+      "custom_labels": {
+        "type": "string",
+        "description": "additional k=v labels"
+      },
+      "daemon_off": {
+        "type": "boolean",
+        "description": "don't start the docker daemon"
+      },
+      "debug": {
+        "type": "boolean",
+        "description": "launch the docker daemon in verbose debug mode"
+      },
+      "dockerfile": {
+        "type": "string",
+        "description": "dockerfile to be used",
+        "default": "Dockerfile"
+      },
+      "dry_run": {
+        "type": "string",
+        "description": "boolean if the docker image should not be pushed at the end"
+      },
+      "email": {
+        "type": "string",
+        "description": "docker email"
+      },
+      "experimental": {
+        "type": "boolean",
+        "description": "docker daemon Experimental mode"
+      },
+      "force_tag": {
+        "type": "boolean",
+        "description": "replace existing matched image tags"
+      },
+      "insecure": {
+        "type": "boolean",
+        "description": "enable insecure communication to this registry"
+      },
+      "ipv6": {
+        "type": "string",
+        "description": "docker daemon IPv6 networking"
+      },
+      "label_schema": {
+        "type": "string",
+        "description": "label-schema labels"
+      },
+      "launch_debug": {
+        "type": "boolean",
+        "description": "launch the docker daemon in verbose debug mode"
+      },
+      "mirror": {
+        "type": "string",
+        "description": "use a mirror registry instead of pulling images directly from the central Hub"
+      },
+      "mtu": {
+        "type": "string",
+        "description": "docker daemon custom mtu setting"
+      },
+      "no_cache": {
+        "type": "string",
+        "description": "do not use cached intermediate containers"
+      },
+      "password": {
+        "type": "string",
+        "description": "authenticates with this password",
+        "mask": true
+      },
+      "platform": {
+        "type": "string",
+        "description": "specify the target platform for the build output, (for example, linux/amd64, linux/arm64, or darwin/amd64)."
+      },
+      "pull_image": {
+        "type": "boolean",
+        "description": "force pull base image at build time"
+      },
+      "purge": {
+        "type": "boolean",
+        "description": "boolean if cleanup of the docker image should be done at the end",
+        "default": "true"
+      },
+      "registry": {
+        "type": "string",
+        "description": "authenticates to this registry"
+      },
+      "repo": {
+        "type": "string",
+        "description": "repository name for the image"
+      },
+      "secret": {
+        "type": "string",
+        "description": "Use buildkit to pass secrets to the dockerbuild. Eg `id=mysecret,src=secret-file`"
+      },
+      "squash": {
+        "type": "boolean",
+        "description": "squash the layers at build time"
+      },
+      "ssh-agent-key": {
+        "type": "string",
+        "description": "private key to use for ssh passthrough, see https://docs.docker.com/engine/reference/commandline/buildx_build/#ssh\n",
+        "mask": true
+      },
+      "storage_driver": {
+        "type": "string",
+        "description": "supports `aufs`, `overlay` or `vfs` drivers"
+      },
+      "storage_path": {
+        "type": "string",
+        "description": "docker daemon storage path"
+      },
+      "tags": {
+        "type": "array",
+        "description": "repository tag(s) for the image"
+      },
+      "target": {
+        "type": "string",
+        "description": "the build target to use, must be defined in the docker file"
+      },
+      "username": {
+        "type": "string",
+        "description": "authenticates with this username"
+      }
+    }
+  }
+}

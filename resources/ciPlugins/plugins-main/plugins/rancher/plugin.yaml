@@ -1,0 +1,78 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "rancher",
+  "spec": {
+    "name": "Rancher",
+    "description": "The Rancher plugin can be used to deploy a Docker image to a Rancher environment.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "pelotech/drone-rancher",
+        "envs": {
+          "PLUGIN_ACCESS_KEY": "${{ inputs.access_key }}",
+          "PLUGIN_BATCH_SIZE": "${{ inputs.batch_size }}",
+          "PLUGIN_CONFIRM": "${{ inputs.confirm }}",
+          "PLUGIN_DOCKER_IMAGE": "${{ inputs.docker_image }}",
+          "PLUGIN_INTERVAL_MILLIS": "${{ inputs.interval_millis }}",
+          "PLUGIN_SECRET_KEY": "${{ inputs.secret_key }}",
+          "PLUGIN_SERVICE": "${{ inputs.service }}",
+          "PLUGIN_START_FIRST": "${{ inputs.start_first }}",
+          "PLUGIN_TIMEOUT": "${{ inputs.timeout }}",
+          "PLUGIN_URL": "${{ inputs.url }}"
+        }
+      }
+    },
+    "inputs": {
+      "access_key": {
+        "type": "string",
+        "description": "the access key for the rancher environment",
+        "required": true,
+        "mask": true
+      },
+      "batch_size": {
+        "type": "number",
+        "description": "number of containers to upgrade in one batch"
+      },
+      "confirm": {
+        "type": "boolean",
+        "description": "auto confirm the service upgrade if successful."
+      },
+      "docker_image": {
+        "type": "string",
+        "description": "docker image to use to upgrade the environment",
+        "required": true
+      },
+      "interval_millis": {
+        "type": "number",
+        "description": "interval in milliseconds between upgrades of the containers"
+      },
+      "secret_key": {
+        "type": "string",
+        "description": "the secret key for the rancher environment",
+        "required": true,
+        "mask": true
+      },
+      "service": {
+        "type": "string",
+        "description": "rancher service on that environment to upgrade",
+        "required": true
+      },
+      "start_first": {
+        "type": "boolean",
+        "description": "start new container before stopping old one.",
+        "default": "true"
+      },
+      "timeout": {
+        "type": "number",
+        "description": "the maximum wait time in seconds for the service to upgrade.",
+        "default": "30"
+      },
+      "url": {
+        "type": "string",
+        "description": "the url of the rancher server",
+        "required": true
+      }
+    }
+  }
+}

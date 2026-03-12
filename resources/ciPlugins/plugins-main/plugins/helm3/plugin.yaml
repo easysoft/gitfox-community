@@ -1,0 +1,159 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "helm3",
+  "spec": {
+    "name": "Helm3",
+    "description": "This plugin provides an interface to Helm 3.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "pelotech/drone-helm3",
+        "envs": {
+          "PLUGIN_ADD_REPOS": "${{ inputs.add_repos }}",
+          "PLUGIN_ATOMIC_UPGRADE": "${{ inputs.atomic_upgrade }}",
+          "PLUGIN_CHART": "${{ inputs.chart }}",
+          "PLUGIN_CHART_VERSION": "${{ inputs.chart_version }}",
+          "PLUGIN_CLEANUP_FAILED_UPGRADE": "${{ inputs.cleanup_failed_upgrade }}",
+          "PLUGIN_DEBUG": "${{ inputs.debug }}",
+          "PLUGIN_DRY_RUN": "${{ inputs.dry_run }}",
+          "PLUGIN_FORCE_UPGRADE": "${{ inputs.force_upgrade }}",
+          "PLUGIN_KEEP_HISTORY": "${{ inputs.keep_history }}",
+          "PLUGIN_KUBE_API_SERVER": "${{ inputs.kube_api_server }}",
+          "PLUGIN_KUBE_CERTIFICATE": "${{ inputs.kube_certificate }}",
+          "PLUGIN_KUBE_SERVICE_ACCOUNT": "${{ inputs.kube_service_account }}",
+          "PLUGIN_KUBE_TOKEN": "${{ inputs.kube_token }}",
+          "PLUGIN_LINT_STRICTLY": "${{ inputs.lint_strictly }}",
+          "PLUGIN_MODE": "${{ inputs.mode }}",
+          "PLUGIN_NAMESPACE": "${{ inputs.namespace }}",
+          "PLUGIN_RELEASE": "${{ inputs.release }}",
+          "PLUGIN_REPO_CA_CERTIFICATE": "${{ inputs.repo_ca_certificate }}",
+          "PLUGIN_REPO_CERTIFICATE": "${{ inputs.repo_certificate }}",
+          "PLUGIN_REUSE_VALUES": "${{ inputs.reuse_values }}",
+          "PLUGIN_SKIP_TLS_VERIFY": "${{ inputs.skip_tls_verify }}",
+          "PLUGIN_STRING_VALUES": "${{ inputs.string_values }}",
+          "PLUGIN_TIMEOUT": "${{ inputs.timeout }}",
+          "PLUGIN_UPDATE_DEPENDENCIES": "${{ inputs.update_dependencies }}",
+          "PLUGIN_VALUES": "${{ inputs.values }}",
+          "PLUGIN_VALUES_FILES": "${{ inputs.values_files }}",
+          "PLUGIN_WAIT_FOR_UPGRADE": "${{ inputs.wait_for_upgrade }}"
+        }
+      }
+    },
+    "inputs": {
+      "add_repos": {
+        "type": "array",
+        "description": "Run helm repo add before running the main helm command.",
+        "default": "boolean"
+      },
+      "atomic_upgrade": {
+        "type": "boolean",
+        "description": "Pass --atomic to helm upgrade."
+      },
+      "chart": {
+        "type": "string",
+        "description": "Helm chart to install or lint."
+      },
+      "chart_version": {
+        "type": "string",
+        "description": "Version of the chart to install."
+      },
+      "cleanup_failed_upgrade": {
+        "type": "boolean",
+        "description": "Pass --cleanup-on-fail to helm upgrade."
+      },
+      "debug": {
+        "type": "boolean",
+        "description": "Produce debug output from the plugin and helm itself. Note that this option may expose secrets in the log output."
+      },
+      "dry_run": {
+        "type": "boolean",
+        "description": "Prepare the un/installation, but do not perform it."
+      },
+      "force_upgrade": {
+        "type": "boolean",
+        "description": "Pass --force to helm upgrade."
+      },
+      "keep_history": {
+        "type": "boolean",
+        "description": "Pass --keep-history to helm uninstall."
+      },
+      "kube_api_server": {
+        "type": "string",
+        "description": "Kubernetes api server."
+      },
+      "kube_certificate": {
+        "type": "string",
+        "description": "Base64-encoded TLS certificate, for clusters using a self-signed CA certificate.",
+        "mask": true
+      },
+      "kube_service_account": {
+        "type": "string",
+        "description": "Account name for connecting to the kubernetes api."
+      },
+      "kube_token": {
+        "type": "string",
+        "description": "Kubernetes api token.",
+        "mask": true
+      },
+      "lint_strictly": {
+        "type": "boolean",
+        "description": "Pass --strict to helm lint."
+      },
+      "mode": {
+        "type": "string",
+        "description": "Helm command to run; valid options are upgrade, lint, and uninstall. If not provided, can be inferred from the Drone event."
+      },
+      "namespace": {
+        "type": "string",
+        "description": "Kubernetes namespace for the un/installation."
+      },
+      "release": {
+        "type": "string",
+        "description": "Release name to un/install."
+      },
+      "repo_ca_certificate": {
+        "type": "string",
+        "description": "Base64 encoded TLS certificate for a chart repository certificate authority.",
+        "mask": true
+      },
+      "repo_certificate": {
+        "type": "string",
+        "description": "Base64 encoded TLS certificate for a chart repository.",
+        "mask": true
+      },
+      "reuse_values": {
+        "type": "boolean",
+        "description": "Reuse the values from a previous release."
+      },
+      "skip_tls_verify": {
+        "type": "boolean",
+        "description": "Do not check for a valid certificate when connecting to the kubernetes api."
+      },
+      "string_values": {
+        "type": "string",
+        "description": "Arguments for helm's --set-string flag."
+      },
+      "timeout": {
+        "type": "string",
+        "description": "Timeout for any individual kubernetes operation, formatted as a Golang duration (e.g. \"3m20s\")."
+      },
+      "update_dependencies": {
+        "type": "boolean",
+        "description": "Run helm dependency update before running the main helm command."
+      },
+      "values": {
+        "type": "string",
+        "description": "Arguments for helm's --set flag."
+      },
+      "values_files": {
+        "type": "string",
+        "description": "Arguments for helm's --values flag."
+      },
+      "wait_for_upgrade": {
+        "type": "boolean",
+        "description": "Wait until kubernetes resources are in a ready state before marking the installation successful."
+      }
+    }
+  }
+}

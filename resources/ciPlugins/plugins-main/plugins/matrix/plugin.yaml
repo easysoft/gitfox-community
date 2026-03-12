@@ -1,0 +1,60 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "matrix",
+  "spec": {
+    "name": "Matrix",
+    "description": "This plugin can be used to send build success or failure messages to a Matrix room.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "plugins/matrix",
+        "envs": {
+          "PLUGIN_ACCESSTOKEN": "${{ inputs.accesstoken }}",
+          "PLUGIN_HOMESERVER": "${{ inputs.homeserver }}",
+          "PLUGIN_PASSWORD": "${{ inputs.password }}",
+          "PLUGIN_ROOMID": "${{ inputs.roomid }}",
+          "PLUGIN_TEMPLATE": "${{ inputs.template }}",
+          "PLUGIN_USERID": "${{ inputs.userid }}",
+          "PLUGIN_USERNAME": "${{ inputs.username }}"
+        }
+      }
+    },
+    "inputs": {
+      "accesstoken": {
+        "type": "string",
+        "description": "Matrix access token (use with userid).",
+        "mask": true
+      },
+      "homeserver": {
+        "type": "string",
+        "description": "The Matrix homeserver URL.",
+        "default": "https://matrix.org"
+      },
+      "password": {
+        "type": "string",
+        "description": "Password on homeserver (use with username).",
+        "required": true,
+        "mask": true
+      },
+      "roomid": {
+        "type": "string",
+        "description": "Room ID to send messages (not alias, but ID, and you can skip the !).",
+        "required": true
+      },
+      "template": {
+        "type": "string",
+        "description": "Template to use for message."
+      },
+      "userid": {
+        "type": "string",
+        "description": "Matrix user ID (@user:homeserver.tld)."
+      },
+      "username": {
+        "type": "string",
+        "description": "Username on homeserver.",
+        "required": true
+      }
+    }
+  }
+}

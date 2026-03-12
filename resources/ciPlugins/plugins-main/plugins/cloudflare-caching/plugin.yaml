@@ -1,0 +1,44 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "cloudflare-caching",
+  "spec": {
+    "name": "Cloudflare Caching",
+    "description": "Our Drone plugin enables the ability for your pipeline to interface with Cloudflare's API to purge cache.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "jetrails/drone-cloudflare-caching",
+        "envs": {
+          "PLUGIN_ACTION": "${{ inputs.action }}",
+          "PLUGIN_API_TOKEN": "${{ inputs.api_token }}",
+          "PLUGIN_LIST": "${{ inputs.list }}",
+          "PLUGIN_ZONE_IDENTIFIER": "${{ inputs.zone_identifier }}"
+        }
+      }
+    },
+    "inputs": {
+      "action": {
+        "type": "string",
+        "description": "What type of cache purge, options are purge_everything, purge_hosts, purge_files, purge_tags.",
+        "default": "purge_everything",
+        "required": true
+      },
+      "api_token": {
+        "type": "string",
+        "description": "Cloudflare API token.",
+        "required": true,
+        "mask": true
+      },
+      "list": {
+        "type": "array",
+        "description": "List of values, could be valid hosts, tags, or files depending on action parameter value."
+      },
+      "zone_identifier": {
+        "type": "string",
+        "description": "Cloudflare zone id.",
+        "required": true
+      }
+    }
+  }
+}

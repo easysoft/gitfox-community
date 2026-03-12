@@ -1,0 +1,60 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "npm",
+  "spec": {
+    "name": "NPM",
+    "description": "The NPM plugin can be used to publish libraries to public or private registries.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "plugins/npm",
+        "envs": {
+          "PLUGIN_ACCESS": "${{ inputs.access }}",
+          "PLUGIN_EMAIL": "${{ inputs.email }}",
+          "PLUGIN_FOLDER": "${{ inputs.folder }}",
+          "PLUGIN_PASSWORD": "${{ inputs.password }}",
+          "PLUGIN_REGISTRY": "${{ inputs.registry }}",
+          "PLUGIN_TOKEN": "${{ inputs.token }}",
+          "PLUGIN_USERNAME": "${{ inputs.username }}"
+        }
+      }
+    },
+    "inputs": {
+      "access": {
+        "type": "string",
+        "description": "NPM scoped package access"
+      },
+      "email": {
+        "type": "string",
+        "description": "the email for the account to publish with"
+      },
+      "folder": {
+        "type": "string",
+        "description": "the folder, relative to the workspace, containing the library.",
+        "default": "the workspace directory"
+      },
+      "password": {
+        "type": "string",
+        "description": "the password for the account to publish with",
+        "required": true,
+        "mask": true
+      },
+      "registry": {
+        "type": "string",
+        "description": "the registry to publish to",
+        "default": "https://registry.npmjs.org"
+      },
+      "token": {
+        "type": "string",
+        "description": "the token for the account to publish with",
+        "mask": true
+      },
+      "username": {
+        "type": "string",
+        "description": "the username for the account to publish with",
+        "required": true
+      }
+    }
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "netlify",
+  "spec": {
+    "name": "Netlify",
+    "description": "The netlify plugin deploy your build to netlify.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "lucap/drone-netlify",
+        "envs": {
+          "PLUGIN_DOMAIN": "${{ inputs.domain }}",
+          "PLUGIN_ENVIROMENT": "${{ inputs.enviroment }}",
+          "PLUGIN_PATH": "${{ inputs.path }}",
+          "PLUGIN_SITE_ID": "${{ inputs.site_id }}",
+          "PLUGIN_SITE_NAME": "${{ inputs.site_name }}",
+          "PLUGIN_TOKEN": "${{ inputs.token }}"
+        }
+      }
+    },
+    "inputs": {
+      "domain": {
+        "type": "string",
+        "description": "Set your custom domain."
+      },
+      "enviroment": {
+        "type": "string",
+        "description": "Set the Netlify environment."
+      },
+      "path": {
+        "type": "string",
+        "description": "Path to a folder or zip file to deploy."
+      },
+      "site_id": {
+        "type": "string",
+        "description": "Set the Site ID (or API ID in your Site settings dashboard).",
+        "required": true
+      },
+      "site_name": {
+        "type": "string",
+        "description": "Set the Netlify subdomain."
+      },
+      "token": {
+        "type": "string",
+        "description": "The netlify token",
+        "required": true,
+        "mask": true
+      }
+    }
+  }
+}

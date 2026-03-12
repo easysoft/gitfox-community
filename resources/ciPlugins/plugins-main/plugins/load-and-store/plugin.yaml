@@ -1,0 +1,55 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "load-and-store",
+  "spec": {
+    "name": "Load and store",
+    "description": "This plugin can be used to load and publish images to the Docker registry. It can come in handy when the default Docker plugin cannot be used. A good example usecase is building Docker images with nix which produces a Docker image archive.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "allgreed/drone-load-and-store",
+        "envs": {
+          "PLUGIN_ARCHIVE": "${{ inputs.archive }}",
+          "PLUGIN_DEBUG": "${{ inputs.debug }}",
+          "PLUGIN_PASSWORD": "${{ inputs.password }}",
+          "PLUGIN_REGISTRY": "${{ inputs.registry }}",
+          "PLUGIN_REPO": "${{ inputs.repo }}",
+          "PLUGIN_USERNAME": "${{ inputs.username }}"
+        }
+      }
+    },
+    "inputs": {
+      "archive": {
+        "type": "string",
+        "description": "location of the docker image archive.",
+        "required": true
+      },
+      "debug": {
+        "type": "boolean",
+        "description": "Enable verbose logging"
+      },
+      "password": {
+        "type": "string",
+        "description": "The password to use for the repository",
+        "required": true,
+        "mask": true
+      },
+      "registry": {
+        "type": "string",
+        "description": "authenticates to this registry.",
+        "default": "docker.io"
+      },
+      "repo": {
+        "type": "string",
+        "description": "repository name for the image.",
+        "required": true
+      },
+      "username": {
+        "type": "string",
+        "description": "The username to use for the repository",
+        "required": true
+      }
+    }
+  }
+}

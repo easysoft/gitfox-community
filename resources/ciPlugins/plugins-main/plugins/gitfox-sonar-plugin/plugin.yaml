@@ -1,0 +1,32 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "gitfox-sonar-plugin",
+  "spec": {
+    "name": "SonarQube",
+    "description": "gitfox sonar plugin.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "hub.zentao.net/ci/gitfox-sonar-plugin",
+        "envs": {
+          "PLUGIN_SONAR_HOST": "${{ inputs.sonar_host }}",
+          "PLUGIN_SONAR_TOKEN": "${{ inputs.sonar_token }}"
+        }
+      }
+    },
+    "inputs": {
+      "sonar_host": {
+        "type": "string",
+        "description": "Hostname of the sonar server.",
+        "required": true
+      },
+      "sonar_token": {
+        "type": "string",
+        "description": "Access token.",
+        "required": true,
+        "mask": true
+      }
+    }
+  }
+}

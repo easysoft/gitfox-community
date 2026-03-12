@@ -1,0 +1,47 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "nomad",
+  "spec": {
+    "name": "Nomad",
+    "description": "Use the Nomad plugin to deploy services from a template. You will need to supply Drone with the nomad template file.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "loq9/drone-nomad",
+        "envs": {
+          "PLUGIN_ADDR": "${{ inputs.addr }}",
+          "PLUGIN_NAMESPACE": "${{ inputs.namespace }}",
+          "PLUGIN_REGION": "${{ inputs.region }}",
+          "PLUGIN_TEMPLATE": "${{ inputs.template }}",
+          "PLUGIN_TOKEN": "${{ inputs.token }}"
+        }
+      }
+    },
+    "inputs": {
+      "addr": {
+        "type": "string",
+        "description": "The Nomad server address",
+        "required": true
+      },
+      "namespace": {
+        "type": "string",
+        "description": "Nomad namespace"
+      },
+      "region": {
+        "type": "string",
+        "description": "Nomad region"
+      },
+      "template": {
+        "type": "string",
+        "description": "Template for Nomad",
+        "required": true
+      },
+      "token": {
+        "type": "string",
+        "description": "Nomad token",
+        "mask": true
+      }
+    }
+  }
+}

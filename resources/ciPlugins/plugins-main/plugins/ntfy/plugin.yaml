@@ -1,0 +1,58 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "ntfy",
+  "spec": {
+    "name": "Ntfy",
+    "description": "The Ntfy.sh plugin posts build status messages to your selected Ntfy server.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "parrazam/drone-ntfy",
+        "envs": {
+          "PLUGIN_PASSWORD": "${{ inputs.password }}",
+          "PLUGIN_PRIORITY": "${{ inputs.priority }}",
+          "PLUGIN_TAGS": "${{ inputs.tags }}",
+          "PLUGIN_TOKEN": "${{ inputs.token }}",
+          "PLUGIN_TOPIC": "${{ inputs.topic }}",
+          "PLUGIN_URL": "${{ inputs.url }}",
+          "PLUGIN_USERNAME": "${{ inputs.username }}"
+        }
+      }
+    },
+    "inputs": {
+      "password": {
+        "type": "string",
+        "description": "Password for username",
+        "mask": true
+      },
+      "priority": {
+        "type": "string",
+        "description": "Priority of the notification. Values can be [min, low, default, high, max]",
+        "default": "default"
+      },
+      "tags": {
+        "type": "string",
+        "description": "Custom tags of the notification."
+      },
+      "token": {
+        "type": "string",
+        "description": "Token to publish/subscribe, instead to use username/password",
+        "mask": true
+      },
+      "topic": {
+        "type": "string",
+        "description": "Topic to publish message",
+        "required": true
+      },
+      "url": {
+        "type": "string",
+        "description": "Ntfy server. If empty, default one will be https://ntfy.sh"
+      },
+      "username": {
+        "type": "string",
+        "description": "Username with publish permissions"
+      }
+    }
+  }
+}

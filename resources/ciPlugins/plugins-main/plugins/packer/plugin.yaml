@@ -1,0 +1,79 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "packer",
+  "spec": {
+    "name": "Packer",
+    "description": "This plugin can build automated machine images with Packer.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "appleboy/drone-packer",
+        "envs": {
+          "PLUGIN_ACTIONS": "${{ inputs.actions }}",
+          "PLUGIN_COLOR": "${{ inputs.color }}",
+          "PLUGIN_DEBUG": "${{ inputs.debug }}",
+          "PLUGIN_EXCEPT": "${{ inputs.except }}",
+          "PLUGIN_FORCE": "${{ inputs.force }}",
+          "PLUGIN_ONLY": "${{ inputs.only }}",
+          "PLUGIN_PARALLEL": "${{ inputs.parallel }}",
+          "PLUGIN_READABLE": "${{ inputs.readable }}",
+          "PLUGIN_SYNTAX_ONLY": "${{ inputs.syntax_only }}",
+          "PLUGIN_TEMPLATE": "${{ inputs.template }}",
+          "PLUGIN_VARS": "${{ inputs.vars }}",
+          "PLUGIN_VAR_FILES": "${{ inputs.var_files }}"
+        }
+      }
+    },
+    "inputs": {
+      "actions": {
+        "type": "array",
+        "description": "a list of actions to have packer perform."
+      },
+      "color": {
+        "type": "boolean",
+        "description": "Disable color output."
+      },
+      "debug": {
+        "type": "boolean",
+        "description": "Debug mode enabled for builds."
+      },
+      "except": {
+        "type": "array",
+        "description": "validate or build all builds other than these."
+      },
+      "force": {
+        "type": "boolean",
+        "description": "Force a build to continue if artifacts exist, deletes existing artifacts."
+      },
+      "only": {
+        "type": "array",
+        "description": "validate or build only the specified builds."
+      },
+      "parallel": {
+        "type": "boolean",
+        "description": "Disable parallelization."
+      },
+      "readable": {
+        "type": "boolean",
+        "description": "Machine-readable output."
+      },
+      "syntax_only": {
+        "type": "boolean",
+        "description": "Only check syntax. Do not verify config of the template."
+      },
+      "template": {
+        "type": "string",
+        "description": "A json file will execute multiple builds in parallel as defined in the template."
+      },
+      "var_files": {
+        "type": "array",
+        "description": "a list of var files to use. Each value is passed as -var-file=."
+      },
+      "vars": {
+        "type": "object",
+        "description": "a map of variables to pass to the Packer build commands. Each value is passed as a <key>=<value> option."
+      }
+    }
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "captains-log",
+  "spec": {
+    "name": "Captains Log",
+    "description": "A Drone plugin that helps organize release information in Slack",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "target/captains-log",
+        "envs": {
+          "PLUGIN_ENTERPRISE_HOST": "${{ inputs.enterprise_host }}",
+          "PLUGIN_GITHUB_OWNER": "${{ inputs.github_owner }}",
+          "PLUGIN_GITHUB_REPO": "${{ inputs.github_repo }}",
+          "PLUGIN_GITHUB_TAG_ID": "${{ inputs.github_tag_id }}",
+          "PLUGIN_JIRA_TEAM_DOMAIN": "${{ inputs.jira_team_domain }}",
+          "PLUGIN_SECRETS": "${{ inputs.secrets }}",
+          "PLUGIN_SLACK_CHANNEL": "${{ inputs.slack_channel }}",
+          "PLUGIN_TEAMS": "${{ inputs.teams }}"
+        }
+      }
+    },
+    "inputs": {
+      "enterprise_host": {
+        "type": "string",
+        "description": "if you use Enterprise Github, this is where you would supply the custom domain."
+      },
+      "github_owner": {
+        "type": "string",
+        "description": "The owner of the GitHub repository",
+        "required": true
+      },
+      "github_repo": {
+        "type": "string",
+        "description": "Target repository name",
+        "required": true
+      },
+      "github_tag_id": {
+        "type": "string",
+        "description": "regex to match on specific tags"
+      },
+      "jira_team_domain": {
+        "type": "string",
+        "description": "namespace of Jira workspace (e.g. `jira.myteamnamespace.com`)",
+        "required": true
+      },
+      "secrets": {
+        "type": "string",
+        "description": "slack and github secrets"
+      },
+      "slack_channel": {
+        "type": "string",
+        "description": "when using the API, you should use slack_channel to specify which room you'd like to post to. When using SLACK_URL you should not specify the room (i.e. slack_channel) because the room is already a part of the webhook."
+      },
+      "teams": {
+        "type": "array",
+        "description": "a list of teams which allows you to organize the output of Captains Log into meaningful chunks."
+      }
+    }
+  }
+}

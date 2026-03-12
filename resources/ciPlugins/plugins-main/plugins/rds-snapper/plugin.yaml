@@ -1,0 +1,62 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "rds-snapper",
+  "spec": {
+    "name": "AWS RDS Snapper",
+    "description": "The rds-snapper plugin cleans up specific RDS instance's snapshots, keeps specified number of copies and creates new snapshots.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "quay.io/honestbee/rds-snapper",
+        "envs": {
+          "PLUGIN_ACTION": "${{ inputs.action }}",
+          "PLUGIN_AWS_ACCESS_KEY": "${{ inputs.aws_access_key }}",
+          "PLUGIN_AWS_REGION": "${{ inputs.aws_region }}",
+          "PLUGIN_AWS_SECRET_KEY": "${{ inputs.aws_secret_key }}",
+          "PLUGIN_DBNAME": "${{ inputs.dbname }}",
+          "PLUGIN_KEEP": "${{ inputs.keep }}",
+          "PLUGIN_SUFFIX": "${{ inputs.suffix }}"
+        }
+      }
+    },
+    "inputs": {
+      "action": {
+        "type": "string",
+        "description": "choose which features to execute (clear|create|export)",
+        "required": true
+      },
+      "aws_access_key": {
+        "type": "string",
+        "description": "AWS access key",
+        "required": true,
+        "mask": true
+      },
+      "aws_region": {
+        "type": "string",
+        "description": "bucket region (us-east-1, eu-west-1, etc)",
+        "required": true
+      },
+      "aws_secret_key": {
+        "type": "string",
+        "description": "AWS secret key",
+        "required": true,
+        "mask": true
+      },
+      "dbname": {
+        "type": "string",
+        "description": "rds instance's name"
+      },
+      "keep": {
+        "type": "number",
+        "description": "number of snapshots to keep",
+        "default": "5"
+      },
+      "suffix": {
+        "type": "string",
+        "description": "snapshot's name suffix.",
+        "default": "randomly generated"
+      }
+    }
+  }
+}

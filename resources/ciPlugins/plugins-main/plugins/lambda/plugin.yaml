@@ -1,0 +1,54 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "lambda",
+  "spec": {
+    "name": "AWS Lambda",
+    "description": "The plugin automatically deployes a serverless function to AWS Lambda from a zip file located in an S3 bucket. This plugin does not handle creating or uploading the zip file.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "omerxx/drone-lambda-plugin",
+        "envs": {
+          "PLUGIN_AWS_ACCESS_KEY_ID": "${{ inputs.aws_access_key_id }}",
+          "PLUGIN_AWS_DEFAULT_REGION": "${{ inputs.aws_default_region }}",
+          "PLUGIN_AWS_SECRET_ACCESS_KEY": "${{ inputs.aws_secret_access_key }}",
+          "PLUGIN_FILE_NAME": "${{ inputs.file_name }}",
+          "PLUGIN_FUNCTION_NAME": "${{ inputs.function_name }}",
+          "PLUGIN_S3_BUCKET": "${{ inputs.s3_bucket }}"
+        }
+      }
+    },
+    "inputs": {
+      "aws_access_key_id": {
+        "type": "string",
+        "description": "The AWS access key ID",
+        "mask": true
+      },
+      "aws_default_region": {
+        "type": "string",
+        "description": "AWS region. This variable overrides the default region of the in-use profile, if set."
+      },
+      "aws_secret_access_key": {
+        "type": "string",
+        "description": "AWS secret key. Access and secret key variables override credentials stored in config files.",
+        "mask": true
+      },
+      "file_name": {
+        "type": "string",
+        "description": "Name of the file in S3. Can be prefixed like my-directory/my-zip-package.zip.",
+        "required": true
+      },
+      "function_name": {
+        "type": "string",
+        "description": "Name of the lambda function as set in AWS.",
+        "required": true
+      },
+      "s3_bucket": {
+        "type": "string",
+        "description": "Name of the S3 bucket in which the zip package for deployment is stored.",
+        "required": true
+      }
+    }
+  }
+}

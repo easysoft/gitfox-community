@@ -1,0 +1,15 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "hg",
+  "spec": {
+    "name": "Mercurial",
+    "description": "The mercurial plugin is used to clone a mercurial repository.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "plugins/hg"
+      }
+    }
+  }
+}

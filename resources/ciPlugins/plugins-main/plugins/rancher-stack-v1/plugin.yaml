@@ -1,0 +1,51 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "rancher-stack-v1",
+  "spec": {
+    "name": "Rancher Stack v1",
+    "description": "A drone.io Rancher Stack plugin to deploy/update an entire Rancher stack (not just a single service) to Rancher v1.6. See Docker Hub for more information.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "dubc/drone-rancher-stack-v1",
+        "envs": {
+          "PLUGIN_ACCESSKEY": "${{ inputs.accesskey }}",
+          "PLUGIN_PULL": "${{ inputs.pull }}",
+          "PLUGIN_SECRETKEY": "${{ inputs.secretkey }}",
+          "PLUGIN_STACK": "${{ inputs.stack }}",
+          "PLUGIN_URL": "${{ inputs.url }}"
+        }
+      }
+    },
+    "inputs": {
+      "accesskey": {
+        "type": "string",
+        "description": "The access key for your rancher environment.",
+        "required": true,
+        "mask": true
+      },
+      "pull": {
+        "type": "boolean",
+        "description": "Makes sure you get the latest plugin version.",
+        "default": "true"
+      },
+      "secretkey": {
+        "type": "string",
+        "description": "The secret key for your rancher environment.",
+        "required": true,
+        "mask": true
+      },
+      "stack": {
+        "type": "string",
+        "description": "This stack must already exist in your rancher environment. E.g app-staging.",
+        "required": true
+      },
+      "url": {
+        "type": "string",
+        "description": "The url where your rancher resides. E.g rancher.domain.com",
+        "required": true
+      }
+    }
+  }
+}

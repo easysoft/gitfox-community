@@ -1,0 +1,48 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "melange",
+  "spec": {
+    "name": "Melange",
+    "description": "Plugin to build apk from source code. Learn more about melange at https://github.com/chainguard-dev/melange.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "https://hub.docker.com/repository/docker/kameshsampath/melange-drone-plugin",
+        "envs": {
+          "PLUGIN_ARCHS": "${{ inputs.archs }}",
+          "PLUGIN_CONFIG_FILE": "${{ inputs.config_file }}",
+          "PLUGIN_ENV_FILE": "${{ inputs.env_file }}",
+          "PLUGIN_OUTPUT_DIR": "${{ inputs.output_dir }}",
+          "PLUGIN_SIGNING_KEY": "${{ inputs.signing_key }}"
+        }
+      }
+    },
+    "inputs": {
+      "archs": {
+        "type": "array",
+        "description": "`386`,`amd64`,`arm64`,`arm/v6`,`arm/v7`,`ppc64le`,`riscv64`,`s390x`",
+        "default": "$(uname -m)"
+      },
+      "config_file": {
+        "type": "string",
+        "description": "The melange configuration YAML file, a path relative to drone pipeline. https://github.com/chainguard-dev/melange/blob/main/docs/BUILD-PROCESS.md#melangeyaml",
+        "required": true
+      },
+      "env_file": {
+        "type": "string",
+        "description": "The environment file that will be preloaded and made available to build environment"
+      },
+      "output_dir": {
+        "type": "string",
+        "description": "The directory where the built packages will be saved",
+        "default": "$DRONE_WORKSPACE/packages"
+      },
+      "signing_key": {
+        "type": "string",
+        "description": "The signing key that will be used to sign the package. If not provided it will be generated and set to `melange.rsa`",
+        "default": "melange.rsa"
+      }
+    }
+  }
+}

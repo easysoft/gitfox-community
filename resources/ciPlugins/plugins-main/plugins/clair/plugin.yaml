@@ -1,0 +1,40 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "clair",
+  "spec": {
+    "name": "Clair",
+    "description": "The Clair plugin submits your docker image to your Clair server to scan your docker image for security vulnerabilities.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "jmccann/drone-clair",
+        "envs": {
+          "PLUGIN_PASSWORD": "${{ inputs.password }}",
+          "PLUGIN_SCAN_IMAGE": "${{ inputs.scan_image }}",
+          "PLUGIN_URL": "${{ inputs.url }}",
+          "PLUGIN_USERNAME": "${{ inputs.username }}"
+        }
+      }
+    },
+    "inputs": {
+      "password": {
+        "type": "string",
+        "description": "Docker Registry password to download the `scan_image` from",
+        "mask": true
+      },
+      "scan_image": {
+        "type": "string",
+        "description": "The docker image to scan.  Supports Docker Hub or private repos."
+      },
+      "url": {
+        "type": "string",
+        "description": "Clair server URL"
+      },
+      "username": {
+        "type": "string",
+        "description": "Docker Registry username to download the `scan_image` from"
+      }
+    }
+  }
+}

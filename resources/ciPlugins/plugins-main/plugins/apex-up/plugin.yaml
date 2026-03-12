@@ -1,0 +1,43 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "apex-up",
+  "spec": {
+    "name": "Apex Up",
+    "description": "This plugin can deploy infinitely scalable serverless apps, apis, and sites in seconds to AWS using apex/up tool.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "appleboy/drone-apex-up",
+        "envs": {
+          "PLUGIN_DIRECTORY": "${{ inputs.directory }}",
+          "PLUGIN_SECRETS": "${{ inputs.secrets }}",
+          "PLUGIN_STAGE": "${{ inputs.stage }}",
+          "PLUGIN_VERBOSE": "${{ inputs.verbose }}"
+        }
+      }
+    },
+    "inputs": {
+      "directory": {
+        "type": "string",
+        "description": "Change working directory."
+      },
+      "secrets": {
+        "type": "array",
+        "description": "AWS access key and secret access key.",
+        "required": true,
+        "mask": true
+      },
+      "stage": {
+        "type": "array",
+        "description": "Target stage names - staging or production.",
+        "required": true
+      },
+      "verbose": {
+        "type": "boolean",
+        "description": "Enable verbose log output.",
+        "default": "true"
+      }
+    }
+  }
+}

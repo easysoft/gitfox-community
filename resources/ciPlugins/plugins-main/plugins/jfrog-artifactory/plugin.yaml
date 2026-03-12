@@ -1,0 +1,81 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "jfrog-artifactory",
+  "spec": {
+    "name": "JFrog Artifactory",
+    "description": "A plugin to upload files to Jfrog artifactory.\n",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "plugins/artifactory",
+        "envs": {
+          "PLUGIN_APIKEY": "${{ inputs.apikey }}",
+          "PLUGIN_FLAT": "${{ inputs.flat }}",
+          "PLUGIN_INSECURE": "${{ inputs.insecure }}",
+          "PLUGIN_PASSWORD": "${{ inputs.password }}",
+          "PLUGIN_PEM_FILE_CONTENTS": "${{ inputs.pem_file_contents }}",
+          "PLUGIN_PEM_FILE_PATH": "${{ inputs.pem_file_path }}",
+          "PLUGIN_RETRIES": "${{ inputs.retries }}",
+          "PLUGIN_SOURCE": "${{ inputs.source }}",
+          "PLUGIN_TARGET": "${{ inputs.target }}",
+          "PLUGIN_URL": "${{ inputs.url }}",
+          "PLUGIN_USERNAME": "${{ inputs.username }}"
+        }
+      }
+    },
+    "inputs": {
+      "apikey": {
+        "type": "string",
+        "description": "key for authentication with artifactory",
+        "mask": true
+      },
+      "flat": {
+        "type": "boolean",
+        "description": "if true, artifacts are downloaded to the exact target path specified and their hierarchy in the source repository is ignored. if false, artifacts are downloaded to the target path in the file system while maintaining their hierarchy in the source repository"
+      },
+      "insecure": {
+        "type": "boolean",
+        "description": "if true, the connection to the source repository is not validated by checking the server certificate. if false, the connection to the source repository is validated by checking the server certificate"
+      },
+      "password": {
+        "type": "string",
+        "description": "password for authentication with artifactory",
+        "mask": true
+      },
+      "pem_file_contents": {
+        "type": "string",
+        "description": "pem file contents for authentication with artifactory, cannot be used in conjunction with insecure",
+        "mask": true
+      },
+      "pem_file_path": {
+        "type": "string",
+        "description": "pem file path for authentication with artifactory, defaults to either \"C:/users/ContainerAdministrator/.jfrog/security/certs/cert.pem\" or \"/root/.jfrog/security/certs/cert.pem\""
+      },
+      "retries": {
+        "type": "number",
+        "description": "number of upload retries",
+        "default": "3"
+      },
+      "source": {
+        "type": "string",
+        "description": "file(s) to upload",
+        "required": true
+      },
+      "target": {
+        "type": "string",
+        "description": "destination of source files in artifactory",
+        "required": true
+      },
+      "url": {
+        "type": "string",
+        "description": "location of the artifactory server",
+        "required": true
+      },
+      "username": {
+        "type": "string",
+        "description": "username for authentication with artifactory"
+      }
+    }
+  }
+}

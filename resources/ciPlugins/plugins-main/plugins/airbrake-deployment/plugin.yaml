@@ -1,0 +1,32 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "airbrake-deployment",
+  "spec": {
+    "name": "airbrake-deployment",
+    "description": "Use the airbrake-deployment plugin to notify Airbrake of deployment in a certain environment.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "dhoeric/drone-airbrake-deployment",
+        "envs": {
+          "PLUGIN_AIRBRAKE_ENVIRONMENT": "${{ inputs.airbrake_environment }}",
+          "PLUGIN_SECRETS": "${{ inputs.secrets }}"
+        }
+      }
+    },
+    "inputs": {
+      "airbrake_environment": {
+        "type": "string",
+        "description": "environment have been deployed in the drone build",
+        "required": true
+      },
+      "secrets": {
+        "type": "array",
+        "description": "project ID of airbrake project & project API key of airbrake project",
+        "required": true,
+        "mask": true
+      }
+    }
+  }
+}

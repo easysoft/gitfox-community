@@ -1,0 +1,42 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "datadog",
+  "spec": {
+    "name": "Datadog",
+    "description": "The plugin can be used to send events and metrics to Datadog from a drone pipeline.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "masci/drone-datadog",
+        "envs": {
+          "PLUGIN_API_KEY": "${{ inputs.api_key }}",
+          "PLUGIN_DRY_RUN": "${{ inputs.dry_run }}",
+          "PLUGIN_EVENTS": "${{ inputs.events }}",
+          "PLUGIN_METRICS": "${{ inputs.metrics }}"
+        }
+      }
+    },
+    "inputs": {
+      "api_key": {
+        "type": "string",
+        "description": "Datadog API key.",
+        "mask": true
+      },
+      "dry_run": {
+        "type": "boolean",
+        "description": "When set to true, the plugin only computes metrics and events without sending anything to the Datadog intake. When the plugin runs in dry mode, it doesn't require an api_key to be set, useful for testing."
+      },
+      "events": {
+        "type": "array",
+        "description": "A list of events to be sent to Datadog. An event must have a title and a text; alert_type defaults to info.",
+        "default": "[]"
+      },
+      "metrics": {
+        "type": "array",
+        "description": "A list of metrics to be sent to Datadog. A metric must have a name and a value; type defaults to gauge; tags and hostname are optional.",
+        "default": "[]"
+      }
+    }
+  }
+}

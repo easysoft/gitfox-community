@@ -1,0 +1,53 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "plugin-kube",
+  "spec": {
+    "name": "Kubernetes",
+    "description": "Updates Kubernetes deployments from templates & configMaps from files. This plugin will either create or update existing resources dependent on their presence. It will wait for deployments before it progresses.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "danielgormly/drone-plugin-kube",
+        "envs": {
+          "PLUGIN_CA": "${{ inputs.ca }}",
+          "PLUGIN_CONFIGMAP_FILE": "${{ inputs.configmap_file }}",
+          "PLUGIN_KUBERNETES_TOKEN": "${{ inputs.kubernetes_token }}",
+          "PLUGIN_OTHER_PARAMETERS": "${{ inputs.Other_parameters }}",
+          "PLUGIN_SERVER": "${{ inputs.server }}",
+          "PLUGIN_TEMPLATE": "${{ inputs.template }}"
+        }
+      }
+    },
+    "inputs": {
+      "Other_parameters": {
+        "type": "string",
+        "description": "Other parameters will be made available for interpolation within yaml templates (upper-case will be converted to lower-case)."
+      },
+      "ca": {
+        "type": "string",
+        "description": "Base-64 encoded string of the K8s CA cert.",
+        "mask": true
+      },
+      "configmap_file": {
+        "type": "string",
+        "description": "path to file containing data to inject in configmap (They configmap key that contains the data will be the filename)."
+      },
+      "kubernetes_token": {
+        "type": "string",
+        "description": "Kubernetes service account token (Not base64 encoded).",
+        "required": true,
+        "mask": true
+      },
+      "server": {
+        "type": "string",
+        "description": "Full url of Kubernetes API endpoint including protocol & port.",
+        "required": true
+      },
+      "template": {
+        "type": "string",
+        "description": "Path to Kubernetes yaml based definition file (Configmap or Deployment)."
+      }
+    }
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "cloudflare-pages",
+  "spec": {
+    "name": "CloudFlare Pages",
+    "description": "The Cloudflare Pages plugin is used to publish static websites to CloudFlare Pages. The following configuration uses the wrangler cli to publish a website.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "mgzamharness/cf-pages-drone-plugin",
+        "envs": {
+          "PLUGIN_BRANCH": "${{ inputs.branch }}",
+          "PLUGIN_CLOUDFLARE_ACCOUNT_ID": "${{ inputs.cloudflare_account_id }}",
+          "PLUGIN_CLOUDFLARE_API_TOKEN": "${{ inputs.cloudflare_api_token }}",
+          "PLUGIN_PATH": "${{ inputs.path }}",
+          "PLUGIN_PROJECT_NAME": "${{ inputs.project_name }}",
+          "PLUGIN_REPO_URL": "${{ inputs.repo_url }}"
+        }
+      }
+    },
+    "inputs": {
+      "branch": {
+        "type": "string",
+        "description": "Cloudflare target branch",
+        "default": "main",
+        "required": true
+      },
+      "cloudflare_account_id": {
+        "type": "string",
+        "description": "CloudFlare Account ID",
+        "required": true,
+        "mask": true
+      },
+      "cloudflare_api_token": {
+        "type": "string",
+        "description": "CloudFlare API Token for authentication",
+        "required": true,
+        "mask": true
+      },
+      "path": {
+        "type": "string",
+        "description": "The directory of content to publish",
+        "default": ".",
+        "required": true
+      },
+      "project_name": {
+        "type": "string",
+        "description": "The cloudflare project name",
+        "default": "demo",
+        "required": true
+      },
+      "repo_url": {
+        "type": "string",
+        "description": "GitHub repo URL for code to publish",
+        "required": true
+      }
+    }
+  }
+}

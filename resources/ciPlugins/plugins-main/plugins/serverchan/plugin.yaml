@@ -1,0 +1,37 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "serverchan",
+  "spec": {
+    "name": "ServerChan(Server酱)",
+    "description": "The ServerChan plugin posts build status messages to your account.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "yakumioto/drone-serverchan",
+        "envs": {
+          "PLUGIN_DESP": "${{ inputs.desp }}",
+          "PLUGIN_KEY": "${{ inputs.key }}",
+          "PLUGIN_TEXT": "${{ inputs.text }}"
+        }
+      }
+    },
+    "inputs": {
+      "desp": {
+        "type": "string",
+        "description": "Message description."
+      },
+      "key": {
+        "type": "string",
+        "description": "ServerChan key.",
+        "required": true,
+        "mask": true
+      },
+      "text": {
+        "type": "string",
+        "description": "Notification title",
+        "required": true
+      }
+    }
+  }
+}

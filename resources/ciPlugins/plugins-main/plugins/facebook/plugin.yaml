@@ -1,0 +1,72 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "facebook",
+  "spec": {
+    "name": "Facebook",
+    "description": "The Facebook plugin posts build status messages to your account.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "appleboy/drone-facebook",
+        "envs": {
+          "PLUGIN_APP_SECRET": "${{ inputs.app_secret }}",
+          "PLUGIN_AUDIOS": "${{ inputs.audios }}",
+          "PLUGIN_FB_PAGE_TOKEN": "${{ inputs.fb_page_token }}",
+          "PLUGIN_FB_VERIFY_TOKEN": "${{ inputs.fb_verify_token }}",
+          "PLUGIN_FILES": "${{ inputs.files }}",
+          "PLUGIN_IMAGES": "${{ inputs.images }}",
+          "PLUGIN_MESSAGE": "${{ inputs.message }}",
+          "PLUGIN_TO": "${{ inputs.to }}",
+          "PLUGIN_VIDEOS": "${{ inputs.videos }}"
+        }
+      }
+    },
+    "inputs": {
+      "app_secret": {
+        "type": "string",
+        "description": "Facebook App Secret.",
+        "mask": true
+      },
+      "audios": {
+        "type": "array",
+        "description": "a valid URL to an audio message.",
+        "default": "[]"
+      },
+      "fb_page_token": {
+        "type": "string",
+        "description": "Facebook Page Token.",
+        "mask": true
+      },
+      "fb_verify_token": {
+        "type": "string",
+        "description": "Facebook Verify Token.",
+        "mask": true
+      },
+      "files": {
+        "type": "array",
+        "description": "a valid URL to a file message.",
+        "default": "[]"
+      },
+      "images": {
+        "type": "array",
+        "description": "a valid URL to an image message.",
+        "default": "[]"
+      },
+      "message": {
+        "type": "string",
+        "description": "overwrite the default message template."
+      },
+      "to": {
+        "type": "string",
+        "description": "Facebook User ID.",
+        "mask": true
+      },
+      "videos": {
+        "type": "array",
+        "description": "a valid URL to a video message.",
+        "default": "[]"
+      }
+    }
+  }
+}

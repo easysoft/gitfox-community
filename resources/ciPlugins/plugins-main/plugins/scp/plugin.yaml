@@ -1,0 +1,145 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "scp",
+  "spec": {
+    "name": "SCP",
+    "description": "The SCP plugin copy files and artifacts to target host machine via SSH.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "appleboy/drone-scp",
+        "envs": {
+          "PLUGIN_COMMAND_TIMEOUT": "${{ inputs.command_timeout }}",
+          "PLUGIN_HOST": "${{ inputs.host }}",
+          "PLUGIN_KEY": "${{ inputs.key }}",
+          "PLUGIN_OVERWRITE": "${{ inputs.overwrite }}",
+          "PLUGIN_PASSPHRASE": "${{ inputs.passphrase }}",
+          "PLUGIN_PASSWORD": "${{ inputs.password }}",
+          "PLUGIN_PORT": "${{ inputs.port }}",
+          "PLUGIN_PROXY_HOST": "${{ inputs.proxy_host }}",
+          "PLUGIN_PROXY_KEY": "${{ inputs.proxy_key }}",
+          "PLUGIN_PROXY_KEY_PASSPHRASE": "${{ inputs.proxy_key_passphrase }}",
+          "PLUGIN_PROXY_KEY_PATH": "${{ inputs.proxy_key_path }}",
+          "PLUGIN_PROXY_PASSWORD": "${{ inputs.proxy_password }}",
+          "PLUGIN_PROXY_PORT": "${{ inputs.proxy_port }}",
+          "PLUGIN_PROXY_USERNAME": "${{ inputs.proxy_username }}",
+          "PLUGIN_RM": "${{ inputs.rm }}",
+          "PLUGIN_SOURCE": "${{ inputs.source }}",
+          "PLUGIN_STRIP_COMPONENTS": "${{ inputs.strip_components }}",
+          "PLUGIN_TARGET": "${{ inputs.target }}",
+          "PLUGIN_TAR_EXEC": "${{ inputs.tar_exec }}",
+          "PLUGIN_TAR_TMP_PATH": "${{ inputs.tar_tmp_path }}",
+          "PLUGIN_TIMEOUT": "${{ inputs.timeout }}",
+          "PLUGIN_USERNAME": "${{ inputs.username }}"
+        }
+      }
+    },
+    "inputs": {
+      "command_timeout": {
+        "type": "number",
+        "description": "Timeout in minutes.",
+        "default": "10"
+      },
+      "host": {
+        "type": "string",
+        "description": "Target host machine.",
+        "required": true
+      },
+      "key": {
+        "type": "string",
+        "description": "Target host machine private key.",
+        "mask": true
+      },
+      "overwrite": {
+        "type": "boolean",
+        "description": "Overwrite target file if exists."
+      },
+      "passphrase": {
+        "type": "string",
+        "description": "Target host machine private key passphrase.",
+        "mask": true
+      },
+      "password": {
+        "type": "string",
+        "description": "Target host machine password.",
+        "required": true,
+        "mask": true
+      },
+      "port": {
+        "type": "number",
+        "description": "Target host machine port.",
+        "default": "22"
+      },
+      "proxy_host": {
+        "type": "string",
+        "description": "Proxy host."
+      },
+      "proxy_key": {
+        "type": "string",
+        "description": "Proxy private key.",
+        "mask": true
+      },
+      "proxy_key_passphrase": {
+        "type": "string",
+        "description": "Proxy private key passphrase.",
+        "mask": true
+      },
+      "proxy_key_path": {
+        "type": "string",
+        "description": "Proxy private key path."
+      },
+      "proxy_password": {
+        "type": "string",
+        "description": "Proxy password.",
+        "mask": true
+      },
+      "proxy_port": {
+        "type": "number",
+        "description": "Proxy port.",
+        "default": "0"
+      },
+      "proxy_username": {
+        "type": "string",
+        "description": "Proxy username."
+      },
+      "rm": {
+        "type": "boolean",
+        "description": "Remove source file after copy."
+      },
+      "source": {
+        "type": "string",
+        "description": "Source file path.",
+        "required": true
+      },
+      "strip_components": {
+        "type": "number",
+        "description": "Strip components from the target path.",
+        "default": "0"
+      },
+      "tar_exec": {
+        "type": "string",
+        "description": "Tar command."
+      },
+      "tar_tmp_path": {
+        "type": "string",
+        "description": "Temporary path for tar."
+      },
+      "target": {
+        "type": "string",
+        "description": "Target host machine path.",
+        "required": true
+      },
+      "timeout": {
+        "type": "number",
+        "description": "Timeout in seconds.",
+        "default": "30"
+      },
+      "username": {
+        "type": "string",
+        "description": "Target host machine username.",
+        "required": true
+      }
+    }
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "ecs-deploy",
+  "spec": {
+    "name": "AWS ECS Deploy",
+    "description": "This plugin allows updating an ECS service. The plugin is a wrapper for ecs-deploy, this bash works by taking the current task definition of a service and just changing the image so that all the configuration stays the same.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "joshdvir/drone-ecs-deploy",
+        "envs": {
+          "PLUGIN_AWS_ACCESS_KEY_ID": "${{ inputs.aws_access_key_id }}",
+          "PLUGIN_AWS_REGION": "${{ inputs.aws_region }}",
+          "PLUGIN_AWS_SECRET_ACCESS_KEY": "${{ inputs.aws_secret_access_key }}",
+          "PLUGIN_CLUSTER": "${{ inputs.cluster }}",
+          "PLUGIN_IMAGE_NAME": "${{ inputs.image_name }}",
+          "PLUGIN_MAX": "${{ inputs.max }}",
+          "PLUGIN_MIN": "${{ inputs.min }}",
+          "PLUGIN_SERVICE": "${{ inputs.service }}",
+          "PLUGIN_TIMEOUT": "${{ inputs.timeout }}"
+        }
+      }
+    },
+    "inputs": {
+      "aws_access_key_id": {
+        "type": "string",
+        "description": "AWS access key.",
+        "mask": true
+      },
+      "aws_region": {
+        "type": "string",
+        "description": "AWS region.",
+        "default": "us-east-1"
+      },
+      "aws_secret_access_key": {
+        "type": "string",
+        "description": "AWS secret key.",
+        "mask": true
+      },
+      "cluster": {
+        "type": "string",
+        "description": "ECS cluster."
+      },
+      "image_name": {
+        "type": "string",
+        "description": "Name of Docker image to run, e.g. repo/image:latest."
+      },
+      "max": {
+        "type": "number",
+        "description": "The upper limit on the number of running tasks during a deployment.",
+        "default": "200"
+      },
+      "min": {
+        "type": "number",
+        "description": "The lower limit on the number of running tasks during a deployment.",
+        "default": "100"
+      },
+      "service": {
+        "type": "string",
+        "description": "Name of service to deploy."
+      },
+      "timeout": {
+        "type": "number",
+        "description": "Script monitors ECS Service for new task definition to be running.",
+        "default": "300"
+      }
+    }
+  }
+}

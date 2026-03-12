@@ -1,0 +1,46 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "snyk",
+  "spec": {
+    "name": "Snyk",
+    "description": "A plugin to scan container images for vulnerabilities using Snyk.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "plugins/drone-snyk",
+        "envs": {
+          "PLUGIN_DOCKERFILE": "${{ inputs.dockerfile }}",
+          "PLUGIN_FAIL_ON_ISSUES": "${{ inputs.fail_on_issues }}",
+          "PLUGIN_IMAGE": "${{ inputs.image }}",
+          "PLUGIN_SEVERITY_THRESHOLD": "${{ inputs.severity_threshold }}",
+          "PLUGIN_SNYK": "${{ inputs.snyk }}"
+        }
+      }
+    },
+    "inputs": {
+      "dockerfile": {
+        "type": "string",
+        "description": "Path to the Dockerfile to use."
+      },
+      "fail_on_issues": {
+        "type": "boolean",
+        "description": "Fail build if issues are found."
+      },
+      "image": {
+        "type": "string",
+        "description": "Name of the image to scan.",
+        "required": true
+      },
+      "severity_threshold": {
+        "type": "string",
+        "description": "Severity threshold."
+      },
+      "snyk": {
+        "type": "string",
+        "description": "Snyk token.",
+        "mask": true
+      }
+    }
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "npm-auth",
+  "spec": {
+    "name": "NPM Auth",
+    "description": "This plugin is used to generate an .npmrc file locally to authenticate against any public/private NPM repository.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "robertstettner/drone-npm-auth",
+        "envs": {
+          "PLUGIN_EMAIL": "${{ inputs.email }}",
+          "PLUGIN_PASSWORD": "${{ inputs.password }}",
+          "PLUGIN_PATH": "${{ inputs.path }}",
+          "PLUGIN_REGISTRY": "${{ inputs.registry }}",
+          "PLUGIN_SCOPE": "${{ inputs.scope }}",
+          "PLUGIN_USERNAME": "${{ inputs.username }}"
+        }
+      }
+    },
+    "inputs": {
+      "email": {
+        "type": "string",
+        "description": "The NPM email",
+        "required": true
+      },
+      "password": {
+        "type": "string",
+        "description": "The NPM password",
+        "required": true,
+        "mask": true
+      },
+      "path": {
+        "type": "string",
+        "description": "Output path of the generated .npmrc file.",
+        "default": "./"
+      },
+      "registry": {
+        "type": "string",
+        "description": "The NPM registry",
+        "default": "https://registry.npmjs.org"
+      },
+      "scope": {
+        "type": "string",
+        "description": "The NPM scope"
+      },
+      "username": {
+        "type": "string",
+        "description": "The NPM username",
+        "required": true
+      }
+    }
+  }
+}

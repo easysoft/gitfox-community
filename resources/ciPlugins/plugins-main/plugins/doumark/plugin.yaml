@@ -1,0 +1,49 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "doumark",
+  "spec": {
+    "name": "Doumark",
+    "description": "Drone plugin for Douban(https://douban.com) movie/book/music marked data sync automatically.\n",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "lizheming/drone-doumark",
+        "envs": {
+          "PLUGIN_DIR": "${{ inputs.dir }}",
+          "PLUGIN_FORMAT": "${{ inputs.format }}",
+          "PLUGIN_ID": "${{ inputs.id }}",
+          "PLUGIN_NOTION_TOKEN": "${{ inputs.notion_token }}",
+          "PLUGIN_TYPE": "${{ inputs.type }}"
+        }
+      }
+    },
+    "inputs": {
+      "dir": {
+        "type": "string",
+        "description": "Target where douban data sync to. It's a file path for csv and json format, and a notion database id for notion format.",
+        "required": true
+      },
+      "format": {
+        "type": "string",
+        "description": "Douban data store format, enum value: csv, json, notion\n",
+        "default": "csv"
+      },
+      "id": {
+        "type": "string",
+        "description": "Douban ID",
+        "required": true
+      },
+      "notion_token": {
+        "type": "string",
+        "description": "Notion Integration Token",
+        "mask": true
+      },
+      "type": {
+        "type": "string",
+        "description": "Douban data Type, enum value: movie, book, music\n",
+        "default": "movie"
+      }
+    }
+  }
+}

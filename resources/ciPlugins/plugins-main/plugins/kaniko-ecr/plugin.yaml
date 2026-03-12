@@ -1,0 +1,95 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "kaniko-ecr",
+  "spec": {
+    "name": "Kaniko ECR",
+    "description": "The Kaniko ECR plugin can be used to build and publish images to the Amazon ECR registry, using the Kaniko image builder. Unlike the Docker ECR plugin, you are not required you to run your agent in privileged mode.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "plugins/kaniko-ecr",
+        "envs": {
+          "PLUGIN_ACCESS_KEY": "${{ inputs.access_key }}",
+          "PLUGIN_BUILD_ARGS": "${{ inputs.build_args }}",
+          "PLUGIN_CONTEXT": "${{ inputs.context }}",
+          "PLUGIN_CREATE_REPOSITORY": "${{ inputs.create_repository }}",
+          "PLUGIN_DOCKERFILE": "${{ inputs.dockerfile }}",
+          "PLUGIN_LIFECYCLE_POLICY": "${{ inputs.lifecycle_policy }}",
+          "PLUGIN_REGION": "${{ inputs.region }}",
+          "PLUGIN_REGISTRY": "${{ inputs.registry }}",
+          "PLUGIN_REPO": "${{ inputs.repo }}",
+          "PLUGIN_REPOSITORY_POLICY": "${{ inputs.repository_policy }}",
+          "PLUGIN_SECRET_KEY": "${{ inputs.secret_key }}",
+          "PLUGIN_TAGS": "${{ inputs.tags }}",
+          "PLUGIN_TARGET": "${{ inputs.target }}"
+        }
+      }
+    },
+    "inputs": {
+      "access_key": {
+        "type": "string",
+        "description": "AWS access key.",
+        "required": true,
+        "mask": true
+      },
+      "build_args": {
+        "type": "array",
+        "description": "custom arguments passed to docker build.",
+        "default": "[]"
+      },
+      "context": {
+        "type": "string",
+        "description": "path to the context directory",
+        "default": "git repo root"
+      },
+      "create_repository": {
+        "type": "boolean",
+        "description": "Create repository if it does not exist."
+      },
+      "dockerfile": {
+        "type": "string",
+        "description": "path to the Dockerfile",
+        "default": "Dockerfile"
+      },
+      "lifecycle_policy": {
+        "type": "string",
+        "description": "filename of ecr lifecycle json policy."
+      },
+      "region": {
+        "type": "string",
+        "description": "AWS region.",
+        "default": "us-east-1"
+      },
+      "registry": {
+        "type": "string",
+        "description": "authenticates to this registry",
+        "required": true
+      },
+      "repo": {
+        "type": "string",
+        "description": "repository name for the image",
+        "required": true
+      },
+      "repository_policy": {
+        "type": "string",
+        "description": "filename of ecr repository json policy."
+      },
+      "secret_key": {
+        "type": "string",
+        "description": "AWS secret key.",
+        "required": true,
+        "mask": true
+      },
+      "tags": {
+        "type": "array",
+        "description": "repository tags to apply to the image",
+        "default": "[]"
+      },
+      "target": {
+        "type": "string",
+        "description": "the build target to use, must be defined in the docker file"
+      }
+    }
+  }
+}

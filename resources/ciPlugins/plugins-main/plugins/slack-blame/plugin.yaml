@@ -1,0 +1,76 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "slack-blame",
+  "spec": {
+    "name": "Slack Blame",
+    "description": "Use the Slack Blame plugin to send a message to a Slack channel or through direct message when a build completes. You will need to supply Drone with an access token to the Slack API. You can create a new access token at [https://api.slack.com/web](https://api.slack.com/web).",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "plugins/slack-blame",
+        "envs": {
+          "PLUGIN_CHANNEL": "${{ inputs.channel }}",
+          "PLUGIN_FAILURE_ICON": "${{ inputs.failure_icon }}",
+          "PLUGIN_FAILURE_IMAGE_ATTACHMENTS": "${{ inputs.failure_image_attachments }}",
+          "PLUGIN_FAILURE_TEMPLATE": "${{ inputs.failure_template }}",
+          "PLUGIN_FAILURE_USERNAME": "${{ inputs.failure_username }}",
+          "PLUGIN_MAPPING": "${{ inputs.mapping }}",
+          "PLUGIN_SUCCESS_ICON": "${{ inputs.success_icon }}",
+          "PLUGIN_SUCCESS_IMAGE_ATTACHMENTS": "${{ inputs.success_image_attachments }}",
+          "PLUGIN_SUCCESS_TEMPLATE": "${{ inputs.success_template }}",
+          "PLUGIN_SUCCESS_USERNAME": "${{ inputs.success_username }}",
+          "PLUGIN_TOKEN": "${{ inputs.token }}"
+        }
+      }
+    },
+    "inputs": {
+      "channel": {
+        "type": "string",
+        "description": "Slack channel."
+      },
+      "failure_icon": {
+        "type": "string",
+        "description": "Icon for failed builds."
+      },
+      "failure_image_attachments": {
+        "type": "array",
+        "description": "List of image attachments for failed builds."
+      },
+      "failure_template": {
+        "type": "string",
+        "description": "Template for failed builds."
+      },
+      "failure_username": {
+        "type": "string",
+        "description": "Username for failed builds."
+      },
+      "mapping": {
+        "type": "array",
+        "description": "Mapping of authors to Slack users. Supports environment variable interpolation, e.g. {\"$DRONE_COMMIT_AUTHOR\": \"$SLACK_USER\"}."
+      },
+      "success_icon": {
+        "type": "string",
+        "description": "Icon for successful builds."
+      },
+      "success_image_attachments": {
+        "type": "array",
+        "description": "List of image attachments for successful builds."
+      },
+      "success_template": {
+        "type": "string",
+        "description": "Template for successful builds."
+      },
+      "success_username": {
+        "type": "string",
+        "description": "Username for successful builds."
+      },
+      "token": {
+        "type": "string",
+        "description": "Slack access token.",
+        "required": true,
+        "mask": true
+      }
+    }
+  }
+}

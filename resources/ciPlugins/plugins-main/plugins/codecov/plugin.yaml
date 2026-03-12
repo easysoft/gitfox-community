@@ -1,0 +1,41 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "codecov",
+  "spec": {
+    "name": "Codecov",
+    "description": "This plugin allows for pushing test coverage results to Codecov.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "robertstettner/drone-codecov",
+        "envs": {
+          "PLUGIN_DEBUG": "${{ inputs.debug }}",
+          "PLUGIN_FILES": "${{ inputs.files }}",
+          "PLUGIN_FLAGS": "${{ inputs.flags }}",
+          "PLUGIN_TOKEN": "${{ inputs.token }}"
+        }
+      }
+    },
+    "inputs": {
+      "debug": {
+        "type": "boolean",
+        "description": "enable debug mode."
+      },
+      "files": {
+        "type": "array",
+        "description": "list of target files to upload."
+      },
+      "flags": {
+        "type": "array",
+        "description": "flag the upload to group coverage metrics."
+      },
+      "token": {
+        "type": "string",
+        "description": "Sets the private repository token.",
+        "required": true,
+        "mask": true
+      }
+    }
+  }
+}

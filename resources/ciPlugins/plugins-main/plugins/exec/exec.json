@@ -1,0 +1,17 @@
+{
+  "type": "object",
+  "properties": {
+    "script": {
+      "title": "脚本",
+      "type": "string",
+      "required": true,
+      "props": {
+        "autoHeight": true
+      },
+      "maxWidth": "340px",
+      "widget": "textarea"
+    }
+  },
+  "displayType": "row",
+  "maxWidth": "340px"
+}

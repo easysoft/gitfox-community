@@ -1,0 +1,44 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "grafana-annotation",
+  "spec": {
+    "name": "Grafana Annotation",
+    "description": "The Grafana Annotation plugin can be used to create an annotation in [Grafana](https://grafana.com).",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "fdeschenes/drone-grafana-annotation",
+        "envs": {
+          "PLUGIN_API_KEY": "${{ inputs.api_key }}",
+          "PLUGIN_TAGS": "${{ inputs.tags }}",
+          "PLUGIN_TEXT": "${{ inputs.text }}",
+          "PLUGIN_URL": "${{ inputs.url }}"
+        }
+      }
+    },
+    "inputs": {
+      "api_key": {
+        "type": "string",
+        "description": "The Grafana API key",
+        "required": true,
+        "mask": true
+      },
+      "tags": {
+        "type": "array",
+        "description": "The tags to add to the annotation",
+        "default": "[]"
+      },
+      "text": {
+        "type": "string",
+        "description": "Description",
+        "required": true
+      },
+      "url": {
+        "type": "string",
+        "description": "The Grafana URL",
+        "required": true
+      }
+    }
+  }
+}

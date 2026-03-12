@@ -1,0 +1,26 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "harness-terraform",
+  "spec": {
+    "name": "Harness Terraform",
+    "description": "Terraform plugin to use in the IACM module in Harness",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "plugins/harness_terraform",
+        "envs": {
+          "PLUGIN_COMMAND": "${{ inputs.command }}"
+        }
+      }
+    },
+    "inputs": {
+      "command": {
+        "type": "string",
+        "description": "Commands that indicates what action the plugin will perform. Current supported values are init, plan, apply or destroy",
+        "default": "init",
+        "required": true
+      }
+    }
+  }
+}

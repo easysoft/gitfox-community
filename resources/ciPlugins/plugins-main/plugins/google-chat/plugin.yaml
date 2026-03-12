@@ -1,0 +1,50 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "google-chat",
+  "spec": {
+    "name": "Google Chat",
+    "description": "The Google chat plugin posts build status messages to your company google chat.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "pelotech/drone-google-chat",
+        "envs": {
+          "PLUGIN_CONVERSATION_KEY": "${{ inputs.conversation_key }}",
+          "PLUGIN_KEY": "${{ inputs.key }}",
+          "PLUGIN_TEMPLATE": "${{ inputs.template }}",
+          "PLUGIN_TOKEN": "${{ inputs.token }}",
+          "PLUGIN_WEBHOOK": "${{ inputs.webhook }}"
+        }
+      }
+    },
+    "inputs": {
+      "conversation_key": {
+        "type": "string",
+        "description": "arbitrary key to group messages together.",
+        "required": true
+      },
+      "key": {
+        "type": "string",
+        "description": "key for the webook.",
+        "required": true,
+        "mask": true
+      },
+      "template": {
+        "type": "string",
+        "description": "overwrite the default message template."
+      },
+      "token": {
+        "type": "string",
+        "description": "token for the webook.",
+        "required": true,
+        "mask": true
+      },
+      "webhook": {
+        "type": "string",
+        "description": "incomming webhook in the Bots section of google chat.",
+        "required": true
+      }
+    }
+  }
+}

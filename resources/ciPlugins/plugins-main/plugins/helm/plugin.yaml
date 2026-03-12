@@ -1,0 +1,76 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "helm",
+  "spec": {
+    "name": "Helm",
+    "description": "This plugin allows you to run Kubernetes Helm as part of your pipeline.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "ipedrazas/drone-helm",
+        "envs": {
+          "PLUGIN_API_SERVER": "${{ inputs.api_server }}",
+          "PLUGIN_CHART": "${{ inputs.chart }}",
+          "PLUGIN_DEBUG": "${{ inputs.debug }}",
+          "PLUGIN_KUBERNETES_TOKEN": "${{ inputs.kubernetes_token }}",
+          "PLUGIN_NAMESPACE": "${{ inputs.namespace }}",
+          "PLUGIN_PREFIX": "${{ inputs.prefix }}",
+          "PLUGIN_RELEASE": "${{ inputs.release }}",
+          "PLUGIN_SKIP_TLS_VERIFY": "${{ inputs.skip_tls_verify }}",
+          "PLUGIN_TILLER_NS": "${{ inputs.tiller_ns }}",
+          "PLUGIN_VALUES": "${{ inputs.values }}"
+        }
+      }
+    },
+    "inputs": {
+      "api_server": {
+        "type": "string",
+        "description": "kubernetes api server.",
+        "mask": true
+      },
+      "chart": {
+        "type": "string",
+        "description": "The chart to install",
+        "required": true
+      },
+      "debug": {
+        "type": "boolean",
+        "description": "very verbose output. it will display all the ENVVARS passed to the container. Very handy when debugging secrets."
+      },
+      "kubernetes_token": {
+        "type": "string",
+        "description": "kubernetes token.",
+        "mask": true
+      },
+      "namespace": {
+        "type": "string",
+        "description": "namespace where you want to install your chart. If you don't specify this parameter",
+        "default": "default"
+      },
+      "prefix": {
+        "type": "string",
+        "description": "defines the prefix of all the secrets used in the plugin. If prefix is DEV and your secret should be named DEV_PASSWORD and the values would be ${PASSWORD}. If prefix is PROD the secret should be defined as PROD_PASSWORD. This allows you to define different secrets for different."
+      },
+      "release": {
+        "type": "string",
+        "description": "name used in the helm command to specify the release",
+        "default": "If you don't specify the release, helm will generate a random name and you will not be able to upgrade that release.",
+        "required": true
+      },
+      "skip_tls_verify": {
+        "type": "boolean",
+        "description": "if you create your own SSL certificates, youi will need this flag to be true to avoid having connectivity issues."
+      },
+      "tiller_ns": {
+        "type": "string",
+        "description": "namespace where tiller will be installed.",
+        "default": "kube-system"
+      },
+      "values": {
+        "type": "string",
+        "description": "values injected in helm command. These are the values you want to overwrite."
+      }
+    }
+  }
+}

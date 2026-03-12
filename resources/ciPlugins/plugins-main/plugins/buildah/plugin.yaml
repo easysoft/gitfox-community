@@ -1,0 +1,113 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "buildah",
+  "spec": {
+    "name": "Drone Buildah",
+    "description": "Drone plugin uses Buildah to build and publish Docker images to a container registry. It mimics the Docker plugin.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "plugins/buildah-docker",
+        "envs": {
+          "PLUGIN_ARGS": "${{ inputs.args }}",
+          "PLUGIN_ARGS-FROM-ENV": "${{ inputs.args-from-env }}",
+          "PLUGIN_AUTO-LABEL": "${{ inputs.auto-label }}",
+          "PLUGIN_COMPRESS": "${{ inputs.compress }}",
+          "PLUGIN_CONTEXT": "${{ inputs.context }}",
+          "PLUGIN_CUSTOM-LABELS": "${{ inputs.custom-labels }}",
+          "PLUGIN_DOCKERFILE": "${{ inputs.dockerfile }}",
+          "PLUGIN_DRY-RUN": "${{ inputs.dry-run }}",
+          "PLUGIN_LABEL-SCHEMA": "${{ inputs.label-schema }}",
+          "PLUGIN_LINK": "${{ inputs.link }}",
+          "PLUGIN_PULL-IMAGE": "${{ inputs.pull-image }}",
+          "PLUGIN_QUIET": "${{ inputs.quiet }}",
+          "PLUGIN_REPO": "${{ inputs.repo }}",
+          "PLUGIN_SQUASH": "${{ inputs.squash }}",
+          "PLUGIN_TAGS": "${{ inputs.tags }}",
+          "PLUGIN_TAGS_AUTO": "${{ inputs.tags_auto }}",
+          "PLUGIN_TAGS_SUFFIX": "${{ inputs.tags_suffix }}",
+          "PLUGIN_TARGET": "${{ inputs.target }}"
+        }
+      }
+    },
+    "inputs": {
+      "args": {
+        "type": "string",
+        "description": "additional build args"
+      },
+      "args-from-env": {
+        "type": "string",
+        "description": "additional build args from env"
+      },
+      "auto-label": {
+        "type": "boolean",
+        "description": "auto label image"
+      },
+      "compress": {
+        "type": "boolean",
+        "description": "compress image layers"
+      },
+      "context": {
+        "type": "string",
+        "description": "build context",
+        "default": "."
+      },
+      "custom-labels": {
+        "type": "array",
+        "description": "additional k=v labels",
+        "default": "[]"
+      },
+      "dockerfile": {
+        "type": "string",
+        "description": "dockerfile to use",
+        "default": "Dockerfile"
+      },
+      "dry-run": {
+        "type": "boolean",
+        "description": "dry run disables docker push"
+      },
+      "label-schema": {
+        "type": "string",
+        "description": "label schema to use"
+      },
+      "link": {
+        "type": "string",
+        "description": "link, for example https://example.com/org/repo-name"
+      },
+      "pull-image": {
+        "type": "boolean",
+        "description": "force pull base image at build time"
+      },
+      "quiet": {
+        "type": "boolean",
+        "description": "quiet mode"
+      },
+      "repo": {
+        "type": "string",
+        "description": "docker repository used to push image"
+      },
+      "squash": {
+        "type": "boolean",
+        "description": "squash image layers"
+      },
+      "tags": {
+        "type": "string",
+        "description": "tag used to tage built image, default \"latest\"",
+        "default": "list"
+      },
+      "tags_auto": {
+        "type": "string",
+        "description": "default build tags"
+      },
+      "tags_suffix": {
+        "type": "string",
+        "description": "suffix to append to build tags"
+      },
+      "target": {
+        "type": "string",
+        "description": "build target"
+      }
+    }
+  }
+}

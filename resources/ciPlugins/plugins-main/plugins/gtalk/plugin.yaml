@@ -1,0 +1,52 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "gtalk",
+  "spec": {
+    "name": "GTalk",
+    "description": "The GTalk plugin posts build status messages to your google account.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "appleboy/drone-gtalk",
+        "envs": {
+          "PLUGIN_GOOGLE_HOST": "${{ inputs.google_host }}",
+          "PLUGIN_GOOGLE_PASSWORD": "${{ inputs.google_password }}",
+          "PLUGIN_GOOGLE_USERNAME": "${{ inputs.google_username }}",
+          "PLUGIN_MESSAGE": "${{ inputs.message }}",
+          "PLUGIN_TO": "${{ inputs.to }}"
+        }
+      }
+    },
+    "inputs": {
+      "google_host": {
+        "type": "string",
+        "description": "The Google Talk server hostname",
+        "default": "talk.google.com:443",
+        "required": true
+      },
+      "google_password": {
+        "type": "string",
+        "description": "Google user account password",
+        "required": true,
+        "mask": true
+      },
+      "google_username": {
+        "type": "string",
+        "description": "Google user account",
+        "required": true,
+        "mask": true
+      },
+      "message": {
+        "type": "string",
+        "description": "overwrite the default message",
+        "required": true
+      },
+      "to": {
+        "type": "string",
+        "description": "Google user account",
+        "required": true
+      }
+    }
+  }
+}

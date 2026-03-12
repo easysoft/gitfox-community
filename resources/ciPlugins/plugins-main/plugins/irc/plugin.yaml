@@ -1,0 +1,68 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "irc",
+  "spec": {
+    "name": "IRC",
+    "description": "The IRC plugin can be used to send notifications to an IRC channel.\n",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "plugins/irc/",
+        "envs": {
+          "PLUGIN_CHANNEL": "${{ inputs.channel }}",
+          "PLUGIN_ENABLE-TLS": "${{ inputs.enable-tls }}",
+          "PLUGIN_HOST": "${{ inputs.host }}",
+          "PLUGIN_NICK": "${{ inputs.nick }}",
+          "PLUGIN_PASSWORD": "${{ inputs.password }}",
+          "PLUGIN_PORT": "${{ inputs.port }}",
+          "PLUGIN_RECIPIENTS": "${{ inputs.recipients }}",
+          "PLUGIN_SASL-PASSWORD": "${{ inputs.sasl-password }}",
+          "PLUGIN_USE-SASL": "${{ inputs.use-sasl }}"
+        }
+      }
+    },
+    "inputs": {
+      "channel": {
+        "type": "string",
+        "description": "channel to post message in"
+      },
+      "enable-tls": {
+        "type": "boolean",
+        "description": "enable tls"
+      },
+      "host": {
+        "type": "string",
+        "description": "irc server host"
+      },
+      "nick": {
+        "type": "string",
+        "description": "nickname used by bot",
+        "default": "drone{random-number}"
+      },
+      "password": {
+        "type": "string",
+        "description": "password",
+        "mask": true
+      },
+      "port": {
+        "type": "string",
+        "description": "port",
+        "default": "6667"
+      },
+      "recipients": {
+        "type": "string",
+        "description": "recipient"
+      },
+      "sasl-password": {
+        "type": "string",
+        "description": "sasl-password",
+        "mask": true
+      },
+      "use-sasl": {
+        "type": "boolean",
+        "description": "use use-sasl"
+      }
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "sonar-plugin",
+  "spec": {
+    "name": "SonarQube",
+    "description": "This plugin can scan your code quality and post the analysis report to your SonarQube server. SonarQube (previously called Sonar), is an open source code quality management platform.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "aosapps/drone-sonar-plugin",
+        "envs": {
+          "PLUGIN_SONAR_HOST": "${{ inputs.sonar_host }}",
+          "PLUGIN_SONAR_TOKEN": "${{ inputs.sonar_token }}"
+        }
+      }
+    },
+    "inputs": {
+      "sonar_host": {
+        "type": "string",
+        "description": "Hostname of the sonar server.",
+        "required": true
+      },
+      "sonar_token": {
+        "type": "string",
+        "description": "Access token.",
+        "required": true,
+        "mask": true
+      }
+    }
+  }
+}

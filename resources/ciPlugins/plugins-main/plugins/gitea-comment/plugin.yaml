@@ -1,0 +1,47 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "gitea-comment",
+  "spec": {
+    "name": "Gitea Comment",
+    "description": "Use this plugin to update build status on Gitea Pull Request. This is useful when the complete team does not want to open drone dashboard for each build message.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "tsakidev/giteacomment",
+        "envs": {
+          "PLUGIN_COMMENT": "${{ inputs.comment }}",
+          "PLUGIN_COMMENT_FROM_FILE": "${{ inputs.comment_from_file }}",
+          "PLUGIN_COMMENT_TITLE": "${{ inputs.comment_title }}",
+          "PLUGIN_GITEA_BASE_URL": "${{ inputs.gitea_base_url }}",
+          "PLUGIN_GITEA_TOKEN": "${{ inputs.gitea_token }}"
+        }
+      }
+    },
+    "inputs": {
+      "comment": {
+        "type": "string",
+        "description": "the content of the comment (required if comment_from_file is not used)"
+      },
+      "comment_from_file": {
+        "type": "string",
+        "description": "the file path to read from (required if comment is not used)"
+      },
+      "comment_title": {
+        "type": "string",
+        "description": "the title of the comment"
+      },
+      "gitea_base_url": {
+        "type": "string",
+        "description": "the url of the gitea installation",
+        "required": true
+      },
+      "gitea_token": {
+        "type": "string",
+        "description": "gitea server auth token",
+        "required": true,
+        "mask": true
+      }
+    }
+  }
+}

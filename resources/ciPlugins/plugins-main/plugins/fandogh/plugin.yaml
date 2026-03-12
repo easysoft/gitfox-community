@@ -1,0 +1,46 @@
+{
+  "kind": "plugin",
+  "type": "step",
+  "name": "fandogh",
+  "spec": {
+    "name": "Fandogh",
+    "description": "This plugin can help you to easy delivery your new docker images to fandogh PaaS.",
+    "step": {
+      "type": "script",
+      "spec": {
+        "image": "amirbagh75/fandogh-drone",
+        "envs": {
+          "PLUGIN_MANIFEST_PATH": "${{ inputs.manifest_path }}",
+          "PLUGIN_PASSWORD": "${{ inputs.password }}",
+          "PLUGIN_REGISTRY": "${{ inputs.registry }}",
+          "PLUGIN_USERNAME": "${{ inputs.username }}",
+          "PLUGIN_VERSION": "${{ inputs.version }}"
+        }
+      }
+    },
+    "inputs": {
+      "manifest_path": {
+        "type": "string",
+        "description": "manifest path."
+      },
+      "password": {
+        "type": "string",
+        "description": "Fandogh password.",
+        "mask": true
+      },
+      "registry": {
+        "type": "string",
+        "description": "registry url."
+      },
+      "username": {
+        "type": "string",
+        "description": "Fandogh username.",
+        "mask": true
+      },
+      "version": {
+        "type": "string",
+        "description": "version id."
+      }
+    }
+  }
+}
