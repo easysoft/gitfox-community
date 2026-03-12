@@ -17,6 +17,16 @@ func (s *Store) CreatePipelineContent(ctx context.Context, content *pipelineMode
 	return mapPipelineContentToModel(*dbContent), nil
 }
 
+// UpdatePipelineContent 更新流水线内容
+func (s *Store) UpdatePipelineContent(ctx context.Context, content *pipelineModel.PipelineContent) error {
+	if err := s.db.WithContext(ctx).Where("pipelineID = ?", content.PipelineID).Updates(&PipelineContent{
+		Data: content.Data, // 只更新 data 字段，其他字段保持不变
+	}).Error; err != nil {
+		return database.ProcessSQLErrorf(ctx, err)
+	}
+	return nil
+}
+
 // GetPipelineContentByPipelineID 根据流水线ID获取流水线内容
 func (s *Store) GetPipelineContentByPipelineID(ctx context.Context, pipelineID int64) (*pipelineModel.PipelineContent, error) {
 	var content PipelineContent

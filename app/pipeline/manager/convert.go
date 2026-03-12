@@ -236,6 +236,6 @@ func ConvertFromDroneLine(l *drone.Line) *livelog.Line {
 	return &livelog.Line{
 		Number:    l.Number,
 		Message:   l.Message,
-		Timestamp: l.Timestamp,
+		Timestamp: time.Now().Unix(),
 	}
 }

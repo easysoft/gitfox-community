@@ -46,6 +46,11 @@ func (a *MembershipAuthorizer) Check(ctx context.Context, session *auth.Session,
 		return true, nil
 	}
 
+	// pipeline 权限
+	if account == "pipeline" {
+		return true, nil
+	}
+
 	// 当前只对仓库资源进行权限检查
 	if scope.ResourceType == constant.ResourceTypeRepo {
 		// 从数据库获取 DevOps Token
