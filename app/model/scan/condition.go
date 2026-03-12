@@ -1,9 +1,8 @@
 package scan
 
 import (
-	"time"
-
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
 )
 
 // ScanConditionReqForBatchCreate 批量创建条件请求（trigger-scoped）
@@ -63,8 +62,8 @@ type ScanCondition struct {
 	Unit        constant.ScanRuleUnit     `json:"unit"`
 	Threshold   int64                     `json:"threshold"`
 	CreatedBy   string                    `json:"createdBy,omitempty"`
-	CreatedDate *time.Time                `json:"createdDate"`
+	CreatedDate *datetime.Local           `json:"createdDate"`
 	EditedBy    string                    `json:"editedBy"`
-	EditedDate  *time.Time                `json:"editedDate"`
+	EditedDate  *datetime.Local           `json:"editedDate"`
 	Deleted     bool                      `json:"deleted"`
 }

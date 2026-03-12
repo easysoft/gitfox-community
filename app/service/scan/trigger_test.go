@@ -9,6 +9,7 @@ import (
 	scanModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
 	scanStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/scan"
 	scanStoreMock "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/scan/mock"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
 	pkgErrors "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	"github.com/stretchr/testify/assert"
@@ -118,9 +119,9 @@ func TestScanTriggerServiceCreateAndDelete(t *testing.T) {
 		triggerStore := scanStoreMock.NewMockIScanTrigger(ctrl)
 		planStore := scanStoreMock.NewMockIScanPlan(ctrl)
 		cronScheduler := &fakeCronScheduler{}
-		planStore.EXPECT().GetByRepoIDAndID(gomock.Any(), uint(1), uint(10)).Return(&scanModel.ScanPlan{ID: 10, RepoID: 1}, nil).Times(2)
+		planStore.EXPECT().GetByRepoIDAndID(gomock.Any(), uint(1), uint(10)).Return(&scanModel.ScanPlan{ID: 10, RepoID: 1}, nil)
 		triggerStore.EXPECT().GetByRepoPlanAndID(gomock.Any(), uint(1), uint(10), uint(1)).Return(&scanModel.ScanTrigger{ID: 1, RepoID: 1, PlanID: 10}, nil)
-		triggerStore.EXPECT().List(gomock.Any(), uint(10)).Return([]*scanModel.ScanTrigger{{ID: 1, RepoID: 1, PlanID: 10}, {ID: 2, RepoID: 1, PlanID: 10}}, nil)
+		triggerStore.EXPECT().Count(gomock.Any(), uint(1), uint(10)).Return(int64(2), nil)
 		triggerStore.EXPECT().Delete(gomock.Any(), uint(1)).Return(nil)
 
 		svc := NewScanTriggerService(triggerStore, &fakeRepoStore{}, planStore, cronScheduler)
@@ -246,28 +247,33 @@ func TestScanTriggerServiceCreateAndDelete(t *testing.T) {
 
 		triggerStore := scanStoreMock.NewMockIScanTrigger(ctrl)
 		planStore := scanStoreMock.NewMockIScanPlan(ctrl)
-		planStore.EXPECT().GetByRepoIDAndID(gomock.Any(), uint(1), uint(10)).Return(&scanModel.ScanPlan{ID: 10, RepoID: 1}, nil).Times(2)
+		planStore.EXPECT().GetByRepoIDAndID(gomock.Any(), uint(1), uint(10)).Return(&scanModel.ScanPlan{ID: 10, RepoID: 1}, nil)
 		triggerStore.EXPECT().GetByRepoPlanAndID(gomock.Any(), uint(1), uint(10), uint(1)).Return(&scanModel.ScanTrigger{ID: 1, RepoID: 1, PlanID: 10}, nil)
-		triggerStore.EXPECT().List(gomock.Any(), uint(10)).Return([]*scanModel.ScanTrigger{{ID: 1, RepoID: 1, PlanID: 10}}, nil)
+		triggerStore.EXPECT().Count(gomock.Any(), uint(1), uint(10)).Return(int64(1), nil)
 
 		svc := NewScanTriggerService(triggerStore, &fakeRepoStore{}, planStore, nil)
 		err := svc.Delete(context.Background(), 1, 10, 1)
 		require.Error(t, err)
 	})
 
-	t.Run("list filters by repo", func(t *testing.T) {
+	t.Run("list with pagination", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
 		triggerStore := scanStoreMock.NewMockIScanTrigger(ctrl)
 		planStore := scanStoreMock.NewMockIScanPlan(ctrl)
+		filter := scanModel.ScanTriggerReqFilter{Page: 1, PageSize: 30}
 		planStore.EXPECT().GetByRepoIDAndID(gomock.Any(), uint(1), uint(10)).Return(&scanModel.ScanPlan{ID: 10, RepoID: 1}, nil)
-		triggerStore.EXPECT().List(gomock.Any(), uint(10)).Return([]*scanModel.ScanTrigger{{ID: 1, RepoID: 1}, {ID: 2, RepoID: 2}}, nil)
+		triggerStore.EXPECT().List(gomock.Any(), uint(1), uint(10), filter).Return(&database.PageResult[*scanModel.ScanTrigger]{
+			Data:  []*scanModel.ScanTrigger{{ID: 1, RepoID: 1}},
+			Total: 1,
+		}, nil)
 
 		svc := NewScanTriggerService(triggerStore, &fakeRepoStore{}, planStore, nil)
-		got, err := svc.List(context.Background(), 1, 10)
+		got, err := svc.List(context.Background(), 1, 10, filter)
 		require.NoError(t, err)
-		require.Len(t, got, 1)
-		assert.Equal(t, int64(1), got[0].RepoID)
+		require.Len(t, got.Data, 1)
+		assert.Equal(t, int64(1), got.Data[0].RepoID)
+		assert.Equal(t, int64(1), got.Total)
 	})
 }

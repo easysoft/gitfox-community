@@ -4,6 +4,7 @@ import (
 	"context"
 	"strings"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	scanModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
 	"gorm.io/gorm"
@@ -96,12 +97,40 @@ func (s *ScanPlanStore) List(ctx context.Context, repoID uint, filter scanModel.
 	}
 
 	if filter.LatestTaskResult != "" {
-		// 社区版当前尚未落库 scan task 历史，参考项目的 latest task 过滤暂以空结果兜底，避免误返回未过滤数据。
-		tx = tx.Where("1 = 0")
+		// 按最新任务结果过滤：子查询取每个计划最新任务，匹配 result
+		tx = tx.Where("ops_scan_plans.id IN (?)",
+			s.db.Model(&ScanTask{}).Select("planID").
+				Where("id IN (?)",
+					s.db.Model(&ScanTask{}).Select("MAX(id)").
+						Where("deleted = ?", false).Group("planID"),
+				).Where("result = ?", filter.LatestTaskResult),
+		)
 	}
 	if filter.LatestTaskStatus != "" {
-		// 社区版当前尚未落库 scan task 历史，参考项目的 latest task 过滤暂以空结果兜底，避免误返回未过滤数据。
-		tx = tx.Where("1 = 0")
+		latestTaskSubQ := s.db.Model(&ScanTask{}).Select("MAX(id)").
+			Where("deleted = ?", false).Group("planID")
+		statusQuery := s.db.Table("ops_scan_tasks t").Select("t.planID").
+			Joins("INNER JOIN ops_pipeline_executions e ON t.executionID = e.id").
+			Where("t.id IN (?)", latestTaskSubQ)
+
+		switch constant.ScanTaskStatus(filter.LatestTaskStatus) {
+		case constant.ScanTaskStatusFailed:
+			statusQuery = statusQuery.Where("e.status IN ?", []string{
+				string(constant.CIStatusFailure),
+				string(constant.CIStatusKilled),
+				string(constant.CIStatusError),
+			})
+		case constant.ScanTaskStatusInProgress:
+			statusQuery = statusQuery.Where("e.status NOT IN ?", []string{
+				string(constant.CIStatusSuccess),
+				string(constant.CIStatusFailure),
+				string(constant.CIStatusKilled),
+				string(constant.CIStatusError),
+			})
+		default:
+			statusQuery = statusQuery.Where("e.status = ?", filter.LatestTaskStatus)
+		}
+		tx = tx.Where("ops_scan_plans.id IN (?)", statusQuery)
 	}
 
 	var plans []*ScanPlan
@@ -132,11 +161,45 @@ func (s *ScanPlanStore) List(ctx context.Context, repoID uint, filter scanModel.
 		}
 	}
 
+	// 批量查询每个计划的最新任务（关联 execution 获取真实状态）
+	type planTaskJoin struct {
+		ScanTask
+		ExecutionStatus constant.CIStatus `gorm:"column:executionStatus"`
+	}
+	latestTaskMap := make(map[uint64]*planTaskJoin)
+	if len(planIDs) > 0 {
+		subQuery := s.db.Model(&ScanTask{}).
+			Select("MAX(id) as id").
+			Where("planID IN ? AND deleted = ?", planIDs, false).
+			Group("planID")
+		var tasks []planTaskJoin
+		if err := s.db.WithContext(ctx).
+			Table("ops_scan_tasks").
+			Select("ops_scan_tasks.*, e.status as executionStatus").
+			Joins("INNER JOIN ops_pipeline_executions e ON ops_scan_tasks.executionID = e.id").
+			Where("ops_scan_tasks.id IN (?)", subQuery).
+			Find(&tasks).Error; err == nil {
+			for i := range tasks {
+				latestTaskMap[tasks[i].PlanID] = &tasks[i]
+			}
+		}
+	}
+
 	modelData := make([]*scanModel.ScanPlan, 0, len(pageResult.Data))
 	for _, item := range pageResult.Data {
 		m := mapScanPlanToModel(*item)
 		m.SolutionIDs = solutionsMap[item.ID]
 		m.SolutionCount = len(solutionsMap[item.ID])
+		if task, ok := latestTaskMap[item.ID]; ok {
+			taskID := int64(task.ID)
+			m.LatestTaskID = &taskID
+			if task.CreatedDate != nil {
+				m.LatestTaskCreated = task.CreatedDate
+			}
+			m.LatestTaskResult = task.Result
+			status := convertExecutionTaskStatus(task.ExecutionStatus)
+			m.LatestTaskStatus = &status
+		}
 		modelData = append(modelData, m)
 	}
 

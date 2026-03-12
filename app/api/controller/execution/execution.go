@@ -1,6 +1,7 @@
 package execution
 
 import (
+	"bufio"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -28,6 +29,121 @@ var (
 	pingInterval = 30 * time.Second
 	tailMaxTime  = 1 * time.Hour
 )
+
+// logLineWriter 定义日志行的写入方式
+type logLineWriter func(w io.Writer, line *livelog.Line)
+
+// writeLineAsJSON 以 JSON 格式写入日志行（用于 GetLiveLogs）
+func writeLineAsJSON(w io.Writer, line *livelog.Line) {
+	io.WriteString(w, "data: ")
+	json.NewEncoder(w).Encode(line)
+	io.WriteString(w, "\n\n")
+}
+
+// writeLineAsText 以纯文本格式写入日志行（用于 GetLogStream）
+func writeLineAsText(w io.Writer, line *livelog.Line) {
+	ts := time.Unix(line.Timestamp, 0).Format("2006-01-02 15:04:05")
+	fmt.Fprintf(w, "data: [%s] %s\n\n", ts, line.Message)
+}
+
+// parseLogPathParams 解析日志相关的四个路径参数
+func parseLogPathParams(ctx *gin.Context) (pipelineID, executionID, stageID, stepID uint, ok bool) {
+	var err error
+	pipelineID, err = req.PathParamAsPositiveUint(ctx, req.PathParamPipelineID)
+	if err != nil {
+		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.ExecutionPathParamError))
+		return 0, 0, 0, 0, false
+	}
+	executionID, err = req.PathParamAsPositiveUint(ctx, req.PathParamExecutionID)
+	if err != nil {
+		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.ExecutionPathParamError))
+		return 0, 0, 0, 0, false
+	}
+	stageID, err = req.PathParamAsPositiveUint(ctx, req.PathParamStageID)
+	if err != nil {
+		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.ExecutionPathParamError))
+		return 0, 0, 0, 0, false
+	}
+	stepID, err = req.PathParamAsPositiveUint(ctx, req.PathParamStepID)
+	if err != nil {
+		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.ExecutionPathParamError))
+		return 0, 0, 0, 0, false
+	}
+	return pipelineID, executionID, stageID, stepID, true
+}
+
+// buildS3LogsParam 构建文件日志存储参数
+func buildS3LogsParam(pipelineID, executionID, stageID, stepID uint) *pipelineModel.S3Logs {
+	return &pipelineModel.S3Logs{
+		PipelineID:  strconv.FormatUint(uint64(pipelineID), 10),
+		ExecutionID: strconv.FormatUint(uint64(executionID), 10),
+		StageID:     strconv.FormatUint(uint64(stageID), 10),
+		StepID:      strconv.FormatUint(uint64(stepID), 10),
+	}
+}
+
+// setupSSE 设置 SSE 响应头并返回 Flusher，失败时直接写入错误响应并返回 nil
+func setupSSE(ctx *gin.Context) (http.Flusher, bool) {
+	w := ctx.Writer
+	f, ok := w.(http.Flusher)
+	if !ok {
+		log := logger.GetLoggerFromGin(ctx)
+		log.Errorf("http writer does not support flushing")
+		resp.InternalError(ctx, errors.WithI18nKey(nil, i18n.ExecutionLogQueryError))
+		return nil, false
+	}
+	h := w.Header()
+	h.Set("Content-Type", "text/event-stream")
+	h.Set("Cache-Control", "no-cache")
+	h.Set("Connection", "keep-alive")
+	h.Set("X-Accel-Buffering", "no")
+	h.Set("Access-Control-Allow-Origin", "*")
+
+	io.WriteString(w, ": ping\n\n")
+	f.Flush()
+	return f, true
+}
+
+// tailLiveStream 消费实时日志流并通过 SSE 写出，直到流结束或超时
+func (c *Controller) tailLiveStream(ctx *gin.Context, stepID uint, f http.Flusher, writeLine logLineWriter) {
+	log := logger.GetLoggerFromGin(ctx)
+	w := ctx.Writer
+
+	reqCtx, cancel := context.WithTimeout(ctx.Request.Context(), tailMaxTime)
+	defer cancel()
+
+	linec, errc := c.pipelineService.TailLogStream(reqCtx, int64(stepID))
+
+	pingTimer := time.NewTimer(pingInterval)
+	defer pingTimer.Stop()
+
+	for {
+		if !pingTimer.Stop() {
+			select {
+			case <-pingTimer.C:
+			default:
+			}
+		}
+		pingTimer.Reset(pingInterval)
+		select {
+		case <-reqCtx.Done():
+			io.WriteString(w, "event: error\ndata: eof\n\n")
+			f.Flush()
+			return
+		case err := <-errc:
+			log.Errorf("received error in the tail channel: %v", err)
+			io.WriteString(w, "event: error\ndata: eof\n\n")
+			f.Flush()
+			return
+		case <-pingTimer.C:
+			io.WriteString(w, ": ping\n\n")
+			f.Flush()
+		case line := <-linec:
+			writeLine(w, line)
+			f.Flush()
+		}
+	}
+}
 
 // Controller 处理与 pipeline 执行相关的 HTTP 请求
 type Controller struct {
@@ -178,75 +294,18 @@ func (c *Controller) Cancel(ctx *gin.Context) {
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
 // @Router /pipelines/{pipelineID}/executions/{executionID}/stream/{stageID}/{stepID} [get]
 func (c *Controller) GetLiveLogs(ctx *gin.Context) {
-	log := logger.GetLoggerFromGin(ctx)
-
 	stepID, err := req.PathParamAsPositiveUint(ctx, req.PathParamStepID)
 	if err != nil {
 		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.ExecutionPathParamError))
 		return
 	}
 
-	w := ctx.Writer
-
-	f, ok := w.(http.Flusher)
+	f, ok := setupSSE(ctx)
 	if !ok {
-		log.Errorf("http writer does not support flushing")
-		resp.InternalError(ctx, errors.WithI18nKey(nil, i18n.ExecutionLogQueryError))
 		return
 	}
 
-	// 设置 SSE 响应头
-	h := w.Header()
-	h.Set("Content-Type", "text/event-stream")
-	h.Set("Cache-Control", "no-cache")
-	h.Set("Connection", "keep-alive")
-	h.Set("X-Accel-Buffering", "no")
-	h.Set("Access-Control-Allow-Origin", "*")
-
-	// 发送初始 ping
-	io.WriteString(w, ": ping\n\n")
-	f.Flush()
-
-	reqCtx, cancel := context.WithTimeout(ctx.Request.Context(), tailMaxTime)
-	defer cancel()
-
-	// TailLogStream 内部会处理流尚未创建的等待逻辑，始终返回非 nil channel
-	linec, errc := c.pipelineService.TailLogStream(reqCtx, int64(stepID))
-
-	enc := json.NewEncoder(w)
-
-	pingTimer := time.NewTimer(pingInterval)
-	defer pingTimer.Stop()
-L:
-	for {
-		// 重置 ping 计时器
-		if !pingTimer.Stop() {
-			select {
-			case <-pingTimer.C:
-			default:
-			}
-		}
-		pingTimer.Reset(pingInterval)
-		select {
-		case <-reqCtx.Done():
-			break L
-		case err := <-errc:
-			log.Errorf("received error in the tail channel: %v", err)
-			break L
-		case <-pingTimer.C:
-			io.WriteString(w, ": ping\n\n")
-			f.Flush()
-		case line := <-linec:
-			io.WriteString(w, "data: ")
-			enc.Encode(line)
-			io.WriteString(w, "\n\n")
-			f.Flush()
-		}
-	}
-
-	// 发送 EOF 事件
-	io.WriteString(w, "event: error\ndata: eof\n\n")
-	f.Flush()
+	c.tailLiveStream(ctx, stepID, f, writeLineAsJSON)
 }
 
 // @Summary 创建实时日志流
@@ -308,35 +367,12 @@ func (c *Controller) CreateLiveLogs(ctx *gin.Context) {
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
 // @Router /pipelines/{pipelineID}/executions/{executionID}/logs/{stageID}/{stepID} [get]
 func (c *Controller) GetFileLogs(ctx *gin.Context) {
-	pipelineID, err := req.PathParamAsPositiveUint(ctx, req.PathParamPipelineID)
-	if err != nil {
-		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.ExecutionPathParamError))
-		return
-	}
-	executionID, err := req.PathParamAsPositiveUint(ctx, req.PathParamExecutionID)
-	if err != nil {
-		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.ExecutionPathParamError))
-		return
-	}
-	stageID, err := req.PathParamAsPositiveUint(ctx, req.PathParamStageID)
-	if err != nil {
-		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.ExecutionPathParamError))
-		return
-	}
-	stepID, err := req.PathParamAsPositiveUint(ctx, req.PathParamStepID)
-	if err != nil {
-		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.ExecutionPathParamError))
+	pipelineID, executionID, stageID, stepID, ok := parseLogPathParams(ctx)
+	if !ok {
 		return
 	}
 
-	param := &pipelineModel.S3Logs{
-		PipelineID:  strconv.FormatUint(uint64(pipelineID), 10),
-		ExecutionID: strconv.FormatUint(uint64(executionID), 10),
-		StageID:     strconv.FormatUint(uint64(stageID), 10),
-		StepID:      strconv.FormatUint(uint64(stepID), 10),
-	}
-
-	rc, err := c.pipelineService.GetLogs(ctx, param)
+	rc, err := c.pipelineService.GetLogs(ctx, buildS3LogsParam(pipelineID, executionID, stageID, stepID))
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.ExecutionLogQueryError)
 		resp.InternalError(ctx, err)
@@ -362,35 +398,12 @@ func (c *Controller) GetFileLogs(ctx *gin.Context) {
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
 // @Router /pipelines/{pipelineID}/executions/{executionID}/logs/{stageID}/{stepID} [post]
 func (c *Controller) CreateFileLogs(ctx *gin.Context) {
-	pipelineID, err := req.PathParamAsPositiveUint(ctx, req.PathParamPipelineID)
-	if err != nil {
-		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.ExecutionPathParamError))
-		return
-	}
-	executionID, err := req.PathParamAsPositiveUint(ctx, req.PathParamExecutionID)
-	if err != nil {
-		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.ExecutionPathParamError))
-		return
-	}
-	stageID, err := req.PathParamAsPositiveUint(ctx, req.PathParamStageID)
-	if err != nil {
-		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.ExecutionPathParamError))
-		return
-	}
-	stepID, err := req.PathParamAsPositiveUint(ctx, req.PathParamStepID)
-	if err != nil {
-		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.ExecutionPathParamError))
+	pipelineID, executionID, stageID, stepID, ok := parseLogPathParams(ctx)
+	if !ok {
 		return
 	}
 
-	param := &pipelineModel.S3Logs{
-		PipelineID:  strconv.FormatUint(uint64(pipelineID), 10),
-		ExecutionID: strconv.FormatUint(uint64(executionID), 10),
-		StageID:     strconv.FormatUint(uint64(stageID), 10),
-		StepID:      strconv.FormatUint(uint64(stepID), 10),
-	}
-
-	err = c.pipelineService.CreateLogs(ctx, param, ctx.Request.Body)
+	err := c.pipelineService.CreateLogs(ctx, buildS3LogsParam(pipelineID, executionID, stageID, stepID), ctx.Request.Body)
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.ExecutionLogCreateError)
 		resp.InternalError(ctx, err)
@@ -398,4 +411,53 @@ func (c *Controller) CreateFileLogs(ctx *gin.Context) {
 	}
 
 	resp.OK(ctx, i18n.ExecutionLogCreateSuccess, nil)
+}
+
+// @Summary 流式获取流水线步骤日志（纯文本/流）
+// @Description 优先从文件存储读取已完成的日志，若无文件日志则以 SSE 方式流式返回实时日志流，输出格式为纯文本 [时间戳] 消息
+// @Tags executions
+// @Produce text/event-stream
+// @Param pipelineID path string true "流水线ID"
+// @Param executionID path string true "执行ID"
+// @Param stageID path string true "阶段ID"
+// @Param stepID path string true "步骤ID"
+// @Success 200 {string} string "SSE 日志流"
+// @Failure 400 {object} resp.ObjectResponse "参数错误"
+// @Failure 500 {object} resp.ObjectResponse "服务器错误"
+// @Router /pipelines/{pipelineID}/executions/{executionID}/logstream/{stageID}/{stepID} [get]
+func (c *Controller) GetLogStream(ctx *gin.Context) {
+	pipelineID, executionID, stageID, stepID, ok := parseLogPathParams(ctx)
+	if !ok {
+		return
+	}
+
+	f, ok := setupSSE(ctx)
+	if !ok {
+		return
+	}
+
+	w := ctx.Writer
+
+	// 优先尝试从文件存储读取已完成的日志
+	rc, fileErr := c.pipelineService.GetLogs(ctx, buildS3LogsParam(pipelineID, executionID, stageID, stepID))
+	if fileErr == nil {
+		defer rc.Close()
+		scanner := bufio.NewScanner(rc)
+		for scanner.Scan() {
+			raw := scanner.Bytes()
+			var line livelog.Line
+			if json.Unmarshal(raw, &line) == nil {
+				writeLineAsText(w, &line)
+			} else {
+				fmt.Fprintf(w, "data: %s\n\n", raw)
+			}
+			f.Flush()
+		}
+		io.WriteString(w, "event: error\ndata: eof\n\n")
+		f.Flush()
+		return
+	}
+
+	// 文件日志不存在，回退到实时日志流
+	c.tailLiveStream(ctx, stepID, f, writeLineAsText)
 }

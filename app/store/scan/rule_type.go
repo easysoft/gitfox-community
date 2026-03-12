@@ -1,9 +1,8 @@
 package scan
 
 import (
-	"time"
-
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
 	"gorm.io/gorm"
 )
 
@@ -24,9 +23,9 @@ type Rule struct {
 	IsCustom    bool                      `gorm:"column:isCustom"`
 	Status      constant.ScanRuleStatus   `gorm:"column:status"`
 	CreatedBy   string                    `gorm:"column:createdBy"`
-	CreatedDate *time.Time                `gorm:"column:createdDate"`
+	CreatedDate *datetime.Local                `gorm:"column:createdDate"`
 	EditedBy    string                    `gorm:"column:editedBy"`
-	EditedDate  *time.Time                `gorm:"column:editedDate"`
+	EditedDate  *datetime.Local                `gorm:"column:editedDate"`
 	Deleted     bool                      `gorm:"column:deleted"`
 }
 
@@ -37,15 +36,15 @@ func (r *Rule) TableName() string {
 
 // BeforeCreate GORM 钩子：创建前自动设置时间
 func (r *Rule) BeforeCreate(tx *gorm.DB) error {
-	now := time.Now()
-	r.CreatedDate = &now
-	r.EditedDate = &now
+	now := datetime.NowLocalTime()
+	r.CreatedDate = now
+	r.EditedDate = now
 	return nil
 }
 
 // BeforeUpdate GORM 钩子：更新前自动设置 EditedDate
 func (r *Rule) BeforeUpdate(tx *gorm.DB) error {
-	now := time.Now()
-	r.EditedDate = &now
+	now := datetime.NowLocalTime()
+	r.EditedDate = now
 	return nil
 }

@@ -1572,6 +1572,14 @@ definitions:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.Pattern'
       id:
         type: integer
+      latestTaskCreated:
+        type: string
+      latestTaskID:
+        type: integer
+      latestTaskResult:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanTaskResult'
+      latestTaskStatus:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanTaskStatus'
       name:
         type: string
       repoID:
@@ -1819,6 +1827,12 @@ definitions:
     properties:
       actions:
         type: string
+      conditionCount:
+        type: integer
+      conditionIDs:
+        items:
+          type: integer
+        type: array
       createdBy:
         type: string
       createdDate:
@@ -1841,6 +1855,14 @@ definitions:
         type: integer
       keywords:
         type: string
+      latestTaskCreated:
+        type: string
+      latestTaskID:
+        type: integer
+      latestTaskResult:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanTaskResult'
+      latestTaskStatus:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanTaskStatus'
       name:
         type: string
       planID:
@@ -1849,6 +1871,21 @@ definitions:
         type: integer
       type:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTriggerType'
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTriggerReqFilter:
+    properties:
+      order:
+        default: desc
+        type: string
+      page:
+        default: 1
+        type: integer
+      pageSize:
+        default: 30
+        type: integer
+      sort:
+        default: id
+        type: string
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTriggerReqForCreate:
     properties:
@@ -2702,6 +2739,48 @@ paths:
           schema:
             $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
       summary: 上传文件日志
+      tags:
+      - executions
+  /pipelines/{pipelineID}/executions/{executionID}/logstream/{stageID}/{stepID}:
+    get:
+      description: 优先从文件存储读取已完成的日志，若无文件日志则以 SSE 方式流式返回实时日志流，输出格式为纯文本 [时间戳] 消息
+      parameters:
+      - description: 流水线ID
+        in: path
+        name: pipelineID
+        required: true
+        type: string
+      - description: 执行ID
+        in: path
+        name: executionID
+        required: true
+        type: string
+      - description: 阶段ID
+        in: path
+        name: stageID
+        required: true
+        type: string
+      - description: 步骤ID
+        in: path
+        name: stepID
+        required: true
+        type: string
+      produces:
+      - text/event-stream
+      responses:
+        "200":
+          description: SSE 日志流
+          schema:
+            type: string
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 流式获取流水线步骤日志（纯文本/流）
       tags:
       - executions
   /pipelines/{pipelineID}/executions/{executionID}/stream/{stageID}/{stepID}:
@@ -5344,7 +5423,7 @@ paths:
     get:
       consumes:
       - application/json
-      description: 根据扫描计划 ID 查询触发器列表
+      description: 根据扫描计划 ID 查询触发器列表，支持分页
       parameters:
       - description: 仓库 ID
         in: path
@@ -5356,6 +5435,12 @@ paths:
         name: planID
         required: true
         type: integer
+      - description: 查询过滤条件
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTriggerReqFilter'
       produces:
       - application/json
       responses:

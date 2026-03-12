@@ -613,6 +613,68 @@ const docTemplate = `{
                 }
             }
         },
+        "/pipelines/{pipelineID}/executions/{executionID}/logstream/{stageID}/{stepID}": {
+            "get": {
+                "description": "优先从文件存储读取已完成的日志，若无文件日志则以 SSE 方式流式返回实时日志流，输出格式为纯文本 [时间戳] 消息",
+                "produces": [
+                    "text/event-stream"
+                ],
+                "tags": [
+                    "executions"
+                ],
+                "summary": "流式获取流水线步骤日志（纯文本/流）",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "流水线ID",
+                        "name": "pipelineID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "执行ID",
+                        "name": "executionID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "阶段ID",
+                        "name": "stageID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "步骤ID",
+                        "name": "stepID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "SSE 日志流",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/pipelines/{pipelineID}/executions/{executionID}/stream/{stageID}/{stepID}": {
             "get": {
                 "description": "以 SSE 方式流式返回指定步骤的实时日志流",
@@ -4857,7 +4919,7 @@ const docTemplate = `{
         },
         "/scan/repos/{repoID}/scanplans/{planID}/triggers": {
             "get": {
-                "description": "根据扫描计划 ID 查询触发器列表",
+                "description": "根据扫描计划 ID 查询触发器列表，支持分页",
                 "consumes": [
                     "application/json"
                 ],
@@ -4882,6 +4944,15 @@ const docTemplate = `{
                         "name": "planID",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "description": "查询过滤条件",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTriggerReqFilter"
+                        }
                     }
                 ],
                 "responses": {
@@ -10075,6 +10146,18 @@ const docTemplate = `{
                 "id": {
                     "type": "integer"
                 },
+                "latestTaskCreated": {
+                    "type": "string"
+                },
+                "latestTaskID": {
+                    "type": "integer"
+                },
+                "latestTaskResult": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanTaskResult"
+                },
+                "latestTaskStatus": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanTaskStatus"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -10449,6 +10532,15 @@ const docTemplate = `{
                 "actions": {
                     "type": "string"
                 },
+                "conditionCount": {
+                    "type": "integer"
+                },
+                "conditionIDs": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
                 "createdBy": {
                     "type": "string"
                 },
@@ -10482,6 +10574,18 @@ const docTemplate = `{
                 "keywords": {
                     "type": "string"
                 },
+                "latestTaskCreated": {
+                    "type": "string"
+                },
+                "latestTaskID": {
+                    "type": "integer"
+                },
+                "latestTaskResult": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanTaskResult"
+                },
+                "latestTaskStatus": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanTaskStatus"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -10493,6 +10597,27 @@ const docTemplate = `{
                 },
                 "type": {
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTriggerType"
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTriggerReqFilter": {
+            "type": "object",
+            "properties": {
+                "order": {
+                    "type": "string",
+                    "default": "desc"
+                },
+                "page": {
+                    "type": "integer",
+                    "default": 1
+                },
+                "pageSize": {
+                    "type": "integer",
+                    "default": 30
+                },
+                "sort": {
+                    "type": "string",
+                    "default": "id"
                 }
             }
         },

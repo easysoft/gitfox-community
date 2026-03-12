@@ -1,22 +1,21 @@
 package scan
 
 import (
-	"time"
-
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
 	"gorm.io/gorm"
 )
 
 // RuleSetRules 规则集与规则关联表
 type RuleSetRules struct {
-	ID          uint64     `gorm:"column:id;primaryKey"`
-	RuleSetID   uint64     `gorm:"column:rulesetID"`
-	RuleID      uint64     `gorm:"column:ruleID"`
-	CreatedBy   string     `gorm:"column:createdBy"`
-	CreatedDate *time.Time `gorm:"column:createdDate"`
-	EditedBy    string     `gorm:"column:editedBy"`
-	EditedDate  *time.Time `gorm:"column:editedDate"`
-	Deleted     bool       `gorm:"column:deleted"`
+	ID          uint64          `gorm:"column:id;primaryKey"`
+	RuleSetID   uint64          `gorm:"column:rulesetID"`
+	RuleID      uint64          `gorm:"column:ruleID"`
+	CreatedBy   string          `gorm:"column:createdBy"`
+	CreatedDate *datetime.Local `gorm:"column:createdDate"`
+	EditedBy    string          `gorm:"column:editedBy"`
+	EditedDate  *datetime.Local `gorm:"column:editedDate"`
+	Deleted     bool            `gorm:"column:deleted"`
 }
 
 // TableName 指定数据库表名
@@ -25,16 +24,16 @@ func (r *RuleSetRules) TableName() string {
 }
 
 func (r *RuleSetRules) BeforeCreate(tx *gorm.DB) error {
-	now := time.Now()
-	r.CreatedDate = &now
-	r.EditedDate = &now
+	now := datetime.NowLocalTime()
+	r.CreatedDate = now
+	r.EditedDate = now
 	return nil
 }
 
 // BeforeUpdate GORM 钩子：更新前自动设置 EditedDate
 func (r *RuleSetRules) BeforeUpdate(tx *gorm.DB) error {
-	now := time.Now()
-	r.EditedDate = &now
+	now := datetime.NowLocalTime()
+	r.EditedDate = now
 	return nil
 }
 
@@ -48,9 +47,9 @@ type SolutionRules struct {
 	IsCustom    bool                    `gorm:"column:isCustom"`
 	Status      constant.ScanRuleStatus `gorm:"column:status"`
 	CreatedBy   string                  `gorm:"column:createdBy"`
-	CreatedDate *time.Time              `gorm:"column:createdDate"`
+	CreatedDate *datetime.Local         `gorm:"column:createdDate"`
 	EditedBy    string                  `gorm:"column:editedBy"`
-	EditedDate  *time.Time              `gorm:"column:editedDate"`
+	EditedDate  *datetime.Local         `gorm:"column:editedDate"`
 	Deleted     bool                    `gorm:"column:deleted"`
 }
 
@@ -60,29 +59,29 @@ func (s *SolutionRules) TableName() string {
 }
 
 func (r *SolutionRules) BeforeCreate(tx *gorm.DB) error {
-	now := time.Now()
-	r.CreatedDate = &now
-	r.EditedDate = &now
+	now := datetime.NowLocalTime()
+	r.CreatedDate = now
+	r.EditedDate = now
 	return nil
 }
 
 // BeforeUpdate GORM 钩子：更新前自动设置 EditedDate
 func (r *SolutionRules) BeforeUpdate(tx *gorm.DB) error {
-	now := time.Now()
-	r.EditedDate = &now
+	now := datetime.NowLocalTime()
+	r.EditedDate = now
 	return nil
 }
 
 // SolutionRuleSets 扫描方案与规则集关联表
 type SolutionRuleSets struct {
-	ID          uint64     `gorm:"column:id;primaryKey"`
-	SolutionID  uint64     `gorm:"column:solutionID"`
-	RuleSetID   uint64     `gorm:"column:ruleSetID"`
-	CreatedBy   string     `gorm:"column:createdBy"`
-	CreatedDate *time.Time `gorm:"column:createdDate"`
-	EditedBy    string     `gorm:"column:editedBy"`
-	EditedDate  *time.Time `gorm:"column:editedDate"`
-	Deleted     bool       `gorm:"column:deleted"`
+	ID          uint64          `gorm:"column:id;primaryKey"`
+	SolutionID  uint64          `gorm:"column:solutionID"`
+	RuleSetID   uint64          `gorm:"column:ruleSetID"`
+	CreatedBy   string          `gorm:"column:createdBy"`
+	CreatedDate *datetime.Local `gorm:"column:createdDate"`
+	EditedBy    string          `gorm:"column:editedBy"`
+	EditedDate  *datetime.Local `gorm:"column:editedDate"`
+	Deleted     bool            `gorm:"column:deleted"`
 }
 
 // TableName 指定数据库表名
@@ -91,25 +90,25 @@ func (s *SolutionRuleSets) TableName() string {
 }
 
 func (r *SolutionRuleSets) BeforeCreate(tx *gorm.DB) error {
-	now := time.Now()
-	r.CreatedDate = &now
-	r.EditedDate = &now
+	now := datetime.NowLocalTime()
+	r.CreatedDate = now
+	r.EditedDate = now
 	return nil
 }
 
 // BeforeUpdate GORM 钩子：更新前自动设置 EditedDate
 func (r *SolutionRuleSets) BeforeUpdate(tx *gorm.DB) error {
-	now := time.Now()
-	r.EditedDate = &now
+	now := datetime.NowLocalTime()
+	r.EditedDate = now
 	return nil
 }
 
 type RuleMigration struct {
-	Name        string     `gorm:"column:name"`
-	Version     string     `gorm:"column:version"`
-	CreatedBy   string     `gorm:"column:createdBy"`
-	CreatedDate *time.Time `gorm:"column:createdDate"`
-	Deleted     bool       `gorm:"column:deleted"`
+	Name        string          `gorm:"column:name"`
+	Version     string          `gorm:"column:version"`
+	CreatedBy   string          `gorm:"column:createdBy"`
+	CreatedDate *datetime.Local `gorm:"column:createdDate"`
+	Deleted     bool            `gorm:"column:deleted"`
 }
 
 func (r *RuleMigration) TableName() string {
