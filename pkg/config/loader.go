@@ -30,7 +30,7 @@ const (
 	schemeHTTP    = "http"
 	schemeHTTPS   = "https"
 	schemeSSH     = "ssh"
-	gitfoxHomeDir = ".gitfox"
+	gitfoxHomeDir = "git"
 	blobDir       = "blob"
 )
 
