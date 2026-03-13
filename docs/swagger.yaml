@@ -1,5 +1,8 @@
 basePath: /api/v2
 definitions:
+  gin.H:
+    additionalProperties: {}
+    type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListArgs:
     properties:
       page:
@@ -5370,6 +5373,58 @@ paths:
           schema:
             $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
       summary: 批量创建扫描计划级条件
+      tags:
+      - scan
+  /scan/repos/{repoID}/scanplans/{planID}/plan-rules:
+    get:
+      consumes:
+      - application/json
+      description: 根据计划 ID 查询最终生效的规则列表，可选传 triggerID 做作用域校验
+      parameters:
+      - description: 仓库 ID
+        in: path
+        name: repoID
+        required: true
+        type: integer
+      - description: 计划 ID
+        in: path
+        name: planID
+        required: true
+        type: integer
+      - description: 触发器 ID
+        in: query
+        name: triggerID
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 查询成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/gin.H'
+                  - properties:
+                      plan:
+                        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanPlan'
+                      rules:
+                        items:
+                          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.Rule'
+                        type: array
+                    type: object
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 获取扫描计划和展开后的有效规则列表
       tags:
       - scan
   /scan/repos/{repoID}/scanplans/{planID}/rules:
