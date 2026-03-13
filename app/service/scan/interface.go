@@ -60,7 +60,7 @@ type IScanPlan interface {
 	Update(ctx context.Context, session *authModel.Session, repoID uint, id uint, req scanModel.ScanPlanReqForUpdate) (*scanModel.ScanPlan, error)
 	Delete(ctx context.Context, repoID uint, id uint) error
 	List(ctx context.Context, repoID uint, filter scanModel.ScanPlanReqFilter) (*database.PageResult[*scanModel.ScanPlan], error)
-	ListRules(ctx context.Context, repoID uint, planID uint, triggerID uint) ([]*scanModel.Rule, error)
+	ListRules(ctx context.Context, repoID uint, planID uint, triggerID uint) (*scanModel.ScanPlan, []*scanModel.Rule, error)
 	BindSolutions(ctx context.Context, repoID uint, planID uint, req scanModel.ScanPlanReqForBind) error
 	UnbindSolutions(ctx context.Context, repoID uint, planID uint, req scanModel.ScanPlanReqForBind) error
 	ListUnbindSolutions(ctx context.Context, repoID uint, planID uint) ([]*scanModel.Solution, error)

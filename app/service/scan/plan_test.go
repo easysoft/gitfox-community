@@ -238,7 +238,7 @@ func TestScanPlanServiceListRules(t *testing.T) {
 		svc := newScanPlanServiceForTest(nil, nil, nil, nil, nil)
 		svc.repoStore = &fakeRepoStore{err: errors.ErrResourceNotFound}
 
-		_, err := svc.ListRules(context.Background(), 1, 2, 0)
+		_, _, err := svc.ListRules(context.Background(), 1, 2, 0)
 		require.Error(t, err)
 		assert.Equal(t, i18n.RepoNotFound, errors.GetI18nKey(err))
 	})
@@ -251,7 +251,7 @@ func TestScanPlanServiceListRules(t *testing.T) {
 		planStore.EXPECT().GetByRepoIDAndID(gomock.Any(), uint(1), uint(2)).Return(nil, errors.ErrResourceNotFound)
 
 		svc := newScanPlanServiceForTest(planStore, nil, nil, nil, nil)
-		_, err := svc.ListRules(context.Background(), 1, 2, 0)
+		_, _, err := svc.ListRules(context.Background(), 1, 2, 0)
 		require.Error(t, err)
 		assert.Equal(t, i18n.PlanNotFound, errors.GetI18nKey(err))
 	})
@@ -266,7 +266,7 @@ func TestScanPlanServiceListRules(t *testing.T) {
 		triggerStore.EXPECT().GetByRepoPlanAndID(gomock.Any(), uint(1), uint(2), uint(9)).Return(nil, errors.ErrResourceNotFound)
 
 		svc := newScanPlanServiceForTest(planStore, nil, nil, nil, triggerStore)
-		_, err := svc.ListRules(context.Background(), 1, 2, 9)
+		_, _, err := svc.ListRules(context.Background(), 1, 2, 9)
 		require.Error(t, err)
 		assert.Equal(t, i18n.TriggerNotFound, errors.GetI18nKey(err))
 	})
@@ -280,7 +280,7 @@ func TestScanPlanServiceListRules(t *testing.T) {
 		planStore.EXPECT().GetSolutionIDList(gomock.Any(), uint(2)).Return([]int64{}, nil)
 
 		svc := newScanPlanServiceForTest(planStore, nil, nil, nil, nil)
-		got, err := svc.ListRules(context.Background(), 1, 2, 0)
+		_, got, err := svc.ListRules(context.Background(), 1, 2, 0)
 		require.NoError(t, err)
 		assert.Empty(t, got)
 	})
@@ -306,7 +306,7 @@ func TestScanPlanServiceListRules(t *testing.T) {
 		ruleStore.EXPECT().ListByIDs(gomock.Any(), []int64{1001, 1002, 1003}).Return([]*scanModel.Rule{{ID: 1001, Status: constant.ScanRuleStatusEnabled, Name: "r1"}, {ID: 1002, Status: constant.ScanRuleStatusDisabled, Name: "r2"}, {ID: 1003, Status: constant.ScanRuleStatusEnabled, Name: "r3"}}, nil)
 
 		svc := newScanPlanServiceForTest(planStore, solutionStore, ruleSetStore, ruleStore, nil)
-		got, err := svc.ListRules(context.Background(), 1, 2, 0)
+		_, got, err := svc.ListRules(context.Background(), 1, 2, 0)
 		require.NoError(t, err)
 		require.Len(t, got, 2)
 		assert.Equal(t, int64(1001), got[0].ID)
@@ -332,7 +332,7 @@ func TestScanPlanServiceListRules(t *testing.T) {
 		ruleStore.EXPECT().ListByIDs(gomock.Any(), []int64{1001}).Return([]*scanModel.Rule{{ID: 1001, Status: constant.ScanRuleStatusEnabled}}, nil)
 
 		svc := newScanPlanServiceForTest(planStore, solutionStore, ruleSetStore, ruleStore, triggerStore)
-		got, err := svc.ListRules(context.Background(), 1, 2, 8)
+		_, got, err := svc.ListRules(context.Background(), 1, 2, 8)
 		require.NoError(t, err)
 		require.Len(t, got, 1)
 		assert.Equal(t, int64(1001), got[0].ID)
