@@ -16,26 +16,28 @@ const (
 
 // ScanTriggerReqForCreate 创建触发器请求
 type ScanTriggerReqForCreate struct {
-	Name       string          `json:"name" binding:"required,max=100"`
-	Desc       string          `json:"desc"`
-	Type       ScanTriggerType `json:"type"`
-	Cron       string          `json:"cron,omitempty"`
-	CronBranch string          `json:"cronBranch,omitempty"`
-	Keywords   string          `json:"keywords,omitempty"`
-	Actions    string          `json:"actions,omitempty"`
-	Disabled   bool            `json:"disabled"`
+	Name        string          `json:"name" binding:"required,max=100"`
+	Desc        string          `json:"desc"`
+	Type        ScanTriggerType `json:"type"`
+	Cron        string          `json:"cron,omitempty"`
+	CronBranch  string          `json:"cronBranch,omitempty"`
+	Keywords    string          `json:"keywords,omitempty"`
+	Actions     string          `json:"actions,omitempty"`
+	Disabled    bool            `json:"disabled"`
+	SolutionIDs []int64         `json:"solutionIDs,omitempty"`
 }
 
 // ScanTriggerReqForUpdate 更新触发器请求
 type ScanTriggerReqForUpdate struct {
-	Name       string          `json:"name,omitempty"`
-	Desc       string          `json:"desc,omitempty"`
-	Type       ScanTriggerType `json:"type,omitempty"`
-	Cron       string          `json:"cron,omitempty"`
-	CronBranch string          `json:"cronBranch,omitempty"`
-	Keywords   string          `json:"keywords,omitempty"`
-	Actions    string          `json:"actions,omitempty"`
-	Disabled   *bool           `json:"disabled,omitempty"`
+	Name        string          `json:"name,omitempty"`
+	Desc        string          `json:"desc,omitempty"`
+	Type        ScanTriggerType `json:"type,omitempty"`
+	Cron        string          `json:"cron,omitempty"`
+	CronBranch  string          `json:"cronBranch,omitempty"`
+	Keywords    string          `json:"keywords,omitempty"`
+	Actions     string          `json:"actions,omitempty"`
+	Disabled    *bool           `json:"disabled,omitempty"`
+	SolutionIDs []int64         `json:"solutionIDs,omitempty"`
 }
 
 // ScanTriggerReqFilter 触发器列表查询过滤条件
@@ -64,8 +66,12 @@ type ScanTrigger struct {
 	EditedBy       string          `json:"editedBy"`
 	EditedDate     *datetime.Local `json:"editedDate"`
 	Deleted        bool            `json:"deleted"`
-	ConditionIDs   []int64         `json:"conditionIDs,omitempty"`
-	ConditionCount int             `json:"conditionCount,omitempty"`
+	ConditionIDs   []int64          `json:"conditionIDs,omitempty"`
+	Conditions     []*ScanCondition `json:"conditions,omitempty"`
+	ConditionCount int              `json:"conditionCount,omitempty"`
+	SolutionIDs    []int64          `json:"solutionIDs,omitempty"`
+	Solutions      []*Solution      `json:"solutions,omitempty"`
+	SolutionCount  int              `json:"solutionCount,omitempty"`
 
 	LatestTaskID      *int64                   `json:"latestTaskID,omitempty"`
 	LatestTaskCreated *datetime.Local          `json:"latestTaskCreated,omitempty"`

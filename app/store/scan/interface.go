@@ -77,6 +77,14 @@ type IScanTrigger interface {
 	Count(ctx context.Context, repoID uint, planID uint) (int64, error)
 }
 
+// IScanTriggerSolution 触发器关联解决方案 store 接口
+type IScanTriggerSolution interface {
+	ReplaceBatch(ctx context.Context, triggerID uint64, solutionIDs []int64, createdBy string) error
+	ListByTriggerID(ctx context.Context, triggerID uint64) ([]int64, error)
+	ListByTriggerIDs(ctx context.Context, triggerIDs []uint64) (map[uint64][]int64, error)
+	DeleteByTriggerID(ctx context.Context, triggerID uint64) error
+}
+
 // IScanCondition 触发器条件 store 接口
 //
 // Note: ops_scan_plan_conditions 同时承载 trigger-scoped 与 plan-scoped 条件。

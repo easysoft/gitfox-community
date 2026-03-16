@@ -17,14 +17,16 @@ import (
 var _ IScanTrigger = (*ScanTriggerService)(nil)
 
 type ScanTriggerService struct {
-	triggerStore  scanStore.IScanTrigger
-	repoStore     repoStore.Interface
-	planStore     scanStore.IScanPlan
-	cronScheduler CronScheduler
+	triggerStore         scanStore.IScanTrigger
+	triggerSolutionStore scanStore.IScanTriggerSolution
+	repoStore            repoStore.Interface
+	planStore            scanStore.IScanPlan
+	solutionStore        scanStore.ISolution
+	cronScheduler        CronScheduler
 }
 
-func NewScanTriggerService(triggerStore scanStore.IScanTrigger, repoStore repoStore.Interface, planStore scanStore.IScanPlan, cronScheduler CronScheduler) *ScanTriggerService {
-	return &ScanTriggerService{triggerStore: triggerStore, repoStore: repoStore, planStore: planStore, cronScheduler: cronScheduler}
+func NewScanTriggerService(triggerStore scanStore.IScanTrigger, triggerSolutionStore scanStore.IScanTriggerSolution, repoStore repoStore.Interface, planStore scanStore.IScanPlan, solutionStore scanStore.ISolution, cronScheduler CronScheduler) *ScanTriggerService {
+	return &ScanTriggerService{triggerStore: triggerStore, triggerSolutionStore: triggerSolutionStore, repoStore: repoStore, planStore: planStore, solutionStore: solutionStore, cronScheduler: cronScheduler}
 }
 
 func (s *ScanTriggerService) Create(ctx context.Context, session *authModel.Session, planID uint, repoID uint, req scanModel.ScanTriggerReqForCreate) (*scanModel.ScanTrigger, error) {
@@ -36,6 +38,11 @@ func (s *ScanTriggerService) Create(ctx context.Context, session *authModel.Sess
 	}
 	if err := validateTriggerCreate(req); err != nil {
 		return nil, err
+	}
+	if len(req.SolutionIDs) > 0 {
+		if err := s.validateSolutionIDsExist(ctx, req.SolutionIDs); err != nil {
+			return nil, err
+		}
 	}
 
 	trigger := &scanStore.ScanPlanTrigger{
@@ -55,6 +62,13 @@ func (s *ScanTriggerService) Create(ctx context.Context, session *authModel.Sess
 	createdTrigger, err := s.triggerStore.Create(ctx, trigger)
 	if err != nil {
 		return nil, err
+	}
+	if len(req.SolutionIDs) > 0 {
+		if err := s.triggerSolutionStore.ReplaceBatch(ctx, uint64(createdTrigger.ID), req.SolutionIDs, session.User.Account); err != nil {
+			return nil, err
+		}
+		createdTrigger.SolutionIDs = req.SolutionIDs
+		createdTrigger.SolutionCount = len(req.SolutionIDs)
 	}
 	if err := s.syncTriggerCronJob(ctx, createdTrigger); err != nil {
 		return nil, err
@@ -84,6 +98,11 @@ func (s *ScanTriggerService) Update(ctx context.Context, session *authModel.Sess
 	}
 	if err := validateTriggerUpdate(req); err != nil {
 		return nil, err
+	}
+	if len(req.SolutionIDs) > 0 {
+		if err := s.validateSolutionIDsExist(ctx, req.SolutionIDs); err != nil {
+			return nil, err
+		}
 	}
 
 	trigger := &scanStore.ScanPlanTrigger{
@@ -118,6 +137,11 @@ func (s *ScanTriggerService) Update(ctx context.Context, session *authModel.Sess
 	if err := s.triggerStore.Update(ctx, trigger); err != nil {
 		return nil, err
 	}
+	if len(req.SolutionIDs) > 0 {
+		if err := s.triggerSolutionStore.ReplaceBatch(ctx, uint64(id), req.SolutionIDs, session.User.Account); err != nil {
+			return nil, err
+		}
+	}
 	updatedTrigger, err := s.getTriggerByRepoPlanAndID(ctx, repoID, planID, id)
 	if err != nil {
 		return nil, err
@@ -146,6 +170,9 @@ func (s *ScanTriggerService) Delete(ctx context.Context, repoID uint, planID uin
 		return errors.WithI18nKey(fmt.Errorf("at least one trigger must be retained"), i18n.TriggerRetainOneError)
 	}
 	if err := s.triggerStore.Delete(ctx, id); err != nil {
+		return err
+	}
+	if err := s.triggerSolutionStore.DeleteByTriggerID(ctx, uint64(id)); err != nil {
 		return err
 	}
 	return s.removeTriggerCronJob(ctx, int64(id))
@@ -244,4 +271,20 @@ func (s *ScanTriggerService) getTriggerByRepoPlanAndID(ctx context.Context, repo
 		return nil, err
 	}
 	return trigger, nil
+}
+
+// validateSolutionIDsExist 校验传入的 solutionIDs 是否全部存在。
+func (s *ScanTriggerService) validateSolutionIDsExist(ctx context.Context, solutionIDs []int64) error {
+	for _, id := range solutionIDs {
+		if _, err := s.solutionStore.GetByID(ctx, uint(id)); err != nil {
+			if isDBNotFoundError(err) {
+				return errors.WithI18nKey(
+					fmt.Errorf("solution %d not found", id),
+					i18n.SolutionNotFound,
+				)
+			}
+			return err
+		}
+	}
+	return nil
 }

@@ -13,11 +13,13 @@ import (
 // @Summary 获取扫描计划的触发器列表
 // @Description 根据扫描计划 ID 查询触发器列表，支持分页
 // @Tags scan
-// @Accept application/json
 // @Produce application/json
 // @Param repoID path uint true "仓库 ID"
 // @Param planID path uint true "计划 ID"
-// @Param body body scanModel.ScanTriggerReqFilter true "查询过滤条件"
+// @Param sort query string false "排序字段" default(id)
+// @Param order query string false "排序方向" default(desc)
+// @Param page query int false "页码" default(1)
+// @Param pageSize query int false "每页数量" default(30)
 // @Success 200 {object} resp.ListResponse{data=[]scanModel.ScanTrigger,listArgs=resp.ListArgs} "查询成功"
 // @Failure 400 {object} resp.ObjectResponse "参数错误"
 // @Failure 500 {object} resp.ObjectResponse "服务器内部错误"
@@ -29,7 +31,7 @@ func (c *ScanController) ScanTriggerList(ctx *gin.Context) {
 	}
 
 	var filter scanModel.ScanTriggerReqFilter
-	if err := ctx.ShouldBindJSON(&filter); err != nil {
+	if err := ctx.ShouldBindQuery(&filter); err != nil {
 		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.TriggerBodyParamError))
 		return
 	}

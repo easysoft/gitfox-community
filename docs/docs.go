@@ -5007,9 +5007,6 @@ const docTemplate = `{
         "/scan/repos/{repoID}/scanplans/{planID}/triggers": {
             "get": {
                 "description": "根据扫描计划 ID 查询触发器列表，支持分页",
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json"
                 ],
@@ -5033,13 +5030,32 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "description": "查询过滤条件",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTriggerReqFilter"
-                        }
+                        "type": "string",
+                        "default": "id",
+                        "description": "排序字段",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "default": "desc",
+                        "description": "排序方向",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 30,
+                        "description": "每页数量",
+                        "name": "pageSize",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -10632,6 +10648,12 @@ const docTemplate = `{
                         "type": "integer"
                     }
                 },
+                "conditions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanCondition"
+                    }
+                },
                 "createdBy": {
                     "type": "string"
                 },
@@ -10686,29 +10708,23 @@ const docTemplate = `{
                 "repoID": {
                     "type": "integer"
                 },
+                "solutionCount": {
+                    "type": "integer"
+                },
+                "solutionIDs": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "solutions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.Solution"
+                    }
+                },
                 "type": {
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTriggerType"
-                }
-            }
-        },
-        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTriggerReqFilter": {
-            "type": "object",
-            "properties": {
-                "order": {
-                    "type": "string",
-                    "default": "desc"
-                },
-                "page": {
-                    "type": "integer",
-                    "default": 1
-                },
-                "pageSize": {
-                    "type": "integer",
-                    "default": 30
-                },
-                "sort": {
-                    "type": "string",
-                    "default": "id"
                 }
             }
         },
@@ -10740,6 +10756,12 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 100
                 },
+                "solutionIDs": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
                 "type": {
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTriggerType"
                 }
@@ -10768,6 +10790,12 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
+                },
+                "solutionIDs": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
                 },
                 "type": {
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTriggerType"

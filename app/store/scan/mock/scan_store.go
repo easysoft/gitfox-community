@@ -832,6 +832,88 @@ func (mr *MockIScanTriggerMockRecorder) Update(ctx, trigger any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockIScanTrigger)(nil).Update), ctx, trigger)
 }
 
+// MockIScanTriggerSolution is a mock of IScanTriggerSolution interface.
+type MockIScanTriggerSolution struct {
+	ctrl     *gomock.Controller
+	recorder *MockIScanTriggerSolutionMockRecorder
+	isgomock struct{}
+}
+
+// MockIScanTriggerSolutionMockRecorder is the mock recorder for MockIScanTriggerSolution.
+type MockIScanTriggerSolutionMockRecorder struct {
+	mock *MockIScanTriggerSolution
+}
+
+// NewMockIScanTriggerSolution creates a new mock instance.
+func NewMockIScanTriggerSolution(ctrl *gomock.Controller) *MockIScanTriggerSolution {
+	mock := &MockIScanTriggerSolution{ctrl: ctrl}
+	mock.recorder = &MockIScanTriggerSolutionMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockIScanTriggerSolution) EXPECT() *MockIScanTriggerSolutionMockRecorder {
+	return m.recorder
+}
+
+// DeleteByTriggerID mocks base method.
+func (m *MockIScanTriggerSolution) DeleteByTriggerID(ctx context.Context, triggerID uint64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteByTriggerID", ctx, triggerID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteByTriggerID indicates an expected call of DeleteByTriggerID.
+func (mr *MockIScanTriggerSolutionMockRecorder) DeleteByTriggerID(ctx, triggerID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteByTriggerID", reflect.TypeOf((*MockIScanTriggerSolution)(nil).DeleteByTriggerID), ctx, triggerID)
+}
+
+// ListByTriggerID mocks base method.
+func (m *MockIScanTriggerSolution) ListByTriggerID(ctx context.Context, triggerID uint64) ([]int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListByTriggerID", ctx, triggerID)
+	ret0, _ := ret[0].([]int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListByTriggerID indicates an expected call of ListByTriggerID.
+func (mr *MockIScanTriggerSolutionMockRecorder) ListByTriggerID(ctx, triggerID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListByTriggerID", reflect.TypeOf((*MockIScanTriggerSolution)(nil).ListByTriggerID), ctx, triggerID)
+}
+
+// ListByTriggerIDs mocks base method.
+func (m *MockIScanTriggerSolution) ListByTriggerIDs(ctx context.Context, triggerIDs []uint64) (map[uint64][]int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListByTriggerIDs", ctx, triggerIDs)
+	ret0, _ := ret[0].(map[uint64][]int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListByTriggerIDs indicates an expected call of ListByTriggerIDs.
+func (mr *MockIScanTriggerSolutionMockRecorder) ListByTriggerIDs(ctx, triggerIDs any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListByTriggerIDs", reflect.TypeOf((*MockIScanTriggerSolution)(nil).ListByTriggerIDs), ctx, triggerIDs)
+}
+
+// ReplaceBatch mocks base method.
+func (m *MockIScanTriggerSolution) ReplaceBatch(ctx context.Context, triggerID uint64, solutionIDs []int64, createdBy string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ReplaceBatch", ctx, triggerID, solutionIDs, createdBy)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ReplaceBatch indicates an expected call of ReplaceBatch.
+func (mr *MockIScanTriggerSolutionMockRecorder) ReplaceBatch(ctx, triggerID, solutionIDs, createdBy any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReplaceBatch", reflect.TypeOf((*MockIScanTriggerSolution)(nil).ReplaceBatch), ctx, triggerID, solutionIDs, createdBy)
+}
+
 // MockIScanCondition is a mock of IScanCondition interface.
 type MockIScanCondition struct {
 	ctrl     *gomock.Controller

@@ -1836,6 +1836,10 @@ definitions:
         items:
           type: integer
         type: array
+      conditions:
+        items:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanCondition'
+        type: array
       createdBy:
         type: string
       createdDate:
@@ -1872,23 +1876,18 @@ definitions:
         type: integer
       repoID:
         type: integer
+      solutionCount:
+        type: integer
+      solutionIDs:
+        items:
+          type: integer
+        type: array
+      solutions:
+        items:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.Solution'
+        type: array
       type:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTriggerType'
-    type: object
-  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTriggerReqFilter:
-    properties:
-      order:
-        default: desc
-        type: string
-      page:
-        default: 1
-        type: integer
-      pageSize:
-        default: 30
-        type: integer
-      sort:
-        default: id
-        type: string
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTriggerReqForCreate:
     properties:
@@ -1907,6 +1906,10 @@ definitions:
       name:
         maxLength: 100
         type: string
+      solutionIDs:
+        items:
+          type: integer
+        type: array
       type:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTriggerType'
     required:
@@ -1928,6 +1931,10 @@ definitions:
         type: string
       name:
         type: string
+      solutionIDs:
+        items:
+          type: integer
+        type: array
       type:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTriggerType'
     type: object
@@ -5476,8 +5483,6 @@ paths:
       - scan
   /scan/repos/{repoID}/scanplans/{planID}/triggers:
     get:
-      consumes:
-      - application/json
       description: 根据扫描计划 ID 查询触发器列表，支持分页
       parameters:
       - description: 仓库 ID
@@ -5490,12 +5495,26 @@ paths:
         name: planID
         required: true
         type: integer
-      - description: 查询过滤条件
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTriggerReqFilter'
+      - default: id
+        description: 排序字段
+        in: query
+        name: sort
+        type: string
+      - default: desc
+        description: 排序方向
+        in: query
+        name: order
+        type: string
+      - default: 1
+        description: 页码
+        in: query
+        name: page
+        type: integer
+      - default: 30
+        description: 每页数量
+        in: query
+        name: pageSize
+        type: integer
       produces:
       - application/json
       responses:
