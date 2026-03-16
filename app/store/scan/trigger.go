@@ -126,7 +126,7 @@ func (s *ScanTriggerStore) List(ctx context.Context, repoID uint, planID uint, f
 		// 先查关联关系
 		var triggerSolutions []ScanTriggerSolution
 		if err := s.db.WithContext(ctx).
-			Where("triggerID IN ? AND deleted = ?", triggerIDs, false).
+			Where("triggerID IN ?", triggerIDs).
 			Find(&triggerSolutions).Error; err == nil && len(triggerSolutions) > 0 {
 			// 收集所有 solutionID 并按 triggerID 分组
 			allSolutionIDs := make([]uint64, 0)
@@ -257,7 +257,7 @@ func (s *ScanTriggerStore) enrichTrigger(ctx context.Context, data ScanPlanTrigg
 	// 查询关联 solutions
 	var triggerSolutions []ScanTriggerSolution
 	if err := s.db.WithContext(ctx).
-		Where("triggerID = ? AND deleted = ?", data.ID, false).
+		Where("triggerID = ?", data.ID).
 		Find(&triggerSolutions).Error; err == nil && len(triggerSolutions) > 0 {
 		solutionIDs := make([]uint64, 0, len(triggerSolutions))
 		for _, ts := range triggerSolutions {
