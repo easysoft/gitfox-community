@@ -31,7 +31,7 @@ func (s *ScanTriggerStore) GetByID(ctx context.Context, id uint) (*scanModel.Sca
 	if err := s.db.WithContext(ctx).Where("id = ? AND deleted = ?", id, false).First(&trigger).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
-	return mapScanTriggerToModel(trigger), nil
+	return s.enrichTrigger(ctx, trigger), nil
 }
 
 func (s *ScanTriggerStore) GetByRepoPlanAndID(ctx context.Context, repoID uint, planID uint, id uint) (*scanModel.ScanTrigger, error) {
@@ -39,7 +39,7 @@ func (s *ScanTriggerStore) GetByRepoPlanAndID(ctx context.Context, repoID uint, 
 	if err := s.db.WithContext(ctx).Where("repoID = ? AND planID = ? AND id = ? AND deleted = ?", repoID, planID, id, false).First(&trigger).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
-	return mapScanTriggerToModel(trigger), nil
+	return s.enrichTrigger(ctx, trigger), nil
 }
 
 func (s *ScanTriggerStore) Update(ctx context.Context, trigger *ScanPlanTrigger) error {
@@ -73,20 +73,22 @@ func (s *ScanTriggerStore) List(ctx context.Context, repoID uint, planID uint, f
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
 
-	// 批量查询关联的 condition IDs
+	// 批量查询关联的 conditions（完整对象 + IDs）
 	triggerIDs := make([]uint64, 0, len(pageResult.Data))
 	for _, t := range pageResult.Data {
 		triggerIDs = append(triggerIDs, t.ID)
 	}
 
-	conditionsMap := make(map[uint64][]int64)
+	conditionsObjMap := make(map[uint64][]*scanModel.ScanCondition)
+	conditionsIDMap := make(map[uint64][]int64)
 	if len(triggerIDs) > 0 {
 		var conditions []ScanPlanCondition
 		if err := s.db.WithContext(ctx).
 			Where("triggerID IN ? AND deleted = ?", triggerIDs, false).
 			Find(&conditions).Error; err == nil {
 			for _, c := range conditions {
-				conditionsMap[c.TriggerID] = append(conditionsMap[c.TriggerID], int64(c.ID))
+				conditionsIDMap[c.TriggerID] = append(conditionsIDMap[c.TriggerID], int64(c.ID))
+				conditionsObjMap[c.TriggerID] = append(conditionsObjMap[c.TriggerID], mapScanConditionToModel(c))
 			}
 		}
 	}
@@ -117,11 +119,52 @@ func (s *ScanTriggerStore) List(ctx context.Context, repoID uint, planID uint, f
 		}
 	}
 
+	// 批量查询关联的 solutions（完整对象 + IDs）
+	solutionsIDMap := make(map[uint64][]int64)
+	solutionsObjMap := make(map[uint64][]*scanModel.Solution)
+	if len(triggerIDs) > 0 {
+		// 先查关联关系
+		var triggerSolutions []ScanTriggerSolution
+		if err := s.db.WithContext(ctx).
+			Where("triggerID IN ? AND deleted = ?", triggerIDs, false).
+			Find(&triggerSolutions).Error; err == nil && len(triggerSolutions) > 0 {
+			// 收集所有 solutionID 并按 triggerID 分组
+			allSolutionIDs := make([]uint64, 0)
+			triggerToSolutionIDs := make(map[uint64][]uint64)
+			for _, ts := range triggerSolutions {
+				triggerToSolutionIDs[ts.TriggerID] = append(triggerToSolutionIDs[ts.TriggerID], ts.SolutionID)
+				solutionsIDMap[ts.TriggerID] = append(solutionsIDMap[ts.TriggerID], int64(ts.SolutionID))
+				allSolutionIDs = append(allSolutionIDs, ts.SolutionID)
+			}
+			// 批量查 solution 完整对象
+			var solutions []SolutionRules
+			if err := s.db.WithContext(ctx).
+				Where("id IN ? AND deleted = ?", allSolutionIDs, false).
+				Find(&solutions).Error; err == nil {
+				solutionMap := make(map[uint64]*scanModel.Solution, len(solutions))
+				for _, sol := range solutions {
+					solutionMap[sol.ID] = mapSolutionToModel(sol)
+				}
+				for tid, sids := range triggerToSolutionIDs {
+					for _, sid := range sids {
+						if obj, ok := solutionMap[sid]; ok {
+							solutionsObjMap[tid] = append(solutionsObjMap[tid], obj)
+						}
+					}
+				}
+			}
+		}
+	}
+
 	modelData := make([]*scanModel.ScanTrigger, 0, len(pageResult.Data))
 	for _, item := range pageResult.Data {
 		m := mapScanTriggerToModel(*item)
-		m.ConditionIDs = conditionsMap[item.ID]
-		m.ConditionCount = len(conditionsMap[item.ID])
+		m.ConditionIDs = conditionsIDMap[item.ID]
+		m.Conditions = conditionsObjMap[item.ID]
+		m.ConditionCount = len(conditionsIDMap[item.ID])
+		m.SolutionIDs = solutionsIDMap[item.ID]
+		m.Solutions = solutionsObjMap[item.ID]
+		m.SolutionCount = len(solutionsIDMap[item.ID])
 		if task, ok := latestTaskMap[item.ID]; ok {
 			taskID := int64(task.ID)
 			m.LatestTaskID = &taskID
@@ -193,4 +236,44 @@ func normalizeScanTriggerSortField(sort string) string {
 	default:
 		return "id"
 	}
+}
+
+// enrichTrigger 为单个 trigger 填充关联的 conditions 和 solutions 完整对象。
+func (s *ScanTriggerStore) enrichTrigger(ctx context.Context, data ScanPlanTrigger) *scanModel.ScanTrigger {
+	m := mapScanTriggerToModel(data)
+
+	// 查询关联 conditions
+	var conditions []ScanPlanCondition
+	if err := s.db.WithContext(ctx).
+		Where("triggerID = ? AND deleted = ?", data.ID, false).
+		Find(&conditions).Error; err == nil {
+		for _, c := range conditions {
+			m.ConditionIDs = append(m.ConditionIDs, int64(c.ID))
+			m.Conditions = append(m.Conditions, mapScanConditionToModel(c))
+		}
+		m.ConditionCount = len(conditions)
+	}
+
+	// 查询关联 solutions
+	var triggerSolutions []ScanTriggerSolution
+	if err := s.db.WithContext(ctx).
+		Where("triggerID = ? AND deleted = ?", data.ID, false).
+		Find(&triggerSolutions).Error; err == nil && len(triggerSolutions) > 0 {
+		solutionIDs := make([]uint64, 0, len(triggerSolutions))
+		for _, ts := range triggerSolutions {
+			solutionIDs = append(solutionIDs, ts.SolutionID)
+			m.SolutionIDs = append(m.SolutionIDs, int64(ts.SolutionID))
+		}
+		var solutions []SolutionRules
+		if err := s.db.WithContext(ctx).
+			Where("id IN ? AND deleted = ?", solutionIDs, false).
+			Find(&solutions).Error; err == nil {
+			for _, sol := range solutions {
+				m.Solutions = append(m.Solutions, mapSolutionToModel(sol))
+			}
+		}
+		m.SolutionCount = len(m.SolutionIDs)
+	}
+
+	return m
 }
