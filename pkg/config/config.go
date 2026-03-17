@@ -6,7 +6,7 @@ import "time"
 type Config struct {
 	InstanceID   string             `yaml:"-"`
 	URL          URL                `yaml:"-"`
-	WorkSpace  WorkSpace        `yaml:"workspace" envconfig:"GITFOX_WORKSPACE_ROOT_DIR"`
+	WorkSpace    WorkSpace          `yaml:"workspace" envconfig:"GITFOX_WORKSPACE_ROOT_DIR"`
 	Server       ServerConfig       `yaml:"server"`
 	Database     DatabaseConfig     `yaml:"database"`
 	SQLite       SQLiteConfig       `yaml:"sqlite"`
@@ -35,7 +35,7 @@ type PipelineAuthConfig struct {
 }
 
 type WorkSpace struct {
-	Root string `yaml:"root" envconfig:"GITFOX_WORKSPACE_ROOT_DIR"` 
+	Root string `yaml:"root" envconfig:"GITFOX_WORKSPACE_ROOT_DIR"`
 }
 
 // ServerConfig HTTP服务配置
@@ -48,9 +48,9 @@ type ServerConfig struct {
 
 // DatabaseConfig 数据库配置
 type DatabaseConfig struct {
-	Driver          string        `envconfig:"GITFOX_DB_DRIVER" default:"mysql"`
-	Datasource      string        `envconfig:"GITFOX_DB_DATASOURCE" required:"true"`
-	
+	Driver     string `envconfig:"GITFOX_DB_DRIVER" default:"mysql"`
+	Datasource string `envconfig:"GITFOX_DB_DATASOURCE" required:"true"`
+
 	PrintSQL        bool          `yaml:"printSQL"`
 	MaxIdleConn     int           `yaml:"maxIdleConn"`
 	MaxOpenConn     int           `yaml:"maxOpenConn"`
