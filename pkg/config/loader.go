@@ -30,7 +30,7 @@ const (
 	schemeHTTP    = "http"
 	schemeHTTPS   = "https"
 	schemeSSH     = "ssh"
-	gitfoxHomeDir = ".gitfox"
+	gitfoxHomeDir = "git"
 	blobDir       = "blob"
 )
 
@@ -61,17 +61,19 @@ func LoadConfig(mode string) (*Config, error) {
 		return nil, errors.Wrap(err, "failed to backfill urls")
 	}
 
-	if config.Git.HookPath == "" {
-		executablePath, err := os.Executable()
+	if config.WorkSpace.Root == "" {
+		config.WorkSpace.Root, err = os.UserHomeDir()
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to get path of current executable: %v", err)
+			return nil, errors.Wrap(err, "failed to get user home directory")
 		}
+	}
 
-		config.Git.HookPath = executablePath
+	if config.Git.HookPath == "" {
+		config.Git.HookPath = config.WorkSpace.Root
 	}
 
 	if config.Git.Root == "" {
-		homedir, err := os.UserHomeDir()
+		homedir := config.WorkSpace.Root
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to get user home directory")
 		}
@@ -85,6 +87,16 @@ func LoadConfig(mode string) (*Config, error) {
 				config.Git.Root = oldPath
 			}
 		}
+	}
+
+	if config.SSH.HostKeysDir == "" {
+		config.SSH.HostKeysDir = filepath.Join(config.WorkSpace.Root, "ssh")
+	}
+	if config.Logging.LogDir == "" {
+		config.Logging.LogDir = filepath.Join(config.WorkSpace.Root, "logs")
+	}
+	if config.Storage.Filesystem.RootDirectory == "" {
+		config.Storage.Filesystem.RootDirectory = filepath.Join(config.WorkSpace.Root, "storage")
 	}
 
 	return config, nil
@@ -213,7 +225,7 @@ func backfillURLs(config *Config) error {
 
 	// backfil internal URLS before continuing override with user provided base (which is external facing)
 	if config.URL.Internal == "" {
-		config.URL.Internal = combineToRawURL(scheme, "localhost", port, "")
+		config.URL.Internal = combineToRawURL(scheme, host, port, "")
 	}
 	if config.URL.Container == "" {
 		config.URL.Container = combineToRawURL(scheme, "host.docker.internal", port, "")
