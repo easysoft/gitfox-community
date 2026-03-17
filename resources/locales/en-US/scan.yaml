@@ -117,6 +117,7 @@ trigger:
   delete_error: "Failed to delete trigger."
   not_found: "Trigger not found."
   actions_required_error: "Actions are required for the selected trigger type."
+  actions_invalid_error: "Invalid trigger action. Valid values: branch_created, branch_updated, tag_created, tag_updated, pullreq_created, pullreq_reopened, pullreq_branch_updated, pullreq_closed, pullreq_merged."
   cron_branch_required_error: "cronBranch is required for cron trigger type."
   cron_required_error: "Cron is required for cron trigger type."
   invalid_cron_error: "Invalid cron expression."

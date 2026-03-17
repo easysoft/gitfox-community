@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	scanModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
 	scanStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/scan"
 	scanStoreMock "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/scan/mock"
@@ -304,7 +305,7 @@ func TestScanTriggerServiceSolutionSync(t *testing.T) {
 		got, err := svc.Create(context.Background(), newTestSession("tester"), 1, 2, scanModel.ScanTriggerReqForCreate{
 			Name:        "t1",
 			Type:        scanModel.ScanTriggerTypeEvent,
-			Actions:     "push",
+			Actions:     []constant.TriggerAction{constant.TriggerActionBranchUpdated},
 			SolutionIDs: []int64{10, 20},
 		})
 		require.NoError(t, err)
@@ -331,7 +332,7 @@ func TestScanTriggerServiceSolutionSync(t *testing.T) {
 		got, err := svc.Create(context.Background(), newTestSession("tester"), 1, 2, scanModel.ScanTriggerReqForCreate{
 			Name:    "t2",
 			Type:    scanModel.ScanTriggerTypeEvent,
-			Actions: "push",
+			Actions: []constant.TriggerAction{constant.TriggerActionBranchUpdated},
 		})
 		require.NoError(t, err)
 		require.NotNil(t, got)
@@ -358,7 +359,7 @@ func TestScanTriggerServiceSolutionSync(t *testing.T) {
 
 		svc := NewScanTriggerService(triggerStore, triggerSolutionStore, &fakeRepoStore{}, planStore, solutionStore, nil)
 		got, err := svc.Update(context.Background(), newTestSession("tester"), 2, 1, 9, scanModel.ScanTriggerReqForUpdate{
-			Actions:     "push",
+			Actions:     []constant.TriggerAction{constant.TriggerActionBranchUpdated},
 			SolutionIDs: []int64{30},
 		})
 		require.NoError(t, err)

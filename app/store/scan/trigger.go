@@ -2,6 +2,7 @@ package scan
 
 import (
 	"context"
+	"strings"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	scanModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
@@ -204,10 +205,11 @@ func mapScanTriggerToModel(data ScanPlanTrigger) *scanModel.ScanTrigger {
 		Name:        data.Name,
 		Desc:        data.Desc,
 		Type:        scanModel.ScanTriggerType(data.Type),
+		ScanType:    constant.ScanType(data.ScanType),
 		Cron:        data.Cron,
 		CronBranch:  data.CronBranch,
 		Keywords:    data.Keywords,
-		Actions:     data.Actions,
+		Actions:     parseActions(data.Actions),
 		Disabled:    data.Disabled,
 		CreatedBy:   data.CreatedBy,
 		CreatedDate: data.CreatedDate,
@@ -215,6 +217,34 @@ func mapScanTriggerToModel(data ScanPlanTrigger) *scanModel.ScanTrigger {
 		EditedDate:  data.EditedDate,
 		Deleted:     data.Deleted,
 	}
+}
+
+// parseActions 将逗号分隔的 actions 字符串转换为 []TriggerAction。
+func parseActions(s string) []constant.TriggerAction {
+	if s == "" {
+		return nil
+	}
+	parts := strings.Split(s, ",")
+	actions := make([]constant.TriggerAction, 0, len(parts))
+	for _, p := range parts {
+		p = strings.TrimSpace(p)
+		if p != "" {
+			actions = append(actions, constant.TriggerAction(p))
+		}
+	}
+	return actions
+}
+
+// JoinActions 将 []TriggerAction 转换为逗号分隔的字符串。
+func JoinActions(actions []constant.TriggerAction) string {
+	if len(actions) == 0 {
+		return ""
+	}
+	parts := make([]string, len(actions))
+	for i, a := range actions {
+		parts[i] = string(a)
+	}
+	return strings.Join(parts, ",")
 }
 
 func normalizeScanTriggerSortField(sort string) string {
