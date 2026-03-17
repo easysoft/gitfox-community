@@ -35,7 +35,7 @@ type PipelineAuthConfig struct {
 }
 
 type WorkSpace struct {
-	Root string `yaml:"root" envconfig:"GITFOX_WORKSPACE_ROOT_DIR" default:"/data/gitfox-community"` 
+	Root string `yaml:"root" envconfig:"GITFOX_WORKSPACE_ROOT_DIR"` 
 }
 
 // ServerConfig HTTP服务配置
@@ -93,7 +93,7 @@ type WebhookConfig struct {
 type SSHConfig struct {
 	Enable      bool   `yaml:"enable"`
 	Host        string `envconfig:"GITFOX_SERVER_HOST" yaml:"host"`
-	Port        int    `envconfig:"GITFOX_SSH_PORT" yaml:"port" default:"22"`
+	Port        int    `envconfig:"GITFOX_SSH_PORT" yaml:"port"`
 	DefaultUser string `yaml:"defaultUser" default:"git"`
 	HostKeysDir string `envconfig:"GITFOX_SSH_HOST_KEYS_DIR"`
 }
