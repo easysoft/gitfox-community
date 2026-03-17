@@ -71,6 +71,7 @@ func registerScanRoutes(r *gin.RouterGroup, controller *Controller) {
 			{
 				planWithID.GET("", controller.Scan.ScanPlanGet)
 				planWithID.GET("/rules", controller.Scan.ScanPlanListRules)
+				planWithID.GET("/plan-rules", controller.Scan.ScanPlanListRules)
 				planWithID.PATCH("", controller.Scan.ScanPlanUpdate)
 				planWithID.DELETE("", controller.Scan.ScanPlanDelete)
 				planWithID.POST("/bind", controller.Scan.ScanPlanBindSolution)

@@ -109,6 +109,15 @@ func (s *Store) GetByID(ctx context.Context, account string, id int64) (*publick
 func (s *Store) UpdateByID(ctx context.Context, account string, id int64, publicKey PublicKey) error {
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 
+		// 先查询公钥是否存在
+		var existing PublicKey
+		if err := tx.Where("account = ? and id = ?", account, id).First(&existing).Error; err != nil {
+			if err == gorm.ErrRecordNotFound {
+				return errors.WithI18nKey(errors.NotFound.Newf("public key id %d not found", id), i18n.AuthPubKeyUpdateNotFound)
+			}
+			return database.ProcessSQLErrorf(ctx, err)
+		}
+
 		if publicKey.Identifier != "" {
 			// 校验标识符是否已存在
 			existingKeys, err := s.ListByIdentifier(ctx, publicKey.Identifier, account)
@@ -144,22 +153,25 @@ func (s *Store) UpdateByID(ctx context.Context, account string, id int64, public
 		if result.Error != nil {
 			return database.ProcessSQLErrorf(ctx, result.Error)
 		}
-		if result.RowsAffected == 0 {
-			return errors.NotFound.Newf("public key id %d not found", id)
-		}
 		return nil
 	})
 }
 
 func (s *Store) DeleteByID(ctx context.Context, account string, id int64) error {
+	// 先查询公钥是否存在
+	var existing PublicKey
+	if err := s.db.WithContext(ctx).Where("account = ? and id = ?", account, id).First(&existing).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return errors.WithI18nKey(errors.NotFound.Newf("public key id %d not found", id), i18n.AuthPubKeyDeleteNotFound)
+		}
+		return database.ProcessSQLErrorf(ctx, err)
+	}
+
 	result := s.db.WithContext(ctx).
 		Where("account = ? and id = ?", account, id).
 		Delete(&PublicKey{})
 	if result.Error != nil {
 		return database.ProcessSQLErrorf(ctx, result.Error)
-	}
-	if result.RowsAffected == 0 {
-		return errors.NotFound.Newf("public key id %d not found", id)
 	}
 	return nil
 }

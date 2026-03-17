@@ -11,12 +11,15 @@ import (
 
 // ScanTriggerList 获取扫描计划的触发器列表
 // @Summary 获取扫描计划的触发器列表
-// @Description 根据扫描计划 ID 查询触发器列表
+// @Description 根据扫描计划 ID 查询触发器列表，支持分页
 // @Tags scan
-// @Accept application/json
 // @Produce application/json
 // @Param repoID path uint true "仓库 ID"
 // @Param planID path uint true "计划 ID"
+// @Param sort query string false "排序字段" default(id)
+// @Param order query string false "排序方向" default(desc)
+// @Param page query int false "页码" default(1)
+// @Param pageSize query int false "每页数量" default(30)
 // @Success 200 {object} resp.ListResponse{data=[]scanModel.ScanTrigger,listArgs=resp.ListArgs} "查询成功"
 // @Failure 400 {object} resp.ObjectResponse "参数错误"
 // @Failure 500 {object} resp.ObjectResponse "服务器内部错误"
@@ -27,13 +30,21 @@ func (c *ScanController) ScanTriggerList(ctx *gin.Context) {
 		return
 	}
 
-	triggers, err := c.triggerSvc.List(ctx.Request.Context(), repoID, planID)
+	var filter scanModel.ScanTriggerReqFilter
+	if err := ctx.ShouldBindQuery(&filter); err != nil {
+		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.TriggerBodyParamError))
+		return
+	}
+	req.SetDefaults(&filter)
+
+	result, err := c.triggerSvc.List(ctx.Request.Context(), repoID, planID, filter)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return
 	}
-	resp.ListSuccess(ctx, triggers,
-		resp.ListArgs{Total: int64(len(triggers)), Page: 1, PageSize: int64(len(triggers))},
+
+	resp.ListSuccess(ctx, result.Data,
+		resp.ListArgs{Total: result.Total, Page: int64(filter.Page), PageSize: int64(filter.PageSize)},
 		i18n.TriggerListSuccess, nil)
 }
 

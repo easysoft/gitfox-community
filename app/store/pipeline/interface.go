@@ -37,6 +37,8 @@ type Interface interface {
 	// --- 流水线内容相关 ---
 	// CreatePipelineContent 创建流水线内容
 	CreatePipelineContent(ctx context.Context, content *pipelineModel.PipelineContent) (*pipelineModel.PipelineContent, error)
+	// UpdatePipelineContent 更新流水线内容
+	UpdatePipelineContent(ctx context.Context, content *pipelineModel.PipelineContent) error
 	// GetPipelineContentByPipelineID 根据流水线ID获取流水线内容
 	GetPipelineContentByPipelineID(ctx context.Context, pipelineID int64) (*pipelineModel.PipelineContent, error)
 

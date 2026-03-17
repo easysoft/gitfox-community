@@ -120,6 +120,7 @@ type CiConfig struct {
 	Runner            string   `envconfig:"GITFOX_CI_RUNNER"`
 	ParallelWorkers   uint     `envconfig:"GITFOX_CI_ParallelWorkers" default:"2"`
 	ContainerNetworks []string `envconfig:"GITFOX_CI_CONTAINER_NETWORKS"`
+	ContainerVolume   string   `envconfig:"GITFOX_CI_CONTAINER_VOLUME"`
 }
 
 // GitspaceConfig Gitspace配置

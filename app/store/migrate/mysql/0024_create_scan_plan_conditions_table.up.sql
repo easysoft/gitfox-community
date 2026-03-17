@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS `ops_scan_plan_conditions` (
 	`planID` int unsigned NOT NULL COMMENT '扫描计划ID',
 	`triggerID` int unsigned NOT NULL DEFAULT 0 COMMENT '触发器ID',
 	`repoID` int unsigned NOT NULL COMMENT '仓库ID',
-	`priority` tinyint(1) NOT NULL COMMENT '优先级（0-low,1-medium,2-high）',
+	`priority` varchar(20) NOT NULL  COMMENT '规则优先级（low-低、medium-中、high-高）',
 	`type` varchar(50) NOT NULL COMMENT '条件类型（defect/security/compliance/optimize）',
 	`unit` varchar(20) NOT NULL COMMENT '阈值单位（count/percent）',
 	`threshold` bigint NOT NULL COMMENT '阈值',

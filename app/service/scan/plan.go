@@ -206,25 +206,26 @@ func (s *ScanPlanService) List(ctx context.Context, repoID uint, filter scanMode
 	return s.planStore.List(ctx, repoID, filter)
 }
 
-func (s *ScanPlanService) ListRules(ctx context.Context, repoID uint, planID uint, triggerID uint) ([]*scanModel.Rule, error) {
+func (s *ScanPlanService) ListRules(ctx context.Context, repoID uint, planID uint, triggerID uint) (*scanModel.ScanPlan, []*scanModel.Rule, error) {
 	if err := s.ensureRepoExists(ctx, repoID); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	if _, err := s.getPlanByRepoAndID(ctx, repoID, planID); err != nil {
-		return nil, err
+	plan, err := s.getPlanByRepoAndID(ctx, repoID, planID)
+	if err != nil {
+		return nil, nil, err
 	}
 	if triggerID != 0 {
 		if _, err := s.getTriggerByRepoPlanAndID(ctx, repoID, planID, triggerID); err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 	}
 
 	solutionIDs, err := s.planStore.GetSolutionIDList(ctx, planID)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	if len(solutionIDs) == 0 {
-		return []*scanModel.Rule{}, nil
+		return nil, []*scanModel.Rule{}, nil
 	}
 
 	ruleIDs := make([]int64, 0)
@@ -232,7 +233,7 @@ func (s *ScanPlanService) ListRules(ctx context.Context, repoID uint, planID uin
 	for _, solutionID := range solutionIDs {
 		solution, err := s.getSolutionByID(ctx, uint(solutionID))
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		if solution.Status != constant.ScanRuleStatusEnabled {
 			continue
@@ -240,7 +241,7 @@ func (s *ScanPlanService) ListRules(ctx context.Context, repoID uint, planID uin
 
 		rulesets, err := s.solutionStore.ListRulesets(ctx, uint(solutionID))
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		for _, ruleset := range rulesets {
 			if ruleset == nil || ruleset.Deleted || ruleset.Status != constant.ScanRuleStatusEnabled {
@@ -249,7 +250,7 @@ func (s *ScanPlanService) ListRules(ctx context.Context, repoID uint, planID uin
 
 			rulesetRuleIDs, err := s.ruleSetStore.GetRuleIDList(ctx, uint(ruleset.ID))
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
 			for _, ruleID := range rulesetRuleIDs {
 				if _, ok := seenRuleIDs[ruleID]; ok {
@@ -261,12 +262,12 @@ func (s *ScanPlanService) ListRules(ctx context.Context, repoID uint, planID uin
 		}
 	}
 	if len(ruleIDs) == 0 {
-		return []*scanModel.Rule{}, nil
+		return nil, []*scanModel.Rule{}, nil
 	}
 
 	rules, err := s.ruleStore.ListByIDs(ctx, ruleIDs)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	result := make([]*scanModel.Rule, 0, len(rules))
@@ -276,7 +277,7 @@ func (s *ScanPlanService) ListRules(ctx context.Context, repoID uint, planID uin
 		}
 		result = append(result, rule)
 	}
-	return result, nil
+	return plan, result, nil
 }
 
 func (s *ScanPlanService) BindSolutions(ctx context.Context, repoID uint, planID uint, req scanModel.ScanPlanReqForBind) error {

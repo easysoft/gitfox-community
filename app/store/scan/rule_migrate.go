@@ -6,17 +6,17 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"time"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/resources"
 	"gorm.io/gorm"
 )
 
 // Migrate 从嵌入的 JSON 文件中迁移规则数据
 func (s *RuleStore) Migrate(ctx context.Context, rulesFile *resources.RulesFile) error {
-	now := time.Now()
+	now := datetime.NowLocalTime()
 
 	// 使用事务批量插入或更新
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
@@ -83,7 +83,7 @@ func getRuleMigrationName(plugin string, lang string) string {
 }
 
 // 直接插入 规则数据
-func insertRules(ctx context.Context, tx *gorm.DB, rulesFile *resources.RulesFile, firstRun bool, now time.Time) error {
+func insertRules(ctx context.Context, tx *gorm.DB, rulesFile *resources.RulesFile, firstRun bool, now *datetime.Local) error {
 
 	if !firstRun {
 		// 删除默认规则
@@ -109,9 +109,9 @@ func insertRules(ctx context.Context, tx *gorm.DB, rulesFile *resources.RulesFil
 			IsCustom:    false,
 			Status:      constant.ScanRuleStatusEnabled,
 			CreatedBy:   "system",
-			CreatedDate: &now,
+			CreatedDate: now,
 			EditedBy:    "system",
-			EditedDate:  &now,
+			EditedDate:  now,
 			Deleted:     false,
 		}
 		err := tx.Create(rule).Error
@@ -141,7 +141,7 @@ func insertRules(ctx context.Context, tx *gorm.DB, rulesFile *resources.RulesFil
 }
 
 // 创建默认规则集
-func createMigrateScanRuleSet(ctx context.Context, tx *gorm.DB, rulesFile *resources.RulesFile, now time.Time) error {
+func createMigrateScanRuleSet(ctx context.Context, tx *gorm.DB, rulesFile *resources.RulesFile, now *datetime.Local) error {
 	ruleSetName := fmt.Sprintf("%s:%s默认规则集", rulesFile.Lang, rulesFile.Plugin)
 	ruleSetNameEn := fmt.Sprintf("%s:%s default rule set", rulesFile.Lang, rulesFile.Plugin)
 	if rulesFile.Lang == string(constant.ScanLangCustomName) {
@@ -176,9 +176,9 @@ func createMigrateScanRuleSet(ctx context.Context, tx *gorm.DB, rulesFile *resou
 		Status:      constant.ScanRuleStatusEnabled,
 		Plugin:      rulesFile.Plugin,
 		CreatedBy:   "system",
-		CreatedDate: &now,
+		CreatedDate: now,
 		EditedBy:    "system",
-		EditedDate:  &now,
+		EditedDate:  now,
 		Deleted:     false,
 	}
 	err = tx.Create(ruleSet).Error
@@ -194,7 +194,7 @@ func createMigrateScanRuleSet(ctx context.Context, tx *gorm.DB, rulesFile *resou
 }
 
 // 创建默认规则关联的规则
-func createMigrateScanRuleSetRules(ctx context.Context, tx *gorm.DB, ruleSet *RuleSet, now time.Time) error {
+func createMigrateScanRuleSetRules(ctx context.Context, tx *gorm.DB, ruleSet *RuleSet, now *datetime.Local) error {
 	// 获取所有规则的ID
 	var ruleIDs []int64
 	if err := tx.Model(&Rule{}).Select("id").Where("lang = ? AND plugin = ? AND isCustom = ? AND deleted = ?", ruleSet.Lang, ruleSet.Plugin, false, false).Scan(&ruleIDs).Error; err != nil {
@@ -209,7 +209,7 @@ func createMigrateScanRuleSetRules(ctx context.Context, tx *gorm.DB, ruleSet *Ru
 }
 
 // 创建默认解决方案（幂等：存在则补齐绑定，不删除重建）
-func createMigrateScanRuleSolutions(ctx context.Context, tx *gorm.DB, rulesFile *resources.RulesFile, now time.Time) error {
+func createMigrateScanRuleSolutions(ctx context.Context, tx *gorm.DB, rulesFile *resources.RulesFile, now *datetime.Local) error {
 	solutionName := fmt.Sprintf("%s默认扫描方案", rulesFile.Lang)
 	solutionNameEn := fmt.Sprintf("%s default scan solution", rulesFile.Lang)
 	if rulesFile.Lang == string(constant.ScanLangCustomName) {
@@ -231,9 +231,9 @@ func createMigrateScanRuleSolutions(ctx context.Context, tx *gorm.DB, rulesFile 
 			IsCustom:    false,
 			Status:      constant.ScanRuleStatusEnabled,
 			CreatedBy:   "system",
-			CreatedDate: &now,
+			CreatedDate: now,
 			EditedBy:    "system",
-			EditedDate:  &now,
+			EditedDate:  now,
 			Deleted:     false,
 		}
 		if err = tx.Create(&solution).Error; err != nil {
@@ -273,7 +273,7 @@ func createMigrateScanRuleSolutions(ctx context.Context, tx *gorm.DB, rulesFile 
 			Updates(map[string]interface{}{
 				"deleted":    false,
 				"editedBy":   "system",
-				"editedDate": &now,
+				"editedDate": now,
 			})
 		if result.Error != nil {
 			return database.ProcessSQLErrorf(ctx, result.Error)
@@ -287,9 +287,9 @@ func createMigrateScanRuleSolutions(ctx context.Context, tx *gorm.DB, rulesFile 
 			SolutionID:  uint64(solution.ID),
 			RuleSetID:   uint64(ruleSetID),
 			CreatedBy:   "system",
-			CreatedDate: &now,
+			CreatedDate: now,
 			EditedBy:    "system",
-			EditedDate:  &now,
+			EditedDate:  now,
 			Deleted:     false,
 		}
 		if err := tx.Create(solutionRuleSet).Error; err != nil {
@@ -301,7 +301,7 @@ func createMigrateScanRuleSolutions(ctx context.Context, tx *gorm.DB, rulesFile 
 }
 
 // 更新或者创建规则版本
-func updateOrCreateMigrateScanRuleVersion(ctx context.Context, tx *gorm.DB, rulesFile *resources.RulesFile, now time.Time) error {
+func updateOrCreateMigrateScanRuleVersion(ctx context.Context, tx *gorm.DB, rulesFile *resources.RulesFile, now *datetime.Local) error {
 	migrationName := getRuleMigrationName(rulesFile.Plugin, rulesFile.Lang)
 
 	// 先查询是否存在
@@ -314,7 +314,7 @@ func updateOrCreateMigrateScanRuleVersion(ctx context.Context, tx *gorm.DB, rule
 			Name:        migrationName,
 			Version:     rulesFile.Version,
 			CreatedBy:   "system",
-			CreatedDate: &now,
+			CreatedDate: now,
 			Deleted:     false,
 		}
 		if err = tx.Create(&migration).Error; err != nil {
@@ -327,7 +327,7 @@ func updateOrCreateMigrateScanRuleVersion(ctx context.Context, tx *gorm.DB, rule
 		updates := map[string]interface{}{
 			"version":    rulesFile.Version,
 			"editedBy":   "system",
-			"editedDate": &now,
+			"editedDate": now,
 		}
 		if err := tx.Model(&existing).Updates(updates).Error; err != nil {
 			return database.ProcessSQLErrorf(ctx, err)
@@ -338,7 +338,7 @@ func updateOrCreateMigrateScanRuleVersion(ctx context.Context, tx *gorm.DB, rule
 }
 
 // 关联规则集与规则
-func rulesSetBindRules(ctx context.Context, tx *gorm.DB, ruleSet *RuleSet, ruleIDs []int64, now time.Time) error {
+func rulesSetBindRules(ctx context.Context, tx *gorm.DB, ruleSet *RuleSet, ruleIDs []int64, now *datetime.Local) error {
 	if len(ruleIDs) == 0 {
 		return nil
 	}
@@ -348,9 +348,9 @@ func rulesSetBindRules(ctx context.Context, tx *gorm.DB, ruleSet *RuleSet, ruleI
 			RuleSetID:   ruleSet.ID,
 			RuleID:      uint64(ruleID),
 			CreatedBy:   "system",
-			CreatedDate: &now,
+			CreatedDate: now,
 			EditedBy:    "system",
-			EditedDate:  &now,
+			EditedDate:  now,
 			Deleted:     false,
 		}
 		if err := tx.Create(newRuleSetRule).Error; err != nil {

@@ -613,6 +613,68 @@ const docTemplate = `{
                 }
             }
         },
+        "/pipelines/{pipelineID}/executions/{executionID}/logstream/{stageID}/{stepID}": {
+            "get": {
+                "description": "优先从文件存储读取已完成的日志，若无文件日志则以 SSE 方式流式返回实时日志流，输出格式为纯文本 [时间戳] 消息",
+                "produces": [
+                    "text/event-stream"
+                ],
+                "tags": [
+                    "executions"
+                ],
+                "summary": "流式获取流水线步骤日志（纯文本/流）",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "流水线ID",
+                        "name": "pipelineID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "执行ID",
+                        "name": "executionID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "阶段ID",
+                        "name": "stageID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "步骤ID",
+                        "name": "stepID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "SSE 日志流",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/pipelines/{pipelineID}/executions/{executionID}/stream/{stageID}/{stepID}": {
             "get": {
                 "description": "以 SSE 方式流式返回指定步骤的实时日志流",
@@ -4780,6 +4842,93 @@ const docTemplate = `{
                 }
             }
         },
+        "/scan/repos/{repoID}/scanplans/{planID}/plan-rules": {
+            "get": {
+                "description": "根据计划 ID 查询最终生效的规则列表，可选传 triggerID 做作用域校验",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scan"
+                ],
+                "summary": "获取扫描计划和展开后的有效规则列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "仓库 ID",
+                        "name": "repoID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "计划 ID",
+                        "name": "planID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "触发器 ID",
+                        "name": "triggerID",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "查询成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/definitions/gin.H"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "plan": {
+                                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanPlan"
+                                                        },
+                                                        "rules": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.Rule"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/scan/repos/{repoID}/scanplans/{planID}/rules": {
             "get": {
                 "description": "根据计划 ID 查询最终生效的规则列表，可选传 triggerID 做作用域校验",
@@ -4857,10 +5006,7 @@ const docTemplate = `{
         },
         "/scan/repos/{repoID}/scanplans/{planID}/triggers": {
             "get": {
-                "description": "根据扫描计划 ID 查询触发器列表",
-                "consumes": [
-                    "application/json"
-                ],
+                "description": "根据扫描计划 ID 查询触发器列表，支持分页",
                 "produces": [
                     "application/json"
                 ],
@@ -4882,6 +5028,34 @@ const docTemplate = `{
                         "name": "planID",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "id",
+                        "description": "排序字段",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "default": "desc",
+                        "description": "排序方向",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 30,
+                        "description": "每页数量",
+                        "name": "pageSize",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -7809,6 +7983,10 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "gin.H": {
+            "type": "object",
+            "additionalProperties": {}
+        },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListArgs": {
             "type": "object",
             "properties": {
@@ -10075,6 +10253,18 @@ const docTemplate = `{
                 "id": {
                     "type": "integer"
                 },
+                "latestTaskCreated": {
+                    "type": "string"
+                },
+                "latestTaskID": {
+                    "type": "integer"
+                },
+                "latestTaskResult": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanTaskResult"
+                },
+                "latestTaskStatus": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanTaskStatus"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -10449,6 +10639,21 @@ const docTemplate = `{
                 "actions": {
                     "type": "string"
                 },
+                "conditionCount": {
+                    "type": "integer"
+                },
+                "conditionIDs": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "conditions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanCondition"
+                    }
+                },
                 "createdBy": {
                     "type": "string"
                 },
@@ -10482,6 +10687,18 @@ const docTemplate = `{
                 "keywords": {
                     "type": "string"
                 },
+                "latestTaskCreated": {
+                    "type": "string"
+                },
+                "latestTaskID": {
+                    "type": "integer"
+                },
+                "latestTaskResult": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanTaskResult"
+                },
+                "latestTaskStatus": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanTaskStatus"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -10490,6 +10707,21 @@ const docTemplate = `{
                 },
                 "repoID": {
                     "type": "integer"
+                },
+                "solutionCount": {
+                    "type": "integer"
+                },
+                "solutionIDs": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "solutions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.Solution"
+                    }
                 },
                 "type": {
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTriggerType"
@@ -10524,6 +10756,12 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 100
                 },
+                "solutionIDs": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
                 "type": {
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTriggerType"
                 }
@@ -10552,6 +10790,12 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
+                },
+                "solutionIDs": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
                 },
                 "type": {
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTriggerType"

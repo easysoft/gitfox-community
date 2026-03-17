@@ -1,10 +1,9 @@
 package scan
 
 import (
-	"time"
-
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
 )
 
 type Rule struct {
@@ -23,9 +22,9 @@ type Rule struct {
 	IsCustom    bool                      `json:"isCustom,omitempty"`
 	Status      constant.ScanRuleStatus   `json:"status,omitempty"`
 	CreatedBy   string                    `json:"createdBy,omitempty"`
-	CreatedDate *time.Time                `json:"createdDate"` // 允许 NULL，用指针类型
+	CreatedDate *datetime.Local           `json:"createdDate"` // 允许 NULL，用指针类型
 	EditedBy    string                    `json:"editedBy"`
-	EditedDate  *time.Time                `json:"editedDate"` // 允许 NULL，用指针类型
+	EditedDate  *datetime.Local           `json:"editedDate"` // 允许 NULL，用指针类型
 	Deleted     bool                      `json:"deleted"`
 }
 

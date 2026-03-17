@@ -109,6 +109,7 @@ func newDockerRunner(
 		ExtraHosts:  extraHosts,
 		Privileged:  Privileged,
 		Networks:    config.Ci.ContainerNetworks,
+		Mount:       config.Ci.ContainerVolume,
 	}
 
 	runner := &runtime2.Runner{

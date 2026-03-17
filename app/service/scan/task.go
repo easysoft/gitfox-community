@@ -83,18 +83,6 @@ func NewScanTaskService(
 
 // Create 创建扫描任务
 func (s *ScanTaskService) Create(ctx context.Context, in *ScanTaskInput) (*scanModel.ScanTask, error) {
-	// 获取或创建代码扫描流水线
-	pipeline, err := s.getOrCreatePipeline(ctx, in.Plan.RepoID, in)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get or create pipeline: %w", err)
-	}
-
-	// 触发流水线执行
-	execution, err := s.triggerSvc.Trigger(ctx, uint(pipeline.ID), in.Hook)
-	if err != nil {
-		return nil, fmt.Errorf("failed to trigger pipeline: %w", err)
-	}
-
 	// 计算序号
 	planNumber, err := s.taskStore.NextPlanNumber(ctx, uint64(in.Plan.ID))
 	if err != nil {
@@ -105,15 +93,14 @@ func (s *ScanTaskService) Create(ctx context.Context, in *ScanTaskInput) (*scanM
 		return nil, fmt.Errorf("failed to get next repo number: %w", err)
 	}
 
-	// 构建扫描任务
+	// 先创建扫描任务（ExecutionID 暂为 0，后续更新）
 	task := &scanStore.ScanTask{
-		PlanID:      uint64(in.Plan.ID),
-		ExecutionID: uint64(execution.ID),
-		RepoNumber:  repoNumber,
-		PlanNumber:  planNumber,
-		ScanType:    constant.ScanType(in.Plan.ScanType),
-		Status:      constant.ScanTaskStatusInProgress,
-		CreatedBy:   in.Hook.Sender,
+		PlanID:     uint64(in.Plan.ID),
+		RepoNumber: repoNumber,
+		PlanNumber: planNumber,
+		ScanType:   constant.ScanType(in.Plan.ScanType),
+		Status:     constant.ScanTaskStatusInProgress,
+		CreatedBy:  in.Hook.Sender,
 	}
 	if in.Trigger == nil {
 		task.TriggerType = constant.ScanPlanTriggerTypeManual
@@ -129,6 +116,37 @@ func (s *ScanTaskService) Create(ctx context.Context, in *ScanTaskInput) (*scanM
 	if err != nil {
 		return nil, fmt.Errorf("failed to create scan task: %w", err)
 	}
+
+	// 注入扫描参数到 Hook.Params，随流水线传递到容器环境变量
+	var triggerID int64
+	if in.Trigger != nil {
+		triggerID = in.Trigger.ID
+	}
+	in.Hook.Params["SCAN_PLAN_ID"] = fmt.Sprintf("%d", in.Plan.ID)
+	in.Hook.Params["SCAN_TASK_ID"] = fmt.Sprintf("%d", created.ID)
+	in.Hook.Params["SCAN_TRIGGER_ID"] = fmt.Sprintf("%d", triggerID)
+
+	// 获取或创建代码扫描流水线
+	pipeline, err := s.getOrCreatePipeline(ctx, in.Plan.RepoID, in)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get or create pipeline: %w", err)
+	}
+
+	// 触发流水线执行
+	execution, err := s.triggerSvc.Trigger(ctx, uint(pipeline.ID), in.Hook)
+	if err != nil {
+		return nil, fmt.Errorf("failed to trigger pipeline: %w", err)
+	}
+
+	// 用 execution.ID 回填扫描任务
+	if err := s.taskStore.Update(ctx, &scanStore.ScanTask{
+		ID:          uint64(created.ID),
+		ExecutionID: uint64(execution.ID),
+	}); err != nil {
+		return nil, fmt.Errorf("failed to update scan task execution id: %w", err)
+	}
+	created.ExecutionID = int64(execution.ID)
+
 	return created, nil
 }
 
@@ -174,6 +192,15 @@ func (s *ScanTaskService) Retry(ctx context.Context, session *authModel.Session,
 		Params:      map[string]string{},
 		Timestamp:   time.Now().UnixMilli(),
 	}
+
+	// 注入扫描参数到 Hook.Params
+	var triggerID int64
+	if taskInfo.Trigger != nil {
+		triggerID = taskInfo.Trigger.ID
+	}
+	hook.Params["SCAN_PLAN_ID"] = fmt.Sprintf("%d", taskInfo.PlanID)
+	hook.Params["SCAN_TASK_ID"] = fmt.Sprintf("%d", taskID)
+	hook.Params["SCAN_TRIGGER_ID"] = fmt.Sprintf("%d", triggerID)
 
 	// 获取或创建流水线
 	input := &ScanTaskInput{
@@ -271,7 +298,13 @@ func (s *ScanTaskService) getOrCreatePipeline(ctx context.Context, repoID int64,
 		if err != nil {
 			return nil, err
 		}
+	} else {
+		// 如果流水线已存在，更新流水线对应的 content（覆盖原有内容）
+		if err := s.updatePipelineContent(ctx, pipeline.ID, in); err != nil {
+			return nil, err
+		}
 	}
+
 	return pipeline, nil
 }
 
@@ -314,6 +347,27 @@ func (s *ScanTaskService) createPipeline(ctx context.Context, repoID int64, in *
 	}
 
 	return pipeline, nil
+}
+
+// updatePipelineContent 更新代码扫描流水线内容
+func (s *ScanTaskService) updatePipelineContent(ctx context.Context, pipelineID int64, in *ScanTaskInput) error {
+	// 根据扫描计划关联的语言选择流水线配置
+	yamlFile := "pipeline/" + _codeScanLabel + ".yaml"
+	if s.containsLangCsharp(ctx, in.Plan.ID) {
+		yamlFile = "pipeline/" + _codeScanCsharpLabel + ".yaml"
+	}
+
+	// 读取 embed 的流水线配置
+	data, err := resources.EmbeddedPipelines.ReadFile(yamlFile)
+	if err != nil {
+		return fmt.Errorf("failed to read embedded pipeline config %s: %w", yamlFile, err)
+	}
+	// 创建流水线内容（base64 编码后存入）
+	content := &pipelineModel.PipelineContent{
+		PipelineID: pipelineID,
+		Data:       []byte(base64.StdEncoding.EncodeToString(data)),
+	}
+	return s.pipelineStore.UpdatePipelineContent(ctx, content)
 }
 
 // containsLangCsharp 检查扫描计划关联的方案是否包含 C# 语言

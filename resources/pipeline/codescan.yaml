@@ -1,13 +1,23 @@
 version: 1
 kind: pipeline
 spec:
+  options:
+    clone:
+      disabled: true
   stages:
     - name: codescan
       type: ci
       spec:
-        clone:
-          depth: 5
         steps:
+          - name: clone
+            type: run
+            spec:
+              container:
+                image: qucheng.tencentcloudcr.com/ci/gitfox-plugin:alpine-git
+                pull: always
+              script:
+                - git clone http://10.0.4.11:3000/git/1/repo20260202.git && echo "clone done"
+                - pwd
           - name: codescan
             type: run
             spec:

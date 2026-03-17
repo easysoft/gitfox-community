@@ -4,10 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
-	"time"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
 	"github.com/bmatcuk/doublestar/v4"
 )
 
@@ -168,20 +169,25 @@ type ScanPlanRulesReqQuery struct {
 
 // ScanPlan 扫描计划响应模型
 type ScanPlan struct {
-	ID            int64       `json:"id"`
-	RepoID        int64       `json:"repoID"`
-	Name          string      `json:"name"`
-	Desc          string      `json:"desc"`
-	ScanType      string      `json:"scanType"`
-	Branches      *Pattern    `json:"branches,omitempty"`
-	Files         *Pattern    `json:"files,omitempty"`
-	SolutionIDs   []int64     `json:"solutionIDs,omitempty"`
-	SolutionCount int         `json:"solutionCount"`
-	TriggerCount  int         `json:"triggerCount"`
-	Solutions     []*Solution `json:"solutions,omitempty"`
-	CreatedBy     string      `json:"createdBy,omitempty"`
-	CreatedDate   *time.Time  `json:"createdDate"`
-	EditedBy      string      `json:"editedBy"`
-	EditedDate    *time.Time  `json:"editedDate"`
-	Deleted       bool        `json:"deleted"`
+	ID            int64           `json:"id"`
+	RepoID        int64           `json:"repoID"`
+	Name          string          `json:"name"`
+	Desc          string          `json:"desc"`
+	ScanType      string          `json:"scanType"`
+	Branches      *Pattern        `json:"branches,omitempty"`
+	Files         *Pattern        `json:"files,omitempty"`
+	SolutionIDs   []int64         `json:"solutionIDs,omitempty"`
+	SolutionCount int             `json:"solutionCount"`
+	TriggerCount  int             `json:"triggerCount"`
+	Solutions     []*Solution     `json:"solutions,omitempty"`
+	CreatedBy     string          `json:"createdBy,omitempty"`
+	CreatedDate   *datetime.Local `json:"createdDate"`
+	EditedBy      string          `json:"editedBy"`
+	EditedDate    *datetime.Local `json:"editedDate"`
+	Deleted       bool            `json:"deleted"`
+
+	LatestTaskID      *int64                   `json:"latestTaskID,omitempty"`
+	LatestTaskCreated *datetime.Local          `json:"latestTaskCreated,omitempty"`
+	LatestTaskResult  *constant.ScanTaskResult `json:"latestTaskResult,omitempty"`
+	LatestTaskStatus  *constant.ScanTaskStatus `json:"latestTaskStatus,omitempty"`
 }
