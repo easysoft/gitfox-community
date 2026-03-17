@@ -5,6 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math/rand"
+	"time"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
@@ -35,6 +37,16 @@ func NewEmbeddedClient(
 	}
 }
 
+func generateInternalToken() string {
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	const hexChars = "0123456789abcdef"
+	b := make([]byte, 31)
+	for i := range b {
+		b[i] = hexChars[r.Intn(len(hexChars))]
+	}
+	return "internal." + string(b)
+}
+
 // Join notifies the server the runner is joining the cluster.
 // Since the runner is embedded, this can just return nil.
 func (e *embedded) Join(_ context.Context, _ string) error {
@@ -56,6 +68,7 @@ func (e *embedded) Ping(_ context.Context, _ string) error {
 // Request requests the next available build stage for execution.
 func (e *embedded) Request(ctx context.Context, args *client.Filter) (*drone.Stage, error) {
 	request := &Request{
+		Token:  generateInternalToken(),
 		Type:   args.Type,
 		OS:     args.OS,
 		Arch:   args.Arch,

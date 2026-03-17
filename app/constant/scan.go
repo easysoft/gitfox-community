@@ -4,6 +4,24 @@ import (
 	"strings"
 )
 
+
+type ScanLangID int
+
+const (
+	ScanLangIDCustom ScanLangID = iota
+	ScanLangGo
+	ScanLangJava
+	ScanLangJavaScript
+	ScanLangKotlin
+	ScanLangPHP
+	ScanLangPython
+	ScanLangRuby
+	ScanLangRust
+	ScanLangTypeScript
+	ScanLangC
+	ScanLangCsharp
+)
+
 type ScanLangName string
 
 const (
@@ -27,6 +45,37 @@ func (s ScanLangName) String() string {
 
 func (s ScanLangName) LowerString() string {
 	return strings.ToLower(string(s))
+}
+
+func (s ScanLangName) ID() ScanLangID {
+	switch s {
+	case ScanLangCustomName:
+		return ScanLangIDCustom
+	case ScanLangGoName:
+		return ScanLangGo
+	case ScanLangJavaName:
+		return ScanLangJava
+	case ScanLangJavaScriptName:
+		return ScanLangJavaScript
+	case ScanLangKotlinName:
+		return ScanLangKotlin
+	case ScanLangPHPName:
+		return ScanLangPHP
+	case ScanLangPythonName:
+		return ScanLangPython
+	case ScanLangRubyName:
+		return ScanLangRuby
+	case ScanLangRustName:
+		return ScanLangRust
+	case ScanLangTypeScriptName:
+		return ScanLangTypeScript
+	case ScanLangCName:
+		return ScanLangC
+	case ScanLangCsharpName:
+		return ScanLangCsharp
+	default:
+		return ScanLangIDCustom
+	}
 }
 
 var scanLangs = sortEnum([]ScanLangName{
@@ -79,14 +128,15 @@ func ParseLang(v string) ScanLangName {
 	}
 }
 
+
 // ScanRulePriority 规则优先级
-type ScanRulePriority int
+type ScanRulePriority string
 
 const (
-	ScanRulePriorityLow ScanRulePriority = iota
-	ScanRulePriorityMedium
-	ScanRulePriorityHigh
-	scanRulePriorityNone = -1
+	ScanRulePriorityLow    ScanRulePriority = "low"
+	ScanRulePriorityMedium ScanRulePriority = "medium"
+	ScanRulePriorityHigh   ScanRulePriority = "high"
+	scanRulePriorityNone   ScanRulePriority = ""
 )
 
 var scanRulePriorities = sortEnum([]ScanRulePriority{
@@ -95,6 +145,7 @@ var scanRulePriorities = sortEnum([]ScanRulePriority{
 	ScanRulePriorityHigh,
 })
 
+func (s ScanRulePriority) String() string    { return string(s) }
 func (ScanRulePriority) Enum() []interface{} { return toInterfaceSlice(scanRulePriorities) }
 func (s ScanRulePriority) Sanitize() (ScanRulePriority, bool) {
 	return Sanitize(s, GetAllScanRulePriorities)
@@ -112,6 +163,74 @@ func GetAllScanRulePriorities() ([]ScanRulePriority, ScanRulePriority) {
 	return scanRulePriorities, scanRulePriorityNone
 }
 
+
+// ScanRuleSeverity 规则严重性
+type ScanRuleSeverity string
+
+const (
+	ScanRuleSeverityLow      ScanRuleSeverity = "low"
+	ScanRuleSeverityMedium   ScanRuleSeverity = "medium"
+	ScanRuleSeverityHigh     ScanRuleSeverity = "high"
+	ScanRuleSeverityCritical ScanRuleSeverity = "critical"
+	scanRuleSeverityNone     ScanRuleSeverity = ""
+)
+
+var scanRuleSeverities = sortEnum([]ScanRuleSeverity{
+	ScanRuleSeverityLow,
+	ScanRuleSeverityMedium,
+	ScanRuleSeverityHigh,
+	ScanRuleSeverityCritical,
+})
+
+func (ScanRuleSeverity) Enum() []interface{} { return toInterfaceSlice(scanRuleSeverities) }
+func (s ScanRuleSeverity) Sanitize() (ScanRuleSeverity, bool) {
+	return Sanitize(s, GetAllScanRuleSeverities)
+}
+func (s ScanRuleSeverity) IsValid() bool {
+	severities, _ := GetAllScanRuleSeverities()
+	for _, sev := range severities {
+		if s == sev {
+			return true
+		}
+	}
+	return false
+}
+func GetAllScanRuleSeverities() ([]ScanRuleSeverity, ScanRuleSeverity) {
+	return scanRuleSeverities, scanRuleSeverityNone
+}
+
+// ScanRuleBind 扫描规则绑定
+type ScanRuleBind string
+
+const (
+	ScanRuleBindBind   ScanRuleBind = "bind"
+	ScanRuleBindUnbind ScanRuleBind = "unbind"
+	scanRuleBindNone   ScanRuleBind = ""
+)
+
+var scanRuleBinds = sortEnum([]ScanRuleBind{
+	ScanRuleBindBind,
+	ScanRuleBindUnbind,
+})
+
+func (ScanRuleBind) Enum() []interface{} { return toInterfaceSlice(scanRuleBinds) }
+func (s ScanRuleBind) Sanitize() (ScanRuleBind, bool) {
+	return Sanitize(s, GetAllScanRuleBinds)
+}
+func GetAllScanRuleBinds() ([]ScanRuleBind, ScanRuleBind) {
+	return scanRuleBinds, scanRuleBindNone
+}
+func (s ScanRuleBind) IsValid() bool {
+	binds, _ := GetAllScanRuleBinds()
+	for _, b := range binds {
+		if s == b {
+			return true
+		}
+	}
+	return false
+}
+
+// ScanRuleStatus 扫描规则状态
 type ScanRuleStatus string
 
 const (
@@ -134,6 +253,17 @@ func (s ScanRuleStatus) String() string {
 	return string(s)
 }
 
+// IsValid 判断状态是否有效
+func (s ScanRuleStatus) IsValid() bool {
+	statuses, _ := GetAllScanRuleStatuses()
+	for _, status := range statuses {
+		if s == status {
+			return true
+		}
+	}
+	return false
+}
+
 // IsEnabled 判断状态是否为启用
 func (s ScanRuleStatus) IsEnabled() bool {
 	return s == ScanRuleStatusEnabled
@@ -152,6 +282,7 @@ func (s ScanRuleStatus) UpdateStatus() ScanRuleStatus {
 	return ScanRuleStatusEnabled
 }
 
+// ScanRuleType 扫描规则类型
 type ScanRuleType string
 
 const (
@@ -187,6 +318,7 @@ func GetAllScanRuleTypes() ([]ScanRuleType, ScanRuleType) {
 	return scanRuleTypes, scanRuleTypeNone
 }
 
+// ScanType 扫描类型
 type ScanType string
 
 const (
@@ -207,6 +339,7 @@ func GetAllScanTypes() ([]ScanType, ScanType) {
 	return scanTypes, ScanTypeFull
 }
 
+// ScanRuleUnit 扫描规则单元
 type ScanRuleUnit string
 
 const (
@@ -225,4 +358,149 @@ func (s ScanRuleUnit) Sanitize() (ScanRuleUnit, bool) {
 }
 func GetAllScanRuleUnits() ([]ScanRuleUnit, ScanRuleUnit) {
 	return scanRuleUnits, ScanRuleUnitCount
+}
+
+// ScanPlanTriggerType 扫描计划触发器类型
+type ScanPlanTriggerType string
+
+const (
+	ScanPlanTriggerTypeManual ScanPlanTriggerType = "manual"
+	ScanPlanTriggerTypeCron   ScanPlanTriggerType = "cron"
+	ScanPlanTriggerTypeAction ScanPlanTriggerType = "action"
+)
+
+type ScanTaskSort string
+
+func (ScanTaskSort) Enum() []interface{}                  { return toInterfaceSlice(scanTaskSorts) }
+func (s ScanTaskSort) Sanitize() (ScanTaskSort, bool)     { return Sanitize(s, GetAllScanTaskSorts) }
+func GetAllScanTaskSorts() ([]ScanTaskSort, ScanTaskSort) { return scanTaskSorts, ScanTaskSortId }
+
+const (
+	ScanTaskSortId       ScanTaskSort = "id"
+	ScanTaskSortStarted  ScanTaskSort = "started"
+	ScanTaskSortFinished ScanTaskSort = "finished"
+	ScanTaskSortRepoId   ScanTaskSort = "repo_id"
+	ScanTaskSortStatus   ScanTaskSort = "status"
+	ScanTaskSortResult   ScanTaskSort = "result"
+)
+
+var scanTaskSorts = sortEnum([]ScanTaskSort{
+	ScanTaskSortId,
+	ScanTaskSortStarted,
+	ScanTaskSortFinished,
+	ScanTaskSortRepoId,
+	ScanTaskSortStatus,
+	ScanTaskSortResult,
+})
+
+// ScanTaskStatus 扫描任务状态
+type ScanTaskStatus string
+
+func (ScanTaskStatus) Enum() []interface{}                { return toInterfaceSlice(scanTaskStatuses) }
+func (s ScanTaskStatus) Sanitize() (ScanTaskStatus, bool) { return Sanitize(s, GetAllScanTaskStatuses) }
+func GetAllScanTaskStatuses() ([]ScanTaskStatus, ScanTaskStatus) {
+	return scanTaskStatuses, ""
+}
+
+const (
+	ScanTaskStatusInProgress ScanTaskStatus = "in_progress"
+	ScanTaskStatusSuccess    ScanTaskStatus = "success"
+	ScanTaskStatusFailed     ScanTaskStatus = "failed"
+)
+
+var scanTaskStatuses = sortEnum([]ScanTaskStatus{
+	ScanTaskStatusInProgress,
+	ScanTaskStatusSuccess,
+	ScanTaskStatusFailed,
+})
+
+// ScanTaskResult 扫描任务结果
+type ScanTaskResult string
+
+func (ScanTaskResult) Enum() []interface{}                { return toInterfaceSlice(scanTaskResults) }
+func (s ScanTaskResult) Sanitize() (ScanTaskResult, bool) { return Sanitize(s, GetAllScanTaskResults) }
+func GetAllScanTaskResults() ([]ScanTaskResult, ScanTaskResult) {
+	return scanTaskResults, ""
+}
+
+const (
+	ScanTaskResultPass   ScanTaskResult = "pass"
+	ScanTaskResultNoPass ScanTaskResult = "no-pass"
+	ScanTaskResultNull   ScanTaskResult = "-"
+)
+
+var scanTaskResults = sortEnum([]ScanTaskResult{
+	ScanTaskResultPass,
+	ScanTaskResultNoPass,
+	ScanTaskResultNull,
+})
+
+
+
+// Order 排序方向
+type Order string
+
+const (
+	OrderAsc  Order = "asc"
+	OrderDesc Order = "desc"
+	orderNone Order = ""
+)
+
+var orders = sortEnum([]Order{
+	OrderAsc,
+	OrderDesc,
+})
+
+func (Order) Enum() []interface{}       { return toInterfaceSlice(orders) }
+func (o Order) Sanitize() (Order, bool) { return Sanitize(o, GetAllOrders) }
+func GetAllOrders() ([]Order, Order) {
+	return orders, OrderDesc
+}
+func (o Order) String() string {
+	return string(o)
+}
+
+// IsValid 判断排序方向是否有效
+func (o Order) IsValid() bool {
+	return o == OrderAsc || o == OrderDesc
+}
+
+// ScanRuleSort 扫描规则排序字段
+type ScanRuleSort string
+
+const (
+	ScanRuleSortID          ScanRuleSort = "id"
+	ScanRuleSortName        ScanRuleSort = "name"
+	ScanRuleSortPriority    ScanRuleSort = "priority"
+	ScanRuleSortCreatedDate ScanRuleSort = "createdDate"
+	scanRuleSortNone        ScanRuleSort = ""
+)
+
+var scanRuleSorts = sortEnum([]ScanRuleSort{
+	ScanRuleSortID,
+	ScanRuleSortName,
+	ScanRuleSortPriority,
+	ScanRuleSortCreatedDate,
+})
+
+func (ScanRuleSort) Enum() []interface{} { return toInterfaceSlice(scanRuleSorts) }
+func (s ScanRuleSort) Sanitize() (ScanRuleSort, bool) {
+	return Sanitize(s, GetAllScanRuleSorts)
+}
+func GetAllScanRuleSorts() ([]ScanRuleSort, ScanRuleSort) {
+	return scanRuleSorts, ScanRuleSortID
+}
+func (s ScanRuleSort) String() string {
+	return string(s)
+}
+
+// IsValid 判断排序字段是否有效
+func (s ScanRuleSort) IsValid() bool {
+	sorts, _ := GetAllScanRuleSorts()
+	for _, sort := range sorts {
+		if s == sort {
+			return true
+		}
+	}
+	return false
 }

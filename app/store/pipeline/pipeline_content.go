@@ -8,6 +8,25 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
 )
 
+// CreatePipelineContent 创建流水线内容
+func (s *Store) CreatePipelineContent(ctx context.Context, content *pipelineModel.PipelineContent) (*pipelineModel.PipelineContent, error) {
+	dbContent := mapModelToPipelineContent(content)
+	if err := s.db.WithContext(ctx).Create(dbContent).Error; err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
+	}
+	return mapPipelineContentToModel(*dbContent), nil
+}
+
+// UpdatePipelineContent 更新流水线内容
+func (s *Store) UpdatePipelineContent(ctx context.Context, content *pipelineModel.PipelineContent) error {
+	if err := s.db.WithContext(ctx).Where("pipelineID = ?", content.PipelineID).Updates(&PipelineContent{
+		Data: content.Data, // 只更新 data 字段，其他字段保持不变
+	}).Error; err != nil {
+		return database.ProcessSQLErrorf(ctx, err)
+	}
+	return nil
+}
+
 // GetPipelineContentByPipelineID 根据流水线ID获取流水线内容
 func (s *Store) GetPipelineContentByPipelineID(ctx context.Context, pipelineID int64) (*pipelineModel.PipelineContent, error) {
 	var content PipelineContent
@@ -15,6 +34,18 @@ func (s *Store) GetPipelineContentByPipelineID(ctx context.Context, pipelineID i
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
 	return mapPipelineContentToModel(content), nil
+}
+
+// mapModelToPipelineContent 将流水线内容模型映射为数据库模型
+func mapModelToPipelineContent(content *pipelineModel.PipelineContent) *PipelineContent {
+	return &PipelineContent{
+		ID:         content.ID,
+		PipelineID: content.PipelineID,
+		Version:    content.Version,
+		Data:       content.Data,
+		Variables:  content.Variables,
+		CreatedBy:  content.CreatedBy,
+	}
 }
 
 // mapPipelineContentToModel 将数据库模型映射为流水线内容模型
@@ -31,8 +62,8 @@ func mapPipelineContentToModel(content PipelineContent) *pipelineModel.PipelineC
 		ID:          content.ID,
 		PipelineID:  content.PipelineID,
 		Version:     content.Version,
-		Data:        decodedData,              // 解码后的原始字节数据
-		DataStr:     string(content.Data),     // 数据库中的 base64 字符串
+		Data:        decodedData,          // 解码后的原始字节数据
+		DataStr:     string(content.Data), // 数据库中的 base64 字符串
 		Variables:   content.Variables,
 		CreatedBy:   content.CreatedBy,
 		CreatedDate: content.CreatedDate,

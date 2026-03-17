@@ -98,4 +98,18 @@ func registerPublicRoutes(r *gin.Engine, controller *Controller) {
 // registerNoAuthRoutes 注册无需认证的特殊路由
 func registerNoAuthRoutes(r *gin.Engine, controller *Controller) {
 	r.GET(fmt.Sprintf("/api/v2/na/repos/:id/archive/*%s", req.PathParamFilePath), controller.Repo.Archive)
+
+	// 流水线日志流接口（无需鉴权，用于外部系统访问）
+	r.GET(fmt.Sprintf("/api/v2/pipelines/:%s/executions/:%s/stream/:%s/:%s",
+		req.PathParamPipelineID, req.PathParamExecutionID, req.PathParamStageID, req.PathParamStepID),
+		controller.Execution.GetLiveLogs)
+	r.POST(fmt.Sprintf("/api/v2/pipelines/:%s/executions/:%s/stream/:%s/:%s",
+		req.PathParamPipelineID, req.PathParamExecutionID, req.PathParamStageID, req.PathParamStepID),
+		controller.Execution.CreateLiveLogs)
+	r.GET(fmt.Sprintf("/api/v2/pipelines/:%s/executions/:%s/logstream/:%s/:%s",
+		req.PathParamPipelineID, req.PathParamExecutionID, req.PathParamStageID, req.PathParamStepID),
+		controller.Execution.GetLogStream)
+
+	// 空间事件接口（无需鉴权，用于 SSE 推送）
+	r.GET("/api/v2/spaces/:id/events", controller.Space.Events)
 }

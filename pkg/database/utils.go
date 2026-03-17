@@ -7,7 +7,6 @@ import (
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"github.com/go-sql-driver/mysql"
-	"github.com/mattn/go-sqlite3"
 	"gorm.io/gorm"
 )
 
@@ -127,14 +126,6 @@ func isSQLUniqueConstraintError(original error) bool {
 	if stderr.As(original, &mysqlErr) {
 		return mysqlErr.Number == 1062
 	}
-
-	// SQLite: 检查唯一约束或主键约束
-	var sqliteErr sqlite3.Error
-	if stderr.As(original, &sqliteErr) {
-		return stderr.Is(sqliteErr.ExtendedCode, sqlite3.ErrConstraintUnique) ||
-			stderr.Is(sqliteErr.ExtendedCode, sqlite3.ErrConstraintPrimaryKey)
-	}
-
 	return false
 }
 
@@ -151,13 +142,6 @@ func isSQLForeignKeyViolationError(original error) bool {
 		// 1452: Cannot add or update a child row
 		return mysqlErr.Number == 1451 || mysqlErr.Number == 1452
 	}
-
-	// SQLite: 外键约束错误
-	var sqliteErr sqlite3.Error
-	if stderr.As(original, &sqliteErr) {
-		return stderr.Is(sqliteErr.ExtendedCode, sqlite3.ErrConstraintForeignKey)
-	}
-
 	return false
 }
 
@@ -172,13 +156,6 @@ func isSQLNotNullViolation(original error) bool {
 	if stderr.As(original, &mysqlErr) {
 		return mysqlErr.Number == 1048
 	}
-
-	// SQLite: 非空约束错误
-	var sqliteErr sqlite3.Error
-	if stderr.As(original, &sqliteErr) {
-		return stderr.Is(sqliteErr.ExtendedCode, sqlite3.ErrConstraintNotNull)
-	}
-
 	return false
 }
 
@@ -193,13 +170,6 @@ func isSQLCheckConstraintViolation(original error) bool {
 	if stderr.As(original, &mysqlErr) {
 		return mysqlErr.Number == 3819
 	}
-
-	// SQLite: 检查约束错误
-	var sqliteErr sqlite3.Error
-	if stderr.As(original, &sqliteErr) {
-		return stderr.Is(sqliteErr.ExtendedCode, sqlite3.ErrConstraintCheck)
-	}
-
 	return false
 }
 
@@ -243,12 +213,6 @@ func isSQLDeadlock(original error) bool {
 	var mysqlErr *mysql.MySQLError
 	if stderr.As(original, &mysqlErr) {
 		return mysqlErr.Number == 1213
-	}
-
-	// SQLite: 数据库被锁定
-	var sqliteErr sqlite3.Error
-	if stderr.As(original, &sqliteErr) {
-		return stderr.Is(sqliteErr.ExtendedCode, sqlite3.ErrBusySnapshot)
 	}
 
 	return false

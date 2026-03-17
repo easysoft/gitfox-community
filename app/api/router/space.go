@@ -16,8 +16,6 @@ func registerSpaceRoutes(r *gin.RouterGroup, controller *Controller) {
 			spaceID.PUT("", controller.Space.Update)           // 更新空间
 			spaceID.DELETE("", controller.Space.Delete)        // 删除空间
 			spaceID.POST("/restore", controller.Space.Restore) // 恢复空间
-
-			spaceID.GET("/events", controller.Space.Events) // 获取空间事件
 		}
 	}
 }

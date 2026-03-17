@@ -14,7 +14,7 @@ import (
 
 var DBWireSet = wire.NewSet(
 	NewDB,
-	NewSqliteDB,
+	// NewSqliteDB,
 )
 
 // NewDB 根据配置中的 Driver 类型初始化相应的数据库

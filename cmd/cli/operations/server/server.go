@@ -12,11 +12,13 @@ import (
 	"github.com/quicklyon/kingpin/v2"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/router"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/logger"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/cmd/cli/operations/provider"
 )
 
 type command struct {
-	mode string
+	mode     string
+	enableCI bool
 }
 
 func (c *command) run(*kingpin.ParseContext) error {
@@ -45,6 +47,12 @@ func (c *command) run(*kingpin.ParseContext) error {
 	// } else {
 	// 	app.SystemLog.Info("[Server] System health check cron job started (runs every minute)")
 	// }
+
+	err = app.ScanRuleSvc.Migrate(context.Background())
+	if err != nil {
+		app.SystemLog.Errorw("[Server] Failed to migrate scan rules", "error", err)
+		panic(err)
+	}
 
 	err = app.PipelineService.Migrate(context.Background(), app.SystemConfig.Ci.PluginsZipUrl)
 	if err != nil {
@@ -122,6 +130,16 @@ func (c *command) run(*kingpin.ParseContext) error {
 		app.SystemLog.Info("[Server] SSH server is disabled in configuration")
 	}
 
+	pollerCtx, cancelPoller := context.WithCancel(context.Background())
+	defer cancelPoller()
+	if c.enableCI {
+		// start poller for CI build executions (non-critical for API)
+		go app.Poller.Poll(
+			logger.WithWrappedZerolog(pollerCtx),
+			int(app.SystemConfig.Ci.ParallelWorkers),
+		)
+	}
+
 	// 等待中断信号以优雅地关闭服务器
 	quit := make(chan os.Signal, 1)
 	// kill (no param) default send syscall.SIGTERM
@@ -174,6 +192,11 @@ func (c *command) run(*kingpin.ParseContext) error {
 		}
 	}
 
+	// 停止 CI Poller
+	app.SystemLog.Info("[Server] Stopping CI poller...")
+	cancelPoller()
+	app.SystemLog.Info("[Server] CI poller shutdown completed")
+
 	// 关闭事件系统（取消所有事件消费者）
 	app.SystemLog.Info("[Server] Stopping event system...")
 	app.EventContext.Cancel()
@@ -200,4 +223,9 @@ func Register(app *kingpin.Application) {
 	cmd.Arg("mode", "set the server mode").
 		Default("dev").
 		StringVar(&c.mode)
+
+	cmd.Flag("enable-ci", "start ci runners for build executions").
+		Default("true").
+		Envar("ENABLE_CI").
+		BoolVar(&c.enableCI)
 }

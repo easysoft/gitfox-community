@@ -6,6 +6,7 @@ import (
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/token"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/httpclient"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
@@ -16,13 +17,15 @@ var _ Authorizer = (*MembershipAuthorizer)(nil)
 type MembershipAuthorizer struct {
 	permissionCache   PermissionCache
 	PublicAccessCache PublicAccessCache
+	tokenStore        token.Interface
 	devopsConfig      config.DevopsConfig
 }
 
-func NewMembershipAuthorizer(permissionCache PermissionCache, publicAccessCache PublicAccessCache, devopsConfig config.DevopsConfig) *MembershipAuthorizer {
+func NewMembershipAuthorizer(permissionCache PermissionCache, publicAccessCache PublicAccessCache, tokenStore token.Interface, devopsConfig config.DevopsConfig) *MembershipAuthorizer {
 	return &MembershipAuthorizer{
 		permissionCache:   permissionCache,
 		PublicAccessCache: publicAccessCache,
+		tokenStore:        tokenStore,
 		devopsConfig:      devopsConfig,
 	}
 }
@@ -43,9 +46,21 @@ func (a *MembershipAuthorizer) Check(ctx context.Context, session *auth.Session,
 		return true, nil
 	}
 
+	// pipeline 权限
+	if account == "pipeline" {
+		return true, nil
+	}
+
 	// 当前只对仓库资源进行权限检查
 	if scope.ResourceType == constant.ResourceTypeRepo {
-		privs, err := getRepoMemberPriv(ctx, a.devopsConfig.URL, scope.ResourceID, a.devopsConfig.Authorization)
+		// 从数据库获取 DevOps Token
+		entry, err := a.tokenStore.GetDevopsToken(ctx)
+		if err != nil {
+			log.Errorf("failed to get devops token: %v", err)
+			return false, fmt.Errorf("failed to get devops token: %w", err)
+		}
+
+		privs, err := getRepoMemberPriv(ctx, a.devopsConfig.URL, scope.ResourceID, entry.Key)
 		if err != nil {
 			log.Errorf("failed to get repo member priv: %v", err)
 			return false, fmt.Errorf("failed to get repo member priv: %w", err)

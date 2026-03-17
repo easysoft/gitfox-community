@@ -37,7 +37,7 @@ type teardown struct {
 	Scheduler    scheduler.Scheduler
 	SSEStreamer  sse.Streamer
 	Reporter     events.Reporter
-	PRReporter   pullreqevents.Reporter
+	PRReporter   *pullreqevents.Reporter
 	Logz         livelog.LogStream
 }
 
@@ -69,7 +69,7 @@ func (t *teardown) do(ctx context.Context, stage *stageModel.StageWithSteps) err
 		if len(step.ErrorLog) > 500 {
 			step.ErrorLog = step.ErrorLog[:500]
 		}
-		err := t.StepSvc.Update(noContext, &step)
+		err := t.StepSvc.Update(noContext, step)
 		if err != nil {
 			log = log.With().
 				Str("step.name", step.Name).

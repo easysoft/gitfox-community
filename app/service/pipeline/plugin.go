@@ -76,6 +76,7 @@ func (s *Service) Migrate(ctx context.Context, url string) error {
 			Name:    strings.ReplaceAll(yaml.Name, yaml.Suffix, ""),
 			Desc:    yamlData.Spec.Description,
 			Type:    yamlData.Type,
+			Kind:    yamlData.Kind,
 			Yaml:    yaml.Content.String(), // 直接保存整个yaml 的json 字符串
 		}
 

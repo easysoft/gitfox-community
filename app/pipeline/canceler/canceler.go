@@ -109,7 +109,7 @@ func (s *service) Cancel(ctx context.Context, executionID uint, account string) 
 			} else {
 				step.Status = constant.CIStatusSkipped
 			}
-			err := s.stepStore.Update(ctx, &step)
+			err := s.stepStore.Update(ctx, step)
 			if err != nil {
 				log.Errorf("[canceler]: could not update step %d status: %v", step.ID, err)
 			}

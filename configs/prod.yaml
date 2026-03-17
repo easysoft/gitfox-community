@@ -90,7 +90,6 @@ middleware:
 
 devops:
   url: "http://xxx/api.php/v1"
-  authorization: "xxx"
 
 job:
   instanceID: "gitfox-community"

@@ -77,7 +77,7 @@ func main() {
 				// data: <json>\n\n
 				fmt.Fprintf(w, "event: %s\n", event.Type)
 				fmt.Fprintf(w, "data: %s\n\n", event.Data)
-				
+
 				if f, ok := w.(http.Flusher); ok {
 					f.Flush()
 				}
@@ -102,7 +102,7 @@ func main() {
 	go func() {
 		targetSpaceID := int64(2024)
 		log.Printf("[Business] 准备向 SpaceID: %d 发送事件 (请运行 PHP 脚本连接)...", targetSpaceID)
-		
+
 		ticker := time.NewTicker(2 * time.Second)
 		defer ticker.Stop()
 

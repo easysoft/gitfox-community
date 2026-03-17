@@ -40,6 +40,18 @@ func init() {
 	}
 }
 
+type TimeUnitKey string
+
+const (
+	TimeUnitSecond TimeUnitKey = "second"
+	TimeUnitMinute TimeUnitKey = "minute"
+	TimeUnitHour   TimeUnitKey = "hour"
+	TimeUnitDay    TimeUnitKey = "day"
+	TimeUnitWeek   TimeUnitKey = "week"
+	TimeUnitMonth  TimeUnitKey = "month"
+	TimeUnitYear   TimeUnitKey = "year"
+)
+
 // AddDuration add or sub duration to the time.
 func AddDuration(t time.Time, duration time.Duration) time.Time {
 	return t.Add(duration)
@@ -204,6 +216,54 @@ func TimestampNano(timezone ...string) int64 {
 	}
 
 	return t.UnixNano()
+}
+
+// BetweenWithUnit returns the relative distance between two times with an appropriate unit.
+func BetweenWithUnit(start, end time.Time) (int, TimeUnitKey) {
+	duration := start.Sub(end)
+	if duration < 0 {
+		duration = -duration
+	}
+
+	seconds := ceilDivInt64(int64(duration), int64(time.Second))
+	if seconds < 60 {
+		return int(seconds), TimeUnitSecond
+	}
+
+	minutes := ceilDivInt64(seconds, 60)
+	if minutes < 60 {
+		return int(minutes), TimeUnitMinute
+	}
+
+	hours := ceilDivInt64(minutes, 60)
+	if hours < 24 {
+		return int(hours), TimeUnitHour
+	}
+
+	days := ceilDivInt64(hours, 24)
+	if days < 7 {
+		return int(days), TimeUnitDay
+	}
+
+	weeks := ceilDivInt64(days, 7)
+	if weeks < 4 {
+		return int(weeks), TimeUnitWeek
+	}
+
+	months := ceilDivInt64(days, 30)
+	if months < 12 {
+		return int(months), TimeUnitMonth
+	}
+
+	years := ceilDivInt64(days, 365)
+	return int(years), TimeUnitYear
+}
+
+func ceilDivInt64(x, y int64) int64 {
+	if x == 0 {
+		return 0
+	}
+	return (x + y - 1) / y
 }
 
 // TrackFuncTime 跟踪函数执行时间。

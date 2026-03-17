@@ -109,7 +109,7 @@ type Manager struct {
 	Config       *config.Config
 	urlProvider  urlprovider.Provider
 	reporter     events.Reporter
-	prReporter   pullreqevents.Reporter
+	prReporter   *pullreqevents.Reporter
 	SSEStreamer  sse.Streamer
 	pullReqSvc   pullrequest.Interface
 	PipelineSvc  pipeline.Interface
@@ -130,8 +130,9 @@ func New(
 	stageSvc stage.Interface,
 	stepSvc step.Interface,
 	reporter events.Reporter,
-	prReporter pullreqevents.Reporter,
+	prReporter *pullreqevents.Reporter,
 	pullReqSvc pullrequest.Interface,
+	logz livelog.LogStream,
 ) *Manager {
 	return &Manager{
 		Config:       config,
@@ -145,6 +146,7 @@ func New(
 		reporter:     reporter,
 		prReporter:   prReporter,
 		pullReqSvc:   pullReqSvc,
+		Logz:         logz,
 	}
 }
 
@@ -334,6 +336,7 @@ func (m *Manager) BeforeStep(_ context.Context, step *stepModel.Step) error {
 		SSEStreamer:  m.SSEStreamer,
 		StepSvc:      m.StepSvc,
 		StageSvc:     m.StageSvc,
+		PipelineSvc:  m.PipelineSvc,
 	}
 	return updater.do(noContext, step)
 }
@@ -353,6 +356,7 @@ func (m *Manager) AfterStep(_ context.Context, step *stepModel.Step) error {
 		SSEStreamer:  m.SSEStreamer,
 		StepSvc:      m.StepSvc,
 		StageSvc:     m.StageSvc,
+		PipelineSvc:  m.PipelineSvc,
 	}
 
 	if err := updater.do(noContext, step); err != nil {
@@ -432,7 +436,7 @@ func (m *Manager) Watch(ctx context.Context, executionID int64) (bool, error) {
 func (m *Manager) createNetrc(ctx context.Context) (*Netrc, error) {
 	return &Netrc{
 		Machine:  m.urlProvider.GetGITHostname(ctx),
-		Login:    "pipeline",
-		Password: "cd65d97989fcb1fdb0d82471c3238a3c",
+		Login:    m.Config.PipelineAuth.UserName,
+		Password: m.Config.PipelineAuth.Password,
 	}, nil
 }

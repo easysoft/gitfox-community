@@ -19,7 +19,7 @@ func ProvideAuthenticators(
 	jwt := NewJWTAuthenticator(principalStore, tokenStore)
 	_ = Register(AuthKindJWT, jwt)
 
-	basic := NewBasicAuthenticator(principalStore)
+	basic := NewBasicAuthenticator(principalStore, cfg.PipelineAuth)
 	_ = Register(AuthKindBasic, basic)
 
 	easy := NewEasyAuthenticator(principalStore, tokenStore)

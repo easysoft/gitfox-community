@@ -48,6 +48,34 @@ func ProvidePipelineContentStorage(cfg *config.Config, d driver.StorageDriver) (
 	return storage.NewCommonContentStore(ctx, d, opts...)
 }
 
-func ProvidePipelineCIStorage(ctx context.Context, storageConfig storage.Config) (ciStorage.PipelineStorage, error) {
+func ProvidePipelineCIStorage(cfg *config.Config) (ciStorage.PipelineStorage, error) {
+	ctx := context.Background()
+
+	storageCfg := cfg.Storage
+	driverName := storageCfg.StorageType
+	if driverName == "" {
+		driverName = "filesystem"
+	}
+
+	rootDir := storageCfg.Filesystem.RootDirectory
+	if rootDir == "" {
+		rootDir = "/data/gitfox/storage"
+	}
+
+	maxThreads := storageCfg.Filesystem.MaxThreads
+	if maxThreads == 0 {
+		maxThreads = 100
+	}
+
+	storageConfig := storage.Config{
+		Local: storage.DriverConfig{
+			Driver:     storage.DriverType(driverName),
+			Parameters: map[string]interface{}{
+				"rootdirectory": rootDir,
+				"maxthreads":    maxThreads,
+			},
+		},
+	}
+
 	return ciStorage.LoadPipelineStorage(ctx, storageConfig)
 }

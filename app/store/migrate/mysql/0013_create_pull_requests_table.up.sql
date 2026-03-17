@@ -92,7 +92,7 @@ CREATE TABLE IF NOT EXISTS `ops_review_flow` (
   `branchType` varchar(255) NOT NULL DEFAULT '' COMMENT '分支类型ID，0-全部分支类型，具体用逗号分隔',
   `name` varchar(255) NOT NULL DEFAULT '' COMMENT '评审流程名称',
   `desc` varchar(500) NOT NULL DEFAULT '' COMMENT '评审流程描述',
-  `definition` TEXT NOT NULL DEFAULT '' COMMENT '评审规则，json定义',
+  `definition` TEXT NOT NULL COMMENT '评审规则，json定义',
   `status` varchar(20) NOT NULL DEFAULT '' COMMENT 'enable-启用，disable-停用',
   `createdBy` varchar(30) NOT NULL DEFAULT '' COMMENT '创建人',
   `createdDate` datetime DEFAULT NULL COMMENT '创建时间',

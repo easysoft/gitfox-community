@@ -83,6 +83,8 @@ var safeRanges = []*unicode.RangeTable{
 
 func safe(r rune) rune {
 	switch {
+	case r == '_': // 额外允许下划线
+		return r
 	case unicode.IsOneOf(safeRanges, r):
 		return unicode.ToLower(r)
 	}

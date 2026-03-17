@@ -3,7 +3,7 @@ package resources
 import (
 	"encoding/json"
 	"fmt"
-	"path/filepath"
+	"path"
 )
 
 // RulesFile 规则文件结构
@@ -52,7 +52,7 @@ func LoadAllRulesFiles() ([]*RulesFile, error) {
 		}
 
 		// 读取文件内容
-		filePath := filepath.Join("scanrule", filename)
+		filePath := path.Join("scanrule", filename)
 		data, err := EmbeddedScanRules.ReadFile(filePath)
 		if err != nil {
 			return nil, fmt.Errorf("failed to read file %s: %w", filename, err)

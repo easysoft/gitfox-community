@@ -6,6 +6,7 @@ package runtime
 
 import (
 	"context"
+	"fmt"
 	"regexp"
 	"time"
 
@@ -23,10 +24,12 @@ import (
 	"github.com/drone/drone-go/drone"
 	"github.com/drone/runner-go/client"
 	"github.com/drone/runner-go/environ"
-	"github.com/drone/runner-go/logger"
+	droneLogger "github.com/drone/runner-go/logger"
 	"github.com/drone/runner-go/pipeline"
 	legacy "github.com/drone/runner-go/pipeline/runtime"
 	"github.com/drone/runner-go/secret"
+
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 )
 
 var noContext = context.Background()
@@ -63,12 +66,9 @@ type Runner struct {
 
 // Run runs the pipeline stage.
 func (s *Runner) Run(ctx context.Context, stage *drone.Stage) error {
-	log := logger.FromContext(ctx).
-		WithField("stage.id", stage.ID).
-		WithField("stage.name", stage.Name).
-		WithField("stage.number", stage.Number)
-
-	log.Debug("stage received")
+	stageInfo := fmt.Sprintf("stage.id=%d, stage.name=%s, stage.number=%d", stage.ID, stage.Name, stage.Number)
+	logger := logger.GetLogger(ctx)
+	logger.Infof("[pipeline]: stage received, %s", stageInfo)
 
 	// delivery to a single agent is not guaranteed, which means
 	// we need confirm receipt. The first agent that confirms
@@ -77,29 +77,23 @@ func (s *Runner) Run(ctx context.Context, stage *drone.Stage) error {
 	stage.Machine = s.Machine
 	err := s.Client.Accept(ctx, stage)
 	if err != nil && err == client.ErrOptimisticLock {
-		log.Debug("stage accepted by another runner")
+		logger.Infof("[pipeline]: stage accepted by another runner, %s", stageInfo)
 		return nil
 	}
 	if err != nil {
-		log.WithError(err).Error("cannot accept stage")
+		logger.Infof("[pipeline]: cannot accept stage, %s, err=%v", stageInfo, err)
 		return err
 	}
 
-	log.Debug("stage accepted")
+	logger.Infof("[pipeline]: stage accepted, %s", stageInfo)
 
 	data, err := s.Client.Detail(ctx, stage)
 	if err != nil {
-		log.WithError(err).Error("cannot get stage details")
+		logger.Infof("[pipeline]: cannot get stage details, %s, err=%v", stageInfo, err)
 		return err
 	}
 
-	log = log.WithField("repo.id", data.Repo.ID).
-		WithField("repo.namespace", data.Repo.Namespace).
-		WithField("repo.name", data.Repo.Name).
-		WithField("build.id", data.Build.ID).
-		WithField("build.number", data.Build.Number)
-
-	log.Debug("stage details fetched")
+	logger.Infof("[pipeline]: stage details fetched, %s", stageInfo)
 
 	// if we are dealing with the legacy drone yaml, use
 	// the legacy drone engine.
@@ -111,20 +105,14 @@ func (s *Runner) Run(ctx context.Context, stage *drone.Stage) error {
 }
 
 func (s *Runner) run(ctx context.Context, stage *drone.Stage, data *client.Context) error {
-	log := logger.FromContext(ctx).
-		WithField("repo.id", data.Repo.ID).
-		WithField("stage.id", stage.ID).
-		WithField("stage.name", stage.Name).
-		WithField("stage.number", stage.Number).
-		WithField("repo.namespace", data.Repo.Namespace).
-		WithField("repo.name", data.Repo.Name).
-		WithField("build.id", data.Build.ID).
-		WithField("build.number", data.Build.Number)
+	stageInfo := fmt.Sprintf("stage.id=%d, stage.name=%s, stage.number=%d", stage.ID, stage.Name, stage.Number)
+	logger := logger.GetLogger(ctx)
+	logger.Infof("[pipeline]: run started, %s", stageInfo)
 
 	ctxdone, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	timeout := time.Duration(data.Repo.Timeout) * time.Minute
+	timeout := time.Duration(int64((10 * time.Hour).Seconds())) * time.Second
 	ctxtimeout, cancel := context.WithTimeout(ctxdone, timeout)
 	defer cancel()
 
@@ -138,18 +126,18 @@ func (s *Runner) run(ctx context.Context, stage *drone.Stage, data *client.Conte
 		done, _ := s.Client.Watch(ctxdone, data.Build.ID)
 		if done {
 			cancel()
-			log.Debugln("received cancellation")
+			logger.Infof("[pipeline]: received cancellation, %s", stageInfo)
 		} else {
-			log.Debugln("done listening for cancellations")
+			logger.Infof("[pipeline]: done listening for cancellations, %s", stageInfo)
 		}
 	}()
 
 	envs := environ.Combine(
 		environ.System(data.System),
-		environ.Repo(data.Repo),
+		// environ.Repo(data.Repo),
 		environ.Build(data.Build),
 		environ.Stage(stage),
-		environ.Link(data.Repo, data.Build, data.System),
+		// environ.Link(data.Repo, data.Build, data.System), TODO:  pipeline 执行详情链接后续重新实现
 		data.Build.Params,
 		extend.Envs(data.Stage, data.Repo),
 	)
@@ -165,16 +153,21 @@ func (s *Runner) run(ctx context.Context, stage *drone.Stage, data *client.Conte
 	// 	return v
 	// }
 
+	// 临时兼容
+	stageRepo := &drone.Repo{}
+	if data.Repo != nil {
+		stageRepo = data.Repo
+	}
 	state := &pipeline.State{
 		Build:  data.Build,
 		Stage:  stage,
-		Repo:   data.Repo,
+		Repo:   stageRepo,
 		System: data.System,
 	}
 
 	config, err := harness.ParseBytes(data.Config.Data)
 	if err != nil {
-		log.WithError(err).Error("cannot parse configuration file")
+		logger.Infof("[pipeline]: cannot parse configuration file, %s, err=%v", stageInfo, err)
 		state.FailAll(err)
 		return s.Reporter.ReportStage(noContext, state)
 	}
@@ -189,7 +182,7 @@ func (s *Runner) run(ctx context.Context, stage *drone.Stage, data *client.Conte
 
 	// expand templates and plugins
 	if err := resolver.Resolve(config, lookupFunc); err != nil {
-		log.WithError(err).Error("cannot load template or plugin")
+		logger.Infof("[pipeline]: cannot load template or plugin, %s, err=%v", stageInfo, err)
 		state.FailAll(err)
 		return s.Reporter.ReportStage(noContext, state)
 	}
@@ -204,7 +197,7 @@ func (s *Runner) run(ctx context.Context, stage *drone.Stage, data *client.Conte
 	// create the expressions context that is used
 	// to evaluate expressions in the yaml.
 	inputParams := map[string]interface{}{}
-	inputParams["repo"] = inputs.Repo(data.Repo)
+	// inputParams["repo"] = inputs.Repo(data.Repo)
 	inputParams["build"] = inputs.Build(data.Build)
 	inputParams["matrix"] = map[string]interface{}{}
 	inputParams["inputs"] = map[string]interface{}{}
@@ -223,7 +216,8 @@ func (s *Runner) run(ctx context.Context, stage *drone.Stage, data *client.Conte
 	walk.Walk(config, func(v interface{}) error {
 		switch vv := v.(type) {
 		case *harness.Pipeline:
-			inputParams["inputs"] = inputs.Inputs(vv.Inputs, data.Build.Params)
+			// inputParams["parameters"] = data.Build.Params
+			inputParams["parameters"] = inputs.Inputs(vv.Inputs, data.Build.Params)
 		}
 		return nil
 	})
@@ -237,13 +231,20 @@ func (s *Runner) run(ctx context.Context, stage *drone.Stage, data *client.Conte
 	// all steps have an identifier
 	normalize.Normalize(config)
 
+	// 临时兼容
+	argsRepo := &drone.Repo{
+		Timeout: int64((10 * time.Hour).Seconds()),
+	}
+	if data.Repo != nil {
+		argsRepo = data.Repo
+	}
 	// compile the yaml configuration file to an intermediate
 	// representation, and then
 	args := compiler.Args{
 		Config: config,
 		Build:  data.Build,
 		Stage:  stage,
-		Repo:   data.Repo,
+		Repo:   argsRepo,
 		System: data.System,
 		Netrc:  data.Netrc,
 		Secret: secret.Static(data.Secrets),
@@ -251,7 +252,7 @@ func (s *Runner) run(ctx context.Context, stage *drone.Stage, data *client.Conte
 
 	spec, err := s.Compiler.Compile(ctx, args)
 	if err != nil {
-		log.WithError(err).Error("cannot find pipeline or stage resource in yaml")
+		logger.Infof("[pipeline]: cannot find pipeline or stage resource in yaml, %s, err=%v", stageInfo, err)
 		state.FailAll(err)
 		return s.Reporter.ReportStage(noContext, state)
 	}
@@ -263,7 +264,7 @@ func (s *Runner) run(ctx context.Context, stage *drone.Stage, data *client.Conte
 			continue
 		}
 		stage.Steps = append(stage.Steps, &drone.Step{
-			Name:      src.Name,
+			Name:      fmt.Sprintf("%s::%s", src.ID, src.Name),
 			Number:    len(stage.Steps) + 1,
 			StageID:   stage.ID,
 			Status:    drone.StatusPending,
@@ -278,21 +279,18 @@ func (s *Runner) run(ctx context.Context, stage *drone.Stage, data *client.Conte
 	stage.Started = time.Now().Unix()
 	stage.Status = drone.StatusRunning
 	if err := s.Client.Update(ctx, stage); err != nil {
-		log.WithError(err).Error("cannot update stage")
+		logger.Infof("[pipeline]: cannot update stage, %s, err=%v", stageInfo, err)
 		return err
 	}
 
-	log.Debug("updated stage to running")
+	logger.Infof("[pipeline]: updated stage to running, %s", stageInfo)
 
-	ctxlogger := logger.WithContext(ctxcancel, log)
+	ctxlogger := droneLogger.WithContext(ctxcancel, droneLogger.FromContext(ctx))
 	ctxExec := extend.WithSecretContext(ctxlogger, usedSecrets)
 	if err := s.Exec(ctxExec, spec, state); err != nil {
-		log.WithError(err).
-			WithField("duration", stage.Stopped-stage.Started).
-			Debug("stage failed")
+		logger.Infof("[pipeline]: stage failed, duration=%d, %s, err=%v", stage.Stopped-stage.Started, stageInfo, err)
 		return err
 	}
-	log.WithField("duration", stage.Stopped-stage.Started).
-		Debug("updated stage to complete")
+	logger.Infof("[pipeline]: updated stage to complete, duration=%d, %s", stage.Stopped-stage.Started, stageInfo)
 	return nil
 }

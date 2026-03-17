@@ -42,6 +42,36 @@ func (m *MockInterface) EXPECT() *MockInterfaceMockRecorder {
 	return m.recorder
 }
 
+// CreatePipeline mocks base method.
+func (m *MockInterface) CreatePipeline(ctx context.Context, arg1 *pipeline.Pipeline) (*pipeline.Pipeline, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreatePipeline", ctx, arg1)
+	ret0, _ := ret[0].(*pipeline.Pipeline)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreatePipeline indicates an expected call of CreatePipeline.
+func (mr *MockInterfaceMockRecorder) CreatePipeline(ctx, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreatePipeline", reflect.TypeOf((*MockInterface)(nil).CreatePipeline), ctx, arg1)
+}
+
+// CreatePipelineContent mocks base method.
+func (m *MockInterface) CreatePipelineContent(ctx context.Context, content *pipeline.PipelineContent) (*pipeline.PipelineContent, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreatePipelineContent", ctx, content)
+	ret0, _ := ret[0].(*pipeline.PipelineContent)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreatePipelineContent indicates an expected call of CreatePipelineContent.
+func (mr *MockInterfaceMockRecorder) CreatePipelineContent(ctx, content any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreatePipelineContent", reflect.TypeOf((*MockInterface)(nil).CreatePipelineContent), ctx, content)
+}
+
 // CreatePlugin mocks base method.
 func (m *MockInterface) CreatePlugin(ctx context.Context, plugin *pipeline.Plugin) error {
 	m.ctrl.T.Helper()
@@ -158,6 +188,21 @@ func (mr *MockInterfaceMockRecorder) GetPipelineByID(ctx, id any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPipelineByID", reflect.TypeOf((*MockInterface)(nil).GetPipelineByID), ctx, id)
 }
 
+// GetPipelineByRepoIDAndName mocks base method.
+func (m *MockInterface) GetPipelineByRepoIDAndName(ctx context.Context, repoID int64, name string) (*pipeline.Pipeline, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPipelineByRepoIDAndName", ctx, repoID, name)
+	ret0, _ := ret[0].(*pipeline.Pipeline)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPipelineByRepoIDAndName indicates an expected call of GetPipelineByRepoIDAndName.
+func (mr *MockInterfaceMockRecorder) GetPipelineByRepoIDAndName(ctx, repoID, name any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPipelineByRepoIDAndName", reflect.TypeOf((*MockInterface)(nil).GetPipelineByRepoIDAndName), ctx, repoID, name)
+}
+
 // GetPipelineContentByPipelineID mocks base method.
 func (m *MockInterface) GetPipelineContentByPipelineID(ctx context.Context, pipelineID int64) (*pipeline.PipelineContent, error) {
 	m.ctrl.T.Helper()
@@ -246,6 +291,20 @@ func (m *MockInterface) ListPlugin(ctx context.Context, filter *pipeline.PluginF
 func (mr *MockInterfaceMockRecorder) ListPlugin(ctx, filter any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListPlugin", reflect.TypeOf((*MockInterface)(nil).ListPlugin), ctx, filter)
+}
+
+// UpdatePipelineContent mocks base method.
+func (m *MockInterface) UpdatePipelineContent(ctx context.Context, content *pipeline.PipelineContent) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdatePipelineContent", ctx, content)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdatePipelineContent indicates an expected call of UpdatePipelineContent.
+func (mr *MockInterfaceMockRecorder) UpdatePipelineContent(ctx, content any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdatePipelineContent", reflect.TypeOf((*MockInterface)(nil).UpdatePipelineContent), ctx, content)
 }
 
 // UpdatePluginByName mocks base method.

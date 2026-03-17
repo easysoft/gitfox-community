@@ -3,6 +3,7 @@ package scan
 import (
 	"context"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	authModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
 	scanModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
 	scanStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/scan"
@@ -56,5 +57,16 @@ func (s *RuleService) List(ctx context.Context, session *authModel.Session, filt
 }
 
 func (s *RuleService) AllScanBaseByField(ctx context.Context, session *authModel.Session, field string) ([]scanModel.ScanBaseResp, error) {
-	return s.ruleStore.AllScanBaseByField(ctx, field)
+	res, err := s.ruleStore.AllScanBaseByField(ctx, field)
+	if err != nil {
+		return nil, err
+	}
+	for i := range res {
+		res[i].ID = int64(constant.ParseLang(res[i].Lang).ID())
+		if res[i].Lang == "" || res[i].Lang == "Custom" {
+			res[i].Lang = "Custom"
+		}
+	}
+
+	return res, nil
 }

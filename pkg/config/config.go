@@ -4,26 +4,33 @@ import "time"
 
 // Config 顶级配置结构体，对应整个YAML文件
 type Config struct {
-	InstanceID string           `yaml:"-"`
-	URL        URL              `yaml:"-"`
-	Server     ServerConfig     `yaml:"server"`
-	Database   DatabaseConfig   `yaml:"database"`
-	SQLite     SQLiteConfig     `yaml:"sqlite"`
-	Docker     DockerConfig     `yaml:"docker"`
-	Git        GitConfig        `yaml:"git"`
-	Job        JobConfig        `yaml:"job"`
-	Webhook    WebhookConfig    `yaml:"webhook"`
-	SSH        SSHConfig        `yaml:"ssh"`
-	Metric     MetricConfig     `yaml:"metric"`
-	Ci         CiConfig         `yaml:"ci"`
-	Gitspace   GitspaceConfig   `yaml:"gitspace"`
-	Registry   RegistryConfig   `yaml:"registry"`
-	Logging    LoggingConfig    `yaml:"logging"`
-	Middleware MiddlewareConfig `yaml:"middleware"`
-	I18n       I18nConfig       `yaml:"i18n"`
-	Principal  PrincipalConfig  `yaml:"principal"`
-	Devops     DevopsConfig     `yaml:"devops"`
-	Storage    StorageConfig    `yaml:"storage"`
+	InstanceID   string             `yaml:"-"`
+	URL          URL                `yaml:"-"`
+	Server       ServerConfig       `yaml:"server"`
+	Database     DatabaseConfig     `yaml:"database"`
+	SQLite       SQLiteConfig       `yaml:"sqlite"`
+	Docker       DockerConfig       `yaml:"docker"`
+	Git          GitConfig          `yaml:"git"`
+	Job          JobConfig          `yaml:"job"`
+	Webhook      WebhookConfig      `yaml:"webhook"`
+	SSH          SSHConfig          `yaml:"ssh"`
+	Metric       MetricConfig       `yaml:"metric"`
+	Ci           CiConfig           `yaml:"ci"`
+	Gitspace     GitspaceConfig     `yaml:"gitspace"`
+	Registry     RegistryConfig     `yaml:"registry"`
+	Logging      LoggingConfig      `yaml:"logging"`
+	Middleware   MiddlewareConfig   `yaml:"middleware"`
+	I18n         I18nConfig         `yaml:"i18n"`
+	Principal    PrincipalConfig    `yaml:"principal"`
+	Devops       DevopsConfig       `yaml:"devops"`
+	Storage      StorageConfig      `yaml:"storage"`
+	PipelineAuth PipelineAuthConfig `yaml:"pipelineAuth"`
+}
+
+// PipelineAuthConfig 流水线内部认证配置
+type PipelineAuthConfig struct {
+	UserName string `envconfig:"GITFOX_PIPELINE_AUTH_USERNAME" default:"pipeline"`
+	Password string `envconfig:"GITFOX_PIPELINE_AUTH_PASSWORD" default:"cd65d97989fcb1fdb0d82471c3238a3c"`
 }
 
 // ServerConfig HTTP服务配置
@@ -81,7 +88,7 @@ type SSHConfig struct {
 	Enable      bool   `yaml:"enable"`
 	Host        string `yaml:"host"`
 	Port        int    `yaml:"port"`
-	DefaultUser string `yaml:"defaultUser"`
+	DefaultUser string `yaml:"defaultUser" default:"git"`
 	HostKeysDir string `envconfig:"GITFOX_SSH_HOST_KEYS_DIR" default:"/data/gitfox/ssh"`
 }
 
@@ -107,6 +114,7 @@ type CiConfig struct {
 	Runner            string   `envconfig:"GITFOX_CI_RUNNER"`
 	ParallelWorkers   uint     `envconfig:"GITFOX_CI_ParallelWorkers" default:"2"`
 	ContainerNetworks []string `envconfig:"GITFOX_CI_CONTAINER_NETWORKS"`
+	ContainerVolume   string   `envconfig:"GITFOX_CI_CONTAINER_VOLUME"`
 }
 
 // GitspaceConfig Gitspace配置
@@ -211,7 +219,7 @@ type URL struct {
 
 	// Internal defines the internal URL via which the service is reachable.
 	// Value is derived from HTTP.Server unless explicitly specified (e.g. http://localhost:3000).
-	Internal string
+	Internal string `envconfig:"GITFOX_URL_BASE"`
 
 	// Container is the endpoint that can be used by running container builds to communicate
 	// with Gitfox (for example while performing a clone on a local repo).
@@ -240,8 +248,7 @@ type PrincipalConfig struct {
 
 // DevopsConfig DevOps 平台配置
 type DevopsConfig struct {
-	URL           string `yaml:"url"`           // DevOps 平台 API 地址
-	Authorization string `yaml:"authorization"` // DevOps 平台 API 授权密钥
+	URL string `yaml:"url"` // DevOps 平台 API 地址
 }
 
 // StorageConfig 通用存储配置

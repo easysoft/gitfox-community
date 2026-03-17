@@ -8,7 +8,6 @@ package extend
 
 import (
 	"fmt"
-	"net/url"
 
 	"github.com/drone/drone-go/drone"
 )
@@ -28,12 +27,12 @@ func Envs(stage *drone.Stage, repo *drone.Repo) map[string]string {
 	environ["GITFOX_EXECUTION_ID"] = fmt.Sprintf("%d", stage.BuildID)
 	environ["GITFOX_STAGE_ID"] = fmt.Sprintf("%d", stage.ID)
 
-	// gitfox api
-	u, err := url.Parse(repo.HTTPURL)
-	if err == nil {
-		environ["GITFOX_API_ENDPOINT"] = fmt.Sprintf("%s://%s/api/v1", u.Scheme, u.Host)
-		environ["GITFOX_SERVER"] = fmt.Sprintf("%s", u.Host)
-	}
+	// TODO: gitfox 接口地址和服务器地址，后续可以考虑放在其他配置中读取
+	// u, err := url.Parse(repo.HTTPURL)
+	// if err == nil {
+	// 	environ["GITFOX_API_ENDPOINT"] = fmt.Sprintf("%s://%s/api/v1", u.Scheme, u.Host)
+	// 	environ["GITFOX_SERVER"] = fmt.Sprintf("%s", u.Host)
+	// }
 
 	return environ
 }

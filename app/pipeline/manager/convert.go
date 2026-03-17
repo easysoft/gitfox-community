@@ -1,6 +1,7 @@
 package manager
 
 import (
+	"strings"
 	"time"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
@@ -114,10 +115,10 @@ func ConvertToDroneStage(stage *stageModel.StageWithSteps) *drone.Stage {
 	}
 }
 
-func ConvertToDroneSteps(steps []stepModel.Step) []*drone.Step {
+func ConvertToDroneSteps(steps []*stepModel.Step) []*drone.Step {
 	droneSteps := make([]*drone.Step, len(steps))
 	for i, step := range steps {
-		droneSteps[i] = ConvertToDroneStep(&step)
+		droneSteps[i] = ConvertToDroneStep(step)
 	}
 	return droneSteps
 }
@@ -170,14 +171,22 @@ func ConvertFromDroneStep(step *drone.Step) *stepModel.Step {
 	}
 }
 
-func ConvertFromDroneSteps(steps []*drone.Step) []stepModel.Step {
-	typesSteps := make([]stepModel.Step, len(steps))
+func ConvertFromDroneSteps(steps []*drone.Step) []*stepModel.Step {
+	typesSteps := make([]*stepModel.Step, len(steps))
 	for i, step := range steps {
-		typesSteps[i] = stepModel.Step{
+		stepCode := ""
+		stepName := step.Name
+		stepBaseInfo := strings.Split(step.Name, "::")
+		if len(stepBaseInfo) > 1 {
+			stepCode = stepBaseInfo[0]
+			stepName = stepBaseInfo[1]
+		}
+		typesSteps[i] = &stepModel.Step{
 			ID:       uint(step.ID),
 			StageID:  uint(step.StageID),
 			SN:       step.Number,
-			Name:     step.Name,
+			Code:     stepCode,
+			Name:     stepName,
 			Status:   constant.ParseCIStatus(step.Status),
 			ErrorLog: step.Error,
 			Started:  toLocal(step.Started),
@@ -227,6 +236,6 @@ func ConvertFromDroneLine(l *drone.Line) *livelog.Line {
 	return &livelog.Line{
 		Number:    l.Number,
 		Message:   l.Message,
-		Timestamp: l.Timestamp,
+		Timestamp: time.Now().Unix(),
 	}
 }
