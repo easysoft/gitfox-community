@@ -310,8 +310,8 @@ func (c *Controller) Archive(ctx *gin.Context) {
 // @Success 200 {object} resp.ObjectResponse{data=[]branchModel.ActivateResult} "激活结果"
 // @Failure 400 {object} resp.ObjectResponse "参数错误"
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
-// @Router /repos/{id}/branches/activate-archived [post]
-func (c *Controller) ActivateArchived(ctx *gin.Context) {
+// @Router /repos/{id}/branches/activate [post]
+func (c *Controller) Activate(ctx *gin.Context) {
 	var reqBody branchModel.ReqForArchive
 	var err error
 
