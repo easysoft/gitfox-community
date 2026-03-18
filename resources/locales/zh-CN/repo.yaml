@@ -20,3 +20,4 @@ repo:
   get_paths_details_success: "获取路径详情成功。"
   delete_success: "仓库删除成功。"
   delete_error: "删除仓库失败。"
+  default_branch_archived_forbidden: "默认分支不能以 archived/ 开头，该前缀为归档分支保留。"

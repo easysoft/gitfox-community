@@ -250,3 +250,101 @@ func (c *Controller) Delete(ctx *gin.Context) {
 
 	resp.OK(ctx, i18n.BranchDeleteSuccess, nil)
 }
+
+// @Summary 批量归档分支
+// @Description 将指定分支批量归档（添加 archived/ 前缀），默认分支不可归档
+// @Tags branches
+// @Accept application/json
+// @Produce application/json
+// @Param id path uint true "仓库 ID"
+// @Param request body branchModel.ReqForArchive true "批量归档请求参数"
+// @Success 200 {object} resp.ObjectResponse{data=[]branchModel.ArchiveResult} "归档结果"
+// @Failure 400 {object} resp.ObjectResponse "参数错误"
+// @Failure 500 {object} resp.ObjectResponse "服务器错误"
+// @Router /repos/{id}/branches/archive [post]
+func (c *Controller) Archive(ctx *gin.Context) {
+	var reqBody branchModel.ReqForArchive
+	var err error
+
+	repoID, err := req.PathParamAsPositiveUint(ctx, "id")
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RepoPathParamError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
+	if err = ctx.ShouldBindJSON(&reqBody); err != nil {
+		err = errors.WithI18nKey(err, i18n.BranchBodyParamError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
+	session, ok := req.GetAuthSession(ctx.Request.Context())
+	if !ok {
+		resp.Unauthorized(ctx, errors.WithI18nKey(nil, i18n.AuthNoSession))
+		return
+	}
+
+	repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, repoID)
+	if err != nil {
+		resp.InternalError(ctx, err)
+		return
+	}
+	if repoOut.Mirror {
+		err = errors.WithI18nKey(err, i18n.RepoMirrorReadOnly)
+		resp.InternalError(ctx, err)
+		return
+	}
+
+	results := c.branchSvc.BatchArchive(ctx, ctx.Request.Context(), reqBody, session, repoOut)
+	resp.OK(ctx, i18n.BranchArchiveSuccess, results)
+}
+
+// @Summary 批量激活归档分支
+// @Description 将指定归档分支批量激活（去掉 archived/ 前缀）
+// @Tags branches
+// @Accept application/json
+// @Produce application/json
+// @Param id path uint true "仓库 ID"
+// @Param request body branchModel.ReqForArchive true "批量激活请求参数"
+// @Success 200 {object} resp.ObjectResponse{data=[]branchModel.ActivateResult} "激活结果"
+// @Failure 400 {object} resp.ObjectResponse "参数错误"
+// @Failure 500 {object} resp.ObjectResponse "服务器错误"
+// @Router /repos/{id}/branches/activate [post]
+func (c *Controller) Activate(ctx *gin.Context) {
+	var reqBody branchModel.ReqForArchive
+	var err error
+
+	repoID, err := req.PathParamAsPositiveUint(ctx, "id")
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RepoPathParamError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
+	if err = ctx.ShouldBindJSON(&reqBody); err != nil {
+		err = errors.WithI18nKey(err, i18n.BranchBodyParamError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
+	session, ok := req.GetAuthSession(ctx.Request.Context())
+	if !ok {
+		resp.Unauthorized(ctx, errors.WithI18nKey(nil, i18n.AuthNoSession))
+		return
+	}
+
+	repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, repoID)
+	if err != nil {
+		resp.InternalError(ctx, err)
+		return
+	}
+	if repoOut.Mirror {
+		err = errors.WithI18nKey(err, i18n.RepoMirrorReadOnly)
+		resp.InternalError(ctx, err)
+		return
+	}
+
+	results := c.branchSvc.BatchActivate(ctx, ctx.Request.Context(), reqBody, session, repoOut)
+	resp.OK(ctx, i18n.BranchActivateSuccess, results)
+}

@@ -2,7 +2,9 @@ package branch
 
 import (
 	"regexp"
+	"strings"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/commit"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
@@ -23,6 +25,25 @@ type ReqForCreate struct {
 
 type ReqForDelete struct {
 	Name string `json:"name" binding:"required,max=100" example:"dev"`
+}
+
+// ReqForArchive 批量归档/激活分支请求
+type ReqForArchive struct {
+	BranchNames []string `json:"branchNames" binding:"required,min=1" example:"dev,feature/login"`
+}
+
+// ArchiveResult 单个分支归档结果
+type ArchiveResult struct {
+	BranchName string `json:"branchName"`
+	Status     bool   `json:"status"`
+	Message    string `json:"message"`
+}
+
+// ActivateResult 单个分支激活结果
+type ActivateResult struct {
+	BranchName string `json:"branchName"`
+	Status     bool   `json:"status"`
+	Message    string `json:"message"`
 }
 
 // ReqFilter stores branch query parameters.
@@ -104,6 +125,10 @@ func (r *ReqForCreateBranchType) Check() error {
 			err = errors.WithI18nKey(err, i18n.BranchTypeBodyCheckPrefixFormat)
 			return err
 		}
+		if strings.HasPrefix(prefix, constant.BranchArchivedPrefix) || strings.TrimRight(prefix, "/-_.") == "archived" {
+			err = errors.WithI18nKey(err, i18n.BranchTypeArchivedPrefixForbidden)
+			return err
+		}
 	}
 
 	// 描述选填,最多500个字符
@@ -143,6 +168,10 @@ func (r *ReqForUpdateBranchType) Check() error {
 			}
 			if !validPrefixRegex.MatchString(prefix) {
 				err = errors.WithI18nKey(err, i18n.BranchTypeBodyCheckPrefixFormat)
+				return err
+			}
+			if strings.HasPrefix(prefix, constant.BranchArchivedPrefix) || strings.TrimRight(prefix, "/-_.") == "archived" {
+				err = errors.WithI18nKey(err, i18n.BranchTypeArchivedPrefixForbidden)
 				return err
 			}
 		}

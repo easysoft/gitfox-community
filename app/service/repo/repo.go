@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"strings"
 	"time"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/githook"
@@ -162,6 +163,12 @@ func (s *Service) createGitRepository(ctx context.Context, req *repoModel.Create
 func (s *Service) Update(ctx context.Context, req *repoModel.ReqForUpdate, oldRepo repoModel.Repo, session *auth.Session) (*repoModel.Repo, error) {
 	// 调用 git 命令更新默认分支
 	if req.DefaultBranch != "" {
+		if strings.HasPrefix(req.DefaultBranch, constant.BranchArchivedPrefix) {
+			return nil, errors.WithI18nKey(
+				fmt.Errorf("default branch cannot start with %s", constant.BranchArchivedPrefix),
+				i18n.RepoDefaultBranchArchivedForbidden,
+			)
+		}
 		writeParams, err := utils.CreateRPCInternalWriteParams(ctx, s.urlProvider, session, &oldRepo)
 		if err != nil {
 			return nil, errors.WithI18nKey(err, i18n.GitCreateExecParamError)

@@ -20,3 +20,4 @@ repo:
   get_paths_details_success: "Get paths details successfully."
   delete_success: "Repository deleted successfully."
   delete_error: "Failed to delete the repository."
+  default_branch_archived_forbidden: "Default branch cannot start with archived/, this prefix is reserved for archived branches."

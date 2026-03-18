@@ -10,6 +10,18 @@ branch:
   list_success: "Query the branch list successfully."
   list_prefix_error: "Failed to query the list of branch prefixes."
   list_prefix_success: "Query the list of branch prefixes successfully."
+  archive_success: "Branches archived successfully."
+  archive_is_default: "Default branch cannot be archived."
+  archive_target_exists: "Archive target branch archived/%s already exists, please delete or rename it first."
+  archive_create_error: "Failed to create archive branch archived/%s. The source branch may not exist or there is a name conflict. Please verify and try again."
+  archive_delete_error: "Failed to delete original branch %s. The branch may not exist or has been modified by another operation. Please verify and try again."
+  archive_rollback_error: "Failed to archive branch %s and rollback also failed. archived/%s may remain, please check and clean up manually."
+  activate_success: "Archived branches activated successfully."
+  activate_not_archived: "Branch %s is not archived (missing archived/ prefix), cannot activate."
+  activate_target_exists: "Activate target branch %s already exists, please delete or rename it first."
+  activate_create_error: "Failed to create activated branch %s. The archived branch may not exist or there is a name conflict. Please verify and try again."
+  activate_delete_error: "Failed to delete archived branch %s. The branch may not exist or has been modified by another operation. Please verify and try again."
+  archived_prefix_forbidden: "Branch name cannot start with archived/, this prefix is reserved for archived branches."
 
 branch_type:
   path_param_error: "Path param parsing failed."
@@ -35,3 +47,4 @@ branch_type:
   query_success: "Query branch type successfully."
   query_error: "Failed to query branch type."
   not_found: "Branch type not found."
+  archived_prefix_forbidden: "Branch type prefix cannot use archived, this prefix is reserved for archived branches."
