@@ -16,7 +16,8 @@ spec:
                 image: qucheng.tencentcloudcr.com/ci/gitfox-plugin:alpine-git
                 pull: always
               script:
-                - git clone http://10.0.4.11:3000/git/1/repo20260202.git
+                - rm -rf /gitfox/*/
+                - git clone ${{parameters.gitURL}} --branch ${{parameters.gitRef}} --depth 5
           - name: dotnet
             type: background
             spec:
@@ -27,5 +28,5 @@ spec:
             type: run
             spec:
               container:
-                image: hub.zentao.net/ci/gitfoxscan:main
+                image: hub.zentao.net/ci/gitfoxscan:gitfox-community
                 pull: always

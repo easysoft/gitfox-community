@@ -76,7 +76,7 @@ type ScanTaskInfoReqFilter struct {
 }
 
 type ScanTaskReqForCreate struct {
-	PlanID uint   `json:"planID"`
-	RepoID uint   `json:"repoID"`
-	Branch string `json:"branch"`
+	PlanID uint   `json:"planID" binding:"required"`
+	RepoID uint   `json:"repoID" binding:"required"`
+	Branch string `json:"branch" binding:"required"`
 }

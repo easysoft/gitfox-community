@@ -60,6 +60,11 @@ func (c *command) run(*kingpin.ParseContext) error {
 		panic(err)
 	}
 
+	if err = app.TokenStore.SetDevopsToken(context.Background()); err != nil {
+		app.SystemLog.Errorw("[Server] Failed to set devops token", "error", err)
+		panic(err)
+	}
+
 	// 注册 Pipeline Cron 触发器处理器
 	if err := provider.RegisterPipelineCronHandler(
 		app.JobScheduler, app.Triggerer, app.PipelineService); err != nil {

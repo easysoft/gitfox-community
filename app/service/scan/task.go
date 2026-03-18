@@ -16,7 +16,9 @@ import (
 	pipelineStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/pipeline"
 	repoStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
 	scanStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/scan"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database/dbtx"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/resources"
 )
 
@@ -52,32 +54,50 @@ func (j *JobCodeScanIdentifier) String() string {
 var _ IScanTask = (*ScanTaskService)(nil)
 
 type ScanTaskService struct {
-	taskStore     scanStore.IScanTask
-	planStore     scanStore.IScanPlan
-	solutionStore scanStore.ISolution
-	repoStore     repoStore.Interface
-	pipelineStore pipelineStore.Interface
-	triggerSvc    triggerer.Triggerer
-	cronScheduler CronScheduler
+	config         *config.Config
+	taskStore      scanStore.IScanTask
+	planStore      scanStore.IScanPlan
+	solutionStore  scanStore.ISolution
+	issueStore     scanStore.IScanIssue
+	conditionStore scanStore.IScanCondition
+	ruleSetStore   scanStore.IRuleSet
+	ruleStore      scanStore.IRule
+	repoStore      repoStore.Interface
+	pipelineStore  pipelineStore.Interface
+	triggerSvc     triggerer.Triggerer
+	cronScheduler  CronScheduler
+	tx             dbtx.TxRunner
 }
 
 func NewScanTaskService(
+	config *config.Config,
 	taskStore scanStore.IScanTask,
 	planStore scanStore.IScanPlan,
 	solutionStore scanStore.ISolution,
+	issueStore scanStore.IScanIssue,
+	conditionStore scanStore.IScanCondition,
+	ruleSetStore scanStore.IRuleSet,
+	ruleStore scanStore.IRule,
 	repoStore repoStore.Interface,
 	pipelineStore pipelineStore.Interface,
 	triggerSvc triggerer.Triggerer,
 	cronScheduler CronScheduler,
+	tx dbtx.TxRunner,
 ) *ScanTaskService {
 	return &ScanTaskService{
-		taskStore:     taskStore,
-		planStore:     planStore,
-		solutionStore: solutionStore,
-		repoStore:     repoStore,
-		pipelineStore: pipelineStore,
-		triggerSvc:    triggerSvc,
-		cronScheduler: cronScheduler,
+		config:         config,
+		taskStore:      taskStore,
+		planStore:      planStore,
+		solutionStore:  solutionStore,
+		issueStore:     issueStore,
+		conditionStore: conditionStore,
+		ruleSetStore:   ruleSetStore,
+		ruleStore:      ruleStore,
+		repoStore:      repoStore,
+		pipelineStore:  pipelineStore,
+		triggerSvc:     triggerSvc,
+		cronScheduler:  cronScheduler,
+		tx:             tx,
 	}
 }
 
@@ -125,6 +145,13 @@ func (s *ScanTaskService) Create(ctx context.Context, in *ScanTaskInput) (*scanM
 	in.Hook.Params["SCAN_PLAN_ID"] = fmt.Sprintf("%d", in.Plan.ID)
 	in.Hook.Params["SCAN_TASK_ID"] = fmt.Sprintf("%d", created.ID)
 	in.Hook.Params["SCAN_TRIGGER_ID"] = fmt.Sprintf("%d", triggerID)
+	in.Hook.Params["SCAN_REPO_ID"] = fmt.Sprintf("%d", in.Repo.ID)
+	// 注入 git clone 需要的参数
+	in.Hook.Params["gitURL"] = in.Repo.GitURL
+	in.Hook.Params["gitRef"] = in.Hook.Ref
+	// 注入 gitfoxscan 调用接口时需要的参数
+	in.Hook.Params["GITFOX_API_ENDPOINT"] = s.config.URL.Base + "/api/v2"
+	in.Hook.Params["PLUGIN_TOKEN"] = s.config.PipelineAuth.Password
 
 	// 获取或创建代码扫描流水线
 	pipeline, err := s.getOrCreatePipeline(ctx, in.Plan.RepoID, in)
@@ -150,9 +177,10 @@ func (s *ScanTaskService) Create(ctx context.Context, in *ScanTaskInput) (*scanM
 	return created, nil
 }
 
-func (s *ScanTaskService) CreateBranchHook(ctx context.Context, repo *repoModel.Repo, branch string, principal *authModel.Session) (*triggerer.Hook, error) {
+func (s *ScanTaskService) CreateBranchHook(ctx context.Context, repo *repoModel.Repo, branch string, sha string, principal *authModel.Session) (*triggerer.Hook, error) {
 	hook := &triggerer.Hook{
-		Trigger:     principal.User.Account, // who/what triggered the build, different from commit author
+		Commit:      sha,
+		Trigger:     principal.User.Account,
 		TriggeredBy: principal.User.ID,
 		Action:      "",
 		Parent:      int64(repo.SpaceID),
@@ -160,7 +188,6 @@ func (s *ScanTaskService) CreateBranchHook(ctx context.Context, repo *repoModel.
 		Sender:      principal.User.Account,
 		Params:      map[string]string{},
 	}
-
 	return hook, nil
 }
 

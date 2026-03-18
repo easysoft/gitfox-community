@@ -109,6 +109,16 @@ type IScanPlanCondition interface {
 	BatchDeleteByIDs(ctx context.Context, repoID, planID uint, ids []uint) error
 }
 
+// IScanIssue 扫描问题 store 接口
+type IScanIssue interface {
+	Create(ctx context.Context, issue *ScanIssue) error
+	ListKeysByTask(ctx context.Context, repoID int64, branch string, taskID uint, method constant.ScanMethod) ([]*scanModel.ScanIssueKey, error)
+	UpdateByTaskID(ctx context.Context, taskID uint, issueIDs []int64) error
+	DisappearedByTask(ctx context.Context, taskID uint, issueIDs []int64) error
+	CreateIssueBindByTaskID(ctx context.Context, taskID uint, issueKeys []string) error
+	ListByTaskForResult(ctx context.Context, taskID uint, planID int64) ([]*scanModel.Rule, error)
+}
+
 // IScanTask 扫描任务 store 接口
 type IScanTask interface {
 	Create(ctx context.Context, task *ScanTask) (*scanModel.ScanTask, error)

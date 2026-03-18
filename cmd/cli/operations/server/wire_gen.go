@@ -53,6 +53,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/space"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/stage"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/step"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/token"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/user"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/cmd/cli/operations/provider"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/auth/authn"
@@ -236,13 +237,14 @@ func NewApp(mode string) (*App, func(), error) {
 	solutionService := scan2.NewSolutionService(solutionStore)
 	scanTaskStore := scan.NewScanTaskStore(db)
 	scanPlanStore := scan.NewScanPlanStore(db)
+	scanIssueStore := scan.NewScanIssueStore(db)
+	scanConditionStore := scan.NewScanConditionStore(db)
 	cronScheduler := provider.ProvideScanCronScheduler(jobsScheduler)
-	scanTaskService := scan2.NewScanTaskService(scanTaskStore, scanPlanStore, solutionStore, store, pipelineStore, triggererTriggerer, cronScheduler)
+	scanTaskService := scan2.NewScanTaskService(config, scanTaskStore, scanPlanStore, solutionStore, scanIssueStore, scanConditionStore, ruleSetStore, ruleStore, store, pipelineStore, triggererTriggerer, cronScheduler, txRunnerImpl)
 	scanTriggerStore := scan.NewScanTriggerStore(db)
 	scanPlanService := scan2.NewScanPlanService(scanPlanStore, store, solutionStore, ruleSetStore, ruleStore, scanTriggerStore)
 	scanTriggerSolutionStore := scan.NewScanTriggerSolutionStore(db)
 	scanTriggerService := scan2.NewScanTriggerService(scanTriggerStore, scanTriggerSolutionStore, store, scanPlanStore, solutionStore, cronScheduler)
-	scanConditionStore := scan.NewScanConditionStore(db)
 	scanConditionService := scan2.NewScanConditionService(scanConditionStore, store, scanPlanStore, scanTriggerStore, cronScheduler)
 	scanPlanConditionService := scan2.NewScanPlanConditionService(store, scanPlanStore, scanConditionStore)
 	scanController := scan3.NewScanController(ruleSetService, ruleService, solutionService, scanTaskService, scanPlanService, scanTriggerService, scanConditionService, scanPlanConditionService, repoService)
@@ -304,6 +306,7 @@ func NewApp(mode string) (*App, func(), error) {
 		Triggerer:       triggererTriggerer,
 		Poller:          poller,
 		ScanRuleSvc:     ruleService,
+		TokenStore:      tokenInterface,
 	}
 	return app, func() {
 		cleanup2()
@@ -332,4 +335,5 @@ type App struct {
 	Triggerer       triggerer.Triggerer
 	Poller          *poller.Poller
 	ScanRuleSvc     scan2.IRule
+	TokenStore      token.Interface
 }

@@ -435,7 +435,51 @@ var scanTaskResults = sortEnum([]ScanTaskResult{
 	ScanTaskResultNull,
 })
 
+// ScanMethod 扫描方法
+type ScanMethod string
 
+const (
+	ScanMethodCheck ScanMethod = "check"
+	ScanMethodSmell ScanMethod = "smell"
+)
+
+var scanMethods = sortEnum([]ScanMethod{
+	ScanMethodCheck,
+	ScanMethodSmell,
+})
+
+func (ScanMethod) Enum() []interface{}              { return toInterfaceSlice(scanMethods) }
+func (s ScanMethod) Sanitize() (ScanMethod, bool)   { return Sanitize(s, GetAllScanMethods) }
+func GetAllScanMethods() ([]ScanMethod, ScanMethod)  { return scanMethods, ScanMethodCheck }
+func (s ScanMethod) String() string                  { return string(s) }
+
+// ScanIssueStatus 扫描问题状态
+type ScanIssueStatus string
+
+const (
+	ScanIssueStatusWait    ScanIssueStatus = "wait"
+	ScanIssueStatusTodo    ScanIssueStatus = "todo"
+	ScanIssueStatusSolving ScanIssueStatus = "solving"
+	ScanIssueStatusSolved  ScanIssueStatus = "solved"
+	ScanIssueStatusClosed  ScanIssueStatus = "closed"
+	ScanIssueStatusIgnore  ScanIssueStatus = "ignore"
+)
+
+var scanIssueStatuses = sortEnum([]ScanIssueStatus{
+	ScanIssueStatusWait,
+	ScanIssueStatusTodo,
+	ScanIssueStatusSolving,
+	ScanIssueStatusSolved,
+	ScanIssueStatusClosed,
+	ScanIssueStatusIgnore,
+})
+
+func (ScanIssueStatus) Enum() []interface{}                    { return toInterfaceSlice(scanIssueStatuses) }
+func (s ScanIssueStatus) Sanitize() (ScanIssueStatus, bool)   { return Sanitize(s, GetAllScanIssueStatuses) }
+func GetAllScanIssueStatuses() ([]ScanIssueStatus, ScanIssueStatus) {
+	return scanIssueStatuses, ScanIssueStatusWait
+}
+func (s ScanIssueStatus) String() string { return string(s) }
 
 // Order 排序方向
 type Order string
