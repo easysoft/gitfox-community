@@ -1908,6 +1908,142 @@ const docTemplate = `{
                 }
             }
         },
+        "/repos/{id}/branches/activate": {
+            "post": {
+                "description": "将指定归档分支批量激活（去掉 archived/ 前缀）",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "branches"
+                ],
+                "summary": "批量激活归档分支",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "仓库 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "批量激活请求参数",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.ReqForArchive"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "激活结果",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.ActivateResult"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/repos/{id}/branches/archive": {
+            "post": {
+                "description": "将指定分支批量归档（添加 archived/ 前缀），默认分支不可归档",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "branches"
+                ],
+                "summary": "批量归档分支",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "仓库 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "批量归档请求参数",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.ReqForArchive"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "归档结果",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.ArchiveResult"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/repos/{id}/branches/list": {
             "post": {
                 "description": "分页查询分支列表",
@@ -8310,6 +8446,61 @@ const docTemplate = `{
                 "ScanTypeIncremental"
             ]
         },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.TriggerAction": {
+            "type": "string",
+            "enum": [
+                "branch_created",
+                "branch_updated",
+                "tag_created",
+                "tag_updated",
+                "pullreq_created",
+                "pullreq_reopened",
+                "pullreq_branch_updated",
+                "pullreq_closed",
+                "pullreq_merged",
+                "cron"
+            ],
+            "x-enum-varnames": [
+                "TriggerActionBranchCreated",
+                "TriggerActionBranchUpdated",
+                "TriggerActionTagCreated",
+                "TriggerActionTagUpdated",
+                "TriggerActionPullReqCreated",
+                "TriggerActionPullReqReopened",
+                "TriggerActionPullReqBranchUpdated",
+                "TriggerActionPullReqClosed",
+                "TriggerActionPullReqMerged",
+                "TriggerActionCron"
+            ]
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.ActivateResult": {
+            "type": "object",
+            "properties": {
+                "branchName": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.ArchiveResult": {
+            "type": "object",
+            "properties": {
+                "branchName": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "boolean"
+                }
+            }
+        },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.Branch": {
             "type": "object",
             "properties": {
@@ -8437,6 +8628,25 @@ const docTemplate = `{
                 },
                 "prefix": {
                     "type": "string"
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.ReqForArchive": {
+            "type": "object",
+            "required": [
+                "branchNames"
+            ],
+            "properties": {
+                "branchNames": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "dev",
+                        "feature/login"
+                    ]
                 }
             }
         },
@@ -10637,7 +10847,10 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "actions": {
-                    "type": "string"
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.TriggerAction"
+                    }
                 },
                 "conditionCount": {
                     "type": "integer"
@@ -10708,6 +10921,9 @@ const docTemplate = `{
                 "repoID": {
                     "type": "integer"
                 },
+                "scanType": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanType"
+                },
                 "solutionCount": {
                     "type": "integer"
                 },
@@ -10735,7 +10951,10 @@ const docTemplate = `{
             ],
             "properties": {
                 "actions": {
-                    "type": "string"
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.TriggerAction"
+                    }
                 },
                 "cron": {
                     "type": "string"
@@ -10756,6 +10975,9 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 100
                 },
+                "scanType": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanType"
+                },
                 "solutionIDs": {
                     "type": "array",
                     "items": {
@@ -10771,7 +10993,10 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "actions": {
-                    "type": "string"
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.TriggerAction"
+                    }
                 },
                 "cron": {
                     "type": "string"
@@ -10790,6 +11015,9 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
+                },
+                "scanType": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanType"
                 },
                 "solutionIDs": {
                     "type": "array",
