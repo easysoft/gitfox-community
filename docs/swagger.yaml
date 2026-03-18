@@ -253,6 +253,48 @@ definitions:
     x-enum-varnames:
     - ScanTypeFull
     - ScanTypeIncremental
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.TriggerAction:
+    enum:
+    - branch_created
+    - branch_updated
+    - tag_created
+    - tag_updated
+    - pullreq_created
+    - pullreq_reopened
+    - pullreq_branch_updated
+    - pullreq_closed
+    - pullreq_merged
+    - cron
+    type: string
+    x-enum-varnames:
+    - TriggerActionBranchCreated
+    - TriggerActionBranchUpdated
+    - TriggerActionTagCreated
+    - TriggerActionTagUpdated
+    - TriggerActionPullReqCreated
+    - TriggerActionPullReqReopened
+    - TriggerActionPullReqBranchUpdated
+    - TriggerActionPullReqClosed
+    - TriggerActionPullReqMerged
+    - TriggerActionCron
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.ActivateResult:
+    properties:
+      branchName:
+        type: string
+      message:
+        type: string
+      status:
+        type: boolean
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.ArchiveResult:
+    properties:
+      branchName:
+        type: string
+      message:
+        type: string
+      status:
+        type: boolean
+    type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.Branch:
     properties:
       commit:
@@ -339,6 +381,19 @@ definitions:
         type: integer
       prefix:
         type: string
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.ReqForArchive:
+    properties:
+      branchNames:
+        example:
+        - dev
+        - feature/login
+        items:
+          type: string
+        minItems: 1
+        type: array
+    required:
+    - branchNames
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.ReqForCreate:
     properties:
@@ -1829,7 +1884,9 @@ definitions:
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTrigger:
     properties:
       actions:
-        type: string
+        items:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.TriggerAction'
+        type: array
       conditionCount:
         type: integer
       conditionIDs:
@@ -1876,6 +1933,8 @@ definitions:
         type: integer
       repoID:
         type: integer
+      scanType:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanType'
       solutionCount:
         type: integer
       solutionIDs:
@@ -1892,7 +1951,9 @@ definitions:
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTriggerReqForCreate:
     properties:
       actions:
-        type: string
+        items:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.TriggerAction'
+        type: array
       cron:
         type: string
       cronBranch:
@@ -1906,6 +1967,8 @@ definitions:
       name:
         maxLength: 100
         type: string
+      scanType:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanType'
       solutionIDs:
         items:
           type: integer
@@ -1918,7 +1981,9 @@ definitions:
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTriggerReqForUpdate:
     properties:
       actions:
-        type: string
+        items:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.TriggerAction'
+        type: array
       cron:
         type: string
       cronBranch:
@@ -1931,6 +1996,8 @@ definitions:
         type: string
       name:
         type: string
+      scanType:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanType'
       solutionIDs:
         items:
           type: integer
@@ -3539,6 +3606,90 @@ paths:
           schema:
             $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
       summary: 创建分支
+      tags:
+      - branches
+  /repos/{id}/branches/activate:
+    post:
+      consumes:
+      - application/json
+      description: 将指定归档分支批量激活（去掉 archived/ 前缀）
+      parameters:
+      - description: 仓库 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 批量激活请求参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.ReqForArchive'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 激活结果
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.ActivateResult'
+                  type: array
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 批量激活归档分支
+      tags:
+      - branches
+  /repos/{id}/branches/archive:
+    post:
+      consumes:
+      - application/json
+      description: 将指定分支批量归档（添加 archived/ 前缀），默认分支不可归档
+      parameters:
+      - description: 仓库 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 批量归档请求参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.ReqForArchive'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 归档结果
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.ArchiveResult'
+                  type: array
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 批量归档分支
       tags:
       - branches
   /repos/{id}/branches/list:
