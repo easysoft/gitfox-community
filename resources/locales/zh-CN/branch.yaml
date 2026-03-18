@@ -11,6 +11,19 @@ branch:
   list_success: "查询分支列表成功。"
   list_prefix_error: "查询分支前缀列表失败。"
   list_prefix_success: "查询分支前缀列表成功。"
+  archive_success: "分支归档成功。"
+  archive_is_default: "默认分支不能归档。"
+  archive_already_archived: "分支已经是归档状态，无法重复归档。"
+  archive_target_exists: "归档目标分支 archived/%s 已存在，请先删除或重命名。"
+  archive_create_error: "创建归档分支 archived/%s 失败，可能是因为源分支不存在或名称冲突，请检查后重试。"
+  archive_delete_error: "删除原分支 %s 失败，可能是因为分支不存在或已被其他操作修改，请检查后重试。"
+  archive_rollback_error: "归档分支 %s 失败且回滚也未成功，archived/%s 可能残留，请手动检查并清理。"
+  activate_success: "激活归档分支成功。"
+  activate_not_archived: "分支 %s 不是归档状态（缺少 archived/ 前缀），无法激活。"
+  activate_target_exists: "激活目标分支 %s 已存在，请先删除或重命名。"
+  activate_create_error: "创建激活分支 %s 失败，可能是因为归档分支不存在或名称冲突，请检查后重试。"
+  activate_delete_error: "删除归档分支 %s 失败，可能是因为分支不存在或已被其他操作修改，请检查后重试。"
+  archived_prefix_forbidden: "分支名不能以 archived/ 开头，该前缀为归档分支保留。"
 
 branch_type:
   path_param_error: "Path 参数解析失败。"
@@ -36,4 +49,5 @@ branch_type:
   query_success: "分支类型查询成功。"
   query_error: "分支类型查询失败。"
   not_found: "分支类型未找到。"
+  archived_prefix_forbidden: "分支类型前缀不能使用 archived，该前缀为归档分支保留。"
   

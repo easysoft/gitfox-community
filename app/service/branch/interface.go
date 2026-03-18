@@ -7,6 +7,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/branch"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
+	"github.com/gin-gonic/gin"
 )
 
 type Interface interface {
@@ -14,6 +15,8 @@ type Interface interface {
 	List(ctx context.Context, req branch.ReqFilter, repo *repo.Repo) ([]branch.Branch, bool, error)
 	ListPrefixes(ctx context.Context, repo repo.Repo) ([]branch.Prefix, error)
 	Delete(ctx context.Context, name string, session *auth.Session, repo *repo.Repo) error
+	BatchArchive(c *gin.Context, ctx context.Context, req branch.ReqForArchive, session *auth.Session, repo *repo.Repo) []branch.ArchiveResult
+	BatchActivate(c *gin.Context, ctx context.Context, req branch.ReqForArchive, session *auth.Session, repo *repo.Repo) []branch.ActivateResult
 
 	// BranchType 相关接口
 	BatchCreateBranchType(ctx context.Context, reqs []branch.ReqForCreateBranchType, session *auth.Session, repoID uint) ([]branch.BranchType, error)

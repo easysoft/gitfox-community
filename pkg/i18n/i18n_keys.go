@@ -66,7 +66,20 @@ const (
 	BranchListPrefixSuccess I18nKey = "branch.list_prefix_success" // 查询分支前缀列表成功.
 	BranchListSuccess       I18nKey = "branch.list_success"        // 查询分支列表成功.
 	BranchPathParamError    I18nKey = "branch.path_param_error"    // Path 参数解析失败.
-	BranchQueryParamError   I18nKey = "branch.query_param_error"   // Query 参数解析失败.
+	BranchQueryParamError          I18nKey = "branch.query_param_error"           // Query 参数解析失败.
+	BranchArchiveSuccess           I18nKey = "branch.archive_success"            // 分支归档成功.
+	BranchArchiveIsDefault         I18nKey = "branch.archive_is_default"         // 默认分支不能归档.
+	BranchArchiveAlreadyArchived   I18nKey = "branch.archive_already_archived"   // 分支已经是归档状态.
+	BranchArchiveTargetExists      I18nKey = "branch.archive_target_exists"      // 归档目标分支已存在.
+	BranchArchiveCreateError       I18nKey = "branch.archive_create_error"       // 创建归档分支失败.
+	BranchArchiveDeleteError       I18nKey = "branch.archive_delete_error"       // 删除原分支失败.
+	BranchArchiveRollbackError     I18nKey = "branch.archive_rollback_error"     // 归档回滚失败，请手动处理.
+	BranchActivateSuccess          I18nKey = "branch.activate_success"           // 激活归档分支成功.
+	BranchActivateNotArchived      I18nKey = "branch.activate_not_archived"      // 分支不是归档状态，无法激活.
+	BranchActivateTargetExists     I18nKey = "branch.activate_target_exists"     // 激活目标分支已存在.
+	BranchActivateCreateError      I18nKey = "branch.activate_create_error"      // 创建激活分支失败.
+	BranchActivateDeleteError      I18nKey = "branch.activate_delete_error"      // 删除归档分支失败.
+	BranchArchivedPrefixForbidden  I18nKey = "branch.archived_prefix_forbidden"  // 分支名不能以 archived/ 开头.
 
 	// Branch_type 相关常量
 	BranchTypeBodyCheckDescLength   I18nKey = "branch_type.body_check_desc_length"   // 描述长度必须小于500个字符.
@@ -77,6 +90,7 @@ const (
 	BranchTypeBodyCheckPrefixFormat I18nKey = "branch_type.body_check_prefix_format" // 前缀以字母开头,仅含字母或数字；末尾需有且仅可有一个分隔符(/ - _ .)
 	BranchTypeBodyCheckPrefixLength I18nKey = "branch_type.body_check_prefix_length" // 前缀长度必须小于50个字符.
 	BranchTypeBodyCheckPrefixNum    I18nKey = "branch_type.body_check_prefix_num"    // 前缀数量须为1至5个.
+	BranchTypeArchivedPrefixForbidden I18nKey = "branch_type.archived_prefix_forbidden" // 分支类型前缀不能使用 archived，该前缀为归档分支保留.
 	BranchTypeBodyParamError        I18nKey = "branch_type.body_param_error"         // Body 参数解析失败.
 	BranchTypeCreateError           I18nKey = "branch_type.create_error"             // 分支类型创建失败.
 	BranchTypeCreateErrorKey        I18nKey = "branch_type.create_error_key"         // 分支类型键值已存在.
@@ -305,6 +319,7 @@ const (
 	RepoQueryError                I18nKey = "repo.query_error"                  // 查询仓库失败
 	RepoQueryParamError           I18nKey = "repo.query_param_error"            // Query 参数解析失败.
 	RepoQuerySuccess              I18nKey = "repo.query_success"                // 查询仓库成功
+	RepoDefaultBranchArchivedForbidden I18nKey = "repo.default_branch_archived_forbidden" // 默认分支不能以 archived/ 开头.
 	RepoUpdateSuccess             I18nKey = "repo.update_success"               // 更新仓库成功
 
 	// Request 相关常量
