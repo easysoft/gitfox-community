@@ -134,6 +134,8 @@ scanTask:
   query_error: "扫描任务详情查询失败。"
   create_success: "扫描任务创建成功。"
   create_error: "扫描任务创建失败。"
+  report_upload_success: "扫描任务报告上传成功。"
+  report_upload_error: "扫描任务报告上传失败。"
 
 condition:
   path_param_error: "路径参数解析失败。"

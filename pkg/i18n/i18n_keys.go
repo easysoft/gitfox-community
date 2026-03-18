@@ -11,22 +11,22 @@ const (
 	AuthFailed                      I18nKey = "auth.failed"                           // 尝试认证失败
 	AuthNoData                      I18nKey = "auth.no_data"                          // 请求不包含任何可用于 Authorizer 的认证数据
 	AuthNoSession                   I18nKey = "auth.no_session"                       // 请求不包含任何会话数据,无法进行授权
-	AuthPubKeyAddAlreadyInUse       I18nKey = "auth.pub_key_add_already_in_use"       // key-公钥已存在
+	AuthPubKeyAddAlreadyInUse       I18nKey = "auth.pub_key_add_already_in_use"       // key::公钥已存在
 	AuthPubKeyAddBodyParamError     I18nKey = "auth.pub_key_add_body_param_error"     // 公钥添加请求体参数解析失败
-	AuthPubKeyAddContentEmpty       I18nKey = "auth.pub_key_add_content_empty"        // key-公钥内容不能为空
+	AuthPubKeyAddContentEmpty       I18nKey = "auth.pub_key_add_content_empty"        // key::公钥内容不能为空
 	AuthPubKeyAddError              I18nKey = "auth.pub_key_add_error"                // 公钥添加失败
-	AuthPubKeyAddIdentifierInUse    I18nKey = "auth.pub_key_add_identifier_in_use"    // name-公钥标识符已存在
+	AuthPubKeyAddIdentifierInUse    I18nKey = "auth.pub_key_add_identifier_in_use"    // name::公钥标识符已存在
 	AuthPubKeyAddParamError         I18nKey = "auth.pub_key_add_param_error"          // 公钥参数错误
 	AuthPubKeyAddSuccess            I18nKey = "auth.pub_key_add_success"              // 公钥添加成功
-	AuthPubKeyContentError          I18nKey = "auth.pub_key_content_error"            // key-公钥内容格式错误
+	AuthPubKeyContentError          I18nKey = "auth.pub_key_content_error"            // key::公钥内容格式错误
 	AuthPubKeyDeleteError           I18nKey = "auth.pub_key_delete_error"             // 公钥删除失败
 	AuthPubKeyDeleteNotFound        I18nKey = "auth.pub_key_delete_not_found"         // 公钥不存在,删除失败
 	AuthPubKeyDeleteParamError      I18nKey = "auth.pub_key_delete_param_error"       // 公钥删除参数校验错误
 	AuthPubKeyDeletePathParamError  I18nKey = "auth.pub_key_delete_path_param_error"  // 公钥删除路径参数解析失败
 	AuthPubKeyDeleteSuccess         I18nKey = "auth.pub_key_delete_success"           // 公钥删除成功
 	AuthPubKeyIdentifierError       I18nKey = "auth.pub_key_identifier_error"         // 公钥标识符校验错误
-	AuthPubKeyIdentifierFormatError I18nKey = "auth.pub_key_identifier_format_error"  // name-公钥标识符格式校验失败,仅支持字母、数字、.、_、-、$
-	AuthPubKeyIdentifierLengthError I18nKey = "auth.pub_key_identifier_length_error"  // name-公钥标识符长度校验失败,长度需在 1-100 个字符之间
+	AuthPubKeyIdentifierFormatError I18nKey = "auth.pub_key_identifier_format_error"  // name::公钥标识符格式校验失败,仅支持字母、数字、.、_、-、$
+	AuthPubKeyIdentifierLengthError I18nKey = "auth.pub_key_identifier_length_error"  // name::公钥标识符长度校验失败,长度需在 1-100 个字符之间
 	AuthPubKeyLastUseDateError      I18nKey = "auth.pub_key_last_use_date_error"      // 公钥最后验证时间数据异常
 	AuthPubKeyListError             I18nKey = "auth.pub_key_list_error"               // 公钥列表查询失败
 	AuthPubKeyListParamError        I18nKey = "auth.pub_key_list_param_error"         // 公钥列表参数校验错误
@@ -404,14 +404,16 @@ const (
 	RunnerUpdateSuccess          I18nKey = "runner.update_success"            // 更新 Runner 成功.
 
 	// ScanTask 相关常量
-	ScanTaskBodyParamError I18nKey = "scanTask.body_param_error" // 请求体参数解析失败.
-	ScanTaskCreateError    I18nKey = "scanTask.create_error"     // 扫描任务创建失败.
-	ScanTaskCreateSuccess  I18nKey = "scanTask.create_success"   // 扫描任务创建成功.
-	ScanTaskListError      I18nKey = "scanTask.list_error"       // 扫描任务列表查询失败.
-	ScanTaskListSuccess    I18nKey = "scanTask.list_success"     // 扫描任务列表查询成功.
-	ScanTaskPathParamError I18nKey = "scanTask.path_param_error" // 路径参数解析失败.
-	ScanTaskQueryError     I18nKey = "scanTask.query_error"      // 扫描任务详情查询失败.
-	ScanTaskQuerySuccess   I18nKey = "scanTask.query_success"    // 扫描任务详情查询成功.
+	ScanTaskBodyParamError      I18nKey = "scanTask.body_param_error"      // 请求体参数解析失败.
+	ScanTaskCreateError         I18nKey = "scanTask.create_error"          // 扫描任务创建失败.
+	ScanTaskCreateSuccess       I18nKey = "scanTask.create_success"        // 扫描任务创建成功.
+	ScanTaskListError           I18nKey = "scanTask.list_error"            // 扫描任务列表查询失败.
+	ScanTaskListSuccess         I18nKey = "scanTask.list_success"          // 扫描任务列表查询成功.
+	ScanTaskPathParamError      I18nKey = "scanTask.path_param_error"      // 路径参数解析失败.
+	ScanTaskQueryError          I18nKey = "scanTask.query_error"           // 扫描任务详情查询失败.
+	ScanTaskQuerySuccess        I18nKey = "scanTask.query_success"         // 扫描任务详情查询成功.
+	ScanTaskReportUploadError   I18nKey = "scanTask.report_upload_error"   // 扫描任务报告上传失败.
+	ScanTaskReportUploadSuccess I18nKey = "scanTask.report_upload_success" // 扫描任务报告上传成功.
 
 	// Solution 相关常量
 	SolutionAlreadyExists       I18nKey = "solution.already_exists"        // 扫描方案名称已存在.

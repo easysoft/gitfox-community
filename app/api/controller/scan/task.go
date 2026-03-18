@@ -1,6 +1,8 @@
 package scan
 
 import (
+	"io"
+
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
 	scanModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
@@ -48,7 +50,7 @@ func (c *ScanController) ScanTaskCreate(ctx *gin.Context) {
 		return
 	}
 
-	hook, err := c.taskSvc.CreateBranchHook(ctx, repo, body.Branch, session)
+	hook, err := c.taskSvc.CreateBranchHook(ctx.Request.Context(), repo, body.Branch, "sha", session)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return
@@ -120,4 +122,52 @@ func (c *ScanController) ScanTaskGet(ctx *gin.Context) {
 		return
 	}
 	resp.OK(ctx, i18n.ScanTaskQuerySuccess, obj)
+}
+
+// ScanTaskUploadReport 上传扫描任务报告
+// @Summary 上传扫描任务报告
+// @Description 上传扫描任务的报告文件，解析 issues 并进行质量门禁判定
+// @Tags scan
+// @Accept multipart/form-data
+// @Produce application/json
+// @Param id path uint true "扫描任务 ID"
+// @Param file formData file true "报告文件"
+// @Param method formData string true "扫描方法（check/smell）"
+// @Success 200 {object} resp.ObjectResponse{data=scanModel.ScanIssueReport} "上传成功"
+// @Failure 400 {object} resp.ObjectResponse "参数错误"
+// @Failure 500 {object} resp.ObjectResponse "服务器内部错误"
+// @Router /scan/tasks/{id}/report [post]
+func (c *ScanController) ScanTaskUploadReport(ctx *gin.Context) {
+	taskID, err := req.PathParamAsPositiveUint(ctx, "id")
+	if err != nil {
+		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.ScanTaskPathParamError))
+		return
+	}
+
+	file, _, err := ctx.Request.FormFile("file")
+	if err != nil {
+		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.ScanTaskBodyParamError))
+		return
+	}
+	defer file.Close()
+
+	content, err := io.ReadAll(file)
+	if err != nil {
+		resp.InternalError(ctx, errors.WithI18nKey(err, i18n.ScanTaskReportUploadError))
+		return
+	}
+
+	method := ctx.Request.FormValue("method")
+	if method == "" {
+		resp.BadRequest(ctx, errors.WithI18nKey(nil, i18n.ScanTaskBodyParamError))
+		return
+	}
+
+	report, err := c.taskSvc.AnalyzeTaskUploadReport(ctx.Request.Context(), taskID, method, content)
+	if err != nil {
+		resp.InternalError(ctx, errors.WithI18nKey(err, i18n.ScanTaskReportUploadError))
+		return
+	}
+
+	resp.OK(ctx, i18n.ScanTaskReportUploadSuccess, report)
 }

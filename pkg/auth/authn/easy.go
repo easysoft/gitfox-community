@@ -9,6 +9,7 @@ import (
 	principal "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/user"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/token"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/user"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/cryptor"
@@ -35,14 +36,16 @@ var _ Authenticator = (*EasyAuthenticator)(nil)
 // --header 'App: zentao' \
 // --header 'Operator: zhangsan'
 type EasyAuthenticator struct {
+	config     *config.Config
 	userStore  user.Interface
 	tokenStore token.Interface
 }
 
 // NewEasyAuthenticator creates a new EasyAuthenticator.
 // NewEasyAuthenticator 创建一个新的 EasyAuthenticator。
-func NewEasyAuthenticator(userStore user.Interface, tokenStore token.Interface) *EasyAuthenticator {
+func NewEasyAuthenticator(config *config.Config, userStore user.Interface, tokenStore token.Interface) *EasyAuthenticator {
 	return &EasyAuthenticator{
+		config:     config,
 		userStore:  userStore,
 		tokenStore: tokenStore,
 	}
@@ -63,6 +66,20 @@ func (a *EasyAuthenticator) Authenticate(r *gin.Context) (*auth.Session, error) 
 	if authorization == "" {
 		logger.Debug("[authn.easy]missing Authorization header")
 		return nil, constant.ErrAuthNoData
+	}
+
+	// pipeline 用户特殊处理
+	if authorization == a.config.PipelineAuth.Password {
+		return &auth.Session{
+			Principal: &principal.Principal{
+				App:         a.config.PipelineAuth.UserName,
+				DisplayName: a.config.PipelineAuth.UserName,
+				Admin:       true,
+				Email:       HeaderAdminEmail,
+			}, User: &principal.User{
+				Account: a.config.PipelineAuth.UserName,
+			},
+		}, nil
 	}
 
 	app, _ = req.GetHeader(r, HeaderApp)

@@ -43,6 +43,7 @@ func registerScanRoutes(r *gin.RouterGroup, controller *Controller) {
 		tasks.POST("", controller.Scan.ScanTaskCreate)
 		tasks.POST("/list", controller.Scan.ScanTaskList)
 		tasks.GET("/:id", controller.Scan.ScanTaskGet)
+		tasks.POST("/:id/report", controller.Scan.ScanTaskUploadReport)
 
 		// 扫描方案相关路由
 		solutions := rule.Group("/solutions")
@@ -71,7 +72,7 @@ func registerScanRoutes(r *gin.RouterGroup, controller *Controller) {
 			{
 				planWithID.GET("", controller.Scan.ScanPlanGet)
 				planWithID.GET("/rules", controller.Scan.ScanPlanListRules)
-				planWithID.GET("/plan-rules", controller.Scan.ScanPlanListRules)
+				planWithID.GET("/plan-rules", controller.Scan.ScanPlanRules)
 				planWithID.PATCH("", controller.Scan.ScanPlanUpdate)
 				planWithID.DELETE("", controller.Scan.ScanPlanDelete)
 				planWithID.POST("/bind", controller.Scan.ScanPlanBindSolution)

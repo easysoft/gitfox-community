@@ -119,6 +119,38 @@ func (s *RuleStore) ExcludeByRuleSetID(
 ) (*database.PageResult[*scanModel.Rule], error) {
 	tx := s.db.WithContext(ctx).Model(&Rule{}).Where("deleted = ?", false)
 
+	if filter.ID > 0 {
+		tx = tx.Where("id = ?", filter.ID)
+	}
+
+	if filter.Name != "" {
+		tx = tx.Where("name LIKE ?", "%"+filter.Name+"%")
+	}
+
+	if filter.Lang != "" {
+		tx = tx.Where("lang = ?", filter.Lang)
+	}
+
+	if filter.Plugin != "" {
+		tx = tx.Where("plugin = ?", filter.Plugin)
+	}
+
+	if filter.Tag != "" {
+		tx = tx.Where("tag = ?", filter.Tag)
+	}
+
+	if filter.Priority != "" {
+		tx = tx.Where("priority = ?", filter.Priority)
+	}
+
+	if filter.Status != "" {
+		tx = tx.Where("status = ?", filter.Status)
+	}
+
+	if filter.Type != "" {
+		tx = tx.Where("type = ?", filter.Type)
+	}
+
 	// 排除已绑定的规则ID
 	if len(excludeIDs) > 0 {
 		tx = tx.Where("id NOT IN ?", excludeIDs)

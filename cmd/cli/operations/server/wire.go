@@ -15,6 +15,7 @@ import (
 	scanSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/scan"
 	triggerSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/trigger"
 	userSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/user"
+	tokenStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/token"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/cmd/cli/operations/provider"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/auth/authn"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
@@ -42,6 +43,7 @@ type App struct {
 	Triggerer       triggerer.Triggerer
 	Poller          *poller.Poller
 	ScanRuleSvc     scanSvc.IRule
+	TokenStore      tokenStore.Interface
 }
 
 func NewApp(mode string) (*App, func(), error) {

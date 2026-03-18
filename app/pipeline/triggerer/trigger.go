@@ -38,6 +38,7 @@ type Hook struct {
 	Timestamp   int64                  `json:"timestamp"`
 	Action      constant.TriggerAction `json:"action"`
 	Ref         string                 `json:"ref"`
+	Commit      string                 `json:"commit"`
 	Cron        string                 `json:"cron"`
 	Sender      string                 `json:"sender"`
 	Params      map[string]string      `json:"params"`
@@ -101,6 +102,7 @@ func (t *triggerer) Trigger(
 	}
 
 	execution := &executionModel.Execution{
+		Commit:     base.Commit,
 		PipelineID: pipelineID,
 		Trigger:    string(base.Action), // 使用 action 取代原先的 event
 		CreatedBy:  base.Trigger,

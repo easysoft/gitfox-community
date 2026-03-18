@@ -97,7 +97,7 @@ type IScanPlanCondition interface {
 // IScanTask 扫描任务 service 接口
 type IScanTask interface {
 	Create(ctx context.Context, in *ScanTaskInput) (*scanModel.ScanTask, error)
-	CreateBranchHook(ctx context.Context, repo *repoModel.Repo, branch string, principal *authModel.Session) (*triggerer.Hook, error)
+	CreateBranchHook(ctx context.Context, repo *repoModel.Repo, branch string, sha string, principal *authModel.Session) (*triggerer.Hook, error)
 	Retry(ctx context.Context, session *authModel.Session, taskID uint) (*scanModel.ScanTask, error)
 	GetTaskInfo(ctx context.Context, taskID uint) (*scanModel.ScanTaskInfo, error)
 	ListTaskInfos(ctx context.Context, filter scanModel.ScanTaskInfoReqFilter) (*database.PageResult[*scanModel.ScanTaskInfo], error)
@@ -105,4 +105,5 @@ type IScanTask interface {
 	Delete(ctx context.Context, id uint) error
 	SetupCron(ctx context.Context, trigger *scanModel.ScanTrigger) error
 	RecycleCron(ctx context.Context, trigger *scanModel.ScanTrigger) error
+	AnalyzeTaskUploadReport(ctx context.Context, taskID uint, method string, content []byte) (*scanModel.ScanIssueReport, error)
 }

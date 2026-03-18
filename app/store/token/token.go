@@ -2,6 +2,8 @@ package token
 
 import (
 	"context"
+	"fmt"
+	"math/rand"
 	"time"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
@@ -101,4 +103,42 @@ func (s *tokensStore) GetDevopsToken(ctx context.Context) (*Entry, error) {
 	}
 
 	return &entry, nil
+}
+
+func (s *tokensStore) SetDevopsToken(ctx context.Context) error {
+	var count int64
+	if err := s.db.WithContext(ctx).Model(&Entry{}).Where("name = 'GitFox' and code = 'gitfox' and deleted = '0'").Count(&count).Error; err != nil {
+		return database.ProcessSQLErrorf(ctx, err)
+	}
+	if count > 0 {
+		return nil
+	}
+
+	now := time.Now()
+	r := rand.New(rand.NewSource(now.UnixNano()))
+	const chars = "abcdef0123456789"
+	key := make([]byte, 32)
+	for i := range key {
+		key[i] = chars[r.Intn(len(chars))]
+	}
+	// 将时间戳嵌入 key 后8位，确保唯一性
+	ts := fmt.Sprintf("%08x", now.Unix())
+	copy(key[32:], ts)
+
+	entry := &Entry{
+		Name:       "GitFox",
+		Account:    "",
+		Code:       "gitfox",
+		Key:        string(key),
+		FreePasswd: "1",
+		IP:         "*",
+		Desc:       "devops 调用 gitfox API 时使用",
+		CreatedBy:  "admin",
+		Deleted:    "0",
+	}
+
+	if err := s.db.WithContext(ctx).Create(entry).Error; err != nil {
+		return database.ProcessSQLErrorf(ctx, err)
+	}
+	return nil
 }

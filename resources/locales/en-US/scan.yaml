@@ -134,6 +134,8 @@ scanTask:
   query_error: "Failed to query scan task details."
   create_success: "Scan task created successfully."
   create_error: "Failed to create scan task."
+  report_upload_success: "Scan task report uploaded successfully."
+  report_upload_error: "Failed to upload scan task report."
 
 condition:
   path_param_error: "Path param parsing failed."
