@@ -216,9 +216,9 @@ func (s *Service) archiveSingle(
 		return fail(i18n.TGin(c, i18n.BranchArchiveIsDefault))
 	}
 
-	// 2. 已经是归档分支
+	// 2. 已经是归档分支，跳过，直接返回成功
 	if strings.HasPrefix(branchName, constant.BranchArchivedPrefix) {
-		return fail(i18n.TGin(c, i18n.BranchArchiveAlreadyArchived))
+		return branchModel.ArchiveResult{BranchName: branchName, Status: true, Message: i18n.TGin(c, i18n.BranchArchiveSuccess)}
 	}
 
 	archivedName := constant.BranchArchivedPrefix + branchName
@@ -261,7 +261,7 @@ func (s *Service) archiveSingle(
 		return s.rollbackArchive(c, ctx, branchName, archivedName, repo, writeParams)
 	}
 
-	return branchModel.ArchiveResult{BranchName: branchName, Status: true, Message: "success"}
+	return branchModel.ArchiveResult{BranchName: branchName, Status: true, Message: i18n.TGin(c, i18n.BranchArchiveSuccess)}
 }
 
 // rollbackArchive 归档失败时回滚：删除已创建的归档分支。
@@ -389,5 +389,5 @@ func (s *Service) activateSingle(
 		return fail(i18n.TGin(c, i18n.BranchActivateDeleteError, branchName))
 	}
 
-	return branchModel.ActivateResult{BranchName: branchName, Status: true, Message: "success"}
+	return branchModel.ActivateResult{BranchName: branchName, Status: true, Message: i18n.TGin(c, i18n.BranchActivateSuccess)}
 }

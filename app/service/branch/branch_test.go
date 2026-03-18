@@ -97,7 +97,7 @@ func TestBatchArchive_Success(t *testing.T) {
 	assert.Len(t, results, 1)
 	assert.True(t, results[0].Status)
 	assert.Equal(t, "dev", results[0].BranchName)
-	assert.Equal(t, "success", results[0].Message)
+	assert.Contains(t, results[0].Message, "archive_success")
 }
 
 func TestBatchArchive_DefaultBranch(t *testing.T) {
@@ -132,8 +132,8 @@ func TestBatchArchive_AlreadyArchived(t *testing.T) {
 	results := svc.BatchArchive(ginCtx, context.Background(), req, session, repo)
 
 	assert.Len(t, results, 1)
-	assert.False(t, results[0].Status)
-	assert.Contains(t, results[0].Message, "archive_already_archived")
+	assert.True(t, results[0].Status)
+	assert.Contains(t, results[0].Message, "archive_success")
 }
 
 func TestBatchArchive_TargetExists(t *testing.T) {
@@ -310,7 +310,7 @@ func TestBatchActivate_Success(t *testing.T) {
 	assert.Len(t, results, 1)
 	assert.True(t, results[0].Status)
 	assert.Equal(t, "archived/dev", results[0].BranchName)
-	assert.Equal(t, "success", results[0].Message)
+	assert.Contains(t, results[0].Message, "activate_success")
 }
 
 func TestBatchActivate_NotArchived(t *testing.T) {

@@ -69,7 +69,6 @@ const (
 	BranchQueryParamError          I18nKey = "branch.query_param_error"           // Query 参数解析失败.
 	BranchArchiveSuccess           I18nKey = "branch.archive_success"            // 分支归档成功.
 	BranchArchiveIsDefault         I18nKey = "branch.archive_is_default"         // 默认分支不能归档.
-	BranchArchiveAlreadyArchived   I18nKey = "branch.archive_already_archived"   // 分支已经是归档状态.
 	BranchArchiveTargetExists      I18nKey = "branch.archive_target_exists"      // 归档目标分支已存在.
 	BranchArchiveCreateError       I18nKey = "branch.archive_create_error"       // 创建归档分支失败.
 	BranchArchiveDeleteError       I18nKey = "branch.archive_delete_error"       // 删除原分支失败.
