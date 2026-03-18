@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	authModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
 	scanModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
 	repoStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
@@ -51,10 +52,11 @@ func (s *ScanTriggerService) Create(ctx context.Context, session *authModel.Sess
 		Name:       req.Name,
 		Desc:       req.Desc,
 		Type:       string(req.Type),
+		ScanType:   string(req.ScanType),
 		Cron:       req.Cron,
 		CronBranch: req.CronBranch,
 		Keywords:   req.Keywords,
-		Actions:    req.Actions,
+		Actions:    scanStore.JoinActions(deduplicateActions(req.Actions)),
 		Disabled:   req.Disabled,
 		CreatedBy:  session.User.Account,
 		EditedBy:   session.User.Account,
@@ -127,8 +129,11 @@ func (s *ScanTriggerService) Update(ctx context.Context, session *authModel.Sess
 	if req.Keywords != "" {
 		trigger.Keywords = req.Keywords
 	}
-	if req.Actions != "" {
-		trigger.Actions = req.Actions
+	if len(req.Actions) > 0 {
+		trigger.Actions = scanStore.JoinActions(deduplicateActions(req.Actions))
+	}
+	if req.ScanType != "" {
+		trigger.ScanType = string(req.ScanType)
 	}
 	if req.Disabled != nil {
 		trigger.Disabled = *req.Disabled
@@ -204,17 +209,36 @@ func validateTriggerCreate(req scanModel.ScanTriggerReqForCreate) error {
 			return errors.WithI18nKey(fmt.Errorf("cronBranch is required when type is cron"), i18n.TriggerCronBranchRequiredError)
 		}
 	case scanModel.ScanTriggerTypeManual, scanModel.ScanTriggerTypeEvent:
-		if req.Actions == "" {
+		if len(req.Actions) == 0 {
 			return errors.WithI18nKey(fmt.Errorf("actions is required when type is %s", req.Type), i18n.TriggerActionsRequiredError)
+		}
+		if err := checkActions(req.Actions); err != nil {
+			return err
 		}
 	default:
 		return errors.WithI18nKey(fmt.Errorf("invalid trigger type: %s", req.Type), i18n.TriggerInvalidTypeError)
+	}
+	if req.ScanType != "" {
+		if _, ok := req.ScanType.Sanitize(); !ok {
+			return errors.WithI18nKey(fmt.Errorf("invalid scan type: %s", req.ScanType), i18n.TriggerInvalidTypeError)
+		}
 	}
 	return nil
 }
 
 func validateTriggerUpdate(req scanModel.ScanTriggerReqForUpdate) error {
 	if req.Type == "" {
+		// 没有改 type，但如果传了 actions 也要校验
+		if len(req.Actions) > 0 {
+			if err := checkActions(req.Actions); err != nil {
+				return err
+			}
+		}
+		if req.ScanType != "" {
+			if _, ok := req.ScanType.Sanitize(); !ok {
+				return errors.WithI18nKey(fmt.Errorf("invalid scan type: %s", req.ScanType), i18n.TriggerInvalidTypeError)
+			}
+		}
 		return nil
 	}
 	switch req.Type {
@@ -229,13 +253,49 @@ func validateTriggerUpdate(req scanModel.ScanTriggerReqForUpdate) error {
 			return errors.WithI18nKey(fmt.Errorf("cronBranch is required when type is cron"), i18n.TriggerCronBranchRequiredError)
 		}
 	case scanModel.ScanTriggerTypeManual, scanModel.ScanTriggerTypeEvent:
-		if req.Actions == "" {
+		if len(req.Actions) == 0 {
 			return errors.WithI18nKey(fmt.Errorf("actions is required when type is %s", req.Type), i18n.TriggerActionsRequiredError)
+		}
+		if err := checkActions(req.Actions); err != nil {
+			return err
 		}
 	default:
 		return errors.WithI18nKey(fmt.Errorf("invalid trigger type: %s", req.Type), i18n.TriggerInvalidTypeError)
 	}
+	if _, ok := req.ScanType.Sanitize(); !ok {
+		return errors.WithI18nKey(fmt.Errorf("invalid scan type: %s", req.ScanType), i18n.TriggerInvalidTypeError)
+	}
 	return nil
+}
+
+// checkActions 校验 actions 是否合法。
+func checkActions(actions []constant.TriggerAction) error {
+	for _, action := range actions {
+		if _, ok := action.Sanitize(); !ok {
+			return errors.WithI18nKey(
+				fmt.Errorf("invalid trigger action: %s", action),
+				i18n.TriggerActionsInvalidError,
+			)
+		}
+	}
+	return nil
+}
+
+// deduplicateActions 去重 actions。
+func deduplicateActions(in []constant.TriggerAction) []constant.TriggerAction {
+	if len(in) == 0 {
+		return nil
+	}
+	seen := make(map[constant.TriggerAction]struct{}, len(in))
+	out := make([]constant.TriggerAction, 0, len(in))
+	for _, a := range in {
+		if _, ok := seen[a]; ok {
+			continue
+		}
+		seen[a] = struct{}{}
+		out = append(out, a)
+	}
+	return out
 }
 
 // ensureRepoExists 校验 repo 是否存在，并把底层 not found 转成 RepoNotFound.

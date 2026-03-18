@@ -462,6 +462,7 @@ const (
 
 	// Trigger 相关常量
 	TriggerActionsRequiredError    I18nKey = "trigger.actions_required_error"     // 当前触发器类型必须配置 actions.
+	TriggerActionsInvalidError     I18nKey = "trigger.actions_invalid_error"      // 触发器 action 值无效.
 	TriggerBodyParamError          I18nKey = "trigger.body_param_error"           // 请求体参数解析失败.
 	TriggerCreateError             I18nKey = "trigger.create_error"               // 触发器创建失败.
 	TriggerCreateSuccess           I18nKey = "trigger.create_success"             // 触发器创建成功.
