@@ -6,6 +6,8 @@ ALTER TABLE `ops_branch_ruleset`
 	ADD COLUMN `forceReview` tinyint(1) unsigned NOT NULL DEFAULT 0 COMMENT '是否开启强制评审' AFTER `pushLine`,
 	ADD COLUMN `reviewFlowID` int unsigned NOT NULL DEFAULT 0 COMMENT '评审流程ID' AFTER `forceReview`;
 
-
 ALTER TABLE `ops_repo`
 	ADD COLUMN `branchArchivable` tinyint(1) NOT NULL DEFAULT '0' COMMENT '是否开启分支归档' AFTER `synced`;
+
+ALTER TABLE `ops_review_flow`
+	DROP COLUMN `branchType`;
