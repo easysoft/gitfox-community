@@ -8,6 +8,7 @@ import (
 	scanModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/scan"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	"github.com/gin-gonic/gin"
 )
@@ -50,7 +51,17 @@ func (c *ScanController) ScanTaskCreate(ctx *gin.Context) {
 		return
 	}
 
-	hook, err := c.taskSvc.CreateBranchHook(ctx.Request.Context(), repo, body.Branch, "sha", session)
+	// 获取分支信息以取得 SHA
+	branchOut, err := c.gitPkg.GetBranch(ctx, &git.GetBranchParams{
+		ReadParams: git.ReadParams{RepoUID: repo.GitUID},
+		BranchName: body.Branch,
+	})
+	if err != nil {
+		resp.InternalError(ctx, err)
+		return
+	}
+
+	hook, err := c.taskSvc.CreateBranchHook(ctx.Request.Context(), repo, body.Branch, branchOut.Branch.SHA.String(), session)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return
@@ -170,4 +181,74 @@ func (c *ScanController) ScanTaskUploadReport(ctx *gin.Context) {
 	}
 
 	resp.OK(ctx, i18n.ScanTaskReportUploadSuccess, report)
+}
+
+// ScanTaskIssueList 查询扫描任务关联的问题列表
+// @Summary 查询扫描任务关联的问题列表
+// @Description 根据任务 ID 查询关联的扫描问题列表，支持分页和过滤
+// @Tags scan
+// @Accept application/json
+// @Produce application/json
+// @Param id path uint true "扫描任务 ID"
+// @Param body body scanModel.ScanTaskIssueReqFilter true "查询过滤条件"
+// @Success 200 {object} resp.ListResponse{data=[]scanModel.ScanIssueInfo,listArgs=resp.ListArgs} "查询成功"
+// @Failure 400 {object} resp.ObjectResponse "参数错误"
+// @Failure 500 {object} resp.ObjectResponse "服务器内部错误"
+// @Router /scan/tasks/{id}/issues [post]
+func (c *ScanController) ScanTaskIssueList(ctx *gin.Context) {
+	taskID, err := req.PathParamAsPositiveUint(ctx, "id")
+	if err != nil {
+		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.ScanTaskPathParamError))
+		return
+	}
+
+	var filter scanModel.ScanTaskIssueReqFilter
+	if err := ctx.ShouldBindJSON(&filter); err != nil {
+		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.ScanTaskBodyParamError))
+		return
+	}
+	filter.TaskID = int64(taskID)
+	req.SetDefaults(&filter)
+
+	result, err := c.taskSvc.ListTaskIssues(ctx.Request.Context(), taskID, filter)
+	if err != nil {
+		resp.InternalError(ctx, err)
+		return
+	}
+	resp.ListSuccess(ctx, result.Data,
+		resp.ListArgs{Total: result.Total, Page: int64(filter.Page), PageSize: int64(filter.PageSize)},
+		i18n.ScanTaskIssueListSuccess, nil)
+}
+
+// ScanTaskRetry 重试扫描任务
+// @Summary 重试扫描任务
+// @Description 重试一个失败的扫描任务，重新触发流水线执行
+// @Tags scan
+// @Accept application/json
+// @Produce application/json
+// @Param id path uint true "扫描任务 ID"
+// @Success 201 {object} resp.ObjectResponse{data=scanModel.ScanTask} "重试成功"
+// @Failure 400 {object} resp.ObjectResponse "参数错误"
+// @Failure 401 {object} resp.ObjectResponse "未授权（会话不存在或已过期）"
+// @Failure 500 {object} resp.ObjectResponse "服务器内部错误"
+// @Router /scan/tasks/{id}/retry [post]
+func (c *ScanController) ScanTaskRetry(ctx *gin.Context) {
+	session, ok := req.GetAuthSession(ctx.Request.Context())
+	if !ok {
+		resp.Unauthorized(ctx, errors.WithI18nKey(nil, i18n.AuthNoSession))
+		return
+	}
+
+	taskID, err := req.PathParamAsPositiveUint(ctx, "id")
+	if err != nil {
+		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.ScanTaskPathParamError))
+		return
+	}
+
+	task, err := c.taskSvc.Retry(ctx.Request.Context(), session, taskID)
+	if err != nil {
+		resp.InternalError(ctx, err)
+		return
+	}
+	resp.Created(ctx, i18n.ScanTaskRetrySuccess, task)
 }

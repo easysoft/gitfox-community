@@ -1,7 +1,10 @@
 package scan
 
 import (
+	"encoding/json"
+
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
+	scanModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
 	"gorm.io/gorm"
 )
@@ -16,8 +19,6 @@ type ScanIssue struct {
 	Line            int64                    `gorm:"column:line"`
 	RepoID          int64                    `gorm:"column:repoID"`
 	RepoBranch      string                   `gorm:"column:repoBranch"`
-	Created         int64                    `gorm:"column:created"`
-	Updated         int64                    `gorm:"column:updated"`
 	CreatedByTaskID int64                    `gorm:"column:createdByTaskID"`
 	UpdatedByTaskID int64                    `gorm:"column:updatedByTaskID"`
 	Status          constant.ScanIssueStatus `gorm:"column:status"`
@@ -51,3 +52,46 @@ type ScanIssueTaskBind struct {
 }
 
 func (r *ScanIssueTaskBind) TableName() string { return "ops_scan_issue_task_binds" }
+
+// issueJoin issue 联表查询中间结构
+type issueJoin struct {
+	ID              int64                     `gorm:"column:id"`
+	Key             string                    `gorm:"column:issueKey"`
+	RuleID          int64                     `gorm:"column:ruleID"`
+	RuleName        string                    `gorm:"column:ruleName"`
+	RuleKey         string                    `gorm:"column:ruleKey"`
+	RulePriority    constant.ScanRulePriority `gorm:"column:rulePriority"`
+	RuleType        constant.ScanRuleType     `gorm:"column:ruleType"`
+	Message         string                    `gorm:"column:message"`
+	Path            string                    `gorm:"column:path"`
+	Line            int64                     `gorm:"column:line"`
+	RepoID          int64                     `gorm:"column:repoID"`
+	RepoBranch      string                    `gorm:"column:repoBranch"`
+	Status          constant.ScanIssueStatus  `gorm:"column:status"`
+	ScanMethod      constant.ScanMethod       `gorm:"column:scanMethod"`
+	Payload         []byte                    `gorm:"column:payload"`
+	CreatedByTaskID int64                     `gorm:"column:createdByTaskID"`
+	UpdatedByTaskID int64                     `gorm:"column:updatedByTaskID"`
+}
+
+func mapIssueJoinToModel(in *issueJoin) *scanModel.ScanIssueInfo {
+	return &scanModel.ScanIssueInfo{
+		ID:              in.ID,
+		Key:             in.Key,
+		RuleID:          in.RuleID,
+		RuleName:        in.RuleName,
+		RuleKey:         in.RuleKey,
+		RulePriority:    in.RulePriority,
+		RuleType:        in.RuleType,
+		Message:         in.Message,
+		Path:            in.Path,
+		Line:            in.Line,
+		RepoID:          in.RepoID,
+		RepoBranch:      in.RepoBranch,
+		Status:          in.Status,
+		ScanMethod:      in.ScanMethod,
+		Payload:         json.RawMessage(in.Payload),
+		CreatedByTaskID: in.CreatedByTaskID,
+		UpdatedByTaskID: in.UpdatedByTaskID,
+	}
+}

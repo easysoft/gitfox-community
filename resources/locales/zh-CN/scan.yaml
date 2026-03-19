@@ -136,6 +136,11 @@ scanTask:
   create_error: "扫描任务创建失败。"
   report_upload_success: "扫描任务报告上传成功。"
   report_upload_error: "扫描任务报告上传失败。"
+  issue_list_success: "扫描任务问题列表查询成功。"
+  issue_list_error: "扫描任务问题列表查询失败。"
+  retry_success: "扫描任务重试成功。"
+  retry_error: "扫描任务重试失败。"
+  retry_not_failed: "仅失败的扫描任务可以重试。"
 
 condition:
   path_param_error: "路径参数解析失败。"

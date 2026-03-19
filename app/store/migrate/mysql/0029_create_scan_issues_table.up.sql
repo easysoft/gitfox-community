@@ -7,8 +7,6 @@ CREATE TABLE IF NOT EXISTS `ops_scan_issues` (
 	`line` bigint NOT NULL DEFAULT 0 COMMENT '行号',
 	`repoID` int unsigned NOT NULL COMMENT '仓库ID',
 	`repoBranch` varchar(255) NOT NULL DEFAULT '' COMMENT '仓库分支',
-	`created` bigint NOT NULL DEFAULT 0 COMMENT '创建时间（毫秒时间戳）',
-	`updated` bigint NOT NULL DEFAULT 0 COMMENT '更新时间（毫秒时间戳）',
 	`createdByTaskID` int unsigned NOT NULL DEFAULT 0 COMMENT '创建该问题的任务ID',
 	`updatedByTaskID` int unsigned NOT NULL DEFAULT 0 COMMENT '最后更新该问题的任务ID',
 	`status` varchar(20) NOT NULL DEFAULT 'wait' COMMENT '问题状态（wait/todo/solving/solved/closed/ignore）',

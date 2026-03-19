@@ -19,6 +19,8 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database/dbtx"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/resources"
 )
 
@@ -196,18 +198,18 @@ func (s *ScanTaskService) Retry(ctx context.Context, session *authModel.Session,
 	// 获取任务详情
 	taskInfo, err := s.taskStore.GetTaskInfo(ctx, taskID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get scan task info: %w", err)
+		return nil, errors.WithI18nKey(fmt.Errorf("failed to get scan task info: %w", err), i18n.ScanTaskRetryError)
 	}
 
 	// 只有失败的任务才能重试
 	if taskInfo.Status != constant.ScanTaskStatusFailed {
-		return nil, fmt.Errorf("only failed tasks can be retried, current status: %s", taskInfo.Status)
+		return nil, errors.WithI18nKey(errors.New("only failed tasks can be retried"), i18n.ScanTaskRetryNotFailed)
 	}
 
 	// 获取扫描计划
 	plan, err := s.planStore.GetByID(ctx, uint(taskInfo.PlanID))
 	if err != nil {
-		return nil, fmt.Errorf("failed to get scan plan: %w", err)
+		return nil, errors.WithI18nKey(fmt.Errorf("failed to get scan plan: %w", err), i18n.ScanTaskRetryError)
 	}
 
 	// 构建重试 Hook
@@ -236,13 +238,13 @@ func (s *ScanTaskService) Retry(ctx context.Context, session *authModel.Session,
 	}
 	pipeline, err := s.getOrCreatePipeline(ctx, plan.RepoID, input)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get pipeline: %w", err)
+		return nil, errors.WithI18nKey(fmt.Errorf("failed to get pipeline: %w", err), i18n.ScanTaskRetryError)
 	}
 
 	// 触发新执行
 	execution, err := s.triggerSvc.Trigger(ctx, uint(pipeline.ID), hook)
 	if err != nil {
-		return nil, fmt.Errorf("failed to trigger retry: %w", err)
+		return nil, errors.WithI18nKey(fmt.Errorf("failed to trigger retry: %w", err), i18n.ExecutionTriggerError)
 	}
 
 	// 更新原任务关联新执行
@@ -252,7 +254,7 @@ func (s *ScanTaskService) Retry(ctx context.Context, session *authModel.Session,
 		Status:      constant.ScanTaskStatusInProgress,
 	}
 	if err := s.taskStore.Update(ctx, task); err != nil {
-		return nil, fmt.Errorf("failed to update scan task: %w", err)
+		return nil, errors.WithI18nKey(fmt.Errorf("failed to update scan task: %w", err), i18n.ScanTaskRetryError)
 	}
 
 	return s.taskStore.GetByID(ctx, taskID)
@@ -266,6 +268,11 @@ func (s *ScanTaskService) GetTaskInfo(ctx context.Context, taskID uint) (*scanMo
 // ListTaskInfos 查询扫描任务详情列表
 func (s *ScanTaskService) ListTaskInfos(ctx context.Context, filter scanModel.ScanTaskInfoReqFilter) (*database.PageResult[*scanModel.ScanTaskInfo], error) {
 	return s.taskStore.ListTaskInfos(ctx, filter)
+}
+
+// ListTaskIssues 查询指定任务关联的 issue 列表
+func (s *ScanTaskService) ListTaskIssues(ctx context.Context, taskID uint, filter scanModel.ScanTaskIssueReqFilter) (*database.PageResult[*scanModel.ScanIssueInfo], error) {
+	return s.issueStore.ListByTaskID(ctx, taskID, filter)
 }
 
 // CountTaskInfos 统计扫描任务数量
