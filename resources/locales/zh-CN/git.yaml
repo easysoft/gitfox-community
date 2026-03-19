@@ -14,6 +14,7 @@ git:
   tag_not_found: "标签不存在"
   ref_already_exists: "引用已存在。"
   branch_already_exists: "分支已存在。"
+  branch_ref_conflict: "无法创建分支，当前分支名与已有分支存在文件系统命名冲突，请尝试更换分支名中的分隔符。"
   tag_already_exists: "标签已存在。"
   invalid_ref: "无效的引用。"
   ambiguous_ref: "引用不明确。"

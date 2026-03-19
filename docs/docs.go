@@ -8573,6 +8573,15 @@ const docTemplate = `{
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.ReqFilter": {
             "type": "object",
             "properties": {
+                "archivedOnly": {
+                    "type": "boolean"
+                },
+                "branchTypeIDs": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
                 "includeArchived": {
                     "type": "boolean"
                 },

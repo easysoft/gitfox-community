@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"strings"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/api"
 )
 
@@ -49,17 +50,35 @@ func (s *Service) ListBranchesV2(ctx context.Context, params *ListBranchesParams
 		if strings.Contains(branch.Name, "ztflow-") {
 			continue
 		}
+
+		// 按关键词模糊匹配分支名（不区分大小写）
 		if params.Query != "" && !strings.Contains(strings.ToLower(branch.Name), strings.ToLower(params.Query)) {
 			continue
 		}
 
-		if !params.IncludeArchived && strings.HasPrefix(branch.Name, "archived/") {
+		// 默认模式（IncludeArchived=false, ArchivedOnly=false）：隐藏 archived/ 前缀的归档分支
+		if !params.IncludeArchived && !params.ArchivedOnly && strings.HasPrefix(branch.Name, constant.BranchArchivedPrefix) {
 			continue
 		}
 
-		names := strings.Split(strings.ToLower(branch.Name), "/")
-		if params.Label != "" && (len(names) > 1 && params.Label != names[0] || len(names) == 1) {
+		// 仅归档模式（ArchivedOnly=true）：只保留 archived/ 前缀的归档分支，跳过其他分支
+		if params.ArchivedOnly && !strings.HasPrefix(branch.Name, constant.BranchArchivedPrefix) {
 			continue
+		}
+
+		if len(params.Labels) > 0 {
+			matched := false
+			lowerName := strings.ToLower(branch.Name)
+			for _, label := range params.Labels {
+				lowerLabel := strings.ToLower(label)
+				if strings.HasPrefix(lowerName, lowerLabel) {
+					matched = true
+					break
+				}
+			}
+			if !matched {
+				continue
+			}
 		}
 		filteredBranches = append(filteredBranches, branch)
 	}

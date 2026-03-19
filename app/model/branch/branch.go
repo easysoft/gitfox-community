@@ -50,7 +50,9 @@ type ActivateResult struct {
 type ReqFilter struct {
 	Query           string `json:"query" form:"query"`
 	Prefix          string `json:"prefix" form:"prefix"`
+	BranchTypeIDs   []uint `json:"branchTypeIDs" form:"branchTypeIDs"`
 	IncludeArchived bool   `json:"includeArchived" form:"includeArchived"`
+	ArchivedOnly    bool   `json:"archivedOnly" form:"archivedOnly"`
 	IncludeCommit   bool   `json:"includeCommit" form:"includeCommit"`
 	MaxDivergence   uint   `json:"maxDivergence" form:"maxDivergence"`
 	Sort            string `json:"sort" form:"sort" default:"name"`
@@ -75,7 +77,7 @@ type Branch struct {
 // BranchType 分支类型请求/响应模型
 type BranchType struct {
 	ID          uint            `json:"id"`
-	RepoID      uint            `json:"repo"`
+	Repo        uint            `json:"repo"`
 	Name        string          `json:"name"`
 	Key         string          `json:"key"`
 	Prefixes    []string        `json:"prefixes"`

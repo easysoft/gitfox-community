@@ -60,7 +60,7 @@ func (s *Service) UpdateBranchType(
 	}
 
 	// 验证分支类型是否属于当前仓库
-	if existing.RepoID != repoID {
+	if existing.Repo != repoID {
 		return nil, errors.WithI18nKey(errors.New("branch type not found in this repo"), i18n.BranchTypeNotFound)
 	}
 
@@ -103,7 +103,7 @@ func (s *Service) GetBranchType(
 	}
 
 	// 验证分支类型是否属于当前仓库
-	if branchType.RepoID != repoID {
+	if branchType.Repo != repoID {
 		return nil, errors.WithI18nKey(errors.New("branch type not found in this repo"), i18n.BranchTypeNotFound)
 	}
 
@@ -123,7 +123,7 @@ func (s *Service) DeleteBranchType(
 	}
 
 	// 验证分支类型是否属于当前仓库
-	if existing.RepoID != repoID {
+	if existing.Repo != repoID {
 		return errors.WithI18nKey(errors.New("branch type not found in this repo"), i18n.BranchTypeNotFound)
 	}
 

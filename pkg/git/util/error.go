@@ -43,6 +43,9 @@ func ProcessGitErrorf(ctx context.Context, err error) error {
 	case isTagRefNotFoundError(errMsg):
 		translatedError = errors.ErrGitTagNotFound
 
+	// 2.0. 分支 ref 路径冲突（如已有 test 分支时创建 test/haha）
+	case isBranchRefConflictError(errMsg):
+		translatedError = errors.ErrGitBranchRefConflict
 	// 2.1. 常见：引用已存在
 	case isRefAlreadyExistsError(errMsg):
 		translatedError = errors.ErrGitRefAlreadyExists
@@ -157,6 +160,14 @@ func isRefAlreadyExistsError(errMsg string) bool {
 		return true
 	}
 	return false
+}
+
+// isBranchRefConflictError 检查是否是分支 ref 路径冲突错误
+// 当已有分支 test 时创建 test/haha，或已有 test/haha 时创建 test，git 会报此错误
+// 原因：git ref 存储中文件和目录不能同名共存
+func isBranchRefConflictError(errMsg string) bool {
+	errMsgLower := strings.ToLower(errMsg)
+	return strings.Contains(errMsgLower, "cannot lock ref") && strings.Contains(errMsgLower, "exists; cannot create")
 }
 
 // isRefBranchAlreadyExistsError 检查是否是分支引用已存在错误

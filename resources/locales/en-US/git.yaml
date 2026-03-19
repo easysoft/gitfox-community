@@ -14,6 +14,7 @@ git:
   tag_not_found: "Tag Reference not found."
   ref_already_exists: "Reference already exists."
   branch_already_exists: "Branch already exists."
+  branch_ref_conflict: "Unable to create branch. The branch name conflicts with an existing branch in the file system. Please try changing the separator in the branch name."
   tag_already_exists: "Tag already exists."
   invalid_ref: "Invalid reference."
   ambiguous_ref: "Ambiguous reference."
