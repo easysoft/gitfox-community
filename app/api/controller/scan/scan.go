@@ -6,6 +6,7 @@ import (
 	repoService "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
 	scanService "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/scan"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	"github.com/gin-gonic/gin"
 )
@@ -20,6 +21,7 @@ type ScanController struct {
 	planConditionSvc scanService.IScanPlanCondition
 	taskSvc          scanService.IScanTask
 	repoSvc          repoService.Interface
+	gitPkg           git.Interface
 }
 
 // NewScanController 创建扫描处理器实例
@@ -33,6 +35,7 @@ func NewScanController(
 	conditionSvc scanService.IScanCondition,
 	planConditionSvc scanService.IScanPlanCondition,
 	repoSvc repoService.Interface,
+	gitPkg git.Interface,
 ) *ScanController {
 	return &ScanController{
 		ruleSetSvc:       ruleSetSvc,
@@ -44,6 +47,7 @@ func NewScanController(
 		planConditionSvc: planConditionSvc,
 		repoSvc:          repoSvc,
 		taskSvc:          taskSvc,
+		gitPkg:           gitPkg,
 	}
 }
 

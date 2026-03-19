@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"sort"
-	"time"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	scanModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
@@ -207,7 +206,8 @@ func (s *ScanTaskService) buildRuleKeyMapByTask(ctx context.Context, task *scanM
 				if rule.Status != constant.ScanRuleStatusEnabled {
 					continue
 				}
-				m[rule.RuleKey] = rule.ID
+				indexKey := fmt.Sprintf("%s:%s", rule.Lang, rule.RuleKey)
+				m[indexKey] = rule.ID
 			}
 		}
 	}
@@ -295,12 +295,9 @@ func (s *ScanTaskService) saveIssues(ctx context.Context, comp *scanModel.ScanIs
 	}
 
 	if len(comp.Added) > 0 {
-		now := time.Now().UnixMilli()
 		for _, item := range comp.Added {
 			item.RepoID = task.RepoID
 			item.RepoBranch = task.ExecutionRef
-			item.Created = now
-			item.Updated = now
 			item.CreatedByTaskID = task.ID
 			item.UpdatedByTaskID = task.ID
 			item.Status = constant.ScanIssueStatusWait
@@ -312,8 +309,6 @@ func (s *ScanTaskService) saveIssues(ctx context.Context, comp *scanModel.ScanIs
 				Line:            item.Line,
 				RepoID:          item.RepoID,
 				RepoBranch:      item.RepoBranch,
-				Created:         item.Created,
-				Updated:         item.Updated,
 				CreatedByTaskID: item.CreatedByTaskID,
 				UpdatedByTaskID: item.UpdatedByTaskID,
 				Status:          item.Status,

@@ -136,6 +136,11 @@ scanTask:
   create_error: "Failed to create scan task."
   report_upload_success: "Scan task report uploaded successfully."
   report_upload_error: "Failed to upload scan task report."
+  issue_list_success: "Scan task issue list queried successfully."
+  issue_list_error: "Failed to query scan task issue list."
+  retry_success: "Scan task retried successfully."
+  retry_error: "Failed to retry scan task."
+  retry_not_failed: "Only failed scan tasks can be retried."
 
 condition:
   path_param_error: "Path param parsing failed."
