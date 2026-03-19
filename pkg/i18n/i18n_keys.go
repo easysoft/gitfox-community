@@ -171,6 +171,7 @@ const (
 	// Git 相关常量
 	GitAmbiguousRef                 I18nKey = "git.ambiguous_ref"                     // 引用不明确.
 	GitBranchAlreadyExists          I18nKey = "git.branch_already_exists"             // 分支已存在.
+	GitBranchRefConflict            I18nKey = "git.branch_ref_conflict"               // 分支与文件系统命名冲突.
 	GitBranchNotFound               I18nKey = "git.branch_not_found"                  // 分支不存在
 	GitCreateExecParamError         I18nKey = "git.create_exec_param_error"           // 创建败 git 命令参数失败.
 	GitEmptyRepo                    I18nKey = "git.empty_repo"                        // 仓库为空.

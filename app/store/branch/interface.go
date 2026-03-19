@@ -14,6 +14,7 @@ type Interface interface {
 	CheckBranchTypePrefix(ctx context.Context, tx *gorm.DB, repo uint, branchTypeID uint, prefixs []string) (bool, error)
 	UpdateBranchType(ctx context.Context, branchType *BranchType, id uint) (*branchModel.BranchType, error)
 	GetBranchTypeByID(ctx context.Context, id uint) (*branchModel.BranchType, error)
+	GetBranchTypesByIDs(ctx context.Context, repoID uint, ids []uint) ([]branchModel.BranchType, error)
 	DeleteBranchType(ctx context.Context, id uint) error
 	ListBranchTypes(ctx context.Context, repoID uint, filter branchModel.ReqFilterBranchType) (*database.PageResult[branchModel.BranchType], error)
 }

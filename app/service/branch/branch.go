@@ -8,6 +8,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	authModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
 	branchModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/branch"
+	commitModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/commit"
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/utils"
 	branchStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/branch"
@@ -79,13 +80,43 @@ func (s *Service) Create(
 
 func (s *Service) List(ctx context.Context, filter branchModel.ReqFilter, repo *repoModel.Repo) ([]branchModel.Branch, bool, error) {
 
+	// ArchivedOnly 模式下不按类型/前缀过滤
+	if filter.ArchivedOnly {
+		filter.Prefix = ""
+		filter.BranchTypeIDs = nil
+	}
+
+	// 构建 Labels 列表
+	var labels []string
+	if filter.Prefix != "" {
+		labels = append(labels, filter.Prefix)
+	}
+
+	// 如果传入了 BranchTypeIDs，查询对应的前缀并追加到 labels
+	if len(filter.BranchTypeIDs) > 0 {
+		branchTypes, err := s.branchStore.GetBranchTypesByIDs(ctx, repo.ID, filter.BranchTypeIDs)
+		if err != nil {
+			return nil, false, errors.WithI18nKey(err, i18n.BranchTypeQueryError)
+		}
+		if len(branchTypes) != len(filter.BranchTypeIDs) {
+			return nil, false, errors.WithI18nKey(
+				fmt.Errorf("some branch type IDs not found"),
+				i18n.BranchTypeNotFound,
+			)
+		}
+		for _, bt := range branchTypes {
+			labels = append(labels, bt.Prefixes...)
+		}
+	}
+
 	// 准备 RPC 参数
 	rpcOut, isLast, err := s.gitPkg.ListBranchesV2(ctx, &git.ListBranchesParams{
 		ReadParams:      git.ReadParams{RepoUID: repo.GitUID},
 		IncludeCommit:   filter.IncludeCommit,
 		Query:           filter.Query,
-		Label:           filter.Prefix,
+		Labels:          labels,
 		IncludeArchived: filter.IncludeArchived,
+		ArchivedOnly:    filter.ArchivedOnly,
 		Sort:            mapToRPCBranchSortOption(filter.Sort),
 		Order:           utils.MapToRPCSortOrder(filter.Order),
 		Page:            int32(filter.Page),
@@ -105,6 +136,42 @@ func (s *Service) List(ctx context.Context, filter branchModel.ReqFilter, repo *
 		}
 
 		response[i].IsDefault = repo.DefaultBranch == branches[i].Name
+	}
+
+	// 计算分支与默认分支的 divergence（ahead/behind 提交数），默认分支自身不参与计算
+	if filter.MaxDivergence > 0 && len(response) > 0 {
+		divRequests := make([]git.CommitDivergenceRequest, 0, len(response))
+		// 记录非默认分支在 response 中的索引，用于回填结果
+		nonDefaultIdx := make([]int, 0, len(response))
+		for i, b := range response {
+			if b.IsDefault {
+				continue
+			}
+			nonDefaultIdx = append(nonDefaultIdx, i)
+			divRequests = append(divRequests, git.CommitDivergenceRequest{
+				From: b.Name,
+				To:   repo.DefaultBranch,
+			})
+		}
+
+		if len(divRequests) > 0 {
+			divOut, divErr := s.gitPkg.GetCommitDivergences(ctx, &git.GetCommitDivergencesParams{
+				ReadParams: git.ReadParams{RepoUID: repo.GitUID},
+				MaxCount:   int32(filter.MaxDivergence),
+				Requests:   divRequests,
+			})
+			if divErr == nil {
+				// divRequests 与 nonDefaultIdx 一一对应，直接按索引回填
+				for j, idx := range nonDefaultIdx {
+					if j < len(divOut.Divergences) {
+						response[idx].CommitDivergence = &commitModel.CommitDivergence{
+							Ahead:  divOut.Divergences[j].Ahead,
+							Behind: divOut.Divergences[j].Behind,
+						}
+					}
+				}
+			}
+		}
 	}
 
 	return response, isLast, nil

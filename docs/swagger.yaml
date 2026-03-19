@@ -342,6 +342,12 @@ definitions:
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_branch.ReqFilter:
     properties:
+      archivedOnly:
+        type: boolean
+      branchTypeIDs:
+        items:
+          type: integer
+        type: array
       includeArchived:
         type: boolean
       includeCommit:

@@ -17,6 +17,7 @@ var (
 	// ErrGitRefAlreadyExists 表示引用已存在
 	ErrGitRefAlreadyExists       = WithI18nKey(GitError.New("reference already exists"), i18n.GitRefAlreadyExists)
 	ErrGitBranchRefAlreadyExists = WithI18nKey(GitError.New("branch already exists"), i18n.GitBranchAlreadyExists)
+	ErrGitBranchRefConflict      = WithI18nKey(GitError.New("branch ref conflict"), i18n.GitBranchRefConflict)
 	ErrGitTagRefAlreadyExists    = WithI18nKey(GitError.New("tag already exists"), i18n.GitTagAlreadyExists)
 
 	// ErrGitInvalidRef 表示无效的引用
