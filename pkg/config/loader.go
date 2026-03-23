@@ -202,7 +202,7 @@ func getSanitizedMachineName() (string, error) {
 //nolint:gocognit // refactor if required
 func backfillURLs(config *Config) error {
 	// default values for HTTP
-	scheme, host, port, path := schemeHTTP, "localhost", "", ""
+	scheme, host, port, path := schemeHTTP, "localhost", "3000", ""
 	if config.Server.Host != "" {
 		host = config.Server.Host
 	}
