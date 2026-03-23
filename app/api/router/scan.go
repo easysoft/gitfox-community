@@ -53,6 +53,8 @@ func registerScanRoutes(r *gin.RouterGroup, controller *Controller) {
 		issues.POST("/list", controller.Scan.ScanIssueList)
 		issues.POST("/batch", controller.Scan.ScanIssueListByIds)
 		issues.PUT("/status", controller.Scan.ScanIssueUpdateStatus)
+		issues.GET("/file-tree", controller.Scan.ScanIssueFileTree)
+		issues.GET("/rule-tree", controller.Scan.ScanIssueRuleTree)
 
 		// 扫描方案相关路由
 		solutions := rule.Group("/solutions")

@@ -182,4 +182,6 @@ issue:
   create_success: "Issue created successfully."
   create_error: "Failed to create issue."
   update_success: "Issue updated successfully."
-  update_error: "Failed to update issue." 
+  update_error: "Failed to update issue."
+  tree_query_success: "Issue tree queried successfully."
+  tree_query_error: "Failed to query issue tree."

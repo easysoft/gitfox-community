@@ -182,4 +182,6 @@ issue:
   create_success: "扫描问题创建成功。"
   create_error: "扫描问题创建失败。"
   update_success: "扫描问题更新成功。"
-  update_error: "扫描问题更新失败。" 
+  update_error: "扫描问题更新失败。"
+  tree_query_success: "扫描问题树查询成功。"
+  tree_query_error: "扫描问题树查询失败。"

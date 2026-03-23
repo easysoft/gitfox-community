@@ -206,16 +206,18 @@ const (
 	GitUnrelatedHistories           I18nKey = "git.unrelated_histories"               // 不相关的历史记录.
 
 	// Issue 相关常量
-	IssueBodyParamError I18nKey = "issue.body_param_error" // 请求体参数解析失败.
-	IssueCreateError    I18nKey = "issue.create_error"     // 扫描问题创建失败.
-	IssueCreateSuccess  I18nKey = "issue.create_success"   // 扫描问题创建成功.
-	IssueListError      I18nKey = "issue.list_error"       // 扫描问题列表查询失败.
-	IssueListSuccess    I18nKey = "issue.list_success"     // 扫描问题列表查询成功.
-	IssuePathParamError I18nKey = "issue.path_param_error" // 路径参数解析失败.
-	IssueQueryError     I18nKey = "issue.query_error"      // 扫描问题详情查询失败.
-	IssueQuerySuccess   I18nKey = "issue.query_success"    // 扫描问题详情查询成功.
-	IssueUpdateError    I18nKey = "issue.update_error"     // 扫描问题更新失败.
-	IssueUpdateSuccess  I18nKey = "issue.update_success"   // 扫描问题更新成功.
+	IssueBodyParamError   I18nKey = "issue.body_param_error"   // 请求体参数解析失败.
+	IssueCreateError      I18nKey = "issue.create_error"       // 扫描问题创建失败.
+	IssueCreateSuccess    I18nKey = "issue.create_success"     // 扫描问题创建成功.
+	IssueListError        I18nKey = "issue.list_error"         // 扫描问题列表查询失败.
+	IssueListSuccess      I18nKey = "issue.list_success"       // 扫描问题列表查询成功.
+	IssuePathParamError   I18nKey = "issue.path_param_error"   // 路径参数解析失败.
+	IssueQueryError       I18nKey = "issue.query_error"        // 扫描问题详情查询失败.
+	IssueQuerySuccess     I18nKey = "issue.query_success"      // 扫描问题详情查询成功.
+	IssueTreeQueryError   I18nKey = "issue.tree_query_error"   // 扫描问题树查询失败.
+	IssueTreeQuerySuccess I18nKey = "issue.tree_query_success" // 扫描问题树查询成功.
+	IssueUpdateError      I18nKey = "issue.update_error"       // 扫描问题更新失败.
+	IssueUpdateSuccess    I18nKey = "issue.update_success"     // 扫描问题更新成功.
 
 	// Pipeline 相关常量
 	PipelineBodyParamError             I18nKey = "pipeline.body_param_error"               // Body 参数解析失败.
