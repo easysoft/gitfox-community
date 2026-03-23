@@ -8,6 +8,7 @@ import (
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 	scanModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/triggerer"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
 )
 
@@ -107,4 +108,8 @@ type IScanTask interface {
 	SetupCron(ctx context.Context, trigger *scanModel.ScanTrigger) error
 	RecycleCron(ctx context.Context, trigger *scanModel.ScanTrigger) error
 	AnalyzeTaskUploadReport(ctx context.Context, taskID uint, method string, content []byte) (*scanModel.ScanIssueReport, error)
+	GetIssueInfo(ctx context.Context, issueID uint) (*scanModel.ScanIssueInfo, error)
+	ListIssueInfos(ctx context.Context, filter scanModel.ScanIssueReqFilter) (*database.PageResult[*scanModel.ScanIssueInfo], error)
+	ListIssueInfosByIDs(ctx context.Context, ids []int64) ([]*scanModel.ScanIssueInfo, error)
+	UpdateIssuesStatus(ctx context.Context, ids []int64, status constant.ScanIssueStatus) error
 }

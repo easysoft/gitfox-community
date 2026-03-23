@@ -171,3 +171,15 @@ planCondition:
   batch_delete_success: "Plan conditions batch deleted successfully."
   batch_delete_error: "Failed to batch delete plan conditions."
   not_found: "Plan condition not found."
+
+issue:
+  path_param_error: "Path param parsing failed."
+  body_param_error: "Body param parsing failed."
+  list_success: "Issue list queried successfully."
+  list_error: "Failed to query issue list."
+  query_success: "Issue details queried successfully."
+  query_error: "Failed to query issue details."
+  create_success: "Issue created successfully."
+  create_error: "Failed to create issue."
+  update_success: "Issue updated successfully."
+  update_error: "Failed to update issue." 

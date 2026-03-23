@@ -9,6 +9,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	scanModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
 	scanStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/scan"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
 )
 
 // AnalyzeTaskUploadReport 分析上传的扫描报告
@@ -295,13 +296,14 @@ func (s *ScanTaskService) saveIssues(ctx context.Context, comp *scanModel.ScanIs
 	}
 
 	if len(comp.Added) > 0 {
+		storeIssues := make([]*scanStore.ScanIssue, 0, len(comp.Added))
 		for _, item := range comp.Added {
 			item.RepoID = task.RepoID
 			item.RepoBranch = task.ExecutionRef
 			item.CreatedByTaskID = task.ID
 			item.UpdatedByTaskID = task.ID
 			item.Status = constant.ScanIssueStatusWait
-			issue := &scanStore.ScanIssue{
+			storeIssues = append(storeIssues, &scanStore.ScanIssue{
 				Key:             item.Key,
 				RuleID:          item.RuleID,
 				Message:         item.Message,
@@ -314,8 +316,11 @@ func (s *ScanTaskService) saveIssues(ctx context.Context, comp *scanModel.ScanIs
 				Status:          item.Status,
 				ScanMethod:      item.ScanMethod,
 				Payload:         item.Payload,
-			}
-			if err := s.issueStore.Create(ctx, issue); err != nil {
+			})
+		}
+		pages := paginateIndex(len(storeIssues), 1000)
+		for _, p := range pages {
+			if err := s.issueStore.BatchCreate(ctx, storeIssues[p[0]:p[1]]); err != nil {
 				return err
 			}
 		}
@@ -422,4 +427,24 @@ func paginateIndex(length, pageSize int) [][2]int {
 		pages = append(pages, [2]int{i, end})
 	}
 	return pages
+}
+
+// GetIssueInfo 获取单个扫描问题详情
+func (s *ScanTaskService) GetIssueInfo(ctx context.Context, issueID uint) (*scanModel.ScanIssueInfo, error) {
+	return s.issueStore.Get(ctx, issueID)
+}
+
+// ListIssueInfos 查询扫描问题列表
+func (s *ScanTaskService) ListIssueInfos(ctx context.Context, filter scanModel.ScanIssueReqFilter) (*database.PageResult[*scanModel.ScanIssueInfo], error) {
+	return s.issueStore.List(ctx, filter)
+}
+
+// ListIssueInfosByIDs 根据 ID 列表查询扫描问题
+func (s *ScanTaskService) ListIssueInfosByIDs(ctx context.Context, ids []int64) ([]*scanModel.ScanIssueInfo, error) {
+	return s.issueStore.ListByIDs(ctx, ids)
+}
+
+// UpdateIssuesStatus 批量更新扫描问题状态
+func (s *ScanTaskService) UpdateIssuesStatus(ctx context.Context, ids []int64, status constant.ScanIssueStatus) error {
+	return s.issueStore.UpdateStatus(ctx, ids, status)
 }
