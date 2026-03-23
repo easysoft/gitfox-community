@@ -40,7 +40,7 @@ type WorkSpace struct {
 
 // ServerConfig HTTP服务配置
 type ServerConfig struct {
-	Port            int           `envconfig:"GITFOX_HTTP_PORT" default:"3000" yaml:"port"`
+	Port            int           `envconfig:"GITFOX_HTTP_PORT" yaml:"port"`
 	Host            string        `envconfig:"GITFOX_SERVER_HOST" yaml:"host"`
 	Proto           string        `envconfig:"GITFOX_SERVER_PROTO" yaml:"proto" default:"http"`
 	ShutdownTimeout time.Duration `yaml:"shutdownTimeout"` // 优雅关闭超时时间，默认 5s
