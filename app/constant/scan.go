@@ -4,7 +4,6 @@ import (
 	"strings"
 )
 
-
 type ScanLangID int
 
 const (
@@ -128,7 +127,6 @@ func ParseLang(v string) ScanLangName {
 	}
 }
 
-
 // ScanRulePriority 规则优先级
 type ScanRulePriority string
 
@@ -162,7 +160,6 @@ func (s ScanRulePriority) IsValid() bool {
 func GetAllScanRulePriorities() ([]ScanRulePriority, ScanRulePriority) {
 	return scanRulePriorities, scanRulePriorityNone
 }
-
 
 // ScanRuleSeverity 规则严重性
 type ScanRuleSeverity string
@@ -450,8 +447,8 @@ var scanMethods = sortEnum([]ScanMethod{
 
 func (ScanMethod) Enum() []interface{}              { return toInterfaceSlice(scanMethods) }
 func (s ScanMethod) Sanitize() (ScanMethod, bool)   { return Sanitize(s, GetAllScanMethods) }
-func GetAllScanMethods() ([]ScanMethod, ScanMethod)  { return scanMethods, ScanMethodCheck }
-func (s ScanMethod) String() string                  { return string(s) }
+func GetAllScanMethods() ([]ScanMethod, ScanMethod) { return scanMethods, ScanMethodCheck }
+func (s ScanMethod) String() string                 { return string(s) }
 
 // ScanIssueStatus 扫描问题状态
 type ScanIssueStatus string
@@ -474,8 +471,10 @@ var scanIssueStatuses = sortEnum([]ScanIssueStatus{
 	ScanIssueStatusIgnore,
 })
 
-func (ScanIssueStatus) Enum() []interface{}                    { return toInterfaceSlice(scanIssueStatuses) }
-func (s ScanIssueStatus) Sanitize() (ScanIssueStatus, bool)   { return Sanitize(s, GetAllScanIssueStatuses) }
+func (ScanIssueStatus) Enum() []interface{} { return toInterfaceSlice(scanIssueStatuses) }
+func (s ScanIssueStatus) Sanitize() (ScanIssueStatus, bool) {
+	return Sanitize(s, GetAllScanIssueStatuses)
+}
 func GetAllScanIssueStatuses() ([]ScanIssueStatus, ScanIssueStatus) {
 	return scanIssueStatuses, ScanIssueStatusWait
 }
@@ -548,3 +547,30 @@ func (s ScanRuleSort) IsValid() bool {
 	}
 	return false
 }
+
+type ScanIssueSort string
+
+func (ScanIssueSort) Enum() []interface{}                    { return toInterfaceSlice(scanIssueSorts) }
+func (s ScanIssueSort) Sanitize() (ScanIssueSort, bool)      { return Sanitize(s, GetAllScanIssueSorts) }
+func GetAllScanIssueSorts() ([]ScanIssueSort, ScanIssueSort) { return scanIssueSorts, ScanIssueSortId }
+
+const (
+	ScanIssueSortId       ScanIssueSort = "id"
+	ScanIssueSortPriority ScanIssueSort = "priority"
+	ScanIssueSortType     ScanIssueSort = "type"
+	ScanIssueSortStatus   ScanIssueSort = "status"
+	ScanIssueSortCreated  ScanIssueSort = "created"
+	ScanIssueSortLine     ScanIssueSort = "line"
+)
+
+var scanIssueSorts = sortEnum([]ScanIssueSort{
+	ScanIssueSortId,
+	ScanIssueSortPriority,
+	ScanIssueSortType,
+	ScanIssueSortStatus,
+	ScanIssueSortCreated,
+	ScanIssueSortLine,
+})
+
+// MaxIssueIDsPerRequest 单次请求允许的最大 issue ID 数量
+const MaxIssueIDsPerRequest = 200

@@ -171,8 +171,8 @@ const (
 	// Git 相关常量
 	GitAmbiguousRef                 I18nKey = "git.ambiguous_ref"                     // 引用不明确.
 	GitBranchAlreadyExists          I18nKey = "git.branch_already_exists"             // 分支已存在.
-	GitBranchRefConflict            I18nKey = "git.branch_ref_conflict"               // 分支与文件系统命名冲突.
 	GitBranchNotFound               I18nKey = "git.branch_not_found"                  // 分支不存在
+	GitBranchRefConflict            I18nKey = "git.branch_ref_conflict"               // 无法创建分支,当前分支名与已有分支存在文件系统命名冲突,请尝试更换分支名中的分隔符.
 	GitCreateExecParamError         I18nKey = "git.create_exec_param_error"           // 创建败 git 命令参数失败.
 	GitEmptyRepo                    I18nKey = "git.empty_repo"                        // 仓库为空.
 	GitExecError                    I18nKey = "git.exec_error"                        // 执行 git 命令失败.
@@ -204,6 +204,18 @@ const (
 	GitTagNotFound                  I18nKey = "git.tag_not_found"                     // 标签不存在
 	GitTimeout                      I18nKey = "git.timeout"                           // Git 操作超时.
 	GitUnrelatedHistories           I18nKey = "git.unrelated_histories"               // 不相关的历史记录.
+
+	// Issue 相关常量
+	IssueBodyParamError I18nKey = "issue.body_param_error" // 请求体参数解析失败.
+	IssueCreateError    I18nKey = "issue.create_error"     // 扫描问题创建失败.
+	IssueCreateSuccess  I18nKey = "issue.create_success"   // 扫描问题创建成功.
+	IssueListError      I18nKey = "issue.list_error"       // 扫描问题列表查询失败.
+	IssueListSuccess    I18nKey = "issue.list_success"     // 扫描问题列表查询成功.
+	IssuePathParamError I18nKey = "issue.path_param_error" // 路径参数解析失败.
+	IssueQueryError     I18nKey = "issue.query_error"      // 扫描问题详情查询失败.
+	IssueQuerySuccess   I18nKey = "issue.query_success"    // 扫描问题详情查询成功.
+	IssueUpdateError    I18nKey = "issue.update_error"     // 扫描问题更新失败.
+	IssueUpdateSuccess  I18nKey = "issue.update_success"   // 扫描问题更新成功.
 
 	// Pipeline 相关常量
 	PipelineBodyParamError             I18nKey = "pipeline.body_param_error"               // Body 参数解析失败.

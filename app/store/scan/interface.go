@@ -112,6 +112,11 @@ type IScanPlanCondition interface {
 // IScanIssue 扫描问题 store 接口
 type IScanIssue interface {
 	Create(ctx context.Context, issue *ScanIssue) error
+	BatchCreate(ctx context.Context, issues []*ScanIssue) error
+	Get(ctx context.Context, id uint) (*scanModel.ScanIssueInfo, error)
+	List(ctx context.Context, filter scanModel.ScanIssueReqFilter) (*database.PageResult[*scanModel.ScanIssueInfo], error)
+	ListByIDs(ctx context.Context, ids []int64) ([]*scanModel.ScanIssueInfo, error)
+	UpdateStatus(ctx context.Context, ids []int64, status constant.ScanIssueStatus) error
 	ListKeysByTask(ctx context.Context, repoID int64, branch string, taskID uint, method constant.ScanMethod) ([]*scanModel.ScanIssueKey, error)
 	UpdateByTaskID(ctx context.Context, taskID uint, issueIDs []int64) error
 	DisappearedByTask(ctx context.Context, taskID uint, issueIDs []int64) error

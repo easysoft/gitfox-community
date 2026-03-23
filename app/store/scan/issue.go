@@ -27,6 +27,122 @@ func (s *ScanIssueStore) Create(ctx context.Context, issue *ScanIssue) error {
 	return nil
 }
 
+// BatchCreate 批量创建扫描问题
+func (s *ScanIssueStore) BatchCreate(ctx context.Context, issues []*ScanIssue) error {
+	if len(issues) == 0 {
+		return nil
+	}
+	if err := s.db.WithContext(ctx).Create(&issues).Error; err != nil {
+		return database.ProcessSQLErrorf(ctx, err)
+	}
+	return nil
+}
+
+// Get 查询单个扫描问题详情（含规则信息）
+func (s *ScanIssueStore) Get(ctx context.Context, id uint) (*scanModel.ScanIssueInfo, error) {
+	var item issueJoin
+	if err := s.db.WithContext(ctx).
+		Table("ops_scan_issues AS i").
+		Select("i.id, i.issueKey, i.ruleID, r.name AS ruleName, r.ruleKey AS ruleKey, " +
+			"r.priority AS rulePriority, r.type AS ruleType, " +
+			"i.message, i.path, i.line, i.repoID, i.repoBranch, " +
+			"i.status, i.scanMethod, i.payload, i.createdByTaskID, i.updatedByTaskID").
+		Joins("INNER JOIN ops_scan_rules AS r ON i.ruleID = r.id").
+		Where("i.id = ? AND i.deleted = ?", id, false).
+		First(&item).Error; err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
+	}
+	return mapIssueJoinToModel(&item), nil
+}
+
+// List 查询扫描问题列表（含规则信息，支持分页）
+func (s *ScanIssueStore) List(ctx context.Context, filter scanModel.ScanIssueReqFilter) (*database.PageResult[*scanModel.ScanIssueInfo], error) {
+	stmt := s.db.WithContext(ctx).
+		Table("ops_scan_issues AS i").
+		Select("i.id, i.issueKey, i.ruleID, r.name AS ruleName, r.ruleKey AS ruleKey, " +
+			"r.priority AS rulePriority, r.type AS ruleType, " +
+			"i.message, i.path, i.line, i.repoID, i.repoBranch, " +
+			"i.status, i.scanMethod, i.payload, i.createdByTaskID, i.updatedByTaskID").
+		Joins("INNER JOIN ops_scan_rules AS r ON i.ruleID = r.id").
+		Where("i.deleted = ?", false)
+
+	if filter.RepoID != 0 {
+		stmt = stmt.Where("i.repoID = ?", filter.RepoID)
+	}
+	if filter.Branch != "" {
+		stmt = stmt.Where("i.repoBranch = ?", filter.Branch)
+	}
+	if filter.RuleID != 0 {
+		stmt = stmt.Where("i.ruleID = ?", filter.RuleID)
+	}
+	if filter.Status != "" {
+		stmt = stmt.Where("i.status = ?", filter.Status)
+	}
+	if filter.ScanMethod != "" {
+		stmt = stmt.Where("i.scanMethod = ?", filter.ScanMethod)
+	}
+
+	var issues []*issueJoin
+	pageResult, err := database.Paginate(ctx, stmt, database.PageParam{
+		Page:      filter.Page,
+		PageSize:  filter.PageSize,
+		Sort:      "i.id",
+		Order:     "desc",
+		NeedTotal: true,
+	}, &issues)
+	if err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
+	}
+
+	data := make([]*scanModel.ScanIssueInfo, 0, len(pageResult.Data))
+	for _, item := range pageResult.Data {
+		data = append(data, mapIssueJoinToModel(item))
+	}
+	return &database.PageResult[*scanModel.ScanIssueInfo]{
+		Data:     data,
+		Total:    pageResult.Total,
+		Page:     pageResult.Page,
+		PageSize: pageResult.PageSize,
+	}, nil
+}
+
+// ListByIDs 根据 ID 列表查询扫描问题详情
+func (s *ScanIssueStore) ListByIDs(ctx context.Context, ids []int64) ([]*scanModel.ScanIssueInfo, error) {
+	if len(ids) == 0 {
+		return nil, nil
+	}
+	var issues []*issueJoin
+	if err := s.db.WithContext(ctx).
+		Table("ops_scan_issues AS i").
+		Select("i.id, i.issueKey, i.ruleID, r.name AS ruleName, r.ruleKey AS ruleKey, " +
+			"r.priority AS rulePriority, r.type AS ruleType, " +
+			"i.message, i.path, i.line, i.repoID, i.repoBranch, " +
+			"i.status, i.scanMethod, i.payload, i.createdByTaskID, i.updatedByTaskID").
+		Joins("INNER JOIN ops_scan_rules AS r ON i.ruleID = r.id").
+		Where("i.id IN ? AND i.deleted = ?", ids, false).
+		Find(&issues).Error; err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
+	}
+	data := make([]*scanModel.ScanIssueInfo, 0, len(issues))
+	for _, item := range issues {
+		data = append(data, mapIssueJoinToModel(item))
+	}
+	return data, nil
+}
+
+// UpdateStatus 批量更新 issue 状态
+func (s *ScanIssueStore) UpdateStatus(ctx context.Context, ids []int64, status constant.ScanIssueStatus) error {
+	if len(ids) == 0 {
+		return nil
+	}
+	if err := s.db.WithContext(ctx).Model(&ScanIssue{}).
+		Where("id IN ? AND deleted = ?", ids, false).
+		Update("status", status).Error; err != nil {
+		return database.ProcessSQLErrorf(ctx, err)
+	}
+	return nil
+}
+
 // ListKeysByTask 查询指定仓库+分支+方法下已有的 issue keys
 func (s *ScanIssueStore) ListKeysByTask(
 	ctx context.Context, repoID int64, branch string, taskID uint, method constant.ScanMethod,
@@ -71,9 +187,10 @@ func (s *ScanIssueStore) DisappearedByTask(ctx context.Context, taskID uint, iss
 		return nil
 	}
 	if err := s.db.WithContext(ctx).Model(&ScanIssue{}).
-		Where("id IN ?", issueIDs).
-		Updates(map[string]interface{}{
+		Where("id IN ? AND deleted = ?", issueIDs, false).
+		Updates(map[string]any{
 			"updatedByTaskID": taskID,
+			"status":          constant.ScanIssueStatusClosed,
 		}).Error; err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
 	}

@@ -47,6 +47,13 @@ func registerScanRoutes(r *gin.RouterGroup, controller *Controller) {
 		tasks.POST("/:id/issues", controller.Scan.ScanTaskIssueList)
 		tasks.POST("/:id/retry", controller.Scan.ScanTaskRetry)
 
+		// 扫描问题相关路由
+		issues := rule.Group("/issues")
+		issues.GET("/:id", controller.Scan.ScanIssueGet)
+		issues.POST("/list", controller.Scan.ScanIssueList)
+		issues.POST("/batch", controller.Scan.ScanIssueListByIds)
+		issues.PUT("/status", controller.Scan.ScanIssueUpdateStatus)
+
 		// 扫描方案相关路由
 		solutions := rule.Group("/solutions")
 		solutions.POST("", controller.Scan.SolutionCreate)
