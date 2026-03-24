@@ -6,6 +6,7 @@ import (
 	"github.com/google/wire"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/runner"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/resolver"
 	dockerRunner "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/runner"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/storage"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/pipeline"
@@ -31,6 +32,7 @@ var RunnerWireSet = wire.NewSet(
 // DockerRunnerWireSet provides a wire set for this package.
 var DockerRunnerWireSet = wire.NewSet(
 	ProvideDynamicStageProvider,
+	ProvideResolverManager,
 	ProvideExecutionRunner,
 	ProvideExecutionPoller,
 )
@@ -43,14 +45,21 @@ func ProvideDynamicStageProvider(
 	return extend.NewStageDynamicEnvProvider(store, stageStore)
 }
 
+func ProvideResolverManager(
+	pipelineSvc *pipeline.Service,
+) *resolver.Manager {
+	return resolver.NewManager(pipelineSvc)
+}
+
 // ProvideExecutionRunner provides an execution runner.
 func ProvideExecutionRunner(
 	config *config.Config,
 	client runnerclient.Client,
+	resolver *resolver.Manager,
 	stageEnvProvider *extend.StageDynamicEnvProvider,
 	pipelineSvc *pipeline.Service,
 ) (dockerRunner.Runner, error) {
-	return dockerRunner.NewExecutionRunner(config, client, stageEnvProvider, pipelineSvc)
+	return dockerRunner.NewExecutionRunner(config, client, resolver, stageEnvProvider, pipelineSvc)
 }
 
 // ProvideExecutionPoller provides a poller which can poll the manager

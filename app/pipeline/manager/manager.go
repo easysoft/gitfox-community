@@ -201,6 +201,7 @@ func (m *Manager) Accept(_ context.Context, id int64, machine string) (*stageMod
 		return nil, fmt.Errorf("stage already assigned, abort")
 	}
 
+	//TODO: 成功解析前先对machine不赋值
 	stage.Host = machine
 	stage.Status = constant.CIStatusPending
 	if err := m.StageSvc.Update(noContext, stage); err != nil {

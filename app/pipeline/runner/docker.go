@@ -16,6 +16,7 @@ import (
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/pipeline"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/resolver"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/runner/docker/engine"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/runner/docker/engine/compiler"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/runner/docker/engine/linter"
@@ -55,6 +56,7 @@ var Privileged = []string{
 func newDockerRunner(
 	config *config.Config,
 	client runnerclient.Client,
+	resolver *resolver.Manager,
 	stageEnvProvider *extend.StageDynamicEnvProvider,
 	pipelineSvc *pipeline.Interface,
 ) (*runtime2.Runner, error) {
@@ -114,6 +116,7 @@ func newDockerRunner(
 
 	runner := &runtime2.Runner{
 		Machine:      config.InstanceID,
+		Resolver:     resolver.GetLookupFn(),
 		Client:       client,
 		Reporter:     tracer,
 		Compiler:     compiler2,
