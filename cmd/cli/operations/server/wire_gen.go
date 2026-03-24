@@ -273,6 +273,7 @@ func NewApp(mode string) (*App, func(), error) {
 	}
 	managerManager := manager.New(config, executionService, pipelineService, urlProvider, streamer, schedulerScheduler, stageService, stepService, reporter2, reporter, pullrequestService, logStream)
 	client := manager.NewEmbeddedClient(managerManager, urlProvider, config)
+	resolverManager := provider.ProvideResolverManager(pipelineService)
 	pipelineStorage, err := provider.ProvidePipelineCIStorage(config)
 	if err != nil {
 		cleanup2()
@@ -280,7 +281,7 @@ func NewApp(mode string) (*App, func(), error) {
 		return nil, nil, err
 	}
 	stageDynamicEnvProvider := provider.ProvideDynamicStageProvider(pipelineStorage, stageStore)
-	runnerRunner, err := provider.ProvideExecutionRunner(config, client, stageDynamicEnvProvider, pipelineService)
+	runnerRunner, err := provider.ProvideExecutionRunner(config, client, resolverManager, stageDynamicEnvProvider, pipelineService)
 	if err != nil {
 		cleanup2()
 		cleanup()

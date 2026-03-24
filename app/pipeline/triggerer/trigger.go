@@ -181,7 +181,7 @@ func parseV1Stages(
 			return nil, err
 		}
 		// Convert pipelineModel.Yaml to v1yaml.Config via JSON
-		return convertToV1Config(yamlConfig)
+		return ConvertToV1Config(yamlConfig)
 	}
 
 	if err := specresolver.Resolve(config, lookupFunc); err != nil {
@@ -277,7 +277,7 @@ func parseV1Stages(
 }
 
 // convertToV1Config converts pipelineModel.Yaml to v1yaml.Config via JSON serialization.
-func convertToV1Config(src *pipelineModel.Yaml) (*v1yaml.Config, error) {
+func ConvertToV1Config(src *pipelineModel.Yaml) (*v1yaml.Config, error) {
 	if src == nil {
 		return nil, fmt.Errorf("source yaml config is nil")
 	}
