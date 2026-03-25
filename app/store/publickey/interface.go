@@ -1,6 +1,6 @@
 package publickey
 
-//go:generate mockgen -source=$GOFILE -destination=mock/publickey_store.go -package=mock
+//go:generate go run go.uber.org/mock/mockgen@v0.6.0 -source=$GOFILE -destination=mock/publickey_store.go -package=mock
 import (
 	"context"
 

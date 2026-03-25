@@ -229,7 +229,7 @@ func NewApp(mode string) (*App, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	githookController := provider.NewGitHookController(userStore, store, tokenInterface, gitService, urlProvider, clientFactory, config, reporter, eventsReporter)
+	githookController := provider.NewGitHookController(userStore, store, pullrequestStore, tokenInterface, gitService, urlProvider, clientFactory, config, reporter, eventsReporter)
 	gitController := provider.NewGitController(service2, service, repoService, settingsService, githookController, gitService)
 	ruleSetStore := scan.NewRuleSetStore(db)
 	ruleStore := scan.NewRuleStore(db)

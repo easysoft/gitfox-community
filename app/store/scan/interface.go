@@ -9,7 +9,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/resources"
 )
 
-//go:generate mockgen -source=$GOFILE -destination=mock/scan_store.go -package=mock
+//go:generate go run go.uber.org/mock/mockgen@v0.6.0 -source=$GOFILE -destination=mock/scan_store.go -package=mock
 
 type IRule interface {
 	ListByRuleSetID(ctx context.Context, ruleIDs []int64, filter scanModel.RuleReqFilter) (*database.PageResult[*scanModel.Rule], error)

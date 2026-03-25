@@ -79,7 +79,7 @@ func newDockerRunner(
 	remote := remote.New(client)
 	upload := uploader.New(client)
 	tracer := history.New(remote)
-	engine, err := engine.NewEnv(engine.Opts{})
+	engine, err := engine.NewEnv(engine.Opts{APIVersion: config.Docker.ApiVersion})
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +97,7 @@ func newDockerRunner(
 		Exec:     exec.Exec,
 	}
 
-	engine2, err := engine2.NewEnv(engine2.Opts{})
+	engine2, err := engine2.NewEnv(engine2.Opts{APIVersion: config.Docker.ApiVersion})
 	if err != nil {
 		return nil, err
 	}

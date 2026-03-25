@@ -17,7 +17,7 @@ import (
 	urlMock "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/url/mock"
 
 	"github.com/gin-gonic/gin"
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 	"github.com/stretchr/testify/assert"
 )
 

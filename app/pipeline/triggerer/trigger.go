@@ -101,10 +101,14 @@ func (t *triggerer) Trigger(
 		return nil, err
 	}
 
+	tigger := string(base.Action)
+	if tigger == "" {
+		tigger = "manual"
+	}
 	execution := &executionModel.Execution{
 		Commit:     base.Commit,
 		PipelineID: pipelineID,
-		Trigger:    string(base.Action), // 使用 action 取代原先的 event
+		Trigger:    tigger, // 使用 action 取代原先的 event
 		CreatedBy:  base.Trigger,
 		Parent:     uint(base.Parent),
 		Status:     constant.CIStatusPending,

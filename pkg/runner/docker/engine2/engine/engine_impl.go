@@ -28,7 +28,8 @@ import (
 
 // Opts configures the Docker engine.
 type Opts struct {
-	HidePull bool
+	HidePull   bool
+	APIVersion string
 }
 
 // Docker implements a Docker pipeline engine.
@@ -47,7 +48,7 @@ func New(client client.APIClient, opts Opts) *Docker {
 
 // NewEnv returns a new Engine from the environment.
 func NewEnv(opts Opts) (*Docker, error) {
-	cli, err := client.NewClientWithOpts(client.FromEnv)
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithVersion(opts.APIVersion), client.WithAPIVersionNegotiation())
 	if err != nil {
 		return nil, err
 	}

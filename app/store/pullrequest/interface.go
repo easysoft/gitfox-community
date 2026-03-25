@@ -1,6 +1,6 @@
 package pullrequest
 
-//go:generate mockgen -source=$GOFILE -destination=mock/pullrequest_store.go -package=mock
+//go:generate go run go.uber.org/mock/mockgen@v0.6.0 -source=$GOFILE -destination=mock/pullrequest_store.go -package=mock
 
 import (
 	"context"
@@ -9,6 +9,7 @@ import (
 )
 
 type Interface interface {
+	Create(ctx context.Context, pr *repoModel.PullRequest) error
 	GetByID(ctx context.Context, targetRepoID uint, id uint) (*repoModel.PullRequest, error)
 	List(ctx context.Context, filter *repoModel.PullRequestFilter) ([]*repoModel.PullRequest, error)
 	UpdateOptLock(ctx context.Context, pr *repoModel.PullRequest, mutateFn func(pr *repoModel.PullRequest) error) (*repoModel.PullRequest, error)

@@ -11,7 +11,7 @@ import (
 
 	git "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
 	api "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/api"
-	gomock "github.com/golang/mock/gomock"
+	gomock "go.uber.org/mock/gomock"
 )
 
 // MockInterface is a mock of Interface interface.
