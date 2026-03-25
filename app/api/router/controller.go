@@ -4,6 +4,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/branch"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/commit"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/execution"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/fit"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/git"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/pipeline"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/repo"
@@ -29,4 +30,5 @@ type Controller struct {
 	Runner    *runner.Controller
 	Execution *execution.Controller
 	Test      *test.TestController
+	Fit       *fit.Controller
 }

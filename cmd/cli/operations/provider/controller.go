@@ -6,6 +6,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/branch"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/commit"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/execution"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/fit"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/git"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/pipeline"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/repo"
@@ -34,6 +35,7 @@ func NewControllers(
 	userController *user.Controller,
 	gitController *git.GitController,
 	scanController *scan.ScanController,
+	fitController *fit.Controller,
 ) *router.Controller {
 	return &router.Controller{
 		Space:     spaceController,
@@ -47,5 +49,6 @@ func NewControllers(
 		Pipeline:  pipelineController,
 		Execution: executionController,
 		Runner:    runnerController,
+		Fit:       fitController,
 	}
 }

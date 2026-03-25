@@ -54,6 +54,8 @@ const (
 	AuthUserIssueTokenError         I18nKey = "auth.user_issue_token_error"           // 用户创建会话令牌失败
 	AuthUserNotFound                I18nKey = "auth.user_not_found"                   // 用户不存在
 	AuthUserPassError               I18nKey = "auth.user_pass_error"                  // 用户密码错误
+	AuthUserProfileQueryError       I18nKey = "auth.user_profile_query_error"         // 当前用户信息查询失败
+	AuthUserProfileQuerySuccess     I18nKey = "auth.user_profile_query_success"       // 当前用户信息查询成功
 
 	// Branch 相关常量
 	BranchActivateCreateError     I18nKey = "branch.activate_create_error"     // 创建激活分支 %s 失败,可能是因为归档分支不存在或名称冲突,请检查后重试.
@@ -167,6 +169,14 @@ const (
 	ExecutionQuerySuccess     I18nKey = "execution.query_success"      // 执行查询成功
 	ExecutionTriggerError     I18nKey = "execution.trigger_error"      // 执行触发失败
 	ExecutionTriggerSuccess   I18nKey = "execution.trigger_success"    // 执行触发成功
+
+	// Fit 相关常量
+	FitBranchNameRequired           I18nKey = "fit.branch_name_required"            // 分支名称不能为空
+	FitBranchPermissionQueryError   I18nKey = "fit.branch_permission_query_error"   // 查询分支权限失败
+	FitBranchPermissionQuerySuccess I18nKey = "fit.branch_permission_query_success" // 查询分支权限成功
+	FitRepoNameRequired             I18nKey = "fit.repo_name_required"              // 仓库名称不能为空
+	FitRepoQueryError               I18nKey = "fit.repo_query_error"                // 查询仓库失败
+	FitRepoQuerySuccess             I18nKey = "fit.repo_query_success"              // 查询仓库成功
 
 	// Git 相关常量
 	GitAmbiguousRef                 I18nKey = "git.ambiguous_ref"                     // 引用不明确.

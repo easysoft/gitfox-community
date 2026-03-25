@@ -1,0 +1,7 @@
+fit:
+  branch_name_required: "分支名称不能为空"
+  branch_permission_query_error: "查询分支权限失败"
+  branch_permission_query_success: "查询分支权限成功"
+  repo_name_required: "仓库名称不能为空"
+  repo_query_error: "查询仓库失败"
+  repo_query_success: "查询仓库成功"
