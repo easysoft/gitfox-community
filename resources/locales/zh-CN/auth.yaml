@@ -46,3 +46,5 @@ auth:
   pub_key_use_month: "月前"
   pub_key_use_year: "年前"
   pub_key_last_use_date_error: "公钥最后验证时间数据异常"
+  user_profile_query_success: "当前用户信息查询成功"
+  user_profile_query_error: "当前用户信息查询失败"

@@ -46,3 +46,5 @@ auth:
   pub_key_use_month: "month ago"
   pub_key_use_year: "year ago"
   pub_key_last_use_date_error: "The last verification time data of the key is abnormal."
+  user_profile_query_success: "query current user profile success"
+  user_profile_query_error: "failed to query current user profile"

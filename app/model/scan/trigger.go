@@ -58,26 +58,26 @@ type ScanTrigger struct {
 	Name           string                   `json:"name"`
 	Desc           string                   `json:"desc"`
 	Type           ScanTriggerType          `json:"type"`
-	ScanType       constant.ScanType        `json:"scanType,omitempty"`
-	Cron           string                   `json:"cron,omitempty"`
-	CronBranch     string                   `json:"cronBranch,omitempty"`
-	Keywords       string                   `json:"keywords,omitempty"`
-	Actions        []constant.TriggerAction `json:"actions,omitempty"`
+	ScanType       constant.ScanType        `json:"scanType"`
+	Cron           string                   `json:"cron"`
+	CronBranch     string                   `json:"cronBranch"`
+	Keywords       string                   `json:"keywords"`
+	Actions        []constant.TriggerAction `json:"actions"`
 	Disabled       bool                     `json:"disabled"`
-	CreatedBy      string                   `json:"createdBy,omitempty"`
+	CreatedBy      string                   `json:"createdBy"`
 	CreatedDate    *datetime.Local          `json:"createdDate"`
 	EditedBy       string                   `json:"editedBy"`
 	EditedDate     *datetime.Local          `json:"editedDate"`
 	Deleted        bool                     `json:"deleted"`
-	ConditionIDs   []int64                  `json:"conditionIDs,omitempty"`
-	Conditions     []*ScanCondition         `json:"conditions,omitempty"`
-	ConditionCount int                      `json:"conditionCount,omitempty"`
-	SolutionIDs    []int64                  `json:"solutionIDs,omitempty"`
-	Solutions      []*Solution              `json:"solutions,omitempty"`
-	SolutionCount  int                      `json:"solutionCount,omitempty"`
+	ConditionIDs   []int64                  `json:"conditionIDs"`
+	Conditions     []*ScanCondition         `json:"conditions"`
+	ConditionCount int                      `json:"conditionCountmitempty"`
+	SolutionIDs    []int64                  `json:"solutionIDs"`
+	Solutions      []*Solution              `json:"solutions"`
+	SolutionCount  int                      `json:"solutionCount"`
 
-	LatestTaskID      *int64                   `json:"latestTaskID,omitempty"`
-	LatestTaskCreated *datetime.Local          `json:"latestTaskCreated,omitempty"`
-	LatestTaskResult  *constant.ScanTaskResult `json:"latestTaskResult,omitempty"`
-	LatestTaskStatus  *constant.ScanTaskStatus `json:"latestTaskStatus,omitempty"`
+	LatestTaskID      *int64                   `json:"latestTaskID"`
+	LatestTaskCreated *datetime.Local          `json:"latestTaskCreated"`
+	LatestTaskResult  *constant.ScanTaskResult `json:"latestTaskResult"`
+	LatestTaskStatus  *constant.ScanTaskStatus `json:"latestTaskStatus"`
 }

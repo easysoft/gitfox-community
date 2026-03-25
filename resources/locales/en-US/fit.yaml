@@ -1,0 +1,7 @@
+fit:
+  branch_name_required: "branch name is required"
+  branch_permission_query_error: "failed to query branch permission"
+  branch_permission_query_success: "query branch permission success"
+  repo_name_required: "repo name is required"
+  repo_query_error: "failed to query repository"
+  repo_query_success: "query repository success"

@@ -176,18 +176,18 @@ type ScanPlan struct {
 	ScanType      string          `json:"scanType"`
 	Branches      *Pattern        `json:"branches,omitempty"`
 	Files         *Pattern        `json:"files,omitempty"`
-	SolutionIDs   []int64         `json:"solutionIDs,omitempty"`
+	SolutionIDs   []int64         `json:"solutionIDs"`
 	SolutionCount int             `json:"solutionCount"`
 	TriggerCount  int             `json:"triggerCount"`
-	Solutions     []*Solution     `json:"solutions,omitempty"`
+	Solutions     []*Solution     `json:"solutions"`
 	CreatedBy     string          `json:"createdBy,omitempty"`
 	CreatedDate   *datetime.Local `json:"createdDate"`
 	EditedBy      string          `json:"editedBy"`
 	EditedDate    *datetime.Local `json:"editedDate"`
 	Deleted       bool            `json:"deleted"`
 
-	LatestTaskID      *int64                   `json:"latestTaskID,omitempty"`
-	LatestTaskCreated *datetime.Local          `json:"latestTaskCreated,omitempty"`
-	LatestTaskResult  *constant.ScanTaskResult `json:"latestTaskResult,omitempty"`
-	LatestTaskStatus  *constant.ScanTaskStatus `json:"latestTaskStatus,omitempty"`
+	LatestTaskID      *int64                   `json:"latestTaskID"`
+	LatestTaskCreated *datetime.Local          `json:"latestTaskCreated"`
+	LatestTaskResult  *constant.ScanTaskResult `json:"latestTaskResult"`
+	LatestTaskStatus  *constant.ScanTaskStatus `json:"latestTaskStatus"`
 }

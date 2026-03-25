@@ -15,6 +15,12 @@ type BranchPermissionResult struct {
 	ForcePushUser []string `json:"forcePushUser"`
 	SourceBranch  []string `json:"sourceBranch"`
 	TargetBranch  []string `json:"targetBranch"`
+	PpmCreateUser []string `json:"ppmCreateUser"`
+	PpmHandleUser []string `json:"ppmHandleUser"`
+	CommitLine    int      `json:"commitLine"`
+	PushLine      int      `json:"pushLine"`
+	ForceReview   int      `json:"forceReview"`
+	ReviewFlowID  int      `json:"reviewFlowID"`
 }
 
 // GetBranchPermission 获取分支权限
