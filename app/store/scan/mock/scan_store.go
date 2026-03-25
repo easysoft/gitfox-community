@@ -1106,6 +1106,234 @@ func (mr *MockIScanPlanConditionMockRecorder) Update(ctx, condition any) *gomock
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockIScanPlanCondition)(nil).Update), ctx, condition)
 }
 
+// MockIScanIssue is a mock of IScanIssue interface.
+type MockIScanIssue struct {
+	ctrl     *gomock.Controller
+	recorder *MockIScanIssueMockRecorder
+	isgomock struct{}
+}
+
+// MockIScanIssueMockRecorder is the mock recorder for MockIScanIssue.
+type MockIScanIssueMockRecorder struct {
+	mock *MockIScanIssue
+}
+
+// NewMockIScanIssue creates a new mock instance.
+func NewMockIScanIssue(ctrl *gomock.Controller) *MockIScanIssue {
+	mock := &MockIScanIssue{ctrl: ctrl}
+	mock.recorder = &MockIScanIssueMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockIScanIssue) EXPECT() *MockIScanIssueMockRecorder {
+	return m.recorder
+}
+
+// BatchCreate mocks base method.
+func (m *MockIScanIssue) BatchCreate(ctx context.Context, issues []*scan0.ScanIssue) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "BatchCreate", ctx, issues)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// BatchCreate indicates an expected call of BatchCreate.
+func (mr *MockIScanIssueMockRecorder) BatchCreate(ctx, issues any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BatchCreate", reflect.TypeOf((*MockIScanIssue)(nil).BatchCreate), ctx, issues)
+}
+
+// Create mocks base method.
+func (m *MockIScanIssue) Create(ctx context.Context, issue *scan0.ScanIssue) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Create", ctx, issue)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Create indicates an expected call of Create.
+func (mr *MockIScanIssueMockRecorder) Create(ctx, issue any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockIScanIssue)(nil).Create), ctx, issue)
+}
+
+// CreateIssueBindByTaskID mocks base method.
+func (m *MockIScanIssue) CreateIssueBindByTaskID(ctx context.Context, taskID uint, issueKeys []string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateIssueBindByTaskID", ctx, taskID, issueKeys)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CreateIssueBindByTaskID indicates an expected call of CreateIssueBindByTaskID.
+func (mr *MockIScanIssueMockRecorder) CreateIssueBindByTaskID(ctx, taskID, issueKeys any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateIssueBindByTaskID", reflect.TypeOf((*MockIScanIssue)(nil).CreateIssueBindByTaskID), ctx, taskID, issueKeys)
+}
+
+// DisappearedByTask mocks base method.
+func (m *MockIScanIssue) DisappearedByTask(ctx context.Context, taskID uint, issueIDs []int64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DisappearedByTask", ctx, taskID, issueIDs)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DisappearedByTask indicates an expected call of DisappearedByTask.
+func (mr *MockIScanIssueMockRecorder) DisappearedByTask(ctx, taskID, issueIDs any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DisappearedByTask", reflect.TypeOf((*MockIScanIssue)(nil).DisappearedByTask), ctx, taskID, issueIDs)
+}
+
+// Get mocks base method.
+func (m *MockIScanIssue) Get(ctx context.Context, id uint) (*scan.ScanIssueInfo, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Get", ctx, id)
+	ret0, _ := ret[0].(*scan.ScanIssueInfo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Get indicates an expected call of Get.
+func (mr *MockIScanIssueMockRecorder) Get(ctx, id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockIScanIssue)(nil).Get), ctx, id)
+}
+
+// List mocks base method.
+func (m *MockIScanIssue) List(ctx context.Context, filter scan.ScanIssueReqFilter) (*database.PageResult[*scan.ScanIssueInfo], error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "List", ctx, filter)
+	ret0, _ := ret[0].(*database.PageResult[*scan.ScanIssueInfo])
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// List indicates an expected call of List.
+func (mr *MockIScanIssueMockRecorder) List(ctx, filter any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockIScanIssue)(nil).List), ctx, filter)
+}
+
+// ListByIDs mocks base method.
+func (m *MockIScanIssue) ListByIDs(ctx context.Context, ids []int64) ([]*scan.ScanIssueInfo, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListByIDs", ctx, ids)
+	ret0, _ := ret[0].([]*scan.ScanIssueInfo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListByIDs indicates an expected call of ListByIDs.
+func (mr *MockIScanIssueMockRecorder) ListByIDs(ctx, ids any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListByIDs", reflect.TypeOf((*MockIScanIssue)(nil).ListByIDs), ctx, ids)
+}
+
+// ListByTaskForResult mocks base method.
+func (m *MockIScanIssue) ListByTaskForResult(ctx context.Context, taskID uint, planID int64) ([]*scan.Rule, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListByTaskForResult", ctx, taskID, planID)
+	ret0, _ := ret[0].([]*scan.Rule)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListByTaskForResult indicates an expected call of ListByTaskForResult.
+func (mr *MockIScanIssueMockRecorder) ListByTaskForResult(ctx, taskID, planID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListByTaskForResult", reflect.TypeOf((*MockIScanIssue)(nil).ListByTaskForResult), ctx, taskID, planID)
+}
+
+// ListByTaskID mocks base method.
+func (m *MockIScanIssue) ListByTaskID(ctx context.Context, taskID uint, filter scan.ScanTaskIssueReqFilter) (*database.PageResult[*scan.ScanIssueInfo], error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListByTaskID", ctx, taskID, filter)
+	ret0, _ := ret[0].(*database.PageResult[*scan.ScanIssueInfo])
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListByTaskID indicates an expected call of ListByTaskID.
+func (mr *MockIScanIssueMockRecorder) ListByTaskID(ctx, taskID, filter any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListByTaskID", reflect.TypeOf((*MockIScanIssue)(nil).ListByTaskID), ctx, taskID, filter)
+}
+
+// ListDistinctFilesByRepo mocks base method.
+func (m *MockIScanIssue) ListDistinctFilesByRepo(ctx context.Context, repoID int64, taskFilter *scan.IssueTaskFilter) ([]*scan.IssueFileRaw, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListDistinctFilesByRepo", ctx, repoID, taskFilter)
+	ret0, _ := ret[0].([]*scan.IssueFileRaw)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListDistinctFilesByRepo indicates an expected call of ListDistinctFilesByRepo.
+func (mr *MockIScanIssueMockRecorder) ListDistinctFilesByRepo(ctx, repoID, taskFilter any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListDistinctFilesByRepo", reflect.TypeOf((*MockIScanIssue)(nil).ListDistinctFilesByRepo), ctx, repoID, taskFilter)
+}
+
+// ListDistinctRulesByRepo mocks base method.
+func (m *MockIScanIssue) ListDistinctRulesByRepo(ctx context.Context, repoID int64, taskFilter *scan.IssueTaskFilter) ([]*scan.IssueRuleRaw, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListDistinctRulesByRepo", ctx, repoID, taskFilter)
+	ret0, _ := ret[0].([]*scan.IssueRuleRaw)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListDistinctRulesByRepo indicates an expected call of ListDistinctRulesByRepo.
+func (mr *MockIScanIssueMockRecorder) ListDistinctRulesByRepo(ctx, repoID, taskFilter any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListDistinctRulesByRepo", reflect.TypeOf((*MockIScanIssue)(nil).ListDistinctRulesByRepo), ctx, repoID, taskFilter)
+}
+
+// ListKeysByTask mocks base method.
+func (m *MockIScanIssue) ListKeysByTask(ctx context.Context, repoID int64, branch string, taskID uint, method constant.ScanMethod) ([]*scan.ScanIssueKey, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListKeysByTask", ctx, repoID, branch, taskID, method)
+	ret0, _ := ret[0].([]*scan.ScanIssueKey)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListKeysByTask indicates an expected call of ListKeysByTask.
+func (mr *MockIScanIssueMockRecorder) ListKeysByTask(ctx, repoID, branch, taskID, method any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListKeysByTask", reflect.TypeOf((*MockIScanIssue)(nil).ListKeysByTask), ctx, repoID, branch, taskID, method)
+}
+
+// UpdateByTaskID mocks base method.
+func (m *MockIScanIssue) UpdateByTaskID(ctx context.Context, taskID uint, issueIDs []int64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateByTaskID", ctx, taskID, issueIDs)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateByTaskID indicates an expected call of UpdateByTaskID.
+func (mr *MockIScanIssueMockRecorder) UpdateByTaskID(ctx, taskID, issueIDs any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateByTaskID", reflect.TypeOf((*MockIScanIssue)(nil).UpdateByTaskID), ctx, taskID, issueIDs)
+}
+
+// UpdateStatus mocks base method.
+func (m *MockIScanIssue) UpdateStatus(ctx context.Context, ids []int64, status constant.ScanIssueStatus) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateStatus", ctx, ids, status)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateStatus indicates an expected call of UpdateStatus.
+func (mr *MockIScanIssueMockRecorder) UpdateStatus(ctx, ids, status any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockIScanIssue)(nil).UpdateStatus), ctx, ids, status)
+}
+
 // MockIScanTask is a mock of IScanTask interface.
 type MockIScanTask struct {
 	ctrl     *gomock.Controller

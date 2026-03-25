@@ -22,6 +22,16 @@ func NewPullRequestStore(db *gorm.DB) *Store {
 	}
 }
 
+// Create 创建PR
+func (s *Store) Create(ctx context.Context, pr *repoModel.PullRequest) error {
+	storePR := mapModelToStore(pr)
+	if err := s.db.WithContext(ctx).Create(storePR).Error; err != nil {
+		return database.ProcessSQLErrorf(ctx, err)
+	}
+	pr.ID = storePR.ID
+	return nil
+}
+
 // GetByID 根据ID获取PR
 func (s *Store) GetByID(ctx context.Context, targetRepoID uint, id uint) (*repoModel.PullRequest, error) {
 	var pr PullRequest

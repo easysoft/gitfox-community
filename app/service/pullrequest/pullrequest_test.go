@@ -15,7 +15,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/sha"
 
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 	"github.com/stretchr/testify/assert"
 )
 

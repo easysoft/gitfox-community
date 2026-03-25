@@ -21,6 +21,7 @@ import (
 	gitevents "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/events/git"
 	pullreqevents "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/events/pullreq"
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/pullrequest"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/token"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/user"
@@ -34,19 +35,21 @@ import (
 )
 
 type Controller struct {
-	userStore    user.Interface
-	repoStore    repo.Interface
-	tokenStore   token.Interface
-	git          git.Interface
-	urlProvider  url.Provider
-	devopsConfig config.DevopsConfig
-	prReporter   *pullreqevents.Reporter
-	gitReporter  *gitevents.Reporter
+	userStore     user.Interface
+	repoStore     repo.Interface
+	pullreqStore  pullrequest.Interface
+	tokenStore    token.Interface
+	git           git.Interface
+	urlProvider   url.Provider
+	devopsConfig  config.DevopsConfig
+	prReporter    *pullreqevents.Reporter
+	gitReporter   *gitevents.Reporter
 }
 
 func NewController(
 	userStore user.Interface,
 	repoStore repo.Interface,
+	pullreqStore pullrequest.Interface,
 	tokenStore token.Interface,
 	git git.Interface,
 	urlProvider url.Provider,
@@ -55,14 +58,15 @@ func NewController(
 	gitReporter *gitevents.Reporter,
 ) *Controller {
 	return &Controller{
-		userStore:    userStore,
-		repoStore:    repoStore,
-		tokenStore:   tokenStore,
-		git:          git,
-		urlProvider:  urlProvider,
-		devopsConfig: devopsConfig,
-		prReporter:   prReporter,
-		gitReporter:  gitReporter,
+		userStore:     userStore,
+		repoStore:     repoStore,
+		pullreqStore:  pullreqStore,
+		tokenStore:    tokenStore,
+		git:           git,
+		urlProvider:   urlProvider,
+		devopsConfig:  devopsConfig,
+		prReporter:    prReporter,
+		gitReporter:   gitReporter,
 	}
 }
 

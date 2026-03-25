@@ -64,7 +64,7 @@ type SQLiteConfig struct {
 
 // DockerConfig Docker配置
 type DockerConfig struct {
-	ApiVersion string `yaml:"apiVersion"` // 用string类型兼容版本号格式
+	ApiVersion string `envconfig:"GITFOX_DOCKER_API_VERSION" yaml:"apiVersion" default:"1.44"` // 用string类型兼容版本号格式
 }
 
 // GitConfig Git配置
