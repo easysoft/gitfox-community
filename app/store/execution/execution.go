@@ -3,6 +3,8 @@ package execution
 import (
 	"context"
 	"encoding/json"
+	"math"
+	"time"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	executionModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/execution"
@@ -52,6 +54,7 @@ func (s *Store) Create(ctx context.Context, execution *executionModel.Execution)
 // Update updates an execution
 func (s *Store) Update(ctx context.Context, execution *executionModel.Execution) error {
 	db := dbtx.GetOrmAccessor(ctx, s.db)
+	populateDuration(execution)
 
 	var paramsJSON string
 	if execution.Params != nil {
@@ -120,4 +123,12 @@ func mapToModel(e *Execution) *executionModel.Execution {
 		CreatedDate: e.CreatedDate,
 		EditedDate:  e.EditedDate,
 	}
+}
+
+func populateDuration(execution *executionModel.Execution) {
+	if execution == nil || execution.Started == nil || execution.Finished == nil {
+		return
+	}
+	duration := time.Time(*execution.Finished).Sub(time.Time(*execution.Started))
+	execution.Duration = uint(math.Ceil(duration.Seconds()))
 }
