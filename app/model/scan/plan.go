@@ -169,22 +169,30 @@ type ScanPlanRulesReqQuery struct {
 
 // ScanPlan 扫描计划响应模型
 type ScanPlan struct {
-	ID            int64           `json:"id"`
-	RepoID        int64           `json:"repoID"`
-	Name          string          `json:"name"`
-	Desc          string          `json:"desc"`
-	ScanType      string          `json:"scanType"`
-	Branches      *Pattern        `json:"branches,omitempty"`
-	Files         *Pattern        `json:"files,omitempty"`
-	SolutionIDs   []int64         `json:"solutionIDs"`
-	SolutionCount int             `json:"solutionCount"`
-	TriggerCount  int             `json:"triggerCount"`
-	Solutions     []*Solution     `json:"solutions"`
-	CreatedBy     string          `json:"createdBy,omitempty"`
-	CreatedDate   *datetime.Local `json:"createdDate"`
-	EditedBy      string          `json:"editedBy"`
-	EditedDate    *datetime.Local `json:"editedDate"`
-	Deleted       bool            `json:"deleted"`
+	ID             int64            `json:"id"`
+	RepoID         int64            `json:"repoID"`
+	RepoName       string           `json:"repoName,omitempty"`
+	SpaceID        int64            `json:"spaceID"`
+	SpaceName      string           `json:"spaceName,omitempty"`
+	Name           string           `json:"name"`
+	Desc           string           `json:"desc"`
+	ScanType       string           `json:"scanType"`
+	Branches       *Pattern         `json:"branches,omitempty"`
+	Files          *Pattern         `json:"files,omitempty"`
+	SolutionIDs    []int64           `json:"solutionIDs"`
+	Solutions      []*Solution       `json:"solutions"`
+	SolutionCount  int               `json:"solutionCount"`
+	TriggerIDs     []int64           `json:"triggerIDs"`
+	Triggers       []*ScanTrigger    `json:"triggers"`
+	TriggerCount   int               `json:"triggerCount"`
+	ConditionIDs   []int64           `json:"conditionIDs"`
+	Conditions     []*ScanCondition  `json:"conditions"`
+	ConditionCount int               `json:"conditionCount"`
+	CreatedBy      string           `json:"createdBy,omitempty"`
+	CreatedDate    *datetime.Local  `json:"createdDate"`
+	EditedBy       string           `json:"editedBy"`
+	EditedDate     *datetime.Local  `json:"editedDate"`
+	Deleted        bool             `json:"deleted"`
 
 	LatestTaskID      *int64                   `json:"latestTaskID"`
 	LatestTaskCreated *datetime.Local          `json:"latestTaskCreated"`
