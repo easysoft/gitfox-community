@@ -1752,6 +1752,16 @@ definitions:
     properties:
       branches:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.Pattern'
+      conditionCount:
+        type: integer
+      conditionIDs:
+        items:
+          type: integer
+        type: array
+      conditions:
+        items:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanCondition'
+        type: array
       createdBy:
         type: string
       createdDate:
@@ -1780,6 +1790,8 @@ definitions:
         type: string
       repoID:
         type: integer
+      repoName:
+        type: string
       scanType:
         type: string
       solutionCount:
@@ -1792,8 +1804,20 @@ definitions:
         items:
           $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.Solution'
         type: array
+      spaceID:
+        type: integer
+      spaceName:
+        type: string
       triggerCount:
         type: integer
+      triggerIDs:
+        items:
+          type: integer
+        type: array
+      triggers:
+        items:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTrigger'
+        type: array
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanPlanConditionReqForBatchCreate:
     properties:
@@ -2110,6 +2134,8 @@ definitions:
         items:
           $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.Solution'
         type: array
+      spaceID:
+        type: integer
       type:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTriggerType'
     type: object
@@ -2279,6 +2305,22 @@ definitions:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleStatus'
       tag:
         type: string
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.TreeNode:
+    properties:
+      children:
+        items:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.TreeNode'
+        type: array
+      isLeaf:
+        type: boolean
+      issueCount:
+        type: integer
+      name:
+        type: string
+      path:
+        type: string
+      ref: {}
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_space.CreateSpaceRequest:
     properties:
@@ -5394,6 +5436,45 @@ paths:
       summary: 根据 ID 列表查询扫描问题
       tags:
       - scan
+  /scan/issues/file-tree:
+    get:
+      consumes:
+      - application/json
+      description: 按文件路径聚合扫描问题，返回树形结构
+      parameters:
+      - description: 仓库 ID
+        format: int64
+        in: query
+        name: repoID
+        type: integer
+      - description: 任务 ID
+        format: int64
+        in: query
+        name: taskID
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 查询成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.TreeNode'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 获取 issue 文件树
+      tags:
+      - scan
   /scan/issues/list:
     post:
       consumes:
@@ -5431,6 +5512,45 @@ paths:
           schema:
             $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
       summary: 查询扫描问题列表
+      tags:
+      - scan
+  /scan/issues/rule-tree:
+    get:
+      consumes:
+      - application/json
+      description: 按规则维度聚合扫描问题，返回树形结构
+      parameters:
+      - description: 仓库 ID
+        format: int64
+        in: query
+        name: repoID
+        type: integer
+      - description: 任务 ID
+        format: int64
+        in: query
+        name: taskID
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 查询成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.TreeNode'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 获取 issue 规则树
       tags:
       - scan
   /scan/issues/status:
