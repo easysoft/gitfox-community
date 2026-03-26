@@ -48,6 +48,7 @@ const (
 	AuthPubKeyUseMinute             I18nKey = "auth.pub_key_use_minute"               // 分钟前
 	AuthPubKeyUseMonth              I18nKey = "auth.pub_key_use_month"                // 月前
 	AuthPubKeyUseSecond             I18nKey = "auth.pub_key_use_second"               // 秒前
+	AuthPubKeyUseWeek               I18nKey = "auth.pub_key_use_week"                 // 周前
 	AuthPubKeyUseYear               I18nKey = "auth.pub_key_use_year"                 // 年前
 	AuthSessionTokenNotAllowed      I18nKey = "auth.session_token_not_allowed"        // 会话令牌不允许用于与 Git 交互
 	AuthUserIssuePatError           I18nKey = "auth.user_issue_pat_error"             // 用户创建访问令牌失败

@@ -111,7 +111,8 @@ func (s *SolutionStore) List(ctx context.Context, filter scanModel.SolutionReqFi
 			Count      int64  `gorm:"column:cnt"`
 		}
 		var rsCounts []countRow
-		if err := s.db.WithContext(ctx).Table("ops_scan_solution_rulesets").
+		var solutionRuleSetsModel SolutionRuleSets
+		if err := s.db.WithContext(ctx).Table(solutionRuleSetsModel.TableName()).
 			Select("solutionID, COUNT(*) as cnt").
 			Where("solutionID IN ? AND deleted = ?", solutionIDs, false).
 			Group("solutionID").Find(&rsCounts).Error; err == nil {
@@ -238,7 +239,8 @@ func (s *SolutionStore) BindRulesets(ctx context.Context, solutionID uint, rules
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		// 验证规则集是否存在
 		var existingIDs []uint
-		if err := tx.Table("ops_scan_rulesets").
+		var rulesetModel RuleSet
+		if err := tx.Table(rulesetModel.TableName()).
 			Where("id IN ? AND deleted = ?", rulesetIDs, false).
 			Pluck("id", &existingIDs).Error; err != nil {
 			return database.ProcessSQLErrorf(ctx, err)

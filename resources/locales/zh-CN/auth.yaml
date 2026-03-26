@@ -43,6 +43,7 @@ auth:
   pub_key_use_minute: "分钟前"
   pub_key_use_hour: "小时前"
   pub_key_use_day: "天前"
+  pub_key_use_week: "周前"
   pub_key_use_month: "月前"
   pub_key_use_year: "年前"
   pub_key_last_use_date_error: "公钥最后验证时间数据异常"

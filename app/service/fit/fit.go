@@ -4,10 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
-	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
-	repoSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/utils"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/token"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
@@ -17,17 +13,15 @@ import (
 type Service struct {
 	tokenStore   token.Interface
 	devopsConfig config.DevopsConfig
-	repoSvc      repoSvc.Interface
 }
 
 var _ Interface = (*Service)(nil)
 
 // NewService 创建 fit 服务实例
-func NewService(tokenStore token.Interface, devopsConfig config.DevopsConfig, repoSvc repoSvc.Interface) *Service {
+func NewService(tokenStore token.Interface, devopsConfig config.DevopsConfig) *Service {
 	return &Service{
 		tokenStore:   tokenStore,
 		devopsConfig: devopsConfig,
-		repoSvc:      repoSvc,
 	}
 }
 
@@ -44,9 +38,4 @@ func (s *Service) GetBranchPermission(ctx context.Context, repoID uint, branchNa
 	}
 
 	return result, nil
-}
-
-// GetRepoByName 根据空间 ID 和仓库名获取仓库信息（带权限校验）
-func (s *Service) GetRepoByName(ctx context.Context, session *auth.Session, spaceID uint, repoName string) (*repoModel.Repo, error) {
-	return s.repoSvc.GetRepoCheckAccess(ctx, session, spaceID, repoName, []constant.Permission{constant.PermissionRepoView})
 }
