@@ -3,6 +3,8 @@ package step
 import (
 	"context"
 	"encoding/json"
+	"math"
+	"time"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	stepModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/step"
@@ -27,6 +29,7 @@ func (s *Store) Create(ctx context.Context, step *stepModel.Step) error {
 // Update updates a step
 func (s *Store) Update(ctx context.Context, step *stepModel.Step) error {
 	db := dbtx.GetOrmAccessor(ctx, s.db)
+	populateDuration(step)
 
 	dbStep := mapToDBModel(step)
 
@@ -47,6 +50,14 @@ func (s *Store) GetByID(ctx context.Context, id uint) (*stepModel.Step, error) {
 	}
 
 	return mapToModel(&dbStep), nil
+}
+
+func populateDuration(step *stepModel.Step) {
+	if step == nil || step.Started == nil || step.Finished == nil {
+		return
+	}
+	duration := time.Time(*step.Finished).Sub(time.Time(*step.Started))
+	step.Duration = uint(math.Ceil(duration.Seconds()))
 }
 
 // mapToDBModel converts business model to database model

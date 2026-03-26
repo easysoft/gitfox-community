@@ -174,29 +174,28 @@ func (c *Controller) reportTagEvent(
 ) {
 	switch {
 	case tagUpdate.Old.IsNil():
-		// c.gitReporter.TagCreated(ctx, &events.TagCreatedPayload{
-		// 	RepoID:      repo.ID,
-		// 	PrincipalID: principalID,
-		// 	Ref:         tagUpdate.Ref,
-		// 	SHA:         tagUpdate.New.String(),
-		// })
+		c.gitReporter.TagCreated(ctx, &gitevents.TagCreatedPayload{
+			RepoID:  int64(repo.ID),
+			Account: principalAccount,
+			Ref:     tagUpdate.Ref,
+			SHA:     tagUpdate.New.String(),
+		})
 	case tagUpdate.New.IsNil():
-		// c.gitReporter.TagDeleted(ctx, &events.TagDeletedPayload{
-		// 	RepoID:      repo.ID,
-		// 	PrincipalID: principalID,
-		// 	Ref:         tagUpdate.Ref,
-		// 	SHA:         tagUpdate.Old.String(),
-		// })
+		c.gitReporter.TagDeleted(ctx, &gitevents.TagDeletedPayload{
+			RepoID:  int64(repo.ID),
+			Account: principalAccount,
+			Ref:     tagUpdate.Ref,
+			SHA:     tagUpdate.Old.String(),
+		})
 	default:
-		// c.gitReporter.TagUpdated(ctx, &events.TagUpdatedPayload{
-		// 	RepoID:      repo.ID,
-		// 	PrincipalID: principalID,
-		// 	Ref:         tagUpdate.Ref,
-		// 	OldSHA:      tagUpdate.Old.String(),
-		// 	NewSHA:      tagUpdate.New.String(),
-		// 	// tags can only be force updated!
-		// 	Forced: true,
-		// })
+		c.gitReporter.TagUpdated(ctx, &gitevents.TagUpdatedPayload{
+			RepoID:  int64(repo.ID),
+			Account: principalAccount,
+			Ref:     tagUpdate.Ref,
+			OldSHA:  tagUpdate.Old.String(),
+			NewSHA:  tagUpdate.New.String(),
+			Forced:  true,
+		})
 	}
 }
 
