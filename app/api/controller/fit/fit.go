@@ -3,8 +3,10 @@ package fit
 import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 	fitSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/fit"
+	repoSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
 	svcUtils "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/utils"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
@@ -19,13 +21,15 @@ var (
 
 // Controller 处理 fit 相关的 HTTP 请求（Basic 认证，直连外部系统）
 type Controller struct {
-	fitSvc fitSvc.Interface
+	fitSvc  fitSvc.Interface
+	repoSvc repoSvc.Interface
 }
 
 // NewController 创建 fit 处理器实例
-func NewController(fitSvc fitSvc.Interface) *Controller {
+func NewController(fitSvc fitSvc.Interface, repoSvc repoSvc.Interface) *Controller {
 	return &Controller{
-		fitSvc: fitSvc,
+		fitSvc:  fitSvc,
+		repoSvc: repoSvc,
 	}
 }
 
@@ -96,7 +100,7 @@ func (ctl *Controller) GetRepoByName(c *gin.Context) {
 		return
 	}
 
-	repo, err := ctl.fitSvc.GetRepoByName(c.Request.Context(), session, spaceID, repoName)
+	repo, err := ctl.repoSvc.GetRepoCheckAccess(c.Request.Context(), session, spaceID, repoName, []constant.Permission{constant.PermissionRepoView})
 	if err != nil {
 		if errors.IsNotFound(err) {
 			resp.NotFound(c, err)

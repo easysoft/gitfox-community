@@ -43,6 +43,7 @@ auth:
   pub_key_use_minute: "minute ago"
   pub_key_use_hour: "hour ago"
   pub_key_use_day: "day ago"
+  pub_key_use_week: "week ago"
   pub_key_use_month: "month ago"
   pub_key_use_year: "year ago"
   pub_key_last_use_date_error: "The last verification time data of the key is abnormal."

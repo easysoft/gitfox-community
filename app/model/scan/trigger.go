@@ -53,6 +53,7 @@ type ScanTriggerReqFilter struct {
 // ScanTrigger 触发器响应模型
 type ScanTrigger struct {
 	ID             int64                    `json:"id"`
+	SpaceID        int64                    `json:"spaceID"`
 	PlanID         int64                    `json:"planID"`
 	RepoID         int64                    `json:"repoID"`
 	Name           string                   `json:"name"`
@@ -71,7 +72,7 @@ type ScanTrigger struct {
 	Deleted        bool                     `json:"deleted"`
 	ConditionIDs   []int64                  `json:"conditionIDs"`
 	Conditions     []*ScanCondition         `json:"conditions"`
-	ConditionCount int                      `json:"conditionCountmitempty"`
+	ConditionCount int                      `json:"conditionCount"`
 	SolutionIDs    []int64                  `json:"solutionIDs"`
 	Solutions      []*Solution              `json:"solutions"`
 	SolutionCount  int                      `json:"solutionCount"`
