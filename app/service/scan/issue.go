@@ -448,3 +448,24 @@ func (s *ScanTaskService) ListIssueInfosByIDs(ctx context.Context, ids []int64) 
 func (s *ScanTaskService) UpdateIssuesStatus(ctx context.Context, ids []int64, status constant.ScanIssueStatus) error {
 	return s.issueStore.UpdateStatus(ctx, ids, status)
 }
+
+// SetIssuesStatus 批量更新扫描问题状态和/或解决方案（事务）
+func (s *ScanTaskService) SetIssuesStatus(ctx context.Context, in scanModel.ScanIssueUpdateStatusReq) error {
+	return s.tx.WithTx(ctx, func(ctx context.Context) error {
+		if in.Status != nil {
+			if err := s.issueStore.UpdateStatus(ctx, in.IDs, *in.Status); err != nil {
+				return err
+			}
+		}
+		if in.Resolution != nil {
+			var resolution *constant.ScanIssueResolution
+			if *in.Resolution != constant.ScanIssueResolutionNull {
+				resolution = in.Resolution
+			}
+			if err := s.issueStore.UpdateResolution(ctx, in.IDs, resolution); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}

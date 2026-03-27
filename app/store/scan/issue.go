@@ -46,7 +46,7 @@ func (s *ScanIssueStore) Get(ctx context.Context, id uint) (*scanModel.ScanIssue
 		Select("i.id, i.issueKey, i.ruleID, r.name AS ruleName, r.ruleKey AS ruleKey, " +
 			"r.priority AS rulePriority, r.type AS ruleType, " +
 			"i.message, i.path, i.line, i.repoID, i.repoBranch, " +
-			"i.status, i.scanMethod, i.payload, i.createdByTaskID, i.updatedByTaskID").
+			"i.status, i.scanMethod, i.resolution, i.payload, i.createdByTaskID, i.updatedByTaskID").
 		Joins("INNER JOIN ops_scan_rules AS r ON i.ruleID = r.id").
 		Where("i.id = ? AND i.deleted = ?", id, false).
 		First(&item).Error; err != nil {
@@ -62,7 +62,7 @@ func (s *ScanIssueStore) List(ctx context.Context, filter scanModel.ScanIssueReq
 		Select("i.id, i.issueKey, i.ruleID, r.name AS ruleName, r.ruleKey AS ruleKey, " +
 			"r.priority AS rulePriority, r.type AS ruleType, " +
 			"i.message, i.path, i.line, i.repoID, i.repoBranch, " +
-			"i.status, i.scanMethod, i.payload, i.createdByTaskID, i.updatedByTaskID").
+			"i.status, i.scanMethod, i.resolution, i.payload, i.createdByTaskID, i.updatedByTaskID").
 		Joins("INNER JOIN ops_scan_rules AS r ON i.ruleID = r.id").
 		Where("i.deleted = ?", false)
 
@@ -117,7 +117,7 @@ func (s *ScanIssueStore) ListByIDs(ctx context.Context, ids []int64) ([]*scanMod
 		Select("i.id, i.issueKey, i.ruleID, r.name AS ruleName, r.ruleKey AS ruleKey, " +
 			"r.priority AS rulePriority, r.type AS ruleType, " +
 			"i.message, i.path, i.line, i.repoID, i.repoBranch, " +
-			"i.status, i.scanMethod, i.payload, i.createdByTaskID, i.updatedByTaskID").
+			"i.status, i.scanMethod, i.resolution, i.payload, i.createdByTaskID, i.updatedByTaskID").
 		Joins("INNER JOIN ops_scan_rules AS r ON i.ruleID = r.id").
 		Where("i.id IN ? AND i.deleted = ?", ids, false).
 		Find(&issues).Error; err != nil {
@@ -128,6 +128,19 @@ func (s *ScanIssueStore) ListByIDs(ctx context.Context, ids []int64) ([]*scanMod
 		data = append(data, mapIssueJoinToModel(item))
 	}
 	return data, nil
+}
+
+// UpdateResolution 批量更新 issue resolution
+func (s *ScanIssueStore) UpdateResolution(ctx context.Context, ids []int64, resolution *constant.ScanIssueResolution) error {
+	if len(ids) == 0 {
+		return nil
+	}
+	if err := s.db.WithContext(ctx).Model(&ScanIssue{}).
+		Where("id IN ? AND deleted = ?", ids, false).
+		Updates(map[string]any{"resolution": resolution}).Error; err != nil {
+		return database.ProcessSQLErrorf(ctx, err)
+	}
+	return nil
 }
 
 // UpdateStatus 批量更新 issue 状态
@@ -237,7 +250,7 @@ func (s *ScanIssueStore) ListByTaskID(ctx context.Context, taskID uint, filter s
 		Select("i.id, i.issueKey, i.ruleID, r.name AS ruleName, r.ruleKey AS ruleKey, "+
 			"r.priority AS rulePriority, r.type AS ruleType, "+
 			"i.message, i.path, i.line, i.repoID, i.repoBranch, "+
-			"i.status, i.scanMethod, i.payload, i.createdByTaskID, i.updatedByTaskID").
+			"i.status, i.scanMethod, i.resolution, i.payload, i.createdByTaskID, i.updatedByTaskID").
 		Joins("INNER JOIN ops_scan_issues AS i ON bind.issueID = i.id").
 		Joins("INNER JOIN ops_scan_rules AS r ON i.ruleID = r.id").
 		Where("bind.taskID = ? AND i.deleted = ?", taskID, false)

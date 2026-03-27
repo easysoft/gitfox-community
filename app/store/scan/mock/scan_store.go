@@ -1334,6 +1334,20 @@ func (mr *MockIScanIssueMockRecorder) UpdateStatus(ctx, ids, status any) *gomock
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockIScanIssue)(nil).UpdateStatus), ctx, ids, status)
 }
 
+// UpdateResolution mocks base method.
+func (m *MockIScanIssue) UpdateResolution(ctx context.Context, ids []int64, resolution *constant.ScanIssueResolution) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateResolution", ctx, ids, resolution)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateResolution indicates an expected call of UpdateResolution.
+func (mr *MockIScanIssueMockRecorder) UpdateResolution(ctx, ids, resolution any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateResolution", reflect.TypeOf((*MockIScanIssue)(nil).UpdateResolution), ctx, ids, resolution)
+}
+
 // MockIScanTask is a mock of IScanTask interface.
 type MockIScanTask struct {
 	ctrl     *gomock.Controller

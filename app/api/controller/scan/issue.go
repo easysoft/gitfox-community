@@ -101,7 +101,7 @@ func (c *ScanController) ScanIssueListByIds(ctx *gin.Context) {
 
 // ScanIssueUpdateStatus 批量更新扫描问题状态
 // @Summary 批量更新扫描问题状态
-// @Description 批量更新扫描问题的处理状态
+// @Description 批量更新扫描问题的处理状态和/或解决方案
 // @Tags scan
 // @Accept application/json
 // @Produce application/json
@@ -122,14 +122,16 @@ func (c *ScanController) ScanIssueUpdateStatus(ctx *gin.Context) {
 			i18n.IssueBodyParamError))
 		return
 	}
-	if _, ok := in.Status.Sanitize(); !ok {
-		resp.BadRequest(ctx, errors.WithI18nKey(
-			fmt.Errorf("invalid status: %s", in.Status),
-			i18n.IssueBodyParamError))
-		return
+	if in.Status != nil {
+		if _, ok := in.Status.Sanitize(); !ok {
+			resp.BadRequest(ctx, errors.WithI18nKey(
+				fmt.Errorf("invalid status: %s", *in.Status),
+				i18n.IssueBodyParamError))
+			return
+		}
 	}
 
-	if err := c.taskSvc.UpdateIssuesStatus(ctx.Request.Context(), in.IDs, in.Status); err != nil {
+	if err := c.taskSvc.SetIssuesStatus(ctx.Request.Context(), in); err != nil {
 		resp.InternalError(ctx, err)
 		return
 	}

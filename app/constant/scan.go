@@ -574,3 +574,33 @@ var scanIssueSorts = sortEnum([]ScanIssueSort{
 
 // MaxIssueIDsPerRequest 单次请求允许的最大 issue ID 数量
 const MaxIssueIDsPerRequest = 200
+
+// ScanIssueResolution 扫描问题解决方案
+type ScanIssueResolution string
+
+const (
+	ScanIssueResolutionNull         ScanIssueResolution = ""
+	ScanIssueResolutionByDesign     ScanIssueResolution = "bydesign"
+	ScanIssueResolutionDuplicate    ScanIssueResolution = "duplicate"
+	ScanIssueResolutionExternal     ScanIssueResolution = "external"
+	ScanIssueResolutionFixed        ScanIssueResolution = "fixed"
+	ScanIssueResolutionNotReproduce ScanIssueResolution = "notrepro"
+	ScanIssueResolutionPostponed    ScanIssueResolution = "postponed"
+	ScanIssueResolutionWillNotFix   ScanIssueResolution = "willnotfix"
+	ScanIssueResolutionToStory      ScanIssueResolution = "tostory"
+)
+
+var scanIssueResolutions = sortEnum([]ScanIssueResolution{
+	ScanIssueResolutionByDesign, ScanIssueResolutionDuplicate, ScanIssueResolutionExternal,
+	ScanIssueResolutionFixed, ScanIssueResolutionNotReproduce, ScanIssueResolutionPostponed,
+	ScanIssueResolutionWillNotFix, ScanIssueResolutionToStory,
+})
+
+func (s ScanIssueResolution) String() string    { return string(s) }
+func (ScanIssueResolution) Enum() []interface{} { return toInterfaceSlice(scanIssueResolutions) }
+func (s ScanIssueResolution) Sanitize() (ScanIssueResolution, bool) {
+	return Sanitize(s, GetAllScanIssueResolutions)
+}
+func GetAllScanIssueResolutions() ([]ScanIssueResolution, ScanIssueResolution) {
+	return scanIssueResolutions, ScanIssueResolutionNull
+}
