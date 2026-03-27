@@ -252,7 +252,7 @@ func areDepsComplete(stage *stageModel.Stage, stages []*stageModel.StageWithStep
 		deps[dep] = struct{}{}
 	}
 	for _, sibling := range stages {
-		if _, ok := deps[sibling.Name]; !ok {
+		if _, ok := deps[sibling.Code]; !ok {
 			continue
 		}
 		if !sibling.Status.IsDone() {

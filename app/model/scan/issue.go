@@ -246,27 +246,29 @@ type ScanIssueIDsReqFilter struct {
 
 // ScanIssueUpdateStatusReq 批量更新扫描问题状态请求
 type ScanIssueUpdateStatusReq struct {
-	IDs    []int64                  `json:"ids" binding:"required"`
-	Status constant.ScanIssueStatus `json:"status" binding:"required"`
+	IDs        []int64                       `json:"ids" binding:"required"`
+	Status     *constant.ScanIssueStatus     `json:"status"`
+	Resolution *constant.ScanIssueResolution `json:"resolution"`
 }
 
 // ScanIssueInfo 扫描问题详情（含规则信息）
 type ScanIssueInfo struct {
-	ID              int64                     `json:"id"`
-	Key             string                    `json:"key"`
-	RuleID          int64                     `json:"ruleID"`
-	RuleName        string                    `json:"ruleName"`
-	RuleKey         string                    `json:"ruleKey"`
-	RulePriority    constant.ScanRulePriority `json:"rulePriority"`
-	RuleType        constant.ScanRuleType     `json:"ruleType"`
-	Message         string                    `json:"message"`
-	Path            string                    `json:"path"`
-	Line            int64                     `json:"line"`
-	RepoID          int64                     `json:"repoID"`
-	RepoBranch      string                    `json:"repoBranch"`
-	Status          constant.ScanIssueStatus  `json:"status"`
-	ScanMethod      constant.ScanMethod       `json:"scanMethod"`
-	Payload         json.RawMessage           `json:"payload"`
-	CreatedByTaskID int64                     `json:"createdByTaskID"`
-	UpdatedByTaskID int64                     `json:"updatedByTaskID"`
+	ID              int64                         `json:"id"`
+	Key             string                        `json:"key"`
+	RuleID          int64                         `json:"ruleID"`
+	RuleName        string                        `json:"ruleName"`
+	RuleKey         string                        `json:"ruleKey"`
+	RulePriority    constant.ScanRulePriority     `json:"rulePriority"`
+	RuleType        constant.ScanRuleType         `json:"ruleType"`
+	Message         string                        `json:"message"`
+	Path            string                        `json:"path"`
+	Line            int64                         `json:"line"`
+	RepoID          int64                         `json:"repoID"`
+	RepoBranch      string                        `json:"repoBranch"`
+	Status          constant.ScanIssueStatus      `json:"status"`
+	ScanMethod      constant.ScanMethod           `json:"scanMethod"`
+	Resolution      *constant.ScanIssueResolution `json:"resolution"`
+	Payload         json.RawMessage               `json:"payload"`
+	CreatedByTaskID int64                         `json:"createdByTaskID"`
+	UpdatedByTaskID int64                         `json:"updatedByTaskID"`
 }
