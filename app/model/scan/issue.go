@@ -232,6 +232,7 @@ type ScanTaskIssueReqFilter struct {
 type ScanIssueReqFilter struct {
 	RepoID     int64                    `json:"repoID,omitempty" form:"repoID"`
 	Branch     string                   `json:"branch,omitempty" form:"branch"`
+	File       string                   `json:"file,omitempty" form:"file"`
 	RuleID     int64                    `json:"ruleID,omitempty" form:"ruleID"`
 	Status     constant.ScanIssueStatus `json:"status,omitempty" form:"status"`
 	ScanMethod constant.ScanMethod      `json:"scanMethod,omitempty" form:"scanMethod"`

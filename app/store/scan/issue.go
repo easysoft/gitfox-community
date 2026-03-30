@@ -43,9 +43,9 @@ func (s *ScanIssueStore) Get(ctx context.Context, id uint) (*scanModel.ScanIssue
 	var item issueJoin
 	if err := s.db.WithContext(ctx).
 		Table("ops_scan_issues AS i").
-		Select("i.id, i.issueKey, i.ruleID, r.name AS ruleName, r.ruleKey AS ruleKey, " +
-			"r.priority AS rulePriority, r.type AS ruleType, " +
-			"i.message, i.path, i.line, i.repoID, i.repoBranch, " +
+		Select("i.id, i.issueKey, i.ruleID, r.name AS ruleName, r.ruleKey AS ruleKey, "+
+			"r.priority AS rulePriority, r.type AS ruleType, "+
+			"i.message, i.path, i.line, i.repoID, i.repoBranch, "+
 			"i.status, i.scanMethod, i.resolution, i.payload, i.createdByTaskID, i.updatedByTaskID").
 		Joins("INNER JOIN ops_scan_rules AS r ON i.ruleID = r.id").
 		Where("i.id = ? AND i.deleted = ?", id, false).
@@ -59,9 +59,9 @@ func (s *ScanIssueStore) Get(ctx context.Context, id uint) (*scanModel.ScanIssue
 func (s *ScanIssueStore) List(ctx context.Context, filter scanModel.ScanIssueReqFilter) (*database.PageResult[*scanModel.ScanIssueInfo], error) {
 	stmt := s.db.WithContext(ctx).
 		Table("ops_scan_issues AS i").
-		Select("i.id, i.issueKey, i.ruleID, r.name AS ruleName, r.ruleKey AS ruleKey, " +
-			"r.priority AS rulePriority, r.type AS ruleType, " +
-			"i.message, i.path, i.line, i.repoID, i.repoBranch, " +
+		Select("i.id, i.issueKey, i.ruleID, r.name AS ruleName, r.ruleKey AS ruleKey, "+
+			"r.priority AS rulePriority, r.type AS ruleType, "+
+			"i.message, i.path, i.line, i.repoID, i.repoBranch, "+
 			"i.status, i.scanMethod, i.resolution, i.payload, i.createdByTaskID, i.updatedByTaskID").
 		Joins("INNER JOIN ops_scan_rules AS r ON i.ruleID = r.id").
 		Where("i.deleted = ?", false)
@@ -80,6 +80,9 @@ func (s *ScanIssueStore) List(ctx context.Context, filter scanModel.ScanIssueReq
 	}
 	if filter.ScanMethod != "" {
 		stmt = stmt.Where("i.scanMethod = ?", filter.ScanMethod)
+	}
+	if filter.File != "" {
+		stmt = stmt.Where("i.path = ?", filter.File)
 	}
 
 	var issues []*issueJoin
@@ -114,9 +117,9 @@ func (s *ScanIssueStore) ListByIDs(ctx context.Context, ids []int64) ([]*scanMod
 	var issues []*issueJoin
 	if err := s.db.WithContext(ctx).
 		Table("ops_scan_issues AS i").
-		Select("i.id, i.issueKey, i.ruleID, r.name AS ruleName, r.ruleKey AS ruleKey, " +
-			"r.priority AS rulePriority, r.type AS ruleType, " +
-			"i.message, i.path, i.line, i.repoID, i.repoBranch, " +
+		Select("i.id, i.issueKey, i.ruleID, r.name AS ruleName, r.ruleKey AS ruleKey, "+
+			"r.priority AS rulePriority, r.type AS ruleType, "+
+			"i.message, i.path, i.line, i.repoID, i.repoBranch, "+
 			"i.status, i.scanMethod, i.resolution, i.payload, i.createdByTaskID, i.updatedByTaskID").
 		Joins("INNER JOIN ops_scan_rules AS r ON i.ruleID = r.id").
 		Where("i.id IN ? AND i.deleted = ?", ids, false).
