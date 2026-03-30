@@ -9,15 +9,15 @@ spec:
       type: ci
       spec:
         steps:
-          - name: clone
-            type: run
+          - name: git clone
+            type: plugin
             spec:
-              container:
-                image: qucheng.tencentcloudcr.com/ci/gitfox-plugin:alpine-git
-                pull: always
-              script:
-                - rm -rf /gitfox/*/
-                - git clone ${{parameters.gitURL}} --branch ${{parameters.gitRef}} --depth 5
+              name: git_clone
+              inputs:
+                repository: ${{parameters.gitURL}}
+                gitRef: ${{parameters.gitRef}}
+                cloneDepth: 50
+                cloneDir: ""
           - name: dotnet
             type: background
             spec:

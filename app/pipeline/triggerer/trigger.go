@@ -268,7 +268,7 @@ func parseV1Stages(
 					}
 				}
 
-				prevStage = temp.Code
+				prevStage = temp.Name
 				stages = append(stages, temp)
 			default:
 				return nil, fmt.Errorf("only CI and template stages are supported in v1 at the moment")
