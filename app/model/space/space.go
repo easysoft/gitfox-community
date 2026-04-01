@@ -16,7 +16,7 @@ type UpdateSpaceRequest struct {
 	Name       string `json:"name"`
 	Auth       string `json:"auth" binding:"required,oneof=extend reset" example:"extend"`
 	Permission string `json:"acl" binding:"omitempty,oneof=open private"`
-	Desc       string `json:"desc"`
+	Desc       string `json:"desc,omitempty"`
 	EditedBy   string `json:"editedBy" binding:"required"`
 }
 
