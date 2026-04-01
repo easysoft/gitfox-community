@@ -98,6 +98,9 @@ func LoadConfig(mode string) (*Config, error) {
 	if config.Storage.Filesystem.RootDirectory == "" {
 		config.Storage.Filesystem.RootDirectory = filepath.Join(config.WorkSpace.Root, "storage")
 	}
+	if config.Ci.ContainerVolume == "" {
+		config.Ci.ContainerVolume = filepath.Join(config.WorkSpace.Root, "volumes")
+	}
 
 	return config, nil
 }
