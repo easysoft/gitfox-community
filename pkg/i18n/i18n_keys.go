@@ -109,6 +109,24 @@ const (
 	BranchTypeUpdateErrorPrefix       I18nKey = "branch_type.update_error_prefix"       // 分支类型前缀已存在.
 	BranchTypeUpdateSuccess           I18nKey = "branch_type.update_success"            // 分支类型更新成功.
 
+	// Cli 相关常量
+	CliHooksCommand                I18nKey = "cli.hooks_command"                  // hooks
+	CliHooksDescription            I18nKey = "cli.hooks_description"              // 管理 Git 服务器钩子
+	CliHooksPostReceiveDescription I18nKey = "cli.hooks_post_receive_description" // 在推送的所有引用更新之后执行的钩子
+	CliHooksPreReceiveDescription  I18nKey = "cli.hooks_pre_receive_description"  // 在推送的任何引用更新之前执行的钩子
+	CliHooksUpdateDescription      I18nKey = "cli.hooks_update_description"       // 在特定引用更新之前执行的钩子
+	CliHooksUpdateNewArg           I18nKey = "cli.hooks_update_new_arg"           // 新的提交 SHA
+	CliHooksUpdateOldArg           I18nKey = "cli.hooks_update_old_arg"           // 旧的提交 SHA
+	CliHooksUpdateRefArg           I18nKey = "cli.hooks_update_ref_arg"           // 要执行钩子的引用
+	CliInstallCommand              I18nKey = "cli.install_command"                // install
+	CliInstallDescription          I18nKey = "cli.install_description"            // 安装 GitFox
+	CliInstallInitDescription      I18nKey = "cli.install_init_description"       // 初始化 GitFox 配置
+	CliInstallStartDescription     I18nKey = "cli.install_start_description"      // 启动 GitFox 服务
+	CliServer                      I18nKey = "cli.server"                         // server
+	CliServerDescription           I18nKey = "cli.server_description"             // 启动服务器
+	CliServerEnableCiFlag          I18nKey = "cli.server_enable_ci_flag"          // 启动 CI 运行器以执行构建
+	CliServerModeArg               I18nKey = "cli.server_mode_arg"                // 设置服务器模式
+
 	// Commit 相关常量
 	CommitActionDecodeError    I18nKey = "commit.action_decode_error"    // 解码提交文件内容时失败.
 	CommitBodyParamError       I18nKey = "commit.body_param_error"       // Body 参数解析失败.

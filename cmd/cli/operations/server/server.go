@@ -14,6 +14,8 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/router"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/logger"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/cmd/cli/operations/provider"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
+	clii18n "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n/cli"
 )
 
 type command struct {
@@ -222,14 +224,15 @@ func (c *command) run(*kingpin.ParseContext) error {
 func Register(app *kingpin.Application) {
 	c := new(command)
 
-	cmd := app.Command("server", "starts the server").
+	cmd := app.Command(clii18n.T(i18n.CliServer), clii18n.T(i18n.CliServerDescription)).
+		Default().
 		Action(c.run)
 
-	cmd.Arg("mode", "set the server mode").
+	cmd.Arg("mode", clii18n.T(i18n.CliServerModeArg)).
 		Default("dev").
 		StringVar(&c.mode)
 
-	cmd.Flag("enable-ci", "start ci runners for build executions").
+	cmd.Flag("enable-ci", clii18n.T(i18n.CliServerEnableCiFlag)).
 		Default("true").
 		Envar("ENABLE_CI").
 		BoolVar(&c.enableCI)

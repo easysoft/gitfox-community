@@ -20,6 +20,8 @@ import (
 	"os/signal"
 	"syscall"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
+	clii18n "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n/cli"
 	"github.com/quicklyon/kingpin/v2"
 )
 
@@ -86,7 +88,7 @@ func RegisterPreReceive(cmd KingpinRegister, loadCoreFn LoadCLICoreFunc) {
 		loadCoreFn: loadCoreFn,
 	}
 
-	cmd.Command(ParamPreReceive, "hook that is executed before any reference of the push is updated").
+	cmd.Command(ParamPreReceive, clii18n.T(i18n.CliHooksPreReceiveDescription)).
 		Action(c.run)
 }
 
@@ -96,18 +98,18 @@ func RegisterUpdate(cmd KingpinRegister, loadCoreFn LoadCLICoreFunc) {
 		loadCoreFn: loadCoreFn,
 	}
 
-	subCmd := cmd.Command(ParamUpdate, "hook that is executed before the specific reference gets updated").
+	subCmd := cmd.Command(ParamUpdate, clii18n.T(i18n.CliHooksUpdateDescription)).
 		Action(c.run)
 
-	subCmd.Arg("ref", "reference for which the hook is executed").
+	subCmd.Arg("ref", clii18n.T(i18n.CliHooksUpdateRefArg)).
 		Required().
 		StringVar(&c.ref)
 
-	subCmd.Arg("old", "old commit sha").
+	subCmd.Arg("old", clii18n.T(i18n.CliHooksUpdateOldArg)).
 		Required().
 		StringVar(&c.oldSHA)
 
-	subCmd.Arg("new", "new commit sha").
+	subCmd.Arg("new", clii18n.T(i18n.CliHooksUpdateNewArg)).
 		Required().
 		StringVar(&c.newSHA)
 }
@@ -118,7 +120,7 @@ func RegisterPostReceive(cmd KingpinRegister, loadCoreFn LoadCLICoreFunc) {
 		loadCoreFn: loadCoreFn,
 	}
 
-	cmd.Command(ParamPostReceive, "hook that is executed after all references of the push got updated").
+	cmd.Command(ParamPostReceive, clii18n.T(i18n.CliHooksPostReceiveDescription)).
 		Action(c.run)
 }
 
