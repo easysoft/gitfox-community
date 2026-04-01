@@ -99,7 +99,7 @@ type IScanPlanCondition interface {
 type IScanTask interface {
 	Create(ctx context.Context, in *ScanTaskInput) (*scanModel.ScanTask, error)
 	CreateBranchHook(ctx context.Context, repo *repoModel.Repo, branch string, sha string, principal *authModel.Session) (*triggerer.Hook, error)
-	Retry(ctx context.Context, session *authModel.Session, taskID uint) (*scanModel.ScanTask, error)
+	Retry(ctx context.Context, session *authModel.Session, taskID uint, repo *repoModel.Repo) (*scanModel.ScanTask, error)
 	GetTaskInfo(ctx context.Context, taskID uint) (*scanModel.ScanTaskInfo, error)
 	ListTaskInfos(ctx context.Context, filter scanModel.ScanTaskInfoReqFilter) (*database.PageResult[*scanModel.ScanTaskInfo], error)
 	ListTaskIssues(ctx context.Context, taskID uint, filter scanModel.ScanTaskIssueReqFilter) (*database.PageResult[*scanModel.ScanIssueInfo], error)

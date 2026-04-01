@@ -252,7 +252,7 @@ func areDepsComplete(stage *stageModel.Stage, stages []*stageModel.StageWithStep
 		deps[dep] = struct{}{}
 	}
 	for _, sibling := range stages {
-		if _, ok := deps[sibling.Name]; !ok {
+		if _, ok := deps[sibling.Code]; !ok {
 			continue
 		}
 		if !sibling.Status.IsDone() {
@@ -294,6 +294,7 @@ func (t *teardown) scheduleDownstream(
 		log := log.With().
 			Uint("stage.id", sibling.ID).
 			Str("stage.name", sibling.Name).
+			Str("stage.code", sibling.Code).
 			Str("stage.depends_on", strings.Join(sibling.Depends, ",")).
 			Logger()
 

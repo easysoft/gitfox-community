@@ -194,7 +194,7 @@ func (s *ScanTaskService) CreateBranchHook(ctx context.Context, repo *repoModel.
 }
 
 // Retry 重试失败的扫描任务
-func (s *ScanTaskService) Retry(ctx context.Context, session *authModel.Session, taskID uint) (*scanModel.ScanTask, error) {
+func (s *ScanTaskService) Retry(ctx context.Context, session *authModel.Session, taskID uint, repo *repoModel.Repo) (*scanModel.ScanTask, error) {
 	// 获取任务详情
 	taskInfo, err := s.taskStore.GetTaskInfo(ctx, taskID)
 	if err != nil {
@@ -230,6 +230,13 @@ func (s *ScanTaskService) Retry(ctx context.Context, session *authModel.Session,
 	hook.Params["SCAN_PLAN_ID"] = fmt.Sprintf("%d", taskInfo.PlanID)
 	hook.Params["SCAN_TASK_ID"] = fmt.Sprintf("%d", taskID)
 	hook.Params["SCAN_TRIGGER_ID"] = fmt.Sprintf("%d", triggerID)
+	hook.Params["SCAN_REPO_ID"] = fmt.Sprintf("%d", taskInfo.RepoID)
+	// 注入 git clone 需要的参数
+	hook.Params["gitURL"] = repo.GitURL
+	hook.Params["gitRef"] = hook.Ref
+	// 注入 gitfoxscan 调用接口时需要的参数
+	hook.Params["GITFOX_API_ENDPOINT"] = s.config.URL.Base + "/api/v2"
+	hook.Params["PLUGIN_TOKEN"] = s.config.PipelineAuth.Password
 
 	// 获取或创建流水线
 	input := &ScanTaskInput{
