@@ -87,7 +87,7 @@ func (e *Execer) Exec(ctx context.Context, spec *engine.Spec, state *pipeline.St
 		// for safe concurrent use.
 		// https://medium.com/@julienetienne/golang-for-loop-concurrency-quirk-95e6b184cfe
 		step_ := step
-		d.AddVertex(step_.Name, func() error {
+		d.AddVertex(step_.ID, func() error {
 			err := e.exec(ctx, state, spec, step_)
 			// if the step is configured to fast fail the
 			// pipeline, and if the step returned a non-zero
@@ -111,7 +111,7 @@ func (e *Execer) Exec(ctx context.Context, spec *engine.Spec, state *pipeline.St
 	// depends_on attribute.
 	for _, step := range spec.Steps {
 		for _, dep := range step.DependsOn {
-			d.AddEdge(dep, step.Name)
+			d.AddEdge(dep, step.ID)
 		}
 	}
 

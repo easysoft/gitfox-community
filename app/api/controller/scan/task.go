@@ -245,7 +245,19 @@ func (c *ScanController) ScanTaskRetry(ctx *gin.Context) {
 		return
 	}
 
-	task, err := c.taskSvc.Retry(ctx.Request.Context(), session, taskID)
+	taskInfo, err := c.taskSvc.GetTaskInfo(ctx.Request.Context(), taskID)
+	if err != nil {
+		resp.InternalError(ctx, err)
+		return
+	}
+
+	repo, err := c.repoSvc.GetByID(ctx, session, uint(taskInfo.RepoID))
+	if err != nil {
+		resp.InternalError(ctx, err)
+		return
+	}
+
+	task, err := c.taskSvc.Retry(ctx.Request.Context(), session, taskID, repo)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return

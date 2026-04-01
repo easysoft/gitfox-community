@@ -137,6 +137,14 @@ func (s *ScanPlanStore) List(ctx context.Context, repoID uint, filter scanModel.
 						Where("deleted = ?", false).Group("planID"),
 				).Where("result = ?", filter.LatestTaskResult),
 		)
+	} else {
+		tx = tx.Where("ops_scan_plans.id IN (?)",
+			s.db.Model(&ScanTask{}).Select("planID").
+				Where("id IN (?)",
+					s.db.Model(&ScanTask{}).Select("MAX(id)").
+						Where("deleted = ?", false).Group("planID"),
+				),
+		)
 	}
 	if filter.LatestTaskStatus != "" {
 		latestTaskSubQ := s.db.Model(&ScanTask{}).Select("MAX(id)").

@@ -52,7 +52,7 @@ func configureSerial(spec *engine.Spec) {
 	var prev *engine.Step
 	for _, step := range spec.Steps {
 		if prev != nil {
-			step.DependsOn = []string{prev.Name}
+			step.DependsOn = []string{prev.ID}
 		}
 		prev = step
 	}
@@ -97,12 +97,22 @@ func convertSecretEnv(src map[string]*manifest.Variable) []*engine.Secret {
 // helper function modifies the pipeline dependency graph to
 // account for the clone step.
 func configureCloneDeps(spec *engine.Spec) {
+	var cloneID string
+	for _, step := range spec.Steps {
+		if step.Name == "clone" {
+			cloneID = step.ID
+			break
+		}
+	}
+	if cloneID == "" {
+		return
+	}
 	for _, step := range spec.Steps {
 		if step.Name == "clone" {
 			continue
 		}
 		if len(step.DependsOn) == 0 {
-			step.DependsOn = []string{"clone"}
+			step.DependsOn = []string{cloneID}
 		}
 	}
 }
@@ -110,14 +120,19 @@ func configureCloneDeps(spec *engine.Spec) {
 // helper function modifies the pipeline dependency graph to
 // account for a disabled clone step.
 func removeCloneDeps(spec *engine.Spec) {
+	var cloneID string
 	for _, step := range spec.Steps {
 		if step.Name == "clone" {
-			return
+			cloneID = step.ID
+			break
 		}
+	}
+	if cloneID == "" {
+		return
 	}
 	for _, step := range spec.Steps {
 		if len(step.DependsOn) == 1 &&
-			step.DependsOn[0] == "clone" {
+			step.DependsOn[0] == cloneID {
 			step.DependsOn = []string{}
 		}
 	}
