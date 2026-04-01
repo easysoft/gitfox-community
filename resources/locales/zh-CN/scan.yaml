@@ -117,6 +117,7 @@ trigger:
   delete_error: "触发器删除失败。"
   not_found: "触发器不存在。"
   actions_required_error: "当前触发器类型必须配置 actions。"
+  actions_invalid_error: "触发器 action 值无效，合法值为：branch_created, branch_updated, tag_created, tag_updated, pullreq_created, pullreq_reopened, pullreq_branch_updated, pullreq_closed, pullreq_merged。"
   cron_branch_required_error: "定时触发器必须配置 cronBranch。"
   cron_required_error: "定时触发器必须配置 cron。"
   invalid_cron_error: "cron 表达式无效。"
@@ -133,6 +134,13 @@ scanTask:
   query_error: "扫描任务详情查询失败。"
   create_success: "扫描任务创建成功。"
   create_error: "扫描任务创建失败。"
+  report_upload_success: "扫描任务报告上传成功。"
+  report_upload_error: "扫描任务报告上传失败。"
+  issue_list_success: "扫描任务问题列表查询成功。"
+  issue_list_error: "扫描任务问题列表查询失败。"
+  retry_success: "扫描任务重试成功。"
+  retry_error: "扫描任务重试失败。"
+  retry_not_failed: "仅失败的扫描任务可以重试。"
 
 condition:
   path_param_error: "路径参数解析失败。"
@@ -164,4 +172,16 @@ planCondition:
   batch_delete_error: "计划级条件批量删除失败。"
   not_found: "计划级条件不存在。"
 
-
+issue:
+  path_param_error: "路径参数解析失败。"
+  body_param_error: "请求体参数解析失败。"
+  list_success: "扫描问题列表查询成功。"
+  list_error: "扫描问题列表查询失败。"
+  query_success: "扫描问题详情查询成功。"
+  query_error: "扫描问题详情查询失败。"
+  create_success: "扫描问题创建成功。"
+  create_error: "扫描问题创建失败。"
+  update_success: "扫描问题更新成功。"
+  update_error: "扫描问题更新失败。"
+  tree_query_success: "扫描问题树查询成功。"
+  tree_query_error: "扫描问题树查询失败。"

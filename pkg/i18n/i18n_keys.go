@@ -11,22 +11,22 @@ const (
 	AuthFailed                      I18nKey = "auth.failed"                           // 尝试认证失败
 	AuthNoData                      I18nKey = "auth.no_data"                          // 请求不包含任何可用于 Authorizer 的认证数据
 	AuthNoSession                   I18nKey = "auth.no_session"                       // 请求不包含任何会话数据,无法进行授权
-	AuthPubKeyAddAlreadyInUse       I18nKey = "auth.pub_key_add_already_in_use"       // key-公钥已存在
+	AuthPubKeyAddAlreadyInUse       I18nKey = "auth.pub_key_add_already_in_use"       // key::公钥已存在
 	AuthPubKeyAddBodyParamError     I18nKey = "auth.pub_key_add_body_param_error"     // 公钥添加请求体参数解析失败
-	AuthPubKeyAddContentEmpty       I18nKey = "auth.pub_key_add_content_empty"        // key-公钥内容不能为空
+	AuthPubKeyAddContentEmpty       I18nKey = "auth.pub_key_add_content_empty"        // key::公钥内容不能为空
 	AuthPubKeyAddError              I18nKey = "auth.pub_key_add_error"                // 公钥添加失败
-	AuthPubKeyAddIdentifierInUse    I18nKey = "auth.pub_key_add_identifier_in_use"    // name-公钥标识符已存在
+	AuthPubKeyAddIdentifierInUse    I18nKey = "auth.pub_key_add_identifier_in_use"    // name::公钥标识符已存在
 	AuthPubKeyAddParamError         I18nKey = "auth.pub_key_add_param_error"          // 公钥参数错误
 	AuthPubKeyAddSuccess            I18nKey = "auth.pub_key_add_success"              // 公钥添加成功
-	AuthPubKeyContentError          I18nKey = "auth.pub_key_content_error"            // key-公钥内容格式错误
+	AuthPubKeyContentError          I18nKey = "auth.pub_key_content_error"            // key::公钥内容格式错误
 	AuthPubKeyDeleteError           I18nKey = "auth.pub_key_delete_error"             // 公钥删除失败
 	AuthPubKeyDeleteNotFound        I18nKey = "auth.pub_key_delete_not_found"         // 公钥不存在,删除失败
 	AuthPubKeyDeleteParamError      I18nKey = "auth.pub_key_delete_param_error"       // 公钥删除参数校验错误
 	AuthPubKeyDeletePathParamError  I18nKey = "auth.pub_key_delete_path_param_error"  // 公钥删除路径参数解析失败
 	AuthPubKeyDeleteSuccess         I18nKey = "auth.pub_key_delete_success"           // 公钥删除成功
 	AuthPubKeyIdentifierError       I18nKey = "auth.pub_key_identifier_error"         // 公钥标识符校验错误
-	AuthPubKeyIdentifierFormatError I18nKey = "auth.pub_key_identifier_format_error"  // name-公钥标识符格式校验失败,仅支持字母、数字、.、_、-、$
-	AuthPubKeyIdentifierLengthError I18nKey = "auth.pub_key_identifier_length_error"  // name-公钥标识符长度校验失败,长度需在 1-100 个字符之间
+	AuthPubKeyIdentifierFormatError I18nKey = "auth.pub_key_identifier_format_error"  // name::公钥标识符格式校验失败,仅支持字母、数字、.、_、-、$
+	AuthPubKeyIdentifierLengthError I18nKey = "auth.pub_key_identifier_length_error"  // name::公钥标识符长度校验失败,长度需在 1-100 个字符之间
 	AuthPubKeyLastUseDateError      I18nKey = "auth.pub_key_last_use_date_error"      // 公钥最后验证时间数据异常
 	AuthPubKeyListError             I18nKey = "auth.pub_key_list_error"               // 公钥列表查询失败
 	AuthPubKeyListParamError        I18nKey = "auth.pub_key_list_param_error"         // 公钥列表参数校验错误
@@ -48,50 +48,66 @@ const (
 	AuthPubKeyUseMinute             I18nKey = "auth.pub_key_use_minute"               // 分钟前
 	AuthPubKeyUseMonth              I18nKey = "auth.pub_key_use_month"                // 月前
 	AuthPubKeyUseSecond             I18nKey = "auth.pub_key_use_second"               // 秒前
+	AuthPubKeyUseWeek               I18nKey = "auth.pub_key_use_week"                 // 周前
 	AuthPubKeyUseYear               I18nKey = "auth.pub_key_use_year"                 // 年前
 	AuthSessionTokenNotAllowed      I18nKey = "auth.session_token_not_allowed"        // 会话令牌不允许用于与 Git 交互
 	AuthUserIssuePatError           I18nKey = "auth.user_issue_pat_error"             // 用户创建访问令牌失败
 	AuthUserIssueTokenError         I18nKey = "auth.user_issue_token_error"           // 用户创建会话令牌失败
 	AuthUserNotFound                I18nKey = "auth.user_not_found"                   // 用户不存在
 	AuthUserPassError               I18nKey = "auth.user_pass_error"                  // 用户密码错误
+	AuthUserProfileQueryError       I18nKey = "auth.user_profile_query_error"         // 当前用户信息查询失败
+	AuthUserProfileQuerySuccess     I18nKey = "auth.user_profile_query_success"       // 当前用户信息查询成功
 
 	// Branch 相关常量
-	BranchBodyParamError    I18nKey = "branch.body_param_error"    // Body 参数解析失败.
-	BranchCreateError       I18nKey = "branch.create_error"        // 分支创建失败.
-	BranchCreateSuccess     I18nKey = "branch.create_success"      // 分支创建成功.
-	BranchDeleteError       I18nKey = "branch.delete_error"        // 分支删除失败.
-	BranchDeleteSuccess     I18nKey = "branch.delete_success"      // 分支删除成功.
-	BranchListError         I18nKey = "branch.list_error"          // 查询分支列表失败.
-	BranchListPrefixError   I18nKey = "branch.list_prefix_error"   // 查询分支前缀列表失败.
-	BranchListPrefixSuccess I18nKey = "branch.list_prefix_success" // 查询分支前缀列表成功.
-	BranchListSuccess       I18nKey = "branch.list_success"        // 查询分支列表成功.
-	BranchPathParamError    I18nKey = "branch.path_param_error"    // Path 参数解析失败.
-	BranchQueryParamError   I18nKey = "branch.query_param_error"   // Query 参数解析失败.
+	BranchActivateCreateError     I18nKey = "branch.activate_create_error"     // 创建激活分支 %s 失败,可能是因为归档分支不存在或名称冲突,请检查后重试.
+	BranchActivateDeleteError     I18nKey = "branch.activate_delete_error"     // 删除归档分支 %s 失败,可能是因为分支不存在或已被其他操作修改,请检查后重试.
+	BranchActivateNotArchived     I18nKey = "branch.activate_not_archived"     // 分支 %s 不是归档状态(缺少 archived/ 前缀),无法激活.
+	BranchActivateSuccess         I18nKey = "branch.activate_success"          // 激活归档分支成功.
+	BranchActivateTargetExists    I18nKey = "branch.activate_target_exists"    // 激活目标分支 %s 已存在,请先删除或重命名.
+	BranchArchiveCreateError      I18nKey = "branch.archive_create_error"      // 创建归档分支 archived/%s 失败,可能是因为源分支不存在或名称冲突,请检查后重试.
+	BranchArchiveDeleteError      I18nKey = "branch.archive_delete_error"      // 删除原分支 %s 失败,可能是因为分支不存在或已被其他操作修改,请检查后重试.
+	BranchArchiveIsDefault        I18nKey = "branch.archive_is_default"        // 默认分支不能归档.
+	BranchArchiveRollbackError    I18nKey = "branch.archive_rollback_error"    // 归档分支 %s 失败且回滚也未成功,archived/%s 可能残留,请手动检查并清理.
+	BranchArchiveSuccess          I18nKey = "branch.archive_success"           // 分支归档成功.
+	BranchArchiveTargetExists     I18nKey = "branch.archive_target_exists"     // 归档目标分支 archived/%s 已存在,请先删除或重命名.
+	BranchArchivedPrefixForbidden I18nKey = "branch.archived_prefix_forbidden" // 分支名不能以 archived/ 开头,该前缀为归档分支保留.
+	BranchBodyParamError          I18nKey = "branch.body_param_error"          // Body 参数解析失败.
+	BranchCreateError             I18nKey = "branch.create_error"              // 分支创建失败.
+	BranchCreateSuccess           I18nKey = "branch.create_success"            // 分支创建成功.
+	BranchDeleteError             I18nKey = "branch.delete_error"              // 分支删除失败.
+	BranchDeleteSuccess           I18nKey = "branch.delete_success"            // 分支删除成功.
+	BranchListError               I18nKey = "branch.list_error"                // 查询分支列表失败.
+	BranchListPrefixError         I18nKey = "branch.list_prefix_error"         // 查询分支前缀列表失败.
+	BranchListPrefixSuccess       I18nKey = "branch.list_prefix_success"       // 查询分支前缀列表成功.
+	BranchListSuccess             I18nKey = "branch.list_success"              // 查询分支列表成功.
+	BranchPathParamError          I18nKey = "branch.path_param_error"          // Path 参数解析失败.
+	BranchQueryParamError         I18nKey = "branch.query_param_error"         // Query 参数解析失败.
 
 	// Branch_type 相关常量
-	BranchTypeBodyCheckDescLength   I18nKey = "branch_type.body_check_desc_length"   // 描述长度必须小于500个字符.
-	BranchTypeBodyCheckError        I18nKey = "branch_type.body_check_error"         // 请求参数校验失败.
-	BranchTypeBodyCheckKeyFormat    I18nKey = "branch_type.body_check_key_format"    // 键值仅可包含英文字母、数字与分隔符 / - _ .,最多50个字符.
-	BranchTypeBodyCheckKeyLength    I18nKey = "branch_type.body_check_key_length"    // 键值长度必须小于50个字符.
-	BranchTypeBodyCheckNameLength   I18nKey = "branch_type.body_check_name_length"   // 名称长度必须小于100个字符.
-	BranchTypeBodyCheckPrefixFormat I18nKey = "branch_type.body_check_prefix_format" // 前缀以字母开头,仅含字母或数字；末尾需有且仅可有一个分隔符(/ - _ .)
-	BranchTypeBodyCheckPrefixLength I18nKey = "branch_type.body_check_prefix_length" // 前缀长度必须小于50个字符.
-	BranchTypeBodyCheckPrefixNum    I18nKey = "branch_type.body_check_prefix_num"    // 前缀数量须为1至5个.
-	BranchTypeBodyParamError        I18nKey = "branch_type.body_param_error"         // Body 参数解析失败.
-	BranchTypeCreateError           I18nKey = "branch_type.create_error"             // 分支类型创建失败.
-	BranchTypeCreateErrorKey        I18nKey = "branch_type.create_error_key"         // 分支类型键值已存在.
-	BranchTypeCreateErrorPrefix     I18nKey = "branch_type.create_error_prefix"      // 分支类型前缀已存在.
-	BranchTypeCreateSuccess         I18nKey = "branch_type.create_success"           // 分支类型创建成功.
-	BranchTypeDeleteError           I18nKey = "branch_type.delete_error"             // 分支类型删除失败.
-	BranchTypeDeleteSuccess         I18nKey = "branch_type.delete_success"           // 分支类型删除成功.
-	BranchTypeNotFound              I18nKey = "branch_type.not_found"                // 分支类型未找到.
-	BranchTypePathParamError        I18nKey = "branch_type.path_param_error"         // Path 参数解析失败.
-	BranchTypeQueryError            I18nKey = "branch_type.query_error"              // 分支类型查询失败.
-	BranchTypeQuerySuccess          I18nKey = "branch_type.query_success"            // 分支类型查询成功.
-	BranchTypeUpdateError           I18nKey = "branch_type.update_error"             // 分支类型更新失败.
-	BranchTypeUpdateErrorKey        I18nKey = "branch_type.update_error_key"         // 分支类型键值已存在.
-	BranchTypeUpdateErrorPrefix     I18nKey = "branch_type.update_error_prefix"      // 分支类型前缀已存在.
-	BranchTypeUpdateSuccess         I18nKey = "branch_type.update_success"           // 分支类型更新成功.
+	BranchTypeArchivedPrefixForbidden I18nKey = "branch_type.archived_prefix_forbidden" // 分支类型前缀不能使用 archived,该前缀为归档分支保留.
+	BranchTypeBodyCheckDescLength     I18nKey = "branch_type.body_check_desc_length"    // 描述长度必须小于500个字符.
+	BranchTypeBodyCheckError          I18nKey = "branch_type.body_check_error"          // 请求参数校验失败.
+	BranchTypeBodyCheckKeyFormat      I18nKey = "branch_type.body_check_key_format"     // 键值仅可包含英文字母、数字与分隔符 / - _ .,最多50个字符.
+	BranchTypeBodyCheckKeyLength      I18nKey = "branch_type.body_check_key_length"     // 键值长度必须小于50个字符.
+	BranchTypeBodyCheckNameLength     I18nKey = "branch_type.body_check_name_length"    // 名称长度必须小于100个字符.
+	BranchTypeBodyCheckPrefixFormat   I18nKey = "branch_type.body_check_prefix_format"  // 前缀以字母开头,仅含字母或数字；末尾需有且仅可有一个分隔符(/ - _ .)
+	BranchTypeBodyCheckPrefixLength   I18nKey = "branch_type.body_check_prefix_length"  // 前缀长度必须小于50个字符.
+	BranchTypeBodyCheckPrefixNum      I18nKey = "branch_type.body_check_prefix_num"     // 前缀数量须为1至5个.
+	BranchTypeBodyParamError          I18nKey = "branch_type.body_param_error"          // Body 参数解析失败.
+	BranchTypeCreateError             I18nKey = "branch_type.create_error"              // 分支类型创建失败.
+	BranchTypeCreateErrorKey          I18nKey = "branch_type.create_error_key"          // 分支类型键值已存在.
+	BranchTypeCreateErrorPrefix       I18nKey = "branch_type.create_error_prefix"       // 分支类型前缀已存在.
+	BranchTypeCreateSuccess           I18nKey = "branch_type.create_success"            // 分支类型创建成功.
+	BranchTypeDeleteError             I18nKey = "branch_type.delete_error"              // 分支类型删除失败.
+	BranchTypeDeleteSuccess           I18nKey = "branch_type.delete_success"            // 分支类型删除成功.
+	BranchTypeNotFound                I18nKey = "branch_type.not_found"                 // 分支类型未找到.
+	BranchTypePathParamError          I18nKey = "branch_type.path_param_error"          // Path 参数解析失败.
+	BranchTypeQueryError              I18nKey = "branch_type.query_error"               // 分支类型查询失败.
+	BranchTypeQuerySuccess            I18nKey = "branch_type.query_success"             // 分支类型查询成功.
+	BranchTypeUpdateError             I18nKey = "branch_type.update_error"              // 分支类型更新失败.
+	BranchTypeUpdateErrorKey          I18nKey = "branch_type.update_error_key"          // 分支类型键值已存在.
+	BranchTypeUpdateErrorPrefix       I18nKey = "branch_type.update_error_prefix"       // 分支类型前缀已存在.
+	BranchTypeUpdateSuccess           I18nKey = "branch_type.update_success"            // 分支类型更新成功.
 
 	// Commit 相关常量
 	CommitActionDecodeError    I18nKey = "commit.action_decode_error"    // 解码提交文件内容时失败.
@@ -155,10 +171,19 @@ const (
 	ExecutionTriggerError     I18nKey = "execution.trigger_error"      // 执行触发失败
 	ExecutionTriggerSuccess   I18nKey = "execution.trigger_success"    // 执行触发成功
 
+	// Fit 相关常量
+	FitBranchNameRequired           I18nKey = "fit.branch_name_required"            // 分支名称不能为空
+	FitBranchPermissionQueryError   I18nKey = "fit.branch_permission_query_error"   // 查询分支权限失败
+	FitBranchPermissionQuerySuccess I18nKey = "fit.branch_permission_query_success" // 查询分支权限成功
+	FitRepoNameRequired             I18nKey = "fit.repo_name_required"              // 仓库名称不能为空
+	FitRepoQueryError               I18nKey = "fit.repo_query_error"                // 查询仓库失败
+	FitRepoQuerySuccess             I18nKey = "fit.repo_query_success"              // 查询仓库成功
+
 	// Git 相关常量
 	GitAmbiguousRef                 I18nKey = "git.ambiguous_ref"                     // 引用不明确.
 	GitBranchAlreadyExists          I18nKey = "git.branch_already_exists"             // 分支已存在.
 	GitBranchNotFound               I18nKey = "git.branch_not_found"                  // 分支不存在
+	GitBranchRefConflict            I18nKey = "git.branch_ref_conflict"               // 无法创建分支,当前分支名与已有分支存在文件系统命名冲突,请尝试更换分支名中的分隔符.
 	GitCreateExecParamError         I18nKey = "git.create_exec_param_error"           // 创建败 git 命令参数失败.
 	GitEmptyRepo                    I18nKey = "git.empty_repo"                        // 仓库为空.
 	GitExecError                    I18nKey = "git.exec_error"                        // 执行 git 命令失败.
@@ -190,6 +215,20 @@ const (
 	GitTagNotFound                  I18nKey = "git.tag_not_found"                     // 标签不存在
 	GitTimeout                      I18nKey = "git.timeout"                           // Git 操作超时.
 	GitUnrelatedHistories           I18nKey = "git.unrelated_histories"               // 不相关的历史记录.
+
+	// Issue 相关常量
+	IssueBodyParamError   I18nKey = "issue.body_param_error"   // 请求体参数解析失败.
+	IssueCreateError      I18nKey = "issue.create_error"       // 扫描问题创建失败.
+	IssueCreateSuccess    I18nKey = "issue.create_success"     // 扫描问题创建成功.
+	IssueListError        I18nKey = "issue.list_error"         // 扫描问题列表查询失败.
+	IssueListSuccess      I18nKey = "issue.list_success"       // 扫描问题列表查询成功.
+	IssuePathParamError   I18nKey = "issue.path_param_error"   // 路径参数解析失败.
+	IssueQueryError       I18nKey = "issue.query_error"        // 扫描问题详情查询失败.
+	IssueQuerySuccess     I18nKey = "issue.query_success"      // 扫描问题详情查询成功.
+	IssueTreeQueryError   I18nKey = "issue.tree_query_error"   // 扫描问题树查询失败.
+	IssueTreeQuerySuccess I18nKey = "issue.tree_query_success" // 扫描问题树查询成功.
+	IssueUpdateError      I18nKey = "issue.update_error"       // 扫描问题更新失败.
+	IssueUpdateSuccess    I18nKey = "issue.update_success"     // 扫描问题更新成功.
 
 	// Pipeline 相关常量
 	PipelineBodyParamError             I18nKey = "pipeline.body_param_error"               // Body 参数解析失败.
@@ -285,27 +324,28 @@ const (
 	PullrequestQuerySuccess                  I18nKey = "pullrequest.query_success"                      // 查询 Pull Request 成功
 
 	// Repo 相关常量
-	RepoBodyParamError            I18nKey = "repo.body_param_error"             // Body 参数解析失败.
-	RepoCreateError               I18nKey = "repo.create_error"                 // 创建仓库异常
-	RepoCreateSuccess             I18nKey = "repo.create_success"               // 创建仓库成功
-	RepoDeleteError               I18nKey = "repo.delete_error"                 // 删除仓库失败.
-	RepoDeleteSuccess             I18nKey = "repo.delete_success"               // 仓库删除成功.
-	RepoGetContentError           I18nKey = "repo.get_content_error"            // 获取仓库内容失败.
-	RepoGetContentPermissionError I18nKey = "repo.get_content_permission_error" // 您没有权限获取此仓库的内容.
-	RepoGetContentSuccess         I18nKey = "repo.get_content_success"          // 获取仓库内容成功.
-	RepoGetPathsDetailsSuccess    I18nKey = "repo.get_paths_details_success"    // 获取路径详情成功.
-	RepoGetPathsSuccess           I18nKey = "repo.get_paths_success"            // 获取路径成功.
-	RepoIdentifierInvalid         I18nKey = "repo.identifier_invalid"           // 仓库名称不合法,identifier仅支持字母、数字、下划线(_)、连字符(-)、点号(.)
-	RepoLineNumberError           I18nKey = "repo.line_number_error"            // 行号必须大于0, 且结束行号必须大于起始行号
-	RepoMirrorReadOnly            I18nKey = "repo.mirror_read_only"             // 镜像仓库只读.
-	RepoNotFound                  I18nKey = "repo.not_found"                    // 仓库不存在.
-	RepoPathParamError            I18nKey = "repo.path_param_error"             // Path 参数解析失败.
-	RepoPullPermissionError       I18nKey = "repo.pull_permission_error"        // 您没有权限拉取此仓库.
-	RepoPushPermissionError       I18nKey = "repo.push_permission_error"        // 您没有权限推送此仓库.
-	RepoQueryError                I18nKey = "repo.query_error"                  // 查询仓库失败
-	RepoQueryParamError           I18nKey = "repo.query_param_error"            // Query 参数解析失败.
-	RepoQuerySuccess              I18nKey = "repo.query_success"                // 查询仓库成功
-	RepoUpdateSuccess             I18nKey = "repo.update_success"               // 更新仓库成功
+	RepoBodyParamError                 I18nKey = "repo.body_param_error"                  // Body 参数解析失败.
+	RepoCreateError                    I18nKey = "repo.create_error"                      // 创建仓库异常
+	RepoCreateSuccess                  I18nKey = "repo.create_success"                    // 创建仓库成功
+	RepoDefaultBranchArchivedForbidden I18nKey = "repo.default_branch_archived_forbidden" // 默认分支不能以 archived/ 开头,该前缀为归档分支保留.
+	RepoDeleteError                    I18nKey = "repo.delete_error"                      // 删除仓库失败.
+	RepoDeleteSuccess                  I18nKey = "repo.delete_success"                    // 仓库删除成功.
+	RepoGetContentError                I18nKey = "repo.get_content_error"                 // 获取仓库内容失败.
+	RepoGetContentPermissionError      I18nKey = "repo.get_content_permission_error"      // 您没有权限获取此仓库的内容.
+	RepoGetContentSuccess              I18nKey = "repo.get_content_success"               // 获取仓库内容成功.
+	RepoGetPathsDetailsSuccess         I18nKey = "repo.get_paths_details_success"         // 获取路径详情成功.
+	RepoGetPathsSuccess                I18nKey = "repo.get_paths_success"                 // 获取路径成功.
+	RepoIdentifierInvalid              I18nKey = "repo.identifier_invalid"                // 仓库名称不合法,identifier仅支持字母、数字、下划线(_)、连字符(-)、点号(.)
+	RepoLineNumberError                I18nKey = "repo.line_number_error"                 // 行号必须大于0, 且结束行号必须大于起始行号
+	RepoMirrorReadOnly                 I18nKey = "repo.mirror_read_only"                  // 镜像仓库只读.
+	RepoNotFound                       I18nKey = "repo.not_found"                         // 仓库不存在.
+	RepoPathParamError                 I18nKey = "repo.path_param_error"                  // Path 参数解析失败.
+	RepoPullPermissionError            I18nKey = "repo.pull_permission_error"             // 您没有权限拉取此仓库.
+	RepoPushPermissionError            I18nKey = "repo.push_permission_error"             // 您没有权限推送此仓库.
+	RepoQueryError                     I18nKey = "repo.query_error"                       // 查询仓库失败
+	RepoQueryParamError                I18nKey = "repo.query_param_error"                 // Query 参数解析失败.
+	RepoQuerySuccess                   I18nKey = "repo.query_success"                     // 查询仓库成功
+	RepoUpdateSuccess                  I18nKey = "repo.update_success"                    // 更新仓库成功
 
 	// Request 相关常量
 	RequestInvalidBooleanParameter         I18nKey = "request.invalid_boolean_parameter"          // 参数必须为布尔值.
@@ -390,14 +430,21 @@ const (
 	RunnerUpdateSuccess          I18nKey = "runner.update_success"            // 更新 Runner 成功.
 
 	// ScanTask 相关常量
-	ScanTaskBodyParamError I18nKey = "scanTask.body_param_error" // 请求体参数解析失败.
-	ScanTaskCreateError    I18nKey = "scanTask.create_error"     // 扫描任务创建失败.
-	ScanTaskCreateSuccess  I18nKey = "scanTask.create_success"   // 扫描任务创建成功.
-	ScanTaskListError      I18nKey = "scanTask.list_error"       // 扫描任务列表查询失败.
-	ScanTaskListSuccess    I18nKey = "scanTask.list_success"     // 扫描任务列表查询成功.
-	ScanTaskPathParamError I18nKey = "scanTask.path_param_error" // 路径参数解析失败.
-	ScanTaskQueryError     I18nKey = "scanTask.query_error"      // 扫描任务详情查询失败.
-	ScanTaskQuerySuccess   I18nKey = "scanTask.query_success"    // 扫描任务详情查询成功.
+	ScanTaskBodyParamError      I18nKey = "scanTask.body_param_error"      // 请求体参数解析失败.
+	ScanTaskCreateError         I18nKey = "scanTask.create_error"          // 扫描任务创建失败.
+	ScanTaskCreateSuccess       I18nKey = "scanTask.create_success"        // 扫描任务创建成功.
+	ScanTaskIssueListError      I18nKey = "scanTask.issue_list_error"      // 扫描任务问题列表查询失败.
+	ScanTaskIssueListSuccess    I18nKey = "scanTask.issue_list_success"    // 扫描任务问题列表查询成功.
+	ScanTaskListError           I18nKey = "scanTask.list_error"            // 扫描任务列表查询失败.
+	ScanTaskListSuccess         I18nKey = "scanTask.list_success"          // 扫描任务列表查询成功.
+	ScanTaskPathParamError      I18nKey = "scanTask.path_param_error"      // 路径参数解析失败.
+	ScanTaskQueryError          I18nKey = "scanTask.query_error"           // 扫描任务详情查询失败.
+	ScanTaskQuerySuccess        I18nKey = "scanTask.query_success"         // 扫描任务详情查询成功.
+	ScanTaskReportUploadError   I18nKey = "scanTask.report_upload_error"   // 扫描任务报告上传失败.
+	ScanTaskReportUploadSuccess I18nKey = "scanTask.report_upload_success" // 扫描任务报告上传成功.
+	ScanTaskRetryError          I18nKey = "scanTask.retry_error"           // 扫描任务重试失败.
+	ScanTaskRetryNotFailed      I18nKey = "scanTask.retry_not_failed"      // 仅失败的扫描任务可以重试.
+	ScanTaskRetrySuccess        I18nKey = "scanTask.retry_success"         // 扫描任务重试成功.
 
 	// Solution 相关常量
 	SolutionAlreadyExists       I18nKey = "solution.already_exists"        // 扫描方案名称已存在.
@@ -461,6 +508,7 @@ const (
 	TagQueryParamError I18nKey = "tag.query_param_error" // Query 参数解析失败.
 
 	// Trigger 相关常量
+	TriggerActionsInvalidError     I18nKey = "trigger.actions_invalid_error"      // 触发器 action 值无效,合法值为:branch_created, branch_upda...
 	TriggerActionsRequiredError    I18nKey = "trigger.actions_required_error"     // 当前触发器类型必须配置 actions.
 	TriggerBodyParamError          I18nKey = "trigger.body_param_error"           // 请求体参数解析失败.
 	TriggerCreateError             I18nKey = "trigger.create_error"               // 触发器创建失败.

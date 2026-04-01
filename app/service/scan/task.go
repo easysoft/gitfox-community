@@ -16,7 +16,11 @@ import (
 	pipelineStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/pipeline"
 	repoStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
 	scanStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/scan"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database/dbtx"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/resources"
 )
 
@@ -52,32 +56,50 @@ func (j *JobCodeScanIdentifier) String() string {
 var _ IScanTask = (*ScanTaskService)(nil)
 
 type ScanTaskService struct {
-	taskStore     scanStore.IScanTask
-	planStore     scanStore.IScanPlan
-	solutionStore scanStore.ISolution
-	repoStore     repoStore.Interface
-	pipelineStore pipelineStore.Interface
-	triggerSvc    triggerer.Triggerer
-	cronScheduler CronScheduler
+	config         *config.Config
+	taskStore      scanStore.IScanTask
+	planStore      scanStore.IScanPlan
+	solutionStore  scanStore.ISolution
+	issueStore     scanStore.IScanIssue
+	conditionStore scanStore.IScanCondition
+	ruleSetStore   scanStore.IRuleSet
+	ruleStore      scanStore.IRule
+	repoStore      repoStore.Interface
+	pipelineStore  pipelineStore.Interface
+	triggerSvc     triggerer.Triggerer
+	cronScheduler  CronScheduler
+	tx             dbtx.TxRunner
 }
 
 func NewScanTaskService(
+	config *config.Config,
 	taskStore scanStore.IScanTask,
 	planStore scanStore.IScanPlan,
 	solutionStore scanStore.ISolution,
+	issueStore scanStore.IScanIssue,
+	conditionStore scanStore.IScanCondition,
+	ruleSetStore scanStore.IRuleSet,
+	ruleStore scanStore.IRule,
 	repoStore repoStore.Interface,
 	pipelineStore pipelineStore.Interface,
 	triggerSvc triggerer.Triggerer,
 	cronScheduler CronScheduler,
+	tx dbtx.TxRunner,
 ) *ScanTaskService {
 	return &ScanTaskService{
-		taskStore:     taskStore,
-		planStore:     planStore,
-		solutionStore: solutionStore,
-		repoStore:     repoStore,
-		pipelineStore: pipelineStore,
-		triggerSvc:    triggerSvc,
-		cronScheduler: cronScheduler,
+		config:         config,
+		taskStore:      taskStore,
+		planStore:      planStore,
+		solutionStore:  solutionStore,
+		issueStore:     issueStore,
+		conditionStore: conditionStore,
+		ruleSetStore:   ruleSetStore,
+		ruleStore:      ruleStore,
+		repoStore:      repoStore,
+		pipelineStore:  pipelineStore,
+		triggerSvc:     triggerSvc,
+		cronScheduler:  cronScheduler,
+		tx:             tx,
 	}
 }
 
@@ -125,6 +147,13 @@ func (s *ScanTaskService) Create(ctx context.Context, in *ScanTaskInput) (*scanM
 	in.Hook.Params["SCAN_PLAN_ID"] = fmt.Sprintf("%d", in.Plan.ID)
 	in.Hook.Params["SCAN_TASK_ID"] = fmt.Sprintf("%d", created.ID)
 	in.Hook.Params["SCAN_TRIGGER_ID"] = fmt.Sprintf("%d", triggerID)
+	in.Hook.Params["SCAN_REPO_ID"] = fmt.Sprintf("%d", in.Repo.ID)
+	// 注入 git clone 需要的参数
+	in.Hook.Params["gitURL"] = in.Repo.GitURL
+	in.Hook.Params["gitRef"] = in.Hook.Ref
+	// 注入 gitfoxscan 调用接口时需要的参数
+	in.Hook.Params["GITFOX_API_ENDPOINT"] = s.config.URL.Base + "/api/v2"
+	in.Hook.Params["PLUGIN_TOKEN"] = s.config.PipelineAuth.Password
 
 	// 获取或创建代码扫描流水线
 	pipeline, err := s.getOrCreatePipeline(ctx, in.Plan.RepoID, in)
@@ -150,9 +179,10 @@ func (s *ScanTaskService) Create(ctx context.Context, in *ScanTaskInput) (*scanM
 	return created, nil
 }
 
-func (s *ScanTaskService) CreateBranchHook(ctx context.Context, repo *repoModel.Repo, branch string, principal *authModel.Session) (*triggerer.Hook, error) {
+func (s *ScanTaskService) CreateBranchHook(ctx context.Context, repo *repoModel.Repo, branch string, sha string, principal *authModel.Session) (*triggerer.Hook, error) {
 	hook := &triggerer.Hook{
-		Trigger:     principal.User.Account, // who/what triggered the build, different from commit author
+		Commit:      sha,
+		Trigger:     principal.User.Account,
 		TriggeredBy: principal.User.ID,
 		Action:      "",
 		Parent:      int64(repo.SpaceID),
@@ -160,27 +190,26 @@ func (s *ScanTaskService) CreateBranchHook(ctx context.Context, repo *repoModel.
 		Sender:      principal.User.Account,
 		Params:      map[string]string{},
 	}
-
 	return hook, nil
 }
 
 // Retry 重试失败的扫描任务
-func (s *ScanTaskService) Retry(ctx context.Context, session *authModel.Session, taskID uint) (*scanModel.ScanTask, error) {
+func (s *ScanTaskService) Retry(ctx context.Context, session *authModel.Session, taskID uint, repo *repoModel.Repo) (*scanModel.ScanTask, error) {
 	// 获取任务详情
 	taskInfo, err := s.taskStore.GetTaskInfo(ctx, taskID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get scan task info: %w", err)
+		return nil, errors.WithI18nKey(fmt.Errorf("failed to get scan task info: %w", err), i18n.ScanTaskRetryError)
 	}
 
 	// 只有失败的任务才能重试
 	if taskInfo.Status != constant.ScanTaskStatusFailed {
-		return nil, fmt.Errorf("only failed tasks can be retried, current status: %s", taskInfo.Status)
+		return nil, errors.WithI18nKey(errors.New("only failed tasks can be retried"), i18n.ScanTaskRetryNotFailed)
 	}
 
 	// 获取扫描计划
 	plan, err := s.planStore.GetByID(ctx, uint(taskInfo.PlanID))
 	if err != nil {
-		return nil, fmt.Errorf("failed to get scan plan: %w", err)
+		return nil, errors.WithI18nKey(fmt.Errorf("failed to get scan plan: %w", err), i18n.ScanTaskRetryError)
 	}
 
 	// 构建重试 Hook
@@ -201,6 +230,13 @@ func (s *ScanTaskService) Retry(ctx context.Context, session *authModel.Session,
 	hook.Params["SCAN_PLAN_ID"] = fmt.Sprintf("%d", taskInfo.PlanID)
 	hook.Params["SCAN_TASK_ID"] = fmt.Sprintf("%d", taskID)
 	hook.Params["SCAN_TRIGGER_ID"] = fmt.Sprintf("%d", triggerID)
+	hook.Params["SCAN_REPO_ID"] = fmt.Sprintf("%d", taskInfo.RepoID)
+	// 注入 git clone 需要的参数
+	hook.Params["gitURL"] = repo.GitURL
+	hook.Params["gitRef"] = hook.Ref
+	// 注入 gitfoxscan 调用接口时需要的参数
+	hook.Params["GITFOX_API_ENDPOINT"] = s.config.URL.Base + "/api/v2"
+	hook.Params["PLUGIN_TOKEN"] = s.config.PipelineAuth.Password
 
 	// 获取或创建流水线
 	input := &ScanTaskInput{
@@ -209,13 +245,13 @@ func (s *ScanTaskService) Retry(ctx context.Context, session *authModel.Session,
 	}
 	pipeline, err := s.getOrCreatePipeline(ctx, plan.RepoID, input)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get pipeline: %w", err)
+		return nil, errors.WithI18nKey(fmt.Errorf("failed to get pipeline: %w", err), i18n.ScanTaskRetryError)
 	}
 
 	// 触发新执行
 	execution, err := s.triggerSvc.Trigger(ctx, uint(pipeline.ID), hook)
 	if err != nil {
-		return nil, fmt.Errorf("failed to trigger retry: %w", err)
+		return nil, errors.WithI18nKey(fmt.Errorf("failed to trigger retry: %w", err), i18n.ExecutionTriggerError)
 	}
 
 	// 更新原任务关联新执行
@@ -225,7 +261,7 @@ func (s *ScanTaskService) Retry(ctx context.Context, session *authModel.Session,
 		Status:      constant.ScanTaskStatusInProgress,
 	}
 	if err := s.taskStore.Update(ctx, task); err != nil {
-		return nil, fmt.Errorf("failed to update scan task: %w", err)
+		return nil, errors.WithI18nKey(fmt.Errorf("failed to update scan task: %w", err), i18n.ScanTaskRetryError)
 	}
 
 	return s.taskStore.GetByID(ctx, taskID)
@@ -239,6 +275,11 @@ func (s *ScanTaskService) GetTaskInfo(ctx context.Context, taskID uint) (*scanMo
 // ListTaskInfos 查询扫描任务详情列表
 func (s *ScanTaskService) ListTaskInfos(ctx context.Context, filter scanModel.ScanTaskInfoReqFilter) (*database.PageResult[*scanModel.ScanTaskInfo], error) {
 	return s.taskStore.ListTaskInfos(ctx, filter)
+}
+
+// ListTaskIssues 查询指定任务关联的 issue 列表
+func (s *ScanTaskService) ListTaskIssues(ctx context.Context, taskID uint, filter scanModel.ScanTaskIssueReqFilter) (*database.PageResult[*scanModel.ScanIssueInfo], error) {
+	return s.issueStore.ListByTaskID(ctx, taskID, filter)
 }
 
 // CountTaskInfos 统计扫描任务数量

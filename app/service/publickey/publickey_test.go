@@ -39,22 +39,6 @@ func (f *fakeUserStore) FindByEmail(ctx context.Context, email string) (*princip
 	return nil, nil
 }
 
-func (f *fakeUserStore) CompareHashAndPassword(ctx context.Context, hashedPassword, password []byte) error {
-	return nil
-}
-
-func (f *fakeUserStore) IssueUserPAT(ctx context.Context, user *principal.User, identifier string, lifetime *time.Duration) (*auth.TokenResponse, error) {
-	return nil, nil
-}
-
-func (f *fakeUserStore) IssueAppPAT(ctx context.Context, user *principal.User, identifier string, lifetime *time.Duration) (*auth.TokenResponse, error) {
-	return nil, nil
-}
-
-func (f *fakeUserStore) IssueAdminPAT() (string, error) {
-	return "", nil
-}
-
 func newSession(account string) *auth.Session {
 	return &auth.Session{User: &principal.User{Account: account}}
 }
@@ -317,9 +301,9 @@ func TestServiceGetByID(t *testing.T) {
 				created := datetime.Local(time.Date(2026, 3, 1, 10, 0, 0, 0, time.UTC))
 				verified := datetime.Local(time.Date(2026, 3, 1, 10, 1, 1, 0, time.UTC))
 				m.EXPECT().GetByID(gomock.Any(), "tester", int64(1001)).Return(&publickeyModel.PublicKey{
-					Identifier:  "key-1",
-					Type:        "ssh-ed25519",
-					CreatedDate: &created,
+					Identifier:   "key-1",
+					Type:         "ssh-ed25519",
+					CreatedDate:  &created,
 					VerifiedDate: &verified,
 				}, nil)
 			},

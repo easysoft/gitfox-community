@@ -10,6 +10,7 @@ import (
 	pullreqevents "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/events/pullreq"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/githook"
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/utils"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
 	gitenum "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/enum"
@@ -66,7 +67,7 @@ func (c *Controller) PostReceive(
 	}
 
 	// handle branch updates related to PRs - best effort
-	// c.handlePRMessaging(ctx, repo, in.PrincipalAccount, in.PostReceiveInput, &out)
+	c.handlePRMessaging(ctx, repo, in.PrincipalAccount, in.PostReceiveInput, &out)
 
 	// err = c.postReceiveExtender.Extend(ctx, rgit, session, repo, in, &out)
 	// if err != nil {
@@ -173,244 +174,206 @@ func (c *Controller) reportTagEvent(
 ) {
 	switch {
 	case tagUpdate.Old.IsNil():
-		// c.gitReporter.TagCreated(ctx, &events.TagCreatedPayload{
-		// 	RepoID:      repo.ID,
-		// 	PrincipalID: principalID,
-		// 	Ref:         tagUpdate.Ref,
-		// 	SHA:         tagUpdate.New.String(),
-		// })
+		c.gitReporter.TagCreated(ctx, &gitevents.TagCreatedPayload{
+			RepoID:  int64(repo.ID),
+			Account: principalAccount,
+			Ref:     tagUpdate.Ref,
+			SHA:     tagUpdate.New.String(),
+		})
 	case tagUpdate.New.IsNil():
-		// c.gitReporter.TagDeleted(ctx, &events.TagDeletedPayload{
-		// 	RepoID:      repo.ID,
-		// 	PrincipalID: principalID,
-		// 	Ref:         tagUpdate.Ref,
-		// 	SHA:         tagUpdate.Old.String(),
-		// })
+		c.gitReporter.TagDeleted(ctx, &gitevents.TagDeletedPayload{
+			RepoID:  int64(repo.ID),
+			Account: principalAccount,
+			Ref:     tagUpdate.Ref,
+			SHA:     tagUpdate.Old.String(),
+		})
 	default:
-		// c.gitReporter.TagUpdated(ctx, &events.TagUpdatedPayload{
-		// 	RepoID:      repo.ID,
-		// 	PrincipalID: principalID,
-		// 	Ref:         tagUpdate.Ref,
-		// 	OldSHA:      tagUpdate.Old.String(),
-		// 	NewSHA:      tagUpdate.New.String(),
-		// 	// tags can only be force updated!
-		// 	Forced: true,
-		// })
+		c.gitReporter.TagUpdated(ctx, &gitevents.TagUpdatedPayload{
+			RepoID:  int64(repo.ID),
+			Account: principalAccount,
+			Ref:     tagUpdate.Ref,
+			OldSHA:  tagUpdate.Old.String(),
+			NewSHA:  tagUpdate.New.String(),
+			Forced:  true,
+		})
 	}
 }
 
 // handlePRMessaging checks any single branch push for pr information and returns an according response if needed.
-// TODO: If it is a new branch, or an update on a branch without any PR, it also sends out an SSE for pr creation.
-// func (c *Controller) handlePRMessaging(
-// 	ctx context.Context,
-// 	repo *repoModel.Repo,
-// 	principalAccount string,
-// 	in hook.PostReceiveInput,
-// 	out *hook.Output,
-// ) {
-// 	// skip anything that was a batch push / isn't branch related / isn't updating/creating a branch.
-// 	if len(in.RefUpdates) != 1 || in.RefUpdates[0].New.IsNil() {
-// 		return
-// 	}
+func (c *Controller) handlePRMessaging(
+	ctx context.Context,
+	repo *repoModel.Repo,
+	principalAccount string,
+	in hook.PostReceiveInput,
+	out *hook.Output,
+) {
+	if len(in.RefUpdates) != 1 || in.RefUpdates[0].New.IsNil() {
+		return
+	}
 
-// 	// for now we only care about first branch that was pushed.
-// 	branchName := in.RefUpdates[0].Ref[len(gitReferenceNamePrefixBranch):]
-// 	branchPre := ""
-// 	if strings.HasPrefix(in.RefUpdates[0].Ref, gitReferenceNameAgitPullReq) {
-// 		branchName = in.RefUpdates[0].Ref[len(gitReferenceNameAgitPullReq):]
-// 		branchPre = c.getZtFlowBranchNamePre(ctx, repo, in)
-// 	}
+	branchName := in.RefUpdates[0].Ref[len(gitReferenceNamePrefixBranch):]
+	branchPre := ""
+	if strings.HasPrefix(in.RefUpdates[0].Ref, gitReferenceNameAgitPullReq) {
+		branchName = in.RefUpdates[0].Ref[len(gitReferenceNameAgitPullReq):]
+		branchPre = c.getZtFlowBranchNamePre(ctx, repo, in)
+	}
+	c.suggestPullRequest(ctx, repo, branchName, branchPre, principalAccount, out)
+}
 
-// c.suggestPullRequest(ctx, repo, branchName, branchPre, principalAccount, out)
+func (c *Controller) suggestPullRequest(
+	ctx context.Context,
+	repo *repoModel.Repo,
+	branchName, branchPre string,
+	principalAccount string,
+	out *hook.Output,
+) {
+	log := logger.GetLogger(ctx)
+	if branchName == repo.DefaultBranch && len(branchPre) == 0 {
+		return
+	}
 
-// TODO: store latest pushed branch for user in cache and send out SSE
-// }
+	if len(branchPre) > 0 {
+		branchName = fmt.Sprintf("%s%s", branchPre, branchName)
+	}
 
-// func (c *Controller) suggestPullRequest(
-// 	ctx context.Context,
-// 	repo *repoModel.Repo,
-// 	branchName, branchPre string,
-// 	principalAccount string,
-// 	out *hook.Output,
-// ) {
-// if branchName == repo.DefaultBranch && len(branchPre) == 0 {
-// 	// Don't suggest a pull request if this is a push to the default branch.
-// 	return
-// }
+	prs, err := c.pullreqStore.List(ctx, &repoModel.PullRequestFilter{
+		PageSize:     2,
+		SourceRepoID: repo.ID,
+		SourceBranch: strings.TrimPrefix(branchName, "refs/heads/"),
+		Status:       repoModel.PullRequestStatusOpen,
+	})
+	if err != nil {
+		log.Warnf("failed to find pullrequests for branch '%s' originating from repo '%s'", branchName, repo.Path)
+		return
+	}
 
-// if len(branchPre) > 0 {
-// 	branchName = fmt.Sprintf("%s%s", branchPre, branchName)
-// }
+	if len(prs) > 0 {
+		log.Debugf("found PRs for branch %s", branchName)
+		msgs := make([]string, 2*len(prs)+1)
+		msgs[0] = fmt.Sprintf("Branch %q has open PRs:", branchName)
+		if strings.Contains(branchName, "/ztflow-") {
+			bn := strings.TrimPrefix(branchName, branchPre)
+			bn = strings.Split(bn, "#")[0]
+			msgs[0] = fmt.Sprintf("Branch %q has open review PRs:", bn)
+		}
+		for i, pr := range prs {
+			msgs[2*i+1] = fmt.Sprintf("  (#%d) %s", pr.ID, pr.Title)
+			msgs[2*i+2] = "    " + c.urlProvider.GenerateUIPRURL(ctx, repo.Path, int64(pr.ID))
+		}
+		out.Messages = append(out.Messages, msgs...)
+		return
+	}
 
-// do we have a PR related to it?
-// prs, err := c.pullreqStore.List(ctx, &types.PullReqFilter{
-// 	Page: 1,
-// 	// without forks we expect at most one PR (keep 2 to not break when forks are introduced)
-// 	Size:         2,
-// 	SourceRepoID: repo.ID,
-// 	SourceBranch: strings.TrimPrefix(branchName, "refs/heads/"),
-// 	// we only care about open PRs - merged/closed will lead to "create new PR" message
-// 	States: []enum.PullReqState{enum.PullReqStateOpen},
-// 	Order:  enum.OrderAsc,
-// 	Sort:   enum.PullReqSortCreated,
-// 	// don't care about the PR description, omit it from the response
-// 	ExcludeDescription: true,
-// })
-// if err != nil {
-// 	log.Ctx(ctx).Warn().Err(err).Msgf(
-// 		"failed to find pullrequests for branch '%s' originating from repo '%s'",
-// 		branchName,
-// 		repo.Path,
-// 	)
-// 	return
-// }
+	log.Debugf("create new %s PR", branchName)
+	if strings.Contains(branchName, "/ztflow-") {
+		var sourceSHA string
+		targetBranch := strings.TrimPrefix(branchName, branchPre)
+		sourceBranch := strings.TrimPrefix(branchName, "refs/heads/")
+		log.Debugf("branchName: %s, sourceBranch: %s, targetBranch: %s", branchName, sourceBranch, targetBranch)
+		targetBranch = strings.Split(targetBranch, "#")[0]
+		if sourceSHA, err = c.verifyBranchExistence(ctx, repo, sourceBranch); err != nil {
+			log.Errorf("failed to verify source branch %s existence: %v", sourceBranch, err)
+			out.Error = strPtr("failed to create review pull request")
+			return
+		}
+		if _, err = c.verifyBranchExistence(ctx, repo, targetBranch); err != nil {
+			log.Errorf("failed to verify target branch %s existence: %v", targetBranch, err)
+			out.Error = strPtr("failed to create review pull request")
+			return
+		}
+		if err = c.checkIfAlreadyExists(ctx, repo.ID, repo.ID, targetBranch, sourceBranch); err != nil {
+			log.Errorf("check If Already Exists %s -> %s: %v", sourceBranch, targetBranch, err)
+			out.Error = strPtr("failed to create review pull request")
+			return
+		}
+		mergeBaseResult, err := c.git.MergeBase(ctx, git.MergeBaseParams{
+			ReadParams: git.ReadParams{RepoUID: repo.GitUID},
+			Ref1:       sourceBranch,
+			Ref2:       targetBranch,
+		})
+		if err != nil {
+			log.Errorf("failed to find merge base %s -> %s: %v", sourceBranch, targetBranch, err)
+			out.Error = strPtr("failed to create review pull request")
+			return
+		}
+		mergeBaseSHA := mergeBaseResult.MergeBaseSHA
+		if mergeBaseSHA.String() == sourceSHA {
+			log.Errorf("The source branch %s doesn't contain any new commits", sourceBranch)
+			out.Error = strPtr("The source branch doesn't contain any new commits")
+			return
+		}
+		// 查询分支权限获取 reviewFlowID
+		entry, err := c.tokenStore.GetDevopsToken(ctx)
+		if err != nil {
+			log.Errorf("failed to get devops token: %v", err)
+			out.Error = strPtr("failed to create review pull request")
+			return
+		}
+		rule, err := utils.GetBranchPermission(ctx, c.devopsConfig.URL, int64(repo.ID), targetBranch, entry.Key)
+		if err != nil {
+			log.Errorf("failed to get branch rule for %s: %v", targetBranch, err)
+			out.Error = strPtr("failed to create review pull request")
+			return
+		}
+		pr := &repoModel.PullRequest{
+			CreatedBy:         principalAccount,
+			EditedBy:          principalAccount,
+			RepoID:            repo.ID,
+			SourceRepoID:      repo.ID,
+			SourceBranch:      sourceBranch,
+			TargetRepoID:      repo.ID,
+			TargetBranch:      targetBranch,
+			Status:            repoModel.PullRequestStatusOpen,
+			MergeCheckStatus:  repoModel.MergeCheckStatusUnchecked,
+			RebaseCheckStatus: repoModel.MergeCheckStatusUnchecked,
+			Title:             fmt.Sprintf("发起 %q 强制评审", targetBranch),
+			Desc:              "这是强制代码评审请求，请及时指定相关评审者",
+			SourceSHA:         sourceSHA,
+			MergeBaseSHA:      mergeBaseSHA.String(),
+			Flow:              1, // PullRequestFlowZentao
+			ReviewFlowID:      uint(rule.ReviewFlowID),
+		}
+		if err := c.pullreqStore.Create(ctx, pr); err != nil {
+			out.Error = strPtr("failed to create a new pull request")
+			return
+		}
+		c.prReporter.Created(ctx, &pullreqevents.CreatedPayload{
+			Base:         eventBase(pr, principalAccount),
+			SourceBranch: sourceBranch,
+			TargetBranch: targetBranch,
+			SourceSHA:    sourceSHA,
+		})
+		out.Messages = append(out.Messages,
+			fmt.Sprintf("review a pull request for %q by visiting:", targetBranch),
+			"  "+c.urlProvider.GenerateUIPRURL(ctx, repo.Path, int64(pr.ID)),
+		)
+		return
+	}
 
-// for already existing PRs, print them to users terminal for easier access.
-// if len(prs) > 0 {
-// 	log.Debug().Int("pr_count", len(prs)).Msgf("found PRs for branch %s", branchName)
-// 	msgs := make([]string, 2*len(prs)+1)
-// 	msgs[0] = fmt.Sprintf("Branch %q has open PRs:", branchName)
-// 	if strings.Contains(branchName, "/ztflow-") {
-// 		bn := strings.TrimPrefix(branchName, branchPre)
-// 		bn = strings.Split(bn, "#")[0]
-// 		msgs[0] = fmt.Sprintf("Branch %q has open review PRs:", bn)
-// 	}
-// 	for i, pr := range prs {
-// 		msgs[2*i+1] = fmt.Sprintf("  (#%d) %s", pr.Number, pr.Title)
-// 		msgs[2*i+2] = "    " + c.urlProvider.GenerateUIPRURL(ctx, repo.Path, pr.Number)
-// 	}
-// 	out.Messages = append(out.Messages, msgs...)
-// 	return
-// }
-// log := logger.GetLogger(ctx)
-// log.Debugf("create new %s PR", branchName)
-// this is a new PR!
-// if strings.Contains(branchName, "/ztflow-") {
-// 	// prCount, _ := c.pullreqStore.Count(ctx, &types.PullReqFilter{
-// 	// 	SourceRepoID: repo.ID,
-// 	// })
-// 	repo, err = c.repoStore.UpdateOptLock(ctx, repo, func(repo *repoModel.Repo) error {
-// 		repo.PullReqSeq++
-// 		return nil
-// 	})
-// 	if err != nil {
-// 		log.Ctx(ctx).Error().Err(err).Msgf("failed to increment %v pull request sequence", repo.ID)
-// 		out.Error = ptr.String("failed to create review pull request")
-// 		return
-// 	}
-// 	number := repo.PullReqSeq
-// 	now := time.Now().UnixMilli()
-// 	var sourceSHA string
-// 	targetBranch := strings.TrimPrefix(branchName, branchPre)
-// 	sourceBranch := strings.TrimPrefix(branchName, "refs/heads/")
-// 	log.Ctx(ctx).Debug().Msgf("branchName: %s, sourceBranch: %s, targetBranch: %s", branchName, sourceBranch, targetBranch)
-// 	targetBranch = strings.Split(targetBranch, "#")[0]
-// 	if sourceSHA, err = c.verifyBranchExistence(ctx, repo, sourceBranch); err != nil {
-// 		log.Ctx(ctx).Error().Err(err).Msgf("failed to verify source branch %s existence", sourceBranch)
-// 		out.Error = ptr.String("failed to create review pull request")
-// 		return
-// 	}
-// 	if _, err = c.verifyBranchExistence(ctx, repo, targetBranch); err != nil {
-// 		log.Ctx(ctx).Error().Err(err).Msgf("failed to verify traget branch %s existence", targetBranch)
-// 		out.Error = ptr.String("failed to create review pull request")
-// 		return
-// 	}
-// 	if err = c.checkIfAlreadyExists(ctx, repo.ID, repo.ID, targetBranch, sourceBranch); err != nil {
-// 		log.Ctx(ctx).Error().Err(err).Msgf("check If Already Exists %s -> %s existence", sourceBranch, targetBranch)
-// 		out.Error = ptr.String("failed to create review pull request")
-// 		return
-// 	}
-// 	mergeBaseResult, err := c.git.MergeBase(ctx, git.MergeBaseParams{
-// 		ReadParams: git.ReadParams{RepoUID: repo.GitUID},
-// 		Ref1:       sourceBranch,
-// 		Ref2:       targetBranch,
-// 	})
-// 	if err != nil {
-// 		log.Ctx(ctx).Error().Err(err).Msgf("failed to find merge base %s -> %s err: %v", sourceBranch, targetBranch, err)
-// 		out.Error = ptr.String("failed to create review pull request")
-// 		return
-// 	}
-// 	mergeBaseSHA := mergeBaseResult.MergeBaseSHA
-// 	if mergeBaseSHA.String() == sourceSHA {
-// 		log.Ctx(ctx).Error().Msgf("The source branch %s doesn't contain any new commits", sourceBranch)
-// 		out.Error = ptr.String("The source branch doesn't contain any new commits")
-// 		return
-// 	}
-// 	createdBy := bootstrap.NewSystemServiceSession().Principal.ID
-// 	if principalID > 0 {
-// 		createdBy = principalID
-// 	}
-// 	pr := &types.PullReq{
-// 		CreatedBy:        createdBy,
-// 		Created:          now,
-// 		Updated:          now,
-// 		Edited:           now,
-// 		SourceRepoID:     repo.ID,
-// 		SourceBranch:     sourceBranch,
-// 		TargetRepoID:     repo.ID,
-// 		TargetBranch:     targetBranch,
-// 		State:            enum.PullReqStateOpen,
-// 		MergeCheckStatus: enum.MergeCheckStatusUnchecked,
-// 		Title:            fmt.Sprintf("发起 %q 强制评审", targetBranch),
-// 		Description:      "这是强制代码评审请求，请及时指定相关评审者",
-// 		Number:           number,
-// 		SourceSHA:        sourceSHA,
-// 		// MergeSHA is null 手动创建not null
-// 		MergeBaseSHA: mergeBaseSHA.String(),
-// 		Flow:         enum.PullRequestFlowZentao,
-// 	}
-// 	if err := c.pullreqStore.Create(ctx, pr); err != nil {
-// 		out.Error = ptr.String("failed to create a new pull request")
-// 		return
-// 	}
-// 	prBase := eventBase(pr, &bootstrap.NewSystemServiceSession().Principal)
-// 	c.prReporter.Created(ctx, &pullreqevents.CreatedPayload{
-// 		Base:         prBase,
-// 		SourceBranch: sourceBranch,
-// 		TargetBranch: targetBranch,
-// 		SourceSHA:    sourceSHA,
-// 	})
-// 	out.Messages = append(out.Messages,
-// 		fmt.Sprintf("review a pull request for %q by visiting:", targetBranch),
-// 		"  "+c.urlProvider.GenerateUIPRURL(ctx, repo.Path, number),
-// 	)
-// 	c.notifyCodeOwners(ctx, bootstrap.NewSystemServiceSession(), repo, pr)
-// 	return
-// }
-
-// out.Messages = append(out.Messages,
-// 	fmt.Sprintf("Create a pull request for %q by visiting:", branchName),
-// 	"  "+c.urlProvider.GenerateUICompareURL(ctx, repo.Identifier, repo.DefaultBranch, branchName),
-// )
-// }
+	out.Messages = append(out.Messages,
+		fmt.Sprintf("Create a pull request for %q by visiting:", branchName),
+		"  "+c.urlProvider.GenerateUICompareURL(ctx, repo.Path, repo.DefaultBranch, branchName),
+	)
+}
 
 func (c *Controller) checkIfAlreadyExists(ctx context.Context,
-	targetRepoID, sourceRepoID int64, targetBranch, sourceBranch string,
+	targetRepoID, sourceRepoID uint, targetBranch, sourceBranch string,
 ) error {
-	// sourceBranch = strings.TrimPrefix(sourceBranch, "refs/heads/")
-	// existing, err := c.pullreqStore.List(ctx, &types.PullReqFilter{
-	// 	SourceRepoID: sourceRepoID,
-	// 	SourceBranch: sourceBranch,
-	// 	TargetRepoID: targetRepoID,
-	// 	TargetBranch: targetBranch,
-	// 	States:       []enum.PullReqState{enum.PullReqStateOpen},
-	// 	Size:         1,
-	// 	Sort:         enum.PullReqSortNumber,
-	// 	Order:        enum.OrderAsc,
-	// })
-	// if err != nil {
-	// 	return fmt.Errorf("failed to get existing pull requests: %w", err)
-	// }
-	// if len(existing) > 0 {
-	// 	return usererror.ConflictWithPayload(
-	// 		"a pull request for this target and source branch already exists",
-	// 		map[string]any{
-	// 			"type":   "pr already exists",
-	// 			"number": existing[0].Number,
-	// 			"title":  existing[0].Title,
-	// 		},
-	// 	)
-	// }
+	sourceBranch = strings.TrimPrefix(sourceBranch, "refs/heads/")
+	existing, err := c.pullreqStore.List(ctx, &repoModel.PullRequestFilter{
+		SourceRepoID: sourceRepoID,
+		SourceBranch: sourceBranch,
+		TargetRepoID: targetRepoID,
+		TargetBranch: targetBranch,
+		Status:       repoModel.PullRequestStatusOpen,
+		PageSize:     1,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to get existing pull requests: %w", err)
+	}
+	if len(existing) > 0 {
+		return fmt.Errorf("a pull request for this target and source branch already exists")
+	}
 
 	return nil
 }
@@ -565,4 +528,8 @@ func (c *Controller) ReportPRCreated(ctx context.Context, pr *repoModel.PullRequ
 		TargetBranch: pr.TargetBranch,
 		SourceSHA:    pr.SourceSHA,
 	})
+}
+
+func strPtr(s string) *string {
+	return &s
 }

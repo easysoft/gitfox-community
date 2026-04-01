@@ -3,6 +3,8 @@ package stage
 import (
 	"context"
 	"encoding/json"
+	"math"
+	"time"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	stageModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/stage"
@@ -69,6 +71,7 @@ func (s *Store) Create(ctx context.Context, stage *stageModel.Stage) error {
 // Update updates a stage
 func (s *Store) Update(ctx context.Context, stage *stageModel.Stage) error {
 	db := dbtx.GetOrmAccessor(ctx, s.db)
+	populateDuration(stage)
 
 	var labelsJSON, dependsJSON string
 	if stage.Labels != nil {
@@ -328,4 +331,12 @@ func (s *Store) ListWithSteps(ctx context.Context, executionID uint) ([]*stageMo
 	}
 
 	return result, nil
+}
+
+func populateDuration(stage *stageModel.Stage) {
+	if stage == nil || stage.Started == nil || stage.Finished == nil {
+		return
+	}
+	duration := time.Time(*stage.Finished).Sub(time.Time(*stage.Started))
+	stage.Duration = uint(math.Ceil(duration.Seconds()))
 }

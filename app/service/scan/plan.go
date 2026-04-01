@@ -17,12 +17,13 @@ import (
 var _ IScanPlan = (*ScanPlanService)(nil)
 
 type ScanPlanService struct {
-	planStore     scanStore.IScanPlan
-	repoStore     repoStore.Interface
-	solutionStore scanStore.ISolution
-	ruleSetStore  scanStore.IRuleSet
-	ruleStore     scanStore.IRule
-	triggerStore  scanStore.IScanTrigger
+	planStore      scanStore.IScanPlan
+	repoStore      repoStore.Interface
+	solutionStore  scanStore.ISolution
+	ruleSetStore   scanStore.IRuleSet
+	ruleStore      scanStore.IRule
+	triggerStore   scanStore.IScanTrigger
+	conditionStore scanStore.IScanPlanCondition
 }
 
 func NewScanPlanService(
@@ -32,14 +33,16 @@ func NewScanPlanService(
 	ruleSetStore scanStore.IRuleSet,
 	ruleStore scanStore.IRule,
 	triggerStore scanStore.IScanTrigger,
+	conditionStore scanStore.IScanPlanCondition,
 ) *ScanPlanService {
 	return &ScanPlanService{
-		planStore:     planStore,
-		repoStore:     repoStore,
-		solutionStore: solutionStore,
-		ruleSetStore:  ruleSetStore,
-		ruleStore:     ruleStore,
-		triggerStore:  triggerStore,
+		planStore:      planStore,
+		repoStore:      repoStore,
+		solutionStore:  solutionStore,
+		ruleSetStore:   ruleSetStore,
+		ruleStore:      ruleStore,
+		triggerStore:   triggerStore,
+		conditionStore: conditionStore,
 	}
 }
 
@@ -116,6 +119,34 @@ func (s *ScanPlanService) GetByID(ctx context.Context, repoID uint, id uint) (*s
 	plan.SolutionIDs = solutionIDs
 	plan.SolutionCount = len(solutionIDs)
 	plan.Solutions = solutions
+	triggerCount, err := s.triggerStore.Count(ctx, repoID, id)
+	if err != nil {
+		return nil, err
+	}
+	plan.TriggerCount = int(triggerCount)
+	triggerPage, err := s.triggerStore.List(ctx, repoID, id, scanModel.ScanTriggerReqFilter{Page: 1, PageSize: 1000})
+	if err != nil {
+		return nil, err
+	}
+	plan.Triggers = triggerPage.Data
+	plan.TriggerIDs = make([]int64, 0, len(triggerPage.Data))
+	for _, trigger := range triggerPage.Data {
+		if trigger != nil {
+			plan.TriggerIDs = append(plan.TriggerIDs, trigger.ID)
+		}
+	}
+	conditions, err := s.conditionStore.ListByPlan(ctx, repoID, id)
+	if err != nil {
+		return nil, err
+	}
+	plan.Conditions = conditions
+	plan.ConditionIDs = make([]int64, 0, len(conditions))
+	for _, condition := range conditions {
+		if condition != nil {
+			plan.ConditionIDs = append(plan.ConditionIDs, condition.ID)
+		}
+	}
+	plan.ConditionCount = len(conditions)
 	return plan, nil
 }
 

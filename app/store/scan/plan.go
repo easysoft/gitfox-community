@@ -32,7 +32,23 @@ func (s *ScanPlanStore) GetByID(ctx context.Context, id uint) (*scanModel.ScanPl
 	if err := s.db.WithContext(ctx).Where("id = ? AND deleted = ?", id, false).First(&plan).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
-	return mapScanPlanToModel(plan), nil
+	m := mapScanPlanToModel(plan)
+	repoMetaMap, err := loadRepoMetaByRepoIDs(ctx, s.db, []uint64{plan.RepoID})
+	if err == nil {
+		if meta, ok := repoMetaMap[plan.RepoID]; ok {
+			m.RepoName = meta.Name
+			m.SpaceID = meta.SpaceID
+			spaceNameMap, e := loadSpaceNamesBySpaceIDs(ctx, s.db, []uint64{uint64(meta.SpaceID)})
+			if e == nil {
+				m.SpaceName = spaceNameMap[uint64(meta.SpaceID)]
+			}
+		}
+	}
+	latestTaskMap, err := loadLatestTasksByPlanIDs(ctx, s.db, []uint64{plan.ID})
+	if err == nil {
+		applyLatestTaskToPlan(m, latestTaskMap[plan.ID])
+	}
+	return m, nil
 }
 
 func (s *ScanPlanStore) GetByRepoIDAndID(ctx context.Context, repoID uint, id uint) (*scanModel.ScanPlan, error) {
@@ -44,7 +60,23 @@ func (s *ScanPlanStore) GetByRepoIDAndID(ctx context.Context, repoID uint, id ui
 	if err := tx.First(&plan).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
-	return mapScanPlanToModel(plan), nil
+	m := mapScanPlanToModel(plan)
+	repoMetaMap, err := loadRepoMetaByRepoIDs(ctx, s.db, []uint64{plan.RepoID})
+	if err == nil {
+		if meta, ok := repoMetaMap[plan.RepoID]; ok {
+			m.RepoName = meta.Name
+			m.SpaceID = meta.SpaceID
+			spaceNameMap, e := loadSpaceNamesBySpaceIDs(ctx, s.db, []uint64{uint64(meta.SpaceID)})
+			if e == nil {
+				m.SpaceName = spaceNameMap[uint64(meta.SpaceID)]
+			}
+		}
+	}
+	latestTaskMap, err := loadLatestTasksByPlanIDs(ctx, s.db, []uint64{plan.ID})
+	if err == nil {
+		applyLatestTaskToPlan(m, latestTaskMap[plan.ID])
+	}
+	return m, nil
 }
 
 func (s *ScanPlanStore) FindByName(ctx context.Context, repoID uint, name string) (*scanModel.ScanPlan, error) {
@@ -105,6 +137,14 @@ func (s *ScanPlanStore) List(ctx context.Context, repoID uint, filter scanModel.
 						Where("deleted = ?", false).Group("planID"),
 				).Where("result = ?", filter.LatestTaskResult),
 		)
+	} else {
+		tx = tx.Where("ops_scan_plans.id IN (?)",
+			s.db.Model(&ScanTask{}).Select("planID").
+				Where("id IN (?)",
+					s.db.Model(&ScanTask{}).Select("MAX(id)").
+						Where("deleted = ?", false).Group("planID"),
+				),
+		)
 	}
 	if filter.LatestTaskStatus != "" {
 		latestTaskSubQ := s.db.Model(&ScanTask{}).Select("MAX(id)").
@@ -147,58 +187,61 @@ func (s *ScanPlanStore) List(ctx context.Context, repoID uint, filter scanModel.
 
 	// 批量查询关联的 solution IDs
 	planIDs := make([]uint64, 0, len(pageResult.Data))
+	repoIDs := make([]uint64, 0, len(pageResult.Data))
 	for _, p := range pageResult.Data {
 		planIDs = append(planIDs, p.ID)
+		repoIDs = append(repoIDs, p.RepoID)
 	}
 
-	solutionsMap := make(map[uint64][]int64)
-	if len(planIDs) > 0 {
-		var bindings []ScanPlanSolution
-		if err := s.db.WithContext(ctx).Where("planID IN ? AND deleted = ?", planIDs, false).Find(&bindings).Error; err == nil {
-			for _, b := range bindings {
-				solutionsMap[b.PlanID] = append(solutionsMap[b.PlanID], int64(b.SolutionID))
-			}
-		}
+	repoMetaMap, err := loadRepoMetaByRepoIDs(ctx, s.db, repoIDs)
+	if err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
+	}
+	spaceIDs := make([]uint64, 0, len(repoMetaMap))
+	for _, meta := range repoMetaMap {
+		spaceIDs = append(spaceIDs, uint64(meta.SpaceID))
+	}
+	spaceNameMap, err := loadSpaceNamesBySpaceIDs(ctx, s.db, spaceIDs)
+	if err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
 
-	// 批量查询每个计划的最新任务（关联 execution 获取真实状态）
-	type planTaskJoin struct {
-		ScanTask
-		ExecutionStatus constant.CIStatus `gorm:"column:executionStatus"`
+	solutionsMap, err := loadSolutionIDsByPlanIDs(ctx, s.db, planIDs)
+	if err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
-	latestTaskMap := make(map[uint64]*planTaskJoin)
-	if len(planIDs) > 0 {
-		subQuery := s.db.Model(&ScanTask{}).
-			Select("MAX(id) as id").
-			Where("planID IN ? AND deleted = ?", planIDs, false).
-			Group("planID")
-		var tasks []planTaskJoin
-		if err := s.db.WithContext(ctx).
-			Table("ops_scan_tasks").
-			Select("ops_scan_tasks.*, e.status as executionStatus").
-			Joins("INNER JOIN ops_pipeline_executions e ON ops_scan_tasks.executionID = e.id").
-			Where("ops_scan_tasks.id IN (?)", subQuery).
-			Find(&tasks).Error; err == nil {
-			for i := range tasks {
-				latestTaskMap[tasks[i].PlanID] = &tasks[i]
-			}
-		}
+
+	triggerIDsMap, err := loadTriggerIDsByPlanIDs(ctx, s.db, planIDs)
+	if err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
+	}
+
+	conditionIDsMap, err := loadPlanConditionsByPlanIDs(ctx, s.db, planIDs)
+	if err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
+	}
+
+	latestTaskMap, err := loadLatestTasksByPlanIDs(ctx, s.db, planIDs)
+	if err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
 
 	modelData := make([]*scanModel.ScanPlan, 0, len(pageResult.Data))
 	for _, item := range pageResult.Data {
 		m := mapScanPlanToModel(*item)
+		if meta, ok := repoMetaMap[item.RepoID]; ok {
+			m.RepoName = meta.Name
+			m.SpaceID = meta.SpaceID
+			m.SpaceName = spaceNameMap[uint64(meta.SpaceID)]
+		}
 		m.SolutionIDs = solutionsMap[item.ID]
 		m.SolutionCount = len(solutionsMap[item.ID])
+		m.TriggerIDs = triggerIDsMap[item.ID]
+		m.TriggerCount = len(triggerIDsMap[item.ID])
+		m.ConditionIDs = conditionIDsMap[item.ID]
+		m.ConditionCount = len(conditionIDsMap[item.ID])
 		if task, ok := latestTaskMap[item.ID]; ok {
-			taskID := int64(task.ID)
-			m.LatestTaskID = &taskID
-			if task.CreatedDate != nil {
-				m.LatestTaskCreated = task.CreatedDate
-			}
-			m.LatestTaskResult = task.Result
-			status := convertExecutionTaskStatus(task.ExecutionStatus)
-			m.LatestTaskStatus = &status
+			applyLatestTaskToPlan(m, task)
 		}
 		modelData = append(modelData, m)
 	}

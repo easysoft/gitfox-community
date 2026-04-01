@@ -8,6 +8,7 @@ import (
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 	scanModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/triggerer"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
 )
 
@@ -97,12 +98,21 @@ type IScanPlanCondition interface {
 // IScanTask 扫描任务 service 接口
 type IScanTask interface {
 	Create(ctx context.Context, in *ScanTaskInput) (*scanModel.ScanTask, error)
-	CreateBranchHook(ctx context.Context, repo *repoModel.Repo, branch string, principal *authModel.Session) (*triggerer.Hook, error)
-	Retry(ctx context.Context, session *authModel.Session, taskID uint) (*scanModel.ScanTask, error)
+	CreateBranchHook(ctx context.Context, repo *repoModel.Repo, branch string, sha string, principal *authModel.Session) (*triggerer.Hook, error)
+	Retry(ctx context.Context, session *authModel.Session, taskID uint, repo *repoModel.Repo) (*scanModel.ScanTask, error)
 	GetTaskInfo(ctx context.Context, taskID uint) (*scanModel.ScanTaskInfo, error)
 	ListTaskInfos(ctx context.Context, filter scanModel.ScanTaskInfoReqFilter) (*database.PageResult[*scanModel.ScanTaskInfo], error)
+	ListTaskIssues(ctx context.Context, taskID uint, filter scanModel.ScanTaskIssueReqFilter) (*database.PageResult[*scanModel.ScanIssueInfo], error)
 	CountTaskInfos(ctx context.Context, filter scanModel.ScanTaskInfoReqFilter) (int64, error)
 	Delete(ctx context.Context, id uint) error
 	SetupCron(ctx context.Context, trigger *scanModel.ScanTrigger) error
 	RecycleCron(ctx context.Context, trigger *scanModel.ScanTrigger) error
+	AnalyzeTaskUploadReport(ctx context.Context, taskID uint, method string, content []byte) (*scanModel.ScanIssueReport, error)
+	GetIssueInfo(ctx context.Context, issueID uint) (*scanModel.ScanIssueInfo, error)
+	ListIssueInfos(ctx context.Context, filter scanModel.ScanIssueReqFilter) (*database.PageResult[*scanModel.ScanIssueInfo], error)
+	ListIssueInfosByIDs(ctx context.Context, ids []int64) ([]*scanModel.ScanIssueInfo, error)
+	UpdateIssuesStatus(ctx context.Context, ids []int64, status constant.ScanIssueStatus) error
+	SetIssuesStatus(ctx context.Context, in scanModel.ScanIssueUpdateStatusReq) error
+	GetIssueFileTree(ctx context.Context, repoID, taskID int64) (*scanModel.TreeNode, error)
+	GetIssueRuleTree(ctx context.Context, repoID, taskID int64) (*scanModel.TreeNode, error)
 }

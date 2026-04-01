@@ -7,6 +7,7 @@ package compiler
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
@@ -356,6 +357,7 @@ func (c *CompilerImpl) Compile(ctx context.Context, args Args) (*engine.Spec, er
 				step_.Labels = stageLabels
 				step_.ExtraHosts = append(step_.ExtraHosts, c.ExtraHosts...)
 				step_.Privileged = c.isPrivileged(step_)
+				step_.ID = fmt.Sprintf("%s_%d", step_.ID, args.Build.ID)
 
 				// if src.When != nil {
 				// 	// 处理when.eval条件

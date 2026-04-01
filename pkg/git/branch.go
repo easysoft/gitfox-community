@@ -80,8 +80,9 @@ type ListBranchesParams struct {
 	ReadParams
 	IncludeCommit   bool
 	Query           string
-	Label           string
+	Labels          []string
 	IncludeArchived bool
+	ArchivedOnly    bool
 	Sort            BranchSortOption
 	Order           SortOrder
 	Page            int32

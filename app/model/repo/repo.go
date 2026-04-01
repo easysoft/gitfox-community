@@ -56,6 +56,9 @@ func (req *CreateRepoReq) Validate() error {
 	if req.DefaultBranch == "" {
 		req.DefaultBranch = "main"
 	}
+	if strings.HasPrefix(req.DefaultBranch, constant.BranchArchivedPrefix) {
+		return errors.Newf("default branch cannot start with %s", constant.BranchArchivedPrefix)
+	}
 	return nil
 }
 

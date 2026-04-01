@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS `ops_scan_triggers` (
 	`name` varchar(255) NOT NULL COMMENT '触发器名称',
 	`desc` text NULL DEFAULT NULL COMMENT '触发器描述',
 	`type` varchar(20) NOT NULL COMMENT '触发器类型（cron/manual/event）',
+	`scanType` varchar(20) NOT NULL COMMENT '扫描类型（full/incremental）',
 	`cron` varchar(255) NOT NULL DEFAULT '' COMMENT 'cron 表达式',
 	`cronBranch` varchar(255) NOT NULL DEFAULT '' COMMENT 'cron 扫描分支',
 	`keywords` text NULL COMMENT '关键字过滤条件',

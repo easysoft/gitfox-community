@@ -40,7 +40,6 @@ func NewExecutionPoller(
 			Kind: resource.Kind,
 			Type: resource.Type,
 			// TODO: Check if other parameters are needed.
-
 		},
 	}
 }

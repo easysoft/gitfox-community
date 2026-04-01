@@ -3,6 +3,7 @@ package runner
 import (
 	"context"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/resolver"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/pipeline"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/runner/extend"
@@ -17,8 +18,9 @@ type Runner interface {
 func NewExecutionRunner(
 	config *config.Config,
 	client runnerclient.Client,
+	resolver *resolver.Manager,
 	stageEnvProvider *extend.StageDynamicEnvProvider,
 	pipelineSvc pipeline.Interface,
 ) (Runner, error) {
-	return newDockerRunner(config, client, stageEnvProvider, &pipelineSvc)
+	return newDockerRunner(config, client, resolver, stageEnvProvider, &pipelineSvc)
 }

@@ -1,6 +1,6 @@
 package url
 
-//go:generate mockgen -source=$GOFILE -destination=mock/url_provider.go -package=mock
+//go:generate go run go.uber.org/mock/mockgen@v0.6.0 -source=$GOFILE -destination=mock/url_provider.go -package=mock
 import (
 	"context"
 	"fmt"

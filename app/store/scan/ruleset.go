@@ -29,11 +29,23 @@ func (s *RuleSetStore) Create(ctx context.Context, ruleSet *RuleSet) (*scanModel
 }
 
 func (s *RuleSetStore) GetByID(ctx context.Context, id uint) (*scanModel.RuleSet, error) {
-	var ruleSet RuleSet
-	if err := s.db.WithContext(ctx).Where("id = ?", id).First(&ruleSet).Error; err != nil {
+	type rulesetWithCount struct {
+		RuleSet
+		RulesCount int64 `gorm:"column:rules_count"`
+	}
+
+	var ruleSet rulesetWithCount
+	if err := s.db.WithContext(ctx).
+		Table("ops_scan_rulesets AS r").
+		Select("r.*, (SELECT COUNT(*) FROM ops_scan_ruleset_rules WHERE rulesetID = r.id AND deleted = ?) as rules_count", false).
+		Where("r.id = ?", id).
+		First(&ruleSet).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
-	return mapToModel(ruleSet), nil
+
+	m := mapToModel(ruleSet.RuleSet)
+	m.RulesCount = ruleSet.RulesCount
+	return m, nil
 }
 
 func (s *RuleSetStore) Update(ctx context.Context, ruleSet *RuleSet, id uint) (*scanModel.RuleSet, error) {
@@ -82,27 +94,35 @@ func (s *RuleSetStore) IsUsedBySolution(ctx context.Context, id uint) (bool, err
 
 // List 查询规则集列表（支持分页和过滤）
 func (s *RuleSetStore) List(ctx context.Context, filter scanModel.RuleSetReqFilter) (*database.PageResult[*scanModel.RuleSet], error) {
-	tx := s.db.WithContext(ctx).Model(&RuleSet{}).Where("deleted = ?", false)
+	type rulesetWithCount struct {
+		RuleSet
+		RulesCount int64 `gorm:"column:rules_count"`
+	}
+
+	tx := s.db.WithContext(ctx).
+		Table("ops_scan_rulesets AS r").
+		Select("r.*, (SELECT COUNT(*) FROM ops_scan_ruleset_rules WHERE rulesetID = r.id AND deleted = ?) as rules_count", false).
+		Where("r.deleted = ?", false)
 
 	// 过滤条件
 	if filter.Name != "" {
-		tx = tx.Where("name LIKE ?", "%"+filter.Name+"%")
+		tx = tx.Where("r.name LIKE ?", "%"+filter.Name+"%")
 	}
 	if filter.Lang != "" {
-		tx = tx.Where("lang = ?", strings.ToLower(filter.Lang))
+		tx = tx.Where("r.lang = ?", strings.ToLower(filter.Lang))
 	}
 	if filter.Tag != "" {
-		tx = tx.Where("tag = ?", filter.Tag)
+		tx = tx.Where("r.tag = ?", filter.Tag)
 	}
 	if filter.Type != "" {
-		tx = tx.Where("type = ?", filter.Type)
+		tx = tx.Where("r.type = ?", filter.Type)
 	}
 	if filter.Status != "" {
-		tx = tx.Where("status = ?", filter.Status)
+		tx = tx.Where("r.status = ?", filter.Status)
 	}
 
 	// 分页查询
-	var ruleSets []*RuleSet
+	var ruleSets []*rulesetWithCount
 	pageResult, err := database.Paginate(ctx, tx, database.PageParam{
 		Page:      filter.Page,
 		PageSize:  filter.PageSize,
@@ -117,7 +137,9 @@ func (s *RuleSetStore) List(ctx context.Context, filter scanModel.RuleSetReqFilt
 	// 转换为 model 层数据
 	modelData := make([]*scanModel.RuleSet, 0, len(pageResult.Data))
 	for _, item := range pageResult.Data {
-		modelData = append(modelData, mapToModel(*item))
+		m := mapToModel(item.RuleSet)
+		m.RulesCount = item.RulesCount
+		modelData = append(modelData, m)
 	}
 
 	return &database.PageResult[*scanModel.RuleSet]{

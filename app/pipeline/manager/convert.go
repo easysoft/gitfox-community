@@ -41,6 +41,8 @@ func ConvertToDroneBuild(execution *executionModel.Execution) *drone.Build {
 		Error:    execution.Error,
 		Ref:      execution.Ref,
 		Params:   execution.Params,
+		Before:   execution.Commit,
+		After:    execution.Commit,
 		Started:  toUnix(execution.Started),
 		Finished: toUnix(execution.Finished),
 		Created:  toUnix(execution.CreatedDate),

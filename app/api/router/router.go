@@ -67,6 +67,8 @@ func NewRouter(mode string, logger *logger.SugaredMateLogger, controller *Contro
 	basicAuthGroup := r.Group("")
 	basicAuthGroup.Use(middleware.Attempt(authn.Get(authn.AuthKindBasic)))
 	registerGitRoutes(basicAuthGroup, controller) // Git 相关路由
+	basicAuthGroup = basicAuthGroup.Group("/api/v2")
+	registerFitRoutes(basicAuthGroup, controller) // Fit 相关路由
 
 	// 注册 Git 钩子路由 内部使用无需鉴权
 	internalGroup := r.Group("/api/v2/internal")

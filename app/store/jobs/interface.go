@@ -7,7 +7,7 @@ import (
 	jobModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/jobs"
 )
 
-//go:generate mockgen -source=$GOFILE -destination=mock/scheduleJob_store.go -package=mock
+//go:generate go run go.uber.org/mock/mockgen@v0.6.0 -source=$GOFILE -destination=mock/scheduleJob_store.go -package=mock
 
 type Interface interface {
 	// GetByName fetches a job by its name.

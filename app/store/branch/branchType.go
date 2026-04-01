@@ -100,6 +100,23 @@ func (s *Store) GetBranchTypeByID(ctx context.Context, id uint) (*branchModel.Br
 	return mapBranchTypeToModel(branchType), nil
 }
 
+// GetBranchTypesByIDs 根据 ID 列表批量获取分支类型
+func (s *Store) GetBranchTypesByIDs(ctx context.Context, repoID uint, ids []uint) ([]branchModel.BranchType, error) {
+	var branchTypes []BranchType
+	err := s.db.WithContext(ctx).
+		Where("id IN ? AND repo = ? AND deleted = 0", ids, repoID).
+		Find(&branchTypes).Error
+	if err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
+	}
+
+	result := make([]branchModel.BranchType, len(branchTypes))
+	for i, bt := range branchTypes {
+		result[i] = *mapBranchTypeToModel(bt)
+	}
+	return result, nil
+}
+
 // DeleteBranchType 删除分支类型
 func (s *Store) DeleteBranchType(ctx context.Context, id uint) error {
 	if err := s.db.WithContext(ctx).Model(&BranchType{}).Delete("id = ?", id).Error; err != nil {
@@ -111,7 +128,7 @@ func (s *Store) DeleteBranchType(ctx context.Context, id uint) error {
 // ListBranchTypes 分页查询分支类型列表
 func (s *Store) ListBranchTypes(ctx context.Context, repoID uint, filter branchModel.ReqFilterBranchType) (*database.PageResult[branchModel.BranchType], error) {
 	query := s.db.WithContext(ctx).Model(&BranchType{}).
-		Where("repoID = ? AND deleted = 0", repoID)
+		Where("repo = ? AND deleted = 0", repoID)
 
 	// 如果有查询条件,添加模糊查询
 	if filter.Name != "" {
@@ -191,7 +208,7 @@ func (s *Store) CheckBranchTypePrefix(ctx context.Context, tx *gorm.DB, repo uin
 func mapBranchTypeToModel(data BranchType) *branchModel.BranchType {
 	return &branchModel.BranchType{
 		ID:          data.ID,
-		RepoID:      data.Repo,
+		Repo:        data.Repo,
 		Name:        data.Name,
 		Key:         data.Key,
 		Prefixes:    str.SplitEx(data.Prefixes, ",", true),

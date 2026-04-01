@@ -13,6 +13,7 @@ type ScanPlanTrigger struct {
 	Name        string          `gorm:"column:name"`
 	Desc        string          `gorm:"column:desc"`
 	Type        string          `gorm:"column:type"`
+	ScanType    string          `gorm:"column:scanType"`
 	Cron        string          `gorm:"column:cron"`
 	CronBranch  string          `gorm:"column:cronBranch"`
 	Keywords    string          `gorm:"column:keywords"`

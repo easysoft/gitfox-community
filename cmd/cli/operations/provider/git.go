@@ -12,6 +12,7 @@ import (
 	repoSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
 	settingsSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/settings"
 	spaceSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/space"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/pullrequest"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
 	settingsStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/settings"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/token"
@@ -109,6 +110,7 @@ func NewGitClientFactory() hook.ClientFactory {
 func NewGitHookController(
 	principalStore principal.Interface,
 	repoStore repo.Interface,
+	pullreqStore pullrequest.Interface,
 	tokenStore token.Interface,
 	git gitPkg.Interface,
 	urlProvider url.Provider,
@@ -120,6 +122,7 @@ func NewGitHookController(
 	ctrl := githook.NewController(
 		principalStore,
 		repoStore,
+		pullreqStore,
 		tokenStore,
 		git,
 		urlProvider,

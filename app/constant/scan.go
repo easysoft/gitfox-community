@@ -4,7 +4,6 @@ import (
 	"strings"
 )
 
-
 type ScanLangID int
 
 const (
@@ -128,7 +127,6 @@ func ParseLang(v string) ScanLangName {
 	}
 }
 
-
 // ScanRulePriority 规则优先级
 type ScanRulePriority string
 
@@ -162,7 +160,6 @@ func (s ScanRulePriority) IsValid() bool {
 func GetAllScanRulePriorities() ([]ScanRulePriority, ScanRulePriority) {
 	return scanRulePriorities, scanRulePriorityNone
 }
-
 
 // ScanRuleSeverity 规则严重性
 type ScanRuleSeverity string
@@ -435,7 +432,53 @@ var scanTaskResults = sortEnum([]ScanTaskResult{
 	ScanTaskResultNull,
 })
 
+// ScanMethod 扫描方法
+type ScanMethod string
 
+const (
+	ScanMethodCheck ScanMethod = "check"
+	ScanMethodSmell ScanMethod = "smell"
+)
+
+var scanMethods = sortEnum([]ScanMethod{
+	ScanMethodCheck,
+	ScanMethodSmell,
+})
+
+func (ScanMethod) Enum() []interface{}              { return toInterfaceSlice(scanMethods) }
+func (s ScanMethod) Sanitize() (ScanMethod, bool)   { return Sanitize(s, GetAllScanMethods) }
+func GetAllScanMethods() ([]ScanMethod, ScanMethod) { return scanMethods, ScanMethodCheck }
+func (s ScanMethod) String() string                 { return string(s) }
+
+// ScanIssueStatus 扫描问题状态
+type ScanIssueStatus string
+
+const (
+	ScanIssueStatusWait    ScanIssueStatus = "wait"
+	ScanIssueStatusTodo    ScanIssueStatus = "todo"
+	ScanIssueStatusSolving ScanIssueStatus = "solving"
+	ScanIssueStatusSolved  ScanIssueStatus = "solved"
+	ScanIssueStatusClosed  ScanIssueStatus = "closed"
+	ScanIssueStatusIgnore  ScanIssueStatus = "ignore"
+)
+
+var scanIssueStatuses = sortEnum([]ScanIssueStatus{
+	ScanIssueStatusWait,
+	ScanIssueStatusTodo,
+	ScanIssueStatusSolving,
+	ScanIssueStatusSolved,
+	ScanIssueStatusClosed,
+	ScanIssueStatusIgnore,
+})
+
+func (ScanIssueStatus) Enum() []interface{} { return toInterfaceSlice(scanIssueStatuses) }
+func (s ScanIssueStatus) Sanitize() (ScanIssueStatus, bool) {
+	return Sanitize(s, GetAllScanIssueStatuses)
+}
+func GetAllScanIssueStatuses() ([]ScanIssueStatus, ScanIssueStatus) {
+	return scanIssueStatuses, ScanIssueStatusWait
+}
+func (s ScanIssueStatus) String() string { return string(s) }
 
 // Order 排序方向
 type Order string
@@ -503,4 +546,61 @@ func (s ScanRuleSort) IsValid() bool {
 		}
 	}
 	return false
+}
+
+type ScanIssueSort string
+
+func (ScanIssueSort) Enum() []interface{}                    { return toInterfaceSlice(scanIssueSorts) }
+func (s ScanIssueSort) Sanitize() (ScanIssueSort, bool)      { return Sanitize(s, GetAllScanIssueSorts) }
+func GetAllScanIssueSorts() ([]ScanIssueSort, ScanIssueSort) { return scanIssueSorts, ScanIssueSortId }
+
+const (
+	ScanIssueSortId       ScanIssueSort = "id"
+	ScanIssueSortPriority ScanIssueSort = "priority"
+	ScanIssueSortType     ScanIssueSort = "type"
+	ScanIssueSortStatus   ScanIssueSort = "status"
+	ScanIssueSortCreated  ScanIssueSort = "created"
+	ScanIssueSortLine     ScanIssueSort = "line"
+)
+
+var scanIssueSorts = sortEnum([]ScanIssueSort{
+	ScanIssueSortId,
+	ScanIssueSortPriority,
+	ScanIssueSortType,
+	ScanIssueSortStatus,
+	ScanIssueSortCreated,
+	ScanIssueSortLine,
+})
+
+// MaxIssueIDsPerRequest 单次请求允许的最大 issue ID 数量
+const MaxIssueIDsPerRequest = 200
+
+// ScanIssueResolution 扫描问题解决方案
+type ScanIssueResolution string
+
+const (
+	ScanIssueResolutionNull         ScanIssueResolution = ""
+	ScanIssueResolutionByDesign     ScanIssueResolution = "bydesign"
+	ScanIssueResolutionDuplicate    ScanIssueResolution = "duplicate"
+	ScanIssueResolutionExternal     ScanIssueResolution = "external"
+	ScanIssueResolutionFixed        ScanIssueResolution = "fixed"
+	ScanIssueResolutionNotReproduce ScanIssueResolution = "notrepro"
+	ScanIssueResolutionPostponed    ScanIssueResolution = "postponed"
+	ScanIssueResolutionWillNotFix   ScanIssueResolution = "willnotfix"
+	ScanIssueResolutionToStory      ScanIssueResolution = "tostory"
+)
+
+var scanIssueResolutions = sortEnum([]ScanIssueResolution{
+	ScanIssueResolutionByDesign, ScanIssueResolutionDuplicate, ScanIssueResolutionExternal,
+	ScanIssueResolutionFixed, ScanIssueResolutionNotReproduce, ScanIssueResolutionPostponed,
+	ScanIssueResolutionWillNotFix, ScanIssueResolutionToStory,
+})
+
+func (s ScanIssueResolution) String() string    { return string(s) }
+func (ScanIssueResolution) Enum() []interface{} { return toInterfaceSlice(scanIssueResolutions) }
+func (s ScanIssueResolution) Sanitize() (ScanIssueResolution, bool) {
+	return Sanitize(s, GetAllScanIssueResolutions)
+}
+func GetAllScanIssueResolutions() ([]ScanIssueResolution, ScanIssueResolution) {
+	return scanIssueResolutions, ScanIssueResolutionNull
 }

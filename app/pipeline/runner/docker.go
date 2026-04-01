@@ -16,6 +16,7 @@ import (
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/pipeline"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/resolver"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/runner/docker/engine"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/runner/docker/engine/compiler"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/runner/docker/engine/linter"
@@ -55,6 +56,7 @@ var Privileged = []string{
 func newDockerRunner(
 	config *config.Config,
 	client runnerclient.Client,
+	resolver *resolver.Manager,
 	stageEnvProvider *extend.StageDynamicEnvProvider,
 	pipelineSvc *pipeline.Interface,
 ) (*runtime2.Runner, error) {
@@ -77,7 +79,7 @@ func newDockerRunner(
 	remote := remote.New(client)
 	upload := uploader.New(client)
 	tracer := history.New(remote)
-	engine, err := engine.NewEnv(engine.Opts{})
+	engine, err := engine.NewEnv(engine.Opts{APIVersion: config.Docker.ApiVersion})
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +97,7 @@ func newDockerRunner(
 		Exec:     exec.Exec,
 	}
 
-	engine2, err := engine2.NewEnv(engine2.Opts{})
+	engine2, err := engine2.NewEnv(engine2.Opts{APIVersion: config.Docker.ApiVersion})
 	if err != nil {
 		return nil, err
 	}
@@ -114,6 +116,7 @@ func newDockerRunner(
 
 	runner := &runtime2.Runner{
 		Machine:      config.InstanceID,
+		Resolver:     resolver.GetLookupFn(),
 		Client:       client,
 		Reporter:     tracer,
 		Compiler:     compiler2,

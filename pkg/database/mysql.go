@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	"gorm.io/driver/mysql"
@@ -21,6 +22,9 @@ type MysqlDB gorm.DB
 // 参考 https://github.com/go-sql-driver/mysql#loc
 // 参考 https://github.com/go-sql-driver/mysql#system-variables
 func NewMysqlDB(conf config.DatabaseConfig) (*MysqlDB, func() error, error) {
+	if !strings.Contains(conf.Datasource, "parseTime") {
+		conf.Datasource += "?parseTime=true&loc=Local"
+	}
 	db, err := gorm.Open(mysql.Open(conf.Datasource), &gorm.Config{
 		NamingStrategy: schema.NamingStrategy{
 			TablePrefix:   "ops_", // 表名前缀，"repo" 的表应为 "ops_repo"

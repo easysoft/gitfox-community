@@ -175,8 +175,12 @@ func (c *ScanController) ScanPlanRules(ctx *gin.Context) {
 		return
 	}
 	resp.OK(ctx, i18n.PlanQuerySuccess, gin.H{
-		"plan":  plan,
-		"rules": rules,
+		"id":       plan.ID,
+		"name":     plan.Name,
+		"repoID":   plan.RepoID,
+		"files":    plan.Files,
+		"scanType": plan.ScanType,
+		"rules":    rules,
 	})
 }
 

@@ -9,7 +9,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/resources"
 )
 
-//go:generate mockgen -source=$GOFILE -destination=mock/scan_store.go -package=mock
+//go:generate go run go.uber.org/mock/mockgen@v0.6.0 -source=$GOFILE -destination=mock/scan_store.go -package=mock
 
 type IRule interface {
 	ListByRuleSetID(ctx context.Context, ruleIDs []int64, filter scanModel.RuleReqFilter) (*database.PageResult[*scanModel.Rule], error)
@@ -107,6 +107,25 @@ type IScanPlanCondition interface {
 	ListByPlan(ctx context.Context, repoID, planID uint) ([]*scanModel.ScanCondition, error)
 	BatchCreateByPlan(ctx context.Context, conditions []*ScanPlanCondition) error
 	BatchDeleteByIDs(ctx context.Context, repoID, planID uint, ids []uint) error
+}
+
+// IScanIssue 扫描问题 store 接口
+type IScanIssue interface {
+	Create(ctx context.Context, issue *ScanIssue) error
+	BatchCreate(ctx context.Context, issues []*ScanIssue) error
+	Get(ctx context.Context, id uint) (*scanModel.ScanIssueInfo, error)
+	List(ctx context.Context, filter scanModel.ScanIssueReqFilter) (*database.PageResult[*scanModel.ScanIssueInfo], error)
+	ListByIDs(ctx context.Context, ids []int64) ([]*scanModel.ScanIssueInfo, error)
+	UpdateStatus(ctx context.Context, ids []int64, status constant.ScanIssueStatus) error
+	UpdateResolution(ctx context.Context, ids []int64, resolution *constant.ScanIssueResolution) error
+	ListKeysByTask(ctx context.Context, repoID int64, branch string, taskID uint, method constant.ScanMethod) ([]*scanModel.ScanIssueKey, error)
+	UpdateByTaskID(ctx context.Context, taskID uint, issueIDs []int64) error
+	DisappearedByTask(ctx context.Context, taskID uint, issueIDs []int64) error
+	CreateIssueBindByTaskID(ctx context.Context, taskID uint, issueKeys []string) error
+	ListByTaskForResult(ctx context.Context, taskID uint, planID int64) ([]*scanModel.Rule, error)
+	ListByTaskID(ctx context.Context, taskID uint, filter scanModel.ScanTaskIssueReqFilter) (*database.PageResult[*scanModel.ScanIssueInfo], error)
+	ListDistinctFilesByRepo(ctx context.Context, repoID int64, taskFilter *scanModel.IssueTaskFilter) ([]*scanModel.IssueFileRaw, error)
+	ListDistinctRulesByRepo(ctx context.Context, repoID int64, taskFilter *scanModel.IssueTaskFilter) ([]*scanModel.IssueRuleRaw, error)
 }
 
 // IScanTask 扫描任务 store 接口

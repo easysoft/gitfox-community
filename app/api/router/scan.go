@@ -43,6 +43,18 @@ func registerScanRoutes(r *gin.RouterGroup, controller *Controller) {
 		tasks.POST("", controller.Scan.ScanTaskCreate)
 		tasks.POST("/list", controller.Scan.ScanTaskList)
 		tasks.GET("/:id", controller.Scan.ScanTaskGet)
+		tasks.POST("/:id/report", controller.Scan.ScanTaskUploadReport)
+		tasks.POST("/:id/issues", controller.Scan.ScanTaskIssueList)
+		tasks.POST("/:id/retry", controller.Scan.ScanTaskRetry)
+
+		// 扫描问题相关路由
+		issues := rule.Group("/issues")
+		issues.GET("/:id", controller.Scan.ScanIssueGet)
+		issues.POST("/list", controller.Scan.ScanIssueList)
+		issues.POST("/batch", controller.Scan.ScanIssueListByIds)
+		issues.PUT("/status", controller.Scan.ScanIssueUpdateStatus)
+		issues.GET("/file-tree", controller.Scan.ScanIssueFileTree)
+		issues.GET("/rule-tree", controller.Scan.ScanIssueRuleTree)
 
 		// 扫描方案相关路由
 		solutions := rule.Group("/solutions")
@@ -71,7 +83,7 @@ func registerScanRoutes(r *gin.RouterGroup, controller *Controller) {
 			{
 				planWithID.GET("", controller.Scan.ScanPlanGet)
 				planWithID.GET("/rules", controller.Scan.ScanPlanListRules)
-				planWithID.GET("/plan-rules", controller.Scan.ScanPlanListRules)
+				planWithID.GET("/plan-rules", controller.Scan.ScanPlanRules)
 				planWithID.PATCH("", controller.Scan.ScanPlanUpdate)
 				planWithID.DELETE("", controller.Scan.ScanPlanDelete)
 				planWithID.POST("/bind", controller.Scan.ScanPlanBindSolution)

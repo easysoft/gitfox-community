@@ -8,5 +8,5 @@ type Session struct {
 	Principal *principal.Principal
 
 	// User is the end principal. default to Principal, override if SudoUser exist
-	User *principal.User
+	User *principal.User `json:"user"`
 }

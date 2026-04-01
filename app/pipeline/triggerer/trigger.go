@@ -38,6 +38,7 @@ type Hook struct {
 	Timestamp   int64                  `json:"timestamp"`
 	Action      constant.TriggerAction `json:"action"`
 	Ref         string                 `json:"ref"`
+	Commit      string                 `json:"commit"`
 	Cron        string                 `json:"cron"`
 	Sender      string                 `json:"sender"`
 	Params      map[string]string      `json:"params"`
@@ -100,9 +101,14 @@ func (t *triggerer) Trigger(
 		return nil, err
 	}
 
+	tigger := string(base.Action)
+	if tigger == "" {
+		tigger = "manual"
+	}
 	execution := &executionModel.Execution{
+		Commit:     base.Commit,
 		PipelineID: pipelineID,
-		Trigger:    string(base.Action), // 使用 action 取代原先的 event
+		Trigger:    tigger, // 使用 action 取代原先的 event
 		CreatedBy:  base.Trigger,
 		Parent:     uint(base.Parent),
 		Status:     constant.CIStatusPending,
@@ -179,7 +185,7 @@ func parseV1Stages(
 			return nil, err
 		}
 		// Convert pipelineModel.Yaml to v1yaml.Config via JSON
-		return convertToV1Config(yamlConfig)
+		return ConvertToV1Config(yamlConfig)
 	}
 
 	if err := specresolver.Resolve(config, lookupFunc); err != nil {
@@ -262,7 +268,7 @@ func parseV1Stages(
 					}
 				}
 
-				prevStage = temp.Name
+				prevStage = temp.Code
 				stages = append(stages, temp)
 			default:
 				return nil, fmt.Errorf("only CI and template stages are supported in v1 at the moment")
@@ -275,7 +281,7 @@ func parseV1Stages(
 }
 
 // convertToV1Config converts pipelineModel.Yaml to v1yaml.Config via JSON serialization.
-func convertToV1Config(src *pipelineModel.Yaml) (*v1yaml.Config, error) {
+func ConvertToV1Config(src *pipelineModel.Yaml) (*v1yaml.Config, error) {
 	if src == nil {
 		return nil, fmt.Errorf("source yaml config is nil")
 	}
