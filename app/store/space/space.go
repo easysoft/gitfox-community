@@ -24,7 +24,7 @@ func (s *SpaceStore) Create(ctx context.Context, req spaceModel.CreateSpaceReque
 		Name:       req.Name,
 		Auth:       req.Auth,
 		Permission: req.Permission,
-		Desc:       req.Desc,
+		Desc:       &req.Desc,
 		CreatedBy:  req.CreatedBy,
 		EditedBy:   req.CreatedBy,
 	}
@@ -57,9 +57,7 @@ func (s *SpaceStore) Update(ctx context.Context, id uint, req spaceModel.UpdateS
 		if req.Permission != "" {
 			out.Permission = req.Permission
 		}
-		if req.Desc != "" {
-			out.Desc = req.Desc
-		}
+		out.Desc = &req.Desc
 
 		// 3. 更新（BeforeUpdate钩子会自动填充EditedDate，无需手动处理）
 		if err := tx.Updates(&out).Error; err != nil {
@@ -194,12 +192,16 @@ func (r *SpaceStore) Restore(ctx context.Context, id uint) error {
 
 // mapToModel 将 Space 转换为 SpaceResponse
 func mapToModel(data Space) *spaceModel.SpaceResponse {
+	desc := ""
+	if data.Desc != nil {
+		desc = *data.Desc
+	}
 	return &spaceModel.SpaceResponse{
 		ID:          data.ID,
 		Name:        data.Name,
 		Auth:        data.Auth,
 		Permission:  data.Permission,
-		Desc:        data.Desc,
+		Desc:        desc,
 		CreatedBy:   data.CreatedBy,
 		CreatedDate: data.CreatedDate,
 		EditedBy:    data.EditedBy,
