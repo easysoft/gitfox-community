@@ -3,6 +3,8 @@ package hooks
 import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/githook"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/hook"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
+	clii18n "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n/cli"
 	"github.com/quicklyon/kingpin/v2"
 )
 
@@ -12,6 +14,6 @@ const (
 )
 
 func Register(app *kingpin.Application) {
-	subCmd := app.Command(ParamHooks, "manage git server hooks")
+	subCmd := app.Command(ParamHooks, clii18n.T(i18n.CliHooksDescription))
 	hook.RegisterAll(subCmd, githook.LoadFromEnvironment)
 }
