@@ -31,6 +31,8 @@ import (
 // t 是 clii18n.T 的简写，用于在代码中简洁地调用翻译函数。
 var t = clii18n.T
 
+const defaultPort = "3052"
+
 // dbConfig 保存从禅道 my.php 中解析出的数据库连接信息。
 type dbConfig struct {
 	Host     string
@@ -92,13 +94,23 @@ func runInit(_ *kingpin.ParseContext) error {
 	var workspace string
 	var zentaoPath string // 禅道配置目录路径（仅同机模式下有值）
 
-	// 尝试加载已有的 local.env，用于回显默认值
+	// 尝试加载自定义的 prod.env
 	existingEnv := loadExistingEnv()
+	// 尝试加载内置的 prod.env
+	templateEnv := loadTemplateEnv()
+
+	defaultWorkspace := existingEnv["GITFOX_WORKSPACE_ROOT_DIR"]
+	if defaultWorkspace == "" {
+		defaultWorkspace = templateEnv["GITFOX_WORKSPACE_ROOT_DIR"]
+	}
+	if defaultWorkspace == "" {
+		defaultWorkspace = t(i18n.CliInitWorkspacePlaceholder)
+	}
 
 	// ========== 第三步：根据用户选择进入不同交互流程 ==========
 	if sameMachine {
 		// 同机模式：从禅道配置目录中读取 my.php 获取数据库信息
-		if err := runSameMachineFlow(&db, &zentaoIP, &workspace, &zentaoPath); err != nil {
+		if err := runSameMachineFlow(&db, &zentaoIP, &workspace, &zentaoPath, defaultWorkspace); err != nil {
 			if errors.Is(err, huh.ErrUserAborted) {
 				return nil
 			}
@@ -106,10 +118,7 @@ func runInit(_ *kingpin.ParseContext) error {
 		}
 	} else {
 		// 异机模式：需要用户手动输入数据库连接信息
-		defaultWorkspace := existingEnv["GITFOX_WORKSPACE_ROOT_DIR"]
-		if defaultWorkspace == "" {
-			defaultWorkspace = t(i18n.CliInitWorkspacePlaceholder)
-		}
+
 		if err := runDifferentMachineFlow(&db, &zentaoIP, &workspace, defaultWorkspace); err != nil {
 			if errors.Is(err, huh.ErrUserAborted) {
 				return nil
@@ -120,10 +129,19 @@ func runInit(_ *kingpin.ParseContext) error {
 
 	// ========== 第四步：自动获取本机 IP 并拼接服务地址 ==========
 	localIP := getLocalIP()
-	
+
 	zentaoBaseURL := normalizeZentaoURL(zentaoIP)
 	devopsURL := fmt.Sprintf("%s/api.php/v1", zentaoBaseURL)
-	urlBase := fmt.Sprintf("http://%s:3000", localIP)
+
+	gitfoxPort := existingEnv["GITFOX_HTTP_PORT"]
+	if gitfoxPort == "" {
+		gitfoxPort = templateEnv["GITFOX_HTTP_PORT"]
+	}
+	if gitfoxPort == "" {
+		gitfoxPort = defaultPort
+	}
+
+	urlBase := fmt.Sprintf("http://%s:%s", localIP, gitfoxPort)
 
 	// ========== 验证禅道配置信息 ==========
 	var verifyErr error
@@ -147,12 +165,7 @@ func runInit(_ *kingpin.ParseContext) error {
 	fmt.Println(successStyle.Render("✓ ") + t(i18n.CliInitSuccessZentaoConn))
 	fmt.Println()
 
-	// 打印如果输入的不是IP而是域名或容器名的提醒
-	if !isIPAddress(db.Host) && db.Host != "localhost" {
-		fmt.Println()
-		fmt.Printf(t(i18n.CliInitWarnDbHost)+"\n", db.Host)
-		fmt.Println()
-	}
+	// （之前打印警告的逻辑已移动到输入的 Validator 中直接进行硬性拦截）
 
 	// ========== 检查文件是否已存在并询问是否覆盖 ==========
 	targetEnvPath := filepath.Join(workspace, "prod.env")
@@ -198,8 +211,7 @@ func runInit(_ *kingpin.ParseContext) error {
 	}
 
 	// ========== 第五步：保存配置到安装目录的 prod.env ==========
-
-	fmt.Println(t(i18n.CliInitSavingConfig))
+	fmt.Println(successStyle.Render("✓ ") + t(i18n.CliInitSavingConfig))
 
 	envPath, err := saveEnvFile(existingEnv, &db, workspace, localIP, devopsURL, urlBase)
 	if err != nil {
@@ -215,15 +227,7 @@ func runInit(_ *kingpin.ParseContext) error {
 		return fmt.Errorf(t(i18n.CliInitErrCopyBin), err)
 	}
 
-	// ========== 第七步：同机模式下，将 GitFox 地址写回禅道 my.php ==========
-	if sameMachine && zentaoPath != "" {
-		myPHPPath := filepath.Join(zentaoPath, "my.php")
-		if err := updateZentaoPHPConfig(myPHPPath, localIP, 3000); err != nil {
-			fmt.Printf(t(i18n.CliInitWarnMyphpWrite)+"\n", err)
-		}
-	}
-
-	// ========== 第八步：打印配置摘要 ==========
+	// ========== 第七步：打印配置摘要 ==========
 	printSummary(envPath, &db, workspace, localIP, devopsURL)
 
 	return nil
@@ -238,7 +242,7 @@ func runInit(_ *kingpin.ParseContext) error {
 //  4. 计算默认安装目录（禅道目录的父目录/gitfox）
 //  5. 让用户输入禅道服务 IP 和确认安装目录
 //  6. 返回 zentaoPath，供后续写回 my.php 使用
-func runSameMachineFlow(db *dbConfig, zentaoIP *string, workspace *string, zentaoPath *string) error {
+func runSameMachineFlow(db *dbConfig, zentaoIP *string, workspace *string, zentaoPath *string, defaultWorkspace string) error {
 	// 第一步：让用户输入禅道配置目录，并进行实时校验
 	err := huh.NewForm(
 		huh.NewGroup(
@@ -293,9 +297,7 @@ func runSameMachineFlow(db *dbConfig, zentaoIP *string, workspace *string, zenta
 	fmt.Println(successStyle.Render("✓ ") + t(i18n.CliInitSuccessDbConn))
 	fmt.Println()
 
-	// 第三步：根据禅道配置目录推算默认安装目录
-	// 例：zentaoPath = /opt/zbox/app/zentao/config → 父目录 = /opt/zbox/app/zentao → 默认 = /opt/zbox/app/zentao/gitfox
-	defaultWorkspace := filepath.Join(filepath.Dir(*zentaoPath), "gitfox")
+	// 第三步：回显默认安装目录
 	*workspace = defaultWorkspace
 
 	// 第四步：让用户输入禅道 IP 和确认/修改安装目录
@@ -338,7 +340,7 @@ func runDifferentMachineFlow(db *dbConfig, zentaoIP *string, workspace *string, 
 				Description(t(i18n.CliInitDbHostDesc)).
 				Placeholder(t(i18n.CliInitDbHostPlaceholder)).
 				Value(&db.Host).
-				Validate(requiredValidator),
+				Validate(dbHostValidator),
 			huh.NewInput().
 				Title(t(i18n.CliInitDbPort)).
 				Placeholder(t(i18n.CliInitDbPortPlaceholder)).
@@ -455,6 +457,18 @@ func normalizeZentaoURL(s string) string {
 	return strings.TrimRight(s, "/")
 }
 
+// dbHostValidator 校验数据库主机输入，拦截本地环境无法正常解析的内部 Docker 名
+func dbHostValidator(s string) error {
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return errors.New(t(i18n.CliInitErrRequired))
+	}
+	if s != "localhost" && !isIPAddress(s) && !strings.Contains(s, ".") {
+		return errors.New(t(i18n.CliInitErrDbHostFormat))
+	}
+	return nil
+}
+
 // isIPAddress 检查字符串是否为有效的 IPv4/IPv6 地址
 func isIPAddress(host string) bool {
 	return net.ParseIP(host) != nil
@@ -535,7 +549,7 @@ func parsePHPConfig(path string) (*dbConfig, error) {
 	for pattern, target := range patterns {
 		re, err := regexp.Compile(pattern)
 		if err != nil {
-			return nil, fmt.Errorf("正则表达式编译失败: %w", err)
+			return nil, fmt.Errorf(t(i18n.CliInitErrMyphpRegex), err)
 		}
 		compiled[re] = target
 	}
@@ -557,74 +571,10 @@ func parsePHPConfig(path string) (*dbConfig, error) {
 
 	// 校验必要字段：数据库名和用户名不能为空
 	if db.Name == "" || db.User == "" {
-		return nil, errors.New("缺少必要的数据库配置（数据库名、用户名）")
+		return nil, errors.New(t(i18n.CliInitErrMyphpMissingFields))
 	}
 
 	return db, nil
-}
-
-// updateZentaoPHPConfig 将 GitFox 的服务地址写回禅道的 my.php 配置文件。
-//
-// 写入/更新以下两行：
-//
-//	$config->devops->gitfoxURL = 'http://{ip}';
-//	$config->devops->gitfoxPort = {port};
-//
-// 如果 my.php 中已存在这两行，则原地更新；否则在文件末尾（?>之前或文件尾部）追加。
-func updateZentaoPHPConfig(myPHPPath string, gitfoxIP string, gitfoxPort int) error {
-	data, err := os.ReadFile(myPHPPath)
-	if err != nil {
-		return fmt.Errorf("读取 my.php 失败: %w", err)
-	}
-
-	content := string(data)
-	gitfoxURLLine := fmt.Sprintf("$config->devops->gitfoxURL = 'http://%s';", gitfoxIP)
-	gitfoxPortLine := fmt.Sprintf("$config->devops->gitfoxPort = %d;", gitfoxPort)
-
-	// 使用正则匹配已有的 gitfoxURL 和 gitfoxPort 行
-	urlRegex := regexp.MustCompile(`(?m)^\s*\$config->devops->gitfoxURL\s*=.*$`)
-	portRegex := regexp.MustCompile(`(?m)^\s*\$config->devops->gitfoxPort\s*=.*$`)
-
-	urlUpdated := false
-	portUpdated := false
-
-	// 如果已有 gitfoxURL 行，原地替换
-	if urlRegex.MatchString(content) {
-		content = urlRegex.ReplaceAllString(content, gitfoxURLLine)
-		urlUpdated = true
-	}
-
-	// 如果已有 gitfoxPort 行，原地替换
-	if portRegex.MatchString(content) {
-		content = portRegex.ReplaceAllString(content, gitfoxPortLine)
-		portUpdated = true
-	}
-
-	// 如果有未更新的行，追加到文件末尾
-	if !urlUpdated || !portUpdated {
-		var appendLines []string
-		if !urlUpdated {
-			appendLines = append(appendLines, gitfoxURLLine)
-		}
-		if !portUpdated {
-			appendLines = append(appendLines, gitfoxPortLine)
-		}
-		appendContent := "\n" + strings.Join(appendLines, "\n") + "\n"
-
-		// 如果文件包含 ?>，在其前面插入；否则直接追加到末尾
-		if strings.Contains(content, "?>") {
-			content = strings.Replace(content, "?>", appendContent+"?>", 1)
-		} else {
-			content += appendContent
-		}
-	}
-
-	// 写回文件
-	if err := os.WriteFile(myPHPPath, []byte(content), 0644); err != nil {
-		return fmt.Errorf("写入 my.php 失败: %w", err)
-	}
-
-	return nil
 }
 
 // getLocalIP 获取本机非回环 IPv4 地址。
@@ -667,6 +617,18 @@ func loadExistingEnv() map[string]string {
 	return envMap
 }
 
+// loadTemplateEnv 从内嵌的 prod.env 模板中读取所有的默认配置键值对
+func loadTemplateEnv() map[string]string {
+	envMap := make(map[string]string)
+	templateBytes, err := configs.FS.ReadFile("prod.env")
+	if err == nil {
+		if parsed, err := godotenv.Unmarshal(string(templateBytes)); err == nil {
+			return parsed
+		}
+	}
+	return envMap
+}
+
 // saveEnvFile 将配置保存到用户指定安装目录下的 prod.env 文件。
 //
 // 替换策略：
@@ -677,7 +639,7 @@ func loadExistingEnv() map[string]string {
 func saveEnvFile(existing map[string]string, db *dbConfig, workspace, serverHost, devopsURL, urlBase string) (string, error) {
 	// 确保安装目录存在
 	if err := os.MkdirAll(workspace, 0755); err != nil {
-		return "", fmt.Errorf("创建安装目录失败: %w", err)
+		return "", fmt.Errorf(t(i18n.CliInitErrMkdir), err)
 	}
 
 	envPath := filepath.Join(workspace, "prod.env")
@@ -685,7 +647,7 @@ func saveEnvFile(existing map[string]string, db *dbConfig, workspace, serverHost
 	// 读取内嵌的配置模板
 	templateBytes, err := configs.FS.ReadFile("prod.env")
 	if err != nil {
-		return "", fmt.Errorf("读取内置配置模板失败: %w", err)
+		return "", fmt.Errorf(t(i18n.CliInitErrReadTemplate), err)
 	}
 	content := string(templateBytes)
 
@@ -733,13 +695,13 @@ func copyBinary(workspace string) (string, error) {
 	// 获取当前可执行文件路径
 	exePath, err := os.Executable()
 	if err != nil {
-		return "", fmt.Errorf("获取可执行文件路径失败: %w", err)
+		return "", fmt.Errorf(t(i18n.CliInitErrGetExec), err)
 	}
 
 	// 解析符号链接，获取真实路径
 	exePath, err = filepath.EvalSymlinks(exePath)
 	if err != nil {
-		return "", fmt.Errorf("解析可执行文件符号链接失败: %w", err)
+		return "", fmt.Errorf(t(i18n.CliInitErrEvalSymlink), err)
 	}
 
 	dstPath := filepath.Join(workspace, "gitfox")
@@ -755,43 +717,38 @@ func copyBinary(workspace string) (string, error) {
 
 	// 确保安装目录存在
 	if err := os.MkdirAll(workspace, 0755); err != nil {
-		return "", fmt.Errorf("创建安装目录失败: %w", err)
+		return "", fmt.Errorf(t(i18n.CliInitErrMkdir), err)
 	}
 
 	// 打开源文件
 	src, err := os.Open(exePath)
 	if err != nil {
-		return "", fmt.Errorf("打开源二进制文件失败: %w", err)
+		return "", fmt.Errorf(t(i18n.CliInitErrOpenSrcBin), err)
 	}
 	defer src.Close()
 
 	// 创建目标文件（可执行权限 0755）
 	dst, err := os.OpenFile(dstPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0755)
 	if err != nil {
-		return "", fmt.Errorf("创建目标二进制文件失败: %w", err)
+		return "", fmt.Errorf(t(i18n.CliInitErrCreateDestBin), err)
 	}
 	defer dst.Close()
 
 	// 流式复制文件内容
 	if _, err := io.Copy(dst, src); err != nil {
-		return "", fmt.Errorf("复制二进制文件失败: %w", err)
+		return "", fmt.Errorf(t(i18n.CliInitErrCopyBin), err)
 	}
 
 	return dstPath, nil
 }
 
-// setDefault 仅在 map 中不存在该 key 时设置默认值。
-func setDefault(m map[string]string, key, value string) {
-	if _, exists := m[key]; !exists {
-		m[key] = value
-	}
-}
-
 // printSummary 以美化的表格形式打印最终配置摘要。
 // 密码在 DSN 中以 *** 替代，避免泄露。
 func printSummary(envPath string, db *dbConfig, workspace, serverHost, devopsURL string) {
+	successStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("46")).Bold(true)
+
 	fmt.Println()
-	fmt.Println(t(i18n.CliInitSuccess))
+	fmt.Println(successStyle.Render("✓ ") + t(i18n.CliInitSuccess))
 	fmt.Println()
 
 	headerStyle := lipgloss.NewStyle().
@@ -823,4 +780,14 @@ func printSummary(envPath string, db *dbConfig, workspace, serverHost, devopsURL
 
 	fmt.Println(strings.Repeat("─", 60))
 	fmt.Println()
+
+	// 打印启动提示
+	fmt.Println("💡 " + t(i18n.CliInitNextStepHint))
+	fmt.Printf("   cd %s\n", workspace)
+
+	cmdPrefix := "./gitfox"
+	if runtime.GOOS == "windows" {
+		cmdPrefix = ".\\gitfox.exe"
+	}
+	fmt.Printf("   %s start\n\n", cmdPrefix)
 }
