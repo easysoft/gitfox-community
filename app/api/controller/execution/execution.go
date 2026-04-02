@@ -19,7 +19,9 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/triggerer"
 	executionService "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/execution"
 	pipelineService "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/pipeline"
+	repoService "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/livelog"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
@@ -152,6 +154,8 @@ type Controller struct {
 	canceler         canceler.Canceler
 	executionService executionService.Interface
 	pipelineService  pipelineService.Interface
+	repoService      repoService.Interface
+	gitPkg           git.Interface
 }
 
 // NewController 创建流水线执行实例
@@ -160,12 +164,16 @@ func NewController(
 	canceler canceler.Canceler,
 	executionService executionService.Interface,
 	pipelineService pipelineService.Interface,
+	repoService repoService.Interface,
+	gitPkg git.Interface,
 ) *Controller {
 	return &Controller{
 		triggerer:        triggerer,
 		canceler:         canceler,
 		executionService: executionService,
 		pipelineService:  pipelineService,
+		repoService:      repoService,
+		gitPkg:           gitPkg,
 	}
 }
 
@@ -199,11 +207,40 @@ func (c *Controller) Create(ctx *gin.Context) {
 		resp.Unauthorized(ctx, errors.WithI18nKey(nil, i18n.AuthNoSession))
 		return
 	}
+
+	// 获取 pipeline 关联的 repo 信息
+	pipeline, err := c.pipelineService.GetPipelineByID(ctx, int64(reqBody.PipelineID))
+	if err != nil {
+		resp.InternalError(ctx, err)
+		return
+	}
+
+	// 获取分支信息以取得 SHA
+	var commitSHA string
+	if ref != "" && pipeline.RepoID != 0 {
+		repo, err := c.repoService.GetByID(ctx, session, uint(pipeline.RepoID))
+		if err != nil {
+			resp.InternalError(ctx, err)
+			return
+		}
+		branchOut, err := c.gitPkg.GetBranch(ctx, &git.GetBranchParams{
+			ReadParams: git.ReadParams{RepoUID: repo.GitUID},
+			BranchName: ref,
+		})
+		if err != nil {
+			resp.InternalError(ctx, err)
+			return
+		}
+		commitSHA = branchOut.Branch.SHA.String()
+	}
+
 	// Create manual hook for execution.
 	hook := &triggerer.Hook{
 		Trigger:     session.User.Account, // who/what triggered the build, different from commit author
 		TriggeredBy: session.User.ID,
+		Parent:      pipeline.SpaceID,
 		Ref:         ref,
+		Commit:      commitSHA,
 		Sender:      session.User.Account,
 		Params:      reqBody.Params,
 	}

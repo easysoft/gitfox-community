@@ -72,7 +72,10 @@ func (s *Store) GetTriggers(ctx context.Context, filter *pipelineModel.TriggerFi
 
 	result := make([]*pipelineModel.Trigger, 0, len(triggers))
 	for _, t := range triggers {
-		if t.Trigger != "" && len(filter.Trigger) > 0 {
+		if t.Trigger == "" {
+			continue
+		}
+		if len(filter.Trigger) > 0 {
 			if len(slice.Intersection(filter.Trigger, strings.Split(t.Trigger, ","))) == 0 {
 				continue
 			}

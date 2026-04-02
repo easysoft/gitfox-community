@@ -348,3 +348,8 @@ func (s *ScanTriggerService) validateSolutionIDsExist(ctx context.Context, solut
 	}
 	return nil
 }
+
+// FindByRepoIDAndActions 根据 repoID 和 actions 查询触发器。
+func (s *ScanTriggerService) FindByRepoIDAndActions(ctx context.Context, repoID uint, actions []constant.TriggerAction) ([]*scanModel.ScanTrigger, error) {
+	return s.triggerStore.FindByRepoIDAndActions(ctx, repoID, actions)
+}

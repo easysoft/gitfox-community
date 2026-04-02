@@ -15,6 +15,8 @@ func (s *Service) handleEventPullReqCreated(ctx context.Context, event *events.E
 		Trigger: event.Payload.Account,
 		Action:  constant.TriggerActionPullReqCreated,
 		Ref:     fmt.Sprintf("refs/pullreq/%d/head", event.Payload.PullReqID),
+		Match:   event.Payload.SourceBranch,
+		Commit:  event.Payload.SourceSHA,
 	}
 	return s.trigger(ctx, event.Payload.SourceRepoID, hook)
 }
@@ -24,6 +26,8 @@ func (s *Service) handleEventPullReqReopened(ctx context.Context, event *events.
 		Trigger: event.Payload.Account,
 		Action:  constant.TriggerActionPullReqReopened,
 		Ref:     fmt.Sprintf("refs/pullreq/%d/head", event.Payload.PullReqID),
+		Match:   event.Payload.SourceBranch,
+		Commit:  event.Payload.SourceSHA,
 	}
 	return s.trigger(ctx, event.Payload.SourceRepoID, hook)
 }
@@ -33,6 +37,8 @@ func (s *Service) handleEventPullReqBranchUpdated(ctx context.Context, event *ev
 		Trigger: event.Payload.Account,
 		Action:  constant.TriggerActionPullReqBranchUpdated,
 		Ref:     fmt.Sprintf("refs/pullreq/%d/head", event.Payload.PullReqID),
+		Match:   event.Payload.SourceBranch,
+		Commit:  event.Payload.NewSHA,
 	}
 	return s.trigger(ctx, event.Payload.SourceRepoID, hook)
 }
@@ -42,6 +48,8 @@ func (s *Service) handleEventPullReqClosed(ctx context.Context, event *events.Ev
 		Trigger: event.Payload.Account,
 		Action:  constant.TriggerActionPullReqClosed,
 		Ref:     fmt.Sprintf("refs/pullreq/%d/head", event.Payload.PullReqID),
+		Match:   event.Payload.SourceBranch,
+		Commit:  event.Payload.SourceSHA,
 	}
 	return s.trigger(ctx, event.Payload.SourceRepoID, hook)
 }
@@ -53,7 +61,9 @@ func (s *Service) handleEventPullReqMerged(
 	hook := &triggerer.Hook{
 		Trigger: event.Payload.Account,
 		Action:  constant.TriggerActionPullReqMerged,
-		Ref:     fmt.Sprintf("refs/pullreq/%d/head", event.Payload.PullReqID),
+		Ref:     fmt.Sprintf("refs/heads/%s", event.Payload.TargetBranch),
+		Match:   event.Payload.TargetBranch,
+		Commit:  event.Payload.MergeSHA,
 	}
 	return s.trigger(ctx, event.Payload.SourceRepoID, hook)
 }

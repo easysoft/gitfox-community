@@ -45,7 +45,8 @@ const ClosedEvent events.EventType = "closed"
 
 type ClosedPayload struct {
 	Base
-	SourceSHA string `json:"sourceSHA"`
+	SourceBranch string `json:"sourceBranch"`
+	SourceSHA    string `json:"sourceSHA"`
 }
 
 func (r *Reporter) Closed(ctx context.Context, payload *ClosedPayload) {
@@ -76,6 +77,7 @@ const ReopenedEvent events.EventType = "reopened"
 
 type ReopenedPayload struct {
 	Base
+	SourceBranch string `json:"sourceBranch"`
 	SourceSHA    string `json:"sourceSHA"`
 	MergeBaseSHA string `json:"mergeBaseSHA"`
 }
@@ -108,10 +110,11 @@ const MergedEvent events.EventType = "merged"
 
 type MergedPayload struct {
 	Base
-	MergeMethod repoModel.MergeMethod `json:"mergeMethod"`
-	MergeSHA    string                `json:"mergeSHA"`
-	TargetSHA   string                `json:"targetSHA"`
-	SourceSHA   string                `json:"sourceSHA"`
+	TargetBranch string                `json:"targetBranch"`
+	MergeMethod  repoModel.MergeMethod `json:"mergeMethod"`
+	MergeSHA     string                `json:"mergeSHA"`
+	TargetSHA    string                `json:"targetSHA"`
+	SourceSHA    string                `json:"sourceSHA"`
 }
 
 func (r *Reporter) Merged(ctx context.Context, payload *MergedPayload) {

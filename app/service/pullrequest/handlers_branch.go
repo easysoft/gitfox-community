@@ -138,6 +138,7 @@ func (s *Service) triggerPREventOnBranchUpdate(ctx context.Context,
 				TargetRepoID: int64(pr.TargetRepoID),
 				Account:      event.Payload.Account,
 			},
+			SourceBranch:    pr.SourceBranch,
 			OldSHA:          event.Payload.OldSHA,
 			NewSHA:          event.Payload.NewSHA,
 			OldMergeBaseSHA: oldMergeBase,
@@ -199,7 +200,8 @@ func (s *Service) closePullReqOnBranchDelete(ctx context.Context,
 				TargetRepoID: int64(pr.TargetRepoID),
 				Account:      event.Payload.Account,
 			},
-			SourceSHA: pr.SourceSHA,
+			SourceBranch: pr.SourceBranch,
+			SourceSHA:    pr.SourceSHA,
 		})
 
 		// Publish SSE event for real-time UI updates

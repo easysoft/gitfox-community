@@ -2,6 +2,7 @@ package trigger
 
 import (
 	"context"
+	"strings"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	gitevents "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/events/git"
@@ -15,6 +16,8 @@ func (s *Service) handleEventTagCreated(ctx context.Context,
 		Trigger: event.Payload.Account,
 		Action:  constant.TriggerActionTagCreated,
 		Ref:     event.Payload.Ref,
+		Match:   strings.TrimPrefix(event.Payload.Ref, "refs/tags/"),
+		Commit:  event.Payload.SHA,
 	}
 	return s.trigger(ctx, event.Payload.RepoID, hook)
 }
@@ -25,6 +28,8 @@ func (s *Service) handleEventTagUpdated(ctx context.Context,
 		Trigger: event.Payload.Account,
 		Action:  constant.TriggerActionTagUpdated,
 		Ref:     event.Payload.Ref,
+		Match:   strings.TrimPrefix(event.Payload.Ref, "refs/tags/"),
+		Commit:  event.Payload.NewSHA,
 	}
 	return s.trigger(ctx, event.Payload.RepoID, hook)
 }
