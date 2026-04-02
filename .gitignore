@@ -9,6 +9,7 @@
 *.dylib
 .vscode/
 .task/
+.agent/
 CLAUDE.md
 
 # Test binary, built with `go test -c`
