@@ -63,6 +63,7 @@ func NewApp(mode string) (*App, func(), error) {
 		provider.DockerRunnerWireSet,
 		provider.ScanRuleSetWireSet,
 		provider.ScanRuleWireSet,
+		provider.FitWireSet,
 		provider.CommitWireSet,
 		provider.ControllersWireSet,
 		provider.URLWireSet,

@@ -10,8 +10,8 @@ import (
 	branch3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/branch"
 	commit2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/commit"
 	execution3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/execution"
+	fit2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/fit"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/githook"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/fit"
 	pipeline3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/pipeline"
 	repo3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/repo"
 	runner3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/runner"
@@ -27,7 +27,7 @@ import (
 	branch2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/branch"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/commit"
 	execution2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/execution"
-	fit2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/fit"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/fit"
 	jobs2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/jobs"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/locker"
 	pipeline2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/pipeline"
@@ -122,10 +122,8 @@ func NewApp(mode string) (*App, func(), error) {
 		return nil, nil, err
 	}
 	branchStore := branch.NewBranchStore(db)
-	settingsInterface := settings.NewSettingStore(db)
-	settingsService := provider.NewSettingsService(settingsInterface)
-	repoService := repo2.NewRepoSvc(gitService, store, spaceStore, urlProvider, membershipAuthorizer)
 	branchService := branch2.NewService(urlProvider, gitService, branchStore)
+	repoService := repo2.NewRepoSvc(gitService, store, spaceStore, urlProvider, membershipAuthorizer)
 	controller := branch3.NewController(branchService, repoService)
 	ciConfig := provider.NewCiConfig(config)
 	pipelineStore := pipeline.NewPipelineStore(db)
@@ -173,7 +171,7 @@ func NewApp(mode string) (*App, func(), error) {
 	stepStore := step.NewStepStore(db)
 	cancelerCanceler := canceler.New(executionStore, stageStore, stepStore)
 	executionService := execution2.NewExecutionService(executionStore, stageStore)
-	executionController := execution3.NewController(triggererTriggerer, cancelerCanceler, executionService, pipelineService)
+	executionController := execution3.NewController(triggererTriggerer, cancelerCanceler, executionService, pipelineService, repoService, gitService)
 	runnerService := runner2.NewService(runnerStore)
 	url := provider.NewURLConfig(config)
 	runnerController := runner3.NewController(runnerService, url)
@@ -223,6 +221,8 @@ func NewApp(mode string) (*App, func(), error) {
 	interface2 := publickey2.NewPublicKeyService(publickeyInterface, userService)
 	userController := user3.NewUserController(userService, interface2)
 	service2 := provider.NewGitService(gitService, urlProvider)
+	settingsInterface := settings.NewSettingStore(db)
+	settingsService := provider.NewSettingsService(settingsInterface)
 	eventsReporter, err := provider.ProvideGitEventReporter(system)
 	if err != nil {
 		cleanup2()
@@ -250,8 +250,8 @@ func NewApp(mode string) (*App, func(), error) {
 	scanConditionService := scan2.NewScanConditionService(scanConditionStore, store, scanPlanStore, scanTriggerStore, cronScheduler)
 	scanPlanConditionService := scan2.NewScanPlanConditionService(store, scanPlanStore, scanConditionStore)
 	scanController := scan3.NewScanController(ruleSetService, ruleService, solutionService, scanTaskService, scanPlanService, scanTriggerService, scanConditionService, scanPlanConditionService, repoService, gitService)
-	fitService := fit2.NewService(tokenInterface, devopsConfig)
-	fitController := fit.NewController(fitService, repoService)
+	fitService := fit.NewService(tokenInterface, devopsConfig)
+	fitController := fit2.NewController(fitService, repoService)
 	routerController := provider.NewControllers(spaceController, controller, pipelineController, executionController, runnerController, tagController, commitController, repoController, userController, gitController, scanController, fitController)
 	i18nManager, err := provider.NewI18nManager(config)
 	if err != nil {
@@ -260,7 +260,7 @@ func NewApp(mode string) (*App, func(), error) {
 		return nil, nil, err
 	}
 	server := provider.ProvideSSHServer(config, interface2, gitController)
-	triggerService, err := provider.ProvideTriggerService(eventContext, pipelineService, triggererTriggerer, readerFactory, eventsReaderFactory)
+	triggerService, err := provider.ProvideTriggerService(eventContext, pipelineService, triggererTriggerer, store, urlProvider, scanTriggerService, scanPlanService, scanTaskService, readerFactory, eventsReaderFactory)
 	if err != nil {
 		cleanup2()
 		cleanup()

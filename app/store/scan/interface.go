@@ -75,6 +75,7 @@ type IScanTrigger interface {
 	Delete(ctx context.Context, id uint) error
 	List(ctx context.Context, repoID uint, planID uint, filter scanModel.ScanTriggerReqFilter) (*database.PageResult[*scanModel.ScanTrigger], error)
 	Count(ctx context.Context, repoID uint, planID uint) (int64, error)
+	FindByRepoIDAndActions(ctx context.Context, repoID uint, actions []constant.TriggerAction) ([]*scanModel.ScanTrigger, error)
 }
 
 // IScanTriggerSolution 触发器关联解决方案 store 接口

@@ -832,6 +832,21 @@ func (mr *MockIScanTriggerMockRecorder) Update(ctx, trigger any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockIScanTrigger)(nil).Update), ctx, trigger)
 }
 
+// FindByRepoIDAndActions mocks base method.
+func (m *MockIScanTrigger) FindByRepoIDAndActions(ctx context.Context, repoID uint, actions []constant.TriggerAction) ([]*scan.ScanTrigger, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindByRepoIDAndActions", ctx, repoID, actions)
+	ret0, _ := ret[0].([]*scan.ScanTrigger)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindByRepoIDAndActions indicates an expected call of FindByRepoIDAndActions.
+func (mr *MockIScanTriggerMockRecorder) FindByRepoIDAndActions(ctx, repoID, actions any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByRepoIDAndActions", reflect.TypeOf((*MockIScanTrigger)(nil).FindByRepoIDAndActions), ctx, repoID, actions)
+}
+
 // MockIScanTriggerSolution is a mock of IScanTriggerSolution interface.
 type MockIScanTriggerSolution struct {
 	ctrl     *gomock.Controller

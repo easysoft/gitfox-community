@@ -7,8 +7,11 @@ import (
 	pullreqevents "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/events/pullreq"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/triggerer"
 	pipelineSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/pipeline"
+	scanSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/scan"
 	triggerSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/trigger"
+	repoStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/events"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/url"
 )
 
 // TriggerWireSet provides a wire set for trigger service.
@@ -21,6 +24,11 @@ func ProvideTriggerService(
 	eventCtx *EventContext,
 	pipelineSvc pipelineSvc.Interface,
 	triggerer triggerer.Triggerer,
+	repoStore repoStore.Interface,
+	urlProvider url.Provider,
+	scanTriggerSvc scanSvc.IScanTrigger,
+	planSvc scanSvc.IScanPlan,
+	taskSvc scanSvc.IScanTask,
 	gitReaderFactory *events.ReaderFactory[*gitevents.Reader],
 	pullReqEvFactory *events.ReaderFactory[*pullreqevents.Reader],
 ) (*triggerSvc.Service, error) {
@@ -34,6 +42,11 @@ func ProvideTriggerService(
 		cfg,
 		pipelineSvc,
 		triggerer,
+		repoStore,
+		urlProvider,
+		scanTriggerSvc,
+		planSvc,
+		taskSvc,
 		gitReaderFactory,
 		pullReqEvFactory,
 	)

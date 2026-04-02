@@ -692,10 +692,11 @@ func (s *Service) Merge(ctx context.Context, session *auth.Session, repoid uint,
 			TargetRepoID: int64(pr.TargetRepoID),
 			Account:      session.User.Account,
 		},
-		MergeMethod: params.Method,
-		MergeSHA:    mergeOutput.MergeSHA.String(),
-		TargetSHA:   mergeOutput.BaseSHA.String(),
-		SourceSHA:   mergeOutput.HeadSHA.String(),
+		TargetBranch: pr.TargetBranch,
+		MergeMethod:  params.Method,
+		MergeSHA:     mergeOutput.MergeSHA.String(),
+		TargetSHA:    mergeOutput.BaseSHA.String(),
+		SourceSHA:    mergeOutput.HeadSHA.String(),
 	})
 
 	// 返回结果
@@ -802,7 +803,8 @@ func (s *Service) TriggerEvent(
 				TargetRepoID: int64(pr.TargetRepoID),
 				Account:      account,
 			},
-			SourceSHA: pr.SourceSHA,
+			SourceBranch: pr.SourceBranch,
+			SourceSHA:    pr.SourceSHA,
 		})
 	case repoModel.EventTriggerTypeReopen:
 		s.pullreqEvReporter.Reopened(ctx, &pullreqevents.ReopenedPayload{
@@ -812,6 +814,7 @@ func (s *Service) TriggerEvent(
 				TargetRepoID: int64(pr.TargetRepoID),
 				Account:      account,
 			},
+			SourceBranch: pr.SourceBranch,
 			SourceSHA:    pr.SourceSHA,
 			MergeBaseSHA: pr.MergeBaseSHA,
 		})

@@ -6,14 +6,21 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/bmatcuk/doublestar/v4"
+
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	gitevents "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/events/git"
 	pullreqevents "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/events/pullreq"
 	pipelineModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/pipeline"
+	scanModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/triggerer"
 	pipelineSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/pipeline"
+	scanSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/scan"
+	repoStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/events"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/stream"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/url"
 
 	"github.com/hashicorp/go-multierror"
 )
@@ -46,8 +53,13 @@ func (c *Config) Prepare() error {
 }
 
 type Service struct {
-	pipelineSvc pipelineSvc.Interface
-	triggerSvc  triggerer.Triggerer
+	pipelineSvc    pipelineSvc.Interface
+	triggerSvc     triggerer.Triggerer
+	repoStore      repoStore.Interface
+	urlProvider    url.Provider
+	scanTriggerSvc scanSvc.IScanTrigger
+	planSvc        scanSvc.IScanPlan
+	taskSvc        scanSvc.IScanTask
 }
 
 func New(
@@ -55,6 +67,11 @@ func New(
 	config Config,
 	pipelineSvc pipelineSvc.Interface,
 	triggerSvc triggerer.Triggerer,
+	repoStore repoStore.Interface,
+	urlProvider url.Provider,
+	scanTriggerSvc scanSvc.IScanTrigger,
+	planSvc scanSvc.IScanPlan,
+	taskSvc scanSvc.IScanTask,
 	gitReaderFactory *events.ReaderFactory[*gitevents.Reader],
 	pullreqEvReaderFactory *events.ReaderFactory[*pullreqevents.Reader],
 ) (*Service, error) {
@@ -63,8 +80,13 @@ func New(
 	}
 
 	service := &Service{
-		pipelineSvc: pipelineSvc,
-		triggerSvc:  triggerSvc,
+		pipelineSvc:    pipelineSvc,
+		triggerSvc:     triggerSvc,
+		repoStore:      repoStore,
+		urlProvider:    urlProvider,
+		scanTriggerSvc: scanTriggerSvc,
+		planSvc:        planSvc,
+		taskSvc:        taskSvc,
 	}
 
 	_, err := gitReaderFactory.Launch(ctx, eventsReaderGroupName, config.EventReaderName,
@@ -116,8 +138,27 @@ func New(
 }
 
 func (s *Service) trigger(ctx context.Context, repoID int64, hook *triggerer.Hook) error {
+	var errs error
+	if err := s.triggerPipeline(ctx, repoID, hook); err != nil {
+		errs = multierror.Append(errs, err)
+	}
+	if err := s.triggerScanPipeline(ctx, repoID, hook); err != nil {
+		errs = multierror.Append(errs, err)
+	}
+	return errs
+}
+
+func (s *Service) triggerPipeline(ctx context.Context, repoID int64, hook *triggerer.Hook) error {
 	log := logger.GetLogger(ctx)
 	log.Infof("[pipeline-trigger] trigger called: repoID=%d, action=%s, ref=%s", repoID, hook.Action, hook.Ref)
+
+	// 根据 repoID 查询 repo 的 gitURL
+	repo, err := s.repoStore.GetByID(ctx, uint(repoID))
+	if err != nil {
+		return fmt.Errorf("failed to get repo by ID %d: %w", repoID, err)
+	}
+	gitURL := s.urlProvider.GenerateGITCloneURL(ctx, repo.Path)
+	log.Infof("[pipeline-trigger] repo gitURL=%s", gitURL)
 
 	// Get all enabled triggers for a repo or space.
 	filter := pipelineModel.TriggerFilter{
@@ -133,6 +174,11 @@ func (s *Service) trigger(ctx context.Context, repoID int64, hook *triggerer.Hoo
 
 	var errs error
 	for _, t := range triggers {
+		pipelineInfo, err := s.pipelineSvc.GetPipelineByID(ctx, t.PipelineID)
+		if err != nil {
+			errs = multierror.Append(errs, fmt.Errorf("failed to get pipeline info %d: %w", t.PipelineID, err))
+			continue
+		}
 		params, err := s.pipelineSvc.GetPipelineVariables(ctx, t.PipelineID)
 		if err != nil {
 			errs = multierror.Append(errs, fmt.Errorf("failed to get pipeline variables %d: %w", t.PipelineID, err))
@@ -145,10 +191,77 @@ func (s *Service) trigger(ctx context.Context, repoID int64, hook *triggerer.Hoo
 		for k, v := range params {
 			hook.Params[k] = v
 		}
+		hook.Params["gitURL"] = gitURL
+		hook.Params["gitRef"] = hook.Ref
+		hook.Parent = pipelineInfo.SpaceID
 		_, err = s.triggerSvc.Trigger(ctx, uint(t.PipelineID), hook)
 		if err != nil {
 			errs = multierror.Append(errs, err)
 		}
 	}
 	return errs
+}
+
+func (s *Service) triggerScanPipeline(ctx context.Context, repoID int64, hook *triggerer.Hook) error {
+	log := logger.GetLogger(ctx)
+	log.Infof("[pipeline-trigger-scan] trigger called: repoID=%d, action=%s, ref=%s", repoID, hook.Action, hook.Ref)
+
+	// 根据 repoID 查询 repo 的 gitURL
+	repo, err := s.repoStore.GetByID(ctx, uint(repoID))
+	if err != nil {
+		return fmt.Errorf("failed to get repo by ID %d: %w", repoID, err)
+	}
+	gitURL := s.urlProvider.GenerateGITCloneURL(ctx, repo.Path)
+	log.Infof("[pipeline-trigger-scan] repo gitURL=%s", gitURL)
+	repo.GitURL = gitURL
+
+	// 查询扫描相关的 trigger
+	triggers, err := s.scanTriggerSvc.FindByRepoIDAndActions(ctx, uint(repoID), []constant.TriggerAction{hook.Action})
+	if err != nil {
+		return fmt.Errorf("failed to list all enabled triggers: %w", err)
+	}
+	log.Infof("[pipeline-trigger-scan] found %d raw triggers for repoID=%d, action=%s", len(triggers), repoID, hook.Action)
+	// 根据 trigger 关联的 planID 查询扫描计划，匹配分支后获取有效的触发器
+	var errs error
+	for _, t := range triggers {
+		plan, err := s.planSvc.GetByID(ctx, repo.ID, uint(t.PlanID))
+		if err != nil {
+			errs = multierror.Append(errs, fmt.Errorf("failed to get scan plan info %d: %w", t.PlanID, err))
+			continue
+		}
+		if !s.isBranchMatch(plan.Branches, hook.Match) {
+			log.Infof("[pipeline-trigger-scan] skip trigger %d for plan %d due to branch filter not match: filter=%s, ref=%s", t.ID, t.PlanID, plan.Branches, hook.Ref)
+			continue
+		}
+
+		scanTrigger := &scanModel.ScanTaskTrigger{
+			ID:   t.ID,
+			Name: t.Name,
+			Type: constant.ScanPlanTriggerTypeAction,
+		}
+
+		if hook.Params == nil {
+			hook.Params = make(map[string]string)
+		}
+		hook.Parent = int64(repo.SpaceID)
+		if _, err = s.taskSvc.Create(ctx, &scanSvc.ScanTaskInput{Plan: plan, Repo: repo, Trigger: scanTrigger, Hook: hook}); err != nil {
+			errs = multierror.Append(errs, fmt.Errorf("failed to create scan task for plan %d: %w", t.PlanID, err))
+		}
+	}
+	return errs
+}
+
+// isBranchMatch checks whether ref matches any of the include patterns in branches.
+// Returns true if at least one pattern matches, false if none match.
+// If branches is nil or has no include patterns, it returns true (no filter).
+func (s *Service) isBranchMatch(branches *scanModel.Pattern, ref string) bool {
+	if branches == nil || len(branches.Include) == 0 {
+		return true
+	}
+	for _, pattern := range branches.Include {
+		if ok, _ := doublestar.Match(pattern, ref); ok {
+			return true
+		}
+	}
+	return false
 }

@@ -11,6 +11,7 @@ const BranchUpdatedEvent events.EventType = "branch-updated"
 
 type BranchUpdatedPayload struct {
 	Base
+	SourceBranch    string `json:"sourceBranch"`
 	OldSHA          string `json:"oldSHA"`
 	NewSHA          string `json:"newSHA"`
 	OldMergeBaseSHA string `json:"oldMergeBaseSHA"`

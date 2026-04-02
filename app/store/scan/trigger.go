@@ -136,6 +136,32 @@ func (s *ScanTriggerStore) Count(ctx context.Context, repoID uint, planID uint) 
 	return count, nil
 }
 
+// FindByRepoIDAndActions 查询指定仓库下、actions 有交集的所有未禁用触发器。
+func (s *ScanTriggerStore) FindByRepoIDAndActions(ctx context.Context, repoID uint, actions []constant.TriggerAction) ([]*scanModel.ScanTrigger, error) {
+	var rows []ScanPlanTrigger
+	if err := s.db.WithContext(ctx).
+		Where("repoID = ? AND deleted = ? AND disabled = ?", repoID, false, false).
+		Find(&rows).Error; err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
+	}
+
+	actionSet := make(map[constant.TriggerAction]struct{}, len(actions))
+	for _, a := range actions {
+		actionSet[a] = struct{}{}
+	}
+
+	result := make([]*scanModel.ScanTrigger, 0, len(rows))
+	for _, row := range rows {
+		for _, a := range parseActions(row.Actions) {
+			if _, ok := actionSet[a]; ok {
+				result = append(result, mapScanTriggerToModel(row))
+				break
+			}
+		}
+	}
+	return result, nil
+}
+
 func mapScanTriggerToModel(data ScanPlanTrigger) *scanModel.ScanTrigger {
 	return &scanModel.ScanTrigger{
 		ID:          int64(data.ID),

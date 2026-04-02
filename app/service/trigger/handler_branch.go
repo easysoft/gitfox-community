@@ -2,6 +2,7 @@ package trigger
 
 import (
 	"context"
+	"strings"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	gitevents "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/events/git"
@@ -14,6 +15,8 @@ func (s *Service) handleEventBranchCreated(ctx context.Context, event *events.Ev
 		Trigger: event.Payload.Account,
 		Action:  constant.TriggerActionBranchCreated,
 		Ref:     event.Payload.Ref,
+		Match:   strings.TrimPrefix(event.Payload.Ref, "refs/heads/"),
+		Commit:  event.Payload.SHA,
 	}
 	return s.trigger(ctx, event.Payload.RepoID, hook)
 }
@@ -24,6 +27,8 @@ func (s *Service) handleEventBranchUpdated(ctx context.Context,
 		Trigger: event.Payload.Account,
 		Action:  constant.TriggerActionBranchUpdated,
 		Ref:     event.Payload.Ref,
+		Match:   strings.TrimPrefix(event.Payload.Ref, "refs/heads/"),
+		Commit:  event.Payload.NewSHA,
 	}
 	return s.trigger(ctx, event.Payload.RepoID, hook)
 }
