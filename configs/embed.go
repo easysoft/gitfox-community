@@ -6,5 +6,5 @@ import (
 
 // FS contains embedded configuration files.
 //
-//go:embed prod.env
+//go:embed prod.env prod.yaml
 var FS embed.FS

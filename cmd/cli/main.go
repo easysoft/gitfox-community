@@ -4,7 +4,7 @@ import (
 	"os"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/cmd/cli/operations/hooks"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/cmd/cli/operations/install"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/cmd/cli/operations/service"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/cmd/cli/operations/server"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/hook"
 	clii18n "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n/cli"
@@ -43,7 +43,7 @@ func main() {
 	app := kingpin.New(application, description)
 	server.Register(app)
 	hooks.Register(app)
-	install.Register(app)
+	service.Register(app)
 	kingpin.MustParse(app.Parse(args))
 }
 

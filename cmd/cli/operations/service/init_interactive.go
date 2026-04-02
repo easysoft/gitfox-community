@@ -1,13 +1,11 @@
-package install
+package service
 
 import (
 	"bufio"
-	"database/sql"
 	"errors"
 	"fmt"
 	"io"
 	"net"
-	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -15,7 +13,6 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/charmbracelet/huh"
 	"github.com/charmbracelet/huh/spinner"
@@ -61,16 +58,15 @@ func (d *dbConfig) toDSN() string {
 //  6. 将当前二进制复制到安装目录
 //  7. 打印配置摘要
 func runInit(_ *kingpin.ParseContext) error {
-	// ========== 第一步：显示欢迎横幅 ==========
-	titleStyle := lipgloss.NewStyle().
-		Bold(true).
-		Foreground(lipgloss.Color("#FAFAFA")).
-		Background(lipgloss.Color("#7D56F4")).
-		Padding(0, 2)
+	// ========== 第零步：启动前置安全拦截 (必须具备 Root 提权环境) ==========
+	if err := CheckSudo(); err != nil {
+		errStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#FF0000")).Bold(true)
+		fmt.Println(errStyle.Render(err.Error()))
+		return nil
+	}
 
-	fmt.Println()
-	fmt.Println(titleStyle.Render(t(i18n.CliInitWelcome)))
-	fmt.Println()
+	// ========== 第一步：显示欢迎横幅 ==========
+	printBanner(t(i18n.CliInitWelcome))
 
 	// ========== 第二步：询问是否与禅道在同一机器 ==========
 	var sameMachine bool
@@ -149,7 +145,7 @@ func runInit(_ *kingpin.ParseContext) error {
 	_ = spinner.New().
 		Title(t(i18n.CliInitVerifying)).
 		Action(func() {
-			verifyErr = verifyZentao(devopsURL)
+			verifyErr = CheckZentao(devopsURL)
 		}).Run()
 
 	if verifyErr != nil {
@@ -170,11 +166,13 @@ func runInit(_ *kingpin.ParseContext) error {
 
 	// ========== 检查文件是否已存在并询问是否覆盖 ==========
 	targetEnvPath := filepath.Join(workspace, "prod.env")
+	targetYamlPath := filepath.Join(workspace, "prod.yaml")
 	targetBinPath := filepath.Join(workspace, "gitfox")
 	if runtime.GOOS == "windows" {
 		targetBinPath += ".exe"
 	}
 
+	// --- 检查 prod.env 是否已存在 ---
 	if info, err := os.Stat(targetEnvPath); err == nil && !info.IsDir() {
 		var overwrite bool
 		err := huh.NewConfirm().
@@ -191,8 +189,34 @@ func runInit(_ *kingpin.ParseContext) error {
 			fmt.Println(t(i18n.CliInitOverwriteCancel))
 			return nil
 		}
+		if bakPath, err := backupFile(targetEnvPath); err == nil {
+			fmt.Println(successStyle.Render("✓ ") + fmt.Sprintf(t(i18n.CliInitBackupCreated), bakPath))
+		}
 	}
 
+	// --- 检查 prod.yaml 是否已存在 ---
+	if info, err := os.Stat(targetYamlPath); err == nil && !info.IsDir() {
+		var overwrite bool
+		err := huh.NewConfirm().
+			Title(fmt.Sprintf(t(i18n.CliInitOverwriteYaml), targetYamlPath)).
+			Affirmative(t(i18n.CliInitYes)).
+			Negative(t(i18n.CliInitNo)).
+			Value(&overwrite).
+			Run()
+		if err != nil {
+			return err
+		}
+		if !overwrite {
+			fmt.Println()
+			fmt.Println(t(i18n.CliInitOverwriteCancel))
+			return nil
+		}
+		if bakPath, err := backupFile(targetYamlPath); err == nil {
+			fmt.Println(successStyle.Render("✓ ") + fmt.Sprintf(t(i18n.CliInitBackupCreated), bakPath))
+		}
+	}
+
+	// --- 检查 gitfox 二进制是否已存在 ---
 	if info, err := os.Stat(targetBinPath); err == nil && !info.IsDir() {
 		var overwrite bool
 		err := huh.NewConfirm().
@@ -209,6 +233,9 @@ func runInit(_ *kingpin.ParseContext) error {
 			fmt.Println(t(i18n.CliInitOverwriteCancel))
 			return nil
 		}
+		if bakPath, err := backupFile(targetBinPath); err == nil {
+			fmt.Println(successStyle.Render("✓ ") + fmt.Sprintf(t(i18n.CliInitBackupCreated), bakPath))
+		}
 	}
 
 	// ========== 第五步：保存配置到安装目录的 prod.env ==========
@@ -220,6 +247,14 @@ func runInit(_ *kingpin.ParseContext) error {
 		fmt.Println(errStyle.Render(fmt.Sprintf("❌ "+t(i18n.CliInitErrSaveConfig), err)))
 		return fmt.Errorf(t(i18n.CliInitErrSaveConfig), err)
 	}
+
+	// ========== 第五步（续）：释放内置 prod.yaml 到安装目录 ==========
+	if err := copyEmbeddedYaml(workspace); err != nil {
+		errStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#FF0000")).Bold(true)
+		fmt.Println(errStyle.Render(fmt.Sprintf("❌ prod.yaml: %v", err)))
+		return err
+	}
+	fmt.Println(successStyle.Render("✓ ") + "prod.yaml → "+filepath.Join(workspace, "prod.yaml"))
 
 	// ========== 第六步：复制当前二进制到安装目录 ==========
 	if _, err := copyBinary(workspace); err != nil {
@@ -304,7 +339,7 @@ func runSameMachineFlow(db *dbConfig, zentaoIP *string, workspace *string, zenta
 	// 第二步其二：立即测试提取的数据库信息
 	var verifyErr error
 	_ = spinner.New().Title(t(i18n.CliInitTestingDbConn)).Action(func() {
-		verifyErr = verifyDB(db)
+		verifyErr = CheckDB(db.toDSN())
 	}).Run()
 
 	if verifyErr != nil {
@@ -398,7 +433,7 @@ func runDifferentMachineFlow(db *dbConfig, zentaoIP *string, workspace *string, 
 
 	var verifyErr error
 	_ = spinner.New().Title(t(i18n.CliInitTestingDbConn)).Action(func() {
-		verifyErr = verifyDB(db)
+		verifyErr = CheckDB(db.toDSN())
 	}).Run()
 
 	if verifyErr != nil {
@@ -494,36 +529,7 @@ func isIPAddress(host string) bool {
 	return net.ParseIP(host) != nil
 }
 
-// verifyDB 验证数据库连通性
-func verifyDB(db *dbConfig) error {
-	sqlDB, err := sql.Open("mysql", db.toDSN())
-	if err != nil {
-		return fmt.Errorf(t(i18n.CliInitErrDbConn), err)
-	}
-	defer sqlDB.Close()
-
-	sqlDB.SetConnMaxLifetime(3 * time.Second)
-	if err := sqlDB.Ping(); err != nil {
-		return fmt.Errorf(t(i18n.CliInitErrDbConn), err)
-	}
-	return nil
-}
-
-// verifyZentao 验证禅道服务有效性
-func verifyZentao(apiURL string) error {
-	client := http.Client{Timeout: 5 * time.Second}
-	resp, err := client.Get(apiURL)
-	if err != nil {
-		return fmt.Errorf(t(i18n.CliInitErrZentaoConn), err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode >= 400 && resp.StatusCode != http.StatusUnauthorized {
-		return fmt.Errorf(t(i18n.CliInitErrZentaoConn), fmt.Sprintf("HTTP %d", resp.StatusCode))
-	}
-
-	return nil
-}
+// (This line is intentionally left blank since old verify functions are removed)
 
 // parsePHPConfig 解析禅道 my.php 配置文件，提取数据库连接信息。
 //
@@ -725,6 +731,9 @@ func copyBinary(workspace string) (string, error) {
 	}
 
 	dstPath := filepath.Join(workspace, "gitfox")
+	if runtime.GOOS == "windows" {
+		dstPath += ".exe"
+	}
 
 	// 如果源和目标是同一个文件，跳过复制
 	if absSrc, err1 := filepath.Abs(exePath); err1 == nil {
@@ -760,6 +769,39 @@ func copyBinary(workspace string) (string, error) {
 	}
 
 	return dstPath, nil
+}
+
+// backupFile 将指定路径的文件重命名为 xxx_bak，用于覆盖前的安全备份。
+// 返回备份后的文件路径。如果源文件不存在则跳过。
+func backupFile(filePath string) (string, error) {
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		return "", nil
+	}
+	bakPath := filePath + "_bak"
+	if err := os.Rename(filePath, bakPath); err != nil {
+		return "", fmt.Errorf("backup %s: %w", filePath, err)
+	}
+	return bakPath, nil
+}
+
+// copyEmbeddedYaml 将内嵌的 prod.yaml 配置文件释放到目标工作目录。
+func copyEmbeddedYaml(workspace string) error {
+	dstPath := filepath.Join(workspace, "prod.yaml")
+
+	yamlBytes, err := configs.FS.ReadFile("prod.yaml")
+	if err != nil {
+		return fmt.Errorf("read embedded prod.yaml: %w", err)
+	}
+
+	if err := os.MkdirAll(workspace, 0755); err != nil {
+		return fmt.Errorf("mkdir %s: %w", workspace, err)
+	}
+
+	if err := os.WriteFile(dstPath, yamlBytes, 0644); err != nil {
+		return fmt.Errorf("write prod.yaml: %w", err)
+	}
+
+	return nil
 }
 
 // printSummary 以美化的表格形式打印最终配置摘要。
@@ -810,4 +852,68 @@ func printSummary(envPath string, db *dbConfig, workspace, serverHost, devopsURL
 		cmdPrefix = ".\\gitfox.exe"
 	}
 	fmt.Printf("   %s start\n\n", cmdPrefix)
+}
+
+// updateZentaoPHPConfig 将 GitFox 的服务地址写回禅道的 my.php 配置文件。
+//
+// 写入/更新以下两行：
+//
+//	$config->devops->gitfoxURL = 'http://{ip}';
+//	$config->devops->gitfoxPort = {port};
+//
+// 如果 my.php 中已存在这两行，则原地更新；否则在文件末尾（?>之前或文件尾部）追加。
+func updateZentaoPHPConfig(myPHPPath string, gitfoxIP string, gitfoxPort int) error {
+	data, err := os.ReadFile(myPHPPath)
+	if err != nil {
+		return fmt.Errorf(clii18n.T(i18n.CliInitErrMyphpRead), err)
+	}
+
+	content := string(data)
+	gitfoxURLLine := fmt.Sprintf("$config->devops->gitfoxURL = 'http://%s';", gitfoxIP)
+	gitfoxPortLine := fmt.Sprintf("$config->devops->gitfoxPort = %d;", gitfoxPort)
+
+	// 使用正则匹配已有的 gitfoxURL 和 gitfoxPort 行
+	urlRegex := regexp.MustCompile(`(?m)^\s*\$config->devops->gitfoxURL\s*=.*$`)
+	portRegex := regexp.MustCompile(`(?m)^\s*\$config->devops->gitfoxPort\s*=.*$`)
+
+	urlUpdated := false
+	portUpdated := false
+
+	// 如果已有 gitfoxURL 行，原地替换
+	if urlRegex.MatchString(content) {
+		content = urlRegex.ReplaceAllLiteralString(content, gitfoxURLLine)
+		urlUpdated = true
+	}
+
+	// 如果已有 gitfoxPort 行，原地替换
+	if portRegex.MatchString(content) {
+		content = portRegex.ReplaceAllLiteralString(content, gitfoxPortLine)
+		portUpdated = true
+	}
+
+	// 如果有未更新的行，追加到文件末尾
+	if !urlUpdated || !portUpdated {
+		var appendLines []string
+		if !urlUpdated {
+			appendLines = append(appendLines, gitfoxURLLine)
+		}
+		if !portUpdated {
+			appendLines = append(appendLines, gitfoxPortLine)
+		}
+		appendContent := "\n" + strings.Join(appendLines, "\n") + "\n"
+
+		// 如果文件包含 ?>，在其前面插入；否则直接追加到末尾
+		if strings.Contains(content, "?>") {
+			content = strings.Replace(content, "?>", appendContent+"?>", 1)
+		} else {
+			content += appendContent
+		}
+	}
+
+	// 写回文件
+	if err := os.WriteFile(myPHPPath, []byte(content), 0644); err != nil {
+		return fmt.Errorf(clii18n.T(i18n.CliInitErrMyphpWrite), err)
+	}
+
+	return nil
 }
