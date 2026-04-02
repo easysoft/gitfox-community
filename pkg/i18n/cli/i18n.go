@@ -9,11 +9,16 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/resources"
 )
 
-var currentLocale string
+var (
+	currentLocale string
+	cliManager    *i18n.Manager // CLI 专用 Manager，不占用全局实例
+)
 
 // Init 初始化 CLI i18n，根据系统环境自动检测语言并从内存加载翻译
 //
-// 性能优化：直接从 embedded resources 读取到内存，无需创建临时文件
+// 使用独立的 Manager 实例，避免与服务端的全局 i18n Manager 冲突。
+// 服务端通过 provider.NewI18nManager 初始化全局 Manager（加载所有翻译文件），
+// CLI 的 Init 如果先调用 InitGlobal 会导致 sync.Once 阻止服务端再次初始化。
 func Init() {
 	currentLocale = detectLocale()
 
@@ -24,8 +29,8 @@ func Init() {
 		return
 	}
 
-	// 初始化全局管理器（不设置 TranslationsDir，手动加载翻译）
-	i18n.InitGlobal(&i18n.ManagerConfig{
+	// 创建 CLI 专用管理器（不影响全局管理器）
+	cliManager = i18n.NewManager(&i18n.ManagerConfig{
 		DefaultLocale:    "en-US",
 		FallbackLocale:   "en-US",
 		TranslationsDir:  "", // 不从目录加载
@@ -33,16 +38,12 @@ func Init() {
 		AutoLoad:         false, // 手动加载
 	})
 
-	// 手动加载翻译到 Manager
-	manager := i18n.GetGlobalManager()
+	// 手动加载翻译到 CLI Manager
 	for locale, trans := range translations {
 		for key, value := range trans {
-			manager.AddTranslation(locale, key, value)
+			cliManager.AddTranslation(locale, key, value)
 		}
 	}
-
-	// 返回空清理函数（无需清理，因为没有创建临时文件）
-	return
 }
 
 // loadTranslationsFromEmbedFS 从 embedded FS 加载 CLI 翻译（仅加载 cli.yaml）
@@ -120,7 +121,14 @@ func normalizeLocale(locale string) string {
 	return "en-US"
 }
 
-// T 翻译函数，使用当前检测到的语言环境
+// T 翻译函数，使用 CLI 专用管理器和当前检测到的语言环境
 func T(key i18n.I18nKey) string {
-	return i18n.TWithLocale(currentLocale, string(key))
+	if cliManager == nil {
+		return string(key)
+	}
+	translator, err := cliManager.GetTranslator(currentLocale)
+	if err != nil {
+		return string(key)
+	}
+	return translator.T(string(key))
 }

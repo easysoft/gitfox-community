@@ -254,7 +254,7 @@ type PrincipalConfig struct {
 
 // DevopsConfig DevOps 平台配置
 type DevopsConfig struct {
-	URL string `yaml:"url"` // DevOps 平台 API 地址
+	URL string `yaml:"url" envconfig:"GITFOX_DEVOPS_URL"` // DevOps 平台 API 地址
 }
 
 // StorageConfig 通用存储配置

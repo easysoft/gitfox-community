@@ -11,5 +11,6 @@ const (
 )
 
 func RegisterInit(app *kingpin.Application) {
-	app.Command(ParamInit, clii18n.T(i18n.CliInstallInitDescription))
+	app.Command(ParamInit, clii18n.T(i18n.CliInstallInitDescription)).
+		Action(runInit)
 }
