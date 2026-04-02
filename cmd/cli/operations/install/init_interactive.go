@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 
@@ -227,7 +228,26 @@ func runInit(_ *kingpin.ParseContext) error {
 		return fmt.Errorf(t(i18n.CliInitErrCopyBin), err)
 	}
 
-	// ========== 第七步：打印配置摘要 ==========
+	// ========== 第七步：处理禅道 my.php 的联动信息配置 ==========
+	if sameMachine && zentaoPath != "" {
+		myPHPPath := filepath.Join(zentaoPath, "my.php")
+		portInt, _ := strconv.Atoi(gitfoxPort)
+		if err := updateZentaoPHPConfig(myPHPPath, localIP, portInt); err != nil {
+			errStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#FF8C00")).Bold(true)
+			fmt.Println(errStyle.Render(fmt.Sprintf(t(i18n.CliInitWarnMyphpWrite), err)))
+		} else {
+			fmt.Println(successStyle.Render("✓ ") + t(i18n.CliInitSuccessMyphpWrite))
+		}
+	} else {
+		// 异机部署，打印向导性指引文本
+		fmt.Println()
+		fmt.Println("💡 " + t(i18n.CliInitManualMyphpHint))
+		fmt.Printf("   $config->devops->gitfoxURL = 'http://%s';\n", localIP)
+		fmt.Printf("   $config->devops->gitfoxPort = %s;\n", gitfoxPort)
+		fmt.Println()
+	}
+
+	// ========== 第八步：打印配置摘要 ==========
 	printSummary(envPath, &db, workspace, localIP, devopsURL)
 
 	return nil

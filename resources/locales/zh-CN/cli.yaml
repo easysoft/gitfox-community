@@ -83,4 +83,6 @@ cli:
   init_err_copy_bin: "复制二进制文件失败: %w"
   init_err_myphp_write: "写入 my.php 失败: %w"
   init_warn_myphp_write: "⚠️  写入禅道配置失败（不影响 GitFox 运行）: %v"
+  init_success_myphp_write: "成功将 GitFox 服务地址写回 my.php"
+  init_manual_myphp_hint: "由于属于异机部署，请别忘了手动将以下代码追加到禅道服务器的 {zentao}/config/my.php 文件中："
   init_next_step_hint: "想使用此配置启动服务，请执行以下命令："

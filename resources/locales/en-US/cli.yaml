@@ -83,4 +83,6 @@ cli:
   init_err_copy_bin: "Failed to copy binary: %w"
   init_err_myphp_write: "Failed to write to my.php: %w"
   init_warn_myphp_write: "⚠️ Failed to write ZenTao config (GitFox unaffected): %v"
+  init_success_myphp_write: "Successfully wrote GitFox URL to my.php"
+  init_manual_myphp_hint: "Since this is a remote deployment, please manually append the following code to ZenTao's {zentao}/config/my.php file:"
   init_next_step_hint: "To start the service with this configuration, please run the following commands:"

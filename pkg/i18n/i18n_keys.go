@@ -164,6 +164,7 @@ const (
 	CliInitErrSaveConfig           I18nKey = "cli.init_err_save_config"           // 保存配置失败: %w
 	CliInitErrUrlFormat            I18nKey = "cli.init_err_url_format"            // 不合法的 URL 或地址格式
 	CliInitErrZentaoConn           I18nKey = "cli.init_err_zentao_conn"           // 禅道服务连接失败: %v
+	CliInitManualMyphpHint         I18nKey = "cli.init_manual_myphp_hint"         // 由于属于异机部署,请别忘了手动将以下代码追加到禅道服务器的 {zentao}/config/m...
 	CliInitNextStepHint            I18nKey = "cli.init_next_step_hint"            // 想使用此配置启动服务,请执行以下命令:
 	CliInitNo                      I18nKey = "cli.init_no"                        // 否
 	CliInitOverwriteBin            I18nKey = "cli.init_overwrite_bin"             // 二进制文件 [%s] 已存在,是否被覆盖?
@@ -173,6 +174,7 @@ const (
 	CliInitSavingConfig            I18nKey = "cli.init_saving_config"             // 正在保存配置...
 	CliInitSuccess                 I18nKey = "cli.init_success"                   // GitFox 配置初始化成功!
 	CliInitSuccessDbConn           I18nKey = "cli.init_success_db_conn"           // 数据库连接测试成功
+	CliInitSuccessMyphpWrite       I18nKey = "cli.init_success_myphp_write"       // 成功将 GitFox 服务地址写回 my.php
 	CliInitSuccessZentaoConn       I18nKey = "cli.init_success_zentao_conn"       // 禅道服务连通性测试成功
 	CliInitTestingDbConn           I18nKey = "cli.init_testing_db_conn"           // 正在测试数据库连通性...
 	CliInitVerifying               I18nKey = "cli.init_verifying"                 // 正在验证配置信息...

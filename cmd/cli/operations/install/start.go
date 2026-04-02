@@ -46,13 +46,13 @@ func updateZentaoPHPConfig(myPHPPath string, gitfoxIP string, gitfoxPort int) er
 
 	// 如果已有 gitfoxURL 行，原地替换
 	if urlRegex.MatchString(content) {
-		content = urlRegex.ReplaceAllString(content, gitfoxURLLine)
+		content = urlRegex.ReplaceAllLiteralString(content, gitfoxURLLine)
 		urlUpdated = true
 	}
 
 	// 如果已有 gitfoxPort 行，原地替换
 	if portRegex.MatchString(content) {
-		content = portRegex.ReplaceAllString(content, gitfoxPortLine)
+		content = portRegex.ReplaceAllLiteralString(content, gitfoxPortLine)
 		portUpdated = true
 	}
 
