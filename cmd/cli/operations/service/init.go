@@ -1,4 +1,4 @@
-package install
+package service
 
 import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
