@@ -132,3 +132,27 @@ func populateDuration(execution *executionModel.Execution) {
 	duration := time.Time(*execution.Finished).Sub(time.Time(*execution.Started))
 	execution.Duration = uint(math.Ceil(duration.Seconds()))
 }
+
+// ListByPr gets executions by PR with pipeline name from ops_pipeline
+func (s *Store) ListByPr(ctx context.Context, filter executionModel.ExecutionInfoReqFilter) ([]*executionModel.ExecutionByPr, error) {
+	db := dbtx.GetOrmAccessor(ctx, s.db)
+
+	var results []*executionModel.ExecutionByPr
+	query := db.Table("ops_pipeline_executions e").
+		Select("e.id, e.pipelineID, p.name as pipelineName, e.trigger, e.commit, e.ref, e.status").
+		Joins("JOIN ops_pipeline p ON e.pipelineID = p.id").
+		Where("p.deleted = 0")
+
+	if filter.Commit != "" {
+		query = query.Where("e.commit = ?", filter.Commit)
+	}
+	if filter.Ref != "" {
+		query = query.Where("e.ref = ?", filter.Ref)
+	}
+
+	if err := query.Find(&results).Error; err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
+	}
+
+	return results, nil
+}

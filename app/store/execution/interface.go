@@ -28,4 +28,6 @@ type Interface interface {
 	Update(ctx context.Context, execution *executionModel.Execution) error
 	// GetByID gets execution by ID
 	GetByID(ctx context.Context, id uint) (*executionModel.Execution, error)
+	// ListByPr gets executions by PR with pipeline name
+	ListByPr(ctx context.Context, filter executionModel.ExecutionInfoReqFilter) ([]*executionModel.ExecutionByPr, error)
 }

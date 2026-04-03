@@ -33,3 +33,18 @@ type ExecutionWithStages struct {
 	Execution
 	Stages []*stageModel.StageWithSteps `json:"stages"`
 }
+
+type ExecutionByPr struct {
+	ID           uint              `json:"id"`
+	PipelineID   uint              `json:"pipelineID"`
+	PipelineName string            `json:"pipelineName"`
+	Trigger      string            `json:"trigger"`
+	Commit       string            `json:"commit"`
+	Ref          string            `json:"ref"`
+	Status       constant.CIStatus `json:"status"`
+}
+
+type ExecutionInfoReqFilter struct {
+	Commit string `json:"commit"`
+	Ref    string `json:"ref"`
+}

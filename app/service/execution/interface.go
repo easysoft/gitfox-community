@@ -31,4 +31,6 @@ type Interface interface {
 	GetByID(ctx context.Context, id uint) (*executionModel.Execution, error)
 	// GetWithStages gets execution with all stages and steps
 	GetWithStages(ctx context.Context, id uint) (*executionModel.ExecutionWithStages, error)
+	// ListByPr gets executions by PR with pipeline name
+	ListByPr(ctx context.Context, filter executionModel.ExecutionInfoReqFilter) ([]*executionModel.ExecutionByPr, error)
 }
