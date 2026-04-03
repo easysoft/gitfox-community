@@ -20,6 +20,7 @@ func Register(app *kingpin.Application) {
 	RegisterStop(app)
 	RegisterUninstall(app)
 	RegisterStatus(app)
+	RegisterVersion(app)
 }
 
 func RegisterInstall(app *kingpin.Application) {

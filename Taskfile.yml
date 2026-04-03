@@ -10,6 +10,15 @@ vars:
   GOOS: $(go env GOOS)
   GOARCH: $(go env GOARCH)
 
+  BUILD_RELEASE:
+    sh: git rev-parse --abbrev-ref HEAD 2>/dev/null | sed 's|release/||' | grep -v '^$' || echo "0.0.1"
+  BUILD_DATE:
+    sh: date +%Y-%m-%dT%H:%M:%S
+  GIT_BRANCH:
+    sh: git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown"
+  GIT_COMMIT:
+    sh: git rev-parse --short HEAD 2>/dev/null || echo "unknown"
+
   VERSION_PKG: gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/common
   LDFLAGS: "-w -s \
     -X '{{.VERSION_PKG}}.Version={{.BUILD_RELEASE}}' \
