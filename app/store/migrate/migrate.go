@@ -37,6 +37,12 @@ const (
 func Migrate(ctx context.Context, db *sql.DB, driverName string, log *logger.SugaredMateLogger) error {
 	log.Infow("[Migrate] Starting database migration", "driver", driverName)
 
+	// 确保迁移表存在
+	if err := ensureMigrationsTable(ctx, db, driverName); err != nil {
+		log.Errorw("[Migrate] Failed to create migrations table", "error", err)
+		return fmt.Errorf("failed to create migrations table: %w", err)
+	}
+
 	// 获取当前版本
 	currentVersion, err := Current(ctx, db, driverName)
 	if err != nil {
@@ -180,4 +186,22 @@ func getMigrator(db *sql.DB, driverName string, log *logger.SugaredMateLogger) (
 	}
 
 	return opts, nil
+}
+
+// ensureMigrationsTable creates the migrations table if it does not exist
+func ensureMigrationsTable(ctx context.Context, db *sql.DB, driverName string) error {
+	var createTableSQL string
+
+	if driverName == dmDriverName {
+		createTableSQL = `CREATE TABLE IF NOT EXISTS "` + tableName + `" ("version" TEXT NOT NULL)`
+	} else {
+		createTableSQL = `CREATE TABLE IF NOT EXISTS ` + tableName + ` (version TEXT NOT NULL)`
+	}
+
+	_, err := db.ExecContext(ctx, createTableSQL)
+	if err != nil {
+		return fmt.Errorf("failed to create migrations table: %w", err)
+	}
+
+	return nil
 }

@@ -40,3 +40,8 @@ func (s *Service) GetWithStages(ctx context.Context, id uint) (*executionModel.E
 		Stages:    stages,
 	}, nil
 }
+
+// ListByPr gets executions by PR with pipeline name
+func (s *Service) ListByPr(ctx context.Context, filter executionModel.ExecutionInfoReqFilter) ([]*executionModel.ExecutionByPr, error) {
+	return s.executionStore.ListByPr(ctx, filter)
+}

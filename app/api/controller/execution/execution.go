@@ -510,3 +510,31 @@ func (c *Controller) GetLogStream(ctx *gin.Context) {
 	// 文件日志不存在，回退到实时日志流
 	c.tailLiveStream(ctx, stepID, f, writeLineAsText)
 }
+
+// @Summary 查询 pr 相关的流水线执行详情
+// @Description 查询 pr 相关的流水线执行的详细信息
+// @Tags executions
+// @Accept application/json
+// @Produce application/json
+// @Param body body executionModel.ExecutionInfoReqFilter true "查询过滤条件"
+// @Success 200 {object} resp.ObjectResponse{data=executionModel.ExecutionByPr} "查询成功"
+// @Failure 400 {object} resp.ObjectResponse "参数错误"
+// @Failure 500 {object} resp.ObjectResponse "服务器错误"
+// @Router /pipeline/executions/list-by-pr [post]
+func (c *Controller) ListByPr(ctx *gin.Context) {
+
+	var filter executionModel.ExecutionInfoReqFilter
+	if err := ctx.ShouldBindJSON(&filter); err != nil {
+		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.ExecutionBodyParamError))
+		return
+	}
+	req.SetDefaults(&filter)
+
+	result, err := c.executionService.ListByPr(ctx.Request.Context(), filter)
+	if err != nil {
+		resp.InternalError(ctx, err)
+		return
+	}
+
+	resp.OK(ctx, i18n.ExecutionQuerySuccess, result)
+}
