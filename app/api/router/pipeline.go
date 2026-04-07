@@ -18,6 +18,7 @@ func registerPipelineRoutes(r *gin.RouterGroup, controller *Controller) {
 	execution := r.Group("/pipeline/executions")
 	{
 		execution.POST("", controller.Execution.Create)
+		execution.POST("/list-by-pr", controller.Execution.ListByPr)
 		executionWithID := execution.Group(":id")
 		{
 			executionWithID.GET("", controller.Execution.Get)

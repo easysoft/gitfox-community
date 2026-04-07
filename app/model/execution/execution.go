@@ -35,13 +35,13 @@ type ExecutionWithStages struct {
 }
 
 type ExecutionByPr struct {
-	ID           uint              `json:"id"`
-	PipelineID   uint              `json:"pipelineID"`
-	PipelineName string            `json:"pipelineName"`
-	Trigger      string            `json:"trigger"`
-	Commit       string            `json:"commit"`
-	Ref          string            `json:"ref"`
-	Status       constant.CIStatus `json:"status"`
+	ID         uint              `json:"id" gorm:"id"`
+	PipelineID uint              `json:"pipelineID" gorm:"pipelineID"`
+	Name       string            `json:"name" gorm:"name"`
+	Trigger    string            `json:"trigger" gorm:"trigger"`
+	Commit     string            `json:"commit" gorm:"commit"`
+	Ref        string            `json:"ref" gorm:"ref"`
+	Status     constant.CIStatus `json:"status" gorm:"status"`
 }
 
 type ExecutionInfoReqFilter struct {
