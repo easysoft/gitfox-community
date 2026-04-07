@@ -482,6 +482,64 @@ const docTemplate = `{
                 }
             }
         },
+        "/pipeline/executions/list-by-pr": {
+            "post": {
+                "description": "查询 pr 相关的流水线执行的详细信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "executions"
+                ],
+                "summary": "查询 pr 相关的流水线执行详情",
+                "parameters": [
+                    {
+                        "description": "查询过滤条件",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_execution.ExecutionInfoReqFilter"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "查询成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_execution.ExecutionByPr"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/pipeline/executions/{id}": {
             "get": {
                 "description": "查询流水线执行的详细信息",
@@ -4476,7 +4534,7 @@ const docTemplate = `{
         },
         "/scan/issues/status": {
             "put": {
-                "description": "批量更新扫描问题的处理状态",
+                "description": "批量更新扫描问题的处理状态和/或解决方案",
                 "consumes": [
                     "application/json"
                 ],
@@ -9013,6 +9071,31 @@ const docTemplate = `{
                 "RunnerOffline"
             ]
         },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanIssueResolution": {
+            "type": "string",
+            "enum": [
+                "",
+                "bydesign",
+                "duplicate",
+                "external",
+                "fixed",
+                "notrepro",
+                "postponed",
+                "willnotfix",
+                "tostory"
+            ],
+            "x-enum-varnames": [
+                "ScanIssueResolutionNull",
+                "ScanIssueResolutionByDesign",
+                "ScanIssueResolutionDuplicate",
+                "ScanIssueResolutionExternal",
+                "ScanIssueResolutionFixed",
+                "ScanIssueResolutionNotReproduce",
+                "ScanIssueResolutionPostponed",
+                "ScanIssueResolutionWillNotFix",
+                "ScanIssueResolutionToStory"
+            ]
+        },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanIssueStatus": {
             "type": "string",
             "enum": [
@@ -9893,6 +9976,43 @@ const docTemplate = `{
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.CIStatus"
                 },
                 "trigger": {
+                    "type": "string"
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_execution.ExecutionByPr": {
+            "type": "object",
+            "properties": {
+                "commit": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "pipelineID": {
+                    "type": "integer"
+                },
+                "ref": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.CIStatus"
+                },
+                "trigger": {
+                    "type": "string"
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_execution.ExecutionInfoReqFilter": {
+            "type": "object",
+            "properties": {
+                "commit": {
+                    "type": "string"
+                },
+                "ref": {
                     "type": "string"
                 }
             }
@@ -10910,6 +11030,9 @@ const docTemplate = `{
                 "bind": {
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleBind"
                 },
+                "id": {
+                    "type": "integer"
+                },
                 "lang": {
                     "type": "string"
                 },
@@ -11287,6 +11410,9 @@ const docTemplate = `{
                 "repoID": {
                     "type": "integer"
                 },
+                "resolution": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanIssueResolution"
+                },
                 "ruleID": {
                     "type": "integer"
                 },
@@ -11345,6 +11471,9 @@ const docTemplate = `{
                 "branch": {
                     "type": "string"
                 },
+                "file": {
+                    "type": "string"
+                },
                 "page": {
                     "type": "integer",
                     "default": 1
@@ -11370,8 +11499,7 @@ const docTemplate = `{
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanIssueUpdateStatusReq": {
             "type": "object",
             "required": [
-                "ids",
-                "status"
+                "ids"
             ],
             "properties": {
                 "ids": {
@@ -11379,6 +11507,9 @@ const docTemplate = `{
                     "items": {
                         "type": "integer"
                     }
+                },
+                "resolution": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanIssueResolution"
                 },
                 "status": {
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanIssueStatus"
@@ -12141,6 +12272,9 @@ const docTemplate = `{
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.SolutionReqFilter": {
             "type": "object",
             "properties": {
+                "id": {
+                    "type": "integer"
+                },
                 "name": {
                     "type": "string"
                 },
