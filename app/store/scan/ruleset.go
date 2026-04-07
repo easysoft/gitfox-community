@@ -105,11 +105,17 @@ func (s *RuleSetStore) List(ctx context.Context, filter scanModel.RuleSetReqFilt
 		Where("r.deleted = ?", false)
 
 	// 过滤条件
+	if filter.ID != 0 {
+		tx = tx.Where("r.id = ?", filter.ID)
+	}
 	if filter.Name != "" {
 		tx = tx.Where("r.name LIKE ?", "%"+filter.Name+"%")
 	}
 	if filter.Lang != "" {
 		tx = tx.Where("r.lang = ?", strings.ToLower(filter.Lang))
+	}
+	if filter.Plugin != "" {
+		tx = tx.Where("r.plugin = ?", filter.Plugin)
 	}
 	if filter.Tag != "" {
 		tx = tx.Where("r.tag = ?", filter.Tag)

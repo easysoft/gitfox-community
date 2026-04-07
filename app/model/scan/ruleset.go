@@ -28,8 +28,10 @@ type RuleSetReqForUpdate struct {
 }
 
 type RuleSetReqFilter struct {
+	ID       int64  `json:"id"`
 	Name     string `json:"name"`
 	Lang     string `json:"lang"`
+	Plugin   string `json:"plugin"`
 	Tag      string `json:"tag"`
 	Type     string `json:"type"`
 	Status   string `json:"status"`
