@@ -1545,6 +1545,8 @@ definitions:
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.RuleSetReqFilter:
     properties:
+      id:
+        type: integer
       lang:
         type: string
       name:
@@ -1558,6 +1560,8 @@ definitions:
       pageSize:
         default: 30
         type: integer
+      plugin:
+        type: string
       sort:
         default: id
         type: string
@@ -2304,6 +2308,10 @@ definitions:
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.SolutionReqFilter:
     properties:
+      createdBy:
+        type: string
+      editedBy:
+        type: string
       id:
         type: integer
       name:

@@ -83,6 +83,12 @@ func (s *SolutionStore) List(ctx context.Context, filter scanModel.SolutionReqFi
 	if filter.Status != "" {
 		tx = tx.Where("status = ?", filter.Status)
 	}
+	if filter.CreatedBy != "" {
+		tx = tx.Where("createdBy LIKE ?", "%"+filter.CreatedBy+"%")
+	}
+	if filter.EditedBy != "" {
+		tx = tx.Where("editedBy LIKE ?", "%"+filter.EditedBy+"%")
+	}
 
 	var solutions []*SolutionRules
 	pageResult, err := database.Paginate(ctx, tx, database.PageParam{

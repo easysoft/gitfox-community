@@ -25,14 +25,16 @@ type SolutionReqForUpdate struct {
 
 // SolutionReqFilter 查询扫描方案过滤条件
 type SolutionReqFilter struct {
-	ID       uint   `json:"id,omitempty"`
-	Name     string `json:"name"`
-	Tag      string `json:"tag"`
-	Status   string `json:"status"`
-	Sort     string `json:"sort" form:"sort" default:"id"`
-	Order    string `json:"order" form:"order" default:"asc"`
-	Page     int    `json:"page" form:"page" default:"1"`
-	PageSize int    `json:"pageSize" form:"pageSize" default:"30"`
+	ID        uint   `json:"id,omitempty"`
+	Name      string `json:"name"`
+	Tag       string `json:"tag"`
+	Status    string `json:"status"`
+	CreatedBy string `json:"createdBy"`
+	EditedBy  string `json:"editedBy"`
+	Sort      string `json:"sort" form:"sort" default:"id"`
+	Order     string `json:"order" form:"order" default:"asc"`
+	Page      int    `json:"page" form:"page" default:"1"`
+	PageSize  int    `json:"pageSize" form:"pageSize" default:"30"`
 }
 
 // SolutionReqForBind 绑定/解绑规则集请求
