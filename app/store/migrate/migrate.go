@@ -101,7 +101,7 @@ func Current(ctx context.Context, db *sql.DB, driverName string) (string, error)
 		query = `
 			SELECT count(*)
 			FROM information_schema.TABLES
-			WHERE TABLE_NAME= ?`
+			WHERE TABLE_NAME= ? AND TABLE_SCHEMA = database()`
 	case dmDriverName:
 		// 达梦数据库：由于建表时使用了双引号 "ops_migrations"，
 		// 在 ALL_TABLES 中 TABLE_NAME 存储的是小写，但是需要区分 OWNER

@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS `ops_scan_tasks` (
 )
 ENGINE=InnoDB COMMENT='扫描任务表';
 
-CREATE INDEX IF NOT EXISTS idx_planID_deleted ON ops_scan_tasks (`planID`, `deleted`);
-CREATE INDEX IF NOT EXISTS idx_executionID ON ops_scan_tasks (`executionID`);
-CREATE INDEX IF NOT EXISTS idx_status ON ops_scan_tasks (`status`);
-CREATE INDEX IF NOT EXISTS idx_deleted ON ops_scan_tasks (`deleted`);
+CREATE INDEX idx_planID_deleted ON ops_scan_tasks (`planID`, `deleted`);
+CREATE INDEX idx_executionID ON ops_scan_tasks (`executionID`);
+CREATE INDEX idx_status ON ops_scan_tasks (`status`);
+CREATE INDEX idx_deleted ON ops_scan_tasks (`deleted`);
