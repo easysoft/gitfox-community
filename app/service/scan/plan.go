@@ -116,8 +116,7 @@ func (s *ScanPlanService) GetByID(ctx context.Context, repoID uint, id uint) (*s
 	if err != nil {
 		if isDBNotFoundError(err) {
 			return nil, errors.WithI18nKey(
-				fmt.Errorf("scan plan %d:%s data inconsistency, bound solution has been deleted", plan.ID, plan.Name),
-				i18n.PlanSolutionDeletedError,
+				err, i18n.PlanSolutionDeletedError,
 			)
 		}
 		return nil, err
@@ -271,10 +270,7 @@ func (s *ScanPlanService) ListRules(ctx context.Context, repoID uint, planID uin
 		solution, err := s.getSolutionByID(ctx, uint(solutionID))
 		if err != nil {
 			if isDBNotFoundError(err) {
-				return nil, nil, errors.WithI18nKey(
-					fmt.Errorf("scan plan %d:%s data inconsistency, bound solution has been deleted", plan.ID, plan.Name),
-					i18n.PlanSolutionDeletedError,
-				)
+				return nil, nil, errors.WithI18nKey(err, i18n.PlanSolutionDeletedError)
 			}
 			return nil, nil, err
 		}
