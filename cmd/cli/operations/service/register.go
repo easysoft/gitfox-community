@@ -2,6 +2,7 @@ package service
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -127,7 +128,7 @@ func RestartService() error {
 		_ = exec.Command("nssm", "restart", "gitfox").Run()
 		return nil
 	default:
-		return fmt.Errorf(clii18n.T(i18n.CliStartErrUnsupportedOs))
+		return errors.New(clii18n.T(i18n.CliStartErrUnsupportedOs))
 	}
 }
 
@@ -162,7 +163,7 @@ func RegisterService(exePath, workDir string) error {
 	case "darwin":
 		return registerMac(exePath, workDir)
 	default:
-		return fmt.Errorf(clii18n.T(i18n.CliStartErrUnsupportedOs))
+		return errors.New(clii18n.T(i18n.CliStartErrUnsupportedOs))
 	}
 }
 
@@ -174,7 +175,7 @@ func registerWindows(exePath, workDir string) error {
 
 	// 1. 前置依赖断言：NSSM 是否存在于机器的 $PATH 中
 	if _, err := exec.LookPath("nssm"); err != nil {
-		return fmt.Errorf(t(i18n.CliStartErrNssmMissing))
+		return errors.New(t(i18n.CliStartErrNssmMissing))
 	}
 
 	// 2. 清理旧实例 (防御式编程，允许这里产生 error 不影响后续)
@@ -183,7 +184,7 @@ func registerWindows(exePath, workDir string) error {
 
 	// 3. 注册新服务，直接下发 server 端启动命令
 	if err := exec.Command("nssm", "install", "gitfox", exePath, "server", "prod").Run(); err != nil {
-		return fmt.Errorf(t(i18n.CliStartErrRequiresAdmin))
+		return errors.New(t(i18n.CliStartErrRequiresAdmin))
 	}
 	
 	// 4. 重定向工作目录以确保相对路径（如 db logs）产出正确
@@ -204,7 +205,7 @@ func registerLinux(exePath, workDir string) error {
 
 	// 1. 前置依赖断言：探测到 systemctl 工具
 	if _, err := exec.LookPath("systemctl"); err != nil {
-		return fmt.Errorf(t(i18n.CliStartErrSystemctlMissing))
+		return errors.New(t(i18n.CliStartErrSystemctlMissing))
 	}
 
 	// 2. 动态生成符合当前系统的 service definition
@@ -246,7 +247,7 @@ func registerMac(exePath, workDir string) error {
 
 	// 1. 前置依赖断言：探测到 launchctl 工具
 	if _, err := exec.LookPath("launchctl"); err != nil {
-		return fmt.Errorf(t(i18n.CliStartErrLaunchctlMissing))
+		return errors.New(t(i18n.CliStartErrLaunchctlMissing))
 	}
 
 	// 2. 构建 Apple 标准的 PropertyList XML 配置文件

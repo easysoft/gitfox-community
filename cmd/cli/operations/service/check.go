@@ -2,6 +2,7 @@ package service
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -11,9 +12,9 @@ import (
 	"strings"
 	"time"
 
-	_ "github.com/go-sql-driver/mysql"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	clii18n "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n/cli"
+	_ "github.com/go-sql-driver/mysql"
 )
 
 // CheckSudo 检查当前上下文是否具有超级管理员执行权限 (Root/Sudo)。
@@ -21,7 +22,7 @@ import (
 // 注意：在 Windows 环境中该接口固定返回 nil，此时权限防御将下沉交由 Windows 原生安全体系兜底。
 func CheckSudo() error {
 	if runtime.GOOS != "windows" && os.Getuid() != 0 {
-		return fmt.Errorf(clii18n.T(i18n.CliStartErrRequiresAdmin))
+		return errors.New(clii18n.T(i18n.CliStartErrRequiresAdmin))
 	}
 	return nil
 }
@@ -92,7 +93,7 @@ func CheckDockerCompose() (bool, string, error) {
 	if _, err := exec.LookPath("docker"); err == nil {
 		cmd = exec.Command("docker", "compose", "version")
 		toolName = "docker compose"
-		
+
 		// 有时候 docker 存在，但插件 compose 不存在。我们测试跑一下能否运行
 		if err := cmd.Run(); err != nil {
 			cmd = nil // V2 不可用
@@ -117,13 +118,13 @@ func CheckDockerCompose() (bool, string, error) {
 	}
 
 	outStr := strings.TrimSpace(string(output))
-	
-	// 输出可能是: 
+
+	// 输出可能是:
 	// v2: "Docker Compose version v2.21.0-desktop.1"
 	// v1: "docker-compose version 1.29.2, build 5becea4c"
 	re := regexp.MustCompile(`[Vv]ersion\s+([vV]?\d+\.\d+\.\d+(?:[-a-zA-Z0-9.]+)*)`)
 	matches := re.FindStringSubmatch(outStr)
-	
+
 	if len(matches) > 1 {
 		return true, matches[1], nil
 	}
