@@ -108,6 +108,28 @@ definitions:
     x-enum-varnames:
     - RunnerOnline
     - RunnerOffline
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanIssueResolution:
+    enum:
+    - ""
+    - bydesign
+    - duplicate
+    - external
+    - fixed
+    - notrepro
+    - postponed
+    - willnotfix
+    - tostory
+    type: string
+    x-enum-varnames:
+    - ScanIssueResolutionNull
+    - ScanIssueResolutionByDesign
+    - ScanIssueResolutionDuplicate
+    - ScanIssueResolutionExternal
+    - ScanIssueResolutionFixed
+    - ScanIssueResolutionNotReproduce
+    - ScanIssueResolutionPostponed
+    - ScanIssueResolutionWillNotFix
+    - ScanIssueResolutionToStory
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanIssueStatus:
     enum:
     - wait
@@ -732,6 +754,30 @@ definitions:
       status:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.CIStatus'
       trigger:
+        type: string
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_execution.ExecutionByPr:
+    properties:
+      commit:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      pipelineID:
+        type: integer
+      ref:
+        type: string
+      status:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.CIStatus'
+      trigger:
+        type: string
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_execution.ExecutionInfoReqFilter:
+    properties:
+      commit:
+        type: string
+      ref:
         type: string
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_execution.ExecutionWithStages:
@@ -1431,6 +1477,8 @@ definitions:
     properties:
       bind:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleBind'
+      id:
+        type: integer
       lang:
         type: string
       langID:
@@ -1683,6 +1731,8 @@ definitions:
         type: string
       repoID:
         type: integer
+      resolution:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanIssueResolution'
       ruleID:
         type: integer
       ruleKey:
@@ -1721,6 +1771,8 @@ definitions:
     properties:
       branch:
         type: string
+      file:
+        type: string
       page:
         default: 1
         type: integer
@@ -1742,11 +1794,12 @@ definitions:
         items:
           type: integer
         type: array
+      resolution:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanIssueResolution'
       status:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanIssueStatus'
     required:
     - ids
-    - status
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanPlan:
     properties:
@@ -2251,6 +2304,8 @@ definitions:
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.SolutionReqFilter:
     properties:
+      id:
+        type: integer
       name:
         type: string
       order:
@@ -3060,6 +3115,41 @@ paths:
           schema:
             $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
       summary: 取消流水线执行
+      tags:
+      - executions
+  /pipeline/executions/list-by-pr:
+    post:
+      consumes:
+      - application/json
+      description: 查询 pr 相关的流水线执行的详细信息
+      parameters:
+      - description: 查询过滤条件
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_execution.ExecutionInfoReqFilter'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 查询成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_execution.ExecutionByPr'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 查询 pr 相关的流水线执行详情
       tags:
       - executions
   /pipeline/steps/{name}/schema:
@@ -5557,7 +5647,7 @@ paths:
     put:
       consumes:
       - application/json
-      description: 批量更新扫描问题的处理状态
+      description: 批量更新扫描问题的处理状态和/或解决方案
       parameters:
       - description: 更新请求
         in: body

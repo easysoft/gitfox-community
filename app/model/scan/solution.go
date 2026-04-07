@@ -25,6 +25,7 @@ type SolutionReqForUpdate struct {
 
 // SolutionReqFilter 查询扫描方案过滤条件
 type SolutionReqFilter struct {
+	ID       uint   `json:"id,omitempty"`
 	Name     string `json:"name"`
 	Tag      string `json:"tag"`
 	Status   string `json:"status"`

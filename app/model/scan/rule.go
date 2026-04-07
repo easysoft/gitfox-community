@@ -44,6 +44,7 @@ type RuleReqFilter struct {
 }
 
 type RuleListReqFilter struct {
+	ID           uint                      `json:"id,omitempty"`
 	RuleSetID    int64                     `json:"rulesetID,omitempty"`
 	Name         string                    `json:"name,omitempty"`
 	Lang         string                    `json:"lang,omitempty"`

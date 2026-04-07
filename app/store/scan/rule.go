@@ -212,6 +212,10 @@ func (s *RuleStore) List(ctx context.Context, filter scanModel.RuleListReqFilter
 	}
 
 	// 过滤查询参数
+	if filter.ID > 0 {
+		tx = tx.Where("id = ?", filter.ID)
+	}
+
 	if filter.Name != "" {
 		tx = tx.Where("name LIKE ?", "%"+filter.Name+"%")
 	}

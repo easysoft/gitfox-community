@@ -71,6 +71,9 @@ func (s *SolutionStore) Delete(ctx context.Context, id uint) error {
 func (s *SolutionStore) List(ctx context.Context, filter scanModel.SolutionReqFilter) (*database.PageResult[*scanModel.Solution], error) {
 	tx := s.db.WithContext(ctx).Model(&SolutionRules{}).Where("deleted = ?", false)
 
+	if filter.ID > 0 {
+		tx = tx.Where("id = ?", filter.ID)
+	}
 	if filter.Name != "" {
 		tx = tx.Where("name LIKE ?", "%"+filter.Name+"%")
 	}

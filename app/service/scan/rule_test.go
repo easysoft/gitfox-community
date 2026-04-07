@@ -47,6 +47,24 @@ func TestRuleServiceDelegation(t *testing.T) {
 		assert.Equal(t, int64(1), got.Total)
 	})
 
+	t.Run("List with id filter", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		store := scanStoreMock.NewMockIRule(ctrl)
+		store.EXPECT().List(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, filter scanModel.RuleListReqFilter) (*database.PageResult[*scanModel.Rule], error) {
+			assert.Equal(t, uint(42), filter.ID)
+			return &database.PageResult[*scanModel.Rule]{Data: []*scanModel.Rule{{ID: 42, Name: "target-rule"}}, Total: 1}, nil
+		})
+
+		svc := NewRuleService(store, nil)
+		got, err := svc.List(context.Background(), &authModel.Session{}, scanModel.RuleListReqFilter{ID: 42})
+		require.NoError(t, err)
+		require.NotNil(t, got)
+		assert.Equal(t, int64(1), got.Total)
+		assert.Equal(t, int64(42), got.Data[0].ID)
+	})
+
 	t.Run("UpdateStatus", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()

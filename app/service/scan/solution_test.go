@@ -99,6 +99,28 @@ func TestSolutionServiceCreateAndGet(t *testing.T) {
 		assert.ElementsMatch(t, []string{"eslint"}, got.Data[1].Plugins)
 		assert.ElementsMatch(t, []string{"js"}, got.Data[1].Langs)
 	})
+
+	t.Run("list with id filter", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		store := scanStoreMock.NewMockISolution(ctrl)
+		store.EXPECT().List(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, filter scanModel.SolutionReqFilter) (*database.PageResult[*scanModel.Solution], error) {
+			assert.Equal(t, uint(10), filter.ID)
+			return &database.PageResult[*scanModel.Solution]{
+				Data: []*scanModel.Solution{{ID: 10, Name: "sol-a"}},
+			}, nil
+		})
+		store.EXPECT().ListRulesets(gomock.Any(), uint(10)).Return([]*scanModel.RuleSet{
+			{ID: 1, Plugin: "pmd", Lang: constant.ScanLangName("go"), RulesCount: 2},
+		}, nil)
+
+		svc := NewSolutionService(store)
+		got, err := svc.List(context.Background(), scanModel.SolutionReqFilter{ID: 10})
+		require.NoError(t, err)
+		require.Len(t, got.Data, 1)
+		assert.Equal(t, int64(10), got.Data[0].ID)
+	})
 }
 
 func TestSolutionServiceStatusAndBind(t *testing.T) {
