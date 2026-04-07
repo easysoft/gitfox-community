@@ -128,22 +128,18 @@ func (s *ScanPlanStore) List(ctx context.Context, repoID uint, filter scanModel.
 			Where("ops_repo.spaceID = ?", filter.SpaceID)
 	}
 
-	// 获取每个计划最新任务的子查询
-	latestTaskSubQuery := s.db.Model(&ScanTask{}).
-		Select("MAX(id)").
-		Where("deleted = ?", false).
-		Group("planID")
-
-	planIDSubQuery := s.db.Model(&ScanTask{}).
-		Select("planID").
-		Where("id IN (?)", latestTaskSubQuery)
-
 	if filter.LatestTaskResult != "" {
-		// 按最新任务结果过滤
-		planIDSubQuery = planIDSubQuery.Where("result = ?", filter.LatestTaskResult)
+		// 按最新任务结果过滤：只保留有对应结果的计划
+		latestTaskSubQuery := s.db.Model(&ScanTask{}).
+			Select("MAX(id)").
+			Where("deleted = ?", false).
+			Group("planID")
+		planIDSubQuery := s.db.Model(&ScanTask{}).
+			Select("planID").
+			Where("id IN (?)", latestTaskSubQuery).
+			Where("result = ?", filter.LatestTaskResult)
+		tx = tx.Where("ops_scan_plans.id IN (?)", planIDSubQuery)
 	}
-
-	tx = tx.Where("ops_scan_plans.id IN (?)", planIDSubQuery)
 
 	if filter.LatestTaskStatus != "" {
 		latestTaskSubQ := s.db.Model(&ScanTask{}).Select("MAX(id)").

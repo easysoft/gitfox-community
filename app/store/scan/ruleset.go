@@ -217,8 +217,7 @@ func (s *RuleSetStore) GetRuleIDList(ctx context.Context, ruleSetID uint) ([]int
 
 // BindRule 绑定规则到规则集（将 deleted 设置为 false，不存在则新增记录）
 func (s *RuleSetStore) BindRule(ctx context.Context, ruleSetID uint, ruleIDs []uint) error {
-
-	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		for _, ruleID := range ruleIDs {
 			// 查询关联记录是否存在
 			var existingRecord RuleSetRules
@@ -250,13 +249,71 @@ func (s *RuleSetStore) BindRule(ctx context.Context, ruleSetID uint, ruleIDs []u
 		}
 		return nil
 	})
+	if err != nil {
+		return err
+	}
+	return s.autoUpdatePlugin(ctx, ruleSetID)
 }
 
 // UnBindRule 解绑规则与规则集（将 deleted 设置为 true）
 func (s *RuleSetStore) UnBindRule(ctx context.Context, ruleSetID uint, ruleIDs []uint) error {
-
-	// 将关联表中对应记录的 deleted 设置为 true
-	return s.db.WithContext(ctx).Model(&RuleSetRules{}).
+	err := s.db.WithContext(ctx).Model(&RuleSetRules{}).
 		Where("rulesetID = ? AND ruleID IN ?", ruleSetID, ruleIDs).
 		Update("deleted", true).Error
+	if err != nil {
+		return err
+	}
+	return s.autoUpdatePlugin(ctx, ruleSetID)
 }
+
+// autoUpdatePlugin 根据规则集当前绑定的规则自动更新 plugin 字段。
+// 统计所有已绑定规则的 plugin 分布，去除 custom 类，按数量降序用逗号拼接后写回规则集。
+// 若规则集已无任何绑定规则，则将 plugin 重置为 "default"。
+func (s *RuleSetStore) autoUpdatePlugin(ctx context.Context, ruleSetID uint) error {
+	type pluginCount struct {
+		Plugin string `gorm:"column:plugin"`
+		Count  int64  `gorm:"column:count"`
+	}
+
+	var counts []pluginCount
+	err := s.db.WithContext(ctx).
+		Table("ops_scan_rules AS r").
+		Select("r.plugin, COUNT(*) AS count").
+		Joins("JOIN ops_scan_ruleset_rules AS rsr ON r.id = rsr.ruleID").
+		Where("rsr.rulesetID = ? AND rsr.deleted = ?", ruleSetID, false).
+		Group("r.plugin").
+		Order("count DESC").
+		Find(&counts).Error
+	if err != nil {
+		return database.ProcessSQLErrorf(ctx, err)
+	}
+
+	var plugin string
+	if len(counts) == 0 {
+		plugin = "default"
+	} else {
+		var plugins []string
+		for _, pc := range counts {
+			if strings.Contains(strings.ToLower(pc.Plugin), "custom") {
+				continue
+			}
+			plugins = append(plugins, pc.Plugin)
+		}
+		plugin = strings.Join(plugins, ",")
+	}
+
+	// 与当前值一致时跳过写库
+	var current RuleSet
+	if err := s.db.WithContext(ctx).Select("plugin").Where("id = ?", ruleSetID).First(&current).Error; err != nil {
+		return database.ProcessSQLErrorf(ctx, err)
+	}
+	if current.Plugin == plugin {
+		return nil
+	}
+
+	return s.db.WithContext(ctx).
+		Model(&RuleSet{}).
+		Where("id = ?", ruleSetID).
+		Update("plugin", plugin).Error
+}
+
