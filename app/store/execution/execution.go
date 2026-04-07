@@ -139,8 +139,8 @@ func (s *Store) ListByPr(ctx context.Context, filter executionModel.ExecutionInf
 
 	var results []*executionModel.ExecutionByPr
 	query := db.Table("ops_pipeline_executions e").
-		Select("e.id, e.pipelineID, p.name, e.trigger, e.commit, e.ref, e.status").
-		Joins("JOIN ops_pipeline p ON e.pipelineID = p.id").
+		Select("e.id, e.PipelineID, p.name, e.trigger, e.commit, e.ref, e.status").
+		Joins("JOIN ops_pipeline p ON e.PipelineID = p.id").
 		Where("p.deleted = 0")
 
 	if filter.Commit != "" {
