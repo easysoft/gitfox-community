@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "rules":[
+        {
+          "ruleKey": "argument.byRef",
+          "plugin": "phpstan",
+          "lang": "php",
+          "name": "引用传递参数使用错误",
+          "priority": "low",
+          "type": "defect",
+          "tag": "Code Quality",
+          "content": "引用传递参数使用错误\n示例：\n```php\nfunction test($a) {\n    $a = 1;\n}\n```",
+          "description": "引用传递参数使用错误",
+          "description_en": "Passing parameter by reference error"
+        }
+  ]
+}

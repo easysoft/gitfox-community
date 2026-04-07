@@ -22,7 +22,6 @@ CREATE TABLE IF NOT EXISTS `ops_scan_rules` (
 )
 ENGINE=InnoDB COMMENT='扫描规则表';
 
-CREATE UNIQUE INDEX uk_ruleKey ON ops_scan_rules (ruleKey);
 CREATE UNIQUE INDEX uk_ruleKey_lang_deleted_unique ON ops_scan_rules (ruleKey, lang, deleted);
 CREATE INDEX idx_name ON ops_scan_rules (name);
 CREATE INDEX idx_type ON ops_scan_rules (type);
