@@ -114,6 +114,12 @@ func (s *ScanPlanService) GetByID(ctx context.Context, repoID uint, id uint) (*s
 	}
 	solutions, solutionIDs, err := s.solutionStore.GetSolutionsByPlanID(ctx, id)
 	if err != nil {
+		if isDBNotFoundError(err) {
+			return nil, errors.WithI18nKey(
+				fmt.Errorf("scan plan %d:%s data inconsistency, bound solution has been deleted", plan.ID, plan.Name),
+				i18n.PlanSolutionDeletedError,
+			)
+		}
 		return nil, err
 	}
 	plan.SolutionIDs = solutionIDs
@@ -264,6 +270,12 @@ func (s *ScanPlanService) ListRules(ctx context.Context, repoID uint, planID uin
 	for _, solutionID := range solutionIDs {
 		solution, err := s.getSolutionByID(ctx, uint(solutionID))
 		if err != nil {
+			if isDBNotFoundError(err) {
+				return nil, nil, errors.WithI18nKey(
+					fmt.Errorf("scan plan %d:%s data inconsistency, bound solution has been deleted", plan.ID, plan.Name),
+					i18n.PlanSolutionDeletedError,
+				)
+			}
 			return nil, nil, err
 		}
 		if solution.Status != constant.ScanRuleStatusEnabled {
@@ -336,6 +348,18 @@ func (s *ScanPlanService) UnbindSolutions(ctx context.Context, repoID uint, plan
 	}
 	if _, err := s.getPlanByRepoAndID(ctx, repoID, planID); err != nil {
 		return err
+	}
+	// 检查解绑后是否至少保留一个方案
+	currentIDs, err := s.planStore.GetSolutionIDList(ctx, planID)
+	if err != nil {
+		return err
+	}
+	remaining := countRemainingAfterUnbind(currentIDs, req.SolutionIDs)
+	if remaining < 1 {
+		return errors.WithI18nKey(
+			errors.New("plan must retain at least one solution"),
+			i18n.PlanSolutionRetainOneError,
+		)
 	}
 	return s.planStore.UnbindSolutions(ctx, planID, req.SolutionIDs)
 }
@@ -433,4 +457,19 @@ func (s *ScanPlanService) getTriggerByRepoPlanAndID(ctx context.Context, repoID 
 // isDBNotFoundError 判断错误是否应视为项目内统一的数据库 not found 错误。
 func isDBNotFoundError(err error) bool {
 	return errors.IsNotFound(err) || errors.GetI18nKey(err) == i18n.DbNotfound
+}
+
+// countRemainingAfterUnbind 计算从 currentIDs 中移除 unbindIDs 后剩余的数量。
+func countRemainingAfterUnbind(currentIDs []int64, unbindIDs []uint) int {
+	removeSet := make(map[int64]struct{}, len(unbindIDs))
+	for _, id := range unbindIDs {
+		removeSet[int64(id)] = struct{}{}
+	}
+	remaining := 0
+	for _, id := range currentIDs {
+		if _, found := removeSet[id]; !found {
+			remaining++
+		}
+	}
+	return remaining
 }

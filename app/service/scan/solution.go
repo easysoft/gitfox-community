@@ -96,6 +96,14 @@ func (s *SolutionService) Delete(ctx context.Context, id uint) error {
 	if !obj.IsCustom {
 		return errors.WithI18nKey(nil, i18n.SolutionBuiltinDeleteError)
 	}
+	// 检查是否被扫描计划引用
+	inUse, err := s.solutionStore.IsUsedByPlan(ctx, id)
+	if err != nil {
+		return err
+	}
+	if inUse {
+		return errors.WithI18nKey(nil, i18n.SolutionInUseError)
+	}
 	return s.solutionStore.Delete(ctx, id)
 }
 
