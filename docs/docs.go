@@ -11132,6 +11132,9 @@ const docTemplate = `{
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.RuleSetReqFilter": {
             "type": "object",
             "properties": {
+                "id": {
+                    "type": "integer"
+                },
                 "lang": {
                     "type": "string"
                 },
@@ -11149,6 +11152,9 @@ const docTemplate = `{
                 "pageSize": {
                     "type": "integer",
                     "default": 30
+                },
+                "plugin": {
+                    "type": "string"
                 },
                 "sort": {
                     "type": "string",
@@ -12272,6 +12278,12 @@ const docTemplate = `{
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.SolutionReqFilter": {
             "type": "object",
             "properties": {
+                "createdBy": {
+                    "type": "string"
+                },
+                "editedBy": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "integer"
                 },

@@ -22,6 +22,7 @@ type cronJobInput struct {
 	PipelineID int64 `json:"pipelineID"`
 }
 
+
 func (h *cronTriggerHandler) Handle(ctx context.Context, input string, _ pkgJobs.ProgressReporter) (string, error) {
 	var in cronJobInput
 	if err := json.Unmarshal([]byte(input), &in); err != nil {
@@ -32,14 +33,21 @@ func (h *cronTriggerHandler) Handle(ctx context.Context, input string, _ pkgJobs
 		return "", fmt.Errorf("invalid pipelineID %d in cron job input", in.PipelineID)
 	}
 
-	pipeline, err := h.pipelineSvc.GetPipelineByID(ctx, in.PipelineID)
+	_, err := h.pipelineSvc.GetPipelineByID(ctx, in.PipelineID)
 	if err != nil {
 		return "", fmt.Errorf("failed to get pipeline %d: %w", in.PipelineID, err)
 	}
 
+	// 从 ops_pipeline_content 解析 variables，取 key=gitRef 的分支值。
+	// 优先取 value，value 为空则取 defaultValue，两者均为空则报错。
+	gitRef, err := h.resolveGitRef(ctx, in.PipelineID)
+	if err != nil {
+		return "", fmt.Errorf("failed to resolve gitRef for pipeline %d: %w", in.PipelineID, err)
+	}
+
 	hook := &triggerer.Hook{
 		Action:  constant.TriggerActionCron,
-		Ref:     pipeline.DefaultBranch,
+		Ref:     gitRef,
 		Trigger: "system",
 	}
 
@@ -50,6 +58,25 @@ func (h *cronTriggerHandler) Handle(ctx context.Context, input string, _ pkgJobs
 	}
 
 	return "", nil
+}
+
+// resolveGitRef 从流水线 variables 中查找 key=gitRef 的值并返回。
+// 使用 GetPipelineVariables：runtime=true 时取 defaultValue（定时任务无人提供运行时值），
+// runtime=false 时取 value（固定值）。两者皆空则返回错误。
+func (h *cronTriggerHandler) resolveGitRef(ctx context.Context, pipelineID int64) (string, error) {
+	vars, err := h.pipelineSvc.GetPipelineVariables(ctx, pipelineID)
+	if err != nil {
+		return "", fmt.Errorf("pipeline %d: failed to get pipeline variables: %w", pipelineID, err)
+	}
+
+	ref, ok := vars["gitRef"]
+	if !ok {
+		return "", fmt.Errorf("pipeline %d: gitRef variable not found in variables, please configure it", pipelineID)
+	}
+	if ref == "" {
+		return "", fmt.Errorf("pipeline %d: gitRef variable is not set", pipelineID)
+	}
+	return ref, nil
 }
 
 // RegisterPipelineCronHandler registers the cron trigger handler with the job
