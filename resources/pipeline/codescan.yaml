@@ -12,7 +12,7 @@ spec:
           - name: git clone
             type: plugin
             spec:
-              name: git_clone
+              name: scm_git_clone
               inputs:
                 repository: ${{parameters.gitURL}}
                 gitRef: ${{parameters.gitRef}}
