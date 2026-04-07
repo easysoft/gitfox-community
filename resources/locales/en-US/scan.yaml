@@ -99,8 +99,10 @@ plan:
   bind_error: "Failed to bind solutions to scan plan."
   unbind_success: "Scan plan unbind solutions successfully."
   unbind_error: "Failed to unbind solutions from scan plan."
+  solution_retain_one_error: "Scan plan must retain at least one solution, cannot unbind all."
   solution_list_success: "Scan plan unbind solution list queried successfully."
   solution_list_error: "Failed to query scan plan unbind solution list."
+  solution_deleted_error: "Scan plan data inconsistency, the bound solution has been deleted."
 
 trigger:
   path_param_error: "Path param parsing failed."

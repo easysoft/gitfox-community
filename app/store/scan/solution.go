@@ -308,6 +308,18 @@ func (s *SolutionStore) GetSolutionsByPlanID(ctx context.Context, planID uint) (
 	return solutions, ids, nil
 }
 
+// IsUsedByPlan 检查扫描方案是否被扫描计划使用
+func (s *SolutionStore) IsUsedByPlan(ctx context.Context, solutionID uint) (bool, error) {
+	var count int64
+	err := s.db.WithContext(ctx).Model(&ScanPlanSolution{}).
+		Where("solutionID = ? AND deleted = ?", solutionID, false).
+		Count(&count).Error
+	if err != nil {
+		return false, database.ProcessSQLErrorf(ctx, err)
+	}
+	return count > 0, nil
+}
+
 func mapSolutionToModel(data SolutionRules) *scanModel.Solution {
 	return &scanModel.Solution{
 		ID:          int64(data.ID),

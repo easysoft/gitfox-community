@@ -99,8 +99,10 @@ plan:
   bind_error: "扫描计划绑定扫描方案失败。"
   unbind_success: "扫描计划解绑扫描方案成功。"
   unbind_error: "扫描计划解绑扫描方案失败。"
+  solution_retain_one_error: "扫描计划至少需要保留一个扫描方案，无法全部解绑。"
   solution_list_success: "扫描计划可绑定方案列表查询成功。"
   solution_list_error: "扫描计划可绑定方案列表查询失败。"
+  solution_deleted_error: "扫描计划数据异常，关联的扫描方案已被删除。"
 
 trigger:
   path_param_error: "路径参数解析失败。"

@@ -476,9 +476,11 @@ const (
 	PlanPatternEmptyError        I18nKey = "plan.pattern_empty_error"         // 匹配规则中不允许出现空字符串.
 	PlanQueryError               I18nKey = "plan.query_error"                 // 扫描计划详情查询失败.
 	PlanQuerySuccess             I18nKey = "plan.query_success"               // 扫描计划详情查询成功.
+	PlanSolutionDeletedError     I18nKey = "plan.solution_deleted_error"      // 扫描计划数据异常,关联的扫描方案已被删除.
 	PlanSolutionIdsRequired      I18nKey = "plan.solution_ids_required"       // 至少需要传入一个扫描方案 ID.
 	PlanSolutionListError        I18nKey = "plan.solution_list_error"         // 扫描计划可绑定方案列表查询失败.
 	PlanSolutionListSuccess      I18nKey = "plan.solution_list_success"       // 扫描计划可绑定方案列表查询成功.
+	PlanSolutionRetainOneError   I18nKey = "plan.solution_retain_one_error"   // 扫描计划至少需要保留一个扫描方案,无法全部解绑.
 	PlanUnbindError              I18nKey = "plan.unbind_error"                // 扫描计划解绑扫描方案失败.
 	PlanUnbindSuccess            I18nKey = "plan.unbind_success"              // 扫描计划解绑扫描方案成功.
 	PlanUpdateError              I18nKey = "plan.update_error"                // 扫描计划更新失败.

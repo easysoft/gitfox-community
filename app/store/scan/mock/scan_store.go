@@ -447,6 +447,21 @@ func (mr *MockISolutionMockRecorder) GetSolutionsByPlanID(ctx, planID any) *gomo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSolutionsByPlanID", reflect.TypeOf((*MockISolution)(nil).GetSolutionsByPlanID), ctx, planID)
 }
 
+// IsUsedByPlan mocks base method.
+func (m *MockISolution) IsUsedByPlan(ctx context.Context, solutionID uint) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IsUsedByPlan", ctx, solutionID)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// IsUsedByPlan indicates an expected call of IsUsedByPlan.
+func (mr *MockISolutionMockRecorder) IsUsedByPlan(ctx, solutionID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsUsedByPlan", reflect.TypeOf((*MockISolution)(nil).IsUsedByPlan), ctx, solutionID)
+}
+
 // List mocks base method.
 func (m *MockISolution) List(ctx context.Context, filter scan.SolutionReqFilter) (*database.PageResult[*scan.Solution], error) {
 	m.ctrl.T.Helper()
@@ -773,6 +788,21 @@ func (mr *MockIScanTriggerMockRecorder) Delete(ctx, id any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockIScanTrigger)(nil).Delete), ctx, id)
 }
 
+// FindByRepoIDAndActions mocks base method.
+func (m *MockIScanTrigger) FindByRepoIDAndActions(ctx context.Context, repoID uint, actions []constant.TriggerAction) ([]*scan.ScanTrigger, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindByRepoIDAndActions", ctx, repoID, actions)
+	ret0, _ := ret[0].([]*scan.ScanTrigger)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindByRepoIDAndActions indicates an expected call of FindByRepoIDAndActions.
+func (mr *MockIScanTriggerMockRecorder) FindByRepoIDAndActions(ctx, repoID, actions any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByRepoIDAndActions", reflect.TypeOf((*MockIScanTrigger)(nil).FindByRepoIDAndActions), ctx, repoID, actions)
+}
+
 // GetByID mocks base method.
 func (m *MockIScanTrigger) GetByID(ctx context.Context, id uint) (*scan.ScanTrigger, error) {
 	m.ctrl.T.Helper()
@@ -830,21 +860,6 @@ func (m *MockIScanTrigger) Update(ctx context.Context, trigger *scan0.ScanPlanTr
 func (mr *MockIScanTriggerMockRecorder) Update(ctx, trigger any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockIScanTrigger)(nil).Update), ctx, trigger)
-}
-
-// FindByRepoIDAndActions mocks base method.
-func (m *MockIScanTrigger) FindByRepoIDAndActions(ctx context.Context, repoID uint, actions []constant.TriggerAction) ([]*scan.ScanTrigger, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindByRepoIDAndActions", ctx, repoID, actions)
-	ret0, _ := ret[0].([]*scan.ScanTrigger)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// FindByRepoIDAndActions indicates an expected call of FindByRepoIDAndActions.
-func (mr *MockIScanTriggerMockRecorder) FindByRepoIDAndActions(ctx, repoID, actions any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByRepoIDAndActions", reflect.TypeOf((*MockIScanTrigger)(nil).FindByRepoIDAndActions), ctx, repoID, actions)
 }
 
 // MockIScanTriggerSolution is a mock of IScanTriggerSolution interface.
@@ -1335,20 +1350,6 @@ func (mr *MockIScanIssueMockRecorder) UpdateByTaskID(ctx, taskID, issueIDs any) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateByTaskID", reflect.TypeOf((*MockIScanIssue)(nil).UpdateByTaskID), ctx, taskID, issueIDs)
 }
 
-// UpdateStatus mocks base method.
-func (m *MockIScanIssue) UpdateStatus(ctx context.Context, ids []int64, status constant.ScanIssueStatus) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateStatus", ctx, ids, status)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// UpdateStatus indicates an expected call of UpdateStatus.
-func (mr *MockIScanIssueMockRecorder) UpdateStatus(ctx, ids, status any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockIScanIssue)(nil).UpdateStatus), ctx, ids, status)
-}
-
 // UpdateResolution mocks base method.
 func (m *MockIScanIssue) UpdateResolution(ctx context.Context, ids []int64, resolution *constant.ScanIssueResolution) error {
 	m.ctrl.T.Helper()
@@ -1361,6 +1362,20 @@ func (m *MockIScanIssue) UpdateResolution(ctx context.Context, ids []int64, reso
 func (mr *MockIScanIssueMockRecorder) UpdateResolution(ctx, ids, resolution any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateResolution", reflect.TypeOf((*MockIScanIssue)(nil).UpdateResolution), ctx, ids, resolution)
+}
+
+// UpdateStatus mocks base method.
+func (m *MockIScanIssue) UpdateStatus(ctx context.Context, ids []int64, status constant.ScanIssueStatus) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateStatus", ctx, ids, status)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateStatus indicates an expected call of UpdateStatus.
+func (mr *MockIScanIssueMockRecorder) UpdateStatus(ctx, ids, status any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockIScanIssue)(nil).UpdateStatus), ctx, ids, status)
 }
 
 // MockIScanTask is a mock of IScanTask interface.
