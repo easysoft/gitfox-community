@@ -213,26 +213,37 @@ func (s *SolutionStore) ListRulesets(ctx context.Context, solutionID uint) ([]*s
 	return result, nil
 }
 
-// ListUnbindRulesets 获取扫描方案未绑定的规则集列表
+// ListUnbindRulesets 获取扫描方案未绑定的规则集列表（含规则数量）
 func (s *SolutionStore) ListUnbindRulesets(ctx context.Context, solutionID uint) ([]*scanModel.RuleSet, error) {
 	rulesetIDs, err := s.GetRulesetIDList(ctx, solutionID)
 	if err != nil {
 		return nil, err
 	}
 
-	tx := s.db.WithContext(ctx).Where("deleted = ?", false)
-	if len(rulesetIDs) > 0 {
-		tx = tx.Where("id NOT IN ?", rulesetIDs)
+	type rulesetWithCount struct {
+		RuleSet
+		RulesCount int64 `gorm:"column:rules_count"`
 	}
 
-	var rulesets []*RuleSet
+	tx := s.db.WithContext(ctx).
+		Table("ops_scan_rulesets AS r").
+		Select("r.*, (SELECT COUNT(*) FROM ops_scan_ruleset_rules WHERE rulesetID = r.id AND deleted = ?) as rules_count", false).
+		Where("r.deleted = ?", false)
+
+	if len(rulesetIDs) > 0 {
+		tx = tx.Where("r.id NOT IN ?", rulesetIDs)
+	}
+
+	var rulesets []*rulesetWithCount
 	if err := tx.Find(&rulesets).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
 
 	result := make([]*scanModel.RuleSet, 0, len(rulesets))
 	for _, r := range rulesets {
-		result = append(result, mapToModel(*r))
+		m := mapToModel(r.RuleSet)
+		m.RulesCount = r.RulesCount
+		result = append(result, m)
 	}
 	return result, nil
 }
