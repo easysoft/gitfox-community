@@ -285,6 +285,9 @@ func runInit(_ *kingpin.ParseContext) error {
 	// ========== 第八步：打印配置摘要 ==========
 	printSummary(envPath, &db, workspace, localIP, devopsURL)
 
+	// 记录 workspace 路径，供 install 命令使用
+	lastInitWorkspace = workspace
+
 	return nil
 }
 
@@ -512,14 +515,10 @@ func normalizeZentaoURL(s string) string {
 	return strings.TrimRight(s, "/")
 }
 
-// dbHostValidator 校验数据库主机输入，拦截本地环境无法正常解析的内部 Docker 名
+// dbHostValidator 校验数据库主机输入非空即可，连通性由后续测试保证。
 func dbHostValidator(s string) error {
-	s = strings.TrimSpace(s)
-	if s == "" {
+	if strings.TrimSpace(s) == "" {
 		return errors.New(t(i18n.CliInitErrRequired))
-	}
-	if s != "localhost" && !isIPAddress(s) && !strings.Contains(s, ".") {
-		return errors.New(t(i18n.CliInitErrDbHostFormat))
 	}
 	return nil
 }
@@ -843,15 +842,17 @@ func printSummary(envPath string, db *dbConfig, workspace, serverHost, devopsURL
 	fmt.Println(strings.Repeat("─", 60))
 	fmt.Println()
 
-	// 打印启动提示
-	fmt.Println("💡 " + t(i18n.CliInitNextStepHint))
-	fmt.Printf("   cd %s\n", workspace)
+	// install 模式下跳过启动提示（install 会自动执行 start）
+	if !isInstallingMode {
+		fmt.Println("💡 " + t(i18n.CliInitNextStepHint))
+		fmt.Printf("   cd %s\n", workspace)
 
-	cmdPrefix := "./gitfox"
-	if runtime.GOOS == "windows" {
-		cmdPrefix = ".\\gitfox.exe"
+		cmdPrefix := "./gitfox"
+		if runtime.GOOS == "windows" {
+			cmdPrefix = ".\\gitfox.exe"
+		}
+		fmt.Printf("   %s start\n\n", cmdPrefix)
 	}
-	fmt.Printf("   %s start\n\n", cmdPrefix)
 }
 
 // updateZentaoPHPConfig 将 GitFox 的服务地址写回禅道的 my.php 配置文件。

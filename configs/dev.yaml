@@ -86,10 +86,10 @@ job:
 storage:
   storageType: filesystem
   filesystem:
-    rootDirectory: /data/gitfox/storage
+    rootDirectory: ""
   s3:
-    enabled: true
-    bucket: "pangu"
-    endpoint: "http://cdn.zcorp.cc:9000"
-    region: "cn-qingdao"
+    enabled: false
+    bucket: ""
+    endpoint: ""
+    region: ""
     pathStyle: true
