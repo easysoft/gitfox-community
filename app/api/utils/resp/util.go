@@ -108,7 +108,7 @@ func listSuccess(c *gin.Context, data interface{}, listArgs interface{}, code i1
 // code: i18n key, e.g. "repo.branch.create.success"
 // httpStatus: HTTP status code
 // data: object data
-func objectErr(c *gin.Context,err error, httpStatus int, args ...interface{}) {
+func objectErr(c *gin.Context, err error, httpStatus int, args ...interface{}) {
 	code := errors.GetI18nKey(err)
 	message := i18n.TGin(c, code, args...)
 	traceID := getTraceID(c)
