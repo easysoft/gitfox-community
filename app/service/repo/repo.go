@@ -155,7 +155,7 @@ func (s *Service) createGitRepository(ctx context.Context, req *repoModel.Create
 		CommitterDate: &now,
 	})
 	if err != nil {
-		return nil, false, errors.Wrapf(err, "failed to create repo")
+		return nil, false, errors.WithI18nKey(err, i18n.RepoCreateError)
 	}
 	return resp, len(files) == 0, nil
 }
