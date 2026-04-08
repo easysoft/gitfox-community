@@ -26,7 +26,7 @@ func RequestID(log *logger.SugaredMateLogger) gin.HandlerFunc {
 		requestLogger := log.With("trace_id", traceID)
 		c.Set(logger.ContextLogger, requestLogger)
 		ctx := c.Request.Context()
-		ctx = context.WithValue(ctx, logger.LoggerContextKey, log)
+		ctx = context.WithValue(ctx, logger.LoggerContextKey, requestLogger)
 		c.Request = c.Request.WithContext(ctx)
 
 		c.Next()
@@ -37,7 +37,7 @@ func RequestID(log *logger.SugaredMateLogger) gin.HandlerFunc {
 // 输出字段：http.method, http.url, status_code, response_size_bytes, elapsed_ms, trace_id, client_ip, user_agent
 // 可选输出：query, route_params, request_body(截断), response_body(截断)
 func AccessLog(logger *logger.SugaredMateLogger) gin.HandlerFunc {
-	const logRequestBody = false    // 如需记录请求体，改为 true
+	const logRequestBody = true    // 如需记录请求体，改为 true
 	const logResponseBody = false   // 如需记录响应体，改为 true
 	const maxLoggedBodyBytes = 2048 // 体积上限，超过将截断
 

@@ -21,7 +21,7 @@ import (
 // 使用方式: router.Use(middleware.Attempt(authenticator))
 func Attempt(authenticator authn.Authenticator) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		log := logger.GetLogger(c)
+		log := logger.GetLoggerFromGin(c)
 		ctx := c.Request.Context()
 
 		// 尝试认证请求

@@ -7,6 +7,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	"github.com/gin-gonic/gin"
 )
 
@@ -107,10 +108,17 @@ func listSuccess(c *gin.Context, data interface{}, listArgs interface{}, code i1
 // code: i18n key, e.g. "repo.branch.create.success"
 // httpStatus: HTTP status code
 // data: object data
-func objectErr(c *gin.Context, err error, httpStatus int, args ...interface{}) {
+func objectErr(c *gin.Context,err error, httpStatus int, args ...interface{}) {
 	code := errors.GetI18nKey(err)
 	message := i18n.TGin(c, code, args...)
 	traceID := getTraceID(c)
+	log := logger.GetLoggerFromGin(c)
+	log.Errorw("API error response",
+		"error", err,
+		"code", code,
+		"message", message,
+		"trace_id", traceID,
+	)
 	c.JSON(httpStatus, ObjectResponse{
 		Code:    constant.RespFailCode,
 		Message: message,
