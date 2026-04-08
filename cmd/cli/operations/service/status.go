@@ -116,7 +116,7 @@ func runStatus(_ *kingpin.ParseContext) error {
 		httpPort = "3052"
 	}
 	if sshPort == "" {
-		sshPort = "22"
+		sshPort = "3322"
 	}
 
 	warnStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#FF8C00")).Bold(true)
