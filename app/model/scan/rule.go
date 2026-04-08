@@ -63,6 +63,9 @@ type RuleListReqFilter struct {
 }
 
 func (f *RuleListReqFilter) Validater() error {
+	// 转换语言参数
+	f.Lang = NormalizeLang(f.Lang)
+
 	// 设置分页默认值
 	if f.Page <= 0 {
 		f.Page = 1
