@@ -14,8 +14,8 @@ type Step struct {
 	Depends    string          `gorm:"column:depends;not null;default:''"`
 	GroupID    uint            `gorm:"column:groupID;not null;default:0"`
 	FailPolicy string          `gorm:"column:failPolicy;not null;default:'fail'"`
-	Started    *datetime.Local `gorm:"column:started;not null"`
-	Finished   *datetime.Local `gorm:"column:finished;not null"`
+	Started    *datetime.Local `gorm:"column:started"`
+	Finished   *datetime.Local `gorm:"column:finished"`
 	Duration   uint            `gorm:"column:duration"`
 	Status     string          `gorm:"column:status;not null"`
 	ErrorCode  int             `gorm:"column:errorCode;not null"`

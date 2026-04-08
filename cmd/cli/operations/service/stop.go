@@ -1,6 +1,7 @@
 package service
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"os/exec"
@@ -35,13 +36,13 @@ func StopService() error {
 	case "darwin":
 		return stopMac()
 	default:
-		return fmt.Errorf(clii18n.T(i18n.CliStartErrUnsupportedOs))
+		return errors.New(clii18n.T(i18n.CliStartErrUnsupportedOs))
 	}
 }
 
 func stopWindows() error {
 	if _, err := exec.LookPath("nssm"); err != nil {
-		return fmt.Errorf(clii18n.T(i18n.CliStartErrNssmMissing))
+		return errors.New(clii18n.T(i18n.CliStartErrNssmMissing))
 	}
 	if err := exec.Command("nssm", "stop", "gitfox").Run(); err != nil {
 		return fmt.Errorf(clii18n.T(i18n.CliStopFailed), err)
@@ -51,12 +52,12 @@ func stopWindows() error {
 
 func stopLinux() error {
 	if _, err := exec.LookPath("systemctl"); err != nil {
-		return fmt.Errorf(clii18n.T(i18n.CliStartErrSystemctlMissing))
+		return errors.New(clii18n.T(i18n.CliStartErrSystemctlMissing))
 	}
 
 	// 检查服务是否存在
 	if err := exec.Command("systemctl", "is-active", "--quiet", "gitfox").Run(); err != nil {
-		return fmt.Errorf(clii18n.T(i18n.CliStopErrNotRunning))
+		return errors.New(clii18n.T(i18n.CliStopErrNotRunning))
 	}
 
 	if err := exec.Command("systemctl", "stop", "gitfox").Run(); err != nil {
@@ -67,7 +68,7 @@ func stopLinux() error {
 
 func stopMac() error {
 	if _, err := exec.LookPath("launchctl"); err != nil {
-		return fmt.Errorf(clii18n.T(i18n.CliStartErrLaunchctlMissing))
+		return errors.New(clii18n.T(i18n.CliStartErrLaunchctlMissing))
 	}
 
 	plistPath := "/Library/LaunchDaemons/com.gitfox.service.plist"

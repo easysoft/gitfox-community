@@ -13,13 +13,10 @@ import (
 )
 
 const (
-	envMavenMirror          = "MAVEN_MIRROR_URL"
-	defaultMavenMirror      = "https://maven.aliyun.com/repository/public"
 	envMavenLocalRepository = "MAVEN_LOCAL_REPOSITORY_PATH"
 )
 
-type buildMavenStep struct {
-}
+type buildMavenStep struct{}
 
 func (c *buildMavenStep) Convert(step *harness.Step) (*harness.StepBuild, error) {
 	req, err := NewEmptyBuildStep(step)
@@ -31,24 +28,14 @@ func (c *buildMavenStep) Convert(step *harness.Step) (*harness.StepBuild, error)
 	if getOrDefaultTrue(req.OutSpec.Caching.Enabled) {
 		c.setupCache(req)
 	}
-	c.setProxy(req)
-	c.setupContainer(req)
 	return req.OutSpec, nil
 }
 
-func (c *buildMavenStep) setupCache(r *StepRequest) {
-	if r.OutSpec.Caching.KeyFile == "" {
-		r.OutSpec.Caching.KeyFile = "pom.xml"
-	}
-	if r.OutSpec.Caching.Paths == nil || len(r.OutSpec.Caching.Paths) == 0 {
-		r.OutSpec.Caching.Paths = []string{".cache/maven"}
-	}
-
-	r.OutSpec.Envs[envMavenLocalRepository] = "/gitfox/.cache/maven"
-}
-
+// setupMirror 配置 Maven 仓库镜像地址。
+// 用户可自定义镜像地址（内网环境），为空则使用默认的阿里云公共仓库。
+// 同时触发 setup-maven 预操作，在容器启动前生成包含镜像配置的 settings.xml。
 func (c *buildMavenStep) setupMirror(r *StepRequest) {
-	copySettingsCmd := fmt.Sprintf("mkdir ~/.m2 && cp %s ~/.m2/settings.xml", ".gen_settings.xml")
+	copySettingsCmd := fmt.Sprintf("mkdir -p ~/.m2 && cp %s ~/.m2/settings.xml", ".gen_settings.xml")
 	r.OutSpec.Script = append(harness.Stringorslice{copySettingsCmd}, r.OutSpec.Script...)
 	if _, exist := r.OutSpec.Envs[envMavenMirror]; !exist {
 		r.OutSpec.Envs[envMavenMirror] = defaultMavenMirror
@@ -59,9 +46,13 @@ func (c *buildMavenStep) setupMirror(r *StepRequest) {
 	r.OutSpec.PreActions = append(r.OutSpec.PreActions, "setup-maven")
 }
 
-func (c *buildMavenStep) setupContainer(r *StepRequest) {
-	r.OutSpec.Container.Image = "hub.zentao.net/ci/maven:3.9.4-eclipse-temurin-11-alpine"
-}
-
-func (c *buildMavenStep) setProxy(r *StepRequest) {
+// setupCache 配置 Maven 本地仓库缓存，加速重复构建。
+func (c *buildMavenStep) setupCache(r *StepRequest) {
+	if r.OutSpec.Caching.KeyFile == "" {
+		r.OutSpec.Caching.KeyFile = "pom.xml"
+	}
+	if len(r.OutSpec.Caching.Paths) == 0 {
+		r.OutSpec.Caching.Paths = []string{".cache/maven"}
+	}
+	r.OutSpec.Envs[envMavenLocalRepository] = "/gitfox/.cache/maven"
 }

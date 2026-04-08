@@ -1,6 +1,7 @@
 package service
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -113,7 +114,7 @@ func uninstallService() error {
 	case "darwin":
 		return uninstallMac()
 	default:
-		return fmt.Errorf(clii18n.T(i18n.CliStartErrUnsupportedOs))
+		return errors.New(clii18n.T(i18n.CliStartErrUnsupportedOs))
 	}
 }
 
@@ -121,7 +122,7 @@ func uninstallWindows() error {
 	t := clii18n.T
 
 	if _, err := exec.LookPath("nssm"); err != nil {
-		return fmt.Errorf(t(i18n.CliStartErrNssmMissing))
+		return errors.New(t(i18n.CliStartErrNssmMissing))
 	}
 
 	// nssm remove 会同时 disable + 删除服务注册
@@ -136,7 +137,7 @@ func uninstallLinux() error {
 	t := clii18n.T
 
 	if _, err := exec.LookPath("systemctl"); err != nil {
-		return fmt.Errorf(t(i18n.CliStartErrSystemctlMissing))
+		return errors.New(t(i18n.CliStartErrSystemctlMissing))
 	}
 
 	servicePath := "/etc/systemd/system/gitfox.service"
@@ -162,7 +163,7 @@ func uninstallMac() error {
 	t := clii18n.T
 
 	if _, err := exec.LookPath("launchctl"); err != nil {
-		return fmt.Errorf(t(i18n.CliStartErrLaunchctlMissing))
+		return errors.New(t(i18n.CliStartErrLaunchctlMissing))
 	}
 
 	plistPath := "/Library/LaunchDaemons/com.gitfox.service.plist"
