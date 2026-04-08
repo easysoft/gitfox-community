@@ -7,7 +7,7 @@ repo:
   body_param_error: "Body 参数解析失败。"
   query_param_error: "Query 参数解析失败。"
   path_param_error: "Path 参数解析失败。"
-  identifier_invalid: "仓库名称不合法，identifier仅支持字母、数字、下划线(_)、连字符(-)、点号(.)"
+  identifier_invalid: "仓库名称不合法，代码库名称仅支持字母、数字、下划线(_)、连字符(-)、点号(.)"
   not_found: "仓库不存在。"
   query_error: "查询仓库失败"
   query_success: "查询仓库成功"
@@ -21,3 +21,14 @@ repo:
   delete_success: "仓库删除成功。"
   delete_error: "删除仓库失败。"
   default_branch_archived_forbidden: "默认分支不能以 archived/ 开头，该前缀为归档分支保留。"
+  space_not_found: "所属空间不存在"
+  identifier_too_long: "代码库名称长度不能超过64字符"
+  identifier_invalid_git: "代码库名称不能以 .git 结尾"
+  description_too_long: "代码库描述过长，不能超过200字符"
+  license_error: "读取 license 异常"
+  gitignore_invalid: "读取 .gitignore 异常"
+  email_required: "用户邮箱为空，请在个人中心维护用户邮箱后再进行代码库创建"
+
+
+
+

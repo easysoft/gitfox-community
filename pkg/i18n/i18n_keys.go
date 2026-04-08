@@ -552,12 +552,18 @@ const (
 	RepoDefaultBranchArchivedForbidden I18nKey = "repo.default_branch_archived_forbidden" // 默认分支不能以 archived/ 开头,该前缀为归档分支保留.
 	RepoDeleteError                    I18nKey = "repo.delete_error"                      // 删除仓库失败.
 	RepoDeleteSuccess                  I18nKey = "repo.delete_success"                    // 仓库删除成功.
+	RepoDescriptionTooLong             I18nKey = "repo.description_too_long"              // 代码库描述过长,不能超过200字符
+	RepoEmailRequired                  I18nKey = "repo.email_required"                    // 用户邮箱为空,请在个人中心维护用户邮箱后再进行代码库创建
 	RepoGetContentError                I18nKey = "repo.get_content_error"                 // 获取仓库内容失败.
 	RepoGetContentPermissionError      I18nKey = "repo.get_content_permission_error"      // 您没有权限获取此仓库的内容.
 	RepoGetContentSuccess              I18nKey = "repo.get_content_success"               // 获取仓库内容成功.
 	RepoGetPathsDetailsSuccess         I18nKey = "repo.get_paths_details_success"         // 获取路径详情成功.
 	RepoGetPathsSuccess                I18nKey = "repo.get_paths_success"                 // 获取路径成功.
-	RepoIdentifierInvalid              I18nKey = "repo.identifier_invalid"                // 仓库名称不合法,identifier仅支持字母、数字、下划线(_)、连字符(-)、点号(.)
+	RepoGitignoreInvalid               I18nKey = "repo.gitignore_invalid"                 // 读取 .gitignore 异常
+	RepoIdentifierInvalid              I18nKey = "repo.identifier_invalid"                // 仓库名称不合法,代码库名称仅支持字母、数字、下划线(_)、连字符(-)、点号(.)
+	RepoIdentifierInvalidGit           I18nKey = "repo.identifier_invalid_git"            // 代码库名称不能以 .git 结尾
+	RepoIdentifierTooLong              I18nKey = "repo.identifier_too_long"               // 代码库名称长度不能超过64字符
+	RepoLicenseError                   I18nKey = "repo.license_error"                     // 读取 license 异常
 	RepoLineNumberError                I18nKey = "repo.line_number_error"                 // 行号必须大于0, 且结束行号必须大于起始行号
 	RepoMirrorReadOnly                 I18nKey = "repo.mirror_read_only"                  // 镜像仓库只读.
 	RepoNotFound                       I18nKey = "repo.not_found"                         // 仓库不存在.
@@ -567,6 +573,7 @@ const (
 	RepoQueryError                     I18nKey = "repo.query_error"                       // 查询仓库失败
 	RepoQueryParamError                I18nKey = "repo.query_param_error"                 // Query 参数解析失败.
 	RepoQuerySuccess                   I18nKey = "repo.query_success"                     // 查询仓库成功
+	RepoSpaceNotFound                  I18nKey = "repo.space_not_found"                   // 所属空间不存在
 	RepoUpdateSuccess                  I18nKey = "repo.update_success"                    // 更新仓库成功
 
 	// Request 相关常量

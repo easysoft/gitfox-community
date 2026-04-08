@@ -56,12 +56,12 @@ func NewRepoSvc(
 func (s *Service) Create(ctx context.Context, session *auth.Session, params *repoModel.CreateRepoReq) (*repoModel.Repo, error) {
 	_, err := s.spaceStore.GetByID(ctx, params.SpaceID)
 	if err != nil {
-		return nil, errors.NotFound.Newf("failed to find the parent space: %v", err)
+		return nil, errors.WithI18nKey(nil, i18n.I18nKey(i18n.RepoSpaceNotFound))
 	}
 
 	gitResp, isEmpty, err := s.createGitRepository(ctx, params, session)
 	if err != nil {
-		return nil, errors.SystemErr.Newf("error creating repository on git: %v", err)
+		return nil, err
 	}
 
 	repo := &repo.Repository{
@@ -103,7 +103,7 @@ func (s *Service) createGitRepository(ctx context.Context, req *repoModel.Create
 	if req.License != "" && req.License != "none" {
 		content, err = resources.Licence.ReadFile(fmt.Sprintf("license/%s.txt", req.License))
 		if err != nil {
-			return nil, false, errors.Wrapf(err, "failed to read license '%s'", req.License)
+			return nil, false, errors.WithI18nKey(nil, i18n.RepoLicenseError)
 		}
 		files = append(files, git.File{
 			Path:    "LICENSE",
@@ -114,7 +114,7 @@ func (s *Service) createGitRepository(ctx context.Context, req *repoModel.Create
 	if req.Ignore != "" {
 		content, err = resources.Gitignore.ReadFile(fmt.Sprintf("gitignore/%s.gitignore", req.Ignore))
 		if err != nil {
-			return nil, false, errors.Wrapf(err, "failed to read git ignore '%s'", req.Ignore)
+			return nil, false, errors.WithI18nKey(err, i18n.RepoGitignoreInvalid)
 		}
 		files = append(files, git.File{
 			Path:    ".gitignore",

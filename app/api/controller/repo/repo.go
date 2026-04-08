@@ -59,7 +59,6 @@ func (ctl *Controller) Create(c *gin.Context) {
 
 	err := reqData.Validate()
 	if err != nil {
-		err = errors.WithI18nKey(err, i18n.RepoBodyParamError)
 		resp.BadRequest(c, err)
 		return
 	}
@@ -69,10 +68,13 @@ func (ctl *Controller) Create(c *gin.Context) {
 		resp.Unauthorized(c, errors.WithI18nKey(nil, i18n.AuthNoSession))
 		return
 	}
+	if session.User.Email == "" {
+		resp.BadRequest(c, errors.WithI18nKey(nil, i18n.RepoEmailRequired))
+		return
+	}
 
 	data, err := ctl.repoSvc.Create(c.Request.Context(), session, reqData)
 	if err != nil {
-		err = errors.WithI18nKey(err, i18n.RepoCreateError)
 		resp.InternalError(c, err)
 		return
 	}

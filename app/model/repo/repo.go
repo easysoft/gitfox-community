@@ -8,6 +8,8 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	gitTypes "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/api"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
+
 )
 
 // CreateRemoteRepoRequest 创建远端仓库请求参数
@@ -36,20 +38,20 @@ func (req *CreateRepoReq) Validate() error {
 
 	// 校验Identifier字符规则（符合Git仓库命名规范）
 	if !regexp.MustCompile(`^[a-zA-Z0-9-_.]+$`).MatchString(req.Identifier) {
-		return errors.Newf("identifier仅支持字母、数字、下划线(_)、连字符(-)、点号(.)")
+		return errors.WithI18nKey(nil, i18n.RepoIdentifierInvalid)
 	}
 
 	if len(req.Identifier) > 64 {
-		return errors.Newf("identifier长度不能超过64字符")
+		return errors.WithI18nKey(nil, i18n.RepoIdentifierTooLong)
 	}
 
 	identifierLower := strings.ToLower(req.Identifier)
 	if strings.HasSuffix(identifierLower, ".git") {
-		return errors.Newf("repository identifiers cannot end with .git")
+		return errors.WithI18nKey(nil, i18n.RepoIdentifierInvalidGit)
 	}
 
 	if len(req.Desc) > constant.MaxDescByteCountUTF8MB4 {
-		return errors.Newf("Description can be at most %d in length.", constant.MaxDescByteCountUTF8MB4)
+		return errors.WithI18nKey(nil, i18n.RepoDescriptionTooLong)
 	}
 
 	// 默认分支处理（未传则设为main）
@@ -57,7 +59,7 @@ func (req *CreateRepoReq) Validate() error {
 		req.DefaultBranch = "main"
 	}
 	if strings.HasPrefix(req.DefaultBranch, constant.BranchArchivedPrefix) {
-		return errors.Newf("default branch cannot start with %s", constant.BranchArchivedPrefix)
+		return errors.WithI18nKey(nil, i18n.RepoDefaultBranchArchivedForbidden)
 	}
 	return nil
 }
