@@ -49,6 +49,7 @@ func runStatus(_ *kingpin.ParseContext) error {
 		fmt.Println(okStyle.Render("  ✓ ") + fmt.Sprintf(t(i18n.CliStatusGitOk), ver))
 	} else {
 		fmt.Println(errStyle.Render("  ✗ ") + t(i18n.CliStatusGitMissing))
+		fmt.Println(lipgloss.NewStyle().Foreground(lipgloss.Color("#888888")).Render("      👉 Install: https://git-scm.com/downloads"))
 	}
 
 	// --- Docker ---
@@ -56,6 +57,7 @@ func runStatus(_ *kingpin.ParseContext) error {
 		fmt.Println(okStyle.Render("  ✓ ") + fmt.Sprintf(t(i18n.CliStatusDockerOk), ver))
 	} else {
 		fmt.Println(errStyle.Render("  ✗ ") + t(i18n.CliStatusDockerMissing))
+		fmt.Println(lipgloss.NewStyle().Foreground(lipgloss.Color("#888888")).Render("      👉 Install: https://docs.docker.com/get-docker/"))
 	}
 
 	// --- Docker Compose ---
@@ -63,6 +65,7 @@ func runStatus(_ *kingpin.ParseContext) error {
 		fmt.Println(okStyle.Render("  ✓ ") + fmt.Sprintf(t(i18n.CliStatusComposeOk), ver))
 	} else {
 		fmt.Println(errStyle.Render("  ✗ ") + t(i18n.CliStatusComposeMissing))
+		fmt.Println(lipgloss.NewStyle().Foreground(lipgloss.Color("#888888")).Render("      👉 Install: https://docs.docker.com/compose/install/"))
 	}
 
 	fmt.Println()
