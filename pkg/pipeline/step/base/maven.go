@@ -13,10 +13,6 @@ import (
 )
 
 const (
-	// mavenBuildImage maven-build 插件镜像，内含 Go 二进制 + SDKMAN + 多版本 JDK/Maven。
-	// 容器启动后通过 PLUGIN_* 环境变量接收参数并自动执行编译。
-	mavenBuildImage = "hub.zentao.net/ci/gitfox-plugin:java-build-gitfox-community"
-
 	envMavenLocalRepository = "MAVEN_LOCAL_REPOSITORY_PATH"
 )
 
@@ -28,7 +24,6 @@ func (c *buildMavenStep) Convert(step *harness.Step) (*harness.StepBuild, error)
 		return nil, err
 	}
 
-	c.setupContainer(req)
 	c.setupMirror(req)
 	if getOrDefaultTrue(req.OutSpec.Caching.Enabled) {
 		c.setupCache(req)
@@ -49,14 +44,6 @@ func (c *buildMavenStep) setupMirror(r *StepRequest) {
 		}
 	}
 	r.OutSpec.PreActions = append(r.OutSpec.PreActions, "setup-maven")
-}
-
-// setupContainer 设置运行 Maven 编译的容器镜像。
-// 若用户在高级配置中自定义了镜像则保留，否则使用内置的插件镜像。
-func (c *buildMavenStep) setupContainer(r *StepRequest) {
-	if r.OutSpec.Container.Image == "" {
-		r.OutSpec.Container.Image = mavenBuildImage
-	}
 }
 
 // setupCache 配置 Maven 本地仓库缓存，加速重复构建。
