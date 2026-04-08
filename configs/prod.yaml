@@ -62,14 +62,14 @@ registry:
 # 日志配置
 logging:
   level: -1                              # 日志输出的最低级别  -1~5：debug,info,warn,error,dpanic,panic,fatal
-  stdout: true                          # 是否输出到终端？  true=是，false=否
-  encoder: console                       # 日志编码格式，json 或 console，默认为 console
+  stdout: true                           # 是否输出到终端？  true=是，false=否
+  encoder: json                          # 日志编码格式，json 或 console，默认为 console
   maxAge: 90                             # 日志文件最大保存时间，单位：天，-1：禁用此选项
   maxCount: 20                           # 日志文件最大保存数量
   maxSize: 500                           # 日志文件切割大小，单位：MB
-  levelColor: true                      # 日志级别颜色，默认为大写字母和彩色显示
+  levelColor: false                       # 日志级别颜色，默认为大写字母和彩色显示
   timeFormat: "2006-01-02 15:04:05.999"  # 时间格式字符串
-  stackTraceLevel: 2                     # 打印堆栈跟踪的最低级别
+  stackTraceLevel: 3                     # 打印堆栈跟踪的最低级别
   logAPIServerConf:
     filename: api.log
   logRunnerConf:
