@@ -268,6 +268,7 @@ const (
 	CliStartSuccess                      I18nKey = "cli.start_success"                         // ✨ GitFox 后台守护进程服务注册并启动成功!
 	CliStartSuccessCheckDb               I18nKey = "cli.start_success_check_db"                // 数据库连通性正常
 	CliStartSuccessCheckZentao           I18nKey = "cli.start_success_check_zentao"            // 禅道 API 通讯正常
+	CliStartSummaryAddress               I18nKey = "cli.start_summary_address"                 // Gitfox 接口地址
 	CliStartSummaryAppLog                I18nKey = "cli.start_summary_app_log"                 // 应用业务日志
 	CliStartSummaryLogCmd                I18nKey = "cli.start_summary_log_cmd"                 // 追踪系统启动日志
 	CliStartSummaryLogCmdMac             I18nKey = "cli.start_summary_log_cmd_mac"             // 系统 Console (或 logs 目录)
@@ -276,7 +277,6 @@ const (
 	CliStartSummaryStatusCmd             I18nKey = "cli.start_summary_status_cmd"              // 查看健康状态
 	CliStartSummaryStopCmd               I18nKey = "cli.start_summary_stop_cmd"                // 下线/停止守护进程
 	CliStartSummaryTitle                 I18nKey = "cli.start_summary_title"                   // 🌟 GitFox 守护进程运行档案
-	CliStartSummaryWeb                   I18nKey = "cli.start_summary_web"                     // Web 访问入口
 	CliStartWelcome                      I18nKey = "cli.start_welcome"                         // GitFox · 启动服务
 	CliStatusComposeMissing              I18nKey = "cli.status_compose_missing"                // Docker Compose 未安装.安装指南: https://docs.docker.co...
 	CliStatusComposeOk                   I18nKey = "cli.status_compose_ok"                     // Docker Compose 已安装 (版本: %s)
