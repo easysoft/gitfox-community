@@ -95,8 +95,10 @@ func (s *Service) Migrate(ctx context.Context, url string) error {
 		}
 
 		// 如果数据库中已经存在插件,且插件规格未发生变化,则跳过upsert
-		if _, ok := pluginMap[plugin.Name]; ok {
-			continue
+		if p, ok := pluginMap[plugin.Name]; ok {
+			if p.Matches(plugin) {
+				continue
+			}
 		}
 
 		if name := plugin.Name; name == "" {
