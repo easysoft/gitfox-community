@@ -141,7 +141,7 @@ cli:
   start_step_health_check: "Waiting for service to become fully healthy (Port: %s)..."
   start_err_health_timeout: "Daemon registered, but the background service failed to pass the 15-second health check. The service may have crashed immediately upon startup! Please troubleshoot using the system logs:"
   start_summary_title: "GitFox Service Runtime Summary"
-  start_summary_web: "Web Console"
+  start_summary_address: "Gitfox API Address"
   start_summary_app_log: "Application Logs"
   start_summary_manage_title: "[ Daemon Management ]"
   start_summary_status_cmd: "Check Status"

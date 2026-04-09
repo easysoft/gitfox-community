@@ -141,7 +141,7 @@ cli:
   start_step_health_check: "正在等待服务完全启动，健康检查中 (端口: %s)..."
   start_err_health_timeout: "守护进程注册动作已下发，但后台服务无法通过 15秒 健康心跳检查。服务极其可能在启动瞬间本身发生了 Panic 崩溃！请务必通过系统日志进行排查："
   start_summary_title: "🌟 GitFox 守护进程运行档案"
-  start_summary_web: "Web 访问入口"
+  start_summary_address: "Gitfox 接口地址"
   start_summary_app_log: "应用业务日志"
   start_summary_manage_title: "[ 运维与日常管理指令 ]"
   start_summary_status_cmd: "查看健康状态"

@@ -322,7 +322,7 @@ func printStartSummary(workDir, host, port string) {
 	fmt.Println("  ────────────────────────────────────────────────────────")
 	fmt.Println("  " + t(i18n.CliStartSummaryTitle))
 	fmt.Println("  ────────────────────────────────────────────────────────")
-	fmt.Printf("  🌐 %-16s : %s\n", t(i18n.CliStartSummaryWeb), webConsole)
+	fmt.Printf("  🌐 %-16s : %s\n", t(i18n.CliStartSummaryAddress), webConsole)
 	fmt.Printf("  📁 %-16s : %s\n", t(i18n.CliStartSummaryAppLog), appLogsDir)
 	fmt.Println()
 	fmt.Println("  " + t(i18n.CliStartSummaryManageTitle))
