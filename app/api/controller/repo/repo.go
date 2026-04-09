@@ -75,6 +75,12 @@ func (ctl *Controller) Create(c *gin.Context) {
 
 	data, err := ctl.repoSvc.Create(c.Request.Context(), session, reqData)
 	if err != nil {
+		i18nKey := errors.GetI18nKey(err)
+		if i18nKey == i18n.DbDuplicate {
+			err = errors.WithI18nKey(err, i18n.RepoCreateDuplicate)
+			resp.BadRequest(c, err)
+			return
+		}
 		resp.InternalError(c, err)
 		return
 	}

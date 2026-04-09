@@ -46,7 +46,6 @@ func (s *Service) List(ctx context.Context, filter spaceModel.ListSpaceFilter) (
 func (s *Service) GetByID(ctx context.Context, id uint) (*space.Space, error) {
 	spaceEntity, err := s.spaceStore.GetByID(ctx, id)
 	if err != nil {
-		// 传递Store层错误（如“space not found”）
 		return nil, err
 	}
 	return spaceEntity, nil

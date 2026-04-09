@@ -48,6 +48,12 @@ func (ctl *SpaceController) Create(c *gin.Context) {
 	// 调用服务层创建空间
 	spaceObj, err := ctl.spaceSvc.Create(c.Request.Context(), reqData)
 	if err != nil {
+		i18nKey := errors.GetI18nKey(err)
+		if i18nKey == i18n.DbDuplicate {
+			err = errors.WithI18nKey(err, i18n.SpaceCreateDuplicate)
+			resp.BadRequest(c, err)
+			return
+		}
 		err = errors.WithI18nKey(err, i18n.SpaceCreateError)
 		resp.InternalError(c, err)
 		return
@@ -114,9 +120,14 @@ func (ctl *SpaceController) GetByID(c *gin.Context) {
 		resp.BadRequest(c, err)
 		return
 	}
-
 	obj, err := ctl.spaceSvc.GetByID(c.Request.Context(), spaceID)
 	if err != nil {
+		i18nKey := errors.GetI18nKey(err)
+		if i18nKey == i18n.DbNotfound {
+			err = errors.WithI18nKey(err, i18n.SpaceNotFound)
+			resp.NotFound(c, err)
+			return
+		}
 		err = errors.WithI18nKey(err, i18n.SpaceQueryError)
 		resp.InternalError(c, err)
 		return
