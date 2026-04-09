@@ -151,6 +151,7 @@ func (s *ScanTaskService) Create(ctx context.Context, in *ScanTaskInput) (*scanM
 	// 注入 git clone 需要的参数
 	in.Hook.Params["gitURL"] = in.Repo.GitURL
 	in.Hook.Params["gitRef"] = in.Hook.Ref
+	in.Hook.Params["PLUGIN_WORKSPACE"] = in.Repo.Identifier // 供流水线中插件使用，表示代码 clone 的目录
 	// 注入 gitfoxscan 调用接口时需要的参数
 	in.Hook.Params["GITFOX_API_ENDPOINT"] = s.config.URL.Base + "/api/v2"
 	in.Hook.Params["PLUGIN_TOKEN"] = s.config.PipelineAuth.Password

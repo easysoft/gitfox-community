@@ -207,7 +207,7 @@ func (s *ScanTaskService) buildRuleKeyMapByTask(ctx context.Context, task *scanM
 				if rule.Status != constant.ScanRuleStatusEnabled {
 					continue
 				}
-				indexKey := fmt.Sprintf("%s:%s", rule.Lang, rule.RuleKey)
+				indexKey := fmt.Sprintf("%s:%s", rule.Lang.LowerString(), rule.RuleKey)
 				m[indexKey] = rule.ID
 			}
 		}
