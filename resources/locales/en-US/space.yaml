@@ -20,3 +20,5 @@ space:
   query_success: "Query the space successfully"
   restore_error: "Failed to restore space"
   restore_success: "restore space successfully"
+  not_found: "The queried space does not exist"
+  create_duplicate: "Failed to create space, the space already exists" 

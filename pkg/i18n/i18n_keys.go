@@ -547,6 +547,7 @@ const (
 
 	// Repo 相关常量
 	RepoBodyParamError                 I18nKey = "repo.body_param_error"                  // Body 参数解析失败.
+	RepoCreateDuplicate                I18nKey = "repo.create_duplicate"                  // 创建仓库失败,仓库已存在
 	RepoCreateError                    I18nKey = "repo.create_error"                      // 创建仓库异常
 	RepoCreateSuccess                  I18nKey = "repo.create_success"                    // 创建仓库成功
 	RepoDefaultBranchArchivedForbidden I18nKey = "repo.default_branch_archived_forbidden" // 默认分支不能以 archived/ 开头,该前缀为归档分支保留.
@@ -705,10 +706,12 @@ const (
 	// Space 相关常量
 	SpaceArtifactsTitleSuccess   I18nKey = "space.artifacts_title_success"   // 仓库设置保存成功
 	SpaceBodyParamError          I18nKey = "space.body_param_error"          // Body 参数解析失败.
+	SpaceCreateDuplicate         I18nKey = "space.create_duplicate"          // 创建空间异常,空间已存在
 	SpaceCreateError             I18nKey = "space.create_error"              // 空间创建失败.
 	SpaceCreateSuccess           I18nKey = "space.create_success"            // 空间创建成功.
 	SpaceListError               I18nKey = "space.list_error"                // 查询空间列表失败
 	SpaceListSuccess             I18nKey = "space.list_success"              // 查询空间列表成功
+	SpaceNotFound                I18nKey = "space.not_found"                 // 查询空间不存在
 	SpacePathParamError          I18nKey = "space.path_param_error"          // Path 参数解析失败.
 	SpaceQueryError              I18nKey = "space.query_error"               // 查询空间失败
 	SpaceQueryParamError         I18nKey = "space.query_param_error"         // Query 参数解析失败.

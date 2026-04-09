@@ -21,3 +21,5 @@ space:
   query_success: "查询空间成功"
   restore_error: "恢复空间失败"
   restore_success: "恢复空间成功"
+  not_found: "查询空间不存在"
+  create_duplicate: "创建空间异常，空间已存在"
