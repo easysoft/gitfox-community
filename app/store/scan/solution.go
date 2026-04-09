@@ -69,28 +69,41 @@ func (s *SolutionStore) Delete(ctx context.Context, id uint) error {
 
 // List 查询扫描方案列表（支持分页和过滤）
 func (s *SolutionStore) List(ctx context.Context, filter scanModel.SolutionReqFilter) (*database.PageResult[*scanModel.Solution], error) {
-	tx := s.db.WithContext(ctx).Model(&SolutionRules{}).Where("deleted = ?", false)
+	type solutionWithCount struct {
+		SolutionRules
+		RuleSetsCount int64 `gorm:"column:rulesets_count"`
+		RulesCount    int64 `gorm:"column:rules_count"`
+	}
+
+	tx := s.db.WithContext(ctx).
+		Table("ops_scan_solutions AS s").
+		Select(`s.*,
+			(SELECT COUNT(*) FROM ops_scan_solution_rulesets WHERE solutionID = s.id AND deleted = ?) AS rulesets_count,
+			(SELECT COUNT(*) FROM ops_scan_solution_rulesets AS ssr
+				JOIN ops_scan_ruleset_rules AS srr ON srr.rulesetID = ssr.ruleSetID AND srr.deleted = ?
+				WHERE ssr.solutionID = s.id AND ssr.deleted = ?) AS rules_count`, false, false, false).
+		Where("s.deleted = ?", false)
 
 	if filter.ID > 0 {
-		tx = tx.Where("id = ?", filter.ID)
+		tx = tx.Where("s.id = ?", filter.ID)
 	}
 	if filter.Name != "" {
-		tx = tx.Where("name LIKE ?", "%"+filter.Name+"%")
+		tx = tx.Where("s.name LIKE ?", "%"+filter.Name+"%")
 	}
 	if filter.Tag != "" {
-		tx = tx.Where("tag = ?", filter.Tag)
+		tx = tx.Where("s.tag = ?", filter.Tag)
 	}
 	if filter.Status != "" {
-		tx = tx.Where("status = ?", filter.Status)
+		tx = tx.Where("s.status = ?", filter.Status)
 	}
 	if filter.CreatedBy != "" {
-		tx = tx.Where("createdBy LIKE ?", "%"+filter.CreatedBy+"%")
+		tx = tx.Where("s.createdBy LIKE ?", "%"+filter.CreatedBy+"%")
 	}
 	if filter.EditedBy != "" {
-		tx = tx.Where("editedBy LIKE ?", "%"+filter.EditedBy+"%")
+		tx = tx.Where("s.editedBy LIKE ?", "%"+filter.EditedBy+"%")
 	}
 
-	var solutions []*SolutionRules
+	var solutions []*solutionWithCount
 	pageResult, err := database.Paginate(ctx, tx, database.PageParam{
 		Page:      filter.Page,
 		PageSize:  filter.PageSize,
@@ -102,52 +115,11 @@ func (s *SolutionStore) List(ctx context.Context, filter scanModel.SolutionReqFi
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
 
-	// 批量查询聚合信息
-	solutionIDs := make([]uint64, 0, len(pageResult.Data))
-	for _, item := range pageResult.Data {
-		solutionIDs = append(solutionIDs, item.ID)
-	}
-
-	// 每个方案的规则集数量
-	ruleSetsCountMap := make(map[uint64]int64)
-	// 每个方案的规则数量
-	rulesCountMap := make(map[uint64]int64)
-
-	if len(solutionIDs) > 0 {
-		// 查询规则集数量
-		type countRow struct {
-			SolutionID uint64 `gorm:"column:solutionID"`
-			Count      int64  `gorm:"column:cnt"`
-		}
-		var rsCounts []countRow
-		var solutionRuleSetsModel SolutionRuleSets
-		if err := s.db.WithContext(ctx).Table(solutionRuleSetsModel.TableName()).
-			Select("solutionID, COUNT(*) as cnt").
-			Where("solutionID IN ? AND deleted = ?", solutionIDs, false).
-			Group("solutionID").Find(&rsCounts).Error; err == nil {
-			for _, row := range rsCounts {
-				ruleSetsCountMap[row.SolutionID] = row.Count
-			}
-		}
-
-		// 查询规则数量（通过 solution_rulesets JOIN ruleset_rules）
-		var ruleCounts []countRow
-		if err := s.db.WithContext(ctx).Table("ops_scan_solution_rulesets AS ssr").
-			Select("ssr.solutionID, COUNT(srr.id) as cnt").
-			Joins("JOIN ops_scan_ruleset_rules AS srr ON srr.rulesetID = ssr.ruleSetID AND srr.deleted = ?", false).
-			Where("ssr.solutionID IN ? AND ssr.deleted = ?", solutionIDs, false).
-			Group("ssr.solutionID").Find(&ruleCounts).Error; err == nil {
-			for _, row := range ruleCounts {
-				rulesCountMap[row.SolutionID] = row.Count
-			}
-		}
-	}
-
 	modelData := make([]*scanModel.Solution, 0, len(pageResult.Data))
 	for _, item := range pageResult.Data {
-		m := mapSolutionToModel(*item)
-		m.RuleSetsCount = ruleSetsCountMap[item.ID]
-		m.RulesCount = rulesCountMap[item.ID]
+		m := mapSolutionToModel(item.SolutionRules)
+		m.RuleSetsCount = item.RuleSetsCount
+		m.RulesCount = item.RulesCount
 		modelData = append(modelData, m)
 	}
 
@@ -175,6 +147,10 @@ func normalizeSolutionSortField(sort string) string {
 		return "editedBy"
 	case "editedDate":
 		return "editedDate"
+	case "rulesCount":
+		return "rules_count"
+	case "ruleSetsCount":
+		return "rulesets_count"
 	default:
 		return "id"
 	}

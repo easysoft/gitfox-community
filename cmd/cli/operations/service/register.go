@@ -171,7 +171,7 @@ func RegisterService(exePath, workDir string) error {
 // 注：依赖外部 NSSM 工具包。它会自动处理旧服务的卸载，并注入新的 Application 环境目录与参数。
 func registerWindows(exePath, workDir string) error {
 	t := clii18n.T
-	fmt.Println("🚀 " + t(i18n.CliStartStepWindowsService))
+	fmt.Println(t(i18n.CliStartStepWindowsService))
 
 	// 1. 前置依赖断言：NSSM 是否存在于机器的 $PATH 中
 	if _, err := exec.LookPath("nssm"); err != nil {
@@ -186,7 +186,7 @@ func registerWindows(exePath, workDir string) error {
 	if err := exec.Command("nssm", "install", "gitfox", exePath, "server", "prod").Run(); err != nil {
 		return errors.New(t(i18n.CliStartErrRequiresAdmin))
 	}
-	
+
 	// 4. 重定向工作目录以确保相对路径（如 db logs）产出正确
 	_ = exec.Command("nssm", "set", "gitfox", "AppDirectory", workDir).Run()
 
@@ -201,7 +201,7 @@ func registerWindows(exePath, workDir string) error {
 // registerLinux 将程序注册为 standard systemd unit。
 func registerLinux(exePath, workDir string) error {
 	t := clii18n.T
-	fmt.Println("🚀 " + t(i18n.CliStartStepLinuxService))
+	// fmt.Println(t(i18n.CliStartStepLinuxService))
 
 	// 1. 前置依赖断言：探测到 systemctl 工具
 	if _, err := exec.LookPath("systemctl"); err != nil {
@@ -243,7 +243,7 @@ WantedBy=multi-user.target
 // registerMac 针对 macOS / Darwin 环境，将程序挂载入用户级的 Launchd Daemon。
 func registerMac(exePath, workDir string) error {
 	t := clii18n.T
-	fmt.Println("🚀 " + t(i18n.CliStartStepMacService))
+	fmt.Println(t(i18n.CliStartStepMacService))
 
 	// 1. 前置依赖断言：探测到 launchctl 工具
 	if _, err := exec.LookPath("launchctl"); err != nil {

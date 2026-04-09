@@ -7,7 +7,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
-	"strings"
 	"time"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
@@ -67,9 +66,9 @@ func runInstall(ctx *kingpin.ParseContext) error {
 	}
 
 	// ========== 阶段 2：在工作目录执行 ./gitfox start ==========
-	fmt.Println()
-	fmt.Println("🚀 " + t(i18n.CliInstallStepStart))
-	fmt.Println()
+	// fmt.Println()
+	// fmt.Println(t(i18n.CliInstallStepStart))
+	// fmt.Println()
 
 	binName := "gitfox"
 	if runtime.GOOS == "windows" {
@@ -79,7 +78,7 @@ func runInstall(ctx *kingpin.ParseContext) error {
 
 	// 确保二进制文件存在
 	if _, err := os.Stat(binPath); os.IsNotExist(err) {
-		fmt.Println(errStyle.Render("❌ " + fmt.Sprintf(t(i18n.CliInstallErrBinNotFound), binPath)))
+		fmt.Println(errStyle.Render("✗ " + fmt.Sprintf(t(i18n.CliInstallErrBinNotFound), binPath)))
 		return nil
 	}
 
@@ -90,7 +89,7 @@ func runInstall(ctx *kingpin.ParseContext) error {
 	cmd.Stdin = os.Stdin
 
 	if err := cmd.Run(); err != nil {
-		fmt.Println(errStyle.Render(fmt.Sprintf("❌ "+t(i18n.CliInstallStartExecFailed), err)))
+		fmt.Println(errStyle.Render("✗ " + fmt.Sprintf(t(i18n.CliInstallStartExecFailed), err)))
 	}
 
 	// ========== 阶段 3：快速探测服务状态（start 内部已做完整健康检查，此处仅判断最终结果） ==========
@@ -116,24 +115,23 @@ func runInstall(ctx *kingpin.ParseContext) error {
 func printInstallSuccess(workspace, binName string) {
 	t := clii18n.T
 
-	doneStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#4CAF82"))
+	doneStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#000000"))
 	labelStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#999999")).Width(20)
-	valueStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#04B575"))
+	valueStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#000000"))
 	headerStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#7D56F4"))
 
 	fmt.Println()
-	fmt.Println(doneStyle.Render("✅ " + t(i18n.CliInstallSuccess)))
+	fmt.Println(doneStyle.Render("✓ " + t(i18n.CliInstallSuccess)))
 	fmt.Println()
 
 	// 后续命令指引
 	fmt.Println(headerStyle.Render(t(i18n.CliInstallNextSteps)))
-	fmt.Println(strings.Repeat("─", 60))
+	//fmt.Println(strings.Repeat("─", 60))
 
 	printRow := func(label, value string) {
 		fmt.Printf("  %s %s\n", labelStyle.Render(label), valueStyle.Render(value))
 	}
 
-	fmt.Println()
 	fmt.Printf("  %s\n", t(i18n.CliInstallCdHint))
 	fmt.Printf("  $ cd %s\n", workspace)
 	fmt.Println()
@@ -142,9 +140,6 @@ func printInstallSuccess(workspace, binName string) {
 	printRow(t(i18n.CliInstallCmdStatus), fmt.Sprintf("./%s status", binName))
 	printRow(t(i18n.CliInstallCmdUninstall), fmt.Sprintf("./%s uninstall", binName))
 	printRow(t(i18n.CliInstallCmdVersion), fmt.Sprintf("./%s version", binName))
-
-	fmt.Println(strings.Repeat("─", 60))
-	fmt.Println()
 }
 
 // printBanner 打印统一风格的欢迎横幅

@@ -178,6 +178,8 @@ func normalizeRuleSetSortField(sort string) string {
 		return "editedBy"
 	case "editedDate":
 		return "editedDate"
+	case "rulesCount":
+		return "rules_count"
 	default:
 		return "id"
 	}

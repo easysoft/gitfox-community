@@ -82,7 +82,7 @@ func stopMac() error {
 func runStop(_ *kingpin.ParseContext) error {
 	t := clii18n.T
 	errStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#FF4500")).Bold(true)
-	successStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("46")).Bold(true)
+	// successStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#000000")).Bold(true)
 
 	printBanner(t(i18n.CliStopWelcome))
 
@@ -95,7 +95,7 @@ func runStop(_ *kingpin.ParseContext) error {
 	_, port, healthURL := readHealthURL()
 
 	// ========== 阶段 1. 执行停止 ==========
-	fmt.Println("⏹️  " + t(i18n.CliStopStep))
+	fmt.Println(t(i18n.CliStopStep))
 	if err := StopService(); err != nil {
 		fmt.Println(errStyle.Render(err.Error()))
 		return nil
@@ -103,7 +103,7 @@ func runStop(_ *kingpin.ParseContext) error {
 
 	// ========== 阶段 2. 反向健康检查：确认端口不再响应 ==========
 	if port != "" {
-		fmt.Println("🔍 " + fmt.Sprintf(t(i18n.CliStopHealthChecking), port))
+		//fmt.Println(fmt.Sprintf(t(i18n.CliStopHealthChecking), port))
 
 		client := http.Client{Timeout: 2 * time.Second}
 		stillUp := false
@@ -124,14 +124,15 @@ func runStop(_ *kingpin.ParseContext) error {
 
 		if stillUp {
 			warnStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#FF8C00")).Bold(true)
-			fmt.Println(warnStyle.Render("⚠️  " + t(i18n.CliStopHealthStillUp)))
-		} else {
-			fmt.Println(successStyle.Render("✓ ") + t(i18n.CliStopHealthConfirmed))
+			fmt.Println(warnStyle.Render(t(i18n.CliStopHealthStillUp)))
 		}
+		// else {
+		// 	fmt.Println(successStyle.Render("✓ ") + t(i18n.CliStopHealthConfirmed))
+		// }
 	}
 
 	fmt.Println()
-	doneStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#4CAF82"))
+	doneStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#000000"))
 	fmt.Println(doneStyle.Render("✓ " + t(i18n.CliStopSuccess)))
 	fmt.Println()
 

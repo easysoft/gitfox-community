@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"time"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
@@ -30,7 +31,7 @@ func RegisterStart(app *kingpin.Application) {
 func runStart(_ *kingpin.ParseContext) error {
 	t := clii18n.T
 	errStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#FF4500")).Bold(true)
-	successStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("46")).Bold(true)
+	successStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#000000")).Bold(true)
 
 	printBanner(t(i18n.CliStartWelcome))
 
@@ -52,21 +53,23 @@ func runStart(_ *kingpin.ParseContext) error {
 	// =========================================================
 	// 阶段 1. 启动前置依赖拦截 (依赖是否齐全)
 	// =========================================================
-	fmt.Println("🔍 " + t(i18n.CliStartStepCheckDeps))
-	if ok, ver, err := CheckGit(); !ok || err != nil {
+	// fmt.Println(t(i18n.CliStartStepCheckDeps))
+	if ok, _, err := CheckGit(); !ok || err != nil {
 		fmt.Println(errStyle.Render(err.Error()))
 		return nil
-	} else {
-		fmt.Println(successStyle.Render("✓ ") + fmt.Sprintf(t(i18n.CliStartCheckGitOk), ver))
 	}
+	//  else {
+	// 	fmt.Println(successStyle.Render("✓ ") + fmt.Sprintf(t(i18n.CliStartCheckGitOk), ver))
+	// }
 
-	if ok, ver, err := CheckDocker(); !ok || err != nil {
+	if ok, _, err := CheckDocker(); !ok || err != nil {
 		fmt.Println(errStyle.Render(err.Error()))
 		return nil
-	} else {
-		fmt.Println(successStyle.Render("✓ ") + fmt.Sprintf(t(i18n.CliStartCheckDockerOk), ver))
 	}
-	fmt.Println()
+	// else {
+	// 	fmt.Println(successStyle.Render("✓ ") + fmt.Sprintf(t(i18n.CliStartCheckDockerOk), ver))
+	// }
+	// fmt.Println()
 
 	// =========================================================
 	// 阶段 2. 读取环境配制检查 (识别是否允许提供服务)
@@ -99,8 +102,7 @@ func runStart(_ *kingpin.ParseContext) error {
 		devopsURL = v
 	}
 
-	fmt.Println()
-	fmt.Println("────────────────────────────────────────────────────────")
+	// fmt.Println("────────────────────────────────────────────────────────")
 
 	// 强制校验：如果这四个核心要素只要有一个为空，说明配置文件已被破坏，强制重新 init
 	if port == "" || host == "" || dsn == "" || devopsURL == "" {
@@ -108,20 +110,20 @@ func runStart(_ *kingpin.ParseContext) error {
 		return nil
 	}
 
-	fmt.Println("🔍 " + t(i18n.CliStartStepCheckDb))
+	// fmt.Println(t(i18n.CliStartStepCheckDb))
 	if err := CheckDB(dsn); err != nil {
 		fmt.Println(errStyle.Render(fmt.Sprintf(t(i18n.CliStartErrCheckDb), err.Error())))
 		return nil
 	}
-	fmt.Println(successStyle.Render("✓ ") + t(i18n.CliStartSuccessCheckDb))
+	// fmt.Println(successStyle.Render("✓ ") + t(i18n.CliStartSuccessCheckDb))
 
-	fmt.Println("🔍 " + t(i18n.CliStartStepCheckZentao))
+	// fmt.Println(t(i18n.CliStartStepCheckZentao))
 	if err := CheckZentao(devopsURL); err != nil {
 		fmt.Println(errStyle.Render(fmt.Sprintf(t(i18n.CliStartErrCheckZentao), err.Error())))
 		return nil
 	}
-	fmt.Println(successStyle.Render("✓ ") + t(i18n.CliStartSuccessCheckZentao))
-	fmt.Println("────────────────────────────────────────────────────────")
+	// fmt.Println(successStyle.Render("✓ ") + t(i18n.CliStartSuccessCheckZentao))
+	// fmt.Println("────────────────────────────────────────────────────────")
 	// =========================================================
 	// 阶段 3. 智能服务注册决策引擎
 	// =========================================================
@@ -163,8 +165,8 @@ func runStart(_ *kingpin.ParseContext) error {
 		}
 
 		// 用户确认重启
-		fmt.Println()
-		fmt.Println("🔄 " + t(i18n.CliStartServiceRestarting))
+		// fmt.Println()
+		fmt.Println(t(i18n.CliStartServiceRestarting))
 		if err := RestartService(); err != nil {
 			fmt.Println(errStyle.Render(fmt.Sprintf(t(i18n.CliStartFailed), err)))
 			return nil
@@ -180,11 +182,11 @@ func runStart(_ *kingpin.ParseContext) error {
 	for _, checkPortNum := range [2]string{port, sshPort} {
 		ps := CheckPort(checkPortNum)
 		if ps.Unknown {
-			fmt.Println(errStyle.Render("❌ " + fmt.Sprintf(t(i18n.CliStartErrPortConflictUnknown), checkPortNum)))
+			fmt.Println(errStyle.Render("✗ " + fmt.Sprintf(t(i18n.CliStartErrPortConflictUnknown), checkPortNum)))
 			return nil
 		}
 		if ps.InUse {
-			fmt.Println(errStyle.Render("❌ " + fmt.Sprintf(t(i18n.CliStartErrPortConflict), checkPortNum, ps.PID, ps.Process)))
+			fmt.Println(errStyle.Render("✗ " + fmt.Sprintf(t(i18n.CliStartErrPortConflict), checkPortNum, ps.PID, ps.Process)))
 			return nil
 		}
 	}
@@ -195,11 +197,11 @@ func runStart(_ *kingpin.ParseContext) error {
 	if existing.Registered {
 		if existing.Corrupted {
 			// 文件损坏，直接覆盖重建
-			fmt.Println(warnStyle.Render("⚠️  " + t(i18n.CliStartServiceCorrupted)))
+			fmt.Println(warnStyle.Render(t(i18n.CliStartServiceCorrupted)))
 			fmt.Println()
 		} else if existing.ExePath == exePath && existing.WorkDir == workDir {
 			// 同一二进制 + 同一工作目录 → 直接 restart，跳过注册
-			fmt.Println("🔄 " + t(i18n.CliStartServiceExistsSame))
+			// fmt.Println(t(i18n.CliStartServiceExistsSame))
 			if err := RestartService(); err != nil {
 				fmt.Println(errStyle.Render(fmt.Sprintf(t(i18n.CliStartFailed), err)))
 				return nil
@@ -208,7 +210,7 @@ func runStart(_ *kingpin.ParseContext) error {
 			goto healthCheck
 		} else {
 			// 路径不同 → 提示用户对比并确认是否覆盖
-			fmt.Println(warnStyle.Render("⚠️  " + t(i18n.CliStartServiceExistsDiff)))
+			fmt.Println(warnStyle.Render(t(i18n.CliStartServiceExistsDiff)))
 			fmt.Println(fmt.Sprintf(t(i18n.CliStartServiceExistsOldExe), existing.ExePath))
 			fmt.Println(fmt.Sprintf(t(i18n.CliStartServiceExistsNewExe), exePath))
 			if existing.WorkDir != workDir {
@@ -227,7 +229,7 @@ func runStart(_ *kingpin.ParseContext) error {
 
 			if overwriteErr != nil || !overwrite {
 				// 用户选择保留现有注册 → 用旧配置 restart
-				fmt.Println("🔄 " + t(i18n.CliStartServiceRestarting))
+				fmt.Println(t(i18n.CliStartServiceRestarting))
 				if err := RestartService(); err != nil {
 					fmt.Println(errStyle.Render(fmt.Sprintf(t(i18n.CliStartFailed), err)))
 					return nil
@@ -268,8 +270,7 @@ healthCheck:
 	// =========================================================
 	// 服务虽然被挂载进了后台，但不代表内部启动未抛出 Panic。
 	// 通过短时长循环测试 /public/health 接口验证内部状态正常。
-	fmt.Println()
-	fmt.Println("⏳ " + fmt.Sprintf(t(i18n.CliStartStepHealthCheck), port))
+	// fmt.Println(fmt.Sprintf(t(i18n.CliStartStepHealthCheck), port))
 	healthURL = fmt.Sprintf("http://%s:%s/public/health", host, port)
 
 	client := http.Client{Timeout: 2 * time.Second}
@@ -288,13 +289,13 @@ healthCheck:
 	}
 
 	if !isHealthy {
-		fmt.Println(errStyle.Render("❌ " + t(i18n.CliStartErrHealthTimeout)))
+		fmt.Println(errStyle.Render("✗ " + t(i18n.CliStartErrHealthTimeout)))
 		fmt.Println()
 		printFailureSummary()
 		return nil
 	}
 
-	doneStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#4CAF82"))
+	doneStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#000000"))
 	fmt.Println(doneStyle.Render("✓ " + t(i18n.CliStartSuccess)))
 	fmt.Println()
 	printStartSummary(workDir, host, port)
@@ -319,16 +320,27 @@ func printStartSummary(workDir, host, port string) {
 	webConsole := fmt.Sprintf("http://%s:%s", host, port)
 	appLogsDir := filepath.Join(workDir, "logs")
 
-	fmt.Println("  ────────────────────────────────────────────────────────")
-	fmt.Println("  " + t(i18n.CliStartSummaryTitle))
-	fmt.Println("  ────────────────────────────────────────────────────────")
-	fmt.Printf("  🌐 %-16s : %s\n", t(i18n.CliStartSummaryAddress), webConsole)
-	fmt.Printf("  📁 %-16s : %s\n", t(i18n.CliStartSummaryAppLog), appLogsDir)
-	fmt.Println()
-	fmt.Println("  " + t(i18n.CliStartSummaryManageTitle))
-	fmt.Printf("  📖 %-16s : %s\n", t(i18n.CliStartSummaryLogCmd), logCmd)
-	fmt.Println("  ────────────────────────────────────────────────────────")
-	fmt.Println()
+	headerStyle := lipgloss.NewStyle().
+		Bold(true).
+		Foreground(lipgloss.Color("#7D56F4"))
+	labelStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#999999")).
+		Width(20)
+	valueStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#000000"))
+
+	printRow := func(label, value string) {
+		fmt.Printf("  %s %s\n", labelStyle.Render(label+":"), valueStyle.Render(value))
+	}
+
+	fmt.Println(headerStyle.Render(t(i18n.CliStartSummaryTitle)))
+	fmt.Println(strings.Repeat("─", 60))
+	printRow(t(i18n.CliStartSummaryAddress), webConsole)
+	printRow(t(i18n.CliStartSummaryAppLog), appLogsDir)
+	// fmt.Println()
+	// fmt.Println(headerStyle.Render(t(i18n.CliStartSummaryManageTitle)))
+	printRow(t(i18n.CliStartSummaryLogCmd), logCmd)
+	fmt.Println(strings.Repeat("─", 60))
 }
 
 // printFailureSummary 打印健康检查失败的排错指南
@@ -349,13 +361,23 @@ func printFailureSummary() {
 		statusCmd = "sudo launchctl list | grep gitfox"
 	}
 
-	errStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#FF8C00")).Bold(true)
+	headerStyle := lipgloss.NewStyle().
+		Bold(true).
+		Foreground(lipgloss.Color("#FF8C00"))
+	labelStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#999999")).
+		Width(20)
+	valueStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#000000"))
 
-	fmt.Println(errStyle.Render("  ────────────────────────────────────────────────────────"))
-	fmt.Println(errStyle.Render("  " + t(i18n.CliStartFailureTitle)))
-	fmt.Println(errStyle.Render("  ────────────────────────────────────────────────────────"))
-	fmt.Printf("  🔍 %-16s : %s\n", t(i18n.CliStartFailureCheckStatus), statusCmd)
-	fmt.Printf("  📖 %-16s : %s\n", t(i18n.CliStartFailureCheckLog), logCmd)
-	fmt.Println(errStyle.Render("  ────────────────────────────────────────────────────────"))
+	printRow := func(label, value string) {
+		fmt.Printf("  %s %s\n", labelStyle.Render(label+":"), valueStyle.Render(value))
+	}
+
+	fmt.Println(headerStyle.Render(t(i18n.CliStartFailureTitle)))
+	fmt.Println(strings.Repeat("─", 60))
+	printRow(t(i18n.CliStartFailureCheckStatus), statusCmd)
+	printRow(t(i18n.CliStartFailureCheckLog), logCmd)
+	fmt.Println(strings.Repeat("─", 60))
 	fmt.Println()
 }

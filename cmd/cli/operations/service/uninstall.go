@@ -30,7 +30,7 @@ func RegisterUninstall(app *kingpin.Application) {
 func runUninstall(_ *kingpin.ParseContext) error {
 	t := clii18n.T
 	errStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#FF4500")).Bold(true)
-	successStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("46")).Bold(true)
+	// successStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#000000")).Bold(true)
 
 	printBanner(t(i18n.CliUninstallWelcome))
 
@@ -53,12 +53,11 @@ func runUninstall(_ *kingpin.ParseContext) error {
 		fmt.Println(t(i18n.CliUninstallConfirmCancel))
 		return nil
 	}
-	fmt.Println()
 
 	_, port, healthURL := readHealthURL()
 
 	// ========== 阶段 2. 停止服务 ==========
-	fmt.Println("⏹️  " + t(i18n.CliStopStep))
+	fmt.Println(t(i18n.CliStopStep))
 	// 停止允许失败（服务可能本就没在运行）
 	_ = StopService()
 
@@ -70,7 +69,7 @@ func runUninstall(_ *kingpin.ParseContext) error {
 
 	// ========== 阶段 4. 反向健康检查 ==========
 	if port != "" {
-		fmt.Println("🔍 " + fmt.Sprintf(t(i18n.CliStopHealthChecking), port))
+		//fmt.Println(fmt.Sprintf(t(i18n.CliStopHealthChecking), port))
 
 		client := http.Client{Timeout: 2 * time.Second}
 		stillUp := false
@@ -90,14 +89,15 @@ func runUninstall(_ *kingpin.ParseContext) error {
 
 		if stillUp {
 			warnStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#FF8C00")).Bold(true)
-			fmt.Println(warnStyle.Render("⚠️  " + t(i18n.CliStopHealthStillUp)))
-		} else {
-			fmt.Println(successStyle.Render("✓ ") + t(i18n.CliStopHealthConfirmed))
+			fmt.Println(warnStyle.Render(t(i18n.CliStopHealthStillUp)))
 		}
+		// else {
+		// 	fmt.Println(successStyle.Render("✓ ") + t(i18n.CliStopHealthConfirmed))
+		// }
 	}
 
 	fmt.Println()
-	doneStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#4CAF82"))
+	doneStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#000000"))
 	fmt.Println(doneStyle.Render("✓ " + t(i18n.CliUninstallSuccess)))
 	fmt.Println()
 
@@ -143,17 +143,17 @@ func uninstallLinux() error {
 	servicePath := "/etc/systemd/system/gitfox.service"
 
 	// 1. disable: 拔除开机自启钩子
-	fmt.Println("  🔗 " + t(i18n.CliUninstallStepDisable))
+	//fmt.Println("  " + t(i18n.CliUninstallStepDisable))
 	_ = exec.Command("systemctl", "disable", "gitfox").Run()
 
 	// 2. rm: 粉碎服务定义文件
-	fmt.Println("  🗑️  " + t(i18n.CliUninstallStepRemove))
+	//fmt.Println("  " + t(i18n.CliUninstallStepRemove))
 	if err := os.Remove(servicePath); err != nil && !os.IsNotExist(err) {
 		return fmt.Errorf(t(i18n.CliUninstallFailed), err)
 	}
 
 	// 3. daemon-reload: 通知 systemd 刷新缓存
-	fmt.Println("  🔄 " + t(i18n.CliUninstallStepReload))
+	//fmt.Println("  " + t(i18n.CliUninstallStepReload))
 	_ = exec.Command("systemctl", "daemon-reload").Run()
 
 	return nil
@@ -169,11 +169,11 @@ func uninstallMac() error {
 	plistPath := "/Library/LaunchDaemons/com.gitfox.service.plist"
 
 	// 1. unload: 卸载并禁用
-	fmt.Println("  🔗 " + t(i18n.CliUninstallStepDisable))
+	fmt.Println("  " + t(i18n.CliUninstallStepDisable))
 	_ = exec.Command("launchctl", "unload", "-w", plistPath).Run()
 
 	// 2. rm: 删除 plist 文件
-	fmt.Println("  🗑️  " + t(i18n.CliUninstallStepRemove))
+	fmt.Println("  " + t(i18n.CliUninstallStepRemove))
 	if err := os.Remove(plistPath); err != nil && !os.IsNotExist(err) {
 		return fmt.Errorf(t(i18n.CliUninstallFailed), err)
 	}
