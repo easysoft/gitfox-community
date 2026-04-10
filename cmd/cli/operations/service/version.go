@@ -22,11 +22,9 @@ func runVersion(_ *kingpin.ParseContext) error {
 	printBanner("  " + t(i18n.CliVersionWelcome) + "  ")
 
 	labelStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#999999")).
 		Width(20)
 
-	valueStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#000000"))
+	valueStyle := lipgloss.NewStyle()
 
 	printRow := func(label, value string) {
 		fmt.Printf("  %s %s\n", labelStyle.Render(label+":"), valueStyle.Render(value))

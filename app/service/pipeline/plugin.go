@@ -20,7 +20,7 @@ func (s *Service) Migrate(ctx context.Context, url string) error {
 		return err
 	}
 
-	zipFile, cancel, err := resources.LoadAllCIPlugins(ctx, url)
+	pluginPkgPath, cancel, err := resources.DownloadCIPlugins(ctx, url)
 	if err != nil {
 		return err
 	}
@@ -31,7 +31,7 @@ func (s *Service) Migrate(ctx context.Context, url string) error {
 		pluginMap[v.Name] = v
 	}
 
-	data, err := file.GetZipData(zipFile)
+	data, err := file.GetArchiveData(pluginPkgPath)
 	if err != nil {
 		return err
 	}

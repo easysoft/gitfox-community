@@ -163,8 +163,12 @@ func (zd *ZipData) CleanRead() {
 	}
 }
 
+// GetZipData 解析 zip.ReadCloser，构建并返回 ZipData 目录树。
+// 安全措施：
+//   - 过滤包含 ".." 的路径遍历条目（Zip Slip 防护）
+//   - 使用 io.LimitReader 限制单个文件最大读取量（解压炸弹防护）
 func GetZipData(zipFile *zip.ReadCloser) (ZipData, error) {
-	// 全局自增 id
+	// 全局自增 id，用于标识每个节点的唯一性
 	currentID := 0
 	root := ZipData{
 		id:    currentID,
@@ -176,21 +180,27 @@ func GetZipData(zipFile *zip.ReadCloser) (ZipData, error) {
 	}
 	currentID++
 
-	// 构建目录树
+	// dirMap 用于快速定位已创建的目录节点，避免重复创建
 	dirMap := make(map[string]*ZipData)
 	dirMap[""] = &root
 
 	for _, file := range zipFile.File {
-		// 跳过根目录
+		// 跳过根目录或空名条目
 		if file.Name == "" || file.Name == "/" {
 			continue
 		}
 
-		// 移除末尾的斜杠
-		cleanPath := strings.TrimSuffix(file.Name, "/")
+		// 安全检查：路径清洗，防御 Zip Slip 路径遍历攻击
+		safePath, ok := sanitizePath(file.Name)
+		if !ok {
+			continue // 包含 ".." 的恶意路径，静默跳过
+		}
+
+		// 移除末尾的斜杠，统一格式
+		cleanPath := strings.TrimSuffix(safePath, "/")
 		parts := strings.Split(cleanPath, "/")
 
-		// 遍历路径的每一部分，确保所有父目录都存在
+		// 逐层遍历路径，确保所有父目录节点都已创建
 		for i := 0; i < len(parts); i++ {
 			currentPath := strings.Join(parts[:i+1], "/")
 			parentPath := ""
@@ -203,7 +213,7 @@ func GetZipData(zipFile *zip.ReadCloser) (ZipData, error) {
 				continue
 			}
 
-			// 判断是文件还是目录
+			// 判断当前节点是文件还是目录
 			isLastPart := i == len(parts)-1
 			isFile := isLastPart && !file.FileInfo().IsDir()
 
@@ -219,22 +229,27 @@ func GetZipData(zipFile *zip.ReadCloser) (ZipData, error) {
 				data.Type = "file"
 				data.Suffix = filepath.Ext(parts[i])
 
-				// 读取文件内容
+				// 读取文件内容（使用 LimitReader 进行解压炸弹防护）
 				fc, err := file.Open()
 				if err != nil {
 					return ZipData{}, err
 				}
-				_, err = io.Copy(&data.Content, fc)
+				limitedReader := io.LimitReader(fc, maxPluginFileSize+1)
+				n, err := io.Copy(&data.Content, limitedReader)
 				fc.Close()
 				if err != nil {
 					return ZipData{}, err
+				}
+				// 如果实际读取量超过上限，说明文件过大，跳过该文件
+				if n > maxPluginFileSize {
+					continue
 				}
 			} else {
 				data.Type = "dir"
 				data.Next = make(map[string]*ZipData)
 			}
 
-			// 添加到父目录
+			// 将当前节点挂载到父目录
 			parent := dirMap[parentPath]
 			if parent.Next == nil {
 				parent.Next = make(map[string]*ZipData)

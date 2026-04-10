@@ -1,6 +1,7 @@
 package file
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"testing"
@@ -25,7 +26,7 @@ func TestDownloadFile(t *testing.T) {
 		// 测试下载到目录（自动使用 URL 中的文件名）
 		dirPath := "./file/"
 
-		err := DownloadFile(dirPath, testURL)
+		err := DownloadFile(context.Background(), dirPath, testURL)
 		if err != nil {
 			t.Errorf("DownloadFile to directory failed: %v", err)
 			return
@@ -50,7 +51,7 @@ func TestDownloadFile(t *testing.T) {
 		// 测试下载到指定文件路径
 		filePath := "./file/p.zip"
 
-		err := DownloadFile(filePath, testURL)
+		err := DownloadFile(context.Background(), filePath, testURL)
 		if err != nil {
 			t.Errorf("DownloadFile to specific file failed: %v", err)
 			return
@@ -79,7 +80,7 @@ func TestDownloadFile(t *testing.T) {
 			t.Fatalf("Failed to create parent directory: %v", err)
 		}
 
-		err := DownloadFile(filePath, testURL)
+		err := DownloadFile(context.Background(), filePath, testURL)
 		if err != nil {
 			t.Errorf("DownloadFile to non-existent directory failed: %v", err)
 			return
@@ -105,7 +106,7 @@ func TestDownloadFile(t *testing.T) {
 			t.Fatalf("Failed to create existing file: %v", err)
 		}
 
-		err := DownloadFile(filePath, testURL)
+		err := DownloadFile(context.Background(), filePath, testURL)
 		if err != nil {
 			t.Errorf("DownloadFile overwrite failed: %v", err)
 			return
@@ -137,7 +138,7 @@ func TestDownloadFileErrorCases(t *testing.T) {
 		_ = os.MkdirAll(filepath.Dir(filePath), 0755)
 		defer os.RemoveAll("./file")
 
-		err := DownloadFile(filePath, invalidURL)
+		err := DownloadFile(context.Background(), filePath, invalidURL)
 		if err == nil {
 			t.Error("Expected error for invalid URL, but got nil")
 		} else {
@@ -154,7 +155,7 @@ func TestDownloadFileErrorCases(t *testing.T) {
 		_ = os.MkdirAll(dirPath, 0755)
 		defer os.RemoveAll("./file")
 
-		err := DownloadFile(dirPath, urlWithoutFilename)
+		err := DownloadFile(context.Background(), dirPath, urlWithoutFilename)
 		if err == nil {
 			t.Error("Expected error for URL without filename, but got nil")
 		} else if err.Error() != "cannot extract filename from url" {
@@ -169,7 +170,7 @@ func TestDownloadFileErrorCases(t *testing.T) {
 		filePath := "./nonexistent/subdir/file.zip"
 		testURL := "https://pkg.zentao.net/gitfox/20260123/plugins.zip"
 
-		err := DownloadFile(filePath, testURL)
+		err := DownloadFile(context.Background(), filePath, testURL)
 		if err == nil {
 			t.Error("Expected error for invalid directory, but got nil")
 			// 清理可能创建的文件

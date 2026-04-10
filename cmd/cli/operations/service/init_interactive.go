@@ -157,7 +157,7 @@ func runInit(_ *kingpin.ParseContext) error {
 		return verifyErr
 	}
 
-	successStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#000000")).Bold(true)
+	successStyle := lipgloss.NewStyle().Bold(true)
 	// fmt.Println()
 	// fmt.Println(successStyle.Render("✓ ") + t(i18n.CliInitSuccessZentaoConn))
 	// fmt.Println()
@@ -429,10 +429,8 @@ func runDifferentMachineFlow(db *dbConfig, zentaoIP *string, workspace *string, 
 
 	// 打印用户输入的信息（隐藏密码）
 	labelStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#999999")).
 		Width(20)
-	valueStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#000000"))
+	valueStyle := lipgloss.NewStyle()
 	printRow := func(label, value string) {
 		fmt.Printf("  %s %s\n", labelStyle.Render(label+":"), valueStyle.Render(value))
 	}
@@ -817,7 +815,7 @@ func copyEmbeddedYaml(workspace string) error {
 // printSummary 以美化的表格形式打印最终配置摘要。
 // 密码在 DSN 中以 *** 替代，避免泄露。
 func printSummary(envPath string, db *dbConfig, workspace, serverHost, devopsURL string) {
-	successStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#000000")).Bold(true)
+	successStyle := lipgloss.NewStyle().Bold(true)
 
 	fmt.Println()
 	fmt.Println(successStyle.Render("✓ ") + t(i18n.CliInitSuccess))
@@ -828,11 +826,9 @@ func printSummary(envPath string, db *dbConfig, workspace, serverHost, devopsURL
 		Foreground(lipgloss.Color("#7D56F4"))
 
 	labelStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#999999")).
 		Width(20)
 
-	valueStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#000000"))
+	valueStyle := lipgloss.NewStyle()
 
 	fmt.Println(headerStyle.Render(t(i18n.CliInitConfigSummary)))
 	fmt.Println(strings.Repeat("─", 60))
