@@ -30,7 +30,7 @@ func RegisterUninstall(app *kingpin.Application) {
 func runUninstall(_ *kingpin.ParseContext) error {
 	t := clii18n.T
 	errStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#FF4500")).Bold(true)
-	// successStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#000000")).Bold(true)
+	// successStyle := lipgloss.NewStyle().Bold(true)
 
 	printBanner(t(i18n.CliUninstallWelcome))
 
@@ -99,7 +99,6 @@ func runUninstall(_ *kingpin.ParseContext) error {
 	fmt.Println()
 	doneStyle := lipgloss.NewStyle()
 	fmt.Println(doneStyle.Render("✓ " + t(i18n.CliUninstallSuccess)))
-	fmt.Println()
 
 	return nil
 }
@@ -108,29 +107,12 @@ func runUninstall(_ *kingpin.ParseContext) error {
 func uninstallService() error {
 	switch runtime.GOOS {
 	case "windows":
-		return uninstallWindows()
+		return uninstallWindows() // → windows.go
 	case "linux":
 		return uninstallLinux()
-	case "darwin":
-		return uninstallMac()
 	default:
 		return errors.New(clii18n.T(i18n.CliStartErrUnsupportedOs))
 	}
-}
-
-func uninstallWindows() error {
-	t := clii18n.T
-
-	if _, err := exec.LookPath("nssm"); err != nil {
-		return errors.New(t(i18n.CliStartErrNssmMissing))
-	}
-
-	// nssm remove 会同时 disable + 删除服务注册
-	if err := exec.Command("nssm", "remove", "gitfox", "confirm").Run(); err != nil {
-		return fmt.Errorf(t(i18n.CliUninstallFailed), err)
-	}
-
-	return nil
 }
 
 func uninstallLinux() error {
@@ -155,28 +137,6 @@ func uninstallLinux() error {
 	// 3. daemon-reload: 通知 systemd 刷新缓存
 	//fmt.Println("  " + t(i18n.CliUninstallStepReload))
 	_ = exec.Command("systemctl", "daemon-reload").Run()
-
-	return nil
-}
-
-func uninstallMac() error {
-	t := clii18n.T
-
-	if _, err := exec.LookPath("launchctl"); err != nil {
-		return errors.New(t(i18n.CliStartErrLaunchctlMissing))
-	}
-
-	plistPath := "/Library/LaunchDaemons/com.gitfox.service.plist"
-
-	// 1. unload: 卸载并禁用
-	fmt.Println("  " + t(i18n.CliUninstallStepDisable))
-	_ = exec.Command("launchctl", "unload", "-w", plistPath).Run()
-
-	// 2. rm: 删除 plist 文件
-	fmt.Println("  " + t(i18n.CliUninstallStepRemove))
-	if err := os.Remove(plistPath); err != nil && !os.IsNotExist(err) {
-		return fmt.Errorf(t(i18n.CliUninstallFailed), err)
-	}
 
 	return nil
 }

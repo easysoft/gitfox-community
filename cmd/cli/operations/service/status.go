@@ -37,29 +37,33 @@ func runStatus(_ *kingpin.ParseContext) error {
 	// =========================================================
 	// 区块 1. 依赖环境检查
 	// =========================================================
-	fmt.Println(headerStyle.Render("  " + t(i18n.CliStatusSectionDeps)))
+	fmt.Println(headerStyle.Render(t(i18n.CliStatusSectionDeps)))
 
 	// --- Git ---
 	if ok, ver, _ := CheckGit(); ok {
-		fmt.Println(okStyle.Render("  ✓ ") + fmt.Sprintf(t(i18n.CliStatusGitOk), ver))
+		fmt.Println(okStyle.Render("✓ ") + fmt.Sprintf(t(i18n.CliStatusGitOk), ver))
 	} else {
-		fmt.Println(errStyle.Render("  ✗ ") + t(i18n.CliStatusGitMissing))
+		fmt.Println(errStyle.Render("✗ ") + t(i18n.CliStatusGitMissing))
 		fmt.Println(lipgloss.NewStyle().Render("      Install: https://git-scm.com/downloads"))
 	}
 
 	// --- Docker ---
-	if ok, ver, _ := CheckDocker(); ok {
-		fmt.Println(okStyle.Render("  ✓ ") + fmt.Sprintf(t(i18n.CliStatusDockerOk), ver))
+	if ok, ver, err := CheckDocker(); ok && err == nil {
+		fmt.Println(okStyle.Render("✓ ") + fmt.Sprintf(t(i18n.CliStatusDockerOk), ver))
+	} else if ok && err != nil {
+		// 已安装但 daemon 未运行
+		warnStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#FF8C00")).Bold(true)
+		fmt.Println(warnStyle.Render("✗ ") + err.Error())
 	} else {
-		fmt.Println(errStyle.Render("  ✗ ") + t(i18n.CliStatusDockerMissing))
+		fmt.Println(errStyle.Render("✗ ") + t(i18n.CliStatusDockerMissing))
 		fmt.Println(lipgloss.NewStyle().Render("      Install: https://docs.docker.com/get-docker/"))
 	}
 
 	// --- Docker Compose ---
 	if ok, ver, _ := CheckDockerCompose(); ok {
-		fmt.Println(okStyle.Render("  ✓ ") + fmt.Sprintf(t(i18n.CliStatusComposeOk), ver))
+		fmt.Println(okStyle.Render("✓ ") + fmt.Sprintf(t(i18n.CliStatusComposeOk), ver))
 	} else {
-		fmt.Println(errStyle.Render("  ✗ ") + t(i18n.CliStatusComposeMissing))
+		fmt.Println(errStyle.Render("✗ ") + t(i18n.CliStatusComposeMissing))
 		fmt.Println(lipgloss.NewStyle().Render("      Install: https://docs.docker.com/compose/install/"))
 	}
 
@@ -108,14 +112,9 @@ func isServiceRegistered() bool {
 		}
 		// 或者通过 systemctl 判断
 		return exec.Command("systemctl", "is-enabled", "--quiet", "gitfox").Run() == nil
-	case "darwin":
-		if _, err := os.Stat("/Library/LaunchDaemons/com.gitfox.service.plist"); err == nil {
-			return true
-		}
-		return false
 	case "windows":
-		// 尝试查询服务名是否存在
-		return exec.Command("sc", "query", "gitfox").Run() == nil
+		// isServiceRegisteredWindows 已迁移至 windows.go
+		return isServiceRegisteredWindows()
 	default:
 		return false
 	}

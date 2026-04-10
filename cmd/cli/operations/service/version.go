@@ -19,7 +19,7 @@ func RegisterVersion(app *kingpin.Application) {
 func runVersion(_ *kingpin.ParseContext) error {
 	t := clii18n.T
 
-	printBanner("  " + t(i18n.CliVersionWelcome) + "  ")
+	printBanner(t(i18n.CliVersionWelcome))
 
 	labelStyle := lipgloss.NewStyle().
 		Width(20)
@@ -27,7 +27,7 @@ func runVersion(_ *kingpin.ParseContext) error {
 	valueStyle := lipgloss.NewStyle()
 
 	printRow := func(label, value string) {
-		fmt.Printf("  %s %s\n", labelStyle.Render(label+":"), valueStyle.Render(value))
+		fmt.Printf("%s %s\n", labelStyle.Render(label+":"), valueStyle.Render(value))
 	}
 
 	// ── 构建信息区块 ──────────────────────────────────────────

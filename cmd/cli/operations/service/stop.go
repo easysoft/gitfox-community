@@ -30,25 +30,15 @@ func RegisterStop(app *kingpin.Application) {
 func StopService() error {
 	switch runtime.GOOS {
 	case "windows":
-		return stopWindows()
+		return stopWindows() // → windows.go
 	case "linux":
 		return stopLinux()
-	case "darwin":
-		return stopMac()
 	default:
 		return errors.New(clii18n.T(i18n.CliStartErrUnsupportedOs))
 	}
 }
 
-func stopWindows() error {
-	if _, err := exec.LookPath("nssm"); err != nil {
-		return errors.New(clii18n.T(i18n.CliStartErrNssmMissing))
-	}
-	if err := exec.Command("nssm", "stop", "gitfox").Run(); err != nil {
-		return fmt.Errorf(clii18n.T(i18n.CliStopFailed), err)
-	}
-	return nil
-}
+// stopWindows 已迁移至 windows.go
 
 func stopLinux() error {
 	if _, err := exec.LookPath("systemctl"); err != nil {
@@ -66,23 +56,11 @@ func stopLinux() error {
 	return nil
 }
 
-func stopMac() error {
-	if _, err := exec.LookPath("launchctl"); err != nil {
-		return errors.New(clii18n.T(i18n.CliStartErrLaunchctlMissing))
-	}
-
-	plistPath := "/Library/LaunchDaemons/com.gitfox.service.plist"
-	if err := exec.Command("launchctl", "unload", "-w", plistPath).Run(); err != nil {
-		return fmt.Errorf(clii18n.T(i18n.CliStopFailed), err)
-	}
-	return nil
-}
-
 // runStop 是 `gitfox stop` 的实际执行入口处理函数。
 func runStop(_ *kingpin.ParseContext) error {
 	t := clii18n.T
 	errStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#FF4500")).Bold(true)
-	// successStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#000000")).Bold(true)
+	// successStyle := lipgloss.NewStyle().Bold(true)
 
 	printBanner(t(i18n.CliStopWelcome))
 
@@ -137,15 +115,6 @@ func runStop(_ *kingpin.ParseContext) error {
 	fmt.Println()
 
 	return nil
-}
-
-// readPortFromEnv 尝试从当前目录的 prod.env 中读取端口号
-func readPortFromEnv() string {
-	envMap, err := godotenv.Read(filepath.Join(".", "prod.env"))
-	if err != nil {
-		return ""
-	}
-	return envMap["GITFOX_HTTP_PORT"]
 }
 
 // readHealthURL 从 prod.env 读取 host 和 port，拼装健康检查 URL。

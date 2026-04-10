@@ -23,6 +23,18 @@ const (
 // lastInitWorkspace 记录 init 成功后的工作目录路径，供 install 命令使用。
 var lastInitWorkspace string
 
+// lastInitSameMachine 记录 init 时用户是否选择了同机部署。
+var lastInitSameMachine bool
+
+// lastInitZentaoPath 记录 init 时用户输入的禅道配置目录路径（仅同机模式有值）。
+var lastInitZentaoPath string
+
+// lastInitLocalIP 记录 init 时自动获取的本机 IP。
+var lastInitLocalIP string
+
+// lastInitGitfoxPort 记录 init 时使用的 GitFox HTTP 端口。
+var lastInitGitfoxPort string
+
 // isInstallingMode 标记当前是否处于 install 流程中，用于跳过 init 末尾的「请执行 start」提示。
 var isInstallingMode bool
 
@@ -34,6 +46,7 @@ func Register(app *kingpin.Application) {
 	RegisterUninstall(app)
 	RegisterStatus(app)
 	RegisterVersion(app)
+	RegisterServiceRun(app) // Windows SCM 内部子命令 → windows_svc.go / windows_svc_stub.go
 }
 
 func RegisterInstall(app *kingpin.Application) {
@@ -72,7 +85,7 @@ func runInstall(ctx *kingpin.ParseContext) error {
 
 	binName := "gitfox"
 	if runtime.GOOS == "windows" {
-		binName = "gitfox.exe"
+		binName = windowsBinaryName // → windows.go
 	}
 	binPath := filepath.Join(workspace, binName)
 
@@ -111,7 +124,7 @@ func runInstall(ctx *kingpin.ParseContext) error {
 	return nil
 }
 
-// printInstallSuccess 打印安装成功后的引导信息。
+// printInstallSuccess 打印安装成功后的引导信息，包括 my.php 配置提示。
 func printInstallSuccess(workspace, binName string) {
 	t := clii18n.T
 
@@ -119,36 +132,48 @@ func printInstallSuccess(workspace, binName string) {
 	labelStyle := lipgloss.NewStyle().Width(20)
 	valueStyle := lipgloss.NewStyle()
 	headerStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#7D56F4"))
+	warnStyle := lipgloss.NewStyle()
 
-	fmt.Println()
 	fmt.Println(doneStyle.Render("✓ " + t(i18n.CliInstallSuccess)))
+
+	// ===== 重要：禅道 my.php 配置提示 =====
+	// 同机模式下 init 已自动写入；异机模式下需要用户手动配置。
+	if !lastInitSameMachine || lastInitZentaoPath == "" {
+		fmt.Println(warnStyle.Render(t(i18n.CliInitManualMyphpHint)))
+		fmt.Printf("$config->devops->gitfoxURL = 'http://%s';\n", lastInitLocalIP)
+		fmt.Printf("$config->devops->gitfoxPort = %s;\n", lastInitGitfoxPort)
+	}
 	fmt.Println()
 
 	// 后续命令指引
 	fmt.Println(headerStyle.Render(t(i18n.CliInstallNextSteps)))
-	//fmt.Println(strings.Repeat("─", 60))
 
 	printRow := func(label, value string) {
-		fmt.Printf("  %s %s\n", labelStyle.Render(label), valueStyle.Render(value))
+		fmt.Printf("%s %s\n", labelStyle.Render(label), valueStyle.Render(value))
 	}
 
-	fmt.Printf("  %s\n", t(i18n.CliInstallCdHint))
-	fmt.Printf("  $ cd %s\n", workspace)
+	cmdPrefix := fmt.Sprintf("./%s", binName)
+	if runtime.GOOS == "windows" {
+		cmdPrefix = windowsCmdPrefix
+	}
+
+	fmt.Printf("%s\n", t(i18n.CliInstallCdHint))
+	fmt.Printf("$ cd %s\n", workspace)
 	fmt.Println()
 
-	printRow(t(i18n.CliInstallCmdStop), fmt.Sprintf("./%s stop", binName))
-	printRow(t(i18n.CliInstallCmdStatus), fmt.Sprintf("./%s status", binName))
-	printRow(t(i18n.CliInstallCmdUninstall), fmt.Sprintf("./%s uninstall", binName))
-	printRow(t(i18n.CliInstallCmdVersion), fmt.Sprintf("./%s version", binName))
+	printRow(t(i18n.CliInstallCmdStop), fmt.Sprintf("%s stop", cmdPrefix))
+	printRow(t(i18n.CliInstallCmdStatus), fmt.Sprintf("%s status", cmdPrefix))
+	printRow(t(i18n.CliInstallCmdUninstall), fmt.Sprintf("%s uninstall", cmdPrefix))
+	printRow(t(i18n.CliInstallCmdVersion), fmt.Sprintf("%s version", cmdPrefix))
 }
 
 // printBanner 打印统一风格的欢迎横幅
 func printBanner(text string) {
 	bannerStyle := lipgloss.NewStyle().
-		Bold(true).
-		Foreground(lipgloss.Color("#FAFAFA")).
-		Background(lipgloss.Color("#7D56F4")).
-		Padding(0, 2)
+		Bold(true)
+		// Foreground(lipgloss.Color("#FAFAFA")).
+		// Background(lipgloss.Color("#7D56F4")).
+		// Padding(0, 2)
 
 	fmt.Println(bannerStyle.Render(text))
 	fmt.Println()

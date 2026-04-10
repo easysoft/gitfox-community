@@ -17,14 +17,18 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-// CheckSudo 检查当前上下文是否具有超级管理员执行权限 (Root/Sudo)。
+// CheckSudo 检查当前上下文是否具有超级管理员执行权限 (Root/Sudo/Administrator)。
 // 主要由于许多 CLI 的核心命令 (如挂载、停止后台守护进程) 需要穿透系统底层安全限制。
-// 注意：在 Windows 环境中该接口固定返回 nil，此时权限防御将下沉交由 Windows 原生安全体系兜底。
 func CheckSudo() error {
-	if runtime.GOOS != "windows" && os.Getuid() != 0 {
-		return errors.New(clii18n.T(i18n.CliStartErrRequiresAdmin))
+	switch runtime.GOOS {
+	case "windows":
+		return checkSudoWindows()
+	default:
+		if os.Getuid() != 0 {
+			return errors.New(clii18n.T(i18n.CliStartErrRequiresAdmin))
+		}
+		return nil
 	}
-	return nil
 }
 
 // CheckGit 检查 git 是否安装并获取版本信息。
@@ -57,7 +61,7 @@ func CheckGit() (bool, string, error) {
 	return true, version, nil
 }
 
-// CheckDocker 检查 docker 是否安装并获取版本信息。
+// CheckDocker 检查 docker 是否安装、daemon 是否正在运行，并获取版本信息。
 func CheckDocker() (bool, string, error) {
 	t := clii18n.T
 	if _, err := exec.LookPath("docker"); err != nil {
@@ -74,11 +78,21 @@ func CheckDocker() (bool, string, error) {
 	outStr := strings.TrimSpace(string(output))
 	re := regexp.MustCompile(`[Vv]ersion\s+(\d+\.\d+\.\d+(?:[-a-zA-Z0-9.]+)*)`)
 	matches := re.FindStringSubmatch(outStr)
+	version := outStr
 	if len(matches) > 1 {
-		return true, matches[1], nil
+		version = matches[1]
 	}
 
-	return true, outStr, nil
+	// 验证 Docker daemon 是否正在运行
+	// docker --version 只是客户端本地操作，daemon 停了也能成功
+	// docker info 需要和 daemon 通信，可以真正检测 daemon 状态
+	infoCmd := exec.Command("docker", "info")
+	infoCmd.Env = append(os.Environ(), "DOCKER_CLI_HINTS=false")
+	if err := infoCmd.Run(); err != nil {
+		return true, version, fmt.Errorf(t(i18n.CliCheckErrDaemonNotRunning), "docker")
+	}
+
+	return true, version, nil
 }
 
 // CheckDockerCompose 检查 docker compose 是否安装并获取版本信息。
@@ -173,17 +187,15 @@ type PortStatus struct {
 }
 
 // CheckPort 检查指定端口是否被占用，并返回占用者的 PID 和进程名。
-// 跨平台支持：Linux/macOS 使用 ss/lsof，Windows 使用 netstat。
+// 跨平台支持：Linux 使用 ss/lsof，Windows 使用 netstat。
 func CheckPort(port string) PortStatus {
 	result := PortStatus{Port: port}
 
 	switch runtime.GOOS {
 	case "linux":
 		result = checkPortLinux(port)
-	case "darwin":
-		result = checkPortMac(port)
 	case "windows":
-		result = checkPortWindows(port)
+		result = checkPortWindows(port) // → windows.go
 	default:
 		result.Unknown = true
 	}
@@ -204,43 +216,6 @@ func checkPortLinux(port string) PortStatus {
 		return parseLsofOutput(string(out), port)
 	}
 	return parseSsOutput(string(out), port)
-}
-
-func checkPortMac(port string) PortStatus {
-	result := PortStatus{Port: port}
-	out, err := exec.Command("lsof", "-i", ":"+port, "-sTCP:LISTEN", "-n", "-P").Output()
-	if err != nil {
-		result.Unknown = true
-		return result
-	}
-	return parseLsofOutput(string(out), port)
-}
-
-func checkPortWindows(port string) PortStatus {
-	result := PortStatus{Port: port}
-	out, err := exec.Command("netstat", "-ano").Output()
-	if err != nil {
-		result.Unknown = true
-		return result
-	}
-	for _, line := range strings.Split(string(out), "\n") {
-		if strings.Contains(line, ":"+port) && strings.Contains(line, "LISTENING") {
-			fields := strings.Fields(line)
-			if len(fields) >= 5 {
-				result.InUse = true
-				result.PID = fields[4]
-				// 通过 tasklist 查进程名
-				if nameOut, err := exec.Command("tasklist", "/FI", "PID eq "+result.PID, "/NH", "/FO", "CSV").Output(); err == nil {
-					parts := strings.Split(strings.TrimSpace(string(nameOut)), ",")
-					if len(parts) > 0 {
-						result.Process = strings.Trim(parts[0], "\"")
-					}
-				}
-			}
-			return result
-		}
-	}
-	return result
 }
 
 // parseLsofOutput 解析 lsof 输出提取 PID / 进程名
