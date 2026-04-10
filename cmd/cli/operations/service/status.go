@@ -27,16 +27,13 @@ func RegisterStatus(app *kingpin.Application) {
 // 逐项检查依赖工具安装状态和 GitFox 服务运行状态，以状态报告的形式呈现。
 func runStatus(_ *kingpin.ParseContext) error {
 	t := clii18n.T
-	okStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#000000")).Bold(true)
+	okStyle := lipgloss.NewStyle().Bold(true)
 	errStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#FF4500")).Bold(true)
 	headerStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#7D56F4"))
-	// separatorLine := "────────────────────────────────────────────────────────"
 
 	printBanner(t(i18n.CliStatusWelcome))
+	//fmt.Println(headerStyle.Render(t(i18n.CliStatusTitle)))
 
-	fmt.Println(headerStyle.Render(t(i18n.CliStatusTitle)))
-	// fmt.Println(separatorLine)
-	fmt.Println()
 	// =========================================================
 	// 区块 1. 依赖环境检查
 	// =========================================================
@@ -47,7 +44,7 @@ func runStatus(_ *kingpin.ParseContext) error {
 		fmt.Println(okStyle.Render("  ✓ ") + fmt.Sprintf(t(i18n.CliStatusGitOk), ver))
 	} else {
 		fmt.Println(errStyle.Render("  ✗ ") + t(i18n.CliStatusGitMissing))
-		fmt.Println(lipgloss.NewStyle().Foreground(lipgloss.Color("#888888")).Render("      Install: https://git-scm.com/downloads"))
+		fmt.Println(lipgloss.NewStyle().Render("      Install: https://git-scm.com/downloads"))
 	}
 
 	// --- Docker ---
@@ -55,7 +52,7 @@ func runStatus(_ *kingpin.ParseContext) error {
 		fmt.Println(okStyle.Render("  ✓ ") + fmt.Sprintf(t(i18n.CliStatusDockerOk), ver))
 	} else {
 		fmt.Println(errStyle.Render("  ✗ ") + t(i18n.CliStatusDockerMissing))
-		fmt.Println(lipgloss.NewStyle().Foreground(lipgloss.Color("#888888")).Render("      Install: https://docs.docker.com/get-docker/"))
+		fmt.Println(lipgloss.NewStyle().Render("      Install: https://docs.docker.com/get-docker/"))
 	}
 
 	// --- Docker Compose ---
@@ -63,7 +60,7 @@ func runStatus(_ *kingpin.ParseContext) error {
 		fmt.Println(okStyle.Render("  ✓ ") + fmt.Sprintf(t(i18n.CliStatusComposeOk), ver))
 	} else {
 		fmt.Println(errStyle.Render("  ✗ ") + t(i18n.CliStatusComposeMissing))
-		fmt.Println(lipgloss.NewStyle().Foreground(lipgloss.Color("#888888")).Render("      Install: https://docs.docker.com/compose/install/"))
+		fmt.Println(lipgloss.NewStyle().Render("      Install: https://docs.docker.com/compose/install/"))
 	}
 
 	fmt.Println()

@@ -1,6 +1,7 @@
 package file
 
 import (
+	"context"
 	"io"
 	"net/http"
 	"os"
@@ -46,9 +47,10 @@ func FindFilesRecursive(dir, target string) ([]string, error) {
 	return result, nil
 }
 
-// DownloadFile will download the file exist in url to a local file.
-// 下载文件到本地 path: 本地文件路径(或者是目录) url: 远程文件URL
-func DownloadFile(path string, url string) error {
+// DownloadFile 下载远程文件到本地。
+// 支持通过 context 进行超时控制和取消操作。
+// path: 本地文件路径(或者是目录) url: 远程文件URL ctx: 上下文（用于超时和取消控制）
+func DownloadFile(ctx context.Context, path string, url string) error {
 	if IsDir(path) {
 		// 如果是目录，则从 URL 中提取文件名并拼接路径
 		_, fileName := filepath.Split(url)
@@ -58,12 +60,22 @@ func DownloadFile(path string, url string) error {
 		path = filepath.Join(path, fileName)
 	}
 
-	resp, err := http.Get(url)
+	// 使用 http.NewRequestWithContext 替代废弃的 http.Get，支持 context 取消
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return errors.Newf("could not create HTTP request: %v", err)
+	}
+
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return err
 	}
 	if resp != nil && resp.Body != nil {
 		defer func() { _ = resp.Body.Close() }()
+	}
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return errors.Newf("received non-2xx status code: %d", resp.StatusCode)
 	}
 
 	// 创建或者覆盖

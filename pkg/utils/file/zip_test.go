@@ -2,6 +2,7 @@ package file
 
 import (
 	"archive/zip"
+	"context"
 	"os"
 	"path/filepath"
 	"testing"
@@ -23,7 +24,7 @@ func TestReadZipFile(t *testing.T) {
 	testZipPath := filepath.Join(testDir, "test.zip")
 	testURL := "https://pkg.zentao.net/gitfox/20260123/plugins.zip"
 
-	if err := DownloadFile(testZipPath, testURL); err != nil {
+	if err := DownloadFile(context.Background(), testZipPath, testURL); err != nil {
 		t.Fatalf("Failed to download test zip file: %v", err)
 	}
 

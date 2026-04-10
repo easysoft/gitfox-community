@@ -115,9 +115,9 @@ func runInstall(ctx *kingpin.ParseContext) error {
 func printInstallSuccess(workspace, binName string) {
 	t := clii18n.T
 
-	doneStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#000000"))
-	labelStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#999999")).Width(20)
-	valueStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#000000"))
+	doneStyle := lipgloss.NewStyle()
+	labelStyle := lipgloss.NewStyle().Width(20)
+	valueStyle := lipgloss.NewStyle()
 	headerStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#7D56F4"))
 
 	fmt.Println()
@@ -150,7 +150,6 @@ func printBanner(text string) {
 		Background(lipgloss.Color("#7D56F4")).
 		Padding(0, 2)
 
-	fmt.Println()
 	fmt.Println(bannerStyle.Render(text))
 	fmt.Println()
 }

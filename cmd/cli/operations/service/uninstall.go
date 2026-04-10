@@ -97,7 +97,7 @@ func runUninstall(_ *kingpin.ParseContext) error {
 	}
 
 	fmt.Println()
-	doneStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#000000"))
+	doneStyle := lipgloss.NewStyle()
 	fmt.Println(doneStyle.Render("✓ " + t(i18n.CliUninstallSuccess)))
 	fmt.Println()
 
