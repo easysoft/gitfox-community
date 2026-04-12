@@ -56,11 +56,13 @@ func (s *ScanTaskStore) baseTaskInfoQuery(ctx context.Context) *gorm.DB {
 		Select("ops_scan_tasks.*, "+
 			"ops_scan_plans.name as planName, ops_scan_plans.repoID, "+
 			"ops_repo.name as repoName, "+
+			"t.name as triggerName, "+
 			"e.id as executionNumber, e.ref as executionRef, "+
 			"e.status as executionStatus, e.started as executionStarted, e.finished as executionFinished").
 		Joins("INNER JOIN ops_scan_plans ON ops_scan_tasks.planID = ops_scan_plans.id").
 		Joins("INNER JOIN ops_repo ON ops_scan_plans.repoID = ops_repo.id").
 		Joins("INNER JOIN ops_pipeline_executions e ON ops_scan_tasks.executionID = e.id").
+		Joins("LEFT JOIN ops_scan_triggers t ON ops_scan_tasks.triggerID = t.id").
 		Where("ops_scan_tasks.deleted = ?", false)
 }
 
@@ -288,6 +290,7 @@ func mapTaskJoinToScanTaskInfo(in *taskJoin) *scanModel.ScanTaskInfo {
 		}
 		if in.TriggerID != nil {
 			info.Trigger.ID = int64(*in.TriggerID)
+			info.Trigger.Name = in.TriggerName
 		}
 	} else {
 		info.Trigger = &scanModel.ScanTaskTrigger{

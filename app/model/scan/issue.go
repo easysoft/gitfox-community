@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
 )
 
 // ScanIssue 扫描问题内部模型
@@ -272,4 +273,5 @@ type ScanIssueInfo struct {
 	Payload         json.RawMessage               `json:"payload"`
 	CreatedByTaskID int64                         `json:"createdByTaskID"`
 	UpdatedByTaskID int64                         `json:"updatedByTaskID"`
+	CreatedDate     *datetime.Local               `json:"createdDate"`
 }
