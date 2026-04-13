@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS `ops_ppm` (
 	`deletions` int unsigned NULL DEFAULT NULL COMMENT '删除的代码行数',
 	`flow` tinyint(1) NOT NULL DEFAULT '0' COMMENT '拉取请求对应的流程标识（0=默认流程，其他值对应自定义流程）',
 	`reviewFlowID` int unsigned NOT NULL DEFAULT '0' COMMENT '关联的评审流程ID',
+  `executionID` int unsigned NOT NULL DEFAULT '0' COMMENT '关联的禅道执行ID',
 	`status` varchar(255) NOT NULL COMMENT '拉取请求状态（如open/closed/merged/draft等）',
 	`mergedDate` datetime NULL COMMENT '合并时间',
 	`createdBy` varchar(30) NOT NULL DEFAULT '' COMMENT '创建人',
