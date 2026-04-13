@@ -169,7 +169,7 @@ func runInit(_ *kingpin.ParseContext) error {
 	targetYamlPath := filepath.Join(workspace, "prod.yaml")
 	targetBinPath := filepath.Join(workspace, "gitfox")
 	if runtime.GOOS == "windows" {
-		targetBinPath += ".exe"
+		targetBinPath += ".exe" // windowsBinaryName 的后缀，定义在 windows.go
 	}
 
 	// --- 检查 prod.env 是否已存在 ---
@@ -273,19 +273,24 @@ func runInit(_ *kingpin.ParseContext) error {
 		} else {
 			fmt.Println(successStyle.Render("✓ ") + t(i18n.CliInitSuccessMyphpWrite))
 		}
-	} else {
-		// 异机部署，打印向导性指引文本
+	} else if !isInstallingMode {
+		// 异机部署 + 单独执行 init 时，在此处打印向导性指引文本
+		// 走一键安装（install）时跳过，由 printInstallSuccess 统一显示
 		fmt.Println()
 		fmt.Println(t(i18n.CliInitManualMyphpHint))
-		fmt.Printf("   $config->devops->gitfoxURL = 'http://%s';\n", localIP)
-		fmt.Printf("   $config->devops->gitfoxPort = %s;\n", gitfoxPort)
+		fmt.Printf("$config->devops->gitfoxURL = 'http://%s';\n", localIP)
+		fmt.Printf("$config->devops->gitfoxPort = %s;\n", gitfoxPort)
 	}
 
 	// ========== 第八步：打印配置摘要 ==========
 	printSummary(envPath, &db, workspace, localIP, devopsURL)
 
-	// 记录 workspace 路径，供 install 命令使用
+	// 记录 init 上下文，供 install 命令使用
 	lastInitWorkspace = workspace
+	lastInitSameMachine = sameMachine
+	lastInitZentaoPath = zentaoPath
+	lastInitLocalIP = localIP
+	lastInitGitfoxPort = gitfoxPort
 
 	return nil
 }
@@ -350,7 +355,7 @@ func runSameMachineFlow(db *dbConfig, zentaoIP *string, workspace *string, zenta
 		return errors.New(t(i18n.CliInitErrDbExtractedFail))
 	}
 
-	// successStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#000000")).Bold(true)
+	// successStyle := lipgloss.NewStyle().Bold(true)
 	// fmt.Println(successStyle.Render("✓ ") + t(i18n.CliInitSuccessDbConn))
 
 	// 第三步：回显默认安装目录
@@ -455,7 +460,7 @@ func runDifferentMachineFlow(db *dbConfig, zentaoIP *string, workspace *string, 
 		return errors.New(t(i18n.CliInitErrDbConnFailAbort))
 	}
 
-	// successStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#000000")).Bold(true)
+	// successStyle := lipgloss.NewStyle().Bold(true)
 	// fmt.Println(successStyle.Render("✓ ") + t(i18n.CliInitSuccessDbConn))
 
 	// 第二组表单：禅道 IP 和安装目录
@@ -530,11 +535,6 @@ func dbHostValidator(s string) error {
 		return errors.New(t(i18n.CliInitErrRequired))
 	}
 	return nil
-}
-
-// isIPAddress 检查字符串是否为有效的 IPv4/IPv6 地址
-func isIPAddress(host string) bool {
-	return net.ParseIP(host) != nil
 }
 
 // (This line is intentionally left blank since old verify functions are removed)
@@ -740,7 +740,7 @@ func copyBinary(workspace string) (string, error) {
 
 	dstPath := filepath.Join(workspace, "gitfox")
 	if runtime.GOOS == "windows" {
-		dstPath += ".exe"
+		dstPath += ".exe" // windowsBinaryName 的后缀，定义在 windows.go
 	}
 
 	// 如果源和目标是同一个文件，跳过复制
@@ -854,7 +854,7 @@ func printSummary(envPath string, db *dbConfig, workspace, serverHost, devopsURL
 
 		cmdPrefix := "./gitfox"
 		if runtime.GOOS == "windows" {
-			cmdPrefix = ".\\gitfox.exe"
+			cmdPrefix = windowsCmdPrefix // → windows.go
 		}
 		fmt.Printf("   %s start\n\n", cmdPrefix)
 	}

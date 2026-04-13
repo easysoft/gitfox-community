@@ -31,7 +31,7 @@ func RegisterStart(app *kingpin.Application) {
 func runStart(_ *kingpin.ParseContext) error {
 	t := clii18n.T
 	errStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#FF4500")).Bold(true)
-	successStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#000000")).Bold(true)
+	successStyle := lipgloss.NewStyle().Bold(true)
 
 	printBanner(t(i18n.CliStartWelcome))
 
@@ -69,7 +69,6 @@ func runStart(_ *kingpin.ParseContext) error {
 	// else {
 	// 	fmt.Println(successStyle.Render("✓ ") + fmt.Sprintf(t(i18n.CliStartCheckDockerOk), ver))
 	// }
-	// fmt.Println()
 
 	// =========================================================
 	// 阶段 2. 读取环境配制检查 (识别是否允许提供服务)
@@ -102,8 +101,6 @@ func runStart(_ *kingpin.ParseContext) error {
 		devopsURL = v
 	}
 
-	// fmt.Println("────────────────────────────────────────────────────────")
-
 	// 强制校验：如果这四个核心要素只要有一个为空，说明配置文件已被破坏，强制重新 init
 	if port == "" || host == "" || dsn == "" || devopsURL == "" {
 		fmt.Println(errStyle.Render(t(i18n.CliStartErrEnvIncomplete)))
@@ -123,7 +120,7 @@ func runStart(_ *kingpin.ParseContext) error {
 		return nil
 	}
 	// fmt.Println(successStyle.Render("✓ ") + t(i18n.CliStartSuccessCheckZentao))
-	// fmt.Println("────────────────────────────────────────────────────────")
+
 	// =========================================================
 	// 阶段 3. 智能服务注册决策引擎
 	// =========================================================
@@ -254,7 +251,6 @@ func runStart(_ *kingpin.ParseContext) error {
 			fmt.Println(t(i18n.CliStartConfirmCancel))
 			return nil
 		}
-		fmt.Println()
 	}
 
 	// 执行全新注册
@@ -295,7 +291,7 @@ healthCheck:
 		return nil
 	}
 
-	doneStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#000000"))
+	doneStyle := lipgloss.NewStyle()
 	fmt.Println(doneStyle.Render("✓ " + t(i18n.CliStartSuccess)))
 	fmt.Println()
 	printStartSummary(workDir, host, port)
@@ -310,11 +306,9 @@ func printStartSummary(workDir, host, port string) {
 	var logCmd string
 	switch runtime.GOOS {
 	case "windows":
-		logCmd = t(i18n.CliStartSummaryLogCmdWindows)
+		logCmd = windowsLogCmd() // → windows.go
 	case "linux":
 		logCmd = "sudo journalctl -u gitfox -f"
-	case "darwin":
-		logCmd = t(i18n.CliStartSummaryLogCmdMac)
 	}
 
 	webConsole := fmt.Sprintf("http://%s:%s", host, port)
@@ -324,10 +318,8 @@ func printStartSummary(workDir, host, port string) {
 		Bold(true).
 		Foreground(lipgloss.Color("#7D56F4"))
 	labelStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#999999")).
 		Width(20)
-	valueStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#000000"))
+	valueStyle := lipgloss.NewStyle()
 
 	printRow := func(label, value string) {
 		fmt.Printf("  %s %s\n", labelStyle.Render(label+":"), valueStyle.Render(value))
@@ -351,24 +343,19 @@ func printFailureSummary() {
 	var statusCmd string
 	switch runtime.GOOS {
 	case "windows":
-		logCmd = t(i18n.CliStartSummaryLogCmdWindows)
-		statusCmd = "sc query gitfox"
+		logCmd = windowsLogCmd()       // → windows.go
+		statusCmd = windowsStatusCmd() // → windows.go
 	case "linux":
 		logCmd = "sudo journalctl -u gitfox -n 50 --no-pager"
 		statusCmd = "sudo systemctl status gitfox"
-	case "darwin":
-		logCmd = t(i18n.CliStartSummaryLogCmdMac)
-		statusCmd = "sudo launchctl list | grep gitfox"
 	}
 
 	headerStyle := lipgloss.NewStyle().
 		Bold(true).
 		Foreground(lipgloss.Color("#FF8C00"))
 	labelStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#999999")).
 		Width(20)
-	valueStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#000000"))
+	valueStyle := lipgloss.NewStyle()
 
 	printRow := func(label, value string) {
 		fmt.Printf("  %s %s\n", labelStyle.Render(label+":"), valueStyle.Render(value))

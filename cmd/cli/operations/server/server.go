@@ -24,7 +24,26 @@ type command struct {
 }
 
 func (c *command) run(*kingpin.ParseContext) error {
-	app, cleanup, err := NewApp(c.mode)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// 监听系统中断信号（拦截 Ctrl+C / Systemd 停止）
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		<-quit
+		// 收到信号后通过 context 触发内部停止
+		cancel()
+	}()
+
+	return RunServerWithContext(ctx, c.mode, c.enableCI, nil)
+}
+
+// RunServerWithContext 是 GitFox 的通用启动引擎。
+// 它通过 ctx 控制生命周期：当 ctx 被 cancel 时，执行优雅关机。
+// onReady 是一个可选的回调函数，当网络端口挂载完毕、正式开始监听时触发。
+func RunServerWithContext(ctx context.Context, mode string, enableCI bool, onReady func()) error {
+	app, cleanup, err := NewApp(mode)
 	if err != nil {
 		// 这里无法使用 app.SystemLog 因为 app 初始化失败，只能使用 fmt.Printf
 		fmt.Printf("[Server] Failed to initialize app server: %v\n", err)
@@ -100,7 +119,7 @@ func (c *command) run(*kingpin.ParseContext) error {
 	addr := fmt.Sprintf("%s:%d", app.SystemConfig.Server.Host, app.SystemConfig.Server.Port)
 	srv := &http.Server{
 		Addr:    addr,
-		Handler: router.NewRouter(c.mode, app.APILog.SugaredMateLogger, app.Controller),
+		Handler: router.NewRouter(mode, app.APILog.SugaredMateLogger, app.Controller),
 	}
 
 	// 停止使用
@@ -139,7 +158,7 @@ func (c *command) run(*kingpin.ParseContext) error {
 
 	pollerCtx, cancelPoller := context.WithCancel(context.Background())
 	defer cancelPoller()
-	if c.enableCI {
+	if enableCI {
 		// start poller for CI build executions (non-critical for API)
 		go app.Poller.Poll(
 			logger.WithWrappedZerolog(pollerCtx),
@@ -147,17 +166,15 @@ func (c *command) run(*kingpin.ParseContext) error {
 		)
 	}
 
-	// 等待中断信号以优雅地关闭服务器
-	quit := make(chan os.Signal, 1)
-	// kill (no param) default send syscall.SIGTERM
-	// kill -2 is syscall.SIGINT
-	// kill -9 is syscall.SIGKILL but can't be caught, so don't need add it
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	// 当主业务模块挂载成功时，通知外部组件
+	if onReady != nil {
+		onReady()
+	}
 
-	// 等待信号或服务器错误
+	// 阻塞等待：等待外部取消请求或内部子服务抛出致命错误
 	select {
-	case <-quit:
-		app.SystemLog.Info("[Server] Received shutdown signal, shutting down server...")
+	case <-ctx.Done():
+		app.SystemLog.Info("[Server] Context canceled, initiating graceful shutdown...")
 	case err := <-serverErrors:
 		app.SystemLog.Errorw("[Server] Server error occurred", "error", err)
 		return err
@@ -166,23 +183,20 @@ func (c *command) run(*kingpin.ParseContext) error {
 		return err
 	}
 
-	// 停止接收信号通知
-	signal.Stop(quit)
-	close(quit)
-
 	// 使用 context 通知服务器在配置的超时时间内完成当前请求
 	shutdownTimeout := app.SystemConfig.Server.ShutdownTimeout
 	if shutdownTimeout == 0 {
 		// 如果配置文件中未设置，使用默认值 5 秒
 		shutdownTimeout = 5 * time.Second
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
-	defer cancel()
+	// 使用新的带超时的 context 来执行优雅关机操作
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), shutdownTimeout)
+	defer shutdownCancel()
 
 	app.SystemLog.Infow("[Server] Gracefully shutting down", "timeout", shutdownTimeout)
 
 	// 关闭 HTTP 服务器
-	if err := srv.Shutdown(ctx); err != nil {
+	if err := srv.Shutdown(shutdownCtx); err != nil {
 		app.SystemLog.Errorw("[Server] HTTP server forced to shutdown", "error", err)
 		// 不直接返回,继续清理其他资源
 	} else {
@@ -192,7 +206,7 @@ func (c *command) run(*kingpin.ParseContext) error {
 	// 关闭 SSH 服务器(如果已启用)
 	if app.SystemConfig.SSH.Enable {
 		app.SystemLog.Info("[Server] Shutting down SSH server...")
-		if err := app.SSHServer.Shutdown(ctx); err != nil {
+		if err := app.SSHServer.Shutdown(shutdownCtx); err != nil {
 			app.SystemLog.Errorw("[Server] SSH server forced to shutdown", "error", err)
 		} else {
 			app.SystemLog.Info("[Server] SSH server shutdown completed")
@@ -211,7 +225,7 @@ func (c *command) run(*kingpin.ParseContext) error {
 
 	// 停止 Job Scheduler
 	app.SystemLog.Info("[Server] Stopping job scheduler...")
-	app.JobScheduler.WaitJobsDone(ctx)
+	app.JobScheduler.WaitJobsDone(shutdownCtx)
 	app.SystemLog.Info("[Server] Job scheduler shutdown completed")
 
 	// 停止所有定时任务
