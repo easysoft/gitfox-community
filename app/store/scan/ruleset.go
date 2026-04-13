@@ -164,6 +164,8 @@ func normalizeRuleSetSortField(sort string) string {
 		return "name"
 	case "lang":
 		return "lang"
+	case "plugin":
+		return "plugin"
 	case "tag":
 		return "tag"
 	case "type":

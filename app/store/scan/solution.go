@@ -282,25 +282,27 @@ func (s *SolutionStore) UnbindRulesets(ctx context.Context, solutionID uint, rul
 	return nil
 }
 
-// GetSolutionsByPlanID 获取计划关联的方案ID列表
+// GetSolutionsByPlanID 获取计划关联的方案完整信息及ID列表
+// 参考 gitfox 主仓库实现，使用 LEFT JOIN 一次性查出所有关联方案，避免 N+1 查询。
 func (s *SolutionStore) GetSolutionsByPlanID(ctx context.Context, planID uint) ([]*scanModel.Solution, []int64, error) {
-	var ids []int64
-	var solutions []*scanModel.Solution
-	err := s.db.WithContext(ctx).Model(&ScanPlanSolution{}).
-		Where("planID = ? AND deleted = ?", planID, false).
-		Pluck("solutionID", &ids).Error
+	var results []SolutionRules
+	err := s.db.WithContext(ctx).
+		Table("ops_scan_plan_solutions AS ps").
+		Select("sol.*").
+		Joins("LEFT JOIN ops_scan_solutions AS sol ON sol.id = ps.solutionID").
+		Where("ps.planID = ? AND ps.deleted = ?", planID, false).
+		Where("sol.deleted = ?", false).
+		Find(&results).Error
 	if err != nil {
 		return nil, nil, database.ProcessSQLErrorf(ctx, err)
 	}
 
-	for _, id := range ids {
-		solution, err := s.GetByID(ctx, uint(id))
-		if err != nil {
-			return nil, nil, err
-		}
-		solutions = append(solutions, solution)
+	solutions := make([]*scanModel.Solution, 0, len(results))
+	ids := make([]int64, 0, len(results))
+	for _, item := range results {
+		solutions = append(solutions, mapSolutionToModel(item))
+		ids = append(ids, int64(item.ID))
 	}
-
 	return solutions, ids, nil
 }
 
