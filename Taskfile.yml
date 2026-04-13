@@ -29,8 +29,8 @@ vars:
   PLATFORMS_ARCHS:
   - os: linux
     arches: [amd64, arm64]  # Linux支持的架构
-  - os: darwin
-    arches: [amd64, arm64]       # macOS支持的架构（Intel和M系列）
+  # - os: darwin
+  #   arches: [amd64, arm64]       # macOS支持的架构（Intel和M系列）
   - os: windows
     arches: [amd64]       # Windows支持的架构
 
@@ -236,17 +236,34 @@ tasks:
         cmd: |
           GOOS={{.item.os}}
           {{range .item.arches}}
-            GOARCH={{.}}          
-            # 执行交叉编译
+            GOARCH={{.}}
+            BUILD_RELEASE={{$.BUILD_RELEASE}}
+
             echo "编译: $GOOS/$GOARCH"
+
+            # 创建版本目录
+            DIST_DIR="{{$.BIN_DIR}}/$GOOS-$GOARCH"
+            mkdir -p "$DIST_DIR"
+
             # windows 平台需要 .exe 后缀
             suffix=""
             if [ "$GOOS" = "windows" ]; then
               suffix=".exe"
             fi
+
+            # 执行交叉编译
             CGO_ENABLED=0 GOOS=$GOOS GOARCH=$GOARCH \
-            go build -o "{{$.BIN_DIR}}/gitfox-$GOOS-$GOARCH"$suffix -ldflags "{{$.LDFLAGS}}" \
-            ./cmd/cli/main.go
+            go build -o "$DIST_DIR/gitfox"$suffix -ldflags "{{$.LDFLAGS}}" \
+            "{{$.ROOT_DIR}}/cmd/cli/main.go"
+
+            # 复制配置文件
+            cp "{{$.ROOT_DIR}}/configs/prod.env" "$DIST_DIR/"
+            cp "{{$.ROOT_DIR}}/configs/prod.yaml" "$DIST_DIR/"
+
+            # 压缩为 zip 文件
+            cd "{{$.BIN_DIR}}" && zip -r "$GOOS-$GOARCH.zip" "$GOOS-$GOARCH"
+
+            echo "完成: $GOOS-$GOARCH.zip"
           {{end}}
     parallel: true
 
@@ -310,4 +327,4 @@ tasks:
     desc: download ci plugin
     cmds:
       - mkdir -p resources/ciPlugins
-      - wget -O resources/ciPlugins/plugins.zip https://pkg.zentao.net/gitfox/20260123/plugins.zip
+      - wget -O resources/ciPlugins/plugins.tar.gz https://gitfox.zcorp.cc/_artifacts/gitfox-plugin/raw/plugins/plugins/2.0.beta.1/plugins.tar.gz
