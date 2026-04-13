@@ -62,7 +62,7 @@ func (s *ScanIssueStore) List(ctx context.Context, filter scanModel.ScanIssueReq
 		Select("i.id, i.issueKey, i.ruleID, r.name AS ruleName, r.ruleKey AS ruleKey, "+
 			"r.priority AS rulePriority, r.type AS ruleType, "+
 			"i.message, i.path, i.line, i.repoID, i.repoBranch, "+
-			"i.status, i.scanMethod, i.resolution, i.payload, i.createdByTaskID, i.updatedByTaskID").
+			"i.status, i.scanMethod, i.resolution, i.payload, i.createdByTaskID, i.updatedByTaskID, i.createdDate").
 		Joins("INNER JOIN ops_scan_rules AS r ON i.ruleID = r.id").
 		Where("i.deleted = ?", false)
 

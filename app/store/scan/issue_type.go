@@ -74,6 +74,7 @@ type issueJoin struct {
 	Payload         []byte                        `gorm:"column:payload"`
 	CreatedByTaskID int64                         `gorm:"column:createdByTaskID"`
 	UpdatedByTaskID int64                         `gorm:"column:updatedByTaskID"`
+	CreatedDate     *datetime.Local               `gorm:"column:createdDate"`
 }
 
 func mapIssueJoinToModel(in *issueJoin) *scanModel.ScanIssueInfo {
@@ -96,5 +97,6 @@ func mapIssueJoinToModel(in *issueJoin) *scanModel.ScanIssueInfo {
 		Payload:         json.RawMessage(in.Payload),
 		CreatedByTaskID: in.CreatedByTaskID,
 		UpdatedByTaskID: in.UpdatedByTaskID,
+		CreatedDate:     in.CreatedDate,
 	}
 }

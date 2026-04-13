@@ -44,9 +44,10 @@ func (r *ScanTask) BeforeUpdate(tx *gorm.DB) error {
 
 type taskJoin struct {
 	ScanTask
-	RepoId   int64  `gorm:"column:repoID"`
-	RepoName string `gorm:"column:repoName"`
-	PlanName string `gorm:"column:planName"`
+	RepoId      int64  `gorm:"column:repoID"`
+	RepoName    string `gorm:"column:repoName"`
+	PlanName    string `gorm:"column:planName"`
+	TriggerName string `gorm:"column:triggerName"`
 
 	ExecutionNumber   int64             `gorm:"column:executionNumber"`
 	ExecutionRef      string            `gorm:"column:executionRef"`
