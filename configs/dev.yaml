@@ -7,6 +7,13 @@ server:
   proto: http
   shutdownTimeout: 5s  # 优雅关闭超时时间
 
+# SSH 服务配置
+ssh:
+  enable: true
+  host: 0.0.0.0
+  port: 3322
+
+
 # 数据库配置
 database:
   printSQL: true
@@ -14,6 +21,8 @@ database:
   maxOpenConn: 100
   connMaxLifeTime: 1800s # 1800s
 
+storage:
+  storageType: filesystem
 # git 配置
 git:
   trace: true
@@ -23,17 +32,15 @@ webhook:
   allowLoopback: true
   allowPrivateNetwork: true
 
-# SSH 服务配置
-ssh:
-  enable: true
-  host: 0.0.0.0
-  port: 3322
+
 
 i18n:
   defaultLocale: zh-CN
   fallbackLocale: en-US
+  translationsDir: locales
   supportedLocales: ["zh-CN", "en-US"]
   headerName: X-Locale
+  autoLoad: true
 
 # 监控配置
 metric:
@@ -48,8 +55,8 @@ registry:
     
 # 日志配置
 logging:
-  level: -1                              # 日志输出的最低级别  -1~5：debug,info,warn,error,dpanic,panic,fatal
-  stdout: false                          # 是否输出到终端？  true=是，false=否
+  level: 0                             # 日志输出的最低级别  -1~5：debug,info,warn,error,dpanic,panic,fatal
+  stdout: true                          # 是否输出到终端？  true=是，false=否
   encoder: json                       # 日志编码格式，json 或 console，默认为 console
   maxAge: 90                             # 日志文件最大保存时间，单位：天，-1：禁用此选项
   maxCount: 20                           # 日志文件最大保存数量
@@ -74,22 +81,3 @@ middleware:
   logRequestBody: true
   logResponseBody: true
   maxLoggedBodyBytes: 2048
-
-devops:
-  url: "http://xxx/api.php/v1"
-
-job:
-  instanceID: "gitfox-community"
-  maxRunning: 10
-  retentionTime: 120h
-  
-storage:
-  storageType: filesystem
-  filesystem:
-    rootDirectory: ""
-  s3:
-    enabled: false
-    bucket: ""
-    endpoint: ""
-    region: ""
-    pathStyle: true
