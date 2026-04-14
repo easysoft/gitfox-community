@@ -11,6 +11,7 @@ import (
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	clii18n "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n/cli"
+	"github.com/charmbracelet/huh/spinner"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/joho/godotenv"
 	"github.com/quicklyon/kingpin/v2"
@@ -62,9 +63,65 @@ func RegisterInstall(app *kingpin.Application) {
 //  3. 等待子进程完成后，快速探测服务健康状态
 func runInstall(ctx *kingpin.ParseContext) error {
 	t := clii18n.T
+	okStyle := lipgloss.NewStyle().Bold(true)
 	errStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#FF4500"))
+	warnStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#FF8C00"))
+	headerStyle := lipgloss.NewStyle().Bold(true)
 
-	// printBanner(t(i18n.CliInstallWelcome))
+	// ========== 阶段 0：环境依赖检查 ==========
+	var gitOk bool
+	var gitVer string
+	var dockerOk bool
+	var dockerVer string
+	var dockerErr error
+	var composeOk bool
+	var composeVer string
+
+	_ = spinner.New().
+		Title(t(i18n.CliInstallDepChecking)).
+		Action(func() {
+			gitOk, gitVer, _ = CheckGit()
+			dockerOk, dockerVer, dockerErr = CheckDocker()
+			composeOk, composeVer, _ = CheckDockerCompose()
+		}).Run()
+
+	fmt.Println(headerStyle.Render(t(i18n.CliStatusSectionDeps)))
+
+	missing := false
+
+	// --- Git ---
+	if gitOk {
+		fmt.Println(okStyle.Render("") + fmt.Sprintf(t(i18n.CliStatusGitOk), gitVer))
+	} else {
+		fmt.Println(errStyle.Render("") + t(i18n.CliStatusGitMissing))
+		missing = true
+	}
+
+	// --- Docker ---
+	if dockerOk && dockerErr == nil {
+		fmt.Println(okStyle.Render("") + fmt.Sprintf(t(i18n.CliStatusDockerOk), dockerVer))
+	} else if dockerOk && dockerErr != nil {
+		fmt.Println(warnStyle.Render("") + dockerErr.Error())
+		missing = true
+	} else {
+		fmt.Println(errStyle.Render("") + t(i18n.CliStatusDockerMissing))
+		missing = true
+	}
+
+	// --- Docker Compose ---
+	if composeOk {
+		fmt.Println(okStyle.Render("") + fmt.Sprintf(t(i18n.CliStatusComposeOk), composeVer))
+	} else {
+		fmt.Println(errStyle.Render("") + t(i18n.CliStatusComposeMissing))
+		missing = true
+	}
+
+	if missing {
+		fmt.Println()
+		fmt.Println(errStyle.Render(t(i18n.CliInstallDepMissing)))
+		return nil
+	}
+	fmt.Println()
 
 	// ========== 阶段 1：执行 init ==========
 	isInstallingMode = true
