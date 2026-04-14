@@ -19,7 +19,7 @@ func RegisterVersion(app *kingpin.Application) {
 func runVersion(_ *kingpin.ParseContext) error {
 	t := clii18n.T
 
-	printBanner(t(i18n.CliVersionWelcome))
+	// printBanner(t(i18n.CliVersionWelcome))
 
 	labelStyle := lipgloss.NewStyle().
 		Width(20)
@@ -31,8 +31,6 @@ func runVersion(_ *kingpin.ParseContext) error {
 	}
 
 	// ── 构建信息区块 ──────────────────────────────────────────
-	// fmt.Println(separatorLine)
-	// fmt.Println()
 
 	version := common.Version
 	if version == "" {
@@ -56,11 +54,7 @@ func runVersion(_ *kingpin.ParseContext) error {
 	printRow(t(i18n.CliVersionGitBranch), gitBranch)
 	printRow(t(i18n.CliVersionGitCommit), gitCommit)
 
-	// fmt.Println()
-	// fmt.Println(separatorLine)
-
 	// // ── 服务状态区块 ──────────────────────────────────────────
-	// fmt.Println()
 
 	// // 注册状态
 	// registered := isServiceRegistered()
@@ -89,10 +83,6 @@ func runVersion(_ *kingpin.ParseContext) error {
 	// } else {
 	// 	fmt.Println("  " + runtimeLabel + "  " + errStyle.Render("✗ "+t(i18n.CliVersionRuntimeStopped)))
 	// }
-
-	// fmt.Println()
-	// fmt.Println(separatorLine)
-	// fmt.Println()
 
 	return nil
 }

@@ -29,10 +29,10 @@ func RegisterUninstall(app *kingpin.Application) {
 // 流程：sudo 校验 -> 确认对话框 -> stop -> disable -> rm -> daemon-reload -> 健康检查
 func runUninstall(_ *kingpin.ParseContext) error {
 	t := clii18n.T
-	errStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#FF4500")).Bold(true)
+	errStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#FF4500"))
 	// successStyle := lipgloss.NewStyle().Bold(true)
 
-	printBanner(t(i18n.CliUninstallWelcome))
+	// printBanner(t(i18n.CliUninstallWelcome))
 
 	// ========== 阶段 0. 权限校验 ==========
 	if err := CheckSudo(); err != nil {
@@ -41,13 +41,11 @@ func runUninstall(_ *kingpin.ParseContext) error {
 	}
 
 	// ========== 阶段 1. 二次确认 ==========
-	var confirm bool
+	confirm := true
 	confirmErr := huh.NewConfirm().
 		Title(t(i18n.CliUninstallConfirm)).
-		Affirmative(t(i18n.CliUninstallConfirmYes)).
-		Negative(t(i18n.CliUninstallConfirmNo)).
 		Value(&confirm).
-		Run()
+		RunAccessible(os.Stdout, os.Stdin)
 
 	if confirmErr != nil || !confirm {
 		fmt.Println(t(i18n.CliUninstallConfirmCancel))
@@ -88,7 +86,7 @@ func runUninstall(_ *kingpin.ParseContext) error {
 		}
 
 		if stillUp {
-			warnStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#FF8C00")).Bold(true)
+			warnStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#FF8C00"))
 			fmt.Println(warnStyle.Render(t(i18n.CliStopHealthStillUp)))
 		}
 		// else {
@@ -96,7 +94,6 @@ func runUninstall(_ *kingpin.ParseContext) error {
 		// }
 	}
 
-	fmt.Println()
 	doneStyle := lipgloss.NewStyle()
 	fmt.Println(doneStyle.Render("✓ " + t(i18n.CliUninstallSuccess)))
 

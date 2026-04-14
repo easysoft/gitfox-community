@@ -33,8 +33,9 @@ type RuleReqFilter struct {
 	Name     string `json:"name,omitempty" form:"name,omitempty"`
 	Plugin   string `json:"plugin,omitempty" form:"plugin,omitempty"`
 	Priority string `json:"priority,omitempty" form:"priority,omitempty"`
-	Lang     string `json:"lang,omitempty" form:"lang,omitempty"`
-	Tag      string `json:"tag,omitempty" form:"tag,omitempty"`
+	Lang     string              `json:"lang,omitempty" form:"lang,omitempty"`
+	LangID   constant.ScanLangID `json:"langID,omitempty" form:"langID,omitempty"`
+	Tag      string              `json:"tag,omitempty" form:"tag,omitempty"`
 	Status   string `json:"status,omitempty" form:"status,omitempty"`
 	Type     string `json:"type,omitempty" form:"type,omitempty"`
 	Sort     string `json:"sort" form:"sort" default:"id"`
@@ -48,7 +49,7 @@ type RuleListReqFilter struct {
 	RuleSetID    int64                     `json:"rulesetID,omitempty"`
 	Name         string                    `json:"name,omitempty"`
 	Lang         string                    `json:"lang,omitempty"`
-	LangID       int64                     `json:"langID,omitempty"`
+	LangID       constant.ScanLangID       `json:"langID,omitempty"`
 	Plugin       string                    `json:"plugin,omitempty"`
 	Tag          string                    `json:"tag,omitempty"`
 	Priority     constant.ScanRulePriority `json:"priority,omitempty"`
@@ -63,8 +64,10 @@ type RuleListReqFilter struct {
 }
 
 func (f *RuleListReqFilter) Validater() error {
-	// 转换语言参数
-	f.Lang = NormalizeLang(f.Lang)
+	// 如果前端传了有效的 LangID (> 0)，则强制以 LangID 映射为准（优先级高于独立传入的字符串）
+	if f.LangID > 0 {
+		f.Lang = f.LangID.String()
+	}
 
 	// 设置分页默认值
 	if f.Page <= 0 {
@@ -114,7 +117,7 @@ func (f *RuleListReqFilter) Validater() error {
 }
 
 type ScanBaseResp struct {
-	ID     int64  `json:"id,omitempty"`
+	ID     int64  `json:"id"`
 	Tag    string `json:"tag,omitempty"`
 	Lang   string `json:"lang,omitempty"`
 	Plugin string `json:"plugin,omitempty"`

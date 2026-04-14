@@ -146,6 +146,34 @@ definitions:
     - ScanIssueStatusSolved
     - ScanIssueStatusClosed
     - ScanIssueStatusIgnore
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanLangID:
+    enum:
+    - 0
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    - 6
+    - 7
+    - 8
+    - 9
+    - 10
+    - 11
+    type: integer
+    x-enum-varnames:
+    - ScanLangIDCustom
+    - ScanLangGo
+    - ScanLangJava
+    - ScanLangJavaScript
+    - ScanLangKotlin
+    - ScanLangPHP
+    - ScanLangPython
+    - ScanLangRuby
+    - ScanLangRust
+    - ScanLangTypeScript
+    - ScanLangC
+    - ScanLangCsharp
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanLangName:
     enum:
     - Custom
@@ -1482,7 +1510,7 @@ definitions:
       lang:
         type: string
       langID:
-        type: integer
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanLangID'
       name:
         type: string
       order:
@@ -1549,6 +1577,8 @@ definitions:
         type: integer
       lang:
         type: string
+      langID:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanLangID'
       name:
         type: string
       order:
@@ -1597,15 +1627,9 @@ definitions:
       tag:
         type: string
       type:
-        enum:
-        - defect
-        - security
-        - compliance
-        - optimize
         type: string
     required:
     - name
-    - type
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.RuleSetReqForUpdate:
     properties:
@@ -1624,11 +1648,6 @@ definitions:
       tag:
         type: string
       type:
-        enum:
-        - defect
-        - security
-        - compliance
-        - optimize
         type: string
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanBaseResp:
@@ -1717,6 +1736,8 @@ definitions:
     properties:
       createdByTaskID:
         type: integer
+      createdDate:
+        type: string
       id:
         type: integer
       key:

@@ -9115,6 +9115,37 @@ const docTemplate = `{
                 "ScanIssueStatusIgnore"
             ]
         },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanLangID": {
+            "type": "integer",
+            "enum": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11
+            ],
+            "x-enum-varnames": [
+                "ScanLangIDCustom",
+                "ScanLangGo",
+                "ScanLangJava",
+                "ScanLangJavaScript",
+                "ScanLangKotlin",
+                "ScanLangPHP",
+                "ScanLangPython",
+                "ScanLangRuby",
+                "ScanLangRust",
+                "ScanLangTypeScript",
+                "ScanLangC",
+                "ScanLangCsharp"
+            ]
+        },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanLangName": {
             "type": "string",
             "enum": [
@@ -11037,7 +11068,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "langID": {
-                    "type": "integer"
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanLangID"
                 },
                 "name": {
                     "type": "string"
@@ -11138,6 +11169,9 @@ const docTemplate = `{
                 "lang": {
                     "type": "string"
                 },
+                "langID": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanLangID"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -11185,8 +11219,7 @@ const docTemplate = `{
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.RuleSetReqForCreate": {
             "type": "object",
             "required": [
-                "name",
-                "type"
+                "name"
             ],
             "properties": {
                 "desc": {
@@ -11212,13 +11245,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "type": {
-                    "type": "string",
-                    "enum": [
-                        "defect",
-                        "security",
-                        "compliance",
-                        "optimize"
-                    ]
+                    "type": "string"
                 }
             }
         },
@@ -11247,13 +11274,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "type": {
-                    "type": "string",
-                    "enum": [
-                        "defect",
-                        "security",
-                        "compliance",
-                        "optimize"
-                    ]
+                    "type": "string"
                 }
             }
         },
@@ -11388,6 +11409,9 @@ const docTemplate = `{
             "properties": {
                 "createdByTaskID": {
                     "type": "integer"
+                },
+                "createdDate": {
+                    "type": "string"
                 },
                 "id": {
                     "type": "integer"
