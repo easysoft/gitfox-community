@@ -59,10 +59,10 @@ func stopLinux() error {
 // runStop 是 `gitfox stop` 的实际执行入口处理函数。
 func runStop(_ *kingpin.ParseContext) error {
 	t := clii18n.T
-	errStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#FF4500")).Bold(true)
+	errStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#FF4500"))
 	// successStyle := lipgloss.NewStyle().Bold(true)
 
-	printBanner(t(i18n.CliStopWelcome))
+	// printBanner(t(i18n.CliStopWelcome))
 
 	// ========== 阶段 0. 权限校验 ==========
 	if err := CheckSudo(); err != nil {
@@ -101,7 +101,7 @@ func runStop(_ *kingpin.ParseContext) error {
 		}
 
 		if stillUp {
-			warnStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#FF8C00")).Bold(true)
+			warnStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#FF8C00"))
 			fmt.Println(warnStyle.Render(t(i18n.CliStopHealthStillUp)))
 		}
 		// else {
@@ -109,10 +109,8 @@ func runStop(_ *kingpin.ParseContext) error {
 		// }
 	}
 
-	fmt.Println()
 	doneStyle := lipgloss.NewStyle()
 	fmt.Println(doneStyle.Render("✓ " + t(i18n.CliStopSuccess)))
-	fmt.Println()
 
 	return nil
 }

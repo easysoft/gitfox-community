@@ -19,6 +19,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
+	"github.com/muesli/termenv"
 	"github.com/quicklyon/kingpin/v2"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/configs"
@@ -60,25 +61,20 @@ func (d *dbConfig) toDSN() string {
 func runInit(_ *kingpin.ParseContext) error {
 	// ========== 第零步：启动前置安全拦截 (必须具备 Root 提权环境) ==========
 	if err := CheckSudo(); err != nil {
-		errStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#FF0000")).Bold(true)
+		errStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#FF0000"))
 		fmt.Println(errStyle.Render(err.Error()))
 		return nil
 	}
 
 	// ========== 第一步：显示欢迎横幅 ==========
-	printBanner(t(i18n.CliInitWelcome))
+	// printBanner(t(i18n.CliInitWelcome))
 
 	// ========== 第二步：询问是否与禅道在同一机器 ==========
 	var sameMachine bool
-	err := huh.NewForm(
-		huh.NewGroup(
-			huh.NewConfirm().
-				Title(t(i18n.CliInitSameMachine)).
-				Affirmative(t(i18n.CliInitYes)).
-				Negative(t(i18n.CliInitNo)).
-				Value(&sameMachine),
-		),
-	).Run()
+	err := huh.NewConfirm().
+		Title(t(i18n.CliInitSameMachine)).
+		Value(&sameMachine).
+		RunAccessible(os.Stdout, os.Stdin)
 	if err != nil {
 		if errors.Is(err, huh.ErrUserAborted) {
 			return nil
@@ -149,7 +145,7 @@ func runInit(_ *kingpin.ParseContext) error {
 		}).Run()
 
 	if verifyErr != nil {
-		errStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#FF0000")).Bold(true)
+		errStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#FF0000"))
 		fmt.Println()
 		fmt.Println(errStyle.Render("✗ 验证失败: " + verifyErr.Error()))
 		fmt.Println()
@@ -174,13 +170,13 @@ func runInit(_ *kingpin.ParseContext) error {
 
 	// --- 检查 prod.env 是否已存在 ---
 	if info, err := os.Stat(targetEnvPath); err == nil && !info.IsDir() {
-		var overwrite bool
+		overwrite := true
 		err := huh.NewConfirm().
 			Title(fmt.Sprintf(t(i18n.CliInitOverwriteEnv), targetEnvPath)).
-			Affirmative(t(i18n.CliInitYes)).
-			Negative(t(i18n.CliInitNo)).
 			Value(&overwrite).
-			Run()
+			RunAccessible(os.Stdout, os.Stdin)
+		termenv.DefaultOutput().CursorUp(1)
+		termenv.DefaultOutput().ClearLine()
 		if err != nil {
 			return err
 		}
@@ -196,13 +192,13 @@ func runInit(_ *kingpin.ParseContext) error {
 
 	// --- 检查 prod.yaml 是否已存在 ---
 	if info, err := os.Stat(targetYamlPath); err == nil && !info.IsDir() {
-		var overwrite bool
+		overwrite := true
 		err := huh.NewConfirm().
 			Title(fmt.Sprintf(t(i18n.CliInitOverwriteYaml), targetYamlPath)).
-			Affirmative(t(i18n.CliInitYes)).
-			Negative(t(i18n.CliInitNo)).
 			Value(&overwrite).
-			Run()
+			RunAccessible(os.Stdout, os.Stdin)
+		termenv.DefaultOutput().CursorUp(1)
+		termenv.DefaultOutput().ClearLine()
 		if err != nil {
 			return err
 		}
@@ -218,13 +214,13 @@ func runInit(_ *kingpin.ParseContext) error {
 
 	// --- 检查 gitfox 二进制是否已存在 ---
 	if info, err := os.Stat(targetBinPath); err == nil && !info.IsDir() {
-		var overwrite bool
+		overwrite := true
 		err := huh.NewConfirm().
 			Title(fmt.Sprintf(t(i18n.CliInitOverwriteBin), targetBinPath)).
-			Affirmative(t(i18n.CliInitYes)).
-			Negative(t(i18n.CliInitNo)).
 			Value(&overwrite).
-			Run()
+			RunAccessible(os.Stdout, os.Stdin)
+		termenv.DefaultOutput().CursorUp(1)
+		termenv.DefaultOutput().ClearLine()
 		if err != nil {
 			return err
 		}
@@ -243,14 +239,14 @@ func runInit(_ *kingpin.ParseContext) error {
 
 	envPath, err := saveEnvFile(existingEnv, &db, workspace, localIP, devopsURL, urlBase)
 	if err != nil {
-		errStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#FF0000")).Bold(true)
+		errStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#FF0000"))
 		fmt.Println(errStyle.Render("✗ " + fmt.Sprintf(t(i18n.CliInitErrSaveConfig), err)))
 		return fmt.Errorf(t(i18n.CliInitErrSaveConfig), err)
 	}
 
 	// ========== 第五步（续）：释放内置 prod.yaml 到安装目录 ==========
 	if err := copyEmbeddedYaml(workspace); err != nil {
-		errStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#FF0000")).Bold(true)
+		errStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#FF0000"))
 		fmt.Println(errStyle.Render("✗ prod.yaml: " + fmt.Sprintf("%v", err)))
 		return err
 	}
@@ -258,7 +254,7 @@ func runInit(_ *kingpin.ParseContext) error {
 
 	// ========== 第六步：复制当前二进制到安装目录 ==========
 	if _, err := copyBinary(workspace); err != nil {
-		errStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#FF0000")).Bold(true)
+		errStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#FF0000"))
 		fmt.Println(errStyle.Render("✗ " + fmt.Sprintf(t(i18n.CliInitErrCopyBin), err)))
 		return fmt.Errorf(t(i18n.CliInitErrCopyBin), err)
 	}
@@ -268,7 +264,7 @@ func runInit(_ *kingpin.ParseContext) error {
 		myPHPPath := filepath.Join(zentaoPath, "my.php")
 		portInt, _ := strconv.Atoi(gitfoxPort)
 		if err := updateZentaoPHPConfig(myPHPPath, localIP, portInt); err != nil {
-			errStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#FF8C00")).Bold(true)
+			errStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#FF8C00"))
 			fmt.Println(errStyle.Render(fmt.Sprintf(t(i18n.CliInitWarnMyphpWrite), err)))
 		} else {
 			fmt.Println(successStyle.Render("✓ ") + t(i18n.CliInitSuccessMyphpWrite))
@@ -350,7 +346,7 @@ func runSameMachineFlow(db *dbConfig, zentaoIP *string, workspace *string, zenta
 	}).Run()
 
 	if verifyErr != nil {
-		errStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#FF0000")).Bold(true)
+		errStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#FF0000"))
 		fmt.Println(errStyle.Render("✗ " + fmt.Sprintf(t(i18n.CliInitErrDbConn), verifyErr.Error())))
 		return errors.New(t(i18n.CliInitErrDbExtractedFail))
 	}
@@ -386,9 +382,8 @@ func runSameMachineFlow(db *dbConfig, zentaoIP *string, workspace *string, zenta
 //  1. 让用户手动输入数据库连接信息（主机、端口、库名、用户名、密码）
 //  2. 让用户输入禅道服务 IP 和安装目录
 func runDifferentMachineFlow(db *dbConfig, zentaoIP *string, workspace *string, defaultWorkspace string) error {
-	headerStyle := lipgloss.NewStyle().
-		Bold(true).
-		Foreground(lipgloss.Color("#7D56F4"))
+	headerStyle := lipgloss.NewStyle().Bold(true)
+	//.Foreground(lipgloss.Color("#7D56F4"))
 
 	// 使用翻译后的 placeholder 作为默认值预填充
 	db.Host = t(i18n.CliInitDbHostPlaceholder)
@@ -455,7 +450,7 @@ func runDifferentMachineFlow(db *dbConfig, zentaoIP *string, workspace *string, 
 	}).Run()
 
 	if verifyErr != nil {
-		errStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#FF0000")).Bold(true)
+		errStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#FF0000"))
 		fmt.Println(errStyle.Render("✗ " + fmt.Sprintf(t(i18n.CliInitErrDbConn), verifyErr.Error())))
 		return errors.New(t(i18n.CliInitErrDbConnFailAbort))
 	}
@@ -821,12 +816,10 @@ func printSummary(envPath string, db *dbConfig, workspace, serverHost, devopsURL
 	fmt.Println(successStyle.Render("✓ ") + t(i18n.CliInitSuccess))
 	fmt.Println()
 
-	headerStyle := lipgloss.NewStyle().
-		Bold(true).
-		Foreground(lipgloss.Color("#7D56F4"))
+	headerStyle := lipgloss.NewStyle().Bold(true)
+	//.Foreground(lipgloss.Color("#7D56F4"))
 
-	labelStyle := lipgloss.NewStyle().
-		Width(20)
+	labelStyle := lipgloss.NewStyle().Width(20)
 
 	valueStyle := lipgloss.NewStyle()
 

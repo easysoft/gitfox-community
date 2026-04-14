@@ -30,10 +30,10 @@ func RegisterStart(app *kingpin.Application) {
 // 职责流：环境校验 -> 读取配置提取端口 -> 执行系统后台服务注入 -> HTTP 轮询进程存活探测。
 func runStart(_ *kingpin.ParseContext) error {
 	t := clii18n.T
-	errStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#FF4500")).Bold(true)
+	errStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#FF4500"))
 	successStyle := lipgloss.NewStyle().Bold(true)
 
-	printBanner(t(i18n.CliStartWelcome))
+	// printBanner(t(i18n.CliStartWelcome))
 
 	// 获取当前执行目录作为 GitFox 的核心工作路径
 	workDir, err := os.Getwd()
@@ -124,7 +124,7 @@ func runStart(_ *kingpin.ParseContext) error {
 	// =========================================================
 	// 阶段 3. 智能服务注册决策引擎
 	// =========================================================
-	warnStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#FF8C00")).Bold(true)
+	warnStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#FF8C00"))
 
 	// 3.1 获取当前二进制绝对路径
 	exePath, err := os.Executable()
@@ -149,10 +149,8 @@ func runStart(_ *kingpin.ParseContext) error {
 		var wantRestart bool
 		restartErr := huh.NewConfirm().
 			Title(t(i18n.CliStartAlreadyRunningRestart)).
-			Affirmative(t(i18n.CliStartAlreadyRunningRestartYes)).
-			Negative(t(i18n.CliStartAlreadyRunningRestartNo)).
 			Value(&wantRestart).
-			Run()
+			RunAccessible(os.Stdout, os.Stdin)
 
 		if restartErr != nil || !wantRestart {
 			fmt.Println(t(i18n.CliStartAlreadyRunningSkip))
@@ -219,10 +217,8 @@ func runStart(_ *kingpin.ParseContext) error {
 			var overwrite bool
 			overwriteErr := huh.NewConfirm().
 				Title(t(i18n.CliStartServiceOverwrite)).
-				Affirmative(t(i18n.CliStartServiceOverwriteYes)).
-				Negative(t(i18n.CliStartServiceOverwriteNo)).
 				Value(&overwrite).
-				Run()
+				RunAccessible(os.Stdout, os.Stdin)
 
 			if overwriteErr != nil || !overwrite {
 				// 用户选择保留现有注册 → 用旧配置 restart
@@ -239,13 +235,11 @@ func runStart(_ *kingpin.ParseContext) error {
 		}
 	} else {
 		// 首次注册 → 弹出确认框
-		var confirm bool
+		confirm := true
 		confirmErr := huh.NewConfirm().
 			Title(t(i18n.CliStartConfirmRegister)).
-			Affirmative(t(i18n.CliStartConfirmYes)).
-			Negative(t(i18n.CliStartConfirmNo)).
 			Value(&confirm).
-			Run()
+			RunAccessible(os.Stdout, os.Stdin)
 
 		if confirmErr != nil || !confirm {
 			fmt.Println(t(i18n.CliStartConfirmCancel))
@@ -314,9 +308,8 @@ func printStartSummary(workDir, host, port string) {
 	webConsole := fmt.Sprintf("http://%s:%s", host, port)
 	appLogsDir := filepath.Join(workDir, "logs")
 
-	headerStyle := lipgloss.NewStyle().
-		Bold(true).
-		Foreground(lipgloss.Color("#7D56F4"))
+	headerStyle := lipgloss.NewStyle().Bold(true)
+	//.Foreground(lipgloss.Color("#7D56F4"))
 	labelStyle := lipgloss.NewStyle().
 		Width(20)
 	valueStyle := lipgloss.NewStyle()

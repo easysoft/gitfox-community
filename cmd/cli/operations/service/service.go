@@ -62,9 +62,9 @@ func RegisterInstall(app *kingpin.Application) {
 //  3. 等待子进程完成后，快速探测服务健康状态
 func runInstall(ctx *kingpin.ParseContext) error {
 	t := clii18n.T
-	errStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#FF4500")).Bold(true)
+	errStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#FF4500"))
 
-	printBanner(t(i18n.CliInstallWelcome))
+	// printBanner(t(i18n.CliInstallWelcome))
 
 	// ========== 阶段 1：执行 init ==========
 	isInstallingMode = true
@@ -131,7 +131,8 @@ func printInstallSuccess(workspace, binName string) {
 	doneStyle := lipgloss.NewStyle()
 	labelStyle := lipgloss.NewStyle().Width(20)
 	valueStyle := lipgloss.NewStyle()
-	headerStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#7D56F4"))
+	headerStyle := lipgloss.NewStyle().Bold(true)
+	//.Foreground(lipgloss.Color("#7D56F4"))
 	warnStyle := lipgloss.NewStyle()
 
 	fmt.Println(doneStyle.Render("✓ " + t(i18n.CliInstallSuccess)))

@@ -65,7 +65,9 @@ func (c *ScanController) List(ctx *gin.Context) {
 
 	// 设置默认值
 	req.SetDefaults(&reqQuery)
-	reqQuery.Lang = scanModel.NormalizeLang(reqQuery.Lang)
+	if reqQuery.LangID > 0 {
+		reqQuery.Lang = reqQuery.LangID.String()
+	}
 
 	result, err := c.ruleSetSvc.List(ctx.Request.Context(), reqQuery)
 	if err != nil {
@@ -216,7 +218,9 @@ func (c *ScanController) GetBindRule(ctx *gin.Context) {
 
 	// 设置默认值
 	req.SetDefaults(&reqQuery)
-	reqQuery.Lang = scanModel.NormalizeLang(reqQuery.Lang)
+	if reqQuery.LangID > 0 {
+		reqQuery.Lang = reqQuery.LangID.String()
+	}
 
 	result, err := c.ruleSetSvc.GetBindRule(ctx.Request.Context(), ruleSetID, reqQuery)
 	if err != nil {
@@ -263,7 +267,9 @@ func (c *ScanController) GetUnBindRule(ctx *gin.Context) {
 
 	// 设置默认值
 	req.SetDefaults(&reqQuery)
-	reqQuery.Lang = scanModel.NormalizeLang(reqQuery.Lang)
+	if reqQuery.LangID > 0 {
+		reqQuery.Lang = reqQuery.LangID.String()
+	}
 
 	result, err := c.ruleSetSvc.GetUnBindRule(ctx.Request.Context(), ruleSetID, reqQuery)
 	if err != nil {
