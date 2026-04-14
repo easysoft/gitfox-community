@@ -11,7 +11,7 @@ type ScanTriggerType string
 const (
 	ScanTriggerTypeCron   ScanTriggerType = "cron"
 	ScanTriggerTypeManual ScanTriggerType = "manual"
-	ScanTriggerTypeEvent  ScanTriggerType = "event"
+	ScanTriggerTypeEvent  ScanTriggerType = "action"
 )
 
 // ScanTriggerReqForCreate 创建触发器请求
