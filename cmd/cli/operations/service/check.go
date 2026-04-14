@@ -84,11 +84,8 @@ func CheckDocker() (bool, string, error) {
 	}
 
 	// 验证 Docker daemon 是否正在运行
-	// docker --version 只是客户端本地操作，daemon 停了也能成功
-	// docker info 需要和 daemon 通信，可以真正检测 daemon 状态
-	infoCmd := exec.Command("docker", "info")
-	infoCmd.Env = append(os.Environ(), "DOCKER_CLI_HINTS=false")
-	if err := infoCmd.Run(); err != nil {
+	// 注意：不能用 docker info，它会连接 docker.socket 触发 systemd socket activation 把 Docker 拉起来
+	if !isDockerDaemonRunning() {
 		return true, version, fmt.Errorf(t(i18n.CliCheckErrDaemonNotRunning), "docker")
 	}
 
@@ -144,6 +141,32 @@ func CheckDockerCompose() (bool, string, error) {
 	}
 
 	return true, outStr, nil
+}
+
+// isDockerDaemonRunning 检测 Docker daemon 是否正在运行，且不会触发 systemd socket activation。
+// Linux 上优先使用 systemctl is-active，若 systemctl 不存在则回退到 pgrep 检测 dockerd 进程。
+// Windows 上通过 sc query 检测服务状态。
+func isDockerDaemonRunning() bool {
+	switch runtime.GOOS {
+	case "linux":
+		// systemctl is-active 只读查询，不触发 socket activation
+		if err := exec.Command("systemctl", "is-active", "--quiet", "docker").Run(); err == nil {
+			return true
+		}
+		// 非 systemd 环境回退：检测 dockerd 进程是否存在
+		if err := exec.Command("pgrep", "-x", "dockerd").Run(); err == nil {
+			return true
+		}
+		return false
+	case "windows":
+		out, err := exec.Command("sc", "query", "docker").CombinedOutput()
+		if err != nil {
+			return false
+		}
+		return strings.Contains(string(out), "RUNNING")
+	default:
+		return false
+	}
 }
 
 // CheckDB 验证数据库连通性
