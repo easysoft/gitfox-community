@@ -51,16 +51,14 @@ func (s *RuleSetService) GetByID(ctx context.Context, id uint) (*scanModel.RuleS
 
 func (s *RuleSetService) Update(ctx context.Context, session *authModel.Session, id uint, req scanModel.RuleSetReqForUpdate) (*scanModel.RuleSet, error) {
 	// 将请求转换为 store 层的 RuleSet 结构
-	ruleSet := &scanStore.RuleSet{EditedBy: session.User.Account}
+	ruleSet := &scanStore.RuleSet{
+		EditedBy: session.User.Account,
+		Desc:     req.Desc,
+		DescEn:   req.DescEn,
+	}
 
 	if req.Name != "" {
 		ruleSet.Name = req.Name
-	}
-	if req.Desc != "" {
-		ruleSet.Desc = req.Desc
-	}
-	if req.DescEn != "" {
-		ruleSet.DescEn = req.DescEn
 	}
 	if req.Lang != "" {
 		ruleSet.Lang = constant.ScanLangName(constant.ParseLang(req.Lang).LowerString())
