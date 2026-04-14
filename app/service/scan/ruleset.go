@@ -145,32 +145,10 @@ func (s *RuleSetService) GetUnBindRule(ctx context.Context, ruleSetID uint, filt
 
 // BindRule 绑定规则到规则集
 func (s *RuleSetService) BindRule(ctx context.Context, ruleSetID uint, req scanModel.RuleSetReqForBind) error {
-	// 查询规则集详情
-	ruleSet, err := s.ruleSetStore.GetByID(ctx, ruleSetID)
-	if err != nil {
-		return err
-	}
-
-	// 检查是否为内置规则集
-	if !ruleSet.IsCustom {
-		return errors.WithI18nKey(nil, i18n.RuleSetBuiltinBindError)
-	}
-
 	return s.ruleSetStore.BindRule(ctx, ruleSetID, req.IDs)
 }
 
 // UnBindRule 解绑规则与规则集
 func (s *RuleSetService) UnBindRule(ctx context.Context, ruleSetID uint, req scanModel.RuleSetReqForBind) error {
-	// 查询规则集详情
-	ruleSet, err := s.ruleSetStore.GetByID(ctx, ruleSetID)
-	if err != nil {
-		return err
-	}
-
-	// 检查是否为内置规则集
-	if !ruleSet.IsCustom {
-		return errors.WithI18nKey(nil, i18n.RuleSetBuiltinUnbindError)
-	}
-
 	return s.ruleSetStore.UnBindRule(ctx, ruleSetID, req.IDs)
 }
