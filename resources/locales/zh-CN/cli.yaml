@@ -29,6 +29,8 @@ cli:
   install_cleanup_skip: "配置文件已保留。请排查问题后手动进入工作目录执行 start："
   install_success: "GitFox 安装完成，服务已成功启动！"
   install_next_steps: "后续操作指南"
+  install_workspace_hint: "请在以下目录执行命令"
+  install_gitfox_help: "GitFox 帮助"
   install_cd_hint: "以下命令需要在工作目录下执行："
   install_cmd_stop: "停止服务"
   install_cmd_status: "查看状态"

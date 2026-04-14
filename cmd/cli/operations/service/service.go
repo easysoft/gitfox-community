@@ -186,10 +186,7 @@ func printInstallSuccess(workspace, binName string) {
 	t := clii18n.T
 
 	doneStyle := lipgloss.NewStyle()
-	labelStyle := lipgloss.NewStyle().Width(20)
-	valueStyle := lipgloss.NewStyle()
 	headerStyle := lipgloss.NewStyle().Bold(true)
-	//.Foreground(lipgloss.Color("#7D56F4"))
 	warnStyle := lipgloss.NewStyle()
 
 	fmt.Println(doneStyle.Render("✓ " + t(i18n.CliInstallSuccess)))
@@ -205,24 +202,10 @@ func printInstallSuccess(workspace, binName string) {
 
 	// 后续命令指引
 	fmt.Println(headerStyle.Render(t(i18n.CliInstallNextSteps)))
-
-	printRow := func(label, value string) {
-		fmt.Printf("%s %s\n", labelStyle.Render(label), valueStyle.Render(value))
-	}
-
-	cmdPrefix := fmt.Sprintf("./%s", binName)
-	if runtime.GOOS == "windows" {
-		cmdPrefix = windowsCmdPrefix
-	}
-
-	fmt.Printf("%s\n", t(i18n.CliInstallCdHint))
-	fmt.Printf("$ cd %s\n", workspace)
+	fmt.Println(t(i18n.CliInstallWorkspaceHint))
+	fmt.Printf("cd %s\n", workspace)
+	fmt.Printf("./%s help\n", binName)
 	fmt.Println()
-
-	printRow(t(i18n.CliInstallCmdStop), fmt.Sprintf("%s stop", cmdPrefix))
-	printRow(t(i18n.CliInstallCmdStatus), fmt.Sprintf("%s status", cmdPrefix))
-	printRow(t(i18n.CliInstallCmdUninstall), fmt.Sprintf("%s uninstall", cmdPrefix))
-	printRow(t(i18n.CliInstallCmdVersion), fmt.Sprintf("%s version", cmdPrefix))
 }
 
 // printBanner 打印统一风格的欢迎横幅

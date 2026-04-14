@@ -221,6 +221,8 @@ const (
 	CliInstallStepStart                  I18nKey = "cli.install_step_start"                    // 正在自动启动服务...
 	CliInstallSuccess                    I18nKey = "cli.install_success"                       // GitFox 安装完成,服务已成功启动!
 	CliInstallWelcome                    I18nKey = "cli.install_welcome"                       // GitFox · 一键安装
+	CliInstallWorkspaceHint              I18nKey = "cli.install_workspace_hint"                // 请在以下目录执行命令
+	CliInstallGitfoxHelp                 I18nKey = "cli.install_gitfox_help"                   // ./gitfox help
 	CliServer                            I18nKey = "cli.server"                                // server
 	CliServerDescription                 I18nKey = "cli.server_description"                    // 启动服务器
 	CliServerEnableCiFlag                I18nKey = "cli.server_enable_ci_flag"                 // 启动 CI 运行器以执行构建

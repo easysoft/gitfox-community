@@ -29,6 +29,8 @@ cli:
   install_cleanup_skip: "Configuration files preserved. Please troubleshoot and run start manually:"
   install_success: "GitFox installation complete. Service is running!"
   install_next_steps: "Next Steps"
+  install_workspace_hint: "Run the following commands from the workspace directory:"
+  install_gitfox_help: "GitFox help"
   install_cd_hint: "Run the following commands from the workspace directory:"
   install_cmd_stop: "Stop service"
   install_cmd_status: "Check status"
