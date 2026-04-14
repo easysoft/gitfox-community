@@ -103,7 +103,6 @@ func TestRuleSetServiceBindAndQuery(t *testing.T) {
 
 		ruleSetStore := scanStoreMock.NewMockIRuleSet(ctrl)
 		ruleStore := scanStoreMock.NewMockIRule(ctrl)
-		ruleSetStore.EXPECT().GetByID(gomock.Any(), uint(1)).Return(&scanModel.RuleSet{ID: 1, IsCustom: true}, nil)
 		ruleSetStore.EXPECT().UnBindRule(gomock.Any(), uint(1), []uint{9}).Return(nil)
 
 		svc := NewRuleSetService(ruleSetStore, ruleStore)

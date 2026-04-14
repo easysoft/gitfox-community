@@ -14,12 +14,11 @@ type SolutionReqForCreate struct {
 	Status constant.ScanRuleStatus `json:"status,omitempty"`
 }
 
-// SolutionReqForUpdate 更新扫描方案请求
 type SolutionReqForUpdate struct {
-	Name   string                  `json:"name,omitempty"`
-	Desc   string                  `json:"desc,omitempty"`
-	DescEn string                  `json:"descEn,omitempty"`
-	Tag    string                  `json:"tag,omitempty"`
+	Name   *string                 `json:"name,omitempty"`
+	Desc   *string                 `json:"desc"`   // 不带 omitempty：允许前端传空字符串清空描述
+	DescEn *string                 `json:"descEn"` // 不带 omitempty：允许前端传空字符串清空英文描述
+	Tag    *string                 `json:"tag,omitempty"`
 	Status constant.ScanRuleStatus `json:"status,omitempty"`
 }
 

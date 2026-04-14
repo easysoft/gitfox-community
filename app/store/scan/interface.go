@@ -26,7 +26,7 @@ type IRule interface {
 type IRuleSet interface {
 	Create(ctx context.Context, ruleSet *RuleSet) (*scanModel.RuleSet, error)
 	GetByID(ctx context.Context, id uint) (*scanModel.RuleSet, error)
-	Update(ctx context.Context, ruleSet *RuleSet, id uint) (*scanModel.RuleSet, error)
+	Update(ctx context.Context, id uint, updates map[string]interface{}) (*scanModel.RuleSet, error)
 	Delete(ctx context.Context, id uint) error
 	List(ctx context.Context, filter scanModel.RuleSetReqFilter) (*database.PageResult[*scanModel.RuleSet], error)
 	GetRuleIDList(ctx context.Context, ruleSetID uint) ([]int64, error)
@@ -40,7 +40,7 @@ type ISolution interface {
 	Create(ctx context.Context, solution *SolutionRules) (*scanModel.Solution, error)
 	GetByID(ctx context.Context, id uint) (*scanModel.Solution, error)
 	Find(ctx context.Context, name string) (*scanModel.Solution, error)
-	Update(ctx context.Context, solution *SolutionRules) error
+	Update(ctx context.Context, id uint, updates map[string]interface{}) error
 	Delete(ctx context.Context, id uint) error
 	List(ctx context.Context, filter scanModel.SolutionReqFilter) (*database.PageResult[*scanModel.Solution], error)
 	GetRulesetIDList(ctx context.Context, solutionID uint) ([]int64, error)

@@ -6,7 +6,6 @@ import (
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	scanModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
-	scanStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/scan"
 	scanStoreMock "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/scan/mock"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
@@ -132,10 +131,10 @@ func TestSolutionServiceStatusAndBind(t *testing.T) {
 
 		store := scanStoreMock.NewMockISolution(ctrl)
 		store.EXPECT().GetByID(gomock.Any(), uint(1)).Return(&scanModel.Solution{ID: 1, Status: constant.ScanRuleStatusEnabled}, nil)
-		store.EXPECT().Update(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, solution *scanStore.SolutionRules) error {
-			assert.Equal(t, uint64(1), solution.ID)
-			assert.Equal(t, constant.ScanRuleStatusDisabled, solution.Status)
-			assert.Equal(t, "tester", solution.EditedBy)
+		store.EXPECT().Update(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, id uint, updates map[string]interface{}) error {
+			assert.Equal(t, uint(1), id)
+			assert.Equal(t, constant.ScanRuleStatusDisabled, updates["status"])
+			assert.Equal(t, "tester", updates["editedBy"])
 			return nil
 		})
 

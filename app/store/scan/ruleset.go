@@ -48,35 +48,11 @@ func (s *RuleSetStore) GetByID(ctx context.Context, id uint) (*scanModel.RuleSet
 	return m, nil
 }
 
-func (s *RuleSetStore) Update(ctx context.Context, ruleSet *RuleSet, id uint) (*scanModel.RuleSet, error) {
-	ruleSet.ID = uint64(id)
-
-	// Desc/DescEn 允许传入空字符串，需显式列入 Select 以绕过 GORM 跳过零值的行为
-	selectFields := []string{"Desc", "DescEn", "EditedBy", "EditedDate"}
-	if ruleSet.Name != "" {
-		selectFields = append(selectFields, "Name")
-	}
-	if ruleSet.Lang != "" {
-		selectFields = append(selectFields, "Lang")
-	}
-	if ruleSet.Tag != "" {
-		selectFields = append(selectFields, "Tag")
-	}
-	if ruleSet.Type != "" {
-		selectFields = append(selectFields, "Type")
-	}
-	if ruleSet.Plugin != "" {
-		selectFields = append(selectFields, "Plugin")
-	}
-	if ruleSet.Status != "" {
-		selectFields = append(selectFields, "Status")
-	}
-
-	if err := s.db.WithContext(ctx).Model(ruleSet).Select(selectFields).Updates(ruleSet).Error; err != nil {
+func (s *RuleSetStore) Update(ctx context.Context, id uint, updates map[string]interface{}) (*scanModel.RuleSet, error) {
+	if err := s.db.WithContext(ctx).Model(&RuleSet{}).Where("id = ?", id).Updates(updates).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
 
-	// 重新查询完整记录,因为 Updates 只更新指定非零值字段,不会回填其他字段
 	var updated RuleSet
 	if err := s.db.WithContext(ctx).Where("id = ?", id).First(&updated).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)

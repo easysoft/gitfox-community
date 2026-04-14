@@ -11,7 +11,6 @@ import (
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	clii18n "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n/cli"
-	"github.com/charmbracelet/huh"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/joho/godotenv"
 	"github.com/quicklyon/kingpin/v2"
@@ -146,11 +145,7 @@ func runStart(_ *kingpin.ParseContext) error {
 		fmt.Println(successStyle.Render("✓ ") + fmt.Sprintf(t(i18n.CliStartAlreadyRunning), port))
 		fmt.Println()
 
-		var wantRestart bool
-		restartErr := huh.NewConfirm().
-			Title(t(i18n.CliStartAlreadyRunningRestart)).
-			Value(&wantRestart).
-			RunAccessible(os.Stdout, os.Stdin)
+		wantRestart, restartErr := confirmPrompt(t(i18n.CliStartAlreadyRunningRestart))
 
 		if restartErr != nil || !wantRestart {
 			fmt.Println(t(i18n.CliStartAlreadyRunningSkip))
@@ -177,11 +172,11 @@ func runStart(_ *kingpin.ParseContext) error {
 	for _, checkPortNum := range [2]string{port, sshPort} {
 		ps := CheckPort(checkPortNum)
 		if ps.Unknown {
-			fmt.Println(errStyle.Render("✗ " + fmt.Sprintf(t(i18n.CliStartErrPortConflictUnknown), checkPortNum)))
+			fmt.Println(errStyle.Render(fmt.Sprintf(t(i18n.CliStartErrPortConflictUnknown), checkPortNum)))
 			return nil
 		}
 		if ps.InUse {
-			fmt.Println(errStyle.Render("✗ " + fmt.Sprintf(t(i18n.CliStartErrPortConflict), checkPortNum, ps.PID, ps.Process)))
+			fmt.Println(errStyle.Render(fmt.Sprintf(t(i18n.CliStartErrPortConflict), checkPortNum, ps.PID, ps.Process)))
 			return nil
 		}
 	}
@@ -214,11 +209,7 @@ func runStart(_ *kingpin.ParseContext) error {
 			}
 			fmt.Println()
 
-			var overwrite bool
-			overwriteErr := huh.NewConfirm().
-				Title(t(i18n.CliStartServiceOverwrite)).
-				Value(&overwrite).
-				RunAccessible(os.Stdout, os.Stdin)
+			overwrite, overwriteErr := confirmPrompt(t(i18n.CliStartServiceOverwrite))
 
 			if overwriteErr != nil || !overwrite {
 				// 用户选择保留现有注册 → 用旧配置 restart
@@ -235,11 +226,7 @@ func runStart(_ *kingpin.ParseContext) error {
 		}
 	} else {
 		// 首次注册 → 弹出确认框
-		confirm := true
-		confirmErr := huh.NewConfirm().
-			Title(t(i18n.CliStartConfirmRegister)).
-			Value(&confirm).
-			RunAccessible(os.Stdout, os.Stdin)
+		confirm, confirmErr := confirmPrompt(t(i18n.CliStartConfirmRegister))
 
 		if confirmErr != nil || !confirm {
 			fmt.Println(t(i18n.CliStartConfirmCancel))
@@ -279,7 +266,7 @@ healthCheck:
 	}
 
 	if !isHealthy {
-		fmt.Println(errStyle.Render("✗ " + t(i18n.CliStartErrHealthTimeout)))
+		fmt.Println(errStyle.Render(t(i18n.CliStartErrHealthTimeout)))
 		fmt.Println()
 		printFailureSummary()
 		return nil

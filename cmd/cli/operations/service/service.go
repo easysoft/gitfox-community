@@ -91,7 +91,7 @@ func runInstall(ctx *kingpin.ParseContext) error {
 
 	// 确保二进制文件存在
 	if _, err := os.Stat(binPath); os.IsNotExist(err) {
-		fmt.Println(errStyle.Render("✗ " + fmt.Sprintf(t(i18n.CliInstallErrBinNotFound), binPath)))
+		fmt.Println(errStyle.Render(fmt.Sprintf(t(i18n.CliInstallErrBinNotFound), binPath)))
 		return nil
 	}
 
@@ -102,7 +102,7 @@ func runInstall(ctx *kingpin.ParseContext) error {
 	cmd.Stdin = os.Stdin
 
 	if err := cmd.Run(); err != nil {
-		fmt.Println(errStyle.Render("✗ " + fmt.Sprintf(t(i18n.CliInstallStartExecFailed), err)))
+		fmt.Println(errStyle.Render(fmt.Sprintf(t(i18n.CliInstallStartExecFailed), err)))
 	}
 
 	// ========== 阶段 3：快速探测服务状态（start 内部已做完整健康检查，此处仅判断最终结果） ==========

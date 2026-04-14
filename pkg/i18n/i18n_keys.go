@@ -126,9 +126,11 @@ const (
 	CliInitConfigDb                      I18nKey = "cli.init_config_db"                        // 数据库
 	CliInitConfigDevopsUrl               I18nKey = "cli.init_config_devops_url"                // 禅道 API 接口
 	CliInitConfigFilePath                I18nKey = "cli.init_config_file_path"                 // 配置文件
-	CliInitConfigServerHost              I18nKey = "cli.init_config_server_host"               // GitFox 本机 IP
+	CliInitConfigServerIp                I18nKey = "cli.init_config_server_ip"                 // 服务IP
+	CliInitConfigServerPort              I18nKey = "cli.init_config_server_port"               // 服务端口
 	CliInitConfigSummary                 I18nKey = "cli.init_config_summary"                   // 配置摘要
 	CliInitConfigWorkspace               I18nKey = "cli.init_config_workspace"                 // 工作空间
+	CliInitConfirmInvalidInput           I18nKey = "cli.init_confirm_invalid_input"            // 输入无效，请输入 Y 或 N。
 	CliInitConnDbHost                    I18nKey = "cli.init_conn_db_host"                     // 主机
 	CliInitConnDbInfoFooter              I18nKey = "cli.init_conn_db_info_footer"              // --------------------------
 	CliInitConnDbInfoTitle               I18nKey = "cli.init_conn_db_info_title"               // 待连接的数据库信息
@@ -195,6 +197,7 @@ const (
 	CliInitZentaoPath                    I18nKey = "cli.init_zentao_path"                      // 禅道配置文件目录
 	CliInitZentaoPathDesc                I18nKey = "cli.init_zentao_path_desc"                 // 包含禅道 my.php 配置文件的目录
 	CliInitZentaoPathPlaceholder         I18nKey = "cli.init_zentao_path_placeholder"          // /opt/zbox/app/zentao/config
+	CliInitZentaoRetry                   I18nKey = "cli.init_zentao_retry"                     // 请重新输入禅道服务地址.
 	CliInstallCdHint                     I18nKey = "cli.install_cd_hint"                       // 以下命令需要在工作目录下执行:
 	CliInstallCleanupConfirm             I18nKey = "cli.install_cleanup_confirm"               // 是否清理已生成的配置文件?(清理后可重新执行 install)
 	CliInstallCleanupDone                I18nKey = "cli.install_cleanup_done"                  // 已清理配置文件.请排查问题后重新执行 gitfox install.
