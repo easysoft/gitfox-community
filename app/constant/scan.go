@@ -395,6 +395,11 @@ const (
 	ScanRuleSortName        ScanRuleSort = "name"
 	ScanRuleSortPriority    ScanRuleSort = "priority"
 	ScanRuleSortCreatedDate ScanRuleSort = "createdDate"
+	ScanRuleSortLang        ScanRuleSort = "lang"
+	ScanRuleSortPlugin      ScanRuleSort = "plugin"
+	ScanRuleSortType        ScanRuleSort = "type"
+	ScanRuleSortStatus      ScanRuleSort = "status"
+	ScanRuleSortDesc        ScanRuleSort = "desc"
 	scanRuleSortNone        ScanRuleSort = ""
 )
 
@@ -403,6 +408,11 @@ var scanRuleSorts = sortEnum([]ScanRuleSort{
 	ScanRuleSortName,
 	ScanRuleSortPriority,
 	ScanRuleSortCreatedDate,
+	ScanRuleSortLang,
+	ScanRuleSortPlugin,
+	ScanRuleSortType,
+	ScanRuleSortStatus,
+	ScanRuleSortDesc,
 })
 
 func (ScanRuleSort) Enum() []interface{} { return toInterfaceSlice(scanRuleSorts) }
