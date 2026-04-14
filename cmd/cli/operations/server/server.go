@@ -240,7 +240,7 @@ func Register(app *kingpin.Application) {
 
 	cmd := app.Command(clii18n.T(i18n.CliServer), clii18n.T(i18n.CliServerDescription)).
 		Default().
-		Action(c.run)
+		Action(c.run).Hidden()
 
 	cmd.Arg("mode", clii18n.T(i18n.CliServerModeArg)).
 		Default("dev").

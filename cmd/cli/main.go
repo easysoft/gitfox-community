@@ -4,8 +4,8 @@ import (
 	"os"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/cmd/cli/operations/hooks"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/cmd/cli/operations/service"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/cmd/cli/operations/server"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/cmd/cli/operations/service"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/hook"
 	clii18n "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n/cli"
 
@@ -34,6 +34,21 @@ const (
 // @in header
 // @name Authorization
 
+const customUsageTemplate = `usage: GitFox [<flags>] <command> [<args> ...]
+
+GitFox help
+
+{{if .Context.SelectedCommand}}\
+{{if len .Context.SelectedCommand.Commands}}\
+{{range .Context.SelectedCommand.Commands}}{{if not .Hidden}}{{if ne .Name "help"}}{{printf "%-11s %s" .Name .Help}}
+{{end}}{{end}}{{end}}\
+{{end}}\
+{{else}}\
+{{range .App.Commands}}{{if not .Hidden}}{{if ne .Name "help"}}{{printf "%-11s %s" .Name .Help}}
+{{end}}{{end}}{{end}}\
+{{end}}\
+`
+
 func main() {
 	// 初始化 CLI 多语言
 	clii18n.Init()
@@ -41,6 +56,7 @@ func main() {
 	// 解析命令行参数
 	args := getArguments()
 	app := kingpin.New(application, description)
+	app.UsageTemplate(customUsageTemplate)
 	server.Register(app)
 	hooks.Register(app)
 	service.Register(app)

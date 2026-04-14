@@ -88,7 +88,7 @@ func RegisterPreReceive(cmd KingpinRegister, loadCoreFn LoadCLICoreFunc) {
 		loadCoreFn: loadCoreFn,
 	}
 
-	cmd.Command(ParamPreReceive, clii18n.T(i18n.CliHooksPreReceiveDescription)).
+	cmd.Command(ParamPreReceive, clii18n.T(i18n.CliHooksPreReceiveDescription)).Hidden().
 		Action(c.run)
 }
 
@@ -98,7 +98,7 @@ func RegisterUpdate(cmd KingpinRegister, loadCoreFn LoadCLICoreFunc) {
 		loadCoreFn: loadCoreFn,
 	}
 
-	subCmd := cmd.Command(ParamUpdate, clii18n.T(i18n.CliHooksUpdateDescription)).
+	subCmd := cmd.Command(ParamUpdate, clii18n.T(i18n.CliHooksUpdateDescription)).Hidden().
 		Action(c.run)
 
 	subCmd.Arg("ref", clii18n.T(i18n.CliHooksUpdateRefArg)).
@@ -120,7 +120,7 @@ func RegisterPostReceive(cmd KingpinRegister, loadCoreFn LoadCLICoreFunc) {
 		loadCoreFn: loadCoreFn,
 	}
 
-	cmd.Command(ParamPostReceive, clii18n.T(i18n.CliHooksPostReceiveDescription)).
+	cmd.Command(ParamPostReceive, clii18n.T(i18n.CliHooksPostReceiveDescription)).Hidden().
 		Action(c.run)
 }
 

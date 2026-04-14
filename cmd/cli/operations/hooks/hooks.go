@@ -14,6 +14,6 @@ const (
 )
 
 func Register(app *kingpin.Application) {
-	subCmd := app.Command(ParamHooks, clii18n.T(i18n.CliHooksDescription))
+	subCmd := app.Command(ParamHooks, clii18n.T(i18n.CliHooksDescription)).Hidden()
 	hook.RegisterAll(subCmd, githook.LoadFromEnvironment)
 }
