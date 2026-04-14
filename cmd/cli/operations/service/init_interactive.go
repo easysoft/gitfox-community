@@ -19,7 +19,6 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
-	"github.com/muesli/termenv"
 	"github.com/quicklyon/kingpin/v2"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/configs"
@@ -70,11 +69,7 @@ func runInit(_ *kingpin.ParseContext) error {
 	// printBanner(t(i18n.CliInitWelcome))
 
 	// ========== 第二步：询问是否与禅道在同一机器 ==========
-	var sameMachine bool
-	err := huh.NewConfirm().
-		Title(t(i18n.CliInitSameMachine)).
-		Value(&sameMachine).
-		RunAccessible(os.Stdout, os.Stdin)
+	sameMachine, err := confirmPrompt(t(i18n.CliInitSameMachine))
 	if err != nil {
 		if errors.Is(err, huh.ErrUserAborted) {
 			return nil
@@ -86,6 +81,7 @@ func runInit(_ *kingpin.ParseContext) error {
 	var zentaoIP string
 	var workspace string
 	var zentaoPath string // 禅道配置目录路径（仅同机模式下有值）
+	var devopsURL string
 
 	// 尝试加载自定义的 prod.env
 	existingEnv := loadExistingEnv()
@@ -103,7 +99,7 @@ func runInit(_ *kingpin.ParseContext) error {
 	// ========== 第三步：根据用户选择进入不同交互流程 ==========
 	if sameMachine {
 		// 同机模式：从禅道配置目录中读取 my.php 获取数据库信息
-		if err := runSameMachineFlow(&db, &zentaoIP, &workspace, &zentaoPath, defaultWorkspace); err != nil {
+		if err := runSameMachineFlow(&db, &workspace, &zentaoPath, defaultWorkspace); err != nil {
 			if errors.Is(err, huh.ErrUserAborted) {
 				return nil
 			}
@@ -112,7 +108,7 @@ func runInit(_ *kingpin.ParseContext) error {
 	} else {
 		// 异机模式：需要用户手动输入数据库连接信息
 
-		if err := runDifferentMachineFlow(&db, &zentaoIP, &workspace, defaultWorkspace); err != nil {
+		if err := runDifferentMachineFlow(&db, &workspace, defaultWorkspace); err != nil {
 			if errors.Is(err, huh.ErrUserAborted) {
 				return nil
 			}
@@ -122,9 +118,6 @@ func runInit(_ *kingpin.ParseContext) error {
 
 	// ========== 第四步：自动获取本机 IP 并拼接服务地址 ==========
 	localIP := getLocalIP()
-
-	zentaoBaseURL := normalizeZentaoURL(zentaoIP)
-	devopsURL := fmt.Sprintf("%s/api.php/v1", zentaoBaseURL)
 
 	gitfoxPort := existingEnv["GITFOX_HTTP_PORT"]
 	if gitfoxPort == "" {
@@ -136,21 +129,34 @@ func runInit(_ *kingpin.ParseContext) error {
 
 	urlBase := fmt.Sprintf("http://%s:%s", localIP, gitfoxPort)
 
-	// ========== 验证禅道配置信息 ==========
-	var verifyErr error
-	_ = spinner.New().
-		Title(t(i18n.CliInitVerifying)).
-		Action(func() {
-			verifyErr = CheckZentao(devopsURL)
-		}).Run()
+	// ========== 输入禅道地址并验证连通性（失败可重试） ==========
+	errStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#FF0000"))
+	for {
+		var inputErr error
+		zentaoIP, inputErr = inputPrompt(t(i18n.CliInitZentaoIp), "", requiredURLOrHostValidator)
+		if inputErr != nil {
+			if errors.Is(inputErr, huh.ErrUserAborted) {
+				return nil
+			}
+			return inputErr
+		}
 
-	if verifyErr != nil {
-		errStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#FF0000"))
-		fmt.Println()
-		fmt.Println(errStyle.Render("✗ 验证失败: " + verifyErr.Error()))
-		fmt.Println()
-		// 直接返回避免 kingpin 吃掉错误
-		return verifyErr
+		zentaoBaseURL := normalizeZentaoURL(zentaoIP)
+		devopsURL = fmt.Sprintf("%s/api.php/v1", zentaoBaseURL)
+
+		var verifyErr error
+		_ = spinner.New().
+			Title(t(i18n.CliInitVerifying)).
+			Action(func() {
+				verifyErr = CheckZentao(devopsURL)
+			}).Run()
+
+		if verifyErr == nil {
+			break
+		}
+
+		fmt.Println(errStyle.Render(verifyErr.Error()))
+		fmt.Println(errStyle.Render(t(i18n.CliInitZentaoRetry)))
 	}
 
 	successStyle := lipgloss.NewStyle().Bold(true)
@@ -168,69 +174,12 @@ func runInit(_ *kingpin.ParseContext) error {
 		targetBinPath += ".exe" // windowsBinaryName 的后缀，定义在 windows.go
 	}
 
-	// --- 检查 prod.env 是否已存在 ---
-	if info, err := os.Stat(targetEnvPath); err == nil && !info.IsDir() {
-		overwrite := true
-		err := huh.NewConfirm().
-			Title(fmt.Sprintf(t(i18n.CliInitOverwriteEnv), targetEnvPath)).
-			Value(&overwrite).
-			RunAccessible(os.Stdout, os.Stdin)
-		termenv.DefaultOutput().CursorUp(1)
-		termenv.DefaultOutput().ClearLine()
-		if err != nil {
-			return err
-		}
-		if !overwrite {
-			fmt.Println()
-			fmt.Println(t(i18n.CliInitOverwriteCancel))
-			return nil
-		}
-		if bakPath, err := backupFile(targetEnvPath); err == nil {
-			fmt.Println(successStyle.Render("✓ ") + fmt.Sprintf(t(i18n.CliInitBackupCreated), bakPath))
-		}
-	}
-
-	// --- 检查 prod.yaml 是否已存在 ---
-	if info, err := os.Stat(targetYamlPath); err == nil && !info.IsDir() {
-		overwrite := true
-		err := huh.NewConfirm().
-			Title(fmt.Sprintf(t(i18n.CliInitOverwriteYaml), targetYamlPath)).
-			Value(&overwrite).
-			RunAccessible(os.Stdout, os.Stdin)
-		termenv.DefaultOutput().CursorUp(1)
-		termenv.DefaultOutput().ClearLine()
-		if err != nil {
-			return err
-		}
-		if !overwrite {
-			fmt.Println()
-			fmt.Println(t(i18n.CliInitOverwriteCancel))
-			return nil
-		}
-		if bakPath, err := backupFile(targetYamlPath); err == nil {
-			fmt.Println(successStyle.Render("✓ ") + fmt.Sprintf(t(i18n.CliInitBackupCreated), bakPath))
-		}
-	}
-
-	// --- 检查 gitfox 二进制是否已存在 ---
-	if info, err := os.Stat(targetBinPath); err == nil && !info.IsDir() {
-		overwrite := true
-		err := huh.NewConfirm().
-			Title(fmt.Sprintf(t(i18n.CliInitOverwriteBin), targetBinPath)).
-			Value(&overwrite).
-			RunAccessible(os.Stdout, os.Stdin)
-		termenv.DefaultOutput().CursorUp(1)
-		termenv.DefaultOutput().ClearLine()
-		if err != nil {
-			return err
-		}
-		if !overwrite {
-			fmt.Println()
-			fmt.Println(t(i18n.CliInitOverwriteCancel))
-			return nil
-		}
-		if bakPath, err := backupFile(targetBinPath); err == nil {
-			fmt.Println(successStyle.Render("✓ ") + fmt.Sprintf(t(i18n.CliInitBackupCreated), bakPath))
+	// --- 已存在的文件自动备份后覆盖 ---
+	for _, path := range []string{targetEnvPath, targetYamlPath, targetBinPath} {
+		if info, err := os.Stat(path); err == nil && !info.IsDir() {
+			if bakPath, err := backupFile(path); err == nil {
+				fmt.Println(successStyle.Render("✓ ") + fmt.Sprintf(t(i18n.CliInitBackupCreated), bakPath))
+			}
 		}
 	}
 
@@ -240,14 +189,14 @@ func runInit(_ *kingpin.ParseContext) error {
 	envPath, err := saveEnvFile(existingEnv, &db, workspace, localIP, devopsURL, urlBase)
 	if err != nil {
 		errStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#FF0000"))
-		fmt.Println(errStyle.Render("✗ " + fmt.Sprintf(t(i18n.CliInitErrSaveConfig), err)))
+		fmt.Println(errStyle.Render(fmt.Sprintf(t(i18n.CliInitErrSaveConfig), err)))
 		return fmt.Errorf(t(i18n.CliInitErrSaveConfig), err)
 	}
 
 	// ========== 第五步（续）：释放内置 prod.yaml 到安装目录 ==========
 	if err := copyEmbeddedYaml(workspace); err != nil {
 		errStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#FF0000"))
-		fmt.Println(errStyle.Render("✗ prod.yaml: " + fmt.Sprintf("%v", err)))
+		fmt.Println(errStyle.Render("prod.yaml: " + fmt.Sprintf("%v", err)))
 		return err
 	}
 	// fmt.Println(successStyle.Render("✓ ") + "prod.yaml → " + filepath.Join(workspace, "prod.yaml"))
@@ -255,7 +204,7 @@ func runInit(_ *kingpin.ParseContext) error {
 	// ========== 第六步：复制当前二进制到安装目录 ==========
 	if _, err := copyBinary(workspace); err != nil {
 		errStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#FF0000"))
-		fmt.Println(errStyle.Render("✗ " + fmt.Sprintf(t(i18n.CliInitErrCopyBin), err)))
+		fmt.Println(errStyle.Render(fmt.Sprintf(t(i18n.CliInitErrCopyBin), err)))
 		return fmt.Errorf(t(i18n.CliInitErrCopyBin), err)
 	}
 
@@ -266,9 +215,10 @@ func runInit(_ *kingpin.ParseContext) error {
 		if err := updateZentaoPHPConfig(myPHPPath, localIP, portInt); err != nil {
 			errStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#FF8C00"))
 			fmt.Println(errStyle.Render(fmt.Sprintf(t(i18n.CliInitWarnMyphpWrite), err)))
-		} else {
-			fmt.Println(successStyle.Render("✓ ") + t(i18n.CliInitSuccessMyphpWrite))
 		}
+		// else {
+		// 	fmt.Println(successStyle.Render("✓ ") + t(i18n.CliInitSuccessMyphpWrite))
+		// }
 	} else if !isInstallingMode {
 		// 异机部署 + 单独执行 init 时，在此处打印向导性指引文本
 		// 走一键安装（install）时跳过，由 printInstallSuccess 统一显示
@@ -279,7 +229,7 @@ func runInit(_ *kingpin.ParseContext) error {
 	}
 
 	// ========== 第八步：打印配置摘要 ==========
-	printSummary(envPath, &db, workspace, localIP, devopsURL)
+	printSummary(envPath, &db, workspace, localIP, gitfoxPort, devopsURL)
 
 	// 记录 init 上下文，供 install 命令使用
 	lastInitWorkspace = workspace
@@ -300,33 +250,25 @@ func runInit(_ *kingpin.ParseContext) error {
 //  4. 计算默认安装目录（禅道目录的父目录/gitfox）
 //  5. 让用户输入禅道服务 IP 和确认安装目录
 //  6. 返回 zentaoPath，供后续写回 my.php 使用
-func runSameMachineFlow(db *dbConfig, zentaoIP *string, workspace *string, zentaoPath *string, defaultWorkspace string) error {
+func runSameMachineFlow(db *dbConfig, workspace *string, zentaoPath *string, defaultWorkspace string) error {
 	// 第一步：让用户输入禅道配置目录，并进行实时校验
-	err := huh.NewForm(
-		huh.NewGroup(
-			huh.NewInput().
-				Title(t(i18n.CliInitZentaoPath)).
-				Description(t(i18n.CliInitZentaoPathDesc)).
-				Placeholder(t(i18n.CliInitZentaoPathPlaceholder)).
-				Value(zentaoPath).
-				Validate(func(s string) error {
-					if strings.TrimSpace(s) == "" {
-						return errors.New(t(i18n.CliInitErrRequired))
-					}
-					// 检查目录是否存在
-					info, err := os.Stat(s)
-					if err != nil || !info.IsDir() {
-						return errors.New(t(i18n.CliInitErrDirNotFound))
-					}
-					// 检查目录下是否包含 my.php 文件
-					myPHPPath := filepath.Join(s, "my.php")
-					if _, err := os.Stat(myPHPPath); err != nil {
-						return errors.New(t(i18n.CliInitErrMyphpNotFound))
-					}
-					return nil
-				}),
-		),
-	).Run()
+	var err error
+	*zentaoPath, err = inputPrompt(t(i18n.CliInitZentaoPath), "", func(s string) error {
+		if strings.TrimSpace(s) == "" {
+			return errors.New(t(i18n.CliInitErrRequired))
+		}
+		// 检查目录是否存在
+		info, err := os.Stat(s)
+		if err != nil || !info.IsDir() {
+			return errors.New(t(i18n.CliInitErrDirNotFound))
+		}
+		// 检查目录下是否包含 my.php 文件
+		myPHPPath := filepath.Join(s, "my.php")
+		if _, err := os.Stat(myPHPPath); err != nil {
+			return errors.New(t(i18n.CliInitErrMyphpNotFound))
+		}
+		return nil
+	})
 	if err != nil {
 		return err
 	}
@@ -347,31 +289,15 @@ func runSameMachineFlow(db *dbConfig, zentaoIP *string, workspace *string, zenta
 
 	if verifyErr != nil {
 		errStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#FF0000"))
-		fmt.Println(errStyle.Render("✗ " + fmt.Sprintf(t(i18n.CliInitErrDbConn), verifyErr.Error())))
+		fmt.Println(errStyle.Render(fmt.Sprintf(t(i18n.CliInitErrDbConn), verifyErr.Error())))
 		return errors.New(t(i18n.CliInitErrDbExtractedFail))
 	}
 
-	// successStyle := lipgloss.NewStyle().Bold(true)
-	// fmt.Println(successStyle.Render("✓ ") + t(i18n.CliInitSuccessDbConn))
-
-	// 第三步：回显默认安装目录
-	*workspace = defaultWorkspace
-
-	// 第四步：让用户输入禅道 IP 和确认/修改安装目录
-	err = huh.NewForm(
-		huh.NewGroup(
-			huh.NewInput().
-				Title(t(i18n.CliInitZentaoIp)).
-				Placeholder(t(i18n.CliInitZentaoIpPlaceholder)).
-				Value(zentaoIP).
-				Validate(requiredURLOrHostValidator),
-			huh.NewInput().
-				Title(t(i18n.CliInitWorkspace)).
-				Placeholder(t(i18n.CliInitWorkspacePlaceholder)).
-				Value(workspace).
-				Validate(requiredAbsPathValidator),
-		),
-	).Run()
+	// 第三步：让用户输入安装目录（有默认值）
+	*workspace, err = inputPrompt(t(i18n.CliInitWorkspace), defaultWorkspace, requiredAbsPathValidator)
+	if err != nil {
+		return err
+	}
 
 	return err
 }
@@ -381,48 +307,34 @@ func runSameMachineFlow(db *dbConfig, zentaoIP *string, workspace *string, zenta
 // 流程：
 //  1. 让用户手动输入数据库连接信息（主机、端口、库名、用户名、密码）
 //  2. 让用户输入禅道服务 IP 和安装目录
-func runDifferentMachineFlow(db *dbConfig, zentaoIP *string, workspace *string, defaultWorkspace string) error {
+func runDifferentMachineFlow(db *dbConfig, workspace *string, defaultWorkspace string) error {
 	headerStyle := lipgloss.NewStyle().Bold(true)
 	//.Foreground(lipgloss.Color("#7D56F4"))
 
-	// 使用翻译后的 placeholder 作为默认值预填充
-	db.Host = t(i18n.CliInitDbHostPlaceholder)
-	db.Port = t(i18n.CliInitDbPortPlaceholder)
-	db.Name = t(i18n.CliInitDbNamePlaceholder)
-	db.User = t(i18n.CliInitDbUserPlaceholder)
-	*workspace = defaultWorkspace
+	var err error
 
-	// 第一组表单：数据库连接信息（5 个字段）
-	err := huh.NewForm(
-		huh.NewGroup(
-			huh.NewInput().
-				Title(t(i18n.CliInitDbHost)).
-				Description(t(i18n.CliInitDbHostDesc)).
-				Placeholder(t(i18n.CliInitDbHostPlaceholder)).
-				Value(&db.Host).
-				Validate(dbHostValidator),
-			huh.NewInput().
-				Title(t(i18n.CliInitDbPort)).
-				Placeholder(t(i18n.CliInitDbPortPlaceholder)).
-				Value(&db.Port).
-				Validate(requiredValidator),
-			huh.NewInput().
-				Title(t(i18n.CliInitDbName)).
-				Placeholder(t(i18n.CliInitDbNamePlaceholder)).
-				Value(&db.Name).
-				Validate(requiredValidator),
-			huh.NewInput().
-				Title(t(i18n.CliInitDbUser)).
-				Placeholder(t(i18n.CliInitDbUserPlaceholder)).
-				Value(&db.User).
-				Validate(requiredValidator),
-			huh.NewInput().
-				Title(t(i18n.CliInitDbPassword)).
-				EchoMode(huh.EchoModePassword).
-				Value(&db.Password).
-				Validate(requiredValidator),
-		),
-	).Run()
+	// 第一组：数据库连接信息（5 个字段，无默认值）
+	db.Host, err = inputPrompt(t(i18n.CliInitDbHost), "", dbHostValidator)
+	if err != nil {
+		return err
+	}
+
+	db.Port, err = inputPrompt(t(i18n.CliInitDbPort), "", requiredValidator)
+	if err != nil {
+		return err
+	}
+
+	db.Name, err = inputPrompt(t(i18n.CliInitDbName), "", requiredValidator)
+	if err != nil {
+		return err
+	}
+
+	db.User, err = inputPrompt(t(i18n.CliInitDbUser), "", requiredValidator)
+	if err != nil {
+		return err
+	}
+
+	db.Password, err = passwordPrompt(t(i18n.CliInitDbPassword), requiredValidator)
 	if err != nil {
 		return err
 	}
@@ -451,30 +363,18 @@ func runDifferentMachineFlow(db *dbConfig, zentaoIP *string, workspace *string, 
 
 	if verifyErr != nil {
 		errStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#FF0000"))
-		fmt.Println(errStyle.Render("✗ " + fmt.Sprintf(t(i18n.CliInitErrDbConn), verifyErr.Error())))
+		fmt.Println(errStyle.Render(fmt.Sprintf(t(i18n.CliInitErrDbConn), verifyErr.Error())))
 		return errors.New(t(i18n.CliInitErrDbConnFailAbort))
 	}
 
-	// successStyle := lipgloss.NewStyle().Bold(true)
-	// fmt.Println(successStyle.Render("✓ ") + t(i18n.CliInitSuccessDbConn))
+	// 第二组：安装目录（有默认值）
 
-	// 第二组表单：禅道 IP 和安装目录
-	err = huh.NewForm(
-		huh.NewGroup(
-			huh.NewInput().
-				Title(t(i18n.CliInitZentaoIp)).
-				Placeholder(t(i18n.CliInitZentaoIpPlaceholder)).
-				Value(zentaoIP).
-				Validate(requiredValidator),
-			huh.NewInput().
-				Title(t(i18n.CliInitWorkspace)).
-				Placeholder(t(i18n.CliInitWorkspacePlaceholder)).
-				Value(workspace).
-				Validate(requiredAbsPathValidator),
-		),
-	).Run()
+	*workspace, err = inputPrompt(t(i18n.CliInitWorkspace), defaultWorkspace, requiredAbsPathValidator)
+	if err != nil {
+		return err
+	}
 
-	return err
+	return nil
 }
 
 // requiredValidator 校验输入不能为空。
@@ -809,7 +709,7 @@ func copyEmbeddedYaml(workspace string) error {
 
 // printSummary 以美化的表格形式打印最终配置摘要。
 // 密码在 DSN 中以 *** 替代，避免泄露。
-func printSummary(envPath string, db *dbConfig, workspace, serverHost, devopsURL string) {
+func printSummary(envPath string, db *dbConfig, workspace, serverIP, serverPort, devopsURL string) {
 	successStyle := lipgloss.NewStyle().Bold(true)
 
 	fmt.Println()
@@ -836,7 +736,8 @@ func printSummary(envPath string, db *dbConfig, workspace, serverHost, devopsURL
 	printRow(t(i18n.CliInitConfigFilePath), envPath)
 	printRow(t(i18n.CliInitConfigDb), dsnDisplay)
 	printRow(t(i18n.CliInitConfigWorkspace), workspace)
-	printRow(t(i18n.CliInitConfigServerHost), serverHost)
+	printRow(t(i18n.CliInitConfigServerIp), serverIP)
+	printRow(t(i18n.CliInitConfigServerPort), serverPort)
 	printRow(t(i18n.CliInitConfigDevopsUrl), devopsURL)
 	fmt.Println(strings.Repeat("─", 60))
 

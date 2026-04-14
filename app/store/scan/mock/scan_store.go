@@ -305,18 +305,18 @@ func (mr *MockIRuleSetMockRecorder) UnBindRule(ctx, ruleSetID, ruleIDs any) *gom
 }
 
 // Update mocks base method.
-func (m *MockIRuleSet) Update(ctx context.Context, ruleSet *scan0.RuleSet, id uint) (*scan.RuleSet, error) {
+func (m *MockIRuleSet) Update(ctx context.Context, id uint, updates map[string]any) (*scan.RuleSet, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Update", ctx, ruleSet, id)
+	ret := m.ctrl.Call(m, "Update", ctx, id, updates)
 	ret0, _ := ret[0].(*scan.RuleSet)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Update indicates an expected call of Update.
-func (mr *MockIRuleSetMockRecorder) Update(ctx, ruleSet, id any) *gomock.Call {
+func (mr *MockIRuleSetMockRecorder) Update(ctx, id, updates any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockIRuleSet)(nil).Update), ctx, ruleSet, id)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockIRuleSet)(nil).Update), ctx, id, updates)
 }
 
 // MockISolution is a mock of ISolution interface.
@@ -522,17 +522,17 @@ func (mr *MockISolutionMockRecorder) UnbindRulesets(ctx, solutionID, rulesetIDs 
 }
 
 // Update mocks base method.
-func (m *MockISolution) Update(ctx context.Context, solution *scan0.SolutionRules) error {
+func (m *MockISolution) Update(ctx context.Context, id uint, updates map[string]any) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Update", ctx, solution)
+	ret := m.ctrl.Call(m, "Update", ctx, id, updates)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Update indicates an expected call of Update.
-func (mr *MockISolutionMockRecorder) Update(ctx, solution any) *gomock.Call {
+func (mr *MockISolutionMockRecorder) Update(ctx, id, updates any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockISolution)(nil).Update), ctx, solution)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockISolution)(nil).Update), ctx, id, updates)
 }
 
 // MockIScanPlan is a mock of IScanPlan interface.

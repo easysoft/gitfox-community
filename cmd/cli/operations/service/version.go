@@ -62,7 +62,7 @@ func runVersion(_ *kingpin.ParseContext) error {
 	// if registered {
 	// 	fmt.Println("  " + regLabel + "  " + okStyle.Render("✓ "+t(i18n.CliVersionServiceStatusRegistered)))
 	// } else {
-	// 	fmt.Println("  " + regLabel + "  " + errStyle.Render("✗ "+t(i18n.CliVersionServiceStatusNotRegistered)))
+	// 	fmt.Println("  " + regLabel + "  " + errStyle.Render(t(i18n.CliVersionServiceStatusNotRegistered)))
 	// }
 
 	// // 运行状态（通过健康接口探测）
@@ -78,10 +78,10 @@ func runVersion(_ *kingpin.ParseContext) error {
 	// 		if resp != nil {
 	// 			resp.Body.Close()
 	// 		}
-	// 		fmt.Println("  " + runtimeLabel + "  " + errStyle.Render("✗ "+t(i18n.CliVersionRuntimeStopped)))
+	// 		fmt.Println("  " + runtimeLabel + "  " + errStyle.Render(t(i18n.CliVersionRuntimeStopped)))
 	// 	}
 	// } else {
-	// 	fmt.Println("  " + runtimeLabel + "  " + errStyle.Render("✗ "+t(i18n.CliVersionRuntimeStopped)))
+	// 	fmt.Println("  " + runtimeLabel + "  " + errStyle.Render(t(i18n.CliVersionRuntimeStopped)))
 	// }
 
 	return nil

@@ -126,9 +126,11 @@ const (
 	CliInitConfigDb                      I18nKey = "cli.init_config_db"                        // 数据库
 	CliInitConfigDevopsUrl               I18nKey = "cli.init_config_devops_url"                // 禅道 API 接口
 	CliInitConfigFilePath                I18nKey = "cli.init_config_file_path"                 // 配置文件
-	CliInitConfigServerHost              I18nKey = "cli.init_config_server_host"               // GitFox 本机 IP
+	CliInitConfigServerIp                I18nKey = "cli.init_config_server_ip"                 // 服务IP
+	CliInitConfigServerPort              I18nKey = "cli.init_config_server_port"               // 服务端口
 	CliInitConfigSummary                 I18nKey = "cli.init_config_summary"                   // 配置摘要
 	CliInitConfigWorkspace               I18nKey = "cli.init_config_workspace"                 // 工作空间
+	CliInitConfirmInvalidInput           I18nKey = "cli.init_confirm_invalid_input"            // 输入无效，请输入 Y 或 N。
 	CliInitConnDbHost                    I18nKey = "cli.init_conn_db_host"                     // 主机
 	CliInitConnDbInfoFooter              I18nKey = "cli.init_conn_db_info_footer"              // --------------------------
 	CliInitConnDbInfoTitle               I18nKey = "cli.init_conn_db_info_title"               // 待连接的数据库信息
@@ -195,6 +197,7 @@ const (
 	CliInitZentaoPath                    I18nKey = "cli.init_zentao_path"                      // 禅道配置文件目录
 	CliInitZentaoPathDesc                I18nKey = "cli.init_zentao_path_desc"                 // 包含禅道 my.php 配置文件的目录
 	CliInitZentaoPathPlaceholder         I18nKey = "cli.init_zentao_path_placeholder"          // /opt/zbox/app/zentao/config
+	CliInitZentaoRetry                   I18nKey = "cli.init_zentao_retry"                     // 请重新输入禅道服务地址.
 	CliInstallCdHint                     I18nKey = "cli.install_cd_hint"                       // 以下命令需要在工作目录下执行:
 	CliInstallCleanupConfirm             I18nKey = "cli.install_cleanup_confirm"               // 是否清理已生成的配置文件?(清理后可重新执行 install)
 	CliInstallCleanupDone                I18nKey = "cli.install_cleanup_done"                  // 已清理配置文件.请排查问题后重新执行 gitfox install.
@@ -206,6 +209,8 @@ const (
 	CliInstallCmdUninstall               I18nKey = "cli.install_cmd_uninstall"                 // 卸载服务
 	CliInstallCmdVersion                 I18nKey = "cli.install_cmd_version"                   // 查看版本
 	CliInstallCommand                    I18nKey = "cli.install_command"                       // install
+	CliInstallDepChecking                I18nKey = "cli.install_dep_checking"                  // 正在进行依赖项检查...
+	CliInstallDepMissing                 I18nKey = "cli.install_dep_missing"                   // 缺少必要依赖，请先安装后重试。
 	CliInstallDescription                I18nKey = "cli.install_description"                   // 安装 GitFox
 	CliInstallErrBinNotFound             I18nKey = "cli.install_err_bin_not_found"             // 工作目录中未找到 GitFox 二进制文件: %s
 	CliInstallInitDescription            I18nKey = "cli.install_init_description"              // 初始化 GitFox 配置
@@ -294,13 +299,14 @@ const (
 	CliStartSummaryTitle                 I18nKey = "cli.start_summary_title"                   // GitFox 守护进程运行档案
 	CliStartSummaryWindowsCleaning       I18nKey = "cli.start_summary_windows_cleaning"        // [Service] 正在清理资源...
 	CliStartWelcome                      I18nKey = "cli.start_welcome"                         // GitFox · 启动服务
+	CliStatusChecking                    I18nKey = "cli.status_checking"                       // 正在进行依赖项检查...
 	CliStatusComposeMissing              I18nKey = "cli.status_compose_missing"                // Docker Compose 未安装.安装指南: https://docs.docker.co...
 	CliStatusComposeOk                   I18nKey = "cli.status_compose_ok"                     // Docker Compose 已安装 (版本: %s)
 	CliStatusDescription                 I18nKey = "cli.status_description"                    // 检查 GitFox 及其依赖的运行状态
-	CliStatusDockerMissing               I18nKey = "cli.status_docker_missing"                 // Docker 未安装.安装指南: https://docs.docker.com/engine...
+	CliStatusDockerMissing               I18nKey = "cli.status_docker_missing"                 // Docker 未安装，安装文档: https://docs.docker.com/engine...
 	CliStatusDockerOk                    I18nKey = "cli.status_docker_ok"                      // Docker 已安装 (版本: %s)
-	CliStatusGitMissing                  I18nKey = "cli.status_git_missing"                    // Git 未安装.安装指南: https://git-scm.com/book/en/v2/Ge...
-	CliStatusGitOk                       I18nKey = "cli.status_git_ok"                         // Git 已安装 (版本: %s)
+	CliStatusGitMissing                  I18nKey = "cli.status_git_missing"                    // Git 未安装，安装文档: https://git-scm.com/book/en/v2/Ge...
+	CliStatusGitOk                       I18nKey = "cli.status_git_ok"                         // Git 已安装，版本: %s
 	CliStatusPortFree                    I18nKey = "cli.status_port_free"                      // 端口 %s 空闲
 	CliStatusPortInUse                   I18nKey = "cli.status_port_in_use"                    // 端口 %s 被占用 (PID: %s / 进程: %s)
 	CliStatusPortUnknown                 I18nKey = "cli.status_port_unknown"                   // 端口 %s 状态未知
@@ -310,7 +316,8 @@ const (
 	CliStatusServiceNotRegistered        I18nKey = "cli.status_service_not_registered"         // GitFox 守护进程未注册为系统服务.
 	CliStatusServicePort                 I18nKey = "cli.status_service_port"                   // 监听端口: %s
 	CliStatusServiceRegistered           I18nKey = "cli.status_service_registered"             // GitFox 守护进程已注册但未响应 (端口: %s).
-	CliStatusServiceRunning              I18nKey = "cli.status_service_running"                // GitFox 守护进程正在运行且健康.
+	CliStatusServiceNotRunning           I18nKey = "cli.status_service_not_running"            // GitFox 服务未启动
+	CliStatusServiceRunning              I18nKey = "cli.status_service_running"                // GitFox 服务正常
 	CliStatusTitle                       I18nKey = "cli.status_title"                          // GitFox 系统状态报告
 	CliStatusWelcome                     I18nKey = "cli.status_welcome"                        // GitFox · 系统状态
 	CliStopDescription                   I18nKey = "cli.stop_description"                      // 停止 GitFox 后台守护进程服务

@@ -10,6 +10,7 @@ import (
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	clii18n "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n/cli"
+	"github.com/charmbracelet/huh/spinner"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/quicklyon/kingpin/v2"
 )
@@ -31,56 +32,53 @@ func runStatus(_ *kingpin.ParseContext) error {
 	errStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#FF4500"))
 	warnStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#FF8C00"))
 	headerStyle := lipgloss.NewStyle().Bold(true)
-	//.Foreground(lipgloss.Color("#7D56F4"))
-
-	// printBanner(t(i18n.CliStatusWelcome))
-	//fmt.Println(headerStyle.Render(t(i18n.CliStatusTitle)))
 
 	// =========================================================
-	// 区块 1. 依赖环境检查
+	// 区块 1. 依赖环境检查（带 spinner loading）
 	// =========================================================
+	var gitOk bool
+	var gitVer string
+	var dockerOk bool
+	var dockerVer string
+	var dockerErr error
+
+	_ = spinner.New().
+		Title(t(i18n.CliStatusChecking)).
+		Action(func() {
+			gitOk, gitVer, _ = CheckGit()
+			dockerOk, dockerVer, dockerErr = CheckDocker()
+		}).Run()
+
 	fmt.Println(headerStyle.Render(t(i18n.CliStatusSectionDeps)))
 
 	// --- Git ---
-	if ok, ver, _ := CheckGit(); ok {
-		fmt.Println(okStyle.Render("") + fmt.Sprintf(t(i18n.CliStatusGitOk), ver))
+	if gitOk {
+		fmt.Println(okStyle.Render("") + fmt.Sprintf(t(i18n.CliStatusGitOk), gitVer))
 	} else {
 		fmt.Println(errStyle.Render("") + t(i18n.CliStatusGitMissing))
-		fmt.Println(lipgloss.NewStyle().Render("Install: https://git-scm.com/downloads"))
 	}
 
 	// --- Docker ---
-	if ok, ver, err := CheckDocker(); ok && err == nil {
-		fmt.Println(okStyle.Render("") + fmt.Sprintf(t(i18n.CliStatusDockerOk), ver))
-	} else if ok && err != nil {
+	if dockerOk && dockerErr == nil {
+		fmt.Println(okStyle.Render("") + fmt.Sprintf(t(i18n.CliStatusDockerOk), dockerVer))
+	} else if dockerOk && dockerErr != nil {
 		// 已安装但 daemon 未运行
-
-		fmt.Println(warnStyle.Render("") + err.Error())
+		fmt.Println(warnStyle.Render("") + dockerErr.Error())
 	} else {
 		fmt.Println(errStyle.Render("") + t(i18n.CliStatusDockerMissing))
-		fmt.Println(lipgloss.NewStyle().Render("Install: https://docs.docker.com/get-docker/"))
 	}
-
-	// --- Docker Compose ---
-	if ok, ver, _ := CheckDockerCompose(); ok {
-		fmt.Println(okStyle.Render("") + fmt.Sprintf(t(i18n.CliStatusComposeOk), ver))
-	} else {
-		fmt.Println(errStyle.Render("") + t(i18n.CliStatusComposeMissing))
-		fmt.Println(lipgloss.NewStyle().Render("Install: https://docs.docker.com/compose/install/"))
-	}
-
-	// fmt.Println()
 
 	// =========================================================
 	// 区块 2. GitFox 服务状态检查
 	// =========================================================
+	fmt.Println()
 	fmt.Println(headerStyle.Render(t(i18n.CliStatusSectionService)))
 
 	registered := isServiceRegistered()
 	_, port, healthURL := readHealthURL()
 
 	if !registered {
-		fmt.Println(errStyle.Render("") + t(i18n.CliStatusServiceNotRegistered))
+		fmt.Println(errStyle.Render("") + t(i18n.CliStatusServiceNotRunning))
 	} else if healthURL != "" {
 		// 服务已注册，探测健康接口
 		client := http.Client{Timeout: 3 * time.Second}
@@ -94,11 +92,11 @@ func runStatus(_ *kingpin.ParseContext) error {
 			if resp != nil {
 				resp.Body.Close()
 			}
-			fmt.Println(errStyle.Render("") + fmt.Sprintf(t(i18n.CliStatusServiceRegistered), port))
+			fmt.Println(errStyle.Render("") + t(i18n.CliStatusServiceNotRunning))
 		}
 	} else {
 		// 注册了但没有 env 配置可读取端口
-		fmt.Println(errStyle.Render("") + fmt.Sprintf(t(i18n.CliStatusServiceRegistered), "?"))
+		fmt.Println(errStyle.Render("") + t(i18n.CliStatusServiceNotRunning))
 	}
 	return nil
 }

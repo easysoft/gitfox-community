@@ -17,14 +17,14 @@ type RuleSetReqForCreate struct {
 }
 
 type RuleSetReqForUpdate struct {
-	Name   string `json:"name,omitempty"`
-	Desc   string `json:"desc,omitempty"`
-	DescEn string `json:"descEn,omitempty"`
-	Lang   string `json:"lang,omitempty"`
-	Tag    string `json:"tag,omitempty"`
-	Type   string `json:"type,omitempty"`
-	Plugin string `json:"plugin,omitempty"`
-	Status string `json:"status,omitempty"`
+	Name   *string `json:"name,omitempty"`
+	Desc   *string `json:"desc"`   // 不带 omitempty：允许前端传空字符串清空描述
+	DescEn *string `json:"descEn"` // 不带 omitempty：允许前端传空字符串清空英文描述
+	Lang   *string `json:"lang,omitempty"`
+	Tag    *string `json:"tag,omitempty"`
+	Type   string  `json:"type,omitempty"`
+	Plugin string  `json:"plugin,omitempty"`
+	Status string  `json:"status,omitempty"`
 }
 
 type RuleSetReqFilter struct {

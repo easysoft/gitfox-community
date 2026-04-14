@@ -10,6 +10,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
 )
 
 var _ ISolution = (*SolutionService)(nil)
@@ -61,28 +62,28 @@ func (s *SolutionService) GetByID(ctx context.Context, id uint) (*scanModel.Solu
 }
 
 func (s *SolutionService) Update(ctx context.Context, session *authModel.Session, id uint, req scanModel.SolutionReqForUpdate) (*scanModel.Solution, error) {
-	solution := &scanStore.SolutionRules{
-		ID:       uint64(id),
-		EditedBy: session.User.Account,
-	}
-	if req.Name != "" {
-		solution.Name = req.Name
-	}
-	if req.Desc != "" {
-		solution.Desc = req.Desc
-	}
-	if req.DescEn != "" {
-		solution.DescEn = req.DescEn
-	}
-	if req.Tag != "" {
-		solution.Tag = req.Tag
+	updates := map[string]interface{}{
+		"editedBy":   session.User.Account,
+		"editedDate": datetime.NowLocalTime(),
 	}
 
+	if req.Name != nil {
+		updates["name"] = *req.Name
+	}
+	if req.Desc != nil {
+		updates["desc"] = *req.Desc
+	}
+	if req.DescEn != nil {
+		updates["descEn"] = *req.DescEn
+	}
+	if req.Tag != nil {
+		updates["tag"] = *req.Tag
+	}
 	if req.Status != "" {
-		solution.Status = req.Status
+		updates["status"] = req.Status
 	}
 
-	if err := s.solutionStore.Update(ctx, solution); err != nil {
+	if err := s.solutionStore.Update(ctx, id, updates); err != nil {
 		return nil, err
 	}
 	return s.getSolutionByID(ctx, id)
@@ -169,12 +170,12 @@ func (s *SolutionService) UpdateStatus(ctx context.Context, session *authModel.S
 		newStatus = constant.ScanRuleStatusDisabled
 	}
 
-	solution := &scanStore.SolutionRules{
-		ID:       uint64(id),
-		Status:   newStatus,
-		EditedBy: session.User.Account,
+	updates := map[string]interface{}{
+		"status":     newStatus,
+		"editedBy":   session.User.Account,
+		"editedDate": datetime.NowLocalTime(),
 	}
-	return s.solutionStore.Update(ctx, solution)
+	return s.solutionStore.Update(ctx, id, updates)
 }
 
 func (s *SolutionService) ListRulesets(ctx context.Context, solutionID uint) ([]*scanModel.RuleSet, error) {

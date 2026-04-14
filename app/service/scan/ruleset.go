@@ -10,6 +10,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
 )
 
 var _ IRuleSet = (*RuleSetService)(nil)
@@ -50,33 +51,37 @@ func (s *RuleSetService) GetByID(ctx context.Context, id uint) (*scanModel.RuleS
 }
 
 func (s *RuleSetService) Update(ctx context.Context, session *authModel.Session, id uint, req scanModel.RuleSetReqForUpdate) (*scanModel.RuleSet, error) {
-	// 将请求转换为 store 层的 RuleSet 结构
-	ruleSet := &scanStore.RuleSet{
-		EditedBy: session.User.Account,
-		Desc:     req.Desc,
-		DescEn:   req.DescEn,
+	updates := map[string]interface{}{
+		"editedBy":   session.User.Account,
+		"editedDate": datetime.NowLocalTime(),
 	}
 
-	if req.Name != "" {
-		ruleSet.Name = req.Name
+	if req.Desc != nil {
+		updates["desc"] = *req.Desc
 	}
-	if req.Lang != "" {
-		ruleSet.Lang = constant.ScanLangName(constant.ParseLang(req.Lang).LowerString())
+	if req.DescEn != nil {
+		updates["descEn"] = *req.DescEn
 	}
-	if req.Tag != "" {
-		ruleSet.Tag = req.Tag
+	if req.Name != nil {
+		updates["name"] = *req.Name
+	}
+	if req.Lang != nil {
+		updates["lang"] = constant.ScanLangName(constant.ParseLang(*req.Lang).LowerString())
+	}
+	if req.Tag != nil {
+		updates["tag"] = *req.Tag
 	}
 	if req.Type != "" {
-		ruleSet.Type = constant.ScanRuleType(req.Type)
+		updates["type"] = constant.ScanRuleType(req.Type)
 	}
 	if req.Plugin != "" {
-		ruleSet.Plugin = req.Plugin
+		updates["plugin"] = req.Plugin
 	}
 	if req.Status != "" {
-		ruleSet.Status = constant.ScanRuleStatus(req.Status)
+		updates["status"] = constant.ScanRuleStatus(req.Status)
 	}
 
-	return s.ruleSetStore.Update(ctx, ruleSet, id)
+	return s.ruleSetStore.Update(ctx, id, updates)
 }
 
 func (s *RuleSetService) Delete(ctx context.Context, id uint) error {

@@ -11,7 +11,6 @@ import (
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	clii18n "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n/cli"
-	"github.com/charmbracelet/huh"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/quicklyon/kingpin/v2"
 )
@@ -41,11 +40,7 @@ func runUninstall(_ *kingpin.ParseContext) error {
 	}
 
 	// ========== 阶段 1. 二次确认 ==========
-	confirm := true
-	confirmErr := huh.NewConfirm().
-		Title(t(i18n.CliUninstallConfirm)).
-		Value(&confirm).
-		RunAccessible(os.Stdout, os.Stdin)
+	confirm, confirmErr := confirmPrompt(t(i18n.CliUninstallConfirm))
 
 	if confirmErr != nil || !confirm {
 		fmt.Println(t(i18n.CliUninstallConfirmCancel))

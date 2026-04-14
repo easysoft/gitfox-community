@@ -47,8 +47,8 @@ func (s *SolutionStore) Find(ctx context.Context, name string) (*scanModel.Solut
 	return mapSolutionToModel(solution), nil
 }
 
-func (s *SolutionStore) Update(ctx context.Context, solution *SolutionRules) error {
-	if err := s.db.WithContext(ctx).Updates(solution).Error; err != nil {
+func (s *SolutionStore) Update(ctx context.Context, id uint, updates map[string]interface{}) error {
+	if err := s.db.WithContext(ctx).Model(&SolutionRules{}).Where("id = ?", id).Updates(updates).Error; err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
 	}
 	return nil
