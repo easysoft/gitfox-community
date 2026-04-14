@@ -167,7 +167,8 @@ func NewApp(mode string) (*App, func(), error) {
 		return nil, nil, err
 	}
 	txRunnerImpl := dbtx.NewTxRunner(db)
-	triggererTriggerer := triggerer.New(pipelineService, executionStore, stageStore, schedulerScheduler, txRunnerImpl)
+	serverConfig := provider.NewServerConfig(config)
+	triggererTriggerer := triggerer.New(pipelineService, executionStore, stageStore, schedulerScheduler, txRunnerImpl, serverConfig)
 	stepStore := step.NewStepStore(db)
 	cancelerCanceler := canceler.New(executionStore, stageStore, stepStore)
 	executionService := execution2.NewExecutionService(executionStore, stageStore)

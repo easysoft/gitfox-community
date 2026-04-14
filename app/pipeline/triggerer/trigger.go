@@ -18,6 +18,7 @@ import (
 	pipelineSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/pipeline"
 	executionStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/execution"
 	stageStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/stage"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database/dbtx"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	v1yaml "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pipeline/spec"
@@ -65,15 +66,17 @@ type triggerer struct {
 	stageStore      stageStore.Interface
 	scheduler       scheduler.Scheduler
 	tx              dbtx.TxRunner
+	config          config.ServerConfig
 }
 
-func New(pipelineService pipelineSvc.Interface, executionStore executionStore.Interface, stageStore stageStore.Interface, scheduler scheduler.Scheduler, tx dbtx.TxRunner) Triggerer {
+func New(pipelineService pipelineSvc.Interface, executionStore executionStore.Interface, stageStore stageStore.Interface, scheduler scheduler.Scheduler, tx dbtx.TxRunner, cfg config.ServerConfig) Triggerer {
 	return &triggerer{
 		pipelineService: pipelineService,
 		executionStore:  executionStore,
 		stageStore:      stageStore,
 		scheduler:       scheduler,
 		tx:              tx,
+		config:          cfg,
 	}
 }
 
@@ -104,6 +107,14 @@ func (t *triggerer) Trigger(
 		log.Errorf("[trigger]: could not find pipeline content: %v", err)
 		return nil, err
 	}
+
+	// 将 gitfox 服务的 Host/Port 注入到 base.Params，供 YAML 中作为环境变量使用
+	if base.Params == nil {
+		base.Params = make(map[string]string)
+	}
+	base.Params["PLUGIN_GITFOX_SERVER_HOST"] = t.config.Host
+	base.Params["PLUGIN_GITFOX_SERVER_PORT"] = fmt.Sprintf("%d", t.config.Port)
+	base.Params["PLUGIN_GITFOX_SERVER_PROTO"] = t.config.Proto
 
 	tigger := string(base.Action)
 	if tigger == "" {
