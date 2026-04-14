@@ -246,7 +246,8 @@ func (s *RuleStore) List(ctx context.Context, filter scanModel.RuleListReqFilter
 
 	// 排序：组合 sort 和 order
 	if filter.Sort != "" && filter.Order != "" {
-		tx = tx.Order("" + string(filter.Sort) + " " + string(filter.Order))
+		sortField := normalizeRuleSortField(string(filter.Sort))
+		tx = tx.Order(fmt.Sprintf("%s %s", sortField, string(filter.Order)))
 	}
 
 	// 分页查询
@@ -286,6 +287,16 @@ func normalizeRuleSortField(sort string) string {
 		return "editedBy"
 	case "editedDate":
 		return "editedDate"
+	case "lang":
+		return "lang"
+	case "plugin":
+		return "plugin"
+	case "type":
+		return "`type`"
+	case "status":
+		return "status"
+	case "desc":
+		return "`desc`"
 	default:
 		return "id"
 	}
