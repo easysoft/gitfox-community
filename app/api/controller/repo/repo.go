@@ -380,12 +380,6 @@ func (c *Controller) Archive(ctx *gin.Context) {
 	var repoID uint
 	var err error
 
-	session, ok := req.GetAuthSession(ctx.Request.Context())
-	if !ok {
-		resp.Unauthorized(ctx, errors.WithI18nKey(nil, i18n.AuthNoSession))
-		return
-	}
-
 	repoID, err = req.PathParamAsPositiveUint(ctx, "id")
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.RepoPathParamError)
@@ -394,7 +388,7 @@ func (c *Controller) Archive(ctx *gin.Context) {
 	}
 
 	// 通过仓库 ID 获取仓库
-	repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), session, repoID)
+	repoOut, err := c.repoSvc.GetByID(ctx.Request.Context(), nil, repoID)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return
