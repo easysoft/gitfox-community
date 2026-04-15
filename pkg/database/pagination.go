@@ -54,7 +54,7 @@ func Paginate[T any](ctx context.Context, db *gorm.DB, param PageParam, dataPtr 
 	if param.Page <= 0 {
 		param.Page = defaultPage
 	}
-	if param.PageSize <= 0 || param.PageSize > maxPageSize {
+	if param.PageSize <= 0 {
 		param.PageSize = defaultPageSize
 	}
 	if param.Sort == "" {
