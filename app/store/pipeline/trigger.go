@@ -30,7 +30,7 @@ func (s *Store) UpdateTrigger(ctx context.Context, trigger *pipelineModel.Trigge
 
 	storeTrigger := mapTriggerToStore(trigger)
 	if err := s.db.WithContext(ctx).Model(&Trigger{}).Where("id = ? AND deleted = 0", trigger.ID).
-		Select("trigger", "cron", "editedBy", "editedDate").Updates(&storeTrigger).Error; err != nil {
+		Select("repoID", "trigger", "cron", "editedBy", "editedDate").Updates(&storeTrigger).Error; err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
 	}
 	return nil
