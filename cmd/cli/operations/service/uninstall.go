@@ -3,11 +3,9 @@ package service
 import (
 	"errors"
 	"fmt"
-	"net/http"
 	"os"
 	"os/exec"
 	"runtime"
-	"time"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	clii18n "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n/cli"
@@ -62,31 +60,10 @@ func runUninstall(_ *kingpin.ParseContext) error {
 
 	// ========== 阶段 4. 反向健康检查 ==========
 	if port != "" {
-		//fmt.Println(fmt.Sprintf(t(i18n.CliStopHealthChecking), port))
-
-		client := http.Client{Timeout: 2 * time.Second}
-		stillUp := false
-		for i := 0; i < 5; i++ {
-			resp, err := client.Get(healthURL)
-			if err != nil {
-				break
-			}
-			if resp != nil {
-				resp.Body.Close()
-			}
-			if i == 4 {
-				stillUp = true
-			}
-			time.Sleep(1 * time.Second)
-		}
-
-		if stillUp {
+		if CheckPortDown(healthURL, 5) {
 			warnStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#FF8C00"))
 			fmt.Println(warnStyle.Render(t(i18n.CliStopHealthStillUp)))
 		}
-		// else {
-		// 	fmt.Println(successStyle.Render("✓ ") + t(i18n.CliStopHealthConfirmed))
-		// }
 	}
 
 	doneStyle := lipgloss.NewStyle()

@@ -78,7 +78,7 @@ func runStatus(_ *kingpin.ParseContext) error {
 	_, port, healthURL := readHealthURL()
 
 	if !registered {
-		fmt.Println(errStyle.Render("") + t(i18n.CliStatusServiceNotRunning))
+		fmt.Println(errStyle.Render(t(i18n.CliStatusServiceNotRunning)))
 	} else if healthURL != "" {
 		// 服务已注册，探测健康接口
 		client := http.Client{Timeout: 3 * time.Second}
@@ -92,11 +92,11 @@ func runStatus(_ *kingpin.ParseContext) error {
 			if resp != nil {
 				resp.Body.Close()
 			}
-			fmt.Println(errStyle.Render("") + t(i18n.CliStatusServiceNotRunning))
+			fmt.Println(errStyle.Render(t(i18n.CliStatusServiceNotRunning)))
 		}
 	} else {
 		// 注册了但没有 env 配置可读取端口
-		fmt.Println(errStyle.Render("") + t(i18n.CliStatusServiceNotRunning))
+		fmt.Println(errStyle.Render(t(i18n.CliStatusServiceNotRunning)))
 	}
 	return nil
 }

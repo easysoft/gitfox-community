@@ -224,15 +224,16 @@ func runStart(_ *kingpin.ParseContext) error {
 			// 用户确认覆盖 → 先 stop 旧服务，再走全新注册
 			_ = StopService()
 		}
-	} else {
-		// 首次注册 → 弹出确认框
-		confirm, confirmErr := confirmPrompt(t(i18n.CliStartConfirmRegister))
-
-		if confirmErr != nil || !confirm {
-			fmt.Println(t(i18n.CliStartConfirmCancel))
-			return nil
-		}
 	}
+	// else {
+	// 	// 首次注册 → 弹出确认框
+	// 	confirm, confirmErr := confirmPrompt(t(i18n.CliStartConfirmRegister))
+
+	// 	if confirmErr != nil || !confirm {
+	// 		fmt.Println(t(i18n.CliStartConfirmCancel))
+	// 		return nil
+	// 	}
+	// }
 
 	// 执行全新注册
 	if err := RegisterService(exePath, workDir); err != nil {

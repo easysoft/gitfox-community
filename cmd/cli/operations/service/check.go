@@ -281,3 +281,21 @@ func parseSsOutput(output, port string) PortStatus {
 	}
 	return result
 }
+
+// CheckPortDown 反向健康检查：在服务停止后确认端口不再响应。
+// 最多轮询 maxRetries 次（每次间隔 1s），若端口始终有响应则返回 true（仍在线）。
+func CheckPortDown(healthURL string, maxRetries int) bool {
+	client := http.Client{Timeout: 2 * time.Second}
+	for i := 0; i < maxRetries; i++ {
+		time.Sleep(1 * time.Second)
+		resp, err := client.Get(healthURL)
+		if err != nil {
+			// 连接被拒绝 = 服务确实已停止
+			return false
+		}
+		if resp != nil {
+			resp.Body.Close()
+		}
+	}
+	return true
+}
