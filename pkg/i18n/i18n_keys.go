@@ -110,8 +110,8 @@ const (
 	BranchTypeUpdateSuccess           I18nKey = "branch_type.update_success"            // 分支类型更新成功.
 
 	// Cli 相关常量
+	CliCheckErrDaemonNotRunning          I18nKey = "cli.check_err_daemon_not_running"          // %s 已安装但服务未运行.
 	CliCheckErrExecFailed                I18nKey = "cli.check_err_exec_failed"                 // 执行 %s 命令失败: %w
-	CliCheckErrDaemonNotRunning          I18nKey = "cli.check_err_daemon_not_running"           // %s 已安装但服务未运行,请先启动服务 (如: systemctl start %s).
 	CliCheckErrNotFound                  I18nKey = "cli.check_err_not_found"                   // 未找到 %s 命令,请确认是否已正确安装并添加到系统环境变量中.
 	CliCheckErrParseFailed               I18nKey = "cli.check_err_parse_failed"                // 无法解析 %s 的版本输出信息: %s
 	CliHooksCommand                      I18nKey = "cli.hooks_command"                         // hooks
@@ -122,15 +122,15 @@ const (
 	CliHooksUpdateNewArg                 I18nKey = "cli.hooks_update_new_arg"                  // 新的提交 SHA
 	CliHooksUpdateOldArg                 I18nKey = "cli.hooks_update_old_arg"                  // 旧的提交 SHA
 	CliHooksUpdateRefArg                 I18nKey = "cli.hooks_update_ref_arg"                  // 要执行钩子的引用
-	CliInitBackupCreated                 I18nKey = "cli.init_backup_created"                   // 已创建备份: %s
+	CliInitBackupCreated                 I18nKey = "cli.init_backup_created"                   // 最新配置文件已生成,历史配置文件已备份至: %s
 	CliInitConfigDb                      I18nKey = "cli.init_config_db"                        // 数据库
-	CliInitConfigDevopsUrl               I18nKey = "cli.init_config_devops_url"                // 禅道 API 接口
+	CliInitConfigDevopsUrl               I18nKey = "cli.init_config_devops_url"                // 禅道接口
 	CliInitConfigFilePath                I18nKey = "cli.init_config_file_path"                 // 配置文件
 	CliInitConfigServerIp                I18nKey = "cli.init_config_server_ip"                 // 服务IP
 	CliInitConfigServerPort              I18nKey = "cli.init_config_server_port"               // 服务端口
-	CliInitConfigSummary                 I18nKey = "cli.init_config_summary"                   // 配置摘要
+	CliInitConfigSummary                 I18nKey = "cli.init_config_summary"                   // GitFox服务配置概览
 	CliInitConfigWorkspace               I18nKey = "cli.init_config_workspace"                 // 工作空间
-	CliInitConfirmInvalidInput           I18nKey = "cli.init_confirm_invalid_input"            // 输入无效，请输入 Y 或 N。
+	CliInitConfirmInvalidInput           I18nKey = "cli.init_confirm_invalid_input"            // 输入无效,请输入 Y 或 N.
 	CliInitConnDbHost                    I18nKey = "cli.init_conn_db_host"                     // 主机
 	CliInitConnDbInfoFooter              I18nKey = "cli.init_conn_db_info_footer"              // --------------------------
 	CliInitConnDbInfoTitle               I18nKey = "cli.init_conn_db_info_title"               // 待连接的数据库信息
@@ -210,19 +210,19 @@ const (
 	CliInstallCmdVersion                 I18nKey = "cli.install_cmd_version"                   // 查看版本
 	CliInstallCommand                    I18nKey = "cli.install_command"                       // install
 	CliInstallDepChecking                I18nKey = "cli.install_dep_checking"                  // 正在进行依赖项检查...
-	CliInstallDepMissing                 I18nKey = "cli.install_dep_missing"                   // 缺少必要依赖，请先安装后重试。
-	CliInstallDescription                I18nKey = "cli.install_description"                   // 安装 GitFox
+	CliInstallDepMissing                 I18nKey = "cli.install_dep_missing"                   // 缺少必要依赖,请先安装后重试.
+	CliInstallDescription                I18nKey = "cli.install_description"                   // 安装gitfox,init,start,status命令的集合
 	CliInstallErrBinNotFound             I18nKey = "cli.install_err_bin_not_found"             // 工作目录中未找到 GitFox 二进制文件: %s
-	CliInstallInitDescription            I18nKey = "cli.install_init_description"              // 初始化 GitFox 配置
-	CliInstallNextSteps                  I18nKey = "cli.install_next_steps"                    // 后续操作指南
-	CliInstallStartDescription           I18nKey = "cli.install_start_description"             // 启动 GitFox 服务
+	CliInstallGitfoxHelp                 I18nKey = "cli.install_gitfox_help"                   // GitFox 帮助
+	CliInstallInitDescription            I18nKey = "cli.install_init_description"              // 初始化配置文件
+	CliInstallNextSteps                  I18nKey = "cli.install_next_steps"                    // GitFox 帮助
+	CliInstallStartDescription           I18nKey = "cli.install_start_description"             // 启动gitfox服务并注册为系统服务
 	CliInstallStartExecFailed            I18nKey = "cli.install_start_exec_failed"             // 执行启动命令失败: %v
 	CliInstallStartFailed                I18nKey = "cli.install_start_failed"                  // 服务启动失败,未通过健康检查.
 	CliInstallStepStart                  I18nKey = "cli.install_step_start"                    // 正在自动启动服务...
 	CliInstallSuccess                    I18nKey = "cli.install_success"                       // GitFox 安装完成,服务已成功启动!
 	CliInstallWelcome                    I18nKey = "cli.install_welcome"                       // GitFox · 一键安装
 	CliInstallWorkspaceHint              I18nKey = "cli.install_workspace_hint"                // 请在以下目录执行命令
-	CliInstallGitfoxHelp                 I18nKey = "cli.install_gitfox_help"                   // ./gitfox help
 	CliServer                            I18nKey = "cli.server"                                // server
 	CliServerDescription                 I18nKey = "cli.server_description"                    // 启动服务器
 	CliServerEnableCiFlag                I18nKey = "cli.server_enable_ci_flag"                 // 启动 CI 运行器以执行构建
@@ -244,7 +244,6 @@ const (
 	CliStartErrEnvIncomplete             I18nKey = "cli.start_err_env_incomplete"              // 配置文件 prod.env 核心参数缺失(如 PORT, HOST, DB 等),文件可能已被...
 	CliStartErrEnvNotFound               I18nKey = "cli.start_err_env_not_found"               // 未在当前目录找到 prod.env 配置文件,请确认是否已执行过 init 初始化或当前处在正...
 	CliStartErrHealthTimeout             I18nKey = "cli.start_err_health_timeout"              // 守护进程注册动作已下发,但后台服务无法通过 15秒 健康心跳检查.服务极其可能在启动瞬间本身发...
-	CliStartErrLaunchctlMissing          I18nKey = "cli.start_err_launchctl_missing"           // 执行失败:系统中未找到 launchctl 工具,无法在此 macOS 环境注册常驻服务.
 	CliStartErrNssmMissing               I18nKey = "cli.start_err_nssm_missing"                // 未找到 nssm 工具,Windows 注册为服务需要 nssm 存在于系统环境变量中.
 	CliStartErrPortConflict              I18nKey = "cli.start_err_port_conflict"               // 端口冲突:端口 %s 已被其他进程占用 (PID: %s / 进程: %s),请先释放该端口后重试.
 	CliStartErrPortConflictUnknown       I18nKey = "cli.start_err_port_conflict_unknown"       // 端口冲突:无法检测端口 %s 的占用状态,请手动确认后重试.
@@ -282,7 +281,6 @@ const (
 	CliStartStepCheckZentao              I18nKey = "cli.start_step_check_zentao"               // 正在探测禅道 API 连通性...
 	CliStartStepHealthCheck              I18nKey = "cli.start_step_health_check"               // 正在等待服务完全启动,健康检查中 (端口: %s)...
 	CliStartStepLinuxService             I18nKey = "cli.start_step_linux_service"              // 正在注册 Linux systemd 守护进程服务...
-	CliStartStepMacService               I18nKey = "cli.start_step_mac_service"                // 正在注册 macOS LaunchAgent 守护进程服务...
 	CliStartStepWindowsService           I18nKey = "cli.start_step_windows_service"            // 正在注册 Windows NSSM 守护进程服务...
 	CliStartStepWindowsStartHttp         I18nKey = "cli.start_step_windows_start_http"         // [Service] 启动 HTTP 服务器
 	CliStartStepWindowsStartSsh          I18nKey = "cli.start_step_windows_start_ssh"          // [Service] 启动 SSH 服务器
@@ -293,7 +291,6 @@ const (
 	CliStartSummaryAddress               I18nKey = "cli.start_summary_address"                 // Gitfox 接口地址
 	CliStartSummaryAppLog                I18nKey = "cli.start_summary_app_log"                 // 应用业务日志
 	CliStartSummaryLogCmd                I18nKey = "cli.start_summary_log_cmd"                 // 追踪系统启动日志
-	CliStartSummaryLogCmdMac             I18nKey = "cli.start_summary_log_cmd_mac"             // 系统 Console (或 logs 目录)
 	CliStartSummaryLogCmdWindows         I18nKey = "cli.start_summary_log_cmd_windows"         // 系统事件查看器 (或 logs 目录)
 	CliStartSummaryManageTitle           I18nKey = "cli.start_summary_manage_title"            // 运维与日常管理指令
 	CliStartSummaryStatusCmd             I18nKey = "cli.start_summary_status_cmd"              // 查看健康状态
@@ -304,25 +301,25 @@ const (
 	CliStatusChecking                    I18nKey = "cli.status_checking"                       // 正在进行依赖项检查...
 	CliStatusComposeMissing              I18nKey = "cli.status_compose_missing"                // Docker Compose 未安装.安装指南: https://docs.docker.co...
 	CliStatusComposeOk                   I18nKey = "cli.status_compose_ok"                     // Docker Compose 已安装 (版本: %s)
-	CliStatusDescription                 I18nKey = "cli.status_description"                    // 检查 GitFox 及其依赖的运行状态
-	CliStatusDockerMissing               I18nKey = "cli.status_docker_missing"                 // Docker 未安装，安装文档: https://docs.docker.com/engine...
-	CliStatusDockerOk                    I18nKey = "cli.status_docker_ok"                      // Docker 已安装 (版本: %s)
-	CliStatusGitMissing                  I18nKey = "cli.status_git_missing"                    // Git 未安装，安装文档: https://git-scm.com/book/en/v2/Ge...
-	CliStatusGitOk                       I18nKey = "cli.status_git_ok"                         // Git 已安装，版本: %s
+	CliStatusDescription                 I18nKey = "cli.status_description"                    // 检查gitfox服务状态以及环境依赖项
+	CliStatusDockerMissing               I18nKey = "cli.status_docker_missing"                 // Docker 未安装,安装文档: https://docs.docker.com/engine...
+	CliStatusDockerOk                    I18nKey = "cli.status_docker_ok"                      // Docker 已安装,版本: %s
+	CliStatusGitMissing                  I18nKey = "cli.status_git_missing"                    // Git 未安装,安装文档: https://git-scm.com/book/en/v2/Ge...
+	CliStatusGitOk                       I18nKey = "cli.status_git_ok"                         // Git 已安装,版本: %s
 	CliStatusPortFree                    I18nKey = "cli.status_port_free"                      // 端口 %s 空闲
 	CliStatusPortInUse                   I18nKey = "cli.status_port_in_use"                    // 端口 %s 被占用 (PID: %s / 进程: %s)
 	CliStatusPortUnknown                 I18nKey = "cli.status_port_unknown"                   // 端口 %s 状态未知
-	CliStatusSectionDeps                 I18nKey = "cli.status_section_deps"                   // 依赖环境检查
+	CliStatusSectionDeps                 I18nKey = "cli.status_section_deps"                   // 环境依赖项检查
 	CliStatusSectionPorts                I18nKey = "cli.status_section_ports"                  // 端口占用检查
 	CliStatusSectionService              I18nKey = "cli.status_section_service"                // GitFox 服务状态
 	CliStatusServiceNotRegistered        I18nKey = "cli.status_service_not_registered"         // GitFox 守护进程未注册为系统服务.
+	CliStatusServiceNotRunning           I18nKey = "cli.status_service_not_running"            // GitFox 服务未启动
 	CliStatusServicePort                 I18nKey = "cli.status_service_port"                   // 监听端口: %s
 	CliStatusServiceRegistered           I18nKey = "cli.status_service_registered"             // GitFox 守护进程已注册但未响应 (端口: %s).
-	CliStatusServiceNotRunning           I18nKey = "cli.status_service_not_running"            // GitFox 服务未启动
 	CliStatusServiceRunning              I18nKey = "cli.status_service_running"                // GitFox 服务正常
 	CliStatusTitle                       I18nKey = "cli.status_title"                          // GitFox 系统状态报告
 	CliStatusWelcome                     I18nKey = "cli.status_welcome"                        // GitFox · 系统状态
-	CliStopDescription                   I18nKey = "cli.stop_description"                      // 停止 GitFox 后台守护进程服务
+	CliStopDescription                   I18nKey = "cli.stop_description"                      // 停止gitfox服务
 	CliStopErrNotRunning                 I18nKey = "cli.stop_err_not_running"                  // GitFox 服务当前未注册或未在运行.
 	CliStopErrWindowsHttpForce           I18nKey = "cli.stop_err_windows_http_force"           // [Service] HTTP 服务器强制关闭
 	CliStopErrWindowsQueryStatus         I18nKey = "cli.stop_err_windows_query_status"         // 查询服务状态失败: %w
@@ -344,7 +341,7 @@ const (
 	CliUninstallConfirmCancel            I18nKey = "cli.uninstall_confirm_cancel"              // 卸载已取消,未做任何更改.
 	CliUninstallConfirmNo                I18nKey = "cli.uninstall_confirm_no"                  // 取消
 	CliUninstallConfirmYes               I18nKey = "cli.uninstall_confirm_yes"                 // 确认卸载
-	CliUninstallDescription              I18nKey = "cli.uninstall_description"                 // 停止并完全从系统中移除 GitFox 守护进程服务
+	CliUninstallDescription              I18nKey = "cli.uninstall_description"                 // 停止gitfox服务并从系统服务中移除
 	CliUninstallFailed                   I18nKey = "cli.uninstall_failed"                      // 卸载服务失败: %v
 	CliUninstallStepDisable              I18nKey = "cli.uninstall_step_disable"                // 正在禁用服务开机自启...
 	CliUninstallStepReload               I18nKey = "cli.uninstall_step_reload"                 // 正在重载系统服务守护进程...
@@ -361,7 +358,7 @@ const (
 	CliVersionServiceStatusNotRegistered I18nKey = "cli.version_service_status_not_registered" // 未注册
 	CliVersionServiceStatusRegistered    I18nKey = "cli.version_service_status_registered"     // 已注册
 	CliVersionVersion                    I18nKey = "cli.version_version"                       // 版本
-	CliVersionWelcome                    I18nKey = "cli.version_welcome"                       // GitFox · 版本信息
+	CliVersionWelcome                    I18nKey = "cli.version_welcome"                       // gitfox版本信息
 
 	// Commit 相关常量
 	CommitActionDecodeError    I18nKey = "commit.action_decode_error"    // 解码提交文件内容时失败.
