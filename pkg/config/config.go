@@ -41,7 +41,8 @@ type WorkSpace struct {
 // ServerConfig HTTP服务配置
 type ServerConfig struct {
 	Port            int           `envconfig:"GITFOX_HTTP_PORT" yaml:"port"`
-	Host            string        `envconfig:"GITFOX_SERVER_HOST" yaml:"host"`
+	Host            string        `yaml:"host"` // 内部监听地址
+	ServerHost		string        `envconfig:"GITFOX_SERVER_HOST"` // 用于生成外部URL
 	Proto           string        `envconfig:"GITFOX_SERVER_PROTO" yaml:"proto" default:"http"`
 	ShutdownTimeout time.Duration `yaml:"shutdownTimeout"` // 优雅关闭超时时间，默认 5s
 }
@@ -92,7 +93,7 @@ type WebhookConfig struct {
 // SSHConfig SSH服务配置
 type SSHConfig struct {
 	Enable      bool   `yaml:"enable"`
-	Host        string `envconfig:"GITFOX_SERVER_HOST" yaml:"host"`
+	Host        string `yaml:"host"`
 	Port        int    `envconfig:"GITFOX_SSH_PORT" yaml:"port"`
 	DefaultUser string `yaml:"defaultUser" default:"git"`
 	HostKeysDir string `envconfig:"GITFOX_SSH_HOST_KEYS_DIR"`

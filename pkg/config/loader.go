@@ -264,6 +264,11 @@ func backfillURLs(config *Config) error {
 
 		// overwrite sshhost with base url host, but keep port as is
 		sshHost = u.Hostname()
+	} else if config.Server.ServerHost != "" {
+		scheme = config.Server.Proto
+		host = config.Server.ServerHost
+		port = fmt.Sprint(config.Server.Port)
+		sshHost = config.Server.ServerHost
 	}
 
 	// backfill external facing URLs
