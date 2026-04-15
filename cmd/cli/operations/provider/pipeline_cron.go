@@ -22,7 +22,6 @@ type cronJobInput struct {
 	PipelineID int64 `json:"pipelineID"`
 }
 
-
 func (h *cronTriggerHandler) Handle(ctx context.Context, input string, _ pkgJobs.ProgressReporter) (string, error) {
 	var in cronJobInput
 	if err := json.Unmarshal([]byte(input), &in); err != nil {
@@ -49,6 +48,7 @@ func (h *cronTriggerHandler) Handle(ctx context.Context, input string, _ pkgJobs
 		Action:  constant.TriggerActionCron,
 		Ref:     gitRef,
 		Trigger: "system",
+		Params:  map[string]string{"gitRef": gitRef},
 	}
 
 	//nolint:gosec // PipelineID is validated > 0 above, safe to convert to uint.
