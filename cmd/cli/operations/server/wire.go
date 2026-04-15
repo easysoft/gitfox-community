@@ -15,6 +15,9 @@ import (
 	scanSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/scan"
 	triggerSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/trigger"
 	userSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/user"
+	repoSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
+	repoStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
+	scanStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/scan"
 	tokenStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/token"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/cmd/cli/operations/provider"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/auth/authn"
@@ -41,9 +44,15 @@ type App struct {
 	EventContext    *provider.EventContext
 	JobScheduler    *jobsSvc.Scheduler
 	Triggerer       triggerer.Triggerer
-	Poller          *poller.Poller
-	ScanRuleSvc     scanSvc.IRule
-	TokenStore      tokenStore.Interface
+	Poller           *poller.Poller
+	ScanRuleSvc      scanSvc.IRule
+	ScanTaskSvc      scanSvc.IScanTask
+	ScanPlanSvc      scanSvc.IScanPlan
+	ScanPlanStore    scanStore.IScanPlan
+	ScanTriggerStore scanStore.IScanTrigger
+	RepoStore        repoStore.Interface
+	RepoService      repoSvc.Interface
+	TokenStore       tokenStore.Interface
 }
 
 func NewApp(mode string) (*App, func(), error) {

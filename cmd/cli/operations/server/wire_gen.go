@@ -294,25 +294,31 @@ func NewApp(mode string) (*App, func(), error) {
 	}
 	poller := provider.ProvideExecutionPoller(runnerRunner, client)
 	app := &App{
-		SystemConfig:    config,
-		SystemLog:       systemLog,
-		APILog:          apiLog,
-		DB:              db,
-		Controller:      routerController,
-		I18nManager:     i18nManager,
-		GithookCtrl:     githookController,
-		SSHServer:       server,
-		UserService:     userService,
-		PipelineService: pipelineService,
-		TriggerService:  triggerService,
-		Authenticator:   authenticator,
-		EventSystem:     system,
-		EventContext:    eventContext,
-		JobScheduler:    jobsScheduler,
-		Triggerer:       triggererTriggerer,
-		Poller:          poller,
-		ScanRuleSvc:     ruleService,
-		TokenStore:      tokenInterface,
+		SystemConfig:     config,
+		SystemLog:        systemLog,
+		APILog:           apiLog,
+		DB:               db,
+		Controller:       routerController,
+		I18nManager:      i18nManager,
+		GithookCtrl:      githookController,
+		SSHServer:        server,
+		UserService:      userService,
+		PipelineService:  pipelineService,
+		TriggerService:   triggerService,
+		Authenticator:    authenticator,
+		EventSystem:      system,
+		EventContext:     eventContext,
+		JobScheduler:     jobsScheduler,
+		Triggerer:        triggererTriggerer,
+		Poller:           poller,
+		ScanRuleSvc:      ruleService,
+		ScanTaskSvc:      scanTaskService,
+		ScanPlanSvc:      scanPlanService,
+		ScanPlanStore:    scanPlanStore,
+		ScanTriggerStore: scanTriggerStore,
+		RepoStore:        store,
+		RepoService:      repoService,
+		TokenStore:       tokenInterface,
 	}
 	return app, func() {
 		cleanup2()
@@ -323,23 +329,29 @@ func NewApp(mode string) (*App, func(), error) {
 // wire.go:
 
 type App struct {
-	SystemConfig    *config.Config
-	SystemLog       *provider.SystemLog
-	APILog          *provider.APILog
-	DB              *gorm.DB
-	Controller      *router.Controller
-	I18nManager     *provider.I18nManager
-	GithookCtrl     *githook.Controller
-	SSHServer       *ssh.Server
-	UserService     user2.Interface
-	PipelineService pipeline2.Interface
-	TriggerService  *trigger.Service
-	Authenticator   authn.Authenticator
-	EventSystem     *events.System
-	EventContext    *provider.EventContext
-	JobScheduler    *jobs2.Scheduler
-	Triggerer       triggerer.Triggerer
-	Poller          *poller.Poller
-	ScanRuleSvc     scan2.IRule
-	TokenStore      token.Interface
+	SystemConfig     *config.Config
+	SystemLog        *provider.SystemLog
+	APILog           *provider.APILog
+	DB               *gorm.DB
+	Controller       *router.Controller
+	I18nManager      *provider.I18nManager
+	GithookCtrl      *githook.Controller
+	SSHServer        *ssh.Server
+	UserService      user2.Interface
+	PipelineService  pipeline2.Interface
+	TriggerService   *trigger.Service
+	Authenticator    authn.Authenticator
+	EventSystem      *events.System
+	EventContext     *provider.EventContext
+	JobScheduler     *jobs2.Scheduler
+	Triggerer        triggerer.Triggerer
+	Poller           *poller.Poller
+	ScanRuleSvc      scan2.IRule
+	ScanTaskSvc      scan2.IScanTask
+	ScanPlanSvc      scan2.IScanPlan
+	ScanPlanStore    scan.IScanPlan
+	ScanTriggerStore scan.IScanTrigger
+	RepoStore        repo.Interface
+	RepoService      repo2.Interface
+	TokenStore       token.Interface
 }

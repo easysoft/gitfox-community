@@ -13,7 +13,7 @@ import (
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/router"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/logger"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/cmd/cli/operations/provider"
+	cronSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/cron"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	clii18n "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n/cli"
 )
@@ -87,9 +87,16 @@ func RunServerWithContext(ctx context.Context, mode string, enableCI bool, onRea
 	}
 
 	// 注册 Pipeline Cron 触发器处理器
-	if err := provider.RegisterPipelineCronHandler(
+	if err := cronSvc.RegisterPipelineHandler(
 		app.JobScheduler, app.Triggerer, app.PipelineService); err != nil {
 		app.SystemLog.Errorw("[Server] Failed to register pipeline cron handler", "error", err)
+		panic(err)
+	}
+
+	// 注册 Scan Cron 触发器处理器
+	if err := cronSvc.RegisterScanHandler(
+		app.JobScheduler, app.ScanTaskSvc, app.ScanPlanSvc, app.ScanTriggerStore, app.RepoService); err != nil {
+		app.SystemLog.Errorw("[Server] Failed to register scan cron handler", "error", err)
 		panic(err)
 	}
 
