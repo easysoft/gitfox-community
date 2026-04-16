@@ -197,6 +197,7 @@ func printInstallSuccess(workspace, binName string) {
 		fmt.Println(warnStyle.Render(t(i18n.CliInitManualMyphpHint)))
 		fmt.Printf("$config->devops->gitfoxURL = 'http://%s';\n", lastInitLocalIP)
 		fmt.Printf("$config->devops->gitfoxPort = %s;\n", lastInitGitfoxPort)
+		fmt.Printf("$config->CSPs[] = 'http://%s:%s';\n", lastInitLocalIP, lastInitGitfoxPort)
 	}
 	fmt.Println()
 
@@ -211,10 +212,10 @@ func printInstallSuccess(workspace, binName string) {
 // printBanner 打印统一风格的欢迎横幅
 func printBanner(text string) {
 	bannerStyle := lipgloss.NewStyle().
-		Bold(true)
-		// Foreground(lipgloss.Color("#FAFAFA")).
-		// Background(lipgloss.Color("#7D56F4")).
-		// Padding(0, 2)
+		Bold(true).
+		Foreground(lipgloss.Color("#FAFAFA")).
+		Background(lipgloss.Color("#7D56F4")).
+		Padding(0, 2)
 
 	fmt.Println(bannerStyle.Render(text))
 	fmt.Println()
