@@ -215,7 +215,7 @@ func (s *ScanTaskService) Retry(ctx context.Context, session *authModel.Session,
 
 	// 构建重试 Hook
 	hook := &triggerer.Hook{
-		Trigger:     fmt.Sprintf("retry-%d", time.Now().Unix()),
+		Trigger:     session.User.Account,
 		TriggeredBy: session.User.ID,
 		Ref:         taskInfo.ExecutionRef,
 		Sender:      session.User.Account,
