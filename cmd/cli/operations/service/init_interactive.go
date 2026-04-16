@@ -226,6 +226,7 @@ func runInit(_ *kingpin.ParseContext) error {
 		fmt.Println(t(i18n.CliInitManualMyphpHint))
 		fmt.Printf("$config->devops->gitfoxURL = 'http://%s';\n", localIP)
 		fmt.Printf("$config->devops->gitfoxPort = %s;\n", gitfoxPort)
+		fmt.Printf("$config->CSPs[] = 'http://%s:%s';\n", localIP, gitfoxPort)
 	}
 
 	// ========== 第八步：打印配置摘要 ==========
@@ -771,6 +772,7 @@ func updateZentaoPHPConfig(myPHPPath string, gitfoxIP string, gitfoxPort int) er
 	content := string(data)
 	gitfoxURLLine := fmt.Sprintf("$config->devops->gitfoxURL = 'http://%s';", gitfoxIP)
 	gitfoxPortLine := fmt.Sprintf("$config->devops->gitfoxPort = %d;", gitfoxPort)
+	cspsLine := fmt.Sprintf("$config->CSPs[] = 'http://%s:%d';", gitfoxIP, gitfoxPort)
 
 	// 使用正则匹配已有的 gitfoxURL 和 gitfoxPort 行
 	urlRegex := regexp.MustCompile(`(?m)^\s*\$config->devops->gitfoxURL\s*=.*$`)
@@ -791,14 +793,22 @@ func updateZentaoPHPConfig(myPHPPath string, gitfoxIP string, gitfoxPort int) er
 		portUpdated = true
 	}
 
+	// 针对 CSPs[]（数组形式）的特别处理
+	// 为防止正则盲目覆盖掉禅道原本就有的其他 CSP 规则（如 $config->CSPs[] = 'http://other-domain.com'）
+	// 这里改为：如果文件内尚未包含这句新的 CSP 规则，则认为未更新，触发下面追加逻辑。
+	cspsUpdated := strings.Contains(content, cspsLine)
+
 	// 如果有未更新的行，追加到文件末尾
-	if !urlUpdated || !portUpdated {
+	if !urlUpdated || !portUpdated || !cspsUpdated {
 		var appendLines []string
 		if !urlUpdated {
 			appendLines = append(appendLines, gitfoxURLLine)
 		}
 		if !portUpdated {
 			appendLines = append(appendLines, gitfoxPortLine)
+		}
+		if !cspsUpdated {
+			appendLines = append(appendLines, cspsLine)
 		}
 		appendContent := "\n" + strings.Join(appendLines, "\n") + "\n"
 
