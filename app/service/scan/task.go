@@ -228,6 +228,7 @@ func (s *ScanTaskService) Retry(ctx context.Context, session *authModel.Session,
 	if taskInfo.Trigger != nil {
 		triggerID = taskInfo.Trigger.ID
 	}
+
 	hook.Params["SCAN_PLAN_ID"] = fmt.Sprintf("%d", taskInfo.PlanID)
 	hook.Params["SCAN_TASK_ID"] = fmt.Sprintf("%d", taskID)
 	hook.Params["SCAN_TRIGGER_ID"] = fmt.Sprintf("%d", triggerID)
@@ -235,6 +236,7 @@ func (s *ScanTaskService) Retry(ctx context.Context, session *authModel.Session,
 	// 注入 git clone 需要的参数
 	hook.Params["gitURL"] = repo.GitURL
 	hook.Params["gitRef"] = hook.Ref
+	hook.Params["PLUGIN_WORKSPACE"] = repo.Identifier // 供流水线中插件使用，表示代码 clone 的目录
 	// 注入 gitfoxscan 调用接口时需要的参数
 	hook.Params["GITFOX_API_ENDPOINT"] = s.config.URL.Base + "/api/v2"
 	hook.Params["PLUGIN_TOKEN"] = s.config.PipelineAuth.Password
