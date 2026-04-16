@@ -29,19 +29,19 @@ type Rule struct {
 }
 
 type RuleReqFilter struct {
-	ID       uint   `json:"id,omitempty" form:"id,omitempty"`
-	Name     string `json:"name,omitempty" form:"name,omitempty"`
-	Plugin   string `json:"plugin,omitempty" form:"plugin,omitempty"`
-	Priority string `json:"priority,omitempty" form:"priority,omitempty"`
-	Lang     string              `json:"lang,omitempty" form:"lang,omitempty"`
-	LangID   constant.ScanLangID `json:"langID,omitempty" form:"langID,omitempty"`
-	Tag      string              `json:"tag,omitempty" form:"tag,omitempty"`
-	Status   string `json:"status,omitempty" form:"status,omitempty"`
-	Type     string `json:"type,omitempty" form:"type,omitempty"`
-	Sort     string `json:"sort" form:"sort" default:"id"`
-	Order    string `json:"order" form:"order" default:"asc"`
-	Page     int    `json:"page" form:"page" default:"1"`
-	Size     int    `json:"size" form:"size" default:"30"`
+	ID       uint                `json:"id,omitempty"`
+	Name     string              `json:"name,omitempty"`
+	Plugin   string              `json:"plugin,omitempty"`
+	Priority string              `json:"priority,omitempty"`
+	Lang     string              `json:"lang,omitempty"`
+	LangID   constant.ScanLangID `json:"langID,omitempty"`
+	Tag      string              `json:"tag,omitempty"`
+	Status   string              `json:"status,omitempty"`
+	Type     string              `json:"type,omitempty"`
+	Sort     string              `json:"sort" default:"id"`
+	Order    string              `json:"order" default:"asc"`
+	Page     int                 `json:"page" default:"1"`
+	Size     int                 `json:"pageSize" default:"30"`
 }
 
 type RuleListReqFilter struct {

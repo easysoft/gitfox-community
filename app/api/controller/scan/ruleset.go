@@ -200,7 +200,7 @@ func (c *ScanController) Delete(ctx *gin.Context) {
 // @Success 200 {object} resp.ListResponse{data=[]scanModel.Rule} "查询成功"
 // @Error 400 {object} resp.ObjectResponse "参数错误"
 // @Error 500 {object} resp.ObjectResponse "服务器内部错误"
-// @Router /scan/rulesets/{id}/rules/bind [get]
+// @Router /scan/rulesets/{id}/rules/bind/list [post]
 func (c *ScanController) GetBindRule(ctx *gin.Context) {
 	ruleSetID, err := req.PathParamAsPositiveUint(ctx, "id")
 	if err != nil {
@@ -210,7 +210,7 @@ func (c *ScanController) GetBindRule(ctx *gin.Context) {
 	}
 
 	var reqQuery scanModel.RuleReqFilter
-	if err := ctx.ShouldBindQuery(&reqQuery); err != nil {
+	if err := ctx.ShouldBindJSON(&reqQuery); err != nil {
 		err = errors.WithI18nKey(err, i18n.RuleQueryParamError)
 		resp.BadRequest(ctx, err)
 		return
@@ -249,7 +249,7 @@ func (c *ScanController) GetBindRule(ctx *gin.Context) {
 // @Success 200 {object} resp.ListResponse{data=[]scanModel.Rule} "查询成功"
 // @Error 400 {object} resp.ObjectResponse "参数错误"
 // @Error 500 {object} resp.ObjectResponse "服务器内部错误"
-// @Router /scan/rulesets/{id}/rules/unbind [get]
+// @Router /scan/rulesets/{id}/rules/unbind/list [post]
 func (c *ScanController) GetUnBindRule(ctx *gin.Context) {
 	ruleSetID, err := req.PathParamAsPositiveUint(ctx, "id")
 	if err != nil {
@@ -259,7 +259,7 @@ func (c *ScanController) GetUnBindRule(ctx *gin.Context) {
 	}
 
 	var reqQuery scanModel.RuleReqFilter
-	if err := ctx.ShouldBindQuery(&reqQuery); err != nil {
+	if err := ctx.ShouldBindJSON(&reqQuery); err != nil {
 		err = errors.WithI18nKey(err, i18n.RuleQueryParamError)
 		resp.BadRequest(ctx, err)
 		return
