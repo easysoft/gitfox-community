@@ -112,7 +112,7 @@ func (t *triggerer) Trigger(
 	if base.Params == nil {
 		base.Params = make(map[string]string)
 	}
-	base.Params["PLUGIN_GITFOX_SERVER_HOST"] = t.config.Host
+	base.Params["PLUGIN_GITFOX_SERVER_HOST"] = t.config.ServerHost
 	base.Params["PLUGIN_GITFOX_SERVER_PORT"] = fmt.Sprintf("%d", t.config.Port)
 	base.Params["PLUGIN_GITFOX_SERVER_PROTO"] = t.config.Proto
 
