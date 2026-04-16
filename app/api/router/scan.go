@@ -32,8 +32,8 @@ func registerScanRoutes(r *gin.RouterGroup, controller *Controller) {
 			ruleSetsWithID.GET("", controller.Scan.Get)
 			ruleSetsWithID.PUT("", controller.Scan.Update)
 			ruleSetsWithID.DELETE("", controller.Scan.Delete)
-			ruleSetsWithID.GET("/rules/bind", controller.Scan.GetBindRule)
-			ruleSetsWithID.GET("/rules/unbind", controller.Scan.GetUnBindRule)
+			ruleSetsWithID.POST("/rules/bind/list", controller.Scan.GetBindRule)
+			ruleSetsWithID.POST("/rules/unbind/list", controller.Scan.GetUnBindRule)
 			ruleSetsWithID.POST("/rules/bind", controller.Scan.BindRule)
 			ruleSetsWithID.POST("/rules/unbind", controller.Scan.UnBindRule)
 		}
