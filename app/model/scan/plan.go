@@ -149,8 +149,8 @@ type ScanPlanReqForUpdate struct {
 type ScanPlanReqFilter struct {
 	Name             string `json:"name"`
 	SpaceID          int64  `json:"space_id,omitempty"`
-	LatestTaskResult string `json:"latest_task_result,omitempty"`
-	LatestTaskStatus string `json:"latest_task_status,omitempty"`
+	LatestTaskResult string `json:"latestTaskResult,omitempty"`
+	LatestTaskStatus string `json:"latestTaskStatus,omitempty"`
 	Sort             string `json:"sort" form:"sort" default:"id"`
 	Order            string `json:"order" form:"order" default:"desc"`
 	Page             int    `json:"page" form:"page" default:"1"`
@@ -179,15 +179,15 @@ type ScanPlan struct {
 	ScanType       string           `json:"scanType"`
 	Branches       *Pattern         `json:"branches,omitempty"`
 	Files          *Pattern         `json:"files,omitempty"`
-	SolutionIDs    []int64           `json:"solutionIDs"`
-	Solutions      []*Solution       `json:"solutions"`
-	SolutionCount  int               `json:"solutionCount"`
-	TriggerIDs     []int64           `json:"triggerIDs"`
-	Triggers       []*ScanTrigger    `json:"triggers"`
-	TriggerCount   int               `json:"triggerCount"`
-	ConditionIDs   []int64           `json:"conditionIDs"`
-	Conditions     []*ScanCondition  `json:"conditions"`
-	ConditionCount int               `json:"conditionCount"`
+	SolutionIDs    []int64          `json:"solutionIDs"`
+	Solutions      []*Solution      `json:"solutions"`
+	SolutionCount  int              `json:"solutionCount"`
+	TriggerIDs     []int64          `json:"triggerIDs"`
+	Triggers       []*ScanTrigger   `json:"triggers"`
+	TriggerCount   int              `json:"triggerCount"`
+	ConditionIDs   []int64          `json:"conditionIDs"`
+	Conditions     []*ScanCondition `json:"conditions"`
+	ConditionCount int              `json:"conditionCount"`
 	CreatedBy      string           `json:"createdBy,omitempty"`
 	CreatedDate    *datetime.Local  `json:"createdDate"`
 	EditedBy       string           `json:"editedBy"`
