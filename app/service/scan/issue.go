@@ -4,13 +4,43 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"regexp"
 	"sort"
+	"strconv"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	scanModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
 	scanStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/scan"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
 )
+
+// typecheckSubErrorRe 匹配 typecheck 消息中的子错误，格式：./path:line:col: message
+var typecheckSubErrorRe = regexp.MustCompile(`\./([^:]+):(\d+):(\d+):\s*([^./][^\n]*)`)
+
+// expandTypecheckIssue 将 golangci-lint typecheck 的捆绑消息拆分为多条独立 issue
+func expandTypecheckIssue(check *scanModel.IssueInputCheck) []*scanModel.IssueInputCheck {
+	if check.Tool != "golangci-lint" || check.RuleKey != "typecheck" {
+		return []*scanModel.IssueInputCheck{check}
+	}
+	matches := typecheckSubErrorRe.FindAllStringSubmatch(check.Message, -1)
+	if len(matches) <= 1 {
+		return []*scanModel.IssueInputCheck{check}
+	}
+	result := make([]*scanModel.IssueInputCheck, 0, len(matches))
+	for _, m := range matches {
+		line, _ := strconv.ParseInt(m[2], 10, 64)
+		col, _ := strconv.ParseInt(m[3], 10, 64)
+		msg := m[4]
+		item := *check
+		item.Message = msg
+		item.Location.Path = m[1]
+		item.Location.Range.StartLine = line
+		item.Location.Range.EndLine = line
+		item.Location.Range.StartByte = col
+		result = append(result, &item)
+	}
+	return result
+}
 
 // AnalyzeTaskUploadReport 分析上传的扫描报告
 func (s *ScanTaskService) AnalyzeTaskUploadReport(
@@ -89,8 +119,14 @@ func (s *ScanTaskService) analyzeCheckIssues(
 		return nil, err
 	}
 
-	var issues []*scanModel.ScanIssue
+	// 展开 golangci-lint typecheck 捆绑消息
+	expanded := make([]*scanModel.IssueInputCheck, 0, len(checks))
 	for _, check := range checks {
+		expanded = append(expanded, expandTypecheckIssue(check)...)
+	}
+
+	var issues []*scanModel.ScanIssue
+	for _, check := range expanded {
 		inIssue := &scanModel.ScanIssue{
 			Message:    check.Message,
 			Path:       check.Location.Path,
@@ -225,7 +261,6 @@ func (s *ScanTaskService) compareIssues(
 		return nil, err
 	}
 
-	var toDeleteIDs []int64
 	var toUpdateIDs []int64
 	var toAddItems []*scanModel.ScanIssue
 	var allIssues []*scanModel.ScanIssue
@@ -246,9 +281,7 @@ func (s *ScanTaskService) compareIssues(
 	}
 
 	for _, item := range existIssues {
-		if _, exist := listBMap[item.Key]; !exist {
-			toDeleteIDs = append(toDeleteIDs, item.ID)
-		} else {
+		if _, exist := listBMap[item.Key]; exist {
 			if item.UpdatedByTaskID >= task.ID {
 				report.Skip++
 				continue
@@ -263,14 +296,12 @@ func (s *ScanTaskService) compareIssues(
 		}
 	}
 
-	report.Resolve = len(toDeleteIDs)
 	report.Update = len(toUpdateIDs)
 	report.Add = len(toAddItems)
 
 	return &scanModel.ScanIssueComparedData{
 		Added:   toAddItems,
 		Updated: toUpdateIDs,
-		Removed: toDeleteIDs,
 		All:     allIssues,
 	}, nil
 }
@@ -281,15 +312,6 @@ func (s *ScanTaskService) saveIssues(ctx context.Context, comp *scanModel.ScanIs
 		pages := paginateIndex(len(comp.Updated), 1000)
 		for _, p := range pages {
 			if err := s.issueStore.UpdateByTaskID(ctx, uint(task.ID), comp.Updated[p[0]:p[1]]); err != nil {
-				return err
-			}
-		}
-	}
-
-	if len(comp.Removed) > 0 {
-		pages := paginateIndex(len(comp.Removed), 1000)
-		for _, p := range pages {
-			if err := s.issueStore.DisappearedByTask(ctx, uint(task.ID), comp.Removed[p[0]:p[1]]); err != nil {
 				return err
 			}
 		}
