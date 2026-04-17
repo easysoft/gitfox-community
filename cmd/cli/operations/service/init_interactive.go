@@ -24,6 +24,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/configs"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	clii18n "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n/cli"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/common"
 )
 
 // t 是 clii18n.T 的简写，用于在代码中简洁地调用翻译函数。
@@ -278,6 +279,8 @@ func runSameMachineFlow(db *dbConfig, workspace *string, zentaoPath *string, def
 	myPHPPath := filepath.Join(*zentaoPath, "my.php")
 	parsed, err := parsePHPConfig(myPHPPath)
 	if err != nil {
+		errStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#FF0000"))
+		fmt.Println(errStyle.Render(fmt.Sprintf("%s: %v", t(i18n.CliInitErrMyphpParse), err)))
 		return fmt.Errorf("%s: %w", t(i18n.CliInitErrMyphpParse), err)
 	}
 	*db = *parsed
@@ -310,7 +313,6 @@ func runSameMachineFlow(db *dbConfig, workspace *string, zentaoPath *string, def
 //  2. 让用户输入禅道服务 IP 和安装目录
 func runDifferentMachineFlow(db *dbConfig, workspace *string, defaultWorkspace string) error {
 	headerStyle := lipgloss.NewStyle().Bold(true)
-	//.Foreground(lipgloss.Color("#7D56F4"))
 
 	var err error
 
@@ -425,15 +427,17 @@ func normalizeZentaoURL(s string) string {
 	return strings.TrimRight(s, "/")
 }
 
-// dbHostValidator 校验数据库主机输入非空即可，连通性由后续测试保证。
+// dbHostValidator 校验数据库主机输入必须是合法 IP 或域名。
 func dbHostValidator(s string) error {
-	if strings.TrimSpace(s) == "" {
+	host := strings.TrimSpace(s)
+	if host == "" {
 		return errors.New(t(i18n.CliInitErrRequired))
+	}
+	if !common.IsDbHost(host) {
+		return errors.New(t(i18n.CliInitErrDbHostFormat))
 	}
 	return nil
 }
-
-// (This line is intentionally left blank since old verify functions are removed)
 
 // parsePHPConfig 解析禅道 my.php 配置文件，提取数据库连接信息。
 //
@@ -460,10 +464,7 @@ func parsePHPConfig(path string) (*dbConfig, error) {
 	}
 	defer file.Close()
 
-	db := &dbConfig{
-		Host: "127.0.0.1",
-		Port: "3306",
-	}
+	db := &dbConfig{}
 
 	// 定义正则模式：匹配 $config->db->字段名 = '值'; 格式的行
 	patterns := map[string]*string{
@@ -499,9 +500,13 @@ func parsePHPConfig(path string) (*dbConfig, error) {
 		return nil, err
 	}
 
-	// 校验必要字段：数据库名和用户名不能为空
-	if db.Name == "" || db.User == "" {
+	// 校验必要字段不能为空（Host 由下方 IsDbHost 统一校验，含空值判断）
+	// 如果 my.php 中使用了 getenv() 等动态变量，正则无法匹配，这些字段会为空
+	if db.Port == "" || db.Name == "" || db.User == "" {
 		return nil, errors.New(t(i18n.CliInitErrMyphpMissingFields))
+	}
+	if !common.IsDbHost(db.Host) {
+		return nil, errors.New(t(i18n.CliInitErrDbHostFormat))
 	}
 
 	return db, nil
