@@ -500,9 +500,9 @@ func parsePHPConfig(path string) (*dbConfig, error) {
 		return nil, err
 	}
 
-	// 校验必要字段：主机、端口、数据库名和用户名不能为空
+	// 校验必要字段不能为空（Host 由下方 IsDbHost 统一校验，含空值判断）
 	// 如果 my.php 中使用了 getenv() 等动态变量，正则无法匹配，这些字段会为空
-	if db.Host == "" || db.Port == "" || db.Name == "" || db.User == "" {
+	if db.Port == "" || db.Name == "" || db.User == "" {
 		return nil, errors.New(t(i18n.CliInitErrMyphpMissingFields))
 	}
 	if !common.IsDbHost(db.Host) {
