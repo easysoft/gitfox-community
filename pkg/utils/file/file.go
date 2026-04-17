@@ -2,6 +2,7 @@ package file
 
 import (
 	"context"
+	"crypto/tls"
 	"io"
 	"net/http"
 	"os"
@@ -66,7 +67,12 @@ func DownloadFile(ctx context.Context, path string, url string) error {
 		return errors.Newf("could not create HTTP request: %v", err)
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	client := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, //nolint:gosec
+		},
+	}
+	resp, err := client.Do(req)
 	if err != nil {
 		return err
 	}
