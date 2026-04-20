@@ -75,6 +75,7 @@ type issueJoin struct {
 	CreatedByTaskID int64                         `gorm:"column:createdByTaskID"`
 	UpdatedByTaskID int64                         `gorm:"column:updatedByTaskID"`
 	PlanID          int64                         `gorm:"column:planID"`
+	PlanName        string                        `gorm:"column:planName"`
 	CreatedDate     *datetime.Local               `gorm:"column:createdDate"`
 }
 
@@ -99,6 +100,7 @@ func mapIssueJoinToModel(in *issueJoin) *scanModel.ScanIssueInfo {
 		CreatedByTaskID: in.CreatedByTaskID,
 		UpdatedByTaskID: in.UpdatedByTaskID,
 		PlanID:          in.PlanID,
+		PlanName:        in.PlanName,
 		CreatedDate:     in.CreatedDate,
 	}
 }

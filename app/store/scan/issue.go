@@ -2,6 +2,7 @@ package scan
 
 import (
 	"context"
+	"strings"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	scanModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
@@ -46,9 +47,10 @@ func (s *ScanIssueStore) Get(ctx context.Context, id uint) (*scanModel.ScanIssue
 		Select("i.id, i.issueKey, i.ruleID, r.name AS ruleName, r.ruleKey AS ruleKey, "+
 			"r.priority AS rulePriority, r.type AS ruleType, "+
 			"i.message, i.path, i.line, i.repoID, i.repoBranch, "+
-			"i.status, i.scanMethod, i.resolution, i.payload, i.createdByTaskID, i.updatedByTaskID, t.planID, i.createdDate").
+			"i.status, i.scanMethod, i.resolution, i.payload, i.createdByTaskID, i.updatedByTaskID, t.planID, p.name AS planName, i.createdDate").
 		Joins("INNER JOIN ops_scan_rules AS r ON i.ruleID = r.id").
 		Joins("LEFT JOIN ops_scan_tasks AS t ON i.updatedByTaskID = t.id").
+		Joins("LEFT JOIN ops_scan_plans AS p ON t.planID = p.id").
 		Where("i.id = ? AND i.deleted = ?", id, false).
 		First(&item).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
@@ -63,9 +65,10 @@ func (s *ScanIssueStore) List(ctx context.Context, filter scanModel.ScanIssueReq
 		Select("i.id, i.issueKey, i.ruleID, r.name AS ruleName, r.ruleKey AS ruleKey, "+
 			"r.priority AS rulePriority, r.type AS ruleType, "+
 			"i.message, i.path, i.line, i.repoID, i.repoBranch, "+
-			"i.status, i.scanMethod, i.resolution, i.payload, i.createdByTaskID, i.updatedByTaskID, t.planID, i.createdDate").
+			"i.status, i.scanMethod, i.resolution, i.payload, i.createdByTaskID, i.updatedByTaskID, t.planID, p.name AS planName, i.createdDate").
 		Joins("INNER JOIN ops_scan_rules AS r ON i.ruleID = r.id").
 		Joins("LEFT JOIN ops_scan_tasks AS t ON i.updatedByTaskID = t.id").
+		Joins("LEFT JOIN ops_scan_plans AS p ON t.planID = p.id").
 		Where("i.deleted = ?", false)
 
 	if filter.ID != 0 {
@@ -93,13 +96,16 @@ func (s *ScanIssueStore) List(ctx context.Context, filter scanModel.ScanIssueReq
 		stmt = stmt.Where("i.message LIKE ?", "%"+filter.Message+"%")
 	}
 	if filter.RulePriority != "" {
-		stmt = stmt.Where("r.priority = ?", filter.RulePriority)
+		stmt = stmt.Where("r.priority IN ?", strings.Split(filter.RulePriority, ","))
 	}
 	if filter.RuleType != "" {
 		stmt = stmt.Where("r.type = ?", filter.RuleType)
 	}
 	if filter.Tool != "" {
 		stmt = stmt.Where("r.plugin = ?", filter.Tool)
+	}
+	if filter.PlanID != 0 {
+		stmt = stmt.Where("t.planID = ?", filter.PlanID)
 	}
 	if filter.CreateDate != "" {
 		stmt = stmt.Where("DATE(i.createdDate) = ?", filter.CreateDate[:10])

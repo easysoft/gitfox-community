@@ -248,6 +248,11 @@ definitions:
     - name
     - priority
     - createdDate
+    - lang
+    - plugin
+    - type
+    - status
+    - desc
     - ""
     type: string
     x-enum-varnames:
@@ -255,6 +260,11 @@ definitions:
     - ScanRuleSortName
     - ScanRuleSortPriority
     - ScanRuleSortCreatedDate
+    - ScanRuleSortLang
+    - ScanRuleSortPlugin
+    - ScanRuleSortType
+    - ScanRuleSortStatus
+    - ScanRuleSortDesc
     - scanRuleSortNone
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleStatus:
     enum:
@@ -1634,8 +1644,10 @@ definitions:
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.RuleSetReqForUpdate:
     properties:
       desc:
+        description: 不带 omitempty：允许前端传空字符串清空描述
         type: string
       descEn:
+        description: 不带 omitempty：允许前端传空字符串清空英文描述
         type: string
       lang:
         type: string
@@ -1752,6 +1764,10 @@ definitions:
         items:
           type: integer
         type: array
+      planID:
+        type: integer
+      planName:
+        type: string
       repoBranch:
         type: string
       repoID:
@@ -1796,7 +1812,13 @@ definitions:
     properties:
       branch:
         type: string
+      createDate:
+        type: string
       file:
+        type: string
+      id:
+        type: integer
+      message:
         type: string
       page:
         default: 1
@@ -1804,14 +1826,22 @@ definitions:
       pageSize:
         default: 20
         type: integer
+      planID:
+        type: integer
       repoID:
         type: integer
       ruleID:
         type: integer
+      rulePriority:
+        type: string
+      ruleType:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleType'
       scanMethod:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanMethod'
       status:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanIssueStatus'
+      tool:
+        type: string
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanIssueUpdateStatusReq:
     properties:
@@ -1939,9 +1969,9 @@ definitions:
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanPlanReqFilter:
     properties:
-      latest_task_result:
+      latestTaskResult:
         type: string
-      latest_task_status:
+      latestTaskStatus:
         type: string
       name:
         type: string
@@ -2278,7 +2308,7 @@ definitions:
     enum:
     - cron
     - manual
-    - event
+    - action
     type: string
     x-enum-varnames:
     - ScanTriggerTypeCron
@@ -2380,8 +2410,10 @@ definitions:
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.SolutionReqForUpdate:
     properties:
       desc:
+        description: 不带 omitempty：允许前端传空字符串清空描述
         type: string
       descEn:
+        description: 不带 omitempty：允许前端传空字符串清空英文描述
         type: string
       name:
         type: string
@@ -7126,7 +7158,34 @@ paths:
       tags:
       - scan
   /scan/rulesets/{id}/rules/bind:
-    get:
+    post:
+      consumes:
+      - application/json
+      description: 将指定的规则绑定到规则集
+      parameters:
+      - description: 规则集ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 绑定规则请求参数
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.RuleSetReqForBind'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 绑定成功
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 绑定规则到规则集
+      tags:
+      - scan
+  /scan/rulesets/{id}/rules/bind/list:
+    post:
       consumes:
       - application/json
       description: 根据规则集ID查询已绑定的规则列表，支持分页
@@ -7163,17 +7222,18 @@ paths:
       summary: 获取规则集已绑定的规则列表
       tags:
       - scan
+  /scan/rulesets/{id}/rules/unbind:
     post:
       consumes:
       - application/json
-      description: 将指定的规则绑定到规则集
+      description: 将指定的规则从规则集中解绑
       parameters:
       - description: 规则集ID
         in: path
         name: id
         required: true
         type: integer
-      - description: 绑定规则请求参数
+      - description: 解绑规则请求参数
         in: body
         name: body
         required: true
@@ -7183,14 +7243,14 @@ paths:
       - application/json
       responses:
         "200":
-          description: 绑定成功
+          description: 解绑成功
           schema:
             $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
-      summary: 绑定规则到规则集
+      summary: 解绑规则与规则集
       tags:
       - scan
-  /scan/rulesets/{id}/rules/unbind:
-    get:
+  /scan/rulesets/{id}/rules/unbind/list:
+    post:
       consumes:
       - application/json
       description: 根据规则集ID查询未绑定的规则列表，支持分页
@@ -7225,32 +7285,6 @@ paths:
                   type: array
               type: object
       summary: 获取规则集未绑定的规则列表
-      tags:
-      - scan
-    post:
-      consumes:
-      - application/json
-      description: 将指定的规则从规则集中解绑
-      parameters:
-      - description: 规则集ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: 解绑规则请求参数
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.RuleSetReqForBind'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 解绑成功
-          schema:
-            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
-      summary: 解绑规则与规则集
       tags:
       - scan
   /scan/rulesets/list:
