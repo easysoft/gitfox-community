@@ -238,12 +238,13 @@ type ScanIssueReqFilter struct {
 	File         string                    `json:"file,omitempty" form:"file"`
 	Message      string                    `json:"message,omitempty" form:"message"`
 	RuleID       int64                     `json:"ruleID,omitempty" form:"ruleID"`
-	RulePriority constant.ScanRulePriority `json:"rulePriority,omitempty" form:"rulePriority"`
+	RulePriority string                    `json:"rulePriority,omitempty" form:"rulePriority"`
 	RuleType     constant.ScanRuleType     `json:"ruleType,omitempty" form:"ruleType"`
 	Tool         string                    `json:"tool,omitempty" form:"tool"`
 	Status       constant.ScanIssueStatus  `json:"status,omitempty" form:"status"`
 	ScanMethod   constant.ScanMethod       `json:"scanMethod,omitempty" form:"scanMethod"`
 	CreateDate   string                    `json:"createDate,omitempty" form:"createDate"`
+	PlanID       int64                     `json:"planID,omitempty" form:"planID"`
 	Page         int                       `json:"page" form:"page" default:"1"`
 	PageSize     int                       `json:"pageSize" form:"pageSize" default:"20"`
 }
@@ -281,5 +282,6 @@ type ScanIssueInfo struct {
 	CreatedByTaskID int64                         `json:"createdByTaskID"`
 	UpdatedByTaskID int64                         `json:"updatedByTaskID"`
 	PlanID          int64                         `json:"planID"`
+	PlanName        string                        `json:"planName"`
 	CreatedDate     *datetime.Local               `json:"createdDate"`
 }

@@ -6929,7 +6929,48 @@ const docTemplate = `{
             }
         },
         "/scan/rulesets/{id}/rules/bind": {
-            "get": {
+            "post": {
+                "description": "将指定的规则绑定到规则集",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scan"
+                ],
+                "summary": "绑定规则到规则集",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "规则集ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "绑定规则请求参数",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.RuleSetReqForBind"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "绑定成功",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/scan/rulesets/{id}/rules/bind/list": {
+            "post": {
                 "description": "根据规则集ID查询已绑定的规则列表，支持分页",
                 "consumes": [
                     "application/json"
@@ -6987,9 +7028,11 @@ const docTemplate = `{
                         }
                     }
                 }
-            },
+            }
+        },
+        "/scan/rulesets/{id}/rules/unbind": {
             "post": {
-                "description": "将指定的规则绑定到规则集",
+                "description": "将指定的规则从规则集中解绑",
                 "consumes": [
                     "application/json"
                 ],
@@ -6999,7 +7042,7 @@ const docTemplate = `{
                 "tags": [
                     "scan"
                 ],
-                "summary": "绑定规则到规则集",
+                "summary": "解绑规则与规则集",
                 "parameters": [
                     {
                         "type": "integer",
@@ -7009,7 +7052,7 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "description": "绑定规则请求参数",
+                        "description": "解绑规则请求参数",
                         "name": "body",
                         "in": "body",
                         "required": true,
@@ -7020,7 +7063,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "绑定成功",
+                        "description": "解绑成功",
                         "schema": {
                             "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
                         }
@@ -7028,8 +7071,8 @@ const docTemplate = `{
                 }
             }
         },
-        "/scan/rulesets/{id}/rules/unbind": {
-            "get": {
+        "/scan/rulesets/{id}/rules/unbind/list": {
+            "post": {
                 "description": "根据规则集ID查询未绑定的规则列表，支持分页",
                 "consumes": [
                     "application/json"
@@ -7084,45 +7127,6 @@ const docTemplate = `{
                                     }
                                 }
                             ]
-                        }
-                    }
-                }
-            },
-            "post": {
-                "description": "将指定的规则从规则集中解绑",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "scan"
-                ],
-                "summary": "解绑规则与规则集",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "规则集ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "解绑规则请求参数",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.RuleSetReqForBind"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "解绑成功",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
                         }
                     }
                 }
@@ -9236,6 +9240,11 @@ const docTemplate = `{
                 "name",
                 "priority",
                 "createdDate",
+                "lang",
+                "plugin",
+                "type",
+                "status",
+                "desc",
                 ""
             ],
             "x-enum-varnames": [
@@ -9243,6 +9252,11 @@ const docTemplate = `{
                 "ScanRuleSortName",
                 "ScanRuleSortPriority",
                 "ScanRuleSortCreatedDate",
+                "ScanRuleSortLang",
+                "ScanRuleSortPlugin",
+                "ScanRuleSortType",
+                "ScanRuleSortStatus",
+                "ScanRuleSortDesc",
                 "scanRuleSortNone"
             ]
         },
@@ -11253,9 +11267,11 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "desc": {
+                    "description": "不带 omitempty：允许前端传空字符串清空描述",
                     "type": "string"
                 },
                 "descEn": {
+                    "description": "不带 omitempty：允许前端传空字符串清空英文描述",
                     "type": "string"
                 },
                 "lang": {
@@ -11434,6 +11450,12 @@ const docTemplate = `{
                         "type": "integer"
                     }
                 },
+                "planID": {
+                    "type": "integer"
+                },
+                "planName": {
+                    "type": "string"
+                },
                 "repoBranch": {
                     "type": "string"
                 },
@@ -11501,7 +11523,16 @@ const docTemplate = `{
                 "branch": {
                     "type": "string"
                 },
+                "createDate": {
+                    "type": "string"
+                },
                 "file": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "message": {
                     "type": "string"
                 },
                 "page": {
@@ -11512,17 +11543,29 @@ const docTemplate = `{
                     "type": "integer",
                     "default": 20
                 },
+                "planID": {
+                    "type": "integer"
+                },
                 "repoID": {
                     "type": "integer"
                 },
                 "ruleID": {
                     "type": "integer"
                 },
+                "rulePriority": {
+                    "type": "string"
+                },
+                "ruleType": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleType"
+                },
                 "scanMethod": {
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanMethod"
                 },
                 "status": {
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanIssueStatus"
+                },
+                "tool": {
+                    "type": "string"
                 }
             }
         },
@@ -11718,10 +11761,10 @@ const docTemplate = `{
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanPlanReqFilter": {
             "type": "object",
             "properties": {
-                "latest_task_result": {
+                "latestTaskResult": {
                     "type": "string"
                 },
-                "latest_task_status": {
+                "latestTaskStatus": {
                     "type": "string"
                 },
                 "name": {
@@ -12226,7 +12269,7 @@ const docTemplate = `{
             "enum": [
                 "cron",
                 "manual",
-                "event"
+                "action"
             ],
             "x-enum-varnames": [
                 "ScanTriggerTypeCron",
@@ -12377,9 +12420,11 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "desc": {
+                    "description": "不带 omitempty：允许前端传空字符串清空描述",
                     "type": "string"
                 },
                 "descEn": {
+                    "description": "不带 omitempty：允许前端传空字符串清空英文描述",
                     "type": "string"
                 },
                 "name": {
