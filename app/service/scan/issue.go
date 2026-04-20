@@ -337,6 +337,7 @@ func (s *ScanTaskService) saveIssues(ctx context.Context, comp *scanModel.ScanIs
 				UpdatedByTaskID: item.UpdatedByTaskID,
 				Status:          item.Status,
 				ScanMethod:      item.ScanMethod,
+				Resolution:      item.Resolution,
 				Payload:         item.Payload,
 			})
 		}

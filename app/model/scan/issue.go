@@ -13,18 +13,19 @@ import (
 
 // ScanIssue 扫描问题内部模型
 type ScanIssue struct {
-	Key             string                   `json:"key"`
-	RuleID          int64                    `json:"ruleID"`
-	Message         string                   `json:"message"`
-	Path            string                   `json:"path"`
-	Line            int64                    `json:"line"`
-	RepoID          int64                    `json:"repoID"`
-	RepoBranch      string                   `json:"repoBranch"`
-	CreatedByTaskID int64                    `json:"createdByTaskID"`
-	UpdatedByTaskID int64                    `json:"updatedByTaskID"`
-	Status          constant.ScanIssueStatus `json:"status"`
-	ScanMethod      constant.ScanMethod      `json:"scanMethod"`
-	Payload         json.RawMessage          `json:"payload"`
+	Key             string                        `json:"key"`
+	RuleID          int64                         `json:"ruleID"`
+	Message         string                        `json:"message"`
+	Path            string                        `json:"path"`
+	Line            int64                         `json:"line"`
+	RepoID          int64                         `json:"repoID"`
+	RepoBranch      string                        `json:"repoBranch"`
+	CreatedByTaskID int64                         `json:"createdByTaskID"`
+	UpdatedByTaskID int64                         `json:"updatedByTaskID"`
+	Status          constant.ScanIssueStatus      `json:"status"`
+	ScanMethod      constant.ScanMethod           `json:"scanMethod"`
+	Resolution      *constant.ScanIssueResolution `json:"resolution"`
+	Payload         json.RawMessage               `json:"payload"`
 }
 
 // SetPayload 设置扩展数据
@@ -231,14 +232,20 @@ type ScanTaskIssueReqFilter struct {
 
 // ScanIssueReqFilter 任务问题列表查询过滤条件
 type ScanIssueReqFilter struct {
-	RepoID     int64                    `json:"repoID,omitempty" form:"repoID"`
-	Branch     string                   `json:"branch,omitempty" form:"branch"`
-	File       string                   `json:"file,omitempty" form:"file"`
-	RuleID     int64                    `json:"ruleID,omitempty" form:"ruleID"`
-	Status     constant.ScanIssueStatus `json:"status,omitempty" form:"status"`
-	ScanMethod constant.ScanMethod      `json:"scanMethod,omitempty" form:"scanMethod"`
-	Page       int                      `json:"page" form:"page" default:"1"`
-	PageSize   int                      `json:"pageSize" form:"pageSize" default:"20"`
+	ID           int64                     `json:"id,omitempty" form:"id"`
+	RepoID       int64                     `json:"repoID,omitempty" form:"repoID"`
+	Branch       string                    `json:"branch,omitempty" form:"branch"`
+	File         string                    `json:"file,omitempty" form:"file"`
+	Message      string                    `json:"message,omitempty" form:"message"`
+	RuleID       int64                     `json:"ruleID,omitempty" form:"ruleID"`
+	RulePriority constant.ScanRulePriority `json:"rulePriority,omitempty" form:"rulePriority"`
+	RuleType     constant.ScanRuleType     `json:"ruleType,omitempty" form:"ruleType"`
+	Tool         string                    `json:"tool,omitempty" form:"tool"`
+	Status       constant.ScanIssueStatus  `json:"status,omitempty" form:"status"`
+	ScanMethod   constant.ScanMethod       `json:"scanMethod,omitempty" form:"scanMethod"`
+	CreateDate   string                    `json:"createDate,omitempty" form:"createDate"`
+	Page         int                       `json:"page" form:"page" default:"1"`
+	PageSize     int                       `json:"pageSize" form:"pageSize" default:"20"`
 }
 
 // ScanIssueIDsReqFilter 任务问题列表ID过滤条件
@@ -273,5 +280,6 @@ type ScanIssueInfo struct {
 	Payload         json.RawMessage               `json:"payload"`
 	CreatedByTaskID int64                         `json:"createdByTaskID"`
 	UpdatedByTaskID int64                         `json:"updatedByTaskID"`
+	PlanID          int64                         `json:"planID"`
 	CreatedDate     *datetime.Local               `json:"createdDate"`
 }
