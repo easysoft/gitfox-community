@@ -284,6 +284,9 @@ func (s *ScanIssueStore) ListByTaskID(ctx context.Context, taskID uint, filter s
 		Joins("INNER JOIN ops_scan_rules AS r ON i.ruleID = r.id").
 		Where("bind.taskID = ? AND i.deleted = ?", taskID, false)
 
+	if filter.ID != 0 {
+		stmt = stmt.Where("i.id = ?", filter.ID)
+	}
 	if filter.RuleID != 0 {
 		stmt = stmt.Where("i.ruleID = ?", filter.RuleID)
 	}
@@ -292,6 +295,24 @@ func (s *ScanIssueStore) ListByTaskID(ctx context.Context, taskID uint, filter s
 	}
 	if filter.ScanMethod != "" {
 		stmt = stmt.Where("i.scanMethod = ?", filter.ScanMethod)
+	}
+	if filter.File != "" {
+		stmt = stmt.Where("i.path = ?", filter.File)
+	}
+	if filter.Message != "" {
+		stmt = stmt.Where("i.message LIKE ?", "%"+filter.Message+"%")
+	}
+	if filter.RulePriority != "" {
+		stmt = stmt.Where("r.priority IN ?", strings.Split(filter.RulePriority, ","))
+	}
+	if filter.RuleType != "" {
+		stmt = stmt.Where("r.type = ?", filter.RuleType)
+	}
+	if filter.Tool != "" {
+		stmt = stmt.Where("r.plugin = ?", filter.Tool)
+	}
+	if filter.CreateDate != "" {
+		stmt = stmt.Where("DATE(i.createdDate) = ?", filter.CreateDate[:10])
 	}
 	if filter.DetectionStatus == "new" {
 		stmt = stmt.Where("i.createdByTaskID = ?", taskID)
