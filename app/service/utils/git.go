@@ -10,7 +10,9 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/branch"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/commit"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/url"
 )
 
@@ -65,7 +67,16 @@ func CreateRPCInternalWriteParams(
 	session *auth.Session,
 	repo *repo.Repo,
 ) (git.WriteParams, error) {
-	return createRPCWriteParams(ctx, urlProvider, session, repo, true)
+	if session.User.Email == "" {
+		err := errors.WithI18nKey(nil, i18n.RepoEmailRequired)
+		return git.WriteParams{}, err
+	}
+	params, err := createRPCWriteParams(ctx, urlProvider, session, repo, true)
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.GitCreateExecParamError)
+		return git.WriteParams{}, err
+	}
+	return params, nil
 }
 
 func MapBranch(b git.Branch) (branch.Branch, error) {
