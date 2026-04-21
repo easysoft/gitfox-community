@@ -219,6 +219,13 @@ type ScanTaskUploadReportReq struct {
 
 // ScanTaskIssueReqFilter 任务问题列表查询过滤条件
 type ScanTaskIssueReqFilter struct {
+	ID              int64                    `json:"id,omitempty" form:"id"`
+	Message         string                   `json:"message,omitempty" form:"message"`
+	File            string                   `json:"file,omitempty" form:"file"`
+	RuleType        constant.ScanRuleType    `json:"ruleType,omitempty" form:"ruleType"`
+	Tool            string                   `json:"tool,omitempty" form:"tool"`
+	RulePriority    string                   `json:"rulePriority,omitempty" form:"rulePriority"`
+	CreateDate      string                   `json:"createDate,omitempty" form:"createDate"`
 	TaskID          int64                    `json:"taskID" form:"taskID"`
 	RepoID          int64                    `json:"repoID,omitempty" form:"repoID"`
 	Branch          string                   `json:"branch,omitempty" form:"branch"`
@@ -232,21 +239,21 @@ type ScanTaskIssueReqFilter struct {
 
 // ScanIssueReqFilter 任务问题列表查询过滤条件
 type ScanIssueReqFilter struct {
-	ID           int64                     `json:"id,omitempty" form:"id"`
-	RepoID       int64                     `json:"repoID,omitempty" form:"repoID"`
-	Branch       string                    `json:"branch,omitempty" form:"branch"`
-	File         string                    `json:"file,omitempty" form:"file"`
-	Message      string                    `json:"message,omitempty" form:"message"`
-	RuleID       int64                     `json:"ruleID,omitempty" form:"ruleID"`
-	RulePriority string                    `json:"rulePriority,omitempty" form:"rulePriority"`
-	RuleType     constant.ScanRuleType     `json:"ruleType,omitempty" form:"ruleType"`
-	Tool         string                    `json:"tool,omitempty" form:"tool"`
-	Status       constant.ScanIssueStatus  `json:"status,omitempty" form:"status"`
-	ScanMethod   constant.ScanMethod       `json:"scanMethod,omitempty" form:"scanMethod"`
-	CreateDate   string                    `json:"createDate,omitempty" form:"createDate"`
-	PlanID       int64                     `json:"planID,omitempty" form:"planID"`
-	Page         int                       `json:"page" form:"page" default:"1"`
-	PageSize     int                       `json:"pageSize" form:"pageSize" default:"20"`
+	ID           int64                    `json:"id,omitempty" form:"id"`
+	RepoID       int64                    `json:"repoID,omitempty" form:"repoID"`
+	Branch       string                   `json:"branch,omitempty" form:"branch"`
+	File         string                   `json:"file,omitempty" form:"file"`
+	Message      string                   `json:"message,omitempty" form:"message"`
+	RuleID       int64                    `json:"ruleID,omitempty" form:"ruleID"`
+	RulePriority string                   `json:"rulePriority,omitempty" form:"rulePriority"`
+	RuleType     constant.ScanRuleType    `json:"ruleType,omitempty" form:"ruleType"`
+	Tool         string                   `json:"tool,omitempty" form:"tool"`
+	Status       constant.ScanIssueStatus `json:"status,omitempty" form:"status"`
+	ScanMethod   constant.ScanMethod      `json:"scanMethod,omitempty" form:"scanMethod"`
+	CreateDate   string                   `json:"createDate,omitempty" form:"createDate"`
+	PlanID       int64                    `json:"planID,omitempty" form:"planID"`
+	Page         int                      `json:"page" form:"page" default:"1"`
+	PageSize     int                      `json:"pageSize" form:"pageSize" default:"20"`
 }
 
 // ScanIssueIDsReqFilter 任务问题列表ID过滤条件
