@@ -794,4 +794,20 @@ const (
 	TriggerTypeRequiredError       I18nKey = "trigger.type_required_error"        // 触发器类型不能为空.
 	TriggerUpdateError             I18nKey = "trigger.update_error"               // 触发器更新失败.
 	TriggerUpdateSuccess           I18nKey = "trigger.update_success"             // 触发器更新成功.
+
+	// Webhook 相关常量
+	WebhookBodyParamError  I18nKey = "webhook.body_param_error"  // Body 参数解析失败.
+	WebhookCreateError     I18nKey = "webhook.create_error"      // webhook 创建失败.
+	WebhookCreateSuccess   I18nKey = "webhook.create_success"    // webhook 创建成功.
+	WebhookDeleteError     I18nKey = "webhook.delete_error"      // webhook 删除失败.
+	WebhookDeleteSuccess   I18nKey = "webhook.delete_success"    // webhook 删除成功.
+	WebhookDuplicateName   I18nKey = "webhook.duplicate_name"    // 同名 webhook 已存在.
+	WebhookListError       I18nKey = "webhook.list_error"        // 查询 webhook 列表失败.
+	WebhookListSuccess     I18nKey = "webhook.list_success"      // 查询 webhook 列表成功.
+	WebhookNotFound        I18nKey = "webhook.not_found"         // webhook 不存在.
+	WebhookPathParamError  I18nKey = "webhook.path_param_error"  // Path 参数解析失败.
+	WebhookQueryParamError I18nKey = "webhook.query_param_error" // Query 参数解析失败.
+	WebhookQuerySuccess    I18nKey = "webhook.query_success"     // webhook 详情查询成功.
+	WebhookUpdateError     I18nKey = "webhook.update_error"      // webhook 更新失败.
+	WebhookUpdateSuccess   I18nKey = "webhook.update_success"    // webhook 更新成功.
 )

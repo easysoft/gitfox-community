@@ -15,6 +15,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/space"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/tag"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/user"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/webhook"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/router"
 )
 
@@ -36,6 +37,7 @@ func NewControllers(
 	gitController *git.GitController,
 	scanController *scan.ScanController,
 	fitController *fit.Controller,
+	webhookController *webhook.Controller,
 ) *router.Controller {
 	return &router.Controller{
 		Space:     spaceController,
@@ -50,5 +52,6 @@ func NewControllers(
 		Execution: executionController,
 		Runner:    runnerController,
 		Fit:       fitController,
+		Webhook:   webhookController,
 	}
 }

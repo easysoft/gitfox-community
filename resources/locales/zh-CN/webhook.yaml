@@ -1,0 +1,16 @@
+# webhook 相关翻译
+webhook:
+  path_param_error: "Path 参数解析失败。"
+  query_param_error: "Query 参数解析失败。"
+  body_param_error: "Body 参数解析失败。"
+  create_success: "webhook 创建成功。"
+  create_error: "webhook 创建失败。"
+  list_error: "查询 webhook 列表失败。"
+  list_success: "查询 webhook 列表成功。"
+  delete_success: "webhook 删除成功。"
+  delete_error: "webhook 删除失败。"
+  duplicate_name: "同名 webhook 已存在。"
+  not_found: "webhook 不存在。"
+  update_success: "webhook 更新成功。"
+  update_error: "webhook 更新失败。"
+  query_success: "webhook 详情查询成功。"

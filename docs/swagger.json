@@ -3739,6 +3739,344 @@
                 }
             }
         },
+        "/repos/{id}/webhooks": {
+            "get": {
+                "description": "分页查询仓库下的webhook列表",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "webhooks"
+                ],
+                "summary": "查询webhook列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "仓库 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "name": "pageSize",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "sort",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "查询成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_webhook.Webhook"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "新增一个webhook",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "webhooks"
+                ],
+                "summary": "创建webhook",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "仓库 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "创建webhook请求参数",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_webhook.ReqForCreate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "创建成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_webhook.Webhook"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误（如名称重复）",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/repos/{id}/webhooks/{webhookID}": {
+            "get": {
+                "description": "根据 webhook ID 查询详情",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "webhooks"
+                ],
+                "summary": "查询webhook详情",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "仓库 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "webhook ID",
+                        "name": "webhookID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "查询成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_webhook.Webhook"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "webhook不存在",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "更新webhook的基本信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "webhooks"
+                ],
+                "summary": "更新 webhook",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "仓库 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "webhook ID",
+                        "name": "webhookID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "更新webhook请求参数",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_webhook.ReqForUpdate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "更新成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_webhook.Webhook"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "webhook不存在",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "根据 webhook ID 软删除",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "webhooks"
+                ],
+                "summary": "删除webhook",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "仓库 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "webhook ID",
+                        "name": "webhookID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "删除成功",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "webhook不存在",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/repos/{repoId}/blame/{filePath}": {
             "get": {
                 "description": "根据传入的仓库 ID、文件路径、Git 引用、行号范围等信息，获取仓库代码blame信息",
@@ -9372,6 +9710,85 @@
                 "TriggerActionCron"
             ]
         },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.WebhookAuthMethod": {
+            "type": "string",
+            "enum": [
+                "",
+                "signature",
+                "token"
+            ],
+            "x-enum-varnames": [
+                "WebhookAuthMethodNone",
+                "WebhookAuthMethodSignature",
+                "WebhookAuthMethodToken"
+            ]
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.WebhookExecutionResult": {
+            "type": "string",
+            "enum": [
+                "success",
+                "retriable_error",
+                "fatal_error"
+            ],
+            "x-enum-varnames": [
+                "WebhookExecutionResultSuccess",
+                "WebhookExecutionResultRetriableError",
+                "WebhookExecutionResultFatalError"
+            ]
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.WebhookTrigger": {
+            "type": "string",
+            "enum": [
+                "branch_created",
+                "branch_updated",
+                "branch_deleted",
+                "tag_created",
+                "tag_updated",
+                "tag_deleted",
+                "pullreq_created",
+                "pullreq_reopened",
+                "pullreq_branch_updated",
+                "pullreq_closed",
+                "pullreq_comment_created",
+                "pullreq_comment_updated",
+                "pullreq_comment_status_updated",
+                "pullreq_merged",
+                "pullreq_updated",
+                "pullreq_label_assigned",
+                "pullreq_reviewer_created",
+                "pullreq_required_checks_passed",
+                "pullreq_reviewer_deleted",
+                "pullreq_review_submitted",
+                "artifact_created",
+                "artifact_updated",
+                "artifact_deleted"
+            ],
+            "x-enum-varnames": [
+                "WebhookTriggerBranchCreated",
+                "WebhookTriggerBranchUpdated",
+                "WebhookTriggerBranchDeleted",
+                "WebhookTriggerTagCreated",
+                "WebhookTriggerTagUpdated",
+                "WebhookTriggerTagDeleted",
+                "WebhookTriggerPullReqCreated",
+                "WebhookTriggerPullReqReopened",
+                "WebhookTriggerPullReqBranchUpdated",
+                "WebhookTriggerPullReqClosed",
+                "WebhookTriggerPullReqCommentCreated",
+                "WebhookTriggerPullReqCommentUpdated",
+                "WebhookTriggerPullReqCommentStatusUpdated",
+                "WebhookTriggerPullReqMerged",
+                "WebhookTriggerPullReqUpdated",
+                "WebhookTriggerPullReqLabelAssigned",
+                "WebhookTriggerPullReqReviewerCreated",
+                "WebhookTriggerPullReqRequiredChecksPassed",
+                "WebhookTriggerPullReqReviewerDeleted",
+                "WebhookTriggerPullReqReviewSubmitted",
+                "WebhookTriggerArtifactCreated",
+                "WebhookTriggerArtifactUpdated",
+                "WebhookTriggerArtifactDeleted"
+            ]
+        },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_auth.Session": {
             "type": "object",
             "properties": {
@@ -12881,6 +13298,132 @@
                 },
                 "is_admin": {
                     "type": "boolean"
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_webhook.ReqForCreate": {
+            "type": "object",
+            "properties": {
+                "authHeader": {
+                    "type": "string"
+                },
+                "authMethod": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.WebhookAuthMethod"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "displayName": {
+                    "type": "string"
+                },
+                "enabled": {
+                    "type": "boolean"
+                },
+                "insecure": {
+                    "type": "boolean"
+                },
+                "secret": {
+                    "type": "string"
+                },
+                "triggers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.WebhookTrigger"
+                    }
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_webhook.ReqForUpdate": {
+            "type": "object",
+            "properties": {
+                "authHeader": {
+                    "type": "string"
+                },
+                "authMethod": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.WebhookAuthMethod"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "displayName": {
+                    "type": "string"
+                },
+                "enabled": {
+                    "type": "boolean"
+                },
+                "insecure": {
+                    "type": "boolean"
+                },
+                "secret": {
+                    "type": "string"
+                },
+                "triggers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.WebhookTrigger"
+                    }
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_webhook.Webhook": {
+            "type": "object",
+            "properties": {
+                "authHeader": {
+                    "type": "string"
+                },
+                "authMethod": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.WebhookAuthMethod"
+                },
+                "createdBy": {
+                    "type": "string"
+                },
+                "createdDate": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "displayName": {
+                    "type": "string"
+                },
+                "enabled": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "insecure": {
+                    "type": "boolean"
+                },
+                "latestExecutionResult": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.WebhookExecutionResult"
+                },
+                "parentID": {
+                    "type": "integer"
+                },
+                "parentType": {
+                    "type": "string"
+                },
+                "triggers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.WebhookTrigger"
+                    }
+                },
+                "updatedBy": {
+                    "type": "string"
+                },
+                "updatedDate": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
                 }
             }
         },

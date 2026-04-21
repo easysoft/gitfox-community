@@ -62,6 +62,7 @@ func NewRouter(mode string, logger *logger.SugaredMateLogger, controller *Contro
 	registerPipelineRoutes(authGroup, controller) // 流水线相关路由
 	registerRunnerRoutes(authGroup, controller)   // Runner 管理相关路由
 	registerUserRoutes(authGroup, controller)     // 用户相关路由
+	registerWebhookRoutes(authGroup, controller)  // Webhook 相关路由
 
 	// 创建需要 Basic 认证的路由组（用于 Git 操作）
 	basicAuthGroup := r.Group("")

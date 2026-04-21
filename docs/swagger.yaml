@@ -361,6 +361,76 @@ definitions:
     - TriggerActionPullReqClosed
     - TriggerActionPullReqMerged
     - TriggerActionCron
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.WebhookAuthMethod:
+    enum:
+    - ""
+    - signature
+    - token
+    type: string
+    x-enum-varnames:
+    - WebhookAuthMethodNone
+    - WebhookAuthMethodSignature
+    - WebhookAuthMethodToken
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.WebhookExecutionResult:
+    enum:
+    - success
+    - retriable_error
+    - fatal_error
+    type: string
+    x-enum-varnames:
+    - WebhookExecutionResultSuccess
+    - WebhookExecutionResultRetriableError
+    - WebhookExecutionResultFatalError
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.WebhookTrigger:
+    enum:
+    - branch_created
+    - branch_updated
+    - branch_deleted
+    - tag_created
+    - tag_updated
+    - tag_deleted
+    - pullreq_created
+    - pullreq_reopened
+    - pullreq_branch_updated
+    - pullreq_closed
+    - pullreq_comment_created
+    - pullreq_comment_updated
+    - pullreq_comment_status_updated
+    - pullreq_merged
+    - pullreq_updated
+    - pullreq_label_assigned
+    - pullreq_reviewer_created
+    - pullreq_required_checks_passed
+    - pullreq_reviewer_deleted
+    - pullreq_review_submitted
+    - artifact_created
+    - artifact_updated
+    - artifact_deleted
+    type: string
+    x-enum-varnames:
+    - WebhookTriggerBranchCreated
+    - WebhookTriggerBranchUpdated
+    - WebhookTriggerBranchDeleted
+    - WebhookTriggerTagCreated
+    - WebhookTriggerTagUpdated
+    - WebhookTriggerTagDeleted
+    - WebhookTriggerPullReqCreated
+    - WebhookTriggerPullReqReopened
+    - WebhookTriggerPullReqBranchUpdated
+    - WebhookTriggerPullReqClosed
+    - WebhookTriggerPullReqCommentCreated
+    - WebhookTriggerPullReqCommentUpdated
+    - WebhookTriggerPullReqCommentStatusUpdated
+    - WebhookTriggerPullReqMerged
+    - WebhookTriggerPullReqUpdated
+    - WebhookTriggerPullReqLabelAssigned
+    - WebhookTriggerPullReqReviewerCreated
+    - WebhookTriggerPullReqRequiredChecksPassed
+    - WebhookTriggerPullReqReviewerDeleted
+    - WebhookTriggerPullReqReviewSubmitted
+    - WebhookTriggerArtifactCreated
+    - WebhookTriggerArtifactUpdated
+    - WebhookTriggerArtifactDeleted
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_auth.Session:
     properties:
       principal:
@@ -2726,6 +2796,89 @@ definitions:
         type: integer
       is_admin:
         type: boolean
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_webhook.ReqForCreate:
+    properties:
+      authHeader:
+        type: string
+      authMethod:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.WebhookAuthMethod'
+      description:
+        type: string
+      displayName:
+        type: string
+      enabled:
+        type: boolean
+      insecure:
+        type: boolean
+      secret:
+        type: string
+      triggers:
+        items:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.WebhookTrigger'
+        type: array
+      url:
+        type: string
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_webhook.ReqForUpdate:
+    properties:
+      authHeader:
+        type: string
+      authMethod:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.WebhookAuthMethod'
+      description:
+        type: string
+      displayName:
+        type: string
+      enabled:
+        type: boolean
+      insecure:
+        type: boolean
+      secret:
+        type: string
+      triggers:
+        items:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.WebhookTrigger'
+        type: array
+      url:
+        type: string
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_webhook.Webhook:
+    properties:
+      authHeader:
+        type: string
+      authMethod:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.WebhookAuthMethod'
+      createdBy:
+        type: string
+      createdDate:
+        type: string
+      description:
+        type: string
+      displayName:
+        type: string
+      enabled:
+        type: boolean
+      id:
+        type: integer
+      insecure:
+        type: boolean
+      latestExecutionResult:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.WebhookExecutionResult'
+      parentID:
+        type: integer
+      parentType:
+        type: string
+      triggers:
+        items:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.WebhookTrigger'
+        type: array
+      updatedBy:
+        type: string
+      updatedDate:
+        type: string
+      url:
+        type: string
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_service_utils.BranchPermissionResult:
     properties:
@@ -5202,6 +5355,219 @@ paths:
       summary: 查询标签列表
       tags:
       - tags
+  /repos/{id}/webhooks:
+    get:
+      consumes:
+      - application/json
+      description: 分页查询仓库下的webhook列表
+      parameters:
+      - description: 仓库 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - in: query
+        name: order
+        type: string
+      - default: 1
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        in: query
+        name: pageSize
+        type: integer
+      - in: query
+        name: sort
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 查询成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_webhook.Webhook'
+                  type: array
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse'
+      summary: 查询webhook列表
+      tags:
+      - webhooks
+    post:
+      consumes:
+      - application/json
+      description: 新增一个webhook
+      parameters:
+      - description: 仓库 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 创建webhook请求参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_webhook.ReqForCreate'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 创建成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_webhook.Webhook'
+              type: object
+        "400":
+          description: 参数错误（如名称重复）
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 创建webhook
+      tags:
+      - webhooks
+  /repos/{id}/webhooks/{webhookID}:
+    delete:
+      description: 根据 webhook ID 软删除
+      parameters:
+      - description: 仓库 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: webhook ID
+        in: path
+        name: webhookID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 删除成功
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "404":
+          description: webhook不存在
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 删除webhook
+      tags:
+      - webhooks
+    get:
+      description: 根据 webhook ID 查询详情
+      parameters:
+      - description: 仓库 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: webhook ID
+        in: path
+        name: webhookID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 查询成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_webhook.Webhook'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "404":
+          description: webhook不存在
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 查询webhook详情
+      tags:
+      - webhooks
+    put:
+      consumes:
+      - application/json
+      description: 更新webhook的基本信息
+      parameters:
+      - description: 仓库 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: webhook ID
+        in: path
+        name: webhookID
+        required: true
+        type: integer
+      - description: 更新webhook请求参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_webhook.ReqForUpdate'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_webhook.Webhook'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "404":
+          description: webhook不存在
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 更新 webhook
+      tags:
+      - webhooks
   /repos/{repoId}/blame/{filePath}:
     get:
       consumes:

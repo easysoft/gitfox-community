@@ -14,6 +14,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/tag"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/test"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/user"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/webhook"
 )
 
 // Controller 聚合所有的 HTTP 处理器
@@ -23,6 +24,7 @@ type Controller struct {
 	Tag       *tag.Controller
 	Branch    *branch.Controller
 	Space     *space.SpaceController
+	Webhook   *webhook.Controller
 	Git       *git.GitController
 	Repo      *repo.Controller
 	Scan      *scan.ScanController
