@@ -68,7 +68,6 @@ func (s *Service) Create(
 	// Create internal write params. Note: This will skip the pre-commit protection rules check.
 	writeParams, err := utils.CreateRPCInternalWriteParams(ctx, s.urlProvider, session, repo)
 	if err != nil {
-		err = errors.WithI18nKey(err, i18n.GitCreateExecParamError)
 		return nil, err
 	}
 	now := time.Now()

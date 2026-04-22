@@ -202,7 +202,7 @@ func (s *Service) Delete(
 	// 准备 RPC 参数
 	writeParams, err := utils.CreateRPCInternalWriteParams(ctx, s.urlProvider, session, repo)
 	if err != nil {
-		return errors.WithI18nKey(err, i18n.GitCreateExecParamError)
+		return err
 	}
 
 	// 获取分支信息以取得 SHA
