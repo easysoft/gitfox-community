@@ -28,4 +28,5 @@ repo:
   description_too_long: "代码库描述过长，不能超过200字符"
   license_error: "读取 license 异常"
   gitignore_invalid: "读取 .gitignore 异常"
-  email_required: "用户邮箱为空，请在个人中心维护用户邮箱后再进行 Git 相关操作"
+  email_required: "用户邮箱为空，请在个人中心维护用户邮箱后再进行代码库相关操作"
+  username_required: "用户名为空，请在个人中心维护用户名后再进行代码库相关操作"

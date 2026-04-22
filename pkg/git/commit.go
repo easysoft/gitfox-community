@@ -22,13 +22,14 @@ import (
 	"os"
 	"time"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/commit"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/api"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/command"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/enum"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/parser"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/sha"
-	"github.com/easysoft/gitfox/errors"
-	"github.com/easysoft/gitfox/types"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 )
 
 func CommitMessage(subject, body string) string {
@@ -69,11 +70,11 @@ type Identity struct {
 
 func (i *Identity) Validate() error {
 	if i.Name == "" {
-		return errors.InvalidArgument("identity name is mandatory")
+		return errors.WithI18nKey(nil, i18n.RepoUsernameRequired)
 	}
 
 	if i.Email == "" {
-		return errors.InvalidArgument("identity email is mandatory")
+		return errors.WithI18nKey(nil, i18n.RepoEmailRequired)
 	}
 
 	return nil
@@ -390,7 +391,7 @@ type CountCommitsParams struct {
 }
 
 type CountCommitsOutput struct {
-	CommitStats []types.CommitCount
+	CommitStats []commit.CommitCount
 	Total       int
 	AuthorCount map[string]int
 }
@@ -428,9 +429,9 @@ func (s *Service) CountCommits(ctx context.Context, params *CountCommitsParams) 
 }
 
 type CountCommitsShortstatOutput struct {
-	CommitStats []types.CommitCount
+	CommitStats []commit.CommitCount
 	Total       int
-	AuthorCount map[string]types.CommitCountData
+	AuthorCount map[string]commit.CommitCountData
 }
 
 func (s *Service) CountCommitsWithShortstat(ctx context.Context, params *CountCommitsParams) (*CountCommitsShortstatOutput, error) {
@@ -453,7 +454,7 @@ func (s *Service) CountCommitsWithShortstat(ctx context.Context, params *CountCo
 	}
 	countCommitsOutput := &CountCommitsShortstatOutput{
 		CommitStats: commitsStat,
-		AuthorCount: make(map[string]types.CommitCountData),
+		AuthorCount: make(map[string]commit.CommitCountData),
 	}
 
 	total := 0

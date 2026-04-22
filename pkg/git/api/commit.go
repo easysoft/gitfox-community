@@ -26,13 +26,12 @@ import (
 	"strings"
 	"time"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/commit"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/command"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/enum"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/sha"
-	"github.com/easysoft/gitfox/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/common"
-	"github.com/easysoft/gitfox/types"
-
 	"github.com/golang-module/carbon/v2"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/sync/errgroup"
@@ -205,7 +204,7 @@ func (g *Git) listCommitSHAs(
 	err := cmd.Run(ctx, command.WithDir(repoPath), command.WithStdout(output))
 	if cErr := command.AsError(err); cErr != nil {
 		if cErr.IsExitCode(128) && cErr.IsAmbiguousArgErr() {
-			return nil, errors.NotFound("reference %q is ambiguous", ref)
+			return nil, errors.NotFound.Newf("reference %s is ambiguous", ref)
 		}
 		return nil, processGitErrorf(err, "failed to trigger rev-list command")
 	}
@@ -582,7 +581,7 @@ func (g *Git) GetFullCommitID(
 	if err != nil {
 		cmdErr := command.AsError(err)
 		if cmdErr != nil && cmdErr.IsExitCode(128) {
-			return sha.None, errors.NotFound("commit not found %s", shortID)
+			return sha.None, errors.NotFound.Newf("commit not found %s", shortID)
 		}
 		return sha.None, err
 	}
@@ -735,7 +734,7 @@ func getCommit(
 	err := cmd.Run(ctx, command.WithDir(repoPath), command.WithStdout(output))
 	if err != nil {
 		if strings.Contains(err.Error(), "ambiguous argument") {
-			return nil, errors.NotFound("revision %q not found", rev)
+			return nil, errors.NotFound.Newf("revision %s not found", rev)
 		}
 		return nil, fmt.Errorf("failed to run git to get commit data: %w", err)
 	}
@@ -743,7 +742,7 @@ func getCommit(
 	commitLine := output.String()
 
 	if commitLine == "" {
-		return nil, errors.InvalidArgument("path %q not found in %s", path, rev)
+		return nil, errors.NotFound.Newf("path %q not found in %s", path, rev)
 	}
 
 	const columnCount = 10
@@ -823,7 +822,7 @@ func getCommitFromBatchReader(
 
 	switch output.Type {
 	case "missing":
-		return nil, errors.NotFound("sha '%s' not found", output.SHA)
+		return nil, errors.NotFound.Newf("sha '%s' not found", output.SHA)
 	case "tag":
 		// then we need to parse the tag
 		// and load the commit
@@ -861,7 +860,7 @@ func getCommitFromBatchReader(
 		if err != nil {
 			return nil, fmt.Errorf("reader Discard failed: %w", err)
 		}
-		return nil, errors.NotFound("rev '%s' not found", rev)
+		return nil, errors.NotFound.Newf("rev '%s' not found", rev)
 	}
 }
 
@@ -971,7 +970,7 @@ func (g *Git) CountCommits(
 	repoPath string,
 	ref string,
 	filter CountCommitFilter,
-) ([]types.CommitCount, error) {
+) ([]commit.CommitCount, error) {
 	if repoPath == "" {
 		return nil, ErrRepositoryPathEmpty
 	}
@@ -1021,10 +1020,10 @@ func (g *Git) CountCommits(
 		}
 		commitStatsMap[date][author]++
 	}
-	var commitStats []types.CommitCount
+	var commitStats []commit.CommitCount
 	for date, authorsMap := range commitStatsMap {
 		for author, count := range authorsMap {
-			commitStats = append(commitStats, types.CommitCount{Date: date, Author: author, CommitCountData: types.CommitCountData{Commits: count}})
+			commitStats = append(commitStats, commit.CommitCount{Date: date, Author: author, CommitCountData: commit.CommitCountData{Commits: count}})
 		}
 	}
 	sort.Slice(commitStats, func(i, j int) bool {

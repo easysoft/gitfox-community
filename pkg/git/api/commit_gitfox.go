@@ -23,10 +23,9 @@ import (
 	"strconv"
 	"strings"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/commit"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/command"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/common"
-	"github.com/easysoft/gitfox/types"
-
 	"github.com/golang-module/carbon/v2"
 )
 
@@ -36,7 +35,7 @@ func (g *Git) CountCommitsWithShortstat(
 	repoPath string,
 	ref string,
 	filter CountCommitFilter,
-) ([]types.CommitCount, error) {
+) ([]commit.CommitCount, error) {
 	if repoPath == "" {
 		return nil, ErrRepositoryPathEmpty
 	}
@@ -69,7 +68,7 @@ func (g *Git) CountCommitsWithShortstat(
 		return nil, fmt.Errorf("failed to run git to count commit data: %w", err)
 	}
 	scanner := bufio.NewScanner(output)
-	commitStatsMap := make(map[string]map[string]types.CommitCount)
+	commitStatsMap := make(map[string]map[string]commit.CommitCount)
 	var currentAuthor, currentDate string
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
@@ -84,14 +83,14 @@ func (g *Git) CountCommitsWithShortstat(
 				continue
 			}
 			if _, exists := commitStatsMap[currentDate]; !exists {
-				commitStatsMap[currentDate] = make(map[string]types.CommitCount)
+				commitStatsMap[currentDate] = make(map[string]commit.CommitCount)
 			}
 			commitStat, exists := commitStatsMap[currentDate][currentAuthor]
 			if !exists {
-				commitStat = types.CommitCount{
+				commitStat = commit.CommitCount{
 					Date:   currentDate,
 					Author: currentAuthor,
-					CommitCountData: types.CommitCountData{
+					CommitCountData: commit.CommitCountData{
 						Commits: 0,
 					},
 				}
@@ -118,13 +117,13 @@ func (g *Git) CountCommitsWithShortstat(
 	if err := scanner.Err(); err != nil {
 		return nil, fmt.Errorf("error scanning git output: %w", err)
 	}
-	var commitStats []types.CommitCount
+	var commitStats []commit.CommitCount
 	for date, authorsMap := range commitStatsMap {
 		for author, count := range authorsMap {
-			commitStats = append(commitStats, types.CommitCount{
+			commitStats = append(commitStats, commit.CommitCount{
 				Date:   date,
 				Author: author,
-				CommitCountData: types.CommitCountData{
+				CommitCountData: commit.CommitCountData{
 					Commits:   count.Commits,
 					Additions: count.Additions,
 					Deletions: count.Deletions,
@@ -143,8 +142,8 @@ func (g *Git) CountCommitsWithShortstat(
 }
 
 // parseCommitStats parses the commit stats and returns the commit count data.
-func parseCommitStats(stats string) types.CommitCountData {
-	var result types.CommitCountData
+func parseCommitStats(stats string) commit.CommitCountData {
+	var result commit.CommitCountData
 	result.Commits = 1
 	fields := strings.Split(stats, ",")
 	for _, field := range fields[1:] {

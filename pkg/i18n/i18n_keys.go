@@ -148,7 +148,7 @@ const (
 	CliInitDbPortPlaceholder             I18nKey = "cli.init_db_port_placeholder"              // 3306
 	CliInitDbUser                        I18nKey = "cli.init_db_user"                          // 数据库用户
 	CliInitDbUserPlaceholder             I18nKey = "cli.init_db_user_placeholder"              // root
-	CliInitErrAbsPath                    I18nKey = "cli.init_err_abs_path"                     // 必须是绝对路径 (例如: Linux/Mac: /data/gitfox, Win: D:\g...
+	CliInitErrAbsPath                    I18nKey = "cli.init_err_abs_path"                     // 必须是绝对路径 (例如: Linux: /data/gitfox, Win: D:\gitfox)
 	CliInitErrCopyBin                    I18nKey = "cli.init_err_copy_bin"                     // 复制二进制文件失败: %w
 	CliInitErrCreateDestBin              I18nKey = "cli.init_err_create_dest_bin"              // 创建目标二进制文件失败: %w
 	CliInitErrDbConn                     I18nKey = "cli.init_err_db_conn"                      // 数据库连接失败: %v
@@ -585,7 +585,7 @@ const (
 	RepoDeleteError                    I18nKey = "repo.delete_error"                      // 删除仓库失败.
 	RepoDeleteSuccess                  I18nKey = "repo.delete_success"                    // 仓库删除成功.
 	RepoDescriptionTooLong             I18nKey = "repo.description_too_long"              // 代码库描述过长,不能超过200字符
-	RepoEmailRequired                  I18nKey = "repo.email_required"                    // 用户邮箱为空,请在个人中心维护用户邮箱后再进行代码库创建
+	RepoEmailRequired                  I18nKey = "repo.email_required"                    // 用户邮箱为空,请在个人中心维护用户邮箱后再进行代码库相关操作
 	RepoGetContentError                I18nKey = "repo.get_content_error"                 // 获取仓库内容失败.
 	RepoGetContentPermissionError      I18nKey = "repo.get_content_permission_error"      // 您没有权限获取此仓库的内容.
 	RepoGetContentSuccess              I18nKey = "repo.get_content_success"               // 获取仓库内容成功.
@@ -607,6 +607,7 @@ const (
 	RepoQuerySuccess                   I18nKey = "repo.query_success"                     // 查询仓库成功
 	RepoSpaceNotFound                  I18nKey = "repo.space_not_found"                   // 所属空间不存在
 	RepoUpdateSuccess                  I18nKey = "repo.update_success"                    // 更新仓库成功
+	RepoUsernameRequired               I18nKey = "repo.username_required"                 // 用户名为空,请在个人中心维护用户名后再进行代码库相关操作
 
 	// Request 相关常量
 	RequestInvalidBooleanParameter         I18nKey = "request.invalid_boolean_parameter"          // 参数必须为布尔值.

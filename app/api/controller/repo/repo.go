@@ -69,6 +69,11 @@ func (ctl *Controller) Create(c *gin.Context) {
 		return
 	}
 
+	if session.User.Email == "" {
+		resp.BadRequest(c, errors.WithI18nKey(nil, i18n.RepoEmailRequired))
+		return
+	}
+
 	data, err := ctl.repoSvc.Create(c.Request.Context(), session, reqData)
 	if err != nil {
 		i18nKey := errors.GetI18nKey(err)
