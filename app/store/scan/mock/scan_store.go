@@ -1378,6 +1378,34 @@ func (mr *MockIScanIssueMockRecorder) UpdateStatus(ctx, ids, status any) *gomock
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockIScanIssue)(nil).UpdateStatus), ctx, ids, status)
 }
 
+// UpdateTimestamps mocks base method.
+func (m *MockIScanIssue) UpdateTimestamps(ctx context.Context, in scan.ScanIssueUpdateStatusReq) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateTimestamps", ctx, in)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateTimestamps indicates an expected call of UpdateTimestamps.
+func (mr *MockIScanIssueMockRecorder) UpdateTimestamps(ctx, in any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateTimestamps", reflect.TypeOf((*MockIScanIssue)(nil).UpdateTimestamps), ctx, in)
+}
+
+// ResetExpiredIgnore mocks base method.
+func (m *MockIScanIssue) ResetExpiredIgnore(ctx context.Context, ids []int64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ResetExpiredIgnore", ctx, ids)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ResetExpiredIgnore indicates an expected call of ResetExpiredIgnore.
+func (mr *MockIScanIssueMockRecorder) ResetExpiredIgnore(ctx, ids any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ResetExpiredIgnore", reflect.TypeOf((*MockIScanIssue)(nil).ResetExpiredIgnore), ctx, ids)
+}
+
 // MockIScanTask is a mock of IScanTask interface.
 type MockIScanTask struct {
 	ctrl     *gomock.Controller

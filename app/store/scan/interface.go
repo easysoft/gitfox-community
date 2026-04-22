@@ -120,6 +120,8 @@ type IScanIssue interface {
 	ListByIDs(ctx context.Context, ids []int64) ([]*scanModel.ScanIssueInfo, error)
 	UpdateStatus(ctx context.Context, ids []int64, status constant.ScanIssueStatus) error
 	UpdateResolution(ctx context.Context, ids []int64, resolution *constant.ScanIssueResolution) error
+	UpdateTimestamps(ctx context.Context, in scanModel.ScanIssueUpdateStatusReq) error
+	ResetExpiredIgnore(ctx context.Context, ids []int64) error
 	ListKeysByTask(ctx context.Context, repoID int64, branch string, taskID uint, method constant.ScanMethod) ([]*scanModel.ScanIssueKey, error)
 	UpdateByTaskID(ctx context.Context, taskID uint, issueIDs []int64) error
 	DisappearedByTask(ctx context.Context, taskID uint, issueIDs []int64) error

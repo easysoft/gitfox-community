@@ -48,6 +48,7 @@ type ScanIssueKey struct {
 	CreatedByTaskID int64                    `json:"createdByTaskID"`
 	UpdatedByTaskID int64                    `json:"updatedByTaskID"`
 	Status          constant.ScanIssueStatus `json:"status"`
+	Ignored         *int64                   `json:"ignored"`
 }
 
 // ScanIssueReport 扫描报告统计
@@ -233,6 +234,8 @@ type ScanTaskIssueReqFilter struct {
 	Status          constant.ScanIssueStatus `json:"status,omitempty" form:"status"`
 	ScanMethod      constant.ScanMethod      `json:"scanMethod,omitempty" form:"scanMethod"`
 	DetectionStatus string                   `json:"detectionStatus,omitempty" form:"detectionStatus"`
+	Sort            string                   `json:"sort,omitempty" form:"sort" default:"id"`
+	Order           string                   `json:"order,omitempty" form:"order" default:"desc"`
 	Page            int                      `json:"page" form:"page" default:"1"`
 	PageSize        int                      `json:"pageSize" form:"pageSize" default:"20"`
 }
@@ -252,6 +255,8 @@ type ScanIssueReqFilter struct {
 	ScanMethod   constant.ScanMethod      `json:"scanMethod,omitempty" form:"scanMethod"`
 	CreateDate   string                   `json:"createDate,omitempty" form:"createDate"`
 	PlanID       int64                    `json:"planID,omitempty" form:"planID"`
+	Sort         string                   `json:"sort,omitempty" form:"sort" default:"id"`
+	Order        string                   `json:"order,omitempty" form:"order" default:"desc"`
 	Page         int                      `json:"page" form:"page" default:"1"`
 	PageSize     int                      `json:"pageSize" form:"pageSize" default:"20"`
 }
@@ -266,6 +271,8 @@ type ScanIssueUpdateStatusReq struct {
 	IDs        []int64                       `json:"ids" binding:"required"`
 	Status     *constant.ScanIssueStatus     `json:"status"`
 	Resolution *constant.ScanIssueResolution `json:"resolution"`
+	Resolved   *datetime.Local               `json:"resolved"`
+	Ignored    *int64                        `json:"ignored"`
 }
 
 // ScanIssueInfo 扫描问题详情（含规则信息）
@@ -291,4 +298,7 @@ type ScanIssueInfo struct {
 	PlanID          int64                         `json:"planID"`
 	PlanName        string                        `json:"planName"`
 	CreatedDate     *datetime.Local               `json:"createdDate"`
+	Resolved        *datetime.Local               `json:"resolved"`
+	Closed          *datetime.Local               `json:"closed"`
+	Ignored         *int64                        `json:"ignored"`
 }

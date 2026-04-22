@@ -7,8 +7,37 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	scanModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
 	"gorm.io/gorm"
 )
+
+func normalizeIssueSortField(sort string) string {
+	switch strings.TrimSpace(sort) {
+	case "", "id":
+		return "i.id"
+	case "rulePriority":
+		return "r.priority"
+	case "ruleType":
+		return "r.type"
+	case "status":
+		return "i.status"
+	case "createDate":
+		return "i.createdDate"
+	default:
+		return "i.id"
+	}
+}
+
+func normalizeIssueSortOrder(order string) string {
+	switch strings.ToLower(strings.TrimSpace(order)) {
+	case "asc":
+		return "asc"
+	case "desc":
+		return "desc"
+	default:
+		return "desc"
+	}
+}
 
 var _ IScanIssue = (*ScanIssueStore)(nil)
 
@@ -47,7 +76,7 @@ func (s *ScanIssueStore) Get(ctx context.Context, id uint) (*scanModel.ScanIssue
 		Select("i.id, i.issueKey, i.ruleID, r.name AS ruleName, r.ruleKey AS ruleKey, "+
 			"r.priority AS rulePriority, r.type AS ruleType, "+
 			"i.message, i.path, i.line, i.repoID, i.repoBranch, "+
-			"i.status, i.scanMethod, i.resolution, i.payload, i.createdByTaskID, i.updatedByTaskID, t.planID, p.name AS planName, i.createdDate").
+			"i.status, i.scanMethod, i.resolution, i.payload, i.createdByTaskID, i.updatedByTaskID, t.planID, p.name AS planName, i.createdDate, i.resolved, i.closed, i.ignored").
 		Joins("INNER JOIN ops_scan_rules AS r ON i.ruleID = r.id").
 		Joins("LEFT JOIN ops_scan_tasks AS t ON i.updatedByTaskID = t.id").
 		Joins("LEFT JOIN ops_scan_plans AS p ON t.planID = p.id").
@@ -65,7 +94,7 @@ func (s *ScanIssueStore) List(ctx context.Context, filter scanModel.ScanIssueReq
 		Select("i.id, i.issueKey, i.ruleID, r.name AS ruleName, r.ruleKey AS ruleKey, "+
 			"r.priority AS rulePriority, r.type AS ruleType, "+
 			"i.message, i.path, i.line, i.repoID, i.repoBranch, "+
-			"i.status, i.scanMethod, i.resolution, i.payload, i.createdByTaskID, i.updatedByTaskID, t.planID, p.name AS planName, i.createdDate").
+			"i.status, i.scanMethod, i.resolution, i.payload, i.createdByTaskID, i.updatedByTaskID, t.planID, p.name AS planName, i.createdDate, i.resolved, i.closed, i.ignored").
 		Joins("INNER JOIN ops_scan_rules AS r ON i.ruleID = r.id").
 		Joins("LEFT JOIN ops_scan_tasks AS t ON i.updatedByTaskID = t.id").
 		Joins("LEFT JOIN ops_scan_plans AS p ON t.planID = p.id").
@@ -110,13 +139,12 @@ func (s *ScanIssueStore) List(ctx context.Context, filter scanModel.ScanIssueReq
 	if filter.CreateDate != "" {
 		stmt = stmt.Where("DATE(i.createdDate) = ?", filter.CreateDate[:10])
 	}
-
 	var issues []*issueJoin
 	pageResult, err := database.Paginate(ctx, stmt, database.PageParam{
 		Page:      filter.Page,
 		PageSize:  filter.PageSize,
-		Sort:      "i.id",
-		Order:     "desc",
+		Sort:      normalizeIssueSortField(filter.Sort),
+		Order:     normalizeIssueSortOrder(filter.Order),
 		NeedTotal: true,
 	}, &issues)
 	if err != nil {
@@ -146,7 +174,7 @@ func (s *ScanIssueStore) ListByIDs(ctx context.Context, ids []int64) ([]*scanMod
 		Select("i.id, i.issueKey, i.ruleID, r.name AS ruleName, r.ruleKey AS ruleKey, "+
 			"r.priority AS rulePriority, r.type AS ruleType, "+
 			"i.message, i.path, i.line, i.repoID, i.repoBranch, "+
-			"i.status, i.scanMethod, i.resolution, i.payload, i.createdByTaskID, i.updatedByTaskID").
+			"i.status, i.scanMethod, i.resolution, i.payload, i.createdByTaskID, i.updatedByTaskID, i.resolved, i.closed, i.ignored").
 		Joins("INNER JOIN ops_scan_rules AS r ON i.ruleID = r.id").
 		Where("i.id IN ? AND i.deleted = ?", ids, false).
 		Find(&issues).Error; err != nil {
@@ -185,13 +213,56 @@ func (s *ScanIssueStore) UpdateStatus(ctx context.Context, ids []int64, status c
 	return nil
 }
 
-// ListKeysByTask 查询指定仓库+分支+方法下已有的 issue keys
+// UpdateTimestamps 按状态写对应时间戳字段
+func (s *ScanIssueStore) UpdateTimestamps(ctx context.Context, in scanModel.ScanIssueUpdateStatusReq) error {
+	if len(in.IDs) == 0 {
+		return nil
+	}
+	fields := map[string]any{}
+	if in.Status != nil {
+		switch *in.Status {
+		case constant.ScanIssueStatusSolved:
+			fields["resolved"] = in.Resolved
+		case constant.ScanIssueStatusClosed:
+			fields["closed"] = datetime.NowLocalTime()
+		case constant.ScanIssueStatusIgnore:
+			fields["ignored"] = in.Ignored
+		}
+	}
+	if len(fields) == 0 {
+		return nil
+	}
+	if err := s.db.WithContext(ctx).Model(&ScanIssue{}).
+		Where("id IN ? AND deleted = ?", in.IDs, false).
+		Updates(fields).Error; err != nil {
+		return database.ProcessSQLErrorf(ctx, err)
+	}
+	return nil
+}
+
+// ResetExpiredIgnore 将过期的 ignore 问题重置为 wait 状态，清空 resolution 和 ignored
+func (s *ScanIssueStore) ResetExpiredIgnore(ctx context.Context, ids []int64) error {
+	if len(ids) == 0 {
+		return nil
+	}
+	if err := s.db.WithContext(ctx).Model(&ScanIssue{}).
+		Where("id IN ? AND deleted = ?", ids, false).
+		Updates(map[string]any{
+			"status":     constant.ScanIssueStatusWait,
+			"resolution": nil,
+			"ignored":    nil,
+		}).Error; err != nil {
+		return database.ProcessSQLErrorf(ctx, err)
+	}
+	return nil
+}
+
 func (s *ScanIssueStore) ListKeysByTask(
 	ctx context.Context, repoID int64, branch string, taskID uint, method constant.ScanMethod,
 ) ([]*scanModel.ScanIssueKey, error) {
 	var issues []*ScanIssue
 	if err := s.db.WithContext(ctx).
-		Select("id, issueKey, createdByTaskID, updatedByTaskID, status").
+		Select("id, issueKey, createdByTaskID, updatedByTaskID, status, ignored").
 		Where("repoID = ? AND repoBranch = ? AND scanMethod = ? AND deleted = ?", repoID, branch, method, false).
 		Find(&issues).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
@@ -205,6 +276,7 @@ func (s *ScanIssueStore) ListKeysByTask(
 			CreatedByTaskID: item.CreatedByTaskID,
 			UpdatedByTaskID: item.UpdatedByTaskID,
 			Status:          item.Status,
+			Ignored:         item.Ignored,
 		})
 	}
 	return result, nil
@@ -279,7 +351,7 @@ func (s *ScanIssueStore) ListByTaskID(ctx context.Context, taskID uint, filter s
 		Select("i.id, i.issueKey, i.ruleID, r.name AS ruleName, r.ruleKey AS ruleKey, "+
 			"r.priority AS rulePriority, r.type AS ruleType, "+
 			"i.message, i.path, i.line, i.repoID, i.repoBranch, "+
-			"i.status, i.scanMethod, i.resolution, i.payload, i.createdByTaskID, i.updatedByTaskID").
+			"i.status, i.scanMethod, i.resolution, i.payload, i.createdByTaskID, i.updatedByTaskID, i.resolved, i.closed, i.ignored").
 		Joins("INNER JOIN ops_scan_issues AS i ON bind.issueID = i.id").
 		Joins("INNER JOIN ops_scan_rules AS r ON i.ruleID = r.id").
 		Where("bind.taskID = ? AND i.deleted = ?", taskID, false)
@@ -322,8 +394,8 @@ func (s *ScanIssueStore) ListByTaskID(ctx context.Context, taskID uint, filter s
 	pageResult, err := database.Paginate(ctx, stmt, database.PageParam{
 		Page:      filter.Page,
 		PageSize:  filter.PageSize,
-		Sort:      "i.id",
-		Order:     "desc",
+		Sort:      normalizeIssueSortField(filter.Sort),
+		Order:     normalizeIssueSortOrder(filter.Order),
 		NeedTotal: true,
 	}, &issues)
 	if err != nil {
