@@ -159,7 +159,7 @@ func (s *ScanTaskService) Create(ctx context.Context, in *ScanTaskInput) (*scanM
 	// 获取或创建代码扫描流水线
 	pipeline, err := s.getOrCreatePipeline(ctx, in.Plan.RepoID, in)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get or create pipeline: %w", err)
+		return nil, err
 	}
 
 	// 触发流水线执行
