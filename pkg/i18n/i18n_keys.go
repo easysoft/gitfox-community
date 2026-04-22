@@ -483,6 +483,7 @@ const (
 
 	// Pipeline 相关常量
 	PipelineBodyParamError             I18nKey = "pipeline.body_param_error"               // Body 参数解析失败.
+	PipelineCSharpNotSupportError      I18nKey = "pipeline.c_sharp_not_support_error"      // 目前暂不支持C#扫描.
 	PipelinePathParamError             I18nKey = "pipeline.path_param_error"               // Path 参数解析失败.
 	PipelineQueryParamError            I18nKey = "pipeline.query_param_error"              // Query 参数解析失败.
 	PipelineQuerySchemaGroupSuccess    I18nKey = "pipeline.query_schema_group_success"     // 查询 schema 分组配置成功
