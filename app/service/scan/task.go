@@ -27,8 +27,8 @@ import (
 const (
 	_codeScanPipelineName = "_codescan"
 	_codeScanLabel        = "codescan"
-	_codeScanCsharpLabel  = "codescan_csharp"
-	_codeScanDescription  = "inner codescan pipeline"
+	// _codeScanCsharpLabel  = "codescan_csharp"
+	_codeScanDescription = "inner codescan pipeline"
 
 	JobTypeCodeScan        = "gitfox:codescan"
 	JobMaxDurationCodeScan = 2 * time.Hour
@@ -354,11 +354,10 @@ func (s *ScanTaskService) getOrCreatePipeline(ctx context.Context, repoID int64,
 
 // createPipeline 创建代码扫描流水线
 func (s *ScanTaskService) createPipeline(ctx context.Context, repoID int64, in *ScanTaskInput) (*pipelineModel.Pipeline, error) {
-	// 根据扫描计划关联的语言选择流水线配置
-	yamlFile := "pipeline/" + _codeScanLabel + ".yaml"
 	if s.containsLangCsharp(ctx, in.Plan.ID) {
-		yamlFile = "pipeline/" + _codeScanCsharpLabel + ".yaml"
+		return nil, errors.WithI18nKey(nil, i18n.PipelineCSharpNotSupportError)
 	}
+	yamlFile := "pipeline/" + _codeScanLabel + ".yaml"
 
 	// 读取 embed 的流水线配置
 	data, err := resources.EmbeddedPipelines.ReadFile(yamlFile)
@@ -400,11 +399,10 @@ func (s *ScanTaskService) createPipeline(ctx context.Context, repoID int64, in *
 
 // updatePipelineContent 更新代码扫描流水线内容
 func (s *ScanTaskService) updatePipelineContent(ctx context.Context, pipelineID int64, in *ScanTaskInput) error {
-	// 根据扫描计划关联的语言选择流水线配置
-	yamlFile := "pipeline/" + _codeScanLabel + ".yaml"
 	if s.containsLangCsharp(ctx, in.Plan.ID) {
-		yamlFile = "pipeline/" + _codeScanCsharpLabel + ".yaml"
+		return errors.WithI18nKey(nil, i18n.PipelineCSharpNotSupportError)
 	}
+	yamlFile := "pipeline/" + _codeScanLabel + ".yaml"
 
 	// 读取 embed 的流水线配置
 	data, err := resources.EmbeddedPipelines.ReadFile(yamlFile)
