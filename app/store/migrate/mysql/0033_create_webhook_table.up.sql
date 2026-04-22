@@ -19,8 +19,8 @@ CREATE TABLE IF NOT EXISTS `ops_webhooks` (
 	`editedDate` datetime NULL COMMENT '更新时间',
 	`deleted` tinyint(1) NOT NULL DEFAULT 0 COMMENT '删除标识，0-未删除，1-已删除',
 	PRIMARY KEY (`id`) USING BTREE COMMENT '主键索引（Web钩子ID）',
-	UNIQUE INDEX `repoId_displayName` (`repoId`, `displayName`) USING BTREE COMMENT '仓库ID+钩子显示名称唯一索引（防止同仓库显示名称重复）',
-	UNIQUE INDEX `spaceId_displayName` (`spaceId`, `displayName`) USING BTREE COMMENT '空间ID+钩子显示名称唯一索引（防止同空间显示名称重复）'
+	UNIQUE INDEX `repoID_displayName` (`repoID`, `displayName`) USING BTREE COMMENT '仓库ID+钩子显示名称唯一索引（防止同仓库显示名称重复）',
+	UNIQUE INDEX `spaceID_displayName` (`spaceID`, `displayName`) USING BTREE COMMENT '空间ID+钩子显示名称唯一索引（防止同空间显示名称重复）'
 )
 ENGINE=InnoDB COMMENT='Web钩子配置表：存储Web钩子的基本信息、触发规则、认证方式、执行状态等';
 
