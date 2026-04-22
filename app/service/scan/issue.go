@@ -402,24 +402,13 @@ func (s *ScanTaskService) bindIssuesByTaskID(ctx context.Context, task *scanMode
 func (s *ScanTaskService) analyzeTaskResult(
 	ctx context.Context, planID, triggerID uint, rules []*scanModel.Rule,
 ) (constant.ScanTaskResult, error) {
-	conditions, err := s.conditionStore.List(ctx, triggerID)
+	conditions, err := s.conditionStore.ListByPlanID(ctx, planID)
 	if err != nil {
 		return "", err
 	}
 
 	if len(conditions) == 0 {
-		// 如果 trigger 级别没有条件，尝试获取 plan 级别条件
-		if triggerID > 0 {
-			conditions, err = s.conditionStore.List(ctx, 0)
-			if err != nil {
-				return "", err
-			}
-			if len(conditions) == 0 {
-				return constant.ScanTaskResultPass, nil
-			}
-		} else {
-			return constant.ScanTaskResultPass, nil
-		}
+		return constant.ScanTaskResultPass, nil
 	}
 
 	counter := make([]int64, len(conditions))

@@ -1011,6 +1011,21 @@ func (mr *MockIScanConditionMockRecorder) List(ctx, triggerID any) *gomock.Call 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockIScanCondition)(nil).List), ctx, triggerID)
 }
 
+// ListByPlanID mocks base method.
+func (m *MockIScanCondition) ListByPlanID(ctx context.Context, planID uint) ([]*scan.ScanCondition, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListByPlanID", ctx, planID)
+	ret0, _ := ret[0].([]*scan.ScanCondition)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListByPlanID indicates an expected call of ListByPlanID.
+func (mr *MockIScanConditionMockRecorder) ListByPlanID(ctx, planID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListByPlanID", reflect.TypeOf((*MockIScanCondition)(nil).ListByPlanID), ctx, planID)
+}
+
 // MockIScanPlanCondition is a mock of IScanPlanCondition interface.
 type MockIScanPlanCondition struct {
 	ctrl     *gomock.Controller

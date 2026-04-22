@@ -95,6 +95,7 @@ type IScanCondition interface {
 	BatchCreate(ctx context.Context, conditions []*ScanPlanCondition) error
 	BatchDelete(ctx context.Context, repoID uint, planID uint, triggerID uint, ids []uint) error
 	List(ctx context.Context, triggerID uint) ([]*scanModel.ScanCondition, error)
+	ListByPlanID(ctx context.Context, planID uint) ([]*scanModel.ScanCondition, error)
 }
 
 // IScanPlanCondition 扫描计划级条件 store 接口（triggerID=0）

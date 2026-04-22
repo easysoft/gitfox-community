@@ -54,6 +54,19 @@ func (s *ScanConditionStore) List(ctx context.Context, triggerID uint) ([]*scanM
 	return result, nil
 }
 
+func (s *ScanConditionStore) ListByPlanID(ctx context.Context, planID uint) ([]*scanModel.ScanCondition, error) {
+	var conditions []*ScanPlanCondition
+	if err := s.db.WithContext(ctx).Where("planID = ? AND deleted = ?", planID, false).Find(&conditions).Error; err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
+	}
+
+	result := make([]*scanModel.ScanCondition, 0, len(conditions))
+	for _, c := range conditions {
+		result = append(result, mapScanConditionToModel(*c))
+	}
+	return result, nil
+}
+
 // ---- plan-scoped conditions (triggerID=0) ----
 
 func (s *ScanConditionStore) Create(ctx context.Context, condition *ScanPlanCondition) (*scanModel.ScanCondition, error) {
