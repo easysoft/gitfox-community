@@ -361,6 +361,9 @@ func applyTaskQueryFilter(stmt *gorm.DB, filter scanModel.ScanTaskInfoReqFilter)
 			stmt = stmt.Where("ops_scan_tasks.result = ?", filter.Result)
 		}
 	}
+	if filter.CreateDate != "" {
+		stmt = stmt.Where("DATE(ops_scan_tasks.createdDate) = ?", filter.CreateDate[:10])
+	}
 	return stmt
 }
 

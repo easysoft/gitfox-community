@@ -62,17 +62,18 @@ type ScanTaskTrigger struct {
 
 // ScanTaskInfoReqFilter 查询扫描任务详情过滤条件
 type ScanTaskInfoReqFilter struct {
-	TaskID    int64                   `json:"taskID,omitempty" form:"taskID"`
-	RepoID    int64                   `json:"repoID,omitempty" form:"repoID"`
-	PlanID    int64                   `json:"planID,omitempty" form:"planID"`
-	TriggerID int64                   `json:"triggerID,omitempty" form:"triggerID"`
-	Branch    string                  `json:"branch,omitempty" form:"branch"`
-	Status    constant.ScanTaskStatus `json:"status,omitempty" form:"status"`
-	Result    constant.ScanTaskResult `json:"result,omitempty" form:"result"`
-	Sort      string                  `json:"sort" form:"sort"`
-	Order     string                  `json:"order" form:"order"`
-	Page      int                     `json:"page" form:"page" default:"1"`
-	PageSize  int                     `json:"pageSize" form:"pageSize" default:"20"`
+	TaskID     int64                   `json:"taskID,omitempty" form:"taskID"`
+	RepoID     int64                   `json:"repoID,omitempty" form:"repoID"`
+	PlanID     int64                   `json:"planID,omitempty" form:"planID"`
+	TriggerID  int64                   `json:"triggerID,omitempty" form:"triggerID"`
+	Branch     string                  `json:"branch,omitempty" form:"branch"`
+	Status     constant.ScanTaskStatus `json:"status,omitempty" form:"status"`
+	Result     constant.ScanTaskResult `json:"result,omitempty" form:"result"`
+	CreateDate string                  `json:"createDate,omitempty" form:"createDate"`
+	Sort       string                  `json:"sort" form:"sort"`
+	Order      string                  `json:"order" form:"order"`
+	Page       int                     `json:"page" form:"page" default:"1"`
+	PageSize   int                     `json:"pageSize" form:"pageSize" default:"20"`
 }
 
 type ScanTaskReqForCreate struct {
