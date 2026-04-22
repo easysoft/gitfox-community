@@ -171,7 +171,7 @@ func (s *Service) Update(ctx context.Context, req *repoModel.ReqForUpdate, oldRe
 		}
 		writeParams, err := utils.CreateRPCInternalWriteParams(ctx, s.urlProvider, session, &oldRepo)
 		if err != nil {
-			return nil, errors.WithI18nKey(err, i18n.GitCreateExecParamError)
+			return nil, err
 		}
 		err = s.gitSvc.UpdateDefaultBranch(ctx, &git.UpdateDefaultBranchParams{
 			WriteParams: writeParams,
