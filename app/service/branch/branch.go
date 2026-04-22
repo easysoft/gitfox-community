@@ -55,7 +55,6 @@ func (s *Service) Create(
 	// 准备 RPC 参数
 	writeParams, err := utils.CreateRPCInternalWriteParams(ctx, s.urlProvider, session, repo)
 	if err != nil {
-		err = errors.WithI18nKey(err, i18n.GitCreateExecParamError)
 		return nil, err
 	}
 
