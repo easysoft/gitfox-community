@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"sort"
 	"strconv"
+	"time"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	scanModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
@@ -264,6 +265,7 @@ func (s *ScanTaskService) compareIssues(
 	var toUpdateIDs []int64
 	var toAddItems []*scanModel.ScanIssue
 	var allIssues []*scanModel.ScanIssue
+	var expiredIgnoreIDs []int64
 
 	listBMap := make(map[string]*scanModel.ScanIssue)
 	for _, item := range inputs {
@@ -280,8 +282,21 @@ func (s *ScanTaskService) compareIssues(
 		listAMap[item.Key] = true
 	}
 
+	now := time.Now().Unix()
 	for _, item := range existIssues {
 		if _, exist := listBMap[item.Key]; exist {
+			// ignore 状态：永久忽略（-1）直接跳过；未过期跳过；过期则重置
+			if item.Status == constant.ScanIssueStatusIgnore {
+				if item.Ignored != nil && *item.Ignored == -1 {
+					report.Skip++
+					continue
+				}
+				if item.Ignored != nil && now <= *item.Ignored {
+					report.Skip++
+					continue
+				}
+				expiredIgnoreIDs = append(expiredIgnoreIDs, item.ID)
+			}
 			if item.UpdatedByTaskID >= task.ID {
 				report.Skip++
 				continue
@@ -293,6 +308,12 @@ func (s *ScanTaskService) compareIssues(
 	for key, item := range listBMap {
 		if _, exists := listAMap[key]; !exists {
 			toAddItems = append(toAddItems, item)
+		}
+	}
+
+	if len(expiredIgnoreIDs) > 0 {
+		if err := s.issueStore.ResetExpiredIgnore(ctx, expiredIgnoreIDs); err != nil {
+			return nil, err
 		}
 	}
 
@@ -477,6 +498,9 @@ func (s *ScanTaskService) SetIssuesStatus(ctx context.Context, in scanModel.Scan
 	return s.tx.WithTx(ctx, func(ctx context.Context) error {
 		if in.Status != nil {
 			if err := s.issueStore.UpdateStatus(ctx, in.IDs, *in.Status); err != nil {
+				return err
+			}
+			if err := s.issueStore.UpdateTimestamps(ctx, in); err != nil {
 				return err
 			}
 		}

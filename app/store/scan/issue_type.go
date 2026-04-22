@@ -28,6 +28,9 @@ type ScanIssue struct {
 	CreatedDate     *datetime.Local               `gorm:"column:createdDate"`
 	EditedDate      *datetime.Local               `gorm:"column:editedDate"`
 	Deleted         bool                          `gorm:"column:deleted"`
+	Resolved        *datetime.Local               `gorm:"column:resolved"`
+	Closed          *datetime.Local               `gorm:"column:closed"`
+	Ignored         *int64                        `gorm:"column:ignored"`
 }
 
 func (r *ScanIssue) TableName() string { return "ops_scan_issues" }
@@ -77,6 +80,9 @@ type issueJoin struct {
 	PlanID          int64                         `gorm:"column:planID"`
 	PlanName        string                        `gorm:"column:planName"`
 	CreatedDate     *datetime.Local               `gorm:"column:createdDate"`
+	Resolved        *datetime.Local               `gorm:"column:resolved"`
+	Closed          *datetime.Local               `gorm:"column:closed"`
+	Ignored         *int64                        `gorm:"column:ignored"`
 }
 
 func mapIssueJoinToModel(in *issueJoin) *scanModel.ScanIssueInfo {
@@ -102,5 +108,8 @@ func mapIssueJoinToModel(in *issueJoin) *scanModel.ScanIssueInfo {
 		PlanID:          in.PlanID,
 		PlanName:        in.PlanName,
 		CreatedDate:     in.CreatedDate,
+		Resolved:        in.Resolved,
+		Closed:          in.Closed,
+		Ignored:         in.Ignored,
 	}
 }
