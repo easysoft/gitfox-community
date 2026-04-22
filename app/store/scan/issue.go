@@ -351,9 +351,12 @@ func (s *ScanIssueStore) ListByTaskID(ctx context.Context, taskID uint, filter s
 		Select("i.id, i.issueKey, i.ruleID, r.name AS ruleName, r.ruleKey AS ruleKey, "+
 			"r.priority AS rulePriority, r.type AS ruleType, "+
 			"i.message, i.path, i.line, i.repoID, i.repoBranch, "+
-			"i.status, i.scanMethod, i.resolution, i.payload, i.createdByTaskID, i.updatedByTaskID, i.resolved, i.closed, i.ignored").
+			"i.status, i.scanMethod, i.resolution, i.payload, i.createdByTaskID, i.updatedByTaskID, "+
+			"t.planID, p.name AS planName, i.createdDate, i.resolved, i.closed, i.ignored").
 		Joins("INNER JOIN ops_scan_issues AS i ON bind.issueID = i.id").
 		Joins("INNER JOIN ops_scan_rules AS r ON i.ruleID = r.id").
+		Joins("LEFT JOIN ops_scan_tasks AS t ON i.updatedByTaskID = t.id").
+		Joins("LEFT JOIN ops_scan_plans AS p ON t.planID = p.id").
 		Where("bind.taskID = ? AND i.deleted = ?", taskID, false)
 
 	if filter.ID != 0 {
@@ -382,6 +385,9 @@ func (s *ScanIssueStore) ListByTaskID(ctx context.Context, taskID uint, filter s
 	}
 	if filter.Tool != "" {
 		stmt = stmt.Where("r.plugin = ?", filter.Tool)
+	}
+	if filter.PlanID != 0 {
+		stmt = stmt.Where("t.planID = ?", filter.PlanID)
 	}
 	if filter.CreateDate != "" {
 		stmt = stmt.Where("DATE(i.createdDate) = ?", filter.CreateDate[:10])

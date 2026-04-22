@@ -233,6 +233,7 @@ type ScanTaskIssueReqFilter struct {
 	RuleID          int64                    `json:"ruleID,omitempty" form:"ruleID"`
 	Status          constant.ScanIssueStatus `json:"status,omitempty" form:"status"`
 	ScanMethod      constant.ScanMethod      `json:"scanMethod,omitempty" form:"scanMethod"`
+	PlanID          int64                    `json:"planID,omitempty" form:"planID"`
 	DetectionStatus string                   `json:"detectionStatus,omitempty" form:"detectionStatus"`
 	Sort            string                   `json:"sort,omitempty" form:"sort" default:"id"`
 	Order           string                   `json:"order,omitempty" form:"order" default:"desc"`
