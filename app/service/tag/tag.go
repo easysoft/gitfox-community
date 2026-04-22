@@ -41,7 +41,6 @@ func (s *Service) Create(
 	// 准备 RPC 参数
 	writeParams, err := utils.CreateRPCInternalWriteParams(ctx, s.urlProvider, session, repo)
 	if err != nil {
-		err = errors.WithI18nKey(err, i18n.GitCreateExecParamError)
 		return nil, err
 	}
 
@@ -101,7 +100,6 @@ func (s *Service) Delete(ctx context.Context, name string, session *authModel.Se
 	// 准备 RPC 参数
 	writeParams, err := utils.CreateRPCInternalWriteParams(ctx, s.urlProvider, session, repo)
 	if err != nil {
-		err = errors.WithI18nKey(err, i18n.GitCreateExecParamError)
 		return err
 	}
 	err = s.gitPkg.DeleteTag(ctx, &git.DeleteTagParams{

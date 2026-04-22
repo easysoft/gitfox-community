@@ -270,7 +270,6 @@ func (s *Service) MergeCheck(ctx context.Context, session *auth.Session, repoid 
 
 	writeParams, err := utils.CreateRPCInternalWriteParams(ctx, s.urlProvider, session, repo)
 	if err != nil {
-		err = errors.WithI18nKey(err, i18n.GitCreateExecParamError)
 		return nil, err
 	}
 
@@ -495,7 +494,6 @@ func (s *Service) Merge(ctx context.Context, session *auth.Session, repoid uint,
 	// 准备 RPC 参数
 	writeParams, err := utils.CreateRPCInternalWriteParams(ctx, s.urlProvider, session, repo)
 	if err != nil {
-		err = errors.WithI18nKey(err, i18n.GitCreateExecParamError)
 		return nil, nil, err
 	}
 
