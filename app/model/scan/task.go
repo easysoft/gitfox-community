@@ -70,6 +70,10 @@ type ScanTaskInfoReqFilter struct {
 	Status     constant.ScanTaskStatus `json:"status,omitempty" form:"status"`
 	Result     constant.ScanTaskResult `json:"result,omitempty" form:"result"`
 	CreateDate string                  `json:"createDate,omitempty" form:"createDate"`
+	StartedGt  string                  `json:"startedGt,omitempty" form:"startedGt"`
+	StartedLt  string                  `json:"startedLt,omitempty" form:"startedLt"`
+	FinishedGt string                  `json:"finishedGt,omitempty" form:"finishedGt"`
+	FinishedLt string                  `json:"finishedLt,omitempty" form:"finishedLt"`
 	Sort       string                  `json:"sort" form:"sort"`
 	Order      string                  `json:"order" form:"order"`
 	Page       int                     `json:"page" form:"page" default:"1"`

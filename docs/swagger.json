@@ -11417,6 +11417,9 @@
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanIssueInfo": {
             "type": "object",
             "properties": {
+                "closed": {
+                    "type": "string"
+                },
                 "createdByTaskID": {
                     "type": "integer"
                 },
@@ -11424,6 +11427,9 @@
                     "type": "string"
                 },
                 "id": {
+                    "type": "integer"
+                },
+                "ignored": {
                     "type": "integer"
                 },
                 "key": {
@@ -11458,6 +11464,9 @@
                 },
                 "resolution": {
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanIssueResolution"
+                },
+                "resolved": {
+                    "type": "string"
                 },
                 "ruleID": {
                     "type": "integer"
@@ -11529,6 +11538,10 @@
                 "message": {
                     "type": "string"
                 },
+                "order": {
+                    "type": "string",
+                    "default": "desc"
+                },
                 "page": {
                     "type": "integer",
                     "default": 1
@@ -11555,6 +11568,10 @@
                 "scanMethod": {
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanMethod"
                 },
+                "sort": {
+                    "type": "string",
+                    "default": "id"
+                },
                 "status": {
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanIssueStatus"
                 },
@@ -11575,8 +11592,14 @@
                         "type": "integer"
                     }
                 },
+                "ignored": {
+                    "type": "integer"
+                },
                 "resolution": {
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanIssueResolution"
+                },
+                "resolved": {
+                    "type": "string"
                 },
                 "status": {
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanIssueStatus"
@@ -11967,6 +11990,15 @@
                 "branch": {
                     "type": "string"
                 },
+                "createDate": {
+                    "type": "string"
+                },
+                "finishedGt": {
+                    "type": "string"
+                },
+                "finishedLt": {
+                    "type": "string"
+                },
                 "order": {
                     "type": "string"
                 },
@@ -11990,6 +12022,12 @@
                 "sort": {
                     "type": "string"
                 },
+                "startedGt": {
+                    "type": "string"
+                },
+                "startedLt": {
+                    "type": "string"
+                },
                 "status": {
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanTaskStatus"
                 },
@@ -12007,8 +12045,24 @@
                 "branch": {
                     "type": "string"
                 },
+                "createDate": {
+                    "type": "string"
+                },
                 "detectionStatus": {
                     "type": "string"
+                },
+                "file": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "order": {
+                    "type": "string",
+                    "default": "desc"
                 },
                 "page": {
                     "type": "integer",
@@ -12018,20 +12072,36 @@
                     "type": "integer",
                     "default": 20
                 },
+                "planID": {
+                    "type": "integer"
+                },
                 "repoID": {
                     "type": "integer"
                 },
                 "ruleID": {
                     "type": "integer"
                 },
+                "rulePriority": {
+                    "type": "string"
+                },
+                "ruleType": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleType"
+                },
                 "scanMethod": {
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanMethod"
+                },
+                "sort": {
+                    "type": "string",
+                    "default": "id"
                 },
                 "status": {
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanIssueStatus"
                 },
                 "taskID": {
                     "type": "integer"
+                },
+                "tool": {
+                    "type": "string"
                 }
             }
         },

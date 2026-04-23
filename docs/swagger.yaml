@@ -1746,11 +1746,15 @@ definitions:
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanIssueInfo:
     properties:
+      closed:
+        type: string
       createdByTaskID:
         type: integer
       createdDate:
         type: string
       id:
+        type: integer
+      ignored:
         type: integer
       key:
         type: string
@@ -1774,6 +1778,8 @@ definitions:
         type: integer
       resolution:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanIssueResolution'
+      resolved:
+        type: string
       ruleID:
         type: integer
       ruleKey:
@@ -1820,6 +1826,9 @@ definitions:
         type: integer
       message:
         type: string
+      order:
+        default: desc
+        type: string
       page:
         default: 1
         type: integer
@@ -1838,6 +1847,9 @@ definitions:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleType'
       scanMethod:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanMethod'
+      sort:
+        default: id
+        type: string
       status:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanIssueStatus'
       tool:
@@ -1849,8 +1861,12 @@ definitions:
         items:
           type: integer
         type: array
+      ignored:
+        type: integer
       resolution:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanIssueResolution'
+      resolved:
+        type: string
       status:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanIssueStatus'
     required:
@@ -2110,6 +2126,12 @@ definitions:
     properties:
       branch:
         type: string
+      createDate:
+        type: string
+      finishedGt:
+        type: string
+      finishedLt:
+        type: string
       order:
         type: string
       page:
@@ -2126,6 +2148,10 @@ definitions:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanTaskResult'
       sort:
         type: string
+      startedGt:
+        type: string
+      startedLt:
+        type: string
       status:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanTaskStatus'
       taskID:
@@ -2137,7 +2163,18 @@ definitions:
     properties:
       branch:
         type: string
+      createDate:
+        type: string
       detectionStatus:
+        type: string
+      file:
+        type: string
+      id:
+        type: integer
+      message:
+        type: string
+      order:
+        default: desc
         type: string
       page:
         default: 1
@@ -2145,16 +2182,27 @@ definitions:
       pageSize:
         default: 20
         type: integer
+      planID:
+        type: integer
       repoID:
         type: integer
       ruleID:
         type: integer
+      rulePriority:
+        type: string
+      ruleType:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleType'
       scanMethod:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanMethod'
+      sort:
+        default: id
+        type: string
       status:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanIssueStatus'
       taskID:
         type: integer
+      tool:
+        type: string
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTaskReqForCreate:
     properties:

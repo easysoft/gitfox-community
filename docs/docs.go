@@ -11423,6 +11423,9 @@ const docTemplate = `{
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanIssueInfo": {
             "type": "object",
             "properties": {
+                "closed": {
+                    "type": "string"
+                },
                 "createdByTaskID": {
                     "type": "integer"
                 },
@@ -11430,6 +11433,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
+                    "type": "integer"
+                },
+                "ignored": {
                     "type": "integer"
                 },
                 "key": {
@@ -11464,6 +11470,9 @@ const docTemplate = `{
                 },
                 "resolution": {
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanIssueResolution"
+                },
+                "resolved": {
+                    "type": "string"
                 },
                 "ruleID": {
                     "type": "integer"
@@ -11535,6 +11544,10 @@ const docTemplate = `{
                 "message": {
                     "type": "string"
                 },
+                "order": {
+                    "type": "string",
+                    "default": "desc"
+                },
                 "page": {
                     "type": "integer",
                     "default": 1
@@ -11561,6 +11574,10 @@ const docTemplate = `{
                 "scanMethod": {
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanMethod"
                 },
+                "sort": {
+                    "type": "string",
+                    "default": "id"
+                },
                 "status": {
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanIssueStatus"
                 },
@@ -11581,8 +11598,14 @@ const docTemplate = `{
                         "type": "integer"
                     }
                 },
+                "ignored": {
+                    "type": "integer"
+                },
                 "resolution": {
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanIssueResolution"
+                },
+                "resolved": {
+                    "type": "string"
                 },
                 "status": {
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanIssueStatus"
@@ -11973,6 +11996,15 @@ const docTemplate = `{
                 "branch": {
                     "type": "string"
                 },
+                "createDate": {
+                    "type": "string"
+                },
+                "finishedGt": {
+                    "type": "string"
+                },
+                "finishedLt": {
+                    "type": "string"
+                },
                 "order": {
                     "type": "string"
                 },
@@ -11996,6 +12028,12 @@ const docTemplate = `{
                 "sort": {
                     "type": "string"
                 },
+                "startedGt": {
+                    "type": "string"
+                },
+                "startedLt": {
+                    "type": "string"
+                },
                 "status": {
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanTaskStatus"
                 },
@@ -12013,8 +12051,24 @@ const docTemplate = `{
                 "branch": {
                     "type": "string"
                 },
+                "createDate": {
+                    "type": "string"
+                },
                 "detectionStatus": {
                     "type": "string"
+                },
+                "file": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "order": {
+                    "type": "string",
+                    "default": "desc"
                 },
                 "page": {
                     "type": "integer",
@@ -12024,20 +12078,36 @@ const docTemplate = `{
                     "type": "integer",
                     "default": 20
                 },
+                "planID": {
+                    "type": "integer"
+                },
                 "repoID": {
                     "type": "integer"
                 },
                 "ruleID": {
                     "type": "integer"
                 },
+                "rulePriority": {
+                    "type": "string"
+                },
+                "ruleType": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleType"
+                },
                 "scanMethod": {
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanMethod"
+                },
+                "sort": {
+                    "type": "string",
+                    "default": "id"
                 },
                 "status": {
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanIssueStatus"
                 },
                 "taskID": {
                     "type": "integer"
+                },
+                "tool": {
+                    "type": "string"
                 }
             }
         },

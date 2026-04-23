@@ -364,6 +364,18 @@ func applyTaskQueryFilter(stmt *gorm.DB, filter scanModel.ScanTaskInfoReqFilter)
 	if filter.CreateDate != "" {
 		stmt = stmt.Where("DATE(ops_scan_tasks.createdDate) = ?", filter.CreateDate[:10])
 	}
+	if filter.StartedGt != "" {
+		stmt = stmt.Where("e.started >= ?", filter.StartedGt)
+	}
+	if filter.StartedLt != "" {
+		stmt = stmt.Where("e.started < ?", filter.StartedLt)
+	}
+	if filter.FinishedGt != "" {
+		stmt = stmt.Where("e.finished >= ?", filter.FinishedGt)
+	}
+	if filter.FinishedLt != "" {
+		stmt = stmt.Where("e.finished < ?", filter.FinishedLt)
+	}
 	return stmt
 }
 
