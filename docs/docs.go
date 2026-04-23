@@ -11535,6 +11535,12 @@ const docTemplate = `{
                 "createDate": {
                     "type": "string"
                 },
+                "createdGt": {
+                    "type": "string"
+                },
+                "createdLt": {
+                    "type": "string"
+                },
                 "file": {
                     "type": "string"
                 },
@@ -11562,6 +11568,12 @@ const docTemplate = `{
                 "repoID": {
                     "type": "integer"
                 },
+                "resolvedGt": {
+                    "type": "string"
+                },
+                "resolvedLt": {
+                    "type": "string"
+                },
                 "ruleID": {
                     "type": "integer"
                 },
@@ -11582,6 +11594,12 @@ const docTemplate = `{
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanIssueStatus"
                 },
                 "tool": {
+                    "type": "string"
+                },
+                "updatedGt": {
+                    "type": "string"
+                },
+                "updatedLt": {
                     "type": "string"
                 }
             }

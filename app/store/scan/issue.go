@@ -139,6 +139,24 @@ func (s *ScanIssueStore) List(ctx context.Context, filter scanModel.ScanIssueReq
 	if filter.CreateDate != "" {
 		stmt = stmt.Where("DATE(i.createdDate) = ?", filter.CreateDate[:10])
 	}
+	if filter.CreatedGt != "" {
+		stmt = stmt.Where("i.createdDate >= ?", filter.CreatedGt)
+	}
+	if filter.CreatedLt != "" {
+		stmt = stmt.Where("i.createdDate < ?", filter.CreatedLt)
+	}
+	if filter.UpdatedGt != "" {
+		stmt = stmt.Where("i.editedDate >= ?", filter.UpdatedGt)
+	}
+	if filter.UpdatedLt != "" {
+		stmt = stmt.Where("i.editedDate < ?", filter.UpdatedLt)
+	}
+	if filter.ResolvedGt != "" {
+		stmt = stmt.Where("i.resolved >= ?", filter.ResolvedGt)
+	}
+	if filter.ResolvedLt != "" {
+		stmt = stmt.Where("i.resolved < ?", filter.ResolvedLt)
+	}
 	var issues []*issueJoin
 	pageResult, err := database.Paginate(ctx, stmt, database.PageParam{
 		Page:      filter.Page,

@@ -255,11 +255,29 @@ type ScanIssueReqFilter struct {
 	Status       constant.ScanIssueStatus `json:"status,omitempty" form:"status"`
 	ScanMethod   constant.ScanMethod      `json:"scanMethod,omitempty" form:"scanMethod"`
 	CreateDate   string                   `json:"createDate,omitempty" form:"createDate"`
-	PlanID       int64                    `json:"planID,omitempty" form:"planID"`
-	Sort         string                   `json:"sort,omitempty" form:"sort" default:"id"`
-	Order        string                   `json:"order,omitempty" form:"order" default:"desc"`
-	Page         int                      `json:"page" form:"page" default:"1"`
-	PageSize     int                      `json:"pageSize" form:"pageSize" default:"20"`
+	CreatedFilter
+	UpdatedFilter
+	ResolvedFilter
+	PlanID   int64  `json:"planID,omitempty" form:"planID"`
+	Sort     string `json:"sort,omitempty" form:"sort" default:"id"`
+	Order    string `json:"order,omitempty" form:"order" default:"desc"`
+	Page     int    `json:"page" form:"page" default:"1"`
+	PageSize int    `json:"pageSize" form:"pageSize" default:"20"`
+}
+
+type CreatedFilter struct {
+	CreatedGt string `json:"createdGt,omitempty" form:"createdGt"`
+	CreatedLt string `json:"createdLt,omitempty" form:"createdLt"`
+}
+
+type UpdatedFilter struct {
+	UpdatedGt string `json:"updatedGt,omitempty" form:"updatedGt"`
+	UpdatedLt string `json:"updatedLt,omitempty" form:"updatedLt"`
+}
+
+type ResolvedFilter struct {
+	ResolvedGt string `json:"resolvedGt,omitempty" form:"resolvedGt"`
+	ResolvedLt string `json:"resolvedLt,omitempty" form:"resolvedLt"`
 }
 
 // ScanIssueIDsReqFilter 任务问题列表ID过滤条件

@@ -1820,6 +1820,10 @@ definitions:
         type: string
       createDate:
         type: string
+      createdGt:
+        type: string
+      createdLt:
+        type: string
       file:
         type: string
       id:
@@ -1839,6 +1843,10 @@ definitions:
         type: integer
       repoID:
         type: integer
+      resolvedGt:
+        type: string
+      resolvedLt:
+        type: string
       ruleID:
         type: integer
       rulePriority:
@@ -1853,6 +1861,10 @@ definitions:
       status:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanIssueStatus'
       tool:
+        type: string
+      updatedGt:
+        type: string
+      updatedLt:
         type: string
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanIssueUpdateStatusReq:
