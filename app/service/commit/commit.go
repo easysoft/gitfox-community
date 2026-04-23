@@ -91,6 +91,7 @@ func (s *Service) Create(
 }
 
 func (s *Service) List(ctx context.Context, req commitModel.ReqFilter, repo repoModel.Repo, gitRef string) (commitModel.RespForList, error) {
+	gitRef = utils.DecodeGitRef(gitRef)
 
 	if gitRef == "" {
 		gitRef = repo.DefaultBranch
@@ -169,8 +170,8 @@ func (s *Service) GetDivergence(ctx context.Context, req commitModel.ReqForDiver
 		Requests:   make([]git.CommitDivergenceRequest, len(req.Requests)),
 	}
 	for i := range req.Requests {
-		options.Requests[i].From = req.Requests[i].From
-		options.Requests[i].To = req.Requests[i].To
+		options.Requests[i].From = utils.DecodeGitRef(req.Requests[i].From)
+		options.Requests[i].To = utils.DecodeGitRef(req.Requests[i].To)
 		// backfil default branch if no 'to' was provided
 		if len(options.Requests[i].To) == 0 {
 			options.Requests[i].To = repo.DefaultBranch
