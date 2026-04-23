@@ -720,8 +720,8 @@ func parseDiffPath(path string) (CompareInfo, error) {
 		return CompareInfo{}, err
 	}
 	return CompareInfo{
-		BaseRef:   infos[0],
-		HeadRef:   infos[1],
+		BaseRef:   utils.DecodeGitRef(infos[0]),
+		HeadRef:   utils.DecodeGitRef(infos[1]),
 		MergeBase: strings.Contains(path, "..."),
 	}, nil
 }

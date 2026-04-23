@@ -43,6 +43,8 @@ func (s *Service) Create(
 	session *authModel.Session,
 	repo *repoModel.Repo,
 ) (*branchModel.Branch, error) {
+	req.Name = utils.DecodeGitRef(req.Name)
+	req.Source = utils.DecodeGitRef(req.Source)
 
 	// 禁止创建 archived/ 前缀的分支
 	if strings.HasPrefix(req.Name, constant.BranchArchivedPrefix) {
@@ -198,6 +200,8 @@ func (s *Service) Delete(
 	session *authModel.Session,
 	repo *repoModel.Repo,
 ) error {
+	name = utils.DecodeGitRef(name)
+
 	// 准备 RPC 参数
 	writeParams, err := utils.CreateRPCInternalWriteParams(ctx, s.urlProvider, session, repo)
 	if err != nil {
@@ -245,6 +249,9 @@ func (s *Service) BatchArchive(
 	session *authModel.Session,
 	repo *repoModel.Repo,
 ) []branchModel.ArchiveResult {
+	for i, name := range req.BranchNames {
+		req.BranchNames[i] = utils.DecodeGitRef(name)
+	}
 	results := make([]branchModel.ArchiveResult, 0, len(req.BranchNames))
 
 	writeParams, err := utils.CreateRPCInternalWriteParams(ctx, s.urlProvider, session, repo)
@@ -376,6 +383,9 @@ func (s *Service) BatchActivate(
 	session *authModel.Session,
 	repo *repoModel.Repo,
 ) []branchModel.ActivateResult {
+	for i, name := range req.BranchNames {
+		req.BranchNames[i] = utils.DecodeGitRef(name)
+	}
 	results := make([]branchModel.ActivateResult, 0, len(req.BranchNames))
 
 	writeParams, err := utils.CreateRPCInternalWriteParams(ctx, s.urlProvider, session, repo)

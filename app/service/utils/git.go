@@ -199,8 +199,8 @@ func ParseDiffPath(path string) (repo.CompareInfo, error) {
 		return repo.CompareInfo{}, fmt.Errorf("invalid format \"%s\"", path)
 	}
 	return repo.CompareInfo{
-		BaseRef:   infos[0],
-		HeadRef:   infos[1],
+		BaseRef:   DecodeGitRef(infos[0]),
+		HeadRef:   DecodeGitRef(infos[1]),
 		MergeBase: strings.Contains(path, "..."),
 	}, nil
 }
