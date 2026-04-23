@@ -332,7 +332,7 @@ func (s *Service) Archive(ctx context.Context, params gitAPI.ArchiveParams, repo
 }
 
 func (s *Service) GetBlame(ctx context.Context, req repoModel.BlameFilter, repo repoModel.Repo, filePath string, w io.Writer) error {
-	gitRef := req.GitRef
+	gitRef := utils.DecodeGitRef(req.GitRef)
 	if gitRef == "" {
 		gitRef = repo.DefaultBranch
 	}
@@ -347,8 +347,8 @@ func (s *Service) GetBlame(ctx context.Context, req repoModel.BlameFilter, repo 
 }
 
 func (s *Service) Paths(ctx context.Context, req repoModel.PathsInput, repo repoModel.Repo) (*repoModel.PathsOutput, error) {
-	gitRef := req.GitRef
-	if req.GitRef == "" {
+	gitRef := utils.DecodeGitRef(req.GitRef)
+	if gitRef == "" {
 		gitRef = repo.DefaultBranch
 	}
 	rpcOut, err := s.gitSvc.ListPaths(ctx, &git.ListPathsParams{
@@ -367,8 +367,8 @@ func (s *Service) Paths(ctx context.Context, req repoModel.PathsInput, repo repo
 }
 
 func (s *Service) PathsDetails(ctx context.Context, req repoModel.PathsDetailsInput, repo repoModel.Repo) (*repoModel.PathsDetailsOutput, error) {
-	gitRef := req.GitRef
-	if req.GitRef == "" {
+	gitRef := utils.DecodeGitRef(req.GitRef)
+	if gitRef == "" {
 		gitRef = repo.DefaultBranch
 	}
 

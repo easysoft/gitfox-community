@@ -16,6 +16,7 @@ import (
 )
 
 func (s *Service) GetContent(ctx context.Context, session *auth.Session, repo *repoModel.Repo, gitRef string, repoPath string, includeLatestCommit bool, flattenDirectories bool) (*repoModel.GetContentOutput, error) {
+	gitRef = utils.DecodeGitRef(gitRef)
 
 	// create read params once
 	readParams := git.ReadParams{
