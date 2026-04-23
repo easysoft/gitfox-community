@@ -37,6 +37,8 @@ func (s *Service) Create(
 	session *authModel.Session,
 	repo *repoModel.Repo,
 ) (*tagModel.Tag, error) {
+	req.Name = utils.DecodeGitRef(req.Name)
+	req.Source = utils.DecodeGitRef(req.Source)
 
 	// 准备 RPC 参数
 	writeParams, err := utils.CreateRPCInternalWriteParams(ctx, s.urlProvider, session, repo)
@@ -97,6 +99,7 @@ func (s *Service) List(ctx context.Context, req tagModel.ReqFilter, repo repoMod
 }
 
 func (s *Service) Delete(ctx context.Context, name string, session *authModel.Session, repo *repoModel.Repo) error {
+	name = utils.DecodeGitRef(name)
 	// 准备 RPC 参数
 	writeParams, err := utils.CreateRPCInternalWriteParams(ctx, s.urlProvider, session, repo)
 	if err != nil {
