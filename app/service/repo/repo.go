@@ -162,6 +162,7 @@ func (s *Service) createGitRepository(ctx context.Context, req *repoModel.Create
 
 func (s *Service) Update(ctx context.Context, req *repoModel.ReqForUpdate, oldRepo repoModel.Repo, session *auth.Session) (*repoModel.Repo, error) {
 	// 调用 git 命令更新默认分支
+	req.DefaultBranch = utils.DecodeGitRef(req.DefaultBranch)
 	if req.DefaultBranch != "" {
 		if strings.HasPrefix(req.DefaultBranch, constant.BranchArchivedPrefix) {
 			return nil, errors.WithI18nKey(
