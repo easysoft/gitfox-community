@@ -83,9 +83,18 @@ type issueJoin struct {
 	Resolved        *datetime.Local               `gorm:"column:resolved"`
 	Closed          *datetime.Local               `gorm:"column:closed"`
 	Ignored         *int64                        `gorm:"column:ignored"`
+	TriggerID       int64                         `gorm:"column:triggerID"`
+	TriggerType     constant.ScanPlanTriggerType  `gorm:"column:triggerType"`
 }
 
 func mapIssueJoinToModel(in *issueJoin) *scanModel.ScanIssueInfo {
+	trigger := new(scanModel.ScanTaskTrigger)
+	if in.TriggerType == constant.ScanPlanTriggerTypeAction || in.TriggerType == constant.ScanPlanTriggerTypeCron {
+		trigger.ID = in.TriggerID
+		trigger.Type = in.TriggerType
+	} else {
+		trigger.Type = constant.ScanPlanTriggerTypeManual
+	}
 	return &scanModel.ScanIssueInfo{
 		ID:              in.ID,
 		Key:             in.Key,
@@ -111,5 +120,6 @@ func mapIssueJoinToModel(in *issueJoin) *scanModel.ScanIssueInfo {
 		Resolved:        in.Resolved,
 		Closed:          in.Closed,
 		Ignored:         in.Ignored,
+		Trigger:         trigger,
 	}
 }

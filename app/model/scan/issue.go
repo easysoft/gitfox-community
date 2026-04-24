@@ -320,4 +320,5 @@ type ScanIssueInfo struct {
 	Resolved        *datetime.Local               `json:"resolved"`
 	Closed          *datetime.Local               `json:"closed"`
 	Ignored         *int64                        `json:"ignored"`
+	Trigger         *ScanTaskTrigger              `json:"trigger"`
 }
