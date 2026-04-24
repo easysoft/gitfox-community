@@ -276,7 +276,8 @@ func (c *Controller) suggestPullRequest(
 			out.Error = strPtr("failed to create review pull request")
 			return
 		}
-		if _, err = c.verifyBranchExistence(ctx, repo, targetBranch); err != nil {
+		targetSHA, err := c.verifyBranchExistence(ctx, repo, targetBranch)
+		if err != nil {
 			log.Errorf("failed to verify target branch %s existence: %v", targetBranch, err)
 			out.Error = strPtr("failed to create review pull request")
 			return
@@ -330,6 +331,7 @@ func (c *Controller) suggestPullRequest(
 			Desc:              "这是强制代码评审请求，请及时指定相关评审者",
 			SourceSHA:         sourceSHA,
 			MergeBaseSHA:      mergeBaseSHA.String(),
+			MergeTargetSHA:    targetSHA,
 			Flow:              1, // PullRequestFlowZentao
 			ReviewFlowID:      uint(rule.ReviewFlowID),
 		}
