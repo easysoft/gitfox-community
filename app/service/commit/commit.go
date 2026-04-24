@@ -74,8 +74,8 @@ func (s *Service) Create(
 	rpcOut, err := s.gitPkg.CommitFiles(ctx, &git.CommitFilesParams{
 		WriteParams:   writeParams,
 		Message:       git.CommitMessage(utils.GenerateCommitTitle(req.Message), req.Message),
-		Branch:        req.Branch,
-		NewBranch:     req.NewBranch,
+		Branch:        utils.DecodeGitRef(req.Branch),
+		NewBranch:     utils.DecodeGitRef(req.NewBranch),
 		Actions:       actions,
 		Committer:     &git.Identity{Name: session.User.Account, Email: session.User.Email},
 		CommitterDate: &now,
