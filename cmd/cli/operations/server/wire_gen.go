@@ -19,7 +19,7 @@ import (
 	space3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/space"
 	tag2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/tag"
 	user3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/user"
-	webhook3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/webhook"
+	webhook2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/webhook"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/router"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/canceler"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/manager"
@@ -43,7 +43,6 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/tag"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/trigger"
 	user2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/user"
-	webhook2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/webhook"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/branch"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/execution"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/jobs"
@@ -257,8 +256,13 @@ func NewApp(mode string) (*App, func(), error) {
 	fitService := fit.NewService(tokenInterface, devopsConfig)
 	fitController := fit2.NewController(fitService, repoService)
 	webhookStore := webhook.NewWebhookStore(db)
-	webhookService := webhook2.NewWebhookSvc(webhookStore)
-	webhookController := webhook3.NewController(webhookService)
+	webhookService, err := provider.ProvideWebhookService(eventContext, gitService, readerFactory, webhookStore, store, urlProvider)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	webhookController := webhook2.NewController(webhookService)
 	routerController := provider.NewControllers(spaceController, controller, pipelineController, executionController, runnerController, tagController, commitController, repoController, userController, gitController, scanController, fitController, webhookController)
 	i18nManager, err := provider.NewI18nManager(config)
 	if err != nil {

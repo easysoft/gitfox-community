@@ -796,18 +796,25 @@ const (
 	TriggerUpdateSuccess           I18nKey = "trigger.update_success"             // 触发器更新成功.
 
 	// Webhook 相关常量
-	WebhookBodyParamError  I18nKey = "webhook.body_param_error"  // Body 参数解析失败.
-	WebhookCreateError     I18nKey = "webhook.create_error"      // webhook 创建失败.
-	WebhookCreateSuccess   I18nKey = "webhook.create_success"    // webhook 创建成功.
-	WebhookDeleteError     I18nKey = "webhook.delete_error"      // webhook 删除失败.
-	WebhookDeleteSuccess   I18nKey = "webhook.delete_success"    // webhook 删除成功.
-	WebhookDuplicateName   I18nKey = "webhook.duplicate_name"    // 同名 webhook 已存在.
-	WebhookListError       I18nKey = "webhook.list_error"        // 查询 webhook 列表失败.
-	WebhookListSuccess     I18nKey = "webhook.list_success"      // 查询 webhook 列表成功.
-	WebhookNotFound        I18nKey = "webhook.not_found"         // webhook 不存在.
-	WebhookPathParamError  I18nKey = "webhook.path_param_error"  // Path 参数解析失败.
-	WebhookQueryParamError I18nKey = "webhook.query_param_error" // Query 参数解析失败.
-	WebhookQuerySuccess    I18nKey = "webhook.query_success"     // webhook 详情查询成功.
-	WebhookUpdateError     I18nKey = "webhook.update_error"      // webhook 更新失败.
-	WebhookUpdateSuccess   I18nKey = "webhook.update_success"    // webhook 更新成功.
+	WebhookBodyParamError            I18nKey = "webhook.body_param_error"            // Body 参数解析失败.
+	WebhookCreateError               I18nKey = "webhook.create_error"                // webhook 创建失败.
+	WebhookCreateSuccess             I18nKey = "webhook.create_success"              // webhook 创建成功.
+	WebhookDeleteError               I18nKey = "webhook.delete_error"                // webhook 删除失败.
+	WebhookDeleteSuccess             I18nKey = "webhook.delete_success"              // webhook 删除成功.
+	WebhookDuplicateName             I18nKey = "webhook.duplicate_name"              // 同名 webhook 已存在.
+	WebhookExecutionNotFound         I18nKey = "webhook.execution_not_found"         // webhook 执行记录不存在.
+	WebhookExecutionNotRetriggerable I18nKey = "webhook.execution_not_retriggerable" // webhook 执行不可重新触发.
+	WebhookExecutionQuerySuccess     I18nKey = "webhook.execution_query_success"     // webhook 执行记录查询成功.
+	WebhookExecutionRetriggerError   I18nKey = "webhook.execution_retrigger_error"   // webhook 执行重新触发失败.
+	WebhookExecutionRetriggerSuccess I18nKey = "webhook.execution_retrigger_success" // webhook 执行重新触发成功.
+	WebhookListError                 I18nKey = "webhook.list_error"                  // 查询 webhook 列表失败.
+	WebhookListExecutionsError       I18nKey = "webhook.list_executions_error"       // 查询 webhook 执行记录列表失败.
+	WebhookListExecutionsSuccess     I18nKey = "webhook.list_executions_success"     // 查询 webhook 执行记录列表成功.
+	WebhookListSuccess               I18nKey = "webhook.list_success"                // 查询 webhook 列表成功.
+	WebhookNotFound                  I18nKey = "webhook.not_found"                   // webhook 不存在.
+	WebhookPathParamError            I18nKey = "webhook.path_param_error"            // Path 参数解析失败.
+	WebhookQueryParamError           I18nKey = "webhook.query_param_error"           // Query 参数解析失败.
+	WebhookQuerySuccess              I18nKey = "webhook.query_success"               // webhook 详情查询成功.
+	WebhookUpdateError               I18nKey = "webhook.update_error"                // webhook 更新失败.
+	WebhookUpdateSuccess             I18nKey = "webhook.update_success"              // webhook 更新成功.
 )

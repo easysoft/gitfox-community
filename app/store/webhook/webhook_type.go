@@ -43,3 +43,29 @@ func (w *Webhook) BeforeUpdate(tx *gorm.DB) error {
 	w.EditedDate = datetime.NowLocalTime()
 	return nil
 }
+
+// Execution 对应数据库表 ops_webhook_executions
+type Execution struct {
+	ID             uint            `gorm:"column:id"`
+	WebhookID      uint            `gorm:"column:webhookID"`
+	TriggerType    string          `gorm:"column:triggerType"`
+	EventID        string          `gorm:"column:eventID"`
+	Result         string          `gorm:"column:result"`
+	Duration       int64           `gorm:"column:duration"`
+	Error          string          `gorm:"column:error"`
+	ReqURL         string          `gorm:"column:reqUrl"`
+	ReqHeaders     string          `gorm:"column:reqHeaders"`
+	ReqBody        string          `gorm:"column:reqBody"`
+	RespStatusCode int             `gorm:"column:respStatusCode"`
+	RespStatus     string          `gorm:"column:respStatus"`
+	RespHeaders    string          `gorm:"column:respHeaders"`
+	RespBody       string          `gorm:"column:respBody"`
+	RetriggerID    *uint           `gorm:"column:retriggerID"`
+	Retriggerable  bool            `gorm:"column:retriggerable"`
+	CreatedDate    *datetime.Local `gorm:"column:createdDate"`
+	EditedDate     *datetime.Local `gorm:"column:editedDate"`
+}
+
+func (e *Execution) TableName() string {
+	return "ops_webhook_executions"
+}

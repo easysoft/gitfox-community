@@ -15,6 +15,12 @@ func registerWebhookRoutes(r *gin.RouterGroup, controller *Controller) {
 			webhooksWithID.GET("/", controller.Webhook.Get)
 			webhooksWithID.PUT("/", controller.Webhook.Update)
 			webhooksWithID.DELETE("/", controller.Webhook.Delete)
+			executions := webhooksWithID.Group("/executions")
+			{
+				executions.GET("/", controller.Webhook.ListExecutions)
+				executions.GET("/:executionID", controller.Webhook.GetExecution)
+				executions.POST("/:executionID/retrigger", controller.Webhook.RetriggerExecution)
+			}
 		}
 	}
 }

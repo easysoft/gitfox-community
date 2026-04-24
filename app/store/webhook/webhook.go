@@ -62,6 +62,59 @@ func (s *Store) Delete(ctx context.Context, id uint) error {
 }
 
 // allowedSortFields 限制排序字段白名单，防止 SQL 注入
+func (s *Store) ListByParentInfo(ctx context.Context, parents []webhookModel.ParentInfo) ([]*webhookModel.Webhook, error) {
+	if len(parents) == 0 {
+		return nil, nil
+	}
+
+	tx := s.db.WithContext(ctx).Model(&Webhook{}).Where("deleted = 0 AND enabled = 1")
+
+	type clause struct {
+		col string
+		id  int64
+	}
+	var repoClauses []clause
+	var spaceClauses []clause
+	for _, p := range parents {
+		switch p.Type {
+		case string(constant.WebhookParentRepo):
+			repoClauses = append(repoClauses, clause{col: "repoID", id: int64(p.ID)})
+		case string(constant.WebhookParentSpace):
+			spaceClauses = append(spaceClauses, clause{col: "spaceID", id: int64(p.ID)})
+		}
+	}
+
+	var repoIDs []int64
+	for _, c := range repoClauses {
+		repoIDs = append(repoIDs, c.id)
+	}
+	var spaceIDs []int64
+	for _, c := range spaceClauses {
+		spaceIDs = append(spaceIDs, c.id)
+	}
+
+	switch {
+	case len(repoIDs) > 0 && len(spaceIDs) > 0:
+		tx = tx.Where("repoID IN ? OR spaceID IN ?", repoIDs, spaceIDs)
+	case len(repoIDs) > 0:
+		tx = tx.Where("repoID IN ?", repoIDs)
+	case len(spaceIDs) > 0:
+		tx = tx.Where("spaceID IN ?", spaceIDs)
+	}
+
+	var rows []*Webhook
+	if err := tx.Find(&rows).Error; err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
+	}
+
+	result := make([]*webhookModel.Webhook, len(rows))
+	for i, row := range rows {
+		result[i] = mapToModel(*row)
+	}
+	return result, nil
+}
+
+// allowedSortFields 限制排序字段白名单，防止 SQL 注入
 var allowedSortFields = map[string]string{
 	"displayName":           "displayName",
 	"enabled":               "enabled",
@@ -102,6 +155,124 @@ func (s *Store) List(ctx context.Context, repoID int64, filter webhookModel.ReqF
 	}, nil
 }
 
+var allowedExecutionSortFields = map[string]string{
+	"result":      "result",
+	"createdDate": "createdDate",
+}
+
+func (s *Store) ListExecutionsByTriggerID(ctx context.Context, triggerID string) ([]*webhookModel.Execution, error) {
+	var rows []*Execution
+	if err := s.db.WithContext(ctx).Where("eventID = ?", triggerID).Find(&rows).Error; err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
+	}
+	result := make([]*webhookModel.Execution, len(rows))
+	for i, row := range rows {
+		result[i] = mapExecutionToModel(*row)
+	}
+	return result, nil
+}
+
+func (s *Store) GetExecutionByID(ctx context.Context, executionID uint) (*webhookModel.Execution, error) {
+	var execution Execution
+	err := s.db.WithContext(ctx).Where("id = ?", executionID).First(&execution).Error
+	if err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
+	}
+	return mapExecutionToModel(execution), nil
+}
+
+func (s *Store) CreateExecution(ctx context.Context, execution *webhookModel.Execution) error {
+	entity := &Execution{
+		WebhookID:      uint(execution.WebhookID),
+		TriggerType:    execution.TriggerType,
+		EventID:        execution.EventID,
+		Result:         string(execution.Result),
+		Duration:       execution.Duration,
+		Error:          execution.Error,
+		ReqURL:         execution.ReqURL,
+		ReqHeaders:     execution.ReqHeaders,
+		ReqBody:        execution.ReqBody,
+		RespStatusCode: execution.RespStatusCode,
+		RespStatus:     execution.RespStatus,
+		RespHeaders:    execution.RespHeaders,
+		RespBody:       execution.RespBody,
+		Retriggerable:  execution.ReTriggerable,
+		CreatedDate:    execution.CreatedDate,
+		EditedDate:     execution.EditedDate,
+	}
+	if execution.RetriggerID != nil {
+		id := uint(*execution.RetriggerID)
+		entity.RetriggerID = &id
+	}
+	if err := s.db.WithContext(ctx).Create(entity).Error; err != nil {
+		return database.ProcessSQLErrorf(ctx, err)
+	}
+	execution.ID = int64(entity.ID)
+	return nil
+}
+
+func (s *Store) ListExecutions(ctx context.Context, webhookID uint, filter webhookModel.ReqForList) (*database.PageResult[*webhookModel.Execution], error) {
+	tx := s.db.WithContext(ctx).Model(&Execution{}).Where("webhookID = ?", webhookID)
+
+	sort := "createdDate"
+	if col, ok := allowedExecutionSortFields[filter.Sort]; ok {
+		sort = col
+	}
+
+	var rows []*Execution
+	pageResult, err := database.Paginate(ctx, tx, database.PageParam{
+		Page:      filter.Page,
+		PageSize:  filter.PageSize,
+		Sort:      sort,
+		Order:     filter.Order,
+		NeedTotal: true,
+	}, &rows)
+	if err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
+	}
+
+	data := make([]*webhookModel.Execution, len(rows))
+	for i, row := range rows {
+		data[i] = mapExecutionToModel(*row)
+	}
+
+	return &database.PageResult[*webhookModel.Execution]{
+		Data:      data,
+		Total:     pageResult.Total,
+		Page:      pageResult.Page,
+		PageSize:  pageResult.PageSize,
+		TotalPage: pageResult.TotalPage,
+	}, nil
+}
+
+func mapExecutionToModel(data Execution) *webhookModel.Execution {
+	var retriggerID *int64
+	if data.RetriggerID != nil {
+		id := int64(*data.RetriggerID)
+		retriggerID = &id
+	}
+	return &webhookModel.Execution{
+		ID:             int64(data.ID),
+		WebhookID:      int64(data.WebhookID),
+		TriggerType:    data.TriggerType,
+		EventID:        data.EventID,
+		Result:         constant.WebhookExecutionResult(data.Result),
+		Duration:       data.Duration,
+		Error:          data.Error,
+		ReqURL:         data.ReqURL,
+		ReqHeaders:     data.ReqHeaders,
+		ReqBody:        data.ReqBody,
+		RespStatusCode: data.RespStatusCode,
+		RespStatus:     data.RespStatus,
+		RespHeaders:    data.RespHeaders,
+		RespBody:       data.RespBody,
+		RetriggerID:    retriggerID,
+		ReTriggerable:  data.Retriggerable,
+		CreatedDate:    data.CreatedDate,
+		EditedDate:     data.EditedDate,
+	}
+}
+
 func mapToModel(data Webhook) *webhookModel.Webhook {
 	var triggers []constant.WebhookTrigger
 	if data.Triggers != "" {
@@ -131,9 +302,9 @@ func mapToModel(data Webhook) *webhookModel.Webhook {
 		ParentID:              parentID,
 		ParentType:            parentType,
 		CreatedBy:             data.CreatedBy,
-		Created:               data.CreatedDate,
-		UpdatedBy:             data.EditedBy,
-		Updated:               data.EditedDate,
+		CreatedDate:           data.CreatedDate,
+		EditedBy:              data.EditedBy,
+		EditedDate:            data.EditedDate,
 		Internal:              data.Internal,
 		DisplayName:           data.DisplayName,
 		Description:           data.Desc,
