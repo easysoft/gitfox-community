@@ -1,0 +1,1104 @@
+package artifact
+
+import (
+	"archive/zip"
+	"compress/flate"
+	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io"
+	"io/fs"
+	"net/http"
+	"path/filepath"
+	"sort"
+	"strconv"
+	"strings"
+	"time"
+
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/adapter"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/adapter/container"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/adapter/generic"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/adapter/helm"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/adapter/raw"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/entity"
+	artModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/model"
+	enum "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
+	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
+	authModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
+	artifactStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/artifact"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/rbac"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/storage"
+	storagedriver "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/storage/driver"
+
+	repoStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
+	spaceStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/space"
+	userStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/user"
+	artifactperm "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/rbac/artifact"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
+	"github.com/opencontainers/go-digest"
+
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
+	"gorm.io/gorm"
+)
+
+const artifactStoragePrefix = "artifact"
+
+const (
+	JobTypeArtifactContainerGC      = "gitfox:cleanup:artifact-container-garbage-collector"
+	JobTypeArtifactSoftRemoveGC     = "gitfox:cleanup:artifact-soft-remove"
+	JobTypeArtifactExpiredViewGC    = "gitfox:cleanup:artifact-expired-view"
+	JobNameArtifactExpiredViewGC    = "gitfox:recurring:artifact-expired-view-gc"
+	ArtifactGCJobMaxDurationSeconds = 3600
+)
+
+var _ Interface = (*Service)(nil)
+
+// Service 是制品库的核心业务服务。
+type Service struct {
+	db         *gorm.DB
+	artStore   artifactStore.Interface
+	spaceStore spaceStore.Interface
+	repoStore  repoStore.Interface
+	userStore  *userStore.Store
+	perm       *artifactperm.Manager
+	fileStore  storage.ContentStorage
+	scheduler  JobScheduler
+	config     *config.ArtifactConfig // 制品库配置（回收站保留期、GC 间隔等）
+}
+
+// NewService 创建制品库服务。使用 StorageDriver 内部构建 ContentStorage，
+// 避免与 pipeline 的 ContentStorage provider 冲突。
+func NewService(
+	db *gorm.DB,
+	artStore artifactStore.Interface,
+	spaceStore spaceStore.Interface,
+	repoStore repoStore.Interface,
+	uStore *userStore.Store,
+	perm *artifactperm.Manager,
+	d storagedriver.StorageDriver,
+	scheduler JobScheduler,
+	cfg *config.ArtifactConfig,
+) (*Service, error) {
+	fs, err := storage.NewCommonContentStore(context.Background(), d,
+		storage.WithPrefix(artifactStoragePrefix))
+	if err != nil {
+		return nil, err
+	}
+	// 校验并修正配置：确保 GCInterval >= RecycleBinRetention
+	cfg.Sanitize()
+	return &Service{
+		db:         db,
+		artStore:   artStore,
+		spaceStore: spaceStore,
+		repoStore:  repoStore,
+		userStore:  uStore,
+		perm:       perm,
+		fileStore:  fs,
+		scheduler:  scheduler,
+		config:     cfg,
+	}, nil
+}
+
+// CreateView 创建制品库视图。
+//
+// 名称唯一性规则（同一作用域 spaceID + repoID 下）：
+//  1. 若存在同名的 active 视图（deleted=0）-> 拒绝，返回"名称已存在"。
+//  2. 若存在同名的软删视图（deleted=1）且仍在回收站保留期内
+//     （editedDate 距今 < config.RecycleBinRetention）-> 拒绝，提示用户从回收站恢复。
+//  3. 若存在同名的软删视图但已超过保留期 -> 先物理删除过期 view，再正常创建。
+//  4. 无同名记录 -> 正常创建。
+//
+// 注意：ops_artifact_views 表已移除严格唯一索引（uk_spaceID_repoID_name），
+// 改由此方法在应用层保证名称唯一性，以支持回收站保留期的时间窗口判断。
+func (s *Service) CreateView(ctx context.Context, req *model.CreateArtifactViewReq) (*model.ArtifactView, error) {
+	log := logger.GetLogger(ctx)
+
+	// 查询同作用域下所有同名 view（包含已软删的）
+	existing, err := s.artStore.Views().FindByNameInScope(ctx, req.SpaceID, req.RepoID, req.Name)
+	if err != nil {
+		return nil, err
+	}
+
+	now := time.Now()
+	retentionCutoff := now.Add(-s.config.RecycleBinRetention) // 回收站保留期截止时间
+
+	for _, v := range existing {
+		if v.Deleted == 0 {
+			// 情况1：存在同名 active view，拒绝创建
+			return nil, fmt.Errorf("同名制品库视图 '%s' 已存在", req.Name)
+		}
+
+		// deleted=1：检查是否在回收站保留期内
+		// editedDate 即软删时间（软删时 GORM autoUpdateTime 自动更新）
+		if v.EditedDate != nil && v.EditedDate.After(retentionCutoff) {
+			// 情况2：同名 view 在回收站保留期内，提示用户恢复
+			remainDays := int(v.EditedDate.Sub(retentionCutoff).Hours()/24) + 1
+			return nil, fmt.Errorf(
+				"同名制品库视图 '%s' 在回收站中（剩余 %d 天可恢复），请从回收站恢复或等待过期后重建",
+				req.Name, remainDays,
+			)
+		}
+
+		// 情况3：同名 view 已超过保留期，先级联清理关联资源再物理删除 view
+		log.Infof("物理删除过期的同名软删视图 id=%d name=%s", v.ID, v.Name)
+		if err = s.hardDeleteViewResources(ctx, v.ID); err != nil {
+			log.Errorf("清理过期视图 %d 关联资源失败: %v", v.ID, err)
+			// 继续尝试删除 view 本身
+		}
+		if err = s.artStore.Views().Delete(ctx, v.ID); err != nil {
+			return nil, fmt.Errorf("清理过期视图失败: %w", err)
+		}
+	}
+
+	// 情况4：无冲突，正常创建
+	v := &model.ArtifactView{
+		Name:        req.Name,
+		Description: req.Description,
+		SpaceID:     req.SpaceID,
+		RepoID:      req.RepoID,
+		Default:     false,
+	}
+	if err = s.artStore.Views().Create(ctx, v); err != nil {
+		return nil, err
+	}
+	return v, nil
+}
+
+// ParseSpaceView 解析 SpaceRepoReq 参数为 ViewDescriptor。
+func (s *Service) ParseSpaceView(ctx context.Context, req *model.SpaceRepoReq) (*adapter.ViewDescriptor, error) {
+	desc := &adapter.ViewDescriptor{
+		Store:     s.fileStore,
+		StorageID: 1,
+	}
+
+	var view *model.ArtifactView
+	var err error
+
+	if req.RepoID > 0 {
+		if req.SpaceID == 0 {
+			return nil, errors.New("spaceId is required when repoId is provided")
+		}
+		repo, err := s.repoStore.GetByID(ctx, uint(req.RepoID))
+		if err != nil {
+			return nil, err
+		}
+		desc.Repo = &model.RepoRef{ID: int64(repo.ID), GitUID: repo.GitUID, Name: repo.Identifier}
+		view, err = s.artStore.Views().GetDefaultByRepoAndSpace(ctx, req.RepoID, req.SpaceID)
+		if err != nil {
+			return nil, err
+		}
+		desc.ViewID = view.ID
+	} else if req.SpaceID > 0 {
+		space, err := s.spaceStore.GetByID(ctx, uint(req.SpaceID))
+		if err != nil {
+			return nil, err
+		}
+		desc.Space = &model.SpaceRef{ID: int64(space.ID), Name: space.Name}
+		view, err = s.artStore.Views().GetDefault(ctx, req.SpaceID)
+		if err != nil {
+			return nil, err
+		}
+		desc.ViewID = view.ID
+	} else {
+		// global view
+		view, err = s.artStore.Views().GetDefault(ctx, 0)
+		if err != nil {
+			return nil, err
+		}
+		desc.ViewID = view.ID
+	}
+
+	return desc, nil
+}
+
+func (s *Service) ListPackages(ctx context.Context, viewId int64, filter *model.ArtifactFilter) ([]*model.ArtifactListItem, error) {
+	return s.artStore.FindPackages(ctx, viewId, filter)
+}
+
+func (s *Service) ListVersions(ctx context.Context, viewId int64,
+	packageName, groupName string, format model.ArtifactFormat, opt model.SearchVersionOption,
+) ([]*model.ArtifactVersion, error) {
+	dbPkg, err := s.artStore.Packages().GetByName(ctx, packageName, groupName, viewId, format)
+	if err != nil {
+		return nil, err
+	}
+	opt.PackageId = dbPkg.ID
+	opt.ViewId = viewId
+	return s.artStore.Versions().Find(ctx, opt)
+}
+
+func (s *Service) ListAssets(ctx context.Context, versionId int64) ([]*model.ArtifactAssetsRes, error) {
+	return s.artStore.ListAssets(ctx, versionId)
+}
+
+func (s *Service) ListGroupAssets(ctx context.Context, groupId int64) ([]*model.ArtifactAssetsRes, error) {
+	return s.artStore.ListGroupAssets(ctx, groupId)
+}
+
+func (s *Service) GetAsset(ctx context.Context, assetId int64) (*model.ArtifactAssetsRes, error) {
+	return s.artStore.GetAsset(ctx, assetId)
+}
+
+func (s *Service) GetBlobHistory(ctx context.Context, assetId int64) ([]*model.ArtifactBlobRes, error) {
+	return s.artStore.Blobs().History(ctx, assetId)
+}
+
+func (s *Service) DownloadAsset(ctx context.Context, assetId int64) (io.ReadCloser, *model.ArtifactBlob, error) {
+	asset, err := s.artStore.Assets().GetById(ctx, assetId)
+	if err != nil {
+		return nil, nil, err
+	}
+	blob, err := s.artStore.Blobs().GetById(ctx, asset.BlobID)
+	if err != nil {
+		return nil, nil, err
+	}
+	blobPath := adapter.BlobPath(blob.Ref)
+	reader, err := s.fileStore.Open(ctx, blobPath)
+	if err != nil {
+		return nil, nil, err
+	}
+	return reader, blob, nil
+}
+
+func (s *Service) Upload(ctx context.Context, view *adapter.ViewDescriptor, format model.ArtifactFormat, req *http.Request) ([]*adapter.SavedAsset, error) {
+	var uploader adapter.ArtifactPackageUploader
+
+	switch format {
+	case model.ArtifactRawFormat:
+		uploader = raw.NewUploader(s.fileStore, s.artStore, view)
+	case model.ArtifactGenericFormat:
+		uploader = generic.NewUploader(s.fileStore, s.artStore, view)
+	default:
+		return nil, errors.New("unsupported artifact format")
+	}
+
+	if _, err := uploader.Serve(ctx, req); err != nil {
+		return nil, err
+	}
+	if err := uploader.IsValid(ctx); err != nil {
+		_ = uploader.Cancel(ctx)
+		return nil, err
+	}
+	if err := uploader.Save(ctx); err != nil {
+		return nil, err
+	}
+	return uploader.GetAssets(), nil
+}
+
+func (s *Service) CreateGroup(ctx context.Context, viewId int64, names []string, format model.ArtifactFormat) (*model.ArtifactGroupEndpoint, error) {
+	var result *model.ArtifactGroupEndpoint
+	err := s.db.Transaction(func(tx *gorm.DB) error {
+		ge, e := s.artStore.Groups().RecursiveCreate(ctx, viewId, names, format)
+		if e != nil {
+			return e
+		}
+		result = ge
+		return nil
+	})
+	return result, err
+}
+
+func (s *Service) ListFormats(ctx context.Context, viewId int64) ([]*model.ArtifactTreeNode, error) {
+	return s.artStore.Nodes().ListFormats(ctx, viewId)
+}
+
+func (s *Service) ListTreeNodes(ctx context.Context, parentId int64) ([]*model.ArtifactTreeNode, error) {
+	return s.artStore.Nodes().ListByParentId(ctx, parentId)
+}
+
+func (s *Service) DeleteVersion(ctx context.Context, versionId int64) error {
+	ver, err := s.artStore.Versions().GetByID(ctx, versionId)
+	if err != nil {
+		return err
+	}
+	return s.artStore.Versions().SoftDelete(ctx, ver)
+}
+
+func (s *Service) DeletePackage(ctx context.Context, packageId int64) error {
+	pkg, err := s.artStore.Packages().GetByID(ctx, packageId)
+	if err != nil {
+		return err
+	}
+	return s.artStore.Packages().SoftDelete(ctx, pkg)
+}
+
+func (s *Service) statistic(ctx context.Context, report *model.ArtifactStatisticReport) (*model.ArtifactStatisticResponse, error) {
+	res := &model.ArtifactStatisticResponse{}
+
+	delData := &model.ArtifactGarbageReportRes{Ids: make([]int64, 0)}
+	for _, d := range report.DeleteList {
+		delData.Count++
+		delData.Size += d.Size
+		delData.Ids = append(delData.Ids, d.AssetId)
+	}
+	res.GarbageCollect = delData
+
+	if len(report.TagList) == 0 {
+		res.Capacity = make([]*model.ArtifactPackageCapacityRes, 0)
+		return res, nil
+	}
+
+	sort.Slice(report.TagList, func(i, j int) bool {
+		return report.TagList[i].VersionId < report.TagList[j].VersionId
+	})
+
+	vids := make([]int64, 0, len(report.TagList))
+	for _, t := range report.TagList {
+		vids = append(vids, t.VersionId)
+	}
+
+	verInfoList, err := s.artStore.Versions().Search(ctx, artifactStore.VersionIDsOption{IDs: vids})
+	if err != nil {
+		return nil, err
+	}
+
+	capByVersion := make(map[int64]*model.ArtifactVersionCapacityDesc, len(report.TagList))
+	for _, item := range report.TagList {
+		capByVersion[item.VersionId] = item
+	}
+
+	pkgCapMap := make(map[int64]*model.ArtifactPackageCapacityRes)
+	for _, verInfo := range verInfoList {
+		pkgCap, ok := pkgCapMap[verInfo.PackageId]
+		if !ok {
+			pkgCap = &model.ArtifactPackageCapacityRes{
+				Scope:     artifactViewScope(verInfo),
+				Space:     verInfo.SpaceName,
+				Repo:      verInfo.RepoName,
+				Name:      verInfo.PackageName,
+				Namespace: verInfo.PackageNamespace,
+				Format:    verInfo.PackageFormat,
+				Versions:  make([]model.ArtifactVersionCapacityRes, 0),
+			}
+			pkgCapMap[verInfo.PackageId] = pkgCap
+		}
+
+		tagCap, ok := capByVersion[verInfo.ID]
+		if !ok {
+			continue
+		}
+		verCap := model.ArtifactVersionCapacityRes{
+			Version:       verInfo.Version,
+			Size:          tagCap.TotalSize,
+			ExclusiveSize: tagCap.ExclusiveSize,
+		}
+		pkgCap.Versions = append(pkgCap.Versions, verCap)
+		pkgCap.Size += tagCap.TotalSize
+		pkgCap.ExclusiveSize += tagCap.ExclusiveSize
+	}
+
+	pkgCapList := make([]*model.ArtifactPackageCapacityRes, 0, len(pkgCapMap))
+	for _, pkgCap := range pkgCapMap {
+		sort.Slice(pkgCap.Versions, func(i, j int) bool {
+			return pkgCap.Versions[i].ExclusiveSize > pkgCap.Versions[j].ExclusiveSize
+		})
+		pkgCapList = append(pkgCapList, pkgCap)
+	}
+	sort.Slice(pkgCapList, func(i, j int) bool {
+		return pkgCapList[i].Size > pkgCapList[j].Size
+	})
+
+	res.Capacity = pkgCapList
+	return res, nil
+}
+
+func artifactViewScope(info *model.ArtifactVersionInfo) string {
+	if info.ViewRepoID > 0 {
+		return "repo"
+	}
+	if info.ViewSpaceID > 0 {
+		return "space"
+	}
+	return "global"
+}
+
+func (s *Service) StatisticContainerCapacity(ctx context.Context) (*model.ArtifactStatisticResponse, error) {
+	report, err := s.artStore.StatisticAssets(ctx, artifactStore.ContainerFormatOption{})
+	if err != nil {
+		return nil, err
+	}
+	return s.statistic(ctx, report)
+}
+
+func (s *Service) StatisticCapacity(ctx context.Context) (*model.ArtifactStatisticResponse, error) {
+	report, err := s.artStore.StatisticAssets(ctx, artifactStore.ExcludeContainerOption{})
+	if err != nil {
+		return nil, err
+	}
+	return s.statistic(ctx, report)
+}
+
+func (s *Service) StatisticSummary(ctx context.Context) (map[string]*model.ArtifactStatsObject, error) {
+	assets, err := s.artStore.Assets().Search(ctx, artifactStore.AssetVersionedOption{})
+	if err != nil {
+		return nil, err
+	}
+
+	versionStats := make(map[int64]*model.ArtifactStatsObject)
+	for _, asset := range assets {
+		if asset.VersionID.Ptr() == nil {
+			continue
+		}
+		stats, ok := versionStats[asset.VersionID.Int64]
+		if !ok {
+			stats = &model.ArtifactStatsObject{}
+			versionStats[asset.VersionID.Int64] = stats
+		}
+		stats.Total++
+		if asset.Deleted > 0 {
+			stats.Deleted++
+		} else {
+			stats.Active++
+		}
+	}
+
+	vIds := make([]int64, 0, len(versionStats))
+	for vID := range versionStats {
+		vIds = append(vIds, vID)
+	}
+	verInfoList, err := s.artStore.Versions().Search(ctx, artifactStore.VersionIDsOption{IDs: vIds})
+	if err != nil {
+		return nil, err
+	}
+
+	res := map[string]*model.ArtifactStatsObject{
+		"all": {},
+	}
+	for _, verInfo := range verInfoList {
+		verStats, ok := versionStats[verInfo.ID]
+		if !ok {
+			logger.GetLogger(ctx).Debugf("versionId %d not found in versionStats", verInfo.ID)
+			continue
+		}
+		key := artifactScopeKey(verInfo)
+		scopeStats, ok := res[key]
+		if !ok {
+			scopeStats = &model.ArtifactStatsObject{}
+			res[key] = scopeStats
+		}
+		addStats(scopeStats, verStats)
+		addStats(res["all"], verStats)
+	}
+	return res, nil
+}
+
+func artifactScopeKey(info *model.ArtifactVersionInfo) string {
+	switch artifactViewScope(info) {
+	case "repo":
+		return "repo:" + info.RepoName
+	case "space":
+		return "space:" + info.SpaceName
+	default:
+		return "global"
+	}
+}
+
+func addStats(dst, src *model.ArtifactStatsObject) {
+	dst.Total += src.Total
+	dst.Active += src.Active
+	dst.Deleted += src.Deleted
+}
+
+func (s *Service) TriggerGarbageCollectContainer(ctx context.Context) (*model.JobUIDResponse, error) {
+	return s.triggerGarbageCollect(ctx, JobTypeArtifactContainerGC)
+}
+
+func (s *Service) TriggerGarbageCollectSoftRemove(ctx context.Context) (*model.JobUIDResponse, error) {
+	return s.triggerGarbageCollect(ctx, JobTypeArtifactSoftRemoveGC)
+}
+
+func (s *Service) triggerGarbageCollect(ctx context.Context, jobType string) (*model.JobUIDResponse, error) {
+	if s.scheduler == nil {
+		return nil, errors.New("artifact job scheduler is not configured")
+	}
+	jobName := fmt.Sprintf("%s:%d", jobType, time.Now().UnixNano())
+	payload, err := json.Marshal(map[string]any{"retention_time": 0})
+	if err != nil {
+		return nil, err
+	}
+	if err = s.scheduler.RunJob(ctx, jobName, jobType, string(payload), ArtifactGCJobMaxDurationSeconds); err != nil {
+		return nil, err
+	}
+	return &model.JobUIDResponse{UID: jobName}, nil
+}
+
+func (s *Service) GarbageCollectSoftRemove(ctx context.Context) (*model.ArtifactGarbageReportRes, error) {
+	report, err := s.artStore.StatisticAssets(ctx, artifactStore.ExcludeContainerOption{})
+	if err != nil {
+		return nil, err
+	}
+	return s.garbageCollect(ctx, report.DeleteList)
+}
+
+func (s *Service) GarbageCollectContainer(ctx context.Context) (*model.ArtifactGarbageReportRes, error) {
+	report, err := s.artStore.StatisticAssets(ctx, artifactStore.ContainerFormatOption{})
+	if err != nil {
+		return nil, err
+	}
+	return s.garbageCollect(ctx, report.DeleteList)
+}
+
+func (s *Service) garbageCollect(ctx context.Context, items []*model.ArtifactRecycleBlobDesc) (*model.ArtifactGarbageReportRes, error) {
+	res := &model.ArtifactGarbageReportRes{Ids: make([]int64, 0, len(items))}
+	for _, item := range items {
+		if item == nil || item.AssetId == 0 || item.BlobId == 0 {
+			continue
+		}
+		if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+			if err := s.artStore.Assets().DeleteById(ctx, item.AssetId); err != nil {
+				return err
+			}
+			if err := s.artStore.Blobs().DeleteById(ctx, item.BlobId); err != nil {
+				return err
+			}
+			if item.BlobRef != "" {
+				return s.fileStore.Delete(ctx, adapter.BlobPath(item.BlobRef))
+			}
+			return nil
+		}); err != nil {
+			logger.GetLogger(ctx).Errorf("artifact garbage collect failed for asset %d blob %d: %v", item.AssetId, item.BlobId, err)
+			return res, err
+		}
+		res.Count++
+		res.Size += item.Size
+		res.Ids = append(res.Ids, item.AssetId)
+	}
+	return res, nil
+}
+
+func (s *Service) SoftRemove(ctx context.Context, spaceID int64, req *model.SoftRemoveEntitiesReq) (*model.ArtifactNodeRemoveReport, error) {
+	ids := req.EntityIds
+	if len(ids) == 0 {
+		ids = req.NodeIds
+	}
+	report := &model.ArtifactNodeRemoveReport{Total: len(ids), Data: make([]*model.ArtifactNodeRemoveRes, len(ids))}
+	for _, eid := range ids {
+		if _, err := entity.Parse(ctx, s.artStore, eid); err != nil {
+			logger.GetLogger(ctx).Warnf("parse artifact entity %s failed before soft remove: %v", eid, err)
+			return nil, err
+		}
+	}
+
+	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		for idx, eid := range ids {
+			res := &model.ArtifactNodeRemoveRes{NodeId: eid, Status: model.ArtifactStatusOK}
+			report.Data[idx] = res
+			if err := s.softRemoveEntity(ctx, eid, res); err != nil {
+				if res.Status == model.ArtifactStatusOK {
+					res.Status = model.ArtifactStatusUnknown
+				}
+				return err
+			}
+		}
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+
+	for _, item := range report.Data {
+		if item.Status == model.ArtifactStatusOK {
+			report.Success++
+		} else {
+			report.Failed++
+		}
+	}
+	return report, nil
+}
+
+func (s *Service) softRemoveEntity(ctx context.Context, eid string, res *model.ArtifactNodeRemoveRes) error {
+	if strings.Count(eid, ".") != 1 {
+		res.Status = model.ArtifactStatusInvalidId
+		return nil
+	}
+	parts := strings.Split(eid, ".")
+	nodeType := model.ArtifactTreeNodeType(parts[0])
+	nodeID, err := strconv.ParseInt(parts[1], 10, 64)
+	if err != nil {
+		res.Status = model.ArtifactStatusInvalidId
+		return nil
+	}
+
+	switch nodeType {
+	case model.ArtifactTreeNodeTypeAsset:
+		asset, err := s.artStore.Assets().GetById(ctx, nodeID)
+		if err != nil {
+			res.Status = model.ArtifactStatusNotFound
+			return nil
+		}
+		return s.softRemoveAsset(ctx, asset, res)
+	case model.ArtifactTreeNodeTypeVersion:
+		ver, err := s.artStore.Versions().GetByID(ctx, nodeID)
+		if err != nil {
+			res.Status = model.ArtifactStatusNotFound
+			return nil
+		}
+		return s.softRemoveVersion(ctx, ver, res)
+	case model.ArtifactTreeNodeTypePackage:
+		pkg, err := s.artStore.Packages().GetByID(ctx, nodeID)
+		if err != nil {
+			res.Status = model.ArtifactStatusNotFound
+			return nil
+		}
+		return s.softRemovePackage(ctx, pkg, res)
+	case model.ArtifactTreeNodeTypeGroup, model.ArtifactTreeNodeTypeDirectory:
+		group, err := s.artStore.Groups().GetById(ctx, nodeID)
+		if err != nil {
+			res.Status = model.ArtifactStatusNotFound
+			return nil
+		}
+		return s.softRemoveGroup(ctx, group, res)
+	default:
+		res.Status = model.ArtifactStatusInvalidId
+		return nil
+	}
+}
+
+func (s *Service) softRemoveAsset(ctx context.Context, asset *model.ArtifactAsset, res *model.ArtifactNodeRemoveRes) error {
+	if err := s.artStore.Assets().SoftDeleteById(ctx, asset.ID); err != nil {
+		return err
+	}
+	if asset.BlobID != 0 {
+		if err := s.artStore.Blobs().SoftDeleteById(ctx, asset.BlobID); err != nil {
+			return err
+		}
+	}
+	res.Assets++
+	return nil
+}
+
+func (s *Service) softRemoveVersion(ctx context.Context, ver *model.ArtifactVersion, res *model.ArtifactNodeRemoveRes) error {
+	assets, err := s.artStore.Assets().Search(ctx, model.SearchAssetOption{VersionId: ver.ID}, artifactStore.AssetExcludeDeletedOption{})
+	if err != nil {
+		return err
+	}
+	for _, asset := range assets {
+		if err = s.softRemoveAsset(ctx, asset, res); err != nil {
+			return err
+		}
+	}
+	if err = s.artStore.Versions().SoftDelete(ctx, ver); err != nil {
+		return err
+	}
+	res.Versions++
+	_ = s.deleteTreeNodeByTarget(ctx, ver.ViewID, model.ArtifactTreeNodeTypeVersion, ver.ID)
+	return nil
+}
+
+func (s *Service) softRemovePackage(ctx context.Context, pkg *model.ArtifactPackage, res *model.ArtifactNodeRemoveRes) error {
+	versions, err := s.artStore.Versions().Find(ctx, model.SearchVersionOption{PackageId: pkg.ID, ViewId: pkg.ViewID})
+	if err != nil {
+		return err
+	}
+	for _, ver := range versions {
+		if err = s.softRemoveVersion(ctx, ver, res); err != nil {
+			return err
+		}
+	}
+	if err = s.artStore.Packages().SoftDelete(ctx, pkg); err != nil {
+		return err
+	}
+	res.Packages++
+	_ = s.deleteTreeNodeByTarget(ctx, pkg.ViewID, model.ArtifactTreeNodeTypePackage, pkg.ID)
+	if pkg.Format == model.ArtifactHelmFormat {
+		_ = helm.NewHelmIndex(s.artStore, &adapter.ViewDescriptor{ViewID: pkg.ViewID, Store: s.fileStore, StorageID: 1}).UpdateRepo(ctx, "/artifacts/helm")
+	}
+	return nil
+}
+
+func (s *Service) softRemoveGroup(ctx context.Context, group *model.ArtifactGroup, res *model.ArtifactNodeRemoveRes) error {
+	packages, err := s.artStore.Packages().Search(ctx, groupPackagesOption{groupID: group.ID})
+	if err != nil {
+		return err
+	}
+	for _, pkg := range packages {
+		if err = s.softRemovePackage(ctx, pkg, res); err != nil {
+			return err
+		}
+	}
+	assets, err := s.artStore.Assets().Search(ctx, groupAssetsOption{groupID: group.ID}, artifactStore.AssetExcludeDeletedOption{})
+	if err != nil {
+		return err
+	}
+	for _, asset := range assets {
+		if err = s.softRemoveAsset(ctx, asset, res); err != nil {
+			return err
+		}
+	}
+	return s.artStore.Groups().SoftDeleteById(ctx, group.ID)
+}
+
+func (s *Service) deleteTreeNodeByTarget(ctx context.Context, viewID int64, nodeType model.ArtifactTreeNodeType, id int64) error {
+	node, err := s.artStore.Nodes().GetByTarget(ctx, viewID, nodeType, id)
+	if err != nil {
+		return nil
+	}
+	return s.artStore.Nodes().DeleteById(ctx, node.ID)
+}
+
+type groupPackagesOption struct{ groupID int64 }
+
+func (o groupPackagesOption) Apply(db *gorm.DB) *gorm.DB {
+	return db.Where("groupID = ?", o.groupID).Where("deleted = 0")
+}
+
+type groupAssetsOption struct{ groupID int64 }
+
+func (o groupAssetsOption) Apply(db *gorm.DB) *gorm.DB {
+	return db.Where("groupID = ?", o.groupID)
+}
+
+type ArchiveGroup struct {
+	base      *archiveGroupItem
+	subGroups []*archiveGroupItem
+}
+
+func (a *ArchiveGroup) Name() string {
+	return fmt.Sprintf("%s.zip", a.base.Name)
+}
+
+type archiveGroupItem struct {
+	*model.ArtifactGroup
+	archivePath string
+	entity      *model.ArtifactEntity
+}
+
+func (s *Service) PrepareArchiveGroup(ctx context.Context, session *authModel.Session, spaceID, repoID, groupID int64) (*ArchiveGroup, error) {
+	root, err := s.artStore.Groups().GetById(ctx, groupID)
+	if err != nil {
+		return nil, err
+	}
+	rootEntity, err := entity.Parse(ctx, s.artStore, (&model.ArtifactTreeNodeId{Type: model.ArtifactTreeNodeTypeGroup, Pk: root.ID}).String())
+	if err != nil {
+		return nil, err
+	}
+	if err = s.authorizeArtifactAction(ctx, session, spaceID, repoID, rootEntity, enum.CasbinActionArtifactView); err != nil {
+		return nil, err
+	}
+
+	descendants, err := s.artStore.Groups().ListDescendants(ctx, groupID)
+	if err != nil {
+		return nil, err
+	}
+	rootGroup := &archiveGroupItem{ArtifactGroup: root, archivePath: root.Name, entity: rootEntity}
+	parentMap := map[int64]*archiveGroupItem{groupID: rootGroup}
+	archive := &ArchiveGroup{base: rootGroup}
+	denied := make(map[int64]bool)
+	for _, d := range descendants {
+		parent := parentMap[d.ParentID.Int64]
+		if parent == nil {
+			logger.GetLogger(ctx).Errorf("parent group %d does not exist in archive parent map", d.ParentID.Int64)
+			continue
+		}
+		entityNode := parent.entity.Join(&model.ArtifactEntity{Kind: model.ArtifactEntityKindGroup, Id: d.ID, Name: d.Name})
+		item := &archiveGroupItem{ArtifactGroup: d, archivePath: filepath.Join(parent.archivePath, d.Name), entity: entityNode}
+		parentMap[d.ID] = item
+		if denied[d.ParentID.Int64] {
+			denied[d.ID] = true
+			continue
+		}
+		if err = s.authorizeArtifactAction(ctx, session, spaceID, repoID, entityNode, enum.CasbinActionArtifactPull); err != nil {
+			denied[d.ID] = true
+			logger.GetLogger(ctx).Infof("group %d denied by artifact access control: %v", d.ID, err)
+			continue
+		}
+		archive.subGroups = append(archive.subGroups, item)
+	}
+	return archive, nil
+}
+
+func (s *Service) authorizeArtifactAction(ctx context.Context, session *authModel.Session, spaceID, repoID int64, e *model.ArtifactEntity, action enum.CasbinAction) error {
+	if session == nil || session.User == nil {
+		return errors.New("authentication required")
+	}
+
+	sub := rbac.NewUser(session.User.ID)
+	obj := rbac.NewObject(e.PolicyLocation())
+
+	// 三级作用域查找：repo → space → global
+	// 某一级有策略则覆盖（不回落），无策略则向上继承
+	if repoID > 0 {
+		repoScope := rbac.NewRepoSpace(spaceID, repoID)
+		if s.perm.HasPoliciesForScope(repoScope) {
+			_, _, err := s.perm.Enforce(ctx, sub, repoScope, obj, action)
+			return err
+		}
+	}
+	if spaceID > 0 {
+		spaceScope := rbac.NewSpace(spaceID)
+		if s.perm.HasPoliciesForScope(spaceScope) {
+			_, _, err := s.perm.Enforce(ctx, sub, spaceScope, obj, action)
+			return err
+		}
+	}
+	globalScope := rbac.NewSpace(0)
+	_, _, err := s.perm.Enforce(ctx, sub, globalScope, obj, action)
+	return err
+}
+
+func (s *Service) ArchiveGroup(ctx context.Context, archive *ArchiveGroup, output io.Writer) error {
+	zipWriter := zip.NewWriter(output)
+	zipWriter.RegisterCompressor(zip.Deflate, func(out io.Writer) (io.WriteCloser, error) {
+		return flate.NewWriter(out, flate.BestCompression)
+	})
+	defer zipWriter.Close()
+
+	for _, g := range append(archive.subGroups, archive.base) {
+		assets, err := s.artStore.ListGroupAssets(ctx, g.ID)
+		if err != nil {
+			return err
+		}
+		for _, asset := range assets {
+			info, err := s.fileStore.Stat(ctx, adapter.BlobPath(asset.BlobRef))
+			if err != nil {
+				return err
+			}
+			zf := zipAssetFile{asset: asset, info: info}
+			header, err := zip.FileInfoHeader(zf)
+			if err != nil {
+				return err
+			}
+			header.Name = filepath.Join(g.archivePath, asset.Path)
+			writer, err := zipWriter.CreateHeader(header)
+			if err != nil {
+				return err
+			}
+			reader, err := s.fileStore.Open(ctx, adapter.BlobPath(asset.BlobRef))
+			if err != nil {
+				return err
+			}
+			if _, err = io.Copy(writer, reader); err != nil {
+				_ = reader.Close()
+				return err
+			}
+			_ = reader.Close()
+		}
+	}
+	return zipWriter.Flush()
+}
+
+type zipAssetFile struct {
+	asset *model.ArtifactAssetsRes
+	info  storagedriver.FileInfo
+}
+
+func (z zipAssetFile) Name() string       { return z.asset.Path }
+func (z zipAssetFile) Size() int64        { return z.info.Size() }
+func (z zipAssetFile) Mode() fs.FileMode  { return 0644 }
+func (z zipAssetFile) ModTime() time.Time { return z.info.ModTime() }
+func (z zipAssetFile) IsDir() bool        { return z.info.IsDir() }
+func (z zipAssetFile) Sys() any           { return nil }
+
+func (s *Service) ListContainerImages(ctx context.Context, view *adapter.ViewDescriptor, packageName, version string) (*container.TagMetadata, error) {
+	ver, err := s.artStore.GetVersion(ctx, view.ViewID, packageName, "", version, model.ArtifactContainerFormat)
+	if err != nil {
+		return nil, err
+	}
+	assets, err := s.artStore.Assets().Search(ctx,
+		model.SearchAssetOption{VersionId: ver.ID, Kind: model.AssetKindMain},
+		artifactStore.AssetExcludeDeletedOption{},
+	)
+	if err != nil {
+		return nil, err
+	}
+	if len(assets) == 0 {
+		return nil, errors.New("container tag asset not found")
+	}
+	dgst, err := digest.Parse(assets[0].Path)
+	if err != nil {
+		return nil, err
+	}
+	reader := container.NewTagMetadataReader(s.artStore, view)
+	return reader.Parse(ctx, assets[0].ContentType, dgst)
+}
+
+// RefreshTree 全量重建制品树节点。
+// 遍历顺序：groups → packages(含 raw namespace 补建 group) → versions。
+// 移植自原项目 /root/repo/gitfox/app/services/artifact/sync_tree_node.go:RefreshTreeNodes。
+func (s *Service) RefreshTree(ctx context.Context) error {
+	syncer := artModel.NewSyncer(s.artStore)
+
+	// 1. 同步所有 group 树节点
+	groups, err := s.artStore.Groups().All(ctx)
+	if err != nil {
+		logger.GetLogger(ctx).Errorf("refresh tree: list groups failed: %v", err)
+		return err
+	}
+	for _, group := range groups {
+		if _, gErr := syncer.SyncTreeNodeForGroup(ctx, group); gErr != nil {
+			logger.GetLogger(ctx).Errorf("refresh tree: sync group %d failed: %v", group.ID, gErr)
+			return gErr
+		}
+	}
+
+	// 2. 遍历所有 packages，同步 package + version 树节点
+	return s.artStore.Packages().ListBatch(ctx, false, 100, func(pkg *model.ArtifactPackage) error {
+		// 2a. raw 格式 namespace 补建 group（namespace != "" 且 groupID==0 时）
+		if pkg.Namespace != "" && pkg.GroupID == 0 {
+			if sErr := syncer.SyncRawGroup(ctx, pkg); sErr != nil {
+				return sErr
+			}
+		}
+
+		// 2b. 同步 package 节点
+		if _, pErr := syncer.SyncTreeNodeForPackage(ctx, pkg); pErr != nil {
+			return pErr
+		}
+
+		// 2c. 同步该 package 下所有 version 节点
+		dbVersions, vErr := s.artStore.Versions().Find(ctx, model.SearchVersionOption{PackageId: pkg.ID})
+		if vErr != nil {
+			return vErr
+		}
+		for _, ver := range dbVersions {
+			if _, tErr := syncer.SyncTreeNodeForVersion(ctx, ver, pkg); tErr != nil {
+				return tErr
+			}
+		}
+		return nil
+	})
+}
+
+// GarbageCollectExpiredViews 清理超过回收站保留期的已软删视图及其全部关联资源。
+//
+// 处理流程：
+//  1. 根据 config.RecycleBinRetention 计算过期截止时间
+//  2. 查出所有 deleted=1 且 editedDate < 截止时间 的 view（editedDate 即软删时间）
+//  3. 对每个过期 view，级联硬删其下的 packages -> versions -> assets -> blobs（含物理文件）
+//  4. 最后硬删 view 本身
+//
+// 此方法由定时任务 JobTypeArtifactExpiredViewGC 自动调用。
+func (s *Service) GarbageCollectExpiredViews(ctx context.Context) (int, error) {
+	log := logger.GetLogger(ctx)
+
+	// 计算回收站保留期截止时间：editedDate 早于此时间的已软删 view 将被清理
+	cutoff := time.Now().Add(-s.config.RecycleBinRetention)
+	log.Infof("开始清理过期已软删视图，截止时间: %s", cutoff.Format(time.RFC3339))
+
+	// 查出并硬删过期 view，返回被删除的 view ID 列表
+	expiredViewIDs, err := s.artStore.Views().HardDeleteExpired(ctx, cutoff)
+	if err != nil {
+		return 0, fmt.Errorf("查询过期视图失败: %w", err)
+	}
+	if len(expiredViewIDs) == 0 {
+		log.Info("无过期已软删视图需要清理")
+		return 0, nil
+	}
+
+	log.Infof("发现 %d 个过期已软删视图待清理: %v", len(expiredViewIDs), expiredViewIDs)
+
+	// 对每个过期 view，级联清理其下所有关联资源
+	for _, viewID := range expiredViewIDs {
+		if err = s.hardDeleteViewResources(ctx, viewID); err != nil {
+			log.Errorf("清理视图 %d 的关联资源失败: %v", viewID, err)
+			// 继续处理其他 view，不因单个失败中断
+		}
+	}
+
+	log.Infof("过期视图清理完成，共处理 %d 个视图", len(expiredViewIDs))
+	return len(expiredViewIDs), nil
+}
+
+// hardDeleteViewResources 级联硬删指定 view 下的所有关联资源。
+// 删除顺序：
+//  1. packages (含 versions -> version assets -> blobs+物理文件)
+//  2. group 级 assets (generic 格式挂载在 group 上的 assets -> blobs+物理文件)
+//  3. groups
+//  4. tree_nodes
+//  5. meta_assets (helm chart 索引等)
+func (s *Service) hardDeleteViewResources(ctx context.Context, viewID int64) error {
+	log := logger.GetLogger(ctx)
+
+	// ---- 1. 清理 packages -> versions -> version-assets -> blobs ----
+	packages, err := s.artStore.Packages().List(ctx, viewID, true)
+	if err != nil {
+		return fmt.Errorf("查询 view %d 的 packages 失败: %w", viewID, err)
+	}
+
+	for _, pkg := range packages {
+		versions, vErr := s.artStore.Versions().Find(ctx, model.SearchVersionOption{
+			PackageId:      pkg.ID,
+			ViewId:         viewID,
+			IncludeDeleted: true,
+		})
+		if vErr != nil {
+			log.Errorf("查询 package %d 的 versions 失败: %v", pkg.ID, vErr)
+			continue
+		}
+
+		for _, ver := range versions {
+			if err = s.hardDeleteVersionAssets(ctx, ver.ID); err != nil {
+				log.Errorf("清理 version %d 的 assets 失败: %v", ver.ID, err)
+			}
+			if _, err = s.artStore.Versions().DeleteByIds(ctx, ver.ID); err != nil {
+				log.Errorf("硬删 version %d 失败: %v", ver.ID, err)
+			}
+		}
+
+		if err = s.artStore.Packages().DeleteById(ctx, pkg.ID); err != nil {
+			log.Errorf("硬删 package %d 失败: %v", pkg.ID, err)
+		}
+	}
+
+	// ---- 2. 清理 view 下剩余 assets（group 级 generic assets 等）及其 blobs+物理文件 ----
+	// version-linked assets 已在上面清理，这里处理 groupID>0 且 versionID=0 的 assets
+	remainingAssets, err := s.artStore.Assets().SearchExtendBlob(ctx, artifactStore.AssetViewOption{ViewId: viewID})
+	if err != nil {
+		log.Errorf("查询 view %d 的剩余 assets 失败: %v", viewID, err)
+	} else {
+		for _, asset := range remainingAssets {
+			if asset.BlobID != 0 && asset.Ref != "" {
+				_ = s.fileStore.Delete(ctx, adapter.BlobPath(asset.Ref))
+				_ = s.artStore.Blobs().DeleteById(ctx, asset.BlobID)
+			}
+			_ = s.artStore.Assets().DeleteById(ctx, asset.ID)
+		}
+	}
+
+	// ---- 3. 清理 groups ----
+	if n, gErr := s.artStore.Groups().DeleteByViewID(ctx, viewID); gErr != nil {
+		log.Errorf("硬删 view %d 的 groups 失败: %v", viewID, gErr)
+	} else if n > 0 {
+		log.Infof("硬删 view %d 的 %d 个 groups", viewID, n)
+	}
+
+	// ---- 4. 清理 tree_nodes ----
+	if n, tErr := s.artStore.Nodes().DeleteByViewID(ctx, viewID); tErr != nil {
+		log.Errorf("硬删 view %d 的 tree_nodes 失败: %v", viewID, tErr)
+	} else if n > 0 {
+		log.Infof("硬删 view %d 的 %d 个 tree_nodes", viewID, n)
+	}
+
+	// ---- 5. 清理 meta_assets ----
+	if n, mErr := s.artStore.MetaAssets().DeleteByViewID(ctx, viewID); mErr != nil {
+		log.Errorf("硬删 view %d 的 meta_assets 失败: %v", viewID, mErr)
+	} else if n > 0 {
+		log.Infof("硬删 view %d 的 %d 个 meta_assets", viewID, n)
+	}
+
+	log.Infof("视图 %d 关联资源清理完成: %d 个 packages", viewID, len(packages))
+	return nil
+}
+
+// hardDeleteVersionAssets 硬删指定 version 下的所有 assets 及关联 blobs，并清理物理文件。
+func (s *Service) hardDeleteVersionAssets(ctx context.Context, versionID int64) error {
+	assets, err := s.artStore.Assets().Search(ctx, model.SearchAssetOption{VersionId: versionID})
+	if err != nil {
+		return err
+	}
+
+	for _, asset := range assets {
+		// 删除关联的 blob 及物理文件
+		if asset.BlobID != 0 {
+			blob, bErr := s.artStore.Blobs().GetById(ctx, asset.BlobID)
+			if bErr == nil && blob.Ref != "" {
+				_ = s.fileStore.Delete(ctx, adapter.BlobPath(blob.Ref))
+			}
+			_ = s.artStore.Blobs().DeleteById(ctx, asset.BlobID)
+		}
+		// 硬删 asset
+		_ = s.artStore.Assets().DeleteById(ctx, asset.ID)
+	}
+	return nil
+}
+

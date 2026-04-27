@@ -1,0 +1,16 @@
+# 制品库相关翻译
+artifact:
+  list_success: "制品列表查询成功."
+  query_success: "制品详情查询成功."
+  upload_success: "制品上传成功."
+  download_success: "制品下载成功."
+  garbage_collect_success: "制品垃圾回收任务创建成功."
+  delete_success: "制品删除成功."
+  create_group_success: "制品 Group 创建成功."
+  refresh_tree_success: "制品树刷新成功."
+  statistic_success: "制品统计查询成功."
+  path_param_error: "Path 参数解析失败."
+  body_param_error: "Body 参数解析失败."
+  query_param_error: "Query 参数解析失败."
+  permission_update_success: "制品权限更新成功."
+  permission_query_success: "制品权限查询成功."

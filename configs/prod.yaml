@@ -79,3 +79,9 @@ middleware:
   logRequestBody: true
   logResponseBody: true
   maxLoggedBodyBytes: 2048
+
+# 制品库配置
+artifact:
+  recycleBinRetention: 720h  # 回收站保留时长，默认 30 天（720h），软删后此时间内可恢复
+  gcInterval: 720h           # GC 定时任务间隔，默认 30 天（720h），不得小于 recycleBinRetention
+

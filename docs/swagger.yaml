@@ -431,6 +431,29 @@ definitions:
     - WebhookTriggerArtifactCreated
     - WebhookTriggerArtifactUpdated
     - WebhookTriggerArtifactDeleted
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.ArtifactVersionListReq:
+    properties:
+      format:
+        type: string
+      groupName:
+        type: string
+      packageName:
+        type: string
+      repoId:
+        type: integer
+      spaceId:
+        type: integer
+    required:
+    - format
+    - packageName
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.SpaceRepoReq:
+    properties:
+      repoId:
+        type: integer
+      spaceId:
+        type: integer
+    type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_auth.Session:
     properties:
       principal:
@@ -3071,6 +3094,420 @@ info:
   title: GitFox API
   version: "1.0"
 paths:
+  /artifacts/assets/{assetId}:
+    get:
+      consumes:
+      - application/json
+      description: 获取指定制品文件的详细信息
+      parameters:
+      - description: 文件ID
+        in: path
+        name: assetId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 查询文件详情
+      tags:
+      - artifacts
+  /artifacts/assets/{assetId}/download:
+    get:
+      description: 下载制品文件
+      parameters:
+      - description: 文件ID
+        in: path
+        name: assetId
+        required: true
+        type: integer
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: 文件流
+          schema:
+            type: file
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 下载文件
+      tags:
+      - artifacts
+  /artifacts/assets/{assetId}/history:
+    get:
+      consumes:
+      - application/json
+      description: 获取指定制品文件的历史 blob 列表
+      parameters:
+      - description: 文件ID
+        in: path
+        name: assetId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 查询文件历史
+      tags:
+      - artifacts
+  /artifacts/formats:
+    post:
+      consumes:
+      - application/json
+      description: 列出指定空间的已用格式
+      parameters:
+      - description: 查询范围
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.SpaceRepoReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 查询格式列表
+      tags:
+      - artifacts
+  /artifacts/groups:
+    post:
+      consumes:
+      - application/json
+      description: 创建 group 节点
+      parameters:
+      - description: 请求参数(包含 spaceId, repoId, names 和 format)
+        in: body
+        name: body
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 创建分组
+      tags:
+      - artifacts
+  /artifacts/groups/{groupId}/assets:
+    get:
+      consumes:
+      - application/json
+      description: 列出指定分组的制品文件列表
+      parameters:
+      - description: 分组ID
+        in: path
+        name: groupId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 查询分组文件列表
+      tags:
+      - artifacts
+  /artifacts/nodes/{nodeId}/children:
+    get:
+      consumes:
+      - application/json
+      description: 列出树节点的子节点
+      parameters:
+      - description: 节点ID
+        in: path
+        name: nodeId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 查询树节点列表
+      tags:
+      - artifacts
+  /artifacts/packages:
+    post:
+      consumes:
+      - application/json
+      description: 列出指定空间/视图下的制品包
+      parameters:
+      - description: 查询范围
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.SpaceRepoReq'
+      - description: 制品格式
+        in: query
+        name: format
+        type: string
+      - description: 查询关键字
+        in: query
+        name: query
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 查询制品包列表
+      tags:
+      - artifacts
+  /artifacts/packages/{packageId}:
+    delete:
+      consumes:
+      - application/json
+      description: 删除指定包
+      parameters:
+      - description: 包ID
+        in: path
+        name: packageId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 删除指定包
+      tags:
+      - artifacts
+  /artifacts/tree/refresh:
+    post:
+      consumes:
+      - application/json
+      description: 重建所有制品树节点
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 重建制品树
+      tags:
+      - artifacts
+  /artifacts/upload/{format}:
+    post:
+      consumes:
+      - multipart/form-data
+      description: 上传制品文件（multipart/form-data）
+      parameters:
+      - description: 制品格式
+        in: path
+        name: format
+        required: true
+        type: string
+      - description: 空间ID
+        in: formData
+        name: spaceId
+        type: integer
+      - description: 仓库ID
+        in: formData
+        name: repoId
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 上传制品
+      tags:
+      - artifacts
+  /artifacts/versions/{versionId}:
+    delete:
+      consumes:
+      - application/json
+      description: 删除指定版本
+      parameters:
+      - description: 版本ID
+        in: path
+        name: versionId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 删除指定版本
+      tags:
+      - artifacts
+  /artifacts/versions/{versionId}/assets:
+    get:
+      consumes:
+      - application/json
+      description: 列出指定版本的制品文件列表
+      parameters:
+      - description: 版本ID
+        in: path
+        name: versionId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 查询版本文件列表
+      tags:
+      - artifacts
+  /artifacts/versions/list:
+    post:
+      consumes:
+      - application/json
+      description: 列出指定制品包的版本列表
+      parameters:
+      - description: 查询条件
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.ArtifactVersionListReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 查询版本列表
+      tags:
+      - artifacts
   /fit/repos/{id}/settings/advanced:
     get:
       consumes:

@@ -1,0 +1,16 @@
+# Artifact translations
+artifact:
+  list_success: "Artifact list queried successfully."
+  query_success: "Artifact details queried successfully."
+  upload_success: "Artifact uploaded successfully."
+  download_success: "Artifact downloaded successfully."
+  garbage_collect_success: "Artifact garbage collection job created successfully."
+  delete_success: "Artifact deleted successfully."
+  create_group_success: "Artifact group created successfully."
+  refresh_tree_success: "Artifact tree refreshed successfully."
+  statistic_success: "Artifact statistics queried successfully."
+  path_param_error: "Path param parsing failed."
+  body_param_error: "Body param parsing failed."
+  query_param_error: "Query param parsing failed."
+  permission_update_success: "Artifact permission updated successfully."
+  permission_query_success: "Artifact permission queried successfully."

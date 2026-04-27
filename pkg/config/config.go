@@ -26,6 +26,7 @@ type Config struct {
 	Devops       DevopsConfig       `yaml:"devops"`
 	Storage      StorageConfig      `yaml:"storage"`
 	PipelineAuth PipelineAuthConfig `yaml:"pipelineAuth"`
+	Artifact     ArtifactConfig     `yaml:"artifact"`
 }
 
 // PipelineAuthConfig 流水线内部认证配置
@@ -280,3 +281,35 @@ type S3Config struct {
 	AccessKey string `envconfig:"GITFOX_S3_ACCESS_KEY"` // S3 访问密钥
 	SecretKey string `envconfig:"GITFOX_S3_SECRET_KEY"` // S3 访问密钥
 }
+
+// ArtifactConfig 制品库模块配置。
+// 加载优先级：环境变量 > YAML 配置文件 > 代码默认值。
+type ArtifactConfig struct {
+	// RecycleBinRetention 回收站保留时长。
+	// 软删除后在此时间窗口内可从回收站恢复，同名制品库不允许重建。
+	// 超过此时间后，资源可被 GC 清理并允许同名重建。
+	// 默认 720h（30天）。
+	RecycleBinRetention time.Duration `yaml:"recycleBinRetention" envconfig:"GITFOX_ARTIFACT_RECYCLE_BIN_RETENTION" default:"720h"`
+
+	// GCInterval GC 定时任务的 cron 间隔周期。
+	// 用于定时清理超过回收站保留期的已软删制品资源。
+	// 此值不得小于 RecycleBinRetention，否则会自动修正为 RecycleBinRetention。
+	// 默认 720h（30天）。
+	GCInterval time.Duration `yaml:"gcInterval" envconfig:"GITFOX_ARTIFACT_GC_INTERVAL" default:"720h"`
+}
+
+// Sanitize 校验并修正 ArtifactConfig 中的不合理配置。
+// 规则：GCInterval 不得小于 RecycleBinRetention；若未设置则使用默认值 720h。
+func (c *ArtifactConfig) Sanitize() {
+	if c.RecycleBinRetention <= 0 {
+		c.RecycleBinRetention = 720 * time.Hour
+	}
+	if c.GCInterval <= 0 {
+		c.GCInterval = 720 * time.Hour
+	}
+	// GC 间隔不得小于回收站保留期，否则可能误删仍在保留期内的资源
+	if c.GCInterval < c.RecycleBinRetention {
+		c.GCInterval = c.RecycleBinRetention
+	}
+}
+

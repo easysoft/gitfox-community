@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	artifactSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/artifact"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	authModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
 	scanModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
@@ -151,6 +152,54 @@ func RegisterPipelineHandler(scheduler *jobsSvc.Scheduler, t triggerer.Triggerer
 	handler := &pipelineTriggerHandler{triggerer: t, pipelineSvc: svc}
 	return scheduler.RegisterHandler(pipelineSvc.JobTypePipelineCron, handler)
 }
+
+func RegisterArtifactGCHandler(scheduler *jobsSvc.Scheduler, svc artifactSvc.Interface) error {
+	if err := scheduler.RegisterHandler(artifactSvc.JobTypeArtifactContainerGC, artifactContainerGCHandler{svc: svc}); err != nil {
+		return err
+	}
+	if err := scheduler.RegisterHandler(artifactSvc.JobTypeArtifactSoftRemoveGC, artifactSoftRemoveGCHandler{svc: svc}); err != nil {
+		return err
+	}
+	// 注册过期视图 GC handler，由定时任务自动触发
+	return scheduler.RegisterHandler(artifactSvc.JobTypeArtifactExpiredViewGC, artifactExpiredViewGCHandler{svc: svc})
+}
+
+type artifactContainerGCHandler struct {
+	svc artifactSvc.Interface
+}
+
+func (h artifactContainerGCHandler) Handle(ctx context.Context, input string, _ pkgJobs.ProgressReporter) (string, error) {
+	_ = input
+	_, err := h.svc.GarbageCollectContainer(ctx)
+	return "", err
+}
+
+type artifactSoftRemoveGCHandler struct {
+	svc artifactSvc.Interface
+}
+
+func (h artifactSoftRemoveGCHandler) Handle(ctx context.Context, input string, _ pkgJobs.ProgressReporter) (string, error) {
+	_ = input
+	_, err := h.svc.GarbageCollectSoftRemove(ctx)
+	return "", err
+}
+
+// artifactExpiredViewGCHandler 处理过期已软删视图的定时 GC 任务。
+// 清理超过回收站保留期的已软删视图及其全部关联资源（packages/versions/assets/blobs/物理文件）。
+type artifactExpiredViewGCHandler struct {
+	svc artifactSvc.Interface
+}
+
+func (h artifactExpiredViewGCHandler) Handle(ctx context.Context, input string, _ pkgJobs.ProgressReporter) (string, error) {
+	_ = input
+	count, err := h.svc.GarbageCollectExpiredViews(ctx)
+	if err != nil {
+		return "", err
+	}
+	result := fmt.Sprintf("cleaned %d expired views", count)
+	return result, nil
+}
+
 
 func RegisterScanHandler(
 	scheduler *jobsSvc.Scheduler,
