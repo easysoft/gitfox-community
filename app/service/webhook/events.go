@@ -42,6 +42,47 @@ func (s *Service) triggerForEventWithRepo(
 	return s.triggerForEvent(ctx, eventID, parents, triggerType, &webhookModel.ReqForList{}, body)
 }
 
+// triggerForEventWithPullReq triggers all webhooks for the given repo and triggerType
+// using the eventID to generate a deterministic triggerID and using the output of bodyFn as payload.
+// The method tries to find the pullreq, principal, target repo, and source repo
+// and provides all to the bodyFn to generate the body.
+// NOTE: technically we could avoid this call if we send the data via the event (though then events will get big).
+func (s *Service) triggerForEventWithPullReq(ctx context.Context,
+	triggerType constant.WebhookTrigger, eventID string, principal string, targetRepoID, prID int64,
+	createBodyFn func(principal string, pr *repoModel.PullRequest, targetRepo, sourceRepo *repoModel.Repo) (any, error)) error {
+
+	pr, err := s.pullreqStore.GetByID(ctx, uint(targetRepoID), uint(prID))
+	if err != nil {
+		return err
+	}
+
+	targetRepo, err := s.repoStore.GetByID(ctx, pr.TargetRepoID)
+	if err != nil {
+		return fmt.Errorf("failed to get pr target repo: %w", err)
+	}
+
+	sourceRepo := targetRepo
+	if pr.SourceRepoID != pr.TargetRepoID {
+		sourceRepo, err = s.repoStore.GetByID(ctx, pr.SourceRepoID)
+		if err != nil {
+			return fmt.Errorf("failed to get pr source repo: %w", err)
+		}
+	}
+
+	// create body
+	body, err := createBodyFn(principal, pr, targetRepo, sourceRepo)
+	if err != nil {
+		return fmt.Errorf("body creation function failed: %w", err)
+	}
+
+	parents, err := s.getParentInfoRepo(targetRepo.ID)
+	if err != nil {
+		return fmt.Errorf("failed to get webhook parent info: %w", err)
+	}
+
+	return s.triggerForEvent(ctx, eventID, parents, triggerType, &webhookModel.ReqForList{}, body)
+}
+
 func (s *Service) getParentInfoRepo(repoID uint) ([]webhookModel.ParentInfo, error) {
 	var parents []webhookModel.ParentInfo
 

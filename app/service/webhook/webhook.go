@@ -17,6 +17,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	gitevents "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/events/git"
 	pullreqevents "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/events/pullreq"
+	pullreqStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/pullrequest"
 	repoStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/events"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/stream"
@@ -63,6 +64,7 @@ var _ Interface = (*Service)(nil)
 type Service struct {
 	webhookStore webhookStore.Interface
 	repoStore    repoStore.Interface
+	pullreqStore pullreqStore.Interface
 	urlProvider  url.Provider
 	git          git.Interface
 	config       Config
@@ -81,6 +83,7 @@ func NewWebhookSvc(
 	prReaderFactory *events.ReaderFactory[*pullreqevents.Reader],
 	webhookStore webhookStore.Interface,
 	repoStore repoStore.Interface,
+	pullreqStore pullreqStore.Interface,
 	urlProvider url.Provider,
 ) (*Service, error) {
 	if err := config.Prepare(); err != nil {
@@ -92,6 +95,7 @@ func NewWebhookSvc(
 		git:                        git,
 		webhookStore:               webhookStore,
 		repoStore:                  repoStore,
+		pullreqStore:               pullreqStore,
 		urlProvider:                urlProvider,
 		secureHTTPClient:           newHTTPClient(config.AllowLoopback, config.AllowPrivateNetwork, false),
 		insecureHTTPClient:         newHTTPClient(config.AllowLoopback, config.AllowPrivateNetwork, true),
@@ -135,11 +139,11 @@ func NewWebhookSvc(
 				))
 
 			// register events
-			// _ = r.RegisterCreated(service.handleEventPullReqCreated)
-			// _ = r.RegisterReopened(service.handleEventPullReqReopened)
-			// _ = r.RegisterBranchUpdated(service.handleEventPullReqBranchUpdated)
-			// _ = r.RegisterClosed(service.handleEventPullReqClosed)
-			// _ = r.RegisterMerged(service.handleEventPullReqMerged)
+			_ = r.RegisterCreated(service.handleEventPullReqCreated)
+			_ = r.RegisterReopened(service.handleEventPullReqReopened)
+			_ = r.RegisterBranchUpdated(service.handleEventPullReqBranchUpdated)
+			_ = r.RegisterClosed(service.handleEventPullReqClosed)
+			_ = r.RegisterMerged(service.handleEventPullReqMerged)
 
 			return nil
 		})

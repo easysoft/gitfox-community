@@ -179,3 +179,30 @@ type ParentInfo struct {
 	Type string
 	ID   uint
 }
+
+// PullReqSegment contains details for all pull req related payloads for webhooks.
+type PullReqSegment struct {
+	PullReq PullReqInfo `json:"pull_req"`
+}
+
+// PullReqInfo describes the pullreq related info for a webhook payload.
+// NOTE: don't use types package as we want pullreq payload to be independent from API calls.
+type PullReqInfo struct {
+	Number        int64                 `json:"number"`
+	State         constant.PullReqState `json:"state"`
+	IsDraft       bool                  `json:"is_draft"`
+	Title         string                `json:"title"`
+	Description   string                `json:"description"`
+	SourceRepoID  int64                 `json:"source_repo_id"`
+	SourceBranch  string                `json:"source_branch"`
+	TargetRepoID  int64                 `json:"target_repo_id"`
+	TargetBranch  string                `json:"target_branch"`
+	MergeStrategy *constant.MergeMethod `json:"merge_strategy,omitempty"`
+	Author        string                `json:"author"`
+	PrURL         string                `json:"pr_url"`
+}
+
+// PullReqTargetReferenceSegment contains details for the pull req target reference for webhooks.
+type PullReqTargetReferenceSegment struct {
+	TargetRef ReferenceInfo `json:"target_ref"`
+}

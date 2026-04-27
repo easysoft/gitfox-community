@@ -104,6 +104,9 @@ func (s *Service) triggerWebhooks(
 }
 
 func webhookHasTrigger(webhook *webhookModel.Webhook, triggerType constant.WebhookTrigger) bool {
+	if len(webhook.Triggers) == 0 {
+		return true
+	}
 	for _, t := range webhook.Triggers {
 		if t == triggerType {
 			return true
