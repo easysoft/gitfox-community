@@ -3,6 +3,7 @@ package provider
 import (
 	"github.com/google/wire"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/artifact"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/branch"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/commit"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/execution"
@@ -38,6 +39,7 @@ func NewControllers(
 	scanController *scan.ScanController,
 	fitController *fit.Controller,
 	webhookController *webhook.Controller,
+	artifactController *artifact.Controller,
 ) *router.Controller {
 	return &router.Controller{
 		Space:     spaceController,
@@ -53,5 +55,6 @@ func NewControllers(
 		Runner:    runnerController,
 		Fit:       fitController,
 		Webhook:   webhookController,
+		Artifact:  artifactController,
 	}
 }

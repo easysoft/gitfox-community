@@ -7,6 +7,7 @@
 package server
 
 import (
+	artifact4 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/artifact"
 	branch3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/branch"
 	commit2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/commit"
 	execution3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/execution"
@@ -21,10 +22,12 @@ import (
 	user3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/user"
 	webhook2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/webhook"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/router"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/authorizer"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/canceler"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/manager"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/scheduler"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/triggerer"
+	artifact3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/artifact"
 	branch2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/branch"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/commit"
 	execution2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/execution"
@@ -43,6 +46,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/tag"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/trigger"
 	user2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/user"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/artifact"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/branch"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/execution"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/jobs"
@@ -68,6 +72,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/livelog"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/lock"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pubsub"
+	artifact2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/rbac/artifact"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/ssh"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/storage"
 	"github.com/drone/runner-go/poller"
@@ -263,7 +268,23 @@ func NewApp(mode string) (*App, func(), error) {
 		return nil, nil, err
 	}
 	webhookController := webhook2.NewController(webhookService)
-	routerController := provider.NewControllers(spaceController, controller, pipelineController, executionController, runnerController, tagController, commitController, repoController, userController, gitController, scanController, fitController, webhookController)
+	artifactStore := artifact.NewStore(db)
+	artifactManager, err := artifact2.ProvideArtifactPermManager(db)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	jobScheduler := provider.ProvideArtifactJobScheduler(jobsScheduler)
+	artifactConfig := provider.ProvideArtifactConfig(config)
+	artifactService, err := artifact3.NewService(db, artifactStore, spaceStore, store, userStore, artifactManager, storageDriver, jobScheduler, artifactConfig)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	artifactController := artifact4.NewController(artifactService)
+	routerController := provider.NewControllers(spaceController, controller, pipelineController, executionController, runnerController, tagController, commitController, repoController, userController, gitController, scanController, fitController, webhookController, artifactController)
 	i18nManager, err := provider.NewI18nManager(config)
 	if err != nil {
 		cleanup2()
@@ -303,32 +324,35 @@ func NewApp(mode string) (*App, func(), error) {
 		return nil, nil, err
 	}
 	poller := provider.ProvideExecutionPoller(runnerRunner, client)
+	artifactAuthorizer := authorizer.New(artifactManager)
 	app := &App{
-		SystemConfig:     config,
-		SystemLog:        systemLog,
-		APILog:           apiLog,
-		DB:               db,
-		Controller:       routerController,
-		I18nManager:      i18nManager,
-		GithookCtrl:      githookController,
-		SSHServer:        server,
-		UserService:      userService,
-		PipelineService:  pipelineService,
-		TriggerService:   triggerService,
-		Authenticator:    authenticator,
-		EventSystem:      system,
-		EventContext:     eventContext,
-		JobScheduler:     jobsScheduler,
-		Triggerer:        triggererTriggerer,
-		Poller:           poller,
-		ScanRuleSvc:      ruleService,
-		ScanTaskSvc:      scanTaskService,
-		ScanPlanSvc:      scanPlanService,
-		ScanPlanStore:    scanPlanStore,
-		ScanTriggerStore: scanTriggerStore,
-		RepoStore:        store,
-		RepoService:      repoService,
-		TokenStore:       tokenInterface,
+		SystemConfig:       config,
+		SystemLog:          systemLog,
+		APILog:             apiLog,
+		DB:                 db,
+		Controller:         routerController,
+		I18nManager:        i18nManager,
+		GithookCtrl:        githookController,
+		SSHServer:          server,
+		UserService:        userService,
+		PipelineService:    pipelineService,
+		TriggerService:     triggerService,
+		Authenticator:      authenticator,
+		EventSystem:        system,
+		EventContext:       eventContext,
+		JobScheduler:       jobsScheduler,
+		Triggerer:          triggererTriggerer,
+		Poller:             poller,
+		ScanRuleSvc:        ruleService,
+		ScanTaskSvc:        scanTaskService,
+		ScanPlanSvc:        scanPlanService,
+		ScanPlanStore:      scanPlanStore,
+		ScanTriggerStore:   scanTriggerStore,
+		RepoStore:          store,
+		RepoService:        repoService,
+		TokenStore:         tokenInterface,
+		ArtifactService:    artifactService,
+		ArtifactAuthorizer: artifactAuthorizer,
 	}
 	return app, func() {
 		cleanup2()
@@ -339,29 +363,31 @@ func NewApp(mode string) (*App, func(), error) {
 // wire.go:
 
 type App struct {
-	SystemConfig     *config.Config
-	SystemLog        *provider.SystemLog
-	APILog           *provider.APILog
-	DB               *gorm.DB
-	Controller       *router.Controller
-	I18nManager      *provider.I18nManager
-	GithookCtrl      *githook.Controller
-	SSHServer        *ssh.Server
-	UserService      user2.Interface
-	PipelineService  pipeline2.Interface
-	TriggerService   *trigger.Service
-	Authenticator    authn.Authenticator
-	EventSystem      *events.System
-	EventContext     *provider.EventContext
-	JobScheduler     *jobs2.Scheduler
-	Triggerer        triggerer.Triggerer
-	Poller           *poller.Poller
-	ScanRuleSvc      scan2.IRule
-	ScanTaskSvc      scan2.IScanTask
-	ScanPlanSvc      scan2.IScanPlan
-	ScanPlanStore    scan.IScanPlan
-	ScanTriggerStore scan.IScanTrigger
-	RepoStore        repo.Interface
-	RepoService      repo2.Interface
-	TokenStore       token.Interface
+	SystemConfig       *config.Config
+	SystemLog          *provider.SystemLog
+	APILog             *provider.APILog
+	DB                 *gorm.DB
+	Controller         *router.Controller
+	I18nManager        *provider.I18nManager
+	GithookCtrl        *githook.Controller
+	SSHServer          *ssh.Server
+	UserService        user2.Interface
+	PipelineService    pipeline2.Interface
+	TriggerService     *trigger.Service
+	Authenticator      authn.Authenticator
+	EventSystem        *events.System
+	EventContext       *provider.EventContext
+	JobScheduler       *jobs2.Scheduler
+	Triggerer          triggerer.Triggerer
+	Poller             *poller.Poller
+	ScanRuleSvc        scan2.IRule
+	ScanTaskSvc        scan2.IScanTask
+	ScanPlanSvc        scan2.IScanPlan
+	ScanPlanStore      scan.IScanPlan
+	ScanTriggerStore   scan.IScanTrigger
+	RepoStore          repo.Interface
+	RepoService        repo2.Interface
+	TokenStore         token.Interface
+	ArtifactService    artifact3.Interface
+	ArtifactAuthorizer authorizer.Authorizer
 }

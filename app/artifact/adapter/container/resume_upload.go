@@ -25,11 +25,11 @@ import (
 	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
 
 	artifactStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/artifact"
-	gitfox_pkgErrors "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+	pkgerrors "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	"github.com/google/uuid"
 	"github.com/opencontainers/go-digest"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 
 	_ "crypto/sha256"
 )
@@ -166,7 +166,7 @@ func parseProgress(ctx context.Context, artStore artifactStore.Interface, view *
 
 	dbBlob, err := artStore.Blobs().GetByRef(ctx, ref, view.StorageID)
 	if err != nil {
-		if errors.Is(err, gitfox_pkgErrors.ErrResourceNotFound) {
+		if errors.Is(err, pkgerrors.ErrResourceNotFound) {
 			status = progressNotStarted
 			return status, digester, nil
 		} else {
@@ -377,7 +377,7 @@ func (crr *ResumeRequest) createOrUpdateModelBlob(ctx context.Context, mutateFn 
 		return crr.artStore.Blobs().UpdateOptLock(ctx, dbBlob, mutateFn)
 	}
 
-	if errors.Is(err, gitfox_pkgErrors.ErrResourceNotFound) {
+	if errors.Is(err, pkgerrors.ErrResourceNotFound) {
 		var creatorId = int64(0)
 		session, ok := req.GetAuthSession(ctx)
 		if ok {

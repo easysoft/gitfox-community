@@ -6,6 +6,18 @@ package i18n
 type I18nKey string
 
 const (
+	// Artifact 相关常量
+	ArtifactCreateGroupSuccess      I18nKey = "artifact.create_group_success"       // 制品分组创建成功
+	ArtifactDeleteSuccess           I18nKey = "artifact.delete_success"             // 制品删除成功
+	ArtifactGarbageCollectSuccess   I18nKey = "artifact.garbage_collect_success"    // 制品垃圾回收成功
+	ArtifactListSuccess             I18nKey = "artifact.list_success"               // 制品列表查询成功
+	ArtifactPermissionQuerySuccess  I18nKey = "artifact.permission_query_success"   // 制品权限查询成功
+	ArtifactPermissionUpdateSuccess I18nKey = "artifact.permission_update_success"  // 制品权限更新成功
+	ArtifactQuerySuccess            I18nKey = "artifact.query_success"              // 制品详情查询成功
+	ArtifactRefreshTreeSuccess      I18nKey = "artifact.refresh_tree_success"       // 制品树刷新成功
+	ArtifactStatisticSuccess        I18nKey = "artifact.statistic_success"          // 制品统计查询成功
+	ArtifactUploadSuccess           I18nKey = "artifact.upload_success"             // 制品上传成功
+
 	// Auth 相关常量
 	AuthAuthUserLoginSuccess        I18nKey = "auth.auth_user_login_success"          // 用户登录成功
 	AuthFailed                      I18nKey = "auth.failed"                           // 尝试认证失败

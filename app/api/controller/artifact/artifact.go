@@ -58,7 +58,7 @@ func (c *Controller) ListPackages(ctx *gin.Context) {
 		resp.InternalError(ctx, err)
 		return
 	}
-	resp.OK(ctx, i18n.RepoDeleteSuccess, list)
+	resp.OK(ctx, i18n.ArtifactListSuccess, list)
 }
 
 // @Summary 创建视图
@@ -82,7 +82,7 @@ func (c *Controller) CreateView(ctx *gin.Context) {
 		resp.InternalError(ctx, err)
 		return
 	}
-	resp.OK(ctx, i18n.RepoDeleteSuccess, view)
+	resp.OK(ctx, i18n.ArtifactListSuccess, view)
 }
 
 
@@ -114,7 +114,7 @@ func (c *Controller) ListVersions(ctx *gin.Context) {
 		resp.InternalError(ctx, err)
 		return
 	}
-	resp.OK(ctx, i18n.RepoDeleteSuccess, versions)
+	resp.OK(ctx, i18n.ArtifactListSuccess, versions)
 }
 
 // @Summary 查询版本文件列表
@@ -138,7 +138,7 @@ func (c *Controller) ListAssets(ctx *gin.Context) {
 		resp.InternalError(ctx, err)
 		return
 	}
-	resp.OK(ctx, i18n.RepoDeleteSuccess, assets)
+	resp.OK(ctx, i18n.ArtifactListSuccess, assets)
 }
 
 // @Summary 查询分组文件列表
@@ -162,7 +162,7 @@ func (c *Controller) ListGroupAssets(ctx *gin.Context) {
 		resp.InternalError(ctx, err)
 		return
 	}
-	resp.OK(ctx, i18n.RepoDeleteSuccess, assets)
+	resp.OK(ctx, i18n.ArtifactListSuccess, assets)
 }
 
 // @Summary 查询文件详情
@@ -186,7 +186,7 @@ func (c *Controller) GetAsset(ctx *gin.Context) {
 		resp.InternalError(ctx, err)
 		return
 	}
-	resp.OK(ctx, i18n.RepoDeleteSuccess, asset)
+	resp.OK(ctx, i18n.ArtifactQuerySuccess, asset)
 }
 
 // @Summary 查询文件历史
@@ -210,7 +210,7 @@ func (c *Controller) GetBlobHistory(ctx *gin.Context) {
 		resp.InternalError(ctx, err)
 		return
 	}
-	resp.OK(ctx, i18n.RepoDeleteSuccess, blobs)
+	resp.OK(ctx, i18n.ArtifactQuerySuccess, blobs)
 }
 
 // @Summary 下载文件
@@ -272,7 +272,7 @@ func (c *Controller) Upload(ctx *gin.Context) {
 		resp.InternalError(ctx, err)
 		return
 	}
-	resp.OK(ctx, i18n.RepoDeleteSuccess, assets)
+	resp.OK(ctx, i18n.ArtifactUploadSuccess, assets)
 }
 
 // @Summary 创建分组
@@ -310,7 +310,7 @@ func (c *Controller) CreateGroup(ctx *gin.Context) {
 		resp.InternalError(ctx, err)
 		return
 	}
-	resp.OK(ctx, i18n.RepoDeleteSuccess, ge)
+	resp.OK(ctx, i18n.ArtifactCreateGroupSuccess, ge)
 }
 
 // @Summary 查询格式列表
@@ -339,7 +339,7 @@ func (c *Controller) ListFormats(ctx *gin.Context) {
 		resp.InternalError(ctx, err)
 		return
 	}
-	resp.OK(ctx, i18n.RepoDeleteSuccess, formats)
+	resp.OK(ctx, i18n.ArtifactListSuccess, formats)
 }
 
 // @Summary 查询树节点列表
@@ -363,7 +363,7 @@ func (c *Controller) ListTreeNodes(ctx *gin.Context) {
 		resp.InternalError(ctx, err)
 		return
 	}
-	resp.OK(ctx, i18n.RepoDeleteSuccess, nodes)
+	resp.OK(ctx, i18n.ArtifactListSuccess, nodes)
 }
 
 // @Summary 删除指定版本
@@ -386,7 +386,7 @@ func (c *Controller) DeleteVersion(ctx *gin.Context) {
 		resp.InternalError(ctx, err)
 		return
 	}
-	resp.OK(ctx, i18n.RepoDeleteSuccess, nil)
+	resp.OK(ctx, i18n.ArtifactDeleteSuccess, nil)
 }
 
 // @Summary 删除指定包
@@ -409,7 +409,7 @@ func (c *Controller) DeletePackage(ctx *gin.Context) {
 		resp.InternalError(ctx, err)
 		return
 	}
-	resp.OK(ctx, i18n.RepoDeleteSuccess, nil)
+	resp.OK(ctx, i18n.ArtifactDeleteSuccess, nil)
 }
 
 // @Summary 容量统计
@@ -425,7 +425,7 @@ func (c *Controller) StatisticCapacity(ctx *gin.Context) {
 		resp.InternalError(ctx, err)
 		return
 	}
-	resp.OK(ctx, i18n.RepoDeleteSuccess, data)
+	resp.OK(ctx, i18n.ArtifactStatisticSuccess, data)
 }
 
 // @Summary 容器容量统计
@@ -441,7 +441,7 @@ func (c *Controller) StatisticContainerCapacity(ctx *gin.Context) {
 		resp.InternalError(ctx, err)
 		return
 	}
-	resp.OK(ctx, i18n.RepoDeleteSuccess, data)
+	resp.OK(ctx, i18n.ArtifactStatisticSuccess, data)
 }
 
 // @Summary 制品汇总统计
@@ -457,7 +457,7 @@ func (c *Controller) StatisticSummary(ctx *gin.Context) {
 		resp.InternalError(ctx, err)
 		return
 	}
-	resp.OK(ctx, i18n.RepoDeleteSuccess, data)
+	resp.OK(ctx, i18n.ArtifactStatisticSuccess, data)
 }
 
 
@@ -487,7 +487,7 @@ func (c *Controller) SoftRemoveByEntity(ctx *gin.Context) {
 		resp.InternalError(ctx, err)
 		return
 	}
-	resp.OK(ctx, i18n.RepoDeleteSuccess, data)
+	resp.OK(ctx, i18n.ArtifactDeleteSuccess, data)
 }
 
 // @Summary 归档 generic 分组
@@ -543,7 +543,7 @@ func (c *Controller) GarbageCollectContainer(ctx *gin.Context) {
 		resp.InternalError(ctx, err)
 		return
 	}
-	resp.OK(ctx, i18n.RepoDeleteSuccess, data)
+	resp.OK(ctx, i18n.ArtifactGarbageCollectSuccess, data)
 }
 
 // @Summary 触发软删垃圾回收
@@ -559,7 +559,7 @@ func (c *Controller) GarbageCollectSoftRemove(ctx *gin.Context) {
 		resp.InternalError(ctx, err)
 		return
 	}
-	resp.OK(ctx, i18n.RepoDeleteSuccess, data)
+	resp.OK(ctx, i18n.ArtifactGarbageCollectSuccess, data)
 }
 
 // @Summary 重建制品树
@@ -575,5 +575,5 @@ func (c *Controller) RefreshTree(ctx *gin.Context) {
 		resp.InternalError(ctx, err)
 		return
 	}
-	resp.OK(ctx, i18n.RepoDeleteSuccess, nil)
+	resp.OK(ctx, i18n.ArtifactRefreshTreeSuccess, nil)
 }

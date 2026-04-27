@@ -9,7 +9,9 @@ import (
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/githook"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/router"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/authorizer"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/triggerer"
+	artifactSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/artifact"
 	jobsSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/jobs"
 	pipelineSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/pipeline"
 	scanSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/scan"
@@ -53,6 +55,8 @@ type App struct {
 	RepoStore        repoStore.Interface
 	RepoService      repoSvc.Interface
 	TokenStore       tokenStore.Interface
+	ArtifactService  artifactSvc.Interface
+	ArtifactAuthorizer authorizer.Authorizer
 }
 
 func NewApp(mode string) (*App, func(), error) {
@@ -89,6 +93,7 @@ func NewApp(mode string) (*App, func(), error) {
 		provider.JobWireSet,
 		provider.AuthWireSet,
 		provider.StorageWireSet,
+		provider.ArtifactWireSet,
 		wire.Struct(new(App), "*")),
 	)
 }

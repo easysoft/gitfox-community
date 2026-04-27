@@ -1,6 +1,7 @@
 package router
 
 import (
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/artifact"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/branch"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/commit"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/execution"
@@ -33,4 +34,5 @@ type Controller struct {
 	Execution *execution.Controller
 	Test      *test.TestController
 	Fit       *fit.Controller
+	Artifact  *artifact.Controller
 }

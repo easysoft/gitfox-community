@@ -13,6 +13,7 @@ import (
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/router"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/logger"
+	artifactSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/artifact"
 	cronSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/cron"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	clii18n "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n/cli"
@@ -100,6 +101,26 @@ func RunServerWithContext(ctx context.Context, mode string, enableCI bool, onRea
 		panic(err)
 	}
 
+	// 注册 Artifact GC 处理器
+	if err := cronSvc.RegisterArtifactGCHandler(app.JobScheduler, app.ArtifactService); err != nil {
+		app.SystemLog.Errorw("[Server] Failed to register artifact GC handler", "error", err)
+		panic(err)
+	}
+
+	// 注册制品库过期视图 GC 定时任务。
+	if err := app.JobScheduler.AddRecurringWithData(
+		ctx,
+		artifactSvc.JobNameArtifactExpiredViewGC,
+		artifactSvc.JobTypeArtifactExpiredViewGC,
+		"{}",
+		"0 3 * * *", // 每天3点执行
+		time.Duration(artifactSvc.ArtifactGCJobMaxDurationSeconds)*time.Second,
+	); err != nil {
+		app.SystemLog.Errorw("[Server] Failed to register artifact expired view GC recurring job", "error", err)
+		panic(err)
+	}
+	app.SystemLog.Info("[Server] Artifact expired view GC recurring job registered (daily at 03:00)")
+
 	// TODO: 重新协商方案 启动时对账：确保所有 trigger 的 cron job 与 DB 一致（修复上次异常退出可能导致的不一致）
 	// app.SystemLog.Info("[Server] Reconciling pipeline cron jobs...")
 	// if err := app.PipelineService.ReconcileCronJobs(context.Background()); err != nil {
@@ -126,16 +147,8 @@ func RunServerWithContext(ctx context.Context, mode string, enableCI bool, onRea
 	addr := fmt.Sprintf("%s:%d", app.SystemConfig.Server.Host, app.SystemConfig.Server.Port)
 	srv := &http.Server{
 		Addr:    addr,
-		Handler: router.NewRouter(mode, app.APILog.SugaredMateLogger, app.Controller),
+		Handler: router.NewRouter(mode, app.APILog.SugaredMateLogger, app.Controller, app.ArtifactAuthorizer),
 	}
-
-	// 停止使用
-	// adminPAT, err := app.UserService.IssueAdminPAT()
-	// if err != nil {
-	// 	app.SystemLog.Errorw("[Server] Failed to issue admin PAT", "error", err)
-	// 	panic(err)
-	// }
-	// app.SystemLog.Infow("[Server] Admin PAT issued", "pat", adminPAT)
 
 	// 创建错误通道用于捕获服务器启动错误
 	serverErrors := make(chan error, 3) // 增加容量以支持 HTTP、SSH 和 JobScheduler

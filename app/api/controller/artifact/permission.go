@@ -45,7 +45,7 @@ func (c *Controller) SetEntityPermission(ctx *gin.Context) {
 		resp.InternalError(ctx, err)
 		return
 	}
-	resp.OK(ctx, i18n.RepoDeleteSuccess, data)
+	resp.OK(ctx, i18n.ArtifactPermissionUpdateSuccess, data)
 }
 
 // @Summary 获取节点级权限
@@ -77,7 +77,7 @@ func (c *Controller) GetEntityPermissions(ctx *gin.Context) {
 		resp.InternalError(ctx, err)
 		return
 	}
-	resp.OK(ctx, i18n.RepoDeleteSuccess, data)
+	resp.OK(ctx, i18n.ArtifactPermissionQuerySuccess, data)
 }
 
 // @Summary 设置空间级权限
@@ -114,7 +114,7 @@ func (c *Controller) SetSpacePermission(ctx *gin.Context) {
 		resp.InternalError(ctx, err)
 		return
 	}
-	resp.OK(ctx, i18n.RepoDeleteSuccess, data)
+	resp.OK(ctx, i18n.ArtifactPermissionUpdateSuccess, data)
 }
 
 // @Summary 获取空间级权限
@@ -144,7 +144,7 @@ func (c *Controller) GetSpacePermissions(ctx *gin.Context) {
 		resp.InternalError(ctx, err)
 		return
 	}
-	resp.OK(ctx, i18n.RepoDeleteSuccess, data)
+	resp.OK(ctx, i18n.ArtifactPermissionQuerySuccess, data)
 }
 
 // @Summary 获取空间成员列表
@@ -174,5 +174,5 @@ func (c *Controller) GetSpaceMembers(ctx *gin.Context) {
 		resp.InternalError(ctx, err)
 		return
 	}
-	resp.OK(ctx, i18n.RepoDeleteSuccess, data)
+	resp.OK(ctx, i18n.ArtifactPermissionQuerySuccess, data)
 }
