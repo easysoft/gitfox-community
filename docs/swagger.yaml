@@ -66,6 +66,26 @@ definitions:
     - CIStatusError
     - CIStatusBlocked
     - CIStatusDeclined
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.CasbinRole:
+    enum:
+    - artifact_reader
+    - artifact_writer
+    - artifact_admin
+    type: string
+    x-enum-varnames:
+    - CasbinArtifactRoleReader
+    - CasbinArtifactRoleWriter
+    - CasbinArtifactRoleAdmin
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.CasbinScope:
+    enum:
+    - .
+    - '*'
+    - '**'
+    type: string
+    x-enum-varnames:
+    - CasbinScopeSingle
+    - CasbinScopeSub
+    - CasbinScopeRecursive
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ContentEncodingType:
     enum:
     - utf8
@@ -446,6 +466,50 @@ definitions:
     required:
     - format
     - packageName
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.CreateArtifactViewReq:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+      repoId:
+        type: integer
+      spaceId:
+        type: integer
+    required:
+    - name
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.PermRule:
+    properties:
+      role:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.CasbinRole'
+      scope:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.CasbinScope'
+      user_ids:
+        items:
+          type: integer
+        type: array
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.PermissionRequest:
+    properties:
+      private:
+        type: boolean
+      rules:
+        items:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.PermRule'
+        type: array
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.SoftRemoveEntitiesReq:
+    properties:
+      entity_ids:
+        items:
+          type: string
+        type: array
+      node_ids:
+        items:
+          type: string
+        type: array
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.SpaceRepoReq:
     properties:
@@ -2935,6 +2999,8 @@ definitions:
         type: integer
       parentType:
         type: string
+      secret:
+        type: string
       triggers:
         items:
           $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.WebhookTrigger'
@@ -3179,6 +3245,143 @@ paths:
       summary: 查询文件历史
       tags:
       - artifacts
+  /artifacts/capacity/all:
+    get:
+      description: 返回非容器格式制品容量统计
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 容量统计
+      tags:
+      - artifacts
+  /artifacts/capacity/container:
+    get:
+      description: 返回 container 格式制品容量统计
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 容器容量统计
+      tags:
+      - artifacts
+  /artifacts/entities:
+    delete:
+      consumes:
+      - application/json
+      description: 按 entity_id 批量软删除 asset/version/package/group
+      parameters:
+      - description: 实体ID列表
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.SoftRemoveEntitiesReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 按实体批量软删除制品
+      tags:
+      - artifacts
+  /artifacts/entities/{entityId}/permissions:
+    get:
+      consumes:
+      - application/json
+      description: 获取指定实体节点的权限配置（含继承信息）
+      parameters:
+      - description: 空间ID
+        in: query
+        name: spaceId
+        required: true
+        type: integer
+      - description: '实体ID（格式: kind.id，如 package.123）'
+        in: path
+        name: entityId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 获取节点级权限
+      tags:
+      - artifacts
+    post:
+      consumes:
+      - application/json
+      description: 设置指定实体节点的权限（私有/公开 + 用户角色规则）
+      parameters:
+      - description: 空间ID
+        in: query
+        name: spaceId
+        required: true
+        type: integer
+      - description: '实体ID（格式: kind.id，如 package.123）'
+        in: path
+        name: entityId
+        required: true
+        type: string
+      - description: 权限配置
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.PermissionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 设置节点级权限
+      tags:
+      - artifacts
   /artifacts/formats:
     post:
       consumes:
@@ -3207,6 +3410,39 @@ paths:
           schema:
             $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
       summary: 查询格式列表
+      tags:
+      - artifacts
+  /artifacts/garbage/container:
+    get:
+      description: 创建 container 制品垃圾回收后台任务
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      tags:
+      - artifacts
+  /artifacts/garbage/soft-remove:
+    get:
+      description: 创建已软删制品垃圾回收后台任务
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 触发软删垃圾回收
       tags:
       - artifacts
   /artifacts/groups:
@@ -3239,6 +3475,38 @@ paths:
       summary: 创建分组
       tags:
       - artifacts
+  /artifacts/groups/{groupId}/archive:
+    get:
+      description: 将 generic 分组资产打包为 zip 下载
+      parameters:
+      - description: 分组ID
+        in: path
+        name: groupId
+        required: true
+        type: integer
+      - description: 空间ID
+        in: query
+        name: spaceId
+        required: true
+        type: integer
+      produces:
+      - application/zip
+      responses:
+        "200":
+          description: ZIP 文件流
+          schema:
+            type: file
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 归档 generic 分组
+      tags:
+      - artifacts
   /artifacts/groups/{groupId}/assets:
     get:
       consumes:
@@ -3266,6 +3534,35 @@ paths:
           schema:
             $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
       summary: 查询分组文件列表
+      tags:
+      - artifacts
+  /artifacts/members:
+    get:
+      consumes:
+      - application/json
+      description: 获取指定空间的制品库成员列表
+      parameters:
+      - description: 空间ID
+        in: query
+        name: spaceId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 获取空间成员列表
       tags:
       - artifacts
   /artifacts/nodes/{nodeId}/children:
@@ -3362,6 +3659,86 @@ paths:
           schema:
             $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
       summary: 删除指定包
+      tags:
+      - artifacts
+  /artifacts/permissions:
+    get:
+      consumes:
+      - application/json
+      description: 获取指定空间的制品库权限配置
+      parameters:
+      - description: 空间ID
+        in: query
+        name: spaceId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 获取空间级权限
+      tags:
+      - artifacts
+    post:
+      consumes:
+      - application/json
+      description: 设置指定空间的制品库权限
+      parameters:
+      - description: 空间ID
+        in: query
+        name: spaceId
+        required: true
+        type: integer
+      - description: 权限配置
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.PermissionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 设置空间级权限
+      tags:
+      - artifacts
+  /artifacts/statistic:
+    get:
+      description: 返回制品资产汇总统计
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 制品汇总统计
       tags:
       - artifacts
   /artifacts/tree/refresh:
@@ -3506,6 +3883,36 @@ paths:
           schema:
             $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
       summary: 查询版本列表
+      tags:
+      - artifacts
+  /artifacts/views:
+    post:
+      consumes:
+      - application/json
+      description: 创建一个制品库视图 (测试用)
+      parameters:
+      - description: 创建参数
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.CreateArtifactViewReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 创建视图
       tags:
       - artifacts
   /fit/repos/{id}/settings/advanced:
