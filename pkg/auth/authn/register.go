@@ -6,7 +6,6 @@ type authKind string
 
 const (
 	AuthKindEasy  = "easy"
-	AuthKindJWT   = "jwt"
 	AuthKindBasic = "basic"
 )
 

@@ -17,8 +17,9 @@ import (
 )
 
 const (
-	HeaderApp      = "App"
-	HeaderOperator = "Operator"
+	HeaderApp           = "App"
+	HeaderOperator      = "Operator"
+	HeaderAuthorization = "Authorization"
 )
 
 var _ Authenticator = (*EasyAuthenticator)(nil)
