@@ -82,7 +82,7 @@ func (c *Controller) CreateView(ctx *gin.Context) {
 		resp.InternalError(ctx, err)
 		return
 	}
-	resp.OK(ctx, i18n.ArtifactListSuccess, view)
+	resp.OK(ctx, i18n.ArtifactCreateViewSuccess, view)
 }
 
 
@@ -531,6 +531,7 @@ func (c *Controller) ArchiveGroup(ctx *gin.Context) {
 }
 
 
+// @Summary 触发容器垃圾回收
 // @Description 创建 container 制品垃圾回收后台任务
 // @Tags artifacts
 // @Produce application/json

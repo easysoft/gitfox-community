@@ -57,77 +57,14 @@ func RunServerWithContext(ctx context.Context, mode string, enableCI bool, onRea
 		_ = app.SystemLog.Flush()
 	}()
 
-	// 启动定时任务管理器
-	// cronManager := cron.NewCronManager()
+	// 1. 数据迁移
+	app.runMigrations()
 
-	// // 示例：添加系统健康检查定时任务：每一分钟打印一条系统日志
-	// _, err = cronManager.AddJob("system-health-check", "0 * * * * *", func() {
-	// 	app.SystemLog.Infow("System health check", "status", "running")
-	// })
-	// if err != nil {
-	// 	app.SystemLog.Errorw("[Server] Failed to add cron job", "error", err)
-	// } else {
-	// 	app.SystemLog.Info("[Server] System health check cron job started (runs every minute)")
-	// }
+	// 2. 注册后台任务处理器
+	app.registerJobHandlers()
 
-	err = app.ScanRuleSvc.Migrate(context.Background())
-	if err != nil {
-		app.SystemLog.Errorw("[Server] Failed to migrate scan rules", "error", err)
-		panic(err)
-	}
-
-	err = app.PipelineService.Migrate(context.Background(), app.SystemConfig.Ci.PluginsZipUrl)
-	if err != nil {
-		app.SystemLog.Errorw("[Server] Failed to migrate plugins", "error", err)
-		panic(err)
-	}
-
-	if err = app.TokenStore.SetDevopsToken(context.Background()); err != nil {
-		app.SystemLog.Errorw("[Server] Failed to set devops token", "error", err)
-		panic(err)
-	}
-
-	// 注册 Pipeline Cron 触发器处理器
-	if err := cronSvc.RegisterPipelineHandler(
-		app.JobScheduler, app.Triggerer, app.PipelineService); err != nil {
-		app.SystemLog.Errorw("[Server] Failed to register pipeline cron handler", "error", err)
-		panic(err)
-	}
-
-	// 注册 Scan Cron 触发器处理器
-	if err := cronSvc.RegisterScanHandler(
-		app.JobScheduler, app.ScanTaskSvc, app.ScanPlanSvc, app.ScanTriggerStore, app.RepoService); err != nil {
-		app.SystemLog.Errorw("[Server] Failed to register scan cron handler", "error", err)
-		panic(err)
-	}
-
-	// 注册 Artifact GC 处理器
-	if err := cronSvc.RegisterArtifactGCHandler(app.JobScheduler, app.ArtifactService); err != nil {
-		app.SystemLog.Errorw("[Server] Failed to register artifact GC handler", "error", err)
-		panic(err)
-	}
-
-	// 注册制品库过期视图 GC 定时任务。
-	if err := app.JobScheduler.AddRecurringWithData(
-		ctx,
-		artifactSvc.JobNameArtifactExpiredViewGC,
-		artifactSvc.JobTypeArtifactExpiredViewGC,
-		"{}",
-		"0 3 * * *", // 每天3点执行
-		time.Duration(artifactSvc.ArtifactGCJobMaxDurationSeconds)*time.Second,
-	); err != nil {
-		app.SystemLog.Errorw("[Server] Failed to register artifact expired view GC recurring job", "error", err)
-		panic(err)
-	}
-	app.SystemLog.Info("[Server] Artifact expired view GC recurring job registered (daily at 03:00)")
-
-	// TODO: 重新协商方案 启动时对账：确保所有 trigger 的 cron job 与 DB 一致（修复上次异常退出可能导致的不一致）
-	// app.SystemLog.Info("[Server] Reconciling pipeline cron jobs...")
-	// if err := app.PipelineService.ReconcileCronJobs(context.Background()); err != nil {
-	// 	app.SystemLog.Errorw("[Server] Failed to reconcile pipeline cron jobs", "error", err)
-	// 	panic(err)
-	// }
-	// app.SystemLog.Info("[Server] Pipeline cron jobs reconciled")
+	// 3. 注册定时任务
+	app.registerRecurringJobs(ctx)
 
 	// 启动 Job Scheduler
 	app.SystemLog.Info("[Server] Starting job scheduler...")
@@ -248,10 +185,92 @@ func RunServerWithContext(ctx context.Context, mode string, enableCI bool, onRea
 	app.JobScheduler.WaitJobsDone(shutdownCtx)
 	app.SystemLog.Info("[Server] Job scheduler shutdown completed")
 
-	// 停止所有定时任务
-	// app.SystemLog.Info("[Server] Stopping cron jobs...")
-	// cron.StopAll()
 	return nil
+}
+
+// runMigrations 执行启动时的数据迁移任务。
+func (app *App) runMigrations() {
+	if err := app.ScanRuleSvc.Migrate(context.Background()); err != nil {
+		app.SystemLog.Errorw("[Server] Failed to migrate scan rules", "error", err)
+		panic(err)
+	}
+
+	if err := app.PipelineService.Migrate(context.Background(), app.SystemConfig.Ci.PluginsZipUrl); err != nil {
+		app.SystemLog.Errorw("[Server] Failed to migrate plugins", "error", err)
+		panic(err)
+	}
+
+	if err := app.TokenStore.SetDevopsToken(context.Background()); err != nil {
+		app.SystemLog.Errorw("[Server] Failed to set devops token", "error", err)
+		panic(err)
+	}
+}
+
+// registerJobHandlers 注册后台任务处理器（Pipeline Cron、Scan Cron、Artifact GC）。
+func (app *App) registerJobHandlers() {
+	if err := cronSvc.RegisterPipelineHandler(
+		app.JobScheduler, app.Triggerer, app.PipelineService); err != nil {
+		app.SystemLog.Errorw("[Server] Failed to register pipeline cron handler", "error", err)
+		panic(err)
+	}
+
+	if err := cronSvc.RegisterScanHandler(
+		app.JobScheduler, app.ScanTaskSvc, app.ScanPlanSvc, app.ScanTriggerStore, app.RepoService); err != nil {
+		app.SystemLog.Errorw("[Server] Failed to register scan cron handler", "error", err)
+		panic(err)
+	}
+
+	if err := cronSvc.RegisterArtifactGCHandler(app.JobScheduler, app.ArtifactService); err != nil {
+		app.SystemLog.Errorw("[Server] Failed to register artifact GC handler", "error", err)
+		panic(err)
+	}
+}
+
+// registerRecurringJobs 注册定时调度任务。
+// 制品库 GC 的 cron 间隔由配置 artifact.gcInterval 驱动（默认 720h = 每30天），
+// 三个 GC 任务通过 minuteOffset 错峰执行，避免同时竞争资源。
+func (app *App) registerRecurringJobs(ctx context.Context) {
+	app.SystemConfig.Artifact.Sanitize()
+	artCfg := &app.SystemConfig.Artifact
+	app.SystemLog.Infow("[Server] Artifact GC config",
+		"recycleBinRetention", artCfg.RecycleBinRetention,
+		"gcInterval", artCfg.GCInterval,
+	)
+
+	gcJobs := []struct {
+		name    string
+		jobName string
+		jobType string
+		offset  int // minuteOffset，用于错峰
+	}{
+		{"container GC", artifactSvc.JobNameArtifactContainerGC, artifactSvc.JobTypeArtifactContainerGC, 0},
+		{"soft-remove GC", artifactSvc.JobNameArtifactSoftRemoveGC, artifactSvc.JobTypeArtifactSoftRemoveGC, 15},
+		{"expired view GC", artifactSvc.JobNameArtifactExpiredViewGC, artifactSvc.JobTypeArtifactExpiredViewGC, 30},
+	}
+
+	for _, j := range gcJobs {
+		cronExpr := artCfg.GCCronExpr(3, j.offset)
+		if err := app.JobScheduler.AddRecurringWithData(
+			ctx,
+			j.jobName,
+			j.jobType,
+			"{}",
+			cronExpr,
+			time.Duration(artifactSvc.ArtifactGCJobMaxDurationSeconds)*time.Second,
+		); err != nil {
+			app.SystemLog.Errorw("[Server] Failed to register artifact "+j.name+" recurring job", "error", err)
+			panic(err)
+		}
+		app.SystemLog.Infow("[Server] Artifact "+j.name+" recurring job registered", "cron", cronExpr)
+	}
+
+	// TODO: 重新协商方案 启动时对账：确保所有 trigger 的 cron job 与 DB 一致（修复上次异常退出可能导致的不一致）
+	// app.SystemLog.Info("[Server] Reconciling pipeline cron jobs...")
+	// if err := app.PipelineService.ReconcileCronJobs(context.Background()); err != nil {
+	// 	app.SystemLog.Errorw("[Server] Failed to reconcile pipeline cron jobs", "error", err)
+	// 	panic(err)
+	// }
+	// app.SystemLog.Info("[Server] Pipeline cron jobs reconciled")
 }
 
 // Register the server command.

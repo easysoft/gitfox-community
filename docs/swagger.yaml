@@ -3426,6 +3426,7 @@ paths:
           description: 服务器错误
           schema:
             $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 触发容器垃圾回收
       tags:
       - artifacts
   /artifacts/garbage/soft-remove:
@@ -3545,6 +3546,11 @@ paths:
       - description: 空间ID
         in: query
         name: spaceId
+        required: true
+        type: integer
+      - description: 仓库ID
+        in: query
+        name: repoId
         required: true
         type: integer
       produces:
@@ -3672,6 +3678,11 @@ paths:
         name: spaceId
         required: true
         type: integer
+      - description: 仓库ID
+        in: query
+        name: repoId
+        required: true
+        type: integer
       produces:
       - application/json
       responses:
@@ -3698,6 +3709,11 @@ paths:
       - description: 空间ID
         in: query
         name: spaceId
+        required: true
+        type: integer
+      - description: 仓库ID
+        in: query
+        name: repoId
         required: true
         type: integer
       - description: 权限配置

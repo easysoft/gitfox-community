@@ -69,8 +69,8 @@ func registerArtifactRoutes(group *gin.RouterGroup, controller *Controller, auth
 		permAuth := middleware.ArtifactAuthMiddleware(authz, enum.CasbinActionPermission)
 		artifact.POST("/entities/:entityId/permissions", permAuth, controller.Artifact.SetEntityPermission)
 		artifact.GET("/entities/:entityId/permissions", permAuth, controller.Artifact.GetEntityPermissions)
-		artifact.POST("/permissions", permAuth, controller.Artifact.SetSpacePermission)
-		artifact.GET("/permissions", permAuth, controller.Artifact.GetSpacePermissions)
-		artifact.GET("/members", pullAuth, controller.Artifact.GetSpaceMembers)
+		artifact.POST("/permissions", permAuth, controller.Artifact.SetPermissions)
+		artifact.GET("/permissions", permAuth, controller.Artifact.GetPermissions)
+		artifact.GET("/members", pullAuth, controller.Artifact.GetMembers)
 	}
 }

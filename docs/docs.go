@@ -411,6 +411,7 @@ const docTemplate = `{
                 "tags": [
                     "artifacts"
                 ],
+                "summary": "触发容器垃圾回收",
                 "responses": {
                     "200": {
                         "description": "成功",
@@ -611,6 +612,13 @@ const docTemplate = `{
                         "name": "spaceId",
                         "in": "query",
                         "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "仓库ID",
+                        "name": "repoId",
+                        "in": "query",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -801,6 +809,13 @@ const docTemplate = `{
                         "name": "spaceId",
                         "in": "query",
                         "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "仓库ID",
+                        "name": "repoId",
+                        "in": "query",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -841,6 +856,13 @@ const docTemplate = `{
                         "type": "integer",
                         "description": "空间ID",
                         "name": "spaceId",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "仓库ID",
+                        "name": "repoId",
                         "in": "query",
                         "required": true
                     },

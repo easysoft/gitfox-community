@@ -86,12 +86,13 @@ func (c *Controller) GetEntityPermissions(ctx *gin.Context) {
 // @Accept application/json
 // @Produce application/json
 // @Param spaceId query int true "空间ID"
+// @Param repoId query int true "仓库ID"
 // @Param body body model.PermissionRequest true "权限配置"
 // @Success 200 {object} resp.ObjectResponse "成功"
 // @Failure 400 {object} resp.ObjectResponse "参数错误"
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
 // @Router /artifacts/permissions [post]
-func (c *Controller) SetSpacePermission(ctx *gin.Context) {
+func (c *Controller) SetPermissions(ctx *gin.Context) {
 	spaceID, err := req.QueryParamAsPositiveInt64OrError(ctx, "spaceId")
 	if err != nil {
 		resp.BadRequest(ctx, err)
@@ -123,11 +124,12 @@ func (c *Controller) SetSpacePermission(ctx *gin.Context) {
 // @Accept application/json
 // @Produce application/json
 // @Param spaceId query int true "空间ID"
+// @Param repoId query int true "仓库ID"
 // @Success 200 {object} resp.ObjectResponse "成功"
 // @Failure 400 {object} resp.ObjectResponse "参数错误"
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
 // @Router /artifacts/permissions [get]
-func (c *Controller) GetSpacePermissions(ctx *gin.Context) {
+func (c *Controller) GetPermissions(ctx *gin.Context) {
 	spaceID, err := req.QueryParamAsPositiveInt64OrError(ctx, "spaceId")
 	if err != nil {
 		resp.BadRequest(ctx, err)
@@ -153,11 +155,12 @@ func (c *Controller) GetSpacePermissions(ctx *gin.Context) {
 // @Accept application/json
 // @Produce application/json
 // @Param spaceId query int true "空间ID"
+// @Param repoId query int true "仓库ID"
 // @Success 200 {object} resp.ObjectResponse "成功"
 // @Failure 400 {object} resp.ObjectResponse "参数错误"
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
 // @Router /artifacts/members [get]
-func (c *Controller) GetSpaceMembers(ctx *gin.Context) {
+func (c *Controller) GetMembers(ctx *gin.Context) {
 	spaceID, err := req.QueryParamAsPositiveInt64OrError(ctx, "spaceId")
 	if err != nil {
 		resp.BadRequest(ctx, err)

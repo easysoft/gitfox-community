@@ -34,8 +34,8 @@ import (
 	repoStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
 	spaceStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/space"
 	userStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/user"
-	artifactperm "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/rbac/artifact"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
+	artifactperm "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/rbac/artifact"
 	"github.com/opencontainers/go-digest"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
@@ -48,6 +48,8 @@ const (
 	JobTypeArtifactContainerGC      = "gitfox:cleanup:artifact-container-garbage-collector"
 	JobTypeArtifactSoftRemoveGC     = "gitfox:cleanup:artifact-soft-remove"
 	JobTypeArtifactExpiredViewGC    = "gitfox:cleanup:artifact-expired-view"
+	JobNameArtifactContainerGC      = "gitfox:recurring:artifact-container-gc"
+	JobNameArtifactSoftRemoveGC     = "gitfox:recurring:artifact-soft-remove-gc"
 	JobNameArtifactExpiredViewGC    = "gitfox:recurring:artifact-expired-view-gc"
 	ArtifactGCJobMaxDurationSeconds = 3600
 )
@@ -1101,4 +1103,3 @@ func (s *Service) hardDeleteVersionAssets(ctx context.Context, versionID int64) 
 	}
 	return nil
 }
-

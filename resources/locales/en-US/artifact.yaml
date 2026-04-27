@@ -7,6 +7,7 @@ artifact:
   garbage_collect_success: "Artifact garbage collection job created successfully."
   delete_success: "Artifact deleted successfully."
   create_group_success: "Artifact group created successfully."
+  create_view_success: "Artifact view created successfully."
   refresh_tree_success: "Artifact tree refreshed successfully."
   statistic_success: "Artifact statistics queried successfully."
   path_param_error: "Path param parsing failed."

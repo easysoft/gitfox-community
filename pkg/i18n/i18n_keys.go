@@ -8,6 +8,7 @@ type I18nKey string
 const (
 	// Artifact 相关常量
 	ArtifactCreateGroupSuccess      I18nKey = "artifact.create_group_success"       // 制品分组创建成功
+	ArtifactCreateViewSuccess       I18nKey = "artifact.create_view_success"        // 制品视图创建成功
 	ArtifactDeleteSuccess           I18nKey = "artifact.delete_success"             // 制品删除成功
 	ArtifactGarbageCollectSuccess   I18nKey = "artifact.garbage_collect_success"    // 制品垃圾回收成功
 	ArtifactListSuccess             I18nKey = "artifact.list_success"               // 制品列表查询成功

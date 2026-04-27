@@ -7,6 +7,7 @@ artifact:
   garbage_collect_success: "制品垃圾回收任务创建成功."
   delete_success: "制品删除成功."
   create_group_success: "制品 Group 创建成功."
+  create_view_success: "制品视图创建成功."
   refresh_tree_success: "制品树刷新成功."
   statistic_success: "制品统计查询成功."
   path_param_error: "Path 参数解析失败."

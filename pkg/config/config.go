@@ -1,6 +1,9 @@
 package config
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 // Config 顶级配置结构体，对应整个YAML文件
 type Config struct {
@@ -313,3 +316,26 @@ func (c *ArtifactConfig) Sanitize() {
 	}
 }
 
+// GCCronExpr 将 GCInterval 时长转换为 cron 表达式。
+//
+// 转换规则：
+//   - >= 24h: 按天计算间隔，每 N 天凌晨 baseHour 点执行，cron 格式 "minuteOffset baseHour */N * *"
+//   - < 24h:  按小时计算间隔，每 N 小时执行，cron 格式 "minuteOffset */N * * *"
+//
+// 已知限制：cron 的 day-of-month 字段 */N 表示"每月第 N 天的倍数日"而非"每 N 个自然日"。
+// 例如 */30 实际匹配每月 1 号和 31 号，而非从注册日起每 30 天。
+// minuteOffset 用于错峰：同一时段内多个 GC 任务不撞车。
+func (c *ArtifactConfig) GCCronExpr(baseHour, minuteOffset int) string {
+	hours := int(c.GCInterval.Hours())
+	if hours < 1 {
+		hours = 1
+	}
+	if hours >= 24 {
+		days := hours / 24
+		if days <= 0 {
+			days = 1
+		}
+		return fmt.Sprintf("%d %d */%d * *", minuteOffset, baseHour, days)
+	}
+	return fmt.Sprintf("%d */%d * * *", minuteOffset, hours)
+}
