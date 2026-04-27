@@ -23,7 +23,7 @@ func (s *Service) triggerForEventWithRepo(
 	repoID int64,
 	createBodyFn func(string, *repoModel.Repo) (any, error),
 ) error {
-	repo, err := s.repoStore.GetByID(ctx, uint(repoID))
+	repo, err := s.repoSvc.GetByID(ctx, nil, uint(repoID))
 	if err != nil {
 		return err
 	}
@@ -56,14 +56,14 @@ func (s *Service) triggerForEventWithPullReq(ctx context.Context,
 		return err
 	}
 
-	targetRepo, err := s.repoStore.GetByID(ctx, pr.TargetRepoID)
+	targetRepo, err := s.repoSvc.GetByID(ctx, nil, pr.TargetRepoID)
 	if err != nil {
 		return fmt.Errorf("failed to get pr target repo: %w", err)
 	}
 
 	sourceRepo := targetRepo
 	if pr.SourceRepoID != pr.TargetRepoID {
-		sourceRepo, err = s.repoStore.GetByID(ctx, pr.SourceRepoID)
+		sourceRepo, err = s.repoSvc.GetByID(ctx, nil, pr.SourceRepoID)
 		if err != nil {
 			return fmt.Errorf("failed to get pr source repo: %w", err)
 		}

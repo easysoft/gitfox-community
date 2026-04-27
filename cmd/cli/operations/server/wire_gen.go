@@ -261,7 +261,7 @@ func NewApp(mode string) (*App, func(), error) {
 	fitService := fit.NewService(tokenInterface, devopsConfig)
 	fitController := fit2.NewController(fitService, repoService)
 	webhookStore := webhook.NewWebhookStore(db)
-	webhookService, err := provider.ProvideWebhookService(eventContext, gitService, readerFactory, eventsReaderFactory, webhookStore, store, pullrequestStore, urlProvider)
+	webhookService, err := provider.ProvideWebhookService(eventContext, gitService, readerFactory, eventsReaderFactory, webhookStore, store, repoService, pullrequestStore, urlProvider)
 	if err != nil {
 		cleanup2()
 		cleanup()

@@ -17,6 +17,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	gitevents "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/events/git"
 	pullreqevents "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/events/pullreq"
+	repoSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
 	pullreqStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/pullrequest"
 	repoStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/events"
@@ -64,6 +65,7 @@ var _ Interface = (*Service)(nil)
 type Service struct {
 	webhookStore webhookStore.Interface
 	repoStore    repoStore.Interface
+	repoSvc      repoSvc.Interface
 	pullreqStore pullreqStore.Interface
 	urlProvider  url.Provider
 	git          git.Interface
@@ -83,6 +85,7 @@ func NewWebhookSvc(
 	prReaderFactory *events.ReaderFactory[*pullreqevents.Reader],
 	webhookStore webhookStore.Interface,
 	repoStore repoStore.Interface,
+	repoSvc repoSvc.Interface,
 	pullreqStore pullreqStore.Interface,
 	urlProvider url.Provider,
 ) (*Service, error) {
@@ -95,6 +98,7 @@ func NewWebhookSvc(
 		git:                        git,
 		webhookStore:               webhookStore,
 		repoStore:                  repoStore,
+		repoSvc:                    repoSvc,
 		pullreqStore:               pullreqStore,
 		urlProvider:                urlProvider,
 		secureHTTPClient:           newHTTPClient(config.AllowLoopback, config.AllowPrivateNetwork, false),

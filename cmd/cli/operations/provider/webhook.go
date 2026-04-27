@@ -7,6 +7,7 @@ import (
 	gitevents "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/events/git"
 	pullreqevents "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/events/pullreq"
 	webhookSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/webhook"
+	repoSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
 	pullreqStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/pullrequest"
 	repoStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
 	webhookStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/webhook"
@@ -30,6 +31,7 @@ func ProvideWebhookService(
 	prReaderFactory *events.ReaderFactory[*pullreqevents.Reader],
 	webhookStore webhookStore.Interface,
 	repoStore repoStore.Interface,
+	repoSvc repoSvc.Interface,
 	pullreqStore pullreqStore.Interface,
 	urlProvider url.Provider,
 ) (*webhookSvc.Service, error) {
@@ -47,6 +49,7 @@ func ProvideWebhookService(
 		prReaderFactory,
 		webhookStore,
 		repoStore,
+		repoSvc,
 		pullreqStore,
 		urlProvider,
 	)
