@@ -69,6 +69,8 @@ func (c *Controller) PostReceive(
 	// handle branch updates related to PRs - best effort
 	c.handlePRMessaging(ctx, repo, in.PrincipalAccount, in.PostReceiveInput, &out)
 
+	// cleanup temporary AGit refs to avoid keeping refs/for/* as persistent remote refs.
+	c.cleanupAgitRefs(ctx, repo, in.PostReceiveInput)
 	// err = c.postReceiveExtender.Extend(ctx, rgit, session, repo, in, &out)
 	// if err != nil {
 	// 	return hook.Output{}, fmt.Errorf("failed to extend post-receive hook: %w", err)
@@ -534,4 +536,22 @@ func (c *Controller) ReportPRCreated(ctx context.Context, pr *repoModel.PullRequ
 
 func strPtr(s string) *string {
 	return &s
+}
+
+func (c *Controller) cleanupAgitRefs(ctx context.Context, repo *repoModel.Repo, in hook.PostReceiveInput) {
+	log := logger.GetLogger(ctx)
+
+	for _, refUpdate := range in.RefUpdates {
+		if !strings.HasPrefix(refUpdate.Ref, gitReferenceNameAgitPullReq) {
+			continue
+		}
+
+		err := c.git.DeleteRef(ctx, git.DeleteRefParams{
+			ReadParams: git.ReadParams{RepoUID: repo.GitUID},
+			Name:       refUpdate.Ref,
+		})
+		if err != nil {
+			log.Warnf("failed to cleanup agit ref %s: %v", refUpdate.Ref, err)
+		}
+	}
 }
