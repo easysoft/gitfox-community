@@ -115,7 +115,8 @@ func webhookHasTrigger(webhook *webhookModel.Webhook, triggerType constant.Webho
 func (s *Service) RetriggerExecution(ctx context.Context, webhookExecutionID uint) (*webhookModel.TriggerResult, error) {
 	webhookExecution, err := s.webhookStore.GetExecutionByID(ctx, webhookExecutionID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to find webhook execution with id %d: %w", webhookExecutionID, err)
+		err = errors.WithI18nKey(err, i18n.WebhookExecutionNotFound)
+		return nil, err
 	}
 
 	if !webhookExecution.ReTriggerable {
@@ -124,7 +125,8 @@ func (s *Service) RetriggerExecution(ctx context.Context, webhookExecutionID uin
 
 	webhook, err := s.webhookStore.GetByID(ctx, uint(webhookExecution.WebhookID))
 	if err != nil {
-		return nil, fmt.Errorf("failed to find webhook with id %d: %w", webhookExecution.WebhookID, err)
+		err = errors.WithI18nKey(err, i18n.WebhookNotFound)
+		return nil, err
 	}
 
 	body := bytes.NewBufferString(webhookExecution.ReqBody)

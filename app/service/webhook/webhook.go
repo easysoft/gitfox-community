@@ -16,6 +16,7 @@ import (
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	gitevents "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/events/git"
+	pullreqevents "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/events/pullreq"
 	repoStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/events"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/stream"
@@ -77,6 +78,7 @@ func NewWebhookSvc(
 	config Config,
 	git git.Interface,
 	gitReaderFactory *events.ReaderFactory[*gitevents.Reader],
+	prReaderFactory *events.ReaderFactory[*pullreqevents.Reader],
 	webhookStore webhookStore.Interface,
 	repoStore repoStore.Interface,
 	urlProvider url.Provider,
@@ -110,16 +112,39 @@ func NewWebhookSvc(
 			// register events
 			_ = r.RegisterBranchCreated(service.handleEventBranchCreated)
 			_ = r.RegisterBranchUpdated(service.handleEventBranchUpdated)
-			// _ = r.RegisterBranchDeleted(service.handleEventBranchDeleted)
+			_ = r.RegisterBranchDeleted(service.handleEventBranchDeleted)
 
-			// _ = r.RegisterTagCreated(service.handleEventTagCreated)
-			// _ = r.RegisterTagUpdated(service.handleEventTagUpdated)
-			// _ = r.RegisterTagDeleted(service.handleEventTagDeleted)
+			_ = r.RegisterTagCreated(service.handleEventTagCreated)
+			_ = r.RegisterTagUpdated(service.handleEventTagUpdated)
+			_ = r.RegisterTagDeleted(service.handleEventTagDeleted)
 
 			return nil
 		})
 	if err != nil {
 		return nil, fmt.Errorf("failed to launch git event reader for webhooks: %w", err)
+	}
+
+	_, err = prReaderFactory.Launch(ctx, eventsReaderGroupName, config.EventReaderName,
+		func(r *pullreqevents.Reader) error {
+			const idleTimeout = 1 * time.Minute
+			r.Configure(
+				stream.WithConcurrency(config.Concurrency),
+				stream.WithHandlerOptions(
+					stream.WithIdleTimeout(idleTimeout),
+					stream.WithMaxRetries(config.MaxRetries),
+				))
+
+			// register events
+			// _ = r.RegisterCreated(service.handleEventPullReqCreated)
+			// _ = r.RegisterReopened(service.handleEventPullReqReopened)
+			// _ = r.RegisterBranchUpdated(service.handleEventPullReqBranchUpdated)
+			// _ = r.RegisterClosed(service.handleEventPullReqClosed)
+			// _ = r.RegisterMerged(service.handleEventPullReqMerged)
+
+			return nil
+		})
+	if err != nil {
+		return nil, fmt.Errorf("failed to launch pr event reader for webhooks: %w", err)
 	}
 	return service, nil
 }

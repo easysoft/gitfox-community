@@ -51,7 +51,7 @@ type Webhook struct {
 	DisplayName           string                           `json:"displayName"`
 	Description           string                           `json:"description"`
 	URL                   string                           `json:"url"`
-	Secret                string                           `json:"-"`
+	Secret                string                           `json:"secret"`
 	Enabled               bool                             `json:"enabled"`
 	Insecure              bool                             `json:"insecure"`
 	Triggers              []constant.WebhookTrigger        `json:"triggers"`

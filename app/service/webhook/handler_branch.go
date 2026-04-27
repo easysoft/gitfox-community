@@ -125,6 +125,48 @@ func (s *Service) handleEventBranchUpdated(ctx context.Context,
 		})
 }
 
+// handleEventBranchDeleted handles branch deleted events
+// and triggers branch deleted webhooks for the source repo.
+func (s *Service) handleEventBranchDeleted(ctx context.Context,
+	event *events.Event[*gitevents.BranchDeletedPayload]) error {
+	return s.triggerForEventWithRepo(ctx, constant.WebhookTriggerBranchDeleted, event.ID, event.Payload.Account, event.Payload.RepoID,
+		func(principal string, repo *repoModel.Repo) (any, error) {
+			repoInfo := webhookModel.RepositoryInfo{
+				ID:            int64(repo.ID),
+				Identifier:    repo.Identifier,
+				Path:          repo.Path,
+				GitUID:        repo.GitUID,
+				Description:   repo.Desc,
+				DefaultBranch: repo.DefaultBranch,
+				GitURL:        repo.GitURL,
+				GitSSHURL:     repo.GitSSHURL,
+			}
+
+			return &ReferencePayload{
+				BaseSegment: webhookModel.BaseSegment{
+					Trigger:   string(constant.WebhookTriggerBranchDeleted),
+					Repo:      repoInfo,
+					Principal: principal,
+				},
+				ReferenceSegment: webhookModel.ReferenceSegment{
+					Ref: webhookModel.ReferenceInfo{
+						Name: event.Payload.Ref,
+						Repo: repoInfo,
+					},
+				},
+				ReferenceDetailsSegment: webhookModel.ReferenceDetailsSegment{
+					SHA:        commitModel.NilSHA,
+					Commit:     nil,
+					HeadCommit: nil,
+				},
+				ReferenceUpdateSegment: webhookModel.ReferenceUpdateSegment{
+					OldSHA: event.Payload.SHA,
+					Forced: false,
+				},
+			}, nil
+		})
+}
+
 func (s *Service) fetchCommitInfoForEvent(ctx context.Context, repoUID string, commitSHA string) (webhookModel.CommitInfo, error) {
 	out, err := s.git.GetCommit(ctx, &git.GetCommitParams{
 		ReadParams: git.ReadParams{
