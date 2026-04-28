@@ -34,8 +34,8 @@ func TestRole(t *testing.T) {
 	require.NoError(t, err)
 
 	space := rbac.NewSpace(1)
-	user := rbac.NewUser(1)
-	user2 := rbac.NewUser(2)
+	user := rbac.NewUser("admin")
+	user2 := rbac.NewUser("admin2")
 
 	ctx := context.Background()
 

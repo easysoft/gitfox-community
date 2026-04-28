@@ -60,8 +60,6 @@ const (
 	ArtifactNodeLevelVersion = "version"
 )
 
-
-
 // ==================== 权限实体类型枚举 ====================
 // ==================== Enum: Entity Kind ====================
 
@@ -92,50 +90,50 @@ type CasbinSubject struct {
 // ==================== Core Entities ====================
 
 type ArtifactView struct {
-	ID          int64  `gorm:"column:id;primaryKey" json:"id"`
-	Name        string `gorm:"column:name"`
-	Description string `gorm:"column:desc"`
-	SpaceID     int64  `gorm:"column:spaceID"`
-	RepoID      int64  `gorm:"column:repoID"`
-	Default     bool   `gorm:"column:isDefault"`
-	CreatedBy   string     `gorm:"column:createdBy"`
-	CreatedDate *time.Time `gorm:"column:createdDate;autoCreateTime"`
-	EditedBy    string     `gorm:"column:editedBy"`
-	EditedDate  *time.Time `gorm:"column:editedDate;autoUpdateTime"`
-	Deleted     int8       `gorm:"column:deleted"`
+	ID          int64      `json:"id"`
+	Name        string     `json:"name"`
+	Description string     `json:"description"`
+	SpaceID     int64      `json:"space_id"`
+	RepoID      int64      `json:"repo_id"`
+	Default     bool       `json:"is_default"`
+	CreatedBy   string     `json:"created_by"`
+	CreatedDate *time.Time `json:"created_date"`
+	EditedBy    string     `json:"edited_by"`
+	EditedDate  *time.Time `json:"edited_date"`
+	Deleted     int8       `json:"-"`
 }
 
 type ArtifactGroup struct {
-	ID       int64          `gorm:"column:id;primaryKey" json:"id"`
-	ParentID null.Int       `gorm:"column:parentID" json:"parent_id"`
-	ViewID   int64          `gorm:"column:viewID" json:"view_id"`
-	Name     string         `gorm:"column:name" json:"name"`
-	Format   ArtifactFormat `gorm:"column:format" json:"format"`
-	CreatedBy   string         `gorm:"column:createdBy" json:"created_by"`
-	CreatedDate *time.Time     `gorm:"column:createdDate;autoCreateTime" json:"created_date"`
-	EditedBy    string         `gorm:"column:editedBy" json:"edited_by"`
-	EditedDate  *time.Time     `gorm:"column:editedDate;autoUpdateTime" json:"edited_date"`
-	Deleted     int8           `gorm:"column:deleted" json:"deleted"`
+	ID          int64          `json:"id"`
+	ParentID    null.Int       `json:"parent_id"`
+	ViewID      int64          `json:"view_id"`
+	Name        string         `json:"name"`
+	Format      ArtifactFormat `json:"format"`
+	CreatedBy   string         `json:"created_by"`
+	CreatedDate *time.Time     `json:"created_date"`
+	EditedBy    string         `json:"edited_by"`
+	EditedDate  *time.Time     `json:"edited_date"`
+	Deleted     int8           `json:"-"`
 }
 
 type ArtifactPackage struct {
-	ID        int64  `gorm:"column:id;primaryKey" json:"id"`
-	ViewID    int64  `gorm:"column:viewID" json:"view_id"`
-	Name      string `gorm:"column:name" json:"name"`
-	Namespace string `gorm:"column:namespace" json:"namespace"`
+	ID      int64  `json:"id"`
+	ViewID  int64  `json:"view_id"`
+	Name    string `json:"name"`
+	Namespace string `json:"namespace"`
 
 	// GroupID 用于标记 package 所属 group，主要给 raw / maven 风格使用，替代 namespace 的层级含义。
 	// GroupId used for define group of the package, used for raw maven style, instead of the namespace field
 	// 这里使用 int64，便于后续构建索引和关联查询。
 	// convert to int64 for build index
-	GroupID int64 `gorm:"column:groupID"`
+	GroupID int64 `json:"group_id"`
 
-	Format  ArtifactFormat `gorm:"column:format" json:"format"`
-	CreatedBy   string         `gorm:"column:createdBy" json:"created_by"`
-	CreatedDate *time.Time     `gorm:"column:createdDate;autoCreateTime" json:"created_date"`
-	EditedBy    string         `gorm:"column:editedBy" json:"edited_by"`
-	EditedDate  *time.Time     `gorm:"column:editedDate;autoUpdateTime" json:"edited_date"`
-	Deleted     int8           `gorm:"column:deleted" json:"deleted"`
+	Format      ArtifactFormat `json:"format"`
+	CreatedBy   string         `json:"created_by"`
+	CreatedDate *time.Time     `json:"created_date"`
+	EditedBy    string         `json:"edited_by"`
+	EditedDate  *time.Time     `json:"edited_date"`
+	Deleted     int8           `json:"-"`
 }
 
 func (p *ArtifactPackage) IsDeleted() bool {
@@ -143,20 +141,20 @@ func (p *ArtifactPackage) IsDeleted() bool {
 }
 
 type ArtifactVersion struct {
-	ID        int64  `gorm:"column:id;primaryKey"`
-	PackageID int64  `gorm:"column:packageID"`
-	Version   string `gorm:"column:version"`
+	ID        int64  `json:"id"`
+	PackageID int64  `json:"package_id"`
+	Version   string `json:"version"`
 
-	ViewID int64 `gorm:"column:viewID"`
+	ViewID int64 `json:"view_id"`
 	// Metadata 保存 version 级元数据，例如版本创建者等附加信息。
 	// Metadata store version-level metadata. example: version creator
-	Metadata string `gorm:"column:metadata"`
+	Metadata string `json:"metadata"`
 
-	CreatedBy   string     `gorm:"column:createdBy"`
-	CreatedDate *time.Time `gorm:"column:createdDate;autoCreateTime"`
-	EditedBy    string     `gorm:"column:editedBy"`
-	EditedDate  *time.Time `gorm:"column:editedDate;autoUpdateTime"`
-	Deleted     int8       `gorm:"column:deleted"`
+	CreatedBy   string     `json:"created_by"`
+	CreatedDate *time.Time `json:"created_date"`
+	EditedBy    string     `json:"edited_by"`
+	EditedDate  *time.Time `json:"edited_date"`
+	Deleted     int8       `json:"-"`
 }
 
 type ArtifactVersionInfo struct {
@@ -181,37 +179,37 @@ func (v *ArtifactVersion) IsDeleted() bool {
 }
 
 type ArtifactAsset struct {
-	ID int64 `gorm:"column:id;primaryKey"`
+	ID int64 `json:"id"`
 
 	// VersionID 绑定具体 package(format) 与 view 下的版本资产。
 	// VersionID binding with package(with format), view
-	VersionID null.Int `gorm:"column:versionID;"`
+	VersionID null.Int `json:"version_id"`
 
 	// ViewID 用于无版本资产，例如格式级 index 文件。
 	// ViewID used for none-version assets, like index file for a format
-	ViewID null.Int `gorm:"column:viewID"`
+	ViewID null.Int `json:"view_id"`
 
 	// GroupID 用于无版本的文件类资产挂到 group 节点。
 	// GroupId used for file format assets, without version
-	GroupID null.Int `gorm:"column:groupID"`
+	GroupID null.Int `json:"group_id"`
 
 	// Format 也用于标识无版本资产所属的仓库格式。
 	// Format is also used for none-version assets
-	Format ArtifactFormat `gorm:"column:format"`
+	Format ArtifactFormat `json:"format"`
 
-	Path        string    `gorm:"column:path"`
-	ContentType string    `gorm:"column:contentType"`
-	Kind        AssetKind `gorm:"column:kind"`
+	Path        string    `json:"path"`
+	ContentType string    `json:"content_type"`
+	Kind        AssetKind `json:"kind"`
 	// Metadata 保存 asset 级元数据，例如 helm chart 信息，用于后续重建索引。
 	// Metadata store asset-level metadata. example: helm chart metadata, for rebuild index
-	Metadata string `gorm:"column:metadata"`
-	BlobID   int64  `gorm:"column:blobID"`
-	CheckSum string `gorm:"column:checkSum"`
-	CreatedBy   string     `gorm:"column:createdBy"`
-	CreatedDate *time.Time `gorm:"column:createdDate;autoCreateTime"`
-	EditedBy    string     `gorm:"column:editedBy"`
-	EditedDate  *time.Time `gorm:"column:editedDate;autoUpdateTime"`
-	Deleted     int8       `gorm:"column:deleted"`
+	Metadata    string     `json:"metadata"`
+	BlobID      int64      `json:"blob_id"`
+	CheckSum    string     `json:"check_sum"`
+	CreatedBy   string     `json:"created_by"`
+	CreatedDate *time.Time `json:"created_date"`
+	EditedBy    string     `json:"edited_by"`
+	EditedDate  *time.Time `json:"edited_date"`
+	Deleted     int8       `json:"-"`
 }
 
 type ArtifactAssetExtendBlob struct {
@@ -223,48 +221,48 @@ type ArtifactAssetExtendBlob struct {
 }
 
 type ArtifactMetaAsset struct {
-	ID          int64          `gorm:"column:id;primaryKey"`
-	ViewID      int64          `gorm:"column:viewID"`
-	Format      ArtifactFormat `gorm:"column:format"`
-	Path        string         `gorm:"column:path"`
-	ContentType string         `gorm:"column:contentType"`
-	Kind        AssetKind      `gorm:"column:kind"`
-	BlobID      int64          `gorm:"column:blobID"`
-	CheckSum    string         `gorm:"column:checkSum"`
-	CreatedBy   string         `gorm:"column:createdBy"`
-	CreatedDate *time.Time     `gorm:"column:createdDate;autoCreateTime"`
-	EditedBy    string         `gorm:"column:editedBy"`
-	EditedDate  *time.Time     `gorm:"column:editedDate;autoUpdateTime"`
-	Deleted     int8           `gorm:"column:deleted"`
+	ID          int64          `json:"id"`
+	ViewID      int64          `json:"view_id"`
+	Format      ArtifactFormat `json:"format"`
+	Path        string         `json:"path"`
+	ContentType string         `json:"content_type"`
+	Kind        AssetKind      `json:"kind"`
+	BlobID      int64          `json:"blob_id"`
+	CheckSum    string         `json:"check_sum"`
+	CreatedBy   string         `json:"created_by"`
+	CreatedDate *time.Time     `json:"created_date"`
+	EditedBy    string         `json:"edited_by"`
+	EditedDate  *time.Time     `json:"edited_date"`
+	Deleted     int8           `json:"-"`
 }
 
 type ArtifactBlob struct {
-	ID        int64  `gorm:"column:id;primaryKey"`
-	StorageID int64  `gorm:"column:storageID"`
-	Ref       string `gorm:"column:ref"`
-	Size      int64  `gorm:"column:size"`
-	Downloads int64  `gorm:"column:downloads"`
+	ID        int64  `json:"id"`
+	StorageID int64  `json:"storage_id"`
+	Ref       string `json:"ref"`
+	Size      int64  `json:"size"`
+	Downloads int64  `json:"downloads"`
 	// Metadata 保存 blob 文件级元数据，例如容器上传进度或哈希状态。
 	// Metadata store file-level metadata. example: container upload progress hash state
-	Metadata string   `gorm:"column:metadata"`
-	Deleted  int8     `gorm:"column:deleted"`
-	CreatedBy   string     `gorm:"column:createdBy"`
-	CreatedDate *time.Time `gorm:"column:createdDate;autoCreateTime"`
-	EditedBy    string     `gorm:"column:editedBy"`
-	EditedDate  *time.Time `gorm:"column:editedDate;autoUpdateTime"`
-	AssetId  int64    `gorm:"column:assetID"`
-	CheckSum string   `gorm:"column:checkSum"`
+	Metadata    string     `json:"metadata"`
+	Deleted     int8       `json:"-"`
+	CreatedBy   string     `json:"created_by"`
+	CreatedDate *time.Time `json:"created_date"`
+	EditedBy    string     `json:"edited_by"`
+	EditedDate  *time.Time `json:"edited_date"`
+	AssetId     int64      `json:"asset_id"`
+	CheckSum    string     `json:"check_sum"`
 }
 
 type ArtifactTreeNode struct {
-	ID       int64                `gorm:"column:id;primaryKey"`
-	ParentID null.Int             `gorm:"column:parentID"`
-	ViewID   int64                `gorm:"column:viewID"`
-	Name     string               `gorm:"column:name"`
-	Path     string               `gorm:"column:path"`
-	Type     ArtifactTreeNodeType `gorm:"column:type"`
-	Format   ArtifactFormat       `gorm:"column:format"`
-	TargetId null.Int             `gorm:"column:targetID"`
+	ID       int64                `json:"id"`
+	ParentID null.Int             `json:"parent_id"`
+	ViewID   int64                `json:"view_id"`
+	Name     string               `json:"name"`
+	Path     string               `json:"path"`
+	Type     ArtifactTreeNodeType `json:"type"`
+	Format   ArtifactFormat       `json:"format"`
+	TargetId null.Int             `json:"target_id"`
 }
 
 func (n *ArtifactTreeNode) Key() string {
@@ -287,7 +285,7 @@ Parent return the object parent node
 func (n *ArtifactTreeNode) Parent() *ArtifactTreeNode {
 	p := ArtifactTreeNode{
 		ViewID: n.ViewID,
-		Format:  n.Format,
+		Format: n.Format,
 	}
 
 	parentPath := filepath.Dir(n.Path)
@@ -536,14 +534,7 @@ var (
 	ErrArgsValueEmpty      = errors.New("args value should not empty")
 )
 
-func (ArtifactView) TableName() string { return "ops_artifact_views" }
-func (ArtifactGroup) TableName() string { return "ops_artifact_groups" }
-func (ArtifactPackage) TableName() string { return "ops_artifact_packages" }
-func (ArtifactVersion) TableName() string { return "ops_artifact_versions" }
-func (ArtifactAsset) TableName() string { return "ops_artifact_assets" }
-func (ArtifactMetaAsset) TableName() string { return "ops_artifact_meta_assets" }
-func (ArtifactBlob) TableName() string { return "ops_artifact_blobs" }
-func (ArtifactTreeNode) TableName() string { return "ops_artifact_tree_nodes" }
+
 
 // ==================== 权限请求模型 ====================
 // ==================== Permission Request ====================
@@ -556,7 +547,7 @@ type PermissionRequest struct {
 
 // PermRule 是权限规则中的单条规则，包含用户列表、角色和作用域。
 type PermRule struct {
-	UserIDs []int64          `json:"user_ids"`
-	Role    enum.CasbinRole  `json:"role"`
-	Scope   enum.CasbinScope `json:"scope"`
+	Accounts []string         `json:"accounts"`
+	Role     enum.CasbinRole  `json:"role"`
+	Scope    enum.CasbinScope `json:"scope"`
 }

@@ -46,3 +46,11 @@ type ArtifactVersionListReq struct {
 	Format      string `json:"format" binding:"required"`
 	GroupName   string `json:"groupName"`
 }
+
+// CreateGroupReq 创建 group 节点的请求参数。
+// Names 为以 "." 分隔的分组路径，如 "a.b.c" 表示三级分组。
+type CreateGroupReq struct {
+	SpaceRepoReq
+	Names  string `json:"names" binding:"required"`
+	Format string `json:"format" binding:"required"`
+}

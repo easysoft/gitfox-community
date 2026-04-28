@@ -10,8 +10,6 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-
-
 )
 
 const (
@@ -31,11 +29,11 @@ type RequestIdentity interface {
 }
 
 type userRequest struct {
-	id int64
+	account string
 }
 
-func NewUser(id int64) RequestIdentity {
-	return &userRequest{id: id}
+func NewUser(account string) RequestIdentity {
+	return &userRequest{account: account}
 }
 
 func (u *userRequest) Kind() string {
@@ -43,7 +41,7 @@ func (u *userRequest) Kind() string {
 }
 
 func (u *userRequest) Key() string {
-	return fmt.Sprintf("%s:%d", requestUser, u.id)
+	return fmt.Sprintf("%s:%s", requestUser, u.account)
 }
 
 type spaceRequest struct {
@@ -118,7 +116,7 @@ func ParseIdentity(s string) (RequestIdentity, error) {
 
 	switch frames[0] {
 	case requestUser:
-		return NewUser(pk), nil
+		return NewUser(frames[1]), nil
 	case requestSpace:
 		return NewSpace(pk), nil
 	default:

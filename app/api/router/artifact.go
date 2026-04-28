@@ -65,12 +65,15 @@ func registerArtifactRoutes(group *gin.RouterGroup, controller *Controller, auth
 		artifact.GET("/garbage/soft-remove", deleteAuth, controller.Artifact.GarbageCollectSoftRemove)
 		artifact.POST("/tree/refresh", createAuth, controller.Artifact.RefreshTree)
 
-		// 权限管理
-		permAuth := middleware.ArtifactAuthMiddleware(authz, enum.CasbinActionPermission)
-		artifact.POST("/entities/:entityId/permissions", permAuth, controller.Artifact.SetEntityPermission)
-		artifact.GET("/entities/:entityId/permissions", permAuth, controller.Artifact.GetEntityPermissions)
-		artifact.POST("/permissions", permAuth, controller.Artifact.SetPermissions)
-		artifact.GET("/permissions", permAuth, controller.Artifact.GetPermissions)
+		// 权限管理 — 系统级 admin 鉴权
+		// 使用 ArtifactAdminMiddleware 取代 Casbin permAuth：
+		// 只要 Principal.Admin（zentao App）或 User.IsAdmin（DB 管理员）即可管理权限，
+		// 避免「无 artifact_admin 无法授权 artifact_admin」的死锁问题。
+		adminAuth := middleware.ArtifactAdminMiddleware()
+		artifact.POST("/entities/:entityId/permissions", adminAuth, controller.Artifact.SetEntityPermission)
+		artifact.GET("/entities/:entityId/permissions", adminAuth, controller.Artifact.GetEntityPermissions)
+		artifact.POST("/permissions", adminAuth, controller.Artifact.SetPermissions)
+		artifact.GET("/permissions", adminAuth, controller.Artifact.GetPermissions)
 		artifact.GET("/members", pullAuth, controller.Artifact.GetMembers)
 	}
 }

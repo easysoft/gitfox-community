@@ -39,7 +39,7 @@ func NewController(artSvc artifactSvc.Interface) *Controller {
 // @Router /artifacts/packages [post]
 func (c *Controller) ListPackages(ctx *gin.Context) {
 	var reqBody model.SpaceRepoReq
-	if err := ctx.ShouldBind(&reqBody); err != nil {
+	if err := ctx.ShouldBindBodyWithJSON(&reqBody); err != nil {
 		resp.BadRequest(ctx, err)
 		return
 	}
@@ -73,7 +73,7 @@ func (c *Controller) ListPackages(ctx *gin.Context) {
 // @Router /artifacts/views [post]
 func (c *Controller) CreateView(ctx *gin.Context) {
 	var reqBody model.CreateArtifactViewReq
-	if err := ctx.ShouldBind(&reqBody); err != nil {
+	if err := ctx.ShouldBindBodyWithJSON(&reqBody); err != nil {
 		resp.BadRequest(ctx, err)
 		return
 	}
@@ -84,7 +84,6 @@ func (c *Controller) CreateView(ctx *gin.Context) {
 	}
 	resp.OK(ctx, i18n.ArtifactCreateViewSuccess, view)
 }
-
 
 // @Summary 查询版本列表
 // @Description 列出指定制品包的版本列表
@@ -98,7 +97,7 @@ func (c *Controller) CreateView(ctx *gin.Context) {
 // @Router /artifacts/versions/list [post]
 func (c *Controller) ListVersions(ctx *gin.Context) {
 	var reqBody model.ArtifactVersionListReq
-	if err := ctx.ShouldBind(&reqBody); err != nil {
+	if err := ctx.ShouldBindBodyWithJSON(&reqBody); err != nil {
 		resp.BadRequest(ctx, err)
 		return
 	}
@@ -254,7 +253,7 @@ func (c *Controller) DownloadAsset(ctx *gin.Context) {
 // @Router /artifacts/upload/{format} [post]
 func (c *Controller) Upload(ctx *gin.Context) {
 	var reqBody model.SpaceRepoReq
-	if err := ctx.ShouldBind(&reqBody); err != nil {
+	if err := ctx.ShouldBindBodyWithJSON(&reqBody); err != nil {
 		resp.BadRequest(ctx, err)
 		return
 	}
@@ -280,19 +279,14 @@ func (c *Controller) Upload(ctx *gin.Context) {
 // @Tags artifacts
 // @Accept application/json
 // @Produce application/json
-// @Param body body object true "请求参数(包含 spaceId, repoId, names 和 format)"
+// @Param body body model.CreateGroupReq true "请求参数(包含 spaceId, repoId, names 和 format)"
 // @Success 200 {object} resp.ObjectResponse "成功"
 // @Failure 400 {object} resp.ObjectResponse "参数错误"
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
 // @Router /artifacts/groups [post]
 func (c *Controller) CreateGroup(ctx *gin.Context) {
-	var params struct {
-		SpaceID int64  `json:"spaceId"`
-		RepoID  int64  `json:"repoId"`
-		Names   string `json:"names" binding:"required"`
-		Format  string `json:"format" binding:"required"`
-	}
-	if err := ctx.ShouldBindJSON(&params); err != nil {
+	var params model.CreateGroupReq
+	if err := ctx.ShouldBindBodyWithJSON(&params); err != nil {
 		resp.BadRequest(ctx, err)
 		return
 	}
@@ -325,7 +319,7 @@ func (c *Controller) CreateGroup(ctx *gin.Context) {
 // @Router /artifacts/formats [post]
 func (c *Controller) ListFormats(ctx *gin.Context) {
 	var reqBody model.SpaceRepoReq
-	if err := ctx.ShouldBind(&reqBody); err != nil {
+	if err := ctx.ShouldBindBodyWithJSON(&reqBody); err != nil {
 		resp.BadRequest(ctx, err)
 		return
 	}
@@ -460,7 +454,6 @@ func (c *Controller) StatisticSummary(ctx *gin.Context) {
 	resp.OK(ctx, i18n.ArtifactStatisticSuccess, data)
 }
 
-
 // @Summary 按实体批量软删除制品
 // @Description 按 entity_id 批量软删除 asset/version/package/group
 // @Tags artifacts
@@ -473,7 +466,7 @@ func (c *Controller) StatisticSummary(ctx *gin.Context) {
 // @Router /artifacts/entities [delete]
 func (c *Controller) SoftRemoveByEntity(ctx *gin.Context) {
 	var reqBody model.SoftRemoveEntitiesReq
-	if err := ctx.ShouldBindJSON(&reqBody); err != nil {
+	if err := ctx.ShouldBindBodyWithJSON(&reqBody); err != nil {
 		resp.BadRequest(ctx, err)
 		return
 	}
@@ -529,7 +522,6 @@ func (c *Controller) ArchiveGroup(ctx *gin.Context) {
 		return
 	}
 }
-
 
 // @Summary 触发容器垃圾回收
 // @Description 创建 container 制品垃圾回收后台任务

@@ -415,22 +415,29 @@ func artifactViewScope(info *model.ArtifactVersionInfo) string {
 	return "global"
 }
 
+// ----------------- capacity ------------------
+// StatisticContainerCapacity 容器仓库存储统计
 func (s *Service) StatisticContainerCapacity(ctx context.Context) (*model.ArtifactStatisticResponse, error) {
-	report, err := s.artStore.StatisticAssets(ctx, artifactStore.ContainerFormatOption{})
+	// 容量统计不需要过滤保留期，传 0 即可
+	report, err := s.artStore.StatisticAssets(ctx, 0, artifactStore.ContainerFormatOption{})
 	if err != nil {
 		return nil, err
 	}
 	return s.statistic(ctx, report)
 }
 
+// StatisticCapacity 非容器仓库存储统计
 func (s *Service) StatisticCapacity(ctx context.Context) (*model.ArtifactStatisticResponse, error) {
-	report, err := s.artStore.StatisticAssets(ctx, artifactStore.ExcludeContainerOption{})
+	// 容量统计不需要过滤保留期，传 0 即可
+	report, err := s.artStore.StatisticAssets(ctx, 0, artifactStore.ExcludeContainerOption{})
 	if err != nil {
 		return nil, err
 	}
 	return s.statistic(ctx, report)
 }
 
+// ----------------- summary ------------------
+// StatisticSummary 仓库统计概览
 func (s *Service) StatisticSummary(ctx context.Context) (map[string]*model.ArtifactStatsObject, error) {
 	assets, err := s.artStore.Assets().Search(ctx, artifactStore.AssetVersionedOption{})
 	if err != nil {
@@ -526,7 +533,8 @@ func (s *Service) triggerGarbageCollect(ctx context.Context, jobType string) (*m
 }
 
 func (s *Service) GarbageCollectSoftRemove(ctx context.Context) (*model.ArtifactGarbageReportRes, error) {
-	report, err := s.artStore.StatisticAssets(ctx, artifactStore.ExcludeContainerOption{})
+	// GC 场景：传入回收站保留期，确保只清理已过期的软删资源
+	report, err := s.artStore.StatisticAssets(ctx, s.config.RecycleBinRetention, artifactStore.ExcludeContainerOption{})
 	if err != nil {
 		return nil, err
 	}
@@ -534,7 +542,8 @@ func (s *Service) GarbageCollectSoftRemove(ctx context.Context) (*model.Artifact
 }
 
 func (s *Service) GarbageCollectContainer(ctx context.Context) (*model.ArtifactGarbageReportRes, error) {
-	report, err := s.artStore.StatisticAssets(ctx, artifactStore.ContainerFormatOption{})
+	// GC 场景：传入回收站保留期，确保只清理已过期的软删资源
+	report, err := s.artStore.StatisticAssets(ctx, s.config.RecycleBinRetention, artifactStore.ContainerFormatOption{})
 	if err != nil {
 		return nil, err
 	}
@@ -814,7 +823,7 @@ func (s *Service) authorizeArtifactAction(ctx context.Context, session *authMode
 		return errors.New("authentication required")
 	}
 
-	sub := rbac.NewUser(session.User.ID)
+	sub := rbac.NewUser(session.User.Account)
 	obj := rbac.NewObject(e.PolicyLocation())
 
 	// 三级作用域查找：repo → space → global
@@ -963,11 +972,14 @@ func (s *Service) RefreshTree(ctx context.Context) error {
 
 // GarbageCollectExpiredViews 清理超过回收站保留期的已软删视图及其全部关联资源。
 //
-// 处理流程：
+// 正确的处理顺序（参考 gitfox 「先清理子资源、最后才删父记录」模式）：
 //  1. 根据 config.RecycleBinRetention 计算过期截止时间
-//  2. 查出所有 deleted=1 且 editedDate < 截止时间 的 view（editedDate 即软删时间）
+//  2. 【仅查询】找出所有 deleted=1 且 editedDate < 截止时间 的 view ID（不立即删除）
 //  3. 对每个过期 view，级联硬删其下的 packages -> versions -> assets -> blobs（含物理文件）
-//  4. 最后硬删 view 本身
+//  4. 关联资源清理成功后，才物理删除 view 记录本身
+//
+// 此顺序保证幂等性：若进程在步骤 3/4 之间崩溃，view 记录依然存在（deleted=1），
+// 下次 GC 运行时会重新发现并继续处理，不会产生永久孤儿资源。
 //
 // 此方法由定时任务 JobTypeArtifactExpiredViewGC 自动调用。
 func (s *Service) GarbageCollectExpiredViews(ctx context.Context) (int, error) {
@@ -977,8 +989,8 @@ func (s *Service) GarbageCollectExpiredViews(ctx context.Context) (int, error) {
 	cutoff := time.Now().Add(-s.config.RecycleBinRetention)
 	log.Infof("开始清理过期已软删视图，截止时间: %s", cutoff.Format(time.RFC3339))
 
-	// 查出并硬删过期 view，返回被删除的 view ID 列表
-	expiredViewIDs, err := s.artStore.Views().HardDeleteExpired(ctx, cutoff)
+	// 【仅查询】找出过期 view ID，不删除——保证幂等性
+	expiredViewIDs, err := s.artStore.Views().FindExpiredIDs(ctx, cutoff)
 	if err != nil {
 		return 0, fmt.Errorf("查询过期视图失败: %w", err)
 	}
@@ -989,16 +1001,29 @@ func (s *Service) GarbageCollectExpiredViews(ctx context.Context) (int, error) {
 
 	log.Infof("发现 %d 个过期已软删视图待清理: %v", len(expiredViewIDs), expiredViewIDs)
 
-	// 对每个过期 view，级联清理其下所有关联资源
+	cleaned := 0
 	for _, viewID := range expiredViewIDs {
-		if err = s.hardDeleteViewResources(ctx, viewID); err != nil {
-			log.Errorf("清理视图 %d 的关联资源失败: %v", viewID, err)
-			// 继续处理其他 view，不因单个失败中断
+		// Step 1: 先清理关联资源（packages/versions/assets/blobs/物理文件/groups/tree_nodes/meta_assets）
+		if resErr := s.hardDeleteViewResources(ctx, viewID); resErr != nil {
+			// 关联资源清理失败时，保留 view 记录，下次 GC 重试
+			log.Errorf("清理视图 %d 的关联资源失败，跳过本次删除（下次 GC 将重试）: %v", viewID, resErr)
+			continue
 		}
+
+		// Step 2: 关联资源清理成功后，最后才物理删除 view 记录
+		if delErr := s.artStore.Views().Delete(ctx, viewID); delErr != nil {
+			log.Errorf("硬删视图 %d 记录失败（关联资源已清理，下次 GC 将重试删除 view 记录）: %v", viewID, delErr)
+			// 此处不 continue：关联资源已清理，即使 view 记录删除失败，
+			// 下次 GC 也只剩删除空 view 记录，不会重复删资源（资源已不存在）
+			continue
+		}
+
+		cleaned++
+		log.Infof("视图 %d 清理完成", viewID)
 	}
 
-	log.Infof("过期视图清理完成，共处理 %d 个视图", len(expiredViewIDs))
-	return len(expiredViewIDs), nil
+	log.Infof("过期视图清理完成，共成功处理 %d / %d 个视图", cleaned, len(expiredViewIDs))
+	return cleaned, nil
 }
 
 // hardDeleteViewResources 级联硬删指定 view 下的所有关联资源。

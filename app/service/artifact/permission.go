@@ -3,7 +3,6 @@ package artifact
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"strings"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/entity"
@@ -40,8 +39,8 @@ func (s *Service) SetEntityPermission(ctx context.Context, spaceID int64, entity
 		}
 		var requests []*rbac.Request
 		for _, p := range permReq.Rules {
-			for _, uid := range p.UserIDs {
-				subject := rbac.NewUser(uid)
+			for _, account := range p.Accounts {
+				subject := rbac.NewUser(account)
 				requests = append(requests, &rbac.Request{Sub: subject, Role: p.Role.String(), Scope: p.Scope, Effect: rbac.EffectAllow})
 			}
 		}
@@ -153,26 +152,29 @@ func (s *Service) getEntityPermissions(ctx context.Context, space, target rbac.R
 // SetSpacePermission 设置空间/仓库级权限。
 func (s *Service) SetSpacePermission(ctx context.Context, spaceID, repoID int64, permReq *model.PermissionRequest) (*model.ArtifactPermissions, error) {
 	space := resolveScope(spaceID, repoID)
-	if permReq.Private {
-		err := s.perm.PM.DenyAllAccessToSpace(space)
-		if err != nil {
-			return nil, err
-		}
 
-		var requests []*rbac.Request
-		for _, p := range permReq.Rules {
-			for _, uid := range p.UserIDs {
-				subject := rbac.NewUser(uid)
-				requests = append(requests, &rbac.Request{Sub: subject, Role: p.Role.String(), Scope: enum.CasbinScopeRecursive, Effect: rbac.EffectAllow})
-			}
-		}
-		if err = s.perm.PM.EnsureRulesOnSpace(requests, space); err != nil {
+	if permReq.Private {
+		// 私有模式：先写 deny-all（拒绝所有人），再写白名单允许规则
+		if err := s.perm.PM.DenyAllAccessToSpace(space); err != nil {
 			return nil, err
 		}
 	} else {
-		if err := s.perm.PM.RemoveAllPolicyFromSpace(space); err != nil {
+		// 公开模式：移除 deny-all 规则（但保留已有的 allow 规则，下面 EnsureRules 会差量更新）
+		if err := s.perm.PM.AllowAllAccessOnSpace(space); err != nil {
 			return nil, err
 		}
+	}
+
+	// 无论 private 与否，都写入 rules 中的允许规则（差量 add/remove）
+	var requests []*rbac.Request
+	for _, p := range permReq.Rules {
+		for _, account := range p.Accounts {
+			subject := rbac.NewUser(account)
+			requests = append(requests, &rbac.Request{Sub: subject, Role: p.Role.String(), Scope: enum.CasbinScopeRecursive, Effect: rbac.EffectAllow})
+		}
+	}
+	if err := s.perm.PM.EnsureRulesOnSpace(requests, space); err != nil {
+		return nil, err
 	}
 
 	return s.getSpacePermissions(ctx, space)
@@ -249,7 +251,8 @@ func (s *Service) GetSpaceMembers(ctx context.Context, spaceID, repoID int64) ([
 	return subjects, nil
 }
 
-// parseSubject 将 casbin 策略中的 subject key (如 "user:123") 解析为 CasbinSubject。
+// parseSubject 将 casbin 策略中的 subject key（如 "user:admin"）解析为 CasbinSubject。
+// subject key 格式为 "{kind}:{account}"，kind 目前只有 "user"。
 func (s *Service) parseSubject(ctx context.Context, in string) (*model.CasbinSubject, error) {
 	frames := strings.Split(in, ":")
 	if len(frames) != 2 {
@@ -257,15 +260,11 @@ func (s *Service) parseSubject(ctx context.Context, in string) (*model.CasbinSub
 	}
 
 	kind := frames[0]
-	idStr := frames[1]
-	id, err := strconv.ParseInt(idStr, 10, 64)
-	if err != nil {
-		return nil, err
-	}
+	account := frames[1]
 
-	u, err := s.userStore.FindByID(ctx, id)
+	u, err := s.userStore.FindByAccount(ctx, account)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("user not found for account '%s': %w", account, err)
 	}
 
 	return &model.CasbinSubject{
