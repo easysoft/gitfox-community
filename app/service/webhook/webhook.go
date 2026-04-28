@@ -244,7 +244,7 @@ func (s *Service) Update(ctx context.Context, webhookID uint, req webhookModel.R
 	if req.URL != nil && *req.URL != "" {
 		updates["url"] = *req.URL
 	}
-	if len(req.Triggers) > 0 {
+	if req.Triggers != nil {
 		parts := make([]string, len(req.Triggers))
 		for i, t := range req.Triggers {
 			parts[i] = string(t)
