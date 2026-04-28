@@ -34,10 +34,8 @@ type Interface interface {
 	StatisticAssets(ctx context.Context, retentionTime time.Duration, options ...SearchOption) (*model.ArtifactStatisticReport, error)
 }
 
-
-
 type ViewInterface interface {
-	Create(ctx context.Context, newObj *model.ArtifactView) error
+	Create(ctx context.Context, newObj *model.CreateArtifactView) (*model.ArtifactView, error)
 	Delete(ctx context.Context, id int64) error
 	GetDefault(ctx context.Context, spaceId int64) (*model.ArtifactView, error)
 	GetDefaultByRepoAndSpace(ctx context.Context, repoId, spaceId int64) (*model.ArtifactView, error)
@@ -64,7 +62,7 @@ type ViewInterface interface {
 }
 
 type PackageInterface interface {
-	Create(ctx context.Context, newObj *model.ArtifactPackage) error
+	Create(ctx context.Context, newObj *model.CreateArtifactPackage) (*model.ArtifactPackage, error)
 	GetByID(ctx context.Context, packageId int64) (*model.ArtifactPackage, error)
 	GetByName(ctx context.Context, name, namespace string, viewId int64, format model.ArtifactFormat) (*model.ArtifactPackage, error)
 	List(ctx context.Context, viewId int64, includeDeleted bool) ([]*model.ArtifactPackage, error)
@@ -80,7 +78,7 @@ type PackageInterface interface {
 }
 
 type VersionInterface interface {
-	Create(ctx context.Context, newObj *model.ArtifactVersion) error
+	Create(ctx context.Context, newObj *model.CreateArtifactVersion) (*model.ArtifactVersion, error)
 	GetByID(ctx context.Context, versionId int64) (*model.ArtifactVersion, error)
 	GetByVersion(ctx context.Context, packageId, viewId int64, version string) (*model.ArtifactVersion, error)
 	Update(ctx context.Context, ver *model.ArtifactVersion) error
@@ -93,7 +91,7 @@ type VersionInterface interface {
 }
 
 type AssetInterface interface {
-	Create(ctx context.Context, newObj *model.ArtifactAsset) error
+	Create(ctx context.Context, newObj *model.CreateArtifactAsset) (*model.ArtifactAsset, error)
 	GetById(ctx context.Context, assetId int64) (*model.ArtifactAsset, error)
 	GetPath(ctx context.Context, path string, format model.ArtifactFormat) (*model.ArtifactAsset, error)
 	GetMetaAsset(ctx context.Context, path string, viewId int64, format model.ArtifactFormat) (*model.ArtifactAsset, error)
@@ -111,7 +109,7 @@ type AssetInterface interface {
 }
 
 type MetaAssetInterface interface {
-	Create(ctx context.Context, newObj *model.ArtifactMetaAsset) error
+	Create(ctx context.Context, newObj *model.CreateArtifactMetaAsset) (*model.ArtifactMetaAsset, error)
 	GetById(ctx context.Context, metaAssetId int64) (*model.ArtifactMetaAsset, error)
 	GetByPath(ctx context.Context, path string, viewId int64, format model.ArtifactFormat) (*model.ArtifactMetaAsset, error)
 	Update(ctx context.Context, metaAsset *model.ArtifactMetaAsset) error
@@ -120,7 +118,7 @@ type MetaAssetInterface interface {
 }
 
 type BlobInterface interface {
-	Create(ctx context.Context, newObj *model.ArtifactBlob) error
+	Create(ctx context.Context, newObj *model.CreateArtifactBlob) (*model.ArtifactBlob, error)
 	GetById(ctx context.Context, blobId int64) (*model.ArtifactBlob, error)
 	GetByRef(ctx context.Context, ref string, storageId int64) (*model.ArtifactBlob, error)
 	GetByHistory(ctx context.Context, assetId, createdAt int64) (*model.ArtifactBlob, error)
@@ -132,7 +130,7 @@ type BlobInterface interface {
 }
 
 type TreeNodeInterface interface {
-	Create(ctx context.Context, newObj *model.ArtifactTreeNode) error
+	Create(ctx context.Context, newObj *model.CreateArtifactTreeNode) (*model.ArtifactTreeNode, error)
 	RecurseCreate(ctx context.Context, obj *model.ArtifactTreeNode) error
 	GetById(ctx context.Context, id int64) (*model.ArtifactTreeNode, error)
 	GetByPath(ctx context.Context, viewId int64, path string, format model.ArtifactFormat) (*model.ArtifactTreeNode, error)
@@ -146,7 +144,7 @@ type TreeNodeInterface interface {
 }
 
 type GroupInterface interface {
-	Create(ctx context.Context, newObj *model.ArtifactGroup) error
+	Create(ctx context.Context, newObj *model.CreateArtifactGroup) (*model.ArtifactGroup, error)
 	GetById(ctx context.Context, groupId int64) (*model.ArtifactGroup, error)
 	GetRoot(ctx context.Context, viewId int64, name string, format model.ArtifactFormat) (*model.ArtifactGroup, error)
 	GetSubNode(ctx context.Context, parentId int64, name string) (*model.ArtifactGroup, error)

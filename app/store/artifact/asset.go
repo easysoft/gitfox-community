@@ -15,7 +15,7 @@ var _ AssetInterface = (*assets)(nil)
 
 type assets struct{ db *gorm.DB }
 
-func (c *assets) Create(ctx context.Context, newObj *model.ArtifactAsset) error {
+func (c *assets) Create(ctx context.Context, newObj *model.CreateArtifactAsset) (*model.ArtifactAsset, error) {
 	// version/view/group 含可空字段，需先用代码补做查重，避免唯一约束在 NULL 语义下失效。
 	if newObj.VersionID.Ptr() == nil {
 		var err error
@@ -27,18 +27,27 @@ func (c *assets) Create(ctx context.Context, newObj *model.ArtifactAsset) error 
 			_, err = c.GetMetaAsset(ctx, newObj.Path, newObj.ViewID.Int64, newObj.Format)
 		}
 		if err == nil {
-			return pkgErrors.ErrDuplicate
+			return nil, pkgErrors.ErrDuplicate
 		}
 	}
 	if err := model.ValidateAssetKind(newObj.Kind); err != nil {
-		return err
+		return nil, err
 	}
-	row := assetFromModel(newObj)
-	if err := c.db.WithContext(ctx).Create(row).Error; err != nil {
-		return database.ProcessSQLErrorf(ctx, err)
+	var row artifactAsset
+	row.VersionID = newObj.VersionID
+	row.ViewID = newObj.ViewID
+	row.GroupID = newObj.GroupID
+	row.Format = string(newObj.Format)
+	row.Path = newObj.Path
+	row.ContentType = newObj.ContentType
+	row.Kind = string(newObj.Kind)
+	row.Metadata = newObj.Metadata
+	row.BlobID = newObj.BlobID
+	row.CheckSum = newObj.CheckSum
+	if err := c.db.WithContext(ctx).Create(&row).Error; err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
-	newObj.ID = row.ID
-	return nil
+	return assetToModel(&row), nil
 }
 
 func (c *assets) GetById(ctx context.Context, assetId int64) (*model.ArtifactAsset, error) {

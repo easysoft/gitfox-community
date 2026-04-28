@@ -15,13 +15,16 @@ var _ VersionInterface = (*versions)(nil)
 
 type versions struct{ db *gorm.DB }
 
-func (c *versions) Create(ctx context.Context, newObj *model.ArtifactVersion) error {
-	row := versionFromModel(newObj)
-	if err := c.db.WithContext(ctx).Create(row).Error; err != nil {
-		return database.ProcessSQLErrorf(ctx, err)
+func (c *versions) Create(ctx context.Context, newObj *model.CreateArtifactVersion) (*model.ArtifactVersion, error) {
+	var row artifactVersion
+	row.PackageID = newObj.PackageID
+	row.Version = newObj.Version
+	row.ViewID = newObj.ViewID
+	row.Metadata = newObj.Metadata
+	if err := c.db.WithContext(ctx).Create(&row).Error; err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
-	newObj.ID = row.ID
-	return nil
+	return versionToModel(&row), nil
 }
 
 func (c *versions) GetByID(ctx context.Context, versionId int64) (*model.ArtifactVersion, error) {

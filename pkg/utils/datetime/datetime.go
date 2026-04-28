@@ -351,6 +351,27 @@ func (t *Local) String() string {
 	return time.Time(*t).In(CST).Format("2006-01-02 15:04:05")
 }
 
+// After 判断是否晚于
+func (t *Local) After(t2 Local) bool {
+	return time.Time(*t).After(time.Time(t2))
+}
+
+// Before 判断是否早于
+func (t *Local) Before(t2 Local) bool {
+	return time.Time(*t).Before(time.Time(t2))
+}
+
+// Sub 获取两个时间的时间差
+func (t *Local) Sub(t2 Local) time.Duration {
+	return time.Time(*t).Sub(time.Time(t2))
+}
+
+// Add 添加时间
+func (t *Local) Add(d time.Duration) *Local {
+	result := Local(time.Time(*t).Add(d))
+	return &result
+}
+
 func NowLocalTime() *Local {
 	now := time.Now().In(CST)
 	localNow := Local(now)

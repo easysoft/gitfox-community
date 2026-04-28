@@ -84,17 +84,18 @@ func (t *Syncer) SyncTreeNodeForFormat(ctx context.Context, viewId int64, format
 	if !errors.Is(err, pkgErrors.ErrResourceNotFound) {
 		return nil, err
 	}
-	newNode := &artmodel.ArtifactTreeNode{
+	newNode := &artmodel.CreateArtifactTreeNode{
 		ViewID: viewId,
 		Path:    path,
 		Name:    string(format),
 		Type:    artmodel.ArtifactTreeNodeTypeFormat,
 		Format:  format,
 	}
-	if err = t.artStore.Nodes().Create(ctx, newNode); err != nil {
+	created, err := t.artStore.Nodes().Create(ctx, newNode)
+	if err != nil {
 		return nil, err
 	}
-	return newNode, nil
+	return created, nil
 }
 
 func (t *Syncer) SyncTreeNodeForPackage(ctx context.Context, pkg *artmodel.ArtifactPackage) (*artmodel.ArtifactTreeNode, error) {
@@ -177,7 +178,15 @@ func (t *Syncer) upsertTreeNode(ctx context.Context, node *artmodel.ArtifactTree
 		upObj.TargetId = node.TargetId
 		return t.artStore.Nodes().Update(ctx, upObj)
 	} else if errors.Is(e, pkgErrors.ErrResourceNotFound) {
-		return t.artStore.Nodes().Create(ctx, node)
+		created, err := t.artStore.Nodes().Create(ctx, &artmodel.CreateArtifactTreeNode{
+			ParentID: node.ParentID, ViewID: node.ViewID, Name: node.Name,
+			Path: node.Path, Type: node.Type, Format: node.Format, TargetId: node.TargetId,
+		})
+		if err != nil {
+			return err
+		}
+		node.ID = created.ID
+		return nil
 	} else {
 		return e
 	}

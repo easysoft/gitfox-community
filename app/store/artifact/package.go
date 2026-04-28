@@ -14,13 +14,16 @@ var _ PackageInterface = (*packages)(nil)
 
 type packages struct{ db *gorm.DB }
 
-func (c *packages) Create(ctx context.Context, newObj *model.ArtifactPackage) error {
-	row := packageFromModel(newObj)
-	if err := c.db.WithContext(ctx).Create(row).Error; err != nil {
-		return database.ProcessSQLErrorf(ctx, err)
+func (c *packages) Create(ctx context.Context, newObj *model.CreateArtifactPackage) (*model.ArtifactPackage, error) {
+	var row artifactPackage
+	row.ViewID = newObj.ViewID
+	row.Name = newObj.Name
+	row.Namespace = newObj.Namespace
+	row.Format = string(newObj.Format)
+	if err := c.db.WithContext(ctx).Create(&row).Error; err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
-	newObj.ID = row.ID
-	return nil
+	return packageToModel(&row), nil
 }
 
 func (c *packages) GetByID(ctx context.Context, packageId int64) (*model.ArtifactPackage, error) {

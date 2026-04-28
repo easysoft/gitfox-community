@@ -300,27 +300,24 @@ func (crr *ResumeRequest) Finish(ctx context.Context, r *http.Request, dgst *dig
 	}
 
 	now := time.Now().UnixMilli()
-	tm := time.UnixMilli(now)
-	asset := model.ArtifactAsset{
+	_ = now
+	asset := model.CreateArtifactAsset{
 		Format:      model.ArtifactContainerFormat,
 		Path:        dgst.String(),
 		ContentType: "application/octet-stream",
 		Kind:        model.AssetKindMain,
 		BlobID:      dbBlob.ID,
-		CreatedDate: &tm,
-		EditedDate:  &tm,
 	}
 
 	art, err := crr.artStore.Assets().GetPath(ctx, asset.Path, model.ArtifactContainerFormat)
 	if err != nil {
 		log.Errorf("get artifact by path failed: %v", err)
-		if err = crr.artStore.Assets().Create(ctx, &asset); err != nil {
+		if _, err = crr.artStore.Assets().Create(ctx, &asset); err != nil {
 			log.Errorf("save artifact asset failed: %v", err)
 			return err
 		}
 	} else {
 		art.BlobID = dbBlob.ID
-		art.EditedDate = &tm
 		if err = crr.artStore.Assets().Update(ctx, art); err != nil {
 			log.Errorf("update artifact asset failed: %v", err)
 			return err
@@ -385,19 +382,27 @@ func (crr *ResumeRequest) createOrUpdateModelBlob(ctx context.Context, mutateFn 
 		}
 
 		tm := time.UnixMilli(crr.State.StartedAt)
-		newObj := model.ArtifactBlob{
+		_ = tm
+		newObj := model.CreateArtifactBlob{
 			StorageID:   crr.view.StorageID,
 			Ref:         crr.Ref,
-			CreatedDate: &tm,
 			CreatedBy:   fmt.Sprintf("%d", creatorId),
 		}
-		if err = mutateFn(&newObj); err != nil {
+		if err = mutateFn(&model.ArtifactBlob{StorageID: newObj.StorageID, Ref: newObj.Ref, CreatedBy: newObj.CreatedBy}); err != nil {
 			return nil, err
 		}
-		if err = crr.artStore.Blobs().Create(ctx, &newObj); err != nil {
+		// mutateFn sets Metadata and Size on a temp blob; we read from it.
+		tmpBlob := &model.ArtifactBlob{StorageID: newObj.StorageID, Ref: newObj.Ref, CreatedBy: newObj.CreatedBy}
+		if err = mutateFn(tmpBlob); err != nil {
 			return nil, err
 		}
-		return &newObj, err
+		newObj.Metadata = tmpBlob.Metadata
+		newObj.Size = tmpBlob.Size
+		created, err := crr.artStore.Blobs().Create(ctx, &newObj)
+		if err != nil {
+			return nil, err
+		}
+		return created, err
 	}
 	return nil, err
 }

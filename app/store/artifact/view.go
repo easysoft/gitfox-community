@@ -14,14 +14,18 @@ var _ ViewInterface = (*views)(nil)
 
 type views struct{ db *gorm.DB }
 
-func (c *views) Create(ctx context.Context, newObj *model.ArtifactView) error {
-	row := viewFromModel(newObj)
-	if err := c.db.WithContext(ctx).Create(row).Error; err != nil {
-		return database.ProcessSQLErrorf(ctx, err)
+func (c *views) Create(ctx context.Context, newObj *model.CreateArtifactView) (*model.ArtifactView, error) {
+	var view artifactView
+	view.SpaceID = newObj.SpaceID
+	view.RepoID = newObj.RepoID
+	view.Default = newObj.Default
+	view.Name = newObj.Name
+	view.Description = newObj.Description
+	if err := c.db.WithContext(ctx).Create(&view).Error; err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
-	// 回写自增 ID
-	newObj.ID = row.ID
-	return nil
+
+	return viewToModel(&view), nil
 }
 
 func (c *views) Delete(ctx context.Context, id int64) error {

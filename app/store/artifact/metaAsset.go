@@ -13,19 +13,25 @@ var _ MetaAssetInterface = (*metaAssets)(nil)
 
 type metaAssets struct{ db *gorm.DB }
 
-func (s *metaAssets) Create(ctx context.Context, newObj *model.ArtifactMetaAsset) error {
+func (s *metaAssets) Create(ctx context.Context, newObj *model.CreateArtifactMetaAsset) (*model.ArtifactMetaAsset, error) {
 	if err := validatorEmpty(newObj.ViewID, newObj.Path, newObj.ViewID, newObj.Format); err != nil {
-		return err
+		return nil, err
 	}
 	if err := model.ValidateAssetKind(newObj.Kind); err != nil {
-		return err
+		return nil, err
 	}
-	row := metaAssetFromModel(newObj)
-	if err := s.db.WithContext(ctx).Create(row).Error; err != nil {
-		return database.ProcessSQLErrorf(ctx, err)
+	var row artifactMetaAsset
+	row.ViewID = newObj.ViewID
+	row.Format = string(newObj.Format)
+	row.Path = newObj.Path
+	row.ContentType = newObj.ContentType
+	row.Kind = string(newObj.Kind)
+	row.BlobID = newObj.BlobID
+	row.CheckSum = newObj.CheckSum
+	if err := s.db.WithContext(ctx).Create(&row).Error; err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
-	newObj.ID = row.ID
-	return nil
+	return metaAssetToModel(&row), nil
 }
 
 func (s *metaAssets) GetById(ctx context.Context, metaAssetId int64) (*model.ArtifactMetaAsset, error) {

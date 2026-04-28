@@ -59,13 +59,16 @@ WITH RECURSIVE art_group_descendants(descendant_id,descendant_parentID,descendan
 )
 `
 
-func (c *groups) Create(ctx context.Context, newObj *model.ArtifactGroup) error {
-	row := groupFromModel(newObj)
-	if err := c.db.WithContext(ctx).Create(row).Error; err != nil {
-		return database.ProcessSQLErrorf(ctx, err)
+func (c *groups) Create(ctx context.Context, newObj *model.CreateArtifactGroup) (*model.ArtifactGroup, error) {
+	var row artifactGroup
+	row.ParentID = newObj.ParentID
+	row.ViewID = newObj.ViewID
+	row.Name = newObj.Name
+	row.Format = string(newObj.Format)
+	if err := c.db.WithContext(ctx).Create(&row).Error; err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
-	newObj.ID = row.ID
-	return nil
+	return groupToModel(&row), nil
 }
 
 func (c *groups) GetById(ctx context.Context, id int64) (*model.ArtifactGroup, error) {
@@ -134,11 +137,8 @@ func (c *groups) getOrCreate(ctx context.Context, viewId int64, name string, par
 
 	if err != nil {
 		if errors.Is(err, pkgErrors.ErrResourceNotFound) {
-			newObj := &model.ArtifactGroup{ViewID: viewId, Name: name, Format: format, ParentID: parentId}
-			if err = c.Create(ctx, newObj); err != nil {
-				return nil, err
-			}
-			return newObj, nil
+			newObj := &model.CreateArtifactGroup{ViewID: viewId, Name: name, Format: format, ParentID: parentId}
+			return c.Create(ctx, newObj)
 		}
 		return nil, err
 	}

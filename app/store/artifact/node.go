@@ -16,13 +16,19 @@ var _ TreeNodeInterface = (*treeNode)(nil)
 
 type treeNode struct{ db *gorm.DB }
 
-func (c *treeNode) Create(ctx context.Context, newObj *model.ArtifactTreeNode) error {
-	row := nodeFromModel(newObj)
-	if err := c.db.WithContext(ctx).Create(row).Error; err != nil {
-		return database.ProcessSQLErrorf(ctx, err)
+func (c *treeNode) Create(ctx context.Context, newObj *model.CreateArtifactTreeNode) (*model.ArtifactTreeNode, error) {
+	var row artifactTreeNode
+	row.ParentID = newObj.ParentID
+	row.ViewID = newObj.ViewID
+	row.Name = newObj.Name
+	row.Path = newObj.Path
+	row.Type = string(newObj.Type)
+	row.Format = string(newObj.Format)
+	row.TargetId = newObj.TargetId
+	if err := c.db.WithContext(ctx).Create(&row).Error; err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
-	newObj.ID = row.ID
-	return nil
+	return nodeToModel(&row), nil
 }
 
 func (c *treeNode) RecurseCreate(ctx context.Context, obj *model.ArtifactTreeNode) error {
@@ -33,7 +39,15 @@ func (c *treeNode) RecurseCreate(ctx context.Context, obj *model.ArtifactTreeNod
 	}
 
 	if obj.IsRoot() {
-		return c.Create(ctx, obj)
+		created, err := c.Create(ctx, &model.CreateArtifactTreeNode{
+			ParentID: obj.ParentID, ViewID: obj.ViewID, Name: obj.Name,
+			Path: obj.Path, Type: obj.Type, Format: obj.Format, TargetId: obj.TargetId,
+		})
+		if err != nil {
+			return err
+		}
+		obj.ID = created.ID
+		return nil
 	}
 
 	p := obj.Parent()
@@ -41,7 +55,15 @@ func (c *treeNode) RecurseCreate(ctx context.Context, obj *model.ArtifactTreeNod
 		return err
 	}
 	obj.ParentID = null.IntFrom(p.ID)
-	return c.Create(ctx, obj)
+	created, err := c.Create(ctx, &model.CreateArtifactTreeNode{
+		ParentID: obj.ParentID, ViewID: obj.ViewID, Name: obj.Name,
+		Path: obj.Path, Type: obj.Type, Format: obj.Format, TargetId: obj.TargetId,
+	})
+	if err != nil {
+		return err
+	}
+	obj.ID = created.ID
+	return nil
 }
 
 func (c *treeNode) GetById(ctx context.Context, id int64) (*model.ArtifactTreeNode, error) {

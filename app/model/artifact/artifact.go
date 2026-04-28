@@ -9,6 +9,7 @@ import (
 	"time"
 
 	enum "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
 
 	"github.com/guregu/null"
 	"gorm.io/gorm"
@@ -90,17 +91,24 @@ type CasbinSubject struct {
 // ==================== Core Entities ====================
 
 type ArtifactView struct {
-	ID          int64      `json:"id"`
-	Name        string     `json:"name"`
-	Description string     `json:"description"`
-	SpaceID     int64      `json:"spaceId"`
-	RepoID      int64      `json:"repoId"`
-	Default     bool       `json:"isDefault"`
-	CreatedBy   string     `json:"createdBy"`
-	CreatedDate *time.Time `json:"createdDate"`
-	EditedBy    string     `json:"editedBy"`
-	EditedDate  *time.Time `json:"editedDate"`
-	Deleted     int8       `json:"-"`
+	ID          int64           `json:"id"`
+	Name        string          `json:"name"`
+	Description string          `json:"description"`
+	SpaceID     int64           `json:"spaceId"`
+	RepoID      int64           `json:"repoId"`
+	Default     bool            `json:"isDefault"`
+	CreatedBy   string          `json:"createdBy"`
+	CreatedDate *datetime.Local `json:"createdDate"`
+	EditedBy    string          `json:"editedBy"`
+	EditedDate  *datetime.Local `json:"editedDate"`
+	Deleted     int8            `json:"-"`
+}
+type CreateArtifactView struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	SpaceID     int64  `json:"spaceId"`
+	RepoID      int64  `json:"repoId"`
+	Default     bool   `json:"isDefault"`
 }
 
 type ArtifactGroup struct {
@@ -116,10 +124,17 @@ type ArtifactGroup struct {
 	Deleted     int8           `json:"-"`
 }
 
+type CreateArtifactGroup struct {
+	ParentID null.Int       `json:"parentId"`
+	ViewID   int64          `json:"viewId"`
+	Name     string         `json:"name"`
+	Format   ArtifactFormat `json:"format"`
+}
+
 type ArtifactPackage struct {
-	ID      int64  `json:"id"`
-	ViewID  int64  `json:"viewId"`
-	Name    string `json:"name"`
+	ID        int64  `json:"id"`
+	ViewID    int64  `json:"viewId"`
+	Name      string `json:"name"`
 	Namespace string `json:"namespace"`
 
 	// GroupID 用于标记 package 所属 group，主要给 raw / maven 风格使用，替代 namespace 的层级含义。
@@ -134,6 +149,13 @@ type ArtifactPackage struct {
 	EditedBy    string         `json:"editedBy"`
 	EditedDate  *time.Time     `json:"editedDate"`
 	Deleted     int8           `json:"-"`
+}
+
+type CreateArtifactPackage struct {
+	ViewID    int64          `json:"viewId"`
+	Name      string         `json:"name"`
+	Namespace string         `json:"namespace"`
+	Format    ArtifactFormat `json:"format"`
 }
 
 func (p *ArtifactPackage) IsDeleted() bool {
@@ -155,6 +177,13 @@ type ArtifactVersion struct {
 	EditedBy    string     `json:"editedBy"`
 	EditedDate  *time.Time `json:"editedDate"`
 	Deleted     int8       `json:"-"`
+}
+
+type CreateArtifactVersion struct {
+	PackageID int64  `json:"packageId"`
+	Version   string `json:"version"`
+	ViewID    int64  `json:"viewId"`
+	Metadata  string `json:"metadata"`
 }
 
 type ArtifactVersionInfo struct {
@@ -212,6 +241,19 @@ type ArtifactAsset struct {
 	Deleted     int8       `json:"-"`
 }
 
+type CreateArtifactAsset struct {
+	VersionID   null.Int       `json:"versionId"`
+	ViewID      null.Int       `json:"viewId"`
+	GroupID     null.Int       `json:"groupId"`
+	Format      ArtifactFormat `json:"format"`
+	Path        string         `json:"path"`
+	ContentType string         `json:"contentType"`
+	Kind        AssetKind      `json:"kind"`
+	Metadata    string         `json:"metadata"`
+	BlobID      int64          `json:"blobId"`
+	CheckSum    string         `json:"checkSum"`
+}
+
 type ArtifactAssetExtendBlob struct {
 	ArtifactAsset
 	BlobID    int64  `gorm:"column:blobID"`
@@ -236,6 +278,16 @@ type ArtifactMetaAsset struct {
 	Deleted     int8           `json:"-"`
 }
 
+type CreateArtifactMetaAsset struct {
+	ViewID      int64          `json:"viewId"`
+	Format      ArtifactFormat `json:"format"`
+	Path        string         `json:"path"`
+	ContentType string         `json:"contentType"`
+	Kind        AssetKind      `json:"kind"`
+	BlobID      int64          `json:"blobId"`
+	CheckSum    string         `json:"checkSum"`
+}
+
 type ArtifactBlob struct {
 	ID        int64  `json:"id"`
 	StorageID int64  `json:"storageId"`
@@ -254,8 +306,27 @@ type ArtifactBlob struct {
 	CheckSum    string     `json:"checkSum"`
 }
 
+type CreateArtifactBlob struct {
+	StorageID int64  `json:"storageId"`
+	Ref       string `json:"ref"`
+	Size      int64  `json:"size"`
+	CreatedBy string `json:"createdBy"`
+	CheckSum  string `json:"checkSum"`
+	Metadata  string `json:"metadata"`
+}
+
 type ArtifactTreeNode struct {
 	ID       int64                `json:"id"`
+	ParentID null.Int             `json:"parentId"`
+	ViewID   int64                `json:"viewId"`
+	Name     string               `json:"name"`
+	Path     string               `json:"path"`
+	Type     ArtifactTreeNodeType `json:"type"`
+	Format   ArtifactFormat       `json:"format"`
+	TargetId null.Int             `json:"targetId"`
+}
+
+type CreateArtifactTreeNode struct {
 	ParentID null.Int             `json:"parentId"`
 	ViewID   int64                `json:"viewId"`
 	Name     string               `json:"name"`
@@ -533,8 +604,6 @@ var (
 	ErrViewNotFound        = errors.New("special view not found")
 	ErrArgsValueEmpty      = errors.New("args value should not empty")
 )
-
-
 
 // ==================== 权限请求模型 ====================
 // ==================== Permission Request ====================

@@ -12,8 +12,8 @@ import (
 	artifactStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/artifact"
 	pkgErrors "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 
-	"github.com/guregu/null"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
+	"github.com/guregu/null"
 )
 
 type ModelManager struct {
@@ -230,12 +230,31 @@ func (mm *ModelManager) createAsset(ctx context.Context, newObj *model.ArtifactA
 	if err != nil {
 		return err
 	}
-	if err = fillUpAsset(newObj, descriptor, newBlob.ID, now); err != nil {
+	createReq := &model.CreateArtifactAsset{
+		VersionID:   newObj.VersionID,
+		ViewID:      newObj.ViewID,
+		GroupID:     newObj.GroupID,
+		Format:      descriptor.Format,
+		Path:        descriptor.Path,
+		Kind:        descriptor.Kind,
+		ContentType: descriptor.ContentType,
+		BlobID:      newBlob.ID,
+	}
+	if descriptor.Hash != nil {
+		createReq.CheckSum = descriptor.Hash.String()
+	}
+	if descriptor.Metadata != nil {
+		metadata, e := descriptor.Metadata.ToJSON()
+		if e != nil {
+			return e
+		}
+		createReq.Metadata = string(metadata)
+	}
+	created, err := mm.store.Assets().Create(ctx, createReq)
+	if err != nil {
 		return err
 	}
-	if err = mm.store.Assets().Create(ctx, newObj); err != nil {
-		return err
-	}
+	*newObj = *created
 	return mm.linkAssetToBlob(ctx, newObj.ID, newBlob)
 }
 
@@ -244,40 +263,18 @@ func (mm *ModelManager) linkAssetToBlob(ctx context.Context, assetId int64, blob
 	return mm.store.Blobs().Update(ctx, blob)
 }
 
-func fillUpAsset(asset *model.ArtifactAsset, descriptor *AssetDescriptor, blobId, createTime int64) error {
-	asset.Path = descriptor.Path
-	asset.Format = descriptor.Format
-	asset.Kind = descriptor.Kind
-	asset.ContentType = descriptor.ContentType
-	asset.BlobID = blobId
-	tm := time.UnixMilli(createTime)
-	asset.CreatedDate = &tm
-	if descriptor.Hash != nil {
-		asset.CheckSum = descriptor.Hash.String()
-	}
-	if descriptor.Metadata != nil {
-		metadata, err := descriptor.Metadata.ToJSON()
-		if err != nil {
-			return err
-		}
-		asset.Metadata = string(metadata)
-	}
-	return nil
-}
-
 func (mm *ModelManager) createBlob(ctx context.Context, descriptor *AssetDescriptor, createTime int64) (*model.ArtifactBlob, error) {
-	tm := time.UnixMilli(createTime)
-	blobModel := &model.ArtifactBlob{
+	createReq := &model.CreateArtifactBlob{
 		StorageID: mm.view.StorageID,
 		Ref:       descriptor.Ref,
 		Size:      descriptor.Size,
 		CreatedBy: mm.creator.UID,
-		CreatedDate: &tm,
 	}
 	if descriptor.Hash != nil {
-		blobModel.CheckSum = descriptor.Hash.String()
+		createReq.CheckSum = descriptor.Hash.String()
 	}
-	if err := mm.store.Blobs().Create(ctx, blobModel); err != nil {
+	blobModel, err := mm.store.Blobs().Create(ctx, createReq)
+	if err != nil {
 		return nil, err
 	}
 	return blobModel, nil
@@ -285,9 +282,10 @@ func (mm *ModelManager) createBlob(ctx context.Context, descriptor *AssetDescrip
 
 func (mm *ModelManager) validateAsset(ctx context.Context, asset *model.ArtifactAsset, descriptor *AssetDescriptor) error {
 	// 若历史 checksum 可解析且 sha256 未变化，则拒绝重复写入相同内容。
+	log := logger.GetLogger(ctx)
 	var h Hash
 	if err := json.Unmarshal([]byte(asset.CheckSum), &h); err != nil {
-		logger.GetLogger(ctx).Errorf("unmarshal checksum failed: %v", err)
+		log.Errorf("unmarshal checksum failed: %v", err)
 		return nil
 	}
 	if h.Sha256 == descriptor.Hash.Sha256 {
@@ -297,6 +295,7 @@ func (mm *ModelManager) validateAsset(ctx context.Context, asset *model.Artifact
 }
 
 func (mm *ModelManager) getOrCreateVersion(ctx context.Context) (*model.ArtifactVersion, error) {
+	log := logger.GetLogger(ctx)
 	if mm.versionModel != nil {
 		return mm.versionModel, nil
 	}
@@ -329,7 +328,7 @@ func (mm *ModelManager) getOrCreateVersion(ctx context.Context) (*model.Artifact
 		return nil, err
 	}
 
-	verModel := &model.ArtifactVersion{
+	verModel := &model.CreateArtifactVersion{
 		PackageID: mm.pkgModel.ID,
 		Version:   mm.pkgDescriptor.Version,
 		ViewID:    mm.view.ViewID,
@@ -339,14 +338,15 @@ func (mm *ModelManager) getOrCreateVersion(ctx context.Context) (*model.Artifact
 		if e == nil {
 			verModel.Metadata = string(metadata)
 		} else {
-			logger.GetLogger(ctx).Errorf("convert version metadata to json failed: %v", err)
+			log.Errorf("convert version metadata to json failed: %v", err)
 		}
 	}
-	if err = mm.store.Versions().Create(ctx, verModel); err != nil {
+	createdVer, err := mm.store.Versions().Create(ctx, verModel)
+	if err != nil {
 		return nil, err
 	}
-	mm.versionModel = verModel
-	return verModel, nil
+	mm.versionModel = createdVer
+	return createdVer, nil
 }
 
 func (mm *ModelManager) updateVerTime(ctx context.Context, verModel *model.ArtifactVersion, assetModel *model.ArtifactAsset) error {
@@ -375,16 +375,17 @@ func (mm *ModelManager) getOrCreatePackage(ctx context.Context) (*model.Artifact
 	if !errors.Is(err, pkgErrors.ErrResourceNotFound) {
 		return nil, err
 	}
-	pkgModel := &model.ArtifactPackage{
-		ViewID:   mm.view.ViewID,
+	pkgModel := &model.CreateArtifactPackage{
+		ViewID:    mm.view.ViewID,
 		Name:      desc.Name,
 		Namespace: desc.Namespace,
 		Format:    desc.Format,
 	}
-	if err = mm.store.Packages().Create(ctx, pkgModel); err != nil {
+	createdPkg, err := mm.store.Packages().Create(ctx, pkgModel)
+	if err != nil {
 		return nil, err
 	}
-	mm.pkgModel = pkgModel
+	mm.pkgModel = createdPkg
 
 	if mm.pkgModel.Namespace != "" && mm.pkgModel.GroupID == 0 {
 		// raw package 的 namespace 会被拆成 group 树，并把末级 group 回填到 package。
@@ -392,5 +393,5 @@ func (mm *ModelManager) getOrCreatePackage(ctx context.Context) (*model.Artifact
 			return nil, e
 		}
 	}
-	return pkgModel, nil
+	return createdPkg, nil
 }

@@ -272,9 +272,9 @@ func viewToModel(v *artifactView) *model.ArtifactView {
 		RepoID:      v.RepoID,
 		Default:     v.Default,
 		CreatedBy:   v.CreatedBy,
-		CreatedDate: localToTime(v.CreatedDate),
+		CreatedDate: v.CreatedDate,
 		EditedBy:    v.EditedBy,
-		EditedDate:  localToTime(v.EditedDate),
+		EditedDate:  v.EditedDate,
 		Deleted:     v.Deleted,
 	}
 }
@@ -291,9 +291,9 @@ func viewFromModel(m *model.ArtifactView) *artifactView {
 		RepoID:      m.RepoID,
 		Default:     m.Default,
 		CreatedBy:   m.CreatedBy,
-		CreatedDate: timeToLocal(m.CreatedDate),
+		CreatedDate: m.CreatedDate,
 		EditedBy:    m.EditedBy,
-		EditedDate:  timeToLocal(m.EditedDate),
+		EditedDate:  m.EditedDate,
 		Deleted:     m.Deleted,
 	}
 }

@@ -18,16 +18,21 @@ var _ BlobInterface = (*blobs)(nil)
 
 type blobs struct{ db *gorm.DB }
 
-func (c *blobs) Create(ctx context.Context, newObj *model.ArtifactBlob) error {
+func (c *blobs) Create(ctx context.Context, newObj *model.CreateArtifactBlob) (*model.ArtifactBlob, error) {
 	if err := validatorEmpty(newObj.StorageID, newObj.Ref); err != nil {
-		return err
+		return nil, err
 	}
-	row := blobFromModel(newObj)
-	if err := c.db.WithContext(ctx).Create(row).Error; err != nil {
-		return database.ProcessSQLErrorf(ctx, err)
+	var row artifactBlob
+	row.StorageID = newObj.StorageID
+	row.Ref = newObj.Ref
+	row.Size = newObj.Size
+	row.CreatedBy = newObj.CreatedBy
+	row.CheckSum = newObj.CheckSum
+	row.Metadata = newObj.Metadata
+	if err := c.db.WithContext(ctx).Create(&row).Error; err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
-	newObj.ID = row.ID
-	return nil
+	return blobToModel(&row), nil
 }
 
 func (c *blobs) GetById(ctx context.Context, blobId int64) (*model.ArtifactBlob, error) {

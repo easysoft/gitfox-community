@@ -16,6 +16,8 @@ import (
 	"strings"
 	"time"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
+
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/adapter"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/adapter/container"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/adapter/generic"
@@ -123,7 +125,7 @@ func (s *Service) CreateView(ctx context.Context, req *model.CreateArtifactViewR
 	}
 
 	now := time.Now()
-	retentionCutoff := now.Add(-s.config.RecycleBinRetention) // 回收站保留期截止时间
+	retentionCutoff := datetime.Local(now.Add(-s.config.RecycleBinRetention)) // 回收站保留期截止时间
 
 	for _, v := range existing {
 		if v.Deleted == 0 {
@@ -154,17 +156,18 @@ func (s *Service) CreateView(ctx context.Context, req *model.CreateArtifactViewR
 	}
 
 	// 情况4：无冲突，正常创建
-	v := &model.ArtifactView{
+	v := &model.CreateArtifactView{
 		Name:        req.Name,
 		Description: req.Description,
 		SpaceID:     req.SpaceID,
 		RepoID:      req.RepoID,
 		Default:     false,
 	}
-	if err = s.artStore.Views().Create(ctx, v); err != nil {
+	view, err := s.artStore.Views().Create(ctx, v)
+	if err != nil {
 		return nil, err
 	}
-	return v, nil
+	return view, nil
 }
 
 // ParseSpaceView 解析 SpaceRepoReq 参数为 ViewDescriptor。
