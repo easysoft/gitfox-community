@@ -60,36 +60,38 @@ WITH RECURSIVE art_group_descendants(descendant_id,descendant_parentID,descendan
 `
 
 func (c *groups) Create(ctx context.Context, newObj *model.ArtifactGroup) error {
-	if err := c.db.WithContext(ctx).Create(newObj).Error; err != nil {
+	row := groupFromModel(newObj)
+	if err := c.db.WithContext(ctx).Create(row).Error; err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
 	}
+	newObj.ID = row.ID
 	return nil
 }
 
 func (c *groups) GetById(ctx context.Context, id int64) (*model.ArtifactGroup, error) {
-	var obj model.ArtifactGroup
-	if err := c.db.WithContext(ctx).Take(&obj, id).Error; err != nil {
+	var row artifactGroup
+	if err := c.db.WithContext(ctx).Take(&row, id).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
-	return &obj, nil
+	return groupToModel(&row), nil
 }
 
 func (c *groups) GetRoot(ctx context.Context, viewId int64, name string, format model.ArtifactFormat) (*model.ArtifactGroup, error) {
-	var obj model.ArtifactGroup
-	q := model.ArtifactGroup{ViewID: viewId, Name: name, Format: format}
-	if err := c.db.WithContext(ctx).Where(q).Where("parentID IS NULL").First(&obj).Error; err != nil {
+	var row artifactGroup
+	q := artifactGroup{ViewID: viewId, Name: name, Format: string(format)}
+	if err := c.db.WithContext(ctx).Where(&q).Where("parentID IS NULL").First(&row).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
-	return &obj, nil
+	return groupToModel(&row), nil
 }
 
 func (c *groups) GetSubNode(ctx context.Context, parentId int64, name string) (*model.ArtifactGroup, error) {
-	var obj model.ArtifactGroup
-	q := model.ArtifactGroup{ParentID: null.IntFrom(parentId), Name: name}
-	if err := c.db.WithContext(ctx).Where(q).Take(&obj).Error; err != nil {
+	var row artifactGroup
+	q := artifactGroup{ParentID: null.IntFrom(parentId), Name: name}
+	if err := c.db.WithContext(ctx).Where(&q).Take(&row).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
-	return &obj, nil
+	return groupToModel(&row), nil
 }
 
 func (c *groups) GetEndpointByNames(ctx context.Context, viewId int64, names []string, format model.ArtifactFormat) (*model.ArtifactGroupEndpoint, error) {
@@ -175,16 +177,18 @@ func (c *groups) GetEndpointById(ctx context.Context, id int64) (*model.Artifact
 	query := artifactGroupAncestorsQuery + `
 		SELECT * ` + `
 		FROM ops_artifact_groups INNER JOIN art_group_ancestors ON id = group_ancestor_id order by id`
-	var dst []*model.ArtifactGroup
-	if err := c.db.WithContext(ctx).Raw(query, id).Scan(&dst).Error; err != nil {
+	var rows []*artifactGroup
+	if err := c.db.WithContext(ctx).Raw(query, id).Scan(&rows).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
 
 	obj := new(model.ArtifactGroupEndpoint)
-	num := len(dst)
+	num := len(rows)
 	if num == 0 {
 		return nil, database.ProcessSQLErrorf(ctx, gorm.ErrRecordNotFound)
-	} else if num == 1 {
+	}
+	dst := groupsToModel(rows)
+	if num == 1 {
 		obj.ArtifactGroup = dst[0]
 	} else {
 		obj.Parents = dst[0 : num-1]
@@ -197,11 +201,11 @@ func (c *groups) ListDescendantsForOwner(ctx context.Context, viewId int64, form
 	query := artifactGroupOwnerDescendantsQuery + `
 		SELECT ops_artifact_groups.* ` + `
 		FROM ops_artifact_groups INNER JOIN art_group_descendants on id = descendant_id`
-	var dst []*model.ArtifactGroup
-	if err := c.db.WithContext(ctx).Raw(query, viewId, format).Scan(&dst).Error; err != nil {
+	var rows []*artifactGroup
+	if err := c.db.WithContext(ctx).Raw(query, viewId, format).Scan(&rows).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
-	return dst, nil
+	return groupsToModel(rows), nil
 }
 
 func (c *groups) ListDescendants(ctx context.Context, id int64) ([]*model.ArtifactGroup, error) {
@@ -211,23 +215,23 @@ func (c *groups) ListDescendants(ctx context.Context, id int64) ([]*model.Artifa
 		WHERE id != ?
 		ORDER BY parentID ASC
 		`
-	var dst []*model.ArtifactGroup
-	if err := c.db.WithContext(ctx).Raw(query, id, id).Scan(&dst).Error; err != nil {
+	var rows []*artifactGroup
+	if err := c.db.WithContext(ctx).Raw(query, id, id).Scan(&rows).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
-	return dst, nil
+	return groupsToModel(rows), nil
 }
 
 func (c *groups) All(ctx context.Context) ([]*model.ArtifactGroup, error) {
-	var dst []*model.ArtifactGroup
-	if err := c.db.WithContext(ctx).Find(&dst).Error; err != nil {
+	var rows []*artifactGroup
+	if err := c.db.WithContext(ctx).Find(&rows).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
-	return dst, nil
+	return groupsToModel(rows), nil
 }
 
 func (c *groups) SoftDeleteById(ctx context.Context, groupId int64) error {
-	err := c.db.WithContext(ctx).Model(&model.ArtifactGroup{ID: groupId}).
+	err := c.db.WithContext(ctx).Model(&artifactGroup{ID: groupId}).
 		UpdateColumn("deleted", 1).Error
 	if err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
@@ -237,7 +241,7 @@ func (c *groups) SoftDeleteById(ctx context.Context, groupId int64) error {
 
 // DeleteByViewID 硬删指定 view 下的所有 group 记录（含已软删的）。
 func (c *groups) DeleteByViewID(ctx context.Context, viewId int64) (int64, error) {
-	result := c.db.WithContext(ctx).Where("viewID = ?", viewId).Delete(&model.ArtifactGroup{})
+	result := c.db.WithContext(ctx).Where("viewID = ?", viewId).Delete(&artifactGroup{})
 	if result.Error != nil {
 		return 0, database.ProcessSQLErrorf(ctx, result.Error)
 	}

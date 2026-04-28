@@ -5,6 +5,7 @@ import (
 
 	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
+	pkgErrors "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 
 	"gorm.io/gorm"
 )
@@ -14,51 +15,53 @@ var _ PackageInterface = (*packages)(nil)
 type packages struct{ db *gorm.DB }
 
 func (c *packages) Create(ctx context.Context, newObj *model.ArtifactPackage) error {
-	if err := c.db.WithContext(ctx).Create(newObj).Error; err != nil {
+	row := packageFromModel(newObj)
+	if err := c.db.WithContext(ctx).Create(row).Error; err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
 	}
+	newObj.ID = row.ID
 	return nil
 }
 
 func (c *packages) GetByID(ctx context.Context, packageId int64) (*model.ArtifactPackage, error) {
-	var pkg model.ArtifactPackage
-	if err := c.db.WithContext(ctx).First(&pkg, packageId).Error; err != nil {
+	var row artifactPackage
+	if err := c.db.WithContext(ctx).First(&row, packageId).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
-	return &pkg, nil
+	return packageToModel(&row), nil
 }
 
 func (c *packages) GetByName(ctx context.Context, name, namespace string, viewId int64, format model.ArtifactFormat) (*model.ArtifactPackage, error) {
-	var pkg model.ArtifactPackage
-	q := model.ArtifactPackage{Name: name, Namespace: namespace, ViewID: viewId, Format: format}
-	if err := c.db.WithContext(ctx).Where(q).Where("namespace = ?", namespace).First(&pkg).Error; err != nil {
+	var row artifactPackage
+	q := artifactPackage{Name: name, Namespace: namespace, ViewID: viewId, Format: string(format)}
+	if err := c.db.WithContext(ctx).Where(&q).Where("namespace = ?", namespace).First(&row).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
-	return &pkg, nil
+	return packageToModel(&row), nil
 }
 
 func (c *packages) List(ctx context.Context, viewId int64, includeDeleted bool) ([]*model.ArtifactPackage, error) {
-	q := model.ArtifactPackage{ViewID: viewId}
-	stmt := c.db.WithContext(ctx).Where(q)
+	q := artifactPackage{ViewID: viewId}
+	stmt := c.db.WithContext(ctx).Where(&q)
 	if !includeDeleted {
 		stmt = stmt.Where("deleted = 0")
 	}
-	var dst []*model.ArtifactPackage
-	if err := stmt.Find(&dst).Error; err != nil {
+	var rows []*artifactPackage
+	if err := stmt.Find(&rows).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
-	return dst, nil
+	return packagesToModel(rows), nil
 }
 
 func (c *packages) ListBatch(ctx context.Context, includeDeleted bool, batchSize int, fn func(pkg *model.ArtifactPackage) error) error {
-	var results []*model.ArtifactPackage
+	var rows []*artifactPackage
 	stmt := c.db.WithContext(ctx)
 	if !includeDeleted {
 		stmt = stmt.Where("deleted = 0")
 	}
-	res := stmt.FindInBatches(&results, batchSize, func(tx *gorm.DB, batch int) error {
-		for _, result := range results {
-			if err := fn(result); err != nil {
+	res := stmt.FindInBatches(&rows, batchSize, func(tx *gorm.DB, batch int) error {
+		for _, row := range rows {
+			if err := fn(packageToModel(row)); err != nil {
 				return err
 			}
 		}
@@ -71,8 +74,8 @@ func (c *packages) ListBatch(ctx context.Context, includeDeleted bool, batchSize
 }
 
 func (c *packages) ListByNamespace(ctx context.Context, viewId int64, namespace string, format model.ArtifactFormat, recurse, includeDeleted bool) ([]*model.ArtifactPackage, error) {
-	q := model.ArtifactPackage{ViewID: viewId}
-	stmt := c.db.WithContext(ctx).Where(q)
+	q := artifactPackage{ViewID: viewId}
+	stmt := c.db.WithContext(ctx).Where(&q)
 	if recurse {
 		stmt = stmt.Where("namespace LIKE ?", namespace+"%")
 	} else {
@@ -84,15 +87,16 @@ func (c *packages) ListByNamespace(ctx context.Context, viewId int64, namespace 
 	if !includeDeleted {
 		stmt = stmt.Where("deleted = 0")
 	}
-	var dst []*model.ArtifactPackage
-	if err := stmt.Find(&dst).Error; err != nil {
+	var rows []*artifactPackage
+	if err := stmt.Find(&rows).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
-	return dst, nil
+	return packagesToModel(rows), nil
 }
 
 func (c *packages) Update(ctx context.Context, upObj *model.ArtifactPackage) error {
-	if err := c.db.WithContext(ctx).Save(&upObj).Error; err != nil {
+	row := packageFromModel(upObj)
+	if err := c.db.WithContext(ctx).Save(row).Error; err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
 	}
 	return nil
@@ -124,7 +128,7 @@ func (c *packages) DeleteByIds(ctx context.Context, packageIds ...int64) (int64,
 }
 
 func (c *packages) deleteByIds(ctx context.Context, packageIds ...int64) (int64, error) {
-	result := c.db.WithContext(ctx).Delete(&model.ArtifactPackage{}, packageIds)
+	result := c.db.WithContext(ctx).Delete(&artifactPackage{}, packageIds)
 	if result.Error != nil {
 		return result.RowsAffected, database.ProcessSQLErrorf(ctx, result.Error)
 	}
@@ -136,23 +140,26 @@ func (c *packages) Search(ctx context.Context, options ...SearchOption) ([]*mode
 	for _, opt := range options {
 		db = opt.Apply(db)
 	}
-	var data []*model.ArtifactPackage
-	if err := db.Order("id asc").Find(&data).Error; err != nil {
+	var rows []*artifactPackage
+	if err := db.Order("id asc").Find(&rows).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
-	return data, nil
+	return packagesToModel(rows), nil
 }
 
 func (c *packages) GetByAssetID(ctx context.Context, assetId int64) (*model.ArtifactPackage, error) {
-	var pkg model.ArtifactPackage
-	db := c.db.WithContext(ctx).Model(&model.ArtifactPackage{}).
+	var row artifactPackage
+	db := c.db.WithContext(ctx).Model(&artifactPackage{}).
 		Select("ops_artifact_packages.*").
 		Joins("JOIN ops_artifact_versions ON ops_artifact_packages.id = ops_artifact_versions.packageID").
 		Joins("JOIN ops_artifact_assets ON ops_artifact_versions.id = ops_artifact_assets.versionID").
 		Where("ops_artifact_assets.id = ?", assetId).
 		Where("ops_artifact_assets.deleted = 0")
-	if err := db.First(&pkg).Error; err != nil {
+	if err := db.First(&row).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
-	return &pkg, nil
+	return packageToModel(&row), nil
 }
+
+// 仅用于 Search 的 SearchOption 中，避免循环引用
+var _ = pkgErrors.ErrResourceNotFound

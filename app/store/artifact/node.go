@@ -17,9 +17,11 @@ var _ TreeNodeInterface = (*treeNode)(nil)
 type treeNode struct{ db *gorm.DB }
 
 func (c *treeNode) Create(ctx context.Context, newObj *model.ArtifactTreeNode) error {
-	if err := c.db.WithContext(ctx).Create(newObj).Error; err != nil {
+	row := nodeFromModel(newObj)
+	if err := c.db.WithContext(ctx).Create(row).Error; err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
 	}
+	newObj.ID = row.ID
 	return nil
 }
 
@@ -43,67 +45,72 @@ func (c *treeNode) RecurseCreate(ctx context.Context, obj *model.ArtifactTreeNod
 }
 
 func (c *treeNode) GetById(ctx context.Context, id int64) (*model.ArtifactTreeNode, error) {
-	var obj model.ArtifactTreeNode
-	if err := c.db.WithContext(ctx).Take(&obj, id).Error; err != nil {
+	var row artifactTreeNode
+	if err := c.db.WithContext(ctx).Take(&row, id).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
-	return &obj, nil
+	return nodeToModel(&row), nil
 }
 
 func (c *treeNode) GetByPath(ctx context.Context, viewId int64, path string, format model.ArtifactFormat) (*model.ArtifactTreeNode, error) {
-	result := model.ArtifactTreeNode{ViewID: viewId, Path: path, Format: format}
-	if err := c.getNode(ctx, &result); err != nil {
+	obj := &model.ArtifactTreeNode{ViewID: viewId, Path: path, Format: format}
+	if err := c.getNode(ctx, obj); err != nil {
 		return nil, err
 	}
-	return &result, nil
+	return obj, nil
 }
 
 func (c *treeNode) GetByTarget(ctx context.Context, viewId int64, nodeType model.ArtifactTreeNodeType, id int64) (*model.ArtifactTreeNode, error) {
-	var dst model.ArtifactTreeNode
-	q := model.ArtifactTreeNode{ViewID: viewId, Type: nodeType, TargetId: null.IntFrom(id)}
-	if err := c.db.WithContext(ctx).Where(&q).Take(&dst).Error; err != nil {
+	var row artifactTreeNode
+	q := artifactTreeNode{ViewID: viewId, Type: string(nodeType), TargetId: null.IntFrom(id)}
+	if err := c.db.WithContext(ctx).Where(&q).Take(&row).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
-	return &dst, nil
+	return nodeToModel(&row), nil
 }
 
 func (c *treeNode) getNode(ctx context.Context, obj *model.ArtifactTreeNode) error {
-	q := model.ArtifactTreeNode{ViewID: obj.ViewID, Path: obj.Path, Format: obj.Format}
-	if err := c.db.WithContext(ctx).Where(&q).Take(obj).Error; err != nil {
+	var row artifactTreeNode
+	q := artifactTreeNode{ViewID: obj.ViewID, Path: obj.Path, Format: string(obj.Format)}
+	if err := c.db.WithContext(ctx).Where(&q).Take(&row).Error; err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
 	}
+	// 回写查询结果
+	found := nodeToModel(&row)
+	*obj = *found
 	return nil
 }
 
 func (c *treeNode) ListFormats(ctx context.Context, viewId int64) ([]*model.ArtifactTreeNode, error) {
-	q := model.ArtifactTreeNode{ViewID: viewId, Path: "/"}
-	var data []*model.ArtifactTreeNode
-	if err := c.db.WithContext(ctx).Where(&q).Order("format").Find(&data).Error; err != nil {
+	q := artifactTreeNode{ViewID: viewId, Path: "/"}
+	var rows []*artifactTreeNode
+	if err := c.db.WithContext(ctx).Where(&q).Order("format").Find(&rows).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
-	return data, nil
+	return nodesToModel(rows), nil
 }
 
 func (c *treeNode) ListByParentId(ctx context.Context, parentId int64) ([]*model.ArtifactTreeNode, error) {
 	if parentId == 0 {
 		return nil, errors.New("parentId can not be zero")
 	}
-	var data []*model.ArtifactTreeNode
-	if err := c.db.WithContext(ctx).Where("parentID = ?", parentId).Order("name").Find(&data).Error; err != nil {
+	var rows []*artifactTreeNode
+	if err := c.db.WithContext(ctx).Where("parentID = ?", parentId).Order("name").Find(&rows).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
-	return data, nil
+	return nodesToModel(rows), nil
 }
 
 func (c *treeNode) Update(ctx context.Context, upObj *model.ArtifactTreeNode) error {
-	if err := c.db.WithContext(ctx).Save(upObj).Error; err != nil {
+	row := nodeFromModel(upObj)
+	if err := c.db.WithContext(ctx).Save(row).Error; err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
 	}
 	return nil
 }
 
 func (c *treeNode) DeleteById(ctx context.Context, nodeId int64) error {
-	result := c.db.WithContext(ctx).Delete(&model.ArtifactTreeNode{}, nodeId)
+	result := c.db.WithContext(ctx).Delete(&artifactTreeNode{}, nodeId)
 	if result.Error != nil {
 		return database.ProcessSQLErrorf(ctx, result.Error)
 	}
@@ -128,7 +135,7 @@ func (c *treeNode) RecurseDeleteById(ctx context.Context, nodeId int64) error {
 
 // DeleteByViewID 硬删指定 view 下的所有树节点记录。
 func (c *treeNode) DeleteByViewID(ctx context.Context, viewId int64) (int64, error) {
-	result := c.db.WithContext(ctx).Where("viewID = ?", viewId).Delete(&model.ArtifactTreeNode{})
+	result := c.db.WithContext(ctx).Where("viewID = ?", viewId).Delete(&artifactTreeNode{})
 	if result.Error != nil {
 		return 0, database.ProcessSQLErrorf(ctx, result.Error)
 	}

@@ -16,31 +16,34 @@ var _ VersionInterface = (*versions)(nil)
 type versions struct{ db *gorm.DB }
 
 func (c *versions) Create(ctx context.Context, newObj *model.ArtifactVersion) error {
-	if err := c.db.WithContext(ctx).Create(newObj).Error; err != nil {
+	row := versionFromModel(newObj)
+	if err := c.db.WithContext(ctx).Create(row).Error; err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
 	}
+	newObj.ID = row.ID
 	return nil
 }
 
 func (c *versions) GetByID(ctx context.Context, versionId int64) (*model.ArtifactVersion, error) {
-	var ver model.ArtifactVersion
-	if err := c.db.WithContext(ctx).First(&ver, versionId).Error; err != nil {
+	var row artifactVersion
+	if err := c.db.WithContext(ctx).First(&row, versionId).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
-	return &ver, nil
+	return versionToModel(&row), nil
 }
 
 func (c *versions) GetByVersion(ctx context.Context, packageId, viewId int64, version string) (*model.ArtifactVersion, error) {
-	var ver model.ArtifactVersion
-	q := model.ArtifactVersion{PackageID: packageId, ViewID: viewId, Version: version}
-	if err := c.db.WithContext(ctx).Where(q).First(&ver).Error; err != nil {
+	var row artifactVersion
+	q := artifactVersion{PackageID: packageId, ViewID: viewId, Version: version}
+	if err := c.db.WithContext(ctx).Where(&q).First(&row).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
-	return &ver, nil
+	return versionToModel(&row), nil
 }
 
 func (c *versions) Update(ctx context.Context, ver *model.ArtifactVersion) error {
-	if err := c.db.WithContext(ctx).Save(ver).Error; err != nil {
+	row := versionFromModel(ver)
+	if err := c.db.WithContext(ctx).Save(row).Error; err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
 	}
 	return nil
@@ -62,7 +65,7 @@ func (c *versions) DeleteByIds(ctx context.Context, versionIds ...int64) (int64,
 }
 
 func (c *versions) deleteByIds(ctx context.Context, versionIds ...int64) (int64, error) {
-	result := c.db.WithContext(ctx).Delete(&model.ArtifactVersion{}, versionIds)
+	result := c.db.WithContext(ctx).Delete(&artifactVersion{}, versionIds)
 	if result.Error != nil {
 		return result.RowsAffected, database.ProcessSQLErrorf(ctx, result.Error)
 	}
@@ -70,7 +73,14 @@ func (c *versions) deleteByIds(ctx context.Context, versionIds ...int64) (int64,
 }
 
 func (c *versions) Find(ctx context.Context, opt model.SearchVersionOption) ([]*model.ArtifactVersion, error) {
-	stmt := opt.Apply(c.db.WithContext(ctx))
+	stmt := c.db.WithContext(ctx).Model(&artifactVersion{})
+	// 应用 SearchVersionOption 的查询条件
+	if opt.PackageId != 0 {
+		stmt = stmt.Where("packageID = ?", opt.PackageId)
+	}
+	if opt.ViewId != 0 {
+		stmt = stmt.Where("viewID = ?", opt.ViewId)
+	}
 	if opt.Query != "" {
 		stmt = stmt.Where("version LIKE ?", fmt.Sprintf("%%%s%%", opt.Query))
 	}
@@ -79,11 +89,11 @@ func (c *versions) Find(ctx context.Context, opt model.SearchVersionOption) ([]*
 	}
 	stmt = stmt.Limit(int(database.Limit(opt.Size))).Offset(int(database.Offset(opt.Page, opt.Size)))
 
-	var data []*model.ArtifactVersion
-	if err := stmt.Order("editedDate desc").Find(&data).Error; err != nil {
+	var rows []*artifactVersion
+	if err := stmt.Order("editedDate desc").Find(&rows).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
-	return data, nil
+	return versionsToModel(rows), nil
 }
 
 func (c *versions) SoftDelete(ctx context.Context, ver *model.ArtifactVersion) error {
@@ -111,7 +121,7 @@ func (c *versions) Search(ctx context.Context, options ...SearchOption) ([]*mode
 	}
 
 	var data []*model.ArtifactVersionInfo
-	result := db.Model(&model.ArtifactVersion{}).
+	result := db.Model(&artifactVersion{}).
 		Select(strings.Join(selectFields, ",")).
 		Joins("left join ops_artifact_packages on ops_artifact_packages.id = ops_artifact_versions.packageID").
 		Joins("left join ops_artifact_views on ops_artifact_views.id = ops_artifact_versions.viewID").

@@ -22,44 +22,49 @@ func (c *blobs) Create(ctx context.Context, newObj *model.ArtifactBlob) error {
 	if err := validatorEmpty(newObj.StorageID, newObj.Ref); err != nil {
 		return err
 	}
-	if err := c.db.WithContext(ctx).Create(newObj).Error; err != nil {
+	row := blobFromModel(newObj)
+	if err := c.db.WithContext(ctx).Create(row).Error; err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
 	}
+	newObj.ID = row.ID
 	return nil
 }
 
 func (c *blobs) GetById(ctx context.Context, blobId int64) (*model.ArtifactBlob, error) {
-	var blob model.ArtifactBlob
-	if err := c.db.WithContext(ctx).First(&blob, blobId).Error; err != nil {
+	var row artifactBlob
+	if err := c.db.WithContext(ctx).First(&row, blobId).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
-	return &blob, nil
+	return blobToModel(&row), nil
 }
 
 func (c *blobs) GetByRef(ctx context.Context, ref string, storageId int64) (*model.ArtifactBlob, error) {
 	if err := validatorEmpty(ref, storageId); err != nil {
 		return nil, model.ErrArgsValueEmpty
 	}
-	var blob model.ArtifactBlob
-	q := model.ArtifactBlob{Ref: ref, StorageID: storageId}
-	if err := c.db.WithContext(ctx).Where(q).First(&blob).Error; err != nil {
+	var row artifactBlob
+	q := artifactBlob{Ref: ref, StorageID: storageId}
+	if err := c.db.WithContext(ctx).Where(&q).First(&row).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
-	return &blob, nil
+	return blobToModel(&row), nil
 }
 
 func (c *blobs) GetByHistory(ctx context.Context, assetId, createdAt int64) (*model.ArtifactBlob, error) {
-	var blob model.ArtifactBlob
+	var row artifactBlob
 	tm := time.UnixMilli(createdAt)
-	q := model.ArtifactBlob{AssetId: assetId, CreatedDate: &tm}
-	if err := c.db.WithContext(ctx).First(&blob, q).Error; err != nil {
+	// 用原始 time.Time 查询，GORM 会调用 datetime.Local.Value() 做存储转换
+	if err := c.db.WithContext(ctx).
+		Where("assetID = ? AND createdDate = ?", assetId, tm).
+		First(&row).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
-	return &blob, nil
+	return blobToModel(&row), nil
 }
 
 func (c *blobs) Update(ctx context.Context, upObj *model.ArtifactBlob) error {
-	if err := c.db.WithContext(ctx).Save(upObj).Error; err != nil {
+	row := blobFromModel(upObj)
+	if err := c.db.WithContext(ctx).Save(row).Error; err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
 	}
 	return nil
@@ -86,7 +91,7 @@ func (c *blobs) UpdateOptLock(ctx context.Context, upObj *model.ArtifactBlob, mu
 }
 
 func (c *blobs) SoftDeleteById(ctx context.Context, blobId int64) error {
-	err := c.db.WithContext(ctx).Model(&model.ArtifactBlob{ID: blobId}).
+	err := c.db.WithContext(ctx).Model(&artifactBlob{ID: blobId}).
 		UpdateColumn("deleted", 1).Error
 	if err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
@@ -95,7 +100,7 @@ func (c *blobs) SoftDeleteById(ctx context.Context, blobId int64) error {
 }
 
 func (c *blobs) DeleteById(ctx context.Context, blobId int64) error {
-	result := c.db.WithContext(ctx).Delete(&model.ArtifactBlob{}, blobId)
+	result := c.db.WithContext(ctx).Delete(&artifactBlob{}, blobId)
 	if result.Error != nil {
 		return database.ProcessSQLErrorf(ctx, result.Error)
 	}
@@ -107,7 +112,7 @@ func (c *blobs) DeleteById(ctx context.Context, blobId int64) error {
 
 func (c *blobs) History(ctx context.Context, assetId int64) ([]*model.ArtifactBlobRes, error) {
 	var dst []*model.ArtifactBlobRes
-	stmt := c.db.WithContext(ctx).Model(&model.ArtifactBlob{}).
+	stmt := c.db.WithContext(ctx).Model(&artifactBlob{}).
 		Select(`ops_artifact_blobs.id,ops_artifact_assets.path,ops_artifact_blobs.size,ops_artifact_blobs.ref,
 			ops_artifact_blobs.createdBy,
 			ops_artifact_blobs.checkSum,ops_artifact_blobs.metadata,ops_artifact_blobs.createdDate,ops_artifact_blobs.deleted`).

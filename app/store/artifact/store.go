@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
@@ -56,9 +57,9 @@ func (s *Store) Nodes() TreeNodeInterface          { return s.nodes }
 func (s *Store) FindPackages(ctx context.Context, viewId int64, filter *model.ArtifactFilter) ([]*model.ArtifactListItem, error) {
 	// 通过子查询先取每个 package 在当前 view 下的最新 version，再回查 package 列表。
 	result := make([]*model.ArtifactListItem, 0)
-	q := model.ArtifactPackage{ViewID: viewId}
+	q := artifactPackage{ViewID: viewId}
 
-	stmt := s.db.WithContext(ctx).Model(&model.ArtifactPackage{}).
+	stmt := s.db.WithContext(ctx).Model(&artifactPackage{}).
 		Select(`ops_artifact_packages.format, ops_artifact_packages.name, ops_artifact_packages.namespace,
 			ops_artifact_versions.version, ops_artifact_versions.editedDate`).
 		Joins(`JOIN (
@@ -75,7 +76,7 @@ func (s *Store) FindPackages(ctx context.Context, viewId int64, filter *model.Ar
 
 	if filter != nil {
 		if filter.Format != "" {
-			q.Format = model.ArtifactFormat(filter.Format)
+			q.Format = string(filter.Format)
 		}
 		if filter.Query != "" {
 			stmt = stmt.Where("name LIKE ?", fmt.Sprintf("%%%s%%", filter.Query))
@@ -97,7 +98,15 @@ func (s *Store) FindPackages(ctx context.Context, viewId int64, filter *model.Ar
 	return result, nil
 }
 
-func (s *Store) StatisticAssets(ctx context.Context, options ...SearchOption) (*model.ArtifactStatisticReport, error) {
+// StatisticAssets 统计制品资源容量，同时计算符合 GC 条件的软删 asset 列表。
+//
+// retentionTime 指定回收站保留时长：只有软删时间（editedDate）早于 now-retentionTime
+// 的 asset 才会被列入 DeleteList。传入 0 则跳过时间过滤（不建议用于生产 GC）。
+//
+// 引用计数保护：blobRefs 只统计 active（deleted=0）asset 对 blob 的引用。
+// 若一个软删 asset 的 blob 仍被其他 active asset 引用，则该 blob 不会被物理删除，
+// 只删除 asset 记录本身（BlobRef 置空以跳过文件删除）。
+func (s *Store) StatisticAssets(ctx context.Context, retentionTime time.Duration, options ...SearchOption) (*model.ArtifactStatisticReport, error) {
 	assets, err := s.Assets().SearchExtendBlob(ctx, options...)
 	if err != nil {
 		return nil, err
@@ -108,25 +117,53 @@ func (s *Store) StatisticAssets(ctx context.Context, options ...SearchOption) (*
 		TagList:    make([]*model.ArtifactVersionCapacityDesc, 0),
 	}
 	versionCap := make(map[int64]*model.ArtifactVersionCapacityDesc)
-	blobRefs := make(map[int64]int)
 
+	// 第一遍：只统计 active asset（deleted=0）对 blob 的引用计数。
+	// 此处刻意排除 deleted>0 的 asset，确保引用计数反映的是「仍在使用」的 blob。
+	activeBlobRefs := make(map[int64]int)
 	for _, asset := range assets {
-		if asset.BlobID == 0 {
+		if asset.BlobID == 0 || asset.Deleted > 0 {
 			continue
 		}
-		blobRefs[asset.BlobID]++
+		activeBlobRefs[asset.BlobID]++
 	}
 
+	// 计算回收站保留期截止时间；retentionTime==0 时不做时间过滤
+	var retentionCutoff time.Time
+	if retentionTime > 0 {
+		retentionCutoff = time.Now().Add(-retentionTime)
+	}
+
+	// 第二遍：分类处理每个 asset
 	for _, asset := range assets {
 		if asset.BlobID == 0 {
 			continue
 		}
 		if asset.Deleted > 0 {
+			// 保留期检查：editedDate（软删时间）必须早于截止时间
+			if retentionTime > 0 {
+				if asset.EditedDate == nil || !asset.EditedDate.Before(retentionCutoff) {
+					// 仍在保留期内，跳过
+					continue
+				}
+			}
+
+			// 引用计数检查：blob 是否仍被 active asset 引用
+			// 若有 active 引用则保留物理文件（BlobRef 置空），只删 asset 记录
+			blobRef := asset.Ref
+			if activeBlobRefs[asset.BlobID] > 0 {
+				logger.GetLogger(ctx).Debugf(
+					"skip blob deletion for asset %d: blob %d still referenced by %d active asset(s)",
+					asset.ID, asset.BlobID, activeBlobRefs[asset.BlobID],
+				)
+				blobRef = "" // 置空 BlobRef，garbageCollect 会跳过物理文件删除
+			}
+
 			report.DeleteList = append(report.DeleteList, &model.ArtifactRecycleBlobDesc{
 				AssetId: asset.ID,
 				Path:    asset.Path,
 				BlobId:  asset.BlobID,
-				BlobRef: asset.Ref,
+				BlobRef: blobRef,
 				Size:    asset.Size,
 			})
 			continue
@@ -143,7 +180,7 @@ func (s *Store) StatisticAssets(ctx context.Context, options ...SearchOption) (*
 		}
 		capItem.TotalSize += asset.Size
 		capItem.TotalRefs++
-		if blobRefs[asset.BlobID] <= 1 {
+		if activeBlobRefs[asset.BlobID] <= 1 {
 			capItem.ExclusiveSize += asset.Size
 			capItem.ExclusiveRefs++
 		}
@@ -172,7 +209,7 @@ func (s *Store) GetVersion(ctx context.Context, viewId int64,
 func (s *Store) ListAssets(ctx context.Context, versionId int64) ([]*model.ArtifactAssetsRes, error) {
 	// ListAssets 拉取 version 下未删除资产，并联表补齐 blob 与创建人信息。
 	result := make([]*model.ArtifactAssetsRes, 0)
-	stmt := s.db.WithContext(ctx).Model(&model.ArtifactAsset{}).
+	stmt := s.db.WithContext(ctx).Model(&artifactAsset{}).
 		Select(`ops_artifact_assets.id,ops_artifact_assets.path,ops_artifact_assets.contentType,
 			ops_artifact_assets.checkSum,ops_artifact_assets.metadata,ops_artifact_assets.createdDate,
 			ops_artifact_blobs.size,ops_artifact_blobs.ref,ops_artifact_blobs.createdDate,ops_artifact_blobs.createdBy`).
@@ -190,7 +227,7 @@ func (s *Store) ListAssets(ctx context.Context, versionId int64) ([]*model.Artif
 func (s *Store) ListGroupAssets(ctx context.Context, groupId int64) ([]*model.ArtifactAssetsRes, error) {
 	// ListGroupAssets 面向 generic/raw group 级资产，查询逻辑与 version 资产分开。
 	var dst []*model.ArtifactAssetsRes
-	stmt := s.db.WithContext(ctx).Model(&model.ArtifactAsset{}).
+	stmt := s.db.WithContext(ctx).Model(&artifactAsset{}).
 		Select(`ops_artifact_assets.id,ops_artifact_assets.path,ops_artifact_assets.contentType,
 			ops_artifact_assets.checkSum,ops_artifact_assets.metadata,ops_artifact_assets.createdDate,
 			ops_artifact_blobs.size,ops_artifact_blobs.ref,ops_artifact_blobs.createdDate,ops_artifact_blobs.createdBy`).
@@ -208,7 +245,7 @@ func (s *Store) ListGroupAssets(ctx context.Context, groupId int64) ([]*model.Ar
 func (s *Store) GetAsset(ctx context.Context, assetId int64) (*model.ArtifactAssetsRes, error) {
 	// GetAsset 读取单个资产详情，并把字符串字段反序列化为结构化响应。
 	var result model.ArtifactAssetsRes
-	stmt := s.db.WithContext(ctx).Model(&model.ArtifactAsset{}).
+	stmt := s.db.WithContext(ctx).Model(&artifactAsset{}).
 		Select(`ops_artifact_assets.id,ops_artifact_assets.path,ops_artifact_assets.contentType,
 			ops_artifact_assets.checkSum,ops_artifact_assets.metadata,ops_artifact_assets.createdDate,
 			ops_artifact_blobs.size,ops_artifact_blobs.ref,ops_artifact_blobs.createdDate,ops_artifact_blobs.createdBy`).
