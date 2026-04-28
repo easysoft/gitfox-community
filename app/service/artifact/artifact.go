@@ -29,6 +29,8 @@ import (
 	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
 	authModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
 	artifactStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/artifact"
+	pkgErrors "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/rbac"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/storage"
 	storagedriver "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/storage/driver"
@@ -118,10 +120,30 @@ func NewService(
 func (s *Service) CreateView(ctx context.Context, req *model.CreateArtifactViewReq) (*model.ArtifactView, error) {
 	log := logger.GetLogger(ctx)
 
+	// repoID 不为空时，spaceID 必须同时存在
+	if req.RepoID > 0 && req.SpaceID == 0 {
+		return nil, pkgErrors.WithI18nKey(
+			errors.New("spaceId is required when repoId is provided"),
+			i18n.ArtifactSpaceIdRequired,
+		)
+	}
+
+	// 校验 space / repo 是否存在
+	if req.SpaceID > 0 {
+		if _, err := s.spaceStore.GetByID(ctx, uint(req.SpaceID)); err != nil {
+			return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactSpaceQueryError)
+		}
+	}
+	if req.RepoID > 0 {
+		if _, err := s.repoStore.GetByID(ctx, uint(req.RepoID)); err != nil {
+			return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactRepoQueryError)
+		}
+	}
+
 	// 查询同作用域下所有同名 view（包含已软删的）
 	existing, err := s.artStore.Views().FindByNameInScope(ctx, req.SpaceID, req.RepoID, req.Name)
 	if err != nil {
-		return nil, err
+		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactViewQueryError)
 	}
 
 	now := time.Now()
@@ -130,7 +152,10 @@ func (s *Service) CreateView(ctx context.Context, req *model.CreateArtifactViewR
 	for _, v := range existing {
 		if v.Deleted == 0 {
 			// 情况1：存在同名 active view，拒绝创建
-			return nil, fmt.Errorf("同名制品库视图 '%s' 已存在", req.Name)
+			return nil, pkgErrors.WithI18nKey(
+				fmt.Errorf("artifact view '%s' already exists", req.Name),
+				i18n.ArtifactViewNameDuplicate,
+			)
 		}
 
 		// deleted=1：检查是否在回收站保留期内
@@ -138,9 +163,9 @@ func (s *Service) CreateView(ctx context.Context, req *model.CreateArtifactViewR
 		if v.EditedDate != nil && v.EditedDate.After(retentionCutoff) {
 			// 情况2：同名 view 在回收站保留期内，提示用户恢复
 			remainDays := int(v.EditedDate.Sub(retentionCutoff).Hours()/24) + 1
-			return nil, fmt.Errorf(
-				"同名制品库视图 '%s' 在回收站中（剩余 %d 天可恢复），请从回收站恢复或等待过期后重建",
-				req.Name, remainDays,
+			return nil, pkgErrors.WithI18nKey(
+				fmt.Errorf("artifact view '%s' is in recycle bin (%d days remaining)", req.Name, remainDays),
+				i18n.ArtifactViewInRecycleBin,
 			)
 		}
 
@@ -151,9 +176,13 @@ func (s *Service) CreateView(ctx context.Context, req *model.CreateArtifactViewR
 			// 继续尝试删除 view 本身
 		}
 		if err = s.artStore.Views().Delete(ctx, v.ID); err != nil {
-			return nil, fmt.Errorf("清理过期视图失败: %w", err)
+			return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactViewExpiredCleanupError)
 		}
 	}
+
+	// 判断是否为该作用域下的第一个视图：复用已有的 GetDefault 方法，
+	// 如果查不到默认视图，说明当前作用域还没有视图，新建的就自动设为默认。
+	isDefault := !s.hasDefaultView(ctx, req.SpaceID, req.RepoID)
 
 	// 情况4：无冲突，正常创建
 	v := &model.CreateArtifactView{
@@ -161,13 +190,25 @@ func (s *Service) CreateView(ctx context.Context, req *model.CreateArtifactViewR
 		Description: req.Description,
 		SpaceID:     req.SpaceID,
 		RepoID:      req.RepoID,
-		Default:     false,
+		Default:     isDefault,
 	}
 	view, err := s.artStore.Views().Create(ctx, v)
 	if err != nil {
-		return nil, err
+		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactViewCreateError)
 	}
 	return view, nil
+}
+
+// hasDefaultView 检查指定作用域下是否已存在默认视图。
+// 复用已有的 GetDefault / GetDefaultByRepoAndSpace 方法，无需额外的 store 查询。
+func (s *Service) hasDefaultView(ctx context.Context, spaceID, repoID int64) bool {
+	var err error
+	if repoID > 0 {
+		_, err = s.artStore.Views().GetDefaultByRepoAndSpace(ctx, repoID, spaceID)
+	} else {
+		_, err = s.artStore.Views().GetDefault(ctx, spaceID)
+	}
+	return err == nil
 }
 
 // ParseSpaceView 解析 SpaceRepoReq 参数为 ViewDescriptor。
@@ -182,34 +223,37 @@ func (s *Service) ParseSpaceView(ctx context.Context, req *model.SpaceRepoReq) (
 
 	if req.RepoID > 0 {
 		if req.SpaceID == 0 {
-			return nil, errors.New("spaceId is required when repoId is provided")
+			return nil, pkgErrors.WithI18nKey(
+				errors.New("spaceId is required when repoId is provided"),
+				i18n.ArtifactSpaceIdRequired,
+			)
 		}
 		repo, err := s.repoStore.GetByID(ctx, uint(req.RepoID))
 		if err != nil {
-			return nil, err
+			return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactRepoQueryError)
 		}
 		desc.Repo = &model.RepoRef{ID: int64(repo.ID), GitUID: repo.GitUID, Name: repo.Identifier}
 		view, err = s.artStore.Views().GetDefaultByRepoAndSpace(ctx, req.RepoID, req.SpaceID)
 		if err != nil {
-			return nil, err
+			return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactDefaultViewQueryError)
 		}
 		desc.ViewID = view.ID
 	} else if req.SpaceID > 0 {
 		space, err := s.spaceStore.GetByID(ctx, uint(req.SpaceID))
 		if err != nil {
-			return nil, err
+			return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactSpaceQueryError)
 		}
 		desc.Space = &model.SpaceRef{ID: int64(space.ID), Name: space.Name}
 		view, err = s.artStore.Views().GetDefault(ctx, req.SpaceID)
 		if err != nil {
-			return nil, err
+			return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactDefaultViewQueryError)
 		}
 		desc.ViewID = view.ID
 	} else {
 		// global view
 		view, err = s.artStore.Views().GetDefault(ctx, 0)
 		if err != nil {
-			return nil, err
+			return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactDefaultViewQueryError)
 		}
 		desc.ViewID = view.ID
 	}
@@ -218,7 +262,11 @@ func (s *Service) ParseSpaceView(ctx context.Context, req *model.SpaceRepoReq) (
 }
 
 func (s *Service) ListPackages(ctx context.Context, viewId int64, filter *model.ArtifactFilter) ([]*model.ArtifactListItem, error) {
-	return s.artStore.FindPackages(ctx, viewId, filter)
+	res, err := s.artStore.FindPackages(ctx, viewId, filter)
+	if err != nil {
+		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactPackageListError)
+	}
+	return res, nil
 }
 
 func (s *Service) ListVersions(ctx context.Context, viewId int64,
@@ -226,7 +274,7 @@ func (s *Service) ListVersions(ctx context.Context, viewId int64,
 ) ([]*model.ArtifactVersion, error) {
 	dbPkg, err := s.artStore.Packages().GetByName(ctx, packageName, groupName, viewId, format)
 	if err != nil {
-		return nil, err
+		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactPackageQueryError)
 	}
 	opt.PackageId = dbPkg.ID
 	opt.ViewId = viewId
@@ -252,16 +300,16 @@ func (s *Service) GetBlobHistory(ctx context.Context, assetId int64) ([]*model.A
 func (s *Service) DownloadAsset(ctx context.Context, assetId int64) (io.ReadCloser, *model.ArtifactBlob, error) {
 	asset, err := s.artStore.Assets().GetById(ctx, assetId)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, pkgErrors.WithI18nKey(err, i18n.ArtifactAssetQueryError)
 	}
 	blob, err := s.artStore.Blobs().GetById(ctx, asset.BlobID)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, pkgErrors.WithI18nKey(err, i18n.ArtifactBlobQueryError)
 	}
 	blobPath := adapter.BlobPath(blob.Ref)
 	reader, err := s.fileStore.Open(ctx, blobPath)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, pkgErrors.WithI18nKey(err, i18n.ArtifactDownloadOpenError)
 	}
 	return reader, blob, nil
 }
@@ -275,18 +323,21 @@ func (s *Service) Upload(ctx context.Context, view *adapter.ViewDescriptor, form
 	case model.ArtifactGenericFormat:
 		uploader = generic.NewUploader(s.fileStore, s.artStore, view)
 	default:
-		return nil, errors.New("unsupported artifact format")
+		return nil, pkgErrors.WithI18nKey(
+			errors.New("unsupported artifact format"),
+			i18n.ArtifactUnsupportedFormat,
+		)
 	}
 
 	if _, err := uploader.Serve(ctx, req); err != nil {
-		return nil, err
+		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactUploadServeError)
 	}
 	if err := uploader.IsValid(ctx); err != nil {
 		_ = uploader.Cancel(ctx)
-		return nil, err
+		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactUploadValidateError)
 	}
 	if err := uploader.Save(ctx); err != nil {
-		return nil, err
+		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactUploadSaveError)
 	}
 	return uploader.GetAssets(), nil
 }
@@ -315,17 +366,23 @@ func (s *Service) ListTreeNodes(ctx context.Context, parentId int64) ([]*model.A
 func (s *Service) DeleteVersion(ctx context.Context, versionId int64) error {
 	ver, err := s.artStore.Versions().GetByID(ctx, versionId)
 	if err != nil {
-		return err
+		return pkgErrors.WithI18nKey(err, i18n.ArtifactVersionQueryError)
 	}
-	return s.artStore.Versions().SoftDelete(ctx, ver)
+	if err = s.artStore.Versions().SoftDelete(ctx, ver); err != nil {
+		return pkgErrors.WithI18nKey(err, i18n.ArtifactVersionDeleteError)
+	}
+	return nil
 }
 
 func (s *Service) DeletePackage(ctx context.Context, packageId int64) error {
 	pkg, err := s.artStore.Packages().GetByID(ctx, packageId)
 	if err != nil {
-		return err
+		return pkgErrors.WithI18nKey(err, i18n.ArtifactPackageQueryError)
 	}
-	return s.artStore.Packages().SoftDelete(ctx, pkg)
+	if err = s.artStore.Packages().SoftDelete(ctx, pkg); err != nil {
+		return pkgErrors.WithI18nKey(err, i18n.ArtifactPackageDeleteError)
+	}
+	return nil
 }
 
 func (s *Service) statistic(ctx context.Context, report *model.ArtifactStatisticReport) (*model.ArtifactStatisticResponse, error) {
@@ -355,7 +412,7 @@ func (s *Service) statistic(ctx context.Context, report *model.ArtifactStatistic
 
 	verInfoList, err := s.artStore.Versions().Search(ctx, artifactStore.VersionIDsOption{IDs: vids})
 	if err != nil {
-		return nil, err
+		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactStatisticCapacityError)
 	}
 
 	capByVersion := make(map[int64]*model.ArtifactVersionCapacityDesc, len(report.TagList))
@@ -424,7 +481,7 @@ func (s *Service) StatisticContainerCapacity(ctx context.Context) (*model.Artifa
 	// 容量统计不需要过滤保留期，传 0 即可
 	report, err := s.artStore.StatisticAssets(ctx, 0, artifactStore.ContainerFormatOption{})
 	if err != nil {
-		return nil, err
+		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactStatisticCapacityError)
 	}
 	return s.statistic(ctx, report)
 }
@@ -434,7 +491,7 @@ func (s *Service) StatisticCapacity(ctx context.Context) (*model.ArtifactStatist
 	// 容量统计不需要过滤保留期，传 0 即可
 	report, err := s.artStore.StatisticAssets(ctx, 0, artifactStore.ExcludeContainerOption{})
 	if err != nil {
-		return nil, err
+		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactStatisticCapacityError)
 	}
 	return s.statistic(ctx, report)
 }
@@ -444,7 +501,7 @@ func (s *Service) StatisticCapacity(ctx context.Context) (*model.ArtifactStatist
 func (s *Service) StatisticSummary(ctx context.Context) (map[string]*model.ArtifactStatsObject, error) {
 	assets, err := s.artStore.Assets().Search(ctx, artifactStore.AssetVersionedOption{})
 	if err != nil {
-		return nil, err
+		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactStatisticSummaryError)
 	}
 
 	versionStats := make(map[int64]*model.ArtifactStatsObject)
@@ -471,7 +528,7 @@ func (s *Service) StatisticSummary(ctx context.Context) (map[string]*model.Artif
 	}
 	verInfoList, err := s.artStore.Versions().Search(ctx, artifactStore.VersionIDsOption{IDs: vIds})
 	if err != nil {
-		return nil, err
+		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactStatisticSummaryError)
 	}
 
 	res := map[string]*model.ArtifactStatsObject{
@@ -522,7 +579,10 @@ func (s *Service) TriggerGarbageCollectSoftRemove(ctx context.Context) (*model.J
 
 func (s *Service) triggerGarbageCollect(ctx context.Context, jobType string) (*model.JobUIDResponse, error) {
 	if s.scheduler == nil {
-		return nil, errors.New("artifact job scheduler is not configured")
+		return nil, pkgErrors.WithI18nKey(
+			errors.New("artifact job scheduler is not configured"),
+			i18n.ArtifactGcSchedulerNotConfigured,
+		)
 	}
 	jobName := fmt.Sprintf("%s:%d", jobType, time.Now().UnixNano())
 	payload, err := json.Marshal(map[string]any{"retention_time": 0})
@@ -530,7 +590,7 @@ func (s *Service) triggerGarbageCollect(ctx context.Context, jobType string) (*m
 		return nil, err
 	}
 	if err = s.scheduler.RunJob(ctx, jobName, jobType, string(payload), ArtifactGCJobMaxDurationSeconds); err != nil {
-		return nil, err
+		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactGcTriggerError)
 	}
 	return &model.JobUIDResponse{UID: jobName}, nil
 }
@@ -539,7 +599,7 @@ func (s *Service) GarbageCollectSoftRemove(ctx context.Context) (*model.Artifact
 	// GC 场景：传入回收站保留期，确保只清理已过期的软删资源
 	report, err := s.artStore.StatisticAssets(ctx, s.config.RecycleBinRetention, artifactStore.ExcludeContainerOption{})
 	if err != nil {
-		return nil, err
+		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactGcExecuteError)
 	}
 	return s.garbageCollect(ctx, report.DeleteList)
 }
@@ -548,7 +608,7 @@ func (s *Service) GarbageCollectContainer(ctx context.Context) (*model.ArtifactG
 	// GC 场景：传入回收站保留期，确保只清理已过期的软删资源
 	report, err := s.artStore.StatisticAssets(ctx, s.config.RecycleBinRetention, artifactStore.ContainerFormatOption{})
 	if err != nil {
-		return nil, err
+		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactGcExecuteError)
 	}
 	return s.garbageCollect(ctx, report.DeleteList)
 }
@@ -590,7 +650,7 @@ func (s *Service) SoftRemove(ctx context.Context, spaceID int64, req *model.Soft
 	for _, eid := range ids {
 		if _, err := entity.Parse(ctx, s.artStore, eid); err != nil {
 			logger.GetLogger(ctx).Warnf("parse artifact entity %s failed before soft remove: %v", eid, err)
-			return nil, err
+			return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactSoftRemoveParseError)
 		}
 	}
 
@@ -607,7 +667,7 @@ func (s *Service) SoftRemove(ctx context.Context, spaceID int64, req *model.Soft
 		}
 		return nil
 	}); err != nil {
-		return nil, err
+		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactSoftRemoveError)
 	}
 
 	for _, item := range report.Data {
@@ -823,7 +883,10 @@ func (s *Service) PrepareArchiveGroup(ctx context.Context, session *authModel.Se
 
 func (s *Service) authorizeArtifactAction(ctx context.Context, session *authModel.Session, spaceID, repoID int64, e *model.ArtifactEntity, action enum.CasbinAction) error {
 	if session == nil || session.User == nil {
-		return errors.New("authentication required")
+		return pkgErrors.WithI18nKey(
+			errors.New("authentication required"),
+			i18n.ArtifactAuthRequired,
+		)
 	}
 
 	sub := rbac.NewUser(session.User.Account)
@@ -916,7 +979,10 @@ func (s *Service) ListContainerImages(ctx context.Context, view *adapter.ViewDes
 		return nil, err
 	}
 	if len(assets) == 0 {
-		return nil, errors.New("container tag asset not found")
+		return nil, pkgErrors.WithI18nKey(
+			errors.New("container tag asset not found"),
+			i18n.ArtifactContainerTagNotFound,
+		)
 	}
 	dgst, err := digest.Parse(assets[0].Path)
 	if err != nil {
@@ -995,7 +1061,7 @@ func (s *Service) GarbageCollectExpiredViews(ctx context.Context) (int, error) {
 	// 【仅查询】找出过期 view ID，不删除——保证幂等性
 	expiredViewIDs, err := s.artStore.Views().FindExpiredIDs(ctx, cutoff)
 	if err != nil {
-		return 0, fmt.Errorf("查询过期视图失败: %w", err)
+		return 0, pkgErrors.WithI18nKey(fmt.Errorf("query expired views failed: %w", err), i18n.ArtifactViewExpiredQueryError)
 	}
 	if len(expiredViewIDs) == 0 {
 		log.Info("无过期已软删视图需要清理")

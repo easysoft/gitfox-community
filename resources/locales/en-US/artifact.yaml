@@ -15,3 +15,76 @@ artifact:
   query_param_error: "Query param parsing failed."
   permission_update_success: "Artifact permission updated successfully."
   permission_query_success: "Artifact permission queried successfully."
+
+  # ---- Service layer errors ----
+  # View
+  view_name_duplicate: "An artifact view with the same name already exists."
+  view_in_recycle_bin: "A view with the same name is in the recycle bin, please restore it or wait for expiration."
+  view_expired_cleanup_error: "Failed to clean up expired view."
+  view_query_error: "Failed to query artifact view."
+  view_create_error: "Failed to create artifact view."
+  view_expired_query_error: "Failed to query expired views."
+
+  # Parse & Upload
+  space_id_required: "spaceId is required when repoId is provided."
+  repo_query_error: "Failed to query repository."
+  space_query_error: "Failed to query space."
+  default_view_query_error: "Failed to query default view."
+  unsupported_format: "Unsupported artifact format."
+  upload_serve_error: "Artifact upload processing failed."
+  upload_validate_error: "Artifact upload validation failed."
+  upload_save_error: "Failed to save artifact."
+
+  # Package & Version
+  package_query_error: "Failed to query artifact package."
+  version_query_error: "Failed to query artifact version."
+  version_list_error: "Failed to list artifact versions."
+  version_delete_error: "Failed to delete artifact version."
+  package_delete_error: "Failed to delete artifact package."
+  package_list_error: "Failed to list artifact packages."
+
+  # Asset & Blob & Download
+  asset_query_error: "Failed to query artifact asset."
+  asset_list_error: "Failed to list artifact assets."
+  blob_query_error: "Failed to query artifact blob."
+  blob_history_error: "Failed to query artifact blob history."
+  download_open_error: "Failed to open artifact file."
+  download_error: "Failed to download artifact."
+
+  # Group
+  group_create_error: "Failed to create artifact group."
+  group_query_error: "Failed to query artifact group."
+
+  # Tree
+  tree_format_list_error: "Failed to list artifact formats."
+  tree_node_list_error: "Failed to list artifact tree nodes."
+  tree_refresh_error: "Failed to refresh artifact tree."
+
+  # GC & Delete
+  gc_scheduler_not_configured: "Artifact garbage collection scheduler is not configured."
+  gc_trigger_error: "Failed to trigger artifact garbage collection."
+  gc_execute_error: "Failed to execute artifact garbage collection."
+  soft_remove_parse_error: "Failed to parse artifact entity ID."
+  soft_remove_error: "Failed to soft-delete artifact."
+
+  # Statistic
+  statistic_capacity_error: "Failed to query artifact capacity statistics."
+  statistic_summary_error: "Failed to query artifact statistics summary."
+
+  # Container
+  container_tag_not_found: "Container tag asset not found."
+  container_image_query_error: "Failed to query container image."
+
+  # Permission
+  auth_required: "Authentication required."
+  permission_set_error: "Failed to set artifact permission."
+  permission_subject_invalid: "Invalid permission subject format."
+  permission_user_not_found: "User not found for permission subject."
+  permission_member_query_error: "Failed to query artifact members."
+
+  # Archive
+  archive_group_error: "Failed to archive artifact group."
+  archive_write_error: "Failed to write artifact archive file."
+
+  # Hard delete resources
+  hard_delete_error: "Failed to clean up artifact-related resources."

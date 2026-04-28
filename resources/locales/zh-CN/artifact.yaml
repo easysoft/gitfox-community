@@ -15,3 +15,76 @@ artifact:
   query_param_error: "Query 参数解析失败."
   permission_update_success: "制品权限更新成功."
   permission_query_success: "制品权限查询成功."
+
+  # ---- Service 层错误 ----
+  # View（视图）
+  view_name_duplicate: "同名制品库视图已存在."
+  view_in_recycle_bin: "同名制品库视图在回收站中，请从回收站恢复或等待过期后重建."
+  view_expired_cleanup_error: "清理过期视图失败."
+  view_query_error: "查询制品视图失败."
+  view_create_error: "创建制品视图失败."
+  view_expired_query_error: "查询过期视图失败."
+
+  # Parse & Upload
+  space_id_required: "当 repoId 存在时，spaceId 是必填的."
+  repo_query_error: "查询仓库失败."
+  space_query_error: "查询空间失败."
+  default_view_query_error: "查询默认视图失败."
+  unsupported_format: "不支持的制品格式."
+  upload_serve_error: "制品上传处理失败."
+  upload_validate_error: "制品上传验证失败."
+  upload_save_error: "制品保存失败."
+
+  # Package & Version
+  package_query_error: "查询制品包失败."
+  version_query_error: "查询制品版本失败."
+  version_list_error: "查询制品版本列表失败."
+  version_delete_error: "删除制品版本失败."
+  package_delete_error: "删除制品包失败."
+  package_list_error: "查询制品包列表失败."
+
+  # Asset & Blob & Download
+  asset_query_error: "查询制品资产失败."
+  asset_list_error: "查询制品资产列表失败."
+  blob_query_error: "查询制品 Blob 失败."
+  blob_history_error: "查询制品 Blob 历史失败."
+  download_open_error: "打开制品文件失败."
+  download_error: "制品下载失败."
+
+  # Group
+  group_create_error: "创建制品分组失败."
+  group_query_error: "查询制品分组失败."
+
+  # Tree
+  tree_format_list_error: "查询制品格式列表失败."
+  tree_node_list_error: "查询制品树节点列表失败."
+  tree_refresh_error: "制品树刷新失败."
+
+  # GC & Delete
+  gc_scheduler_not_configured: "制品垃圾回收调度器未配置."
+  gc_trigger_error: "触发制品垃圾回收失败."
+  gc_execute_error: "执行制品垃圾回收失败."
+  soft_remove_parse_error: "解析制品实体 ID 失败."
+  soft_remove_error: "制品软删除失败."
+
+  # Statistic
+  statistic_capacity_error: "制品容量统计查询失败."
+  statistic_summary_error: "制品统计概览查询失败."
+
+  # Container
+  container_tag_not_found: "容器镜像标签资产未找到."
+  container_image_query_error: "查询容器镜像失败."
+
+  # Permission
+  auth_required: "需要身份认证."
+  permission_set_error: "设置制品权限失败."
+  permission_subject_invalid: "无效的权限主体格式."
+  permission_user_not_found: "未找到权限关联的用户."
+  permission_member_query_error: "查询制品成员列表失败."
+
+  # Archive
+  archive_group_error: "打包制品分组失败."
+  archive_write_error: "写入制品归档文件失败."
+
+  # 硬删资源
+  hard_delete_error: "清理制品关联资源失败."

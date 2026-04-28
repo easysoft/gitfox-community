@@ -8,6 +8,8 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/entity"
 	enum "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
+	pkgErrors "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/rbac"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
@@ -256,7 +258,10 @@ func (s *Service) GetSpaceMembers(ctx context.Context, spaceID, repoID int64) ([
 func (s *Service) parseSubject(ctx context.Context, in string) (*model.CasbinSubject, error) {
 	frames := strings.Split(in, ":")
 	if len(frames) != 2 {
-		return nil, fmt.Errorf("invalid subject format: %s", in)
+		return nil, pkgErrors.WithI18nKey(
+			fmt.Errorf("invalid subject format: %s", in),
+			i18n.ArtifactPermissionSubjectInvalid,
+		)
 	}
 
 	kind := frames[0]
@@ -264,7 +269,10 @@ func (s *Service) parseSubject(ctx context.Context, in string) (*model.CasbinSub
 
 	u, err := s.userStore.FindByAccount(ctx, account)
 	if err != nil {
-		return nil, fmt.Errorf("user not found for account '%s': %w", account, err)
+		return nil, pkgErrors.WithI18nKey(
+			fmt.Errorf("user not found for account '%s': %w", account, err),
+			i18n.ArtifactPermissionUserNotFound,
+		)
 	}
 
 	return &model.CasbinSubject{
