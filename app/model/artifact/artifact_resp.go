@@ -45,20 +45,20 @@ type ArtifactListItem struct {
 	Format      string `gorm:"column:format" json:"format"`
 	Name        string `gorm:"column:name" json:"name"`
 	Namespace   string `gorm:"column:namespace" json:"namespace"`
-	DisplayName string `gorm:"-" json:"display_name"`
+	DisplayName string `gorm:"-" json:"displayName"`
 	Version     string `gorm:"column:version" json:"version"`
-	UpdateTime  int64  `gorm:"column:editedDate" json:"update_time"`
+	UpdateTime  int64  `gorm:"column:editedDate" json:"updateTime"`
 }
 
 
 type ArtifactAssetsRes struct {
 	Id             int64  `gorm:"column:id" json:"id"`
 	Path           string `gorm:"column:path" json:"path"`
-	ContentType    string `gorm:"column:contentType" json:"content_type"`
+	ContentType    string `gorm:"column:contentType" json:"contentType"`
 	Size           int64  `gorm:"column:size" json:"size"`
 	BlobRef        string `gorm:"column:ref" json:"-"`
 	Creator        string `gorm:"-" json:"creator"`
-	CreatorName    string `gorm:"column:createdBy" json:"creator_name"`
+	CreatorName    string `gorm:"column:createdBy" json:"creatorName"`
 	CheckSumString string `gorm:"column:checkSum" json:"-"`
 	MetadataString string `gorm:"column:metadata" json:"-"`
 	Created        int64  `gorm:"column:createdDate" json:"created"`
@@ -67,7 +67,7 @@ type ArtifactAssetsRes struct {
 	CheckSum *CheckSumRes      `gorm:"-" json:"checksum"`
 	Metadata map[string]string `gorm:"-" json:"metadata"`
 	Link     string            `gorm:"-" json:"link"`
-	EntityId string            `gorm:"-" json:"entity_id"`
+	EntityId string            `gorm:"-" json:"entityId"`
 }
 
 type ArtifactBlobRes struct {
@@ -76,7 +76,7 @@ type ArtifactBlobRes struct {
 	Size           int64    `gorm:"column:size" json:"size"`
 	BlobRef        string   `gorm:"column:ref" json:"-"`
 	Creator        string   `gorm:"-" json:"creator"`
-	CreatorName    string   `gorm:"column:createdBy" json:"creator_name"`
+	CreatorName    string   `gorm:"column:createdBy" json:"creatorName"`
 	CheckSumString string   `gorm:"column:checkSum" json:"-"`
 	MetadataString string   `gorm:"column:metadata" json:"-"`
 	Created        int64    `gorm:"column:createdDate" json:"created"`
@@ -85,7 +85,7 @@ type ArtifactBlobRes struct {
 	CheckSum *CheckSumRes      `gorm:"-" json:"checksum"`
 	Metadata map[string]string `gorm:"-" json:"metadata"`
 	Link     string            `gorm:"-" json:"link"`
-	EntityId string            `gorm:"-" json:"entity_id"`
+	EntityId string            `gorm:"-" json:"entityId"`
 }
 
 type CheckSumRes struct {
@@ -97,7 +97,7 @@ type CheckSumRes struct {
 
 type ArtifactVersionsRes struct {
 	Version     string `json:"version"`
-	CreatorName string `json:"creator_name"`
+	CreatorName string `json:"creatorName"`
 	Updated     int64  `json:"updated"`
 }
 
@@ -132,8 +132,8 @@ type ArtifactTreeNodeMeta struct {
 
 	// NodeId 已废弃，调用方应改用 EntityId。
 	// Deprecated NodeId, use EntityId instead
-	NodeId   string `json:"node_id,omitempty"`
-	EntityId string `json:"entity_id,omitempty"`
+	NodeId   string `json:"nodeId,omitempty"`
+	EntityId string `json:"entityId,omitempty"`
 }
 
 type ArtifactTreeNodeId struct {
@@ -163,9 +163,9 @@ type ArtifactNodeInfo struct {
 	Metadata *ArtifactPkgVerMetadata `json:"metadata"`
 
 	Path        string       `json:"path"`
-	ContentType string       `json:"content_type"`
+	ContentType string       `json:"contentType"`
 	Size        int64        `json:"size"`
-	CreatorName string       `json:"creator_name"`
+	CreatorName string       `json:"creatorName"`
 	Created     int64        `json:"created"`
 	Updated     int64        `json:"updated"`
 	Link        string       `json:"link"`
@@ -183,7 +183,7 @@ type ArtifactPkgVerMetadata struct {
 // ==================== Remove / GC ====================
 
 type ArtifactNodeRemoveRes struct {
-	NodeId   string         `json:"node_id"`
+	NodeId   string         `json:"nodeId"`
 	Status   ArtifactStatus `json:"status"`
 	Packages int            `json:"packages,omitempty"`
 	Versions int            `json:"versions,omitempty"`
@@ -208,7 +208,7 @@ type ArtifactGarbageReportRes struct {
 }
 
 type ArtifactStatisticResponse struct {
-	GarbageCollect *ArtifactGarbageReportRes     `json:"garbage_collect"`
+	GarbageCollect *ArtifactGarbageReportRes     `json:"garbageCollect"`
 	Capacity       []*ArtifactPackageCapacityRes `json:"capacity"`
 }
 
@@ -220,14 +220,14 @@ type ArtifactPackageCapacityRes struct {
 	Namespace     string                       `json:"namespace"`
 	Format        ArtifactFormat               `json:"format"`
 	Size          int64                        `json:"size"`
-	ExclusiveSize int64                        `json:"exclusive_size"`
+	ExclusiveSize int64                        `json:"exclusiveSize"`
 	Versions      []ArtifactVersionCapacityRes `json:"versions"`
 }
 
 type ArtifactVersionCapacityRes struct {
 	Version       string `json:"version"`
 	Size          int64  `json:"size"`
-	ExclusiveSize int64  `json:"exclusive_size"`
+	ExclusiveSize int64  `json:"exclusiveSize"`
 }
 
 type ArtifactStatsObject struct {
@@ -251,9 +251,9 @@ type ArtifactEntityPermissions struct {
 
 type ArtifactPermInherit struct {
 	Inherited       bool     `json:"inherited"`
-	InheritEntityId string   `json:"inherit_entity_id"`
-	InheritFrom     string   `json:"inherit_from"`
-	InheritParents  []string `json:"inherit_parents"`
+	InheritEntityId string   `json:"inheritEntityId"`
+	InheritFrom     string   `json:"inheritFrom"`
+	InheritParents  []string `json:"inheritParents"`
 }
 
 type ArtifactPermRule struct {

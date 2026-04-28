@@ -83,7 +83,7 @@ type CasbinSubject struct {
 	Type        string `json:"type"`
 	Id          int64  `json:"id"`
 	UID         string `json:"uid"`
-	DisplayName string `json:"display_name,omitempty"`
+	DisplayName string `json:"displayName,omitempty"`
 }
 
 // ==================== 核心实体定义 ====================
@@ -93,32 +93,32 @@ type ArtifactView struct {
 	ID          int64      `json:"id"`
 	Name        string     `json:"name"`
 	Description string     `json:"description"`
-	SpaceID     int64      `json:"space_id"`
-	RepoID      int64      `json:"repo_id"`
-	Default     bool       `json:"is_default"`
-	CreatedBy   string     `json:"created_by"`
-	CreatedDate *time.Time `json:"created_date"`
-	EditedBy    string     `json:"edited_by"`
-	EditedDate  *time.Time `json:"edited_date"`
+	SpaceID     int64      `json:"spaceId"`
+	RepoID      int64      `json:"repoId"`
+	Default     bool       `json:"isDefault"`
+	CreatedBy   string     `json:"createdBy"`
+	CreatedDate *time.Time `json:"createdDate"`
+	EditedBy    string     `json:"editedBy"`
+	EditedDate  *time.Time `json:"editedDate"`
 	Deleted     int8       `json:"-"`
 }
 
 type ArtifactGroup struct {
 	ID          int64          `json:"id"`
-	ParentID    null.Int       `json:"parent_id"`
-	ViewID      int64          `json:"view_id"`
+	ParentID    null.Int       `json:"parentId"`
+	ViewID      int64          `json:"viewId"`
 	Name        string         `json:"name"`
 	Format      ArtifactFormat `json:"format"`
-	CreatedBy   string         `json:"created_by"`
-	CreatedDate *time.Time     `json:"created_date"`
-	EditedBy    string         `json:"edited_by"`
-	EditedDate  *time.Time     `json:"edited_date"`
+	CreatedBy   string         `json:"createdBy"`
+	CreatedDate *time.Time     `json:"createdDate"`
+	EditedBy    string         `json:"editedBy"`
+	EditedDate  *time.Time     `json:"editedDate"`
 	Deleted     int8           `json:"-"`
 }
 
 type ArtifactPackage struct {
 	ID      int64  `json:"id"`
-	ViewID  int64  `json:"view_id"`
+	ViewID  int64  `json:"viewId"`
 	Name    string `json:"name"`
 	Namespace string `json:"namespace"`
 
@@ -126,13 +126,13 @@ type ArtifactPackage struct {
 	// GroupId used for define group of the package, used for raw maven style, instead of the namespace field
 	// 这里使用 int64，便于后续构建索引和关联查询。
 	// convert to int64 for build index
-	GroupID int64 `json:"group_id"`
+	GroupID int64 `json:"groupId"`
 
 	Format      ArtifactFormat `json:"format"`
-	CreatedBy   string         `json:"created_by"`
-	CreatedDate *time.Time     `json:"created_date"`
-	EditedBy    string         `json:"edited_by"`
-	EditedDate  *time.Time     `json:"edited_date"`
+	CreatedBy   string         `json:"createdBy"`
+	CreatedDate *time.Time     `json:"createdDate"`
+	EditedBy    string         `json:"editedBy"`
+	EditedDate  *time.Time     `json:"editedDate"`
 	Deleted     int8           `json:"-"`
 }
 
@@ -142,18 +142,18 @@ func (p *ArtifactPackage) IsDeleted() bool {
 
 type ArtifactVersion struct {
 	ID        int64  `json:"id"`
-	PackageID int64  `json:"package_id"`
+	PackageID int64  `json:"packageId"`
 	Version   string `json:"version"`
 
-	ViewID int64 `json:"view_id"`
+	ViewID int64 `json:"viewId"`
 	// Metadata 保存 version 级元数据，例如版本创建者等附加信息。
 	// Metadata store version-level metadata. example: version creator
 	Metadata string `json:"metadata"`
 
-	CreatedBy   string     `json:"created_by"`
-	CreatedDate *time.Time `json:"created_date"`
-	EditedBy    string     `json:"edited_by"`
-	EditedDate  *time.Time `json:"edited_date"`
+	CreatedBy   string     `json:"createdBy"`
+	CreatedDate *time.Time `json:"createdDate"`
+	EditedBy    string     `json:"editedBy"`
+	EditedDate  *time.Time `json:"editedDate"`
 	Deleted     int8       `json:"-"`
 }
 
@@ -183,32 +183,32 @@ type ArtifactAsset struct {
 
 	// VersionID 绑定具体 package(format) 与 view 下的版本资产。
 	// VersionID binding with package(with format), view
-	VersionID null.Int `json:"version_id"`
+	VersionID null.Int `json:"versionId"`
 
 	// ViewID 用于无版本资产，例如格式级 index 文件。
 	// ViewID used for none-version assets, like index file for a format
-	ViewID null.Int `json:"view_id"`
+	ViewID null.Int `json:"viewId"`
 
 	// GroupID 用于无版本的文件类资产挂到 group 节点。
 	// GroupId used for file format assets, without version
-	GroupID null.Int `json:"group_id"`
+	GroupID null.Int `json:"groupId"`
 
 	// Format 也用于标识无版本资产所属的仓库格式。
 	// Format is also used for none-version assets
 	Format ArtifactFormat `json:"format"`
 
 	Path        string    `json:"path"`
-	ContentType string    `json:"content_type"`
+	ContentType string    `json:"contentType"`
 	Kind        AssetKind `json:"kind"`
 	// Metadata 保存 asset 级元数据，例如 helm chart 信息，用于后续重建索引。
 	// Metadata store asset-level metadata. example: helm chart metadata, for rebuild index
 	Metadata    string     `json:"metadata"`
-	BlobID      int64      `json:"blob_id"`
-	CheckSum    string     `json:"check_sum"`
-	CreatedBy   string     `json:"created_by"`
-	CreatedDate *time.Time `json:"created_date"`
-	EditedBy    string     `json:"edited_by"`
-	EditedDate  *time.Time `json:"edited_date"`
+	BlobID      int64      `json:"blobId"`
+	CheckSum    string     `json:"checkSum"`
+	CreatedBy   string     `json:"createdBy"`
+	CreatedDate *time.Time `json:"createdDate"`
+	EditedBy    string     `json:"editedBy"`
+	EditedDate  *time.Time `json:"editedDate"`
 	Deleted     int8       `json:"-"`
 }
 
@@ -222,23 +222,23 @@ type ArtifactAssetExtendBlob struct {
 
 type ArtifactMetaAsset struct {
 	ID          int64          `json:"id"`
-	ViewID      int64          `json:"view_id"`
+	ViewID      int64          `json:"viewId"`
 	Format      ArtifactFormat `json:"format"`
 	Path        string         `json:"path"`
-	ContentType string         `json:"content_type"`
+	ContentType string         `json:"contentType"`
 	Kind        AssetKind      `json:"kind"`
-	BlobID      int64          `json:"blob_id"`
-	CheckSum    string         `json:"check_sum"`
-	CreatedBy   string         `json:"created_by"`
-	CreatedDate *time.Time     `json:"created_date"`
-	EditedBy    string         `json:"edited_by"`
-	EditedDate  *time.Time     `json:"edited_date"`
+	BlobID      int64          `json:"blobId"`
+	CheckSum    string         `json:"checkSum"`
+	CreatedBy   string         `json:"createdBy"`
+	CreatedDate *time.Time     `json:"createdDate"`
+	EditedBy    string         `json:"editedBy"`
+	EditedDate  *time.Time     `json:"editedDate"`
 	Deleted     int8           `json:"-"`
 }
 
 type ArtifactBlob struct {
 	ID        int64  `json:"id"`
-	StorageID int64  `json:"storage_id"`
+	StorageID int64  `json:"storageId"`
 	Ref       string `json:"ref"`
 	Size      int64  `json:"size"`
 	Downloads int64  `json:"downloads"`
@@ -246,23 +246,23 @@ type ArtifactBlob struct {
 	// Metadata store file-level metadata. example: container upload progress hash state
 	Metadata    string     `json:"metadata"`
 	Deleted     int8       `json:"-"`
-	CreatedBy   string     `json:"created_by"`
-	CreatedDate *time.Time `json:"created_date"`
-	EditedBy    string     `json:"edited_by"`
-	EditedDate  *time.Time `json:"edited_date"`
-	AssetId     int64      `json:"asset_id"`
-	CheckSum    string     `json:"check_sum"`
+	CreatedBy   string     `json:"createdBy"`
+	CreatedDate *time.Time `json:"createdDate"`
+	EditedBy    string     `json:"editedBy"`
+	EditedDate  *time.Time `json:"editedDate"`
+	AssetId     int64      `json:"assetId"`
+	CheckSum    string     `json:"checkSum"`
 }
 
 type ArtifactTreeNode struct {
 	ID       int64                `json:"id"`
-	ParentID null.Int             `json:"parent_id"`
-	ViewID   int64                `json:"view_id"`
+	ParentID null.Int             `json:"parentId"`
+	ViewID   int64                `json:"viewId"`
 	Name     string               `json:"name"`
 	Path     string               `json:"path"`
 	Type     ArtifactTreeNodeType `json:"type"`
 	Format   ArtifactFormat       `json:"format"`
-	TargetId null.Int             `json:"target_id"`
+	TargetId null.Int             `json:"targetId"`
 }
 
 func (n *ArtifactTreeNode) Key() string {
@@ -440,7 +440,7 @@ type SearchVersionOption struct {
 	Page           int    `json:"page"`
 	Size           int    `json:"size"`
 	Query          string `json:"query"`
-	IncludeDeleted bool   `json:"include_deleted"`
+	IncludeDeleted bool   `json:"includeDeleted"`
 }
 
 func (opt SearchVersionOption) Apply(db *gorm.DB) *gorm.DB {
@@ -482,7 +482,7 @@ type TreeNode struct {
 	Name     string      `json:"name"`
 	Path     string      `json:"path"`
 	Children []*TreeNode `json:"children,omitempty"`
-	IsLeaf   bool        `json:"is_leaf"`
+	IsLeaf   bool        `json:"isLeaf"`
 }
 
 // ==================== 回收与统计模型 ====================
