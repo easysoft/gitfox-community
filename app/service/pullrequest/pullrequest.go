@@ -697,9 +697,43 @@ func (s *Service) Merge(ctx context.Context, session *auth.Session, repoid uint,
 		SourceSHA:    mergeOutput.HeadSHA.String(),
 	})
 
+	// 清理 ztflow 临时分支和 agit 引用
+	var branchDeleted bool
+	if pr.Flow == 1 {
+		errDelete := s.gitSvc.DeleteBranch(ctx, &git.DeleteBranchParams{
+			WriteParams: writeParams,
+			BranchName:  pr.SourceBranch,
+		})
+		if errDelete != nil {
+			logger.Warnf("failed to delete ztflow source branch %s after merging: %v",
+				pr.SourceBranch, errDelete)
+		} else {
+			branchDeleted = true
+			logger.Infof("deleted ztflow source branch %s after merge", pr.SourceBranch)
+		}
+
+		// ztflow-i-main#d1
+		branchPre := strings.Join(strings.Split(pr.SourceBranch, "-")[:2], "-")
+		branchOrigin := strings.TrimPrefix(pr.SourceBranch, branchPre+"-")
+		branchOrigin = fmt.Sprintf("refs/for/%s", branchOrigin)
+
+		err := s.gitSvc.DeleteRef(ctx, git.DeleteRefParams{
+			ReadParams: git.ReadParams{
+				RepoUID: repo.GitUID,
+			},
+			Name: branchOrigin,
+		})
+		if err != nil {
+			logger.Warnf("repo uid %s failed to delete force review flow branch %s(source: %s)", repo.GitUID, branchOrigin, pr.SourceBranch)
+		} else {
+			logger.Infof("repo uid %s delete force review flow branch %s(source: %s)", repo.GitUID, branchOrigin, pr.SourceBranch)
+		}
+	}
+
 	// 返回结果
 	return &repoModel.MergeResponse{
-		SHA: mergeOutput.MergeSHA.String(),
+		SHA:           mergeOutput.MergeSHA.String(),
+		BranchDeleted: branchDeleted,
 	}, nil, nil
 }
 
