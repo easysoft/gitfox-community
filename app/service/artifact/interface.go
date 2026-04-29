@@ -73,13 +73,7 @@ type Interface interface {
 
 	// ---- 删除操作 ----
 
-	// DeleteVersion 删除指定版本及其下所有资源。
-	DeleteVersion(ctx context.Context, versionId int64) error
-
-	// DeletePackage 删除指定制品包及其下所有版本和资源。
-	DeletePackage(ctx context.Context, packageId int64) error
-
-	// SoftRemove 软删除指定的实体节点（package/version/group），将其标记为已删除。
+	// SoftRemove 软删除指定的实体节点（group/package/version/asset），支持级联删除子节点。
 	SoftRemove(ctx context.Context, spaceID int64, req *model.SoftRemoveEntitiesReq) (*model.ArtifactNodeRemoveReport, error)
 
 	// ---- 归档下载 ----

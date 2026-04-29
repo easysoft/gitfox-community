@@ -37,7 +37,6 @@ func registerArtifactRoutes(group *gin.RouterGroup, controller *Controller, auth
 
 		// 版本级操作
 		artifact.GET("/versions/:versionId/assets", pullAuth, controller.Artifact.ListAssets)
-		artifact.DELETE("/versions/:versionId", deleteAuth, controller.Artifact.DeleteVersion)
 
 		// group 级操作（读）
 		artifact.GET("/groups/:groupId/assets", pullAuth, controller.Artifact.ListGroupAssets)
@@ -48,8 +47,7 @@ func registerArtifactRoutes(group *gin.RouterGroup, controller *Controller, auth
 		artifact.GET("/assets/:assetId/history", pullAuth, controller.Artifact.GetBlobHistory)
 		artifact.GET("/assets/:assetId/download", pullAuth, controller.Artifact.DownloadAsset)
 
-		// 包级删除
-		artifact.DELETE("/packages/:packageId", deleteAuth, controller.Artifact.DeletePackage)
+		// 删除操作（统一使用 SoftRemoveByEntity，支持级联删除）
 		artifact.DELETE("/entities", deleteAuth, controller.Artifact.SoftRemoveByEntity)
 
 		// 树节点（读）

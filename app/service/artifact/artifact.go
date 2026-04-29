@@ -4,7 +4,6 @@ import (
 	"archive/zip"
 	"compress/flate"
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -363,28 +362,6 @@ func (s *Service) ListTreeNodes(ctx context.Context, parentId int64) ([]*model.A
 	return s.artStore.Nodes().ListByParentId(ctx, parentId)
 }
 
-func (s *Service) DeleteVersion(ctx context.Context, versionId int64) error {
-	ver, err := s.artStore.Versions().GetByID(ctx, versionId)
-	if err != nil {
-		return pkgErrors.WithI18nKey(err, i18n.ArtifactVersionQueryError)
-	}
-	if err = s.artStore.Versions().SoftDelete(ctx, ver); err != nil {
-		return pkgErrors.WithI18nKey(err, i18n.ArtifactVersionDeleteError)
-	}
-	return nil
-}
-
-func (s *Service) DeletePackage(ctx context.Context, packageId int64) error {
-	pkg, err := s.artStore.Packages().GetByID(ctx, packageId)
-	if err != nil {
-		return pkgErrors.WithI18nKey(err, i18n.ArtifactPackageQueryError)
-	}
-	if err = s.artStore.Packages().SoftDelete(ctx, pkg); err != nil {
-		return pkgErrors.WithI18nKey(err, i18n.ArtifactPackageDeleteError)
-	}
-	return nil
-}
-
 func (s *Service) statistic(ctx context.Context, report *model.ArtifactStatisticReport) (*model.ArtifactStatisticResponse, error) {
 	res := &model.ArtifactStatisticResponse{}
 
@@ -567,32 +544,6 @@ func addStats(dst, src *model.ArtifactStatsObject) {
 	dst.Total += src.Total
 	dst.Active += src.Active
 	dst.Deleted += src.Deleted
-}
-
-func (s *Service) TriggerGarbageCollectContainer(ctx context.Context) (*model.JobUIDResponse, error) {
-	return s.triggerGarbageCollect(ctx, JobTypeArtifactContainerGC)
-}
-
-func (s *Service) TriggerGarbageCollectSoftRemove(ctx context.Context) (*model.JobUIDResponse, error) {
-	return s.triggerGarbageCollect(ctx, JobTypeArtifactSoftRemoveGC)
-}
-
-func (s *Service) triggerGarbageCollect(ctx context.Context, jobType string) (*model.JobUIDResponse, error) {
-	if s.scheduler == nil {
-		return nil, pkgErrors.WithI18nKey(
-			errors.New("artifact job scheduler is not configured"),
-			i18n.ArtifactGcSchedulerNotConfigured,
-		)
-	}
-	jobName := fmt.Sprintf("%s:%d", jobType, time.Now().UnixNano())
-	payload, err := json.Marshal(map[string]any{"retention_time": 0})
-	if err != nil {
-		return nil, err
-	}
-	if err = s.scheduler.RunJob(ctx, jobName, jobType, string(payload), ArtifactGCJobMaxDurationSeconds); err != nil {
-		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactGcTriggerError)
-	}
-	return &model.JobUIDResponse{UID: jobName}, nil
 }
 
 func (s *Service) GarbageCollectSoftRemove(ctx context.Context) (*model.ArtifactGarbageReportRes, error) {

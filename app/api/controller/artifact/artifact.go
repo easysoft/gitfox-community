@@ -360,52 +360,6 @@ func (c *Controller) ListTreeNodes(ctx *gin.Context) {
 	resp.OK(ctx, i18n.ArtifactListSuccess, nodes)
 }
 
-// @Summary 删除指定版本
-// @Description 删除指定版本
-// @Tags artifacts
-// @Accept application/json
-// @Produce application/json
-// @Param versionId path int true "版本ID"
-// @Success 200 {object} resp.ObjectResponse "成功"
-// @Failure 400 {object} resp.ObjectResponse "参数错误"
-// @Failure 500 {object} resp.ObjectResponse "服务器错误"
-// @Router /artifacts/versions/{versionId} [delete]
-func (c *Controller) DeleteVersion(ctx *gin.Context) {
-	versionId, err := req.PathParamAsPositiveInt64(ctx, "versionId")
-	if err != nil {
-		resp.BadRequest(ctx, err)
-		return
-	}
-	if err := c.artSvc.DeleteVersion(ctx, versionId); err != nil {
-		resp.InternalError(ctx, err)
-		return
-	}
-	resp.OK(ctx, i18n.ArtifactDeleteSuccess, nil)
-}
-
-// @Summary 删除指定包
-// @Description 删除指定包
-// @Tags artifacts
-// @Accept application/json
-// @Produce application/json
-// @Param packageId path int true "包ID"
-// @Success 200 {object} resp.ObjectResponse "成功"
-// @Failure 400 {object} resp.ObjectResponse "参数错误"
-// @Failure 500 {object} resp.ObjectResponse "服务器错误"
-// @Router /artifacts/packages/{packageId} [delete]
-func (c *Controller) DeletePackage(ctx *gin.Context) {
-	packageId, err := req.PathParamAsPositiveInt64(ctx, "packageId")
-	if err != nil {
-		resp.BadRequest(ctx, err)
-		return
-	}
-	if err := c.artSvc.DeletePackage(ctx, packageId); err != nil {
-		resp.InternalError(ctx, err)
-		return
-	}
-	resp.OK(ctx, i18n.ArtifactDeleteSuccess, nil)
-}
-
 // @Summary 容量统计
 // @Description 返回非容器格式制品容量统计
 // @Tags artifacts

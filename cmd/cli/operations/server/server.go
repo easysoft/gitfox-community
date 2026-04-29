@@ -13,7 +13,8 @@ import (
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/router"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/logger"
-	artifactSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/artifact"
+
+	// artifactSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/artifact" // TODO: 制品库 GC 定时任务禁用时暂注释
 	cronSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/cron"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	clii18n "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n/cli"
@@ -230,39 +231,40 @@ func (app *App) registerJobHandlers() {
 // 制品库 GC 的 cron 间隔由配置 artifact.gcInterval 驱动（默认 720h = 每30天），
 // 三个 GC 任务通过 minuteOffset 错峰执行，避免同时竞争资源。
 func (app *App) registerRecurringJobs(ctx context.Context) {
-	app.SystemConfig.Artifact.Sanitize()
-	artCfg := &app.SystemConfig.Artifact
-	app.SystemLog.Infow("[Server] Artifact GC config",
-		"recycleBinRetention", artCfg.RecycleBinRetention,
-		"gcInterval", artCfg.GCInterval,
-	)
+	// TODO: 制品库 GC 定时任务暂时禁用，待回收站策略确认后恢复
+	// app.SystemConfig.Artifact.Sanitize()
+	// artCfg := &app.SystemConfig.Artifact
+	// app.SystemLog.Infow("[Server] Artifact GC config",
+	// 	"recycleBinRetention", artCfg.RecycleBinRetention,
+	// 	"gcInterval", artCfg.GCInterval,
+	// )
 
-	gcJobs := []struct {
-		name    string
-		jobName string
-		jobType string
-		offset  int // minuteOffset，用于错峰
-	}{
-		{"container GC", artifactSvc.JobNameArtifactContainerGC, artifactSvc.JobTypeArtifactContainerGC, 0},
-		{"soft-remove GC", artifactSvc.JobNameArtifactSoftRemoveGC, artifactSvc.JobTypeArtifactSoftRemoveGC, 15},
-		{"expired view GC", artifactSvc.JobNameArtifactExpiredViewGC, artifactSvc.JobTypeArtifactExpiredViewGC, 30},
-	}
+	// gcJobs := []struct {
+	// 	name    string
+	// 	jobName string
+	// 	jobType string
+	// 	offset  int // minuteOffset，用于错峰
+	// }{
+	// 	{"container GC", artifactSvc.JobNameArtifactContainerGC, artifactSvc.JobTypeArtifactContainerGC, 0},
+	// 	{"soft-remove GC", artifactSvc.JobNameArtifactSoftRemoveGC, artifactSvc.JobTypeArtifactSoftRemoveGC, 15},
+	// 	{"expired view GC", artifactSvc.JobNameArtifactExpiredViewGC, artifactSvc.JobTypeArtifactExpiredViewGC, 30},
+	// }
 
-	for _, j := range gcJobs {
-		cronExpr := artCfg.GCCronExpr(3, j.offset)
-		if err := app.JobScheduler.AddRecurringWithData(
-			ctx,
-			j.jobName,
-			j.jobType,
-			"{}",
-			cronExpr,
-			time.Duration(artifactSvc.ArtifactGCJobMaxDurationSeconds)*time.Second,
-		); err != nil {
-			app.SystemLog.Errorw("[Server] Failed to register artifact "+j.name+" recurring job", "error", err)
-			panic(err)
-		}
-		app.SystemLog.Infow("[Server] Artifact "+j.name+" recurring job registered", "cron", cronExpr)
-	}
+	// for _, j := range gcJobs {
+	// 	cronExpr := artCfg.GCCronExpr(3, j.offset)
+	// 	if err := app.JobScheduler.AddRecurringWithData(
+	// 		ctx,
+	// 		j.jobName,
+	// 		j.jobType,
+	// 		"{}",
+	// 		cronExpr,
+	// 		time.Duration(artifactSvc.ArtifactGCJobMaxDurationSeconds)*time.Second,
+	// 	); err != nil {
+	// 		app.SystemLog.Errorw("[Server] Failed to register artifact "+j.name+" recurring job", "error", err)
+	// 		panic(err)
+	// 	}
+	// 	app.SystemLog.Infow("[Server] Artifact "+j.name+" recurring job registered", "cron", cronExpr)
+	// }
 
 	// TODO: 重新协商方案 启动时对账：确保所有 trigger 的 cron job 与 DB 一致（修复上次异常退出可能导致的不一致）
 	// app.SystemLog.Info("[Server] Reconciling pipeline cron jobs...")
