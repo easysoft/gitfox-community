@@ -180,16 +180,17 @@ func (s *ScanTaskService) Create(ctx context.Context, in *ScanTaskInput) (*scanM
 	return created, nil
 }
 
-func (s *ScanTaskService) CreateBranchHook(ctx context.Context, repo *repoModel.Repo, branch string, sha string, principal *authModel.Session) (*triggerer.Hook, error) {
+func (s *ScanTaskService) CreateBranchHook(ctx context.Context, repo *repoModel.Repo, branch string, sha, beforeSha string, principal *authModel.Session) (*triggerer.Hook, error) {
 	hook := &triggerer.Hook{
-		Commit:      sha,
-		Trigger:     principal.User.Account,
-		TriggeredBy: principal.User.ID,
-		Action:      "",
-		Parent:      int64(repo.SpaceID),
-		Ref:         branch,
-		Sender:      principal.User.Account,
-		Params:      map[string]string{},
+		Commit:       sha,
+		CommitBefore: beforeSha,
+		Trigger:      principal.User.Account,
+		TriggeredBy:  principal.User.ID,
+		Action:       "",
+		Parent:       int64(repo.SpaceID),
+		Ref:          branch,
+		Sender:       principal.User.Account,
+		Params:       map[string]string{},
 	}
 	return hook, nil
 }

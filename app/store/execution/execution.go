@@ -27,18 +27,19 @@ func (s *Store) Create(ctx context.Context, execution *executionModel.Execution)
 	}
 
 	dbExecution := &Execution{
-		PipelineID: execution.PipelineID,
-		Parent:     execution.Parent,
-		Trigger:    execution.Trigger,
-		Commit:     execution.Commit,
-		Ref:        execution.Ref,
-		Params:     paramsJSON,
-		Started:    execution.Started,
-		Finished:   execution.Finished,
-		Duration:   execution.Duration,
-		Status:     string(execution.Status),
-		Error:      execution.Error,
-		CreatedBy:  execution.CreatedBy,
+		PipelineID:   execution.PipelineID,
+		Parent:       execution.Parent,
+		Trigger:      execution.Trigger,
+		Commit:       execution.Commit,
+		CommitBefore: execution.CommitBefore,
+		Ref:          execution.Ref,
+		Params:       paramsJSON,
+		Started:      execution.Started,
+		Finished:     execution.Finished,
+		Duration:     execution.Duration,
+		Status:       string(execution.Status),
+		Error:        execution.Error,
+		CreatedBy:    execution.CreatedBy,
 	}
 
 	if err := db.Create(dbExecution).Error; err != nil {
@@ -66,18 +67,19 @@ func (s *Store) Update(ctx context.Context, execution *executionModel.Execution)
 	}
 
 	dbExecution := &Execution{
-		PipelineID: execution.PipelineID,
-		Parent:     execution.Parent,
-		Trigger:    execution.Trigger,
-		Commit:     execution.Commit,
-		Ref:        execution.Ref,
-		Params:     paramsJSON,
-		Started:    execution.Started,
-		Finished:   execution.Finished,
-		Duration:   execution.Duration,
-		Status:     string(execution.Status),
-		Error:      execution.Error,
-		CreatedBy:  execution.CreatedBy,
+		PipelineID:   execution.PipelineID,
+		Parent:       execution.Parent,
+		Trigger:      execution.Trigger,
+		Commit:       execution.Commit,
+		CommitBefore: execution.CommitBefore,
+		Ref:          execution.Ref,
+		Params:       paramsJSON,
+		Started:      execution.Started,
+		Finished:     execution.Finished,
+		Duration:     execution.Duration,
+		Status:       string(execution.Status),
+		Error:        execution.Error,
+		CreatedBy:    execution.CreatedBy,
 	}
 
 	if err := db.Model(&Execution{}).Where("id = ?", execution.ID).Updates(dbExecution).Error; err != nil {
@@ -107,21 +109,22 @@ func mapToModel(e *Execution) *executionModel.Execution {
 	}
 
 	return &executionModel.Execution{
-		ID:          e.ID,
-		PipelineID:  e.PipelineID,
-		Parent:      e.Parent,
-		Trigger:     e.Trigger,
-		Commit:      e.Commit,
-		Ref:         e.Ref,
-		Params:      params,
-		Started:     e.Started,
-		Finished:    e.Finished,
-		Duration:    e.Duration,
-		Status:      constant.CIStatus(e.Status),
-		Error:       e.Error,
-		CreatedBy:   e.CreatedBy,
-		CreatedDate: e.CreatedDate,
-		EditedDate:  e.EditedDate,
+		ID:           e.ID,
+		PipelineID:   e.PipelineID,
+		Parent:       e.Parent,
+		Trigger:      e.Trigger,
+		Commit:       e.Commit,
+		CommitBefore: e.CommitBefore,
+		Ref:          e.Ref,
+		Params:       params,
+		Started:      e.Started,
+		Finished:     e.Finished,
+		Duration:     e.Duration,
+		Status:       constant.CIStatus(e.Status),
+		Error:        e.Error,
+		CreatedBy:    e.CreatedBy,
+		CreatedDate:  e.CreatedDate,
+		EditedDate:   e.EditedDate,
 	}
 }
 

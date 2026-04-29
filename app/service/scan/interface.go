@@ -4,11 +4,11 @@ import (
 	"context"
 	"time"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	authModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 	scanModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/triggerer"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
 )
 
@@ -99,7 +99,7 @@ type IScanPlanCondition interface {
 // IScanTask 扫描任务 service 接口
 type IScanTask interface {
 	Create(ctx context.Context, in *ScanTaskInput) (*scanModel.ScanTask, error)
-	CreateBranchHook(ctx context.Context, repo *repoModel.Repo, branch string, sha string, principal *authModel.Session) (*triggerer.Hook, error)
+	CreateBranchHook(ctx context.Context, repo *repoModel.Repo, branch string, sha, beforeSha string, principal *authModel.Session) (*triggerer.Hook, error)
 	Retry(ctx context.Context, session *authModel.Session, taskID uint, repo *repoModel.Repo) (*scanModel.ScanTask, error)
 	GetTaskInfo(ctx context.Context, taskID uint) (*scanModel.ScanTaskInfo, error)
 	ListTaskInfos(ctx context.Context, filter scanModel.ScanTaskInfoReqFilter) (*database.PageResult[*scanModel.ScanTaskInfo], error)

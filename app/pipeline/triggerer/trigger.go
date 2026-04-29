@@ -32,17 +32,18 @@ var _ Triggerer = (*triggerer)(nil)
 
 // Hook represents the payload of a post-commit hook.
 type Hook struct {
-	Parent      int64                  `json:"parent"`
-	Trigger     string                 `json:"trigger"`
-	TriggeredBy int64                  `json:"triggered_by"`
-	Link        string                 `json:"link"`
-	Timestamp   int64                  `json:"timestamp"`
-	Action      constant.TriggerAction `json:"action"`
-	Ref         string                 `json:"ref"`
-	Commit      string                 `json:"commit"`
-	Cron        string                 `json:"cron"`
-	Sender      string                 `json:"sender"`
-	Params      map[string]string      `json:"params"`
+	Parent       int64                  `json:"parent"`
+	Trigger      string                 `json:"trigger"`
+	TriggeredBy  int64                  `json:"triggered_by"`
+	Link         string                 `json:"link"`
+	Timestamp    int64                  `json:"timestamp"`
+	Action       constant.TriggerAction `json:"action"`
+	Ref          string                 `json:"ref"`
+	Commit       string                 `json:"commit"`
+	CommitBefore string                 `json:"commitBefore"`
+	Cron         string                 `json:"cron"`
+	Sender       string                 `json:"sender"`
+	Params       map[string]string      `json:"params"`
 	// 用于匹配 scan trigger 的字段，与 Ref 可能不同
 	// 比如对于 branch 事件，Ref 是 refs/heads/main，而 Match 是 main；对于 tag 事件，Ref 是 refs/tags/v1.0，而 Match 是 v1.0
 	// 比如对于 pull request 事件，Ref 是 refs/pullreq/123/head，而 Match 根据 action 的不同而不同
@@ -121,14 +122,15 @@ func (t *triggerer) Trigger(
 		tigger = "manual"
 	}
 	execution := &executionModel.Execution{
-		Commit:     base.Commit,
-		PipelineID: pipelineID,
-		Trigger:    tigger, // 使用 action 取代原先的 event
-		CreatedBy:  base.Trigger,
-		Parent:     uint(base.Parent),
-		Status:     constant.CIStatusPending,
-		Ref:        base.Ref,
-		Params:     base.Params,
+		Commit:       base.Commit,
+		CommitBefore: base.CommitBefore,
+		PipelineID:   pipelineID,
+		Trigger:      tigger, // 使用 action 取代原先的 event
+		CreatedBy:    base.Trigger,
+		Parent:       uint(base.Parent),
+		Status:       constant.CIStatusPending,
+		Ref:          base.Ref,
+		Params:       base.Params,
 	}
 
 	// For V1 YAML - for now we can just parse the stages and create them sequentially.
