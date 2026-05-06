@@ -35,7 +35,7 @@ const artifactGroupOwnerDescendantsQuery = `
 WITH RECURSIVE art_group_descendants(descendant_id,descendant_parentID,descendant_deleted) AS (
     SELECT id, parentID, deleted
     FROM ops_artifact_groups
-    WHERE viewID = ? AND format = ? AND parentID = 0
+    WHERE artifactID = ? AND format = ? AND parentID = 0
         AND (deleted IS NULL OR deleted = 0)
     UNION ALL
     SELECT id, parentID, deleted
@@ -62,7 +62,7 @@ WITH RECURSIVE art_group_descendants(descendant_id,descendant_parentID,descendan
 func (c *groups) Create(ctx context.Context, newObj *model.CreateArtifactGroup) (*model.ArtifactGroup, error) {
 	var row artifactGroup
 	row.ParentID = newObj.ParentID
-	row.ViewID = newObj.ViewID
+	row.ArtifactID = newObj.ArtifactID
 	row.Name = newObj.Name
 	row.Format = string(newObj.Format)
 	if err := c.db.WithContext(ctx).Create(&row).Error; err != nil {
@@ -79,9 +79,9 @@ func (c *groups) GetById(ctx context.Context, id int64) (*model.ArtifactGroup, e
 	return groupToModel(&row), nil
 }
 
-func (c *groups) GetRoot(ctx context.Context, viewId int64, name string, format model.ArtifactFormat) (*model.ArtifactGroup, error) {
+func (c *groups) GetRoot(ctx context.Context, artifactID int64, name string, format model.ArtifactFormat) (*model.ArtifactGroup, error) {
 	var row artifactGroup
-	q := artifactGroup{ViewID: viewId, Name: name, Format: string(format)}
+	q := artifactGroup{ArtifactID: artifactID, Name: name, Format: string(format)}
 	if err := c.db.WithContext(ctx).Where(&q).Where("parentID = 0").First(&row).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
@@ -97,9 +97,9 @@ func (c *groups) GetSubNode(ctx context.Context, parentId int64, name string) (*
 	return groupToModel(&row), nil
 }
 
-func (c *groups) GetEndpointByNames(ctx context.Context, viewId int64, names []string, format model.ArtifactFormat) (*model.ArtifactGroupEndpoint, error) {
+func (c *groups) GetEndpointByNames(ctx context.Context, artifactID int64, names []string, format model.ArtifactFormat) (*model.ArtifactGroupEndpoint, error) {
 	obj := new(model.ArtifactGroupEndpoint)
-	rootNode, err := c.GetRoot(ctx, viewId, names[0], format)
+	rootNode, err := c.GetRoot(ctx, artifactID, names[0], format)
 	if err != nil {
 		return nil, err
 	}
@@ -125,19 +125,19 @@ func (c *groups) GetEndpointByNames(ctx context.Context, viewId int64, names []s
 	return obj, nil
 }
 
-func (c *groups) getOrCreate(ctx context.Context, viewId int64, name string, parentId null.Int, format model.ArtifactFormat) (*model.ArtifactGroup, error) {
+func (c *groups) getOrCreate(ctx context.Context, artifactID int64, name string, parentId null.Int, format model.ArtifactFormat) (*model.ArtifactGroup, error) {
 	var dest *model.ArtifactGroup
 	var err error
 
 	if !parentId.Valid || parentId.Int64 == 0 {
-		dest, err = c.GetRoot(ctx, viewId, name, format)
+		dest, err = c.GetRoot(ctx, artifactID, name, format)
 	} else {
 		dest, err = c.GetSubNode(ctx, parentId.Int64, name)
 	}
 
 	if err != nil {
 		if errors.Is(err, pkgErrors.ErrResourceNotFound) {
-			newObj := &model.CreateArtifactGroup{ViewID: viewId, Name: name, Format: format, ParentID: parentId}
+			newObj := &model.CreateArtifactGroup{ArtifactID: artifactID, Name: name, Format: format, ParentID: parentId}
 			return c.Create(ctx, newObj)
 		}
 		return nil, err
@@ -145,9 +145,9 @@ func (c *groups) getOrCreate(ctx context.Context, viewId int64, name string, par
 	return dest, nil
 }
 
-func (c *groups) RecursiveCreate(ctx context.Context, viewId int64, names []string, format model.ArtifactFormat) (*model.ArtifactGroupEndpoint, error) {
+func (c *groups) RecursiveCreate(ctx context.Context, artifactID int64, names []string, format model.ArtifactFormat) (*model.ArtifactGroupEndpoint, error) {
 	obj := new(model.ArtifactGroupEndpoint)
-	rootNode, err := c.getOrCreate(ctx, viewId, names[0], null.IntFrom(0), format)
+	rootNode, err := c.getOrCreate(ctx, artifactID, names[0], null.IntFrom(0), format)
 	if err != nil {
 		return nil, err
 	}
@@ -160,7 +160,7 @@ func (c *groups) RecursiveCreate(ctx context.Context, viewId int64, names []stri
 
 	obj.Parents = append(obj.Parents, rootNode)
 	for i := 1; i <= pathNum-1; i++ {
-		node, e := c.getOrCreate(ctx, viewId, names[i], null.IntFrom(obj.Parents[i-1].ID), format)
+		node, e := c.getOrCreate(ctx, artifactID, names[i], null.IntFrom(obj.Parents[i-1].ID), format)
 		if e != nil {
 			return nil, e
 		}
@@ -197,12 +197,12 @@ func (c *groups) GetEndpointById(ctx context.Context, id int64) (*model.Artifact
 	return obj, nil
 }
 
-func (c *groups) ListDescendantsForOwner(ctx context.Context, viewId int64, format model.ArtifactFormat) ([]*model.ArtifactGroup, error) {
+func (c *groups) ListDescendantsForOwner(ctx context.Context, artifactID int64, format model.ArtifactFormat) ([]*model.ArtifactGroup, error) {
 	query := artifactGroupOwnerDescendantsQuery + `
 		SELECT ops_artifact_groups.* ` + `
 		FROM ops_artifact_groups INNER JOIN art_group_descendants on id = descendant_id`
 	var rows []*artifactGroup
-	if err := c.db.WithContext(ctx).Raw(query, viewId, format).Scan(&rows).Error; err != nil {
+	if err := c.db.WithContext(ctx).Raw(query, artifactID, format).Scan(&rows).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
 	return groupsToModel(rows), nil
@@ -239,9 +239,9 @@ func (c *groups) SoftDeleteById(ctx context.Context, groupId int64) error {
 	return nil
 }
 
-// DeleteByViewID 硬删指定 view 下的所有 group 记录（含已软删的）。
-func (c *groups) DeleteByViewID(ctx context.Context, viewId int64) (int64, error) {
-	result := c.db.WithContext(ctx).Where("viewID = ?", viewId).Delete(&artifactGroup{})
+// DeleteByArtifactID 硬删指定 view 下的所有 group 记录（含已软删的）。
+func (c *groups) DeleteByArtifactID(ctx context.Context, artifactID int64) (int64, error) {
+	result := c.db.WithContext(ctx).Where("artifactID = ?", artifactID).Delete(&artifactGroup{})
 	if result.Error != nil {
 		return 0, database.ProcessSQLErrorf(ctx, result.Error)
 	}

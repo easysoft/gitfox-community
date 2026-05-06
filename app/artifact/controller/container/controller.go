@@ -215,13 +215,13 @@ type tagInfo struct {
 }
 
 // findContainerTag 按镜像名、命名空间（groupName）和 tag 查找镜像版本及关联资源。
-func findContainerTag(ctx context.Context, artStore artifactStore.Interface, viewId int64, pkgName, groupName, tag string) (*tagInfo, error) {
+func findContainerTag(ctx context.Context, artStore artifactStore.Interface, artifactID int64, pkgName, groupName, tag string) (*tagInfo, error) {
 	log := logger.GetLogger(ctx)
-	dbPkg, err := artStore.Packages().GetByName(ctx, pkgName, groupName, viewId, model.ArtifactContainerFormat)
+	dbPkg, err := artStore.Packages().GetByName(ctx, pkgName, groupName, artifactID, model.ArtifactContainerFormat)
 	if err != nil {
 		return nil, err
 	}
-	dbVer, err := artStore.Versions().GetByVersion(ctx, dbPkg.ID, viewId, tag)
+	dbVer, err := artStore.Versions().GetByVersion(ctx, dbPkg.ID, artifactID, tag)
 	if err != nil {
 		return nil, err
 	}
@@ -488,7 +488,7 @@ func (c *Controller) GetContainerTag(ctx context.Context, req *http.Request, man
 func (c *Controller) getContainerTag(ctx context.Context, req *http.Request, manifestReq *ContainerManifestRequest, head bool) (HttpResponseWriter, error) {
 	// TODO: 权限检查
 	view := manifestReq.View
-	t, err := findContainerTag(ctx, c.artStore, view.ViewID, manifestReq.RepoName, manifestReq.GroupName, manifestReq.Tag)
+	t, err := findContainerTag(ctx, c.artStore, view.ArtifactID, manifestReq.RepoName, manifestReq.GroupName, manifestReq.Tag)
 	if err != nil {
 		return nil, err
 	}
@@ -509,17 +509,17 @@ func (c *Controller) PutContainerTag(ctx context.Context, req *http.Request, man
 	view := manifestReq.View
 
 	// 有 GroupName 时自动创建 group，并将 groupId 与 namespace 传入 descriptor
-	groupId, err := c.getOrCreateGroup(ctx, view.ViewID, manifestReq.GroupName)
+	groupId, err := c.getOrCreateGroup(ctx, view.ArtifactID, manifestReq.GroupName)
 	if err != nil {
 		return nil, err
 	}
 
 	uploader := ctnAdapter.NewManifestUploader(c.artStore, view, "")
 	uploader.Prepare(func(desc *adapter.PackageDescriptor) {
-		desc.Name      = manifestReq.RepoName
+		desc.Name = manifestReq.RepoName
 		desc.Namespace = manifestReq.GroupName // 作为包的命名空间，区分不同 group 下的同名镜像
-		desc.GroupId   = groupId               // 供树节点挂载使用
-		desc.Version   = manifestReq.Tag
+		desc.GroupId = groupId                 // 供树节点挂载使用
+		desc.Version = manifestReq.Tag
 	})
 	if err = handleUpload(ctx, req, uploader); err != nil {
 		return nil, err
@@ -534,8 +534,8 @@ func (c *Controller) PutContainerTag(ctx context.Context, req *http.Request, man
 
 // getOrCreateGroup 在指定 view 下按 groupName 查找或创建 container 格式的一级 group。
 // 使用 RecursiveCreate 保证幂等性（group 存在则直接返回）。
-func (c *Controller) getOrCreateGroup(ctx context.Context, viewID int64, groupName string) (int64, error) {
-	ge, err := c.artStore.Groups().RecursiveCreate(ctx, viewID, []string{groupName}, model.ArtifactContainerFormat)
+func (c *Controller) getOrCreateGroup(ctx context.Context, artifactID int64, groupName string) (int64, error) {
+	ge, err := c.artStore.Groups().RecursiveCreate(ctx, artifactID, []string{groupName}, model.ArtifactContainerFormat)
 	if err != nil {
 		return 0, err
 	}
@@ -546,7 +546,7 @@ func (c *Controller) getOrCreateGroup(ctx context.Context, viewID int64, groupNa
 func (c *Controller) DeleteContainerTag(ctx context.Context, req *ContainerManifestRequest) (HttpResponseWriter, error) {
 	// TODO: 权限检查
 	view := req.View
-	t, err := findContainerTag(ctx, c.artStore, view.ViewID, req.RepoName, req.GroupName, req.Tag)
+	t, err := findContainerTag(ctx, c.artStore, view.ArtifactID, req.RepoName, req.GroupName, req.Tag)
 	if err != nil {
 		return nil, err
 	}
@@ -581,13 +581,13 @@ func (c *Controller) ListTags(ctx context.Context, req *ContainerReq) (*tagList,
 		Tags: make([]string, 0),
 	}
 
-	pkgModel, err := c.artStore.Packages().GetByName(ctx, req.RepoName, req.GroupName, req.View.ViewID, model.ArtifactContainerFormat)
+	pkgModel, err := c.artStore.Packages().GetByName(ctx, req.RepoName, req.GroupName, req.View.ArtifactID, model.ArtifactContainerFormat)
 	if err != nil {
 		return &result, nil
 	}
 
 	objects, err := c.artStore.Versions().Find(ctx, model.SearchVersionOption{
-		PackageId: pkgModel.ID, ViewId: req.View.ViewID,
+		PackageId: pkgModel.ID, ArtifactID: req.View.ArtifactID,
 	})
 	if err != nil {
 		return &result, nil

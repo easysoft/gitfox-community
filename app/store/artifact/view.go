@@ -88,7 +88,6 @@ func (c *views) FindByNameInScope(ctx context.Context, spaceId, repoId int64, na
 	return result, nil
 }
 
-
 // SoftDelete 软删除视图（将 deleted 标记为 1）。
 // BeforeUpdate 钩子会自动更新 editedDate，复用为"删除时间"，用于回收站保留期的计算基准。
 // 重要：软删后不应再更新该 view 的其他内容，以保证 editedDate 即删除时间。

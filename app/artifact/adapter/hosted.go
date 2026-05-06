@@ -36,9 +36,9 @@ type ArtifactIndexUpdater interface {
 }
 
 type PackageDescriptor struct {
-	Name      string
-	Namespace string
-	GroupId   int64
+	Name            string
+	Namespace       string
+	GroupId         int64
 	Version         string
 	VersionMetadata MetadataInterface
 	Format          model.ArtifactFormat

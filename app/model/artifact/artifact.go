@@ -114,7 +114,7 @@ type CreateArtifactView struct {
 type ArtifactGroup struct {
 	ID          int64          `json:"id"`
 	ParentID    null.Int       `json:"parentId"`
-	ViewID      int64          `json:"viewId"`
+	ArtifactID  int64          `json:"artifactID"`
 	Name        string         `json:"name"`
 	Format      ArtifactFormat `json:"format"`
 	CreatedBy   string         `json:"createdBy"`
@@ -125,17 +125,17 @@ type ArtifactGroup struct {
 }
 
 type CreateArtifactGroup struct {
-	ParentID null.Int       `json:"parentId"`
-	ViewID   int64          `json:"viewId"`
-	Name     string         `json:"name"`
-	Format   ArtifactFormat `json:"format"`
+	ParentID   null.Int       `json:"parentId"`
+	ArtifactID int64          `json:"artifactID"`
+	Name       string         `json:"name"`
+	Format     ArtifactFormat `json:"format"`
 }
 
 type ArtifactPackage struct {
-	ID        int64  `json:"id"`
-	ViewID    int64  `json:"viewId"`
-	Name      string `json:"name"`
-	Namespace string `json:"namespace"`
+	ID         int64  `json:"id"`
+	ArtifactID int64  `json:"artifactID"`
+	Name       string `json:"name"`
+	Namespace  string `json:"namespace"`
 
 	// GroupID 用于标记 package 所属 group，主要给 raw / maven 风格使用，替代 namespace 的层级含义。
 	// GroupId used for define group of the package, used for raw maven style, instead of the namespace field
@@ -152,11 +152,11 @@ type ArtifactPackage struct {
 }
 
 type CreateArtifactPackage struct {
-	ViewID    int64          `json:"viewId"`
-	Name      string         `json:"name"`
-	Namespace string         `json:"namespace"`
-	GroupID   int64          `json:"groupId"`
-	Format    ArtifactFormat `json:"format"`
+	ArtifactID int64          `json:"artifactID"`
+	Name       string         `json:"name"`
+	Namespace  string         `json:"namespace"`
+	GroupID    int64          `json:"groupId"`
+	Format     ArtifactFormat `json:"format"`
 }
 
 func (p *ArtifactPackage) IsDeleted() bool {
@@ -168,7 +168,7 @@ type ArtifactVersion struct {
 	PackageID int64  `json:"packageId"`
 	Version   string `json:"version"`
 
-	ViewID int64 `json:"viewId"`
+	ArtifactID int64 `json:"artifactID"`
 	// Metadata 保存 version 级元数据，例如版本创建者等附加信息。
 	// Metadata store version-level metadata. example: version creator
 	Metadata string `json:"metadata"`
@@ -181,17 +181,17 @@ type ArtifactVersion struct {
 }
 
 type CreateArtifactVersion struct {
-	PackageID int64  `json:"packageId"`
-	Version   string `json:"version"`
-	ViewID    int64  `json:"viewId"`
-	Metadata  string `json:"metadata"`
+	PackageID  int64  `json:"packageId"`
+	Version    string `json:"version"`
+	ArtifactID int64  `json:"artifactID"`
+	Metadata   string `json:"metadata"`
 }
 
 type ArtifactVersionInfo struct {
-	ID      int64  `gorm:"column:id"`
-	Version string `gorm:"column:version"`
-	ViewID  int64  `gorm:"column:viewID"`
-	Deleted int64  `gorm:"column:deleted"`
+	ID         int64  `gorm:"column:id"`
+	Version    string `gorm:"column:version"`
+	ArtifactID int64  `gorm:"column:artifactID"`
+	Deleted    int64  `gorm:"column:deleted"`
 
 	PackageId        int64          `gorm:"column:packageID"`
 	PackageName      string         `gorm:"column:name"`
@@ -215,9 +215,9 @@ type ArtifactAsset struct {
 	// VersionID binding with package(with format), view
 	VersionID null.Int `json:"versionId"`
 
-	// ViewID 用于无版本资产，例如格式级 index 文件。
-	// ViewID used for none-version assets, like index file for a format
-	ViewID null.Int `json:"viewId"`
+	// ArtifactID 用于无版本资产，例如格式级 index 文件。
+	// ArtifactID used for none-version assets, like index file for a format
+	ArtifactID null.Int `json:"artifactID"`
 
 	// GroupID 用于无版本的文件类资产挂到 group 节点。
 	// GroupId used for file format assets, without version
@@ -244,7 +244,7 @@ type ArtifactAsset struct {
 
 type CreateArtifactAsset struct {
 	VersionID   null.Int       `json:"versionId"`
-	ViewID      null.Int       `json:"viewId"`
+	ArtifactID  null.Int       `json:"artifactID"`
 	GroupID     null.Int       `json:"groupId"`
 	Format      ArtifactFormat `json:"format"`
 	Path        string         `json:"path"`
@@ -265,7 +265,7 @@ type ArtifactAssetExtendBlob struct {
 
 type ArtifactMetaAsset struct {
 	ID          int64          `json:"id"`
-	ViewID      int64          `json:"viewId"`
+	ArtifactID  int64          `json:"artifactID"`
 	Format      ArtifactFormat `json:"format"`
 	Path        string         `json:"path"`
 	ContentType string         `json:"contentType"`
@@ -280,7 +280,7 @@ type ArtifactMetaAsset struct {
 }
 
 type CreateArtifactMetaAsset struct {
-	ViewID      int64          `json:"viewId"`
+	ArtifactID  int64          `json:"artifactID"`
 	Format      ArtifactFormat `json:"format"`
 	Path        string         `json:"path"`
 	ContentType string         `json:"contentType"`
@@ -317,28 +317,28 @@ type CreateArtifactBlob struct {
 }
 
 type ArtifactTreeNode struct {
-	ID       int64                `json:"id"`
-	ParentID null.Int             `json:"parentId"`
-	ViewID   int64                `json:"viewId"`
-	Name     string               `json:"name"`
-	Path     string               `json:"path"`
-	Type     ArtifactTreeNodeType `json:"type"`
-	Format   ArtifactFormat       `json:"format"`
-	TargetId null.Int             `json:"targetId"`
+	ID         int64                `json:"id"`
+	ParentID   null.Int             `json:"parentId"`
+	ArtifactID int64                `json:"artifactID"`
+	Name       string               `json:"name"`
+	Path       string               `json:"path"`
+	Type       ArtifactTreeNodeType `json:"type"`
+	Format     ArtifactFormat       `json:"format"`
+	TargetId   null.Int             `json:"targetId"`
 }
 
 type CreateArtifactTreeNode struct {
-	ParentID null.Int             `json:"parentId"`
-	ViewID   int64                `json:"viewId"`
-	Name     string               `json:"name"`
-	Path     string               `json:"path"`
-	Type     ArtifactTreeNodeType `json:"type"`
-	Format   ArtifactFormat       `json:"format"`
-	TargetId null.Int             `json:"targetId"`
+	ParentID   null.Int             `json:"parentId"`
+	ArtifactID int64                `json:"artifactID"`
+	Name       string               `json:"name"`
+	Path       string               `json:"path"`
+	Type       ArtifactTreeNodeType `json:"type"`
+	Format     ArtifactFormat       `json:"format"`
+	TargetId   null.Int             `json:"targetId"`
 }
 
 func (n *ArtifactTreeNode) Key() string {
-	return fmt.Sprintf("%d:%s:%s", n.ViewID, n.Format, n.Path)
+	return fmt.Sprintf("%d:%s:%s", n.ArtifactID, n.Format, n.Path)
 }
 
 func (n *ArtifactTreeNode) IsRoot() bool {
@@ -356,8 +356,8 @@ Parent return the object parent node
 */
 func (n *ArtifactTreeNode) Parent() *ArtifactTreeNode {
 	p := ArtifactTreeNode{
-		ViewID: n.ViewID,
-		Format: n.Format,
+		ArtifactID: n.ArtifactID,
+		Format:     n.Format,
 	}
 
 	parentPath := filepath.Dir(n.Path)
@@ -508,7 +508,7 @@ func (e *ArtifactGroupEndpoint) names() []string {
 
 type SearchVersionOption struct {
 	PackageId      int64
-	ViewId         int64
+	ArtifactID     int64
 	Page           int    `json:"page"`
 	Size           int    `json:"size"`
 	Query          string `json:"query"`
@@ -521,8 +521,8 @@ func (opt SearchVersionOption) Apply(db *gorm.DB) *gorm.DB {
 		q.PackageID = opt.PackageId
 	}
 
-	if opt.ViewId != 0 {
-		q.ViewID = opt.ViewId
+	if opt.ArtifactID != 0 {
+		q.ArtifactID = opt.ArtifactID
 	}
 
 	return db.Where(&q)

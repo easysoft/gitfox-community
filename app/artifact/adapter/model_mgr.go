@@ -122,9 +122,9 @@ func (mm *ModelManager) createExclusiveAsset(ctx context.Context, ver *model.Art
 		return currAsset, true, err
 	}
 	newAsset := &model.ArtifactAsset{
-		GroupID:   null.IntFrom(0),
-		ViewID:    null.IntFrom(mm.view.ViewID),
-		VersionID: null.IntFrom(ver.ID),
+		GroupID:    null.IntFrom(0),
+		ArtifactID: null.IntFrom(mm.view.ArtifactID),
+		VersionID:  null.IntFrom(ver.ID),
 	}
 	if err = mm.createAsset(ctx, newAsset, descriptor); err != nil {
 		return nil, false, err
@@ -150,9 +150,9 @@ func (mm *ModelManager) createNormalAsset(ctx context.Context, ver *model.Artifa
 		return currAsset, true, err
 	}
 	newAsset := &model.ArtifactAsset{
-		GroupID:   null.IntFrom(0),
-		ViewID:    null.IntFrom(mm.view.ViewID),
-		VersionID: null.IntFrom(ver.ID),
+		GroupID:    null.IntFrom(0),
+		ArtifactID: null.IntFrom(mm.view.ArtifactID),
+		VersionID:  null.IntFrom(ver.ID),
 	}
 	if err = mm.createAsset(ctx, newAsset, descriptor); err != nil {
 		return nil, false, err
@@ -179,9 +179,9 @@ func (mm *ModelManager) createNormalAssetToGroup(ctx context.Context, descriptor
 		return currAsset, true, err
 	}
 	newAsset := &model.ArtifactAsset{
-		VersionID: null.IntFrom(0),
-		ViewID:    null.IntFrom(mm.view.ViewID),
-		GroupID:   null.IntFrom(groupId),
+		VersionID:  null.IntFrom(0),
+		ArtifactID: null.IntFrom(mm.view.ArtifactID),
+		GroupID:    null.IntFrom(groupId),
 	}
 	if err = mm.createAsset(ctx, newAsset, descriptor); err != nil {
 		return nil, false, err
@@ -235,7 +235,7 @@ func (mm *ModelManager) createAsset(ctx context.Context, newObj *model.ArtifactA
 	}
 	createReq := &model.CreateArtifactAsset{
 		VersionID:   newObj.VersionID,
-		ViewID:      newObj.ViewID,
+		ArtifactID:  newObj.ArtifactID,
 		GroupID:     newObj.GroupID,
 		Format:      descriptor.Format,
 		Path:        descriptor.Path,
@@ -317,7 +317,7 @@ func (mm *ModelManager) getOrCreateVersion(ctx context.Context) (*model.Artifact
 		}
 	}()
 
-	currVersion, err := mm.store.Versions().GetByVersion(ctx, mm.pkgModel.ID, mm.view.ViewID, mm.pkgDescriptor.Version)
+	currVersion, err := mm.store.Versions().GetByVersion(ctx, mm.pkgModel.ID, mm.view.ArtifactID, mm.pkgDescriptor.Version)
 	if err == nil {
 		if currVersion.IsDeleted() {
 			if e := mm.store.Versions().UnDelete(ctx, currVersion); e != nil {
@@ -332,9 +332,9 @@ func (mm *ModelManager) getOrCreateVersion(ctx context.Context) (*model.Artifact
 	}
 
 	verModel := &model.CreateArtifactVersion{
-		PackageID: mm.pkgModel.ID,
-		Version:   mm.pkgDescriptor.Version,
-		ViewID:    mm.view.ViewID,
+		PackageID:  mm.pkgModel.ID,
+		Version:    mm.pkgDescriptor.Version,
+		ArtifactID: mm.view.ArtifactID,
 	}
 	if mm.pkgDescriptor.VersionMetadata != nil {
 		metadata, e := mm.pkgDescriptor.VersionMetadata.ToJSON()
@@ -365,7 +365,7 @@ func (mm *ModelManager) getOrCreatePackage(ctx context.Context) (*model.Artifact
 		return mm.pkgModel, nil
 	}
 	desc := mm.pkgDescriptor
-	currPkg, err := mm.store.Packages().GetByName(ctx, desc.Name, desc.Namespace, mm.view.ViewID, desc.Format)
+	currPkg, err := mm.store.Packages().GetByName(ctx, desc.Name, desc.Namespace, mm.view.ArtifactID, desc.Format)
 	if err == nil {
 		if currPkg.IsDeleted() {
 			if e := mm.store.Packages().UnDelete(ctx, currPkg); e != nil {
@@ -379,11 +379,11 @@ func (mm *ModelManager) getOrCreatePackage(ctx context.Context) (*model.Artifact
 		return nil, err
 	}
 	pkgModel := &model.CreateArtifactPackage{
-		ViewID:    mm.view.ViewID,
-		Name:      desc.Name,
-		Namespace: desc.Namespace,
-		GroupID:   desc.GroupId, // 来自上层 Prepare 回调（container 的 getOrCreateGroup、raw 的 namespace）
-		Format:    desc.Format,
+		ArtifactID: mm.view.ArtifactID,
+		Name:       desc.Name,
+		Namespace:  desc.Namespace,
+		GroupID:    desc.GroupId, // 来自上层 Prepare 回调（container 的 getOrCreateGroup、raw 的 namespace）
+		Format:     desc.Format,
 	}
 	createdPkg, err := mm.store.Packages().Create(ctx, pkgModel)
 	if err != nil {

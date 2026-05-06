@@ -15,7 +15,7 @@ import (
 // 时间字段使用 *datetime.Local，与系统其他 store 层规范一致。
 // service 层及以上使用 app/model/artifact 下的 struct（时间为 *time.Time）。
 
-// artifactView → ops_artifact_views
+// artifactView → ops_artifact
 type artifactView struct {
 	ID          int64           `gorm:"column:id;primaryKey"`
 	Name        string          `gorm:"column:name"`
@@ -30,7 +30,7 @@ type artifactView struct {
 	Deleted     int8            `gorm:"column:deleted"`
 }
 
-func (artifactView) TableName() string { return "ops_artifact_views" }
+func (artifactView) TableName() string { return "ops_artifact" }
 
 func (v *artifactView) BeforeCreate(_ *gorm.DB) error {
 	now := datetime.NowLocalTime()
@@ -48,7 +48,7 @@ func (v *artifactView) BeforeUpdate(_ *gorm.DB) error {
 type artifactGroup struct {
 	ID          int64           `gorm:"column:id;primaryKey"`
 	ParentID    null.Int        `gorm:"column:parentID"`
-	ViewID      int64           `gorm:"column:viewID"`
+	ArtifactID  int64           `gorm:"column:artifactID"`
 	Name        string          `gorm:"column:name"`
 	Format      string          `gorm:"column:format"`
 	CreatedBy   string          `gorm:"column:createdBy"`
@@ -75,7 +75,7 @@ func (g *artifactGroup) BeforeUpdate(_ *gorm.DB) error {
 // artifactPackage → ops_artifact_packages
 type artifactPackage struct {
 	ID          int64           `gorm:"column:id;primaryKey"`
-	ViewID      int64           `gorm:"column:viewID"`
+	ArtifactID  int64           `gorm:"column:artifactID"`
 	Name        string          `gorm:"column:name"`
 	Namespace   string          `gorm:"column:namespace"`
 	GroupID     int64           `gorm:"column:groupID"`
@@ -106,7 +106,7 @@ type artifactVersion struct {
 	ID          int64           `gorm:"column:id;primaryKey"`
 	PackageID   int64           `gorm:"column:packageID"`
 	Version     string          `gorm:"column:version"`
-	ViewID      int64           `gorm:"column:viewID"`
+	ArtifactID  int64           `gorm:"column:artifactID"`
 	Metadata    string          `gorm:"column:metadata"`
 	CreatedBy   string          `gorm:"column:createdBy"`
 	CreatedDate *datetime.Local `gorm:"column:createdDate"`
@@ -133,7 +133,7 @@ func (v *artifactVersion) BeforeUpdate(_ *gorm.DB) error {
 type artifactAsset struct {
 	ID          int64           `gorm:"column:id;primaryKey"`
 	VersionID   null.Int        `gorm:"column:versionID"`
-	ViewID      null.Int        `gorm:"column:viewID"`
+	ArtifactID  null.Int        `gorm:"column:artifactID"`
 	GroupID     null.Int        `gorm:"column:groupID"`
 	Format      string          `gorm:"column:format"`
 	Path        string          `gorm:"column:path"`
@@ -166,7 +166,7 @@ func (a *artifactAsset) BeforeUpdate(_ *gorm.DB) error {
 // artifactMetaAsset → ops_artifact_meta_assets
 type artifactMetaAsset struct {
 	ID          int64           `gorm:"column:id;primaryKey"`
-	ViewID      int64           `gorm:"column:viewID"`
+	ArtifactID  int64           `gorm:"column:artifactID"`
 	Format      string          `gorm:"column:format"`
 	Path        string          `gorm:"column:path"`
 	ContentType string          `gorm:"column:contentType"`
@@ -227,14 +227,14 @@ func (b *artifactBlob) BeforeUpdate(_ *gorm.DB) error {
 
 // artifactTreeNode → ops_artifact_tree_nodes
 type artifactTreeNode struct {
-	ID       int64    `gorm:"column:id;primaryKey"`
-	ParentID null.Int `gorm:"column:parentID"`
-	ViewID   int64    `gorm:"column:viewID"`
-	Name     string   `gorm:"column:name"`
-	Path     string   `gorm:"column:path"`
-	Type     string   `gorm:"column:type"`
-	Format   string   `gorm:"column:format"`
-	TargetId null.Int `gorm:"column:targetID"`
+	ID         int64    `gorm:"column:id;primaryKey"`
+	ParentID   null.Int `gorm:"column:parentID"`
+	ArtifactID int64    `gorm:"column:artifactID"`
+	Name       string   `gorm:"column:name"`
+	Path       string   `gorm:"column:path"`
+	Type       string   `gorm:"column:type"`
+	Format     string   `gorm:"column:format"`
+	TargetId   null.Int `gorm:"column:targetID"`
 }
 
 func (artifactTreeNode) TableName() string { return "ops_artifact_tree_nodes" }
@@ -307,7 +307,7 @@ func groupToModel(g *artifactGroup) *model.ArtifactGroup {
 	return &model.ArtifactGroup{
 		ID:          g.ID,
 		ParentID:    g.ParentID,
-		ViewID:      g.ViewID,
+		ArtifactID:  g.ArtifactID,
 		Name:        g.Name,
 		Format:      model.ArtifactFormat(g.Format),
 		CreatedBy:   g.CreatedBy,
@@ -325,7 +325,7 @@ func groupFromModel(m *model.ArtifactGroup) *artifactGroup {
 	return &artifactGroup{
 		ID:          m.ID,
 		ParentID:    m.ParentID,
-		ViewID:      m.ViewID,
+		ArtifactID:  m.ArtifactID,
 		Name:        m.Name,
 		Format:      string(m.Format),
 		CreatedBy:   m.CreatedBy,
@@ -352,7 +352,7 @@ func packageToModel(p *artifactPackage) *model.ArtifactPackage {
 	}
 	return &model.ArtifactPackage{
 		ID:          p.ID,
-		ViewID:      p.ViewID,
+		ArtifactID:  p.ArtifactID,
 		Name:        p.Name,
 		Namespace:   p.Namespace,
 		GroupID:     p.GroupID,
@@ -371,7 +371,7 @@ func packageFromModel(m *model.ArtifactPackage) *artifactPackage {
 	}
 	return &artifactPackage{
 		ID:          m.ID,
-		ViewID:      m.ViewID,
+		ArtifactID:  m.ArtifactID,
 		Name:        m.Name,
 		Namespace:   m.Namespace,
 		GroupID:     m.GroupID,
@@ -402,7 +402,7 @@ func versionToModel(v *artifactVersion) *model.ArtifactVersion {
 		ID:          v.ID,
 		PackageID:   v.PackageID,
 		Version:     v.Version,
-		ViewID:      v.ViewID,
+		ArtifactID:  v.ArtifactID,
 		Metadata:    v.Metadata,
 		CreatedBy:   v.CreatedBy,
 		CreatedDate: v.CreatedDate,
@@ -420,7 +420,7 @@ func versionFromModel(m *model.ArtifactVersion) *artifactVersion {
 		ID:          m.ID,
 		PackageID:   m.PackageID,
 		Version:     m.Version,
-		ViewID:      m.ViewID,
+		ArtifactID:  m.ArtifactID,
 		Metadata:    m.Metadata,
 		CreatedBy:   m.CreatedBy,
 		CreatedDate: m.CreatedDate,
@@ -447,7 +447,7 @@ func assetToModel(a *artifactAsset) *model.ArtifactAsset {
 	return &model.ArtifactAsset{
 		ID:          a.ID,
 		VersionID:   a.VersionID,
-		ViewID:      a.ViewID,
+		ArtifactID:  a.ArtifactID,
 		GroupID:     a.GroupID,
 		Format:      model.ArtifactFormat(a.Format),
 		Path:        a.Path,
@@ -471,7 +471,7 @@ func assetFromModel(m *model.ArtifactAsset) *artifactAsset {
 	return &artifactAsset{
 		ID:          m.ID,
 		VersionID:   m.VersionID,
-		ViewID:      m.ViewID,
+		ArtifactID:  m.ArtifactID,
 		GroupID:     m.GroupID,
 		Format:      string(m.Format),
 		Path:        m.Path,
@@ -504,7 +504,7 @@ func metaAssetToModel(m *artifactMetaAsset) *model.ArtifactMetaAsset {
 	}
 	return &model.ArtifactMetaAsset{
 		ID:          m.ID,
-		ViewID:      m.ViewID,
+		ArtifactID:  m.ArtifactID,
 		Format:      model.ArtifactFormat(m.Format),
 		Path:        m.Path,
 		ContentType: m.ContentType,
@@ -525,7 +525,7 @@ func metaAssetFromModel(src *model.ArtifactMetaAsset) *artifactMetaAsset {
 	}
 	return &artifactMetaAsset{
 		ID:          src.ID,
-		ViewID:      src.ViewID,
+		ArtifactID:  src.ArtifactID,
 		Format:      string(src.Format),
 		Path:        src.Path,
 		ContentType: src.ContentType,
@@ -591,14 +591,14 @@ func nodeToModel(n *artifactTreeNode) *model.ArtifactTreeNode {
 		return nil
 	}
 	return &model.ArtifactTreeNode{
-		ID:       n.ID,
-		ParentID: n.ParentID,
-		ViewID:   n.ViewID,
-		Name:     n.Name,
-		Path:     n.Path,
-		Type:     model.ArtifactTreeNodeType(n.Type),
-		Format:   model.ArtifactFormat(n.Format),
-		TargetId: n.TargetId,
+		ID:         n.ID,
+		ParentID:   n.ParentID,
+		ArtifactID: n.ArtifactID,
+		Name:       n.Name,
+		Path:       n.Path,
+		Type:       model.ArtifactTreeNodeType(n.Type),
+		Format:     model.ArtifactFormat(n.Format),
+		TargetId:   n.TargetId,
 	}
 }
 
@@ -607,14 +607,14 @@ func nodeFromModel(m *model.ArtifactTreeNode) *artifactTreeNode {
 		return nil
 	}
 	return &artifactTreeNode{
-		ID:       m.ID,
-		ParentID: m.ParentID,
-		ViewID:   m.ViewID,
-		Name:     m.Name,
-		Path:     m.Path,
-		Type:     string(m.Type),
-		Format:   string(m.Format),
-		TargetId: m.TargetId,
+		ID:         m.ID,
+		ParentID:   m.ParentID,
+		ArtifactID: m.ArtifactID,
+		Name:       m.Name,
+		Path:       m.Path,
+		Type:       string(m.Type),
+		Format:     string(m.Format),
+		TargetId:   m.TargetId,
 	}
 }
 

@@ -55,10 +55,10 @@ func (s *Store) MetaAssets() MetaAssetInterface { return s.metaAssets }
 func (s *Store) Blobs() BlobInterface           { return s.blobs }
 func (s *Store) Nodes() TreeNodeInterface       { return s.nodes }
 
-func (s *Store) FindPackages(ctx context.Context, viewId int64, filter *model.ArtifactFilter) ([]*model.ArtifactListItem, error) {
+func (s *Store) FindPackages(ctx context.Context, artifactID int64, filter *model.ArtifactFilter) ([]*model.ArtifactListItem, error) {
 	// 通过子查询先取每个 package 在当前 view 下的最新 version，再回查 package 列表。
 	result := make([]*model.ArtifactListItem, 0)
-	q := artifactPackage{ViewID: viewId}
+	q := artifactPackage{ArtifactID: artifactID}
 
 	stmt := s.db.WithContext(ctx).Model(&artifactPackage{}).
 		Select(`ops_artifact_packages.format, ops_artifact_packages.name, ops_artifact_packages.namespace,
@@ -66,10 +66,10 @@ func (s *Store) FindPackages(ctx context.Context, viewId int64, filter *model.Ar
 		Joins(`JOIN (
 			SELECT packageID, MAX(editedDate) AS latest_updated
 				FROM ops_artifact_versions
-				WHERE viewID = ?
+				WHERE artifactID = ?
 				GROUP BY packageID) AS latest_versions
 			ON ops_artifact_packages.id = latest_versions.packageID
-				AND ops_artifact_packages.deleted = 0`, viewId).
+				AND ops_artifact_packages.deleted = 0`, artifactID).
 		Joins(`JOIN ops_artifact_versions
 			ON ops_artifact_versions.packageID = latest_versions.packageID
 				AND ops_artifact_versions.editedDate = latest_versions.latest_updated
@@ -193,14 +193,14 @@ func (s *Store) StatisticAssets(ctx context.Context, retentionTime time.Duration
 	return report, nil
 }
 
-func (s *Store) GetVersion(ctx context.Context, viewId int64,
+func (s *Store) GetVersion(ctx context.Context, artifactID int64,
 	packageName, groupName, versionName string, format model.ArtifactFormat,
 ) (*model.ArtifactVersion, error) {
-	dbPkg, err := s.packages.GetByName(ctx, packageName, groupName, viewId, format)
+	dbPkg, err := s.packages.GetByName(ctx, packageName, groupName, artifactID, format)
 	if err != nil {
 		return nil, err
 	}
-	dbVer, err := s.versions.GetByVersion(ctx, dbPkg.ID, viewId, versionName)
+	dbVer, err := s.versions.GetByVersion(ctx, dbPkg.ID, artifactID, versionName)
 	if err != nil {
 		return nil, err
 	}

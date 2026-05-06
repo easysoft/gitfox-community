@@ -31,7 +31,7 @@ func (c *Controller) Service() artifactSvc.Interface {
 }
 
 // @Summary 查询制品包列表
-// @Description 列出指定作用域下的制品包。viewId > 0 时优先按指定视图查询，否则按默认 view 逻辑查询
+// @Description 列出指定作用域下的制品包。artifactID > 0 时优先按指定视图查询，否则按默认 view 逻辑查询
 // @Tags artifacts
 // @Accept application/json
 // @Produce application/json
@@ -59,7 +59,7 @@ func (c *Controller) ListPackages(ctx *gin.Context) {
 		Format: req.QueryParamOrDefault(ctx, "format", ""),
 		Query:  req.QueryParamOrDefault(ctx, "query", ""),
 	}
-	list, err := c.artSvc.ListPackages(ctx, view.ViewID, filter)
+	list, err := c.artSvc.ListPackages(ctx, view.ArtifactID, filter)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return
@@ -93,7 +93,7 @@ func (c *Controller) CreateView(ctx *gin.Context) {
 }
 
 // @Summary 查询版本列表
-// @Description 列出指定制品包的版本列表。viewId > 0 时优先按指定视图查询，否则按默认 view 逻辑查询
+// @Description 列出指定制品包的版本列表。artifactID > 0 时优先按指定视图查询，否则按默认 view 逻辑查询
 // @Tags artifacts
 // @Accept application/json
 // @Produce application/json
@@ -115,7 +115,7 @@ func (c *Controller) ListVersions(ctx *gin.Context) {
 		return
 	}
 
-	versions, err := c.artSvc.ListVersions(ctx, view.ViewID,
+	versions, err := c.artSvc.ListVersions(ctx, view.ArtifactID,
 		reqBody.PackageName, reqBody.GroupName, model.ArtifactFormat(reqBody.Format), model.SearchVersionOption{})
 	if err != nil {
 		resp.InternalError(ctx, err)
@@ -260,7 +260,7 @@ func (c *Controller) DownloadAsset(ctx *gin.Context) {
 // @Param format path string true "制品格式"
 // @Param spaceId formData int false "空间ID"
 // @Param repoId formData int false "仓库ID"
-// @Param viewId formData int false "视图ID，> 0 时优先按该视图上传"
+// @Param artifactID formData int false "视图ID，> 0 时优先按该视图上传"
 // @Success 200 {object} resp.ObjectResponse "成功"
 // @Failure 400 {object} resp.ObjectResponse "参数错误"
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
@@ -273,9 +273,9 @@ func (c *Controller) Upload(ctx *gin.Context) {
 		return
 	}
 	view, err := c.artSvc.ParseSpaceView(ctx, &model.SpaceRepoReq{
-		SpaceID: reqBody.SpaceID,
-		RepoID:  reqBody.RepoID,
-		ViewID:  reqBody.ViewID,
+		SpaceID:    reqBody.SpaceID,
+		RepoID:     reqBody.RepoID,
+		ArtifactID: reqBody.ArtifactID,
 	})
 	if err != nil {
 		resp.BadRequest(ctx, err)
@@ -294,11 +294,11 @@ func (c *Controller) Upload(ctx *gin.Context) {
 }
 
 // @Summary 创建分组
-// @Description 创建 group 节点。viewId 必传且必须大于 0
+// @Description 创建 group 节点。artifactID 必传且必须大于 0
 // @Tags artifacts
 // @Accept application/json
 // @Produce application/json
-// @Param body body model.CreateGroupReq true "请求参数(viewId 必填；names 为 '.' 分隔的分组路径；format 必须是支持的格式枚举)"
+// @Param body body model.CreateGroupReq true "请求参数(artifactID 必填；names 为 '.' 分隔的分组路径；format 必须是支持的格式枚举)"
 // @Success 200 {object} resp.ObjectResponse "成功"
 // @Failure 400 {object} resp.ObjectResponse "参数错误"
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
@@ -311,14 +311,14 @@ func (c *Controller) CreateGroup(ctx *gin.Context) {
 		return
 	}
 
-	// 业务规则校验（viewId > 0、format 枚举、names 合法、container 不嵌套）
+	// 业务规则校验（artifactID > 0、format 枚举、names 合法、container 不嵌套）
 	if err := params.Validate(); err != nil {
 		resp.BadRequest(ctx, err)
 		return
 	}
 
 	// 检查视图是否存在
-	if err := c.artSvc.ViewExists(ctx, params.ViewID); err != nil {
+	if err := c.artSvc.ViewExists(ctx, params.ArtifactID); err != nil {
 		resp.BadRequest(ctx, err)
 		return
 	}
@@ -327,20 +327,20 @@ func (c *Controller) CreateGroup(ctx *gin.Context) {
 	format := model.ArtifactFormat(params.Format)
 
 	// 检查分组路径是否已存在（防止重复创建）
-	exists, err := c.artSvc.GroupPathExists(ctx, params.ViewID, names, format)
+	exists, err := c.artSvc.GroupPathExists(ctx, params.ArtifactID, names, format)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return
 	}
 	if exists {
 		resp.BadRequest(ctx, errors.WithI18nKey(
-			fmt.Errorf("group path %q already exists under viewId=%d format=%s", params.Names, params.ViewID, params.Format),
+			fmt.Errorf("group path %q already exists under artifactID=%d format=%s", params.Names, params.ArtifactID, params.Format),
 			i18n.ArtifactGroupDuplicate,
 		))
 		return
 	}
 
-	ge, err := c.artSvc.CreateGroup(ctx, params.ViewID, names, format)
+	ge, err := c.artSvc.CreateGroup(ctx, params.ArtifactID, names, format)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return
@@ -349,7 +349,7 @@ func (c *Controller) CreateGroup(ctx *gin.Context) {
 }
 
 // @Summary 查询格式列表
-// @Description 列出指定作用域下的已用格式。viewId > 0 时优先按指定视图查询，否则按默认 view 逻辑查询
+// @Description 列出指定作用域下的已用格式。artifactID > 0 时优先按指定视图查询，否则按默认 view 逻辑查询
 // @Tags artifacts
 // @Accept application/json
 // @Produce application/json
@@ -370,7 +370,7 @@ func (c *Controller) ListFormats(ctx *gin.Context) {
 		resp.BadRequest(ctx, err)
 		return
 	}
-	formats, err := c.artSvc.ListFormats(ctx, view.ViewID)
+	formats, err := c.artSvc.ListFormats(ctx, view.ArtifactID)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return

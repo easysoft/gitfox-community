@@ -86,11 +86,11 @@ func (opt VersionWithDeletedBeforeOption) Apply(db *gorm.DB) *gorm.DB {
 	return db.Where("deleted = 1")
 }
 
-// AssetViewOption 按 viewID 过滤 assets。
+// AssetViewOption 按 artifactID 过滤 assets。
 type AssetViewOption struct {
-	ViewId int64
+	ArtifactID int64
 }
 
 func (opt AssetViewOption) Apply(db *gorm.DB) *gorm.DB {
-	return db.Where("ops_artifact_assets.viewID = ?", opt.ViewId)
+	return db.Where("ops_artifact_assets.artifactID = ?", opt.ArtifactID)
 }

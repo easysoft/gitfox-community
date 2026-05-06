@@ -26,8 +26,8 @@ type Interface interface {
 	MetaAssets() MetaAssetInterface
 	Blobs() BlobInterface
 	Nodes() TreeNodeInterface
-	FindPackages(ctx context.Context, viewId int64, filter *model.ArtifactFilter) ([]*model.ArtifactListItem, error)
-	GetVersion(ctx context.Context, viewId int64, packageName, groupName, versionName string, format model.ArtifactFormat) (*model.ArtifactVersion, error)
+	FindPackages(ctx context.Context, artifactID int64, filter *model.ArtifactFilter) ([]*model.ArtifactListItem, error)
+	GetVersion(ctx context.Context, artifactID int64, packageName, groupName, versionName string, format model.ArtifactFormat) (*model.ArtifactVersion, error)
 	GetAsset(ctx context.Context, assetId int64) (*model.ArtifactAssetsRes, error)
 	ListAssets(ctx context.Context, versionId int64) ([]*model.ArtifactAssetsRes, error)
 	ListGroupAssets(ctx context.Context, groupId int64) ([]*model.ArtifactAssetsRes, error)
@@ -66,10 +66,10 @@ type ViewInterface interface {
 type PackageInterface interface {
 	Create(ctx context.Context, newObj *model.CreateArtifactPackage) (*model.ArtifactPackage, error)
 	GetByID(ctx context.Context, packageId int64) (*model.ArtifactPackage, error)
-	GetByName(ctx context.Context, name, namespace string, viewId int64, format model.ArtifactFormat) (*model.ArtifactPackage, error)
-	List(ctx context.Context, viewId int64, includeDeleted bool) ([]*model.ArtifactPackage, error)
+	GetByName(ctx context.Context, name, namespace string, artifactID int64, format model.ArtifactFormat) (*model.ArtifactPackage, error)
+	List(ctx context.Context, artifactID int64, includeDeleted bool) ([]*model.ArtifactPackage, error)
 	ListBatch(ctx context.Context, includeDeleted bool, batchSize int, fn func(pkg *model.ArtifactPackage) error) error
-	ListByNamespace(ctx context.Context, viewId int64, namespace string, format model.ArtifactFormat, recurse, includeDeleted bool) ([]*model.ArtifactPackage, error)
+	ListByNamespace(ctx context.Context, artifactID int64, namespace string, format model.ArtifactFormat, recurse, includeDeleted bool) ([]*model.ArtifactPackage, error)
 	Update(ctx context.Context, upObj *model.ArtifactPackage) error
 	DeleteById(ctx context.Context, packageId int64) error
 	DeleteByIds(ctx context.Context, packageIds ...int64) (int64, error)
@@ -82,7 +82,7 @@ type PackageInterface interface {
 type VersionInterface interface {
 	Create(ctx context.Context, newObj *model.CreateArtifactVersion) (*model.ArtifactVersion, error)
 	GetByID(ctx context.Context, versionId int64) (*model.ArtifactVersion, error)
-	GetByVersion(ctx context.Context, packageId, viewId int64, version string) (*model.ArtifactVersion, error)
+	GetByVersion(ctx context.Context, packageId, artifactID int64, version string) (*model.ArtifactVersion, error)
 	Update(ctx context.Context, ver *model.ArtifactVersion) error
 	DeleteById(ctx context.Context, versionId int64) error
 	DeleteByIds(ctx context.Context, versionIds ...int64) (int64, error)
@@ -96,7 +96,7 @@ type AssetInterface interface {
 	Create(ctx context.Context, newObj *model.CreateArtifactAsset) (*model.ArtifactAsset, error)
 	GetById(ctx context.Context, assetId int64) (*model.ArtifactAsset, error)
 	GetPath(ctx context.Context, path string, format model.ArtifactFormat) (*model.ArtifactAsset, error)
-	GetMetaAsset(ctx context.Context, path string, viewId int64, format model.ArtifactFormat) (*model.ArtifactAsset, error)
+	GetMetaAsset(ctx context.Context, path string, artifactID int64, format model.ArtifactFormat) (*model.ArtifactAsset, error)
 	GetVersionAsset(ctx context.Context, path string, versionId int64) (*model.ArtifactAsset, error)
 	GetGroupAsset(ctx context.Context, path string, groupId int64) (*model.ArtifactAsset, error)
 	FindMain(ctx context.Context, versionId int64) ([]*model.ArtifactAsset, error)
@@ -107,16 +107,16 @@ type AssetInterface interface {
 	DeleteById(ctx context.Context, assetId int64) error
 	Search(ctx context.Context, option ...SearchOption) ([]*model.ArtifactAsset, error)
 	SearchExtendBlob(ctx context.Context, options ...SearchOption) ([]*model.ArtifactAssetExtendBlob, error)
-	DeleteByViewID(ctx context.Context, viewId int64) (int64, error)
+	DeleteByArtifactID(ctx context.Context, artifactID int64) (int64, error)
 }
 
 type MetaAssetInterface interface {
 	Create(ctx context.Context, newObj *model.CreateArtifactMetaAsset) (*model.ArtifactMetaAsset, error)
 	GetById(ctx context.Context, metaAssetId int64) (*model.ArtifactMetaAsset, error)
-	GetByPath(ctx context.Context, path string, viewId int64, format model.ArtifactFormat) (*model.ArtifactMetaAsset, error)
+	GetByPath(ctx context.Context, path string, artifactID int64, format model.ArtifactFormat) (*model.ArtifactMetaAsset, error)
 	Update(ctx context.Context, metaAsset *model.ArtifactMetaAsset) error
 	DeleteById(ctx context.Context, metaAssetId int64) error
-	DeleteByViewID(ctx context.Context, viewId int64) (int64, error)
+	DeleteByArtifactID(ctx context.Context, artifactID int64) (int64, error)
 }
 
 type BlobInterface interface {
@@ -135,14 +135,14 @@ type TreeNodeInterface interface {
 	Create(ctx context.Context, newObj *model.CreateArtifactTreeNode) (*model.ArtifactTreeNode, error)
 	RecurseCreate(ctx context.Context, obj *model.ArtifactTreeNode) error
 	GetById(ctx context.Context, id int64) (*model.ArtifactTreeNode, error)
-	GetByPath(ctx context.Context, viewId int64, path string, format model.ArtifactFormat) (*model.ArtifactTreeNode, error)
-	GetByTarget(ctx context.Context, viewId int64, nodeType model.ArtifactTreeNodeType, id int64) (*model.ArtifactTreeNode, error)
-	ListFormats(ctx context.Context, viewId int64) ([]*model.ArtifactTreeNode, error)
+	GetByPath(ctx context.Context, artifactID int64, path string, format model.ArtifactFormat) (*model.ArtifactTreeNode, error)
+	GetByTarget(ctx context.Context, artifactID int64, nodeType model.ArtifactTreeNodeType, id int64) (*model.ArtifactTreeNode, error)
+	ListFormats(ctx context.Context, artifactID int64) ([]*model.ArtifactTreeNode, error)
 	ListByParentId(ctx context.Context, parentId int64) ([]*model.ArtifactTreeNode, error)
 	Update(ctx context.Context, upObj *model.ArtifactTreeNode) error
 	DeleteById(ctx context.Context, nodeId int64) error
 	RecurseDeleteById(ctx context.Context, nodeId int64) error
-	DeleteByViewID(ctx context.Context, viewId int64) (int64, error)
+	DeleteByArtifactID(ctx context.Context, artifactID int64) (int64, error)
 }
 
 type GroupInterface interface {
@@ -153,28 +153,28 @@ type GroupInterface interface {
 	GetById(ctx context.Context, groupId int64) (*model.ArtifactGroup, error)
 
 	// GetRoot 在指定 view 下查找指定名称和格式的根分组（parentID IS NULL）。
-	// 供 container push 时通过 (viewId, groupName) 精确定位 namespace group。
-	GetRoot(ctx context.Context, viewId int64, name string, format model.ArtifactFormat) (*model.ArtifactGroup, error)
+	// 供 container push 时通过 (artifactID, groupName) 精确定位 namespace group。
+	GetRoot(ctx context.Context, artifactID int64, name string, format model.ArtifactFormat) (*model.ArtifactGroup, error)
 
 	// GetSubNode 查找指定父分组下的子分组（按名称）。
 	GetSubNode(ctx context.Context, parentId int64, name string) (*model.ArtifactGroup, error)
 
 	// GetEndpointByNames 按路径名数组查找（或递归建立）分组链路，返回末级分组及路径。
 	// 用于 raw/generic 格式按命名空间路径索引分组。
-	GetEndpointByNames(ctx context.Context, viewId int64, names []string, format model.ArtifactFormat) (*model.ArtifactGroupEndpoint, error)
+	GetEndpointByNames(ctx context.Context, artifactID int64, names []string, format model.ArtifactFormat) (*model.ArtifactGroupEndpoint, error)
 
 	// GetEndpointById 按 group ID 查找分组端点（含完整路径信息）。
 	GetEndpointById(ctx context.Context, id int64) (*model.ArtifactGroupEndpoint, error)
 
 	// RecursiveCreate 按名称路径递归创建分组，返回末级分组端点。
 	// 用于 raw 格式在上传时自动建立 namespace 目录树。
-	RecursiveCreate(ctx context.Context, viewId int64, names []string, format model.ArtifactFormat) (*model.ArtifactGroupEndpoint, error)
+	RecursiveCreate(ctx context.Context, artifactID int64, names []string, format model.ArtifactFormat) (*model.ArtifactGroupEndpoint, error)
 
 	// All 返回所有未软删的分组（不推荐在生产路径直接使用，仅供管理/同步任务）。
 	All(ctx context.Context) ([]*model.ArtifactGroup, error)
 
 	// ListDescendantsForOwner 列出指定 view 下指定格式的所有后代分组（用于树形展示）。
-	ListDescendantsForOwner(ctx context.Context, viewId int64, format model.ArtifactFormat) ([]*model.ArtifactGroup, error)
+	ListDescendantsForOwner(ctx context.Context, artifactID int64, format model.ArtifactFormat) ([]*model.ArtifactGroup, error)
 
 	// ListDescendants 列出指定分组的所有后代分组（不限格式）。
 	ListDescendants(ctx context.Context, id int64) ([]*model.ArtifactGroup, error)
@@ -182,6 +182,6 @@ type GroupInterface interface {
 	// SoftDeleteById 软删除分组（将 deleted 置为 1）。
 	SoftDeleteById(ctx context.Context, groupId int64) error
 
-	// DeleteByViewID 物理删除指定 view 下的所有分组，供 view 删除时级联使用。
-	DeleteByViewID(ctx context.Context, viewId int64) (int64, error)
+	// DeleteByArtifactID 物理删除指定 view 下的所有分组，供 view 删除时级联使用。
+	DeleteByArtifactID(ctx context.Context, artifactID int64) (int64, error)
 }
