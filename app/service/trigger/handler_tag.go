@@ -13,11 +13,12 @@ import (
 func (s *Service) handleEventTagCreated(ctx context.Context,
 	event *events.Event[*gitevents.TagCreatedPayload]) error {
 	hook := &triggerer.Hook{
-		Trigger: event.Payload.Account,
-		Action:  constant.TriggerActionTagCreated,
-		Ref:     event.Payload.Ref,
-		Match:   strings.TrimPrefix(event.Payload.Ref, "refs/tags/"),
-		Commit:  event.Payload.SHA,
+		Trigger:      event.Payload.Account,
+		Action:       constant.TriggerActionTagCreated,
+		Ref:          event.Payload.Ref,
+		Match:        strings.TrimPrefix(event.Payload.Ref, "refs/tags/"),
+		Commit:       event.Payload.SHA,
+		CommitBefore: event.Payload.SHA,
 	}
 	return s.trigger(ctx, event.Payload.RepoID, hook)
 }

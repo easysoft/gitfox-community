@@ -12,33 +12,36 @@ import (
 
 func (s *Service) handleEventPullReqCreated(ctx context.Context, event *events.Event[*pullreqevents.CreatedPayload]) error {
 	hook := &triggerer.Hook{
-		Trigger: event.Payload.Account,
-		Action:  constant.TriggerActionPullReqCreated,
-		Ref:     fmt.Sprintf("refs/pullreq/%d/head", event.Payload.PullReqID),
-		Match:   event.Payload.SourceBranch,
-		Commit:  event.Payload.SourceSHA,
+		Trigger:      event.Payload.Account,
+		Action:       constant.TriggerActionPullReqCreated,
+		Ref:          fmt.Sprintf("refs/pullreq/%d/head", event.Payload.PullReqID),
+		Match:        event.Payload.SourceBranch,
+		Commit:       event.Payload.SourceSHA,
+		CommitBefore: event.Payload.MergeBaseSHA,
 	}
 	return s.trigger(ctx, event.Payload.SourceRepoID, hook)
 }
 
 func (s *Service) handleEventPullReqReopened(ctx context.Context, event *events.Event[*pullreqevents.ReopenedPayload]) error {
 	hook := &triggerer.Hook{
-		Trigger: event.Payload.Account,
-		Action:  constant.TriggerActionPullReqReopened,
-		Ref:     fmt.Sprintf("refs/pullreq/%d/head", event.Payload.PullReqID),
-		Match:   event.Payload.SourceBranch,
-		Commit:  event.Payload.SourceSHA,
+		Trigger:      event.Payload.Account,
+		Action:       constant.TriggerActionPullReqReopened,
+		Ref:          fmt.Sprintf("refs/pullreq/%d/head", event.Payload.PullReqID),
+		Match:        event.Payload.SourceBranch,
+		Commit:       event.Payload.SourceSHA,
+		CommitBefore: event.Payload.MergeBaseSHA,
 	}
 	return s.trigger(ctx, event.Payload.SourceRepoID, hook)
 }
 
 func (s *Service) handleEventPullReqBranchUpdated(ctx context.Context, event *events.Event[*pullreqevents.BranchUpdatedPayload]) error {
 	hook := &triggerer.Hook{
-		Trigger: event.Payload.Account,
-		Action:  constant.TriggerActionPullReqBranchUpdated,
-		Ref:     fmt.Sprintf("refs/pullreq/%d/head", event.Payload.PullReqID),
-		Match:   event.Payload.SourceBranch,
-		Commit:  event.Payload.NewSHA,
+		Trigger:      event.Payload.Account,
+		Action:       constant.TriggerActionPullReqBranchUpdated,
+		Ref:          fmt.Sprintf("refs/pullreq/%d/head", event.Payload.PullReqID),
+		Match:        event.Payload.SourceBranch,
+		Commit:       event.Payload.NewSHA,
+		CommitBefore: event.Payload.OldSHA,
 	}
 	return s.trigger(ctx, event.Payload.SourceRepoID, hook)
 }
