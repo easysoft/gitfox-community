@@ -32,8 +32,8 @@ type CreatorInfo struct {
 
 // SpaceRepoReq 定义接收含有 spaceId 和 repoId 参数的通用请求。
 type SpaceRepoReq struct {
-	SpaceID int64 `json:"spaceId"`
-	RepoID  int64 `json:"repoId"`
+	SpaceID int64 `form:"spaceId"`
+	RepoID  int64 `form:"repoId"`
 }
 
 type SoftRemoveEntitiesReq struct {

@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	stderrors "errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -10,19 +11,27 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/authorizer"
 	enum "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
+	pkgErrors "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/rbac"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 )
 
 // ArtifactAuthMiddleware returns a middleware that uses Casbin authorizer to enforce artifact access permissions.
+// 该中间件使用 Casbin 授权器强制执行工访问权限。
+// 1. 获取认证会话
+// 2. 从请求中提取空间、存储库和实体上下文
+// 3. 系统管理员短路放行
+// 4. 执行授权
 func ArtifactAuthMiddleware(authz authorizer.Authorizer, action enum.CasbinAction) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx := c.Request.Context()
 		log := logger.GetLoggerFromGin(c)
 
-		// 1. Get Auth Session
+		// 1. 获取认证会话
 		session, ok := req.GetAuthSession(ctx)
 		if !ok || session.User == nil {
 			if action == enum.CasbinActionArtifactPull {
@@ -35,7 +44,7 @@ func ArtifactAuthMiddleware(authz authorizer.Authorizer, action enum.CasbinActio
 			}
 		}
 
-		// 2. Extract Space, Repo and Entity context from Request
+		// 2. 从请求中提取空间、存储库和实体上下文
 		var spaceID int64
 		var repoID int64
 		if c.ContentType() == "application/json" {
@@ -79,7 +88,7 @@ func ArtifactAuthMiddleware(authz authorizer.Authorizer, action enum.CasbinActio
 			entity = model.ParseEntityKind(entityId)
 		}
 
-		// 3. Enforce Authorization
+		// 4. 执行授权
 		err := authz.Authorize(ctx, session, spaceID, repoID, entity, action)
 		var uid int64
 		if session != nil && session.User != nil {
@@ -87,10 +96,15 @@ func ArtifactAuthMiddleware(authz authorizer.Authorizer, action enum.CasbinActio
 		}
 		if err != nil {
 			log.Warnf("Artifact Authorization failed for user %d on space %d repo %d: %v", uid, spaceID, repoID, err)
-			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
-				"code":    403,
-				"message": "access denied",
-			})
+			switch {
+			case err.Error() == "authentication required":
+				err = pkgErrors.WithI18nKey(err, i18n.ArtifactAuthRequired)
+			case stderrors.Is(err, rbac.ErrNotAuthorized), err.Error() == "rbac authorize failed":
+				err = pkgErrors.WithI18nKey(err, i18n.ArtifactPermissionDenied)
+			}
+			err = pkgErrors.WithHttpStatus(err, http.StatusForbidden)
+			resp.Error(c, err)
+			c.Abort()
 			return
 		}
 

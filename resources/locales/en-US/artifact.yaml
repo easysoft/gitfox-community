@@ -83,6 +83,7 @@ artifact:
 
   # Permission
   auth_required: "Authentication required."
+  permission_denied: "You do not have permission to perform this artifact operation."
   permission_set_error: "Failed to set artifact permission."
   permission_subject_invalid: "Invalid permission subject format."
   permission_user_not_found: "User not found for permission subject."

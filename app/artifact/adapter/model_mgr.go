@@ -122,6 +122,7 @@ func (mm *ModelManager) createExclusiveAsset(ctx context.Context, ver *model.Art
 		return currAsset, true, err
 	}
 	newAsset := &model.ArtifactAsset{
+		GroupID:   null.IntFrom(0),
 		ViewID:    null.IntFrom(mm.view.ViewID),
 		VersionID: null.IntFrom(ver.ID),
 	}
@@ -149,6 +150,7 @@ func (mm *ModelManager) createNormalAsset(ctx context.Context, ver *model.Artifa
 		return currAsset, true, err
 	}
 	newAsset := &model.ArtifactAsset{
+		GroupID:   null.IntFrom(0),
 		ViewID:    null.IntFrom(mm.view.ViewID),
 		VersionID: null.IntFrom(ver.ID),
 	}
@@ -177,8 +179,9 @@ func (mm *ModelManager) createNormalAssetToGroup(ctx context.Context, descriptor
 		return currAsset, true, err
 	}
 	newAsset := &model.ArtifactAsset{
-		ViewID:  null.IntFrom(mm.view.ViewID),
-		GroupID: null.IntFrom(groupId),
+		VersionID: null.IntFrom(0),
+		ViewID:    null.IntFrom(mm.view.ViewID),
+		GroupID:   null.IntFrom(groupId),
 	}
 	if err = mm.createAsset(ctx, newAsset, descriptor); err != nil {
 		return nil, false, err

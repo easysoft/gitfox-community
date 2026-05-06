@@ -9,6 +9,7 @@ import (
 	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
 
 	"gorm.io/gorm"
 )
@@ -45,14 +46,14 @@ func NewStore(db *gorm.DB) *Store {
 	}
 }
 
-func (s *Store) Groups() GroupInterface            { return s.groups }
-func (s *Store) Views() ViewInterface              { return s.views }
-func (s *Store) Packages() PackageInterface        { return s.packages }
-func (s *Store) Versions() VersionInterface        { return s.versions }
-func (s *Store) Assets() AssetInterface            { return s.assets }
-func (s *Store) MetaAssets() MetaAssetInterface    { return s.metaAssets }
-func (s *Store) Blobs() BlobInterface              { return s.blobs }
-func (s *Store) Nodes() TreeNodeInterface          { return s.nodes }
+func (s *Store) Groups() GroupInterface         { return s.groups }
+func (s *Store) Views() ViewInterface           { return s.views }
+func (s *Store) Packages() PackageInterface     { return s.packages }
+func (s *Store) Versions() VersionInterface     { return s.versions }
+func (s *Store) Assets() AssetInterface         { return s.assets }
+func (s *Store) MetaAssets() MetaAssetInterface { return s.metaAssets }
+func (s *Store) Blobs() BlobInterface           { return s.blobs }
+func (s *Store) Nodes() TreeNodeInterface       { return s.nodes }
 
 func (s *Store) FindPackages(ctx context.Context, viewId int64, filter *model.ArtifactFilter) ([]*model.ArtifactListItem, error) {
 	// 通过子查询先取每个 package 在当前 view 下的最新 version，再回查 package 列表。
@@ -129,9 +130,9 @@ func (s *Store) StatisticAssets(ctx context.Context, retentionTime time.Duration
 	}
 
 	// 计算回收站保留期截止时间；retentionTime==0 时不做时间过滤
-	var retentionCutoff time.Time
+	var retentionCutoff *datetime.Local
 	if retentionTime > 0 {
-		retentionCutoff = time.Now().Add(-retentionTime)
+		retentionCutoff = datetime.NowLocalTime().Add(-retentionTime)
 	}
 
 	// 第二遍：分类处理每个 asset
@@ -142,7 +143,7 @@ func (s *Store) StatisticAssets(ctx context.Context, retentionTime time.Duration
 		if asset.Deleted > 0 {
 			// 保留期检查：editedDate（软删时间）必须早于截止时间
 			if retentionTime > 0 {
-				if asset.EditedDate == nil || !asset.EditedDate.Before(retentionCutoff) {
+				if asset.EditedDate == nil || !asset.EditedDate.Before(*retentionCutoff) {
 					// 仍在保留期内，跳过
 					continue
 				}
