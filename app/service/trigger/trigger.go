@@ -18,7 +18,6 @@ import (
 	scanSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/scan"
 	repoStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/events"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/stream"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/url"
@@ -61,7 +60,6 @@ type Service struct {
 	scanTriggerSvc scanSvc.IScanTrigger
 	planSvc        scanSvc.IScanPlan
 	taskSvc        scanSvc.IScanTask
-	gitSvc         git.Interface
 }
 
 func New(
@@ -74,7 +72,6 @@ func New(
 	scanTriggerSvc scanSvc.IScanTrigger,
 	planSvc scanSvc.IScanPlan,
 	taskSvc scanSvc.IScanTask,
-	gitSvc git.Interface,
 	gitReaderFactory *events.ReaderFactory[*gitevents.Reader],
 	pullreqEvReaderFactory *events.ReaderFactory[*pullreqevents.Reader],
 ) (*Service, error) {
@@ -90,7 +87,6 @@ func New(
 		scanTriggerSvc: scanTriggerSvc,
 		planSvc:        planSvc,
 		taskSvc:        taskSvc,
-		gitSvc:         gitSvc,
 	}
 
 	_, err := gitReaderFactory.Launch(ctx, eventsReaderGroupName, config.EventReaderName,
@@ -218,26 +214,6 @@ func (s *Service) triggerScanPipeline(ctx context.Context, repoID int64, hook *t
 	gitURL := s.urlProvider.GenerateGITCloneURL(ctx, repo.Path)
 	log.Infof("[pipeline-trigger-scan] repo gitURL=%s", gitURL)
 	repo.GitURL = gitURL
-
-	// 查询扫描用的 commit sha
-	shas, err := s.gitSvc.ListCommitSHAs(ctx, &git.ListCommitsParams{
-		ReadParams: git.ReadParams{RepoUID: repo.GitUID},
-		GitREF:     hook.Match,
-		Page:       1,
-		Limit:      2,
-	})
-	if err != nil {
-		return fmt.Errorf("failed to list commit SHAs for branch %s: %w", hook.Match, err)
-	}
-	if len(shas) == 0 {
-		return fmt.Errorf("no commits found on branch %s", hook.Match)
-	}
-	hook.Commit = shas[0]
-	if len(shas) > 1 {
-		hook.CommitBefore = shas[1]
-	} else {
-		hook.CommitBefore = shas[0]
-	}
 
 	// 查询扫描相关的 trigger
 	triggers, err := s.scanTriggerSvc.FindByRepoIDAndActions(ctx, uint(repoID), []constant.TriggerAction{hook.Action})
