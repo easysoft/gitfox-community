@@ -25,6 +25,12 @@ type Interface interface {
 	// CreateView 创建制品库视图，支持全局/空间/仓库三级作用域。
 	CreateView(ctx context.Context, req *model.CreateArtifactViewReq) (*model.ArtifactView, error)
 
+	// ResolveView 按请求中的 viewId 或默认视图规则解析实际视图。
+	// 规则：
+	//  1. viewId > 0：优先按 ID 精确取库
+	//  2. viewId == 0 或未传：继续按 spaceId/repoId 走默认 view 逻辑
+	ResolveView(ctx context.Context, req *model.SpaceRepoReq) (*model.ArtifactView, error)
+
 	// ParseSpaceView 解析空间+仓库参数，返回视图描述符（包含 viewID 和路由信息）。
 	ParseSpaceView(ctx context.Context, req *model.SpaceRepoReq) (*adapter.ViewDescriptor, error)
 

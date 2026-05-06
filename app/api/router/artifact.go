@@ -13,16 +13,18 @@ func registerArtifactRoutes(group *gin.RouterGroup, controller *Controller, auth
 	artifact := group.Group("/artifacts")
 
 	// 读操作 — 拉取权限
-	pullAuth := middleware.ArtifactAuthMiddleware(authz, enum.CasbinActionArtifactPull)
+	pullAuth := middleware.ArtifactAuthMiddleware(authz, controller.Artifact.Service(), enum.CasbinActionArtifactPull)
 	// 写操作 — 推送权限
-	pushAuth := middleware.ArtifactAuthMiddleware(authz, enum.CasbinActionArtifactPush)
+	pushAuth := middleware.ArtifactAuthMiddleware(authz, controller.Artifact.Service(), enum.CasbinActionArtifactPush)
 	// 创建操作
-	createAuth := middleware.ArtifactAuthMiddleware(authz, enum.CasbinActionArtifactCreate)
+	createAuth := middleware.ArtifactAuthMiddleware(authz, controller.Artifact.Service(), enum.CasbinActionArtifactCreate)
 	// 删除操作
-	deleteAuth := middleware.ArtifactAuthMiddleware(authz, enum.CasbinActionArtifactDelete)
+	deleteAuth := middleware.ArtifactAuthMiddleware(authz, controller.Artifact.Service(), enum.CasbinActionArtifactDelete)
 	{
-		// 空间级操作（读）
+
+		// 创建制品库
 		artifact.POST("/views", createAuth, controller.Artifact.CreateView)
+
 		artifact.POST("/packages", pullAuth, controller.Artifact.ListPackages)
 		artifact.POST("/formats", pullAuth, controller.Artifact.ListFormats)
 

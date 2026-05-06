@@ -30,10 +30,18 @@ type CreatorInfo struct {
 	DisplayName string `json:"display_name"`
 }
 
-// SpaceRepoReq 定义接收含有 spaceId 和 repoId 参数的通用请求。
+// SpaceRepoReq 定义非文件上传场景使用的 JSON 请求参数。
 type SpaceRepoReq struct {
+	SpaceID int64 `json:"spaceId"`
+	RepoID  int64 `json:"repoId"`
+	ViewID  int64 `json:"viewId"`
+}
+
+// SpaceRepoFormReq 定义文件上传场景使用的 Form 请求参数。
+type SpaceRepoFormReq struct {
 	SpaceID int64 `form:"spaceId"`
 	RepoID  int64 `form:"repoId"`
+	ViewID  int64 `form:"viewId"`
 }
 
 type SoftRemoveEntitiesReq struct {

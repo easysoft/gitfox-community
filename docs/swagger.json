@@ -12023,6 +12023,9 @@
                 },
                 "spaceId": {
                     "type": "integer"
+                },
+                "viewId": {
+                    "type": "integer"
                 }
             }
         },

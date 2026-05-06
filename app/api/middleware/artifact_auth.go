@@ -11,6 +11,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/authorizer"
 	enum "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
+	artifactSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/artifact"
 	pkgErrors "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
@@ -24,9 +25,10 @@ import (
 // 该中间件使用 Casbin 授权器强制执行工访问权限。
 // 1. 获取认证会话
 // 2. 从请求中提取空间、存储库和实体上下文
+// 3. 当 viewId > 0 时，优先解析实际 view 所属的 space/repo 作用域
 // 3. 系统管理员短路放行
 // 4. 执行授权
-func ArtifactAuthMiddleware(authz authorizer.Authorizer, action enum.CasbinAction) gin.HandlerFunc {
+func ArtifactAuthMiddleware(authz authorizer.Authorizer, artSvc artifactSvc.Interface, action enum.CasbinAction) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx := c.Request.Context()
 		log := logger.GetLoggerFromGin(c)
@@ -47,15 +49,18 @@ func ArtifactAuthMiddleware(authz authorizer.Authorizer, action enum.CasbinActio
 		// 2. 从请求中提取空间、存储库和实体上下文
 		var spaceID int64
 		var repoID int64
+		var viewID int64
 		if c.ContentType() == "application/json" {
 			var req struct {
 				SpaceID int64 `json:"spaceId"`
 				RepoID  int64 `json:"repoId"`
+				ViewID  int64 `json:"viewId"`
 			}
 			// Use ShouldBindBodyWith to keep body available for controllers
 			if err := c.ShouldBindBodyWith(&req, binding.JSON); err == nil {
 				spaceID = req.SpaceID
 				repoID = req.RepoID
+				viewID = req.ViewID
 			}
 		} else if c.ContentType() != "" {
 			// For multipart/form-data or urlencoded
@@ -64,6 +69,9 @@ func ArtifactAuthMiddleware(authz authorizer.Authorizer, action enum.CasbinActio
 			}
 			if rID := c.PostForm("repoId"); rID != "" {
 				repoID, _ = strconv.ParseInt(rID, 10, 64)
+			}
+			if vID := c.PostForm("viewId"); vID != "" {
+				viewID, _ = strconv.ParseInt(vID, 10, 64)
 			}
 		}
 
@@ -77,6 +85,26 @@ func ArtifactAuthMiddleware(authz authorizer.Authorizer, action enum.CasbinActio
 			if rID := c.Query("repoId"); rID != "" {
 				repoID, _ = strconv.ParseInt(rID, 10, 64)
 			}
+		}
+		if viewID == 0 {
+			if vID := c.Query("viewId"); vID != "" {
+				viewID, _ = strconv.ParseInt(vID, 10, 64)
+			}
+		}
+
+		if viewID > 0 && artSvc != nil {
+			view, err := artSvc.ResolveView(ctx, &model.SpaceRepoReq{
+				SpaceID: spaceID,
+				RepoID:  repoID,
+				ViewID:  viewID,
+			})
+			if err != nil {
+				resp.BadRequest(c, err)
+				c.Abort()
+				return
+			}
+			spaceID = view.SpaceID
+			repoID = view.RepoID
 		}
 
 		// 构建 entity：优先从 URL 路径参数解析，否则用仓库级 mock entity
