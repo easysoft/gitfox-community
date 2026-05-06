@@ -19,12 +19,12 @@ func (c *assets) Create(ctx context.Context, newObj *model.CreateArtifactAsset) 
 	// version/view/group 含可空字段，需先用代码补做查重，避免唯一约束在 NULL 语义下失效。
 	if newObj.VersionID.Ptr() == nil {
 		var err error
-		if newObj.ViewID.Ptr() == nil {
+		if newObj.ArtifactID.Ptr() == nil {
 			_, err = c.GetPath(ctx, newObj.Path, newObj.Format)
 		} else if newObj.GroupID.Ptr() != nil {
 			_, err = c.GetGroupAsset(ctx, newObj.Path, newObj.GroupID.Int64)
 		} else {
-			_, err = c.GetMetaAsset(ctx, newObj.Path, newObj.ViewID.Int64, newObj.Format)
+			_, err = c.GetMetaAsset(ctx, newObj.Path, newObj.ArtifactID.Int64, newObj.Format)
 		}
 		if err == nil {
 			return nil, pkgErrors.ErrDuplicate
@@ -35,7 +35,7 @@ func (c *assets) Create(ctx context.Context, newObj *model.CreateArtifactAsset) 
 	}
 	var row artifactAsset
 	row.VersionID = newObj.VersionID
-	row.ViewID = newObj.ViewID
+	row.ArtifactID = newObj.ArtifactID
 	row.GroupID = newObj.GroupID
 	row.Format = string(newObj.Format)
 	row.Path = newObj.Path
@@ -70,8 +70,8 @@ func (c *assets) GetPath(ctx context.Context, path string, format model.Artifact
 	return c.find(ctx, &artifactAsset{Path: path, Format: string(format)})
 }
 
-func (c *assets) GetMetaAsset(ctx context.Context, path string, viewId int64, format model.ArtifactFormat) (*model.ArtifactAsset, error) {
-	return c.find(ctx, &artifactAsset{Path: path, Format: string(format), ViewID: null.IntFrom(viewId)})
+func (c *assets) GetMetaAsset(ctx context.Context, path string, artifactID int64, format model.ArtifactFormat) (*model.ArtifactAsset, error) {
+	return c.find(ctx, &artifactAsset{Path: path, Format: string(format), ArtifactID: null.IntFrom(artifactID)})
 }
 
 func (c *assets) GetVersionAsset(ctx context.Context, path string, versionId int64) (*model.ArtifactAsset, error) {
@@ -177,10 +177,10 @@ func (c *assets) SearchExtendBlob(ctx context.Context, options ...SearchOption) 
 	return data, nil
 }
 
-// DeleteByViewID 硬删指定 view 下的所有 asset 记录（含已软删的）。
+// DeleteByArtifactID 硬删指定 view 下的所有 asset 记录（含已软删的）。
 // 注意：只删 asset 记录，不清理关联的 blob 和物理文件，需上层配合处理。
-func (c *assets) DeleteByViewID(ctx context.Context, viewId int64) (int64, error) {
-	result := c.db.WithContext(ctx).Where("viewID = ?", viewId).Delete(&artifactAsset{})
+func (c *assets) DeleteByArtifactID(ctx context.Context, artifactID int64) (int64, error) {
+	result := c.db.WithContext(ctx).Where("artifactID = ?", artifactID).Delete(&artifactAsset{})
 	if result.Error != nil {
 		return 0, database.ProcessSQLErrorf(ctx, result.Error)
 	}

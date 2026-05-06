@@ -16,7 +16,7 @@ type packages struct{ db *gorm.DB }
 
 func (c *packages) Create(ctx context.Context, newObj *model.CreateArtifactPackage) (*model.ArtifactPackage, error) {
 	var row artifactPackage
-	row.ViewID = newObj.ViewID
+	row.ArtifactID = newObj.ArtifactID
 	row.Name = newObj.Name
 	row.Namespace = newObj.Namespace
 	row.GroupID = newObj.GroupID
@@ -35,17 +35,17 @@ func (c *packages) GetByID(ctx context.Context, packageId int64) (*model.Artifac
 	return packageToModel(&row), nil
 }
 
-func (c *packages) GetByName(ctx context.Context, name, namespace string, viewId int64, format model.ArtifactFormat) (*model.ArtifactPackage, error) {
+func (c *packages) GetByName(ctx context.Context, name, namespace string, artifactID int64, format model.ArtifactFormat) (*model.ArtifactPackage, error) {
 	var row artifactPackage
-	q := artifactPackage{Name: name, Namespace: namespace, ViewID: viewId, Format: string(format)}
+	q := artifactPackage{Name: name, Namespace: namespace, ArtifactID: artifactID, Format: string(format)}
 	if err := c.db.WithContext(ctx).Where(&q).Where("namespace = ?", namespace).First(&row).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
 	return packageToModel(&row), nil
 }
 
-func (c *packages) List(ctx context.Context, viewId int64, includeDeleted bool) ([]*model.ArtifactPackage, error) {
-	q := artifactPackage{ViewID: viewId}
+func (c *packages) List(ctx context.Context, artifactID int64, includeDeleted bool) ([]*model.ArtifactPackage, error) {
+	q := artifactPackage{ArtifactID: artifactID}
 	stmt := c.db.WithContext(ctx).Where(&q)
 	if !includeDeleted {
 		stmt = stmt.Where("deleted = 0")
@@ -77,8 +77,8 @@ func (c *packages) ListBatch(ctx context.Context, includeDeleted bool, batchSize
 	return nil
 }
 
-func (c *packages) ListByNamespace(ctx context.Context, viewId int64, namespace string, format model.ArtifactFormat, recurse, includeDeleted bool) ([]*model.ArtifactPackage, error) {
-	q := artifactPackage{ViewID: viewId}
+func (c *packages) ListByNamespace(ctx context.Context, artifactID int64, namespace string, format model.ArtifactFormat, recurse, includeDeleted bool) ([]*model.ArtifactPackage, error) {
+	q := artifactPackage{ArtifactID: artifactID}
 	stmt := c.db.WithContext(ctx).Where(&q)
 	if recurse {
 		stmt = stmt.Where("namespace LIKE ?", namespace+"%")

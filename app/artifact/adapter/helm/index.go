@@ -22,8 +22,8 @@ import (
 	artifactStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/artifact"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/storage"
 
-	"github.com/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
+	"github.com/pkg/errors"
 	"helm.sh/helm/v3/pkg/chart"
 	"sigs.k8s.io/yaml"
 )
@@ -115,7 +115,7 @@ func (h *helmIndex) buildIndex(ctx context.Context, contextPath string) (*IndexF
 		"contextPath": contextPath,
 	}
 	items, err := h.artStore.Versions().Find(ctx, model.SearchVersionOption{
-		ViewId: h.view.ViewID,
+		ArtifactID: h.view.ArtifactID,
 	})
 	if err != nil {
 		return nil, err

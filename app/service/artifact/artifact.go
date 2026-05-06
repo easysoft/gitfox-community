@@ -119,7 +119,7 @@ func (s *Service) FileStore() storage.ContentStorage {
 //  3. 若存在同名的软删视图但已超过保留期 -> 先物理删除过期 view，再正常创建。
 //  4. 无同名记录 -> 正常创建。
 //
-// 注意：ops_artifact_views 表已移除严格唯一索引（uk_spaceID_repoID_name），
+// 注意：ops_artifact 表已移除严格唯一索引（uk_spaceID_repoID_name），
 // 改由此方法在应用层保证名称唯一性，以支持回收站保留期的时间窗口判断。
 func (s *Service) CreateView(ctx context.Context, req *model.CreateArtifactViewReq) (*model.ArtifactView, error) {
 	log := logger.GetLogger(ctx)
@@ -215,17 +215,17 @@ func (s *Service) hasDefaultView(ctx context.Context, spaceID, repoID int64) boo
 	return err == nil
 }
 
-// ResolveView 按请求中的 viewId 或默认视图规则解析实际视图。
+// ResolveView 按请求中的 artifactID 或默认视图规则解析实际视图。
 // 规则：
-//  1. viewId > 0：优先按 ID 精确取库
-//  2. viewId == 0 或未传：继续按现有默认 view 逻辑解析
+//  1. artifactID > 0：优先按 ID 精确取库
+//  2. artifactID == 0 或未传：继续按现有默认 view 逻辑解析
 func (s *Service) ResolveView(ctx context.Context, req *model.SpaceRepoReq) (*model.ArtifactView, error) {
 	if req == nil {
 		req = &model.SpaceRepoReq{}
 	}
 
-	if req.ViewID > 0 {
-		view, err := s.artStore.Views().GetByID(ctx, req.ViewID)
+	if req.ArtifactID > 0 {
+		view, err := s.artStore.Views().GetByID(ctx, req.ArtifactID)
 		if err != nil {
 			if pkgErrors.Is(err, pkgErrors.ErrResourceNotFound) {
 				return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactViewNotFound)
@@ -234,7 +234,7 @@ func (s *Service) ResolveView(ctx context.Context, req *model.SpaceRepoReq) (*mo
 		}
 		if req.SpaceID > 0 && view.SpaceID != req.SpaceID {
 			return nil, pkgErrors.WithI18nKey(
-				fmt.Errorf("viewId %d does not belong to spaceId %d", req.ViewID, req.SpaceID),
+				fmt.Errorf("artifactID %d does not belong to spaceId %d", req.ArtifactID, req.SpaceID),
 				i18n.ArtifactViewScopeMismatch,
 			)
 		}
@@ -247,7 +247,7 @@ func (s *Service) ResolveView(ctx context.Context, req *model.SpaceRepoReq) (*mo
 			}
 			if view.RepoID != req.RepoID {
 				return nil, pkgErrors.WithI18nKey(
-					fmt.Errorf("viewId %d does not belong to repoId %d under spaceId %d", req.ViewID, req.RepoID, req.SpaceID),
+					fmt.Errorf("artifactID %d does not belong to repoId %d under spaceId %d", req.ArtifactID, req.RepoID, req.SpaceID),
 					i18n.ArtifactViewScopeMismatch,
 				)
 			}
@@ -304,9 +304,9 @@ func (s *Service) ParseSpaceView(ctx context.Context, req *model.SpaceRepoReq) (
 	}
 
 	desc := &adapter.ViewDescriptor{
-		ViewID:    view.ID,
-		Store:     s.fileStore,
-		StorageID: 1,
+		ArtifactID: view.ID,
+		Store:      s.fileStore,
+		StorageID:  1,
 	}
 	if err = s.fillViewDescriptorScope(ctx, desc, view); err != nil {
 		return nil, err
@@ -354,29 +354,29 @@ func (s *Service) ParseContainerView(ctx context.Context,
 	}
 
 	return &adapter.ViewDescriptor{
-		ViewID:    view.ID,
-		Store:     s.fileStore,
-		StorageID: 1,
+		ArtifactID: view.ID,
+		Store:      s.fileStore,
+		StorageID:  1,
 	}, nil
 }
 
-func (s *Service) ListPackages(ctx context.Context, viewId int64, filter *model.ArtifactFilter) ([]*model.ArtifactListItem, error) {
-	res, err := s.artStore.FindPackages(ctx, viewId, filter)
+func (s *Service) ListPackages(ctx context.Context, artifactID int64, filter *model.ArtifactFilter) ([]*model.ArtifactListItem, error) {
+	res, err := s.artStore.FindPackages(ctx, artifactID, filter)
 	if err != nil {
 		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactPackageListError)
 	}
 	return res, nil
 }
 
-func (s *Service) ListVersions(ctx context.Context, viewId int64,
+func (s *Service) ListVersions(ctx context.Context, artifactID int64,
 	packageName, groupName string, format model.ArtifactFormat, opt model.SearchVersionOption,
 ) ([]*model.ArtifactVersion, error) {
-	dbPkg, err := s.artStore.Packages().GetByName(ctx, packageName, groupName, viewId, format)
+	dbPkg, err := s.artStore.Packages().GetByName(ctx, packageName, groupName, artifactID, format)
 	if err != nil {
 		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactPackageQueryError)
 	}
 	opt.PackageId = dbPkg.ID
-	opt.ViewId = viewId
+	opt.ArtifactID = artifactID
 	return s.artStore.Versions().Find(ctx, opt)
 }
 
@@ -441,18 +441,18 @@ func (s *Service) Upload(ctx context.Context, view *adapter.ViewDescriptor, form
 	return uploader.GetAssets(), nil
 }
 
-// ViewExists 检查指定 viewId 是否存在（仅 active view）。
-func (s *Service) ViewExists(ctx context.Context, viewId int64) error {
-	_, err := s.artStore.Views().GetByID(ctx, viewId)
+// ViewExists 检查指定 artifactID 是否存在（仅 active view）。
+func (s *Service) ViewExists(ctx context.Context, artifactID int64) error {
+	_, err := s.artStore.Views().GetByID(ctx, artifactID)
 	if err != nil {
-		return pkgErrors.WithI18nKey(err, i18n.ArtifactGroupViewNotFound)
+		return pkgErrors.WithI18nKey(err, i18n.ArtifactGroupArtifactidNotFound)
 	}
 	return nil
 }
 
 // GroupPathExists 检查指定视图下是否已存在完全相同的分组路径。
-func (s *Service) GroupPathExists(ctx context.Context, viewId int64, names []string, format model.ArtifactFormat) (bool, error) {
-	_, err := s.artStore.Groups().GetEndpointByNames(ctx, viewId, names, format)
+func (s *Service) GroupPathExists(ctx context.Context, artifactID int64, names []string, format model.ArtifactFormat) (bool, error) {
+	_, err := s.artStore.Groups().GetEndpointByNames(ctx, artifactID, names, format)
 	if err != nil {
 		if pkgErrors.Is(err, pkgErrors.ErrResourceNotFound) {
 			return false, nil
@@ -462,10 +462,10 @@ func (s *Service) GroupPathExists(ctx context.Context, viewId int64, names []str
 	return true, nil
 }
 
-func (s *Service) CreateGroup(ctx context.Context, viewId int64, names []string, format model.ArtifactFormat) (*model.ArtifactGroupEndpoint, error) {
+func (s *Service) CreateGroup(ctx context.Context, artifactID int64, names []string, format model.ArtifactFormat) (*model.ArtifactGroupEndpoint, error) {
 	var result *model.ArtifactGroupEndpoint
 	err := s.db.Transaction(func(tx *gorm.DB) error {
-		ge, e := s.artStore.Groups().RecursiveCreate(ctx, viewId, names, format)
+		ge, e := s.artStore.Groups().RecursiveCreate(ctx, artifactID, names, format)
 		if e != nil {
 			return e
 		}
@@ -485,8 +485,8 @@ func (s *Service) CreateGroup(ctx context.Context, viewId int64, names []string,
 	return result, nil
 }
 
-func (s *Service) ListFormats(ctx context.Context, viewId int64) ([]*model.ArtifactTreeNode, error) {
-	return s.artStore.Nodes().ListFormats(ctx, viewId)
+func (s *Service) ListFormats(ctx context.Context, artifactID int64) ([]*model.ArtifactTreeNode, error) {
+	return s.artStore.Nodes().ListFormats(ctx, artifactID)
 }
 
 func (s *Service) ListTreeNodes(ctx context.Context, parentId int64) ([]*model.ArtifactTreeNode, error) {
@@ -837,12 +837,12 @@ func (s *Service) softRemoveVersion(ctx context.Context, ver *model.ArtifactVers
 		return err
 	}
 	res.Versions++
-	_ = s.deleteTreeNodeByTarget(ctx, ver.ViewID, model.ArtifactTreeNodeTypeVersion, ver.ID)
+	_ = s.deleteTreeNodeByTarget(ctx, ver.ArtifactID, model.ArtifactTreeNodeTypeVersion, ver.ID)
 	return nil
 }
 
 func (s *Service) softRemovePackage(ctx context.Context, pkg *model.ArtifactPackage, res *model.ArtifactNodeRemoveRes) error {
-	versions, err := s.artStore.Versions().Find(ctx, model.SearchVersionOption{PackageId: pkg.ID, ViewId: pkg.ViewID})
+	versions, err := s.artStore.Versions().Find(ctx, model.SearchVersionOption{PackageId: pkg.ID, ArtifactID: pkg.ArtifactID})
 	if err != nil {
 		return err
 	}
@@ -855,9 +855,9 @@ func (s *Service) softRemovePackage(ctx context.Context, pkg *model.ArtifactPack
 		return err
 	}
 	res.Packages++
-	_ = s.deleteTreeNodeByTarget(ctx, pkg.ViewID, model.ArtifactTreeNodeTypePackage, pkg.ID)
+	_ = s.deleteTreeNodeByTarget(ctx, pkg.ArtifactID, model.ArtifactTreeNodeTypePackage, pkg.ID)
 	if pkg.Format == model.ArtifactHelmFormat {
-		_ = helm.NewHelmIndex(s.artStore, &adapter.ViewDescriptor{ViewID: pkg.ViewID, Store: s.fileStore, StorageID: 1}).UpdateRepo(ctx, "/artifacts/helm")
+		_ = helm.NewHelmIndex(s.artStore, &adapter.ViewDescriptor{ArtifactID: pkg.ArtifactID, Store: s.fileStore, StorageID: 1}).UpdateRepo(ctx, "/artifacts/helm")
 	}
 	return nil
 }
@@ -884,8 +884,8 @@ func (s *Service) softRemoveGroup(ctx context.Context, group *model.ArtifactGrou
 	return s.artStore.Groups().SoftDeleteById(ctx, group.ID)
 }
 
-func (s *Service) deleteTreeNodeByTarget(ctx context.Context, viewID int64, nodeType model.ArtifactTreeNodeType, id int64) error {
-	node, err := s.artStore.Nodes().GetByTarget(ctx, viewID, nodeType, id)
+func (s *Service) deleteTreeNodeByTarget(ctx context.Context, artifactID int64, nodeType model.ArtifactTreeNodeType, id int64) error {
+	node, err := s.artStore.Nodes().GetByTarget(ctx, artifactID, nodeType, id)
 	if err != nil {
 		return nil
 	}
@@ -1049,7 +1049,7 @@ func (z zipAssetFile) IsDir() bool        { return z.info.IsDir() }
 func (z zipAssetFile) Sys() any           { return nil }
 
 func (s *Service) ListContainerImages(ctx context.Context, view *adapter.ViewDescriptor, packageName, version string) (*container.TagMetadata, error) {
-	ver, err := s.artStore.GetVersion(ctx, view.ViewID, packageName, "", version, model.ArtifactContainerFormat)
+	ver, err := s.artStore.GetVersion(ctx, view.ArtifactID, packageName, "", version, model.ArtifactContainerFormat)
 	if err != nil {
 		return nil, err
 	}
@@ -1141,39 +1141,39 @@ func (s *Service) GarbageCollectExpiredViews(ctx context.Context) (int, error) {
 	log.Infof("开始清理过期已软删视图，截止时间: %s", cutoff.Format(time.RFC3339))
 
 	// 【仅查询】找出过期 view ID，不删除——保证幂等性
-	expiredViewIDs, err := s.artStore.Views().FindExpiredIDs(ctx, cutoff)
+	expiredArtifactIDs, err := s.artStore.Views().FindExpiredIDs(ctx, cutoff)
 	if err != nil {
 		return 0, pkgErrors.WithI18nKey(fmt.Errorf("query expired views failed: %w", err), i18n.ArtifactViewExpiredQueryError)
 	}
-	if len(expiredViewIDs) == 0 {
+	if len(expiredArtifactIDs) == 0 {
 		log.Info("无过期已软删视图需要清理")
 		return 0, nil
 	}
 
-	log.Infof("发现 %d 个过期已软删视图待清理: %v", len(expiredViewIDs), expiredViewIDs)
+	log.Infof("发现 %d 个过期已软删视图待清理: %v", len(expiredArtifactIDs), expiredArtifactIDs)
 
 	cleaned := 0
-	for _, viewID := range expiredViewIDs {
+	for _, artifactID := range expiredArtifactIDs {
 		// Step 1: 先清理关联资源（packages/versions/assets/blobs/物理文件/groups/tree_nodes/meta_assets）
-		if resErr := s.hardDeleteViewResources(ctx, viewID); resErr != nil {
+		if resErr := s.hardDeleteViewResources(ctx, artifactID); resErr != nil {
 			// 关联资源清理失败时，保留 view 记录，下次 GC 重试
-			log.Errorf("清理视图 %d 的关联资源失败，跳过本次删除（下次 GC 将重试）: %v", viewID, resErr)
+			log.Errorf("清理视图 %d 的关联资源失败，跳过本次删除（下次 GC 将重试）: %v", artifactID, resErr)
 			continue
 		}
 
 		// Step 2: 关联资源清理成功后，最后才物理删除 view 记录
-		if delErr := s.artStore.Views().Delete(ctx, viewID); delErr != nil {
-			log.Errorf("硬删视图 %d 记录失败（关联资源已清理，下次 GC 将重试删除 view 记录）: %v", viewID, delErr)
+		if delErr := s.artStore.Views().Delete(ctx, artifactID); delErr != nil {
+			log.Errorf("硬删视图 %d 记录失败（关联资源已清理，下次 GC 将重试删除 view 记录）: %v", artifactID, delErr)
 			// 此处不 continue：关联资源已清理，即使 view 记录删除失败，
 			// 下次 GC 也只剩删除空 view 记录，不会重复删资源（资源已不存在）
 			continue
 		}
 
 		cleaned++
-		log.Infof("视图 %d 清理完成", viewID)
+		log.Infof("视图 %d 清理完成", artifactID)
 	}
 
-	log.Infof("过期视图清理完成，共成功处理 %d / %d 个视图", cleaned, len(expiredViewIDs))
+	log.Infof("过期视图清理完成，共成功处理 %d / %d 个视图", cleaned, len(expiredArtifactIDs))
 	return cleaned, nil
 }
 
@@ -1184,19 +1184,19 @@ func (s *Service) GarbageCollectExpiredViews(ctx context.Context) (int, error) {
 //  3. groups
 //  4. tree_nodes
 //  5. meta_assets (helm chart 索引等)
-func (s *Service) hardDeleteViewResources(ctx context.Context, viewID int64) error {
+func (s *Service) hardDeleteViewResources(ctx context.Context, artifactID int64) error {
 	log := logger.GetLogger(ctx)
 
 	// ---- 1. 清理 packages -> versions -> version-assets -> blobs ----
-	packages, err := s.artStore.Packages().List(ctx, viewID, true)
+	packages, err := s.artStore.Packages().List(ctx, artifactID, true)
 	if err != nil {
-		return fmt.Errorf("查询 view %d 的 packages 失败: %w", viewID, err)
+		return fmt.Errorf("查询 view %d 的 packages 失败: %w", artifactID, err)
 	}
 
 	for _, pkg := range packages {
 		versions, vErr := s.artStore.Versions().Find(ctx, model.SearchVersionOption{
 			PackageId:      pkg.ID,
-			ViewId:         viewID,
+			ArtifactID:     artifactID,
 			IncludeDeleted: true,
 		})
 		if vErr != nil {
@@ -1220,9 +1220,9 @@ func (s *Service) hardDeleteViewResources(ctx context.Context, viewID int64) err
 
 	// ---- 2. 清理 view 下剩余 assets（group 级 generic assets 等）及其 blobs+物理文件 ----
 	// version-linked assets 已在上面清理，这里处理 groupID>0 且 versionID=0 的 assets
-	remainingAssets, err := s.artStore.Assets().SearchExtendBlob(ctx, artifactStore.AssetViewOption{ViewId: viewID})
+	remainingAssets, err := s.artStore.Assets().SearchExtendBlob(ctx, artifactStore.AssetViewOption{ArtifactID: artifactID})
 	if err != nil {
-		log.Errorf("查询 view %d 的剩余 assets 失败: %v", viewID, err)
+		log.Errorf("查询 view %d 的剩余 assets 失败: %v", artifactID, err)
 	} else {
 		for _, asset := range remainingAssets {
 			if asset.BlobID != 0 && asset.Ref != "" {
@@ -1234,27 +1234,27 @@ func (s *Service) hardDeleteViewResources(ctx context.Context, viewID int64) err
 	}
 
 	// ---- 3. 清理 groups ----
-	if n, gErr := s.artStore.Groups().DeleteByViewID(ctx, viewID); gErr != nil {
-		log.Errorf("硬删 view %d 的 groups 失败: %v", viewID, gErr)
+	if n, gErr := s.artStore.Groups().DeleteByArtifactID(ctx, artifactID); gErr != nil {
+		log.Errorf("硬删 view %d 的 groups 失败: %v", artifactID, gErr)
 	} else if n > 0 {
-		log.Infof("硬删 view %d 的 %d 个 groups", viewID, n)
+		log.Infof("硬删 view %d 的 %d 个 groups", artifactID, n)
 	}
 
 	// ---- 4. 清理 tree_nodes ----
-	if n, tErr := s.artStore.Nodes().DeleteByViewID(ctx, viewID); tErr != nil {
-		log.Errorf("硬删 view %d 的 tree_nodes 失败: %v", viewID, tErr)
+	if n, tErr := s.artStore.Nodes().DeleteByArtifactID(ctx, artifactID); tErr != nil {
+		log.Errorf("硬删 view %d 的 tree_nodes 失败: %v", artifactID, tErr)
 	} else if n > 0 {
-		log.Infof("硬删 view %d 的 %d 个 tree_nodes", viewID, n)
+		log.Infof("硬删 view %d 的 %d 个 tree_nodes", artifactID, n)
 	}
 
 	// ---- 5. 清理 meta_assets ----
-	if n, mErr := s.artStore.MetaAssets().DeleteByViewID(ctx, viewID); mErr != nil {
-		log.Errorf("硬删 view %d 的 meta_assets 失败: %v", viewID, mErr)
+	if n, mErr := s.artStore.MetaAssets().DeleteByArtifactID(ctx, artifactID); mErr != nil {
+		log.Errorf("硬删 view %d 的 meta_assets 失败: %v", artifactID, mErr)
 	} else if n > 0 {
-		log.Infof("硬删 view %d 的 %d 个 meta_assets", viewID, n)
+		log.Infof("硬删 view %d 的 %d 个 meta_assets", artifactID, n)
 	}
 
-	log.Infof("视图 %d 关联资源清理完成: %d 个 packages", viewID, len(packages))
+	log.Infof("视图 %d 关联资源清理完成: %d 个 packages", artifactID, len(packages))
 	return nil
 }
 

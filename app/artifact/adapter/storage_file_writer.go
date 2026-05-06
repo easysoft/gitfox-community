@@ -98,11 +98,11 @@ func TemporaryPath(p string) string {
 }
 
 type ViewDescriptor struct {
-	ViewID    int64
-	StorageID int64
-	Store     storage.ContentStorage
-	Space     *model.SpaceRef
-	Repo      *model.RepoRef
+	ArtifactID int64
+	StorageID  int64
+	Store      storage.ContentStorage
+	Space      *model.SpaceRef
+	Repo       *model.RepoRef
 }
 
 type SavedAsset struct {

@@ -453,6 +453,8 @@ definitions:
     - WebhookTriggerArtifactDeleted
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.ArtifactVersionListReq:
     properties:
+      artifactID:
+        type: integer
       format:
         type: string
       groupName:
@@ -469,6 +471,8 @@ definitions:
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.CreateArtifactViewReq:
     properties:
+      artifactID:
+        type: integer
       description:
         type: string
       name:
@@ -482,12 +486,12 @@ definitions:
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.CreateGroupReq:
     properties:
+      artifactID:
+        type: integer
       format:
         type: string
       names:
         type: string
-      viewId:
-        type: integer
     required:
     - format
     - names
@@ -533,11 +537,11 @@ definitions:
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.SpaceRepoReq:
     properties:
+      artifactID:
+        type: integer
       repoId:
         type: integer
       spaceId:
-        type: integer
-      viewId:
         type: integer
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_auth.Session:
@@ -942,6 +946,8 @@ definitions:
     properties:
       commit:
         type: string
+      commitBefore:
+        type: string
       createdBy:
         type: string
       createdDate:
@@ -1000,6 +1006,8 @@ definitions:
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_execution.ExecutionWithStages:
     properties:
       commit:
+        type: string
+      commitBefore:
         type: string
       createdBy:
         type: string
@@ -3410,7 +3418,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: 列出指定空间的已用格式
+      description: 列出指定作用域下的已用格式。artifactID > 0 时优先按指定视图查询，否则按默认 view 逻辑查询
       parameters:
       - description: 查询范围
         in: body
@@ -3474,9 +3482,9 @@ paths:
     post:
       consumes:
       - application/json
-      description: 创建 group 节点。viewId 必传且必须大于 0
+      description: 创建 group 节点。artifactID 必传且必须大于 0
       parameters:
-      - description: 请求参数(viewId 必填；names 为 '.' 分隔的分组路径；format 必须是支持的格式枚举)
+      - description: 请求参数(artifactID 必填；names 为 '.' 分隔的分组路径；format 必须是支持的格式枚举)
         in: body
         name: body
         required: true
@@ -3626,7 +3634,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: 列出指定空间/视图下的制品包
+      description: 列出指定作用域下的制品包。artifactID > 0 时优先按指定视图查询，否则按默认 view 逻辑查询
       parameters:
       - description: 查询范围
         in: body
@@ -3784,6 +3792,10 @@ paths:
         in: formData
         name: repoId
         type: integer
+      - description: 视图ID，> 0 时优先按该视图上传
+        in: formData
+        name: artifactID
+        type: integer
       produces:
       - application/json
       responses:
@@ -3835,7 +3847,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: 列出指定制品包的版本列表
+      description: 列出指定制品包的版本列表。artifactID > 0 时优先按指定视图查询，否则按默认 view 逻辑查询
       parameters:
       - description: 查询条件
         in: body
@@ -3888,7 +3900,7 @@ paths:
           description: 服务器错误
           schema:
             $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
-      summary: 创建视图
+      summary: 创建制品库视图
       tags:
       - artifacts
   /fit/repos/{id}/settings/advanced:

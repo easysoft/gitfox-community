@@ -19,7 +19,7 @@ func (c *versions) Create(ctx context.Context, newObj *model.CreateArtifactVersi
 	var row artifactVersion
 	row.PackageID = newObj.PackageID
 	row.Version = newObj.Version
-	row.ViewID = newObj.ViewID
+	row.ArtifactID = newObj.ArtifactID
 	row.Metadata = newObj.Metadata
 	if err := c.db.WithContext(ctx).Create(&row).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
@@ -35,9 +35,9 @@ func (c *versions) GetByID(ctx context.Context, versionId int64) (*model.Artifac
 	return versionToModel(&row), nil
 }
 
-func (c *versions) GetByVersion(ctx context.Context, packageId, viewId int64, version string) (*model.ArtifactVersion, error) {
+func (c *versions) GetByVersion(ctx context.Context, packageId, artifactID int64, version string) (*model.ArtifactVersion, error) {
 	var row artifactVersion
-	q := artifactVersion{PackageID: packageId, ViewID: viewId, Version: version}
+	q := artifactVersion{PackageID: packageId, ArtifactID: artifactID, Version: version}
 	if err := c.db.WithContext(ctx).Where(&q).First(&row).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
@@ -81,8 +81,8 @@ func (c *versions) Find(ctx context.Context, opt model.SearchVersionOption) ([]*
 	if opt.PackageId != 0 {
 		stmt = stmt.Where("packageID = ?", opt.PackageId)
 	}
-	if opt.ViewId != 0 {
-		stmt = stmt.Where("viewID = ?", opt.ViewId)
+	if opt.ArtifactID != 0 {
+		stmt = stmt.Where("artifactID = ?", opt.ArtifactID)
 	}
 	if opt.Query != "" {
 		stmt = stmt.Where("version LIKE ?", fmt.Sprintf("%%%s%%", opt.Query))
@@ -116,10 +116,10 @@ func (c *versions) Search(ctx context.Context, options ...SearchOption) ([]*mode
 	}
 
 	selectFields := []string{
-		"ops_artifact_versions.id", "ops_artifact_versions.version", "ops_artifact_versions.viewID", "ops_artifact_versions.deleted",
+		"ops_artifact_versions.id", "ops_artifact_versions.version", "ops_artifact_versions.artifactID", "ops_artifact_versions.deleted",
 		"ops_artifact_packages.id AS packageID", "ops_artifact_packages.name",
 		"ops_artifact_packages.namespace", "ops_artifact_packages.format",
-		"ops_artifact_views.spaceID", "ops_artifact_views.repoID",
+		"ops_artifact.spaceID", "ops_artifact.repoID",
 		"ops_space.name AS space_name", "ops_repo.name AS repo_name",
 	}
 
@@ -127,9 +127,9 @@ func (c *versions) Search(ctx context.Context, options ...SearchOption) ([]*mode
 	result := db.Model(&artifactVersion{}).
 		Select(strings.Join(selectFields, ",")).
 		Joins("left join ops_artifact_packages on ops_artifact_packages.id = ops_artifact_versions.packageID").
-		Joins("left join ops_artifact_views on ops_artifact_views.id = ops_artifact_versions.viewID").
-		Joins("left join ops_space on ops_space.id = ops_artifact_views.spaceID").
-		Joins("left join ops_repo on ops_repo.id = ops_artifact_views.repoID").
+		Joins("left join ops_artifact on ops_artifact.id = ops_artifact_versions.artifactID").
+		Joins("left join ops_space on ops_space.id = ops_artifact.spaceID").
+		Joins("left join ops_repo on ops_repo.id = ops_artifact.repoID").
 		Scan(&data)
 
 	if result.Error != nil {

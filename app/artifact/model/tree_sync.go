@@ -36,7 +36,7 @@ func (t *Syncer) BuildTreeNode(ctx context.Context) error {
 }
 
 func (t *Syncer) SyncTreeNodeForGroup(ctx context.Context, group *artmodel.ArtifactGroup) (*artmodel.ArtifactTreeNode, error) {
-	if currNode, err := t.artStore.Nodes().GetByTarget(ctx, group.ViewID, artmodel.ArtifactTreeNodeTypeGroup, group.ID); err == nil {
+	if currNode, err := t.artStore.Nodes().GetByTarget(ctx, group.ArtifactID, artmodel.ArtifactTreeNodeTypeGroup, group.ID); err == nil {
 		return currNode, nil
 	}
 
@@ -44,7 +44,7 @@ func (t *Syncer) SyncTreeNodeForGroup(ctx context.Context, group *artmodel.Artif
 	var err error
 
 	if !group.ParentID.Valid || group.ParentID.Int64 == 0 {
-		parentNode, err = t.SyncTreeNodeForFormat(ctx, group.ViewID, group.Format)
+		parentNode, err = t.SyncTreeNodeForFormat(ctx, group.ArtifactID, group.Format)
 		if err != nil {
 			return nil, err
 		}
@@ -60,13 +60,13 @@ func (t *Syncer) SyncTreeNodeForGroup(ctx context.Context, group *artmodel.Artif
 	}
 
 	treeNode := &artmodel.ArtifactTreeNode{
-		ParentID: null.IntFrom(parentNode.ID),
-		ViewID:  group.ViewID,
-		Name:     group.Name,
-		Path:     joinPath([]string{parentNode.Path, group.Name}, "/"),
-		Type:     artmodel.ArtifactTreeNodeTypeGroup,
-		Format:   group.Format,
-		TargetId: null.IntFrom(group.ID),
+		ParentID:   null.IntFrom(parentNode.ID),
+		ArtifactID: group.ArtifactID,
+		Name:       group.Name,
+		Path:       joinPath([]string{parentNode.Path, group.Name}, "/"),
+		Type:       artmodel.ArtifactTreeNodeTypeGroup,
+		Format:     group.Format,
+		TargetId:   null.IntFrom(group.ID),
 	}
 
 	if err = t.upsertTreeNode(ctx, treeNode); err != nil {
@@ -75,9 +75,9 @@ func (t *Syncer) SyncTreeNodeForGroup(ctx context.Context, group *artmodel.Artif
 	return treeNode, nil
 }
 
-func (t *Syncer) SyncTreeNodeForFormat(ctx context.Context, viewId int64, format artmodel.ArtifactFormat) (*artmodel.ArtifactTreeNode, error) {
+func (t *Syncer) SyncTreeNodeForFormat(ctx context.Context, artifactID int64, format artmodel.ArtifactFormat) (*artmodel.ArtifactTreeNode, error) {
 	path := "/"
-	node, err := t.artStore.Nodes().GetByPath(ctx, viewId, path, format)
+	node, err := t.artStore.Nodes().GetByPath(ctx, artifactID, path, format)
 	if err == nil {
 		return node, nil
 	}
@@ -85,11 +85,11 @@ func (t *Syncer) SyncTreeNodeForFormat(ctx context.Context, viewId int64, format
 		return nil, err
 	}
 	newNode := &artmodel.CreateArtifactTreeNode{
-		ViewID: viewId,
-		Path:    path,
-		Name:    string(format),
-		Type:    artmodel.ArtifactTreeNodeTypeFormat,
-		Format:  format,
+		ArtifactID: artifactID,
+		Path:       path,
+		Name:       string(format),
+		Type:       artmodel.ArtifactTreeNodeTypeFormat,
+		Format:     format,
 	}
 	created, err := t.artStore.Nodes().Create(ctx, newNode)
 	if err != nil {
@@ -101,7 +101,7 @@ func (t *Syncer) SyncTreeNodeForFormat(ctx context.Context, viewId int64, format
 func (t *Syncer) SyncTreeNodeForPackage(ctx context.Context, pkg *artmodel.ArtifactPackage) (*artmodel.ArtifactTreeNode, error) {
 	// 所有格式：GroupID != 0 则挂到对应 group，否则直接挂到 format 根节点。
 	// raw 通过 SyncRawGroup 回填 GroupID；container 通过 getOrCreateGroup 预先建好 GroupID。
-	if currNode, err := t.artStore.Nodes().GetByTarget(ctx, pkg.ViewID, artmodel.ArtifactTreeNodeTypePackage, pkg.ID); err == nil {
+	if currNode, err := t.artStore.Nodes().GetByTarget(ctx, pkg.ArtifactID, artmodel.ArtifactTreeNodeTypePackage, pkg.ID); err == nil {
 		return currNode, nil
 	}
 
@@ -115,7 +115,7 @@ func (t *Syncer) SyncTreeNodeForPackage(ctx context.Context, pkg *artmodel.Artif
 		}
 		parentNode, err = t.SyncTreeNodeForGroup(ctx, g)
 	} else {
-		parentNode, err = t.SyncTreeNodeForFormat(ctx, pkg.ViewID, pkg.Format)
+		parentNode, err = t.SyncTreeNodeForFormat(ctx, pkg.ArtifactID, pkg.Format)
 	}
 
 	if err != nil {
@@ -123,13 +123,13 @@ func (t *Syncer) SyncTreeNodeForPackage(ctx context.Context, pkg *artmodel.Artif
 	}
 
 	treeNode := &artmodel.ArtifactTreeNode{
-		ParentID: null.IntFrom(parentNode.ID),
-		ViewID:  pkg.ViewID,
-		Name:     pkg.Name,
-		Path:     joinPath([]string{parentNode.Path, pkg.Name}, "/"),
-		Type:     artmodel.ArtifactTreeNodeTypePackage,
-		Format:   pkg.Format,
-		TargetId: null.IntFrom(pkg.ID),
+		ParentID:   null.IntFrom(parentNode.ID),
+		ArtifactID: pkg.ArtifactID,
+		Name:       pkg.Name,
+		Path:       joinPath([]string{parentNode.Path, pkg.Name}, "/"),
+		Type:       artmodel.ArtifactTreeNodeTypePackage,
+		Format:     pkg.Format,
+		TargetId:   null.IntFrom(pkg.ID),
 	}
 
 	if err = t.upsertTreeNode(ctx, treeNode); err != nil {
@@ -142,7 +142,7 @@ func (t *Syncer) SyncTreeNodeForVersion(ctx context.Context, ver *artmodel.Artif
 	if ver.PackageID != pkg.ID {
 		return nil, fmt.Errorf("package id does not match")
 	}
-	if currNode, err := t.artStore.Nodes().GetByTarget(ctx, pkg.ViewID, artmodel.ArtifactTreeNodeTypeVersion, ver.ID); err == nil {
+	if currNode, err := t.artStore.Nodes().GetByTarget(ctx, pkg.ArtifactID, artmodel.ArtifactTreeNodeTypeVersion, ver.ID); err == nil {
 		return currNode, nil
 	}
 	parentNode, err := t.SyncTreeNodeForPackage(ctx, pkg)
@@ -150,13 +150,13 @@ func (t *Syncer) SyncTreeNodeForVersion(ctx context.Context, ver *artmodel.Artif
 		return nil, err
 	}
 	treeNode := &artmodel.ArtifactTreeNode{
-		ParentID: null.IntFrom(parentNode.ID),
-		ViewID:  pkg.ViewID,
-		Name:     ver.Version,
-		Path:     joinPath([]string{parentNode.Path, ver.Version}, "/"),
-		Type:     artmodel.ArtifactTreeNodeTypeVersion,
-		Format:   pkg.Format,
-		TargetId: null.IntFrom(ver.ID),
+		ParentID:   null.IntFrom(parentNode.ID),
+		ArtifactID: pkg.ArtifactID,
+		Name:       ver.Version,
+		Path:       joinPath([]string{parentNode.Path, ver.Version}, "/"),
+		Type:       artmodel.ArtifactTreeNodeTypeVersion,
+		Format:     pkg.Format,
+		TargetId:   null.IntFrom(ver.ID),
 	}
 	if err = t.upsertTreeNode(ctx, treeNode); err != nil {
 		return nil, err
@@ -166,7 +166,7 @@ func (t *Syncer) SyncTreeNodeForVersion(ctx context.Context, ver *artmodel.Artif
 
 func (t *Syncer) upsertTreeNode(ctx context.Context, node *artmodel.ArtifactTreeNode) error {
 	// 树节点以 owner+format+path 幂等；路径已存在时只纠正类型与目标实体，不重复建点。
-	if upObj, e := t.artStore.Nodes().GetByPath(ctx, node.ViewID, node.Path, node.Format); e == nil {
+	if upObj, e := t.artStore.Nodes().GetByPath(ctx, node.ArtifactID, node.Path, node.Format); e == nil {
 		node.ID = upObj.ID
 		if upObj.Type == node.Type && upObj.TargetId == node.TargetId {
 			return nil
@@ -176,7 +176,7 @@ func (t *Syncer) upsertTreeNode(ctx context.Context, node *artmodel.ArtifactTree
 		return t.artStore.Nodes().Update(ctx, upObj)
 	} else if errors.Is(e, pkgErrors.ErrResourceNotFound) {
 		created, err := t.artStore.Nodes().Create(ctx, &artmodel.CreateArtifactTreeNode{
-			ParentID: node.ParentID, ViewID: node.ViewID, Name: node.Name,
+			ParentID: node.ParentID, ArtifactID: node.ArtifactID, Name: node.Name,
 			Path: node.Path, Type: node.Type, Format: node.Format, TargetId: node.TargetId,
 		})
 		if err != nil {
@@ -192,7 +192,7 @@ func (t *Syncer) upsertTreeNode(ctx context.Context, node *artmodel.ArtifactTree
 func (t *Syncer) SyncRawGroup(ctx context.Context, pkg *artmodel.ArtifactPackage) error {
 	// raw namespace 以 `.` 切分递归建组，末级 group 作为 package 的归属分组。
 	groupNames := strings.Split(pkg.Namespace, ".")
-	ge, e := t.artStore.Groups().RecursiveCreate(ctx, pkg.ViewID, groupNames, pkg.Format)
+	ge, e := t.artStore.Groups().RecursiveCreate(ctx, pkg.ArtifactID, groupNames, pkg.Format)
 	if e != nil {
 		return e
 	}

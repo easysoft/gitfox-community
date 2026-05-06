@@ -28,14 +28,14 @@ const (
 	ArtifactGcExecuteError             I18nKey = "artifact.gc_execute_error"              // 执行制品垃圾回收失败.
 	ArtifactGcSchedulerNotConfigured   I18nKey = "artifact.gc_scheduler_not_configured"   // 制品垃圾回收调度器未配置.
 	ArtifactGcTriggerError             I18nKey = "artifact.gc_trigger_error"              // 触发制品垃圾回收失败.
+	ArtifactGroupArtifactidNotFound    I18nKey = "artifact.group_artifactid_not_found"    // 指定的制品ID不存在.
+	ArtifactGroupArtifactidRequired    I18nKey = "artifact.group_artifactid_required"     // artifactID 必须大于 0.
 	ArtifactGroupContainerNoNesting    I18nKey = "artifact.group_container_no_nesting"    // container 格式仅支持单级分组,不允许使用 '.' 嵌套.
 	ArtifactGroupCreateError           I18nKey = "artifact.group_create_error"            // 创建制品分组失败.
 	ArtifactGroupDuplicate             I18nKey = "artifact.group_duplicate"               // 同名分组路径已存在,不允许重复创建.
 	ArtifactGroupFormatInvalid         I18nKey = "artifact.group_format_invalid"          // 不支持的制品格式,仅支持: generic, raw, maven, container, h...
 	ArtifactGroupNamesInvalid          I18nKey = "artifact.group_names_invalid"           // 分组名称不合法,不能为空且不允许包含空段.
 	ArtifactGroupQueryError            I18nKey = "artifact.group_query_error"             // 查询制品分组失败.
-	ArtifactGroupViewNotFound          I18nKey = "artifact.group_view_not_found"          // 指定的制品视图不存在.
-	ArtifactGroupViewidRequired        I18nKey = "artifact.group_viewid_required"         // viewId 必须大于 0.
 	ArtifactHardDeleteError            I18nKey = "artifact.hard_delete_error"             // 清理制品关联资源失败.
 	ArtifactListSuccess                I18nKey = "artifact.list_success"                  // 制品列表查询成功.
 	ArtifactPackageDeleteError         I18nKey = "artifact.package_delete_error"          // 删除制品包失败.

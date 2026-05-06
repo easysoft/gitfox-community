@@ -14,14 +14,14 @@ var _ MetaAssetInterface = (*metaAssets)(nil)
 type metaAssets struct{ db *gorm.DB }
 
 func (s *metaAssets) Create(ctx context.Context, newObj *model.CreateArtifactMetaAsset) (*model.ArtifactMetaAsset, error) {
-	if err := validatorEmpty(newObj.ViewID, newObj.Path, newObj.ViewID, newObj.Format); err != nil {
+	if err := validatorEmpty(newObj.ArtifactID, newObj.Path, newObj.ArtifactID, newObj.Format); err != nil {
 		return nil, err
 	}
 	if err := model.ValidateAssetKind(newObj.Kind); err != nil {
 		return nil, err
 	}
 	var row artifactMetaAsset
-	row.ViewID = newObj.ViewID
+	row.ArtifactID = newObj.ArtifactID
 	row.Format = string(newObj.Format)
 	row.Path = newObj.Path
 	row.ContentType = newObj.ContentType
@@ -42,12 +42,12 @@ func (s *metaAssets) GetById(ctx context.Context, metaAssetId int64) (*model.Art
 	return metaAssetToModel(&row), nil
 }
 
-func (s *metaAssets) GetByPath(ctx context.Context, path string, viewId int64, format model.ArtifactFormat) (*model.ArtifactMetaAsset, error) {
-	if err := validatorEmpty(path, viewId, format); err != nil {
+func (s *metaAssets) GetByPath(ctx context.Context, path string, artifactID int64, format model.ArtifactFormat) (*model.ArtifactMetaAsset, error) {
+	if err := validatorEmpty(path, artifactID, format); err != nil {
 		return nil, err
 	}
 	var row artifactMetaAsset
-	q := artifactMetaAsset{Path: path, ViewID: viewId, Format: string(format)}
+	q := artifactMetaAsset{Path: path, ArtifactID: artifactID, Format: string(format)}
 	if err := s.db.WithContext(ctx).Where(&q).First(&row).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
@@ -73,9 +73,9 @@ func (s *metaAssets) DeleteById(ctx context.Context, metaAssetId int64) error {
 	return nil
 }
 
-// DeleteByViewID 硬删指定 view 下的所有 meta_asset 记录。
-func (s *metaAssets) DeleteByViewID(ctx context.Context, viewId int64) (int64, error) {
-	result := s.db.WithContext(ctx).Where("viewID = ?", viewId).Delete(&artifactMetaAsset{})
+// DeleteByArtifactID 硬删指定 view 下的所有 meta_asset 记录。
+func (s *metaAssets) DeleteByArtifactID(ctx context.Context, artifactID int64) (int64, error) {
+	result := s.db.WithContext(ctx).Where("artifactID = ?", artifactID).Delete(&artifactMetaAsset{})
 	if result.Error != nil {
 		return 0, database.ProcessSQLErrorf(ctx, result.Error)
 	}

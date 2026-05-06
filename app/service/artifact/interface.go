@@ -25,13 +25,13 @@ type Interface interface {
 	// CreateView 创建制品库视图，支持全局/空间/仓库三级作用域。
 	CreateView(ctx context.Context, req *model.CreateArtifactViewReq) (*model.ArtifactView, error)
 
-	// ResolveView 按请求中的 viewId 或默认视图规则解析实际视图。
+	// ResolveView 按请求中的 artifactID 或默认视图规则解析实际视图。
 	// 规则：
-	//  1. viewId > 0：优先按 ID 精确取库
-	//  2. viewId == 0 或未传：继续按 spaceId/repoId 走默认 view 逻辑
+	//  1. artifactID > 0：优先按 ID 精确取库
+	//  2. artifactID == 0 或未传：继续按 spaceId/repoId 走默认 view 逻辑
 	ResolveView(ctx context.Context, req *model.SpaceRepoReq) (*model.ArtifactView, error)
 
-	// ParseSpaceView 解析空间+仓库参数，返回视图描述符（包含 viewID 和路由信息）。
+	// ParseSpaceView 解析空间+仓库参数，返回视图描述符（包含 artifactID 和路由信息）。
 	ParseSpaceView(ctx context.Context, req *model.SpaceRepoReq) (*adapter.ViewDescriptor, error)
 
 	// ParseContainerView 按作用域和视图名称解析 ViewDescriptor，供容器镜像路由使用。
@@ -43,10 +43,10 @@ type Interface interface {
 	// ---- 制品查询 ----
 
 	// ListPackages 列出指定视图下的制品包，支持格式、关键字过滤。
-	ListPackages(ctx context.Context, viewId int64, filter *model.ArtifactFilter) ([]*model.ArtifactListItem, error)
+	ListPackages(ctx context.Context, artifactID int64, filter *model.ArtifactFilter) ([]*model.ArtifactListItem, error)
 
 	// ListVersions 列出制品包的所有版本。
-	ListVersions(ctx context.Context, viewId int64, packageName, groupName string, format model.ArtifactFormat, opt model.SearchVersionOption) ([]*model.ArtifactVersion, error)
+	ListVersions(ctx context.Context, artifactID int64, packageName, groupName string, format model.ArtifactFormat, opt model.SearchVersionOption) ([]*model.ArtifactVersion, error)
 
 	// ListAssets 列出指定版本下的所有制品资源文件。
 	ListAssets(ctx context.Context, versionId int64) ([]*model.ArtifactAssetsRes, error)
@@ -70,19 +70,19 @@ type Interface interface {
 
 	// ---- 分组管理 ----
 
-	// ViewExists 检查指定 viewId 是否存在（仅 active view）。
-	ViewExists(ctx context.Context, viewId int64) error
+	// ViewExists 检查指定 artifactID 是否存在（仅 active view）。
+	ViewExists(ctx context.Context, artifactID int64) error
 
 	// GroupPathExists 检查指定视图下是否已存在完全相同的分组路径。
-	GroupPathExists(ctx context.Context, viewId int64, names []string, format model.ArtifactFormat) (bool, error)
+	GroupPathExists(ctx context.Context, artifactID int64, names []string, format model.ArtifactFormat) (bool, error)
 
 	// CreateGroup 在指定视图下创建分组层级。
-	CreateGroup(ctx context.Context, viewId int64, names []string, format model.ArtifactFormat) (*model.ArtifactGroupEndpoint, error)
+	CreateGroup(ctx context.Context, artifactID int64, names []string, format model.ArtifactFormat) (*model.ArtifactGroupEndpoint, error)
 
 	// ---- 制品树 ----
 
 	// ListFormats 列出指定视图下的格式根节点。
-	ListFormats(ctx context.Context, viewId int64) ([]*model.ArtifactTreeNode, error)
+	ListFormats(ctx context.Context, artifactID int64) ([]*model.ArtifactTreeNode, error)
 
 	// ListTreeNodes 列出指定父节点下的子节点。
 	ListTreeNodes(ctx context.Context, parentId int64) ([]*model.ArtifactTreeNode, error)

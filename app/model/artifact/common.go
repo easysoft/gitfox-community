@@ -32,16 +32,16 @@ type CreatorInfo struct {
 
 // SpaceRepoReq 定义非文件上传场景使用的 JSON 请求参数。
 type SpaceRepoReq struct {
-	SpaceID int64 `json:"spaceId"`
-	RepoID  int64 `json:"repoId"`
-	ViewID  int64 `json:"viewId"`
+	SpaceID    int64 `json:"spaceId"`
+	RepoID     int64 `json:"repoId"`
+	ArtifactID int64 `json:"artifactID"`
 }
 
 // SpaceRepoFormReq 定义文件上传场景使用的 Form 请求参数。
 type SpaceRepoFormReq struct {
-	SpaceID int64 `form:"spaceId"`
-	RepoID  int64 `form:"repoId"`
-	ViewID  int64 `form:"viewId"`
+	SpaceID    int64 `form:"spaceId"`
+	RepoID     int64 `form:"repoId"`
+	ArtifactID int64 `form:"artifactID"`
 }
 
 type SoftRemoveEntitiesReq struct {
@@ -65,25 +65,25 @@ type ArtifactVersionListReq struct {
 
 // CreateGroupReq 创建 group 节点的请求参数。
 // Names 为以 "." 分隔的分组路径，如 "a.b.c" 表示三级分组。
-// ViewID 必填：必须大于 0。
+// ArtifactID 必填：必须大于 0。
 type CreateGroupReq struct {
-	ViewID int64  `json:"viewId"`
-	Names  string `json:"names" binding:"required"`
-	Format string `json:"format" binding:"required"`
+	ArtifactID int64  `json:"artifactID"`
+	Names      string `json:"names" binding:"required"`
+	Format     string `json:"format" binding:"required"`
 }
 
 // Validate 对 CreateGroupReq 进行业务规则校验，返回携带 i18n key 的错误。
 // 校验规则：
-//  1. ViewID 必须 > 0
+//  1. ArtifactID 必须 > 0
 //  2. Format 必须通过 enum.ArtifactFormat.Sanitize() 校验
 //  3. Names 按 "." 拆分后不能有空段
 //  4. container 格式不支持嵌套（Names 中不能包含 "."）
 func (r *CreateGroupReq) Validate() error {
-	// 1. ViewID 校验
-	if r.ViewID <= 0 {
+	// 1. ArtifactID 校验
+	if r.ArtifactID <= 0 {
 		return errors.WithI18nKey(
-			fmt.Errorf("viewId must be greater than 0, got %d", r.ViewID),
-			i18n.ArtifactGroupViewidRequired,
+			fmt.Errorf("artifactID must be greater than 0, got %d", r.ArtifactID),
+			i18n.ArtifactGroupArtifactidRequired,
 		)
 	}
 

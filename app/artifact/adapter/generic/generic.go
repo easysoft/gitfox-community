@@ -89,7 +89,7 @@ func (h *uploader) validateForm(_ context.Context, req *http.Request) error {
 		return fmt.Errorf("%w: required parameter 'group' or 'id'", adapter.ErrMissFormField)
 	}
 
-	viewId := h.view.ViewID
+	artifactID := h.view.ArtifactID
 	if groupId != "" {
 		gId, err := strconv.ParseInt(groupId, 10, 64)
 		if err != nil {
@@ -99,7 +99,7 @@ func (h *uploader) validateForm(_ context.Context, req *http.Request) error {
 		if err != nil {
 			return err
 		}
-		if g.ViewID != viewId {
+		if g.ArtifactID != artifactID {
 			return fmt.Errorf("%w: %s", adapter.ErrInvalidGroupId, groupId)
 		}
 		h.descriptor.GroupId = gId
@@ -107,7 +107,7 @@ func (h *uploader) validateForm(_ context.Context, req *http.Request) error {
 		if ok, _ := regexp.MatchString(_regexPackageGroup, group); !ok {
 			return adapter.ErrInvalidGroupName
 		}
-		g, err := h.artStore.Groups().GetEndpointByNames(req.Context(), viewId, strings.Split(group, "."), model.ArtifactGenericFormat)
+		g, err := h.artStore.Groups().GetEndpointByNames(req.Context(), artifactID, strings.Split(group, "."), model.ArtifactGenericFormat)
 		if err != nil {
 			return err
 		}

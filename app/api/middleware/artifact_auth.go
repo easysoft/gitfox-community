@@ -25,7 +25,7 @@ import (
 // 该中间件使用 Casbin 授权器强制执行工访问权限。
 // 1. 获取认证会话
 // 2. 从请求中提取空间、存储库和实体上下文
-// 3. 当 viewId > 0 时，优先解析实际 view 所属的 space/repo 作用域
+// 3. 当 artifactID > 0 时，优先解析实际 view 所属的 space/repo 作用域
 // 3. 系统管理员短路放行
 // 4. 执行授权
 func ArtifactAuthMiddleware(authz authorizer.Authorizer, artSvc artifactSvc.Interface, action enum.CasbinAction) gin.HandlerFunc {
@@ -49,18 +49,18 @@ func ArtifactAuthMiddleware(authz authorizer.Authorizer, artSvc artifactSvc.Inte
 		// 2. 从请求中提取空间、存储库和实体上下文
 		var spaceID int64
 		var repoID int64
-		var viewID int64
+		var artifactID int64
 		if c.ContentType() == "application/json" {
 			var req struct {
-				SpaceID int64 `json:"spaceId"`
-				RepoID  int64 `json:"repoId"`
-				ViewID  int64 `json:"viewId"`
+				SpaceID    int64 `json:"spaceId"`
+				RepoID     int64 `json:"repoId"`
+				ArtifactID int64 `json:"artifactID"`
 			}
 			// Use ShouldBindBodyWith to keep body available for controllers
 			if err := c.ShouldBindBodyWith(&req, binding.JSON); err == nil {
 				spaceID = req.SpaceID
 				repoID = req.RepoID
-				viewID = req.ViewID
+				artifactID = req.ArtifactID
 			}
 		} else if c.ContentType() != "" {
 			// For multipart/form-data or urlencoded
@@ -70,8 +70,8 @@ func ArtifactAuthMiddleware(authz authorizer.Authorizer, artSvc artifactSvc.Inte
 			if rID := c.PostForm("repoId"); rID != "" {
 				repoID, _ = strconv.ParseInt(rID, 10, 64)
 			}
-			if vID := c.PostForm("viewId"); vID != "" {
-				viewID, _ = strconv.ParseInt(vID, 10, 64)
+			if vID := c.PostForm("artifactID"); vID != "" {
+				artifactID, _ = strconv.ParseInt(vID, 10, 64)
 			}
 		}
 
@@ -86,17 +86,17 @@ func ArtifactAuthMiddleware(authz authorizer.Authorizer, artSvc artifactSvc.Inte
 				repoID, _ = strconv.ParseInt(rID, 10, 64)
 			}
 		}
-		if viewID == 0 {
-			if vID := c.Query("viewId"); vID != "" {
-				viewID, _ = strconv.ParseInt(vID, 10, 64)
+		if artifactID == 0 {
+			if vID := c.Query("artifactID"); vID != "" {
+				artifactID, _ = strconv.ParseInt(vID, 10, 64)
 			}
 		}
 
-		if viewID > 0 && artSvc != nil {
+		if artifactID > 0 && artSvc != nil {
 			view, err := artSvc.ResolveView(ctx, &model.SpaceRepoReq{
-				SpaceID: spaceID,
-				RepoID:  repoID,
-				ViewID:  viewID,
+				SpaceID:    spaceID,
+				RepoID:     repoID,
+				ArtifactID: artifactID,
 			})
 			if err != nil {
 				resp.BadRequest(c, err)

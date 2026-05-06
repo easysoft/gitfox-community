@@ -358,7 +358,7 @@ const docTemplate = `{
         },
         "/artifacts/formats": {
             "post": {
-                "description": "列出指定空间的已用格式",
+                "description": "列出指定作用域下的已用格式。artifactID \u003e 0 时优先按指定视图查询，否则按默认 view 逻辑查询",
                 "consumes": [
                     "application/json"
                 ],
@@ -456,7 +456,7 @@ const docTemplate = `{
         },
         "/artifacts/groups": {
             "post": {
-                "description": "创建 group 节点。viewId 必传且必须大于 0",
+                "description": "创建 group 节点。artifactID 必传且必须大于 0",
                 "consumes": [
                     "application/json"
                 ],
@@ -469,7 +469,7 @@ const docTemplate = `{
                 "summary": "创建分组",
                 "parameters": [
                     {
-                        "description": "请求参数(viewId 必填；names 为 '.' 分隔的分组路径；format 必须是支持的格式枚举)",
+                        "description": "请求参数(artifactID 必填；names 为 '.' 分隔的分组路径；format 必须是支持的格式枚举)",
                         "name": "body",
                         "in": "body",
                         "required": true,
@@ -687,7 +687,7 @@ const docTemplate = `{
         },
         "/artifacts/packages": {
             "post": {
-                "description": "列出指定空间/视图下的制品包",
+                "description": "列出指定作用域下的制品包。artifactID \u003e 0 时优先按指定视图查询，否则按默认 view 逻辑查询",
                 "consumes": [
                     "application/json"
                 ],
@@ -935,6 +935,12 @@ const docTemplate = `{
                         "description": "仓库ID",
                         "name": "repoId",
                         "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "视图ID，\u003e 0 时优先按该视图上传",
+                        "name": "artifactID",
+                        "in": "formData"
                     }
                 ],
                 "responses": {
@@ -961,7 +967,7 @@ const docTemplate = `{
         },
         "/artifacts/versions/list": {
             "post": {
-                "description": "列出指定制品包的版本列表",
+                "description": "列出指定制品包的版本列表。artifactID \u003e 0 时优先按指定视图查询，否则按默认 view 逻辑查询",
                 "consumes": [
                     "application/json"
                 ],
@@ -1061,7 +1067,7 @@ const docTemplate = `{
                 "tags": [
                     "artifacts"
                 ],
-                "summary": "创建视图",
+                "summary": "创建制品库视图",
                 "parameters": [
                     {
                         "description": "创建参数",
@@ -11906,6 +11912,9 @@ const docTemplate = `{
                 "packageName"
             ],
             "properties": {
+                "artifactID": {
+                    "type": "integer"
+                },
                 "format": {
                     "type": "string"
                 },
@@ -11929,6 +11938,9 @@ const docTemplate = `{
                 "name"
             ],
             "properties": {
+                "artifactID": {
+                    "type": "integer"
+                },
                 "description": {
                     "type": "string"
                 },
@@ -11950,14 +11962,14 @@ const docTemplate = `{
                 "names"
             ],
             "properties": {
+                "artifactID": {
+                    "type": "integer"
+                },
                 "format": {
                     "type": "string"
                 },
                 "names": {
                     "type": "string"
-                },
-                "viewId": {
-                    "type": "integer"
                 }
             }
         },
@@ -12024,13 +12036,13 @@ const docTemplate = `{
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.SpaceRepoReq": {
             "type": "object",
             "properties": {
+                "artifactID": {
+                    "type": "integer"
+                },
                 "repoId": {
                     "type": "integer"
                 },
                 "spaceId": {
-                    "type": "integer"
-                },
-                "viewId": {
                     "type": "integer"
                 }
             }
@@ -12635,6 +12647,9 @@ const docTemplate = `{
                 "commit": {
                     "type": "string"
                 },
+                "commitBefore": {
+                    "type": "string"
+                },
                 "createdBy": {
                     "type": "string"
                 },
@@ -12723,6 +12738,9 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "commit": {
+                    "type": "string"
+                },
+                "commitBefore": {
                     "type": "string"
                 },
                 "createdBy": {
