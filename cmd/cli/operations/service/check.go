@@ -157,6 +157,10 @@ func isDockerDaemonRunning() bool {
 		if err := exec.Command("pgrep", "-x", "dockerd").Run(); err == nil {
 			return true
 		}
+		// 最后手段：尝试 docker info，如果能成功执行说明 daemon 也在运行（但可能会触发 socket activation）
+		if err := exec.Command("docker", "info").Run(); err == nil {
+			return true
+		}
 		return false
 	case "windows":
 		out, err := exec.Command("sc", "query", "docker").CombinedOutput()

@@ -92,9 +92,12 @@ func (p *Parser) Next() map[string]string {
 	return fields
 }
 
-// Err returns the latest encountered parsing error.
+// Err returns the latest encountered parsing or scanner error.
 func (p *Parser) Err() error {
-	return p.err
+	if p.err != nil {
+		return p.err
+	}
+	return p.scanner.Err()
 }
 
 // parseRef parses out all key-value pairs from a single reference block, such as

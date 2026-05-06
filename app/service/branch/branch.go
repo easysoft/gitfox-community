@@ -124,7 +124,6 @@ func (s *Service) List(ctx context.Context, filter branchModel.ReqFilter, repo *
 		PageSize:        int32(filter.PageSize),
 	})
 	if err != nil {
-		err = errors.WithI18nKey(err, i18n.GitCreateExecParamError)
 		return nil, isLast, err
 	}
 
