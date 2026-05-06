@@ -450,7 +450,7 @@
         },
         "/artifacts/groups": {
             "post": {
-                "description": "创建 group 节点",
+                "description": "创建 group 节点。viewId 必传且必须大于 0",
                 "consumes": [
                     "application/json"
                 ],
@@ -463,12 +463,12 @@
                 "summary": "创建分组",
                 "parameters": [
                     {
-                        "description": "请求参数(包含 spaceId, repoId, names 和 format)",
+                        "description": "请求参数(viewId 必填；names 为 '.' 分隔的分组路径；format 必须是支持的格式枚举)",
                         "name": "body",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object"
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.CreateGroupReq"
                         }
                     }
                 ],
@@ -588,7 +588,7 @@
         },
         "/artifacts/members": {
             "get": {
-                "description": "获取指定空间的制品库成员列表",
+                "description": "获取指定空间/仓库的制品库成员列表。",
                 "consumes": [
                     "application/json"
                 ],
@@ -602,17 +602,15 @@
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "空间ID",
+                        "description": "空间ID（可选，不传或传 0 表示全局）",
                         "name": "spaceId",
-                        "in": "query",
-                        "required": true
+                        "in": "query"
                     },
                     {
                         "type": "integer",
-                        "description": "仓库ID",
+                        "description": "仓库ID（可选）",
                         "name": "repoId",
-                        "in": "query",
-                        "required": true
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -739,53 +737,9 @@
                 }
             }
         },
-        "/artifacts/packages/{packageId}": {
-            "delete": {
-                "description": "删除指定包",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "artifacts"
-                ],
-                "summary": "删除指定包",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "包ID",
-                        "name": "packageId",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "成功",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "服务器错误",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/artifacts/permissions": {
             "get": {
-                "description": "获取指定空间的制品库权限配置",
+                "description": "获取指定空间/仓库的制品库权限配置。",
                 "consumes": [
                     "application/json"
                 ],
@@ -799,17 +753,15 @@
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "空间ID",
+                        "description": "空间ID（可选，不传或传 0 表示全局权限）",
                         "name": "spaceId",
-                        "in": "query",
-                        "required": true
+                        "in": "query"
                     },
                     {
                         "type": "integer",
-                        "description": "仓库ID",
+                        "description": "仓库ID（可选）",
                         "name": "repoId",
-                        "in": "query",
-                        "required": true
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -834,7 +786,7 @@
                 }
             },
             "post": {
-                "description": "设置指定空间的制品库权限",
+                "description": "设置指定空间/仓库的制品库权限。spaceId 和 repoId 均为可选：",
                 "consumes": [
                     "application/json"
                 ],
@@ -848,17 +800,15 @@
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "空间ID",
+                        "description": "空间ID（可选，不传或传 0 表示全局权限）",
                         "name": "spaceId",
-                        "in": "query",
-                        "required": true
+                        "in": "query"
                     },
                     {
                         "type": "integer",
-                        "description": "仓库ID",
+                        "description": "仓库ID（可选）",
                         "name": "repoId",
-                        "in": "query",
-                        "required": true
+                        "in": "query"
                     },
                     {
                         "description": "权限配置",
@@ -1025,50 +975,6 @@
                         "schema": {
                             "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.ArtifactVersionListReq"
                         }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "成功",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "服务器错误",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/artifacts/versions/{versionId}": {
-            "delete": {
-                "description": "删除指定版本",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "artifacts"
-                ],
-                "summary": "删除指定版本",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "版本ID",
-                        "name": "versionId",
-                        "in": "path",
-                        "required": true
                     }
                 ],
                 "responses": {
@@ -10636,6 +10542,799 @@
                     }
                 }
             }
+        },
+        "/v2/": {
+            "get": {
+                "description": "Docker Registry API v2 探测端点，用于检测服务是否支持 OCI 分发规范。docker login 时自动调用。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "container"
+                ],
+                "summary": "OCI v2 协议探测",
+                "responses": {
+                    "200": {
+                        "description": "空 JSON 对象，表示支持 v2 协议",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "未认证，响应包含 WWW-Authenticate 挑战头",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/v2/token": {
+            "get": {
+                "security": [
+                    {
+                        "BasicAuth": []
+                    }
+                ],
+                "description": "docker login 时 Docker 客户端携带 Basic Auth 凭证请求此端点，后端调用禅道 API 获取 token 并缓存返回。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "container"
+                ],
+                "summary": "容器镜像 Token 颁发",
+                "responses": {
+                    "200": {
+                        "description": "颁发成功，返回 {token: string}",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "认证失败（账号密码错误或缺失）",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/v2/{space}/{name}/blobs/uploads/": {
+            "post": {
+                "description": "发起一个新的 Blob 上传会话。如果 query 中包含 digest 参数则执行单次上传（monolithic），否则初始化分块上传。",
+                "consumes": [
+                    "application/octet-stream"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "container"
+                ],
+                "summary": "发起 Blob 上传",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "空间名称",
+                        "name": "space",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "镜像名称",
+                        "name": "name",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Blob 摘要（传入时执行单次上传）",
+                        "name": "digest",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "上传会话已创建，响应头包含 Location 和 Docker-Upload-UUID"
+                    },
+                    "401": {
+                        "description": "未认证",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "空间或镜像不存在",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/v2/{space}/{name}/blobs/uploads/{uuid}": {
+            "get": {
+                "description": "查询分块上传会话的当前状态，返回已上传的字节范围。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "container"
+                ],
+                "summary": "查询 Blob 上传状态",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "空间名称",
+                        "name": "space",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "镜像名称",
+                        "name": "name",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "上传会话 UUID",
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "查询成功，响应头包含 Range 和 Docker-Upload-UUID"
+                    },
+                    "401": {
+                        "description": "未认证",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "上传会话不存在",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "完成分块上传会话，可选附带最后一块数据。必须在 query 中提供最终 digest 校验。",
+                "consumes": [
+                    "application/octet-stream"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "container"
+                ],
+                "summary": "完成 Blob 上传",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "空间名称",
+                        "name": "space",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "镜像名称",
+                        "name": "name",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "上传会话 UUID",
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "最终 Blob 摘要",
+                        "name": "digest",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "上传状态 token",
+                        "name": "_state",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "上传完成，响应头包含 Docker-Content-Digest 和 Location"
+                    },
+                    "401": {
+                        "description": "未认证",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "上传会话不存在",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "取消正在进行的分块上传会话，释放已上传的临时数据。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "container"
+                ],
+                "summary": "取消 Blob 上传",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "空间名称",
+                        "name": "space",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "镜像名称",
+                        "name": "name",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "上传会话 UUID",
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "上传状态 token",
+                        "name": "_state",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "取消成功"
+                    },
+                    "401": {
+                        "description": "未认证",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "上传会话不存在",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "description": "向正在进行的分块上传会话追加数据。请求体为原始字节流。",
+                "consumes": [
+                    "application/octet-stream"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "container"
+                ],
+                "summary": "追加 Blob 分块数据",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "空间名称",
+                        "name": "space",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "镜像名称",
+                        "name": "name",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "上传会话 UUID",
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "上传状态 token",
+                        "name": "_state",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "数据追加成功，响应头包含 Range 和 Docker-Upload-UUID"
+                    },
+                    "401": {
+                        "description": "未认证",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "上传会话不存在",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/v2/{space}/{name}/blobs/{digest}": {
+            "get": {
+                "description": "根据 digest 下载指定容器镜像空间下的 Blob 内容（镜像层数据）。",
+                "produces": [
+                    "application/octet-stream"
+                ],
+                "tags": [
+                    "container"
+                ],
+                "summary": "下载 Blob",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "空间名称",
+                        "name": "space",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "镜像名称",
+                        "name": "name",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Blob 摘要 (如 sha256:abc123...)",
+                        "name": "digest",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Blob 内容",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "401": {
+                        "description": "未认证",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Blob 不存在",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "根据 digest 删除指定容器镜像空间下的 Blob。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "container"
+                ],
+                "summary": "删除 Blob",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "空间名称",
+                        "name": "space",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "镜像名称",
+                        "name": "name",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Blob 摘要 (如 sha256:abc123...)",
+                        "name": "digest",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "删除成功"
+                    },
+                    "401": {
+                        "description": "未认证",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Blob 不存在",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "head": {
+                "description": "根据 digest 检查指定容器镜像空间下的 Blob 是否存在，返回 Content-Length 等元信息。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "container"
+                ],
+                "summary": "检查 Blob 是否存在",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "空间名称",
+                        "name": "space",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "镜像名称",
+                        "name": "name",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Blob 摘要 (如 sha256:abc123...)",
+                        "name": "digest",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Blob 存在，响应头包含 Content-Length 和 Docker-Content-Digest"
+                    },
+                    "401": {
+                        "description": "未认证",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Blob 不存在",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/v2/{space}/{name}/manifests/{reference}": {
+            "get": {
+                "description": "根据 reference（tag 或 digest）下载容器镜像的 Manifest 内容。",
+                "produces": [
+                    "application/vnd.docker.distribution.manifest.v2+json"
+                ],
+                "tags": [
+                    "container"
+                ],
+                "summary": "下载 Manifest",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "空间名称",
+                        "name": "space",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "镜像名称",
+                        "name": "name",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "引用（tag 名称或 digest）",
+                        "name": "reference",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Manifest JSON 内容",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "未认证",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Manifest 不存在",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "上传容器镜像的 Manifest（docker push 的核心步骤）。reference 可以是 tag 或 digest。",
+                "consumes": [
+                    "application/vnd.docker.distribution.manifest.v2+json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "container"
+                ],
+                "summary": "上传 Manifest",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "空间名称",
+                        "name": "space",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "镜像名称",
+                        "name": "name",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "引用（tag 名称或 digest）",
+                        "name": "reference",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "上传成功，响应头包含 Docker-Content-Digest 和 Location"
+                    },
+                    "400": {
+                        "description": "Manifest 格式错误",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "未认证",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "根据 reference（tag 或 digest）删除容器镜像的 Manifest 及关联数据。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "container"
+                ],
+                "summary": "删除 Manifest",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "空间名称",
+                        "name": "space",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "镜像名称",
+                        "name": "name",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "引用（tag 名称或 digest）",
+                        "name": "reference",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "删除成功"
+                    },
+                    "401": {
+                        "description": "未认证",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Manifest 不存在",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "head": {
+                "description": "根据 reference（tag 或 digest）检查 Manifest 是否存在，返回 Content-Type 和 Docker-Content-Digest。",
+                "produces": [
+                    "application/vnd.docker.distribution.manifest.v2+json"
+                ],
+                "tags": [
+                    "container"
+                ],
+                "summary": "检查 Manifest 是否存在",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "空间名称",
+                        "name": "space",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "镜像名称",
+                        "name": "name",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "引用（tag 名称或 digest）",
+                        "name": "reference",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Manifest 存在，响应头包含 Content-Length 和 Docker-Content-Digest"
+                    },
+                    "401": {
+                        "description": "未认证",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Manifest 不存在",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/v2/{space}/{name}/tags/list": {
+            "get": {
+                "description": "列出指定容器镜像的所有 Tag 列表。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "container"
+                ],
+                "summary": "列出镜像 Tag",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "空间名称",
+                        "name": "space",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "镜像名称",
+                        "name": "name",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Tag 列表，格式 {name: string, tags: []string}",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "未认证",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "镜像不存在",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -11238,20 +11937,50 @@
                 }
             }
         },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.CreateGroupReq": {
+            "type": "object",
+            "required": [
+                "format",
+                "names"
+            ],
+            "properties": {
+                "format": {
+                    "type": "string"
+                },
+                "names": {
+                    "type": "string"
+                },
+                "viewId": {
+                    "type": "integer"
+                }
+            }
+        },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.PermRule": {
             "type": "object",
             "properties": {
+                "accounts": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "allowAccounts": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "denyAccounts": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "role": {
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.CasbinRole"
                 },
                 "scope": {
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.CasbinScope"
-                },
-                "user_ids": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
                 }
             }
         },
@@ -13413,6 +14142,9 @@
                 },
                 "status": {
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanIssueStatus"
+                },
+                "trigger": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTaskTrigger"
                 },
                 "updatedByTaskID": {
                     "type": "integer"

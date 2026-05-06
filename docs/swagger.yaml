@@ -480,16 +480,36 @@ definitions:
     required:
     - name
     type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.CreateGroupReq:
+    properties:
+      format:
+        type: string
+      names:
+        type: string
+      viewId:
+        type: integer
+    required:
+    - format
+    - names
+    type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.PermRule:
     properties:
+      accounts:
+        items:
+          type: string
+        type: array
+      allowAccounts:
+        items:
+          type: string
+        type: array
+      denyAccounts:
+        items:
+          type: string
+        type: array
       role:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.CasbinRole'
       scope:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.CasbinScope'
-      user_ids:
-        items:
-          type: integer
-        type: array
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.PermissionRequest:
     properties:
@@ -1951,6 +1971,8 @@ definitions:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanMethod'
       status:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanIssueStatus'
+      trigger:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTaskTrigger'
       updatedByTaskID:
         type: integer
     type: object
@@ -3450,14 +3472,14 @@ paths:
     post:
       consumes:
       - application/json
-      description: 创建 group 节点
+      description: 创建 group 节点。viewId 必传且必须大于 0
       parameters:
-      - description: 请求参数(包含 spaceId, repoId, names 和 format)
+      - description: 请求参数(viewId 必填；names 为 '.' 分隔的分组路径；format 必须是支持的格式枚举)
         in: body
         name: body
         required: true
         schema:
-          type: object
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.CreateGroupReq'
       produces:
       - application/json
       responses:
@@ -3541,17 +3563,15 @@ paths:
     get:
       consumes:
       - application/json
-      description: 获取指定空间的制品库成员列表
+      description: 获取指定空间/仓库的制品库成员列表。
       parameters:
-      - description: 空间ID
+      - description: 空间ID（可选，不传或传 0 表示全局）
         in: query
         name: spaceId
-        required: true
         type: integer
-      - description: 仓库ID
+      - description: 仓库ID（可选）
         in: query
         name: repoId
-        required: true
         type: integer
       produces:
       - application/json
@@ -3638,50 +3658,19 @@ paths:
       summary: 查询制品包列表
       tags:
       - artifacts
-  /artifacts/packages/{packageId}:
-    delete:
-      consumes:
-      - application/json
-      description: 删除指定包
-      parameters:
-      - description: 包ID
-        in: path
-        name: packageId
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 成功
-          schema:
-            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
-        "400":
-          description: 参数错误
-          schema:
-            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
-        "500":
-          description: 服务器错误
-          schema:
-            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
-      summary: 删除指定包
-      tags:
-      - artifacts
   /artifacts/permissions:
     get:
       consumes:
       - application/json
-      description: 获取指定空间的制品库权限配置
+      description: 获取指定空间/仓库的制品库权限配置。
       parameters:
-      - description: 空间ID
+      - description: 空间ID（可选，不传或传 0 表示全局权限）
         in: query
         name: spaceId
-        required: true
         type: integer
-      - description: 仓库ID
+      - description: 仓库ID（可选）
         in: query
         name: repoId
-        required: true
         type: integer
       produces:
       - application/json
@@ -3704,17 +3693,15 @@ paths:
     post:
       consumes:
       - application/json
-      description: 设置指定空间的制品库权限
+      description: 设置指定空间/仓库的制品库权限。spaceId 和 repoId 均为可选：
       parameters:
-      - description: 空间ID
+      - description: 空间ID（可选，不传或传 0 表示全局权限）
         in: query
         name: spaceId
-        required: true
         type: integer
-      - description: 仓库ID
+      - description: 仓库ID（可选）
         in: query
         name: repoId
-        required: true
         type: integer
       - description: 权限配置
         in: body
@@ -3811,35 +3798,6 @@ paths:
           schema:
             $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
       summary: 上传制品
-      tags:
-      - artifacts
-  /artifacts/versions/{versionId}:
-    delete:
-      consumes:
-      - application/json
-      description: 删除指定版本
-      parameters:
-      - description: 版本ID
-        in: path
-        name: versionId
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 成功
-          schema:
-            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
-        "400":
-          description: 参数错误
-          schema:
-            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
-        "500":
-          description: 服务器错误
-          schema:
-            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
-      summary: 删除指定版本
       tags:
       - artifacts
   /artifacts/versions/{versionId}/assets:
@@ -9905,6 +9863,552 @@ paths:
       summary: 修改用户公钥
       tags:
       - users
+  /v2/:
+    get:
+      description: Docker Registry API v2 探测端点，用于检测服务是否支持 OCI 分发规范。docker login 时自动调用。
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 空 JSON 对象，表示支持 v2 协议
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未认证，响应包含 WWW-Authenticate 挑战头
+          schema:
+            additionalProperties: true
+            type: object
+      summary: OCI v2 协议探测
+      tags:
+      - container
+  /v2/{space}/{name}/blobs/{digest}:
+    delete:
+      description: 根据 digest 删除指定容器镜像空间下的 Blob。
+      parameters:
+      - description: 空间名称
+        in: path
+        name: space
+        required: true
+        type: string
+      - description: 镜像名称
+        in: path
+        name: name
+        required: true
+        type: string
+      - description: Blob 摘要 (如 sha256:abc123...)
+        in: path
+        name: digest
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: 删除成功
+        "401":
+          description: 未认证
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Blob 不存在
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 删除 Blob
+      tags:
+      - container
+    get:
+      description: 根据 digest 下载指定容器镜像空间下的 Blob 内容（镜像层数据）。
+      parameters:
+      - description: 空间名称
+        in: path
+        name: space
+        required: true
+        type: string
+      - description: 镜像名称
+        in: path
+        name: name
+        required: true
+        type: string
+      - description: Blob 摘要 (如 sha256:abc123...)
+        in: path
+        name: digest
+        required: true
+        type: string
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: Blob 内容
+          schema:
+            type: file
+        "401":
+          description: 未认证
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Blob 不存在
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 下载 Blob
+      tags:
+      - container
+    head:
+      description: 根据 digest 检查指定容器镜像空间下的 Blob 是否存在，返回 Content-Length 等元信息。
+      parameters:
+      - description: 空间名称
+        in: path
+        name: space
+        required: true
+        type: string
+      - description: 镜像名称
+        in: path
+        name: name
+        required: true
+        type: string
+      - description: Blob 摘要 (如 sha256:abc123...)
+        in: path
+        name: digest
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Blob 存在，响应头包含 Content-Length 和 Docker-Content-Digest
+        "401":
+          description: 未认证
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Blob 不存在
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 检查 Blob 是否存在
+      tags:
+      - container
+  /v2/{space}/{name}/blobs/uploads/:
+    post:
+      consumes:
+      - application/octet-stream
+      description: 发起一个新的 Blob 上传会话。如果 query 中包含 digest 参数则执行单次上传（monolithic），否则初始化分块上传。
+      parameters:
+      - description: 空间名称
+        in: path
+        name: space
+        required: true
+        type: string
+      - description: 镜像名称
+        in: path
+        name: name
+        required: true
+        type: string
+      - description: Blob 摘要（传入时执行单次上传）
+        in: query
+        name: digest
+        type: string
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: 上传会话已创建，响应头包含 Location 和 Docker-Upload-UUID
+        "401":
+          description: 未认证
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 空间或镜像不存在
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 发起 Blob 上传
+      tags:
+      - container
+  /v2/{space}/{name}/blobs/uploads/{uuid}:
+    delete:
+      description: 取消正在进行的分块上传会话，释放已上传的临时数据。
+      parameters:
+      - description: 空间名称
+        in: path
+        name: space
+        required: true
+        type: string
+      - description: 镜像名称
+        in: path
+        name: name
+        required: true
+        type: string
+      - description: 上传会话 UUID
+        in: path
+        name: uuid
+        required: true
+        type: string
+      - description: 上传状态 token
+        in: query
+        name: _state
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: 取消成功
+        "401":
+          description: 未认证
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 上传会话不存在
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 取消 Blob 上传
+      tags:
+      - container
+    get:
+      description: 查询分块上传会话的当前状态，返回已上传的字节范围。
+      parameters:
+      - description: 空间名称
+        in: path
+        name: space
+        required: true
+        type: string
+      - description: 镜像名称
+        in: path
+        name: name
+        required: true
+        type: string
+      - description: 上传会话 UUID
+        in: path
+        name: uuid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: 查询成功，响应头包含 Range 和 Docker-Upload-UUID
+        "401":
+          description: 未认证
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 上传会话不存在
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 查询 Blob 上传状态
+      tags:
+      - container
+    patch:
+      consumes:
+      - application/octet-stream
+      description: 向正在进行的分块上传会话追加数据。请求体为原始字节流。
+      parameters:
+      - description: 空间名称
+        in: path
+        name: space
+        required: true
+        type: string
+      - description: 镜像名称
+        in: path
+        name: name
+        required: true
+        type: string
+      - description: 上传会话 UUID
+        in: path
+        name: uuid
+        required: true
+        type: string
+      - description: 上传状态 token
+        in: query
+        name: _state
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: 数据追加成功，响应头包含 Range 和 Docker-Upload-UUID
+        "401":
+          description: 未认证
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 上传会话不存在
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 追加 Blob 分块数据
+      tags:
+      - container
+    put:
+      consumes:
+      - application/octet-stream
+      description: 完成分块上传会话，可选附带最后一块数据。必须在 query 中提供最终 digest 校验。
+      parameters:
+      - description: 空间名称
+        in: path
+        name: space
+        required: true
+        type: string
+      - description: 镜像名称
+        in: path
+        name: name
+        required: true
+        type: string
+      - description: 上传会话 UUID
+        in: path
+        name: uuid
+        required: true
+        type: string
+      - description: 最终 Blob 摘要
+        in: query
+        name: digest
+        required: true
+        type: string
+      - description: 上传状态 token
+        in: query
+        name: _state
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: 上传完成，响应头包含 Docker-Content-Digest 和 Location
+        "401":
+          description: 未认证
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 上传会话不存在
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 完成 Blob 上传
+      tags:
+      - container
+  /v2/{space}/{name}/manifests/{reference}:
+    delete:
+      description: 根据 reference（tag 或 digest）删除容器镜像的 Manifest 及关联数据。
+      parameters:
+      - description: 空间名称
+        in: path
+        name: space
+        required: true
+        type: string
+      - description: 镜像名称
+        in: path
+        name: name
+        required: true
+        type: string
+      - description: 引用（tag 名称或 digest）
+        in: path
+        name: reference
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: 删除成功
+        "401":
+          description: 未认证
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Manifest 不存在
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 删除 Manifest
+      tags:
+      - container
+    get:
+      description: 根据 reference（tag 或 digest）下载容器镜像的 Manifest 内容。
+      parameters:
+      - description: 空间名称
+        in: path
+        name: space
+        required: true
+        type: string
+      - description: 镜像名称
+        in: path
+        name: name
+        required: true
+        type: string
+      - description: 引用（tag 名称或 digest）
+        in: path
+        name: reference
+        required: true
+        type: string
+      produces:
+      - application/vnd.docker.distribution.manifest.v2+json
+      responses:
+        "200":
+          description: Manifest JSON 内容
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未认证
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Manifest 不存在
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 下载 Manifest
+      tags:
+      - container
+    head:
+      description: 根据 reference（tag 或 digest）检查 Manifest 是否存在，返回 Content-Type 和 Docker-Content-Digest。
+      parameters:
+      - description: 空间名称
+        in: path
+        name: space
+        required: true
+        type: string
+      - description: 镜像名称
+        in: path
+        name: name
+        required: true
+        type: string
+      - description: 引用（tag 名称或 digest）
+        in: path
+        name: reference
+        required: true
+        type: string
+      produces:
+      - application/vnd.docker.distribution.manifest.v2+json
+      responses:
+        "200":
+          description: Manifest 存在，响应头包含 Content-Length 和 Docker-Content-Digest
+        "401":
+          description: 未认证
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Manifest 不存在
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 检查 Manifest 是否存在
+      tags:
+      - container
+    put:
+      consumes:
+      - application/vnd.docker.distribution.manifest.v2+json
+      description: 上传容器镜像的 Manifest（docker push 的核心步骤）。reference 可以是 tag 或 digest。
+      parameters:
+      - description: 空间名称
+        in: path
+        name: space
+        required: true
+        type: string
+      - description: 镜像名称
+        in: path
+        name: name
+        required: true
+        type: string
+      - description: 引用（tag 名称或 digest）
+        in: path
+        name: reference
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: 上传成功，响应头包含 Docker-Content-Digest 和 Location
+        "400":
+          description: Manifest 格式错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未认证
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 上传 Manifest
+      tags:
+      - container
+  /v2/{space}/{name}/tags/list:
+    get:
+      description: 列出指定容器镜像的所有 Tag 列表。
+      parameters:
+      - description: 空间名称
+        in: path
+        name: space
+        required: true
+        type: string
+      - description: 镜像名称
+        in: path
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'Tag 列表，格式 {name: string, tags: []string}'
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未认证
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 镜像不存在
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 列出镜像 Tag
+      tags:
+      - container
+  /v2/token:
+    get:
+      consumes:
+      - application/json
+      description: docker login 时 Docker 客户端携带 Basic Auth 凭证请求此端点，后端调用禅道 API 获取 token
+        并缓存返回。
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '颁发成功，返回 {token: string}'
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 认证失败（账号密码错误或缺失）
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BasicAuth: []
+      summary: 容器镜像 Token 颁发
+      tags:
+      - container
 securityDefinitions:
   ApiKeyAuth:
     in: header
