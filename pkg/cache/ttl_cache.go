@@ -212,6 +212,17 @@ func (c *TTLCache[K, V]) Get(ctx context.Context, key K) (V, error) {
 	return item, nil
 }
 
+// Set 直接将 key-value 写入缓存（绕过 Getter 回源）。
+// 用于 token 颁发等场景：先写入缓存，后续 Get 时直接命中。
+func (c *TTLCache[K, V]) Set(key K, value V) {
+	c.mx.Lock()
+	c.cache[key] = cacheEntry[V]{
+		added: time.Now(),
+		data:  value,
+	}
+	c.mx.Unlock()
+}
+
 // Deduplicate is a utility function that removes duplicates from slice.
 func Deduplicate[V constraints.Ordered](slice []V) []V {
 	if len(slice) <= 1 {

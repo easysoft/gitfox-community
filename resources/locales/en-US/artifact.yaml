@@ -54,6 +54,12 @@ artifact:
   # Group
   group_create_error: "Failed to create artifact group."
   group_query_error: "Failed to query artifact group."
+  group_viewid_required: "viewId must be greater than 0."
+  group_view_not_found: "The specified artifact view does not exist."
+  group_format_invalid: "Unsupported artifact format. Supported: generic, raw, maven, container, helm, pypi, npm."
+  group_names_invalid: "Group names are invalid, must not be empty or contain empty segments."
+  group_container_no_nesting: "Container format only supports a single-level group, nesting with '.' is not allowed."
+  group_duplicate: "A group with the same path already exists, duplicate creation is not allowed."
 
   # Tree
   tree_format_list_error: "Failed to list artifact formats."

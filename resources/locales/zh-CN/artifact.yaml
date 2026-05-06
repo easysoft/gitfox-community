@@ -54,6 +54,12 @@ artifact:
   # Group
   group_create_error: "创建制品分组失败."
   group_query_error: "查询制品分组失败."
+  group_viewid_required: "viewId 必须大于 0."
+  group_view_not_found: "指定的制品视图不存在."
+  group_format_invalid: "不支持的制品格式，仅支持: generic, raw, maven, container, helm, pypi, npm."
+  group_names_invalid: "分组名称不合法，不能为空且不允许包含空段."
+  group_container_no_nesting: "container 格式仅支持单级分组，不允许使用 '.' 嵌套."
+  group_duplicate: "同名分组路径已存在，不允许重复创建."
 
   # Tree
   tree_format_list_error: "查询制品格式列表失败."

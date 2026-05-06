@@ -23,6 +23,7 @@ import (
 	webhook2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/webhook"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/router"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/authorizer"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/handler"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/canceler"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/manager"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/scheduler"
@@ -325,6 +326,8 @@ func NewApp(mode string) (*App, func(), error) {
 	}
 	poller := provider.ProvideExecutionPoller(runnerRunner, client)
 	artifactAuthorizer := authorizer.New(artifactManager)
+	containerController := provider.ProvideContainerController(artifactStore, artifactService)
+	containerHandler := provider.ProvideContainerHandler(containerController, artifactService, artifactStore, spaceStore, config)
 	app := &App{
 		SystemConfig:       config,
 		SystemLog:          systemLog,
@@ -353,6 +356,7 @@ func NewApp(mode string) (*App, func(), error) {
 		TokenStore:         tokenInterface,
 		ArtifactService:    artifactService,
 		ArtifactAuthorizer: artifactAuthorizer,
+		ContainerHandler:   containerHandler,
 	}
 	return app, func() {
 		cleanup2()
@@ -390,4 +394,5 @@ type App struct {
 	TokenStore         token.Interface
 	ArtifactService    artifact3.Interface
 	ArtifactAuthorizer authorizer.Authorizer
+	ContainerHandler   *handler.ContainerHandler
 }

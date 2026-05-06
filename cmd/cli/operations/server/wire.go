@@ -10,6 +10,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/githook"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/router"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/authorizer"
+	ctnHandler "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/handler"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/triggerer"
 	artifactSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/artifact"
 	jobsSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/jobs"
@@ -57,6 +58,7 @@ type App struct {
 	TokenStore       tokenStore.Interface
 	ArtifactService  artifactSvc.Interface
 	ArtifactAuthorizer authorizer.Authorizer
+	ContainerHandler *ctnHandler.ContainerHandler
 }
 
 func NewApp(mode string) (*App, func(), error) {
