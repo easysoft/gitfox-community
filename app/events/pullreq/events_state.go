@@ -15,6 +15,7 @@ type CreatedPayload struct {
 	SourceBranch string `json:"sourceBranch"`
 	TargetBranch string `json:"targetBranch"`
 	SourceSHA    string `json:"sourceSHA"`
+	MergeBaseSHA string `json:"mergeBaseSHA"`
 }
 
 func (r *Reporter) Created(ctx context.Context, payload *CreatedPayload) {

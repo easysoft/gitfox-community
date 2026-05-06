@@ -11,7 +11,6 @@ import (
 	triggerSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/trigger"
 	repoStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/events"
-	gitPkg "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/url"
 )
 
@@ -30,7 +29,6 @@ func ProvideTriggerService(
 	scanTriggerSvc scanSvc.IScanTrigger,
 	planSvc scanSvc.IScanPlan,
 	taskSvc scanSvc.IScanTask,
-	gitSvc gitPkg.Interface,
 	gitReaderFactory *events.ReaderFactory[*gitevents.Reader],
 	pullReqEvFactory *events.ReaderFactory[*pullreqevents.Reader],
 ) (*triggerSvc.Service, error) {
@@ -49,7 +47,6 @@ func ProvideTriggerService(
 		scanTriggerSvc,
 		planSvc,
 		taskSvc,
-		gitSvc,
 		gitReaderFactory,
 		pullReqEvFactory,
 	)

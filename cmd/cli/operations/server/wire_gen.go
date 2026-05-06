@@ -294,7 +294,7 @@ func NewApp(mode string) (*App, func(), error) {
 		return nil, nil, err
 	}
 	server := provider.ProvideSSHServer(config, interface2, gitController)
-	triggerService, err := provider.ProvideTriggerService(eventContext, pipelineService, triggererTriggerer, store, urlProvider, scanTriggerService, scanPlanService, scanTaskService, gitService, readerFactory, eventsReaderFactory)
+	triggerService, err := provider.ProvideTriggerService(eventContext, pipelineService, triggererTriggerer, store, urlProvider, scanTriggerService, scanPlanService, scanTaskService, readerFactory, eventsReaderFactory)
 	if err != nil {
 		cleanup2()
 		cleanup()

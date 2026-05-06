@@ -826,6 +826,7 @@ func (s *Service) TriggerEvent(
 			SourceBranch: pr.SourceBranch,
 			TargetBranch: pr.TargetBranch,
 			SourceSHA:    pr.SourceSHA,
+			MergeBaseSHA: pr.MergeBaseSHA,
 		})
 	case repoModel.EventTriggerTypeClose:
 		s.pullreqEvReporter.Closed(ctx, &pullreqevents.ClosedPayload{

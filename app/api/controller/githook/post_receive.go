@@ -344,6 +344,7 @@ func (c *Controller) suggestPullRequest(
 			SourceBranch: sourceBranch,
 			TargetBranch: targetBranch,
 			SourceSHA:    sourceSHA,
+			MergeBaseSHA: mergeBaseSHA.String(),
 		})
 		out.Messages = append(out.Messages,
 			fmt.Sprintf("review a pull request for %q by visiting:", targetBranch),
@@ -529,6 +530,7 @@ func (c *Controller) ReportPRCreated(ctx context.Context, pr *repoModel.PullRequ
 		SourceBranch: pr.SourceBranch,
 		TargetBranch: pr.TargetBranch,
 		SourceSHA:    pr.SourceSHA,
+		MergeBaseSHA: pr.MergeBaseSHA,
 	})
 }
 
