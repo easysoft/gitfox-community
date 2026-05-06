@@ -38,14 +38,17 @@ var CasbinRoles = []CasbinRole{
 }
 
 const (
+	// view pull
 	CasbinArtifactRoleReader CasbinRole = "artifact_reader"
+	// view pull push
 	CasbinArtifactRoleWriter CasbinRole = "artifact_writer"
-	CasbinArtifactRoleAdmin  CasbinRole = "artifact_admin"
+	// view pull push override update delete create permission
+	CasbinArtifactRoleAdmin CasbinRole = "artifact_admin"
 )
 
 type CasbinScope string
 
-func (s CasbinScope) String() string    { return string(s) }
+func (s CasbinScope) String() string { return string(s) }
 
 var CasbinScopes = []CasbinScope{
 	CasbinScopeSingle,
@@ -54,7 +57,10 @@ var CasbinScopes = []CasbinScope{
 }
 
 const (
-	CasbinScopeSingle    CasbinScope = "."
-	CasbinScopeSub       CasbinScope = "*"
+	// 当前节点权限
+	CasbinScopeSingle CasbinScope = "."
+	// 子节点权限
+	CasbinScopeSub CasbinScope = "*"
+	// 递归权限
 	CasbinScopeRecursive CasbinScope = "**"
 )

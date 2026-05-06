@@ -35,6 +35,14 @@ func (c *views) Delete(ctx context.Context, id int64) error {
 	return nil
 }
 
+func (c *views) GetByID(ctx context.Context, id int64) (*model.ArtifactView, error) {
+	var row artifactView
+	if err := c.db.WithContext(ctx).Where("deleted = 0").Take(&row, id).Error; err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
+	}
+	return viewToModel(&row), nil
+}
+
 func (c *views) GetDefault(ctx context.Context, spaceId int64) (*model.ArtifactView, error) {
 	var row artifactView
 	q := artifactView{SpaceID: spaceId, Default: true}
@@ -79,6 +87,7 @@ func (c *views) FindByNameInScope(ctx context.Context, spaceId, repoId int64, na
 	}
 	return result, nil
 }
+
 
 // SoftDelete 软删除视图（将 deleted 标记为 1）。
 // BeforeUpdate 钩子会自动更新 editedDate，复用为"删除时间"，用于回收站保留期的计算基准。

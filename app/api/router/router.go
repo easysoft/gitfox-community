@@ -2,6 +2,7 @@ package router
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
@@ -11,13 +12,16 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/middleware"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/authorizer"
+	ctnHandler "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/handler"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/auth/authn"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/cache"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 )
 
 // NewRouter 创建路由实例并注册所有业务模块的路由
-func NewRouter(mode string, logger *logger.SugaredMateLogger, controller *Controller, artAuthz authorizer.Authorizer) *gin.Engine {
+func NewRouter(mode string, logger *logger.SugaredMateLogger, controller *Controller, artAuthz authorizer.Authorizer, containerHandler *ctnHandler.ContainerHandler, cfg *config.Config) *gin.Engine {
 
 	// 根据 mode 设置 Gin 运行模式
 	switch mode {
@@ -80,6 +84,11 @@ func NewRouter(mode string, logger *logger.SugaredMateLogger, controller *Contro
 	// 注册 Runner client 相关路由使用 token 鉴权
 	runnerClientGroup := r.Group("/api/v2/runner-client")
 	registerRunnerClientRoutes(runnerClientGroup, controller)
+
+	// 注册容器镜像（OCI v2）路由，用于 docker login / pull / push
+	// token 通过 Set 写入，Get miss 时返回 error（表示 token 不存在或已过期）
+	tokenStore := cache.New[string, string](nopTokenGetter{}, 72*time.Hour) // 3 天过期
+	registerContainerRoutes(r, containerHandler, tokenStore, cfg)
 
 	return r
 }

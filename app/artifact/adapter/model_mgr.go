@@ -379,6 +379,7 @@ func (mm *ModelManager) getOrCreatePackage(ctx context.Context) (*model.Artifact
 		ViewID:    mm.view.ViewID,
 		Name:      desc.Name,
 		Namespace: desc.Namespace,
+		GroupID:   desc.GroupId, // 来自上层 Prepare 回调（container 的 getOrCreateGroup、raw 的 namespace）
 		Format:    desc.Format,
 	}
 	createdPkg, err := mm.store.Packages().Create(ctx, pkgModel)
