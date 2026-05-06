@@ -85,7 +85,7 @@ func (s *entityParser) parse(ctx context.Context, eType model.ArtifactEntityKind
 		}
 
 		elem.Name = group.Name
-		if group.ParentID.Ptr() != nil {
+		if group.ParentID.Valid && group.ParentID.Int64 != 0 {
 			elem.Parent, err = s.parse(ctx, model.ArtifactEntityKindGroup, group.ParentID.Int64)
 		} else {
 			elem.Parent = &model.ArtifactEntity{Kind: model.ArtifactEntityKindFormat, Name: string(group.Format)}
