@@ -9,6 +9,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/adapter/container"
 	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
 	authModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/storage"
 )
 
 // JobScheduler 是后台任务调度器接口，用于触发异步 GC 等任务。
@@ -26,6 +27,12 @@ type Interface interface {
 
 	// ParseSpaceView 解析空间+仓库参数，返回视图描述符（包含 viewID 和路由信息）。
 	ParseSpaceView(ctx context.Context, req *model.SpaceRepoReq) (*adapter.ViewDescriptor, error)
+
+	// ParseContainerView 按作用域和视图名称解析 ViewDescriptor，供容器镜像路由使用。
+	// scope: "global" | "space" | "repo"
+	// spaceName / scopeRepoName 在对应 scope 下有值，global 时均为空字符串。
+	// view 不存在时直接返回 404，不自动创建。
+	ParseContainerView(ctx context.Context, scope, spaceName, scopeRepoName, viewname string) (*adapter.ViewDescriptor, error)
 
 	// ---- 制品查询 ----
 
@@ -57,6 +64,12 @@ type Interface interface {
 
 	// ---- 分组管理 ----
 
+	// ViewExists 检查指定 viewId 是否存在（仅 active view）。
+	ViewExists(ctx context.Context, viewId int64) error
+
+	// GroupPathExists 检查指定视图下是否已存在完全相同的分组路径。
+	GroupPathExists(ctx context.Context, viewId int64, names []string, format model.ArtifactFormat) (bool, error)
+
 	// CreateGroup 在指定视图下创建分组层级。
 	CreateGroup(ctx context.Context, viewId int64, names []string, format model.ArtifactFormat) (*model.ArtifactGroupEndpoint, error)
 
@@ -73,13 +86,7 @@ type Interface interface {
 
 	// ---- 删除操作 ----
 
-	// DeleteVersion 删除指定版本及其下所有资源。
-	DeleteVersion(ctx context.Context, versionId int64) error
-
-	// DeletePackage 删除指定制品包及其下所有版本和资源。
-	DeletePackage(ctx context.Context, packageId int64) error
-
-	// SoftRemove 软删除指定的实体节点（package/version/group），将其标记为已删除。
+	// SoftRemove 软删除指定的实体节点（group/package/version/asset），支持级联删除子节点。
 	SoftRemove(ctx context.Context, spaceID int64, req *model.SoftRemoveEntitiesReq) (*model.ArtifactNodeRemoveReport, error)
 
 	// ---- 归档下载 ----
@@ -137,4 +144,7 @@ type Interface interface {
 
 	// GetSpaceMembers 获取空间/仓库级的制品库成员列表。
 	GetSpaceMembers(ctx context.Context, spaceID, repoID int64) ([]*model.CasbinSubject, error)
+
+	// FileStore 返回制品库内容存储，供容器镜像控制器直接使用。
+	FileStore() storage.ContentStorage
 }

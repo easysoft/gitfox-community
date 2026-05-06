@@ -155,6 +155,7 @@ type CreateArtifactPackage struct {
 	ViewID    int64          `json:"viewId"`
 	Name      string         `json:"name"`
 	Namespace string         `json:"namespace"`
+	GroupID   int64          `json:"groupId"`
 	Format    ArtifactFormat `json:"format"`
 }
 
@@ -616,7 +617,9 @@ type PermissionRequest struct {
 
 // PermRule 是权限规则中的单条规则，包含用户列表、角色和作用域。
 type PermRule struct {
-	Accounts []string         `json:"accounts"`
-	Role     enum.CasbinRole  `json:"role"`
-	Scope    enum.CasbinScope `json:"scope"`
+	Accounts      []string         `json:"accounts"`
+	AllowAccounts []string         `json:"allowAccounts"`
+	DenyAccounts  []string         `json:"denyAccounts"`
+	Role          enum.CasbinRole  `json:"role"`
+	Scope         enum.CasbinScope `json:"scope"`
 }

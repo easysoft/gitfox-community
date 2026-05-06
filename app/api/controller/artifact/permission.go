@@ -4,6 +4,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
 	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 
 	"github.com/gin-gonic/gin"
@@ -24,18 +25,21 @@ import (
 func (c *Controller) SetEntityPermission(ctx *gin.Context) {
 	spaceID, err := req.QueryParamAsPositiveInt64OrError(ctx, "spaceId")
 	if err != nil {
+		err = errors.WithI18nKey(err, i18n.ArtifactQueryParamError)
 		resp.BadRequest(ctx, err)
 		return
 	}
 
 	entityId, err := req.PathParamOrError(ctx, "entityId")
 	if err != nil {
+		err = errors.WithI18nKey(err, i18n.ArtifactPathParamError)
 		resp.BadRequest(ctx, err)
 		return
 	}
 
 	var permReq model.PermissionRequest
 	if err := ctx.ShouldBindJSON(&permReq); err != nil {
+		err = errors.WithI18nKey(err, i18n.ArtifactBodyParamError)
 		resp.BadRequest(ctx, err)
 		return
 	}
@@ -62,12 +66,14 @@ func (c *Controller) SetEntityPermission(ctx *gin.Context) {
 func (c *Controller) GetEntityPermissions(ctx *gin.Context) {
 	spaceID, err := req.QueryParamAsPositiveInt64OrError(ctx, "spaceId")
 	if err != nil {
+		err = errors.WithI18nKey(err, i18n.ArtifactQueryParamError)
 		resp.BadRequest(ctx, err)
 		return
 	}
 
 	entityId, err := req.PathParamOrError(ctx, "entityId")
 	if err != nil {
+		err = errors.WithI18nKey(err, i18n.ArtifactPathParamError)
 		resp.BadRequest(ctx, err)
 		return
 	}
@@ -103,6 +109,7 @@ func (c *Controller) SetPermissions(ctx *gin.Context) {
 
 	var permReq model.PermissionRequest
 	if err := ctx.ShouldBindJSON(&permReq); err != nil {
+		err = errors.WithI18nKey(err, i18n.ArtifactBodyParamError)
 		resp.BadRequest(ctx, err)
 		return
 	}

@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"strings"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
 	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
 	artifactSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/artifact"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 
 	"github.com/gin-gonic/gin"
@@ -40,6 +40,7 @@ func NewController(artSvc artifactSvc.Interface) *Controller {
 func (c *Controller) ListPackages(ctx *gin.Context) {
 	var reqBody model.SpaceRepoReq
 	if err := ctx.ShouldBindBodyWithJSON(&reqBody); err != nil {
+		err = errors.WithI18nKey(err, i18n.ArtifactBodyParamError)
 		resp.BadRequest(ctx, err)
 		return
 	}
@@ -74,6 +75,7 @@ func (c *Controller) ListPackages(ctx *gin.Context) {
 func (c *Controller) CreateView(ctx *gin.Context) {
 	var reqBody model.CreateArtifactViewReq
 	if err := ctx.ShouldBindBodyWithJSON(&reqBody); err != nil {
+		err = errors.WithI18nKey(err, i18n.ArtifactBodyParamError)
 		resp.BadRequest(ctx, err)
 		return
 	}
@@ -98,6 +100,7 @@ func (c *Controller) CreateView(ctx *gin.Context) {
 func (c *Controller) ListVersions(ctx *gin.Context) {
 	var reqBody model.ArtifactVersionListReq
 	if err := ctx.ShouldBindBodyWithJSON(&reqBody); err != nil {
+		err = errors.WithI18nKey(err, i18n.ArtifactBodyParamError)
 		resp.BadRequest(ctx, err)
 		return
 	}
@@ -129,6 +132,7 @@ func (c *Controller) ListVersions(ctx *gin.Context) {
 func (c *Controller) ListAssets(ctx *gin.Context) {
 	versionId, err := req.PathParamAsPositiveInt64(ctx, "versionId")
 	if err != nil {
+		err = errors.WithI18nKey(err, i18n.ArtifactPathParamError)
 		resp.BadRequest(ctx, err)
 		return
 	}
@@ -153,6 +157,7 @@ func (c *Controller) ListAssets(ctx *gin.Context) {
 func (c *Controller) ListGroupAssets(ctx *gin.Context) {
 	groupId, err := req.PathParamAsPositiveInt64(ctx, "groupId")
 	if err != nil {
+		err = errors.WithI18nKey(err, i18n.ArtifactPathParamError)
 		resp.BadRequest(ctx, err)
 		return
 	}
@@ -177,6 +182,7 @@ func (c *Controller) ListGroupAssets(ctx *gin.Context) {
 func (c *Controller) GetAsset(ctx *gin.Context) {
 	assetId, err := req.PathParamAsPositiveInt64(ctx, "assetId")
 	if err != nil {
+		err = errors.WithI18nKey(err, i18n.ArtifactPathParamError)
 		resp.BadRequest(ctx, err)
 		return
 	}
@@ -201,6 +207,7 @@ func (c *Controller) GetAsset(ctx *gin.Context) {
 func (c *Controller) GetBlobHistory(ctx *gin.Context) {
 	assetId, err := req.PathParamAsPositiveInt64(ctx, "assetId")
 	if err != nil {
+		err = errors.WithI18nKey(err, i18n.ArtifactPathParamError)
 		resp.BadRequest(ctx, err)
 		return
 	}
@@ -224,6 +231,7 @@ func (c *Controller) GetBlobHistory(ctx *gin.Context) {
 func (c *Controller) DownloadAsset(ctx *gin.Context) {
 	assetId, err := req.PathParamAsPositiveInt64(ctx, "assetId")
 	if err != nil {
+		err = errors.WithI18nKey(err, i18n.ArtifactPathParamError)
 		resp.BadRequest(ctx, err)
 		return
 	}
@@ -254,6 +262,7 @@ func (c *Controller) DownloadAsset(ctx *gin.Context) {
 func (c *Controller) Upload(ctx *gin.Context) {
 	var reqBody model.SpaceRepoReq
 	if err := ctx.ShouldBindBodyWithJSON(&reqBody); err != nil {
+		err = errors.WithI18nKey(err, i18n.ArtifactBodyParamError)
 		resp.BadRequest(ctx, err)
 		return
 	}
@@ -275,11 +284,11 @@ func (c *Controller) Upload(ctx *gin.Context) {
 }
 
 // @Summary 创建分组
-// @Description 创建 group 节点
+// @Description 创建 group 节点。viewId 必传且必须大于 0
 // @Tags artifacts
 // @Accept application/json
 // @Produce application/json
-// @Param body body model.CreateGroupReq true "请求参数(包含 spaceId, repoId, names 和 format)"
+// @Param body body model.CreateGroupReq true "请求参数(viewId 必填；names 为 '.' 分隔的分组路径；format 必须是支持的格式枚举)"
 // @Success 200 {object} resp.ObjectResponse "成功"
 // @Failure 400 {object} resp.ObjectResponse "参数错误"
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
@@ -287,19 +296,41 @@ func (c *Controller) Upload(ctx *gin.Context) {
 func (c *Controller) CreateGroup(ctx *gin.Context) {
 	var params model.CreateGroupReq
 	if err := ctx.ShouldBindBodyWithJSON(&params); err != nil {
+		err = errors.WithI18nKey(err, i18n.ArtifactBodyParamError)
 		resp.BadRequest(ctx, err)
 		return
 	}
 
-	reqBody := &model.SpaceRepoReq{SpaceID: params.SpaceID, RepoID: params.RepoID}
-	view, err := c.artSvc.ParseSpaceView(ctx, reqBody)
+	// 业务规则校验（viewId > 0、format 枚举、names 合法、container 不嵌套）
+	if err := params.Validate(); err != nil {
+		resp.BadRequest(ctx, err)
+		return
+	}
+
+	// 检查视图是否存在
+	if err := c.artSvc.ViewExists(ctx, params.ViewID); err != nil {
+		resp.BadRequest(ctx, err)
+		return
+	}
+
+	names := params.ParseNames()
+	format := model.ArtifactFormat(params.Format)
+
+	// 检查分组路径是否已存在（防止重复创建）
+	exists, err := c.artSvc.GroupPathExists(ctx, params.ViewID, names, format)
 	if err != nil {
-		resp.BadRequest(ctx, err)
+		resp.InternalError(ctx, err)
+		return
+	}
+	if exists {
+		resp.BadRequest(ctx, errors.WithI18nKey(
+			fmt.Errorf("group path %q already exists under viewId=%d format=%s", params.Names, params.ViewID, params.Format),
+			i18n.ArtifactGroupDuplicate,
+		))
 		return
 	}
 
-	names := strings.Split(params.Names, ".")
-	ge, err := c.artSvc.CreateGroup(ctx, view.ViewID, names, model.ArtifactFormat(params.Format))
+	ge, err := c.artSvc.CreateGroup(ctx, params.ViewID, names, format)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return
@@ -320,6 +351,7 @@ func (c *Controller) CreateGroup(ctx *gin.Context) {
 func (c *Controller) ListFormats(ctx *gin.Context) {
 	var reqBody model.SpaceRepoReq
 	if err := ctx.ShouldBindBodyWithJSON(&reqBody); err != nil {
+		err = errors.WithI18nKey(err, i18n.ArtifactBodyParamError)
 		resp.BadRequest(ctx, err)
 		return
 	}
@@ -349,6 +381,7 @@ func (c *Controller) ListFormats(ctx *gin.Context) {
 func (c *Controller) ListTreeNodes(ctx *gin.Context) {
 	parentId, err := req.PathParamAsPositiveInt64(ctx, "nodeId")
 	if err != nil {
+		err = errors.WithI18nKey(err, i18n.ArtifactPathParamError)
 		resp.BadRequest(ctx, err)
 		return
 	}
@@ -358,52 +391,6 @@ func (c *Controller) ListTreeNodes(ctx *gin.Context) {
 		return
 	}
 	resp.OK(ctx, i18n.ArtifactListSuccess, nodes)
-}
-
-// @Summary 删除指定版本
-// @Description 删除指定版本
-// @Tags artifacts
-// @Accept application/json
-// @Produce application/json
-// @Param versionId path int true "版本ID"
-// @Success 200 {object} resp.ObjectResponse "成功"
-// @Failure 400 {object} resp.ObjectResponse "参数错误"
-// @Failure 500 {object} resp.ObjectResponse "服务器错误"
-// @Router /artifacts/versions/{versionId} [delete]
-func (c *Controller) DeleteVersion(ctx *gin.Context) {
-	versionId, err := req.PathParamAsPositiveInt64(ctx, "versionId")
-	if err != nil {
-		resp.BadRequest(ctx, err)
-		return
-	}
-	if err := c.artSvc.DeleteVersion(ctx, versionId); err != nil {
-		resp.InternalError(ctx, err)
-		return
-	}
-	resp.OK(ctx, i18n.ArtifactDeleteSuccess, nil)
-}
-
-// @Summary 删除指定包
-// @Description 删除指定包
-// @Tags artifacts
-// @Accept application/json
-// @Produce application/json
-// @Param packageId path int true "包ID"
-// @Success 200 {object} resp.ObjectResponse "成功"
-// @Failure 400 {object} resp.ObjectResponse "参数错误"
-// @Failure 500 {object} resp.ObjectResponse "服务器错误"
-// @Router /artifacts/packages/{packageId} [delete]
-func (c *Controller) DeletePackage(ctx *gin.Context) {
-	packageId, err := req.PathParamAsPositiveInt64(ctx, "packageId")
-	if err != nil {
-		resp.BadRequest(ctx, err)
-		return
-	}
-	if err := c.artSvc.DeletePackage(ctx, packageId); err != nil {
-		resp.InternalError(ctx, err)
-		return
-	}
-	resp.OK(ctx, i18n.ArtifactDeleteSuccess, nil)
 }
 
 // @Summary 容量统计
@@ -467,11 +454,13 @@ func (c *Controller) StatisticSummary(ctx *gin.Context) {
 func (c *Controller) SoftRemoveByEntity(ctx *gin.Context) {
 	var reqBody model.SoftRemoveEntitiesReq
 	if err := ctx.ShouldBindBodyWithJSON(&reqBody); err != nil {
+		err = errors.WithI18nKey(err, i18n.ArtifactBodyParamError)
 		resp.BadRequest(ctx, err)
 		return
 	}
 	spaceID, _, err := req.QueryParamAsPositiveInt64(ctx, "spaceId")
 	if err != nil {
+		err = errors.WithI18nKey(err, i18n.ArtifactQueryParamError)
 		resp.BadRequest(ctx, err)
 		return
 	}
@@ -496,11 +485,13 @@ func (c *Controller) SoftRemoveByEntity(ctx *gin.Context) {
 func (c *Controller) ArchiveGroup(ctx *gin.Context) {
 	groupID, err := req.PathParamAsPositiveInt64(ctx, "groupId")
 	if err != nil {
+		err = errors.WithI18nKey(err, i18n.ArtifactPathParamError)
 		resp.BadRequest(ctx, err)
 		return
 	}
 	spaceID, err := req.QueryParamAsPositiveInt64OrError(ctx, "spaceId")
 	if err != nil {
+		err = errors.WithI18nKey(err, i18n.ArtifactQueryParamError)
 		resp.BadRequest(ctx, err)
 		return
 	}

@@ -1,5 +1,14 @@
 package artifact
 
+import (
+	"fmt"
+	"strings"
+
+	enum "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
+)
+
 // SpaceRef 是给 artifact adapter 使用的精简空间引用。
 type SpaceRef struct {
 	ID   int64  `json:"id"`
@@ -23,8 +32,8 @@ type CreatorInfo struct {
 
 // SpaceRepoReq 定义接收含有 spaceId 和 repoId 参数的通用请求。
 type SpaceRepoReq struct {
-	SpaceID int64 `json:"spaceId" form:"spaceId"`
-	RepoID  int64 `json:"repoId" form:"repoId"`
+	SpaceID int64 `json:"spaceId"`
+	RepoID  int64 `json:"repoId"`
 }
 
 type SoftRemoveEntitiesReq struct {
@@ -38,7 +47,6 @@ type CreateArtifactViewReq struct {
 	Description string `json:"description"`
 }
 
-
 // ArtifactVersionListReq 接收获取版本列表的请求参数
 type ArtifactVersionListReq struct {
 	SpaceRepoReq
@@ -49,8 +57,61 @@ type ArtifactVersionListReq struct {
 
 // CreateGroupReq 创建 group 节点的请求参数。
 // Names 为以 "." 分隔的分组路径，如 "a.b.c" 表示三级分组。
+// ViewID 必填：必须大于 0。
 type CreateGroupReq struct {
-	SpaceRepoReq
+	ViewID int64  `json:"viewId"`
 	Names  string `json:"names" binding:"required"`
 	Format string `json:"format" binding:"required"`
+}
+
+// Validate 对 CreateGroupReq 进行业务规则校验，返回携带 i18n key 的错误。
+// 校验规则：
+//  1. ViewID 必须 > 0
+//  2. Format 必须通过 enum.ArtifactFormat.Sanitize() 校验
+//  3. Names 按 "." 拆分后不能有空段
+//  4. container 格式不支持嵌套（Names 中不能包含 "."）
+func (r *CreateGroupReq) Validate() error {
+	// 1. ViewID 校验
+	if r.ViewID <= 0 {
+		return errors.WithI18nKey(
+			fmt.Errorf("viewId must be greater than 0, got %d", r.ViewID),
+			i18n.ArtifactGroupViewidRequired,
+		)
+	}
+
+	// 2. Format 枚举校验（使用 constant 包的 Sanitize 模式）
+	format := enum.ArtifactFormat(r.Format)
+	if _, ok := format.Sanitize(); !ok {
+		return errors.WithI18nKey(
+			fmt.Errorf("unsupported format: %s", r.Format),
+			i18n.ArtifactGroupFormatInvalid,
+		)
+	}
+
+	// 3. Names 合法性校验
+	parts := strings.Split(r.Names, ".")
+	for _, part := range parts {
+		if strings.TrimSpace(part) == "" {
+			return errors.WithI18nKey(
+				fmt.Errorf("group names contain empty segment: %q", r.Names),
+				i18n.ArtifactGroupNamesInvalid,
+			)
+		}
+	}
+
+	// 4. container 格式不允许嵌套
+	if format == enum.ArtifactFormatContainer && len(parts) > 1 {
+		return errors.WithI18nKey(
+			fmt.Errorf("container format does not support nested groups: %q", r.Names),
+			i18n.ArtifactGroupContainerNoNesting,
+		)
+	}
+
+	return nil
+}
+
+// ParseNames 将 Names 按 "." 拆分为分组路径段。
+// 调用前应先通过 Validate() 确保合法性。
+func (r *CreateGroupReq) ParseNames() []string {
+	return strings.Split(r.Names, ".")
 }

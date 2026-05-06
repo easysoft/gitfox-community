@@ -19,6 +19,7 @@ func (c *packages) Create(ctx context.Context, newObj *model.CreateArtifactPacka
 	row.ViewID = newObj.ViewID
 	row.Name = newObj.Name
 	row.Namespace = newObj.Namespace
+	row.GroupID = newObj.GroupID
 	row.Format = string(newObj.Format)
 	if err := c.db.WithContext(ctx).Create(&row).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)

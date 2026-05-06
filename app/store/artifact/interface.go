@@ -37,12 +37,14 @@ type Interface interface {
 type ViewInterface interface {
 	Create(ctx context.Context, newObj *model.CreateArtifactView) (*model.ArtifactView, error)
 	Delete(ctx context.Context, id int64) error
+	GetByID(ctx context.Context, id int64) (*model.ArtifactView, error)
 	GetDefault(ctx context.Context, spaceId int64) (*model.ArtifactView, error)
 	GetDefaultByRepoAndSpace(ctx context.Context, repoId, spaceId int64) (*model.ArtifactView, error)
 	GetByName(ctx context.Context, spaceId, repoId int64, name string) (*model.ArtifactView, error)
 
-	// FindByNameInScope 在指定作用域（spaceId + repoId）下查询所有同名 view（含已软删的）。
-	// 用于 CreateView 时判断是否存在活跃的或在回收站保留期内的同名 view。
+	// FindByNameInScope 在指定作用域下查询所有同名 view（包含已软删的）。
+	// 返回结果包含 active（deleted=0）和 soft-deleted（deleted=1）的 view，
+	// 由调用方根据 deleted 状态和 editedDate 判断是否允许创建同名 view。
 	FindByNameInScope(ctx context.Context, spaceId, repoId int64, name string) ([]*model.ArtifactView, error)
 
 	// SoftDelete 软删除视图（将 deleted 置为 1）。
@@ -144,16 +146,42 @@ type TreeNodeInterface interface {
 }
 
 type GroupInterface interface {
+	// Create 在指定 view 下创建一个 artifact 分组。
 	Create(ctx context.Context, newObj *model.CreateArtifactGroup) (*model.ArtifactGroup, error)
+
+	// GetById 按主键查找分组。
 	GetById(ctx context.Context, groupId int64) (*model.ArtifactGroup, error)
+
+	// GetRoot 在指定 view 下查找指定名称和格式的根分组（parentID IS NULL）。
+	// 供 container push 时通过 (viewId, groupName) 精确定位 namespace group。
 	GetRoot(ctx context.Context, viewId int64, name string, format model.ArtifactFormat) (*model.ArtifactGroup, error)
+
+	// GetSubNode 查找指定父分组下的子分组（按名称）。
 	GetSubNode(ctx context.Context, parentId int64, name string) (*model.ArtifactGroup, error)
+
+	// GetEndpointByNames 按路径名数组查找（或递归建立）分组链路，返回末级分组及路径。
+	// 用于 raw/generic 格式按命名空间路径索引分组。
 	GetEndpointByNames(ctx context.Context, viewId int64, names []string, format model.ArtifactFormat) (*model.ArtifactGroupEndpoint, error)
+
+	// GetEndpointById 按 group ID 查找分组端点（含完整路径信息）。
 	GetEndpointById(ctx context.Context, id int64) (*model.ArtifactGroupEndpoint, error)
+
+	// RecursiveCreate 按名称路径递归创建分组，返回末级分组端点。
+	// 用于 raw 格式在上传时自动建立 namespace 目录树。
 	RecursiveCreate(ctx context.Context, viewId int64, names []string, format model.ArtifactFormat) (*model.ArtifactGroupEndpoint, error)
+
+	// All 返回所有未软删的分组（不推荐在生产路径直接使用，仅供管理/同步任务）。
 	All(ctx context.Context) ([]*model.ArtifactGroup, error)
+
+	// ListDescendantsForOwner 列出指定 view 下指定格式的所有后代分组（用于树形展示）。
 	ListDescendantsForOwner(ctx context.Context, viewId int64, format model.ArtifactFormat) ([]*model.ArtifactGroup, error)
+
+	// ListDescendants 列出指定分组的所有后代分组（不限格式）。
 	ListDescendants(ctx context.Context, id int64) ([]*model.ArtifactGroup, error)
+
+	// SoftDeleteById 软删除分组（将 deleted 置为 1）。
 	SoftDeleteById(ctx context.Context, groupId int64) error
+
+	// DeleteByViewID 物理删除指定 view 下的所有分组，供 view 删除时级联使用。
 	DeleteByViewID(ctx context.Context, viewId int64) (int64, error)
 }

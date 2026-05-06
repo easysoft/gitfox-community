@@ -116,3 +116,32 @@ func getRepoMemberPriv(ctx context.Context, baseURL string, repoID uint, authori
 	}
 	return result, nil
 }
+
+// zentaoTokenReq 禅道用户 Token 请求
+type zentaoTokenReq struct {
+	Account  string `json:"account"`
+	Password string `json:"password"`
+}
+
+// zentaoTokenResp 禅道用户 Token 响应
+type zentaoTokenResp struct {
+	Token string `json:"token"`
+}
+
+// GetZentaoUserToken 使用账号密码从禅道获取用户 Token
+// POST {baseURL}/tokens  body: {"account":"admin","password":"123456"}
+func GetZentaoUserToken(ctx context.Context, baseURL, account, password string) (string, error) {
+	url := fmt.Sprintf("%s/tokens", baseURL)
+	reqBody := &zentaoTokenReq{
+		Account:  account,
+		Password: password,
+	}
+	var result zentaoTokenResp
+	if err := httpclient.Request(ctx, "POST", url, nil, nil, reqBody, &result); err != nil {
+		return "", fmt.Errorf("failed to get zentao user token: %w", err)
+	}
+	if result.Token == "" {
+		return "", fmt.Errorf("empty token returned for account %s", account)
+	}
+	return result.Token, nil
+}

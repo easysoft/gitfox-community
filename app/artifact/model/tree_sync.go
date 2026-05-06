@@ -43,7 +43,7 @@ func (t *Syncer) SyncTreeNodeForGroup(ctx context.Context, group *artmodel.Artif
 	var parentNode *artmodel.ArtifactTreeNode
 	var err error
 
-	if group.ParentID.Ptr() == nil {
+	if !group.ParentID.Valid || group.ParentID.Int64 == 0 {
 		parentNode, err = t.SyncTreeNodeForFormat(ctx, group.ViewID, group.Format)
 		if err != nil {
 			return nil, err
@@ -99,7 +99,8 @@ func (t *Syncer) SyncTreeNodeForFormat(ctx context.Context, viewId int64, format
 }
 
 func (t *Syncer) SyncTreeNodeForPackage(ctx context.Context, pkg *artmodel.ArtifactPackage) (*artmodel.ArtifactTreeNode, error) {
-	// raw 格式的 package 可挂到 group，下其它格式始终直接挂到 format 根节点。
+	// 所有格式：GroupID != 0 则挂到对应 group，否则直接挂到 format 根节点。
+	// raw 通过 SyncRawGroup 回填 GroupID；container 通过 getOrCreateGroup 预先建好 GroupID。
 	if currNode, err := t.artStore.Nodes().GetByTarget(ctx, pkg.ViewID, artmodel.ArtifactTreeNodeTypePackage, pkg.ID); err == nil {
 		return currNode, nil
 	}
@@ -107,16 +108,12 @@ func (t *Syncer) SyncTreeNodeForPackage(ctx context.Context, pkg *artmodel.Artif
 	var parentNode *artmodel.ArtifactTreeNode
 	var err error
 
-	if pkg.Format == artmodel.ArtifactRawFormat {
-		if pkg.GroupID == 0 {
-			parentNode, err = t.SyncTreeNodeForFormat(ctx, pkg.ViewID, pkg.Format)
-		} else {
-			g, e := t.artStore.Groups().GetById(ctx, pkg.GroupID)
-			if e != nil {
-				return nil, e
-			}
-			parentNode, err = t.SyncTreeNodeForGroup(ctx, g)
+	if pkg.GroupID != 0 {
+		g, e := t.artStore.Groups().GetById(ctx, pkg.GroupID)
+		if e != nil {
+			return nil, e
 		}
+		parentNode, err = t.SyncTreeNodeForGroup(ctx, g)
 	} else {
 		parentNode, err = t.SyncTreeNodeForFormat(ctx, pkg.ViewID, pkg.Format)
 	}
