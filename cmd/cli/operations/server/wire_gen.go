@@ -70,6 +70,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database/dbtx"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/events"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/livelog"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/lock"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pubsub"
@@ -293,7 +294,7 @@ func NewApp(mode string) (*App, func(), error) {
 		return nil, nil, err
 	}
 	server := provider.ProvideSSHServer(config, interface2, gitController)
-	triggerService, err := provider.ProvideTriggerService(eventContext, pipelineService, triggererTriggerer, store, urlProvider, scanTriggerService, scanPlanService, scanTaskService, readerFactory, eventsReaderFactory)
+	triggerService, err := provider.ProvideTriggerService(eventContext, pipelineService, triggererTriggerer, store, urlProvider, scanTriggerService, scanPlanService, scanTaskService, gitService, readerFactory, eventsReaderFactory)
 	if err != nil {
 		cleanup2()
 		cleanup()
@@ -357,6 +358,7 @@ func NewApp(mode string) (*App, func(), error) {
 		ArtifactService:    artifactService,
 		ArtifactAuthorizer: artifactAuthorizer,
 		ContainerHandler:   containerHandler,
+		GitService:         gitService,
 	}
 	return app, func() {
 		cleanup2()
@@ -395,4 +397,5 @@ type App struct {
 	ArtifactService    artifact3.Interface
 	ArtifactAuthorizer authorizer.Authorizer
 	ContainerHandler   *handler.ContainerHandler
+	GitService         git.Interface
 }

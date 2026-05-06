@@ -10,7 +10,8 @@ type Execution struct {
 	PipelineID  uint            `gorm:"column:pipelineID;not null"`
 	Parent      uint            `gorm:"column:parent;not null;default:0"`
 	Trigger     string          `gorm:"column:trigger;not null"`
-	Commit      string          `gorm:"column:commit;not null;default:''"`
+	Commit       string          `gorm:"column:commit;not null;default:''"`
+	CommitBefore string          `gorm:"column:commitBefore;not null;default:''"`
 	Ref         string          `gorm:"column:ref;not null;default:''"`
 	Params      string          `gorm:"column:params;type:text;not null;default:''"`
 	Started     *datetime.Local `gorm:"column:started"`

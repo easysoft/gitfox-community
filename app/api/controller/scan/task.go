@@ -1,6 +1,7 @@
 package scan
 
 import (
+	"fmt"
 	"io"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
@@ -51,17 +52,30 @@ func (c *ScanController) ScanTaskCreate(ctx *gin.Context) {
 		return
 	}
 
-	// 获取分支信息以取得 SHA
-	branchOut, err := c.gitPkg.GetBranch(ctx, &git.GetBranchParams{
+	// 获取分支信息以取得当前 SHA 和上一次 SHA
+	shas, err := c.gitPkg.ListCommitSHAs(ctx, &git.ListCommitsParams{
 		ReadParams: git.ReadParams{RepoUID: repo.GitUID},
-		BranchName: body.Branch,
+		GitREF:     body.Branch,
+		Page:       1,
+		Limit:      2,
 	})
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return
 	}
+	if len(shas) == 0 {
+		resp.InternalError(ctx, fmt.Errorf("no commits found on branch %s", body.Branch))
+		return
+	}
+	var sha, beforeSha string
+	sha = shas[0]
+	if len(shas) > 1 {
+		beforeSha = shas[1]
+	} else {
+		beforeSha = shas[0]
+	}
 
-	hook, err := c.taskSvc.CreateBranchHook(ctx.Request.Context(), repo, body.Branch, branchOut.Branch.SHA.String(), session)
+	hook, err := c.taskSvc.CreateBranchHook(ctx.Request.Context(), repo, body.Branch, sha, beforeSha, session)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return

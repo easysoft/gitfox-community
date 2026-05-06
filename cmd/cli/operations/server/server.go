@@ -216,7 +216,7 @@ func (app *App) registerJobHandlers() {
 	}
 
 	if err := cronSvc.RegisterScanHandler(
-		app.JobScheduler, app.ScanTaskSvc, app.ScanPlanSvc, app.ScanTriggerStore, app.RepoService); err != nil {
+		app.JobScheduler, app.ScanTaskSvc, app.ScanPlanSvc, app.ScanTriggerStore, app.RepoService, app.GitService); err != nil {
 		app.SystemLog.Errorw("[Server] Failed to register scan cron handler", "error", err)
 		panic(err)
 	}

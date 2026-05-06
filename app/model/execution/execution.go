@@ -12,21 +12,22 @@ type ReqForCreate struct {
 }
 
 type Execution struct {
-	ID          uint              `json:"id"`
-	PipelineID  uint              `json:"pipelineID"`
-	Parent      uint              `json:"parent"`
-	Trigger     string            `json:"trigger"`
-	Commit      string            `json:"commit"`
-	Ref         string            `json:"ref"`
-	Params      map[string]string `json:"params"`
-	Started     *datetime.Local   `json:"started"`
-	Finished    *datetime.Local   `json:"finished"`
-	Duration    uint              `json:"duration"`
-	Status      constant.CIStatus `json:"status"`
-	Error       string            `json:"error"`
-	CreatedBy   string            `json:"createdBy"`
-	CreatedDate *datetime.Local   `json:"createdDate"`
-	EditedDate  *datetime.Local   `json:"editedDate"`
+	ID           uint              `json:"id"`
+	PipelineID   uint              `json:"pipelineID"`
+	Parent       uint              `json:"parent"`
+	Trigger      string            `json:"trigger"`
+	Commit       string            `json:"commit"`
+	CommitBefore string            `json:"commitBefore"`
+	Ref          string            `json:"ref"`
+	Params       map[string]string `json:"params"`
+	Started      *datetime.Local   `json:"started"`
+	Finished     *datetime.Local   `json:"finished"`
+	Duration     uint              `json:"duration"`
+	Status       constant.CIStatus `json:"status"`
+	Error        string            `json:"error"`
+	CreatedBy    string            `json:"createdBy"`
+	CreatedDate  *datetime.Local   `json:"createdDate"`
+	EditedDate   *datetime.Local   `json:"editedDate"`
 }
 
 type ExecutionWithStages struct {

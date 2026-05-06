@@ -15,10 +15,10 @@ import (
 	artifactSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/artifact"
 	jobsSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/jobs"
 	pipelineSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/pipeline"
+	repoSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
 	scanSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/scan"
 	triggerSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/trigger"
 	userSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/user"
-	repoSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
 	repoStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
 	scanStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/scan"
 	tokenStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/token"
@@ -26,39 +26,41 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/auth/authn"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/events"
+	gitPkg "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/ssh"
 	"gorm.io/gorm"
 )
 
 type App struct {
-	SystemConfig    *config.Config
-	SystemLog       *provider.SystemLog
-	APILog          *provider.APILog
-	DB              *gorm.DB
-	Controller      *router.Controller
-	I18nManager     *provider.I18nManager
-	GithookCtrl     *githook.Controller
-	SSHServer       *ssh.Server
-	UserService     userSvc.Interface
-	PipelineService pipelineSvc.Interface
-	TriggerService  *triggerSvc.Service
-	Authenticator   authn.Authenticator
-	EventSystem     *events.System
-	EventContext    *provider.EventContext
-	JobScheduler    *jobsSvc.Scheduler
-	Triggerer       triggerer.Triggerer
-	Poller           *poller.Poller
-	ScanRuleSvc      scanSvc.IRule
-	ScanTaskSvc      scanSvc.IScanTask
-	ScanPlanSvc      scanSvc.IScanPlan
-	ScanPlanStore    scanStore.IScanPlan
-	ScanTriggerStore scanStore.IScanTrigger
-	RepoStore        repoStore.Interface
-	RepoService      repoSvc.Interface
-	TokenStore       tokenStore.Interface
-	ArtifactService  artifactSvc.Interface
+	SystemConfig       *config.Config
+	SystemLog          *provider.SystemLog
+	APILog             *provider.APILog
+	DB                 *gorm.DB
+	Controller         *router.Controller
+	I18nManager        *provider.I18nManager
+	GithookCtrl        *githook.Controller
+	SSHServer          *ssh.Server
+	UserService        userSvc.Interface
+	PipelineService    pipelineSvc.Interface
+	TriggerService     *triggerSvc.Service
+	Authenticator      authn.Authenticator
+	EventSystem        *events.System
+	EventContext       *provider.EventContext
+	JobScheduler       *jobsSvc.Scheduler
+	Triggerer          triggerer.Triggerer
+	Poller             *poller.Poller
+	ScanRuleSvc        scanSvc.IRule
+	ScanTaskSvc        scanSvc.IScanTask
+	ScanPlanSvc        scanSvc.IScanPlan
+	ScanPlanStore      scanStore.IScanPlan
+	ScanTriggerStore   scanStore.IScanTrigger
+	RepoStore          repoStore.Interface
+	RepoService        repoSvc.Interface
+	TokenStore         tokenStore.Interface
+	ArtifactService    artifactSvc.Interface
 	ArtifactAuthorizer authorizer.Authorizer
-	ContainerHandler *ctnHandler.ContainerHandler
+	ContainerHandler   *ctnHandler.ContainerHandler
+	GitService         gitPkg.Interface
 }
 
 func NewApp(mode string) (*App, func(), error) {

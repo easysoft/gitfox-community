@@ -17,6 +17,7 @@ import (
 	scanSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/scan"
 	scanStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/scan"
 	pkgJobs "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/jobs"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
 )
 
 type pipelineTriggerHandler struct {
@@ -78,6 +79,7 @@ type scanTriggerHandler struct {
 	planSvc      scanSvc.IScanPlan
 	triggerStore scanStore.IScanTrigger
 	repoSvc      repoSvc.Interface
+	gitSvc       git.Interface
 }
 
 type scanJobInput struct {
@@ -126,7 +128,27 @@ func (h *scanTriggerHandler) Handle(ctx context.Context, input string, _ pkgJobs
 		return "", fmt.Errorf("invalid scan trigger cron branch: %s", trigger.CronBranch)
 	}
 
-	hook, err := h.taskSvc.CreateBranchHook(ctx, repo, trigger.CronBranch, "", session)
+	shas, err := h.gitSvc.ListCommitSHAs(ctx, &git.ListCommitsParams{
+		ReadParams: git.ReadParams{RepoUID: repo.GitUID},
+		GitREF:     trigger.CronBranch,
+		Page:       1,
+		Limit:      2,
+	})
+	if err != nil {
+		return "", fmt.Errorf("failed to list commit SHAs for branch %s: %w", trigger.CronBranch, err)
+	}
+	if len(shas) == 0 {
+		return "", fmt.Errorf("no commits found on branch %s", trigger.CronBranch)
+	}
+	var sha, beforeSha string
+	sha = shas[0]
+	if len(shas) > 1 {
+		beforeSha = shas[1]
+	} else {
+		beforeSha = shas[0]
+	}
+
+	hook, err := h.taskSvc.CreateBranchHook(ctx, repo, trigger.CronBranch, sha, beforeSha, session)
 	if err != nil {
 		return "", err
 	}
@@ -207,7 +229,8 @@ func RegisterScanHandler(
 	planSvc scanSvc.IScanPlan,
 	triggerStore scanStore.IScanTrigger,
 	rs repoSvc.Interface,
+	gitSvc git.Interface,
 ) error {
-	handler := &scanTriggerHandler{taskSvc: taskSvc, planSvc: planSvc, triggerStore: triggerStore, repoSvc: rs}
+	handler := &scanTriggerHandler{taskSvc: taskSvc, planSvc: planSvc, triggerStore: triggerStore, repoSvc: rs, gitSvc: gitSvc}
 	return scheduler.RegisterHandler(scanSvc.JobTypeScanCron, handler)
 }

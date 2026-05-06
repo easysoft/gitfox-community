@@ -1,0 +1,1 @@
+ALTER TABLE ops_pipeline_executions ADD COLUMN commitBefore VARCHAR(255) NOT NULL DEFAULT '' COMMENT '当前流水线执行时所用提交的前一个提交的SHA值';

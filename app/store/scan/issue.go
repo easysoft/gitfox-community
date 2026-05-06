@@ -15,7 +15,7 @@ func normalizeIssueSortField(sort string) string {
 	switch strings.TrimSpace(sort) {
 	case "", "id":
 		return "i.id"
-	case "rulePriority":
+	case "rulePriority", "priority":
 		return "r.priority"
 	case "ruleType":
 		return "r.type"
