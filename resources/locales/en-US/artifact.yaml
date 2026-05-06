@@ -21,7 +21,9 @@ artifact:
   view_name_duplicate: "An artifact view with the same name already exists."
   view_in_recycle_bin: "A view with the same name is in the recycle bin, please restore it or wait for expiration."
   view_expired_cleanup_error: "Failed to clean up expired view."
+  view_not_found: "The specified artifact view does not exist."
   view_query_error: "Failed to query artifact view."
+  view_scope_mismatch: "The specified artifact view does not match the requested space or repository."
   view_create_error: "Failed to create artifact view."
   view_expired_query_error: "Failed to query expired views."
 

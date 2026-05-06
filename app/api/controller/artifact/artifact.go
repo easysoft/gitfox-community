@@ -25,8 +25,13 @@ func NewController(artSvc artifactSvc.Interface) *Controller {
 	return &Controller{artSvc: artSvc}
 }
 
+// Service 暴露 artifact service，供路由中间件复用统一的视图解析逻辑。
+func (c *Controller) Service() artifactSvc.Interface {
+	return c.artSvc
+}
+
 // @Summary 查询制品包列表
-// @Description 列出指定空间/视图下的制品包
+// @Description 列出指定作用域下的制品包。viewId > 0 时优先按指定视图查询，否则按默认 view 逻辑查询
 // @Tags artifacts
 // @Accept application/json
 // @Produce application/json
@@ -62,7 +67,7 @@ func (c *Controller) ListPackages(ctx *gin.Context) {
 	resp.OK(ctx, i18n.ArtifactListSuccess, list)
 }
 
-// @Summary 创建视图
+// @Summary 创建制品库视图
 // @Description 创建一个制品库视图 (测试用)
 // @Tags artifacts
 // @Accept application/json
@@ -88,7 +93,7 @@ func (c *Controller) CreateView(ctx *gin.Context) {
 }
 
 // @Summary 查询版本列表
-// @Description 列出指定制品包的版本列表
+// @Description 列出指定制品包的版本列表。viewId > 0 时优先按指定视图查询，否则按默认 view 逻辑查询
 // @Tags artifacts
 // @Accept application/json
 // @Produce application/json
@@ -255,18 +260,23 @@ func (c *Controller) DownloadAsset(ctx *gin.Context) {
 // @Param format path string true "制品格式"
 // @Param spaceId formData int false "空间ID"
 // @Param repoId formData int false "仓库ID"
+// @Param viewId formData int false "视图ID，> 0 时优先按该视图上传"
 // @Success 200 {object} resp.ObjectResponse "成功"
 // @Failure 400 {object} resp.ObjectResponse "参数错误"
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
 // @Router /artifacts/upload/{format} [post]
 func (c *Controller) Upload(ctx *gin.Context) {
-	var reqBody model.SpaceRepoReq
+	var reqBody model.SpaceRepoFormReq
 	if err := ctx.ShouldBind(&reqBody); err != nil {
 		err = errors.WithI18nKey(err, i18n.ArtifactBodyParamError)
 		resp.BadRequest(ctx, err)
 		return
 	}
-	view, err := c.artSvc.ParseSpaceView(ctx, &reqBody)
+	view, err := c.artSvc.ParseSpaceView(ctx, &model.SpaceRepoReq{
+		SpaceID: reqBody.SpaceID,
+		RepoID:  reqBody.RepoID,
+		ViewID:  reqBody.ViewID,
+	})
 	if err != nil {
 		resp.BadRequest(ctx, err)
 		return
@@ -339,7 +349,7 @@ func (c *Controller) CreateGroup(ctx *gin.Context) {
 }
 
 // @Summary 查询格式列表
-// @Description 列出指定空间的已用格式
+// @Description 列出指定作用域下的已用格式。viewId > 0 时优先按指定视图查询，否则按默认 view 逻辑查询
 // @Tags artifacts
 // @Accept application/json
 // @Produce application/json

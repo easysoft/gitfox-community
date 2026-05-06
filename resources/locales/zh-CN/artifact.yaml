@@ -21,7 +21,9 @@ artifact:
   view_name_duplicate: "同名制品库视图已存在."
   view_in_recycle_bin: "同名制品库视图在回收站中，请从回收站恢复或等待过期后重建."
   view_expired_cleanup_error: "清理过期视图失败."
+  view_not_found: "指定的制品视图不存在."
   view_query_error: "查询制品视图失败."
+  view_scope_mismatch: "指定的制品视图与请求中的空间或仓库不匹配."
   view_create_error: "创建制品视图失败."
   view_expired_query_error: "查询过期视图失败."
 

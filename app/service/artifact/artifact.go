@@ -215,15 +215,45 @@ func (s *Service) hasDefaultView(ctx context.Context, spaceID, repoID int64) boo
 	return err == nil
 }
 
-// ParseSpaceView 解析 SpaceRepoReq 参数为 ViewDescriptor。
-func (s *Service) ParseSpaceView(ctx context.Context, req *model.SpaceRepoReq) (*adapter.ViewDescriptor, error) {
-	desc := &adapter.ViewDescriptor{
-		Store:     s.fileStore,
-		StorageID: 1,
+// ResolveView 按请求中的 viewId 或默认视图规则解析实际视图。
+// 规则：
+//  1. viewId > 0：优先按 ID 精确取库
+//  2. viewId == 0 或未传：继续按现有默认 view 逻辑解析
+func (s *Service) ResolveView(ctx context.Context, req *model.SpaceRepoReq) (*model.ArtifactView, error) {
+	if req == nil {
+		req = &model.SpaceRepoReq{}
 	}
 
-	var view *model.ArtifactView
-	var err error
+	if req.ViewID > 0 {
+		view, err := s.artStore.Views().GetByID(ctx, req.ViewID)
+		if err != nil {
+			if pkgErrors.Is(err, pkgErrors.ErrResourceNotFound) {
+				return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactViewNotFound)
+			}
+			return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactViewQueryError)
+		}
+		if req.SpaceID > 0 && view.SpaceID != req.SpaceID {
+			return nil, pkgErrors.WithI18nKey(
+				fmt.Errorf("viewId %d does not belong to spaceId %d", req.ViewID, req.SpaceID),
+				i18n.ArtifactViewScopeMismatch,
+			)
+		}
+		if req.RepoID > 0 {
+			if req.SpaceID == 0 {
+				return nil, pkgErrors.WithI18nKey(
+					errors.New("spaceId is required when repoId is provided"),
+					i18n.ArtifactSpaceIdRequired,
+				)
+			}
+			if view.RepoID != req.RepoID {
+				return nil, pkgErrors.WithI18nKey(
+					fmt.Errorf("viewId %d does not belong to repoId %d under spaceId %d", req.ViewID, req.RepoID, req.SpaceID),
+					i18n.ArtifactViewScopeMismatch,
+				)
+			}
+		}
+		return view, nil
+	}
 
 	if req.RepoID > 0 {
 		if req.SpaceID == 0 {
@@ -232,36 +262,55 @@ func (s *Service) ParseSpaceView(ctx context.Context, req *model.SpaceRepoReq) (
 				i18n.ArtifactSpaceIdRequired,
 			)
 		}
-		repo, err := s.repoStore.GetByID(ctx, uint(req.RepoID))
-		if err != nil {
-			return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactRepoQueryError)
-		}
-		desc.Repo = &model.RepoRef{ID: int64(repo.ID), GitUID: repo.GitUID, Name: repo.Identifier}
-		view, err = s.artStore.Views().GetDefaultByRepoAndSpace(ctx, req.RepoID, req.SpaceID)
+		view, err := s.artStore.Views().GetDefaultByRepoAndSpace(ctx, req.RepoID, req.SpaceID)
 		if err != nil {
 			return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactDefaultViewQueryError)
 		}
-		desc.ViewID = view.ID
-	} else if req.SpaceID > 0 {
-		space, err := s.spaceStore.GetByID(ctx, uint(req.SpaceID))
-		if err != nil {
-			return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactSpaceQueryError)
-		}
-		desc.Space = &model.SpaceRef{ID: int64(space.ID), Name: space.Name}
-		view, err = s.artStore.Views().GetDefault(ctx, req.SpaceID)
-		if err != nil {
-			return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactDefaultViewQueryError)
-		}
-		desc.ViewID = view.ID
-	} else {
-		// global view
-		view, err = s.artStore.Views().GetDefault(ctx, 0)
-		if err != nil {
-			return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactDefaultViewQueryError)
-		}
-		desc.ViewID = view.ID
+		return view, nil
 	}
 
+	view, err := s.artStore.Views().GetDefault(ctx, req.SpaceID)
+	if err != nil {
+		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactDefaultViewQueryError)
+	}
+	return view, nil
+}
+
+func (s *Service) fillViewDescriptorScope(ctx context.Context, desc *adapter.ViewDescriptor, view *model.ArtifactView) error {
+	if view.SpaceID > 0 {
+		space, err := s.spaceStore.GetByID(ctx, uint(view.SpaceID))
+		if err != nil {
+			return pkgErrors.WithI18nKey(err, i18n.ArtifactSpaceQueryError)
+		}
+		desc.Space = &model.SpaceRef{ID: int64(space.ID), Name: space.Name}
+	}
+
+	if view.RepoID > 0 {
+		repo, err := s.repoStore.GetByID(ctx, uint(view.RepoID))
+		if err != nil {
+			return pkgErrors.WithI18nKey(err, i18n.ArtifactRepoQueryError)
+		}
+		desc.Repo = &model.RepoRef{ID: int64(repo.ID), GitUID: repo.GitUID, Name: repo.Identifier}
+	}
+
+	return nil
+}
+
+// ParseSpaceView 解析 SpaceRepoReq 参数为 ViewDescriptor。
+func (s *Service) ParseSpaceView(ctx context.Context, req *model.SpaceRepoReq) (*adapter.ViewDescriptor, error) {
+	view, err := s.ResolveView(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	desc := &adapter.ViewDescriptor{
+		ViewID:    view.ID,
+		Store:     s.fileStore,
+		StorageID: 1,
+	}
+	if err = s.fillViewDescriptorScope(ctx, desc, view); err != nil {
+		return nil, err
+	}
 	return desc, nil
 }
 

@@ -12029,6 +12029,9 @@ const docTemplate = `{
                 },
                 "spaceId": {
                     "type": "integer"
+                },
+                "viewId": {
+                    "type": "integer"
                 }
             }
         },

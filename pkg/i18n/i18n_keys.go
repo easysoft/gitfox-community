@@ -76,7 +76,9 @@ const (
 	ArtifactViewExpiredQueryError      I18nKey = "artifact.view_expired_query_error"      // 查询过期视图失败.
 	ArtifactViewInRecycleBin           I18nKey = "artifact.view_in_recycle_bin"           // 同名制品库视图在回收站中,请从回收站恢复或等待过期后重建.
 	ArtifactViewNameDuplicate          I18nKey = "artifact.view_name_duplicate"           // 同名制品库视图已存在.
+	ArtifactViewNotFound               I18nKey = "artifact.view_not_found"                // 指定的制品视图不存在.
 	ArtifactViewQueryError             I18nKey = "artifact.view_query_error"              // 查询制品视图失败.
+	ArtifactViewScopeMismatch          I18nKey = "artifact.view_scope_mismatch"           // 指定的制品视图与请求中的空间或仓库不匹配.
 
 	// Auth 相关常量
 	AuthAuthUserLoginSuccess        I18nKey = "auth.auth_user_login_success"          // 用户登录成功
