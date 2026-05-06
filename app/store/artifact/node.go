@@ -18,7 +18,11 @@ type treeNode struct{ db *gorm.DB }
 
 func (c *treeNode) Create(ctx context.Context, newObj *model.CreateArtifactTreeNode) (*model.ArtifactTreeNode, error) {
 	var row artifactTreeNode
-	row.ParentID = newObj.ParentID
+	if !newObj.ParentID.Valid {
+		row.ParentID = null.IntFrom(0)
+	} else {
+		row.ParentID = newObj.ParentID
+	}
 	row.ViewID = newObj.ViewID
 	row.Name = newObj.Name
 	row.Path = newObj.Path
@@ -39,8 +43,12 @@ func (c *treeNode) RecurseCreate(ctx context.Context, obj *model.ArtifactTreeNod
 	}
 
 	if obj.IsRoot() {
+		parentID := obj.ParentID
+		if !parentID.Valid {
+			parentID = null.IntFrom(0)
+		}
 		created, err := c.Create(ctx, &model.CreateArtifactTreeNode{
-			ParentID: obj.ParentID, ViewID: obj.ViewID, Name: obj.Name,
+			ParentID: parentID, ViewID: obj.ViewID, Name: obj.Name,
 			Path: obj.Path, Type: obj.Type, Format: obj.Format, TargetId: obj.TargetId,
 		})
 		if err != nil {
