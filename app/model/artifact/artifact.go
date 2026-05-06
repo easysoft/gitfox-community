@@ -91,37 +91,48 @@ type CasbinSubject struct {
 // ==================== Core Entities ====================
 
 type ArtifactView struct {
+	ID          int64            `json:"id"`
+	Name        string           `json:"name"`
+	Description string           `json:"description"`
+	SpaceID     int64            `json:"spaceId"`
+	RepoID      int64            `json:"repoId"`
+	Type        ArtifactViewType `json:"type"`
+	Default     bool             `json:"isDefault"`
+	CreatedBy   string           `json:"createdBy"`
+	CreatedDate *datetime.Local  `json:"createdDate"`
+	EditedBy    string           `json:"editedBy"`
+	EditedDate  *datetime.Local  `json:"editedDate"`
+	Deleted     int8             `json:"-"`
+}
+
+type ArtifactViewType string
+
+const (
+	ArtifactViewTypeGlobal ArtifactViewType = "global"
+	ArtifactViewTypeSpace  ArtifactViewType = "space"
+	ArtifactViewTypeRepo   ArtifactViewType = "repo"
+)
+
+type CreateArtifactView struct {
+	Name        string           `json:"name"`
+	Description string           `json:"description"`
+	SpaceID     int64            `json:"spaceId"`
+	RepoID      int64            `json:"repoId"`
+	Type        ArtifactViewType `json:"type"`
+	Default     bool             `json:"isDefault"`
+}
+
+type ArtifactGroup struct {
 	ID          int64           `json:"id"`
+	ParentID    null.Int        `json:"parentId"`
+	ArtifactID  int64           `json:"artifactID"`
 	Name        string          `json:"name"`
-	Description string          `json:"description"`
-	SpaceID     int64           `json:"spaceId"`
-	RepoID      int64           `json:"repoId"`
-	Default     bool            `json:"isDefault"`
+	Format      ArtifactFormat  `json:"format"`
 	CreatedBy   string          `json:"createdBy"`
 	CreatedDate *datetime.Local `json:"createdDate"`
 	EditedBy    string          `json:"editedBy"`
 	EditedDate  *datetime.Local `json:"editedDate"`
 	Deleted     int8            `json:"-"`
-}
-type CreateArtifactView struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	SpaceID     int64  `json:"spaceId"`
-	RepoID      int64  `json:"repoId"`
-	Default     bool   `json:"isDefault"`
-}
-
-type ArtifactGroup struct {
-	ID          int64          `json:"id"`
-	ParentID    null.Int       `json:"parentId"`
-	ArtifactID  int64          `json:"artifactID"`
-	Name        string         `json:"name"`
-	Format      ArtifactFormat `json:"format"`
-	CreatedBy   string         `json:"createdBy"`
-	CreatedDate *time.Time     `json:"createdDate"`
-	EditedBy    string         `json:"editedBy"`
-	EditedDate  *time.Time     `json:"editedDate"`
-	Deleted     int8           `json:"-"`
 }
 
 type CreateArtifactGroup struct {

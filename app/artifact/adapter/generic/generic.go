@@ -79,14 +79,14 @@ func (h *uploader) Serve(ctx context.Context, req *http.Request) (int64, error) 
 func (h *uploader) validateForm(_ context.Context, req *http.Request) error {
 	name := req.FormValue("name")
 	group := req.FormValue("group")
-	groupId := req.FormValue("id")
+	groupId := req.FormValue("groupId")
 
 	if name != "" {
 		h.descriptor.MainAsset.Path = name
 	}
 
 	if group == "" && groupId == "" {
-		return fmt.Errorf("%w: required parameter 'group' or 'id'", adapter.ErrMissFormField)
+		return fmt.Errorf("%w: required parameter 'group' or 'groupId'", adapter.ErrMissFormField)
 	}
 
 	artifactID := h.view.ArtifactID

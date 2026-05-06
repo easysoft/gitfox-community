@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS `ops_artifact` (
 	`repoID` int unsigned NOT NULL DEFAULT 0 COMMENT '所属代码库ID，0表示非代码库级',
 	`name` varchar(100) NOT NULL COMMENT '视图名称',
 	`desc` text NULL DEFAULT NULL COMMENT '视图描述',
+	`type` varchar(30) NOT NULL DEFAULT '' COMMENT '视图类型:global/space/repo',
 	`isDefault` tinyint(1) NOT NULL DEFAULT 0 COMMENT '是否默认视图，0-否，1-是',
 	`createdBy` varchar(30) NOT NULL DEFAULT '' COMMENT '创建人',
 	`createdDate` datetime NULL COMMENT '创建时间',

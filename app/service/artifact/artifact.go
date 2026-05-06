@@ -187,6 +187,7 @@ func (s *Service) CreateView(ctx context.Context, req *model.CreateArtifactViewR
 	// 判断是否为该作用域下的第一个视图：复用已有的 GetDefault 方法，
 	// 如果查不到默认视图，说明当前作用域还没有视图，新建的就自动设为默认。
 	isDefault := !s.hasDefaultView(ctx, req.SpaceID, req.RepoID)
+	viewType := resolveArtifactViewType(req.SpaceID, req.RepoID)
 
 	// 情况4：无冲突，正常创建
 	v := &model.CreateArtifactView{
@@ -194,6 +195,7 @@ func (s *Service) CreateView(ctx context.Context, req *model.CreateArtifactViewR
 		Description: req.Description,
 		SpaceID:     req.SpaceID,
 		RepoID:      req.RepoID,
+		Type:        viewType,
 		Default:     isDefault,
 	}
 	view, err := s.artStore.Views().Create(ctx, v)
@@ -201,6 +203,17 @@ func (s *Service) CreateView(ctx context.Context, req *model.CreateArtifactViewR
 		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactViewCreateError)
 	}
 	return view, nil
+}
+
+func resolveArtifactViewType(spaceID, repoID int64) model.ArtifactViewType {
+	switch {
+	case repoID > 0:
+		return model.ArtifactViewTypeRepo
+	case spaceID > 0:
+		return model.ArtifactViewTypeSpace
+	default:
+		return model.ArtifactViewTypeGlobal
+	}
 }
 
 // hasDefaultView 检查指定作用域下是否已存在默认视图。
