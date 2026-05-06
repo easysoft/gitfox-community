@@ -42,6 +42,7 @@ const (
 	ArtifactPackageListError           I18nKey = "artifact.package_list_error"            // 查询制品包列表失败.
 	ArtifactPackageQueryError          I18nKey = "artifact.package_query_error"           // 查询制品包失败.
 	ArtifactPathParamError             I18nKey = "artifact.path_param_error"              // Path 参数解析失败.
+	ArtifactPermissionDenied           I18nKey = "artifact.permission_denied"             // 您没有权限执行该制品操作.
 	ArtifactPermissionMemberQueryError I18nKey = "artifact.permission_member_query_error" // 查询制品成员列表失败.
 	ArtifactPermissionQuerySuccess     I18nKey = "artifact.permission_query_success"      // 制品权限查询成功.
 	ArtifactPermissionSetError         I18nKey = "artifact.permission_set_error"          // 设置制品权限失败.

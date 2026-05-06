@@ -83,6 +83,7 @@ artifact:
 
   # Permission
   auth_required: "需要身份认证."
+  permission_denied: "您没有权限执行该制品操作."
   permission_set_error: "设置制品权限失败."
   permission_subject_invalid: "无效的权限主体格式."
   permission_user_not_found: "未找到权限关联的用户."

@@ -261,7 +261,7 @@ func (c *Controller) DownloadAsset(ctx *gin.Context) {
 // @Router /artifacts/upload/{format} [post]
 func (c *Controller) Upload(ctx *gin.Context) {
 	var reqBody model.SpaceRepoReq
-	if err := ctx.ShouldBindBodyWithJSON(&reqBody); err != nil {
+	if err := ctx.ShouldBind(&reqBody); err != nil {
 		err = errors.WithI18nKey(err, i18n.ArtifactBodyParamError)
 		resp.BadRequest(ctx, err)
 		return

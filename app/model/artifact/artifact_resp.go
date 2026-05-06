@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	enum "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
 
 	"github.com/guregu/null"
 )
@@ -50,19 +51,18 @@ type ArtifactListItem struct {
 	UpdateTime  int64  `gorm:"column:editedDate" json:"updateTime"`
 }
 
-
 type ArtifactAssetsRes struct {
-	Id             int64  `gorm:"column:id" json:"id"`
-	Path           string `gorm:"column:path" json:"path"`
-	ContentType    string `gorm:"column:contentType" json:"contentType"`
-	Size           int64  `gorm:"column:size" json:"size"`
-	BlobRef        string `gorm:"column:ref" json:"-"`
-	Creator        string `gorm:"-" json:"creator"`
-	CreatorName    string `gorm:"column:createdBy" json:"creatorName"`
-	CheckSumString string `gorm:"column:checkSum" json:"-"`
-	MetadataString string `gorm:"column:metadata" json:"-"`
-	Created        int64  `gorm:"column:createdDate" json:"created"`
-	Updated        int64  `gorm:"column:editedDate" json:"updated"`
+	Id             int64           `gorm:"column:id" json:"id"`
+	Path           string          `gorm:"column:path" json:"path"`
+	ContentType    string          `gorm:"column:contentType" json:"contentType"`
+	Size           int64           `gorm:"column:size" json:"size"`
+	BlobRef        string          `gorm:"column:ref" json:"-"`
+	Creator        string          `gorm:"-" json:"creator"`
+	CreatorName    string          `gorm:"column:createdBy" json:"creatorName"`
+	CheckSumString string          `gorm:"column:checkSum" json:"-"`
+	MetadataString string          `gorm:"column:metadata" json:"-"`
+	Created        *datetime.Local `gorm:"column:createdDate" json:"created"`
+	Updated        *datetime.Local `gorm:"column:editedDate" json:"updated"`
 
 	CheckSum *CheckSumRes      `gorm:"-" json:"checksum"`
 	Metadata map[string]string `gorm:"-" json:"metadata"`
@@ -71,16 +71,16 @@ type ArtifactAssetsRes struct {
 }
 
 type ArtifactBlobRes struct {
-	Id             int64    `gorm:"column:id" json:"id"`
-	Path           string   `gorm:"column:path" json:"path"`
-	Size           int64    `gorm:"column:size" json:"size"`
-	BlobRef        string   `gorm:"column:ref" json:"-"`
-	Creator        string   `gorm:"-" json:"creator"`
-	CreatorName    string   `gorm:"column:createdBy" json:"creatorName"`
-	CheckSumString string   `gorm:"column:checkSum" json:"-"`
-	MetadataString string   `gorm:"column:metadata" json:"-"`
-	Created        int64    `gorm:"column:createdDate" json:"created"`
-	Deleted        null.Int `gorm:"column:deleted" json:"deleted"`
+	Id             int64           `gorm:"column:id" json:"id"`
+	Path           string          `gorm:"column:path" json:"path"`
+	Size           int64           `gorm:"column:size" json:"size"`
+	BlobRef        string          `gorm:"column:ref" json:"-"`
+	Creator        string          `gorm:"-" json:"creator"`
+	CreatorName    string          `gorm:"column:createdBy" json:"creatorName"`
+	CheckSumString string          `gorm:"column:checkSum" json:"-"`
+	MetadataString string          `gorm:"column:metadata" json:"-"`
+	Created        *datetime.Local `gorm:"column:createdDate" json:"created"`
+	Deleted        null.Int        `gorm:"column:deleted" json:"deleted"`
 
 	CheckSum *CheckSumRes      `gorm:"-" json:"checksum"`
 	Metadata map[string]string `gorm:"-" json:"metadata"`
@@ -257,7 +257,7 @@ type ArtifactPermInherit struct {
 }
 
 type ArtifactPermRule struct {
-	Subjects []*CasbinSubject  `json:"subjects"`
-	Role     enum.CasbinRole   `json:"role"`
-	Scope    enum.CasbinScope  `json:"scope"`
+	Subjects []*CasbinSubject `json:"subjects"`
+	Role     enum.CasbinRole  `json:"role"`
+	Scope    enum.CasbinScope `json:"scope"`
 }

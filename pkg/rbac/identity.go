@@ -99,6 +99,7 @@ func (o *objectRequest) Key() string {
 	return o.in
 }
 
+// ParseIdentity 解析请求标识。
 func ParseIdentity(s string) (RequestIdentity, error) {
 	if s == MatchWildcard {
 		return WildcardIdentify, nil
@@ -109,15 +110,14 @@ func ParseIdentity(s string) (RequestIdentity, error) {
 		return nil, fmt.Errorf("invalid identity: %s", s)
 	}
 
-	pk, err := strconv.ParseInt(frames[1], 10, 64)
-	if err != nil {
-		return nil, fmt.Errorf("invalid identity: %s", s)
-	}
-
 	switch frames[0] {
 	case requestUser:
 		return NewUser(frames[1]), nil
 	case requestSpace:
+		pk, err := strconv.ParseInt(frames[1], 10, 64)
+		if err != nil {
+			return nil, fmt.Errorf("invalid identity: %s", s)
+		}
 		return NewSpace(pk), nil
 	default:
 		return nil, fmt.Errorf("invalid identity: %s", s)

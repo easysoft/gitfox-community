@@ -173,11 +173,11 @@ type ArtifactVersion struct {
 	// Metadata store version-level metadata. example: version creator
 	Metadata string `json:"metadata"`
 
-	CreatedBy   string     `json:"createdBy"`
-	CreatedDate *time.Time `json:"createdDate"`
-	EditedBy    string     `json:"editedBy"`
-	EditedDate  *time.Time `json:"editedDate"`
-	Deleted     int8       `json:"-"`
+	CreatedBy   string          `json:"createdBy"`
+	CreatedDate *datetime.Local `json:"createdDate"`
+	EditedBy    string          `json:"editedBy"`
+	EditedDate  *datetime.Local `json:"editedDate"`
+	Deleted     int8            `json:"-"`
 }
 
 type CreateArtifactVersion struct {
@@ -232,14 +232,14 @@ type ArtifactAsset struct {
 	Kind        AssetKind `json:"kind"`
 	// Metadata 保存 asset 级元数据，例如 helm chart 信息，用于后续重建索引。
 	// Metadata store asset-level metadata. example: helm chart metadata, for rebuild index
-	Metadata    string     `json:"metadata"`
-	BlobID      int64      `json:"blobId"`
-	CheckSum    string     `json:"checkSum"`
-	CreatedBy   string     `json:"createdBy"`
-	CreatedDate *time.Time `json:"createdDate"`
-	EditedBy    string     `json:"editedBy"`
-	EditedDate  *time.Time `json:"editedDate"`
-	Deleted     int8       `json:"-"`
+	Metadata    string          `json:"metadata"`
+	BlobID      int64           `json:"blobId"`
+	CheckSum    string          `json:"checkSum"`
+	CreatedBy   string          `json:"createdBy"`
+	CreatedDate *datetime.Local `json:"createdDate"`
+	EditedBy    string          `json:"editedBy"`
+	EditedDate  *datetime.Local `json:"editedDate"`
+	Deleted     int8            `json:"-"`
 }
 
 type CreateArtifactAsset struct {

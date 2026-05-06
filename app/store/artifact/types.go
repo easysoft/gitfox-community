@@ -405,9 +405,9 @@ func versionToModel(v *artifactVersion) *model.ArtifactVersion {
 		ViewID:      v.ViewID,
 		Metadata:    v.Metadata,
 		CreatedBy:   v.CreatedBy,
-		CreatedDate: localToTime(v.CreatedDate),
+		CreatedDate: v.CreatedDate,
 		EditedBy:    v.EditedBy,
-		EditedDate:  localToTime(v.EditedDate),
+		EditedDate:  v.EditedDate,
 		Deleted:     v.Deleted,
 	}
 }
@@ -423,9 +423,9 @@ func versionFromModel(m *model.ArtifactVersion) *artifactVersion {
 		ViewID:      m.ViewID,
 		Metadata:    m.Metadata,
 		CreatedBy:   m.CreatedBy,
-		CreatedDate: timeToLocal(m.CreatedDate),
+		CreatedDate: m.CreatedDate,
 		EditedBy:    m.EditedBy,
-		EditedDate:  timeToLocal(m.EditedDate),
+		EditedDate:  m.EditedDate,
 		Deleted:     m.Deleted,
 	}
 }
@@ -457,9 +457,9 @@ func assetToModel(a *artifactAsset) *model.ArtifactAsset {
 		BlobID:      a.BlobID,
 		CheckSum:    a.CheckSum,
 		CreatedBy:   a.CreatedBy,
-		CreatedDate: localToTime(a.CreatedDate),
+		CreatedDate: a.CreatedDate,
 		EditedBy:    a.EditedBy,
-		EditedDate:  localToTime(a.EditedDate),
+		EditedDate:  a.EditedDate,
 		Deleted:     a.Deleted,
 	}
 }
@@ -481,9 +481,9 @@ func assetFromModel(m *model.ArtifactAsset) *artifactAsset {
 		BlobID:      m.BlobID,
 		CheckSum:    m.CheckSum,
 		CreatedBy:   m.CreatedBy,
-		CreatedDate: timeToLocal(m.CreatedDate),
+		CreatedDate: m.CreatedDate,
 		EditedBy:    m.EditedBy,
-		EditedDate:  timeToLocal(m.EditedDate),
+		EditedDate:  m.EditedDate,
 		Deleted:     m.Deleted,
 	}
 }
