@@ -357,11 +357,8 @@ func NewApp(mode string) (*App, func(), error) {
 		TokenStore:         tokenInterface,
 		ArtifactService:    artifactService,
 		ArtifactAuthorizer: artifactAuthorizer,
-<<<<<<< HEAD
 		ContainerHandler:   containerHandler,
-=======
 		GitService:         gitService,
->>>>>>> 0a80f71 (add increase scan)
 	}
 	return app, func() {
 		cleanup2()
@@ -399,9 +396,6 @@ type App struct {
 	TokenStore         token.Interface
 	ArtifactService    artifact3.Interface
 	ArtifactAuthorizer authorizer.Authorizer
-<<<<<<< HEAD
 	ContainerHandler   *handler.ContainerHandler
-=======
 	GitService         git.Interface
->>>>>>> 0a80f71 (add increase scan)
 }
