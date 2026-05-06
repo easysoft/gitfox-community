@@ -105,6 +105,11 @@ func NewService(
 	}, nil
 }
 
+// FileStore 返回制品库的 ContentStorage，用于外部组件（如容器镜像控制器）直接访问存储。
+func (s *Service) FileStore() storage.ContentStorage {
+	return s.fileStore
+}
+
 // CreateView 创建制品库视图。
 //
 // 名称唯一性规则（同一作用域 spaceID + repoID 下）：
@@ -260,6 +265,52 @@ func (s *Service) ParseSpaceView(ctx context.Context, req *model.SpaceRepoReq) (
 	return desc, nil
 }
 
+// ParseContainerView 按作用域（scope）和 viewname 精确定位 ViewDescriptor。
+//
+// 路由格式（groupname 必传，容器镜像 push/pull 的路径前缀决定 scope）：
+//
+//	/v2/global/{viewname}/{groupname}/{imagename}
+//	/v2/space/{spaceName}/{viewname}/{groupname}/{imagename}
+//	/v2/repo/{spaceName}/{repoName}/{viewname}/{groupname}/{imagename}
+//
+// scope 取值："global" | "space" | "repo"
+// view 不存在时直接返回 404，不自动创建。
+func (s *Service) ParseContainerView(ctx context.Context,
+	scope, spaceName, scopeRepoName, viewname string,
+) (*adapter.ViewDescriptor, error) {
+	var spaceId, repoId int64
+
+	// space / repo scope：先将 spaceName 解析为 ID
+	if scope == "space" || scope == "repo" {
+		space, err := s.spaceStore.GetByName(ctx, spaceName)
+		if err != nil {
+			return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactSpaceQueryError)
+		}
+		spaceId = int64(space.ID)
+	}
+
+	// repo scope：再将 repoName 解析为 ID
+	if scope == "repo" {
+		repo, err := s.repoStore.GetBySpaceAndIdentifier(ctx, uint(spaceId), scopeRepoName)
+		if err != nil {
+			return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactRepoQueryError)
+		}
+		repoId = int64(repo.ID)
+	}
+
+	// 按名称精确查找 view（不使用默认 view）
+	view, err := s.artStore.Views().GetByName(ctx, spaceId, repoId, viewname)
+	if err != nil {
+		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactViewQueryError)
+	}
+
+	return &adapter.ViewDescriptor{
+		ViewID:    view.ID,
+		Store:     s.fileStore,
+		StorageID: 1,
+	}, nil
+}
+
 func (s *Service) ListPackages(ctx context.Context, viewId int64, filter *model.ArtifactFilter) ([]*model.ArtifactListItem, error) {
 	res, err := s.artStore.FindPackages(ctx, viewId, filter)
 	if err != nil {
@@ -341,6 +392,27 @@ func (s *Service) Upload(ctx context.Context, view *adapter.ViewDescriptor, form
 	return uploader.GetAssets(), nil
 }
 
+// ViewExists 检查指定 viewId 是否存在（仅 active view）。
+func (s *Service) ViewExists(ctx context.Context, viewId int64) error {
+	_, err := s.artStore.Views().GetByID(ctx, viewId)
+	if err != nil {
+		return pkgErrors.WithI18nKey(err, i18n.ArtifactGroupViewNotFound)
+	}
+	return nil
+}
+
+// GroupPathExists 检查指定视图下是否已存在完全相同的分组路径。
+func (s *Service) GroupPathExists(ctx context.Context, viewId int64, names []string, format model.ArtifactFormat) (bool, error) {
+	_, err := s.artStore.Groups().GetEndpointByNames(ctx, viewId, names, format)
+	if err != nil {
+		if pkgErrors.Is(err, pkgErrors.ErrResourceNotFound) {
+			return false, nil
+		}
+		return false, pkgErrors.WithI18nKey(err, i18n.ArtifactGroupQueryError)
+	}
+	return true, nil
+}
+
 func (s *Service) CreateGroup(ctx context.Context, viewId int64, names []string, format model.ArtifactFormat) (*model.ArtifactGroupEndpoint, error) {
 	var result *model.ArtifactGroupEndpoint
 	err := s.db.Transaction(func(tx *gorm.DB) error {
@@ -348,10 +420,20 @@ func (s *Service) CreateGroup(ctx context.Context, viewId int64, names []string,
 		if e != nil {
 			return e
 		}
+		// 同步树节点
+		if ge == nil || ge.ArtifactGroup == nil {
+			return errors.New("group endpoint is empty after create")
+		}
+		if _, e = artModel.NewSyncer(s.artStore).SyncTreeNodeForGroup(ctx, ge.ArtifactGroup); e != nil {
+			return e
+		}
 		result = ge
 		return nil
 	})
-	return result, err
+	if err != nil {
+		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactGroupCreateError)
+	}
+	return result, nil
 }
 
 func (s *Service) ListFormats(ctx context.Context, viewId int64) ([]*model.ArtifactTreeNode, error) {
