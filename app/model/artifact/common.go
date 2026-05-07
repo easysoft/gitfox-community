@@ -46,7 +46,6 @@ type SpaceRepoFormReq struct {
 
 type SoftRemoveEntitiesReq struct {
 	EntityIds []string `json:"entity_ids,omitempty"`
-	NodeIds   []string `json:"node_ids,omitempty"`
 }
 
 type CreateArtifactViewReq struct {
@@ -61,6 +60,11 @@ type ArtifactVersionListReq struct {
 	PackageName string `json:"packageName" binding:"required"`
 	Format      string `json:"format" binding:"required"`
 	GroupName   string `json:"groupName"`
+}
+
+type ArtifactTreeListReq struct {
+	SpaceRepoReq
+	ArtifactTreeFilter
 }
 
 // CreateGroupReq 创建 group 节点的请求参数。

@@ -57,8 +57,11 @@ func ValidateAssetKind(kind AssetKind) error {
 const (
 	ArtifactNodeRoot = "/"
 
-	ArtifactNodeLevelAsset   = "asset"
+	ArtifactNodeLevelFormat  = "format"
+	ArtifactNodeLevelGroup   = "group"
+	ArtifactNodeLevelPackage = "package"
 	ArtifactNodeLevelVersion = "version"
+	ArtifactNodeLevelAsset   = "asset"
 )
 
 // ==================== 权限实体类型枚举 ====================
@@ -380,7 +383,7 @@ func (n *ArtifactTreeNode) Parent() *ArtifactTreeNode {
 		p.Type = ArtifactTreeNodeTypeFormat
 	} else {
 		p.Name = filepath.Base(parentPath)
-		p.Type = ArtifactTreeNodeTypeDirectory
+		p.Type = ArtifactTreeNodeTypeGroup
 	}
 	return &p
 }

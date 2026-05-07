@@ -65,7 +65,11 @@ artifact:
 
   # Tree
   tree_format_list_error: "查询制品格式列表失败."
+  tree_format_required: "通用树查询必须指定 format，除非传入了 nodeId."
+  tree_level_invalid: "通用树查询的 level 参数不合法，仅支持: format, group, package, version, asset."
   tree_node_list_error: "查询制品树节点列表失败."
+  tree_node_not_in_artifact: "指定的 nodeId 不属于当前制品库."
+  tree_node_recursive_conflict: "传入 nodeId 时不支持递归查询"
   tree_refresh_error: "制品树刷新失败."
 
   # GC & Delete
@@ -73,6 +77,9 @@ artifact:
   gc_trigger_error: "触发制品垃圾回收失败."
   gc_execute_error: "执行制品垃圾回收失败."
   soft_remove_parse_error: "解析制品实体 ID 失败."
+  soft_remove_entity_id_invalid_format: "制品实体 ID 格式不正确，应为 type.id。"
+  soft_remove_entity_id_invalid_number: "制品实体 ID 中的数字部分不合法。"
+  soft_remove_entity_type_unsupported: "不支持的制品实体类型。"
   soft_remove_error: "制品软删除失败."
 
   # Statistic

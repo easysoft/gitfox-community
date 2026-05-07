@@ -498,12 +498,322 @@ func (s *Service) CreateGroup(ctx context.Context, artifactID int64, names []str
 	return result, nil
 }
 
+// ListTree 是通用树查询入口。
+// 语义：
+//  1. nodeId > 0 时，优先按节点ID定位当前节点，只支持单层查询；
+//  2. path 不带 /** 时，返回“当前层”的平铺节点列表；
+//  3. path 为 /** 或 /xxx/** 时，返回从该路径开始的递归树；
+//  4. format=all 时，以各 format 根节点作为返回顶层；
+//  5. level 表示最大可见层级：format/group/package/version/asset。
+func (s *Service) ListTree(ctx context.Context, artifactID int64, filter *model.ArtifactTreeFilter) ([]*model.ArtifactTreeRes, error) {
+	if filter == nil {
+		filter = &model.ArtifactTreeFilter{}
+	}
+	if filter.NodeID == 0 && filter.Format == "" {
+		return nil, pkgErrors.WithI18nKey(errors.New("format is required"), i18n.ArtifactTreeFormatRequired)
+	}
+	level, err := normalizeTreeLevel(filter.Level)
+	if err != nil {
+		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactTreeLevelInvalid)
+	}
+	path, recursive := normalizeTreePath(filter.Path)
+	if filter.NodeID > 0 {
+		if recursive {
+			return nil, pkgErrors.WithI18nKey(errors.New("recursive query is not supported when nodeId is provided"), i18n.ArtifactTreeNodeRecursiveConflict)
+		}
+		currNode, err := s.artStore.Nodes().GetById(ctx, filter.NodeID)
+		if err != nil {
+			return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactTreeNodeListError)
+		}
+		if currNode.ArtifactID != artifactID {
+			return nil, pkgErrors.WithI18nKey(errors.New("node does not belong to current artifact"), i18n.ArtifactTreeNodeNotInArtifact)
+		}
+		if level == model.ArtifactNodeLevelFormat {
+			return []*model.ArtifactTreeRes{convertTreeNodeToRes(currNode, level)}, nil
+		}
+		return s.listTreeCurrentLevel(ctx, currNode, level)
+	}
+	if filter.Format == model.ArtifactAllFormat {
+		roots, err := s.artStore.Nodes().ListFormats(ctx, artifactID)
+		if err != nil {
+			return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactTreeFormatListError)
+		}
+		if level == model.ArtifactNodeLevelFormat || !recursive {
+			return convertTreeNodesToRes(roots, level), nil
+		}
+		return s.buildFormatForest(ctx, roots, level)
+	}
+	currNode, err := s.artStore.Nodes().GetByPath(ctx, artifactID, path, filter.Format)
+	if err != nil {
+		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactTreeNodeListError)
+	}
+	if level == model.ArtifactNodeLevelFormat {
+		if path == model.ArtifactNodeRoot {
+			return []*model.ArtifactTreeRes{convertTreeNodeToRes(currNode, level)}, nil
+		}
+		return []*model.ArtifactTreeRes{}, nil
+	}
+	if !recursive {
+		return s.listTreeCurrentLevel(ctx, currNode, level)
+	}
+	if path == model.ArtifactNodeRoot {
+		return s.buildTreeChildren(ctx, currNode, level)
+	}
+	root := convertTreeNodeToRes(currNode, level)
+	root.Children, err = s.buildTreeChildren(ctx, currNode, level)
+	if err != nil {
+		return nil, err
+	}
+	root.Leaf = len(root.Children) == 0
+	return []*model.ArtifactTreeRes{root}, nil
+}
+
+// buildFormatForest 将多个 format 根节点分别递归展开，组装成整库的树森林。
+// 仅在 format=all 且 path 使用递归模式时调用。
+func (s *Service) buildFormatForest(ctx context.Context, roots []*model.ArtifactTreeNode, level string) ([]*model.ArtifactTreeRes, error) {
+	data := make([]*model.ArtifactTreeRes, 0, len(roots))
+	for _, root := range roots {
+		item := convertTreeNodeToRes(root, level)
+		children, err := s.buildTreeChildren(ctx, root, level)
+		if err != nil {
+			return nil, err
+		}
+		item.Children = children
+		item.Leaf = len(children) == 0
+		data = append(data, item)
+	}
+	return data, nil
+}
+
 func (s *Service) ListFormats(ctx context.Context, artifactID int64) ([]*model.ArtifactTreeNode, error) {
 	return s.artStore.Nodes().ListFormats(ctx, artifactID)
 }
 
 func (s *Service) ListTreeNodes(ctx context.Context, parentId int64) ([]*model.ArtifactTreeNode, error) {
 	return s.artStore.Nodes().ListByParentId(ctx, parentId)
+}
+
+// listTreeCurrentLevel 处理“非递归模式”的当前层查询。
+// 它只返回 node 的直接下一层：
+//  1. 普通节点返回直接 children；
+//  2. group 节点在 level=asset 时，会把 group 下直接资产一并拼进来；
+//  3. version 节点在 level=asset 时，直接下钻返回该 version 下的资产。
+func (s *Service) listTreeCurrentLevel(ctx context.Context, node *model.ArtifactTreeNode, level string) ([]*model.ArtifactTreeRes, error) {
+	if node.Type == model.ArtifactTreeNodeTypeVersion && node.Format != model.ArtifactContainerFormat && node.TargetId.Valid {
+		if level == model.ArtifactNodeLevelAsset {
+			return s.listVersionAssetAsTree(ctx, node)
+		}
+		return []*model.ArtifactTreeRes{convertTreeNodeToRes(node, level)}, nil
+	}
+	children, err := s.artStore.Nodes().ListByParentId(ctx, node.ID)
+	if err != nil {
+		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactTreeNodeListError)
+	}
+	// 先按 level 裁掉超过目标层级的节点，再做响应模型转换。
+	children = filterTreeNodesByLevel(children, level)
+	data := convertTreeNodesToRes(children, level)
+	if node.Type == model.ArtifactTreeNodeTypeGroup && node.TargetId.Valid && level == model.ArtifactNodeLevelAsset {
+		return s.appendGroupAssets(ctx, node.TargetId.Int64, data)
+	}
+	return data, nil
+}
+
+// buildTreeChildren 处理“递归模式”的子树构建。
+// 递归终止条件：
+//  1. 当前已到 version 且 level < asset；
+//  2. 当前没有更多 children；
+//  3. level 过滤后不再允许继续向下。
+func (s *Service) buildTreeChildren(ctx context.Context, node *model.ArtifactTreeNode, level string) ([]*model.ArtifactTreeRes, error) {
+	if node.Type == model.ArtifactTreeNodeTypeVersion && node.Format != model.ArtifactContainerFormat && node.TargetId.Valid {
+		if level == model.ArtifactNodeLevelAsset {
+			return s.listVersionAssetAsTree(ctx, node)
+		}
+		return nil, nil
+	}
+	children, err := s.artStore.Nodes().ListByParentId(ctx, node.ID)
+	if err != nil {
+		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactTreeNodeListError)
+	}
+	children = filterTreeNodesByLevel(children, level)
+	data := make([]*model.ArtifactTreeRes, 0, len(children))
+	for _, child := range children {
+		item := convertTreeNodeToRes(child, level)
+		item.Children, err = s.buildTreeChildren(ctx, child, level)
+		if err != nil {
+			return nil, err
+		}
+		item.Leaf = len(item.Children) == 0
+		data = append(data, item)
+	}
+	if node.Type == model.ArtifactTreeNodeTypeGroup && node.TargetId.Valid && level == model.ArtifactNodeLevelAsset {
+		return s.appendGroupAssets(ctx, node.TargetId.Int64, data)
+	}
+	return data, nil
+}
+
+// listVersionAssetAsTree 将 version 节点下的资产转换成树节点返回。
+// 参考项目里 version 在 asset 级别会直接展开成文件，这里保持同样语义。
+func (s *Service) listVersionAssetAsTree(ctx context.Context, node *model.ArtifactTreeNode) ([]*model.ArtifactTreeRes, error) {
+	assets, err := s.artStore.ListAssets(ctx, node.TargetId.Int64)
+	if err != nil {
+		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactAssetQueryError)
+	}
+	info := parseArtifactTreePath(node.Path)
+	data := make([]*model.ArtifactTreeRes, 0, len(assets))
+	for _, asset := range assets {
+		base := filepath.Base(asset.Path)
+		meta := &model.ArtifactTreeNodeMeta{Id: asset.Id, Type: model.ArtifactTreeNodeTypeAsset}
+		if info != nil {
+			m := *info
+			m.Id, m.Type = asset.Id, model.ArtifactTreeNodeTypeAsset
+			meta = &m
+		}
+		id := (&model.ArtifactTreeNodeId{Type: model.ArtifactTreeNodeTypeAsset, Pk: asset.Id}).String()
+		meta.NodeId, meta.EntityId = id, id
+		data = append(data, &model.ArtifactTreeRes{Name: base, Path: strings.TrimRight(node.Path, "/") + "/" + base, Leaf: true, Format: node.Format, Metadata: meta})
+	}
+	return data, nil
+}
+
+// appendGroupAssets 把 generic/group 下面直接挂载的资产追加到当前结果中。
+// 这一步只在 level=asset 时执行；group/package/version 级别不会把文件混入返回。
+func (s *Service) appendGroupAssets(ctx context.Context, groupID int64, data []*model.ArtifactTreeRes) ([]*model.ArtifactTreeRes, error) {
+	g, err := s.artStore.Groups().GetEndpointById(ctx, groupID)
+	if err != nil {
+		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactGroupQueryError)
+	}
+	assets, err := s.artStore.ListGroupAssets(ctx, groupID)
+	if err != nil {
+		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactAssetQueryError)
+	}
+	for _, asset := range assets {
+		base := filepath.Base(asset.Path)
+		id := (&model.ArtifactTreeNodeId{Type: model.ArtifactTreeNodeTypeAsset, Pk: asset.Id}).String()
+		data = append(data, &model.ArtifactTreeRes{Name: base, Path: "/" + g.GroupPath() + "/" + base, Leaf: true, Format: model.ArtifactFormat(g.Format), Metadata: &model.ArtifactTreeNodeMeta{Id: asset.Id, Type: model.ArtifactTreeNodeTypeAsset, Name: base, NodeId: id, EntityId: id}})
+	}
+	return data, nil
+}
+
+// filterTreeNodesByLevel 按 level 上限过滤节点类型。
+// 例如 level=package 时，只保留 group/package，不返回 version/asset。
+func filterTreeNodesByLevel(inputs []*model.ArtifactTreeNode, level string) []*model.ArtifactTreeNode {
+	out := make([]*model.ArtifactTreeNode, 0, len(inputs))
+	for _, n := range inputs {
+		if treeNodeLevelRank(n.Type) <= treeLevelRank(level) {
+			out = append(out, n)
+		}
+	}
+	return out
+}
+
+func convertTreeNodesToRes(inputs []*model.ArtifactTreeNode, level string) []*model.ArtifactTreeRes {
+	out := make([]*model.ArtifactTreeRes, 0, len(inputs))
+	for _, n := range inputs {
+		out = append(out, convertTreeNodeToRes(n, level))
+	}
+	return out
+}
+
+// convertTreeNodeToRes 将存储层树节点转换为接口返回模型。
+// 这里只负责“单个节点”的基础映射；children 由上层递归逻辑填充。
+func convertTreeNodeToRes(n *model.ArtifactTreeNode, level string) *model.ArtifactTreeRes {
+	item := &model.ArtifactTreeRes{Name: n.Name, Path: n.Path, Format: n.Format, Leaf: n.Type == model.ArtifactTreeNodeTypeAsset}
+	if n.Type == model.ArtifactTreeNodeTypeVersion {
+		item.Leaf = level != model.ArtifactNodeLevelAsset || n.Format == model.ArtifactContainerFormat
+	}
+	if n.Type == model.ArtifactTreeNodeTypeVersion {
+		item.Metadata = parseArtifactTreePath(n.Path)
+		if item.Metadata == nil {
+			item.Metadata = &model.ArtifactTreeNodeMeta{}
+		}
+		item.Metadata.Type = model.ArtifactTreeNodeTypeVersion
+	} else {
+		item.Metadata = &model.ArtifactTreeNodeMeta{Type: n.Type}
+	}
+	if n.TargetId.Valid {
+		item.Metadata.Id = n.TargetId.Int64
+		id := (&model.ArtifactTreeNodeId{Type: n.Type, Pk: n.TargetId.Int64}).String()
+		item.Metadata.NodeId, item.Metadata.EntityId = id, id
+	}
+	if n.Type == model.ArtifactTreeNodeTypeFormat {
+		item.Metadata.Name = n.Name
+	}
+	return item
+}
+
+func normalizeTreePath(path string) (string, bool) {
+	p := strings.TrimSpace(path)
+	if p == "" {
+		return model.ArtifactNodeRoot, false
+	}
+	recursive := strings.HasSuffix(p, "/**")
+	p = strings.TrimSuffix(p, "/**")
+	if p == "" {
+		p = model.ArtifactNodeRoot
+	}
+	if !strings.HasPrefix(p, "/") {
+		p = "/" + p
+	}
+	if p != "/" {
+		p = strings.TrimRight(p, "/")
+	}
+	return p, recursive
+}
+
+func normalizeTreeLevel(level string) (string, error) {
+	if level == "" {
+		return model.ArtifactNodeLevelAsset, nil
+	}
+	switch level {
+	case model.ArtifactNodeLevelFormat, model.ArtifactNodeLevelGroup, model.ArtifactNodeLevelPackage, model.ArtifactNodeLevelVersion, model.ArtifactNodeLevelAsset:
+		return level, nil
+	default:
+		return "", fmt.Errorf("unsupported level: %s", level)
+	}
+}
+
+func treeLevelRank(level string) int {
+	switch level {
+	case model.ArtifactNodeLevelFormat:
+		return 0
+	case model.ArtifactNodeLevelGroup:
+		return 1
+	case model.ArtifactNodeLevelPackage:
+		return 2
+	case model.ArtifactNodeLevelVersion:
+		return 3
+	default:
+		return 4
+	}
+}
+
+func treeNodeLevelRank(t model.ArtifactTreeNodeType) int {
+	switch t {
+	case model.ArtifactTreeNodeTypeFormat:
+		return 0
+	case model.ArtifactTreeNodeTypeGroup:
+		return 1
+	case model.ArtifactTreeNodeTypePackage:
+		return 2
+	case model.ArtifactTreeNodeTypeVersion:
+		return 3
+	case model.ArtifactTreeNodeTypeAsset:
+		return 4
+	default:
+		return 0
+	}
+}
+
+func parseArtifactTreePath(path string) *model.ArtifactTreeNodeMeta {
+	frames := strings.Split(strings.TrimLeft(path, "/"), "/")
+	if len(frames) < 2 {
+		return nil
+	}
+	meta := &model.ArtifactTreeNodeMeta{Name: frames[len(frames)-2], Version: frames[len(frames)-1]}
+	if len(frames) > 2 {
+		meta.Group = strings.Join(frames[:len(frames)-2], ".")
+	}
+	return meta
 }
 
 func (s *Service) statistic(ctx context.Context, report *model.ArtifactStatisticReport) (*model.ArtifactStatisticResponse, error) {
@@ -738,13 +1048,13 @@ func (s *Service) garbageCollect(ctx context.Context, items []*model.ArtifactRec
 
 func (s *Service) SoftRemove(ctx context.Context, spaceID int64, req *model.SoftRemoveEntitiesReq) (*model.ArtifactNodeRemoveReport, error) {
 	ids := req.EntityIds
-	if len(ids) == 0 {
-		ids = req.NodeIds
-	}
 	report := &model.ArtifactNodeRemoveReport{Total: len(ids), Data: make([]*model.ArtifactNodeRemoveRes, len(ids))}
 	for _, eid := range ids {
 		if _, err := entity.Parse(ctx, s.artStore, eid); err != nil {
 			logger.GetLogger(ctx).Warnf("parse artifact entity %s failed before soft remove: %v", eid, err)
+			if pkgErrors.GetI18nKey(err) != i18n.ErrorDefault {
+				return nil, err
+			}
 			return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactSoftRemoveParseError)
 		}
 	}
@@ -810,7 +1120,7 @@ func (s *Service) softRemoveEntity(ctx context.Context, eid string, res *model.A
 			return nil
 		}
 		return s.softRemovePackage(ctx, pkg, res)
-	case model.ArtifactTreeNodeTypeGroup, model.ArtifactTreeNodeTypeDirectory:
+	case model.ArtifactTreeNodeTypeGroup:
 		group, err := s.artStore.Groups().GetById(ctx, nodeID)
 		if err != nil {
 			res.Status = model.ArtifactStatusNotFound

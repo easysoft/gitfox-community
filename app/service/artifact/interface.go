@@ -84,6 +84,9 @@ type Interface interface {
 	// ListFormats 列出指定视图下的格式根节点。
 	ListFormats(ctx context.Context, artifactID int64) ([]*model.ArtifactTreeNode, error)
 
+	// ListTree 按 path/format/level 聚合查询制品树，兼容参考项目的万能树接口语义。
+	ListTree(ctx context.Context, artifactID int64, filter *model.ArtifactTreeFilter) ([]*model.ArtifactTreeRes, error)
+
 	// ListTreeNodes 列出指定父节点下的子节点。
 	ListTreeNodes(ctx context.Context, parentId int64) ([]*model.ArtifactTreeNode, error)
 

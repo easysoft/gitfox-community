@@ -65,7 +65,11 @@ artifact:
 
   # Tree
   tree_format_list_error: "Failed to list artifact formats."
+  tree_format_required: "format is required for tree queries unless nodeId is provided."
+  tree_level_invalid: "Invalid tree query level. Supported values: format, group, package, version, asset."
   tree_node_list_error: "Failed to list artifact tree nodes."
+  tree_node_not_in_artifact: "The specified nodeId does not belong to the current artifact."
+  tree_node_recursive_conflict: "Recursive tree query is not supported when nodeId is provided."
   tree_refresh_error: "Failed to refresh artifact tree."
 
   # GC & Delete
@@ -73,6 +77,9 @@ artifact:
   gc_trigger_error: "Failed to trigger artifact garbage collection."
   gc_execute_error: "Failed to execute artifact garbage collection."
   soft_remove_parse_error: "Failed to parse artifact entity ID."
+  soft_remove_entity_id_invalid_format: "Invalid artifact entity ID format. Expected type.id."
+  soft_remove_entity_id_invalid_number: "The numeric part of artifact entity ID is invalid."
+  soft_remove_entity_type_unsupported: "Unsupported artifact entity type."
   soft_remove_error: "Failed to soft-delete artifact."
 
   # Statistic
