@@ -22,6 +22,7 @@ type artifactView struct {
 	Description string          `gorm:"column:desc"`
 	SpaceID     int64           `gorm:"column:spaceID"`
 	RepoID      int64           `gorm:"column:repoID"`
+	Type        string          `gorm:"column:type"`
 	Default     bool            `gorm:"column:isDefault"`
 	CreatedBy   string          `gorm:"column:createdBy"`
 	CreatedDate *datetime.Local `gorm:"column:createdDate"`
@@ -270,6 +271,7 @@ func viewToModel(v *artifactView) *model.ArtifactView {
 		Description: v.Description,
 		SpaceID:     v.SpaceID,
 		RepoID:      v.RepoID,
+		Type:        model.ArtifactViewType(v.Type),
 		Default:     v.Default,
 		CreatedBy:   v.CreatedBy,
 		CreatedDate: v.CreatedDate,
@@ -289,6 +291,7 @@ func viewFromModel(m *model.ArtifactView) *artifactView {
 		Description: m.Description,
 		SpaceID:     m.SpaceID,
 		RepoID:      m.RepoID,
+		Type:        string(m.Type),
 		Default:     m.Default,
 		CreatedBy:   m.CreatedBy,
 		CreatedDate: m.CreatedDate,
@@ -311,9 +314,9 @@ func groupToModel(g *artifactGroup) *model.ArtifactGroup {
 		Name:        g.Name,
 		Format:      model.ArtifactFormat(g.Format),
 		CreatedBy:   g.CreatedBy,
-		CreatedDate: localToTime(g.CreatedDate),
+		CreatedDate: g.CreatedDate,
 		EditedBy:    g.EditedBy,
-		EditedDate:  localToTime(g.EditedDate),
+		EditedDate:  g.EditedDate,
 		Deleted:     g.Deleted,
 	}
 }
@@ -329,9 +332,9 @@ func groupFromModel(m *model.ArtifactGroup) *artifactGroup {
 		Name:        m.Name,
 		Format:      string(m.Format),
 		CreatedBy:   m.CreatedBy,
-		CreatedDate: timeToLocal(m.CreatedDate),
+		CreatedDate: m.CreatedDate,
 		EditedBy:    m.EditedBy,
-		EditedDate:  timeToLocal(m.EditedDate),
+		EditedDate:  m.EditedDate,
 		Deleted:     m.Deleted,
 	}
 }

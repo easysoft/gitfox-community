@@ -18,6 +18,7 @@ func (c *views) Create(ctx context.Context, newObj *model.CreateArtifactView) (*
 	var view artifactView
 	view.SpaceID = newObj.SpaceID
 	view.RepoID = newObj.RepoID
+	view.Type = string(newObj.Type)
 	view.Default = newObj.Default
 	view.Name = newObj.Name
 	view.Description = newObj.Description
