@@ -567,10 +567,6 @@ definitions:
         items:
           type: string
         type: array
-      node_ids:
-        items:
-          type: string
-        type: array
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.SpaceRepoReq:
     properties:
@@ -3354,7 +3350,7 @@ paths:
       - application/json
       description: 按 entity_id 批量软删除 asset/version/package/group
       parameters:
-      - description: 实体ID列表
+      - description: 实体ID列表，仅支持 entity_ids，元素格式为 type.id
         in: body
         name: body
         required: true
@@ -10466,30 +10462,6 @@ paths:
             additionalProperties: true
             type: object
       summary: 列出镜像 Tag
-      tags:
-      - container
-  /v2/token:
-    get:
-      consumes:
-      - application/json
-      description: docker login 时 Docker 客户端携带 Basic Auth 凭证请求此端点，后端调用禅道 API 获取 token
-        并缓存返回。
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: '颁发成功，返回 {token: string}'
-          schema:
-            additionalProperties: true
-            type: object
-        "401":
-          description: 认证失败（账号密码错误或缺失）
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - BasicAuth: []
-      summary: 容器镜像 Token 颁发
       tags:
       - container
 securityDefinitions:

@@ -2,7 +2,6 @@ package router
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
@@ -14,7 +13,6 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/authorizer"
 	ctnHandler "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/handler"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/auth/authn"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/cache"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
@@ -58,16 +56,16 @@ func NewRouter(mode string, logger *logger.SugaredMateLogger, controller *Contro
 	// 创建需要 JWT 认证的路由组
 	authGroup := r.Group("/api/v2")
 	authGroup.Use(middleware.Attempt(authn.Get(authn.AuthKindEasy)))
-	registerSpaceRoutes(authGroup, controller)    // 空间相关路由
-	registerBranchRoutes(authGroup, controller)   // 分支相关路由
-	registerTagRoutes(authGroup, controller)      // 标签相关路由
-	registerCommitRoutes(authGroup, controller)   // 提交相关路由
-	registerRepoRoutes(authGroup, controller)     // 仓库相关路由
-	registerScanRoutes(authGroup, controller)     // 扫描相关路由
-	registerPipelineRoutes(authGroup, controller) // 流水线相关路由
-	registerRunnerRoutes(authGroup, controller)   // Runner 管理相关路由
-	registerUserRoutes(authGroup, controller)     // 用户相关路由
-	registerWebhookRoutes(authGroup, controller)  // Webhook 相关路由
+	registerSpaceRoutes(authGroup, controller)              // 空间相关路由
+	registerBranchRoutes(authGroup, controller)             // 分支相关路由
+	registerTagRoutes(authGroup, controller)                // 标签相关路由
+	registerCommitRoutes(authGroup, controller)             // 提交相关路由
+	registerRepoRoutes(authGroup, controller)               // 仓库相关路由
+	registerScanRoutes(authGroup, controller)               // 扫描相关路由
+	registerPipelineRoutes(authGroup, controller)           // 流水线相关路由
+	registerRunnerRoutes(authGroup, controller)             // Runner 管理相关路由
+	registerUserRoutes(authGroup, controller)               // 用户相关路由
+	registerWebhookRoutes(authGroup, controller)            // Webhook 相关路由
 	registerArtifactRoutes(authGroup, controller, artAuthz) // 制品库相关路由
 
 	// 创建需要 Basic 认证的路由组（用于 Git 操作）
@@ -86,9 +84,7 @@ func NewRouter(mode string, logger *logger.SugaredMateLogger, controller *Contro
 	registerRunnerClientRoutes(runnerClientGroup, controller)
 
 	// 注册容器镜像（OCI v2）路由，用于 docker login / pull / push
-	// token 通过 Set 写入，Get miss 时返回 error（表示 token 不存在或已过期）
-	tokenStore := cache.New[string, string](nopTokenGetter{}, 72*time.Hour) // 3 天过期
-	registerContainerRoutes(r, containerHandler, tokenStore, cfg)
+	registerContainerRoutes(r, containerHandler)
 
 	return r
 }

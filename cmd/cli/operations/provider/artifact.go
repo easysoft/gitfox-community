@@ -54,7 +54,6 @@ func ProvideContainerHandler(
 	svc artifactSvc.Interface,
 	artStore artifactStore.Interface,
 	spStore spaceStore.Interface,
-	cfg *config.Config,
 ) *ctnHandler.ContainerHandler {
-	return ctnHandler.NewContainerHandler(ctrl, svc, artStore, spStore, nil, cfg)
+	return ctnHandler.NewContainerHandler(ctrl, svc, artStore, spStore)
 }
