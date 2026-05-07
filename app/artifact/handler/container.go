@@ -11,9 +11,6 @@ import (
 	artifactSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/artifact"
 	artifactStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/artifact"
 	spaceStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/space"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/auth/authz"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/cache"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 	pkgErrors "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 
@@ -28,8 +25,6 @@ type ContainerHandler struct {
 	artSvc     artifactSvc.Interface
 	artStore   artifactStore.Interface
 	spaceStore spaceStore.Interface
-	tokenStore *cache.TTLCache[string, string]
-	devopsURL  string
 }
 
 // NewContainerHandler 创建容器镜像 Handler 实例。
@@ -38,22 +33,13 @@ func NewContainerHandler(
 	artSvc artifactSvc.Interface,
 	artStore artifactStore.Interface,
 	spStore spaceStore.Interface,
-	tokenStore *cache.TTLCache[string, string],
-	cfg *config.Config,
 ) *ContainerHandler {
 	return &ContainerHandler{
 		ctrl:       ctrl,
 		artSvc:     artSvc,
 		artStore:   artStore,
 		spaceStore: spStore,
-		tokenStore: tokenStore,
-		devopsURL:  cfg.Devops.URL,
 	}
-}
-
-// SetTokenStore 注入共享的 TokenStore 实例（由 router 层在注册路由时设置）。
-func (h *ContainerHandler) SetTokenStore(ts *cache.TTLCache[string, string]) {
-	h.tokenStore = ts
 }
 
 // HandleAPIBase OCI v2 协议探测
@@ -68,39 +54,6 @@ func (h *ContainerHandler) HandleAPIBase(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{})
 }
 
-// HandleToken 容器镜像 Token 颁发
-// @Summary 容器镜像 Token 颁发
-// @Description docker login 时 Docker 客户端携带 Basic Auth 凭证请求此端点，后端调用禅道 API 获取 token 并缓存返回。
-// @Tags container
-// @Accept application/json
-// @Produce application/json
-// @Security BasicAuth
-// @Success 200 {object} map[string]interface{} "颁发成功，返回 {token: string}"
-// @Failure 401 {object} map[string]interface{} "认证失败（账号密码错误或缺失）"
-// @Router /v2/token [get]
-func (h *ContainerHandler) HandleToken(c *gin.Context) {
-	log := logger.GetLoggerFromGin(c)
-	ctx := c.Request.Context()
-
-	account, password, ok := c.Request.BasicAuth()
-	if !ok || account == "" {
-		renderContainerErr(c, ctnAdapter.ErrUnauthorized)
-		return
-	}
-
-	// 调用禅道 API 获取 token（不自签 JWT）
-	token, err := authz.GetZentaoUserToken(ctx, h.devopsURL, account, password)
-	if err != nil {
-		log.Errorf("getZentaoUserToken failed for account %s: %v", account, err)
-		renderContainerErr(c, ctnAdapter.ErrUnauthorized)
-		return
-	}
-
-	// 保存到内存缓存（TTL 在 cache.New 时配置）
-	h.tokenStore.Set(token, account)
-
-	c.JSON(http.StatusOK, gin.H{"token": token})
-}
 
 // HandleBlobHead 检查 Blob 是否存在
 // @Summary 检查 Blob 是否存在

@@ -216,7 +216,7 @@ const docTemplate = `{
                 "summary": "按实体批量软删除制品",
                 "parameters": [
                     {
-                        "description": "实体ID列表",
+                        "description": "实体ID列表，仅支持 entity_ids，元素格式为 type.id",
                         "name": "body",
                         "in": "body",
                         "required": true,
@@ -10629,42 +10629,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/v2/token": {
-            "get": {
-                "security": [
-                    {
-                        "BasicAuth": []
-                    }
-                ],
-                "description": "docker login 时 Docker 客户端携带 Basic Auth 凭证请求此端点，后端调用禅道 API 获取 token 并缓存返回。",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "container"
-                ],
-                "summary": "容器镜像 Token 颁发",
-                "responses": {
-                    "200": {
-                        "description": "颁发成功，返回 {token: string}",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "401": {
-                        "description": "认证失败（账号密码错误或缺失）",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    }
-                }
-            }
-        },
         "/v2/{space}/{name}/blobs/uploads/": {
             "post": {
                 "description": "发起一个新的 Blob 上传会话。如果 query 中包含 digest 参数则执行单次上传（monolithic），否则初始化分块上传。",
@@ -12115,12 +12079,6 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "entity_ids": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "node_ids": {
                     "type": "array",
                     "items": {
                         "type": "string"

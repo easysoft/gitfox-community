@@ -328,7 +328,7 @@ func NewApp(mode string) (*App, func(), error) {
 	poller := provider.ProvideExecutionPoller(runnerRunner, client)
 	artifactAuthorizer := authorizer.New(artifactManager)
 	containerController := provider.ProvideContainerController(artifactStore, artifactService)
-	containerHandler := provider.ProvideContainerHandler(containerController, artifactService, artifactStore, spaceStore, config)
+	containerHandler := provider.ProvideContainerHandler(containerController, artifactService, artifactStore, spaceStore)
 	app := &App{
 		SystemConfig:       config,
 		SystemLog:          systemLog,
