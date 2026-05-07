@@ -1048,13 +1048,13 @@ func (s *Service) garbageCollect(ctx context.Context, items []*model.ArtifactRec
 
 func (s *Service) SoftRemove(ctx context.Context, spaceID int64, req *model.SoftRemoveEntitiesReq) (*model.ArtifactNodeRemoveReport, error) {
 	ids := req.EntityIds
-	if len(ids) == 0 {
-		ids = req.NodeIds
-	}
 	report := &model.ArtifactNodeRemoveReport{Total: len(ids), Data: make([]*model.ArtifactNodeRemoveRes, len(ids))}
 	for _, eid := range ids {
 		if _, err := entity.Parse(ctx, s.artStore, eid); err != nil {
 			logger.GetLogger(ctx).Warnf("parse artifact entity %s failed before soft remove: %v", eid, err)
+			if pkgErrors.GetI18nKey(err) != i18n.ErrorDefault {
+				return nil, err
+			}
 			return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactSoftRemoveParseError)
 		}
 	}

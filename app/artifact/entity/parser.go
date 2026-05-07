@@ -8,12 +8,17 @@ import (
 
 	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
 	artifactStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/artifact"
+	pkgErrors "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 )
 
 // Parse 根据 entityId（格式 "kind.id"，如 "package.123"）反查出完整的 ArtifactEntity 树。
 func Parse(ctx context.Context, store artifactStore.Interface, entityId string) (*model.ArtifactEntity, error) {
 	if strings.Count(entityId, ".") != 1 {
-		return nil, fmt.Errorf("invalid node_id %s", entityId)
+		return nil, pkgErrors.WithI18nKey(
+			fmt.Errorf("invalid artifact entity id format: %s", entityId),
+			i18n.ArtifactSoftRemoveEntityIdInvalidFormat,
+		)
 	}
 
 	idx := strings.Index(entityId, ".")
@@ -22,7 +27,10 @@ func Parse(ctx context.Context, store artifactStore.Interface, entityId string) 
 
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		return nil, err
+		return nil, pkgErrors.WithI18nKey(
+			fmt.Errorf("invalid artifact entity id number: %s", entityId),
+			i18n.ArtifactSoftRemoveEntityIdInvalidNumber,
+		)
 	}
 
 	kind := model.ArtifactEntityKind(typeStr)
@@ -31,7 +39,10 @@ func Parse(ctx context.Context, store artifactStore.Interface, entityId string) 
 		p := &entityParser{artStore: store}
 		return p.parse(ctx, kind, id)
 	default:
-		return nil, fmt.Errorf("unsupported artifact entity '%s'", entityId)
+		return nil, pkgErrors.WithI18nKey(
+			fmt.Errorf("unsupported artifact entity type: %s", typeStr),
+			i18n.ArtifactSoftRemoveEntityTypeUnsupported,
+		)
 	}
 }
 

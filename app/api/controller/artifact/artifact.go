@@ -486,7 +486,7 @@ func (c *Controller) StatisticSummary(ctx *gin.Context) {
 // @Tags artifacts
 // @Accept application/json
 // @Produce application/json
-// @Param body body model.SoftRemoveEntitiesReq true "实体ID列表"
+// @Param body body model.SoftRemoveEntitiesReq true "实体ID列表，仅支持 entity_ids，元素格式为 type.id"
 // @Success 200 {object} resp.ObjectResponse "成功"
 // @Failure 400 {object} resp.ObjectResponse "参数错误"
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"

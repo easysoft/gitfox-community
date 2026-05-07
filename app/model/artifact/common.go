@@ -46,7 +46,6 @@ type SpaceRepoFormReq struct {
 
 type SoftRemoveEntitiesReq struct {
 	EntityIds []string `json:"entity_ids,omitempty"`
-	NodeIds   []string `json:"node_ids,omitempty"`
 }
 
 type CreateArtifactViewReq struct {

@@ -77,6 +77,9 @@ artifact:
   gc_trigger_error: "Failed to trigger artifact garbage collection."
   gc_execute_error: "Failed to execute artifact garbage collection."
   soft_remove_parse_error: "Failed to parse artifact entity ID."
+  soft_remove_entity_id_invalid_format: "Invalid artifact entity ID format. Expected type.id."
+  soft_remove_entity_id_invalid_number: "The numeric part of artifact entity ID is invalid."
+  soft_remove_entity_type_unsupported: "Unsupported artifact entity type."
   soft_remove_error: "Failed to soft-delete artifact."
 
   # Statistic
