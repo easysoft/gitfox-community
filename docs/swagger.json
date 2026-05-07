@@ -635,6 +635,52 @@
                 }
             }
         },
+        "/artifacts/nodes": {
+            "post": {
+                "description": "按 artifactID 查询制品树。支持两种定位方式：1）nodeId \u003e 0 时按节点定位当前层，不支持递归；2）否则按 format + path 查询，path 可传 /** 或 /xxx/** 递归返回目录树。level 支持 format/group/package/version/asset，表示最大可见层级。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "artifacts"
+                ],
+                "summary": "通用树查询",
+                "parameters": [
+                    {
+                        "description": "查询条件：nodeId 与 path 二选一时 nodeId 优先；format=all 表示查询所有格式；path 带 /** 时启用递归",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.ArtifactTreeListReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/artifacts/nodes/{nodeId}/children": {
             "get": {
                 "description": "列出树节点的子节点",
@@ -11898,6 +11944,55 @@
                 "WebhookTriggerArtifactUpdated",
                 "WebhookTriggerArtifactDeleted"
             ]
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.ArtifactFormat": {
+            "type": "string",
+            "enum": [
+                "all",
+                "generic",
+                "raw",
+                "maven",
+                "container",
+                "helm",
+                "pypi",
+                "npm"
+            ],
+            "x-enum-varnames": [
+                "ArtifactAllFormat",
+                "ArtifactGenericFormat",
+                "ArtifactRawFormat",
+                "ArtifactMavenFormat",
+                "ArtifactContainerFormat",
+                "ArtifactHelmFormat",
+                "ArtifactPypiFormat",
+                "ArtifactNpmFormat"
+            ]
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.ArtifactTreeListReq": {
+            "type": "object",
+            "properties": {
+                "artifactID": {
+                    "type": "integer"
+                },
+                "format": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.ArtifactFormat"
+                },
+                "level": {
+                    "type": "string"
+                },
+                "nodeId": {
+                    "type": "integer"
+                },
+                "path": {
+                    "type": "string"
+                },
+                "repoId": {
+                    "type": "integer"
+                },
+                "spaceId": {
+                    "type": "integer"
+                }
+            }
         },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.ArtifactVersionListReq": {
             "type": "object",

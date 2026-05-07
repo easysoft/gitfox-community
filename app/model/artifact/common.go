@@ -63,6 +63,11 @@ type ArtifactVersionListReq struct {
 	GroupName   string `json:"groupName"`
 }
 
+type ArtifactTreeListReq struct {
+	SpaceRepoReq
+	ArtifactTreeFilter
+}
+
 // CreateGroupReq 创建 group 节点的请求参数。
 // Names 为以 "." 分隔的分组路径，如 "a.b.c" 表示三级分组。
 // ArtifactID 必填：必须大于 0。

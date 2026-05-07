@@ -65,7 +65,11 @@ artifact:
 
   # Tree
   tree_format_list_error: "查询制品格式列表失败."
+  tree_format_required: "通用树查询必须指定 format，除非传入了 nodeId."
+  tree_level_invalid: "通用树查询的 level 参数不合法，仅支持: format, group, package, version, asset."
   tree_node_list_error: "查询制品树节点列表失败."
+  tree_node_not_in_artifact: "指定的 nodeId 不属于当前制品库."
+  tree_node_recursive_conflict: "传入 nodeId 时不支持递归查询"
   tree_refresh_error: "制品树刷新失败."
 
   # GC & Delete

@@ -61,7 +61,11 @@ const (
 	ArtifactStatisticSuccess           I18nKey = "artifact.statistic_success"             // 制品统计查询成功.
 	ArtifactStatisticSummaryError      I18nKey = "artifact.statistic_summary_error"       // 制品统计概览查询失败.
 	ArtifactTreeFormatListError        I18nKey = "artifact.tree_format_list_error"        // 查询制品格式列表失败.
+	ArtifactTreeFormatRequired         I18nKey = "artifact.tree_format_required"          // 通用树查询必须指定 format,除非传入了 nodeId.
+	ArtifactTreeLevelInvalid           I18nKey = "artifact.tree_level_invalid"            // 通用树查询的 level 参数不合法,仅支持: format, group, package,...
 	ArtifactTreeNodeListError          I18nKey = "artifact.tree_node_list_error"          // 查询制品树节点列表失败.
+	ArtifactTreeNodeNotInArtifact      I18nKey = "artifact.tree_node_not_in_artifact"     // 指定的 nodeId 不属于当前制品库.
+	ArtifactTreeNodeRecursiveConflict  I18nKey = "artifact.tree_node_recursive_conflict"  // 传入 nodeId 时不支持递归查询,请不要同时使用 /**.
 	ArtifactTreeRefreshError           I18nKey = "artifact.tree_refresh_error"            // 制品树刷新失败.
 	ArtifactUnsupportedFormat          I18nKey = "artifact.unsupported_format"            // 不支持的制品格式.
 	ArtifactUploadSaveError            I18nKey = "artifact.upload_save_error"             // 制品保存失败.

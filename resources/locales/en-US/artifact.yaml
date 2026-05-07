@@ -65,7 +65,11 @@ artifact:
 
   # Tree
   tree_format_list_error: "Failed to list artifact formats."
+  tree_format_required: "format is required for tree queries unless nodeId is provided."
+  tree_level_invalid: "Invalid tree query level. Supported values: format, group, package, version, asset."
   tree_node_list_error: "Failed to list artifact tree nodes."
+  tree_node_not_in_artifact: "The specified nodeId does not belong to the current artifact."
+  tree_node_recursive_conflict: "Recursive tree query is not supported when nodeId is provided."
   tree_refresh_error: "Failed to refresh artifact tree."
 
   # GC & Delete

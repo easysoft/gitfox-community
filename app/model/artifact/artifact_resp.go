@@ -34,6 +34,7 @@ type ArtifactVersionFilter struct {
 }
 
 type ArtifactTreeFilter struct {
+	NodeID int64          `json:"nodeId"`
 	Path   string         `json:"path"`
 	Format ArtifactFormat `json:"format"`
 	Level  string         `json:"level"`
@@ -107,12 +108,11 @@ type ArtifactVersionsRes struct {
 type ArtifactTreeNodeType string
 
 const (
-	ArtifactTreeNodeTypeFormat    ArtifactTreeNodeType = "format"
-	ArtifactTreeNodeTypeGroup     ArtifactTreeNodeType = "group"
-	ArtifactTreeNodeTypeDirectory ArtifactTreeNodeType = "directory"
-	ArtifactTreeNodeTypePackage   ArtifactTreeNodeType = "package"
-	ArtifactTreeNodeTypeVersion   ArtifactTreeNodeType = "version"
-	ArtifactTreeNodeTypeAsset     ArtifactTreeNodeType = "asset"
+	ArtifactTreeNodeTypeFormat  ArtifactTreeNodeType = "format"
+	ArtifactTreeNodeTypeGroup   ArtifactTreeNodeType = "group"
+	ArtifactTreeNodeTypePackage ArtifactTreeNodeType = "package"
+	ArtifactTreeNodeTypeVersion ArtifactTreeNodeType = "version"
+	ArtifactTreeNodeTypeAsset   ArtifactTreeNodeType = "asset"
 )
 
 type ArtifactTreeRes struct {
@@ -121,6 +121,7 @@ type ArtifactTreeRes struct {
 	Leaf     bool                  `json:"leaf"`
 	Format   ArtifactFormat        `json:"format"`
 	Metadata *ArtifactTreeNodeMeta `json:"metadata,omitempty"`
+	Children []*ArtifactTreeRes    `json:"children,omitempty"`
 }
 
 type ArtifactTreeNodeMeta struct {
