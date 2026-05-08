@@ -227,15 +227,15 @@ type ArtifactAsset struct {
 
 	// VersionID 绑定具体 package(format) 与 view 下的版本资产。
 	// VersionID binding with package(with format), view
-	VersionID null.Int `json:"versionId"`
+	VersionID null.Int `json:"versionId" gorm:"column:versionID"`
 
 	// ArtifactID 用于无版本资产，例如格式级 index 文件。
 	// ArtifactID used for none-version assets, like index file for a format
-	ArtifactID null.Int `json:"artifactID"`
+	ArtifactID null.Int `json:"artifactID" gorm:"column:artifactID"`
 
 	// GroupID 用于无版本的文件类资产挂到 group 节点。
 	// GroupId used for file format assets, without version
-	GroupID null.Int `json:"groupId"`
+	GroupID null.Int `json:"groupId" gorm:"column:groupID"`
 
 	// Format 也用于标识无版本资产所属的仓库格式。
 	// Format is also used for none-version assets

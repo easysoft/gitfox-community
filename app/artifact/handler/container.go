@@ -54,7 +54,6 @@ func (h *ContainerHandler) HandleAPIBase(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{})
 }
 
-
 // HandleBlobHead 检查 Blob 是否存在
 // @Summary 检查 Blob 是否存在
 // @Description 根据 digest 检查指定容器镜像空间下的 Blob 是否存在，返回 Content-Length 等元信息。
@@ -212,15 +211,16 @@ func (h *ContainerHandler) HandleBlobUploadStart(c *gin.Context) {
 // @Router /v2/{space}/{name}/blobs/uploads/{uuid} [patch]
 func (h *ContainerHandler) HandleBlobUploadPatch(c *gin.Context) {
 	ctx := c.Request.Context()
+	log := logger.GetLoggerFromGin(c)
 	uploadReq, err := h.loadUploadRequest(c, true)
 	if err != nil {
+		log.Errorf("【container push】PATCH load upload failed: path=%s err=%v", c.Request.URL.Path, err)
 		renderContainerErr(c, err)
 		return
 	}
 	rw, err := h.ctrl.AppendBlobContent(ctx, c.Request, uploadReq)
 	if err != nil {
-		log := logger.GetLoggerFromGin(c)
-		log.Errorf("append blob content failed: %v", err)
+		log.Errorf("【container push】PATCH append failed: session=%s err=%v", uploadReq.Resume.SessionID, err)
 		renderContainerErr(c, err)
 		return
 	}
@@ -245,13 +245,16 @@ func (h *ContainerHandler) HandleBlobUploadPatch(c *gin.Context) {
 // @Router /v2/{space}/{name}/blobs/uploads/{uuid} [put]
 func (h *ContainerHandler) HandleBlobUploadFinish(c *gin.Context) {
 	ctx := c.Request.Context()
+	log := logger.GetLoggerFromGin(c)
 	uploadReq, err := h.loadUploadRequest(c, true)
 	if err != nil {
+		log.Errorf("【container push】PUT load upload failed: path=%s err=%v", c.Request.URL.Path, err)
 		renderContainerErr(c, err)
 		return
 	}
 	rw, err := h.ctrl.FinishBlobUpload(ctx, c.Request, uploadReq)
 	if err != nil {
+		log.Errorf("【container push】PUT finish failed: session=%s err=%v", uploadReq.Resume.SessionID, err)
 		renderContainerErr(c, err)
 		return
 	}
@@ -525,7 +528,7 @@ func (h *ContainerHandler) loadContainerRequest(c *gin.Context) (*ctnCtrl.Contai
 	ctx := c.Request.Context()
 	view, err := h.artSvc.ParseContainerView(ctx, scope, spaceName, scopeRepo, viewname)
 	if err != nil {
-		log.Errorf("failed to parse container view: scope=%s space=%s repo=%s view=%s err=%v",
+		log.Errorf("【container】parse view failed: scope=%s space=%s repo=%s view=%s err=%v",
 			scope, spaceName, scopeRepo, viewname, err)
 		return nil, ctnAdapter.ErrNameUnknown.WithDetail("view not found: " + viewname)
 	}
@@ -575,7 +578,7 @@ func (h *ContainerHandler) loadUploadRequest(c *gin.Context, requireState bool) 
 	resume, err := ctnAdapter.ParseResumeRequest(ctx, paramUUID, baseReq.FullName(), token, h.artStore, baseReq.View)
 	if err != nil {
 		log := logger.GetLoggerFromGin(c)
-		log.Errorf("parse resume upload request failed: %v", err)
+		log.Errorf("【container push】parse resume upload failed: uuid=%s err=%v", paramUUID, err)
 		return nil, err
 	}
 

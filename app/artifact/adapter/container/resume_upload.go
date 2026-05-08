@@ -209,6 +209,7 @@ func (crr *ResumeRequest) Size(ctx context.Context) (int64, error) {
 }
 
 func (crr *ResumeRequest) AppendWrite(ctx context.Context, r *http.Request) error {
+	log := logger.GetLogger(ctx)
 	ct := r.Header.Get("Content-Type")
 	if ct != "" && ct != "application/octet-stream" {
 		return ErrUnknown.WithDetail("bad Content-Type")
@@ -216,12 +217,11 @@ func (crr *ResumeRequest) AppendWrite(ctx context.Context, r *http.Request) erro
 
 	fw, err := adapter.NewStorageBlobWriter(ctx, crr.view.Store, crr.Ref, true)
 	if err != nil {
-		logger.GetLogger(ctx).Errorf("create blob writer failed: %v", err)
+		log.Errorf("【container push】create blob writer failed: ref=%s err=%v", crr.Ref, err)
 		return ErrBlobUploadUnknown.WithDetail(err.Error())
 	}
 	defer func() {
 		if err != nil {
-			logger.GetLogger(ctx).Debugf("cancel chunk write on ref %s", crr.Ref)
 			fw.Writer.Cancel(ctx)
 		} else {
 			fw.Writer.Commit(ctx)
@@ -249,13 +249,11 @@ func (crr *ResumeRequest) AppendWrite(ctx context.Context, r *http.Request) erro
 		}
 	}
 
-	logger.GetLogger(ctx).Debugf("copy chunk upload")
 	if err = copyFullPayload(ctx, r, fw.Writer, crr.digester); err != nil {
-		logger.GetLogger(ctx).Errorf("copy full payload failed: %v", err)
+		log.Errorf("【container push】PATCH copy payload failed: session=%s ref=%s err=%v", crr.SessionID, crr.Ref, err)
 		return err
 	}
 
-	logger.GetLogger(ctx).Debugf("digest after append: %s", crr.digester.Digest())
 	crr.State.Offset = fw.Writer.Size()
 	if _, err = crr.saveProgress(ctx, progressInComplete, crr.State.Offset); err != nil {
 		return err
@@ -267,40 +265,40 @@ func (crr *ResumeRequest) Finish(ctx context.Context, r *http.Request, dgst *dig
 	log := logger.GetLogger(ctx)
 	fw, err := adapter.NewStorageBlobWriter(ctx, crr.view.Store, crr.Ref, true)
 	if err != nil {
-		log.Errorf("create blob writer failed: %v", err)
+		log.Errorf("【container push】create blob writer failed: ref=%s err=%v", crr.Ref, err)
 		return ErrBlobUploadUnknown.WithDetail(err.Error())
 	}
 	defer func() {
 		if err != nil {
-			log.Errorf("cancel chunk write on ref %s, session_id=%s: %v", crr.Ref, crr.SessionID, err)
 			fw.Writer.Cancel(ctx)
 		} else {
 			if e := fw.Writer.Commit(ctx); e != nil {
-				log.Errorf("commit chunk write on ref %s: %v", crr.Ref, e)
+				log.Errorf("【container push】commit chunk failed: ref=%s err=%v", crr.Ref, e)
 			}
 		}
 		fw.Writer.Close()
 	}()
 
 	if err = copyFullPayload(ctx, r, fw.Writer, crr.digester); err != nil {
-		log.Errorf("err copy full payload: %v", err)
+		log.Errorf("【container push】PUT copy payload failed: session=%s ref=%s err=%v", crr.SessionID, crr.Ref, err)
 		return err
 	}
-	log.Debugf("digest after complete: %s", crr.digester.Digest())
 
 	completeDigest := crr.digester.Digest()
 	if completeDigest.String() != dgst.String() {
+		log.Errorf(
+			"【container push】digest mismatch: session=%s size=%d got=%s want=%s",
+			crr.SessionID, fw.Writer.Size(), completeDigest, dgst,
+		)
 		return ErrBlobUploadInvalid.WithDetail("digest mismatch")
 	}
 
 	dbBlob, err := crr.saveProgress(ctx, progressCompleted, fw.Writer.Size())
 	if err != nil {
-		log.Errorf("save progress failed: %v", err)
+		log.Errorf("【container push】save progress failed: session=%s err=%v", crr.SessionID, err)
 		return err
 	}
 
-	now := time.Now().UnixMilli()
-	_ = now
 	asset := model.CreateArtifactAsset{
 		Format:      model.ArtifactContainerFormat,
 		Path:        dgst.String(),
@@ -311,15 +309,14 @@ func (crr *ResumeRequest) Finish(ctx context.Context, r *http.Request, dgst *dig
 
 	art, err := crr.artStore.Assets().GetPath(ctx, asset.Path, model.ArtifactContainerFormat)
 	if err != nil {
-		log.Errorf("get artifact by path failed: %v", err)
 		if _, err = crr.artStore.Assets().Create(ctx, &asset); err != nil {
-			log.Errorf("save artifact asset failed: %v", err)
+			log.Errorf("【container push】create asset failed: digest=%s err=%v", dgst, err)
 			return err
 		}
 	} else {
 		art.BlobID = dbBlob.ID
 		if err = crr.artStore.Assets().Update(ctx, art); err != nil {
-			log.Errorf("update artifact asset failed: %v", err)
+			log.Errorf("【container push】update asset failed: digest=%s err=%v", dgst, err)
 			return err
 		}
 	}
@@ -331,7 +328,6 @@ func (crr *ResumeRequest) Remove(ctx context.Context) error {
 	blobPath := adapter.BlobPath(crr.Ref)
 	_, err := crr.view.Store.Stat(ctx, blobPath)
 	if err == nil {
-		logger.GetLogger(ctx).Debugf("delete blob file %s, session_id=%s", blobPath, crr.SessionID)
 		_ = crr.view.Store.Delete(ctx, blobPath)
 		return nil
 	}
@@ -384,9 +380,9 @@ func (crr *ResumeRequest) createOrUpdateModelBlob(ctx context.Context, mutateFn 
 		tm := time.UnixMilli(crr.State.StartedAt)
 		_ = tm
 		newObj := model.CreateArtifactBlob{
-			StorageID:   crr.view.StorageID,
-			Ref:         crr.Ref,
-			CreatedBy:   fmt.Sprintf("%d", creatorId),
+			StorageID: crr.view.StorageID,
+			Ref:       crr.Ref,
+			CreatedBy: fmt.Sprintf("%d", creatorId),
 		}
 		if err = mutateFn(&model.ArtifactBlob{StorageID: newObj.StorageID, Ref: newObj.Ref, CreatedBy: newObj.CreatedBy}); err != nil {
 			return nil, err
