@@ -116,6 +116,20 @@ func (mr *MockInterfaceMockRecorder) GetBySpaceAndIdentifier(ctx, spaceID, ident
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBySpaceAndIdentifier", reflect.TypeOf((*MockInterface)(nil).GetBySpaceAndIdentifier), ctx, spaceID, identifier)
 }
 
+// HardDelete mocks base method.
+func (m *MockInterface) HardDelete(ctx context.Context, id uint) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "HardDelete", ctx, id)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// HardDelete indicates an expected call of HardDelete.
+func (mr *MockInterfaceMockRecorder) HardDelete(ctx, id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HardDelete", reflect.TypeOf((*MockInterface)(nil).HardDelete), ctx, id)
+}
+
 // List mocks base method.
 func (m *MockInterface) List(ctx context.Context, filter repo.ReqFilter) (repo0.RepoPageResult, error) {
 	m.ctrl.T.Helper()
@@ -144,4 +158,19 @@ func (m *MockInterface) Update(ctx context.Context, arg1 *repo0.Repository, id u
 func (mr *MockInterfaceMockRecorder) Update(ctx, arg1, id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockInterface)(nil).Update), ctx, arg1, id)
+}
+
+// UpdateOptLock mocks base method.
+func (m *MockInterface) UpdateOptLock(ctx context.Context, arg1 *repo.Repo, mutateFn func(*repo.Repo) error) (*repo.Repo, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateOptLock", ctx, arg1, mutateFn)
+	ret0, _ := ret[0].(*repo.Repo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateOptLock indicates an expected call of UpdateOptLock.
+func (mr *MockInterfaceMockRecorder) UpdateOptLock(ctx, arg1, mutateFn any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateOptLock", reflect.TypeOf((*MockInterface)(nil).UpdateOptLock), ctx, arg1, mutateFn)
 }

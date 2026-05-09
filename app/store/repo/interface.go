@@ -14,9 +14,11 @@ type RepoPageResult = *database.PageResult[*repoModel.Repo]
 type Interface interface {
 	Create(ctx context.Context, repo *Repository) (*repoModel.Repo, error)
 	Update(ctx context.Context, repo *Repository, id uint) (*repoModel.Repo, error)
+	UpdateOptLock(ctx context.Context, repo *repoModel.Repo, mutateFn func(repo *repoModel.Repo) error) (*repoModel.Repo, error)
 	FindByRef(ctx context.Context, ref string) (*repoModel.Repo, error)
 	GetByID(ctx context.Context, id uint) (*repoModel.Repo, error)
 	Delete(ctx context.Context, id uint) error
+	HardDelete(ctx context.Context, id uint) error
 	GetBySpaceAndIdentifier(ctx context.Context, spaceID uint, identifier string) (*repoModel.Repo, error)
 	List(ctx context.Context, filter repoModel.ReqFilter) (RepoPageResult, error)
 }

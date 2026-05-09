@@ -17,6 +17,7 @@ import (
 
 	// artifactSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/artifact" // TODO: 制品库 GC 定时任务禁用时暂注释
 	cronSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/cron"
+	importerSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/importer"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	clii18n "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n/cli"
 	pkgserver "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/server"
@@ -234,6 +235,11 @@ func (app *App) registerJobHandlers() {
 
 	if err := cronSvc.RegisterArtifactGCHandler(app.JobScheduler, app.ArtifactService); err != nil {
 		app.SystemLog.Errorw("[Server] Failed to register artifact GC handler", "error", err)
+		panic(err)
+	}
+
+	if err := app.JobScheduler.RegisterHandler(importerSvc.JobType, app.RepoImporterSvc); err != nil {
+		app.SystemLog.Errorw("[Server] Failed to register repo importer handler", "error", err)
 		panic(err)
 	}
 }

@@ -30,6 +30,16 @@ type Config struct {
 	Storage      StorageConfig      `yaml:"storage"`
 	PipelineAuth PipelineAuthConfig `yaml:"pipelineAuth"`
 	Artifact     ArtifactConfig     `yaml:"artifact"`
+	Encryption   EncryptionConfig   `yaml:"encryption"`
+}
+
+// EncryptionConfig 字段级加密配置。
+// 当 Key 为空时，敏感字段以明文存储；Key 非空时必须为 32 字节。
+type EncryptionConfig struct {
+	// Key 32 字节的 AES-256 加密密钥。留空则使用明文（不加密）。
+	Key string `yaml:"key" envconfig:"GITFOX_ENCRYPTION_KEY"`
+	// Compat 兼容模式：解密失败时，将原始密文当作明文返回，用于从明文迁移到加密的过渡期。
+	Compat bool `yaml:"compat" envconfig:"GITFOX_ENCRYPTION_COMPAT"`
 }
 
 // PipelineAuthConfig 流水线内部认证配置

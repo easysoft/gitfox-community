@@ -265,6 +265,13 @@ func (g *Git) Sync(
 	cmd := command.New("fetch",
 		command.WithConfig("advice.fetchShowForcedUpdates", "false"),
 		command.WithConfig("credential.helper", ""),
+		// 针对直连境外 Git 服务（尤其是 GnuTLS 版本的 git）常见的
+		// "GnuTLS recv error (-110)" 抖断问题，强制使用 HTTP/1.1，
+		// 调大缓冲并放宽低速超时，提升大仓 fetch 的稳定性。
+		command.WithConfig("http.version", "HTTP/1.1"),
+		command.WithConfig("http.postBuffer", "524288000"),
+		command.WithConfig("http.lowSpeedLimit", "1000"),
+		command.WithConfig("http.lowSpeedTime", "600"),
 		command.WithFlag(
 			"--quiet",
 			"--prune",

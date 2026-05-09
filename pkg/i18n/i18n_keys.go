@@ -677,6 +677,8 @@ const (
 	RepoIdentifierInvalid              I18nKey = "repo.identifier_invalid"                // 仓库名称不合法,代码库名称仅支持字母、数字、下划线(_)、连字符(-)、点号(.)
 	RepoIdentifierInvalidGit           I18nKey = "repo.identifier_invalid_git"            // 代码库名称不能以 .git 结尾
 	RepoIdentifierTooLong              I18nKey = "repo.identifier_too_long"               // 代码库名称长度不能超过64字符
+	RepoImportError                    I18nKey = "repo.import_error"                      // 导入仓库异常
+	RepoImportSuccess                  I18nKey = "repo.import_success"                    // 导入仓库成功
 	RepoLicenseError                   I18nKey = "repo.license_error"                     // 读取 license 异常
 	RepoLineNumberError                I18nKey = "repo.line_number_error"                 // 行号必须大于0, 且结束行号必须大于起始行号
 	RepoMirrorReadOnly                 I18nKey = "repo.mirror_read_only"                  // 镜像仓库只读.

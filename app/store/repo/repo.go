@@ -2,6 +2,7 @@ package repo
 
 import (
 	"context"
+	stderr "errors"
 	"fmt"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/paths"
@@ -53,6 +54,79 @@ func (s *Store) Update(ctx context.Context, repo *Repository, id uint) (*repoMod
 	return mapToModel(updated), nil
 }
 
+// errVersionConflict 表示更新时乐观锁版本冲突，由 UpdateOptLock 内部重试。
+var errVersionConflict = stderr.New("version conflict")
+
+// UpdateOptLock 使用乐观锁机制更新仓库。
+// mutateFn 会在每次尝试时基于最新的仓库快照被调用；若基于 mutex 的条件更新命中 0 行，
+// 方法会重新拉取最新状态并重新执行 mutateFn 直至成功或 mutateFn 返回错误。
+func (s *Store) UpdateOptLock(
+	ctx context.Context,
+	repo *repoModel.Repo,
+	mutateFn func(repo *repoModel.Repo) error,
+) (*repoModel.Repo, error) {
+	for {
+		dup := *repo
+
+		if err := mutateFn(&dup); err != nil {
+			return nil, err
+		}
+
+		updated, err := s.updateOptLock(ctx, &dup)
+		if err == nil {
+			return updated, nil
+		}
+		if !stderr.Is(err, errVersionConflict) {
+			return nil, err
+		}
+
+		latest, err := s.GetByID(ctx, repo.ID)
+		if err != nil {
+			return nil, err
+		}
+		repo = latest
+	}
+}
+
+// updateOptLock 执行一次基于 mutex 的条件更新。命中 0 行视为版本冲突。
+func (s *Store) updateOptLock(ctx context.Context, repo *repoModel.Repo) (*repoModel.Repo, error) {
+	oldMutex := repo.Mutex
+	newMutex := oldMutex + 1
+
+	updates := map[string]any{
+		"spaceID":       repo.SpaceID,
+		"name":          repo.Identifier,
+		"desc":          repo.Desc,
+		"product":       repo.Product,
+		"gitUID":        repo.GitUID,
+		"defaultBranch": repo.DefaultBranch,
+		"forkID":        repo.ForkID,
+		"empty":         repo.Empty,
+		"acl":           repo.ACL,
+		"mirror":        repo.Mirror,
+		"status":        repo.Status,
+		"synced":        repo.Synced,
+		"editedBy":      repo.EditedBy,
+		"mutex":         newMutex,
+	}
+
+	result := s.db.WithContext(ctx).Model(&Repository{}).
+		Where("id = ? AND mutex = ? AND deleted = 0", repo.ID, oldMutex).
+		Updates(updates)
+	if result.Error != nil {
+		return nil, database.ProcessSQLErrorf(ctx, result.Error)
+	}
+	if result.RowsAffected == 0 {
+		return nil, errVersionConflict
+	}
+
+	var refreshed Repository
+	if err := s.db.WithContext(ctx).Where("id = ?", repo.ID).First(&refreshed).Error; err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
+	}
+	return mapToModel(refreshed), nil
+}
+
 // mapToModel 将 repo 转换为 repoResponse
 func mapToModel(data Repository) *repoModel.Repo {
 	path := paths.Concatenate(fmt.Sprint(data.SpaceID), data.Identifier)
@@ -70,6 +144,8 @@ func mapToModel(data Repository) *repoModel.Repo {
 		ACL:           data.ACL,
 		Synced:        data.Synced,
 		Mirror:        data.Mirror,
+		Status:        data.Status,
+		Mutex:         data.Mutex,
 		CreatedBy:     data.CreatedBy,
 		CreatedDate:   data.CreatedDate,
 		EditedBy:      data.EditedBy,
@@ -92,6 +168,14 @@ func (s *Store) GetByID(ctx context.Context, id uint) (*repoModel.Repo, error) {
 
 func (s *Store) Delete(ctx context.Context, id uint) error {
 	if err := s.db.WithContext(ctx).Model(&Repository{}).Where("id = ?", id).Update("deleted", 1).Error; err != nil {
+		return database.ProcessSQLErrorf(ctx, err)
+	}
+	return nil
+}
+
+// HardDelete 物理删除仓库记录，供导入失败等需要彻底清理的场景使用。
+func (s *Store) HardDelete(ctx context.Context, id uint) error {
+	if err := s.db.WithContext(ctx).Where("id = ?", id).Delete(&Repository{}).Error; err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
 	}
 	return nil

@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
 	"os/exec"
 	"regexp"
 	"sync"
@@ -31,7 +32,31 @@ var (
 	GitExecutable = "git"
 
 	actionRegex = regexp.MustCompile(`^[[:alnum:]]+[-[:alnum:]]*$`)
+
+	// inheritedEnvAllowlist 列出允许从父进程透传给 git 子进程的环境变量。
+	// 这些变量不属于业务敏感数据，但对 git 走网络/读全局配置非常关键：
+	//   - HTTP(S)_PROXY / NO_PROXY / ALL_PROXY：libcurl 识别的代理配置，
+	//     缺失会导致 git fetch/clone 在需要代理的环境下 TLS 中断。
+	//   - SSL_CERT_FILE / SSL_CERT_DIR：自签名/私有 CA 证书路径。
+	//   - HOME：git 需要读 ~/.gitconfig 与 ~/.netrc。
+	inheritedEnvAllowlist = []string{
+		"HTTP_PROXY", "HTTPS_PROXY", "NO_PROXY", "ALL_PROXY",
+		"http_proxy", "https_proxy", "no_proxy", "all_proxy",
+		"SSL_CERT_FILE", "SSL_CERT_DIR",
+		"HOME",
+	}
 )
+
+// inheritedEnv 从当前进程按白名单收集环境变量，返回 "KEY=VALUE" 形式的 slice。
+func inheritedEnv() []string {
+	out := make([]string, 0, len(inheritedEnvAllowlist))
+	for _, k := range inheritedEnvAllowlist {
+		if v, ok := os.LookupEnv(k); ok {
+			out = append(out, k+"="+v)
+		}
+	}
+	return out
+}
 
 // Command contains options for running a git command.
 type Command struct {
@@ -152,6 +177,8 @@ func (c *Command) Run(ctx context.Context, opts ...RunOptionFunc) (err error) {
 	if len(c.Envs) > 0 {
 		cmd.Env = c.Envs.Args()
 	}
+	// 从父进程按白名单继承代理/证书/HOME，避免把容器内 git 子进程隔离在"裸网"环境。
+	cmd.Env = append(cmd.Env, inheritedEnv()...)
 	// fix Chinese display issue
 	cmd.Env = append(cmd.Env, "LANG=en_US.UTF-8")
 	cmd.Env = append(cmd.Env, options.Envs...)

@@ -30,3 +30,5 @@ repo:
   gitignore_invalid: "Failed to read .gitignore"
   email_required: "User email is empty. Please update your email in the personal center before performing repository operations."
   username_required: "Username is empty. Please update your username in the personal center before performing repository operations."
+  import_error: "Failed to import repository"
+  import_success: "Repository imported successfully"
