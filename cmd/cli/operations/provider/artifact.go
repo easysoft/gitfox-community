@@ -13,6 +13,7 @@ import (
 	spaceStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/space"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 	artifactRbac "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/rbac/artifact"
+	urlPkg "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/url"
 )
 
 var ArtifactWireSet = wire.NewSet(
@@ -44,8 +45,12 @@ func ProvideArtifactJobScheduler(s *jobsSvc.Scheduler) artifactSvc.JobScheduler 
 }
 
 // ProvideContainerController 创建容器镜像控制器。
-func ProvideContainerController(artStore artifactStore.Interface, svc artifactSvc.Interface) *ctnCtrl.Controller {
-	return ctnCtrl.NewController(artStore, svc.FileStore())
+func ProvideContainerController(
+	artStore artifactStore.Interface,
+	svc artifactSvc.Interface,
+	urlProvider urlPkg.Provider,
+) *ctnCtrl.Controller {
+	return ctnCtrl.NewController(artStore, svc.FileStore(), urlProvider)
 }
 
 // ProvideContainerHandler 创建容器镜像 Handler。

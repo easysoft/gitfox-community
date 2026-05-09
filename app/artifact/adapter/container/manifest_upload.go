@@ -103,7 +103,7 @@ func (h *manifestUploader) IsValid(ctx context.Context) error {
 
 func (h *manifestUploader) Save(ctx context.Context) error {
 	if err := h.uploadReq.Commit(ctx); err != nil {
-		logger.GetLogger(ctx).Errorf("failed to commit upload request: %v", err)
+		logger.GetLogger(ctx).Errorf("【container push】commit manifest failed: err=%v", err)
 		_ = h.uploadReq.Cancel(ctx)
 		return err
 	}

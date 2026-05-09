@@ -34,9 +34,12 @@ func (c *assets) Create(ctx context.Context, newObj *model.CreateArtifactAsset) 
 		return nil, err
 	}
 	var row artifactAsset
-	row.VersionID = newObj.VersionID
-	row.ArtifactID = newObj.ArtifactID
-	row.GroupID = newObj.GroupID
+	// DDL 中 versionID / artifactID / groupID 均为 NOT NULL DEFAULT 0，
+	// null.Int 在 valid=false 时会写出字面 NULL，触发 MySQL not null 约束。
+	// 显式回填为 0，保持与默认值一致，避免插入失败。
+	row.VersionID = nullIntOrZero(newObj.VersionID)
+	row.ArtifactID = nullIntOrZero(newObj.ArtifactID)
+	row.GroupID = nullIntOrZero(newObj.GroupID)
 	row.Format = string(newObj.Format)
 	row.Path = newObj.Path
 	row.ContentType = newObj.ContentType
@@ -48,6 +51,15 @@ func (c *assets) Create(ctx context.Context, newObj *model.CreateArtifactAsset) 
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
 	return assetToModel(&row), nil
+}
+
+// nullIntOrZero 将 null.Int 在 invalid 时归一化为 IntFrom(0)，
+// 用于 NOT NULL DEFAULT 0 的列，避免 GORM 写出 NULL 触发约束。
+func nullIntOrZero(v null.Int) null.Int {
+	if !v.Valid {
+		return null.IntFrom(0)
+	}
+	return v
 }
 
 func (c *assets) GetById(ctx context.Context, assetId int64) (*model.ArtifactAsset, error) {

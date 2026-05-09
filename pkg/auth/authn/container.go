@@ -8,6 +8,7 @@ import (
 	ctnAdapter "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/adapter/container"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	pkgErrors "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	"github.com/gin-gonic/gin"
 )
 
@@ -15,8 +16,11 @@ import (
 // 成功时注入 auth session，失败时按 OCI 规范返回 401 错误体。
 func ContainerRegistryBasicAuth(realm string) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		log := logger.GetLoggerFromGin(c)
+
 		authenticator := Get(AuthKindBasic)
 		if authenticator == nil {
+			log.Errorf("【container auth】basic authenticator not registered")
 			renderContainerBasicAuthErr(c, realm, "basic authenticator is not registered")
 			return
 		}
@@ -27,6 +31,7 @@ func ContainerRegistryBasicAuth(realm string) gin.HandlerFunc {
 				renderContainerBasicAuthErr(c, realm, "authentication required")
 				return
 			}
+			log.Warnf("【container auth】invalid credential on %s %s", c.Request.Method, c.Request.URL.Path)
 			renderContainerBasicAuthErr(c, realm, "invalid username or password")
 			return
 		}

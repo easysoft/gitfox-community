@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -18,6 +19,7 @@ import (
 	cronSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/cron"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	clii18n "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n/cli"
+	pkgserver "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/server"
 )
 
 type command struct {
@@ -94,7 +96,16 @@ func RunServerWithContext(ctx context.Context, mode string, enableCI bool, onRea
 	// 在 goroutine 中启动 HTTP 服务器
 	go func() {
 		app.SystemLog.Infow("[Server] Starting HTTP server", "address", addr)
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		// 显式 Listen + WrapChunkedFix：在 net/http 解析请求前修复 docker 28
+		// PATCH/PUT 漏带 Transfer-Encoding 的兼容问题（OCI Registry blob 续传）。
+		ln, err := net.Listen("tcp", addr)
+		if err != nil {
+			app.SystemLog.Errorw("[Server] HTTP listen failed", "error", err)
+			serverErrors <- err
+			return
+		}
+		ln = pkgserver.WrapChunkedFix(ln)
+		if err := srv.Serve(ln); err != nil && err != http.ErrServerClosed {
 			app.SystemLog.Errorw("[Server] HTTP server error", "error", err)
 			serverErrors <- err
 		}

@@ -2,9 +2,11 @@ package container
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"path/filepath"
 	"regexp"
 	"time"
@@ -16,6 +18,8 @@ import (
 	pkgErrors "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/storage"
+	storagedriver "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/storage/driver"
+	urlPkg "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/url"
 
 	"github.com/opencontainers/go-digest"
 )
@@ -46,18 +50,21 @@ func validateTag(s string) bool {
 // Controller 容器镜像（OCI v2 协议）控制器。
 // 负责处理 docker login / pull / push 的核心业务逻辑。
 type Controller struct {
-	artStore  artifactStore.Interface
-	fileStore storage.ContentStorage
+	artStore    artifactStore.Interface
+	fileStore   storage.ContentStorage
+	urlProvider urlPkg.Provider
 }
 
 // NewController 创建容器镜像控制器实例。
 func NewController(
 	artStore artifactStore.Interface,
 	fileStore storage.ContentStorage,
+	urlProvider urlPkg.Provider,
 ) *Controller {
 	return &Controller{
-		artStore:  artStore,
-		fileStore: fileStore,
+		artStore:    artStore,
+		fileStore:   fileStore,
+		urlProvider: urlProvider,
 	}
 }
 
@@ -230,7 +237,7 @@ func findContainerTag(ctx context.Context, artStore artifactStore.Interface, art
 		return nil, err
 	}
 	if len(dbAssets) != 1 {
-		log.Errorf("expected 1 asset for tag %s, found %d", tag, len(dbAssets))
+		log.Errorf("【container pull】expected 1 asset for tag %s, found %d", tag, len(dbAssets))
 		return nil, fmt.Errorf("expected 1 asset, found %d", len(dbAssets))
 	}
 	dbAsset := dbAssets[0]
@@ -328,14 +335,20 @@ func (c *Controller) StartBlobUpload(ctx context.Context, ctnReq *ContainerReq) 
 }
 
 func (c *Controller) getUploadState(ctx context.Context, ctnReq *ContainerReq, req *ctnAdapter.ResumeRequest) (HttpResponseWriter, error) {
+	nextURL := c.urlProvider.GenerateRegistryURL(ctnReq.FullName(), "blobs", "uploads", req.State.SessionID)
+
 	token, err := req.State.Pack("")
 	if err != nil {
 		return nil, err
 	}
+	nextURL.RawQuery = url.Values{"_state": []string{token}}.Encode()
 
 	endSize, err := req.Size(ctx)
 	if err != nil {
-		endSize = 0
+		var pathNotFoundErr storagedriver.PathNotFoundError
+		if !errors.As(err, &pathNotFoundErr) {
+			return nil, err
+		}
 	}
 	if endSize > 0 {
 		endSize = endSize - 1
@@ -343,11 +356,9 @@ func (c *Controller) getUploadState(ctx context.Context, ctnReq *ContainerReq, r
 
 	return NewResponseWriter(func(w http.ResponseWriter) {
 		w.Header().Add(HeadDockerUUID, req.State.SessionID)
+		w.Header().Add(headerLocation, "/"+nextURL.RequestURI())
 		w.Header().Add(headerContentLength, "0")
 		w.Header().Add(headerRange, fmt.Sprintf("0-%d", endSize))
-		// 将 _state token 作为 query 参数传回
-		uploadURL := fmt.Sprintf("/v2/%s/blobs/uploads/%s?_state=%s", ctnReq.FullName(), req.SessionID, token)
-		w.Header().Add(headerLocation, uploadURL)
 	}), nil
 }
 
@@ -360,13 +371,10 @@ func (c *Controller) GetBlobUploadStatus(ctx context.Context, uploadReq *Contain
 // AppendBlobContent 追加 blob 内容（PATCH）。
 func (c *Controller) AppendBlobContent(ctx context.Context, r *http.Request, uploadReq *ContainerUploadRequest) (HttpResponseWriter, error) {
 	// TODO: 权限检查
-	log := logger.GetLogger(ctx)
 	resumeReq := uploadReq.Resume
 	if err := resumeReq.AppendWrite(ctx, r); err != nil {
-		log.Errorf("append blob content failed: %v", err)
 		return nil, err
 	}
-	log.Infof("append blob content successfully")
 	return c.getUploadState(ctx, uploadReq.ContainerReq, resumeReq)
 }
 
@@ -387,9 +395,10 @@ func (c *Controller) FinishBlobUpload(ctx context.Context, r *http.Request, uplo
 		return nil, err
 	}
 
+	uploadURL := c.urlProvider.GenerateRegistryURL(uploadReq.FullName(), "blobs", dgst.String())
+
 	return NewResponseWriter(func(w http.ResponseWriter) {
-		uploadURL := fmt.Sprintf("/v2/%s/blobs/uploads/%s", uploadReq.FullName(), dgst.String())
-		w.Header().Add(headerLocation, uploadURL)
+		w.Header().Add(headerLocation, "/"+uploadURL.RequestURI())
 		w.Header().Add(headerContentLength, "0")
 		w.Header().Add(headerDigest, dgst.String())
 	}), nil
@@ -444,7 +453,11 @@ func (c *Controller) PutManifest(ctx context.Context, req *http.Request, manifes
 	if err := handleUpload(ctx, req, uploader); err != nil {
 		return nil, err
 	}
+
+	nextURL := c.urlProvider.GenerateRegistryURL(manifestReq.FullName(), "reference", refDigest)
+
 	return NewResponseWriter(func(w http.ResponseWriter) {
+		w.Header().Add(headerLocation, "/"+nextURL.RequestURI())
 		w.Header().Add(headerContentLength, "0")
 		w.Header().Add(headerDigest, refDigest)
 		w.WriteHeader(http.StatusCreated)
@@ -524,8 +537,12 @@ func (c *Controller) PutContainerTag(ctx context.Context, req *http.Request, man
 	if err = handleUpload(ctx, req, uploader); err != nil {
 		return nil, err
 	}
+
+	nextURL := c.urlProvider.GenerateRegistryURL(manifestReq.FullName(), "reference", manifestReq.Tag)
+
 	desc := uploader.Descriptor()
 	return NewResponseWriter(func(w http.ResponseWriter) {
+		w.Header().Add(headerLocation, "/"+nextURL.RequestURI())
 		w.Header().Add(headerContentLength, "0")
 		w.Header().Add(headerDigest, desc.MainAsset.Path)
 		w.WriteHeader(http.StatusCreated)
