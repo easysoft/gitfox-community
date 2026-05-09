@@ -122,9 +122,9 @@ func (mm *ModelManager) createExclusiveAsset(ctx context.Context, ver *model.Art
 		return currAsset, true, err
 	}
 	newAsset := &model.ArtifactAsset{
-		GroupID:    null.IntFrom(0),
-		ArtifactID: null.IntFrom(mm.view.ArtifactID),
-		VersionID:  null.IntFrom(ver.ID),
+		GroupID:   null.IntFrom(0),
+		ArtifactID: null.IntFrom(0),
+		VersionID: null.IntFrom(ver.ID),
 	}
 	if err = mm.createAsset(ctx, newAsset, descriptor); err != nil {
 		return nil, false, err
@@ -151,7 +151,7 @@ func (mm *ModelManager) createNormalAsset(ctx context.Context, ver *model.Artifa
 	}
 	newAsset := &model.ArtifactAsset{
 		GroupID:    null.IntFrom(0),
-		ArtifactID: null.IntFrom(mm.view.ArtifactID),
+		ArtifactID: null.IntFrom(0),
 		VersionID:  null.IntFrom(ver.ID),
 	}
 	if err = mm.createAsset(ctx, newAsset, descriptor); err != nil {
@@ -317,7 +317,7 @@ func (mm *ModelManager) getOrCreateVersion(ctx context.Context) (*model.Artifact
 		}
 	}()
 
-	currVersion, err := mm.store.Versions().GetByVersion(ctx, mm.pkgModel.ID, mm.view.ArtifactID, mm.pkgDescriptor.Version)
+	currVersion, err := mm.store.Versions().GetByVersion(ctx, mm.pkgModel.ID, mm.pkgDescriptor.Version)
 	if err == nil {
 		if currVersion.IsDeleted() {
 			if e := mm.store.Versions().UnDelete(ctx, currVersion); e != nil {
@@ -332,9 +332,8 @@ func (mm *ModelManager) getOrCreateVersion(ctx context.Context) (*model.Artifact
 	}
 
 	verModel := &model.CreateArtifactVersion{
-		PackageID:  mm.pkgModel.ID,
-		Version:    mm.pkgDescriptor.Version,
-		ArtifactID: mm.view.ArtifactID,
+		PackageID: mm.pkgModel.ID,
+		Version:   mm.pkgDescriptor.Version,
 	}
 	if mm.pkgDescriptor.VersionMetadata != nil {
 		metadata, e := mm.pkgDescriptor.VersionMetadata.ToJSON()

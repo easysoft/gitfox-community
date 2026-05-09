@@ -24,6 +24,7 @@ func registerArtifactRoutes(group *gin.RouterGroup, controller *Controller, _ au
 
 		artifact.POST("/packages", controller.Artifact.ListPackages) // pullAuth
 		artifact.POST("/formats", controller.Artifact.ListFormats)   // pullAuth
+		artifact.POST("/nodeInfo", controller.Artifact.ListNodeInfo) // legacy pullAuth
 		artifact.POST("/nodes", controller.Artifact.ListTree)        // pullAuth
 
 		// 创建 group

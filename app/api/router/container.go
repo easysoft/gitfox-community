@@ -28,6 +28,15 @@ func registerContainerRoutes(r *gin.Engine, handler *ctnHandler.ContainerHandler
 
 	auth := authn.ContainerRegistryBasicAuth("gitfox_registry")
 
+	// old:
+	// global/{viewname}/{groupname}/{imagename} - 全局作用域 eg: /v2/global/demoview/demogroup/pipeline-helper
+	// space/{spaceName}/{viewname}/{groupname}/{imagename} - 空间作用域 eg: /v2/space/demospace/demoview/demogroup/pipeline-helper
+	// repo/{spaceName}/{repoName}/{viewname}/{groupname}/{imagename} - 仓库作用域 eg: /v2/repo/demospace/demorepo/demoview/demogroup/pipeline-helper
+	// new:
+	// global/{viewname}/{imagename} - 全局作用域 eg: /v2/global/demoview/pipeline-helper
+	// space+{spaceID}/{viewname}/{imagename} - 空间作用域 eg: /v2/space12/demoview/pipeline-helper
+	// repo+{spaceID}/{viewname}/{imagename} - 仓库作用域 eg: /v2/repo33/demoview/pipeline-helper
+
 	// 全局作用域：/v2/global/{viewname}/{groupname}/{imagename}
 	global := v2.Group("/global/:viewname/:groupname/:imagename", auth)
 	// 空间作用域：/v2/space/{spaceName}/{viewname}/{groupname}/{imagename}

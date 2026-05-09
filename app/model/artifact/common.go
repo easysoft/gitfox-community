@@ -48,6 +48,11 @@ type SoftRemoveEntitiesReq struct {
 	EntityIds []string `json:"entity_ids,omitempty"`
 }
 
+// ListNodeInfoReq 兼容参考项目 `/artifacts/nodeInfo` 的请求体。
+type ListNodeInfoReq struct {
+	EntityIds []string `json:"entity_ids,omitempty"`
+}
+
 type CreateArtifactViewReq struct {
 	SpaceRepoReq
 	Name        string `json:"name" binding:"required"`

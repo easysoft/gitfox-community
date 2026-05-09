@@ -200,7 +200,7 @@ func (s *Store) GetVersion(ctx context.Context, artifactID int64,
 	if err != nil {
 		return nil, err
 	}
-	dbVer, err := s.versions.GetByVersion(ctx, dbPkg.ID, artifactID, versionName)
+	dbVer, err := s.versions.GetByVersion(ctx, dbPkg.ID, versionName)
 	if err != nil {
 		return nil, err
 	}

@@ -378,6 +378,33 @@ func (c *Controller) ListFormats(ctx *gin.Context) {
 	resp.OK(ctx, i18n.ArtifactListSuccess, formats)
 }
 
+// @Summary 查询节点详情
+// @Description 兼容参考项目 `/artifacts/nodeInfo`，按 entity_ids 或旧的 node_ids 批量查询节点详情。成功时返回原始数组，不包裹通用响应体。
+// @Tags artifacts
+// @Accept application/json
+// @Produce application/json
+// @Param body body model.ListNodeInfoReq true "节点 ID 列表"
+// @Success 200 {array} model.ArtifactNodeInfo "成功"
+// @Failure 400 {object} resp.ObjectResponse "参数错误"
+// @Failure 500 {object} resp.ObjectResponse "服务器错误"
+// @Router /artifacts/nodeInfo [post]
+func (c *Controller) ListNodeInfo(ctx *gin.Context) {
+	var reqBody model.ListNodeInfoReq
+	if err := ctx.ShouldBindBodyWithJSON(&reqBody); err != nil {
+		err = errors.WithI18nKey(err, i18n.ArtifactBodyParamError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
+	list, err := c.artSvc.ListNodeInfo(ctx, &reqBody)
+	if err != nil {
+		resp.InternalError(ctx, err)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, list)
+}
+
 // @Summary 通用树查询
 // @Description 按 artifactID 查询制品树。支持两种定位方式：1）nodeId > 0 时按节点定位当前层，不支持递归；2）否则按 format + path 查询，path 可传 /** 或 /xxx/** 递归返回目录树。level 支持 format/group/package/version/asset，表示最大可见层级。
 // @Tags artifacts

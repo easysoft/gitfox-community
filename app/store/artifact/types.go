@@ -107,7 +107,6 @@ type artifactVersion struct {
 	ID          int64           `gorm:"column:id;primaryKey"`
 	PackageID   int64           `gorm:"column:packageID"`
 	Version     string          `gorm:"column:version"`
-	ArtifactID  int64           `gorm:"column:artifactID"`
 	Metadata    string          `gorm:"column:metadata"`
 	CreatedBy   string          `gorm:"column:createdBy"`
 	CreatedDate *datetime.Local `gorm:"column:createdDate"`
@@ -405,7 +404,6 @@ func versionToModel(v *artifactVersion) *model.ArtifactVersion {
 		ID:          v.ID,
 		PackageID:   v.PackageID,
 		Version:     v.Version,
-		ArtifactID:  v.ArtifactID,
 		Metadata:    v.Metadata,
 		CreatedBy:   v.CreatedBy,
 		CreatedDate: v.CreatedDate,
@@ -423,7 +421,6 @@ func versionFromModel(m *model.ArtifactVersion) *artifactVersion {
 		ID:          m.ID,
 		PackageID:   m.PackageID,
 		Version:     m.Version,
-		ArtifactID:  m.ArtifactID,
 		Metadata:    m.Metadata,
 		CreatedBy:   m.CreatedBy,
 		CreatedDate: m.CreatedDate,

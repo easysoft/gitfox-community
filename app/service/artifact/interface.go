@@ -60,6 +60,9 @@ type Interface interface {
 	// GetBlobHistory 获取制品资源的 blob 历史记录。
 	GetBlobHistory(ctx context.Context, assetId int64) ([]*model.ArtifactBlobRes, error)
 
+	// ListNodeInfo 兼容参考项目 `/artifacts/nodeInfo`，按 entity/node ID 批量查询节点详情。
+	ListNodeInfo(ctx context.Context, req *model.ListNodeInfoReq) ([]*model.ArtifactNodeInfo, error)
+
 	// ---- 上传/下载 ----
 
 	// DownloadAsset 下载制品资源，返回文件流和 blob 元信息。

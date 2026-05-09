@@ -69,7 +69,6 @@ CREATE INDEX `idx_pkgs_deleted` ON `ops_artifact_packages` (`deleted`);
 CREATE TABLE IF NOT EXISTS `ops_artifact_versions` (
 	`id` int unsigned NOT NULL AUTO_INCREMENT COMMENT '主键ID',
 	`packageID` int unsigned NOT NULL COMMENT '所属制品包ID',
-	`artifactID` int unsigned NOT NULL COMMENT '所属视图ID',
 	`version` varchar(100) NOT NULL COMMENT '版本号',
 	`metadata` text NULL DEFAULT NULL COMMENT '版本元数据',
 	`createdBy` varchar(30) NOT NULL DEFAULT '' COMMENT '创建人',
@@ -81,10 +80,8 @@ CREATE TABLE IF NOT EXISTS `ops_artifact_versions` (
 )
 ENGINE=InnoDB COMMENT='制品版本表';
 
-CREATE UNIQUE INDEX `uk_vers_artifactID_packageID_version` ON `ops_artifact_versions` (`artifactID`, `packageID`, `version`);
+CREATE UNIQUE INDEX `uk_vers_packageID_version` ON `ops_artifact_versions` (`packageID`, `version`);
 CREATE INDEX `idx_vers_packageID_deleted` ON `ops_artifact_versions` (`packageID`, `deleted`);
-CREATE INDEX `idx_vers_artifactID_deleted` ON `ops_artifact_versions` (`artifactID`, `deleted`);
-CREATE INDEX `idx_vers_artifactID_packageID_deleted` ON `ops_artifact_versions` (`artifactID`, `packageID`, `deleted`);
 CREATE INDEX `idx_vers_createdDate` ON `ops_artifact_versions` (`createdDate`);
 CREATE INDEX `idx_vers_editedDate` ON `ops_artifact_versions` (`editedDate`);
 CREATE INDEX `idx_vers_deleted` ON `ops_artifact_versions` (`deleted`);

@@ -182,7 +182,6 @@ type ArtifactVersion struct {
 	PackageID int64  `json:"packageId"`
 	Version   string `json:"version"`
 
-	ArtifactID int64 `json:"artifactID"`
 	// Metadata 保存 version 级元数据，例如版本创建者等附加信息。
 	// Metadata store version-level metadata. example: version creator
 	Metadata string `json:"metadata"`
@@ -195,10 +194,9 @@ type ArtifactVersion struct {
 }
 
 type CreateArtifactVersion struct {
-	PackageID  int64  `json:"packageId"`
-	Version    string `json:"version"`
-	ArtifactID int64  `json:"artifactID"`
-	Metadata   string `json:"metadata"`
+	PackageID int64  `json:"packageId"`
+	Version   string `json:"version"`
+	Metadata  string `json:"metadata"`
 }
 
 type ArtifactVersionInfo struct {
@@ -522,7 +520,6 @@ func (e *ArtifactGroupEndpoint) names() []string {
 
 type SearchVersionOption struct {
 	PackageId      int64
-	ArtifactID     int64
 	Page           int    `json:"page"`
 	Size           int    `json:"size"`
 	Query          string `json:"query"`
@@ -533,10 +530,6 @@ func (opt SearchVersionOption) Apply(db *gorm.DB) *gorm.DB {
 	q := ArtifactVersion{}
 	if opt.PackageId != 0 {
 		q.PackageID = opt.PackageId
-	}
-
-	if opt.ArtifactID != 0 {
-		q.ArtifactID = opt.ArtifactID
 	}
 
 	return db.Where(&q)

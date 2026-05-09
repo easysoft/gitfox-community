@@ -114,11 +114,22 @@ func (h *helmIndex) buildIndex(ctx context.Context, contextPath string) (*IndexF
 	index.ServerInfo = map[string]interface{}{
 		"contextPath": contextPath,
 	}
-	items, err := h.artStore.Versions().Find(ctx, model.SearchVersionOption{
-		ArtifactID: h.view.ArtifactID,
-	})
+	packages, err := h.artStore.Packages().List(ctx, h.view.ArtifactID, false)
 	if err != nil {
 		return nil, err
+	}
+
+	var items []*model.ArtifactVersion
+	for _, pkg := range packages {
+		if pkg.Format != model.ArtifactHelmFormat {
+			continue
+		}
+		vers, e := h.artStore.Versions().Find(ctx, model.SearchVersionOption{PackageId: pkg.ID})
+		if e != nil {
+			log.Errorf("find versions for package %d failed: %v", pkg.ID, e)
+			return nil, e
+		}
+		items = append(items, vers...)
 	}
 
 	log.Infof("find items: %+v", items)

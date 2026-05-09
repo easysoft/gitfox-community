@@ -471,6 +471,66 @@ definitions:
     - ArtifactHelmFormat
     - ArtifactPypiFormat
     - ArtifactNpmFormat
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.ArtifactNodeInfo:
+    properties:
+      arch:
+        description: CPU 架构（仅 container 格式）：amd64 / arm64 / arm/v7 等
+        type: string
+      checksum:
+        allOf:
+        - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.CheckSumRes'
+        description: 校验值（md5 / sha1 / sha256 / sha512），由上传时计算并存储
+      contentType:
+        description: MIME 类型（如 application/vnd.docker.distribution.manifest.v2+json）
+        type: string
+      created:
+        description: 创建时间（Unix 毫秒时间戳）
+        type: string
+      creatorName:
+        description: 创建人（用户 UID）
+        type: string
+      format:
+        allOf:
+        - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.ArtifactFormat'
+        description: 制品格式：container / helm / raw / generic 等
+      link:
+        description: 资产下载链接
+        type: string
+      metadata:
+        allOf:
+        - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.ArtifactPkgVerMetadata'
+        description: 包/版本基础元数据（名称、版本、分组、所属空间）
+      os:
+        description: 操作系统（仅 container 格式）：linux / windows 等
+        type: string
+      path:
+        description: 文件存储路径（container 为 sha256:xxx digest，其它为相对路径）
+        type: string
+      size:
+        description: 文件大小（字节）
+        type: integer
+      status:
+        description: 查询状态：ok / not found / invalid_id / unknown
+        type: string
+      updated:
+        description: 最后更新时间（Unix 毫秒时间戳）
+        type: string
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.ArtifactPkgVerMetadata:
+    properties:
+      group:
+        description: 分组 / 命名空间（container 为 groupName，raw 为点分路径，generic 为目录）
+        type: string
+      name:
+        description: 包名（即镜像名 / helm chart 名 / 文件名等）
+        type: string
+      space:
+        description: 所属空间名（global 时为 "global"）
+        type: string
+      version:
+        description: 版本号（docker tag / helm version / raw 版本标识）
+        type: string
+    type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.ArtifactTreeListReq:
     properties:
       artifactID:
@@ -506,6 +566,17 @@ definitions:
     - format
     - packageName
     type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.CheckSumRes:
+    properties:
+      md5:
+        type: string
+      sha1:
+        type: string
+      sha256:
+        type: string
+      sha512:
+        type: string
+    type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.CreateArtifactViewReq:
     properties:
       artifactID:
@@ -532,6 +603,13 @@ definitions:
     required:
     - format
     - names
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.ListNodeInfoReq:
+    properties:
+      entity_ids:
+        items:
+          type: string
+        type: array
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.PermRule:
     properties:
@@ -3632,6 +3710,38 @@ paths:
           schema:
             $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
       summary: 获取空间成员列表
+      tags:
+      - artifacts
+  /artifacts/nodeInfo:
+    post:
+      consumes:
+      - application/json
+      description: 兼容参考项目 `/artifacts/nodeInfo`，按 entity_ids 或旧的 node_ids 批量查询节点详情。成功时返回原始数组，不包裹通用响应体。
+      parameters:
+      - description: 节点 ID 列表
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.ListNodeInfoReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            items:
+              $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.ArtifactNodeInfo'
+            type: array
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 查询节点详情
       tags:
       - artifacts
   /artifacts/nodes:

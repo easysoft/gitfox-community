@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"encoding/json"
 	"errors"
 	"net/http"
 	"strings"
@@ -589,23 +588,15 @@ func (h *ContainerHandler) loadUploadRequest(c *gin.Context, requireState bool) 
 }
 
 // renderContainerErr 按 OCI 规范渲染错误（Docker Distribution Spec 固定 JSON 格式）。
+//
+// 错误翻译统一由 adapter 层 `ctnAdapter.RenderError` 承担：
+//   - `*RegistryErr`       → 直接使用其 HTTPStatus/Code
+//   - `ErrResourceNotFound` → 兜底为 404 `BLOB_UNKNOWN`
+//   - 其它                 → 500 `UNKNOWN`
+//
+// manifest / name 语义上的特化（如 not found → `MANIFEST_UNKNOWN` / `NAME_UNKNOWN`），
+// 由各 Handle 入口在调用本函数前自行替换错误值，保持单一翻译源。
 func renderContainerErr(c *gin.Context, err error) {
-	e := translateErr(err)
-	c.Writer.Header().Set("Content-Type", "application/json")
-	c.Writer.WriteHeader(e.HTTPStatusValue)
-	_ = json.NewEncoder(c.Writer).Encode(map[string]interface{}{
-		"errors": []*ctnAdapter.RegistryErr{e},
-	})
+	ctnAdapter.RenderError(c.Request.Context(), c.Writer, err)
 	c.Abort()
-}
-
-func translateErr(err error) *ctnAdapter.RegistryErr {
-	var expect *ctnAdapter.RegistryErr
-	if errors.As(err, &expect) {
-		return expect
-	}
-	if pkgErrors.Is(err, pkgErrors.ErrResourceNotFound) {
-		return ctnAdapter.ErrBlobUnknown.WithDetail("resource not found")
-	}
-	return ctnAdapter.ErrUnknown.WithDetail(err.Error())
 }

@@ -158,25 +158,58 @@ const (
 	ArtifactStatusUnknown   ArtifactStatus = "unknown"
 )
 
+// ArtifactNodeInfo 是 /artifacts/nodeInfo 接口的单条节点详情响应。
+// 字段说明：
+//   - 名称（Name）      → Metadata.Name（包名）
+//   - 版本（Version）   → Metadata.Version
+//   - 分组（Group）     → Metadata.Group（命名空间 / 二级目录）
+//   - 所属空间          → Metadata.Space
+//   - 大小（Size）      → Size（字节）
+//   - 校验值（CheckSum）→ CheckSum（含 md5/sha1/sha256/sha512）
+//   - 创建人            → CreatorName（用户 UID）
+//   - 创建时间          → Created（Unix 毫秒时间戳）
+//   - 最后更新时间      → Updated（Unix 毫秒时间戳）
+//   - 系统/架构         → OS / Arch（仅 container 格式填充，解析自 manifest 元数据；
+//     multi-arch 镜像优先取 linux/amd64，否则取第一个平台）
 type ArtifactNodeInfo struct {
-	Status   string                  `json:"status"`
-	Format   ArtifactFormat          `json:"format"`
+	// 查询状态：ok / not found / invalid_id / unknown
+	Status string `json:"status"`
+	// 制品格式：container / helm / raw / generic 等
+	Format ArtifactFormat `json:"format"`
+	// 包/版本基础元数据（名称、版本、分组、所属空间）
 	Metadata *ArtifactPkgVerMetadata `json:"metadata"`
 
-	Path        string       `json:"path"`
-	ContentType string       `json:"contentType"`
-	Size        int64        `json:"size"`
-	CreatorName string       `json:"creatorName"`
-	Created     int64        `json:"created"`
-	Updated     int64        `json:"updated"`
-	Link        string       `json:"link"`
-	CheckSum    *CheckSumRes `json:"checksum"`
+	// 文件存储路径（container 为 sha256:xxx digest，其它为相对路径）
+	Path string `json:"path"`
+	// MIME 类型（如 application/vnd.docker.distribution.manifest.v2+json）
+	ContentType string `json:"contentType"`
+	// 文件大小（字节）
+	Size int64 `json:"size"`
+	// 创建人（用户 UID）
+	CreatorName string `json:"creatorName"`
+	// 创建时间（Unix 毫秒时间戳）
+	Created *datetime.Local `json:"created"`
+	// 最后更新时间（Unix 毫秒时间戳）
+	Updated *datetime.Local `json:"updated"`
+	// 资产下载链接
+	Link string `json:"link"`
+	// 校验值（md5 / sha1 / sha256 / sha512），由上传时计算并存储
+	CheckSum *CheckSumRes `json:"checksum"`
+	// 操作系统（仅 container 格式）：linux / windows 等
+	OS string `json:"os,omitempty"`
+	// CPU 架构（仅 container 格式）：amd64 / arm64 / arm/v7 等
+	Arch string `json:"arch,omitempty"`
 }
 
+// ArtifactPkgVerMetadata 制品包/版本的基础定位元数据。
 type ArtifactPkgVerMetadata struct {
-	Space   string `json:"space"`
-	Name    string `json:"name"`
-	Group   string `json:"group"`
+	// 所属空间名（global 时为 "global"）
+	Space string `json:"space"`
+	// 包名（即镜像名 / helm chart 名 / 文件名等）
+	Name string `json:"name"`
+	// 分组 / 命名空间（container 为 groupName，raw 为点分路径，generic 为目录）
+	Group string `json:"group"`
+	// 版本号（docker tag / helm version / raw 版本标识）
 	Version string `json:"version"`
 }
 
