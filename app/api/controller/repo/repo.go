@@ -8,6 +8,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/importer"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/pullrequest"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
@@ -21,15 +22,17 @@ import (
 
 type Controller struct {
 	repoSvc        repo.Interface
+	importerSvc    importer.Interface
 	pullrequestSvc pullrequest.Interface
 	urlProvider    urlPkg.Provider
 	gitPkg         gitPkg.Interface
 }
 
 // NewRepoController 创建代码库处理器实例
-func NewRepoController(repoSvc repo.Interface, pullrequestSvc pullrequest.Interface, urlProvider urlPkg.Provider, gitPkg gitPkg.Interface) *Controller {
+func NewRepoController(repoSvc repo.Interface, importerSvc importer.Interface, pullrequestSvc pullrequest.Interface, urlProvider urlPkg.Provider, gitPkg gitPkg.Interface) *Controller {
 	return &Controller{
 		repoSvc:        repoSvc,
+		importerSvc:    importerSvc,
 		pullrequestSvc: pullrequestSvc,
 		urlProvider:    urlProvider,
 		gitPkg:         gitPkg,

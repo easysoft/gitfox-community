@@ -13,6 +13,7 @@ import (
 	ctnHandler "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/handler"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/triggerer"
 	artifactSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/artifact"
+	importerSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/importer"
 	jobsSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/jobs"
 	pipelineSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/pipeline"
 	repoSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
@@ -56,6 +57,7 @@ type App struct {
 	ScanTriggerStore   scanStore.IScanTrigger
 	RepoStore          repoStore.Interface
 	RepoService        repoSvc.Interface
+	RepoImporterSvc    *importerSvc.Repository
 	TokenStore         tokenStore.Interface
 	ArtifactService    artifactSvc.Interface
 	ArtifactAuthorizer authorizer.Authorizer

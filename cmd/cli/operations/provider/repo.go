@@ -6,6 +6,8 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/repo"
 	gitevents "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/events/git"
 	pullreqevents "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/events/pullreq"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/encrypt"
+	importerSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/importer"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/locker"
 	pullrequestSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/pullrequest"
 	repoSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
@@ -23,6 +25,9 @@ var RepoWireSet = wire.NewSet(
 	repo.NewRepoController,
 	wire.Bind(new(repoSvc.Interface), new(*repoSvc.Service)),
 	repoSvc.NewRepoSvc,
+	wire.Bind(new(importerSvc.Interface), new(*importerSvc.Repository)),
+	importerSvc.NewRepoImporterSvc,
+	ProvideEncrypter,
 	wire.Bind(new(pullrequestSvc.Interface), new(*pullrequestSvc.Service)),
 	ProvidePullRequestSvc,
 	wire.Bind(new(repoStore.Interface), new(*repoStore.Store)),
@@ -30,6 +35,12 @@ var RepoWireSet = wire.NewSet(
 	wire.Bind(new(pullrequestStore.Interface), new(*pullrequestStore.Store)),
 	pullrequestStore.NewPullRequestStore,
 )
+
+// ProvideEncrypter returns a field encrypter. When no key is configured,
+// a no-op (plaintext) encrypter is used.
+func ProvideEncrypter(cfg *config.Config) (encrypt.Encrypter, error) {
+	return encrypt.Provide(cfg.Encryption.Key, cfg.Encryption.Compat)
+}
 
 // ProvidePullRequestSvc creates PullRequestService with the event context for graceful shutdown.
 func ProvidePullRequestSvc(

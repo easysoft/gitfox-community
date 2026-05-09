@@ -33,6 +33,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/commit"
 	execution2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/execution"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/fit"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/importer"
 	jobs2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/jobs"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/locker"
 	pipeline2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/pipeline"
@@ -189,6 +190,13 @@ func NewApp(mode string) (*App, func(), error) {
 	tagController := tag2.NewController(tagService, repoService)
 	commitService := commit.NewService(urlProvider, gitService)
 	commitController := commit2.NewController(commitService, repoService)
+	encrypter, err := provider.ProvideEncrypter(config)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	repository := importer.NewRepoImporterSvc(mode, urlProvider, gitService, store, encrypter, jobsScheduler, streamer)
 	eventContext := provider.NewEventContext()
 	eventsConfig := provider.NewEventConfig()
 	universalClient := provider.NewEventRedisClient()
@@ -224,7 +232,7 @@ func NewApp(mode string) (*App, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	repoController := repo3.NewRepoController(repoService, pullrequestService, urlProvider, gitService)
+	repoController := repo3.NewRepoController(repoService, repository, pullrequestService, urlProvider, gitService)
 	userStore := user.NewUserStore(db)
 	userService := user2.NewService(userStore, tokenInterface)
 	publickeyInterface := publickey.NewPublicKeyStore(db)
@@ -354,6 +362,7 @@ func NewApp(mode string) (*App, func(), error) {
 		ScanTriggerStore:   scanTriggerStore,
 		RepoStore:          store,
 		RepoService:        repoService,
+		RepoImporterSvc:    repository,
 		TokenStore:         tokenInterface,
 		ArtifactService:    artifactService,
 		ArtifactAuthorizer: artifactAuthorizer,
@@ -393,6 +402,7 @@ type App struct {
 	ScanTriggerStore   scan.IScanTrigger
 	RepoStore          repo.Interface
 	RepoService        repo2.Interface
+	RepoImporterSvc    *importer.Repository
 	TokenStore         token.Interface
 	ArtifactService    artifact3.Interface
 	ArtifactAuthorizer authorizer.Authorizer

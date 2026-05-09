@@ -31,6 +31,10 @@ func (f *fakeRepoStore) Update(ctx context.Context, repo *repoStore.Repository, 
 	return nil, nil
 }
 
+func (f *fakeRepoStore) UpdateOptLock(ctx context.Context, repo *repoModel.Repo, mutateFn func(repo *repoModel.Repo) error) (*repoModel.Repo, error) {
+	return nil, nil
+}
+
 func (f *fakeRepoStore) FindByRef(ctx context.Context, ref string) (*repoModel.Repo, error) {
 	return nil, nil
 }
@@ -46,6 +50,10 @@ func (f *fakeRepoStore) GetByID(ctx context.Context, id uint) (*repoModel.Repo, 
 }
 
 func (f *fakeRepoStore) Delete(ctx context.Context, id uint) error {
+	return nil
+}
+
+func (f *fakeRepoStore) HardDelete(ctx context.Context, id uint) error {
 	return nil
 }
 
