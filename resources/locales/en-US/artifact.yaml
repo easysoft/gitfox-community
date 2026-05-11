@@ -121,3 +121,19 @@ artifact:
 
   # Hard delete resources
   hard_delete_error: "Failed to clean up artifact-related resources."
+
+  # Move & Rename
+  move_entity_type_invalid: "Unsupported entity type for move."
+  move_format_mismatch: "Source format does not match target."
+  move_sibling_conflict: "Sibling with the same name already exists at target."
+  move_cycle_detected: "Target parent is a descendant of source group."
+  move_source_deleted: "Source entity is soft-deleted or not found."
+  move_target_invalid: "Target artifact or group is invalid."
+  move_active_upload_session: "Source package has active upload sessions."
+  move_success: "Move succeeded."
+  rename_entity_type_invalid: "Unsupported entity type for rename."
+  rename_versioned_not_supported: "Rename is not allowed on versioned packages or groups containing them."
+  rename_invalid_name: "Invalid name. Must be 1..255 chars and must not contain `/`, `\\`, `.`, `..`."
+  rename_sibling_conflict: "Sibling with the same name already exists."
+  rename_source_deleted: "Source entity is soft-deleted or not found."
+  rename_success: "Rename succeeded."

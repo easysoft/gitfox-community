@@ -56,11 +56,10 @@ func registerArtifactRoutes(group *gin.RouterGroup, controller *Controller, _ au
 		artifact.GET("/nodes/:nodeId/children", controller.Artifact.ListTreeNodes) // pullAuth
 
 		// 树节点（写）
-		// 移动目录
-
-		// 移动制品
-
-		// 修改制品名
+		// 移动制品/制品库
+		artifact.POST("/entities/move", controller.Artifact.MoveEntity) // pushAuth
+		// 修改制品名/制品目录移动
+		artifact.POST("/entities/rename", controller.Artifact.RenameEntity) // pushAuth
 
 		// 统计
 		artifact.GET("/capacity/all", controller.Artifact.StatisticCapacity)                // pullAuth

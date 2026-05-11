@@ -121,3 +121,19 @@ artifact:
 
   # 硬删资源
   hard_delete_error: "清理制品关联资源失败."
+
+  # Move & Rename
+  move_entity_type_invalid: "不支持的移动实体类型."
+  move_format_mismatch: "源实体与目标位置格式不匹配."
+  move_sibling_conflict: "目标位置已存在同级同名实体."
+  move_cycle_detected: "目标父组属于源组的子树，禁止循环引用."
+  move_source_deleted: "源实体已软删除或不存在."
+  move_target_invalid: "目标位置无效（制品库或目标组不存在）."
+  move_active_upload_session: "源包存在未完成的上传会话，暂不可移动."
+  move_success: "移动成功."
+  rename_entity_type_invalid: "不支持的重命名实体类型."
+  rename_versioned_not_supported: "不支持重命名版本化包或包含版本化包的组."
+  rename_invalid_name: "名称不合法（长度需 1–255，且不得包含 /、\\、.、..）."
+  rename_sibling_conflict: "同级已存在同名实体."
+  rename_source_deleted: "源实体已软删除或不存在."
+  rename_success: "重命名成功."

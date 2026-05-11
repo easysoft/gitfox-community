@@ -247,6 +247,86 @@ const docTemplate = `{
                 }
             }
         },
+        "/artifacts/entities/move": {
+            "post": {
+                "description": "将 package / asset / group 移动到目标制品库或目标分组",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "artifacts"
+                ],
+                "summary": "移动制品实体",
+                "parameters": [
+                    {
+                        "description": "移动请求",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.MoveEntityReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误或业务校验失败",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/artifacts/entities/rename": {
+            "post": {
+                "description": "重命名 asset 或 group（package 不支持重命名）",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "artifacts"
+                ],
+                "summary": "重命名制品实体",
+                "parameters": [
+                    {
+                        "description": "重命名请求",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.RenameEntityReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误或业务校验失败",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/artifacts/entities/{entityId}/permissions": {
             "get": {
                 "description": "获取指定实体节点的权限配置（含继承信息）",
@@ -1000,7 +1080,7 @@ const docTemplate = `{
         },
         "/artifacts/upload/{format}": {
             "post": {
-                "description": "上传制品文件（multipart/form-data）",
+                "description": "上传制品文件（multipart/form-data）。artifactID 必传，用于精确定位制品库视图。",
                 "consumes": [
                     "multipart/form-data"
                 ],
@@ -1021,21 +1101,10 @@ const docTemplate = `{
                     },
                     {
                         "type": "integer",
-                        "description": "空间ID",
-                        "name": "spaceId",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "仓库ID",
-                        "name": "repoId",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "视图ID，\u003e 0 时优先按该视图上传",
+                        "description": "视图ID（必传，\u003e 0）",
                         "name": "artifactID",
-                        "in": "formData"
+                        "in": "formData",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -12308,6 +12377,7 @@ const docTemplate = `{
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.CreateArtifactViewReq": {
             "type": "object",
             "required": [
+                "format",
                 "name"
             ],
             "properties": {
@@ -12315,6 +12385,9 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "description": {
+                    "type": "string"
+                },
+                "format": {
                     "type": "string"
                 },
                 "name": {
@@ -12354,6 +12427,27 @@ const docTemplate = `{
                     "items": {
                         "type": "string"
                     }
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.MoveEntityReq": {
+            "type": "object",
+            "properties": {
+                "entityType": {
+                    "description": "\"package\" / \"asset\" / \"group\"",
+                    "type": "string"
+                },
+                "sourceId": {
+                    "description": "源实体 ID",
+                    "type": "integer"
+                },
+                "targetArtifactId": {
+                    "description": "目标制品库 ID",
+                    "type": "integer"
+                },
+                "targetGroupId": {
+                    "description": "目标 group ID（package/asset 必填，group 可选）",
+                    "type": "integer"
                 }
             }
         },
@@ -12397,6 +12491,23 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.PermRule"
                     }
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.RenameEntityReq": {
+            "type": "object",
+            "properties": {
+                "entityType": {
+                    "description": "\"asset\" / \"group\"",
+                    "type": "string"
+                },
+                "newName": {
+                    "description": "新名称",
+                    "type": "string"
+                },
+                "sourceId": {
+                    "description": "源实体 ID",
+                    "type": "integer"
                 }
             }
         },

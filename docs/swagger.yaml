@@ -601,6 +601,8 @@ definitions:
         type: integer
       description:
         type: string
+      format:
+        type: string
       name:
         type: string
       repoId:
@@ -608,6 +610,7 @@ definitions:
       spaceId:
         type: integer
     required:
+    - format
     - name
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.CreateGroupReq:
@@ -628,6 +631,21 @@ definitions:
         items:
           type: string
         type: array
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.MoveEntityReq:
+    properties:
+      entityType:
+        description: '"package" / "asset" / "group"'
+        type: string
+      sourceId:
+        description: 源实体 ID
+        type: integer
+      targetArtifactId:
+        description: 目标制品库 ID
+        type: integer
+      targetGroupId:
+        description: 目标 group ID（package/asset 必填，group 可选）
+        type: integer
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.PermRule:
     properties:
@@ -656,6 +674,18 @@ definitions:
         items:
           $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.PermRule'
         type: array
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.RenameEntityReq:
+    properties:
+      entityType:
+        description: '"asset" / "group"'
+        type: string
+      newName:
+        description: 新名称
+        type: string
+      sourceId:
+        description: 源实体 ID
+        type: integer
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.SoftRemoveEntitiesReq:
     properties:
@@ -3623,6 +3653,58 @@ paths:
       summary: 设置节点级权限
       tags:
       - artifacts
+  /artifacts/entities/move:
+    post:
+      consumes:
+      - application/json
+      description: 将 package / asset / group 移动到目标制品库或目标分组
+      parameters:
+      - description: 移动请求
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.MoveEntityReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "400":
+          description: 参数错误或业务校验失败
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 移动制品实体
+      tags:
+      - artifacts
+  /artifacts/entities/rename:
+    post:
+      consumes:
+      - application/json
+      description: 重命名 asset 或 group（package 不支持重命名）
+      parameters:
+      - description: 重命名请求
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.RenameEntityReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "400":
+          description: 参数错误或业务校验失败
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 重命名制品实体
+      tags:
+      - artifacts
   /artifacts/formats:
     post:
       consumes:
@@ -4050,24 +4132,17 @@ paths:
     post:
       consumes:
       - multipart/form-data
-      description: 上传制品文件（multipart/form-data）
+      description: 上传制品文件（multipart/form-data）。artifactID 必传，用于精确定位制品库视图。
       parameters:
       - description: 制品格式
         in: path
         name: format
         required: true
         type: string
-      - description: 空间ID
-        in: formData
-        name: spaceId
-        type: integer
-      - description: 仓库ID
-        in: formData
-        name: repoId
-        type: integer
-      - description: 视图ID，> 0 时优先按该视图上传
+      - description: 视图ID（必传，> 0）
         in: formData
         name: artifactID
+        required: true
         type: integer
       produces:
       - application/json
