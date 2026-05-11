@@ -22,6 +22,7 @@ func registerArtifactRoutes(group *gin.RouterGroup, controller *Controller, _ au
 		// 创建制品库
 		artifact.POST("/views", controller.Artifact.CreateView) // createAuth
 
+		// 列表
 		artifact.POST("/packages", controller.Artifact.ListPackages) // pullAuth
 		artifact.POST("/formats", controller.Artifact.ListFormats)   // pullAuth
 		artifact.POST("/nodeInfo", controller.Artifact.ListNodeInfo) // legacy pullAuth
@@ -53,6 +54,13 @@ func registerArtifactRoutes(group *gin.RouterGroup, controller *Controller, _ au
 
 		// 树节点（读）
 		artifact.GET("/nodes/:nodeId/children", controller.Artifact.ListTreeNodes) // pullAuth
+
+		// 树节点（写）
+		// 移动目录
+
+		// 移动制品
+
+		// 修改制品名
 
 		// 统计
 		artifact.GET("/capacity/all", controller.Artifact.StatisticCapacity)                // pullAuth

@@ -22,6 +22,7 @@ type artifactView struct {
 	Description string          `gorm:"column:desc"`
 	SpaceID     int64           `gorm:"column:spaceID"`
 	RepoID      int64           `gorm:"column:repoID"`
+	Format      string          `gorm:"column:format"`
 	Type        string          `gorm:"column:type"`
 	Default     bool            `gorm:"column:isDefault"`
 	CreatedBy   string          `gorm:"column:createdBy"`
@@ -270,6 +271,7 @@ func viewToModel(v *artifactView) *model.ArtifactView {
 		Description: v.Description,
 		SpaceID:     v.SpaceID,
 		RepoID:      v.RepoID,
+		Format:      model.ArtifactFormat(v.Format),
 		Type:        model.ArtifactViewType(v.Type),
 		Default:     v.Default,
 		CreatedBy:   v.CreatedBy,

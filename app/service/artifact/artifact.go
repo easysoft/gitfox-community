@@ -26,6 +26,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/entity"
 	artModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/model"
 	enum "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
 	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
 	authModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
 	artifactStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/artifact"
@@ -196,6 +197,7 @@ func (s *Service) CreateView(ctx context.Context, req *model.CreateArtifactViewR
 		Description: req.Description,
 		SpaceID:     req.SpaceID,
 		RepoID:      req.RepoID,
+		Format:      artifact.ArtifactFormat(req.Format),
 		Type:        viewType,
 		Default:     isDefault,
 	}
@@ -328,50 +330,110 @@ func (s *Service) ParseSpaceView(ctx context.Context, req *model.SpaceRepoReq) (
 	return desc, nil
 }
 
-// ParseContainerView 按作用域（scope）和 viewname 精确定位 ViewDescriptor。
-//
-// 路由格式（groupname 必传，容器镜像 push/pull 的路径前缀决定 scope）：
-//
-//	/v2/global/{viewname}/{groupname}/{imagename}
-//	/v2/space/{spaceName}/{viewname}/{groupname}/{imagename}
-//	/v2/repo/{spaceName}/{repoName}/{viewname}/{groupname}/{imagename}
-//
-// scope 取值："global" | "space" | "repo"
-// view 不存在时直接返回 404，不自动创建。
-func (s *Service) ParseContainerView(ctx context.Context,
-	scope, spaceName, scopeRepoName, viewname string,
-) (*adapter.ViewDescriptor, error) {
-	var spaceId, repoId int64
+// ContainerArtifactCtx 容器镜像定位的查询结果。
+// 供 container handler 构造 ContainerReq 使用，包含下游需要的最小信息。
+type ContainerArtifactCtx struct {
+	Scope     string                  // "global" | "space" | "repo"
+	SpaceID   int64                   // space 作用域下 > 0
+	RepoID    int64                   // repo 作用域下 > 0
+	View      *adapter.ViewDescriptor // artifact 对应的 view descriptor
+	GroupName string                  // 容器制品库下唯一 group 的 name
+}
 
-	// space / repo scope：先将 spaceName 解析为 ID
-	if scope == "space" || scope == "repo" {
-		space, err := s.spaceStore.GetByName(ctx, spaceName)
-		if err != nil {
-			return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactSpaceQueryError)
-		}
-		spaceId = int64(space.ID)
+// ScopeID 返回对应 scope 的数字 ID（global 时为 0）。
+func (c *ContainerArtifactCtx) ScopeID() uint64 {
+	switch c.Scope {
+	case "space":
+		return uint64(c.SpaceID)
+	case "repo":
+		return uint64(c.RepoID)
+	default:
+		return 0
 	}
+}
 
-	// repo scope：再将 repoName 解析为 ID
-	if scope == "repo" {
-		repo, err := s.repoStore.GetBySpaceAndIdentifier(ctx, uint(spaceId), scopeRepoName)
-		if err != nil {
-			return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactRepoQueryError)
-		}
-		repoId = int64(repo.ID)
-	}
-
-	// 按名称精确查找 view（不使用默认 view）
-	view, err := s.artStore.Views().GetByName(ctx, spaceId, repoId, viewname)
+// resolveContainerArtifact 容器路由的统一私有解析流程。
+// 步骤 1：按 (spaceID, repoID, name) 在 ops_artifact 精确查找 view 记录；
+//   - ErrResourceNotFound → 包装 i18n.ArtifactContainerArtifactNotFound
+//   - 其它错误 → 包装 i18n.ArtifactViewQueryError
+//
+// 步骤 2：调用 s.lookupContainerGroupName(ctx, view.ID) 取容器 group 名。
+// 步骤 3：组装并返回 ContainerArtifactCtx（含 ViewDescriptor{ArtifactID, Store: s.fileStore, StorageID: 1}）。
+func (s *Service) resolveContainerArtifact(
+	ctx context.Context, scope string, spaceID, repoID int64, artifactName string,
+) (*ContainerArtifactCtx, error) {
+	// 1) 按 (spaceID, repoID, name) 精确查找 artifact 视图
+	view, err := s.artStore.Views().GetByName(ctx, spaceID, repoID, artifactName)
 	if err != nil {
+		if pkgErrors.Is(err, pkgErrors.ErrResourceNotFound) {
+			return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactContainerArtifactNotFound)
+		}
 		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactViewQueryError)
 	}
 
-	return &adapter.ViewDescriptor{
-		ArtifactID: view.ID,
-		Store:      s.fileStore,
-		StorageID:  1,
+	// 2) 容器库下只有一个 group，复用已有 Groups().ListDescendantsForOwner 取 name
+	groupName, err := s.lookupContainerGroupName(ctx, view.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	// 3) 组装返回值
+	return &ContainerArtifactCtx{
+		Scope:     scope,
+		SpaceID:   spaceID,
+		RepoID:    repoID,
+		View:      &adapter.ViewDescriptor{ArtifactID: view.ID, Store: s.fileStore, StorageID: 1},
+		GroupName: groupName,
 	}, nil
+}
+
+// ResolveGlobalArtifact 全局作用域下按 artifact name 精确定位制品库及其容器 group。
+// 对应路由：/v2/global/{artifactname}/{imagename}
+func (s *Service) ResolveGlobalArtifact(
+	ctx context.Context, artifactName string,
+) (*ContainerArtifactCtx, error) {
+	return s.resolveContainerArtifact(ctx, "global", 0, 0, artifactName)
+}
+
+// ResolveSpaceArtifact 空间作用域下按 (spaceID, artifactName) 精确定位制品库及其容器 group。
+// 对应路由：/v2/space{spaceID}/{artifactname}/{imagename}
+func (s *Service) ResolveSpaceArtifact(
+	ctx context.Context, spaceID uint64, artifactName string,
+) (*ContainerArtifactCtx, error) {
+	return s.resolveContainerArtifact(ctx, "space", int64(spaceID), 0, artifactName)
+}
+
+// ResolveRepoArtifact 仓库作用域下按 (repoID, artifactName) 精确定位制品库及其容器 group。
+// 对应路由：/v2/repo{repoID}/{artifactname}/{imagename}
+// 与现有 ParseContainerView 行为保持一致：先通过 repoStore 按 ID 反查拿到 repo，
+// 再以 (int64(repo.SpaceID), int64(repoID), artifactName) 调用 resolveContainerArtifact。
+// 不引入新复杂度，保留现有已验证过的查询方式。
+func (s *Service) ResolveRepoArtifact(
+	ctx context.Context, repoID uint64, artifactName string,
+) (*ContainerArtifactCtx, error) {
+	// 通过 repo 反查 spaceID（与现有 ParseContainerView 保持一致，不改动此行为）
+	repo, err := s.repoStore.GetByID(ctx, uint(repoID))
+	if err != nil {
+		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactRepoQueryError)
+	}
+	return s.resolveContainerArtifact(ctx, "repo", int64(repo.SpaceID), int64(repoID), artifactName)
+}
+
+// lookupContainerGroupName 读取 artifact 下唯一容器 group 的 name。
+// 复用已有 store 方法 Groups().ListDescendantsForOwner：容器库下只会有一个 group，
+// 直接取结果切片的第一条。不新增 store 方法，保持最小改动。
+func (s *Service) lookupContainerGroupName(ctx context.Context, artifactID int64) (string, error) {
+	groups, err := s.artStore.Groups().ListDescendantsForOwner(ctx, artifactID, model.ArtifactContainerFormat)
+	if err != nil {
+		// 查询失败统一包装 container_group_not_found
+		return "", pkgErrors.WithI18nKey(err, i18n.ArtifactContainerGroupNotFound)
+	}
+	if len(groups) == 0 {
+		// 空列表同样视作 container_group_not_found
+		return "", pkgErrors.WithI18nKey(pkgErrors.ErrResourceNotFound, i18n.ArtifactContainerGroupNotFound)
+	}
+	// 容器只会有一个 group，取第一条即可
+	return groups[0].Name, nil
 }
 
 func (s *Service) ListPackages(ctx context.Context, artifactID int64, filter *model.ArtifactFilter) ([]*model.ArtifactListItem, error) {
@@ -781,7 +843,6 @@ func nodeInfoSpaceName(view *adapter.ViewDescriptor) string {
 	}
 	return ""
 }
-
 
 func invalidNodeInfo() *model.ArtifactNodeInfo {
 	return &model.ArtifactNodeInfo{Status: string(model.ArtifactStatusInvalidId)}

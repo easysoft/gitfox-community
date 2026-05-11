@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"time"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/adapter"
@@ -71,36 +72,45 @@ func NewController(
 // ---- 请求解析 ----
 
 // ContainerReq 容器镜像请求的基础参数。
+//
+// 对应新路径 /v2/:domainid/:artifactname/:imagename/...
+//   - ScopeID 为 scope=space/repo 时的数字 ID，global 时为 0。
+//   - ArtifactName 取代旧的 ViewName，对应 ops_artifact.name。
+//   - GroupName 由数据库中 container group 记录填充（容器库下唯一一个 group）。
+//   - RepoName 语义不变，即 OCI image 名称。
 type ContainerReq struct {
-	// Scope 作用域：global | space | repo，由路由前缀决定。
+	// Scope 作用域：global | space | repo，由路由 :domainid 解析决定。
 	Scope string
-	// SpaceName 空间标识，scope=space/repo 时有值。
-	SpaceName string
-	// ScopeRepo 仓库标识（git repo identifier），scope=repo 时有值。
-	ScopeRepo string
-	// ViewName 制品视图名称，在 scope 作用域内唯一。
-	ViewName string
-	// GroupName container namespace（必填），同 view 内唯一。
+	// ScopeID space/repo 作用域下的数字 ID，global 时为 0。
+	ScopeID uint64
+	// ArtifactName 对应 ops_artifact.name，取代旧的 ViewName。
+	ArtifactName string
+	// GroupName container 分组名（由数据库 container group 记录填充）。
 	GroupName string
-	// RepoName 镜像名（container image name）。
+	// RepoName 镜像名（OCI image name）。
 	RepoName string
 	View     *adapter.ViewDescriptor
 }
 
 // FullName 返回 OCI repository name，即 URL 中 /v2/ 之后到操作路径之前的部分。
-// 格式与 docker client 使用的路径完全一致，用作 blob upload session 的唯一 key。
+// 新格式（不兼容旧格式，不保留任何兼容层）：
 //
-//	global: "global/{viewname}/{groupname}/{imagename}"
-//	space:  "space/{spaceName}/{viewname}/{groupname}/{imagename}"
-//	repo:   "repo/{spaceName}/{scopeRepo}/{viewname}/{groupname}/{imagename}"
+//	global: "global/{artifactname}/{imagename}"
+//	space:  "space{spaceID}/{artifactname}/{imagename}"
+//	repo:   "repo{repoID}/{artifactname}/{imagename}"
+//
+// 在途 blob upload session 会因格式变化而失效，这是升级的预期代价，不做兼容迁移。
 func (cr *ContainerReq) FullName() string {
 	switch cr.Scope {
 	case "global":
-		return "global/" + cr.ViewName + "/" + cr.GroupName + "/" + cr.RepoName
+		// global 作用域：直接以 "global" 为前缀，不带数字 ID
+		return "global/" + cr.ArtifactName + "/" + cr.RepoName
 	case "space":
-		return "space/" + cr.SpaceName + "/" + cr.ViewName + "/" + cr.GroupName + "/" + cr.RepoName
+		// space 作用域：前缀 space{spaceID}，无分隔符
+		return "space" + strconv.FormatUint(cr.ScopeID, 10) + "/" + cr.ArtifactName + "/" + cr.RepoName
 	default: // repo
-		return "repo/" + cr.SpaceName + "/" + cr.ScopeRepo + "/" + cr.ViewName + "/" + cr.GroupName + "/" + cr.RepoName
+		// repo 作用域：前缀 repo{repoID}，无分隔符
+		return "repo" + strconv.FormatUint(cr.ScopeID, 10) + "/" + cr.ArtifactName + "/" + cr.RepoName
 	}
 }
 
@@ -631,7 +641,7 @@ type tagList struct {
 	Tags []string `json:"tags"`
 }
 
-// ListTags GET /v2/{scope}/{viewname}/{groupname}/{name}/tags/list
+// ListTags GET /v2/{domainid}/{artifactname}/{imagename}/tags/list
 func (c *Controller) ListTags(ctx context.Context, req *ContainerReq) (*tagList, error) {
 	// TODO: 权限检查
 	var result = tagList{

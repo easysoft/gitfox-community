@@ -26,7 +26,8 @@ artifact:
   view_scope_mismatch: "The specified artifact view does not match the requested space or repository."
   view_create_error: "Failed to create artifact view."
   view_expired_query_error: "Failed to query expired views."
-
+  view_format_invalid: "Unsupported artifact format. Supported: generic, raw, maven, container, helm, pypi, npm."
+  
   # Parse & Upload
   space_id_required: "spaceId is required when repoId is provided."
   repo_query_error: "Failed to query repository."
@@ -89,6 +90,12 @@ artifact:
   # Container
   container_tag_not_found: "Container tag asset not found."
   container_image_query_error: "Failed to query container image."
+  container_domain_invalid: "Invalid container registry path prefix. Expect one of: global / space{ID} / repo{ID}."
+  container_space_id_invalid: "Invalid space ID in container registry path."
+  container_repo_id_invalid: "Invalid repository ID in container registry path."
+  container_artifact_not_found: "The specified artifact registry does not exist."
+  container_group_not_found: "No container group found under the artifact registry."
+  container_image_name_required: "The container registry path is missing artifactname or imagename."
 
   # Permission
   auth_required: "Authentication required."

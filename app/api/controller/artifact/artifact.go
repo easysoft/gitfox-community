@@ -84,6 +84,13 @@ func (c *Controller) CreateView(ctx *gin.Context) {
 		resp.BadRequest(ctx, err)
 		return
 	}
+
+	// 业务规则校验（format 枚举）
+	if err := reqBody.Validate(); err != nil {
+		resp.BadRequest(ctx, err)
+		return
+	}
+
 	view, err := c.artSvc.CreateView(ctx, &reqBody)
 	if err != nil {
 		resp.InternalError(ctx, err)

@@ -99,6 +99,7 @@ type ArtifactView struct {
 	Description string           `json:"description"`
 	SpaceID     int64            `json:"spaceId"`
 	RepoID      int64            `json:"repoId"`
+	Format      ArtifactFormat   `json:"format"`
 	Type        ArtifactViewType `json:"type"`
 	Default     bool             `json:"isDefault"`
 	CreatedBy   string           `json:"createdBy"`
@@ -122,6 +123,7 @@ type CreateArtifactView struct {
 	SpaceID     int64            `json:"spaceId"`
 	RepoID      int64            `json:"repoId"`
 	Type        ArtifactViewType `json:"type"`
+	Format      ArtifactFormat   `json:"format"`
 	Default     bool             `json:"isDefault"`
 }
 

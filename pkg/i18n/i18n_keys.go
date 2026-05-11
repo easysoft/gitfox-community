@@ -15,7 +15,13 @@ const (
 	ArtifactBlobHistoryError                I18nKey = "artifact.blob_history_error"                   // 查询制品 Blob 历史失败.
 	ArtifactBlobQueryError                  I18nKey = "artifact.blob_query_error"                     // 查询制品 Blob 失败.
 	ArtifactBodyParamError                  I18nKey = "artifact.body_param_error"                     // Body 参数解析失败.
+	ArtifactContainerArtifactNotFound       I18nKey = "artifact.container_artifact_not_found"         // 指定的制品库不存在.
+	ArtifactContainerDomainInvalid          I18nKey = "artifact.container_domain_invalid"             // 镜像仓库路径格式无效,请检查前缀是否为 global / space{ID} / repo{ID}.
+	ArtifactContainerGroupNotFound          I18nKey = "artifact.container_group_not_found"            // 制品库下未找到容器分组.
+	ArtifactContainerImageNameRequired      I18nKey = "artifact.container_image_name_required"        // 镜像路径缺少制品名或镜像名.
 	ArtifactContainerImageQueryError        I18nKey = "artifact.container_image_query_error"          // 查询容器镜像失败.
+	ArtifactContainerRepoIdInvalid          I18nKey = "artifact.container_repo_id_invalid"            // 镜像仓库路径中的仓库 ID 无效.
+	ArtifactContainerSpaceIdInvalid         I18nKey = "artifact.container_space_id_invalid"           // 镜像仓库路径中的空间 ID 无效.
 	ArtifactContainerTagNotFound            I18nKey = "artifact.container_tag_not_found"              // 容器镜像标签资产未找到.
 	ArtifactCreateGroupSuccess              I18nKey = "artifact.create_group_success"                 // 制品 Group 创建成功.
 	ArtifactCreateViewSuccess               I18nKey = "artifact.create_view_success"                  // 制品视图创建成功.
@@ -81,6 +87,7 @@ const (
 	ArtifactViewCreateError                 I18nKey = "artifact.view_create_error"                    // 创建制品视图失败.
 	ArtifactViewExpiredCleanupError         I18nKey = "artifact.view_expired_cleanup_error"           // 清理过期视图失败.
 	ArtifactViewExpiredQueryError           I18nKey = "artifact.view_expired_query_error"             // 查询过期视图失败.
+	ArtifactViewFormatInvalid               I18nKey = "artifact.view_format_invalid"                  // 不支持的制品格式,仅支持: generic, raw, maven, container, h...
 	ArtifactViewInRecycleBin                I18nKey = "artifact.view_in_recycle_bin"                  // 同名制品库视图在回收站中,请从回收站恢复或等待过期后重建.
 	ArtifactViewNameDuplicate               I18nKey = "artifact.view_name_duplicate"                  // 同名制品库视图已存在.
 	ArtifactViewNotFound                    I18nKey = "artifact.view_not_found"                       // 指定的制品视图不存在.

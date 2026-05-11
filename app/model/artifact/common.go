@@ -57,6 +57,24 @@ type CreateArtifactViewReq struct {
 	SpaceRepoReq
 	Name        string `json:"name" binding:"required"`
 	Description string `json:"description"`
+	Format      string `json:"format" binding:"required"`
+}
+
+// Validate 对 CreateArtifactViewReq 进行业务规则校验，返回携带 i18n key 的错误。
+// 校验规则：
+//  1. Format 必须通过 enum.ArtifactFormat.Sanitize() 校验
+func (r *CreateArtifactViewReq) Validate() error {
+
+	// 1. Format 枚举校验（使用 constant 包的 Sanitize 模式）
+	format := enum.ArtifactFormat(r.Format)
+	if _, ok := format.Sanitize(); !ok {
+		return errors.WithI18nKey(
+			fmt.Errorf("unsupported format: %s", r.Format),
+			i18n.ArtifactViewFormatInvalid,
+		)
+	}
+
+	return nil
 }
 
 // ArtifactVersionListReq 接收获取版本列表的请求参数
