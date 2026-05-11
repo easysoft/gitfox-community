@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"time"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/adapter"
@@ -71,36 +72,45 @@ func NewController(
 // ---- 请求解析 ----
 
 // ContainerReq 容器镜像请求的基础参数。
+//
+// 对应新路径 /v2/:domainid/:artifactname/:imagename/...
+//   - ScopeID 为 scope=space/repo 时的数字 ID，global 时为 0。
+//   - ArtifactName 取代旧的 ViewName，对应 ops_artifact.name。
+//   - GroupName 由数据库中 container group 记录填充（容器库下唯一一个 group）。
+//   - RepoName 语义不变，即 OCI image 名称。
 type ContainerReq struct {
-	// Scope 作用域：global | space | repo，由路由前缀决定。
+	// Scope 作用域：global | space | repo，由路由 :domainid 解析决定。
 	Scope string
-	// SpaceName 空间标识，scope=space/repo 时有值。
-	SpaceName string
-	// ScopeRepo 仓库标识（git repo identifier），scope=repo 时有值。
-	ScopeRepo string
-	// ViewName 制品视图名称，在 scope 作用域内唯一。
-	ViewName string
-	// GroupName container namespace（必填），同 view 内唯一。
+	// ScopeID space/repo 作用域下的数字 ID，global 时为 0。
+	ScopeID uint64
+	// ArtifactName 对应 ops_artifact.name，取代旧的 ViewName。
+	ArtifactName string
+	// GroupName container 分组名（由数据库 container group 记录填充）。
 	GroupName string
-	// RepoName 镜像名（container image name）。
+	// RepoName 镜像名（OCI image name）。
 	RepoName string
 	View     *adapter.ViewDescriptor
 }
 
 // FullName 返回 OCI repository name，即 URL 中 /v2/ 之后到操作路径之前的部分。
-// 格式与 docker client 使用的路径完全一致，用作 blob upload session 的唯一 key。
+// 新格式（不兼容旧格式，不保留任何兼容层）：
 //
-//	global: "global/{viewname}/{groupname}/{imagename}"
-//	space:  "space/{spaceName}/{viewname}/{groupname}/{imagename}"
-//	repo:   "repo/{spaceName}/{scopeRepo}/{viewname}/{groupname}/{imagename}"
+//	global: "global/{artifactname}/{imagename}"
+//	space:  "space{spaceID}/{artifactname}/{imagename}"
+//	repo:   "repo{repoID}/{artifactname}/{imagename}"
+//
+// 在途 blob upload session 会因格式变化而失效，这是升级的预期代价，不做兼容迁移。
 func (cr *ContainerReq) FullName() string {
 	switch cr.Scope {
 	case "global":
-		return "global/" + cr.ViewName + "/" + cr.GroupName + "/" + cr.RepoName
+		// global 作用域：直接以 "global" 为前缀，不带数字 ID
+		return "global/" + cr.ArtifactName + "/" + cr.RepoName
 	case "space":
-		return "space/" + cr.SpaceName + "/" + cr.ViewName + "/" + cr.GroupName + "/" + cr.RepoName
+		// space 作用域：前缀 space{spaceID}，无分隔符
+		return "space" + strconv.FormatUint(cr.ScopeID, 10) + "/" + cr.ArtifactName + "/" + cr.RepoName
 	default: // repo
-		return "repo/" + cr.SpaceName + "/" + cr.ScopeRepo + "/" + cr.ViewName + "/" + cr.GroupName + "/" + cr.RepoName
+		// repo 作用域：前缀 repo{repoID}，无分隔符
+		return "repo" + strconv.FormatUint(cr.ScopeID, 10) + "/" + cr.ArtifactName + "/" + cr.RepoName
 	}
 }
 
@@ -185,6 +195,11 @@ func (c *Controller) GetAssetInfo(ctx context.Context, path string, format model
 	if err != nil {
 		return nil, err
 	}
+	// blob 表 GetById 不过滤 deleted，读路径需自防御：软删 blob 对客户端等价于不存在。
+	if blob.Deleted == 1 {
+		logger.GetLogger(ctx).Debugf("【container pull】blob %d (asset %d) is soft-deleted, treat as not found", blob.ID, asset.ID)
+		return nil, pkgErrors.ErrResourceNotFound
+	}
 	return newAssetMeta(asset, blob), nil
 }
 
@@ -195,7 +210,16 @@ func (c *Controller) GetAssetReader(ctx context.Context, path string, format mod
 		return nil, nil, err
 	}
 	r, err := c.fileStore.Open(ctx, adapter.BlobPath(meta.Ref))
-	return r, meta, err
+	if err != nil {
+		// 物理文件缺失对客户端等价于 not-found，避免被兜底成 500 UNKNOWN。
+		var pathNotFoundErr storagedriver.PathNotFoundError
+		if errors.As(err, &pathNotFoundErr) {
+			logger.GetLogger(ctx).Warnf("【container pull】asset %d blob %d storage path not found: %s", meta.Id, meta.BlobId, pathNotFoundErr.Path)
+			return nil, nil, pkgErrors.ErrResourceNotFound
+		}
+		return nil, nil, err
+	}
+	return r, meta, nil
 }
 
 // ---- 工具方法 ----
@@ -228,15 +252,31 @@ func findContainerTag(ctx context.Context, artStore artifactStore.Interface, art
 	if err != nil {
 		return nil, err
 	}
-	dbVer, err := artStore.Versions().GetByVersion(ctx, dbPkg.ID, artifactID, tag)
+	if dbPkg.IsDeleted() {
+		// 软删包对读路径等价于不存在（store 层未过滤 deleted，是为了让 push 走 UnDelete 复活）。
+		log.Debugf("【container pull】package %s/%s is soft-deleted, treat as not found", groupName, pkgName)
+		return nil, pkgErrors.ErrResourceNotFound
+	}
+	dbVer, err := artStore.Versions().GetByVersion(ctx, dbPkg.ID, tag)
 	if err != nil {
 		return nil, err
+	}
+	if dbVer.IsDeleted() {
+		// 软删版本同理，按 not-found 上抛 → MANIFEST_UNKNOWN 404。
+		log.Debugf("【container pull】version %d tag %s is soft-deleted, treat as not found", dbVer.ID, tag)
+		return nil, pkgErrors.ErrResourceNotFound
 	}
 	dbAssets, err := artStore.Assets().FindMain(ctx, dbVer.ID)
 	if err != nil {
 		return nil, err
 	}
-	if len(dbAssets) != 1 {
+	if len(dbAssets) == 0 {
+		// version 记录存在但 main asset 缺失，属数据残留（push 中途失败 / asset 被清）。
+		// 对 docker client 等价于 tag 不可用，按 not-found 上抛 → MANIFEST_UNKNOWN 404。
+		log.Warnf("【container pull】version %d has no main asset for tag %s, treat as not found", dbVer.ID, tag)
+		return nil, pkgErrors.ErrResourceNotFound
+	}
+	if len(dbAssets) > 1 {
 		log.Errorf("【container pull】expected 1 asset for tag %s, found %d", tag, len(dbAssets))
 		return nil, fmt.Errorf("expected 1 asset, found %d", len(dbAssets))
 	}
@@ -244,6 +284,11 @@ func findContainerTag(ctx context.Context, artStore artifactStore.Interface, art
 	dbBlob, err := artStore.Blobs().GetById(ctx, dbAsset.BlobID)
 	if err != nil {
 		return nil, err
+	}
+	// blob 表 GetById 未过滤 deleted（push 复活路径需要），读路径必须自防御。
+	if dbBlob.Deleted == 1 {
+		log.Debugf("【container pull】blob %d (asset %d, tag %s) is soft-deleted, treat as not found", dbBlob.ID, dbAsset.ID, tag)
+		return nil, pkgErrors.ErrResourceNotFound
 	}
 	return &tagInfo{
 		name:    tag,
@@ -472,6 +517,12 @@ func (c *Controller) DeleteContainerManifest(ctx context.Context, manifestReq *C
 func (c *Controller) getManifestWriter(ctx context.Context, view *adapter.ViewDescriptor, desc *AssetMeta, sendContent bool) (HttpResponseWriter, error) {
 	content, err := view.Store.Get(ctx, adapter.BlobPath(desc.Ref))
 	if err != nil {
+		// 物理 manifest blob 缺失等价于 manifest 不存在，避免兜底成 500。
+		var pathNotFoundErr storagedriver.PathNotFoundError
+		if errors.As(err, &pathNotFoundErr) {
+			logger.GetLogger(ctx).Warnf("【container pull】manifest asset %d blob %d storage path not found: %s", desc.Id, desc.BlobId, pathNotFoundErr.Path)
+			return nil, pkgErrors.ErrResourceNotFound
+		}
 		return nil, err
 	}
 	return NewResponseWriter(func(w http.ResponseWriter) {
@@ -590,7 +641,7 @@ type tagList struct {
 	Tags []string `json:"tags"`
 }
 
-// ListTags GET /v2/{scope}/{viewname}/{groupname}/{name}/tags/list
+// ListTags GET /v2/{domainid}/{artifactname}/{imagename}/tags/list
 func (c *Controller) ListTags(ctx context.Context, req *ContainerReq) (*tagList, error) {
 	// TODO: 权限检查
 	var result = tagList{
@@ -604,7 +655,7 @@ func (c *Controller) ListTags(ctx context.Context, req *ContainerReq) (*tagList,
 	}
 
 	objects, err := c.artStore.Versions().Find(ctx, model.SearchVersionOption{
-		PackageId: pkgModel.ID, ArtifactID: req.View.ArtifactID,
+		PackageId: pkgModel.ID,
 	})
 	if err != nil {
 		return &result, nil

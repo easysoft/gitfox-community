@@ -34,12 +34,6 @@ type Interface interface {
 	// ParseSpaceView 解析空间+仓库参数，返回视图描述符（包含 artifactID 和路由信息）。
 	ParseSpaceView(ctx context.Context, req *model.SpaceRepoReq) (*adapter.ViewDescriptor, error)
 
-	// ParseContainerView 按作用域和视图名称解析 ViewDescriptor，供容器镜像路由使用。
-	// scope: "global" | "space" | "repo"
-	// spaceName / scopeRepoName 在对应 scope 下有值，global 时均为空字符串。
-	// view 不存在时直接返回 404，不自动创建。
-	ParseContainerView(ctx context.Context, scope, spaceName, scopeRepoName, viewname string) (*adapter.ViewDescriptor, error)
-
 	// ---- 制品查询 ----
 
 	// ListPackages 列出指定视图下的制品包，支持格式、关键字过滤。
@@ -59,6 +53,9 @@ type Interface interface {
 
 	// GetBlobHistory 获取制品资源的 blob 历史记录。
 	GetBlobHistory(ctx context.Context, assetId int64) ([]*model.ArtifactBlobRes, error)
+
+	// ListNodeInfo 兼容参考项目 `/artifacts/nodeInfo`，按 entity/node ID 批量查询节点详情。
+	ListNodeInfo(ctx context.Context, req *model.ListNodeInfoReq) ([]*model.ArtifactNodeInfo, error)
 
 	// ---- 上传/下载 ----
 
@@ -133,6 +130,15 @@ type Interface interface {
 	GarbageCollectExpiredViews(ctx context.Context) (int, error)
 
 	// ---- 容器镜像 ----
+
+	// ResolveGlobalArtifact 按 artifactName 解析 /v2/global 路由对应的制品库上下文。
+	ResolveGlobalArtifact(ctx context.Context, artifactName string) (*ContainerArtifactCtx, error)
+
+	// ResolveSpaceArtifact 按 (spaceID, artifactName) 解析 /v2/space{ID} 路由对应的制品库上下文。
+	ResolveSpaceArtifact(ctx context.Context, spaceID uint64, artifactName string) (*ContainerArtifactCtx, error)
+
+	// ResolveRepoArtifact 按 (repoID, artifactName) 解析 /v2/repo{ID} 路由对应的制品库上下文。
+	ResolveRepoArtifact(ctx context.Context, repoID uint64, artifactName string) (*ContainerArtifactCtx, error)
 
 	// ListContainerImages 列出容器镜像的 tag 元数据。
 	ListContainerImages(ctx context.Context, view *adapter.ViewDescriptor, packageName, version string) (*container.TagMetadata, error)

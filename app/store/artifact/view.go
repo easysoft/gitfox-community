@@ -21,6 +21,7 @@ func (c *views) Create(ctx context.Context, newObj *model.CreateArtifactView) (*
 	view.Type = string(newObj.Type)
 	view.Default = newObj.Default
 	view.Name = newObj.Name
+	view.Format = string(newObj.Format)
 	view.Description = newObj.Description
 	if err := c.db.WithContext(ctx).Create(&view).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)

@@ -82,7 +82,7 @@ type PackageInterface interface {
 type VersionInterface interface {
 	Create(ctx context.Context, newObj *model.CreateArtifactVersion) (*model.ArtifactVersion, error)
 	GetByID(ctx context.Context, versionId int64) (*model.ArtifactVersion, error)
-	GetByVersion(ctx context.Context, packageId, artifactID int64, version string) (*model.ArtifactVersion, error)
+	GetByVersion(ctx context.Context, packageId int64, version string) (*model.ArtifactVersion, error)
 	Update(ctx context.Context, ver *model.ArtifactVersion) error
 	DeleteById(ctx context.Context, versionId int64) error
 	DeleteByIds(ctx context.Context, versionIds ...int64) (int64, error)

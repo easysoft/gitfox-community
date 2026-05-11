@@ -26,6 +26,7 @@ artifact:
   view_scope_mismatch: "指定的制品视图与请求中的空间或仓库不匹配."
   view_create_error: "创建制品视图失败."
   view_expired_query_error: "查询过期视图失败."
+  view_format_invalid: "不支持的制品格式，仅支持: generic, raw, maven, container, helm, pypi, npm."
 
   # Parse & Upload
   space_id_required: "当 repoId 存在时，spaceId 是必填的."
@@ -89,6 +90,12 @@ artifact:
   # Container
   container_tag_not_found: "容器镜像标签资产未找到."
   container_image_query_error: "查询容器镜像失败."
+  container_domain_invalid: "镜像仓库路径格式无效，请检查前缀是否为 global / space{ID} / repo{ID}."
+  container_space_id_invalid: "镜像仓库路径中的空间 ID 无效."
+  container_repo_id_invalid: "镜像仓库路径中的仓库 ID 无效."
+  container_artifact_not_found: "指定的制品库不存在."
+  container_group_not_found: "制品库下未找到容器分组."
+  container_image_name_required: "镜像路径缺少制品名或镜像名."
 
   # Permission
   auth_required: "需要身份认证."

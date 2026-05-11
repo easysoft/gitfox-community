@@ -1,9 +1,9 @@
 package handler
 
 import (
-	"encoding/json"
 	"errors"
 	"net/http"
+	"strconv"
 	"strings"
 
 	ctnAdapter "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/adapter/container"
@@ -12,6 +12,7 @@ import (
 	artifactStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/artifact"
 	spaceStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/space"
 	pkgErrors "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 
 	"github.com/gin-gonic/gin"
@@ -59,13 +60,14 @@ func (h *ContainerHandler) HandleAPIBase(c *gin.Context) {
 // @Description 根据 digest 检查指定容器镜像空间下的 Blob 是否存在，返回 Content-Length 等元信息。
 // @Tags container
 // @Produce application/json
-// @Param space path string true "空间名称"
-// @Param name path string true "镜像名称"
+// @Param domainid path string true "作用域标识（global / space{ID} / repo{ID}）"
+// @Param artifactname path string true "制品库名称（ops_artifact.name）"
+// @Param imagename path string true "镜像名称"
 // @Param digest path string true "Blob 摘要 (如 sha256:abc123...)"
 // @Success 200 "Blob 存在，响应头包含 Content-Length 和 Docker-Content-Digest"
 // @Failure 401 {object} map[string]interface{} "未认证"
 // @Failure 404 {object} map[string]interface{} "Blob 不存在"
-// @Router /v2/{space}/{name}/blobs/{digest} [head]
+// @Router /v2/{domainid}/{artifactname}/{imagename}/blobs/{digest} [head]
 func (h *ContainerHandler) HandleBlobHead(c *gin.Context) {
 	ctx := c.Request.Context()
 	ctnReq, err := h.loadContainerRequest(c)
@@ -92,13 +94,14 @@ func (h *ContainerHandler) HandleBlobHead(c *gin.Context) {
 // @Description 根据 digest 下载指定容器镜像空间下的 Blob 内容（镜像层数据）。
 // @Tags container
 // @Produce application/octet-stream
-// @Param space path string true "空间名称"
-// @Param name path string true "镜像名称"
+// @Param domainid path string true "作用域标识（global / space{ID} / repo{ID}）"
+// @Param artifactname path string true "制品库名称（ops_artifact.name）"
+// @Param imagename path string true "镜像名称"
 // @Param digest path string true "Blob 摘要 (如 sha256:abc123...)"
 // @Success 200 {file} binary "Blob 内容"
 // @Failure 401 {object} map[string]interface{} "未认证"
 // @Failure 404 {object} map[string]interface{} "Blob 不存在"
-// @Router /v2/{space}/{name}/blobs/{digest} [get]
+// @Router /v2/{domainid}/{artifactname}/{imagename}/blobs/{digest} [get]
 func (h *ContainerHandler) HandleBlobGet(c *gin.Context) {
 	ctx := c.Request.Context()
 	ctnReq, err := h.loadContainerRequest(c)
@@ -124,13 +127,14 @@ func (h *ContainerHandler) HandleBlobGet(c *gin.Context) {
 // @Description 根据 digest 删除指定容器镜像空间下的 Blob。
 // @Tags container
 // @Produce application/json
-// @Param space path string true "空间名称"
-// @Param name path string true "镜像名称"
+// @Param domainid path string true "作用域标识（global / space{ID} / repo{ID}）"
+// @Param artifactname path string true "制品库名称（ops_artifact.name）"
+// @Param imagename path string true "镜像名称"
 // @Param digest path string true "Blob 摘要 (如 sha256:abc123...)"
 // @Success 202 "删除成功"
 // @Failure 401 {object} map[string]interface{} "未认证"
 // @Failure 404 {object} map[string]interface{} "Blob 不存在"
-// @Router /v2/{space}/{name}/blobs/{digest} [delete]
+// @Router /v2/{domainid}/{artifactname}/{imagename}/blobs/{digest} [delete]
 func (h *ContainerHandler) HandleBlobDelete(c *gin.Context) {
 	ctx := c.Request.Context()
 	ctnReq, err := h.loadContainerRequest(c)
@@ -153,13 +157,14 @@ func (h *ContainerHandler) HandleBlobDelete(c *gin.Context) {
 // @Tags container
 // @Accept application/octet-stream
 // @Produce application/json
-// @Param space path string true "空间名称"
-// @Param name path string true "镜像名称"
+// @Param domainid path string true "作用域标识（global / space{ID} / repo{ID}）"
+// @Param artifactname path string true "制品库名称（ops_artifact.name）"
+// @Param imagename path string true "镜像名称"
 // @Param digest query string false "Blob 摘要（传入时执行单次上传）"
 // @Success 202 "上传会话已创建，响应头包含 Location 和 Docker-Upload-UUID"
 // @Failure 401 {object} map[string]interface{} "未认证"
 // @Failure 404 {object} map[string]interface{} "空间或镜像不存在"
-// @Router /v2/{space}/{name}/blobs/uploads/ [post]
+// @Router /v2/{domainid}/{artifactname}/{imagename}/blobs/uploads/ [post]
 func (h *ContainerHandler) HandleBlobUploadStart(c *gin.Context) {
 	ctx := c.Request.Context()
 	// cross mount 不支持
@@ -201,14 +206,15 @@ func (h *ContainerHandler) HandleBlobUploadStart(c *gin.Context) {
 // @Tags container
 // @Accept application/octet-stream
 // @Produce application/json
-// @Param space path string true "空间名称"
-// @Param name path string true "镜像名称"
+// @Param domainid path string true "作用域标识（global / space{ID} / repo{ID}）"
+// @Param artifactname path string true "制品库名称（ops_artifact.name）"
+// @Param imagename path string true "镜像名称"
 // @Param uuid path string true "上传会话 UUID"
 // @Param _state query string true "上传状态 token"
 // @Success 202 "数据追加成功，响应头包含 Range 和 Docker-Upload-UUID"
 // @Failure 401 {object} map[string]interface{} "未认证"
 // @Failure 404 {object} map[string]interface{} "上传会话不存在"
-// @Router /v2/{space}/{name}/blobs/uploads/{uuid} [patch]
+// @Router /v2/{domainid}/{artifactname}/{imagename}/blobs/uploads/{uuid} [patch]
 func (h *ContainerHandler) HandleBlobUploadPatch(c *gin.Context) {
 	ctx := c.Request.Context()
 	log := logger.GetLoggerFromGin(c)
@@ -234,15 +240,16 @@ func (h *ContainerHandler) HandleBlobUploadPatch(c *gin.Context) {
 // @Tags container
 // @Accept application/octet-stream
 // @Produce application/json
-// @Param space path string true "空间名称"
-// @Param name path string true "镜像名称"
+// @Param domainid path string true "作用域标识（global / space{ID} / repo{ID}）"
+// @Param artifactname path string true "制品库名称（ops_artifact.name）"
+// @Param imagename path string true "镜像名称"
 // @Param uuid path string true "上传会话 UUID"
 // @Param digest query string true "最终 Blob 摘要"
 // @Param _state query string true "上传状态 token"
 // @Success 201 "上传完成，响应头包含 Docker-Content-Digest 和 Location"
 // @Failure 401 {object} map[string]interface{} "未认证"
 // @Failure 404 {object} map[string]interface{} "上传会话不存在"
-// @Router /v2/{space}/{name}/blobs/uploads/{uuid} [put]
+// @Router /v2/{domainid}/{artifactname}/{imagename}/blobs/uploads/{uuid} [put]
 func (h *ContainerHandler) HandleBlobUploadFinish(c *gin.Context) {
 	ctx := c.Request.Context()
 	log := logger.GetLoggerFromGin(c)
@@ -267,14 +274,15 @@ func (h *ContainerHandler) HandleBlobUploadFinish(c *gin.Context) {
 // @Description 取消正在进行的分块上传会话，释放已上传的临时数据。
 // @Tags container
 // @Produce application/json
-// @Param space path string true "空间名称"
-// @Param name path string true "镜像名称"
+// @Param domainid path string true "作用域标识（global / space{ID} / repo{ID}）"
+// @Param artifactname path string true "制品库名称（ops_artifact.name）"
+// @Param imagename path string true "镜像名称"
 // @Param uuid path string true "上传会话 UUID"
 // @Param _state query string true "上传状态 token"
 // @Success 204 "取消成功"
 // @Failure 401 {object} map[string]interface{} "未认证"
 // @Failure 404 {object} map[string]interface{} "上传会话不存在"
-// @Router /v2/{space}/{name}/blobs/uploads/{uuid} [delete]
+// @Router /v2/{domainid}/{artifactname}/{imagename}/blobs/uploads/{uuid} [delete]
 func (h *ContainerHandler) HandleBlobUploadCancel(c *gin.Context) {
 	ctx := c.Request.Context()
 	uploadReq, err := h.loadUploadRequest(c, true)
@@ -296,13 +304,14 @@ func (h *ContainerHandler) HandleBlobUploadCancel(c *gin.Context) {
 // @Description 查询分块上传会话的当前状态，返回已上传的字节范围。
 // @Tags container
 // @Produce application/json
-// @Param space path string true "空间名称"
-// @Param name path string true "镜像名称"
+// @Param domainid path string true "作用域标识（global / space{ID} / repo{ID}）"
+// @Param artifactname path string true "制品库名称（ops_artifact.name）"
+// @Param imagename path string true "镜像名称"
 // @Param uuid path string true "上传会话 UUID"
 // @Success 204 "查询成功，响应头包含 Range 和 Docker-Upload-UUID"
 // @Failure 401 {object} map[string]interface{} "未认证"
 // @Failure 404 {object} map[string]interface{} "上传会话不存在"
-// @Router /v2/{space}/{name}/blobs/uploads/{uuid} [get]
+// @Router /v2/{domainid}/{artifactname}/{imagename}/blobs/uploads/{uuid} [get]
 func (h *ContainerHandler) HandleBlobUploadStatus(c *gin.Context) {
 	ctx := c.Request.Context()
 	uploadReq, err := h.loadUploadRequest(c, false)
@@ -324,13 +333,14 @@ func (h *ContainerHandler) HandleBlobUploadStatus(c *gin.Context) {
 // @Description 根据 reference（tag 或 digest）检查 Manifest 是否存在，返回 Content-Type 和 Docker-Content-Digest。
 // @Tags container
 // @Produce application/vnd.docker.distribution.manifest.v2+json
-// @Param space path string true "空间名称"
-// @Param name path string true "镜像名称"
+// @Param domainid path string true "作用域标识（global / space{ID} / repo{ID}）"
+// @Param artifactname path string true "制品库名称（ops_artifact.name）"
+// @Param imagename path string true "镜像名称"
 // @Param reference path string true "引用（tag 名称或 digest）"
 // @Success 200 "Manifest 存在，响应头包含 Content-Length 和 Docker-Content-Digest"
 // @Failure 401 {object} map[string]interface{} "未认证"
 // @Failure 404 {object} map[string]interface{} "Manifest 不存在"
-// @Router /v2/{space}/{name}/manifests/{reference} [head]
+// @Router /v2/{domainid}/{artifactname}/{imagename}/manifests/{reference} [head]
 func (h *ContainerHandler) HandleManifestHead(c *gin.Context) {
 	ctx := c.Request.Context()
 	manifestReq, err := h.loadManifestRequest(c)
@@ -361,13 +371,14 @@ func (h *ContainerHandler) HandleManifestHead(c *gin.Context) {
 // @Description 根据 reference（tag 或 digest）下载容器镜像的 Manifest 内容。
 // @Tags container
 // @Produce application/vnd.docker.distribution.manifest.v2+json
-// @Param space path string true "空间名称"
-// @Param name path string true "镜像名称"
+// @Param domainid path string true "作用域标识（global / space{ID} / repo{ID}）"
+// @Param artifactname path string true "制品库名称（ops_artifact.name）"
+// @Param imagename path string true "镜像名称"
 // @Param reference path string true "引用（tag 名称或 digest）"
 // @Success 200 {object} map[string]interface{} "Manifest JSON 内容"
 // @Failure 401 {object} map[string]interface{} "未认证"
 // @Failure 404 {object} map[string]interface{} "Manifest 不存在"
-// @Router /v2/{space}/{name}/manifests/{reference} [get]
+// @Router /v2/{domainid}/{artifactname}/{imagename}/manifests/{reference} [get]
 func (h *ContainerHandler) HandleManifestGet(c *gin.Context) {
 	ctx := c.Request.Context()
 	manifestReq, err := h.loadManifestRequest(c)
@@ -399,13 +410,14 @@ func (h *ContainerHandler) HandleManifestGet(c *gin.Context) {
 // @Tags container
 // @Accept application/vnd.docker.distribution.manifest.v2+json
 // @Produce application/json
-// @Param space path string true "空间名称"
-// @Param name path string true "镜像名称"
+// @Param domainid path string true "作用域标识（global / space{ID} / repo{ID}）"
+// @Param artifactname path string true "制品库名称（ops_artifact.name）"
+// @Param imagename path string true "镜像名称"
 // @Param reference path string true "引用（tag 名称或 digest）"
 // @Success 201 "上传成功，响应头包含 Docker-Content-Digest 和 Location"
 // @Failure 401 {object} map[string]interface{} "未认证"
 // @Failure 400 {object} map[string]interface{} "Manifest 格式错误"
-// @Router /v2/{space}/{name}/manifests/{reference} [put]
+// @Router /v2/{domainid}/{artifactname}/{imagename}/manifests/{reference} [put]
 func (h *ContainerHandler) HandleManifestPut(c *gin.Context) {
 	ctx := c.Request.Context()
 	manifestReq, err := h.loadManifestRequest(c)
@@ -432,13 +444,14 @@ func (h *ContainerHandler) HandleManifestPut(c *gin.Context) {
 // @Description 根据 reference（tag 或 digest）删除容器镜像的 Manifest 及关联数据。
 // @Tags container
 // @Produce application/json
-// @Param space path string true "空间名称"
-// @Param name path string true "镜像名称"
+// @Param domainid path string true "作用域标识（global / space{ID} / repo{ID}）"
+// @Param artifactname path string true "制品库名称（ops_artifact.name）"
+// @Param imagename path string true "镜像名称"
 // @Param reference path string true "引用（tag 名称或 digest）"
 // @Success 202 "删除成功"
 // @Failure 401 {object} map[string]interface{} "未认证"
 // @Failure 404 {object} map[string]interface{} "Manifest 不存在"
-// @Router /v2/{space}/{name}/manifests/{reference} [delete]
+// @Router /v2/{domainid}/{artifactname}/{imagename}/manifests/{reference} [delete]
 func (h *ContainerHandler) HandleManifestDelete(c *gin.Context) {
 	ctx := c.Request.Context()
 	manifestReq, err := h.loadManifestRequest(c)
@@ -465,12 +478,13 @@ func (h *ContainerHandler) HandleManifestDelete(c *gin.Context) {
 // @Description 列出指定容器镜像的所有 Tag 列表。
 // @Tags container
 // @Produce application/json
-// @Param space path string true "空间名称"
-// @Param name path string true "镜像名称"
+// @Param domainid path string true "作用域标识（global / space{ID} / repo{ID}）"
+// @Param artifactname path string true "制品库名称（ops_artifact.name）"
+// @Param imagename path string true "镜像名称"
 // @Success 200 {object} map[string]interface{} "Tag 列表，格式 {name: string, tags: []string}"
 // @Failure 401 {object} map[string]interface{} "未认证"
 // @Failure 404 {object} map[string]interface{} "镜像不存在"
-// @Router /v2/{space}/{name}/tags/list [get]
+// @Router /v2/{domainid}/{artifactname}/{imagename}/tags/list [get]
 func (h *ContainerHandler) HandleListTag(c *gin.Context) {
 	ctx := c.Request.Context()
 	ctnReq, err := h.loadContainerRequest(c)
@@ -488,59 +502,82 @@ func (h *ContainerHandler) HandleListTag(c *gin.Context) {
 
 // ---- 内部方法 ----
 
-// detectScope 从 gin 路由 FullPath 前缀判断当前请求的作用域。
-// 路由前缀固定为 /v2/global/、/v2/space/、/v2/repo/，不需要额外中间件。
-func detectScope(c *gin.Context) string {
-	p := c.FullPath()
-	switch {
-	case strings.HasPrefix(p, "/v2/global/"):
-		return "global"
-	case strings.HasPrefix(p, "/v2/space/"):
-		return "space"
-	default:
-		return "repo"
-	}
-}
-
-// loadContainerRequest 从 Gin context 解析容器请求参数。
+// loadContainerRequest 解析容器请求参数。
+// 路由形式：/v2/:domainid/:artifactname/:imagename/...
+// :domainid 取值：
 //
-// 路由格式：
-//
-//	/v2/global/{viewname}/{groupname}/{imagename}
-//	/v2/space/{spaceName}/{viewname}/{groupname}/{imagename}
-//	/v2/repo/{spaceName}/{repoName}/{viewname}/{groupname}/{imagename}
-//
-// groupname 和 imagename 均作为独立的具名参数绑定，不再使用 catch-all *repopath。
+//	"global"        → 全局作用域
+//	"space{ID}"     → 空间作用域
+//	"repo{ID}"      → 仓库作用域
 func (h *ContainerHandler) loadContainerRequest(c *gin.Context) (*ctnCtrl.ContainerReq, error) {
 	log := logger.GetLoggerFromGin(c)
-
-	scope := detectScope(c)
-	viewname := c.Param("viewname")
-	spaceName := c.Param("spaceName") // scope=global 时为 ""
-	scopeRepo := c.Param("repoName")  // scope=global/space 时为 ""
-
-	groupName := c.Param("groupname")
-	imageName := c.Param("imagename")
-	if groupName == "" || imageName == "" {
-		return nil, ctnAdapter.ErrNameInvalid.WithDetail("groupname and imagename are required")
-	}
-
 	ctx := c.Request.Context()
-	view, err := h.artSvc.ParseContainerView(ctx, scope, spaceName, scopeRepo, viewname)
-	if err != nil {
-		log.Errorf("【container】parse view failed: scope=%s space=%s repo=%s view=%s err=%v",
-			scope, spaceName, scopeRepo, viewname, err)
-		return nil, ctnAdapter.ErrNameUnknown.WithDetail("view not found: " + viewname)
+
+	// 路径参数提取：artifactname / imagename 缺失直接返回 OCI NAME_INVALID
+	domainID := c.Param("domainid")
+	artifactName := c.Param("artifactname")
+	imageName := c.Param("imagename")
+	if artifactName == "" || imageName == "" {
+		return nil, ctnAdapter.ErrNameInvalid.WithDetail(i18n.TGin(c, i18n.ArtifactContainerImageNameRequired))
 	}
 
+	// 根据 :domainid 分发到 service 层三个方法
+	var (
+		artCtx *artifactSvc.ContainerArtifactCtx
+		err    error
+		scope  string
+	)
+	switch {
+	case domainID == "global":
+		// 全局作用域：直接按 artifactName 查
+		scope = "global"
+		artCtx, err = h.artSvc.ResolveGlobalArtifact(ctx, artifactName)
+
+	case strings.HasPrefix(domainID, "space"):
+		// 空间作用域：去掉 "space" 前缀后必须全数字
+		idStr := strings.TrimPrefix(domainID, "space")
+		id, parseErr := strconv.ParseUint(idStr, 10, 64)
+		if parseErr != nil || idStr == "" {
+			log.Warnf("【container】invalid space domainid: %q", domainID)
+			return nil, ctnAdapter.ErrNameUnknown.
+				WithDetail(i18n.TGin(c, i18n.ArtifactContainerSpaceIdInvalid))
+		}
+		scope = "space"
+		artCtx, err = h.artSvc.ResolveSpaceArtifact(ctx, id, artifactName)
+
+	case strings.HasPrefix(domainID, "repo"):
+		// 仓库作用域：去掉 "repo" 前缀后必须全数字
+		idStr := strings.TrimPrefix(domainID, "repo")
+		id, parseErr := strconv.ParseUint(idStr, 10, 64)
+		if parseErr != nil || idStr == "" {
+			log.Warnf("【container】invalid repo domainid: %q", domainID)
+			return nil, ctnAdapter.ErrNameUnknown.
+				WithDetail(i18n.TGin(c, i18n.ArtifactContainerRepoIdInvalid))
+		}
+		scope = "repo"
+		artCtx, err = h.artSvc.ResolveRepoArtifact(ctx, id, artifactName)
+
+	default:
+		// 未知前缀：统一返回 NAME_UNKNOWN
+		log.Warnf("【container】invalid domainid: %q", domainID)
+		return nil, ctnAdapter.ErrNameUnknown.
+			WithDetail(i18n.TGin(c, i18n.ArtifactContainerDomainInvalid))
+	}
+
+	if err != nil {
+		log.Errorf("【container】resolve artifact failed: domainid=%s artifact=%s err=%v",
+			domainID, artifactName, err)
+		return nil, ctnAdapter.ErrNameUnknown.WithDetail(err.Error())
+	}
+
+	// 按新字段语义构造 ContainerReq：GroupName 由 service 从数据库填充，RepoName 即 OCI image 名。
 	return &ctnCtrl.ContainerReq{
-		Scope:     scope,
-		SpaceName: spaceName,
-		ScopeRepo: scopeRepo,
-		ViewName:  viewname,
-		GroupName: groupName,
-		RepoName:  imageName,
-		View:      view,
+		Scope:        scope,
+		ScopeID:      artCtx.ScopeID(),
+		ArtifactName: artifactName,
+		GroupName:    artCtx.GroupName,
+		RepoName:     imageName,
+		View:         artCtx.View,
 	}, nil
 }
 
@@ -589,23 +626,15 @@ func (h *ContainerHandler) loadUploadRequest(c *gin.Context, requireState bool) 
 }
 
 // renderContainerErr 按 OCI 规范渲染错误（Docker Distribution Spec 固定 JSON 格式）。
+//
+// 错误翻译统一由 adapter 层 `ctnAdapter.RenderError` 承担：
+//   - `*RegistryErr`       → 直接使用其 HTTPStatus/Code
+//   - `ErrResourceNotFound` → 兜底为 404 `BLOB_UNKNOWN`
+//   - 其它                 → 500 `UNKNOWN`
+//
+// manifest / name 语义上的特化（如 not found → `MANIFEST_UNKNOWN` / `NAME_UNKNOWN`），
+// 由各 Handle 入口在调用本函数前自行替换错误值，保持单一翻译源。
 func renderContainerErr(c *gin.Context, err error) {
-	e := translateErr(err)
-	c.Writer.Header().Set("Content-Type", "application/json")
-	c.Writer.WriteHeader(e.HTTPStatusValue)
-	_ = json.NewEncoder(c.Writer).Encode(map[string]interface{}{
-		"errors": []*ctnAdapter.RegistryErr{e},
-	})
+	ctnAdapter.RenderError(c.Request.Context(), c.Writer, err)
 	c.Abort()
-}
-
-func translateErr(err error) *ctnAdapter.RegistryErr {
-	var expect *ctnAdapter.RegistryErr
-	if errors.As(err, &expect) {
-		return expect
-	}
-	if pkgErrors.Is(err, pkgErrors.ErrResourceNotFound) {
-		return ctnAdapter.ErrBlobUnknown.WithDetail("resource not found")
-	}
-	return ctnAdapter.ErrUnknown.WithDetail(err.Error())
 }
