@@ -2587,6 +2587,52 @@ const docTemplate = `{
                 }
             }
         },
+        "/repos/import": {
+            "post": {
+                "description": "基于传入参数导入远端Git仓库，自动处理GitIgnore模板、License协议、README文件生成，支持派生仓库配置",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "repos"
+                ],
+                "summary": "导入远端仓库",
+                "parameters": [
+                    {
+                        "description": "导入仓库请求参数",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.ImportInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "导入成功（返回仓库核心信息）",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.RepositoryOutput"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/repos/list": {
             "post": {
                 "description": "分页查询仓库列表",
@@ -10678,7 +10724,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/v2/{space}/{name}/blobs/uploads/": {
+        "/v2/{domainid}/{artifactname}/{imagename}/blobs/uploads/": {
             "post": {
                 "description": "发起一个新的 Blob 上传会话。如果 query 中包含 digest 参数则执行单次上传（monolithic），否则初始化分块上传。",
                 "consumes": [
@@ -10694,15 +10740,22 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "空间名称",
-                        "name": "space",
+                        "description": "作用域标识（global / space{ID} / repo{ID}）",
+                        "name": "domainid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "制品库名称（ops_artifact.name）",
+                        "name": "artifactname",
                         "in": "path",
                         "required": true
                     },
                     {
                         "type": "string",
                         "description": "镜像名称",
-                        "name": "name",
+                        "name": "imagename",
                         "in": "path",
                         "required": true
                     },
@@ -10734,7 +10787,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/v2/{space}/{name}/blobs/uploads/{uuid}": {
+        "/v2/{domainid}/{artifactname}/{imagename}/blobs/uploads/{uuid}": {
             "get": {
                 "description": "查询分块上传会话的当前状态，返回已上传的字节范围。",
                 "produces": [
@@ -10747,15 +10800,22 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "空间名称",
-                        "name": "space",
+                        "description": "作用域标识（global / space{ID} / repo{ID}）",
+                        "name": "domainid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "制品库名称（ops_artifact.name）",
+                        "name": "artifactname",
                         "in": "path",
                         "required": true
                     },
                     {
                         "type": "string",
                         "description": "镜像名称",
-                        "name": "name",
+                        "name": "imagename",
                         "in": "path",
                         "required": true
                     },
@@ -10802,15 +10862,22 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "空间名称",
-                        "name": "space",
+                        "description": "作用域标识（global / space{ID} / repo{ID}）",
+                        "name": "domainid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "制品库名称（ops_artifact.name）",
+                        "name": "artifactname",
                         "in": "path",
                         "required": true
                     },
                     {
                         "type": "string",
                         "description": "镜像名称",
-                        "name": "name",
+                        "name": "imagename",
                         "in": "path",
                         "required": true
                     },
@@ -10868,15 +10935,22 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "空间名称",
-                        "name": "space",
+                        "description": "作用域标识（global / space{ID} / repo{ID}）",
+                        "name": "domainid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "制品库名称（ops_artifact.name）",
+                        "name": "artifactname",
                         "in": "path",
                         "required": true
                     },
                     {
                         "type": "string",
                         "description": "镜像名称",
-                        "name": "name",
+                        "name": "imagename",
                         "in": "path",
                         "required": true
                     },
@@ -10930,15 +11004,22 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "空间名称",
-                        "name": "space",
+                        "description": "作用域标识（global / space{ID} / repo{ID}）",
+                        "name": "domainid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "制品库名称（ops_artifact.name）",
+                        "name": "artifactname",
                         "in": "path",
                         "required": true
                     },
                     {
                         "type": "string",
                         "description": "镜像名称",
-                        "name": "name",
+                        "name": "imagename",
                         "in": "path",
                         "required": true
                     },
@@ -10978,7 +11059,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/v2/{space}/{name}/blobs/{digest}": {
+        "/v2/{domainid}/{artifactname}/{imagename}/blobs/{digest}": {
             "get": {
                 "description": "根据 digest 下载指定容器镜像空间下的 Blob 内容（镜像层数据）。",
                 "produces": [
@@ -10991,15 +11072,22 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "空间名称",
-                        "name": "space",
+                        "description": "作用域标识（global / space{ID} / repo{ID}）",
+                        "name": "domainid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "制品库名称（ops_artifact.name）",
+                        "name": "artifactname",
                         "in": "path",
                         "required": true
                     },
                     {
                         "type": "string",
                         "description": "镜像名称",
-                        "name": "name",
+                        "name": "imagename",
                         "in": "path",
                         "required": true
                     },
@@ -11046,15 +11134,22 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "空间名称",
-                        "name": "space",
+                        "description": "作用域标识（global / space{ID} / repo{ID}）",
+                        "name": "domainid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "制品库名称（ops_artifact.name）",
+                        "name": "artifactname",
                         "in": "path",
                         "required": true
                     },
                     {
                         "type": "string",
                         "description": "镜像名称",
-                        "name": "name",
+                        "name": "imagename",
                         "in": "path",
                         "required": true
                     },
@@ -11098,15 +11193,22 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "空间名称",
-                        "name": "space",
+                        "description": "作用域标识（global / space{ID} / repo{ID}）",
+                        "name": "domainid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "制品库名称（ops_artifact.name）",
+                        "name": "artifactname",
                         "in": "path",
                         "required": true
                     },
                     {
                         "type": "string",
                         "description": "镜像名称",
-                        "name": "name",
+                        "name": "imagename",
                         "in": "path",
                         "required": true
                     },
@@ -11139,7 +11241,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/v2/{space}/{name}/manifests/{reference}": {
+        "/v2/{domainid}/{artifactname}/{imagename}/manifests/{reference}": {
             "get": {
                 "description": "根据 reference（tag 或 digest）下载容器镜像的 Manifest 内容。",
                 "produces": [
@@ -11152,15 +11254,22 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "空间名称",
-                        "name": "space",
+                        "description": "作用域标识（global / space{ID} / repo{ID}）",
+                        "name": "domainid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "制品库名称（ops_artifact.name）",
+                        "name": "artifactname",
                         "in": "path",
                         "required": true
                     },
                     {
                         "type": "string",
                         "description": "镜像名称",
-                        "name": "name",
+                        "name": "imagename",
                         "in": "path",
                         "required": true
                     },
@@ -11211,15 +11320,22 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "空间名称",
-                        "name": "space",
+                        "description": "作用域标识（global / space{ID} / repo{ID}）",
+                        "name": "domainid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "制品库名称（ops_artifact.name）",
+                        "name": "artifactname",
                         "in": "path",
                         "required": true
                     },
                     {
                         "type": "string",
                         "description": "镜像名称",
-                        "name": "name",
+                        "name": "imagename",
                         "in": "path",
                         "required": true
                     },
@@ -11263,15 +11379,22 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "空间名称",
-                        "name": "space",
+                        "description": "作用域标识（global / space{ID} / repo{ID}）",
+                        "name": "domainid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "制品库名称（ops_artifact.name）",
+                        "name": "artifactname",
                         "in": "path",
                         "required": true
                     },
                     {
                         "type": "string",
                         "description": "镜像名称",
-                        "name": "name",
+                        "name": "imagename",
                         "in": "path",
                         "required": true
                     },
@@ -11315,15 +11438,22 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "空间名称",
-                        "name": "space",
+                        "description": "作用域标识（global / space{ID} / repo{ID}）",
+                        "name": "domainid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "制品库名称（ops_artifact.name）",
+                        "name": "artifactname",
                         "in": "path",
                         "required": true
                     },
                     {
                         "type": "string",
                         "description": "镜像名称",
-                        "name": "name",
+                        "name": "imagename",
                         "in": "path",
                         "required": true
                     },
@@ -11356,7 +11486,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/v2/{space}/{name}/tags/list": {
+        "/v2/{domainid}/{artifactname}/{imagename}/tags/list": {
             "get": {
                 "description": "列出指定容器镜像的所有 Tag 列表。",
                 "produces": [
@@ -11369,15 +11499,22 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "空间名称",
-                        "name": "space",
+                        "description": "作用域标识（global / space{ID} / repo{ID}）",
+                        "name": "domainid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "制品库名称（ops_artifact.name）",
+                        "name": "artifactname",
                         "in": "path",
                         "required": true
                     },
                     {
                         "type": "string",
                         "description": "镜像名称",
-                        "name": "name",
+                        "name": "imagename",
                         "in": "path",
                         "required": true
                     }
@@ -11547,6 +11684,27 @@ const docTemplate = `{
                 "OrderAsc",
                 "OrderDesc",
                 "orderNone"
+            ]
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.RepoProviderType": {
+            "type": "string",
+            "enum": [
+                "github",
+                "gitlab",
+                "bitbucket",
+                "stash",
+                "gitea",
+                "gogs",
+                "azure"
+            ],
+            "x-enum-varnames": [
+                "RepoProviderTypeGitHub",
+                "RepoProviderTypeGitLab",
+                "RepoProviderTypeBitbucket",
+                "RepoProviderTypeStash",
+                "RepoProviderTypeGitea",
+                "RepoProviderTypeGogs",
+                "RepoProviderTypeAzure"
             ]
         },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.RespCode": {
@@ -13330,6 +13488,26 @@ const docTemplate = `{
                 }
             }
         },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.ImportInput": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "identifier": {
+                    "type": "string"
+                },
+                "provider": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.Provider"
+                },
+                "providerRepo": {
+                    "type": "string"
+                },
+                "spaceID": {
+                    "type": "integer"
+                }
+            }
+        },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.Merge": {
             "type": "object",
             "properties": {
@@ -13513,6 +13691,23 @@ const docTemplate = `{
                 }
             }
         },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.Provider": {
+            "type": "object",
+            "properties": {
+                "host": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "type": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.RepoProviderType"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.Repo": {
             "type": "object",
             "properties": {
@@ -13561,6 +13756,88 @@ const docTemplate = `{
                 },
                 "id": {
                     "type": "integer"
+                },
+                "mirror": {
+                    "type": "boolean"
+                },
+                "mutex": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "path": {
+                    "type": "string"
+                },
+                "product": {
+                    "type": "string"
+                },
+                "spaceID": {
+                    "type": "integer"
+                },
+                "status": {
+                    "description": "状态码用 int 类型（兼容枚举映射）",
+                    "type": "integer"
+                },
+                "synced": {
+                    "type": "integer"
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.RepositoryOutput": {
+            "type": "object",
+            "properties": {
+                "acl": {
+                    "type": "string"
+                },
+                "createdBy": {
+                    "type": "string"
+                },
+                "createdDate": {
+                    "description": "允许 NULL，用指针类型",
+                    "type": "string"
+                },
+                "defaultBranch": {
+                    "type": "string"
+                },
+                "deleted": {
+                    "type": "integer"
+                },
+                "desc": {
+                    "type": "string"
+                },
+                "editedBy": {
+                    "type": "string"
+                },
+                "editedDate": {
+                    "description": "允许 NULL，用指针类型",
+                    "type": "string"
+                },
+                "empty": {
+                    "type": "boolean"
+                },
+                "forkID": {
+                    "description": "允许 NULL，用指针类型",
+                    "type": "integer"
+                },
+                "gitSSHURL": {
+                    "type": "string"
+                },
+                "gitUID": {
+                    "type": "string"
+                },
+                "gitURL": {
+                    "description": "git urls",
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "importing": {
+                    "type": "boolean"
+                },
+                "isPublic": {
+                    "type": "boolean"
                 },
                 "mirror": {
                     "type": "boolean"
