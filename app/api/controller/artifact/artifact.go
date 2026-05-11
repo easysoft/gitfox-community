@@ -260,14 +260,12 @@ func (c *Controller) DownloadAsset(ctx *gin.Context) {
 }
 
 // @Summary 上传制品
-// @Description 上传制品文件（multipart/form-data）
+// @Description 上传制品文件（multipart/form-data）。artifactID 必传，用于精确定位制品库视图。
 // @Tags artifacts
 // @Accept multipart/form-data
 // @Produce application/json
 // @Param format path string true "制品格式"
-// @Param spaceId formData int false "空间ID"
-// @Param repoId formData int false "仓库ID"
-// @Param artifactID formData int false "视图ID，> 0 时优先按该视图上传"
+// @Param artifactID formData int true "视图ID（必传，> 0）"
 // @Success 200 {object} resp.ObjectResponse "成功"
 // @Failure 400 {object} resp.ObjectResponse "参数错误"
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
@@ -279,9 +277,12 @@ func (c *Controller) Upload(ctx *gin.Context) {
 		resp.BadRequest(ctx, err)
 		return
 	}
+	if err := reqBody.Validate(); err != nil {
+		resp.BadRequest(ctx, err)
+		return
+	}
+
 	view, err := c.artSvc.ParseSpaceView(ctx, &model.SpaceRepoReq{
-		SpaceID:    reqBody.SpaceID,
-		RepoID:     reqBody.RepoID,
 		ArtifactID: reqBody.ArtifactID,
 	})
 	if err != nil {
@@ -294,7 +295,13 @@ func (c *Controller) Upload(ctx *gin.Context) {
 
 	assets, err := c.artSvc.Upload(ctx, view, format, ctx.Request)
 	if err != nil {
-		resp.InternalError(ctx, err)
+		// 若 err 在 adapter / service 层已显式携带 HTTP 状态（如 400），按其渲染；
+		// 否则按 500 渲染。i18n key 通过 GetI18nKey 透传到前端。
+		if errors.GetHttpStatus(err) == http.StatusOK {
+			resp.InternalError(ctx, err)
+		} else {
+			resp.Error(ctx, err)
+		}
 		return
 	}
 	resp.OK(ctx, i18n.ArtifactUploadSuccess, assets)

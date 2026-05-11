@@ -885,16 +885,28 @@ func (s *Service) Upload(ctx context.Context, view *adapter.ViewDescriptor, form
 	}
 
 	if _, err := uploader.Serve(ctx, req); err != nil {
-		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactUploadServeError)
+		return nil, wrapUploadError(err, i18n.ArtifactUploadServeError)
 	}
 	if err := uploader.IsValid(ctx); err != nil {
 		_ = uploader.Cancel(ctx)
-		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactUploadValidateError)
+		return nil, wrapUploadError(err, i18n.ArtifactUploadValidateError)
 	}
 	if err := uploader.Save(ctx); err != nil {
-		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactUploadSaveError)
+		return nil, wrapUploadError(err, i18n.ArtifactUploadSaveError)
 	}
 	return uploader.GetAssets(), nil
+}
+
+// wrapUploadError 若 err 已带有专属 i18n key（非默认），直接透传，
+// 否则套上通用 fallback，避免覆盖 adapter 层给出的精准提示。
+func wrapUploadError(err error, fallback i18n.I18nKey) error {
+	if err == nil {
+		return nil
+	}
+	if key := pkgErrors.GetI18nKey(err); key != "" && key != i18n.ErrorDefault {
+		return err
+	}
+	return pkgErrors.WithI18nKey(err, fallback)
 }
 
 // ViewExists 检查指定 artifactID 是否存在（仅 active view）。

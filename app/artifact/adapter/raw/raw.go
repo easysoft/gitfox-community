@@ -11,6 +11,8 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/adapter/request"
 	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
 	artifactStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/artifact"
+	pkgErrors "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/storage"
 )
 
@@ -76,24 +78,39 @@ func (h *uploader) validateForm(_ context.Context, req *http.Request) error {
 	version := req.FormValue("version")
 
 	if name == "" {
-		return fmt.Errorf("%w: required field: name", adapter.ErrMissFormField)
+		return badRequest(
+			fmt.Errorf("%w: required field: name", adapter.ErrMissFormField),
+			i18n.ArtifactUploadNameRequired,
+		)
 	}
 	if ok, _ := regexp.MatchString(_regexPackageName, name); !ok {
-		return fmt.Errorf("%w: require regex pattern: %s", adapter.ErrInvalidPackageName, _regexPackageName)
+		return badRequest(
+			fmt.Errorf("%w: require regex pattern: %s", adapter.ErrInvalidPackageName, _regexPackageName),
+			i18n.ArtifactUploadNameInvalid,
+		)
 	}
 	h.descriptor.Name = name
 
 	if version == "" {
-		return fmt.Errorf("%w: required field: version", adapter.ErrMissFormField)
+		return badRequest(
+			fmt.Errorf("%w: required field: version", adapter.ErrMissFormField),
+			i18n.ArtifactUploadVersionInvalid,
+		)
 	}
 	if ok, _ := regexp.MatchString(_regexPackageVersion, version); !ok {
-		return fmt.Errorf("%w: require regex pattern: %s", adapter.ErrInvalidPackageVersion, _regexPackageVersion)
+		return badRequest(
+			fmt.Errorf("%w: require regex pattern: %s", adapter.ErrInvalidPackageVersion, _regexPackageVersion),
+			i18n.ArtifactUploadVersionInvalid,
+		)
 	}
 	h.descriptor.Version = version
 
 	if namespace != "" {
 		if ok, _ := regexp.MatchString(_regexPackageGroup, namespace); !ok {
-			return adapter.ErrInvalidGroupName
+			return badRequest(
+				fmt.Errorf("%w: require regex pattern: %s", adapter.ErrInvalidGroupName, _regexPackageGroup),
+				i18n.ArtifactUploadRawGroupInvalid,
+			)
 		}
 		h.descriptor.Namespace = namespace
 	}
@@ -121,4 +138,9 @@ func (h *uploader) Cancel(ctx context.Context) error {
 
 func (h *uploader) GetAssets() []*adapter.SavedAsset {
 	return h.uploadReq.Assets
+}
+
+// badRequest 将错误标记为 400 并挂上 i18n key，供 controller 层据此渲染前端提示。
+func badRequest(err error, key i18n.I18nKey) error {
+	return pkgErrors.WithHttpStatus(pkgErrors.WithI18nKey(err, key), http.StatusBadRequest)
 }

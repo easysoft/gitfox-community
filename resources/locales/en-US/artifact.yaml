@@ -37,6 +37,16 @@ artifact:
   upload_serve_error: "Artifact upload processing failed."
   upload_validate_error: "Artifact upload validation failed."
   upload_save_error: "Failed to save artifact."
+  upload_artifactid_required: "artifactID is required for uploading; please select a target artifact repository and try again."
+  upload_name_required: "Package 'name' is required for raw uploads."
+  upload_name_invalid: "The 'name' for raw uploads is invalid: only alphanumerics, dashes and underscores are allowed, and no dots."
+  upload_version_invalid: "A valid 'version' is required for raw uploads (alphanumerics, dashes, underscores and dots only)."
+  upload_raw_group_invalid: "The 'group' for raw uploads must be a dot-separated path (each segment may contain alphanumerics, dashes and underscores only)."
+  upload_group_required: "Either 'group' or 'groupId' is required for uploading."
+  upload_group_id_invalid: "The specified groupId is invalid or does not exist."
+  upload_group_name_invalid: "The specified group path is malformed; it must be a dot-separated path (each segment may contain alphanumerics, dashes and underscores only)."
+  upload_group_path_not_found: "The specified group path does not exist under the current artifact repository; please create the group first or verify the artifactID."
+  upload_group_artifact_mismatch: "The specified group does not belong to the current artifact repository; please verify artifactID and group ownership."
 
   # Package & Version
   package_query_error: "Failed to query artifact package."

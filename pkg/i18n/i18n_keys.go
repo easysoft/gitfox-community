@@ -77,6 +77,16 @@ const (
 	ArtifactTreeNodeRecursiveConflict       I18nKey = "artifact.tree_node_recursive_conflict"         // 传入 nodeId 时不支持递归查询
 	ArtifactTreeRefreshError                I18nKey = "artifact.tree_refresh_error"                   // 制品树刷新失败.
 	ArtifactUnsupportedFormat               I18nKey = "artifact.unsupported_format"                   // 不支持的制品格式.
+	ArtifactUploadArtifactidRequired        I18nKey = "artifact.upload_artifactid_required"           // 上传制品必须传入 artifactID 且必须大于 0.
+	ArtifactUploadNameInvalid               I18nKey = "artifact.upload_name_invalid"                  // raw 制品的包名 name 格式不合法.
+	ArtifactUploadNameRequired              I18nKey = "artifact.upload_name_required"                 // 上传 raw 制品必须指定包名 name.
+	ArtifactUploadRawGroupInvalid           I18nKey = "artifact.upload_raw_group_invalid"             // raw 制品的 group 参数格式不合法.
+	ArtifactUploadVersionInvalid            I18nKey = "artifact.upload_version_invalid"               // 上传 raw 制品必须指定合法的版本 version.
+	ArtifactUploadGroupArtifactMismatch     I18nKey = "artifact.upload_group_artifact_mismatch"       // 指定的分组不属于当前制品库.
+	ArtifactUploadGroupIdInvalid            I18nKey = "artifact.upload_group_id_invalid"              // 指定的 groupId 不合法或不存在.
+	ArtifactUploadGroupNameInvalid          I18nKey = "artifact.upload_group_name_invalid"            // 指定的 group 路径格式不合法.
+	ArtifactUploadGroupPathNotFound         I18nKey = "artifact.upload_group_path_not_found"          // 指定的 group 路径在当前制品库下不存在.
+	ArtifactUploadGroupRequired             I18nKey = "artifact.upload_group_required"                // 上传制品必须指定 group 或 groupId.
 	ArtifactUploadSaveError                 I18nKey = "artifact.upload_save_error"                    // 制品保存失败.
 	ArtifactUploadServeError                I18nKey = "artifact.upload_serve_error"                   // 制品上传处理失败.
 	ArtifactUploadSuccess                   I18nKey = "artifact.upload_success"                       // 制品上传成功.
