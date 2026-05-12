@@ -128,7 +128,13 @@ func WithMessage(err error, msg string) error {
 // WithI18nKey 添加国际化键
 func WithI18nKey(err error, i18nKey i18n.I18nKey) error {
 	if customErr, ok := err.(customError); ok {
-		return customError{errorType: customErr.errorType, i18nKey: i18nKey, originalError: customErr.originalError}
+		return customError{
+			errorType:     customErr.errorType,
+			i18nKey:       i18nKey,
+			httpStatus:    customErr.httpStatus,
+			originalError: customErr.originalError,
+			context:       customErr.context,
+		}
 	}
 
 	// 如果 err 为 nil，创建一个新的错误，使用 i18nKey 作为消息
@@ -146,7 +152,13 @@ func WithHttpStatus(err error, httpStatus int) error {
 	}
 
 	if customErr, ok := err.(customError); ok {
-		return customError{errorType: customErr.errorType, httpStatus: httpStatus, originalError: customErr.originalError}
+		return customError{
+			errorType:     customErr.errorType,
+			i18nKey:       customErr.i18nKey,
+			httpStatus:    httpStatus,
+			originalError: customErr.originalError,
+			context:       customErr.context,
+		}
 	}
 
 	return customError{errorType: NoType, httpStatus: httpStatus, originalError: err}

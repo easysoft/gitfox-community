@@ -38,10 +38,20 @@ type SpaceRepoReq struct {
 }
 
 // SpaceRepoFormReq 定义文件上传场景使用的 Form 请求参数。
+// 上传必须通过 artifactID 精确定位制品库视图，禁止再通过 space/repo 回落推导。
+// 注意：此处不在 tag 层使用 binding:required，以便在控制器里抛出更友好的多语言错误。
 type SpaceRepoFormReq struct {
-	SpaceID    int64 `form:"spaceId"`
-	RepoID     int64 `form:"repoId"`
 	ArtifactID int64 `form:"artifactID"`
+}
+
+func (r *SpaceRepoFormReq) Validate() error {
+	if r.ArtifactID <= 0 {
+		return errors.WithI18nKey(
+			fmt.Errorf("artifactID is required and must be greater than 0, got %d", r.ArtifactID),
+			i18n.ArtifactUploadArtifactidRequired,
+		)
+	}
+	return nil
 }
 
 type SoftRemoveEntitiesReq struct {

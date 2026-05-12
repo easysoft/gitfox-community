@@ -160,6 +160,29 @@ type Interface interface {
 	// GetSpaceMembers 获取空间/仓库级的制品库成员列表。
 	GetSpaceMembers(ctx context.Context, spaceID, repoID int64) ([]*model.CasbinSubject, error)
 
+	// ---- 移动 & 重命名 ----
+
+	// MovePackage 移动 package 到目标制品库（及可选目标 group）。
+	MovePackage(ctx context.Context, pkgID, tArtifactID, tGroupID int64) error
+
+	// MoveAsset 移动组资产到目标 group。
+	MoveAsset(ctx context.Context, assetID, tArtifactID, tGroupID int64) error
+
+	// MoveGroup 移动 group 到目标制品库（及可选目标父 group）。
+	MoveGroup(ctx context.Context, groupID, tArtifactID, tParentGroupID int64) error
+
+	// RenameAsset 重命名组资产。
+	RenameAsset(ctx context.Context, assetID int64, newName string) error
+
+	// RenameGroup 重命名 group。
+	RenameGroup(ctx context.Context, groupID int64, newName string) error
+
+	// MoveEntity 按 entityType 派发到对应的 Move 方法。
+	MoveEntity(ctx context.Context, req *model.MoveEntityReq) error
+
+	// RenameEntity 按 entityType 派发到对应的 Rename 方法。
+	RenameEntity(ctx context.Context, req *model.RenameEntityReq) error
+
 	// FileStore 返回制品库内容存储，供容器镜像控制器直接使用。
 	FileStore() storage.ContentStorage
 }

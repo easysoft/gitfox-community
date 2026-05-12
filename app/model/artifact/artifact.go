@@ -632,3 +632,32 @@ type PermRule struct {
 	Role          enum.CasbinRole  `json:"role"`
 	Scope         enum.CasbinScope `json:"scope"`
 }
+
+// MoveEntityReq 移动实体请求。
+type MoveEntityReq struct {
+	EntityType       string `json:"entityType"`       // "package" / "asset" / "group"
+	SourceID         int64  `json:"sourceId"`         // 源实体 ID
+	TargetArtifactID int64  `json:"targetArtifactId"` // 目标制品库 ID
+	TargetGroupID    int64  `json:"targetGroupId"`    // 目标 group ID（package/asset 必填，group 可选）
+}
+
+// RenameEntityReq 重命名实体请求。
+type RenameEntityReq struct {
+	EntityType string `json:"entityType"` // "asset" / "group"
+	SourceID   int64  `json:"sourceId"`   // 源实体 ID
+	NewName    string `json:"newName"`    // 新名称
+}
+
+// IsVersionedFormat 判断给定格式是否为版本化格式。
+// 版本化格式（container / helm / pypi / npm / maven）采用 package + version 的分发语义，
+// 其包名参与分发协议（如 pull URL），因此不允许重命名；组/包的结构层级也需要做特殊处理。
+// 其余格式（generic / raw、以及 ArtifactAllFormat 或未知值）视为非版本化，返回 false。
+// IsVersionedFormat reports whether the given artifact format is a versioned one.
+func IsVersionedFormat(f ArtifactFormat) bool {
+	switch f {
+	case ArtifactContainerFormat, ArtifactHelmFormat, ArtifactPypiFormat, ArtifactNpmFormat, ArtifactMavenFormat:
+		return true
+	default:
+		return false
+	}
+}

@@ -107,7 +107,7 @@ CREATE TABLE IF NOT EXISTS `ops_artifact_assets` (
 )
 ENGINE=InnoDB COMMENT='制品资源表';
 
-CREATE UNIQUE INDEX `uk_assets_versionID_path_deleted` ON `ops_artifact_assets` (`versionID`, `path`, `deleted`);
+CREATE INDEX `idx_assets_versionID_path_deleted` ON `ops_artifact_assets` (`versionID`, `path`, `deleted`);
 CREATE INDEX `idx_assets_artifactID_format_path_deleted` ON `ops_artifact_assets` (`artifactID`, `format`, `path`, `deleted`);
 CREATE INDEX `idx_assets_groupID_path_deleted` ON `ops_artifact_assets` (`groupID`, `path`, `deleted`);
 CREATE INDEX `idx_assets_blobID` ON `ops_artifact_assets` (`blobID`);
