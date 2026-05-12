@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"regexp"
 	"strconv"
 	"strings"
+	"unicode"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/adapter"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/adapter/request"
@@ -19,9 +19,14 @@ import (
 )
 
 const (
-	_segmentName       = `[a-zA-Z0-9](?:[a-zA-Z0-9\-_]*[a-zA-Z0-9])?`
-	_regexPackageGroup = `^` + _segmentName + `(?:\.` + _segmentName + `)*` + `$`
+	// maxGenericGroupSegmentLen 单段分组名最大 rune 数，与制品库视图名保持一致的上限。
+	maxGenericGroupSegmentLen = 128
 )
+
+// genericGroupForbiddenChars generic 分组名禁用的字符集合。
+// 与视图名黑名单对齐：路径分隔、控制转义、Windows 保留字符；
+// `.` 作为层级分隔符由 split 处理，不列入此处（否则每段都会命中）。
+var genericGroupForbiddenChars = []rune{'/', '\\', ':', '*', '?', '"', '<', '>', '|'}
 
 type uploader struct {
 	uploadReq   *request.ArtifactUploadRequest
@@ -64,16 +69,20 @@ func (h *uploader) Serve(ctx context.Context, req *http.Request) (int64, error) 
 	h.uploadReq.RegisterWriter(fw)
 	size, hash, err := request.Write(file, fw)
 
-	// 文件名一律以上传文件本身为准（fh.Filename），不接受 form 里的 name 覆盖，
-	// 以避免客户端传入 name="swagger" 等无后缀值，导致 asset.path 丢失扩展名，
-	// 进而在文件树 / Content-Disposition 下载时还原不出正确的文件类型。
-	h.descriptor.MainAsset.Path = fh.Filename
+	// 文件名以 form 字段 `name` 为准（由 controller 层的 SpaceRepoFormReq.Validate 保证非空）。
+	// 若出于兼容 / 兜底需要 `name` 为空，退回 multipart 的 fh.Filename 以免 asset.path 落空。
+	fileName := strings.TrimSpace(req.FormValue("name"))
+	if fileName == "" {
+		fileName = fh.Filename
+	}
+	h.descriptor.MainAsset.Path = fileName
 	h.descriptor.MainAsset.Size = size
 	h.descriptor.MainAsset.Hash = hash
 	h.descriptor.MainAsset.Ref = ref
 	h.descriptor.MainAsset.ContentType = "application/octet-stream"
 	h.descriptor.MainAsset.Kind = model.AssetKindMain
 	h.descriptor.MainAsset.Attr = adapter.AttrAssetNormal
+	h.descriptor.MainAsset.Format = model.ArtifactGenericFormat
 
 	h.descriptor.Format = model.ArtifactGenericFormat
 	return size, err
@@ -114,11 +123,8 @@ func (h *uploader) validateForm(_ context.Context, req *http.Request) error {
 		}
 		h.descriptor.GroupId = gId
 	} else {
-		if ok, _ := regexp.MatchString(_regexPackageGroup, group); !ok {
-			return badRequest(
-				adapter.ErrInvalidGroupName,
-				i18n.ArtifactUploadGroupNameInvalid,
-			)
+		if err := validateGenericGroupName(group); err != nil {
+			return err
 		}
 		g, err := h.artStore.Groups().GetEndpointByNames(req.Context(), artifactID, strings.Split(group, "."), model.ArtifactGenericFormat)
 		if err != nil {
@@ -136,6 +142,51 @@ func (h *uploader) validateForm(_ context.Context, req *http.Request) error {
 		h.descriptor.GroupId = g.ID
 	}
 
+	return nil
+}
+
+// validateGenericGroupName 校验 generic 上传时传入的 group 字符串。
+// 约束（与 CreateArtifactViewReq 对 generic/raw 放行中文的口径一致）：
+//  1. 以 `.` 拆分后每一段都不能为空（不允许前导 / 尾随 / 连续 `.`）；
+//  2. 每段 rune 数不得超过 maxGenericGroupSegmentLen；
+//  3. 禁止空白字符（含全角空格等），禁止控制字符；
+//  4. 禁止路径分隔与 Windows 保留字符：`/ \ : * ? " < > |`；
+//  5. 允许中文、字母、数字、中划线、下划线及其他非保留 Unicode。
+func validateGenericGroupName(group string) error {
+	if group == "" {
+		return badRequest(adapter.ErrInvalidGroupName, i18n.ArtifactUploadGroupNameInvalid)
+	}
+	parts := strings.Split(group, ".")
+	for _, seg := range parts {
+		if seg == "" {
+			return badRequest(
+				fmt.Errorf("%w: empty segment in group=%q", adapter.ErrInvalidGroupName, group),
+				i18n.ArtifactUploadGroupNameInvalid,
+			)
+		}
+		if len([]rune(seg)) > maxGenericGroupSegmentLen {
+			return badRequest(
+				fmt.Errorf("%w: segment too long in group=%q", adapter.ErrInvalidGroupName, group),
+				i18n.ArtifactUploadGroupNameInvalid,
+			)
+		}
+		for _, rn := range seg {
+			if unicode.IsSpace(rn) || unicode.IsControl(rn) {
+				return badRequest(
+					fmt.Errorf("%w: group segment contains whitespace or control char: %q", adapter.ErrInvalidGroupName, seg),
+					i18n.ArtifactUploadGroupNameInvalid,
+				)
+			}
+			for _, bad := range genericGroupForbiddenChars {
+				if rn == bad {
+					return badRequest(
+						fmt.Errorf("%w: group segment contains forbidden char %q: %q", adapter.ErrInvalidGroupName, bad, seg),
+						i18n.ArtifactUploadGroupNameInvalid,
+					)
+				}
+			}
+		}
+	}
 	return nil
 }
 

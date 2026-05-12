@@ -88,7 +88,8 @@ type Interface interface {
 	ListTreeNodes(ctx context.Context, parentId int64) ([]*model.ArtifactTreeNode, error)
 
 	// RefreshTree 全量重建制品树节点（groups → packages → versions）。
-	RefreshTree(ctx context.Context) error
+	// format 必填：传入具体 format 时仅刷新该 format 下的节点；传入 ArtifactAllFormat ("all") 时全量刷新。
+	RefreshTree(ctx context.Context, format string) error
 
 	// ---- 删除操作 ----
 

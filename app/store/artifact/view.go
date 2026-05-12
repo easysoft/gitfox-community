@@ -78,7 +78,7 @@ func (c *views) GetDefaultByRepoAndSpace(ctx context.Context, repoId, spaceId in
 func (c *views) FindByNameInScope(ctx context.Context, spaceId, repoId int64, name string) ([]*model.ArtifactView, error) {
 	var rows []*artifactView
 	err := c.db.WithContext(ctx).
-		Where("spaceID = ? AND repoID = ? AND name = ?", spaceId, repoId, name).
+		Where("spaceID = ? AND repoID = ? AND name = ? and deleted = 0", spaceId, repoId, name).
 		Find(&rows).Error
 	if err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)

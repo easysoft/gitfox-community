@@ -57,7 +57,7 @@
 
 | 方法 | 路径 | 权限 | 接口名称 | 简介 |
 |------|------|------|---------|------|
-| DELETE | `/artifacts/entities` | delete | `SoftRemoveByEntity` | 按实体 ID 批量软删除（支持 asset / version / package / group 级联删除） |
+| DELETE | `/artifacts/entities` | delete | `SoftRemoveByEntity` | 按实体 ID 批量软删除，元素格式 `type.id`；支持 `asset` / `version` / `package` / `group`（级联）；以及 `artifact`（整库软删，仅允许在无活制品时执行，空分组允许保留） |
 
 ### 1.8 树节点
 

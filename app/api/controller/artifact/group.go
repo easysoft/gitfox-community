@@ -14,11 +14,11 @@ import (
 )
 
 // @Summary 创建分组
-// @Description 创建 group 节点。artifactID 必传且必须大于 0
+// @Description 创建 group 节点。artifactID 必传且必须大于 0。group 的 format 自动从 artifactID 对应视图中反查，前端不需要传 format。
 // @Tags artifacts
 // @Accept application/json
 // @Produce application/json
-// @Param body body model.CreateGroupReq true "请求参数(artifactID 必填；names 为 '.' 分隔的分组路径；format 必须是支持的格式枚举)"
+// @Param body body model.CreateGroupReq true "请求参数(artifactID 必填；names 为 '.' 分隔的分组路径；format 不传，由服务端从 artifact 反查)"
 // @Success 200 {object} resp.ObjectResponse "成功"
 // @Failure 400 {object} resp.ObjectResponse "参数错误"
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
@@ -31,20 +31,32 @@ func (c *Controller) CreateGroup(ctx *gin.Context) {
 		return
 	}
 
+	// 先确保 artifactID 合法并反查 view：group 的 format 必须与 artifact 一致，
+	// 不允许前端自行指定，统一以 view.Format 为准。
+	if params.ArtifactID <= 0 {
+		resp.BadRequest(ctx, errors.WithI18nKey(
+			fmt.Errorf("artifactID must be greater than 0, got %d", params.ArtifactID),
+			i18n.ArtifactGroupArtifactidRequired,
+		))
+		return
+	}
+
+	view, err := c.artSvc.ResolveView(ctx, &model.SpaceRepoReq{ArtifactID: params.ArtifactID})
+	if err != nil {
+		resp.BadRequest(ctx, err)
+		return
+	}
+	// 用 view.Format 覆盖前端可能传入的 format，保证 group.format 与 artifact 绑定一致
+	params.Format = string(view.Format)
+
 	// 业务规则校验（artifactID > 0、format 枚举、names 合法、container 不嵌套）
 	if err := params.Validate(); err != nil {
 		resp.BadRequest(ctx, err)
 		return
 	}
 
-	// 检查视图是否存在
-	if err := c.artSvc.ViewExists(ctx, params.ArtifactID); err != nil {
-		resp.BadRequest(ctx, err)
-		return
-	}
-
 	names := params.ParseNames()
-	format := model.ArtifactFormat(params.Format)
+	format := view.Format
 
 	// 检查分组路径是否已存在（防止重复创建）
 	exists, err := c.artSvc.GroupPathExists(ctx, params.ArtifactID, names, format)

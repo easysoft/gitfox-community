@@ -74,12 +74,13 @@ func (s ArtifactEntityKind) String() string {
 }
 
 const (
-	ArtifactEntityKindFormat  ArtifactEntityKind = "format"
-	ArtifactEntityKindGroup   ArtifactEntityKind = "group"
-	ArtifactEntityKindPackage ArtifactEntityKind = "package"
-	ArtifactEntityKindVersion ArtifactEntityKind = "version"
-	ArtifactEntityKindAsset   ArtifactEntityKind = "asset"
-	ArtifactEntityEmpty       ArtifactEntityKind = "_empty"
+	ArtifactEntityKindFormat   ArtifactEntityKind = "format"
+	ArtifactEntityKindGroup    ArtifactEntityKind = "group"
+	ArtifactEntityKindPackage  ArtifactEntityKind = "package"
+	ArtifactEntityKindVersion  ArtifactEntityKind = "version"
+	ArtifactEntityKindAsset    ArtifactEntityKind = "asset"
+	ArtifactEntityKindArtifact ArtifactEntityKind = "artifact"
+	ArtifactEntityEmpty        ArtifactEntityKind = "_empty"
 )
 
 // CasbinSubject 保存 Casbin 策略中的主体信息。

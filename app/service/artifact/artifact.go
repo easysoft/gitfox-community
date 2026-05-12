@@ -121,10 +121,23 @@ func (s *Service) FileStore() storage.ContentStorage {
 //  3. 若存在同名的软删视图但已超过保留期 -> 先物理删除过期 view，再正常创建。
 //  4. 无同名记录 -> 正常创建。
 //
+// 默认分组规则：
+//
+//	非版本化格式（generic / raw）在视图创建成功后，会自动生成一个与视图同名、
+//	同 format 的根级分组，避免用户首次上传时还要手动建组。
+//	版本化格式（container / helm / pypi / npm / maven）由各自的 uploader 按协议
+//	自行创建/复用分组，这里不提前插入，以免干扰协议语义。
+//
 // 注意：ops_artifact 表已移除严格唯一索引（uk_spaceID_repoID_name），
 // 改由此方法在应用层保证名称唯一性，以支持回收站保留期的时间窗口判断。
 func (s *Service) CreateView(ctx context.Context, req *model.CreateArtifactViewReq) (*model.ArtifactView, error) {
 	log := logger.GetLogger(ctx)
+
+	// Validate 已在 controller 侧调过，这里再守一次：直接复用 model 的业务校验，
+	// 确保内部调用链路（非 HTTP）也能命中中文限制等规则。
+	if err := req.Validate(); err != nil {
+		return nil, err
+	}
 
 	// repoID 不为空时，spaceID 必须同时存在
 	if req.RepoID > 0 && req.SpaceID == 0 {
@@ -146,44 +159,14 @@ func (s *Service) CreateView(ctx context.Context, req *model.CreateArtifactViewR
 		}
 	}
 
-	// 查询同作用域下所有同名 view（包含已软删的）
+	// 查询同作用域下所有同名 view（ 不包含已软删的）
 	existing, err := s.artStore.Views().FindByNameInScope(ctx, req.SpaceID, req.RepoID, req.Name)
 	if err != nil {
 		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactViewQueryError)
 	}
 
-	now := time.Now()
-	retentionCutoff := datetime.Local(now.Add(-s.config.RecycleBinRetention)) // 回收站保留期截止时间
-
-	for _, v := range existing {
-		if v.Deleted == 0 {
-			// 情况1：存在同名 active view，拒绝创建
-			return nil, pkgErrors.WithI18nKey(
-				fmt.Errorf("artifact view '%s' already exists", req.Name),
-				i18n.ArtifactViewNameDuplicate,
-			)
-		}
-
-		// deleted=1：检查是否在回收站保留期内
-		// editedDate 即软删时间（软删时 GORM autoUpdateTime 自动更新）
-		if v.EditedDate != nil && v.EditedDate.After(retentionCutoff) {
-			// 情况2：同名 view 在回收站保留期内，提示用户恢复
-			remainDays := int(v.EditedDate.Sub(retentionCutoff).Hours()/24) + 1
-			return nil, pkgErrors.WithI18nKey(
-				fmt.Errorf("artifact view '%s' is in recycle bin (%d days remaining)", req.Name, remainDays),
-				i18n.ArtifactViewInRecycleBin,
-			)
-		}
-
-		// 情况3：同名 view 已超过保留期，先级联清理关联资源再物理删除 view
-		log.Infof("物理删除过期的同名软删视图 id=%d name=%s", v.ID, v.Name)
-		if err = s.hardDeleteViewResources(ctx, v.ID); err != nil {
-			log.Errorf("清理过期视图 %d 关联资源失败: %v", v.ID, err)
-			// 继续尝试删除 view 本身
-		}
-		if err = s.artStore.Views().Delete(ctx, v.ID); err != nil {
-			return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactViewExpiredCleanupError)
-		}
+	if len(existing) != 0 {
+		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactViewNameDuplicate)
 	}
 
 	// 判断是否为该作用域下的第一个视图：复用已有的 GetDefault 方法，
@@ -205,7 +188,33 @@ func (s *Service) CreateView(ctx context.Context, req *model.CreateArtifactViewR
 	if err != nil {
 		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactViewCreateError)
 	}
+
+	// container：为新视图铸造一个默认根分组，名称与 format 与视图保持一致。
+	if artifact.ArtifactFormat(req.Format) == artifact.ArtifactContainerFormat {
+		if gErr := s.ensureDefaultGroupForView(ctx, view); gErr != nil {
+			log.Warnf("create default group for view %d (%s) failed: %v", view.ID, view.Name, gErr)
+		}
+	}
+
 	return view, nil
+}
+
+// ensureDefaultGroupForView 为非版本化视图创建一个与视图同名的根分组，并同步 tree node。
+// 使用 Groups().RecursiveCreate：本身幂等，若已存在同名根分组会直接复用。
+func (s *Service) ensureDefaultGroupForView(ctx context.Context, view *model.ArtifactView) error {
+	return s.db.Transaction(func(tx *gorm.DB) error {
+		ge, err := s.artStore.Groups().RecursiveCreate(ctx, view.ID, []string{view.Name}, view.Format)
+		if err != nil {
+			return err
+		}
+		if ge == nil || ge.ArtifactGroup == nil {
+			return errors.New("default group endpoint is empty after create")
+		}
+		if _, err = artModel.NewSyncer(s.artStore).SyncTreeNodeForGroup(ctx, ge.ArtifactGroup); err != nil {
+			return err
+		}
+		return nil
+	})
 }
 
 func resolveArtifactViewType(spaceID, repoID int64) model.ArtifactViewType {
@@ -958,20 +967,22 @@ func (s *Service) CreateGroup(ctx context.Context, artifactID int64, names []str
 //  1. nodeId > 0 时，优先按节点ID定位当前节点，只支持单层查询；
 //  2. path 不带 /** 时，返回“当前层”的平铺节点列表；
 //  3. path 为 /** 或 /xxx/** 时，返回从该路径开始的递归树；
-//  4. format=all 时，以各 format 根节点作为返回顶层；
+//  4. format=all 或留空：
+//     - path == "/"：返回各 format 根节点（递归模式下展开各自子树）；
+//     - path == "/xxx[/**]"：遍历所有 format 根，按 (artifactID, path, format) 逐个 GetByPath，
+//       找到即进入该 format 的分支结果，未命中跳过；多 format 同名路径会合并返回。
 //  5. level 表示最大可见层级：format/group/package/version/asset。
 func (s *Service) ListTree(ctx context.Context, artifactID int64, filter *model.ArtifactTreeFilter) ([]*model.ArtifactTreeRes, error) {
 	if filter == nil {
 		filter = &model.ArtifactTreeFilter{}
-	}
-	if filter.NodeID == 0 && filter.Format == "" {
-		return nil, pkgErrors.WithI18nKey(errors.New("format is required"), i18n.ArtifactTreeFormatRequired)
 	}
 	level, err := normalizeTreeLevel(filter.Level)
 	if err != nil {
 		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactTreeLevelInvalid)
 	}
 	path, recursive := normalizeTreePath(filter.Path)
+
+	// 1) nodeId 分支：精确定位单节点。
 	if filter.NodeID > 0 {
 		if recursive {
 			return nil, pkgErrors.WithI18nKey(errors.New("recursive query is not supported when nodeId is provided"), i18n.ArtifactTreeNodeRecursiveConflict)
@@ -988,16 +999,27 @@ func (s *Service) ListTree(ctx context.Context, artifactID int64, filter *model.
 		}
 		return s.listTreeCurrentLevel(ctx, currNode, level)
 	}
-	if filter.Format == model.ArtifactAllFormat {
+
+	// 2) format 留空视为 all，统一走跨格式分支。
+	isAll := filter.Format == "" || filter.Format == model.ArtifactAllFormat
+
+	if isAll {
 		roots, err := s.artStore.Nodes().ListFormats(ctx, artifactID)
 		if err != nil {
 			return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactTreeFormatListError)
 		}
-		if level == model.ArtifactNodeLevelFormat || !recursive {
-			return convertTreeNodesToRes(roots, level), nil
+		// 2.a path 为根：保持旧语义，返回 format 森林 / 只返 roots。
+		if path == model.ArtifactNodeRoot {
+			if level == model.ArtifactNodeLevelFormat || !recursive {
+				return convertTreeNodesToRes(roots, level), nil
+			}
+			return s.buildFormatForest(ctx, roots, level)
 		}
-		return s.buildFormatForest(ctx, roots, level)
+		// 2.b path 指向具体节点：跨 format 逐个匹配，找到即入结果集。
+		return s.listTreeForAllFormats(ctx, artifactID, path, recursive, level, roots)
 	}
+
+	// 3) 具体 format + path 分支。
 	currNode, err := s.artStore.Nodes().GetByPath(ctx, artifactID, path, filter.Format)
 	if err != nil {
 		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactTreeNodeListError)
@@ -1021,6 +1043,51 @@ func (s *Service) ListTree(ctx context.Context, artifactID int64, filter *model.
 	}
 	root.Leaf = len(root.Children) == 0
 	return []*model.ArtifactTreeRes{root}, nil
+}
+
+// listTreeForAllFormats 跨 format 按 path 查询：逐个 format 根 GetByPath，
+// 命中则按 recursive / level 铺开结果，未命中的 format 静默跳过。
+// 多 format 下若存在同名路径，结果会各自作为顶层元素返回。
+func (s *Service) listTreeForAllFormats(
+	ctx context.Context,
+	artifactID int64,
+	path string,
+	recursive bool,
+	level string,
+	roots []*model.ArtifactTreeNode,
+) ([]*model.ArtifactTreeRes, error) {
+	data := make([]*model.ArtifactTreeRes, 0, len(roots))
+	for _, root := range roots {
+		currNode, err := s.artStore.Nodes().GetByPath(ctx, artifactID, path, root.Format)
+		if err != nil {
+			// 此 format 下不存在该 path：跳过，不让单 format 缺失拖垮整批查询。
+			if pkgErrors.Is(err, pkgErrors.ErrResourceNotFound) {
+				continue
+			}
+			return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactTreeNodeListError)
+		}
+		if level == model.ArtifactNodeLevelFormat {
+			// 非根路径 + level=format 无意义，按既有单 format 语义返空。
+			continue
+		}
+		if !recursive {
+			items, lErr := s.listTreeCurrentLevel(ctx, currNode, level)
+			if lErr != nil {
+				return nil, lErr
+			}
+			data = append(data, items...)
+			continue
+		}
+		item := convertTreeNodeToRes(currNode, level)
+		children, bErr := s.buildTreeChildren(ctx, currNode, level)
+		if bErr != nil {
+			return nil, bErr
+		}
+		item.Children = children
+		item.Leaf = len(children) == 0
+		data = append(data, item)
+	}
+	return data, nil
 }
 
 // buildFormatForest 将多个 format 根节点分别递归展开，组装成整库的树森林。
@@ -1201,6 +1268,10 @@ func convertTreeNodeToRes(n *model.ArtifactTreeNode, level string) *model.Artifa
 	}
 	if n.Type == model.ArtifactTreeNodeTypeFormat {
 		item.Metadata.Name = n.Name
+		if n.ArtifactID > 0 {
+			id := (&model.ArtifactTreeNodeId{Type: model.ArtifactTreeNodeTypeArtifact, Pk: n.ArtifactID}).String()
+			item.Metadata.NodeId, item.Metadata.EntityId = id, id
+		}
 	}
 	return item
 }
@@ -1536,6 +1607,11 @@ func (s *Service) SoftRemove(ctx context.Context, spaceID int64, req *model.Soft
 		}
 		return nil
 	}); err != nil {
+		// 内层已显式带上具体 i18n key（如制品库非空 / 不存在 / 查询失败）时保留之，
+		// 仅对无 key 的未知错误统一包装为 ArtifactSoftRemoveError。
+		if pkgErrors.GetI18nKey(err) != i18n.ErrorDefault {
+			return nil, err
+		}
 		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactSoftRemoveError)
 	}
 
@@ -1596,6 +1672,13 @@ func (s *Service) softRemoveEntity(ctx context.Context, eid string, res *model.A
 			return nil
 		}
 		return s.softRemoveGroup(ctx, group, res)
+	case model.ArtifactTreeNodeTypeArtifact:
+		view, err := s.artStore.Views().GetByID(ctx, nodeID)
+		if err != nil {
+			res.Status = model.ArtifactStatusNotFound
+			return pkgErrors.WithI18nKey(err, i18n.ArtifactSoftRemoveArtifactNotFound)
+		}
+		return s.softRemoveArtifact(ctx, view, res)
 	default:
 		res.Status = model.ArtifactStatusInvalidId
 		return nil
@@ -1654,26 +1737,176 @@ func (s *Service) softRemovePackage(ctx context.Context, pkg *model.ArtifactPack
 	return nil
 }
 
+// softRemoveGroup 软删指定分组。
+// 判空口径：分组自身 + 其所有未软删后代 group 下的活 asset 数为 0 方允许删除。
+//   - 允许空的子目录（子 group 无活 asset）：一并级联软删；
+//   - 任一层级存在活 asset 即拒绝，返回 ArtifactSoftRemoveGroupNotEmpty 触发事务回滚（路 B）；
+//   - 顺带软删子 group 链路上的空壳 package / version（无活 asset 的上传半成品）；
+//   - 每次软删 group / package / version 都同步清对应 tree_node，避免前端刷树残留。
 func (s *Service) softRemoveGroup(ctx context.Context, group *model.ArtifactGroup, res *model.ArtifactNodeRemoveRes) error {
-	packages, err := s.artStore.Packages().Search(ctx, groupPackagesOption{groupID: group.ID})
+	// 1) 收集当前 group + 所有未软删子 group，作为判空与级联软删的目标集合。
+	//    Groups().ListDescendants 返回不含自身，吾在头部追加当前 group 统一处理。
+	descendants, err := s.artStore.Groups().ListDescendants(ctx, group.ID)
 	if err != nil {
-		return err
+		res.Status = model.ArtifactStatusUnknown
+		return pkgErrors.WithI18nKey(err, i18n.ArtifactSoftRemoveGroupQueryError)
+	}
+	targets := make([]*model.ArtifactGroup, 0, len(descendants)+1)
+	targets = append(targets, group)
+	targets = append(targets, descendants...)
+
+	// 2) 非空校验：集合内任一 group 有活 asset（含 groupID 直挂 + package/version 链路下挂）即拒绝。
+	for _, g := range targets {
+		// 2.1 直挂在 group 上的活 asset（generic 场景）。
+		directAssets, aErr := s.artStore.Assets().Search(ctx,
+			groupAssetsOption{groupID: g.ID}, artifactStore.AssetExcludeDeletedOption{})
+		if aErr != nil {
+			res.Status = model.ArtifactStatusUnknown
+			return pkgErrors.WithI18nKey(aErr, i18n.ArtifactSoftRemoveGroupQueryError)
+		}
+		if len(directAssets) > 0 {
+			res.Status = model.ArtifactStatusNotEmpty
+			return pkgErrors.WithI18nKey(
+				fmt.Errorf("group %d still has %d active asset(s)", g.ID, len(directAssets)),
+				i18n.ArtifactSoftRemoveGroupNotEmpty,
+			)
+		}
+		// 2.2 经 package/version 链路下挂的活 asset（raw / maven 等版本化场景）。
+		pkgs, pErr := s.artStore.Packages().Search(ctx, groupPackagesOption{groupID: g.ID})
+		if pErr != nil {
+			res.Status = model.ArtifactStatusUnknown
+			return pkgErrors.WithI18nKey(pErr, i18n.ArtifactSoftRemoveGroupQueryError)
+		}
+		for _, pkg := range pkgs {
+			versions, vErr := s.artStore.Versions().Find(ctx, model.SearchVersionOption{PackageId: pkg.ID})
+			if vErr != nil {
+				res.Status = model.ArtifactStatusUnknown
+				return pkgErrors.WithI18nKey(vErr, i18n.ArtifactSoftRemoveGroupQueryError)
+			}
+			for _, ver := range versions {
+				verAssets, vaErr := s.artStore.Assets().Search(ctx,
+					model.SearchAssetOption{VersionId: ver.ID}, artifactStore.AssetExcludeDeletedOption{})
+				if vaErr != nil {
+					res.Status = model.ArtifactStatusUnknown
+					return pkgErrors.WithI18nKey(vaErr, i18n.ArtifactSoftRemoveGroupQueryError)
+				}
+				if len(verAssets) > 0 {
+					res.Status = model.ArtifactStatusNotEmpty
+					return pkgErrors.WithI18nKey(
+						fmt.Errorf("group %d still has active asset(s) under version %d", g.ID, ver.ID),
+						i18n.ArtifactSoftRemoveGroupNotEmpty,
+					)
+				}
+			}
+		}
+	}
+
+	// 3) 空目录树：级联软删 targets 内的空壳 package/version 与 group 本身，并同步清 tree_node。
+	//    由深到浅处理，保证子级先落地（Groups().ListDescendants 按 parentID 升序，反转后即从叶子起）。
+	for i := len(targets) - 1; i >= 0; i-- {
+		g := targets[i]
+		pkgs, pErr := s.artStore.Packages().Search(ctx, groupPackagesOption{groupID: g.ID})
+		if pErr != nil {
+			return pErr
+		}
+		for _, pkg := range pkgs {
+			versions, vErr := s.artStore.Versions().Find(ctx, model.SearchVersionOption{PackageId: pkg.ID})
+			if vErr != nil {
+				return vErr
+			}
+			for _, ver := range versions {
+				if err = s.artStore.Versions().SoftDelete(ctx, ver); err != nil {
+					return err
+				}
+				res.Versions++
+				_ = s.deleteTreeNodeByTarget(ctx, g.ArtifactID, model.ArtifactTreeNodeTypeVersion, ver.ID)
+			}
+			if err = s.artStore.Packages().SoftDelete(ctx, pkg); err != nil {
+				return err
+			}
+			res.Packages++
+			_ = s.deleteTreeNodeByTarget(ctx, g.ArtifactID, model.ArtifactTreeNodeTypePackage, pkg.ID)
+		}
+		if err = s.artStore.Groups().SoftDeleteById(ctx, g.ID); err != nil {
+			return err
+		}
+		_ = s.deleteTreeNodeByTarget(ctx, g.ArtifactID, model.ArtifactTreeNodeTypeGroup, g.ID)
+	}
+	return nil
+}
+
+// softRemoveArtifact 软删整个制品库（view）。
+// 判空口径：只看活 asset（AssetViewOption + AssetExcludeDeletedOption）。
+//   - 允许库下存在空分组（group 不纳入判空）；
+//   - 允许存在未挂 asset 的活 package / 活 version（上传中途失败留下的空壳，不阻塞删除）；
+//   - 已软删的 asset 视为可忽略（由后续 GC 物理清理）。
+//
+// 一旦发现活 asset，立即返回 ArtifactSoftRemoveArtifactNotEmpty，
+// 触发外层事务回滚（路 B 语义）：整批请求失败，不会部分成功。
+//
+// 清理链路：软删 package / version / group 的同时同步调 deleteTreeNodeByTarget 清对应
+// ops_artifact_tree_nodes 记录，避免前端刷树残留节点。view 自身的 tree_node 无对应
+// 目标实体，待 GC 阶段 hardDeleteViewResources 末尾统一清理。
+func (s *Service) softRemoveArtifact(ctx context.Context, view *model.ArtifactView, res *model.ArtifactNodeRemoveRes) error {
+	// 1) 非空校验：只看活 asset。活 package/version 但无 asset 的空壳允许删。
+	activeAssets, err := s.artStore.Assets().Search(ctx,
+		artifactStore.AssetViewOption{ArtifactID: view.ID},
+		artifactStore.AssetExcludeDeletedOption{},
+	)
+	if err != nil {
+		res.Status = model.ArtifactStatusUnknown
+		return pkgErrors.WithI18nKey(err, i18n.ArtifactSoftRemoveArtifactQueryError)
+	}
+	if len(activeAssets) > 0 {
+		res.Status = model.ArtifactStatusNotEmpty
+		return pkgErrors.WithI18nKey(
+			fmt.Errorf("artifact view %d still has %d active asset(s)", view.ID, len(activeAssets)),
+			i18n.ArtifactSoftRemoveArtifactNotEmpty,
+		)
+	}
+
+	// 2) 空库：顺带软删孤立 package / version（上传半成品），再软删 group 与 view 自身。
+	packages, err := s.artStore.Packages().List(ctx, view.ID, false)
+	if err != nil {
+		res.Status = model.ArtifactStatusUnknown
+		return pkgErrors.WithI18nKey(err, i18n.ArtifactSoftRemoveArtifactQueryError)
 	}
 	for _, pkg := range packages {
-		if err = s.softRemovePackage(ctx, pkg, res); err != nil {
+		versions, vErr := s.artStore.Versions().Find(ctx, model.SearchVersionOption{PackageId: pkg.ID})
+		if vErr != nil {
+			return vErr
+		}
+		for _, ver := range versions {
+			if err = s.artStore.Versions().SoftDelete(ctx, ver); err != nil {
+				return err
+			}
+			res.Versions++
+			_ = s.deleteTreeNodeByTarget(ctx, view.ID, model.ArtifactTreeNodeTypeVersion, ver.ID)
+		}
+		if err = s.artStore.Packages().SoftDelete(ctx, pkg); err != nil {
 			return err
 		}
+		res.Packages++
+		_ = s.deleteTreeNodeByTarget(ctx, view.ID, model.ArtifactTreeNodeTypePackage, pkg.ID)
 	}
-	assets, err := s.artStore.Assets().Search(ctx, groupAssetsOption{groupID: group.ID}, artifactStore.AssetExcludeDeletedOption{})
+
+	// view 与其 group 绑同一 format，直接按 view.Format 递归取全部未删 group。
+	groups, err := s.artStore.Groups().ListDescendantsForOwner(ctx, view.ID, view.Format)
 	if err != nil {
+		res.Status = model.ArtifactStatusUnknown
+		return pkgErrors.WithI18nKey(err, i18n.ArtifactSoftRemoveArtifactQueryError)
+	}
+	for _, g := range groups {
+		if err = s.artStore.Groups().SoftDeleteById(ctx, g.ID); err != nil {
+			return err
+		}
+		_ = s.deleteTreeNodeByTarget(ctx, view.ID, model.ArtifactTreeNodeTypeGroup, g.ID)
+	}
+
+	if err = s.artStore.Views().SoftDelete(ctx, view); err != nil {
 		return err
 	}
-	for _, asset := range assets {
-		if err = s.softRemoveAsset(ctx, asset, res); err != nil {
-			return err
-		}
-	}
-	return s.artStore.Groups().SoftDeleteById(ctx, group.ID)
+	return nil
 }
 
 func (s *Service) deleteTreeNodeByTarget(ctx context.Context, artifactID int64, nodeType model.ArtifactTreeNodeType, id int64) error {
@@ -1869,8 +2102,15 @@ func (s *Service) ListContainerImages(ctx context.Context, view *adapter.ViewDes
 // RefreshTree 全量重建制品树节点。
 // 遍历顺序：groups → packages(含 raw namespace 补建 group) → versions。
 // 移植自原项目 /root/repo/gitfox/app/services/artifact/sync_tree_node.go:RefreshTreeNodes。
-func (s *Service) RefreshTree(ctx context.Context) error {
+//
+// format 含义：
+//   - model.ArtifactAllFormat（"all"）或空值：全量刷新所有格式
+//   - 其它具体 format：仅刷新该 format 下的 groups / packages / versions
+func (s *Service) RefreshTree(ctx context.Context, format string) error {
 	syncer := artModel.NewSyncer(s.artStore)
+
+	targetFormat := model.ArtifactFormat(strings.TrimSpace(format))
+	refreshAll := targetFormat == "" || targetFormat == model.ArtifactAllFormat
 
 	// 1. 同步所有 group 树节点
 	groups, err := s.artStore.Groups().All(ctx)
@@ -1879,6 +2119,9 @@ func (s *Service) RefreshTree(ctx context.Context) error {
 		return err
 	}
 	for _, group := range groups {
+		if !refreshAll && group.Format != targetFormat {
+			continue
+		}
 		if _, gErr := syncer.SyncTreeNodeForGroup(ctx, group); gErr != nil {
 			logger.GetLogger(ctx).Errorf("refresh tree: sync group %d failed: %v", group.ID, gErr)
 			return gErr
@@ -1887,6 +2130,10 @@ func (s *Service) RefreshTree(ctx context.Context) error {
 
 	// 2. 遍历所有 packages，同步 package + version 树节点
 	return s.artStore.Packages().ListBatch(ctx, false, 100, func(pkg *model.ArtifactPackage) error {
+		if !refreshAll && pkg.Format != targetFormat {
+			return nil
+		}
+
 		// 2a. raw 格式 namespace 补建 group（namespace != "" 且 groupID==0 时）
 		if pkg.Namespace != "" && pkg.GroupID == 0 {
 			if sErr := syncer.SyncRawGroup(ctx, pkg); sErr != nil {
