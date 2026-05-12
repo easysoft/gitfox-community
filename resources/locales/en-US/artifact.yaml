@@ -27,6 +27,10 @@ artifact:
   view_create_error: "Failed to create artifact view."
   view_expired_query_error: "Failed to query expired views."
   view_format_invalid: "Unsupported artifact format. Supported: generic, raw, maven, container, helm, pypi, npm."
+  view_name_required: "Artifact view name is required."
+  view_name_too_long: "Artifact view name is too long (max 128 chars)."
+  view_name_invalid_chars: "Artifact view name must not contain whitespace or any of / \\ . .. : * ? \" < > |."
+  view_name_non_ascii_not_allowed: "For versioned artifact views (container/helm/pypi/npm/maven), the name may only contain ASCII letters, digits, dashes and underscores; non-ASCII characters (e.g. Chinese) are not allowed."
   
   # Parse & Upload
   space_id_required: "spaceId is required when repoId is provided."
@@ -38,13 +42,14 @@ artifact:
   upload_validate_error: "Artifact upload validation failed."
   upload_save_error: "Failed to save artifact."
   upload_artifactid_required: "artifactID is required for uploading; please select a target artifact repository and try again."
+  upload_file_name_required: "The 'name' form field is required for upload and must not be empty or whitespace only."
   upload_name_required: "Package 'name' is required for raw uploads."
   upload_name_invalid: "The 'name' for raw uploads is invalid: only alphanumerics, dashes and underscores are allowed, and no dots."
   upload_version_invalid: "A valid 'version' is required for raw uploads (alphanumerics, dashes, underscores and dots only)."
   upload_raw_group_invalid: "The 'group' for raw uploads must be a dot-separated path (each segment may contain alphanumerics, dashes and underscores only)."
   upload_group_required: "Either 'group' or 'groupId' is required for uploading."
   upload_group_id_invalid: "The specified groupId is invalid or does not exist."
-  upload_group_name_invalid: "The specified group path is malformed; it must be a dot-separated path (each segment may contain alphanumerics, dashes and underscores only)."
+  upload_group_name_invalid: "The specified group path is invalid: must be a dot-separated path; each segment must be non-empty, no longer than 128 characters, and must not contain whitespace or any of / \\ : * ? \" < > |. Unicode characters (e.g. Chinese) are allowed."
   upload_group_path_not_found: "The specified group path does not exist under the current artifact repository; please create the group first or verify the artifactID."
   upload_group_artifact_mismatch: "The specified group does not belong to the current artifact repository; please verify artifactID and group ownership."
 
@@ -77,6 +82,8 @@ artifact:
   # Tree
   tree_format_list_error: "Failed to list artifact formats."
   tree_format_required: "format is required for tree queries unless nodeId is provided."
+
+  tree_refresh_format_invalid: "Unsupported artifact format. Supported: generic, raw, maven, container, helm, pypi, npm."
   tree_level_invalid: "Invalid tree query level. Supported values: format, group, package, version, asset."
   tree_node_list_error: "Failed to list artifact tree nodes."
   tree_node_not_in_artifact: "The specified nodeId does not belong to the current artifact."
@@ -92,6 +99,11 @@ artifact:
   soft_remove_entity_id_invalid_number: "The numeric part of artifact entity ID is invalid."
   soft_remove_entity_type_unsupported: "Unsupported artifact entity type."
   soft_remove_error: "Failed to soft-delete artifact."
+  soft_remove_artifact_not_empty: "The artifact library still contains active asset files and cannot be deleted. Empty groups, and orphan packages / versions without any asset, are allowed. Please remove all asset files first and try again."
+  soft_remove_artifact_not_found: "The specified artifact library does not exist or has been deleted."
+  soft_remove_artifact_query_error: "Failed to check the artifact library state."
+  soft_remove_group_not_empty: "The group or one of its sub-groups still contains active asset files and cannot be deleted. Empty sub-groups can be removed together; please delete all asset files first and try again."
+  soft_remove_group_query_error: "Failed to check the group state."
 
   # Statistic
   statistic_capacity_error: "Failed to query artifact capacity statistics."

@@ -42,9 +42,8 @@ type ViewInterface interface {
 	GetDefaultByRepoAndSpace(ctx context.Context, repoId, spaceId int64) (*model.ArtifactView, error)
 	GetByName(ctx context.Context, spaceId, repoId int64, name string) (*model.ArtifactView, error)
 
-	// FindByNameInScope 在指定作用域下查询所有同名 view（包含已软删的）。
-	// 返回结果包含 active（deleted=0）和 soft-deleted（deleted=1）的 view，
-	// 由调用方根据 deleted 状态和 editedDate 判断是否允许创建同名 view。
+	// FindByNameInScope 在指定作用域下查询所有同名 view（不包含已软删的）。
+	// 返回结果包含 active（deleted=0）
 	FindByNameInScope(ctx context.Context, spaceId, repoId int64, name string) ([]*model.ArtifactView, error)
 
 	// SoftDelete 软删除视图（将 deleted 置为 1）。

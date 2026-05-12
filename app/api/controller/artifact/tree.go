@@ -66,15 +66,25 @@ func (c *Controller) ListTreeNodes(ctx *gin.Context) {
 }
 
 // @Summary 重建制品树
-// @Description 重建所有制品树节点
+// @Description 按 format 重建制品树节点。format 必传，支持 generic/raw/maven/container/helm/pypi/npm，或 all 表示全量刷新。
 // @Tags artifacts
 // @Accept application/json
 // @Produce application/json
+// @Param body body model.RefreshTreeReq true "刷新参数（format 必填）"
 // @Success 200 {object} resp.ObjectResponse "成功"
+// @Failure 400 {object} resp.ObjectResponse "参数错误"
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
 // @Router /artifacts/tree/refresh [post]
 func (c *Controller) RefreshTree(ctx *gin.Context) {
-	if err := c.artSvc.RefreshTree(ctx); err != nil {
+	var reqBody model.RefreshTreeReq
+	if err := ctx.ShouldBindBodyWithJSON(&reqBody); err != nil {
+		reqBody.Format = ctx.Query("format")
+	}
+	if err := reqBody.Validate(); err != nil {
+		resp.BadRequest(ctx, err)
+		return
+	}
+	if err := c.artSvc.RefreshTree(ctx, reqBody.Format); err != nil {
 		resp.InternalError(ctx, err)
 		return
 	}

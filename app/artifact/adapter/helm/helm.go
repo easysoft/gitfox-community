@@ -82,6 +82,7 @@ func (h *helmUploader) Serve(ctx context.Context, req *http.Request) (int64, err
 	h.descriptor.MainAsset.ContentType = _chartPkgType
 	h.descriptor.MainAsset.Kind = model.AssetKindMain
 	h.descriptor.MainAsset.Attr = adapter.AttrAssetNormal
+	h.descriptor.MainAsset.Format = model.ArtifactHelmFormat
 	return size, err
 }
 

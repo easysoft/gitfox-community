@@ -35,7 +35,7 @@ func Parse(ctx context.Context, store artifactStore.Interface, entityId string) 
 
 	kind := model.ArtifactEntityKind(typeStr)
 	switch kind {
-	case model.ArtifactEntityKindAsset, model.ArtifactEntityKindVersion, model.ArtifactEntityKindPackage, model.ArtifactEntityKindGroup:
+	case model.ArtifactEntityKindAsset, model.ArtifactEntityKindVersion, model.ArtifactEntityKindPackage, model.ArtifactEntityKindGroup, model.ArtifactEntityKindArtifact:
 		p := &entityParser{artStore: store}
 		return p.parse(ctx, kind, id)
 	default:
@@ -101,6 +101,13 @@ func (s *entityParser) parse(ctx context.Context, eType model.ArtifactEntityKind
 		} else {
 			elem.Parent = &model.ArtifactEntity{Kind: model.ArtifactEntityKindFormat, Name: string(group.Format)}
 		}
+	case model.ArtifactEntityKindArtifact:
+		// artifact 对应 ops_artifact (view) 本身，是权限/实体树的最顶层，无父节点。
+		view, e := s.artStore.Views().GetByID(ctx, pk)
+		if e != nil {
+			return nil, e
+		}
+		elem.Name = view.Name
 	}
 
 	if err != nil {

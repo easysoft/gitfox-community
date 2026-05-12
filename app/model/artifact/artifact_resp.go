@@ -108,11 +108,12 @@ type ArtifactVersionsRes struct {
 type ArtifactTreeNodeType string
 
 const (
-	ArtifactTreeNodeTypeFormat  ArtifactTreeNodeType = "format"
-	ArtifactTreeNodeTypeGroup   ArtifactTreeNodeType = "group"
-	ArtifactTreeNodeTypePackage ArtifactTreeNodeType = "package"
-	ArtifactTreeNodeTypeVersion ArtifactTreeNodeType = "version"
-	ArtifactTreeNodeTypeAsset   ArtifactTreeNodeType = "asset"
+	ArtifactTreeNodeTypeFormat   ArtifactTreeNodeType = "format"
+	ArtifactTreeNodeTypeGroup    ArtifactTreeNodeType = "group"
+	ArtifactTreeNodeTypePackage  ArtifactTreeNodeType = "package"
+	ArtifactTreeNodeTypeVersion  ArtifactTreeNodeType = "version"
+	ArtifactTreeNodeTypeAsset    ArtifactTreeNodeType = "asset"
+	ArtifactTreeNodeTypeArtifact ArtifactTreeNodeType = "artifact"
 )
 
 type ArtifactTreeRes struct {
@@ -155,6 +156,7 @@ const (
 	ArtifactStatusOK        ArtifactStatus = "ok"
 	ArtifactStatusInvalidId ArtifactStatus = "invalid_id"
 	ArtifactStatusNotFound  ArtifactStatus = "not found"
+	ArtifactStatusNotEmpty  ArtifactStatus = "not_empty"
 	ArtifactStatusUnknown   ArtifactStatus = "unknown"
 )
 

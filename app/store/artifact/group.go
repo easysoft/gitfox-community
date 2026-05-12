@@ -21,9 +21,7 @@ WITH RECURSIVE art_group_ancestors(group_ancestor_id, group_ancestor_uid, group_
 	SELECT id, name, parentID
 	FROM ops_artifact_groups
 	WHERE id = ?
-
 	UNION
-
 	SELECT id, name, parentID
 	FROM ops_artifact_groups
 	JOIN art_group_ancestors ON id = group_ancestor_parent_id
@@ -224,7 +222,7 @@ func (c *groups) ListDescendants(ctx context.Context, id int64) ([]*model.Artifa
 
 func (c *groups) All(ctx context.Context) ([]*model.ArtifactGroup, error) {
 	var rows []*artifactGroup
-	if err := c.db.WithContext(ctx).Find(&rows).Error; err != nil {
+	if err := c.db.WithContext(ctx).Where("deleted = 0").Find(&rows).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
 	return groupsToModel(rows), nil

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	artModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/model"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
 	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
 	pkgErrors "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
@@ -148,7 +149,7 @@ func (s *Service) moveAssetInner(ctx context.Context, assetID, tArtifactID, tGro
 		)
 	}
 	// 仅接受组资产：GroupID 必填、不得挂在 version 下
-	if !srcAsset.GroupID.Valid || srcAsset.GroupID.Int64 == 0 || srcAsset.VersionID.Valid {
+	if srcAsset.Format == artifact.ArtifactContainerFormat {
 		return pkgErrors.WithI18nKey(
 			fmt.Errorf("asset %d is not a group asset", assetID),
 			i18n.ArtifactMoveEntityTypeInvalid,
@@ -161,7 +162,7 @@ func (s *Service) moveAssetInner(ctx context.Context, assetID, tArtifactID, tGro
 		return pkgErrors.WithI18nKey(err, i18n.ArtifactMoveTargetInvalid)
 	}
 	// 3. 格式匹配
-	if tView.Format != srcAsset.Format && tView.Format != model.ArtifactAllFormat {
+	if tView.Format != srcAsset.Format {
 		return pkgErrors.WithI18nKey(
 			fmt.Errorf("asset format %s does not match target view format %s", srcAsset.Format, tView.Format),
 			i18n.ArtifactMoveFormatMismatch,
