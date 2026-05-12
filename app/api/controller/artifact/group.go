@@ -58,8 +58,8 @@ func (c *Controller) CreateGroup(ctx *gin.Context) {
 	names := params.ParseNames()
 	format := view.Format
 
-	// 检查分组路径是否已存在（防止重复创建）
-	exists, err := c.artSvc.GroupPathExists(ctx, params.ArtifactID, names, format)
+	// 检查分组路径是否已存在（仅活的 group 算重复，软删的允许重建）
+	exists, err := c.artSvc.ActiveGroupPathExists(ctx, params.ArtifactID, names, format)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return
@@ -71,7 +71,6 @@ func (c *Controller) CreateGroup(ctx *gin.Context) {
 		))
 		return
 	}
-
 	ge, err := c.artSvc.CreateGroup(ctx, params.ArtifactID, names, format)
 	if err != nil {
 		resp.InternalError(ctx, err)

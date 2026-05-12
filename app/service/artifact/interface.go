@@ -73,6 +73,9 @@ type Interface interface {
 	// GroupPathExists 检查指定视图下是否已存在完全相同的分组路径。
 	GroupPathExists(ctx context.Context, artifactID int64, names []string, format model.ArtifactFormat) (bool, error)
 
+	// ActiveGroupPathExists 检查指定视图下是否已存在未软删的同名分组路径。
+	ActiveGroupPathExists(ctx context.Context, artifactID int64, names []string, format model.ArtifactFormat) (bool, error)
+
 	// CreateGroup 在指定视图下创建分组层级。
 	CreateGroup(ctx context.Context, artifactID int64, names []string, format model.ArtifactFormat) (*model.ArtifactGroupEndpoint, error)
 

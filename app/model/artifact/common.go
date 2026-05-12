@@ -242,6 +242,9 @@ type CreateGroupReq struct {
 // 注：Format 在控制器阶段会被 view.Format 覆盖，因此这里不再要求前端必传；
 // 若调用方直接走 service 入口也可以显式设置 Format 后再调用此方法。
 func (r *CreateGroupReq) Validate() error {
+	// 0. 兼容 "/" 分隔符：统一替换为 "."
+	r.Names = strings.Trim(strings.ReplaceAll(r.Names, "/", "."), ".")
+
 	// 1. ArtifactID 校验
 	if r.ArtifactID <= 0 {
 		return errors.WithI18nKey(
