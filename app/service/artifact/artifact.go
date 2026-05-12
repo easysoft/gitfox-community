@@ -939,6 +939,23 @@ func (s *Service) GroupPathExists(ctx context.Context, artifactID int64, names [
 	return true, nil
 }
 
+// ActiveGroupPathExists 检查指定视图下是否已存在**未软删**的同名分组路径。
+// 与 GroupPathExists 的区别：软删的 group 不算"存在"，允许重新创建同名。
+func (s *Service) ActiveGroupPathExists(ctx context.Context, artifactID int64, names []string, format model.ArtifactFormat) (bool, error) {
+	endpoint, err := s.artStore.Groups().GetEndpointByNames(ctx, artifactID, names, format)
+	if err != nil {
+		if pkgErrors.Is(err, pkgErrors.ErrResourceNotFound) {
+			return false, nil
+		}
+		return false, pkgErrors.WithI18nKey(err, i18n.ArtifactGroupQueryError)
+	}
+	// 末级 group 已软删，视为不存在
+	if endpoint.ArtifactGroup != nil && endpoint.ArtifactGroup.Deleted == 1 {
+		return false, nil
+	}
+	return true, nil
+}
+
 func (s *Service) CreateGroup(ctx context.Context, artifactID int64, names []string, format model.ArtifactFormat) (*model.ArtifactGroupEndpoint, error) {
 	var result *model.ArtifactGroupEndpoint
 	err := s.db.Transaction(func(tx *gorm.DB) error {
@@ -970,7 +987,7 @@ func (s *Service) CreateGroup(ctx context.Context, artifactID int64, names []str
 //  4. format=all 或留空：
 //     - path == "/"：返回各 format 根节点（递归模式下展开各自子树）；
 //     - path == "/xxx[/**]"：遍历所有 format 根，按 (artifactID, path, format) 逐个 GetByPath，
-//       找到即进入该 format 的分支结果，未命中跳过；多 format 同名路径会合并返回。
+//     找到即进入该 format 的分支结果，未命中跳过；多 format 同名路径会合并返回。
 //  5. level 表示最大可见层级：format/group/package/version/asset。
 func (s *Service) ListTree(ctx context.Context, artifactID int64, filter *model.ArtifactTreeFilter) ([]*model.ArtifactTreeRes, error) {
 	if filter == nil {
@@ -1832,7 +1849,22 @@ func (s *Service) softRemoveGroup(ctx context.Context, group *model.ArtifactGrou
 		}
 		_ = s.deleteTreeNodeByTarget(ctx, g.ArtifactID, model.ArtifactTreeNodeTypeGroup, g.ID)
 	}
+	// 4) 若该 format 下已无活 group，清理 format 节点（避免前端看到空的格式入口）
+	remaining, _ := s.artStore.Groups().ListDescendantsForOwner(ctx, group.ArtifactID, group.Format)
+	if len(remaining) == 0 {
+		_ = s.deleteFormatTreeNode(ctx, group.ArtifactID, group.Format)
+	}
 	return nil
+}
+
+// deleteFormatTreeNode 删除指定 artifact 下某 format 的根节点（path="/"）。
+// 当该 format 下已无活 group 时调用，避免前端看到空的格式入口。
+func (s *Service) deleteFormatTreeNode(ctx context.Context, artifactID int64, format model.ArtifactFormat) error {
+	node, err := s.artStore.Nodes().GetByPath(ctx, artifactID, "/", format)
+	if err != nil {
+		return nil
+	}
+	return s.artStore.Nodes().DeleteById(ctx, node.ID)
 }
 
 // softRemoveArtifact 软删整个制品库（view）。

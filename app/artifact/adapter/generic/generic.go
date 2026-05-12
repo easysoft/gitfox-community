@@ -26,7 +26,7 @@ const (
 // genericGroupForbiddenChars generic 分组名禁用的字符集合。
 // 与视图名黑名单对齐：路径分隔、控制转义、Windows 保留字符；
 // `.` 作为层级分隔符由 split 处理，不列入此处（否则每段都会命中）。
-var genericGroupForbiddenChars = []rune{'/', '\\', ':', '*', '?', '"', '<', '>', '|'}
+var genericGroupForbiddenChars = []rune{'\\', ':', '*', '?', '"', '<', '>', '|'}
 
 type uploader struct {
 	uploadReq   *request.ArtifactUploadRequest
@@ -126,7 +126,7 @@ func (h *uploader) validateForm(_ context.Context, req *http.Request) error {
 		if err := validateGenericGroupName(group); err != nil {
 			return err
 		}
-		g, err := h.artStore.Groups().GetEndpointByNames(req.Context(), artifactID, strings.Split(group, "."), model.ArtifactGenericFormat)
+		g, err := h.artStore.Groups().GetEndpointByNames(req.Context(), artifactID, strings.Split(strings.Trim(strings.ReplaceAll(group, "/", "."), "."), "."), model.ArtifactGenericFormat)
 		if err != nil {
 			return badRequest(
 				fmt.Errorf("%w: group=%q not found under artifactID=%d: %v", adapter.ErrInvalidGroupName, group, artifactID, err),
