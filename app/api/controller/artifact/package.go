@@ -1,8 +1,6 @@
 package artifact
 
 import (
-	"net/http"
-
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
 	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
@@ -103,5 +101,5 @@ func (c *Controller) ListNodeInfo(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, list)
+	resp.OK(ctx, i18n.ArtifactListSuccess, list)
 }
