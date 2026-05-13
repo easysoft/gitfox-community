@@ -44,12 +44,12 @@ type ArtifactTreeFilter struct {
 // ==================== Response Types ====================
 
 type ArtifactListItem struct {
-	Format      string `gorm:"column:format" json:"format"`
-	Name        string `gorm:"column:name" json:"name"`
-	Namespace   string `gorm:"column:namespace" json:"namespace"`
-	DisplayName string `gorm:"-" json:"displayName"`
-	Version     string `gorm:"column:version" json:"version"`
-	UpdateTime  int64  `gorm:"column:editedDate" json:"updateTime"`
+	Format      string          `gorm:"column:format" json:"format"`
+	Name        string          `gorm:"column:name" json:"name"`
+	Namespace   string          `gorm:"column:namespace" json:"namespace"`
+	DisplayName string          `gorm:"-" json:"displayName"`
+	Version     string          `gorm:"column:version" json:"version"`
+	UpdateTime  *datetime.Local `gorm:"column:editedDate" json:"updateTime"`
 }
 
 type ArtifactAssetsRes struct {

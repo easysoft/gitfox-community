@@ -61,6 +61,8 @@ artifact:
   version_delete_error: "删除制品版本失败."
   package_delete_error: "删除制品包失败."
   package_list_error: "查询制品包列表失败."
+  version_artifactid_required: "查询版本列表必须指定 artifactID，请先选择对应的制品库."
+  version_package_required: "查询版本列表必须指定制品包名 packageName，且不能为空或全为空白字符."
 
   # Asset & Blob & Download
   asset_query_error: "查询制品资产失败."

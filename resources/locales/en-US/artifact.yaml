@@ -61,6 +61,8 @@ artifact:
   version_delete_error: "Failed to delete artifact version."
   package_delete_error: "Failed to delete artifact package."
   package_list_error: "Failed to list artifact packages."
+  version_artifactid_required: "artifactID is required for listing versions; please select a target artifact repository."
+  version_package_required: "packageName is required for listing versions and must not be empty or whitespace only."
 
   # Asset & Blob & Download
   asset_query_error: "Failed to query artifact asset."

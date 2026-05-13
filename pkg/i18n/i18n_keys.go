@@ -112,8 +112,10 @@ const (
 	ArtifactUploadSuccess                   I18nKey = "artifact.upload_success"                       // 制品上传成功.
 	ArtifactUploadValidateError             I18nKey = "artifact.upload_validate_error"                // 制品上传验证失败.
 	ArtifactUploadVersionInvalid            I18nKey = "artifact.upload_version_invalid"               // 上传 raw 制品必须指定版本 version,且只能包含字母数字、中划线、下划线、点.
+	ArtifactVersionArtifactidRequired       I18nKey = "artifact.version_artifactid_required"          // 查询版本列表必须指定 artifactID,请先选择对应的制品库.
 	ArtifactVersionDeleteError              I18nKey = "artifact.version_delete_error"                 // 删除制品版本失败.
 	ArtifactVersionListError                I18nKey = "artifact.version_list_error"                   // 查询制品版本列表失败.
+	ArtifactVersionPackageRequired          I18nKey = "artifact.version_package_required"             // 查询版本列表必须指定制品包名 packageName,且不能为空或全为空白字符.
 	ArtifactVersionQueryError               I18nKey = "artifact.version_query_error"                  // 查询制品版本失败.
 	ArtifactViewCreateError                 I18nKey = "artifact.view_create_error"                    // 创建制品视图失败.
 	ArtifactViewExpiredCleanupError         I18nKey = "artifact.view_expired_cleanup_error"           // 清理过期视图失败.

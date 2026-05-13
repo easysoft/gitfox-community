@@ -6,6 +6,7 @@ import (
 	"path"
 	"strings"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
 	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/storage"
 	storagedriver "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/storage/driver"
@@ -98,11 +99,13 @@ func TemporaryPath(p string) string {
 }
 
 type ViewDescriptor struct {
-	ArtifactID int64
-	StorageID  int64
-	Store      storage.ContentStorage
-	Space      *model.SpaceRef
-	Repo       *model.RepoRef
+	ArtifactID     int64
+	ArtifactName   string
+	ArtifactFormat artifact.ArtifactFormat
+	StorageID      int64
+	Store          storage.ContentStorage
+	Space          *model.SpaceRef
+	Repo           *model.RepoRef
 }
 
 type SavedAsset struct {
