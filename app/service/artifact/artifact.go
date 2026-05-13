@@ -334,9 +334,11 @@ func (s *Service) ParseSpaceView(ctx context.Context, req *model.SpaceRepoReq) (
 	}
 
 	desc := &adapter.ViewDescriptor{
-		ArtifactID: view.ID,
-		Store:      s.fileStore,
-		StorageID:  1,
+		ArtifactID:     view.ID,
+		ArtifactName:   view.Name,
+		ArtifactFormat: view.Format,
+		Store:          s.fileStore,
+		StorageID:      1,
 	}
 	if err = s.fillViewDescriptorScope(ctx, desc, view); err != nil {
 		return nil, err
@@ -458,9 +460,7 @@ func (s *Service) ListPackages(ctx context.Context, artifactID int64, filter *mo
 	return res, nil
 }
 
-func (s *Service) ListVersions(ctx context.Context, artifactID int64,
-	packageName, groupName string, format model.ArtifactFormat, opt model.SearchVersionOption,
-) ([]*model.ArtifactVersion, error) {
+func (s *Service) ListVersions(ctx context.Context, artifactID int64, packageName, groupName string, format model.ArtifactFormat, opt model.SearchVersionOption) ([]*model.ArtifactVersion, error) {
 	dbPkg, err := s.artStore.Packages().GetByName(ctx, packageName, groupName, artifactID, format)
 	if err != nil {
 		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactPackageQueryError)
@@ -470,7 +470,21 @@ func (s *Service) ListVersions(ctx context.Context, artifactID int64,
 }
 
 func (s *Service) ListAssets(ctx context.Context, VersionID int64) ([]*model.ArtifactAssetsRes, error) {
-	return s.artStore.ListAssets(ctx, VersionID)
+	assets, err := s.artStore.ListAssets(ctx, VersionID)
+	if err != nil {
+		return nil, err
+	}
+	// 复用 /artifacts/nodeInfo 的逐资产解析链路，
+	// 将 name / packageName / group / version / os / arch / link / entityID 等字段回填到列表响应，
+	// 与 /artifacts/groups/{groupID}/assets 保持同一套语义与同一份实现。
+	for _, a := range assets {
+		info, infoErr := s.getAssetNodeInfo(ctx, a.Id)
+		if infoErr != nil {
+			return nil, infoErr
+		}
+		applyNodeInfoToAsset(a, info)
+	}
+	return assets, nil
 }
 
 func (s *Service) ListGroupAssets(ctx context.Context, groupID int64) ([]*model.ArtifactAssetsRes, error) {

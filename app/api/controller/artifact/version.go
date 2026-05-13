@@ -58,14 +58,18 @@ func (c *Controller) ListVersions(ctx *gin.Context) {
 		resp.BadRequest(ctx, err)
 		return
 	}
+
+	if err := reqBody.Validate(); err != nil {
+		resp.BadRequest(ctx, err)
+		return
+	}
 	view, err := c.artSvc.ParseSpaceView(ctx, &reqBody.SpaceRepoReq)
 	if err != nil {
 		resp.BadRequest(ctx, err)
 		return
 	}
 
-	versions, err := c.artSvc.ListVersions(ctx, view.ArtifactID,
-		reqBody.PackageName, reqBody.GroupName, model.ArtifactFormat(reqBody.Format), model.SearchVersionOption{})
+	versions, err := c.artSvc.ListVersions(ctx, view.ArtifactID, reqBody.PackageName, view.ArtifactName, view.ArtifactFormat, model.SearchVersionOption{})
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return

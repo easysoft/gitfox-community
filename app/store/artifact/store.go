@@ -64,10 +64,11 @@ func (s *Store) FindPackages(ctx context.Context, artifactID int64, filter *mode
 		Select(`ops_artifact_packages.format, ops_artifact_packages.name, ops_artifact_packages.namespace,
 			ops_artifact_versions.version, ops_artifact_versions.editedDate`).
 		Joins(`JOIN (
-			SELECT packageID, MAX(editedDate) AS latest_updated
-				FROM ops_artifact_versions
-				WHERE artifactID = ?
-				GROUP BY packageID) AS latest_versions
+			SELECT v.packageID, MAX(v.editedDate) AS latest_updated
+				FROM ops_artifact_versions v
+				JOIN ops_artifact_packages p ON v.packageID = p.id
+				WHERE p.artifactID = ? AND v.deleted = 0
+				GROUP BY v.packageID) AS latest_versions
 			ON ops_artifact_packages.id = latest_versions.packageID
 				AND ops_artifact_packages.deleted = 0`, artifactID).
 		Joins(`JOIN ops_artifact_versions

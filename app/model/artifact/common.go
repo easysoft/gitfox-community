@@ -216,12 +216,34 @@ func (r *RefreshTreeReq) Validate() error {
 	return nil
 }
 
-// ArtifactVersionListReq 接收获取版本列表的请求参数
+// ArtifactVersionListReq 接收获取版本列表的请求参数。
+//
+// 校验规则：
+//   - ArtifactID 必填且 > 0：版本列表必须落在某个具体制品库视图内查询。
+//   - PackageName 必填且非空白：用于精确定位制品包，缺失时无法返回任何版本。
+//
+// 注意：此处不在 tag 层使用 binding:required，以便控制器统一抛出多语言错误。
 type ArtifactVersionListReq struct {
 	SpaceRepoReq
-	PackageName string `json:"packageName" binding:"required"`
-	Format      string `json:"format" binding:"required"`
-	GroupName   string `json:"groupName"`
+	PackageName string `json:"packageName"`
+}
+
+// Validate 对版本列表请求做业务校验，返回携带 i18n key 的错误。
+func (r *ArtifactVersionListReq) Validate() error {
+	if r.ArtifactID <= 0 {
+		return errors.WithI18nKey(
+			fmt.Errorf("artifactID is required and must be greater than 0, got %d", r.ArtifactID),
+			i18n.ArtifactVersionArtifactidRequired,
+		)
+	}
+	r.PackageName = strings.TrimSpace(r.PackageName)
+	if r.PackageName == "" {
+		return errors.WithI18nKey(
+			fmt.Errorf("packageName is required"),
+			i18n.ArtifactVersionPackageRequired,
+		)
+	}
+	return nil
 }
 
 type ArtifactTreeListReq struct {
