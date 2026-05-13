@@ -29,7 +29,7 @@ type Interface interface {
 	FindPackages(ctx context.Context, artifactID int64, filter *model.ArtifactFilter) ([]*model.ArtifactListItem, error)
 	GetVersion(ctx context.Context, artifactID int64, packageName, groupName, versionName string, format model.ArtifactFormat) (*model.ArtifactVersion, error)
 	GetAsset(ctx context.Context, assetID int64) (*model.ArtifactAssetsRes, error)
-	ListAssets(ctx context.Context, VersionID int64) ([]*model.ArtifactAssetsRes, error)
+	ListAssets(ctx context.Context, versionID int64) ([]*model.ArtifactAssetsRes, error)
 	ListGroupAssets(ctx context.Context, groupID int64) ([]*model.ArtifactAssetsRes, error)
 	StatisticAssets(ctx context.Context, retentionTime time.Duration, options ...SearchOption) (*model.ArtifactStatisticReport, error)
 }
@@ -80,11 +80,11 @@ type PackageInterface interface {
 
 type VersionInterface interface {
 	Create(ctx context.Context, newObj *model.CreateArtifactVersion) (*model.ArtifactVersion, error)
-	GetByID(ctx context.Context, VersionID int64) (*model.ArtifactVersion, error)
+	GetByID(ctx context.Context, versionID int64) (*model.ArtifactVersion, error)
 	GetByVersion(ctx context.Context, packageId int64, version string) (*model.ArtifactVersion, error)
 	Update(ctx context.Context, ver *model.ArtifactVersion) error
-	DeleteById(ctx context.Context, VersionID int64) error
-	DeleteByIds(ctx context.Context, VersionIDs ...int64) (int64, error)
+	DeleteById(ctx context.Context, versionID int64) error
+	DeleteByIds(ctx context.Context, versionIDs ...int64) (int64, error)
 	Find(ctx context.Context, opt model.SearchVersionOption) ([]*model.ArtifactVersion, error)
 	SoftDelete(ctx context.Context, ver *model.ArtifactVersion) error
 	UnDelete(ctx context.Context, ver *model.ArtifactVersion) error
@@ -96,13 +96,13 @@ type AssetInterface interface {
 	GetById(ctx context.Context, assetID int64) (*model.ArtifactAsset, error)
 	GetPath(ctx context.Context, path string, format model.ArtifactFormat) (*model.ArtifactAsset, error)
 	GetMetaAsset(ctx context.Context, path string, artifactID int64, format model.ArtifactFormat) (*model.ArtifactAsset, error)
-	GetVersionAsset(ctx context.Context, path string, VersionID int64) (*model.ArtifactAsset, error)
+	GetVersionAsset(ctx context.Context, path string, versionID int64) (*model.ArtifactAsset, error)
 	GetGroupAsset(ctx context.Context, path string, groupID int64) (*model.ArtifactAsset, error)
-	FindMain(ctx context.Context, VersionID int64) ([]*model.ArtifactAsset, error)
+	FindMain(ctx context.Context, versionID int64) ([]*model.ArtifactAsset, error)
 	UpdateBlobId(ctx context.Context, assetID int64, blobID int64) error
 	Update(ctx context.Context, asset *model.ArtifactAsset) error
 	SoftDeleteById(ctx context.Context, assetID int64) error
-	SoftDeleteExcludeById(ctx context.Context, VersionID int64, assetID int64) error
+	SoftDeleteExcludeById(ctx context.Context, versionID int64, assetID int64) error
 	DeleteById(ctx context.Context, assetID int64) error
 	Search(ctx context.Context, option ...SearchOption) ([]*model.ArtifactAsset, error)
 	SearchExtendBlob(ctx context.Context, options ...SearchOption) ([]*model.ArtifactAssetExtendBlob, error)

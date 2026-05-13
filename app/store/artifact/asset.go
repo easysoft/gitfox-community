@@ -86,20 +86,20 @@ func (c *assets) GetMetaAsset(ctx context.Context, path string, artifactID int64
 	return c.find(ctx, &artifactAsset{Path: path, Format: string(format), ArtifactID: null.IntFrom(artifactID)})
 }
 
-func (c *assets) GetVersionAsset(ctx context.Context, path string, VersionID int64) (*model.ArtifactAsset, error) {
-	return c.find(ctx, &artifactAsset{Path: path, VersionID: null.IntFrom(VersionID)})
+func (c *assets) GetVersionAsset(ctx context.Context, path string, versionID int64) (*model.ArtifactAsset, error) {
+	return c.find(ctx, &artifactAsset{Path: path, VersionID: null.IntFrom(versionID)})
 }
 
 func (c *assets) GetGroupAsset(ctx context.Context, path string, groupID int64) (*model.ArtifactAsset, error) {
 	return c.find(ctx, &artifactAsset{Path: path, GroupID: null.IntFrom(groupID)})
 }
 
-func (c *assets) FindMain(ctx context.Context, VersionID int64) ([]*model.ArtifactAsset, error) {
-	if err := validatorEmpty(VersionID); err != nil {
+func (c *assets) FindMain(ctx context.Context, versionID int64) ([]*model.ArtifactAsset, error) {
+	if err := validatorEmpty(versionID); err != nil {
 		return nil, err
 	}
 	var rows []*artifactAsset
-	q := artifactAsset{VersionID: null.IntFrom(VersionID)}
+	q := artifactAsset{VersionID: null.IntFrom(versionID)}
 	if err := c.db.WithContext(ctx).Where(&q).Where("deleted = 0").Find(&rows).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
@@ -138,9 +138,9 @@ func (c *assets) SoftDeleteById(ctx context.Context, assetID int64) error {
 	return nil
 }
 
-func (c *assets) SoftDeleteExcludeById(ctx context.Context, VersionID int64, assetID int64) error {
+func (c *assets) SoftDeleteExcludeById(ctx context.Context, versionID int64, assetID int64) error {
 	err := c.db.WithContext(ctx).Model(&artifactAsset{}).
-		Where("versionID = ?", VersionID).
+		Where("versionID = ?", versionID).
 		Where("id <> ?", assetID).
 		Where("deleted = 0").
 		UpdateColumn("deleted", 1).Error

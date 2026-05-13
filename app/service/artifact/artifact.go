@@ -1520,7 +1520,7 @@ func (s *Service) StatisticSummary(ctx context.Context) (map[string]*model.Artif
 	for _, verInfo := range verInfoList {
 		verStats, ok := versionStats[verInfo.ID]
 		if !ok {
-			logger.GetLogger(ctx).Debugf("VersionID %d not found in versionStats", verInfo.ID)
+			logger.GetLogger(ctx).Debugf("versionID %d not found in versionStats", verInfo.ID)
 			continue
 		}
 		key := artifactScopeKey(verInfo)

@@ -43,7 +43,7 @@ type Interface interface {
 	ListVersions(ctx context.Context, artifactID int64, packageName, groupName string, format model.ArtifactFormat, opt model.SearchVersionOption) ([]*model.ArtifactVersion, error)
 
 	// ListAssets 列出指定版本下的所有制品资源文件。
-	ListAssets(ctx context.Context, VersionID int64) ([]*model.ArtifactAssetsRes, error)
+	ListAssets(ctx context.Context, versionID int64) ([]*model.ArtifactAssetsRes, error)
 
 	// ListGroupAssets 列出指定分组下直接挂载的资源文件（generic 格式）。
 	ListGroupAssets(ctx context.Context, groupID int64) ([]*model.ArtifactAssetsRes, error)

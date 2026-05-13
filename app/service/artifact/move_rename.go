@@ -135,7 +135,7 @@ func (s *Service) MovePackage(ctx context.Context, pkgID, tArtifactID, tGroupID 
 }
 
 // moveAssetInner 在调用方事务内完成一次组资产移动。
-// 仅支持组资产（asset.GroupID 有效、VersionID 无效）；版本资产随 package / version 移动，不在本方法范畴。
+// 仅支持组资产（asset.GroupID 有效、versionID 无效）；版本资产随 package / version 移动，不在本方法范畴。
 func (s *Service) moveAssetInner(ctx context.Context, assetID, tArtifactID, tGroupID int64) error {
 	// 1. 读源 asset
 	srcAsset, err := s.artStore.Assets().GetById(ctx, assetID)
