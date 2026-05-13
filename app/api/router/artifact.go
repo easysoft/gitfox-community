@@ -38,22 +38,22 @@ func registerArtifactRoutes(group *gin.RouterGroup, controller *Controller, _ au
 		artifact.POST("/versions/list", controller.Artifact.ListVersions) // pullAuth
 
 		// 版本级操作
-		artifact.GET("/versions/:versionId/assets", controller.Artifact.ListAssets) // pullAuth
+		artifact.GET("/versions/:versionID/assets", controller.Artifact.ListAssets) // pullAuth
 
 		// group 级操作（读）
-		artifact.GET("/groups/:groupId/assets", controller.Artifact.ListGroupAssets) // pullAuth
-		artifact.GET("/groups/:groupId/archive", controller.Artifact.ArchiveGroup)   // pullAuth
+		artifact.GET("/groups/:groupID/assets", controller.Artifact.ListGroupAssets) // pullAuth
+		artifact.GET("/groups/:groupID/archive", controller.Artifact.ArchiveGroup)   // pullAuth
 
 		// asset 级操作（读）
-		artifact.GET("/assets/:assetId", controller.Artifact.GetAsset)               // pullAuth
-		artifact.GET("/assets/:assetId/history", controller.Artifact.GetBlobHistory) // pullAuth
-		artifact.GET("/assets/:assetId/download", controller.Artifact.DownloadAsset) // pullAuth
+		artifact.GET("/assets/:assetID", controller.Artifact.GetAsset)               // pullAuth
+		artifact.GET("/assets/:assetID/history", controller.Artifact.GetBlobHistory) // pullAuth
+		artifact.GET("/assets/:assetID/download", controller.Artifact.DownloadAsset) // pullAuth
 
 		// 删除操作（统一使用 SoftRemoveByEntity，支持级联删除）
 		artifact.DELETE("/entities", controller.Artifact.SoftRemoveByEntity) // deleteAuth
 
 		// 树节点（读）
-		artifact.GET("/nodes/:nodeId/children", controller.Artifact.ListTreeNodes) // pullAuth
+		artifact.GET("/nodes/:nodeID/children", controller.Artifact.ListTreeNodes) // pullAuth
 
 		// 树节点（写）
 		// 移动制品/制品库
@@ -76,8 +76,8 @@ func registerArtifactRoutes(group *gin.RouterGroup, controller *Controller, _ au
 		// 只要 Principal.Admin（zentao App）或 User.IsAdmin（DB 管理员）即可管理权限，
 		// 避免「无 artifact_admin 无法授权 artifact_admin」的死锁问题。
 		// adminAuth := middleware.ArtifactAdminMiddleware()
-		// artifact.POST("/entities/:entityId/permissions", adminAuth, controller.Artifact.SetEntityPermission)
-		// artifact.GET("/entities/:entityId/permissions", adminAuth, controller.Artifact.GetEntityPermissions)
+		// artifact.POST("/entities/:entityID/permissions", adminAuth, controller.Artifact.SetEntityPermission)
+		// artifact.GET("/entities/:entityID/permissions", adminAuth, controller.Artifact.GetEntityPermissions)
 		// artifact.POST("/permissions", adminAuth, controller.Artifact.SetPermissions)
 		// artifact.GET("/permissions", adminAuth, controller.Artifact.GetPermissions)
 		// artifact.GET("/members", pullAuth, controller.Artifact.GetMembers)

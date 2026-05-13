@@ -33,7 +33,7 @@ artifact:
   view_name_non_ascii_not_allowed: "For versioned artifact views (container/helm/pypi/npm/maven), the name may only contain ASCII letters, digits, dashes and underscores; non-ASCII characters (e.g. Chinese) are not allowed."
   
   # Parse & Upload
-  space_id_required: "spaceId is required when repoId is provided."
+  space_id_required: "spaceID is required when repoID is provided."
   repo_query_error: "Failed to query repository."
   space_query_error: "Failed to query space."
   default_view_query_error: "Failed to query default view."
@@ -81,13 +81,13 @@ artifact:
 
   # Tree
   tree_format_list_error: "Failed to list artifact formats."
-  tree_format_required: "format is required for tree queries unless nodeId is provided."
+  tree_format_required: "format is required for tree queries unless nodeID is provided."
 
   tree_refresh_format_invalid: "Unsupported artifact format. Supported: generic, raw, maven, container, helm, pypi, npm."
   tree_level_invalid: "Invalid tree query level. Supported values: format, group, package, version, asset."
   tree_node_list_error: "Failed to list artifact tree nodes."
-  tree_node_not_in_artifact: "The specified nodeId does not belong to the current artifact."
-  tree_node_recursive_conflict: "Recursive tree query is not supported when nodeId is provided."
+  tree_node_not_in_artifact: "The specified nodeID does not belong to the current artifact."
+  tree_node_recursive_conflict: "Recursive tree query is not supported when nodeID is provided."
   tree_refresh_error: "Failed to refresh artifact tree."
 
   # GC & Delete

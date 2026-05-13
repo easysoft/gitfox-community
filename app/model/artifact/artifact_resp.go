@@ -34,7 +34,7 @@ type ArtifactVersionFilter struct {
 }
 
 type ArtifactTreeFilter struct {
-	NodeID int64          `json:"nodeId"`
+	NodeID int64          `json:"nodeID"`
 	Path   string         `json:"path"`
 	Format ArtifactFormat `json:"format"`
 	Level  string         `json:"level"`
@@ -68,7 +68,7 @@ type ArtifactAssetsRes struct {
 	CheckSum *CheckSumRes      `gorm:"-" json:"checksum"`
 	Metadata map[string]string `gorm:"-" json:"metadata"`
 	Link     string            `gorm:"-" json:"link"`
-	EntityId string            `gorm:"-" json:"entityId"`
+	EntityID string            `gorm:"-" json:"entityID"`
 }
 
 type ArtifactBlobRes struct {
@@ -86,7 +86,7 @@ type ArtifactBlobRes struct {
 	CheckSum *CheckSumRes      `gorm:"-" json:"checksum"`
 	Metadata map[string]string `gorm:"-" json:"metadata"`
 	Link     string            `gorm:"-" json:"link"`
-	EntityId string            `gorm:"-" json:"entityId"`
+	EntityID string            `gorm:"-" json:"entityID"`
 }
 
 type CheckSumRes struct {
@@ -132,10 +132,10 @@ type ArtifactTreeNodeMeta struct {
 	Group   string               `json:"group,omitempty"`
 	Version string               `json:"version,omitempty"`
 
-	// NodeId 已废弃，调用方应改用 EntityId。
-	// Deprecated NodeId, use EntityId instead
-	NodeId   string `json:"nodeId,omitempty"`
-	EntityId string `json:"entityId,omitempty"`
+	// NodeID 已废弃，调用方应改用 EntityID。
+	// Deprecated NodeID, use EntityID instead
+	NodeID   string `json:"nodeID,omitempty"`
+	EntityID string `json:"entityID,omitempty"`
 }
 
 type ArtifactTreeNodeId struct {
@@ -219,7 +219,7 @@ type ArtifactPkgVerMetadata struct {
 // ==================== Remove / GC ====================
 
 type ArtifactNodeRemoveRes struct {
-	NodeId   string         `json:"nodeId"`
+	NodeID   string         `json:"nodeID"`
 	Status   ArtifactStatus `json:"status"`
 	Packages int            `json:"packages,omitempty"`
 	Versions int            `json:"versions,omitempty"`
@@ -287,7 +287,7 @@ type ArtifactEntityPermissions struct {
 
 type ArtifactPermInherit struct {
 	Inherited       bool     `json:"inherited"`
-	InheritEntityId string   `json:"inheritEntityId"`
+	InheritEntityID string   `json:"inheritEntityID"`
 	InheritFrom     string   `json:"inheritFrom"`
 	InheritParents  []string `json:"inheritParents"`
 }

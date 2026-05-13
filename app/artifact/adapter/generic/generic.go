@@ -90,38 +90,38 @@ func (h *uploader) Serve(ctx context.Context, req *http.Request) (int64, error) 
 
 func (h *uploader) validateForm(_ context.Context, req *http.Request) error {
 	group := req.FormValue("group")
-	groupId := req.FormValue("groupId")
+	groupID := req.FormValue("groupID")
 
-	if group == "" && groupId == "" {
+	if group == "" && groupID == "" {
 		return badRequest(
-			fmt.Errorf("%w: required parameter 'group' or 'groupId'", adapter.ErrMissFormField),
+			fmt.Errorf("%w: required parameter 'group' or 'groupID'", adapter.ErrMissFormField),
 			i18n.ArtifactUploadGroupRequired,
 		)
 	}
 
 	artifactID := h.view.ArtifactID
-	if groupId != "" {
-		gId, err := strconv.ParseInt(groupId, 10, 64)
+	if groupID != "" {
+		gId, err := strconv.ParseInt(groupID, 10, 64)
 		if err != nil {
 			return badRequest(
-				fmt.Errorf("%w: %s", adapter.ErrInvalidGroupId, groupId),
+				fmt.Errorf("%w: %s", adapter.ErrInvalidGroupId, groupID),
 				i18n.ArtifactUploadGroupIdInvalid,
 			)
 		}
 		g, err := h.artStore.Groups().GetById(req.Context(), gId)
 		if err != nil {
 			return badRequest(
-				fmt.Errorf("%w: %s: %v", adapter.ErrInvalidGroupId, groupId, err),
+				fmt.Errorf("%w: %s: %v", adapter.ErrInvalidGroupId, groupID, err),
 				i18n.ArtifactUploadGroupIdInvalid,
 			)
 		}
 		if g.ArtifactID != artifactID {
 			return badRequest(
-				fmt.Errorf("%w: groupId=%s does not belong to artifactID=%d", adapter.ErrInvalidGroupId, groupId, artifactID),
+				fmt.Errorf("%w: groupID=%s does not belong to artifactID=%d", adapter.ErrInvalidGroupId, groupID, artifactID),
 				i18n.ArtifactUploadGroupArtifactMismatch,
 			)
 		}
-		h.descriptor.GroupId = gId
+		h.descriptor.GroupID = gId
 	} else {
 		if err := validateGenericGroupName(group); err != nil {
 			return err
@@ -139,7 +139,7 @@ func (h *uploader) validateForm(_ context.Context, req *http.Request) error {
 				i18n.ArtifactUploadGroupArtifactMismatch,
 			)
 		}
-		h.descriptor.GroupId = g.ID
+		h.descriptor.GroupID = g.ID
 	}
 
 	return nil

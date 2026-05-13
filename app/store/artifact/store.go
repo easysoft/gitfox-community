@@ -161,9 +161,9 @@ func (s *Store) StatisticAssets(ctx context.Context, retentionTime time.Duration
 			}
 
 			report.DeleteList = append(report.DeleteList, &model.ArtifactRecycleBlobDesc{
-				AssetId: asset.ID,
+				AssetID: asset.ID,
 				Path:    asset.Path,
-				BlobId:  asset.BlobID,
+				BlobID:  asset.BlobID,
 				BlobRef: blobRef,
 				Size:    asset.Size,
 			})
@@ -176,7 +176,7 @@ func (s *Store) StatisticAssets(ctx context.Context, retentionTime time.Duration
 		versionID := asset.VersionID.Int64
 		capItem, ok := versionCap[versionID]
 		if !ok {
-			capItem = &model.ArtifactVersionCapacityDesc{VersionId: versionID}
+			capItem = &model.ArtifactVersionCapacityDesc{VersionID: versionID}
 			versionCap[versionID] = capItem
 		}
 		capItem.TotalSize += asset.Size
@@ -207,7 +207,7 @@ func (s *Store) GetVersion(ctx context.Context, artifactID int64,
 	return dbVer, nil
 }
 
-func (s *Store) ListAssets(ctx context.Context, versionId int64) ([]*model.ArtifactAssetsRes, error) {
+func (s *Store) ListAssets(ctx context.Context, VersionID int64) ([]*model.ArtifactAssetsRes, error) {
 	// ListAssets 拉取 version 下未删除资产，并联表补齐 blob 与创建人信息。
 	result := make([]*model.ArtifactAssetsRes, 0)
 	stmt := s.db.WithContext(ctx).Model(&artifactAsset{}).
@@ -215,7 +215,7 @@ func (s *Store) ListAssets(ctx context.Context, versionId int64) ([]*model.Artif
 			ops_artifact_assets.checkSum,ops_artifact_assets.metadata,ops_artifact_assets.createdDate,
 			ops_artifact_blobs.size,ops_artifact_blobs.ref,ops_artifact_blobs.createdDate,ops_artifact_blobs.createdBy`).
 		Joins(`LEFT JOIN ops_artifact_blobs on ops_artifact_assets.blobID=ops_artifact_blobs.id`).
-		Where(`ops_artifact_assets.versionID = ?`, versionId).
+		Where(`ops_artifact_assets.versionID = ?`, VersionID).
 		Where(`ops_artifact_assets.deleted = 0`)
 
 	if err := stmt.Find(&result).Error; err != nil {
@@ -225,7 +225,7 @@ func (s *Store) ListAssets(ctx context.Context, versionId int64) ([]*model.Artif
 	return result, nil
 }
 
-func (s *Store) ListGroupAssets(ctx context.Context, groupId int64) ([]*model.ArtifactAssetsRes, error) {
+func (s *Store) ListGroupAssets(ctx context.Context, groupID int64) ([]*model.ArtifactAssetsRes, error) {
 	// ListGroupAssets 面向 generic/raw group 级资产，查询逻辑与 version 资产分开。
 	var dst []*model.ArtifactAssetsRes
 	stmt := s.db.WithContext(ctx).Model(&artifactAsset{}).
@@ -233,7 +233,7 @@ func (s *Store) ListGroupAssets(ctx context.Context, groupId int64) ([]*model.Ar
 			ops_artifact_assets.checkSum,ops_artifact_assets.metadata,ops_artifact_assets.createdDate,
 			ops_artifact_blobs.size,ops_artifact_blobs.ref,ops_artifact_blobs.createdDate,ops_artifact_blobs.createdBy`).
 		Joins(`LEFT JOIN ops_artifact_blobs on ops_artifact_assets.blobID=ops_artifact_blobs.id`).
-		Where(`ops_artifact_assets.groupID = ?`, groupId).
+		Where(`ops_artifact_assets.groupID = ?`, groupID).
 		Where(`ops_artifact_assets.deleted = 0`)
 
 	if err := stmt.Find(&dst).Error; err != nil {
@@ -243,7 +243,7 @@ func (s *Store) ListGroupAssets(ctx context.Context, groupId int64) ([]*model.Ar
 	return dst, nil
 }
 
-func (s *Store) GetAsset(ctx context.Context, assetId int64) (*model.ArtifactAssetsRes, error) {
+func (s *Store) GetAsset(ctx context.Context, assetID int64) (*model.ArtifactAssetsRes, error) {
 	// GetAsset 读取单个资产详情，并把字符串字段反序列化为结构化响应。
 	var result model.ArtifactAssetsRes
 	stmt := s.db.WithContext(ctx).Model(&artifactAsset{}).
@@ -251,7 +251,7 @@ func (s *Store) GetAsset(ctx context.Context, assetId int64) (*model.ArtifactAss
 			ops_artifact_assets.checkSum,ops_artifact_assets.metadata,ops_artifact_assets.createdDate,
 			ops_artifact_blobs.size,ops_artifact_blobs.ref,ops_artifact_blobs.createdDate,ops_artifact_blobs.createdBy`).
 		Joins(`LEFT JOIN ops_artifact_blobs on ops_artifact_assets.blobID=ops_artifact_blobs.id`).
-		Where(`ops_artifact_assets.id = ?`, assetId).
+		Where(`ops_artifact_assets.id = ?`, assetID).
 		Where(`ops_artifact_assets.deleted = 0`)
 
 	if err := stmt.Take(&result).Error; err != nil {

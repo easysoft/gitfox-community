@@ -142,7 +142,7 @@ func (s *Service) CreateView(ctx context.Context, req *model.CreateArtifactViewR
 	// repoID 不为空时，spaceID 必须同时存在
 	if req.RepoID > 0 && req.SpaceID == 0 {
 		return nil, pkgErrors.WithI18nKey(
-			errors.New("spaceId is required when repoId is provided"),
+			errors.New("spaceID is required when repoID is provided"),
 			i18n.ArtifactSpaceIdRequired,
 		)
 	}
@@ -259,20 +259,20 @@ func (s *Service) ResolveView(ctx context.Context, req *model.SpaceRepoReq) (*mo
 		}
 		if req.SpaceID > 0 && view.SpaceID != req.SpaceID {
 			return nil, pkgErrors.WithI18nKey(
-				fmt.Errorf("artifactID %d does not belong to spaceId %d", req.ArtifactID, req.SpaceID),
+				fmt.Errorf("artifactID %d does not belong to spaceID %d", req.ArtifactID, req.SpaceID),
 				i18n.ArtifactViewScopeMismatch,
 			)
 		}
 		if req.RepoID > 0 {
 			if req.SpaceID == 0 {
 				return nil, pkgErrors.WithI18nKey(
-					errors.New("spaceId is required when repoId is provided"),
+					errors.New("spaceID is required when repoID is provided"),
 					i18n.ArtifactSpaceIdRequired,
 				)
 			}
 			if view.RepoID != req.RepoID {
 				return nil, pkgErrors.WithI18nKey(
-					fmt.Errorf("artifactID %d does not belong to repoId %d under spaceId %d", req.ArtifactID, req.RepoID, req.SpaceID),
+					fmt.Errorf("artifactID %d does not belong to repoID %d under spaceID %d", req.ArtifactID, req.RepoID, req.SpaceID),
 					i18n.ArtifactViewScopeMismatch,
 				)
 			}
@@ -283,7 +283,7 @@ func (s *Service) ResolveView(ctx context.Context, req *model.SpaceRepoReq) (*mo
 	if req.RepoID > 0 {
 		if req.SpaceID == 0 {
 			return nil, pkgErrors.WithI18nKey(
-				errors.New("spaceId is required when repoId is provided"),
+				errors.New("spaceID is required when repoID is provided"),
 				i18n.ArtifactSpaceIdRequired,
 			)
 		}
@@ -460,29 +460,29 @@ func (s *Service) ListVersions(ctx context.Context, artifactID int64,
 	if err != nil {
 		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactPackageQueryError)
 	}
-	opt.PackageId = dbPkg.ID
+	opt.PackageID = dbPkg.ID
 	return s.artStore.Versions().Find(ctx, opt)
 }
 
-func (s *Service) ListAssets(ctx context.Context, versionId int64) ([]*model.ArtifactAssetsRes, error) {
-	return s.artStore.ListAssets(ctx, versionId)
+func (s *Service) ListAssets(ctx context.Context, VersionID int64) ([]*model.ArtifactAssetsRes, error) {
+	return s.artStore.ListAssets(ctx, VersionID)
 }
 
-func (s *Service) ListGroupAssets(ctx context.Context, groupId int64) ([]*model.ArtifactAssetsRes, error) {
-	return s.artStore.ListGroupAssets(ctx, groupId)
+func (s *Service) ListGroupAssets(ctx context.Context, groupID int64) ([]*model.ArtifactAssetsRes, error) {
+	return s.artStore.ListGroupAssets(ctx, groupID)
 }
 
-func (s *Service) GetAsset(ctx context.Context, assetId int64) (*model.ArtifactAssetsRes, error) {
-	return s.artStore.GetAsset(ctx, assetId)
+func (s *Service) GetAsset(ctx context.Context, assetID int64) (*model.ArtifactAssetsRes, error) {
+	return s.artStore.GetAsset(ctx, assetID)
 }
 
-func (s *Service) GetBlobHistory(ctx context.Context, assetId int64) ([]*model.ArtifactBlobRes, error) {
-	return s.artStore.Blobs().History(ctx, assetId)
+func (s *Service) GetBlobHistory(ctx context.Context, assetID int64) ([]*model.ArtifactBlobRes, error) {
+	return s.artStore.Blobs().History(ctx, assetID)
 }
 
-// ListNodeInfo 兼容参考项目 `/artifacts/nodeInfo`，按 entity_ids / node_ids 批量返回节点详情。
+// ListNodeInfo 兼容参考项目 `/artifacts/nodeInfo`，按 entityIDs 批量返回节点详情。
 func (s *Service) ListNodeInfo(ctx context.Context, req *model.ListNodeInfoReq) ([]*model.ArtifactNodeInfo, error) {
-	ids := req.EntityIds
+	ids := req.EntityIDs
 
 	result := make([]*model.ArtifactNodeInfo, 0, len(ids))
 	for _, entityID := range ids {
@@ -861,8 +861,8 @@ func notFoundNodeInfo() *model.ArtifactNodeInfo {
 	return &model.ArtifactNodeInfo{Status: string(model.ArtifactStatusNotFound)}
 }
 
-func (s *Service) DownloadAsset(ctx context.Context, assetId int64) (io.ReadCloser, *model.ArtifactBlob, error) {
-	asset, err := s.artStore.Assets().GetById(ctx, assetId)
+func (s *Service) DownloadAsset(ctx context.Context, assetID int64) (io.ReadCloser, *model.ArtifactBlob, error) {
+	asset, err := s.artStore.Assets().GetById(ctx, assetID)
 	if err != nil {
 		return nil, nil, pkgErrors.WithI18nKey(err, i18n.ArtifactAssetQueryError)
 	}
@@ -981,7 +981,7 @@ func (s *Service) CreateGroup(ctx context.Context, artifactID int64, names []str
 
 // ListTree 是通用树查询入口。
 // 语义：
-//  1. nodeId > 0 时，优先按节点ID定位当前节点，只支持单层查询；
+//  1. nodeID > 0 时，优先按节点ID定位当前节点，只支持单层查询；
 //  2. path 不带 /** 时，返回“当前层”的平铺节点列表；
 //  3. path 为 /** 或 /xxx/** 时，返回从该路径开始的递归树；
 //  4. format=all 或留空：
@@ -999,10 +999,10 @@ func (s *Service) ListTree(ctx context.Context, artifactID int64, filter *model.
 	}
 	path, recursive := normalizeTreePath(filter.Path)
 
-	// 1) nodeId 分支：精确定位单节点。
+	// 1) nodeID 分支：精确定位单节点。
 	if filter.NodeID > 0 {
 		if recursive {
-			return nil, pkgErrors.WithI18nKey(errors.New("recursive query is not supported when nodeId is provided"), i18n.ArtifactTreeNodeRecursiveConflict)
+			return nil, pkgErrors.WithI18nKey(errors.New("recursive query is not supported when nodeID is provided"), i18n.ArtifactTreeNodeRecursiveConflict)
 		}
 		currNode, err := s.artStore.Nodes().GetById(ctx, filter.NodeID)
 		if err != nil {
@@ -1128,8 +1128,8 @@ func (s *Service) ListFormats(ctx context.Context, artifactID int64) ([]*model.A
 	return s.artStore.Nodes().ListFormats(ctx, artifactID)
 }
 
-func (s *Service) ListTreeNodes(ctx context.Context, parentId int64) ([]*model.ArtifactTreeNode, error) {
-	return s.artStore.Nodes().ListByParentId(ctx, parentId)
+func (s *Service) ListTreeNodes(ctx context.Context, parentID int64) ([]*model.ArtifactTreeNode, error) {
+	return s.artStore.Nodes().ListByParentId(ctx, parentID)
 }
 
 // listTreeCurrentLevel 处理“非递归模式”的当前层查询。
@@ -1144,7 +1144,7 @@ func (s *Service) ListTreeNodes(ctx context.Context, parentId int64) ([]*model.A
 // 注意 container layer blob 走 isolated（VersionID=0，见 manifest_upload.go::AttrAssetIsolated），
 // 不会被这里错列；这一段只会返回挂在 version 上的 main asset（manifest）。
 func (s *Service) listTreeCurrentLevel(ctx context.Context, node *model.ArtifactTreeNode, level string) ([]*model.ArtifactTreeRes, error) {
-	if node.Type == model.ArtifactTreeNodeTypeVersion && node.TargetId.Valid {
+	if node.Type == model.ArtifactTreeNodeTypeVersion && node.TargetID.Valid {
 		if level == model.ArtifactNodeLevelAsset {
 			return s.listVersionAssetAsTree(ctx, node)
 		}
@@ -1157,8 +1157,8 @@ func (s *Service) listTreeCurrentLevel(ctx context.Context, node *model.Artifact
 	// 先按 level 裁掉超过目标层级的节点，再做响应模型转换。
 	children = filterTreeNodesByLevel(children, level)
 	data := convertTreeNodesToRes(children, level)
-	if node.Type == model.ArtifactTreeNodeTypeGroup && node.TargetId.Valid && level == model.ArtifactNodeLevelAsset {
-		return s.appendGroupAssets(ctx, node.TargetId.Int64, data)
+	if node.Type == model.ArtifactTreeNodeTypeGroup && node.TargetID.Valid && level == model.ArtifactNodeLevelAsset {
+		return s.appendGroupAssets(ctx, node.TargetID.Int64, data)
 	}
 	return data, nil
 }
@@ -1172,7 +1172,7 @@ func (s *Service) listTreeCurrentLevel(ctx context.Context, node *model.Artifact
 // container 同样按 version → asset 下钻：asset 不在 tree 表里，必须走 listVersionAssetAsTree
 // 直查 ops_artifact_assets。container layer 走 isolated（VersionID=0），不会被这里错列。
 func (s *Service) buildTreeChildren(ctx context.Context, node *model.ArtifactTreeNode, level string) ([]*model.ArtifactTreeRes, error) {
-	if node.Type == model.ArtifactTreeNodeTypeVersion && node.TargetId.Valid {
+	if node.Type == model.ArtifactTreeNodeTypeVersion && node.TargetID.Valid {
 		if level == model.ArtifactNodeLevelAsset {
 			return s.listVersionAssetAsTree(ctx, node)
 		}
@@ -1193,8 +1193,8 @@ func (s *Service) buildTreeChildren(ctx context.Context, node *model.ArtifactTre
 		item.Leaf = len(item.Children) == 0
 		data = append(data, item)
 	}
-	if node.Type == model.ArtifactTreeNodeTypeGroup && node.TargetId.Valid && level == model.ArtifactNodeLevelAsset {
-		return s.appendGroupAssets(ctx, node.TargetId.Int64, data)
+	if node.Type == model.ArtifactTreeNodeTypeGroup && node.TargetID.Valid && level == model.ArtifactNodeLevelAsset {
+		return s.appendGroupAssets(ctx, node.TargetID.Int64, data)
 	}
 	return data, nil
 }
@@ -1202,7 +1202,7 @@ func (s *Service) buildTreeChildren(ctx context.Context, node *model.ArtifactTre
 // listVersionAssetAsTree 将 version 节点下的资产转换成树节点返回。
 // 参考项目里 version 在 asset 级别会直接展开成文件，这里保持同样语义。
 func (s *Service) listVersionAssetAsTree(ctx context.Context, node *model.ArtifactTreeNode) ([]*model.ArtifactTreeRes, error) {
-	assets, err := s.artStore.ListAssets(ctx, node.TargetId.Int64)
+	assets, err := s.artStore.ListAssets(ctx, node.TargetID.Int64)
 	if err != nil {
 		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactAssetQueryError)
 	}
@@ -1217,7 +1217,7 @@ func (s *Service) listVersionAssetAsTree(ctx context.Context, node *model.Artifa
 			meta = &m
 		}
 		id := (&model.ArtifactTreeNodeId{Type: model.ArtifactTreeNodeTypeAsset, Pk: asset.Id}).String()
-		meta.NodeId, meta.EntityId = id, id
+		meta.NodeID, meta.EntityID = id, id
 		data = append(data, &model.ArtifactTreeRes{Name: base, Path: strings.TrimRight(node.Path, "/") + "/" + base, Leaf: true, Format: node.Format, Metadata: meta})
 	}
 	return data, nil
@@ -1237,7 +1237,7 @@ func (s *Service) appendGroupAssets(ctx context.Context, groupID int64, data []*
 	for _, asset := range assets {
 		base := filepath.Base(asset.Path)
 		id := (&model.ArtifactTreeNodeId{Type: model.ArtifactTreeNodeTypeAsset, Pk: asset.Id}).String()
-		data = append(data, &model.ArtifactTreeRes{Name: base, Path: "/" + g.GroupPath() + "/" + base, Leaf: true, Format: model.ArtifactFormat(g.Format), Metadata: &model.ArtifactTreeNodeMeta{Id: asset.Id, Type: model.ArtifactTreeNodeTypeAsset, Name: base, NodeId: id, EntityId: id}})
+		data = append(data, &model.ArtifactTreeRes{Name: base, Path: "/" + g.GroupPath() + "/" + base, Leaf: true, Format: model.ArtifactFormat(g.Format), Metadata: &model.ArtifactTreeNodeMeta{Id: asset.Id, Type: model.ArtifactTreeNodeTypeAsset, Name: base, NodeID: id, EntityID: id}})
 	}
 	return data, nil
 }
@@ -1278,16 +1278,16 @@ func convertTreeNodeToRes(n *model.ArtifactTreeNode, level string) *model.Artifa
 	} else {
 		item.Metadata = &model.ArtifactTreeNodeMeta{Type: n.Type}
 	}
-	if n.TargetId.Valid {
-		item.Metadata.Id = n.TargetId.Int64
-		id := (&model.ArtifactTreeNodeId{Type: n.Type, Pk: n.TargetId.Int64}).String()
-		item.Metadata.NodeId, item.Metadata.EntityId = id, id
+	if n.TargetID.Valid {
+		item.Metadata.Id = n.TargetID.Int64
+		id := (&model.ArtifactTreeNodeId{Type: n.Type, Pk: n.TargetID.Int64}).String()
+		item.Metadata.NodeID, item.Metadata.EntityID = id, id
 	}
 	if n.Type == model.ArtifactTreeNodeTypeFormat {
 		item.Metadata.Name = n.Name
 		if n.ArtifactID > 0 {
 			id := (&model.ArtifactTreeNodeId{Type: model.ArtifactTreeNodeTypeArtifact, Pk: n.ArtifactID}).String()
-			item.Metadata.NodeId, item.Metadata.EntityId = id, id
+			item.Metadata.NodeID, item.Metadata.EntityID = id, id
 		}
 	}
 	return item
@@ -1375,7 +1375,7 @@ func (s *Service) statistic(ctx context.Context, report *model.ArtifactStatistic
 	for _, d := range report.DeleteList {
 		delData.Count++
 		delData.Size += d.Size
-		delData.Ids = append(delData.Ids, d.AssetId)
+		delData.Ids = append(delData.Ids, d.AssetID)
 	}
 	res.GarbageCollect = delData
 
@@ -1385,12 +1385,12 @@ func (s *Service) statistic(ctx context.Context, report *model.ArtifactStatistic
 	}
 
 	sort.Slice(report.TagList, func(i, j int) bool {
-		return report.TagList[i].VersionId < report.TagList[j].VersionId
+		return report.TagList[i].VersionID < report.TagList[j].VersionID
 	})
 
 	vids := make([]int64, 0, len(report.TagList))
 	for _, t := range report.TagList {
-		vids = append(vids, t.VersionId)
+		vids = append(vids, t.VersionID)
 	}
 
 	verInfoList, err := s.artStore.Versions().Search(ctx, artifactStore.VersionIDsOption{IDs: vids})
@@ -1400,12 +1400,12 @@ func (s *Service) statistic(ctx context.Context, report *model.ArtifactStatistic
 
 	capByVersion := make(map[int64]*model.ArtifactVersionCapacityDesc, len(report.TagList))
 	for _, item := range report.TagList {
-		capByVersion[item.VersionId] = item
+		capByVersion[item.VersionID] = item
 	}
 
 	pkgCapMap := make(map[int64]*model.ArtifactPackageCapacityRes)
 	for _, verInfo := range verInfoList {
-		pkgCap, ok := pkgCapMap[verInfo.PackageId]
+		pkgCap, ok := pkgCapMap[verInfo.PackageID]
 		if !ok {
 			pkgCap = &model.ArtifactPackageCapacityRes{
 				Scope:     artifactViewScope(verInfo),
@@ -1416,7 +1416,7 @@ func (s *Service) statistic(ctx context.Context, report *model.ArtifactStatistic
 				Format:    verInfo.PackageFormat,
 				Versions:  make([]model.ArtifactVersionCapacityRes, 0),
 			}
-			pkgCapMap[verInfo.PackageId] = pkgCap
+			pkgCapMap[verInfo.PackageID] = pkgCap
 		}
 
 		tagCap, ok := capByVersion[verInfo.ID]
@@ -1520,7 +1520,7 @@ func (s *Service) StatisticSummary(ctx context.Context) (map[string]*model.Artif
 	for _, verInfo := range verInfoList {
 		verStats, ok := versionStats[verInfo.ID]
 		if !ok {
-			logger.GetLogger(ctx).Debugf("versionId %d not found in versionStats", verInfo.ID)
+			logger.GetLogger(ctx).Debugf("versionID %d not found in versionStats", verInfo.ID)
 			continue
 		}
 		key := artifactScopeKey(verInfo)
@@ -1573,14 +1573,14 @@ func (s *Service) GarbageCollectContainer(ctx context.Context) (*model.ArtifactG
 func (s *Service) garbageCollect(ctx context.Context, items []*model.ArtifactRecycleBlobDesc) (*model.ArtifactGarbageReportRes, error) {
 	res := &model.ArtifactGarbageReportRes{Ids: make([]int64, 0, len(items))}
 	for _, item := range items {
-		if item == nil || item.AssetId == 0 || item.BlobId == 0 {
+		if item == nil || item.AssetID == 0 || item.BlobID == 0 {
 			continue
 		}
 		if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-			if err := s.artStore.Assets().DeleteById(ctx, item.AssetId); err != nil {
+			if err := s.artStore.Assets().DeleteById(ctx, item.AssetID); err != nil {
 				return err
 			}
-			if err := s.artStore.Blobs().DeleteById(ctx, item.BlobId); err != nil {
+			if err := s.artStore.Blobs().DeleteById(ctx, item.BlobID); err != nil {
 				return err
 			}
 			if item.BlobRef != "" {
@@ -1588,18 +1588,18 @@ func (s *Service) garbageCollect(ctx context.Context, items []*model.ArtifactRec
 			}
 			return nil
 		}); err != nil {
-			logger.GetLogger(ctx).Errorf("artifact garbage collect failed for asset %d blob %d: %v", item.AssetId, item.BlobId, err)
+			logger.GetLogger(ctx).Errorf("artifact garbage collect failed for asset %d blob %d: %v", item.AssetID, item.BlobID, err)
 			return res, err
 		}
 		res.Count++
 		res.Size += item.Size
-		res.Ids = append(res.Ids, item.AssetId)
+		res.Ids = append(res.Ids, item.AssetID)
 	}
 	return res, nil
 }
 
 func (s *Service) SoftRemove(ctx context.Context, spaceID int64, req *model.SoftRemoveEntitiesReq) (*model.ArtifactNodeRemoveReport, error) {
-	ids := req.EntityIds
+	ids := req.EntityIDs
 	report := &model.ArtifactNodeRemoveReport{Total: len(ids), Data: make([]*model.ArtifactNodeRemoveRes, len(ids))}
 	for _, eid := range ids {
 		if _, err := entity.Parse(ctx, s.artStore, eid); err != nil {
@@ -1613,7 +1613,7 @@ func (s *Service) SoftRemove(ctx context.Context, spaceID int64, req *model.Soft
 
 	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		for idx, eid := range ids {
-			res := &model.ArtifactNodeRemoveRes{NodeId: eid, Status: model.ArtifactStatusOK}
+			res := &model.ArtifactNodeRemoveRes{NodeID: eid, Status: model.ArtifactStatusOK}
 			report.Data[idx] = res
 			if err := s.softRemoveEntity(ctx, eid, res); err != nil {
 				if res.Status == model.ArtifactStatusOK {
@@ -1716,7 +1716,7 @@ func (s *Service) softRemoveAsset(ctx context.Context, asset *model.ArtifactAsse
 }
 
 func (s *Service) softRemoveVersion(ctx context.Context, artifactID int64, ver *model.ArtifactVersion, res *model.ArtifactNodeRemoveRes) error {
-	assets, err := s.artStore.Assets().Search(ctx, model.SearchAssetOption{VersionId: ver.ID}, artifactStore.AssetExcludeDeletedOption{})
+	assets, err := s.artStore.Assets().Search(ctx, model.SearchAssetOption{VersionID: ver.ID}, artifactStore.AssetExcludeDeletedOption{})
 	if err != nil {
 		return err
 	}
@@ -1734,7 +1734,7 @@ func (s *Service) softRemoveVersion(ctx context.Context, artifactID int64, ver *
 }
 
 func (s *Service) softRemovePackage(ctx context.Context, pkg *model.ArtifactPackage, res *model.ArtifactNodeRemoveRes) error {
-	versions, err := s.artStore.Versions().Find(ctx, model.SearchVersionOption{PackageId: pkg.ID})
+	versions, err := s.artStore.Versions().Find(ctx, model.SearchVersionOption{PackageID: pkg.ID})
 	if err != nil {
 		return err
 	}
@@ -1795,14 +1795,14 @@ func (s *Service) softRemoveGroup(ctx context.Context, group *model.ArtifactGrou
 			return pkgErrors.WithI18nKey(pErr, i18n.ArtifactSoftRemoveGroupQueryError)
 		}
 		for _, pkg := range pkgs {
-			versions, vErr := s.artStore.Versions().Find(ctx, model.SearchVersionOption{PackageId: pkg.ID})
+			versions, vErr := s.artStore.Versions().Find(ctx, model.SearchVersionOption{PackageID: pkg.ID})
 			if vErr != nil {
 				res.Status = model.ArtifactStatusUnknown
 				return pkgErrors.WithI18nKey(vErr, i18n.ArtifactSoftRemoveGroupQueryError)
 			}
 			for _, ver := range versions {
 				verAssets, vaErr := s.artStore.Assets().Search(ctx,
-					model.SearchAssetOption{VersionId: ver.ID}, artifactStore.AssetExcludeDeletedOption{})
+					model.SearchAssetOption{VersionID: ver.ID}, artifactStore.AssetExcludeDeletedOption{})
 				if vaErr != nil {
 					res.Status = model.ArtifactStatusUnknown
 					return pkgErrors.WithI18nKey(vaErr, i18n.ArtifactSoftRemoveGroupQueryError)
@@ -1827,7 +1827,7 @@ func (s *Service) softRemoveGroup(ctx context.Context, group *model.ArtifactGrou
 			return pErr
 		}
 		for _, pkg := range pkgs {
-			versions, vErr := s.artStore.Versions().Find(ctx, model.SearchVersionOption{PackageId: pkg.ID})
+			versions, vErr := s.artStore.Versions().Find(ctx, model.SearchVersionOption{PackageID: pkg.ID})
 			if vErr != nil {
 				return vErr
 			}
@@ -1904,7 +1904,7 @@ func (s *Service) softRemoveArtifact(ctx context.Context, view *model.ArtifactVi
 		return pkgErrors.WithI18nKey(err, i18n.ArtifactSoftRemoveArtifactQueryError)
 	}
 	for _, pkg := range packages {
-		versions, vErr := s.artStore.Versions().Find(ctx, model.SearchVersionOption{PackageId: pkg.ID})
+		versions, vErr := s.artStore.Versions().Find(ctx, model.SearchVersionOption{PackageID: pkg.ID})
 		if vErr != nil {
 			return vErr
 		}
@@ -2111,7 +2111,7 @@ func (s *Service) ListContainerImages(ctx context.Context, view *adapter.ViewDes
 		return nil, err
 	}
 	assets, err := s.artStore.Assets().Search(ctx,
-		model.SearchAssetOption{VersionId: ver.ID, Kind: model.AssetKindMain},
+		model.SearchAssetOption{VersionID: ver.ID, Kind: model.AssetKindMain},
 		artifactStore.AssetExcludeDeletedOption{},
 	)
 	if err != nil {
@@ -2179,7 +2179,7 @@ func (s *Service) RefreshTree(ctx context.Context, format string) error {
 		}
 
 		// 2c. 同步该 package 下所有 version 节点
-		dbVersions, vErr := s.artStore.Versions().Find(ctx, model.SearchVersionOption{PackageId: pkg.ID})
+		dbVersions, vErr := s.artStore.Versions().Find(ctx, model.SearchVersionOption{PackageID: pkg.ID})
 		if vErr != nil {
 			return vErr
 		}
@@ -2266,7 +2266,7 @@ func (s *Service) hardDeleteViewResources(ctx context.Context, artifactID int64)
 
 	for _, pkg := range packages {
 		versions, vErr := s.artStore.Versions().Find(ctx, model.SearchVersionOption{
-			PackageId:      pkg.ID,
+			PackageID:      pkg.ID,
 			IncludeDeleted: true,
 		})
 		if vErr != nil {
@@ -2330,7 +2330,7 @@ func (s *Service) hardDeleteViewResources(ctx context.Context, artifactID int64)
 
 // hardDeleteVersionAssets 硬删指定 version 下的所有 assets 及关联 blobs，并清理物理文件。
 func (s *Service) hardDeleteVersionAssets(ctx context.Context, versionID int64) error {
-	assets, err := s.artStore.Assets().Search(ctx, model.SearchAssetOption{VersionId: versionID})
+	assets, err := s.artStore.Assets().Search(ctx, model.SearchAssetOption{VersionID: versionID})
 	if err != nil {
 		return err
 	}

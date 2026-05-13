@@ -114,7 +114,7 @@ func (s *Service) movePackageInner(ctx context.Context, pkgID, tArtifactID, tGro
 	if _, err = syncer.SyncTreeNodeForPackage(ctx, srcPkg); err != nil {
 		return err
 	}
-	versions, err := s.artStore.Versions().Find(ctx, model.SearchVersionOption{PackageId: srcPkg.ID})
+	versions, err := s.artStore.Versions().Find(ctx, model.SearchVersionOption{PackageID: srcPkg.ID})
 	if err != nil {
 		return err
 	}
@@ -135,7 +135,7 @@ func (s *Service) MovePackage(ctx context.Context, pkgID, tArtifactID, tGroupID 
 }
 
 // moveAssetInner 在调用方事务内完成一次组资产移动。
-// 仅支持组资产（asset.GroupID 有效、VersionID 无效）；版本资产随 package / version 移动，不在本方法范畴。
+// 仅支持组资产（asset.GroupID 有效、versionID 无效）；版本资产随 package / version 移动，不在本方法范畴。
 func (s *Service) moveAssetInner(ctx context.Context, assetID, tArtifactID, tGroupID int64) error {
 	// 1. 读源 asset
 	srcAsset, err := s.artStore.Assets().GetById(ctx, assetID)

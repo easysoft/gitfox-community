@@ -149,7 +149,7 @@ func ParseManifestReference(base *ContainerReq, reference string) (*ContainerMan
 // AssetMeta 制品资产的元数据（用于 blob/manifest 读取）。
 type AssetMeta struct {
 	Id          int64
-	BlobId      int64
+	BlobID      int64
 	Size        int64
 	Path        string
 	ContentType string
@@ -161,7 +161,7 @@ type AssetMeta struct {
 func newAssetMeta(asset *model.ArtifactAsset, blob *model.ArtifactBlob) *AssetMeta {
 	return &AssetMeta{
 		Id:          asset.ID,
-		BlobId:      blob.ID,
+		BlobID:      blob.ID,
 		Size:        blob.Size,
 		Path:        asset.Path,
 		ContentType: asset.ContentType,
@@ -214,7 +214,7 @@ func (c *Controller) GetAssetReader(ctx context.Context, path string, format mod
 		// 物理文件缺失对客户端等价于 not-found，避免被兜底成 500 UNKNOWN。
 		var pathNotFoundErr storagedriver.PathNotFoundError
 		if errors.As(err, &pathNotFoundErr) {
-			logger.GetLogger(ctx).Warnf("【container pull】asset %d blob %d storage path not found: %s", meta.Id, meta.BlobId, pathNotFoundErr.Path)
+			logger.GetLogger(ctx).Warnf("【container pull】asset %d blob %d storage path not found: %s", meta.Id, meta.BlobID, pathNotFoundErr.Path)
 			return nil, nil, pkgErrors.ErrResourceNotFound
 		}
 		return nil, nil, err
@@ -338,7 +338,7 @@ func (c *Controller) DeleteContainerBlob(ctx context.Context, _ *ContainerReq, d
 	if err != nil {
 		return nil, err
 	}
-	if err = c.artStore.Blobs().DeleteById(ctx, meta.BlobId); err != nil {
+	if err = c.artStore.Blobs().DeleteById(ctx, meta.BlobID); err != nil {
 		if pkgErrors.Is(err, pkgErrors.ErrResourceNotFound) {
 			return nil, ctnAdapter.ErrManifestBlobUnknown.WithDetail(err.Error())
 		}
@@ -520,7 +520,7 @@ func (c *Controller) getManifestWriter(ctx context.Context, view *adapter.ViewDe
 		// 物理 manifest blob 缺失等价于 manifest 不存在，避免兜底成 500。
 		var pathNotFoundErr storagedriver.PathNotFoundError
 		if errors.As(err, &pathNotFoundErr) {
-			logger.GetLogger(ctx).Warnf("【container pull】manifest asset %d blob %d storage path not found: %s", desc.Id, desc.BlobId, pathNotFoundErr.Path)
+			logger.GetLogger(ctx).Warnf("【container pull】manifest asset %d blob %d storage path not found: %s", desc.Id, desc.BlobID, pathNotFoundErr.Path)
 			return nil, pkgErrors.ErrResourceNotFound
 		}
 		return nil, err
@@ -572,8 +572,8 @@ func (c *Controller) PutContainerTag(ctx context.Context, req *http.Request, man
 	// TODO: 权限检查
 	view := manifestReq.View
 
-	// 有 GroupName 时自动创建 group，并将 groupId 与 namespace 传入 descriptor
-	groupId, err := c.getOrCreateGroup(ctx, view.ArtifactID, manifestReq.GroupName)
+	// 有 GroupName 时自动创建 group，并将 groupID 与 namespace 传入 descriptor
+	groupID, err := c.getOrCreateGroup(ctx, view.ArtifactID, manifestReq.GroupName)
 	if err != nil {
 		return nil, err
 	}
@@ -582,7 +582,7 @@ func (c *Controller) PutContainerTag(ctx context.Context, req *http.Request, man
 	uploader.Prepare(func(desc *adapter.PackageDescriptor) {
 		desc.Name = manifestReq.RepoName
 		desc.Namespace = manifestReq.GroupName // 作为包的命名空间，区分不同 group 下的同名镜像
-		desc.GroupId = groupId                 // 供树节点挂载使用
+		desc.GroupID = groupID                 // 供树节点挂载使用
 		desc.Version = manifestReq.Tag
 	})
 	if err = handleUpload(ctx, req, uploader); err != nil {
@@ -655,7 +655,7 @@ func (c *Controller) ListTags(ctx context.Context, req *ContainerReq) (*tagList,
 	}
 
 	objects, err := c.artStore.Versions().Find(ctx, model.SearchVersionOption{
-		PackageId: pkgModel.ID,
+		PackageID: pkgModel.ID,
 	})
 	if err != nil {
 		return &result, nil

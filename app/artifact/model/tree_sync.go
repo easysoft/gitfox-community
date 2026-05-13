@@ -66,7 +66,7 @@ func (t *Syncer) SyncTreeNodeForGroup(ctx context.Context, group *artmodel.Artif
 		Path:       joinPath([]string{parentNode.Path, group.Name}, "/"),
 		Type:       artmodel.ArtifactTreeNodeTypeGroup,
 		Format:     group.Format,
-		TargetId:   null.IntFrom(group.ID),
+		TargetID:   null.IntFrom(group.ID),
 	}
 
 	if err = t.upsertTreeNode(ctx, treeNode); err != nil {
@@ -129,7 +129,7 @@ func (t *Syncer) SyncTreeNodeForPackage(ctx context.Context, pkg *artmodel.Artif
 		Path:       joinPath([]string{parentNode.Path, pkg.Name}, "/"),
 		Type:       artmodel.ArtifactTreeNodeTypePackage,
 		Format:     pkg.Format,
-		TargetId:   null.IntFrom(pkg.ID),
+		TargetID:   null.IntFrom(pkg.ID),
 	}
 
 	if err = t.upsertTreeNode(ctx, treeNode); err != nil {
@@ -156,7 +156,7 @@ func (t *Syncer) SyncTreeNodeForVersion(ctx context.Context, ver *artmodel.Artif
 		Path:       joinPath([]string{parentNode.Path, ver.Version}, "/"),
 		Type:       artmodel.ArtifactTreeNodeTypeVersion,
 		Format:     pkg.Format,
-		TargetId:   null.IntFrom(ver.ID),
+		TargetID:   null.IntFrom(ver.ID),
 	}
 	if err = t.upsertTreeNode(ctx, treeNode); err != nil {
 		return nil, err
@@ -168,16 +168,16 @@ func (t *Syncer) upsertTreeNode(ctx context.Context, node *artmodel.ArtifactTree
 	// 树节点以 owner+format+path 幂等；路径已存在时只纠正类型与目标实体，不重复建点。
 	if upObj, e := t.artStore.Nodes().GetByPath(ctx, node.ArtifactID, node.Path, node.Format); e == nil {
 		node.ID = upObj.ID
-		if upObj.Type == node.Type && upObj.TargetId == node.TargetId {
+		if upObj.Type == node.Type && upObj.TargetID == node.TargetID {
 			return nil
 		}
 		upObj.Type = node.Type
-		upObj.TargetId = node.TargetId
+		upObj.TargetID = node.TargetID
 		return t.artStore.Nodes().Update(ctx, upObj)
 	} else if errors.Is(e, pkgErrors.ErrResourceNotFound) {
 		created, err := t.artStore.Nodes().Create(ctx, &artmodel.CreateArtifactTreeNode{
 			ParentID: node.ParentID, ArtifactID: node.ArtifactID, Name: node.Name,
-			Path: node.Path, Type: node.Type, Format: node.Format, TargetId: node.TargetId,
+			Path: node.Path, Type: node.Type, Format: node.Format, TargetID: node.TargetID,
 		})
 		if err != nil {
 			return err

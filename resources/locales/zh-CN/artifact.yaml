@@ -33,7 +33,7 @@ artifact:
   view_name_non_ascii_not_allowed: "版本化制品库（container/helm/pypi/npm/maven）的名称仅允许英文字母、数字、中划线和下划线，不允许中文."
 
   # Parse & Upload
-  space_id_required: "当 repoId 存在时，spaceId 是必填的."
+  space_id_required: "当 repoID 存在时，spaceID 是必填的."
   repo_query_error: "查询仓库失败."
   space_query_error: "查询空间失败."
   default_view_query_error: "查询默认视图失败."
@@ -81,12 +81,12 @@ artifact:
 
   # Tree
   tree_format_list_error: "查询制品格式列表失败."
-  tree_format_required: "通用树查询必须指定 format，除非传入了 nodeId."
+  tree_format_required: "通用树查询必须指定 format，除非传入了 nodeID."
   tree_refresh_format_invalid: "不支持的制品格式，仅支持: generic, raw, maven, container, helm, pypi, npm."
   tree_level_invalid: "通用树查询的 level 参数不合法，仅支持: format, group, package, version, asset."
   tree_node_list_error: "查询制品树节点列表失败."
-  tree_node_not_in_artifact: "指定的 nodeId 不属于当前制品库."
-  tree_node_recursive_conflict: "传入 nodeId 时不支持递归查询"
+  tree_node_not_in_artifact: "指定的 nodeID 不属于当前制品库."
+  tree_node_recursive_conflict: "传入 nodeID 时不支持递归查询"
   tree_refresh_error: "制品树刷新失败."
 
   # GC & Delete

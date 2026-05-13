@@ -28,7 +28,7 @@ type Interface interface {
 	// ResolveView 按请求中的 artifactID 或默认视图规则解析实际视图。
 	// 规则：
 	//  1. artifactID > 0：优先按 ID 精确取库
-	//  2. artifactID == 0 或未传：继续按 spaceId/repoId 走默认 view 逻辑
+	//  2. artifactID == 0 或未传：继续按 spaceID/repoID 走默认 view 逻辑
 	ResolveView(ctx context.Context, req *model.SpaceRepoReq) (*model.ArtifactView, error)
 
 	// ParseSpaceView 解析空间+仓库参数，返回视图描述符（包含 artifactID 和路由信息）。
@@ -43,16 +43,16 @@ type Interface interface {
 	ListVersions(ctx context.Context, artifactID int64, packageName, groupName string, format model.ArtifactFormat, opt model.SearchVersionOption) ([]*model.ArtifactVersion, error)
 
 	// ListAssets 列出指定版本下的所有制品资源文件。
-	ListAssets(ctx context.Context, versionId int64) ([]*model.ArtifactAssetsRes, error)
+	ListAssets(ctx context.Context, versionID int64) ([]*model.ArtifactAssetsRes, error)
 
 	// ListGroupAssets 列出指定分组下直接挂载的资源文件（generic 格式）。
-	ListGroupAssets(ctx context.Context, groupId int64) ([]*model.ArtifactAssetsRes, error)
+	ListGroupAssets(ctx context.Context, groupID int64) ([]*model.ArtifactAssetsRes, error)
 
 	// GetAsset 获取单个制品资源的详细信息。
-	GetAsset(ctx context.Context, assetId int64) (*model.ArtifactAssetsRes, error)
+	GetAsset(ctx context.Context, assetID int64) (*model.ArtifactAssetsRes, error)
 
 	// GetBlobHistory 获取制品资源的 blob 历史记录。
-	GetBlobHistory(ctx context.Context, assetId int64) ([]*model.ArtifactBlobRes, error)
+	GetBlobHistory(ctx context.Context, assetID int64) ([]*model.ArtifactBlobRes, error)
 
 	// ListNodeInfo 兼容参考项目 `/artifacts/nodeInfo`，按 entity/node ID 批量查询节点详情。
 	ListNodeInfo(ctx context.Context, req *model.ListNodeInfoReq) ([]*model.ArtifactNodeInfo, error)
@@ -60,7 +60,7 @@ type Interface interface {
 	// ---- 上传/下载 ----
 
 	// DownloadAsset 下载制品资源，返回文件流和 blob 元信息。
-	DownloadAsset(ctx context.Context, assetId int64) (io.ReadCloser, *model.ArtifactBlob, error)
+	DownloadAsset(ctx context.Context, assetID int64) (io.ReadCloser, *model.ArtifactBlob, error)
 
 	// Upload 上传制品，自动根据 format 分发到对应的适配器处理。
 	Upload(ctx context.Context, view *adapter.ViewDescriptor, format model.ArtifactFormat, req *http.Request) ([]*adapter.SavedAsset, error)
@@ -88,7 +88,7 @@ type Interface interface {
 	ListTree(ctx context.Context, artifactID int64, filter *model.ArtifactTreeFilter) ([]*model.ArtifactTreeRes, error)
 
 	// ListTreeNodes 列出指定父节点下的子节点。
-	ListTreeNodes(ctx context.Context, parentId int64) ([]*model.ArtifactTreeNode, error)
+	ListTreeNodes(ctx context.Context, parentID int64) ([]*model.ArtifactTreeNode, error)
 
 	// RefreshTree 全量重建制品树节点（groups → packages → versions）。
 	// format 必填：传入具体 format 时仅刷新该 format 下的节点；传入 ArtifactAllFormat ("all") 时全量刷新。

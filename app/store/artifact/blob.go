@@ -35,32 +35,32 @@ func (c *blobs) Create(ctx context.Context, newObj *model.CreateArtifactBlob) (*
 	return blobToModel(&row), nil
 }
 
-func (c *blobs) GetById(ctx context.Context, blobId int64) (*model.ArtifactBlob, error) {
+func (c *blobs) GetById(ctx context.Context, blobID int64) (*model.ArtifactBlob, error) {
 	var row artifactBlob
-	if err := c.db.WithContext(ctx).First(&row, blobId).Error; err != nil {
+	if err := c.db.WithContext(ctx).First(&row, blobID).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
 	return blobToModel(&row), nil
 }
 
-func (c *blobs) GetByRef(ctx context.Context, ref string, storageId int64) (*model.ArtifactBlob, error) {
-	if err := validatorEmpty(ref, storageId); err != nil {
+func (c *blobs) GetByRef(ctx context.Context, ref string, storageID int64) (*model.ArtifactBlob, error) {
+	if err := validatorEmpty(ref, storageID); err != nil {
 		return nil, model.ErrArgsValueEmpty
 	}
 	var row artifactBlob
-	q := artifactBlob{Ref: ref, StorageID: storageId}
+	q := artifactBlob{Ref: ref, StorageID: storageID}
 	if err := c.db.WithContext(ctx).Where(&q).First(&row).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
 	return blobToModel(&row), nil
 }
 
-func (c *blobs) GetByHistory(ctx context.Context, assetId, createdAt int64) (*model.ArtifactBlob, error) {
+func (c *blobs) GetByHistory(ctx context.Context, assetID, createdAt int64) (*model.ArtifactBlob, error) {
 	var row artifactBlob
 	tm := time.UnixMilli(createdAt)
 	// 用原始 time.Time 查询，GORM 会调用 datetime.Local.Value() 做存储转换
 	if err := c.db.WithContext(ctx).
-		Where("assetID = ? AND createdDate = ?", assetId, tm).
+		Where("assetID = ? AND createdDate = ?", assetID, tm).
 		First(&row).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
@@ -95,8 +95,8 @@ func (c *blobs) UpdateOptLock(ctx context.Context, upObj *model.ArtifactBlob, mu
 	}
 }
 
-func (c *blobs) SoftDeleteById(ctx context.Context, blobId int64) error {
-	err := c.db.WithContext(ctx).Model(&artifactBlob{ID: blobId}).
+func (c *blobs) SoftDeleteById(ctx context.Context, blobID int64) error {
+	err := c.db.WithContext(ctx).Model(&artifactBlob{ID: blobID}).
 		UpdateColumn("deleted", 1).Error
 	if err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
@@ -104,8 +104,8 @@ func (c *blobs) SoftDeleteById(ctx context.Context, blobId int64) error {
 	return nil
 }
 
-func (c *blobs) DeleteById(ctx context.Context, blobId int64) error {
-	result := c.db.WithContext(ctx).Delete(&artifactBlob{}, blobId)
+func (c *blobs) DeleteById(ctx context.Context, blobID int64) error {
+	result := c.db.WithContext(ctx).Delete(&artifactBlob{}, blobID)
 	if result.Error != nil {
 		return database.ProcessSQLErrorf(ctx, result.Error)
 	}
@@ -115,14 +115,14 @@ func (c *blobs) DeleteById(ctx context.Context, blobId int64) error {
 	return nil
 }
 
-func (c *blobs) History(ctx context.Context, assetId int64) ([]*model.ArtifactBlobRes, error) {
+func (c *blobs) History(ctx context.Context, assetID int64) ([]*model.ArtifactBlobRes, error) {
 	var dst []*model.ArtifactBlobRes
 	stmt := c.db.WithContext(ctx).Model(&artifactBlob{}).
 		Select(`ops_artifact_blobs.id,ops_artifact_assets.path,ops_artifact_blobs.size,ops_artifact_blobs.ref,
 			ops_artifact_blobs.createdBy,
 			ops_artifact_blobs.checkSum,ops_artifact_blobs.metadata,ops_artifact_blobs.createdDate,ops_artifact_blobs.deleted`).
 		Joins(`LEFT JOIN ops_artifact_assets on ops_artifact_blobs.assetID=ops_artifact_assets.id`).
-		Where(`ops_artifact_blobs.assetID = ?`, assetId).
+		Where(`ops_artifact_blobs.assetID = ?`, assetID).
 		Order("ops_artifact_blobs.createdDate DESC")
 
 	if err := stmt.Find(&dst).Error; err != nil {

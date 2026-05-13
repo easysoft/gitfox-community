@@ -28,7 +28,7 @@ func (c *treeNode) Create(ctx context.Context, newObj *model.CreateArtifactTreeN
 	row.Path = newObj.Path
 	row.Type = string(newObj.Type)
 	row.Format = string(newObj.Format)
-	row.TargetId = newObj.TargetId
+	row.TargetID = newObj.TargetID
 	if err := c.db.WithContext(ctx).Create(&row).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
@@ -49,7 +49,7 @@ func (c *treeNode) RecurseCreate(ctx context.Context, obj *model.ArtifactTreeNod
 		}
 		created, err := c.Create(ctx, &model.CreateArtifactTreeNode{
 			ParentID: parentID, ArtifactID: obj.ArtifactID, Name: obj.Name,
-			Path: obj.Path, Type: obj.Type, Format: obj.Format, TargetId: obj.TargetId,
+			Path: obj.Path, Type: obj.Type, Format: obj.Format, TargetID: obj.TargetID,
 		})
 		if err != nil {
 			return err
@@ -65,7 +65,7 @@ func (c *treeNode) RecurseCreate(ctx context.Context, obj *model.ArtifactTreeNod
 	obj.ParentID = null.IntFrom(p.ID)
 	created, err := c.Create(ctx, &model.CreateArtifactTreeNode{
 		ParentID: obj.ParentID, ArtifactID: obj.ArtifactID, Name: obj.Name,
-		Path: obj.Path, Type: obj.Type, Format: obj.Format, TargetId: obj.TargetId,
+		Path: obj.Path, Type: obj.Type, Format: obj.Format, TargetID: obj.TargetID,
 	})
 	if err != nil {
 		return err
@@ -92,7 +92,7 @@ func (c *treeNode) GetByPath(ctx context.Context, artifactID int64, path string,
 
 func (c *treeNode) GetByTarget(ctx context.Context, artifactID int64, nodeType model.ArtifactTreeNodeType, id int64) (*model.ArtifactTreeNode, error) {
 	var row artifactTreeNode
-	q := artifactTreeNode{ArtifactID: artifactID, Type: string(nodeType), TargetId: null.IntFrom(id)}
+	q := artifactTreeNode{ArtifactID: artifactID, Type: string(nodeType), TargetID: null.IntFrom(id)}
 	if err := c.db.WithContext(ctx).Where(&q).Take(&row).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
@@ -120,12 +120,12 @@ func (c *treeNode) ListFormats(ctx context.Context, artifactID int64) ([]*model.
 	return nodesToModel(rows), nil
 }
 
-func (c *treeNode) ListByParentId(ctx context.Context, parentId int64) ([]*model.ArtifactTreeNode, error) {
-	if parentId == 0 {
-		return nil, errors.New("parentId can not be zero")
+func (c *treeNode) ListByParentId(ctx context.Context, parentID int64) ([]*model.ArtifactTreeNode, error) {
+	if parentID == 0 {
+		return nil, errors.New("parentID can not be zero")
 	}
 	var rows []*artifactTreeNode
-	if err := c.db.WithContext(ctx).Where("parentID = ?", parentId).Order("name").Find(&rows).Error; err != nil {
+	if err := c.db.WithContext(ctx).Where("parentID = ?", parentID).Order("name").Find(&rows).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
 	return nodesToModel(rows), nil
@@ -139,8 +139,8 @@ func (c *treeNode) Update(ctx context.Context, upObj *model.ArtifactTreeNode) er
 	return nil
 }
 
-func (c *treeNode) DeleteById(ctx context.Context, nodeId int64) error {
-	result := c.db.WithContext(ctx).Delete(&artifactTreeNode{}, nodeId)
+func (c *treeNode) DeleteById(ctx context.Context, nodeID int64) error {
+	result := c.db.WithContext(ctx).Delete(&artifactTreeNode{}, nodeID)
 	if result.Error != nil {
 		return database.ProcessSQLErrorf(ctx, result.Error)
 	}
@@ -150,8 +150,8 @@ func (c *treeNode) DeleteById(ctx context.Context, nodeId int64) error {
 	return nil
 }
 
-func (c *treeNode) RecurseDeleteById(ctx context.Context, nodeId int64) error {
-	subNodes, err := c.ListByParentId(ctx, nodeId)
+func (c *treeNode) RecurseDeleteById(ctx context.Context, nodeID int64) error {
+	subNodes, err := c.ListByParentId(ctx, nodeID)
 	if err != nil {
 		return err
 	}
@@ -160,7 +160,7 @@ func (c *treeNode) RecurseDeleteById(ctx context.Context, nodeId int64) error {
 			return err
 		}
 	}
-	return c.DeleteById(ctx, nodeId)
+	return c.DeleteById(ctx, nodeID)
 }
 
 // DeleteByArtifactID 硬删指定 view 下的所有树节点记录。

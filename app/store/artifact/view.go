@@ -45,27 +45,27 @@ func (c *views) GetByID(ctx context.Context, id int64) (*model.ArtifactView, err
 	return viewToModel(&row), nil
 }
 
-func (c *views) GetDefault(ctx context.Context, spaceId int64) (*model.ArtifactView, error) {
+func (c *views) GetDefault(ctx context.Context, spaceID int64) (*model.ArtifactView, error) {
 	var row artifactView
-	q := artifactView{SpaceID: spaceId, Default: true}
+	q := artifactView{SpaceID: spaceID, Default: true}
 	if err := c.db.WithContext(ctx).Where(&q).Where("deleted = 0").First(&row).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
 	return viewToModel(&row), nil
 }
 
-func (c *views) GetByName(ctx context.Context, spaceId, repoId int64, name string) (*model.ArtifactView, error) {
+func (c *views) GetByName(ctx context.Context, spaceID, repoID int64, name string) (*model.ArtifactView, error) {
 	var row artifactView
-	q := artifactView{SpaceID: spaceId, RepoID: repoId, Name: name}
+	q := artifactView{SpaceID: spaceID, RepoID: repoID, Name: name}
 	if err := c.db.WithContext(ctx).Where(&q).Where("deleted = 0").First(&row).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
 	return viewToModel(&row), nil
 }
 
-func (c *views) GetDefaultByRepoAndSpace(ctx context.Context, repoId, spaceId int64) (*model.ArtifactView, error) {
+func (c *views) GetDefaultByRepoAndSpace(ctx context.Context, repoID, spaceID int64) (*model.ArtifactView, error) {
 	var row artifactView
-	q := artifactView{RepoID: repoId, SpaceID: spaceId, Default: true}
+	q := artifactView{RepoID: repoID, SpaceID: spaceID, Default: true}
 	if err := c.db.WithContext(ctx).Where(&q).Where("deleted = 0").First(&row).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
@@ -75,10 +75,10 @@ func (c *views) GetDefaultByRepoAndSpace(ctx context.Context, repoId, spaceId in
 // FindByNameInScope 在指定作用域下查询所有同名 view（包含已软删的）。
 // 返回结果包含 active（deleted=0）和 soft-deleted（deleted=1）的 view，
 // 由调用方根据 deleted 状态和 editedDate 判断是否允许创建同名 view。
-func (c *views) FindByNameInScope(ctx context.Context, spaceId, repoId int64, name string) ([]*model.ArtifactView, error) {
+func (c *views) FindByNameInScope(ctx context.Context, spaceID, repoID int64, name string) ([]*model.ArtifactView, error) {
 	var rows []*artifactView
 	err := c.db.WithContext(ctx).
-		Where("spaceID = ? AND repoID = ? AND name = ? and deleted = 0", spaceId, repoId, name).
+		Where("spaceID = ? AND repoID = ? AND name = ? and deleted = 0", spaceID, repoID, name).
 		Find(&rows).Error
 	if err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)

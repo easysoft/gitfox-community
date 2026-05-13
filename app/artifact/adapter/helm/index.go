@@ -124,7 +124,7 @@ func (h *helmIndex) buildIndex(ctx context.Context, contextPath string) (*IndexF
 		if pkg.Format != model.ArtifactHelmFormat {
 			continue
 		}
-		vers, e := h.artStore.Versions().Find(ctx, model.SearchVersionOption{PackageId: pkg.ID})
+		vers, e := h.artStore.Versions().Find(ctx, model.SearchVersionOption{PackageID: pkg.ID})
 		if e != nil {
 			log.Errorf("find versions for package %d failed: %v", pkg.ID, e)
 			return nil, e
@@ -136,7 +136,7 @@ func (h *helmIndex) buildIndex(ctx context.Context, contextPath string) (*IndexF
 
 	for _, item := range items {
 		assets, e := h.artStore.Assets().Search(ctx,
-			model.SearchAssetOption{Kind: model.AssetKindMain, VersionId: item.ID},
+			model.SearchAssetOption{Kind: model.AssetKindMain, VersionID: item.ID},
 			artifactStore.AssetExcludeDeletedOption{})
 		if e != nil {
 			log.Errorf("search assets failed: %v", e)

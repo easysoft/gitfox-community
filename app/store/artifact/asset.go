@@ -62,9 +62,9 @@ func nullIntOrZero(v null.Int) null.Int {
 	return v
 }
 
-func (c *assets) GetById(ctx context.Context, assetId int64) (*model.ArtifactAsset, error) {
+func (c *assets) GetById(ctx context.Context, assetID int64) (*model.ArtifactAsset, error) {
 	var row artifactAsset
-	if err := c.db.WithContext(ctx).First(&row, assetId).Error; err != nil {
+	if err := c.db.WithContext(ctx).First(&row, assetID).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
 	return assetToModel(&row), nil
@@ -86,32 +86,32 @@ func (c *assets) GetMetaAsset(ctx context.Context, path string, artifactID int64
 	return c.find(ctx, &artifactAsset{Path: path, Format: string(format), ArtifactID: null.IntFrom(artifactID)})
 }
 
-func (c *assets) GetVersionAsset(ctx context.Context, path string, versionId int64) (*model.ArtifactAsset, error) {
-	return c.find(ctx, &artifactAsset{Path: path, VersionID: null.IntFrom(versionId)})
+func (c *assets) GetVersionAsset(ctx context.Context, path string, versionID int64) (*model.ArtifactAsset, error) {
+	return c.find(ctx, &artifactAsset{Path: path, VersionID: null.IntFrom(versionID)})
 }
 
-func (c *assets) GetGroupAsset(ctx context.Context, path string, groupId int64) (*model.ArtifactAsset, error) {
-	return c.find(ctx, &artifactAsset{Path: path, GroupID: null.IntFrom(groupId)})
+func (c *assets) GetGroupAsset(ctx context.Context, path string, groupID int64) (*model.ArtifactAsset, error) {
+	return c.find(ctx, &artifactAsset{Path: path, GroupID: null.IntFrom(groupID)})
 }
 
-func (c *assets) FindMain(ctx context.Context, versionId int64) ([]*model.ArtifactAsset, error) {
-	if err := validatorEmpty(versionId); err != nil {
+func (c *assets) FindMain(ctx context.Context, versionID int64) ([]*model.ArtifactAsset, error) {
+	if err := validatorEmpty(versionID); err != nil {
 		return nil, err
 	}
 	var rows []*artifactAsset
-	q := artifactAsset{VersionID: null.IntFrom(versionId)}
+	q := artifactAsset{VersionID: null.IntFrom(versionID)}
 	if err := c.db.WithContext(ctx).Where(&q).Where("deleted = 0").Find(&rows).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
 	return assetsToModel(rows), nil
 }
 
-func (c *assets) UpdateBlobId(ctx context.Context, assetId int64, blobId int64) error {
-	if err := validatorEmpty(assetId); err != nil {
+func (c *assets) UpdateBlobId(ctx context.Context, assetID int64, blobID int64) error {
+	if err := validatorEmpty(assetID); err != nil {
 		return err
 	}
-	result := c.db.WithContext(ctx).Model(&artifactAsset{ID: assetId}).
-		Updates(&artifactAsset{BlobID: blobId})
+	result := c.db.WithContext(ctx).Model(&artifactAsset{ID: assetID}).
+		Updates(&artifactAsset{BlobID: blobID})
 	if result.Error != nil {
 		return database.ProcessSQLErrorf(ctx, result.Error)
 	}
@@ -129,8 +129,8 @@ func (c *assets) Update(ctx context.Context, upObj *model.ArtifactAsset) error {
 	return nil
 }
 
-func (c *assets) SoftDeleteById(ctx context.Context, assetId int64) error {
-	err := c.db.WithContext(ctx).Model(&artifactAsset{ID: assetId}).
+func (c *assets) SoftDeleteById(ctx context.Context, assetID int64) error {
+	err := c.db.WithContext(ctx).Model(&artifactAsset{ID: assetID}).
 		UpdateColumn("deleted", 1).Error
 	if err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
@@ -138,10 +138,10 @@ func (c *assets) SoftDeleteById(ctx context.Context, assetId int64) error {
 	return nil
 }
 
-func (c *assets) SoftDeleteExcludeById(ctx context.Context, versionId int64, assetId int64) error {
+func (c *assets) SoftDeleteExcludeById(ctx context.Context, versionID int64, assetID int64) error {
 	err := c.db.WithContext(ctx).Model(&artifactAsset{}).
-		Where("versionID = ?", versionId).
-		Where("id <> ?", assetId).
+		Where("versionID = ?", versionID).
+		Where("id <> ?", assetID).
 		Where("deleted = 0").
 		UpdateColumn("deleted", 1).Error
 	if err != nil {
@@ -150,8 +150,8 @@ func (c *assets) SoftDeleteExcludeById(ctx context.Context, versionId int64, ass
 	return nil
 }
 
-func (c *assets) DeleteById(ctx context.Context, assetId int64) error {
-	result := c.db.WithContext(ctx).Delete(&artifactAsset{}, assetId)
+func (c *assets) DeleteById(ctx context.Context, assetID int64) error {
+	result := c.db.WithContext(ctx).Delete(&artifactAsset{}, assetID)
 	if result.Error != nil {
 		return database.ProcessSQLErrorf(ctx, result.Error)
 	}

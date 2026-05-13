@@ -98,8 +98,8 @@ type ArtifactView struct {
 	ID          int64            `json:"id"`
 	Name        string           `json:"name"`
 	Description string           `json:"description"`
-	SpaceID     int64            `json:"spaceId"`
-	RepoID      int64            `json:"repoId"`
+	SpaceID     int64            `json:"spaceID"`
+	RepoID      int64            `json:"repoID"`
 	Format      ArtifactFormat   `json:"format"`
 	Type        ArtifactViewType `json:"type"`
 	Default     bool             `json:"isDefault"`
@@ -121,8 +121,8 @@ const (
 type CreateArtifactView struct {
 	Name        string           `json:"name"`
 	Description string           `json:"description"`
-	SpaceID     int64            `json:"spaceId"`
-	RepoID      int64            `json:"repoId"`
+	SpaceID     int64            `json:"spaceID"`
+	RepoID      int64            `json:"repoID"`
 	Type        ArtifactViewType `json:"type"`
 	Format      ArtifactFormat   `json:"format"`
 	Default     bool             `json:"isDefault"`
@@ -130,7 +130,7 @@ type CreateArtifactView struct {
 
 type ArtifactGroup struct {
 	ID          int64           `json:"id"`
-	ParentID    null.Int        `json:"parentId"`
+	ParentID    null.Int        `json:"parentID"`
 	ArtifactID  int64           `json:"artifactID"`
 	Name        string          `json:"name"`
 	Format      ArtifactFormat  `json:"format"`
@@ -142,7 +142,7 @@ type ArtifactGroup struct {
 }
 
 type CreateArtifactGroup struct {
-	ParentID   null.Int       `json:"parentId"`
+	ParentID   null.Int       `json:"parentID"`
 	ArtifactID int64          `json:"artifactID"`
 	Name       string         `json:"name"`
 	Format     ArtifactFormat `json:"format"`
@@ -155,10 +155,10 @@ type ArtifactPackage struct {
 	Namespace  string `json:"namespace"`
 
 	// GroupID 用于标记 package 所属 group，主要给 raw / maven 风格使用，替代 namespace 的层级含义。
-	// GroupId used for define group of the package, used for raw maven style, instead of the namespace field
+	// GroupID used for define group of the package, used for raw maven style, instead of the namespace field
 	// 这里使用 int64，便于后续构建索引和关联查询。
 	// convert to int64 for build index
-	GroupID int64 `json:"groupId"`
+	GroupID int64 `json:"groupID"`
 
 	Format      ArtifactFormat `json:"format"`
 	CreatedBy   string         `json:"createdBy"`
@@ -172,7 +172,7 @@ type CreateArtifactPackage struct {
 	ArtifactID int64          `json:"artifactID"`
 	Name       string         `json:"name"`
 	Namespace  string         `json:"namespace"`
-	GroupID    int64          `json:"groupId"`
+	GroupID    int64          `json:"groupID"`
 	Format     ArtifactFormat `json:"format"`
 }
 
@@ -182,7 +182,7 @@ func (p *ArtifactPackage) IsDeleted() bool {
 
 type ArtifactVersion struct {
 	ID        int64  `json:"id"`
-	PackageID int64  `json:"packageId"`
+	PackageID int64  `json:"packageID"`
 	Version   string `json:"version"`
 
 	// Metadata 保存 version 级元数据，例如版本创建者等附加信息。
@@ -197,7 +197,7 @@ type ArtifactVersion struct {
 }
 
 type CreateArtifactVersion struct {
-	PackageID int64  `json:"packageId"`
+	PackageID int64  `json:"packageID"`
 	Version   string `json:"version"`
 	Metadata  string `json:"metadata"`
 }
@@ -208,7 +208,7 @@ type ArtifactVersionInfo struct {
 	ArtifactID int64  `gorm:"column:artifactID"`
 	Deleted    int64  `gorm:"column:deleted"`
 
-	PackageId        int64          `gorm:"column:packageID"`
+	PackageID        int64          `gorm:"column:packageID"`
 	PackageName      string         `gorm:"column:name"`
 	PackageNamespace string         `gorm:"column:namespace"`
 	PackageFormat    ArtifactFormat `gorm:"column:format"`
@@ -228,15 +228,15 @@ type ArtifactAsset struct {
 
 	// VersionID 绑定具体 package(format) 与 view 下的版本资产。
 	// VersionID binding with package(with format), view
-	VersionID null.Int `json:"versionId" gorm:"column:versionID"`
+	VersionID null.Int `json:"versionID" gorm:"column:versionID"`
 
 	// ArtifactID 用于无版本资产，例如格式级 index 文件。
 	// ArtifactID used for none-version assets, like index file for a format
 	ArtifactID null.Int `json:"artifactID" gorm:"column:artifactID"`
 
 	// GroupID 用于无版本的文件类资产挂到 group 节点。
-	// GroupId used for file format assets, without version
-	GroupID null.Int `json:"groupId" gorm:"column:groupID"`
+	// GroupID used for file format assets, without version
+	GroupID null.Int `json:"groupID" gorm:"column:groupID"`
 
 	// Format 也用于标识无版本资产所属的仓库格式。
 	// Format is also used for none-version assets
@@ -248,7 +248,7 @@ type ArtifactAsset struct {
 	// Metadata 保存 asset 级元数据，例如 helm chart 信息，用于后续重建索引。
 	// Metadata store asset-level metadata. example: helm chart metadata, for rebuild index
 	Metadata    string          `json:"metadata"`
-	BlobID      int64           `json:"blobId"`
+	BlobID      int64           `json:"blobID"`
 	CheckSum    string          `json:"checkSum"`
 	CreatedBy   string          `json:"createdBy"`
 	CreatedDate *datetime.Local `json:"createdDate"`
@@ -258,15 +258,15 @@ type ArtifactAsset struct {
 }
 
 type CreateArtifactAsset struct {
-	VersionID   null.Int       `json:"versionId"`
+	VersionID   null.Int       `json:"versionID"`
 	ArtifactID  null.Int       `json:"artifactID"`
-	GroupID     null.Int       `json:"groupId"`
+	GroupID     null.Int       `json:"groupID"`
 	Format      ArtifactFormat `json:"format"`
 	Path        string         `json:"path"`
 	ContentType string         `json:"contentType"`
 	Kind        AssetKind      `json:"kind"`
 	Metadata    string         `json:"metadata"`
-	BlobID      int64          `json:"blobId"`
+	BlobID      int64          `json:"blobID"`
 	CheckSum    string         `json:"checkSum"`
 }
 
@@ -285,7 +285,7 @@ type ArtifactMetaAsset struct {
 	Path        string         `json:"path"`
 	ContentType string         `json:"contentType"`
 	Kind        AssetKind      `json:"kind"`
-	BlobID      int64          `json:"blobId"`
+	BlobID      int64          `json:"blobID"`
 	CheckSum    string         `json:"checkSum"`
 	CreatedBy   string         `json:"createdBy"`
 	CreatedDate *time.Time     `json:"createdDate"`
@@ -300,13 +300,13 @@ type CreateArtifactMetaAsset struct {
 	Path        string         `json:"path"`
 	ContentType string         `json:"contentType"`
 	Kind        AssetKind      `json:"kind"`
-	BlobID      int64          `json:"blobId"`
+	BlobID      int64          `json:"blobID"`
 	CheckSum    string         `json:"checkSum"`
 }
 
 type ArtifactBlob struct {
 	ID        int64  `json:"id"`
-	StorageID int64  `json:"storageId"`
+	StorageID int64  `json:"storageID"`
 	Ref       string `json:"ref"`
 	Size      int64  `json:"size"`
 	Downloads int64  `json:"downloads"`
@@ -318,12 +318,12 @@ type ArtifactBlob struct {
 	CreatedDate *time.Time `json:"createdDate"`
 	EditedBy    string     `json:"editedBy"`
 	EditedDate  *time.Time `json:"editedDate"`
-	AssetId     int64      `json:"assetId"`
+	AssetID     int64      `json:"assetID"`
 	CheckSum    string     `json:"checkSum"`
 }
 
 type CreateArtifactBlob struct {
-	StorageID int64  `json:"storageId"`
+	StorageID int64  `json:"storageID"`
 	Ref       string `json:"ref"`
 	Size      int64  `json:"size"`
 	CreatedBy string `json:"createdBy"`
@@ -333,23 +333,23 @@ type CreateArtifactBlob struct {
 
 type ArtifactTreeNode struct {
 	ID         int64                `json:"id"`
-	ParentID   null.Int             `json:"parentId"`
+	ParentID   null.Int             `json:"parentID"`
 	ArtifactID int64                `json:"artifactID"`
 	Name       string               `json:"name"`
 	Path       string               `json:"path"`
 	Type       ArtifactTreeNodeType `json:"type"`
 	Format     ArtifactFormat       `json:"format"`
-	TargetId   null.Int             `json:"targetId"`
+	TargetID   null.Int             `json:"targetID"`
 }
 
 type CreateArtifactTreeNode struct {
-	ParentID   null.Int             `json:"parentId"`
+	ParentID   null.Int             `json:"parentID"`
 	ArtifactID int64                `json:"artifactID"`
 	Name       string               `json:"name"`
 	Path       string               `json:"path"`
 	Type       ArtifactTreeNodeType `json:"type"`
 	Format     ArtifactFormat       `json:"format"`
-	TargetId   null.Int             `json:"targetId"`
+	TargetID   null.Int             `json:"targetID"`
 }
 
 func (n *ArtifactTreeNode) Key() string {
@@ -522,7 +522,7 @@ func (e *ArtifactGroupEndpoint) names() []string {
 // ==================== Search Options ====================
 
 type SearchVersionOption struct {
-	PackageId      int64
+	PackageID      int64
 	Page           int    `json:"page"`
 	Size           int    `json:"size"`
 	Query          string `json:"query"`
@@ -531,22 +531,22 @@ type SearchVersionOption struct {
 
 func (opt SearchVersionOption) Apply(db *gorm.DB) *gorm.DB {
 	q := ArtifactVersion{}
-	if opt.PackageId != 0 {
-		q.PackageID = opt.PackageId
+	if opt.PackageID != 0 {
+		q.PackageID = opt.PackageID
 	}
 
 	return db.Where(&q)
 }
 
 type SearchAssetOption struct {
-	VersionId int64
+	VersionID int64
 	Kind      AssetKind
 	Path      string
 }
 
 func (opt SearchAssetOption) Apply(db *gorm.DB) *gorm.DB {
 	q := ArtifactAsset{
-		VersionID: null.IntFromPtr(&opt.VersionId),
+		VersionID: null.IntFromPtr(&opt.VersionID),
 	}
 
 	if opt.Kind != ("") {
@@ -571,16 +571,16 @@ type TreeNode struct {
 // ==================== Recycle / Statistic ====================
 
 type ArtifactRecycleBlobDesc struct {
-	AssetId int64
+	AssetID int64
 	Path    string
-	BlobId  int64
+	BlobID  int64
 	BlobRef string
 	Size    int64
 }
 
 type ArtifactVersionCapacityDesc struct {
-	AssetId       int64
-	VersionId     int64
+	AssetID       int64
+	VersionID     int64
 	ExclusiveSize int64
 	TotalSize     int64
 	ExclusiveRefs int
@@ -637,15 +637,15 @@ type PermRule struct {
 // MoveEntityReq 移动实体请求。
 type MoveEntityReq struct {
 	EntityType       string `json:"entityType"`       // "package" / "asset" / "group"
-	SourceID         int64  `json:"sourceId"`         // 源实体 ID
-	TargetArtifactID int64  `json:"targetArtifactId"` // 目标制品库 ID
-	TargetGroupID    int64  `json:"targetGroupId"`    // 目标 group ID（package/asset 必填，group 可选）
+	SourceID         int64  `json:"sourceID"`         // 源实体 ID
+	TargetArtifactID int64  `json:"targetArtifactID"` // 目标制品库 ID
+	TargetGroupID    int64  `json:"targetGroupID"`    // 目标 group ID（package/asset 必填，group 可选）
 }
 
 // RenameEntityReq 重命名实体请求。
 type RenameEntityReq struct {
 	EntityType string `json:"entityType"` // "asset" / "group"
-	SourceID   int64  `json:"sourceId"`   // 源实体 ID
+	SourceID   int64  `json:"sourceID"`   // 源实体 ID
 	NewName    string `json:"newName"`    // 新名称
 }
 

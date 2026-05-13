@@ -151,13 +151,13 @@ func (c *packages) Search(ctx context.Context, options ...SearchOption) ([]*mode
 	return packagesToModel(rows), nil
 }
 
-func (c *packages) GetByAssetID(ctx context.Context, assetId int64) (*model.ArtifactPackage, error) {
+func (c *packages) GetByAssetID(ctx context.Context, assetID int64) (*model.ArtifactPackage, error) {
 	var row artifactPackage
 	db := c.db.WithContext(ctx).Model(&artifactPackage{}).
 		Select("ops_artifact_packages.*").
 		Joins("JOIN ops_artifact_versions ON ops_artifact_packages.id = ops_artifact_versions.packageID").
 		Joins("JOIN ops_artifact_assets ON ops_artifact_versions.id = ops_artifact_assets.versionID").
-		Where("ops_artifact_assets.id = ?", assetId).
+		Where("ops_artifact_assets.id = ?", assetID).
 		Where("ops_artifact_assets.deleted = 0")
 	if err := db.First(&row).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)

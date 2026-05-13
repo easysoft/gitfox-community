@@ -20,7 +20,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/artifacts/assets/{assetId}": {
+        "/artifacts/assets/{assetID}": {
             "get": {
                 "description": "获取指定制品文件的详细信息",
                 "consumes": [
@@ -37,7 +37,7 @@ const docTemplate = `{
                     {
                         "type": "integer",
                         "description": "文件ID",
-                        "name": "assetId",
+                        "name": "assetID",
                         "in": "path",
                         "required": true
                     }
@@ -64,7 +64,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/artifacts/assets/{assetId}/download": {
+        "/artifacts/assets/{assetID}/download": {
             "get": {
                 "description": "下载制品文件",
                 "produces": [
@@ -78,7 +78,7 @@ const docTemplate = `{
                     {
                         "type": "integer",
                         "description": "文件ID",
-                        "name": "assetId",
+                        "name": "assetID",
                         "in": "path",
                         "required": true
                     }
@@ -105,7 +105,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/artifacts/assets/{assetId}/history": {
+        "/artifacts/assets/{assetID}/history": {
             "get": {
                 "description": "获取指定制品文件的历史 blob 列表",
                 "consumes": [
@@ -122,7 +122,7 @@ const docTemplate = `{
                     {
                         "type": "integer",
                         "description": "文件ID",
-                        "name": "assetId",
+                        "name": "assetID",
                         "in": "path",
                         "required": true
                     }
@@ -203,7 +203,7 @@ const docTemplate = `{
         },
         "/artifacts/entities": {
             "delete": {
-                "description": "按 entity_id 批量软删除 asset/version/package/group",
+                "description": "按 entityIDs 批量软删除 asset/version/package/group",
                 "consumes": [
                     "application/json"
                 ],
@@ -216,7 +216,7 @@ const docTemplate = `{
                 "summary": "按实体批量软删除制品",
                 "parameters": [
                     {
-                        "description": "实体ID列表，仅支持 entity_ids，元素格式为 type.id",
+                        "description": "实体ID列表，仅支持 entityIDs，元素格式为 type.id",
                         "name": "body",
                         "in": "body",
                         "required": true,
@@ -327,7 +327,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/artifacts/entities/{entityId}/permissions": {
+        "/artifacts/entities/{entityID}/permissions": {
             "get": {
                 "description": "获取指定实体节点的权限配置（含继承信息）",
                 "consumes": [
@@ -344,14 +344,14 @@ const docTemplate = `{
                     {
                         "type": "integer",
                         "description": "空间ID",
-                        "name": "spaceId",
+                        "name": "spaceID",
                         "in": "query",
                         "required": true
                     },
                     {
                         "type": "string",
                         "description": "实体ID（格式: kind.id，如 package.123）",
-                        "name": "entityId",
+                        "name": "entityID",
                         "in": "path",
                         "required": true
                     }
@@ -393,14 +393,14 @@ const docTemplate = `{
                     {
                         "type": "integer",
                         "description": "空间ID",
-                        "name": "spaceId",
+                        "name": "spaceID",
                         "in": "query",
                         "required": true
                     },
                     {
                         "type": "string",
                         "description": "实体ID（格式: kind.id，如 package.123）",
-                        "name": "entityId",
+                        "name": "entityID",
                         "in": "path",
                         "required": true
                     },
@@ -536,7 +536,7 @@ const docTemplate = `{
         },
         "/artifacts/groups": {
             "post": {
-                "description": "创建 group 节点。artifactID 必传且必须大于 0",
+                "description": "创建 group 节点。artifactID 必传且必须大于 0。group 的 format 自动从 artifactID 对应视图中反查，前端不需要传 format。",
                 "consumes": [
                     "application/json"
                 ],
@@ -549,7 +549,7 @@ const docTemplate = `{
                 "summary": "创建分组",
                 "parameters": [
                     {
-                        "description": "请求参数(artifactID 必填；names 为 '.' 分隔的分组路径；format 必须是支持的格式枚举)",
+                        "description": "请求参数(artifactID 必填；names 为 '.' 分隔的分组路径；format 不传，由服务端从 artifact 反查)",
                         "name": "body",
                         "in": "body",
                         "required": true,
@@ -580,7 +580,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/artifacts/groups/{groupId}/archive": {
+        "/artifacts/groups/{groupID}/archive": {
             "get": {
                 "description": "将 generic 分组资产打包为 zip 下载",
                 "produces": [
@@ -594,14 +594,14 @@ const docTemplate = `{
                     {
                         "type": "integer",
                         "description": "分组ID",
-                        "name": "groupId",
+                        "name": "groupID",
                         "in": "path",
                         "required": true
                     },
                     {
                         "type": "integer",
                         "description": "空间ID",
-                        "name": "spaceId",
+                        "name": "spaceID",
                         "in": "query",
                         "required": true
                     }
@@ -628,7 +628,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/artifacts/groups/{groupId}/assets": {
+        "/artifacts/groups/{groupID}/assets": {
             "get": {
                 "description": "列出指定分组的制品文件列表",
                 "consumes": [
@@ -645,7 +645,7 @@ const docTemplate = `{
                     {
                         "type": "integer",
                         "description": "分组ID",
-                        "name": "groupId",
+                        "name": "groupID",
                         "in": "path",
                         "required": true
                     }
@@ -689,13 +689,13 @@ const docTemplate = `{
                     {
                         "type": "integer",
                         "description": "空间ID（可选，不传或传 0 表示全局）",
-                        "name": "spaceId",
+                        "name": "spaceID",
                         "in": "query"
                     },
                     {
                         "type": "integer",
                         "description": "仓库ID（可选）",
-                        "name": "repoId",
+                        "name": "repoID",
                         "in": "query"
                     }
                 ],
@@ -723,7 +723,7 @@ const docTemplate = `{
         },
         "/artifacts/nodeInfo": {
             "post": {
-                "description": "兼容参考项目 ` + "`" + `/artifacts/nodeInfo` + "`" + `，按 entity_ids 或旧的 node_ids 批量查询节点详情。成功时返回原始数组，不包裹通用响应体。",
+                "description": "兼容参考项目 ` + "`" + `/artifacts/nodeInfo` + "`" + `，按 entityIDs 批量查询节点详情。成功时返回原始数组，不包裹通用响应体。",
                 "consumes": [
                     "application/json"
                 ],
@@ -772,7 +772,7 @@ const docTemplate = `{
         },
         "/artifacts/nodes": {
             "post": {
-                "description": "按 artifactID 查询制品树。支持两种定位方式：1）nodeId \u003e 0 时按节点定位当前层，不支持递归；2）否则按 format + path 查询，path 可传 /** 或 /xxx/** 递归返回目录树。level 支持 format/group/package/version/asset，表示最大可见层级。",
+                "description": "按 artifactID 查询制品树。支持两种定位方式：1）nodeID \u003e 0 时按节点定位当前层，不支持递归；2）否则按 format + path 查询，path 可传 /** 或 /xxx/** 递归返回目录树。level 支持 format/group/package/version/asset，表示最大可见层级。",
                 "consumes": [
                     "application/json"
                 ],
@@ -785,7 +785,7 @@ const docTemplate = `{
                 "summary": "通用树查询",
                 "parameters": [
                     {
-                        "description": "查询条件：nodeId 与 path 二选一时 nodeId 优先；format=all 表示查询所有格式；path 带 /** 时启用递归",
+                        "description": "查询条件：nodeID 与 path 二选一时 nodeID 优先；format=all 表示查询所有格式；path 带 /** 时启用递归",
                         "name": "body",
                         "in": "body",
                         "required": true,
@@ -816,7 +816,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/artifacts/nodes/{nodeId}/children": {
+        "/artifacts/nodes/{nodeID}/children": {
             "get": {
                 "description": "列出树节点的子节点",
                 "consumes": [
@@ -833,7 +833,7 @@ const docTemplate = `{
                     {
                         "type": "integer",
                         "description": "节点ID",
-                        "name": "nodeId",
+                        "name": "nodeID",
                         "in": "path",
                         "required": true
                     }
@@ -935,13 +935,13 @@ const docTemplate = `{
                     {
                         "type": "integer",
                         "description": "空间ID（可选，不传或传 0 表示全局权限）",
-                        "name": "spaceId",
+                        "name": "spaceID",
                         "in": "query"
                     },
                     {
                         "type": "integer",
                         "description": "仓库ID（可选）",
-                        "name": "repoId",
+                        "name": "repoID",
                         "in": "query"
                     }
                 ],
@@ -967,7 +967,7 @@ const docTemplate = `{
                 }
             },
             "post": {
-                "description": "设置指定空间/仓库的制品库权限。spaceId 和 repoId 均为可选：",
+                "description": "设置指定空间/仓库的制品库权限。spaceID 和 repoID 均为可选：",
                 "consumes": [
                     "application/json"
                 ],
@@ -982,13 +982,13 @@ const docTemplate = `{
                     {
                         "type": "integer",
                         "description": "空间ID（可选，不传或传 0 表示全局权限）",
-                        "name": "spaceId",
+                        "name": "spaceID",
                         "in": "query"
                     },
                     {
                         "type": "integer",
                         "description": "仓库ID（可选）",
-                        "name": "repoId",
+                        "name": "repoID",
                         "in": "query"
                     },
                     {
@@ -1051,7 +1051,7 @@ const docTemplate = `{
         },
         "/artifacts/tree/refresh": {
             "post": {
-                "description": "重建所有制品树节点",
+                "description": "按 format 重建制品树节点。format 必传，支持 generic/raw/maven/container/helm/pypi/npm，或 all 表示全量刷新。",
                 "consumes": [
                     "application/json"
                 ],
@@ -1062,9 +1062,26 @@ const docTemplate = `{
                     "artifacts"
                 ],
                 "summary": "重建制品树",
+                "parameters": [
+                    {
+                        "description": "刷新参数（format 必填）",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.RefreshTreeReq"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "成功",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
                         "schema": {
                             "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
                         }
@@ -1175,7 +1192,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/artifacts/versions/{versionId}/assets": {
+        "/artifacts/versions/{versionID}/assets": {
             "get": {
                 "description": "列出指定版本的制品文件列表",
                 "consumes": [
@@ -1192,7 +1209,7 @@ const docTemplate = `{
                     {
                         "type": "integer",
                         "description": "版本ID",
-                        "name": "versionId",
+                        "name": "versionID",
                         "in": "path",
                         "required": true
                     }
@@ -12316,16 +12333,16 @@ const docTemplate = `{
                 "level": {
                     "type": "string"
                 },
-                "nodeId": {
+                "nodeID": {
                     "type": "integer"
                 },
                 "path": {
                     "type": "string"
                 },
-                "repoId": {
+                "repoID": {
                     "type": "integer"
                 },
-                "spaceId": {
+                "spaceID": {
                     "type": "integer"
                 }
             }
@@ -12349,10 +12366,10 @@ const docTemplate = `{
                 "packageName": {
                     "type": "string"
                 },
-                "repoId": {
+                "repoID": {
                     "type": "integer"
                 },
-                "spaceId": {
+                "spaceID": {
                     "type": "integer"
                 }
             }
@@ -12393,10 +12410,10 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
-                "repoId": {
+                "repoID": {
                     "type": "integer"
                 },
-                "spaceId": {
+                "spaceID": {
                     "type": "integer"
                 }
             }
@@ -12404,7 +12421,6 @@ const docTemplate = `{
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.CreateGroupReq": {
             "type": "object",
             "required": [
-                "format",
                 "names"
             ],
             "properties": {
@@ -12422,7 +12438,7 @@ const docTemplate = `{
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.ListNodeInfoReq": {
             "type": "object",
             "properties": {
-                "entity_ids": {
+                "entityIDs": {
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -12437,15 +12453,15 @@ const docTemplate = `{
                     "description": "\"package\" / \"asset\" / \"group\"",
                     "type": "string"
                 },
-                "sourceId": {
+                "sourceID": {
                     "description": "源实体 ID",
                     "type": "integer"
                 },
-                "targetArtifactId": {
+                "targetArtifactID": {
                     "description": "目标制品库 ID",
                     "type": "integer"
                 },
-                "targetGroupId": {
+                "targetGroupID": {
                     "description": "目标 group ID（package/asset 必填，group 可选）",
                     "type": "integer"
                 }
@@ -12494,6 +12510,14 @@ const docTemplate = `{
                 }
             }
         },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.RefreshTreeReq": {
+            "type": "object",
+            "properties": {
+                "format": {
+                    "type": "string"
+                }
+            }
+        },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.RenameEntityReq": {
             "type": "object",
             "properties": {
@@ -12505,7 +12529,7 @@ const docTemplate = `{
                     "description": "新名称",
                     "type": "string"
                 },
-                "sourceId": {
+                "sourceID": {
                     "description": "源实体 ID",
                     "type": "integer"
                 }
@@ -12514,7 +12538,7 @@ const docTemplate = `{
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.SoftRemoveEntitiesReq": {
             "type": "object",
             "properties": {
-                "entity_ids": {
+                "entityIDs": {
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -12528,10 +12552,10 @@ const docTemplate = `{
                 "artifactID": {
                     "type": "integer"
                 },
-                "repoId": {
+                "repoID": {
                     "type": "integer"
                 },
-                "spaceId": {
+                "spaceID": {
                     "type": "integer"
                 }
             }

@@ -371,10 +371,10 @@ func (crr *ResumeRequest) createOrUpdateModelBlob(ctx context.Context, mutateFn 
 	}
 
 	if errors.Is(err, pkgerrors.ErrResourceNotFound) {
-		var creatorId = int64(0)
+		var creatorID = int64(0)
 		session, ok := req.GetAuthSession(ctx)
 		if ok {
-			creatorId = session.User.ID
+			creatorID = session.User.ID
 		}
 
 		tm := time.UnixMilli(crr.State.StartedAt)
@@ -382,7 +382,7 @@ func (crr *ResumeRequest) createOrUpdateModelBlob(ctx context.Context, mutateFn 
 		newObj := model.CreateArtifactBlob{
 			StorageID: crr.view.StorageID,
 			Ref:       crr.Ref,
-			CreatedBy: fmt.Sprintf("%d", creatorId),
+			CreatedBy: fmt.Sprintf("%d", creatorID),
 		}
 		if err = mutateFn(&model.ArtifactBlob{StorageID: newObj.StorageID, Ref: newObj.Ref, CreatedBy: newObj.CreatedBy}); err != nil {
 			return nil, err

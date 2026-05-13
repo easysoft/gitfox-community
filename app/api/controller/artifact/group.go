@@ -84,19 +84,19 @@ func (c *Controller) CreateGroup(ctx *gin.Context) {
 // @Tags artifacts
 // @Accept application/json
 // @Produce application/json
-// @Param groupId path int true "分组ID"
+// @Param groupID path int true "分组ID"
 // @Success 200 {object} resp.ObjectResponse "成功"
 // @Failure 400 {object} resp.ObjectResponse "参数错误"
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
-// @Router /artifacts/groups/{groupId}/assets [get]
+// @Router /artifacts/groups/{groupID}/assets [get]
 func (c *Controller) ListGroupAssets(ctx *gin.Context) {
-	groupId, err := req.PathParamAsPositiveInt64(ctx, "groupId")
+	groupID, err := req.PathParamAsPositiveInt64(ctx, "groupID")
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.ArtifactPathParamError)
 		resp.BadRequest(ctx, err)
 		return
 	}
-	assets, err := c.artSvc.ListGroupAssets(ctx, groupId)
+	assets, err := c.artSvc.ListGroupAssets(ctx, groupID)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return
@@ -108,20 +108,20 @@ func (c *Controller) ListGroupAssets(ctx *gin.Context) {
 // @Description 将 generic 分组资产打包为 zip 下载
 // @Tags artifacts
 // @Produce application/zip
-// @Param groupId path int true "分组ID"
-// @Param spaceId query int true "空间ID"
+// @Param groupID path int true "分组ID"
+// @Param spaceID query int true "空间ID"
 // @Success 200 {file} file "ZIP 文件流"
 // @Failure 400 {object} resp.ObjectResponse "参数错误"
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
-// @Router /artifacts/groups/{groupId}/archive [get]
+// @Router /artifacts/groups/{groupID}/archive [get]
 func (c *Controller) ArchiveGroup(ctx *gin.Context) {
-	groupID, err := req.PathParamAsPositiveInt64(ctx, "groupId")
+	groupID, err := req.PathParamAsPositiveInt64(ctx, "groupID")
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.ArtifactPathParamError)
 		resp.BadRequest(ctx, err)
 		return
 	}
-	spaceID, err := req.QueryParamAsPositiveInt64OrError(ctx, "spaceId")
+	spaceID, err := req.QueryParamAsPositiveInt64OrError(ctx, "spaceID")
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.ArtifactQueryParamError)
 		resp.BadRequest(ctx, err)
@@ -129,7 +129,7 @@ func (c *Controller) ArchiveGroup(ctx *gin.Context) {
 	}
 	session, _ := req.GetAuthSession(ctx)
 	var repoID int64
-	if rID, _, _ := req.QueryParamAsPositiveInt64(ctx, "repoId"); rID > 0 {
+	if rID, _, _ := req.QueryParamAsPositiveInt64(ctx, "repoID"); rID > 0 {
 		repoID = rID
 	}
 	archive, err := c.artSvc.PrepareArchiveGroup(ctx, session, spaceID, repoID, groupID)
