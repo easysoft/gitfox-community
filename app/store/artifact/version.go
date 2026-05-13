@@ -20,6 +20,8 @@ func (c *versions) Create(ctx context.Context, newObj *model.CreateArtifactVersi
 	row.PackageID = newObj.PackageID
 	row.Version = newObj.Version
 	row.Metadata = newObj.Metadata
+	row.CreatedBy = newObj.CreatedBy
+	row.EditedBy = newObj.CreatedBy
 	if err := c.db.WithContext(ctx).Create(&row).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}

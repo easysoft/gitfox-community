@@ -178,6 +178,7 @@ type CreateArtifactPackage struct {
 	Namespace  string         `json:"namespace"`
 	GroupID    int64          `json:"groupID"`
 	Format     ArtifactFormat `json:"format"`
+	CreatedBy  string         `json:"createdBy"`
 }
 
 func (p *ArtifactPackage) IsDeleted() bool {
@@ -204,6 +205,7 @@ type CreateArtifactVersion struct {
 	PackageID int64  `json:"packageID"`
 	Version   string `json:"version"`
 	Metadata  string `json:"metadata"`
+	CreatedBy string `json:"createdBy"`
 }
 
 type ArtifactVersionInfo struct {

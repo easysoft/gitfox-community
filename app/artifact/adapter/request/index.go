@@ -41,9 +41,11 @@ func (r *ArtifactIndexRequest) Commit(ctx context.Context) error {
 
 	// AnonymousUser is only used for unittest
 	var creatorId = int64(0)
+	var creator string
 	session, ok := req.GetAuthSession(ctx)
 	if ok {
 		creatorId = session.User.ID
+		creator = session.User.Account
 	}
 
 	if r.Descriptor.MainAsset == nil {
@@ -55,7 +57,7 @@ func (r *ArtifactIndexRequest) Commit(ctx context.Context) error {
 		Format:    r.Descriptor.Format,
 		MainAsset: r.Descriptor.MainAsset,
 		SubAssets: r.Descriptor.SubAssets,
-	}, &model.CreatorInfo{ID: creatorId})
+	}, &model.CreatorInfo{ID: creatorId, UID: creator})
 
 	// setup main asset model
 	if _, err := modelMgr.Sync(ctx, r.Descriptor.MainAsset); err != nil {

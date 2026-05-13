@@ -135,6 +135,7 @@ type ArtifactTreeRes struct {
 	Leaf     bool                  `json:"leaf"`
 	Format   ArtifactFormat        `json:"format"`
 	Metadata *ArtifactTreeNodeMeta `json:"metadata,omitempty"`
+	NodeInfo *ArtifactNodeInfo     `json:"nodeInfo,omitempty"`
 	Children []*ArtifactTreeRes    `json:"children,omitempty"`
 }
 

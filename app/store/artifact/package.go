@@ -21,6 +21,8 @@ func (c *packages) Create(ctx context.Context, newObj *model.CreateArtifactPacka
 	row.Namespace = newObj.Namespace
 	row.GroupID = newObj.GroupID
 	row.Format = string(newObj.Format)
+	row.CreatedBy = newObj.CreatedBy
+	row.EditedBy = newObj.CreatedBy
 	if err := c.db.WithContext(ctx).Create(&row).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
