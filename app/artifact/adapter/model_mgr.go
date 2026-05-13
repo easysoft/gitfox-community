@@ -338,6 +338,7 @@ func (mm *ModelManager) getOrCreateVersion(ctx context.Context) (*model.Artifact
 	verModel := &model.CreateArtifactVersion{
 		PackageID: mm.pkgModel.ID,
 		Version:   mm.pkgDescriptor.Version,
+		CreatedBy: mm.creator.UID,
 	}
 	if mm.pkgDescriptor.VersionMetadata != nil {
 		metadata, e := mm.pkgDescriptor.VersionMetadata.ToJSON()
@@ -387,6 +388,7 @@ func (mm *ModelManager) getOrCreatePackage(ctx context.Context) (*model.Artifact
 		Namespace:  desc.Namespace,
 		GroupID:    desc.GroupID, // 来自上层 Prepare 回调（container 的 getOrCreateGroup、raw 的 namespace）
 		Format:     desc.Format,
+		CreatedBy:  mm.creator.UID,
 	}
 	createdPkg, err := mm.store.Packages().Create(ctx, pkgModel)
 	if err != nil {

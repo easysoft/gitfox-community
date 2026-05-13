@@ -48,14 +48,12 @@ func registerArtifactRoutes(group *gin.RouterGroup, controller *Controller, _ au
 		// 树信息
 		artifact.POST("/nodes", controller.Artifact.ListTree) // pullAuth
 
-		// - 办公控制 -
+		// -- 版本控制 --
 		artifact.POST("/packages", controller.Artifact.ListPackages) // pullAuth
 		// 包版本操作（读）
 		artifact.POST("/versions/list", controller.Artifact.ListVersions) // pullAuth
 		// 版本级操作
 		artifact.GET("/versions/:versionID/assets", controller.Artifact.ListAssets) // pullAuth
-
-		artifact.POST("/formats", controller.Artifact.ListFormats) // pullAuth
 
 		// group 级操作（读）
 		artifact.GET("/groups/:groupID/assets", controller.Artifact.ListGroupAssets) // pullAuth
@@ -76,6 +74,7 @@ func registerArtifactRoutes(group *gin.RouterGroup, controller *Controller, _ au
 		// 管理操作
 		artifact.GET("/garbage/container", controller.Artifact.GarbageCollectContainer)    // deleteAuth
 		artifact.GET("/garbage/soft-remove", controller.Artifact.GarbageCollectSoftRemove) // deleteAuth
+
 		// 权限管理 — 系统级 admin 鉴权
 		// 使用 ArtifactAdminMiddleware 取代 Casbin permAuth：
 		// 只要 Principal.Admin（zentao App）或 User.IsAdmin（DB 管理员）即可管理权限，
@@ -86,5 +85,8 @@ func registerArtifactRoutes(group *gin.RouterGroup, controller *Controller, _ au
 		// artifact.POST("/permissions", adminAuth, controller.Artifact.SetPermissions)
 		// artifact.GET("/permissions", adminAuth, controller.Artifact.GetPermissions)
 		// artifact.GET("/members", pullAuth, controller.Artifact.GetMembers)
+
+		// --- 暂时冗余 ---
+		artifact.POST("/formats", controller.Artifact.ListFormats) // pullAuth
 	}
 }

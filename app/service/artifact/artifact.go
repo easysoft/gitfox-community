@@ -1322,7 +1322,12 @@ func (s *Service) listVersionAssetAsTree(ctx context.Context, node *model.Artifa
 		}
 		id := (&model.ArtifactTreeNodeId{Type: model.ArtifactTreeNodeTypeAsset, Pk: asset.Id}).String()
 		meta.NodeID, meta.EntityID = id, id
-		data = append(data, &model.ArtifactTreeRes{Name: base, Path: strings.TrimRight(node.Path, "/") + "/" + base, Leaf: true, Format: node.Format, Metadata: meta})
+		item := &model.ArtifactTreeRes{Name: base, Path: strings.TrimRight(node.Path, "/") + "/" + base, Leaf: true, Format: node.Format, Metadata: meta}
+		// 填充 nodeInfo
+		if nodeInfo, e := s.getAssetNodeInfo(ctx, asset.Id); e == nil && nodeInfo.Status == string(model.ArtifactStatusOK) {
+			item.NodeInfo = nodeInfo
+		}
+		data = append(data, item)
 	}
 	return data, nil
 }
@@ -1341,7 +1346,19 @@ func (s *Service) appendGroupAssets(ctx context.Context, groupID int64, data []*
 	for _, asset := range assets {
 		base := filepath.Base(asset.Path)
 		id := (&model.ArtifactTreeNodeId{Type: model.ArtifactTreeNodeTypeAsset, Pk: asset.Id}).String()
-		data = append(data, &model.ArtifactTreeRes{Name: base, Path: "/" + g.GroupPath() + "/" + base, Leaf: true, Format: model.ArtifactFormat(g.Format), Metadata: &model.ArtifactTreeNodeMeta{Id: asset.Id, Type: model.ArtifactTreeNodeTypeAsset, Name: base, NodeID: id, EntityID: id}})
+		item := &model.ArtifactTreeRes{Name: base, Path: "/" + g.GroupPath() + "/" + base, Leaf: true, Format: model.ArtifactFormat(g.Format), Metadata: &model.ArtifactTreeNodeMeta{Id: asset.Id, Type: model.ArtifactTreeNodeTypeAsset, Name: base, NodeID: id, EntityID: id}}
+		item.NodeInfo = &model.ArtifactNodeInfo{
+			Status:      string(model.ArtifactStatusOK),
+			Format:      model.ArtifactFormat(g.Format),
+			Path:        asset.Path,
+			ContentType: asset.ContentType,
+			Size:        asset.Size,
+			CreatorName: asset.CreatorName,
+			Created:     asset.Created,
+			Updated:     asset.Updated,
+			CheckSum:    asset.CheckSum,
+		}
+		data = append(data, item)
 	}
 	return data, nil
 }
