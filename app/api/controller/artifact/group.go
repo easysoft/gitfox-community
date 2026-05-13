@@ -41,7 +41,7 @@ func (c *Controller) CreateGroup(ctx *gin.Context) {
 		return
 	}
 
-	view, err := c.artSvc.ResolveView(ctx, &model.SpaceRepoReq{ArtifactID: params.ArtifactID})
+	view, err := c.artSvc.ResolveView(ctx.Request.Context(), &model.SpaceRepoReq{ArtifactID: params.ArtifactID})
 	if err != nil {
 		resp.BadRequest(ctx, err)
 		return
@@ -59,7 +59,7 @@ func (c *Controller) CreateGroup(ctx *gin.Context) {
 	format := view.Format
 
 	// 检查分组路径是否已存在（仅活的 group 算重复，软删的允许重建）
-	exists, err := c.artSvc.ActiveGroupPathExists(ctx, params.ArtifactID, names, format)
+	exists, err := c.artSvc.ActiveGroupPathExists(ctx.Request.Context(), params.ArtifactID, names, format)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return
@@ -71,7 +71,7 @@ func (c *Controller) CreateGroup(ctx *gin.Context) {
 		))
 		return
 	}
-	ge, err := c.artSvc.CreateGroup(ctx, params.ArtifactID, names, format)
+	ge, err := c.artSvc.CreateGroup(ctx.Request.Context(), params.ArtifactID, names, format)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return

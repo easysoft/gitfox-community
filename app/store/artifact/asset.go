@@ -47,6 +47,8 @@ func (c *assets) Create(ctx context.Context, newObj *model.CreateArtifactAsset) 
 	row.Metadata = newObj.Metadata
 	row.BlobID = newObj.BlobID
 	row.CheckSum = newObj.CheckSum
+	row.EditedBy = newObj.EditedBy
+	row.CreatedBy = newObj.CreatedBy
 	if err := c.db.WithContext(ctx).Create(&row).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}

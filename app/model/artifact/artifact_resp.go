@@ -69,6 +69,19 @@ type ArtifactAssetsRes struct {
 	Metadata map[string]string `gorm:"-" json:"metadata"`
 	Link     string            `gorm:"-" json:"link"`
 	EntityID string            `gorm:"-" json:"entityID"`
+
+	// ==================== 业务回填字段（由 service 层基于 nodeinfo 链路统一填充）====================
+	// Name 文件名 / 制品名（asset path 的 basename）
+	Name string `gorm:"-" json:"name,omitempty"`
+	// PackageName 所属包名（version 类资产；非 version 资产为空）
+	PackageName string `gorm:"-" json:"packageName,omitempty"`
+	// Group 所属目录（generic/raw 为点分路径；container 为镜像目录；不存在则空）
+	Group string `gorm:"-" json:"group,omitempty"`
+	// Version 版本号（version 类资产；非 version 资产为空）
+	Version string `gorm:"-" json:"version,omitempty"`
+	// OS / Arch 仅 container 格式由 manifest 解析后回填
+	OS   string `gorm:"-" json:"os,omitempty"`
+	Arch string `gorm:"-" json:"arch,omitempty"`
 }
 
 type ArtifactBlobRes struct {

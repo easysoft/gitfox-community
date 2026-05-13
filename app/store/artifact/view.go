@@ -23,6 +23,8 @@ func (c *views) Create(ctx context.Context, newObj *model.CreateArtifactView) (*
 	view.Name = newObj.Name
 	view.Format = string(newObj.Format)
 	view.Description = newObj.Description
+	view.EditedBy = newObj.EditedBy
+	view.CreatedBy = newObj.CreatedBy
 	if err := c.db.WithContext(ctx).Create(&view).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}

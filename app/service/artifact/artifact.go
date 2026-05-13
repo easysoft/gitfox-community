@@ -16,6 +16,8 @@ import (
 	"strings"
 	"time"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
+	request "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/adapter"
@@ -174,6 +176,7 @@ func (s *Service) CreateView(ctx context.Context, req *model.CreateArtifactViewR
 	isDefault := !s.hasDefaultView(ctx, req.SpaceID, req.RepoID)
 	viewType := resolveArtifactViewType(req.SpaceID, req.RepoID)
 
+	session, _ := request.GetAuthSession(ctx)
 	// 情况4：无冲突，正常创建
 	v := &model.CreateArtifactView{
 		Name:        req.Name,
@@ -183,6 +186,8 @@ func (s *Service) CreateView(ctx context.Context, req *model.CreateArtifactViewR
 		Format:      artifact.ArtifactFormat(req.Format),
 		Type:        viewType,
 		Default:     isDefault,
+		CreatedBy:   session.User.Account,
+		EditedBy:    session.User.Account,
 	}
 	view, err := s.artStore.Views().Create(ctx, v)
 	if err != nil {
@@ -203,7 +208,7 @@ func (s *Service) CreateView(ctx context.Context, req *model.CreateArtifactViewR
 // 使用 Groups().RecursiveCreate：本身幂等，若已存在同名根分组会直接复用。
 func (s *Service) ensureDefaultGroupForView(ctx context.Context, view *model.ArtifactView) error {
 	return s.db.Transaction(func(tx *gorm.DB) error {
-		ge, err := s.artStore.Groups().RecursiveCreate(ctx, view.ID, []string{view.Name}, view.Format)
+		ge, err := s.artStore.Groups().RecursiveCreate(ctx, view.ID, []string{view.Name}, view.Format, view.CreatedBy)
 		if err != nil {
 			return err
 		}
@@ -469,7 +474,91 @@ func (s *Service) ListAssets(ctx context.Context, VersionID int64) ([]*model.Art
 }
 
 func (s *Service) ListGroupAssets(ctx context.Context, groupID int64) ([]*model.ArtifactAssetsRes, error) {
-	return s.artStore.ListGroupAssets(ctx, groupID)
+	assets, err := s.artStore.ListGroupAssets(ctx, groupID)
+	if err != nil {
+		return nil, err
+	}
+	// 复用 /artifacts/nodeInfo 的逐资产解析链路，避免在此处再实现一遍包名 / 版本 / OS / Arch / link 等回填。
+	for _, a := range assets {
+		info, infoErr := s.getAssetNodeInfo(ctx, a.Id)
+		if infoErr != nil {
+			return nil, infoErr
+		}
+		applyNodeInfoToAsset(a, info)
+	}
+
+	// generic 分组下统一以 group 路径 + asset.Path 拼出下载链接
+	group, err := s.artStore.Groups().GetEndpointById(ctx, groupID)
+	if err != nil {
+		// 分组本身不存在视为软失败：保留现有 assets，避免影响列表返回
+		return assets, nil
+	}
+	if group.Format == model.ArtifactGenericFormat {
+		view, err := s.ParseSpaceView(ctx, &model.SpaceRepoReq{ArtifactID: group.ArtifactID})
+		if err != nil {
+			return assets, nil
+		}
+		if err := addLinkForGeneric(assets, nodeInfoSpaceName(view), group.GroupPath(), string(group.Format)); err != nil {
+			return nil, err
+		}
+	}
+	return assets, nil
+}
+
+// addLinkForGeneric 仿照参考项目 gitfox: 为 generic 分组下的资产逐个拼出下载链接。
+// 路径形态：/<ArtifactMount>/<spaceName>/<format>/<groupPath>/<asset.Path>。
+// spaceName 为空时按项目既有约定兜底为 "global"（与 container 全局作用域一致），
+// 避免拼出 "/_artifacts//generic/..." 这种空段路径。
+func addLinkForGeneric(data []*model.ArtifactAssetsRes, spaceName, groupPath, format string) error {
+	if format == "" {
+		return nil
+	}
+	if spaceName == "" {
+		spaceName = "global"
+	}
+	for _, res := range data {
+		segments := []string{"_artifacts", spaceName, format}
+		if groupPath != "" {
+			segments = append(segments, strings.Split(strings.Trim(groupPath, "/"), "/")...)
+		}
+		if res.Path != "" {
+			segments = append(segments, strings.Split(strings.Trim(res.Path, "/"), "/")...)
+		}
+		link, err := url.JoinPath("/", segments...)
+		if err != nil {
+			return err
+		}
+		res.Link = link
+		res.EntityID = (&model.ArtifactTreeNodeId{Type: model.ArtifactTreeNodeTypeAsset, Pk: res.Id}).String()
+	}
+	return nil
+}
+
+// applyNodeInfoToAsset 把 nodeinfo 解析出的业务字段映射到 list 接口的资产响应上。
+// 仅 nodeinfo 命中（status=ok）时才覆盖；其它状态保持 store 查询出的基础信息原样返回。
+func applyNodeInfoToAsset(a *model.ArtifactAssetsRes, info *model.ArtifactNodeInfo) {
+	if a == nil || info == nil || info.Status != string(model.ArtifactStatusOK) {
+		return
+	}
+	a.EntityID = (&model.ArtifactTreeNodeId{Type: model.ArtifactTreeNodeTypeAsset, Pk: a.Id}).String()
+	a.Link = info.Link
+	a.OS = info.OS
+	a.Arch = info.Arch
+	if info.Size > 0 {
+		a.Size = info.Size
+	}
+	if info.Created != nil {
+		a.Created = info.Created
+	}
+	if info.Updated != nil {
+		a.Updated = info.Updated
+	}
+	if info.Metadata != nil {
+		a.Name = info.Metadata.Name
+		a.PackageName = info.Metadata.Name
+		a.Group = info.Metadata.Group
+		a.Version = info.Metadata.Version
+	}
 }
 
 func (s *Service) GetAsset(ctx context.Context, assetID int64) (*model.ArtifactAssetsRes, error) {
@@ -958,8 +1047,9 @@ func (s *Service) ActiveGroupPathExists(ctx context.Context, artifactID int64, n
 
 func (s *Service) CreateGroup(ctx context.Context, artifactID int64, names []string, format model.ArtifactFormat) (*model.ArtifactGroupEndpoint, error) {
 	var result *model.ArtifactGroupEndpoint
+	session, _ := req.GetAuthSession(ctx)
 	err := s.db.Transaction(func(tx *gorm.DB) error {
-		ge, e := s.artStore.Groups().RecursiveCreate(ctx, artifactID, names, format)
+		ge, e := s.artStore.Groups().RecursiveCreate(ctx, artifactID, names, format, session.User.Account)
 		if e != nil {
 			return e
 		}

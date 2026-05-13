@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"time"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	artifactModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/model"
 	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
 	artifactStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/artifact"
@@ -233,6 +234,7 @@ func (mm *ModelManager) createAsset(ctx context.Context, newObj *model.ArtifactA
 	if err != nil {
 		return err
 	}
+	session, _ := req.GetAuthSession(ctx)
 	createReq := &model.CreateArtifactAsset{
 		VersionID:   newObj.VersionID,
 		ArtifactID:  newObj.ArtifactID,
@@ -242,6 +244,8 @@ func (mm *ModelManager) createAsset(ctx context.Context, newObj *model.ArtifactA
 		Kind:        descriptor.Kind,
 		ContentType: descriptor.ContentType,
 		BlobID:      newBlob.ID,
+		CreatedBy:   session.User.Account,
+		EditedBy:    session.User.Account,
 	}
 	if descriptor.Hash != nil {
 		createReq.CheckSum = descriptor.Hash.String()

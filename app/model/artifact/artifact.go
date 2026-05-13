@@ -126,6 +126,8 @@ type CreateArtifactView struct {
 	Type        ArtifactViewType `json:"type"`
 	Format      ArtifactFormat   `json:"format"`
 	Default     bool             `json:"isDefault"`
+	EditedBy    string           `json:"editedBy"`
+	CreatedBy   string           `json:"createdBy"`
 }
 
 type ArtifactGroup struct {
@@ -146,6 +148,8 @@ type CreateArtifactGroup struct {
 	ArtifactID int64          `json:"artifactID"`
 	Name       string         `json:"name"`
 	Format     ArtifactFormat `json:"format"`
+	CreatedBy  string         `json:"createdBy"`
+	EditedBy   string         `json:"editedBy"`
 }
 
 type ArtifactPackage struct {
@@ -268,6 +272,8 @@ type CreateArtifactAsset struct {
 	Metadata    string         `json:"metadata"`
 	BlobID      int64          `json:"blobID"`
 	CheckSum    string         `json:"checkSum"`
+	CreatedBy   string         `json:"createdBy"`
+	EditedBy    string         `json:"editedBy"`
 }
 
 type ArtifactAssetExtendBlob struct {

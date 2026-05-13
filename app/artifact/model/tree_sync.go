@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"strings"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	artmodel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
 	artifactStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/artifact"
 	pkgErrors "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
@@ -190,9 +191,10 @@ func (t *Syncer) upsertTreeNode(ctx context.Context, node *artmodel.ArtifactTree
 }
 
 func (t *Syncer) SyncRawGroup(ctx context.Context, pkg *artmodel.ArtifactPackage) error {
+	session, _ := req.GetAuthSession(ctx)
 	// raw namespace 以 `.` 切分递归建组，末级 group 作为 package 的归属分组。
 	groupNames := strings.Split(pkg.Namespace, ".")
-	ge, e := t.artStore.Groups().RecursiveCreate(ctx, pkg.ArtifactID, groupNames, pkg.Format)
+	ge, e := t.artStore.Groups().RecursiveCreate(ctx, pkg.ArtifactID, groupNames, pkg.Format, session.User.Account)
 	if e != nil {
 		return e
 	}

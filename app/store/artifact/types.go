@@ -293,6 +293,7 @@ func viewFromModel(m *model.ArtifactView) *artifactView {
 		SpaceID:     m.SpaceID,
 		RepoID:      m.RepoID,
 		Type:        string(m.Type),
+		Format:      string(m.Format),
 		Default:     m.Default,
 		CreatedBy:   m.CreatedBy,
 		CreatedDate: m.CreatedDate,
