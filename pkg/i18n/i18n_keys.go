@@ -119,6 +119,7 @@ const (
 	ArtifactViewExpiredCleanupError         I18nKey = "artifact.view_expired_cleanup_error"           // 清理过期视图失败.
 	ArtifactViewExpiredQueryError           I18nKey = "artifact.view_expired_query_error"             // 查询过期视图失败.
 	ArtifactViewFormatInvalid               I18nKey = "artifact.view_format_invalid"                  // 不支持的制品格式,仅支持: generic, raw, maven, container, h...
+	ArtifactViewFormatRequired              I18nKey = "artifact.view_format_required"                 // 请选择制品格式(format),可选值:generic, raw, maven, contai...
 	ArtifactViewInRecycleBin                I18nKey = "artifact.view_in_recycle_bin"                  // 同名制品库视图在回收站中,请从回收站恢复或等待过期后重建.
 	ArtifactViewNameDuplicate               I18nKey = "artifact.view_name_duplicate"                  // 同名制品库视图已存在.
 	ArtifactViewNameInvalidChars            I18nKey = "artifact.view_name_invalid_chars"              // 制品库名称不得包含空白字符或 / \ . .. : * ? " < > | 等特殊字符.

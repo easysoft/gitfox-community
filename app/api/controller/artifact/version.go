@@ -33,7 +33,7 @@ func (c *Controller) CreateView(ctx *gin.Context) {
 		return
 	}
 
-	view, err := c.artSvc.CreateView(ctx, &reqBody)
+	view, err := c.artSvc.CreateView(ctx.Request.Context(), &reqBody)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return

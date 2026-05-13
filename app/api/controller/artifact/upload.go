@@ -45,7 +45,7 @@ func (c *Controller) Upload(ctx *gin.Context) {
 	formatStr := ctx.Param("format")
 	format := model.ArtifactFormat(formatStr)
 
-	assets, err := c.artSvc.Upload(ctx, view, format, ctx.Request)
+	assets, err := c.artSvc.Upload(ctx.Request.Context(), view, format, ctx.Request)
 	if err != nil {
 		// 若 err 在 adapter / service 层已显式携带 HTTP 状态（如 400），按其渲染；
 		// 否则按 500 渲染。i18n key 通过 GetI18nKey 透传到前端。

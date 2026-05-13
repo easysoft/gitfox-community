@@ -63,6 +63,8 @@ func (c *groups) Create(ctx context.Context, newObj *model.CreateArtifactGroup) 
 	row.ArtifactID = newObj.ArtifactID
 	row.Name = newObj.Name
 	row.Format = string(newObj.Format)
+	row.EditedBy = newObj.EditedBy
+	row.CreatedBy = newObj.CreatedBy
 	if err := c.db.WithContext(ctx).Create(&row).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
@@ -123,7 +125,7 @@ func (c *groups) GetEndpointByNames(ctx context.Context, artifactID int64, names
 	return obj, nil
 }
 
-func (c *groups) getOrCreate(ctx context.Context, artifactID int64, name string, parentID null.Int, format model.ArtifactFormat) (*model.ArtifactGroup, error) {
+func (c *groups) getOrCreate(ctx context.Context, artifactID int64, name string, parentID null.Int, format model.ArtifactFormat, operator string) (*model.ArtifactGroup, error) {
 	var dest *model.ArtifactGroup
 	var err error
 
@@ -135,7 +137,7 @@ func (c *groups) getOrCreate(ctx context.Context, artifactID int64, name string,
 
 	if err != nil {
 		if errors.Is(err, pkgErrors.ErrResourceNotFound) {
-			newObj := &model.CreateArtifactGroup{ArtifactID: artifactID, Name: name, Format: format, ParentID: parentID}
+			newObj := &model.CreateArtifactGroup{ArtifactID: artifactID, Name: name, Format: format, ParentID: parentID, CreatedBy: operator, EditedBy: operator}
 			return c.Create(ctx, newObj)
 		}
 		return nil, err
@@ -143,9 +145,9 @@ func (c *groups) getOrCreate(ctx context.Context, artifactID int64, name string,
 	return dest, nil
 }
 
-func (c *groups) RecursiveCreate(ctx context.Context, artifactID int64, names []string, format model.ArtifactFormat) (*model.ArtifactGroupEndpoint, error) {
+func (c *groups) RecursiveCreate(ctx context.Context, artifactID int64, names []string, format model.ArtifactFormat, operator string) (*model.ArtifactGroupEndpoint, error) {
 	obj := new(model.ArtifactGroupEndpoint)
-	rootNode, err := c.getOrCreate(ctx, artifactID, names[0], null.IntFrom(0), format)
+	rootNode, err := c.getOrCreate(ctx, artifactID, names[0], null.IntFrom(0), format, operator)
 	if err != nil {
 		return nil, err
 	}
@@ -158,7 +160,7 @@ func (c *groups) RecursiveCreate(ctx context.Context, artifactID int64, names []
 
 	obj.Parents = append(obj.Parents, rootNode)
 	for i := 1; i <= pathNum-1; i++ {
-		node, e := c.getOrCreate(ctx, artifactID, names[i], null.IntFrom(obj.Parents[i-1].ID), format)
+		node, e := c.getOrCreate(ctx, artifactID, names[i], null.IntFrom(obj.Parents[i-1].ID), format, operator)
 		if e != nil {
 			return nil, e
 		}

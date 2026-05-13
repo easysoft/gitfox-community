@@ -167,7 +167,7 @@ type GroupInterface interface {
 
 	// RecursiveCreate 按名称路径递归创建分组，返回末级分组端点。
 	// 用于 raw 格式在上传时自动建立 namespace 目录树。
-	RecursiveCreate(ctx context.Context, artifactID int64, names []string, format model.ArtifactFormat) (*model.ArtifactGroupEndpoint, error)
+	RecursiveCreate(ctx context.Context, artifactID int64, names []string, format model.ArtifactFormat, operator string) (*model.ArtifactGroupEndpoint, error)
 
 	// All 返回所有未软删的分组（不推荐在生产路径直接使用，仅供管理/同步任务）。
 	All(ctx context.Context) ([]*model.ArtifactGroup, error)

@@ -26,6 +26,7 @@ artifact:
   view_scope_mismatch: "The specified artifact view does not match the requested space or repository."
   view_create_error: "Failed to create artifact view."
   view_expired_query_error: "Failed to query expired views."
+  view_format_required: "Artifact format is required. Allowed values: generic, raw, maven, container, helm, pypi, npm."
   view_format_invalid: "Unsupported artifact format. Supported: generic, raw, maven, container, helm, pypi, npm."
   view_name_required: "Artifact view name is required."
   view_name_too_long: "Artifact view name is too long (max 128 chars)."

@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"time"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/adapter"
 	ctnAdapter "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/adapter/container"
 	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
@@ -603,7 +604,8 @@ func (c *Controller) PutContainerTag(ctx context.Context, req *http.Request, man
 // getOrCreateGroup 在指定 view 下按 groupName 查找或创建 container 格式的一级 group。
 // 使用 RecursiveCreate 保证幂等性（group 存在则直接返回）。
 func (c *Controller) getOrCreateGroup(ctx context.Context, artifactID int64, groupName string) (int64, error) {
-	ge, err := c.artStore.Groups().RecursiveCreate(ctx, artifactID, []string{groupName}, model.ArtifactContainerFormat)
+	session, _ := req.GetAuthSession(ctx)
+	ge, err := c.artStore.Groups().RecursiveCreate(ctx, artifactID, []string{groupName}, model.ArtifactContainerFormat, session.User.Account)
 	if err != nil {
 		return 0, err
 	}

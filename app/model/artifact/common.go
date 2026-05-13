@@ -85,9 +85,9 @@ type ListNodeInfoReq struct {
 
 type CreateArtifactViewReq struct {
 	SpaceRepoReq
-	Name        string `json:"name" binding:"required"`
+	Name        string `json:"name"`
 	Description string `json:"description"`
-	Format      string `json:"format" binding:"required"`
+	Format      string `json:"format"`
 }
 
 // Validate 对 CreateArtifactViewReq 进行业务规则校验，返回携带 i18n key 的错误。
@@ -99,7 +99,15 @@ type CreateArtifactViewReq struct {
 //     （generic / raw 允许中文等非 ASCII 字符）
 func (r *CreateArtifactViewReq) Validate() error {
 
-	// 1. Format 枚举校验（使用 constant 包的 Sanitize 模式）
+	// 1. Format 必填校验：空值给出更友好的提示，避免落到 "不支持的格式"。
+	if strings.TrimSpace(r.Format) == "" {
+		return errors.WithI18nKey(
+			fmt.Errorf("artifact format is required"),
+			i18n.ArtifactViewFormatRequired,
+		)
+	}
+
+	// 2. Format 枚举校验（使用 constant 包的 Sanitize 模式）
 	format := enum.ArtifactFormat(r.Format)
 	if _, ok := format.Sanitize(); !ok {
 		return errors.WithI18nKey(
@@ -108,7 +116,7 @@ func (r *CreateArtifactViewReq) Validate() error {
 		)
 	}
 
-	// 2. Name 非空检查（allow `required` binding 先过，后续再做业务侧统一 i18n 提示）
+	// 3. Name 非空检查（allow `required` binding 先过，后续再做业务侧统一 i18n 提示）
 	name := strings.TrimSpace(r.Name)
 	if name == "" {
 		return errors.WithI18nKey(
@@ -117,7 +125,7 @@ func (r *CreateArtifactViewReq) Validate() error {
 		)
 	}
 
-	// 3. 长度上限
+	// 4. 长度上限
 	if len([]rune(name)) > maxArtifactViewNameLen {
 		return errors.WithI18nKey(
 			fmt.Errorf("artifact view name too long: %d runes", len([]rune(name))),
@@ -125,7 +133,7 @@ func (r *CreateArtifactViewReq) Validate() error {
 		)
 	}
 
-	// 4. 通用字符黑名单（任何 format 都禁止）：空白 / 路径分隔 / 点号 / Windows 保留字符
+	// 5. 通用字符黑名单（任何 format 都禁止）：空白 / 路径分隔 / 点号 / Windows 保留字符
 	for _, rn := range name {
 		if unicode.IsSpace(rn) {
 			return errors.WithI18nKey(
@@ -143,7 +151,7 @@ func (r *CreateArtifactViewReq) Validate() error {
 		}
 	}
 
-	// 5. 版本化格式：Name 必须是 ASCII 字母、数字、中划线、下划线
+	// 6. 版本化格式：Name 必须是 ASCII 字母、数字、中划线、下划线
 	//    非版本化（generic / raw）允许中文等非 ASCII 字符
 	if IsVersionedFormat(ArtifactFormat(r.Format)) {
 		for _, rn := range name {
