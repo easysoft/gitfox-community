@@ -17,19 +17,19 @@ import (
 // @Tags artifacts
 // @Accept application/json
 // @Produce application/json
-// @Param versionId path int true "版本ID"
+// @Param versionID path int true "版本ID"
 // @Success 200 {object} resp.ObjectResponse "成功"
 // @Failure 400 {object} resp.ObjectResponse "参数错误"
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
-// @Router /artifacts/versions/{versionId}/assets [get]
+// @Router /artifacts/versions/{versionID}/assets [get]
 func (c *Controller) ListAssets(ctx *gin.Context) {
-	versionId, err := req.PathParamAsPositiveInt64(ctx, "versionId")
+	versionID, err := req.PathParamAsPositiveInt64(ctx, "versionID")
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.ArtifactPathParamError)
 		resp.BadRequest(ctx, err)
 		return
 	}
-	assets, err := c.artSvc.ListAssets(ctx, versionId)
+	assets, err := c.artSvc.ListAssets(ctx, versionID)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return
@@ -42,19 +42,19 @@ func (c *Controller) ListAssets(ctx *gin.Context) {
 // @Tags artifacts
 // @Accept application/json
 // @Produce application/json
-// @Param assetId path int true "文件ID"
+// @Param assetID path int true "文件ID"
 // @Success 200 {object} resp.ObjectResponse "成功"
 // @Failure 400 {object} resp.ObjectResponse "参数错误"
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
-// @Router /artifacts/assets/{assetId} [get]
+// @Router /artifacts/assets/{assetID} [get]
 func (c *Controller) GetAsset(ctx *gin.Context) {
-	assetId, err := req.PathParamAsPositiveInt64(ctx, "assetId")
+	assetID, err := req.PathParamAsPositiveInt64(ctx, "assetID")
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.ArtifactPathParamError)
 		resp.BadRequest(ctx, err)
 		return
 	}
-	asset, err := c.artSvc.GetAsset(ctx, assetId)
+	asset, err := c.artSvc.GetAsset(ctx, assetID)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return
@@ -67,19 +67,19 @@ func (c *Controller) GetAsset(ctx *gin.Context) {
 // @Tags artifacts
 // @Accept application/json
 // @Produce application/json
-// @Param assetId path int true "文件ID"
+// @Param assetID path int true "文件ID"
 // @Success 200 {object} resp.ObjectResponse "成功"
 // @Failure 400 {object} resp.ObjectResponse "参数错误"
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
-// @Router /artifacts/assets/{assetId}/history [get]
+// @Router /artifacts/assets/{assetID}/history [get]
 func (c *Controller) GetBlobHistory(ctx *gin.Context) {
-	assetId, err := req.PathParamAsPositiveInt64(ctx, "assetId")
+	assetID, err := req.PathParamAsPositiveInt64(ctx, "assetID")
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.ArtifactPathParamError)
 		resp.BadRequest(ctx, err)
 		return
 	}
-	blobs, err := c.artSvc.GetBlobHistory(ctx, assetId)
+	blobs, err := c.artSvc.GetBlobHistory(ctx, assetID)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return
@@ -91,19 +91,19 @@ func (c *Controller) GetBlobHistory(ctx *gin.Context) {
 // @Description 下载制品文件
 // @Tags artifacts
 // @Produce application/octet-stream
-// @Param assetId path int true "文件ID"
+// @Param assetID path int true "文件ID"
 // @Success 200 {file} file "文件流"
 // @Failure 400 {object} resp.ObjectResponse "参数错误"
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
-// @Router /artifacts/assets/{assetId}/download [get]
+// @Router /artifacts/assets/{assetID}/download [get]
 func (c *Controller) DownloadAsset(ctx *gin.Context) {
-	assetId, err := req.PathParamAsPositiveInt64(ctx, "assetId")
+	assetID, err := req.PathParamAsPositiveInt64(ctx, "assetID")
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.ArtifactPathParamError)
 		resp.BadRequest(ctx, err)
 		return
 	}
-	reader, blob, err := c.artSvc.DownloadAsset(ctx, assetId)
+	reader, blob, err := c.artSvc.DownloadAsset(ctx, assetID)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return

@@ -114,7 +114,7 @@ func (s *Service) movePackageInner(ctx context.Context, pkgID, tArtifactID, tGro
 	if _, err = syncer.SyncTreeNodeForPackage(ctx, srcPkg); err != nil {
 		return err
 	}
-	versions, err := s.artStore.Versions().Find(ctx, model.SearchVersionOption{PackageId: srcPkg.ID})
+	versions, err := s.artStore.Versions().Find(ctx, model.SearchVersionOption{PackageID: srcPkg.ID})
 	if err != nil {
 		return err
 	}

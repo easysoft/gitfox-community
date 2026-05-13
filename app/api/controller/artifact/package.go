@@ -80,7 +80,7 @@ func (c *Controller) ListFormats(ctx *gin.Context) {
 }
 
 // @Summary 查询节点详情
-// @Description 兼容参考项目 `/artifacts/nodeInfo`，按 entity_ids 或旧的 node_ids 批量查询节点详情。成功时返回原始数组，不包裹通用响应体。
+// @Description 兼容参考项目 `/artifacts/nodeInfo`，按 entityIDs 批量查询节点详情。成功时返回原始数组，不包裹通用响应体。
 // @Tags artifacts
 // @Accept application/json
 // @Produce application/json

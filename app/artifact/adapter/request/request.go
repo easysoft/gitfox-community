@@ -16,7 +16,7 @@ import (
 // ArtifactRequest 封装制品上传请求的基础设施（view、store、writer 列表）。
 type ArtifactRequest struct {
 	view          *adapter.ViewDescriptor
-	storageId     int64
+	storageID     int64
 	artifactStore artifactStore.Interface
 	modelMgr      *adapter.ModelManager
 
@@ -26,7 +26,7 @@ type ArtifactRequest struct {
 func newRequest(view *adapter.ViewDescriptor, store artifactStore.Interface) *ArtifactRequest {
 	return &ArtifactRequest{
 		view:          view,
-		storageId:     view.StorageID,
+		storageID:     view.StorageID,
 		artifactStore: store,
 		writers:       make([]storagedriver.FileWriter, 0),
 	}

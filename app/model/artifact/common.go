@@ -40,8 +40,8 @@ type CreatorInfo struct {
 
 // SpaceRepoReq 定义非文件上传场景使用的 JSON 请求参数。
 type SpaceRepoReq struct {
-	SpaceID    int64 `json:"spaceId"`
-	RepoID     int64 `json:"repoId"`
+	SpaceID    int64 `json:"spaceID"`
+	RepoID     int64 `json:"repoID"`
 	ArtifactID int64 `json:"artifactID"`
 }
 
@@ -75,12 +75,12 @@ func (r *SpaceRepoFormReq) Validate() error {
 }
 
 type SoftRemoveEntitiesReq struct {
-	EntityIds []string `json:"entity_ids,omitempty"`
+	EntityIDs []string `json:"entityIDs,omitempty"`
 }
 
 // ListNodeInfoReq 兼容参考项目 `/artifacts/nodeInfo` 的请求体。
 type ListNodeInfoReq struct {
-	EntityIds []string `json:"entity_ids,omitempty"`
+	EntityIDs []string `json:"entityIDs,omitempty"`
 }
 
 type CreateArtifactViewReq struct {

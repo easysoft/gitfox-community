@@ -208,7 +208,7 @@ type artifactBlob struct {
 	CreatedDate *datetime.Local `gorm:"column:createdDate"`
 	EditedBy    string          `gorm:"column:editedBy"`
 	EditedDate  *datetime.Local `gorm:"column:editedDate"`
-	AssetId     int64           `gorm:"column:assetID"`
+	AssetID     int64           `gorm:"column:assetID"`
 	CheckSum    string          `gorm:"column:checkSum"`
 }
 
@@ -235,7 +235,7 @@ type artifactTreeNode struct {
 	Path       string   `gorm:"column:path"`
 	Type       string   `gorm:"column:type"`
 	Format     string   `gorm:"column:format"`
-	TargetId   null.Int `gorm:"column:targetID"`
+	TargetID   null.Int `gorm:"column:targetID"`
 }
 
 func (artifactTreeNode) TableName() string { return "ops_artifact_tree_nodes" }
@@ -560,7 +560,7 @@ func blobToModel(b *artifactBlob) *model.ArtifactBlob {
 		CreatedDate: localToTime(b.CreatedDate),
 		EditedBy:    b.EditedBy,
 		EditedDate:  localToTime(b.EditedDate),
-		AssetId:     b.AssetId,
+		AssetID:     b.AssetID,
 		CheckSum:    b.CheckSum,
 	}
 }
@@ -581,7 +581,7 @@ func blobFromModel(m *model.ArtifactBlob) *artifactBlob {
 		CreatedDate: timeToLocal(m.CreatedDate),
 		EditedBy:    m.EditedBy,
 		EditedDate:  timeToLocal(m.EditedDate),
-		AssetId:     m.AssetId,
+		AssetID:     m.AssetID,
 		CheckSum:    m.CheckSum,
 	}
 }
@@ -600,7 +600,7 @@ func nodeToModel(n *artifactTreeNode) *model.ArtifactTreeNode {
 		Path:       n.Path,
 		Type:       model.ArtifactTreeNodeType(n.Type),
 		Format:     model.ArtifactFormat(n.Format),
-		TargetId:   n.TargetId,
+		TargetID:   n.TargetID,
 	}
 }
 
@@ -616,7 +616,7 @@ func nodeFromModel(m *model.ArtifactTreeNode) *artifactTreeNode {
 		Path:       m.Path,
 		Type:       string(m.Type),
 		Format:     string(m.Format),
-		TargetId:   m.TargetId,
+		TargetID:   m.TargetID,
 	}
 }
 

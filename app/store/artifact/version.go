@@ -26,9 +26,9 @@ func (c *versions) Create(ctx context.Context, newObj *model.CreateArtifactVersi
 	return versionToModel(&row), nil
 }
 
-func (c *versions) GetByID(ctx context.Context, versionId int64) (*model.ArtifactVersion, error) {
+func (c *versions) GetByID(ctx context.Context, VersionID int64) (*model.ArtifactVersion, error) {
 	var row artifactVersion
-	if err := c.db.WithContext(ctx).First(&row, versionId).Error; err != nil {
+	if err := c.db.WithContext(ctx).First(&row, VersionID).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
 	return versionToModel(&row), nil
@@ -51,8 +51,8 @@ func (c *versions) Update(ctx context.Context, ver *model.ArtifactVersion) error
 	return nil
 }
 
-func (c *versions) DeleteById(ctx context.Context, versionId int64) error {
-	delNum, err := c.deleteByIds(ctx, versionId)
+func (c *versions) DeleteById(ctx context.Context, VersionID int64) error {
+	delNum, err := c.deleteByIds(ctx, VersionID)
 	if err != nil {
 		return err
 	}
@@ -62,12 +62,12 @@ func (c *versions) DeleteById(ctx context.Context, versionId int64) error {
 	return nil
 }
 
-func (c *versions) DeleteByIds(ctx context.Context, versionIds ...int64) (int64, error) {
-	return c.deleteByIds(ctx, versionIds...)
+func (c *versions) DeleteByIds(ctx context.Context, VersionIDs ...int64) (int64, error) {
+	return c.deleteByIds(ctx, VersionIDs...)
 }
 
-func (c *versions) deleteByIds(ctx context.Context, versionIds ...int64) (int64, error) {
-	result := c.db.WithContext(ctx).Delete(&artifactVersion{}, versionIds)
+func (c *versions) deleteByIds(ctx context.Context, VersionIDs ...int64) (int64, error) {
+	result := c.db.WithContext(ctx).Delete(&artifactVersion{}, VersionIDs)
 	if result.Error != nil {
 		return result.RowsAffected, database.ProcessSQLErrorf(ctx, result.Error)
 	}
@@ -77,8 +77,8 @@ func (c *versions) deleteByIds(ctx context.Context, versionIds ...int64) (int64,
 func (c *versions) Find(ctx context.Context, opt model.SearchVersionOption) ([]*model.ArtifactVersion, error) {
 	stmt := c.db.WithContext(ctx).Model(&artifactVersion{})
 	// 应用 SearchVersionOption 的查询条件
-	if opt.PackageId != 0 {
-		stmt = stmt.Where("packageID = ?", opt.PackageId)
+	if opt.PackageID != 0 {
+		stmt = stmt.Where("packageID = ?", opt.PackageID)
 	}
 	if opt.Query != "" {
 		stmt = stmt.Where("version LIKE ?", fmt.Sprintf("%%%s%%", opt.Query))

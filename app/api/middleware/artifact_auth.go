@@ -52,8 +52,8 @@ func ArtifactAuthMiddleware(authz authorizer.Authorizer, artSvc artifactSvc.Inte
 		var artifactID int64
 		if c.ContentType() == "application/json" {
 			var req struct {
-				SpaceID    int64 `json:"spaceId"`
-				RepoID     int64 `json:"repoId"`
+				SpaceID    int64 `json:"spaceID"`
+				RepoID     int64 `json:"repoID"`
 				ArtifactID int64 `json:"artifactID"`
 			}
 			// Use ShouldBindBodyWith to keep body available for controllers
@@ -64,10 +64,10 @@ func ArtifactAuthMiddleware(authz authorizer.Authorizer, artSvc artifactSvc.Inte
 			}
 		} else if c.ContentType() != "" {
 			// For multipart/form-data or urlencoded
-			if sID := c.PostForm("spaceId"); sID != "" {
+			if sID := c.PostForm("spaceID"); sID != "" {
 				spaceID, _ = strconv.ParseInt(sID, 10, 64)
 			}
-			if rID := c.PostForm("repoId"); rID != "" {
+			if rID := c.PostForm("repoID"); rID != "" {
 				repoID, _ = strconv.ParseInt(rID, 10, 64)
 			}
 			if vID := c.PostForm("artifactID"); vID != "" {
@@ -75,14 +75,14 @@ func ArtifactAuthMiddleware(authz authorizer.Authorizer, artSvc artifactSvc.Inte
 			}
 		}
 
-		// 对 GET 请求或 body 未携带 spaceId 时，从 query params 补充
+		// 对 GET 请求或 body 未携带 spaceID 时，从 query params 补充
 		if spaceID == 0 {
-			if sID := c.Query("spaceId"); sID != "" {
+			if sID := c.Query("spaceID"); sID != "" {
 				spaceID, _ = strconv.ParseInt(sID, 10, 64)
 			}
 		}
 		if repoID == 0 {
-			if rID := c.Query("repoId"); rID != "" {
+			if rID := c.Query("repoID"); rID != "" {
 				repoID, _ = strconv.ParseInt(rID, 10, 64)
 			}
 		}
@@ -112,8 +112,8 @@ func ArtifactAuthMiddleware(authz authorizer.Authorizer, artSvc artifactSvc.Inte
 			Kind: model.ArtifactEntityKindFormat,
 			Name: "repository",
 		}
-		if entityId := c.Param("entityId"); entityId != "" {
-			entity = model.ParseEntityKind(entityId)
+		if entityID := c.Param("entityID"); entityID != "" {
+			entity = model.ParseEntityKind(entityID)
 		}
 
 		// 4. 执行授权

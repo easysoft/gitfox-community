@@ -11,11 +11,11 @@ import (
 )
 
 // @Summary 按实体批量软删除制品
-// @Description 按 entity_id 批量软删除 asset/version/package/group
+// @Description 按 entityIDs 批量软删除 asset/version/package/group
 // @Tags artifacts
 // @Accept application/json
 // @Produce application/json
-// @Param body body model.SoftRemoveEntitiesReq true "实体ID列表，仅支持 entity_ids，元素格式为 type.id"
+// @Param body body model.SoftRemoveEntitiesReq true "实体ID列表，仅支持 entityIDs，元素格式为 type.id"
 // @Success 200 {object} resp.ObjectResponse "成功"
 // @Failure 400 {object} resp.ObjectResponse "参数错误"
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
@@ -27,7 +27,7 @@ func (c *Controller) SoftRemoveByEntity(ctx *gin.Context) {
 		resp.BadRequest(ctx, err)
 		return
 	}
-	spaceID, _, err := req.QueryParamAsPositiveInt64(ctx, "spaceId")
+	spaceID, _, err := req.QueryParamAsPositiveInt64(ctx, "spaceID")
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.ArtifactQueryParamError)
 		resp.BadRequest(ctx, err)

@@ -86,9 +86,9 @@ func (c *groups) GetRoot(ctx context.Context, artifactID int64, name string, for
 	return groupToModel(&row), nil
 }
 
-func (c *groups) GetSubNode(ctx context.Context, parentId int64, name string) (*model.ArtifactGroup, error) {
+func (c *groups) GetSubNode(ctx context.Context, parentID int64, name string) (*model.ArtifactGroup, error) {
 	var row artifactGroup
-	q := artifactGroup{ParentID: null.IntFrom(parentId), Name: name}
+	q := artifactGroup{ParentID: null.IntFrom(parentID), Name: name}
 	if err := c.db.WithContext(ctx).Where(&q).Take(&row).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
@@ -123,19 +123,19 @@ func (c *groups) GetEndpointByNames(ctx context.Context, artifactID int64, names
 	return obj, nil
 }
 
-func (c *groups) getOrCreate(ctx context.Context, artifactID int64, name string, parentId null.Int, format model.ArtifactFormat) (*model.ArtifactGroup, error) {
+func (c *groups) getOrCreate(ctx context.Context, artifactID int64, name string, parentID null.Int, format model.ArtifactFormat) (*model.ArtifactGroup, error) {
 	var dest *model.ArtifactGroup
 	var err error
 
-	if !parentId.Valid || parentId.Int64 == 0 {
+	if !parentID.Valid || parentID.Int64 == 0 {
 		dest, err = c.GetRoot(ctx, artifactID, name, format)
 	} else {
-		dest, err = c.GetSubNode(ctx, parentId.Int64, name)
+		dest, err = c.GetSubNode(ctx, parentID.Int64, name)
 	}
 
 	if err != nil {
 		if errors.Is(err, pkgErrors.ErrResourceNotFound) {
-			newObj := &model.CreateArtifactGroup{ArtifactID: artifactID, Name: name, Format: format, ParentID: parentId}
+			newObj := &model.CreateArtifactGroup{ArtifactID: artifactID, Name: name, Format: format, ParentID: parentID}
 			return c.Create(ctx, newObj)
 		}
 		return nil, err
@@ -228,8 +228,8 @@ func (c *groups) All(ctx context.Context) ([]*model.ArtifactGroup, error) {
 	return groupsToModel(rows), nil
 }
 
-func (c *groups) SoftDeleteById(ctx context.Context, groupId int64) error {
-	err := c.db.WithContext(ctx).Model(&artifactGroup{ID: groupId}).
+func (c *groups) SoftDeleteById(ctx context.Context, groupID int64) error {
+	err := c.db.WithContext(ctx).Model(&artifactGroup{ID: groupID}).
 		UpdateColumn("deleted", 1).Error
 	if err != nil {
 		return database.ProcessSQLErrorf(ctx, err)

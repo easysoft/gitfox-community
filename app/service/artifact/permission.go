@@ -124,20 +124,20 @@ func (s *Service) getEntityPermissions(ctx context.Context, space, target rbac.R
 		return res, nil
 	}
 
-	var denyEntityId string
+	var denyEntityID string
 	if strings.Contains(deniedBy, "/") {
-		denyEntityId = deniedBy[strings.LastIndex(deniedBy, "/")+1:]
+		denyEntityID = deniedBy[strings.LastIndex(deniedBy, "/")+1:]
 	} else {
-		denyEntityId = deniedBy
+		denyEntityID = deniedBy
 	}
-	denyEntityId = strings.ReplaceAll(denyEntityId, ":", ".")
+	denyEntityID = strings.ReplaceAll(denyEntityID, ":", ".")
 
-	eid, err := entity.Parse(ctx, s.artStore, denyEntityId)
+	eid, err := entity.Parse(ctx, s.artStore, denyEntityID)
 	if err != nil {
 		return nil, err
 	}
 	res.Inherit.Inherited = true
-	res.Inherit.InheritEntityId = denyEntityId
+	res.Inherit.InheritEntityID = denyEntityID
 	res.Inherit.InheritFrom = eid.Name
 	parents := []string{eid.Name}
 

@@ -15,22 +15,22 @@ import (
 // @Tags artifacts
 // @Accept application/json
 // @Produce application/json
-// @Param spaceId query int true "空间ID"
-// @Param entityId path string true "实体ID（格式: kind.id，如 package.123）"
+// @Param spaceID query int true "空间ID"
+// @Param entityID path string true "实体ID（格式: kind.id，如 package.123）"
 // @Param body body model.PermissionRequest true "权限配置"
 // @Success 200 {object} resp.ObjectResponse "成功"
 // @Failure 400 {object} resp.ObjectResponse "参数错误"
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
-// @Router /artifacts/entities/{entityId}/permissions [post]
+// @Router /artifacts/entities/{entityID}/permissions [post]
 func (c *Controller) SetEntityPermission(ctx *gin.Context) {
-	spaceID, err := req.QueryParamAsPositiveInt64OrError(ctx, "spaceId")
+	spaceID, err := req.QueryParamAsPositiveInt64OrError(ctx, "spaceID")
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.ArtifactQueryParamError)
 		resp.BadRequest(ctx, err)
 		return
 	}
 
-	entityId, err := req.PathParamOrError(ctx, "entityId")
+	entityID, err := req.PathParamOrError(ctx, "entityID")
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.ArtifactPathParamError)
 		resp.BadRequest(ctx, err)
@@ -44,7 +44,7 @@ func (c *Controller) SetEntityPermission(ctx *gin.Context) {
 		return
 	}
 
-	data, err := c.artSvc.SetEntityPermission(ctx, spaceID, entityId, &permReq)
+	data, err := c.artSvc.SetEntityPermission(ctx, spaceID, entityID, &permReq)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return
@@ -57,28 +57,28 @@ func (c *Controller) SetEntityPermission(ctx *gin.Context) {
 // @Tags artifacts
 // @Accept application/json
 // @Produce application/json
-// @Param spaceId query int true "空间ID"
-// @Param entityId path string true "实体ID（格式: kind.id，如 package.123）"
+// @Param spaceID query int true "空间ID"
+// @Param entityID path string true "实体ID（格式: kind.id，如 package.123）"
 // @Success 200 {object} resp.ObjectResponse "成功"
 // @Failure 400 {object} resp.ObjectResponse "参数错误"
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
-// @Router /artifacts/entities/{entityId}/permissions [get]
+// @Router /artifacts/entities/{entityID}/permissions [get]
 func (c *Controller) GetEntityPermissions(ctx *gin.Context) {
-	spaceID, err := req.QueryParamAsPositiveInt64OrError(ctx, "spaceId")
+	spaceID, err := req.QueryParamAsPositiveInt64OrError(ctx, "spaceID")
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.ArtifactQueryParamError)
 		resp.BadRequest(ctx, err)
 		return
 	}
 
-	entityId, err := req.PathParamOrError(ctx, "entityId")
+	entityID, err := req.PathParamOrError(ctx, "entityID")
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.ArtifactPathParamError)
 		resp.BadRequest(ctx, err)
 		return
 	}
 
-	data, err := c.artSvc.GetEntityPermissions(ctx, spaceID, entityId)
+	data, err := c.artSvc.GetEntityPermissions(ctx, spaceID, entityID)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return
@@ -87,23 +87,23 @@ func (c *Controller) GetEntityPermissions(ctx *gin.Context) {
 }
 
 // @Summary 设置空间级权限
-// @Description 设置指定空间/仓库的制品库权限。spaceId 和 repoId 均为可选：
-// 不传 spaceId（或传 0）表示设置全局权限（适用于所有 space）；
-// 只传 spaceId 表示设置指定 space 权限；同时传 spaceId + repoId 表示设置指定仓库权限。
+// @Description 设置指定空间/仓库的制品库权限。spaceID 和 repoID 均为可选：
+// 不传 spaceID（或传 0）表示设置全局权限（适用于所有 space）；
+// 只传 spaceID 表示设置指定 space 权限；同时传 spaceID + repoID 表示设置指定仓库权限。
 // @Tags artifacts
 // @Accept application/json
 // @Produce application/json
-// @Param spaceId query int false "空间ID（可选，不传或传 0 表示全局权限）"
-// @Param repoId query int false "仓库ID（可选）"
+// @Param spaceID query int false "空间ID（可选，不传或传 0 表示全局权限）"
+// @Param repoID query int false "仓库ID（可选）"
 // @Param body body model.PermissionRequest true "权限配置"
 // @Success 200 {object} resp.ObjectResponse "成功"
 // @Failure 400 {object} resp.ObjectResponse "参数错误"
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
 // @Router /artifacts/permissions [post]
 func (c *Controller) SetPermissions(ctx *gin.Context) {
-	// spaceId 可选：不传或 0 → 全局权限（space:0）
+	// spaceID 可选：不传或 0 → 全局权限（space:0）
 	var spaceID int64
-	if sID, _, _ := req.QueryParamAsPositiveInt64(ctx, "spaceId"); sID > 0 {
+	if sID, _, _ := req.QueryParamAsPositiveInt64(ctx, "spaceID"); sID > 0 {
 		spaceID = sID
 	}
 
@@ -115,7 +115,7 @@ func (c *Controller) SetPermissions(ctx *gin.Context) {
 	}
 
 	var repoID int64
-	if rID, _, _ := req.QueryParamAsPositiveInt64(ctx, "repoId"); rID > 0 {
+	if rID, _, _ := req.QueryParamAsPositiveInt64(ctx, "repoID"); rID > 0 {
 		repoID = rID
 	}
 
@@ -129,25 +129,25 @@ func (c *Controller) SetPermissions(ctx *gin.Context) {
 
 // @Summary 获取空间级权限
 // @Description 获取指定空间/仓库的制品库权限配置。
-// spaceId 可选：不传或传 0 表示查询全局权限。
+// spaceID 可选：不传或传 0 表示查询全局权限。
 // @Tags artifacts
 // @Accept application/json
 // @Produce application/json
-// @Param spaceId query int false "空间ID（可选，不传或传 0 表示全局权限）"
-// @Param repoId query int false "仓库ID（可选）"
+// @Param spaceID query int false "空间ID（可选，不传或传 0 表示全局权限）"
+// @Param repoID query int false "仓库ID（可选）"
 // @Success 200 {object} resp.ObjectResponse "成功"
 // @Failure 400 {object} resp.ObjectResponse "参数错误"
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
 // @Router /artifacts/permissions [get]
 func (c *Controller) GetPermissions(ctx *gin.Context) {
-	// spaceId 可选：不传或 0 → 全局权限（space:0）
+	// spaceID 可选：不传或 0 → 全局权限（space:0）
 	var spaceID int64
-	if sID, _, _ := req.QueryParamAsPositiveInt64(ctx, "spaceId"); sID > 0 {
+	if sID, _, _ := req.QueryParamAsPositiveInt64(ctx, "spaceID"); sID > 0 {
 		spaceID = sID
 	}
 
 	var repoID int64
-	if rID, _, _ := req.QueryParamAsPositiveInt64(ctx, "repoId"); rID > 0 {
+	if rID, _, _ := req.QueryParamAsPositiveInt64(ctx, "repoID"); rID > 0 {
 		repoID = rID
 	}
 
@@ -161,25 +161,25 @@ func (c *Controller) GetPermissions(ctx *gin.Context) {
 
 // @Summary 获取空间成员列表
 // @Description 获取指定空间/仓库的制品库成员列表。
-// spaceId 可选：不传或传 0 表示查询全局成员。
+// spaceID 可选：不传或传 0 表示查询全局成员。
 // @Tags artifacts
 // @Accept application/json
 // @Produce application/json
-// @Param spaceId query int false "空间ID（可选，不传或传 0 表示全局）"
-// @Param repoId query int false "仓库ID（可选）"
+// @Param spaceID query int false "空间ID（可选，不传或传 0 表示全局）"
+// @Param repoID query int false "仓库ID（可选）"
 // @Success 200 {object} resp.ObjectResponse "成功"
 // @Failure 400 {object} resp.ObjectResponse "参数错误"
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
 // @Router /artifacts/members [get]
 func (c *Controller) GetMembers(ctx *gin.Context) {
-	// spaceId 可选：不传或 0 → 全局（space:0）
+	// spaceID 可选：不传或 0 → 全局（space:0）
 	var spaceID int64
-	if sID, _, _ := req.QueryParamAsPositiveInt64(ctx, "spaceId"); sID > 0 {
+	if sID, _, _ := req.QueryParamAsPositiveInt64(ctx, "spaceID"); sID > 0 {
 		spaceID = sID
 	}
 
 	var repoID int64
-	if rID, _, _ := req.QueryParamAsPositiveInt64(ctx, "repoId"); rID > 0 {
+	if rID, _, _ := req.QueryParamAsPositiveInt64(ctx, "repoID"); rID > 0 {
 		repoID = rID
 	}
 

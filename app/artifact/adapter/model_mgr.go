@@ -122,9 +122,9 @@ func (mm *ModelManager) createExclusiveAsset(ctx context.Context, ver *model.Art
 		return currAsset, true, err
 	}
 	newAsset := &model.ArtifactAsset{
-		GroupID:   null.IntFrom(0),
+		GroupID:    null.IntFrom(0),
 		ArtifactID: null.IntFrom(0),
-		VersionID: null.IntFrom(ver.ID),
+		VersionID:  null.IntFrom(ver.ID),
 	}
 	if err = mm.createAsset(ctx, newAsset, descriptor); err != nil {
 		return nil, false, err
@@ -161,12 +161,12 @@ func (mm *ModelManager) createNormalAsset(ctx context.Context, ver *model.Artifa
 }
 
 func (mm *ModelManager) createNormalAssetToGroup(ctx context.Context, descriptor *AssetDescriptor) (*model.ArtifactAsset, bool, error) {
-	groupId := mm.pkgDescriptor.GroupId
-	if groupId == 0 {
+	groupID := mm.pkgDescriptor.GroupID
+	if groupID == 0 {
 		return nil, false, fmt.Errorf("asset's group is empty")
 	}
 	currAsset, assetExist, err := mm.getExistAsset(func() (*model.ArtifactAsset, error) {
-		return mm.store.Assets().GetGroupAsset(ctx, descriptor.Path, groupId)
+		return mm.store.Assets().GetGroupAsset(ctx, descriptor.Path, groupID)
 	})
 	if err != nil {
 		return nil, false, err
@@ -181,7 +181,7 @@ func (mm *ModelManager) createNormalAssetToGroup(ctx context.Context, descriptor
 	newAsset := &model.ArtifactAsset{
 		VersionID:  null.IntFrom(0),
 		ArtifactID: null.IntFrom(mm.view.ArtifactID),
-		GroupID:    null.IntFrom(groupId),
+		GroupID:    null.IntFrom(groupID),
 	}
 	if err = mm.createAsset(ctx, newAsset, descriptor); err != nil {
 		return nil, false, err
@@ -261,8 +261,8 @@ func (mm *ModelManager) createAsset(ctx context.Context, newObj *model.ArtifactA
 	return mm.linkAssetToBlob(ctx, newObj.ID, newBlob)
 }
 
-func (mm *ModelManager) linkAssetToBlob(ctx context.Context, assetId int64, blob *model.ArtifactBlob) error {
-	blob.AssetId = assetId
+func (mm *ModelManager) linkAssetToBlob(ctx context.Context, assetID int64, blob *model.ArtifactBlob) error {
+	blob.AssetID = assetID
 	return mm.store.Blobs().Update(ctx, blob)
 }
 
@@ -381,7 +381,7 @@ func (mm *ModelManager) getOrCreatePackage(ctx context.Context) (*model.Artifact
 		ArtifactID: mm.view.ArtifactID,
 		Name:       desc.Name,
 		Namespace:  desc.Namespace,
-		GroupID:    desc.GroupId, // 来自上层 Prepare 回调（container 的 getOrCreateGroup、raw 的 namespace）
+		GroupID:    desc.GroupID, // 来自上层 Prepare 回调（container 的 getOrCreateGroup、raw 的 namespace）
 		Format:     desc.Format,
 	}
 	createdPkg, err := mm.store.Packages().Create(ctx, pkgModel)
