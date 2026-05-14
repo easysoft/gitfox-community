@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"strings"
 
-	artModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/model"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
 	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
 	pkgErrors "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
@@ -113,35 +112,32 @@ func (s *Service) movePackageInner(ctx context.Context, pkgID, tArtifactID, tGro
 	}
 
 	// 6.1 同步更新该 package 下所有 version 的 asset 的 artifactID
-	versions, _ := s.artStore.Versions().Find(ctx, model.SearchVersionOption{PackageID: srcPkg.ID})
-	for _, ver := range versions {
-		assets, _ := s.artStore.Assets().Search(ctx, model.SearchAssetOption{VersionID: ver.ID})
-		for _, asset := range assets {
-			if asset.ArtifactID.Valid && asset.ArtifactID.Int64 != tArtifactID {
-				asset.ArtifactID = null.IntFrom(tArtifactID)
-				_ = s.artStore.Assets().Update(ctx, asset)
-			}
-		}
-	}
-
-	// 7. tree node 同步：清掉源侧 package 节点（版本节点会随之孤立，交给 Syncer 重建覆盖）
-	syncer := artModel.NewSyncer(s.artStore)
-	if node, e := s.artStore.Nodes().GetByTarget(ctx, oldArtifactID, model.ArtifactTreeNodeTypePackage, srcPkg.ID); e == nil && node != nil {
-		_ = s.artStore.Nodes().DeleteById(ctx, node.ID)
-	}
-	if _, err = syncer.SyncTreeNodeForPackage(ctx, srcPkg); err != nil {
-		return err
-	}
-	versions, err = s.artStore.Versions().Find(ctx, model.SearchVersionOption{PackageID: srcPkg.ID})
+	versions, err := s.artStore.Versions().Find(ctx, model.SearchVersionOption{PackageID: srcPkg.ID})
 	if err != nil {
 		return err
 	}
 	for _, ver := range versions {
-		if _, err = syncer.SyncTreeNodeForVersion(ctx, ver, srcPkg); err != nil {
+		assets, err := s.artStore.Assets().Search(ctx, model.SearchAssetOption{VersionID: ver.ID})
+		if err != nil {
+			return err
+		}
+		for _, asset := range assets {
+			if asset.ArtifactID.Valid && asset.ArtifactID.Int64 != tArtifactID {
+				asset.ArtifactID = null.IntFrom(tArtifactID)
+				if err = s.artStore.Assets().Update(ctx, asset); err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	// 7. tree node 同步：清掉源侧 package 子树，再调用 RefreshTree 重建。
+	if node, e := s.artStore.Nodes().GetByTarget(ctx, oldArtifactID, model.ArtifactTreeNodeTypePackage, srcPkg.ID); e == nil && node != nil {
+		if err = s.artStore.Nodes().RecurseDeleteById(ctx, node.ID); err != nil {
 			return err
 		}
 	}
-	return nil
+	return s.RefreshTree(ctx, string(srcPkg.Format))
 }
 
 // MovePackage 移动 package 到目标 artifact（及可选目标 group），整个过程在单事务内完成。
@@ -351,21 +347,10 @@ func (s *Service) moveGroupInner(ctx context.Context, groupID, tArtifactID, tPar
 	}
 
 	// 7. tree 同步：删源侧 tree node，重建
-	syncer := artModel.NewSyncer(s.artStore)
 	if node, e := s.artStore.Nodes().GetByTarget(ctx, oldArtifactID, model.ArtifactTreeNodeTypeGroup, groupID); e == nil && node != nil {
 		_ = s.artStore.Nodes().RecurseDeleteById(ctx, node.ID)
 	}
-	// 重新读取更新后的 group
-	updatedGroup, _ := s.artStore.Groups().GetById(ctx, groupID)
-	if updatedGroup != nil {
-		_, _ = syncer.SyncTreeNodeForGroup(ctx, updatedGroup)
-	}
-	// 子树 group 也重建
-	descendants, _ := s.artStore.Groups().ListDescendants(ctx, groupID)
-	for _, d := range descendants {
-		_, _ = syncer.SyncTreeNodeForGroup(ctx, d)
-	}
-	return nil
+	return s.RefreshTree(ctx, string(srcGroup.Format))
 }
 
 // MoveGroup 移动 group 到目标 artifact（及可选目标父 group），整个过程在单事务内完成。
@@ -462,20 +447,10 @@ func (s *Service) renameGroupInner(ctx context.Context, groupID int64, newName s
 	}
 
 	// 4. tree 同步：删源侧 tree node，重建
-	syncer := artModel.NewSyncer(s.artStore)
 	if node, e := s.artStore.Nodes().GetByTarget(ctx, srcGroup.ArtifactID, model.ArtifactTreeNodeTypeGroup, groupID); e == nil && node != nil {
 		_ = s.artStore.Nodes().RecurseDeleteById(ctx, node.ID)
 	}
-	updatedGroup, _ := s.artStore.Groups().GetById(ctx, groupID)
-	if updatedGroup != nil {
-		_, _ = syncer.SyncTreeNodeForGroup(ctx, updatedGroup)
-	}
-	// 子树也重建
-	descendants, _ := s.artStore.Groups().ListDescendants(ctx, groupID)
-	for _, d := range descendants {
-		_, _ = syncer.SyncTreeNodeForGroup(ctx, d)
-	}
-	return nil
+	return s.RefreshTree(ctx, string(srcGroup.Format))
 }
 
 // RenameGroup 重命名 group，整个过程在单事务内完成。
@@ -598,6 +573,12 @@ func (s *Service) renameArtifactInner(ctx context.Context, artifactID int64, new
 	}
 
 	oldName := view.Name
+	var oldContainerGroupID int64
+	if view.Format == model.ArtifactContainerFormat || view.Format == model.ArtifactAllFormat {
+		if group, e := s.artStore.Groups().GetRoot(ctx, artifactID, oldName, model.ArtifactContainerFormat); e == nil {
+			oldContainerGroupID = group.ID
+		}
+	}
 
 	// 3. 更新 view name
 	if err = s.artStore.Views().UpdateName(ctx, artifactID, newName); err != nil {
@@ -611,6 +592,16 @@ func (s *Service) renameArtifactInner(ctx context.Context, artifactID int64, new
 		}
 		if err = s.artStore.Packages().UpdateNamespaceByCondition(ctx, artifactID, oldName, newName, string(model.ArtifactContainerFormat)); err != nil {
 			return err
+		}
+		if oldContainerGroupID > 0 {
+			if node, e := s.artStore.Nodes().GetByTarget(ctx, artifactID, model.ArtifactTreeNodeTypeGroup, oldContainerGroupID); e == nil && node != nil {
+				if err = s.artStore.Nodes().RecurseDeleteById(ctx, node.ID); err != nil {
+					return err
+				}
+			}
+			if err = s.RefreshTree(ctx, string(model.ArtifactContainerFormat)); err != nil {
+				return err
+			}
 		}
 	}
 
