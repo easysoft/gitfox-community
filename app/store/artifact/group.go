@@ -239,6 +239,26 @@ func (c *groups) SoftDeleteById(ctx context.Context, groupID int64) error {
 	return nil
 }
 
+// Update 更新 group 记录（全字段覆盖）。
+func (c *groups) Update(ctx context.Context, upObj *model.ArtifactGroup) error {
+	row := groupFromModel(upObj)
+	if err := c.db.WithContext(ctx).Save(row).Error; err != nil {
+		return database.ProcessSQLErrorf(ctx, err)
+	}
+	return nil
+}
+
+// UpdateNameByArtifactAndFormat 批量更新指定 view 下指定格式的 group name。
+func (c *groups) UpdateNameByArtifactAndFormat(ctx context.Context, artifactID int64, oldName, newName string, format model.ArtifactFormat) error {
+	err := c.db.WithContext(ctx).Model(&artifactGroup{}).
+		Where("artifactID = ? AND name = ? AND format = ?", artifactID, oldName, string(format)).
+		UpdateColumn("name", newName).Error
+	if err != nil {
+		return database.ProcessSQLErrorf(ctx, err)
+	}
+	return nil
+}
+
 // DeleteByArtifactID 硬删指定 view 下的所有 group 记录（含已软删的）。
 func (c *groups) DeleteByArtifactID(ctx context.Context, artifactID int64) (int64, error) {
 	result := c.db.WithContext(ctx).Where("artifactID = ?", artifactID).Delete(&artifactGroup{})
@@ -246,4 +266,23 @@ func (c *groups) DeleteByArtifactID(ctx context.Context, artifactID int64) (int6
 		return 0, database.ProcessSQLErrorf(ctx, result.Error)
 	}
 	return result.RowsAffected, nil
+}
+
+// UpdateName 更新分组名称。
+func (c *groups) UpdateName(ctx context.Context, id int64, name string) error {
+	if err := c.db.WithContext(ctx).Model(&artifactGroup{}).Where("id = ?", id).
+		UpdateColumn("name", name).Error; err != nil {
+		return database.ProcessSQLErrorf(ctx, err)
+	}
+	return nil
+}
+
+// UpdateNameByCondition 按条件批量更新分组名称（用于 container 制品库重命名时同步 group）。
+func (c *groups) UpdateNameByCondition(ctx context.Context, artifactID int64, oldName, newName, format string) error {
+	if err := c.db.WithContext(ctx).Model(&artifactGroup{}).
+		Where("artifactID = ? AND name = ? AND format = ?", artifactID, oldName, format).
+		UpdateColumn("name", newName).Error; err != nil {
+		return database.ProcessSQLErrorf(ctx, err)
+	}
+	return nil
 }

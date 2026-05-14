@@ -46,6 +46,9 @@ type ViewInterface interface {
 	// 返回结果包含 active（deleted=0）
 	FindByNameInScope(ctx context.Context, spaceID, repoID int64, name string) ([]*model.ArtifactView, error)
 
+	// UpdateName 更新视图名称。
+	UpdateName(ctx context.Context, id int64, name string) error
+
 	// SoftDelete 软删除视图（将 deleted 置为 1）。
 	// 注意：GORM 的 autoUpdateTime 会自动更新 editedDate，
 	// 因此 editedDate 即为删除时间，用于回收站保留期计算。
@@ -76,6 +79,9 @@ type PackageInterface interface {
 	UnDelete(ctx context.Context, pkg *model.ArtifactPackage) error
 	Search(ctx context.Context, options ...SearchOption) ([]*model.ArtifactPackage, error)
 	GetByAssetID(ctx context.Context, assetID int64) (*model.ArtifactPackage, error)
+
+	// UpdateNamespaceByCondition 按条件批量更新 package namespace。
+	UpdateNamespaceByCondition(ctx context.Context, artifactID int64, oldNamespace, newNamespace, format string) error
 }
 
 type VersionInterface interface {
@@ -180,6 +186,12 @@ type GroupInterface interface {
 
 	// SoftDeleteById 软删除分组（将 deleted 置为 1）。
 	SoftDeleteById(ctx context.Context, groupID int64) error
+
+	// UpdateName 更新分组名称。
+	UpdateName(ctx context.Context, id int64, name string) error
+
+	// UpdateNameByCondition 按条件批量更新分组名称。
+	UpdateNameByCondition(ctx context.Context, artifactID int64, oldName, newName, format string) error
 
 	// DeleteByArtifactID 物理删除指定 view 下的所有分组，供 view 删除时级联使用。
 	DeleteByArtifactID(ctx context.Context, artifactID int64) (int64, error)

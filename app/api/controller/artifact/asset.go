@@ -6,6 +6,7 @@ import (
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
+	artifactModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 
@@ -113,4 +114,40 @@ func (c *Controller) DownloadAsset(ctx *gin.Context) {
 	ctx.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s", blob.Ref))
 	ctx.Header("Content-Length", strconv.FormatInt(blob.Size, 10))
 	ctx.DataFromReader(200, blob.Size, "application/octet-stream", reader, nil)
+}
+
+// @Summary 制品资产分页列表
+// @Description 按 entityID（group.{id} 或 version.{id}）分页查询资产列表，支持过滤和排序
+// @Tags artifacts
+// @Accept application/json
+// @Produce application/json
+// @Param body body artifactModel.ListAssetReq true "分页查询请求"
+// @Success 200 {object} resp.ObjectResponse "成功"
+// @Failure 400 {object} resp.ObjectResponse "参数错误"
+// @Failure 500 {object} resp.ObjectResponse "服务器错误"
+// @Router /artifacts/assets/list [post]
+func (c *Controller) ListAssetPage(ctx *gin.Context) {
+	var body artifactModel.ListAssetReq
+	if err := ctx.ShouldBindBodyWithJSON(&body); err != nil {
+		err = errors.WithI18nKey(err, i18n.ArtifactBodyParamError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+	data, total, err := c.artSvc.ListAssetPage(ctx, &body)
+	if err != nil {
+		resp.BadRequest(ctx, err)
+		return
+	}
+	page, pageSize := body.Page, body.PageSize
+	if page <= 0 {
+		page = 1
+	}
+	if pageSize <= 0 {
+		pageSize = 20
+	}
+	resp.ListSuccess(ctx, data, resp.ListArgs{
+		Total:    total,
+		Page:     int64(page),
+		PageSize: int64(pageSize),
+	}, i18n.ArtifactListSuccess, nil)
 }

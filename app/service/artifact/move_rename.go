@@ -112,6 +112,18 @@ func (s *Service) movePackageInner(ctx context.Context, pkgID, tArtifactID, tGro
 		return err
 	}
 
+	// 6.1 同步更新该 package 下所有 version 的 asset 的 artifactID
+	versions, _ := s.artStore.Versions().Find(ctx, model.SearchVersionOption{PackageID: srcPkg.ID})
+	for _, ver := range versions {
+		assets, _ := s.artStore.Assets().Search(ctx, model.SearchAssetOption{VersionID: ver.ID})
+		for _, asset := range assets {
+			if asset.ArtifactID.Valid && asset.ArtifactID.Int64 != tArtifactID {
+				asset.ArtifactID = null.IntFrom(tArtifactID)
+				_ = s.artStore.Assets().Update(ctx, asset)
+			}
+		}
+	}
+
 	// 7. tree node 同步：清掉源侧 package 节点（版本节点会随之孤立，交给 Syncer 重建覆盖）
 	syncer := artModel.NewSyncer(s.artStore)
 	if node, e := s.artStore.Nodes().GetByTarget(ctx, oldArtifactID, model.ArtifactTreeNodeTypePackage, srcPkg.ID); e == nil && node != nil {
@@ -120,7 +132,7 @@ func (s *Service) movePackageInner(ctx context.Context, pkgID, tArtifactID, tGro
 	if _, err = syncer.SyncTreeNodeForPackage(ctx, srcPkg); err != nil {
 		return err
 	}
-	versions, err := s.artStore.Versions().Find(ctx, model.SearchVersionOption{PackageID: srcPkg.ID})
+	versions, err = s.artStore.Versions().Find(ctx, model.SearchVersionOption{PackageID: srcPkg.ID})
 	if err != nil {
 		return err
 	}
@@ -445,8 +457,9 @@ func (s *Service) renameGroupInner(ctx context.Context, groupID int64, newName s
 	}
 
 	// 3. 主表更新
-	s.db.WithContext(ctx).Model(&artifactGroupRow{}).Where("id = ?", groupID).
-		UpdateColumn("name", newName)
+	if err := s.artStore.Groups().UpdateName(ctx, groupID, newName); err != nil {
+		return err
+	}
 
 	// 4. tree 同步：删源侧 tree node，重建
 	syncer := artModel.NewSyncer(s.artStore)
@@ -522,16 +535,34 @@ func (s *Service) moveByKind(ctx context.Context, kind model.ArtifactEntityKind,
 }
 
 // renameByKind 按实体类型派发到对应的 Rename 方法（不带事务，由调用方包裹）。
-// package 不允许重命名。
+// package / version 不允许重命名；container 格式的制品库也暂不允许重命名。
 func (s *Service) renameByKind(ctx context.Context, kind model.ArtifactEntityKind, sourceID int64, newName string) error {
 	switch kind {
 	case model.ArtifactEntityKindAsset:
 		return s.renameAssetInner(ctx, sourceID, newName)
 	case model.ArtifactEntityKindGroup:
 		return s.renameGroupInner(ctx, sourceID, newName)
+	case model.ArtifactEntityKindArtifact:
+		// container 格式制品库暂不允许重命名（会影响 docker pull URL）
+		view, err := s.artStore.Views().GetByID(ctx, sourceID)
+		if err != nil {
+			return pkgErrors.WithI18nKey(err, i18n.ArtifactRenameSourceDeleted)
+		}
+		if view.Format == model.ArtifactContainerFormat {
+			return pkgErrors.WithI18nKey(
+				fmt.Errorf("rename is not supported for container artifact"),
+				i18n.ArtifactRenameVersionedNotSupported,
+			)
+		}
+		return s.renameArtifactInner(ctx, sourceID, newName)
 	case model.ArtifactEntityKindPackage:
 		return pkgErrors.WithI18nKey(
 			fmt.Errorf("rename is not supported for packages"),
+			i18n.ArtifactRenameVersionedNotSupported,
+		)
+	case model.ArtifactEntityKindVersion:
+		return pkgErrors.WithI18nKey(
+			fmt.Errorf("rename is not supported for versions"),
 			i18n.ArtifactRenameVersionedNotSupported,
 		)
 	default:
@@ -540,6 +571,61 @@ func (s *Service) renameByKind(ctx context.Context, kind model.ArtifactEntityKin
 			i18n.ArtifactRenameEntityTypeInvalid,
 		)
 	}
+}
+
+// renameArtifactInner 重命名制品库（view），同步更新 container 格式下的 group name 和 package namespace。
+func (s *Service) renameArtifactInner(ctx context.Context, artifactID int64, newName string) error {
+	// 1. 读 view
+	view, err := s.artStore.Views().GetByID(ctx, artifactID)
+	if err != nil {
+		return pkgErrors.WithI18nKey(err, i18n.ArtifactRenameSourceDeleted)
+	}
+	if view.Deleted == 1 {
+		return pkgErrors.WithI18nKey(
+			fmt.Errorf("artifact %d is soft-deleted", artifactID),
+			i18n.ArtifactRenameSourceDeleted,
+		)
+	}
+
+	// 1.1 名称合法性校验（复用 CreateView 的规则）
+	trimmed, err := artifact.ValidateViewName(newName, view.Format)
+	if err != nil {
+		return err
+	}
+	newName = trimmed
+
+	// 2. 同名检查：同作用域下不能有同名活 view
+	existing, err := s.artStore.Views().FindByNameInScope(ctx, view.SpaceID, view.RepoID, newName)
+	if err != nil {
+		return err
+	}
+	for _, v := range existing {
+		if v.Deleted == 0 && v.ID != artifactID {
+			return pkgErrors.WithI18nKey(
+				fmt.Errorf("artifact view %q already exists", newName),
+				i18n.ArtifactRenameSiblingConflict,
+			)
+		}
+	}
+
+	oldName := view.Name
+
+	// 3. 更新 view name
+	if err = s.artStore.Views().UpdateName(ctx, artifactID, newName); err != nil {
+		return err
+	}
+
+	// 4. container 格式：同步更新 group name 和 package namespace
+	if view.Format == model.ArtifactContainerFormat || view.Format == model.ArtifactAllFormat {
+		if err = s.artStore.Groups().UpdateNameByCondition(ctx, artifactID, oldName, newName, string(model.ArtifactContainerFormat)); err != nil {
+			return err
+		}
+		if err = s.artStore.Packages().UpdateNamespaceByCondition(ctx, artifactID, oldName, newName, string(model.ArtifactContainerFormat)); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // MoveEntity 解析 entityID 并派发到对应的 Move 方法，整个过程在单事务内完成。
@@ -627,6 +713,13 @@ func (s *Service) RelocateEntity(ctx context.Context, req *model.RelocateEntityR
 		curArtifactID = p.ArtifactID
 		curGroupID = p.GroupID
 		curName = p.Name
+	case model.ArtifactEntityKindArtifact:
+		v, e := s.artStore.Views().GetByID(ctx, id)
+		if e != nil {
+			return pkgErrors.WithI18nKey(e, i18n.ArtifactMoveSourceDeleted)
+		}
+		curArtifactID = v.ID
+		curName = v.Name
 	default:
 		return pkgErrors.WithI18nKey(
 			fmt.Errorf("unsupported entity type: %s", kind),

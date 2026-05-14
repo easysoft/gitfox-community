@@ -519,6 +519,239 @@ func (s *Service) ListGroupAssets(ctx context.Context, groupID int64) ([]*model.
 	return assets, nil
 }
 
+// ListAssetPage 按 entityID（group.{id} / version.{id} / package.{id}）分页查询。
+//   - group.{id}：返回该 group 下的 asset 列表（generic 场景）
+//   - version.{id}：返回该 version 下的 asset 列表（raw 场景）
+//   - package.{id}：返回该 package 下的 version 列表（docker/helm 场景）
+//
+// 先全量查出再内存过滤 + 排序 + 分页。
+func (s *Service) ListAssetPage(ctx context.Context, req *model.ListAssetReq) (interface{}, int64, error) {
+	kind, id, err := parseEntityRef(req.EntityID)
+	if err != nil {
+		return nil, 0, err
+	}
+	if kind != model.ArtifactEntityKindGroup && kind != model.ArtifactEntityKindVersion && kind != model.ArtifactEntityKindPackage {
+		return nil, 0, pkgErrors.WithI18nKey(
+			fmt.Errorf("entityID must be group.{id}, version.{id} or package.{id}, got %s", req.EntityID),
+			i18n.ArtifactEntityIdInvalid,
+		)
+	}
+
+	page, pageSize := req.Page, req.PageSize
+	if page <= 0 {
+		page = 1
+	}
+	if pageSize <= 0 {
+		pageSize = 20
+	}
+
+	if kind == model.ArtifactEntityKindPackage {
+		return s.listVersionPage(ctx, id, req, page, pageSize)
+	}
+	return s.listAssetPageInner(ctx, kind, id, req, page, pageSize)
+}
+
+// listVersionPage 返回 package 下的 version 分页列表。
+func (s *Service) listVersionPage(ctx context.Context, pkgID int64, req *model.ListAssetReq, page, pageSize int) (interface{}, int64, error) {
+	versions, err := s.artStore.Versions().Find(ctx, model.SearchVersionOption{PackageID: pkgID})
+	if err != nil {
+		return nil, 0, pkgErrors.WithI18nKey(err, i18n.ArtifactVersionListError)
+	}
+
+	// 取 package 信息用于填充 container 扩展字段
+	pkg, _ := s.artStore.Packages().GetByID(ctx, pkgID)
+
+	items := make([]*model.VersionListItem, 0, len(versions))
+	for _, ver := range versions {
+		item := &model.VersionListItem{
+			ID:          ver.ID,
+			PackageID:   ver.PackageID,
+			Version:     ver.Version,
+			Metadata:    ver.Metadata,
+			CreatedBy:   ver.CreatedBy,
+			CreatedDate: ver.CreatedDate,
+			EditedBy:    ver.EditedBy,
+			EditedDate:  ver.EditedDate,
+		}
+		// container 格式：填充 size/os/arch/image/package
+		if pkg != nil && pkg.Format == model.ArtifactContainerFormat {
+			item.Image = pkg.Name
+			item.Package = pkg.Namespace
+			s.fillContainerVersionItem(ctx, item, ver, pkg)
+		}
+		items = append(items, item)
+	}
+
+	// 过滤
+	items = filterVersionList(items, req)
+
+	// 排序
+	sortVersionList(items, req.Order, req.Desc)
+
+	// 分页
+	total := int64(len(items))
+	start := (page - 1) * pageSize
+	if start >= int(total) {
+		return []*model.VersionListItem{}, total, nil
+	}
+	end := start + pageSize
+	if end > int(total) {
+		end = int(total)
+	}
+	return items[start:end], total, nil
+}
+
+// fillContainerVersionItem 从 manifest 解析 container version 的 size/os/arch。
+func (s *Service) fillContainerVersionItem(ctx context.Context, item *model.VersionListItem, ver *model.ArtifactVersion, pkg *model.ArtifactPackage) {
+	view, err := s.ParseSpaceView(ctx, &model.SpaceRepoReq{ArtifactID: pkg.ArtifactID})
+	if err != nil {
+		return
+	}
+	info := &model.ArtifactAssetInfo{}
+	if err = s.fillContainerNodeInfo(ctx, info, view, ver); err != nil {
+		return
+	}
+	item.Size = info.Size
+	item.OS = info.OS
+	item.Arch = info.Arch
+}
+
+func filterVersionList(list []*model.VersionListItem, req *model.ListAssetReq) []*model.VersionListItem {
+	if req.Creator == "" && req.Editor == "" && req.Version == "" {
+		return list
+	}
+	filtered := make([]*model.VersionListItem, 0, len(list))
+	for _, item := range list {
+		if req.Creator != "" && item.CreatedBy != req.Creator {
+			continue
+		}
+		if req.Editor != "" && item.EditedBy != req.Editor {
+			continue
+		}
+		if req.Version != "" && !strings.Contains(item.Version, req.Version) {
+			continue
+		}
+		filtered = append(filtered, item)
+	}
+	return filtered
+}
+
+func sortVersionList(list []*model.VersionListItem, order, desc string) {
+	if order == "" {
+		order = "id"
+	}
+	ascending := desc != "desc"
+	sort.Slice(list, func(i, j int) bool {
+		var less bool
+		switch order {
+		case "createdDate", "createTime":
+			ti, tj := timeVal(list[i].CreatedDate), timeVal(list[j].CreatedDate)
+			less = ti.Before(tj)
+		case "editedDate", "updateTime":
+			ti, tj := timeVal(list[i].EditedDate), timeVal(list[j].EditedDate)
+			less = ti.Before(tj)
+		default: // "id"
+			less = list[i].ID < list[j].ID
+		}
+		if ascending {
+			return less
+		}
+		return !less
+	})
+}
+
+// listAssetPageInner 处理 group / version 的 asset 分页。
+func (s *Service) listAssetPageInner(ctx context.Context, kind model.ArtifactEntityKind, id int64, req *model.ListAssetReq, page, pageSize int) (interface{}, int64, error) {
+	var assets []*model.ArtifactAssetsRes
+	var err error
+	switch kind {
+	case model.ArtifactEntityKindGroup:
+		assets, err = s.artStore.ListGroupAssets(ctx, id)
+	case model.ArtifactEntityKindVersion:
+		assets, err = s.artStore.ListAssets(ctx, id)
+	}
+	if err != nil {
+		return nil, 0, pkgErrors.WithI18nKey(err, i18n.ArtifactAssetListError)
+	}
+
+	results := make([]*model.ArtifactAssetInfo, 0, len(assets))
+	for _, a := range assets {
+		info, e := s.getAssetNodeInfo(ctx, a.Id)
+		if e != nil || info.Status != string(model.ArtifactStatusOK) {
+			continue
+		}
+		results = append(results, info)
+	}
+
+	// 过滤
+	results = filterAssetNodeInfoList(results, req)
+	// 排序
+	sortAssetNodeInfoList(results, req.Order, req.Desc)
+
+	// 分页
+	total := int64(len(results))
+	start := (page - 1) * pageSize
+	if start >= int(total) {
+		return []*model.ArtifactAssetInfo{}, total, nil
+	}
+	end := start + pageSize
+	if end > int(total) {
+		end = int(total)
+	}
+	return results[start:end], total, nil
+}
+
+func filterAssetNodeInfoList(list []*model.ArtifactAssetInfo, req *model.ListAssetReq) []*model.ArtifactAssetInfo {
+	filtered := make([]*model.ArtifactAssetInfo, 0, len(list))
+	for _, info := range list {
+		if req.Name != "" && !strings.Contains(strings.ToLower(info.Path), strings.ToLower(req.Name)) {
+			continue
+		}
+		if req.OS != "" && info.OS != req.OS {
+			continue
+		}
+		if req.Arch != "" && info.Arch != req.Arch {
+			continue
+		}
+		if req.Creator != "" && info.CreatorName != req.Creator {
+			continue
+		}
+		filtered = append(filtered, info)
+	}
+	return filtered
+}
+
+func sortAssetNodeInfoList(list []*model.ArtifactAssetInfo, order, desc string) {
+	if order == "" {
+		order = "id"
+	}
+	ascending := desc != "desc"
+	sort.Slice(list, func(i, j int) bool {
+		var less bool
+		switch order {
+		case "createTime":
+			ti, tj := timeVal(list[i].Created), timeVal(list[j].Created)
+			less = ti.Before(tj)
+		case "updateTime":
+			ti, tj := timeVal(list[i].Updated), timeVal(list[j].Updated)
+			less = ti.Before(tj)
+		default: // "id" — 按 path 字典序作为 fallback
+			less = list[i].Path < list[j].Path
+		}
+		if ascending {
+			return less
+		}
+		return !less
+	})
+}
+
+func timeVal(t *datetime.Local) time.Time {
+	if t == nil {
+		return time.Time{}
+	}
+	return time.Time(*t)
+}
+
 // addLinkForGeneric 仿照参考项目 gitfox: 为 generic 分组下的资产逐个拼出下载链接。
 // 路径形态：/<ArtifactMount>/<spaceName>/<format>/<groupPath>/<asset.Path>。
 // spaceName 为空时按项目既有约定兜底为 "global"（与 container 全局作用域一致），
