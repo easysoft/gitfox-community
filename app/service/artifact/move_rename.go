@@ -122,13 +122,10 @@ func (s *Service) movePackageInner(ctx context.Context, pkgID, tArtifactID, tGro
 			return err
 		}
 		for _, asset := range assets {
-			if !asset.ArtifactID.Valid || asset.ArtifactID.Int64 != tArtifactID ||
-				!asset.GroupID.Valid || asset.GroupID.Int64 != targetGroupID {
-				asset.ArtifactID = null.IntFrom(tArtifactID)
-				asset.GroupID = null.IntFrom(targetGroupID)
-				if err = s.artStore.Assets().Update(ctx, asset); err != nil {
-					return err
-				}
+			asset.ArtifactID = null.IntFrom(tArtifactID)
+			asset.GroupID = null.IntFrom(targetGroupID)
+			if err = s.artStore.Assets().Update(ctx, asset); err != nil {
+				return err
 			}
 		}
 	}
