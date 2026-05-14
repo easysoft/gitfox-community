@@ -550,7 +550,7 @@ func addLinkForGeneric(data []*model.ArtifactAssetsRes, spaceName, groupPath, fo
 
 // applyNodeInfoToAsset 把 nodeinfo 解析出的业务字段映射到 list 接口的资产响应上。
 // 仅 nodeinfo 命中（status=ok）时才覆盖；其它状态保持 store 查询出的基础信息原样返回。
-func applyNodeInfoToAsset(a *model.ArtifactAssetsRes, info *model.ArtifactNodeInfo) {
+func applyNodeInfoToAsset(a *model.ArtifactAssetsRes, info *model.ArtifactAssetInfo) {
 	if a == nil || info == nil || info.Status != string(model.ArtifactStatusOK) {
 		return
 	}
@@ -575,45 +575,13 @@ func applyNodeInfoToAsset(a *model.ArtifactAssetsRes, info *model.ArtifactNodeIn
 	}
 }
 
-func (s *Service) GetAsset(ctx context.Context, assetID int64) (*model.ArtifactAssetsRes, error) {
-	return s.artStore.GetAsset(ctx, assetID)
+func (s *Service) GetAsset(ctx context.Context, assetID int64) (*model.ArtifactAssetInfo, error) {
+	return s.getAssetNodeInfo(ctx, assetID)
 }
 
 func (s *Service) GetBlobHistory(ctx context.Context, assetID int64) ([]*model.ArtifactBlobRes, error) {
 	return s.artStore.Blobs().History(ctx, assetID)
 }
-
-// ListNodeInfo 兼容参考项目 `/artifacts/nodeInfo`，按 entityIDs 批量返回节点详情。
-func (s *Service) ListNodeInfo(ctx context.Context, req *model.ListNodeInfoReq) ([]*model.ArtifactNodeInfo, error) {
-	ids := req.EntityIDs
-
-	result := make([]*model.ArtifactNodeInfo, 0, len(ids))
-	for _, entityID := range ids {
-		info, err := s.getNodeInfoByEntityID(ctx, entityID)
-		if err != nil {
-			return nil, err
-		}
-		result = append(result, info)
-	}
-	return result, nil
-}
-
-func (s *Service) getNodeInfoByEntityID(ctx context.Context, entityID string) (*model.ArtifactNodeInfo, error) {
-	kind, id, err := parseNodeInfoEntityID(entityID)
-	if err != nil {
-		return invalidNodeInfo(), nil
-	}
-
-	switch kind {
-	case model.ArtifactEntityKindVersion:
-		return s.getVersionNodeInfo(ctx, id)
-	case model.ArtifactEntityKindAsset:
-		return s.getAssetNodeInfo(ctx, id)
-	default:
-		return invalidNodeInfo(), nil
-	}
-}
-
 func parseNodeInfoEntityID(entityID string) (model.ArtifactEntityKind, int64, error) {
 	if strings.Count(entityID, ".") != 1 {
 		return "", 0, fmt.Errorf("invalid artifact entity id: %s", entityID)
@@ -627,7 +595,7 @@ func parseNodeInfoEntityID(entityID string) (model.ArtifactEntityKind, int64, er
 	return model.ArtifactEntityKind(parts[0]), id, nil
 }
 
-func (s *Service) getVersionNodeInfo(ctx context.Context, versionID int64) (*model.ArtifactNodeInfo, error) {
+func (s *Service) getVersionNodeInfo(ctx context.Context, versionID int64) (*model.ArtifactAssetInfo, error) {
 	ver, err := s.artStore.Versions().GetByID(ctx, versionID)
 	if err != nil {
 		if pkgErrors.Is(err, pkgErrors.ErrResourceNotFound) {
@@ -649,13 +617,13 @@ func (s *Service) getVersionNodeInfo(ctx context.Context, versionID int64) (*mod
 		return nil, err
 	}
 
-	info := &model.ArtifactNodeInfo{
+	info := &model.ArtifactAssetInfo{
 		Status: string(model.ArtifactStatusOK),
 		Format: pkg.Format,
 		Metadata: &model.ArtifactPkgVerMetadata{
 			Space:   nodeInfoSpaceName(view),
 			Name:    pkg.Name,
-			Group:   pkg.Namespace,
+			Group:   strings.ReplaceAll(pkg.Namespace, ".", "/"),
 			Version: ver.Version,
 		},
 	}
@@ -664,6 +632,11 @@ func (s *Service) getVersionNodeInfo(ctx context.Context, versionID int64) (*mod
 		if err = s.fillContainerNodeInfo(ctx, info, view, ver); err != nil {
 			return nil, err
 		}
+		// container 格式：用 Image/Package 替代 Name/Group，语义更清晰
+		info.Metadata.Image = info.Metadata.Name
+		info.Metadata.Package = info.Metadata.Group
+		info.Metadata.Name = ""
+		info.Metadata.Group = ""
 		return info, nil
 	}
 
@@ -681,7 +654,7 @@ func (s *Service) getVersionNodeInfo(ctx context.Context, versionID int64) (*mod
 }
 
 // getAssetNodeInfo 按 assetID 查询节点详情，自动关联版本 / 分组信息并拼装 ArtifactNodeInfo。
-func (s *Service) getAssetNodeInfo(ctx context.Context, assetID int64) (*model.ArtifactNodeInfo, error) {
+func (s *Service) getAssetNodeInfo(ctx context.Context, assetID int64) (*model.ArtifactAssetInfo, error) {
 	// 查 asset 元信息（format / versionID / groupID / artifactID）
 	dbAsset, err := s.artStore.Assets().GetById(ctx, assetID)
 	if err != nil {
@@ -762,7 +735,7 @@ func (s *Service) getAssetNodeInfo(ctx context.Context, assetID int64) (*model.A
 	}
 
 	// 兜底：没有归属信息，只填基础字段
-	info := &model.ArtifactNodeInfo{
+	info := &model.ArtifactAssetInfo{
 		Status: string(model.ArtifactStatusOK),
 		Format: dbAsset.Format,
 	}
@@ -791,7 +764,7 @@ func (s *Service) getPrimaryVersionAsset(ctx context.Context, versionID int64) (
 
 func (s *Service) fillContainerNodeInfo(
 	ctx context.Context,
-	info *model.ArtifactNodeInfo,
+	info *model.ArtifactAssetInfo,
 	view *adapter.ViewDescriptor,
 	ver *model.ArtifactVersion,
 ) error {
@@ -844,7 +817,7 @@ func (s *Service) getGroupAssetNodeInfo(
 	ctx context.Context,
 	dbAsset *model.ArtifactAsset,
 	assetRes *model.ArtifactAssetsRes,
-) (*model.ArtifactNodeInfo, error) {
+) (*model.ArtifactAssetInfo, error) {
 	group, err := s.artStore.Groups().GetEndpointById(ctx, dbAsset.GroupID.Int64)
 	if err != nil {
 		if pkgErrors.Is(err, pkgErrors.ErrResourceNotFound) {
@@ -858,13 +831,13 @@ func (s *Service) getGroupAssetNodeInfo(
 		return nil, err
 	}
 
-	info := &model.ArtifactNodeInfo{
+	info := &model.ArtifactAssetInfo{
 		Status: string(model.ArtifactStatusOK),
 		Format: dbAsset.Format,
 		Metadata: &model.ArtifactPkgVerMetadata{
 			Space: nodeInfoSpaceName(view),
 			Name:  filepath.Base(assetRes.Path),
-			Group: group.GroupName(),
+			Group: strings.ReplaceAll(group.GroupName(), ".", "/"),
 		},
 	}
 	populateNodeInfoAssetFields(info, assetRes)
@@ -876,13 +849,13 @@ func (s *Service) getStandaloneAssetNodeInfo(
 	ctx context.Context,
 	dbAsset *model.ArtifactAsset,
 	assetRes *model.ArtifactAssetsRes,
-) (*model.ArtifactNodeInfo, error) {
+) (*model.ArtifactAssetInfo, error) {
 	view, err := s.ParseSpaceView(ctx, &model.SpaceRepoReq{ArtifactID: dbAsset.ArtifactID.Int64})
 	if err != nil {
 		return nil, err
 	}
 
-	info := &model.ArtifactNodeInfo{
+	info := &model.ArtifactAssetInfo{
 		Status: string(model.ArtifactStatusOK),
 		Format: dbAsset.Format,
 		Metadata: &model.ArtifactPkgVerMetadata{
@@ -895,7 +868,7 @@ func (s *Service) getStandaloneAssetNodeInfo(
 	return info, nil
 }
 
-func populateNodeInfoAssetFields(info *model.ArtifactNodeInfo, asset *model.ArtifactAssetsRes) {
+func populateNodeInfoAssetFields(info *model.ArtifactAssetInfo, asset *model.ArtifactAssetsRes) {
 	if info == nil || asset == nil {
 		return
 	}
@@ -956,12 +929,12 @@ func nodeInfoSpaceName(view *adapter.ViewDescriptor) string {
 	return ""
 }
 
-func invalidNodeInfo() *model.ArtifactNodeInfo {
-	return &model.ArtifactNodeInfo{Status: string(model.ArtifactStatusInvalidId)}
+func invalidNodeInfo() *model.ArtifactAssetInfo {
+	return &model.ArtifactAssetInfo{Status: string(model.ArtifactStatusInvalidId)}
 }
 
-func notFoundNodeInfo() *model.ArtifactNodeInfo {
-	return &model.ArtifactNodeInfo{Status: string(model.ArtifactStatusNotFound)}
+func notFoundNodeInfo() *model.ArtifactAssetInfo {
+	return &model.ArtifactAssetInfo{Status: string(model.ArtifactStatusNotFound)}
 }
 
 func (s *Service) DownloadAsset(ctx context.Context, assetID int64) (io.ReadCloser, *model.ArtifactBlob, error) {
@@ -1347,7 +1320,7 @@ func (s *Service) appendGroupAssets(ctx context.Context, groupID int64, data []*
 		base := filepath.Base(asset.Path)
 		id := (&model.ArtifactTreeNodeId{Type: model.ArtifactTreeNodeTypeAsset, Pk: asset.Id}).String()
 		item := &model.ArtifactTreeRes{Name: base, Path: "/" + g.GroupPath() + "/" + base, Leaf: true, Format: model.ArtifactFormat(g.Format), Metadata: &model.ArtifactTreeNodeMeta{Id: asset.Id, Type: model.ArtifactTreeNodeTypeAsset, Name: base, NodeID: id, EntityID: id}}
-		item.NodeInfo = &model.ArtifactNodeInfo{
+		item.NodeInfo = &model.ArtifactAssetInfo{
 			Status:      string(model.ArtifactStatusOK),
 			Format:      model.ArtifactFormat(g.Format),
 			Path:        asset.Path,
