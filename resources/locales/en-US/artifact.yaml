@@ -152,3 +152,8 @@ artifact:
   rename_sibling_conflict: "Sibling with the same name already exists."
   rename_source_deleted: "Source entity is soft-deleted or not found."
   rename_success: "Rename succeeded."
+  entity_id_invalid: "Invalid entity ID. Expected format: kind.id (e.g. group.11, asset.5)."
+  move_target_group_required: "targetGroupID is required for move."
+  rename_new_name_required: "newName is required for rename."
+  relocate_no_change: "No effective move or rename parameters were provided. Specify at least targetArtifactID/targetGroupID or newName."
+  relocate_success: "Operation succeeded."

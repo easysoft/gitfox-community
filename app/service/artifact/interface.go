@@ -187,6 +187,9 @@ type Interface interface {
 	// RenameEntity 按 entityType 派发到对应的 Rename 方法。
 	RenameEntity(ctx context.Context, req *model.RenameEntityReq) error
 
+	// RelocateEntity 同时支持移动 + 重命名，单事务内完成。
+	RelocateEntity(ctx context.Context, req *model.RelocateEntityReq) error
+
 	// FileStore 返回制品库内容存储，供容器镜像控制器直接使用。
 	FileStore() storage.ContentStorage
 }

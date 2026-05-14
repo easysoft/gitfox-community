@@ -30,6 +30,7 @@ const (
 	ArtifactDownloadError                   I18nKey = "artifact.download_error"                       // 制品下载失败.
 	ArtifactDownloadOpenError               I18nKey = "artifact.download_open_error"                  // 打开制品文件失败.
 	ArtifactDownloadSuccess                 I18nKey = "artifact.download_success"                     // 制品下载成功.
+	ArtifactEntityIdInvalid                 I18nKey = "artifact.entity_id_invalid"                    // 实体 ID 不合法,应为 "kind.id" 格式(如 group.11、asset.5).
 	ArtifactGarbageCollectSuccess           I18nKey = "artifact.garbage_collect_success"              // 制品垃圾回收任务创建成功.
 	ArtifactGcExecuteError                  I18nKey = "artifact.gc_execute_error"                     // 执行制品垃圾回收失败.
 	ArtifactGcSchedulerNotConfigured        I18nKey = "artifact.gc_scheduler_not_configured"          // 制品垃圾回收调度器未配置.
@@ -51,6 +52,7 @@ const (
 	ArtifactMoveSiblingConflict             I18nKey = "artifact.move_sibling_conflict"                // 目标位置已存在同级同名实体.
 	ArtifactMoveSourceDeleted               I18nKey = "artifact.move_source_deleted"                  // 源实体已软删除或不存在.
 	ArtifactMoveSuccess                     I18nKey = "artifact.move_success"                         // 移动成功.
+	ArtifactMoveTargetGroupRequired         I18nKey = "artifact.move_target_group_required"           // 移动操作必须指定目标 targetGroupID.
 	ArtifactMoveTargetInvalid               I18nKey = "artifact.move_target_invalid"                  // 目标位置无效(制品库或目标组不存在).
 	ArtifactPackageDeleteError              I18nKey = "artifact.package_delete_error"                 // 删除制品包失败.
 	ArtifactPackageListError                I18nKey = "artifact.package_list_error"                   // 查询制品包列表失败.
@@ -66,8 +68,11 @@ const (
 	ArtifactQueryParamError                 I18nKey = "artifact.query_param_error"                    // Query 参数解析失败.
 	ArtifactQuerySuccess                    I18nKey = "artifact.query_success"                        // 制品详情查询成功.
 	ArtifactRefreshTreeSuccess              I18nKey = "artifact.refresh_tree_success"                 // 制品树刷新成功.
+	ArtifactRelocateNoChange                I18nKey = "artifact.relocate_no_change"                   // 未传入有效的移动或重命名参数,请至少指定 targetArtifactID/targetGro...
+	ArtifactRelocateSuccess                 I18nKey = "artifact.relocate_success"                     // 操作成功.
 	ArtifactRenameEntityTypeInvalid         I18nKey = "artifact.rename_entity_type_invalid"           // 不支持的重命名实体类型.
 	ArtifactRenameInvalidName               I18nKey = "artifact.rename_invalid_name"                  // 名称不合法(长度需 1–255,且不得包含 /、\、.、..).
+	ArtifactRenameNewNameRequired           I18nKey = "artifact.rename_new_name_required"             // 重命名操作必须指定 newName.
 	ArtifactRenameSiblingConflict           I18nKey = "artifact.rename_sibling_conflict"              // 同级已存在同名实体.
 	ArtifactRenameSourceDeleted             I18nKey = "artifact.rename_source_deleted"                // 源实体已软删除或不存在.
 	ArtifactRenameSuccess                   I18nKey = "artifact.rename_success"                       // 重命名成功.
