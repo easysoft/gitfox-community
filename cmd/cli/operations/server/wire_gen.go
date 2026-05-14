@@ -232,8 +232,23 @@ func NewApp(mode string) (*App, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	repoController := repo3.NewRepoController(repoService, repository, pullrequestService, urlProvider, gitService)
+	artifactStore := artifact.NewStore(db)
 	userStore := user.NewUserStore(db)
+	artifactManager, err := artifact2.ProvideArtifactPermManager(db)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	jobScheduler := provider.ProvideArtifactJobScheduler(jobsScheduler)
+	artifactConfig := provider.ProvideArtifactConfig(config)
+	artifactService, err := artifact3.NewService(db, artifactStore, spaceStore, store, userStore, artifactManager, storageDriver, jobScheduler, artifactConfig)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	repoController := repo3.NewRepoController(repoService, repository, pullrequestService, urlProvider, gitService, artifactService)
 	userService := user2.NewService(userStore, tokenInterface)
 	publickeyInterface := publickey.NewPublicKeyStore(db)
 	interface2 := publickey2.NewPublicKeyService(publickeyInterface, userService)
@@ -278,21 +293,6 @@ func NewApp(mode string) (*App, func(), error) {
 		return nil, nil, err
 	}
 	webhookController := webhook2.NewController(webhookService)
-	artifactStore := artifact.NewStore(db)
-	artifactManager, err := artifact2.ProvideArtifactPermManager(db)
-	if err != nil {
-		cleanup2()
-		cleanup()
-		return nil, nil, err
-	}
-	jobScheduler := provider.ProvideArtifactJobScheduler(jobsScheduler)
-	artifactConfig := provider.ProvideArtifactConfig(config)
-	artifactService, err := artifact3.NewService(db, artifactStore, spaceStore, store, userStore, artifactManager, storageDriver, jobScheduler, artifactConfig)
-	if err != nil {
-		cleanup2()
-		cleanup()
-		return nil, nil, err
-	}
 	artifactController := artifact4.NewController(artifactService)
 	routerController := provider.NewControllers(spaceController, controller, pipelineController, executionController, runnerController, tagController, commitController, repoController, userController, gitController, scanController, fitController, webhookController, artifactController)
 	i18nManager, err := provider.NewI18nManager(config)

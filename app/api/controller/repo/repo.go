@@ -7,7 +7,9 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
+	artifactModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
+	artifactSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/artifact"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/importer"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/pullrequest"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
@@ -26,16 +28,18 @@ type Controller struct {
 	pullrequestSvc pullrequest.Interface
 	urlProvider    urlPkg.Provider
 	gitPkg         gitPkg.Interface
+	artSvc         artifactSvc.Interface
 }
 
 // NewRepoController 创建代码库处理器实例
-func NewRepoController(repoSvc repo.Interface, importerSvc importer.Interface, pullrequestSvc pullrequest.Interface, urlProvider urlPkg.Provider, gitPkg gitPkg.Interface) *Controller {
+func NewRepoController(repoSvc repo.Interface, importerSvc importer.Interface, pullrequestSvc pullrequest.Interface, urlProvider urlPkg.Provider, gitPkg gitPkg.Interface, artSvc artifactSvc.Interface) *Controller {
 	return &Controller{
 		repoSvc:        repoSvc,
 		importerSvc:    importerSvc,
 		pullrequestSvc: pullrequestSvc,
 		urlProvider:    urlProvider,
 		gitPkg:         gitPkg,
+		artSvc:         artSvc,
 	}
 }
 
@@ -87,6 +91,19 @@ func (ctl *Controller) Create(c *gin.Context) {
 		}
 		resp.InternalError(c, err)
 		return
+	}
+
+	// 创建仓库时自动创建默认 generic 制品库
+	if ctl.artSvc != nil {
+		viewName := i18n.TGin(c, i18n.ArtifactDefaultViewName)
+		if viewName == "" {
+			viewName = "Default"
+		}
+		_, _ = ctl.artSvc.CreateView(c.Request.Context(), &artifactModel.CreateArtifactViewReq{
+			SpaceRepoReq: artifactModel.SpaceRepoReq{SpaceID: int64(reqData.SpaceID), RepoID: int64(data.ID)},
+			Name:         viewName,
+			Format:       string(artifactModel.ArtifactGenericFormat),
+		})
 	}
 
 	resp.Created(c, i18n.RepoCreateSuccess, data)

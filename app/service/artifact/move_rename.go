@@ -543,17 +543,6 @@ func (s *Service) renameByKind(ctx context.Context, kind model.ArtifactEntityKin
 	case model.ArtifactEntityKindGroup:
 		return s.renameGroupInner(ctx, sourceID, newName)
 	case model.ArtifactEntityKindArtifact:
-		// container 格式制品库暂不允许重命名（会影响 docker pull URL）
-		view, err := s.artStore.Views().GetByID(ctx, sourceID)
-		if err != nil {
-			return pkgErrors.WithI18nKey(err, i18n.ArtifactRenameSourceDeleted)
-		}
-		if view.Format == model.ArtifactContainerFormat {
-			return pkgErrors.WithI18nKey(
-				fmt.Errorf("rename is not supported for container artifact"),
-				i18n.ArtifactRenameVersionedNotSupported,
-			)
-		}
 		return s.renameArtifactInner(ctx, sourceID, newName)
 	case model.ArtifactEntityKindPackage:
 		return pkgErrors.WithI18nKey(
