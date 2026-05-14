@@ -586,7 +586,7 @@ func (s *Service) listVersionPage(ctx context.Context, pkgID int64, req *model.L
 	items = filterVersionList(items, req)
 
 	// 排序
-	sortVersionList(items, req.Order, req.Desc)
+	sortVersionList(items, req.Sort, req.Order)
 
 	// 分页
 	total := int64(len(items))
@@ -636,14 +636,14 @@ func filterVersionList(list []*model.VersionListItem, req *model.ListAssetReq) [
 	return filtered
 }
 
-func sortVersionList(list []*model.VersionListItem, order, desc string) {
-	if order == "" {
-		order = "id"
+func sortVersionList(list []*model.VersionListItem, sortField, order string) {
+	if sortField == "" {
+		sortField = "id"
 	}
-	ascending := desc != "desc"
+	ascending := order != "desc"
 	sort.Slice(list, func(i, j int) bool {
 		var less bool
-		switch order {
+		switch sortField {
 		case "createdDate", "createTime":
 			ti, tj := timeVal(list[i].CreatedDate), timeVal(list[j].CreatedDate)
 			less = ti.Before(tj)
@@ -686,7 +686,7 @@ func (s *Service) listAssetPageInner(ctx context.Context, kind model.ArtifactEnt
 	// 过滤
 	results = filterAssetNodeInfoList(results, req)
 	// 排序
-	sortAssetNodeInfoList(results, req.Order, req.Desc)
+	sortAssetNodeInfoList(results, req.Sort, req.Order)
 
 	// 分页
 	total := int64(len(results))
@@ -721,14 +721,14 @@ func filterAssetNodeInfoList(list []*model.ArtifactAssetInfo, req *model.ListAss
 	return filtered
 }
 
-func sortAssetNodeInfoList(list []*model.ArtifactAssetInfo, order, desc string) {
-	if order == "" {
-		order = "id"
+func sortAssetNodeInfoList(list []*model.ArtifactAssetInfo, sortField, order string) {
+	if sortField == "" {
+		sortField = "id"
 	}
-	ascending := desc != "desc"
+	ascending := order != "desc"
 	sort.Slice(list, func(i, j int) bool {
 		var less bool
-		switch order {
+		switch sortField {
 		case "createTime":
 			ti, tj := timeVal(list[i].Created), timeVal(list[j].Created)
 			less = ti.Before(tj)
