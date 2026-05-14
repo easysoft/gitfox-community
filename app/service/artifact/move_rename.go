@@ -35,16 +35,20 @@ func (s *Service) movePackageInner(ctx context.Context, pkgID, tArtifactID, tGro
 		)
 	}
 
-	// 2. 读目标 view
+	// 2. 读源/目标 view，校验 format 一致（不允许跨格式制品库）
+	srcView, err := s.artStore.Views().GetByID(ctx, srcPkg.ArtifactID)
+	if err != nil {
+		return pkgErrors.WithI18nKey(err, i18n.ArtifactMoveTargetInvalid)
+	}
 	tView, err := s.artStore.Views().GetByID(ctx, tArtifactID)
 	if err != nil {
 		return pkgErrors.WithI18nKey(err, i18n.ArtifactMoveTargetInvalid)
 	}
 
-	// 3. 格式匹配：目标库格式必须与源包一致，或目标库为 all
-	if tView.Format != srcPkg.Format && tView.Format != model.ArtifactAllFormat {
+	// 3. 源/目标制品库 format 必须严格一致
+	if srcView.Format != tView.Format {
 		return pkgErrors.WithI18nKey(
-			fmt.Errorf("package format %s does not match target view format %s", srcPkg.Format, tView.Format),
+			fmt.Errorf("source view format %s does not match target view format %s", srcView.Format, tView.Format),
 			i18n.ArtifactMoveFormatMismatch,
 		)
 	}
@@ -158,15 +162,25 @@ func (s *Service) moveAssetInner(ctx context.Context, assetID, tArtifactID, tGro
 		)
 	}
 
-	// 2. 目标 view
+	// 2. 读源/目标 view，校验 format 严格一致
+	if !srcAsset.ArtifactID.Valid || srcAsset.ArtifactID.Int64 == 0 {
+		return pkgErrors.WithI18nKey(
+			fmt.Errorf("asset %d has no associated artifactID", assetID),
+			i18n.ArtifactMoveSourceDeleted,
+		)
+	}
+	srcView, err := s.artStore.Views().GetByID(ctx, srcAsset.ArtifactID.Int64)
+	if err != nil {
+		return pkgErrors.WithI18nKey(err, i18n.ArtifactMoveTargetInvalid)
+	}
 	tView, err := s.artStore.Views().GetByID(ctx, tArtifactID)
 	if err != nil {
 		return pkgErrors.WithI18nKey(err, i18n.ArtifactMoveTargetInvalid)
 	}
-	// 3. 格式匹配
-	if tView.Format != srcAsset.Format {
+	// 3. 源/目标制品库 format 必须严格一致
+	if srcView.Format != tView.Format {
 		return pkgErrors.WithI18nKey(
-			fmt.Errorf("asset format %s does not match target view format %s", srcAsset.Format, tView.Format),
+			fmt.Errorf("source view format %s does not match target view format %s", srcView.Format, tView.Format),
 			i18n.ArtifactMoveFormatMismatch,
 		)
 	}
@@ -234,14 +248,18 @@ func (s *Service) moveGroupInner(ctx context.Context, groupID, tArtifactID, tPar
 		)
 	}
 
-	// 2. 目标 view
+	// 2. 读源/目标 view，校验 format 严格一致
+	srcView, err := s.artStore.Views().GetByID(ctx, srcGroup.ArtifactID)
+	if err != nil {
+		return pkgErrors.WithI18nKey(err, i18n.ArtifactMoveTargetInvalid)
+	}
 	tView, err := s.artStore.Views().GetByID(ctx, tArtifactID)
 	if err != nil {
 		return pkgErrors.WithI18nKey(err, i18n.ArtifactMoveTargetInvalid)
 	}
-	if tView.Format != srcGroup.Format && tView.Format != model.ArtifactAllFormat {
+	if srcView.Format != tView.Format {
 		return pkgErrors.WithI18nKey(
-			fmt.Errorf("group format %s does not match target view format %s", srcGroup.Format, tView.Format),
+			fmt.Errorf("source view format %s does not match target view format %s", srcView.Format, tView.Format),
 			i18n.ArtifactMoveFormatMismatch,
 		)
 	}
@@ -628,10 +646,8 @@ func (s *Service) RelocateEntity(ctx context.Context, req *model.RelocateEntityR
 	needRename := req.NewName != "" && req.NewName != curName
 
 	if !needMove && !needRename {
-		return pkgErrors.WithI18nKey(
-			fmt.Errorf("no effective relocate parameters"),
-			i18n.ArtifactRelocateNoChange,
-		)
+		// 既不移动也不改名，直接成功返回，不视为错误
+		return nil
 	}
 
 	return s.db.Transaction(func(tx *gorm.DB) error {
