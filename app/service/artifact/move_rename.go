@@ -122,8 +122,10 @@ func (s *Service) movePackageInner(ctx context.Context, pkgID, tArtifactID, tGro
 			return err
 		}
 		for _, asset := range assets {
-			if asset.ArtifactID.Valid && asset.ArtifactID.Int64 != tArtifactID {
+			if !asset.ArtifactID.Valid || asset.ArtifactID.Int64 != tArtifactID ||
+				!asset.GroupID.Valid || asset.GroupID.Int64 != targetGroupID {
 				asset.ArtifactID = null.IntFrom(tArtifactID)
+				asset.GroupID = null.IntFrom(targetGroupID)
 				if err = s.artStore.Assets().Update(ctx, asset); err != nil {
 					return err
 				}
@@ -348,7 +350,9 @@ func (s *Service) moveGroupInner(ctx context.Context, groupID, tArtifactID, tPar
 
 	// 7. tree 同步：删源侧 tree node，重建
 	if node, e := s.artStore.Nodes().GetByTarget(ctx, oldArtifactID, model.ArtifactTreeNodeTypeGroup, groupID); e == nil && node != nil {
-		_ = s.artStore.Nodes().RecurseDeleteById(ctx, node.ID)
+		if err = s.artStore.Nodes().RecurseDeleteById(ctx, node.ID); err != nil {
+			return err
+		}
 	}
 	return s.RefreshTree(ctx, string(srcGroup.Format))
 }
@@ -371,6 +375,12 @@ func (s *Service) renameAssetInner(ctx context.Context, assetID int64, newName s
 		return pkgErrors.WithI18nKey(
 			fmt.Errorf("asset %d is soft-deleted", assetID),
 			i18n.ArtifactRenameSourceDeleted,
+		)
+	}
+	if srcAsset.Format == artifact.ArtifactContainerFormat {
+		return pkgErrors.WithI18nKey(
+			fmt.Errorf("container asset %d cannot be renamed", assetID),
+			i18n.ArtifactRenameEntityTypeInvalid,
 		)
 	}
 	// 仅组资产
@@ -448,7 +458,9 @@ func (s *Service) renameGroupInner(ctx context.Context, groupID int64, newName s
 
 	// 4. tree 同步：删源侧 tree node，重建
 	if node, e := s.artStore.Nodes().GetByTarget(ctx, srcGroup.ArtifactID, model.ArtifactTreeNodeTypeGroup, groupID); e == nil && node != nil {
-		_ = s.artStore.Nodes().RecurseDeleteById(ctx, node.ID)
+		if err = s.artStore.Nodes().RecurseDeleteById(ctx, node.ID); err != nil {
+			return err
+		}
 	}
 	return s.RefreshTree(ctx, string(srcGroup.Format))
 }
