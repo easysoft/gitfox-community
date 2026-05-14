@@ -135,7 +135,7 @@ type ArtifactTreeRes struct {
 	Leaf     bool                  `json:"leaf"`
 	Format   ArtifactFormat        `json:"format"`
 	Metadata *ArtifactTreeNodeMeta `json:"metadata,omitempty"`
-	NodeInfo *ArtifactNodeInfo     `json:"nodeInfo,omitempty"`
+	NodeInfo *ArtifactAssetInfo    `json:"nodeInfo,omitempty"`
 	Children []*ArtifactTreeRes    `json:"children,omitempty"`
 }
 
@@ -174,7 +174,7 @@ const (
 	ArtifactStatusUnknown   ArtifactStatus = "unknown"
 )
 
-// ArtifactNodeInfo 是 /artifacts/nodeInfo 接口的单条节点详情响应。
+// ArtifactAssetInfo
 // 字段说明：
 //   - 名称（Name）      → Metadata.Name（包名）
 //   - 版本（Version）   → Metadata.Version
@@ -187,7 +187,7 @@ const (
 //   - 最后更新时间      → Updated（Unix 毫秒时间戳）
 //   - 系统/架构         → OS / Arch（仅 container 格式填充，解析自 manifest 元数据；
 //     multi-arch 镜像优先取 linux/amd64，否则取第一个平台）
-type ArtifactNodeInfo struct {
+type ArtifactAssetInfo struct {
 	// 查询状态：ok / not found / invalid_id / unknown
 	Status string `json:"status"`
 	// 制品格式：container / helm / raw / generic 等
@@ -221,12 +221,16 @@ type ArtifactNodeInfo struct {
 type ArtifactPkgVerMetadata struct {
 	// 所属空间名（global 时为 "global"）
 	Space string `json:"space"`
-	// 包名（即镜像名 / helm chart 名 / 文件名等）
-	Name string `json:"name"`
-	// 分组 / 命名空间（container 为 groupName，raw 为点分路径，generic 为目录）
-	Group string `json:"group"`
+	// 包名（非 container 格式使用）
+	Name string `json:"name,omitempty"`
+	// 分组 / 命名空间（非 container 格式使用）
+	Group string `json:"group,omitempty"`
 	// 版本号（docker tag / helm version / raw 版本标识）
 	Version string `json:"version"`
+	// 镜像名（仅 container 格式）
+	Image string `json:"image,omitempty"`
+	// 容器包名 / namespace（仅 container 格式）
+	Package string `json:"package,omitempty"`
 }
 
 // ==================== 删除与回收统计 ====================

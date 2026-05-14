@@ -761,55 +761,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/artifacts/nodeInfo": {
-            "post": {
-                "description": "兼容参考项目 ` + "`" + `/artifacts/nodeInfo` + "`" + `，按 entityIDs 批量查询节点详情。成功时返回原始数组，不包裹通用响应体。",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "artifacts"
-                ],
-                "summary": "查询节点详情",
-                "parameters": [
-                    {
-                        "description": "节点 ID 列表",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.ListNodeInfoReq"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "成功",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.ArtifactNodeInfo"
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "服务器错误",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/artifacts/nodes": {
             "post": {
                 "description": "按 artifactID 查询制品树。支持两种定位方式：1）nodeID \u003e 0 时按节点定位当前层，不支持递归；2）否则按 format + path 查询，path 可传 /** 或 /xxx/** 递归返回目录树。level 支持 format/group/package/version/asset，表示最大可见层级。",
@@ -12271,96 +12222,6 @@ const docTemplate = `{
                 "ArtifactNpmFormat"
             ]
         },
-        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.ArtifactNodeInfo": {
-            "type": "object",
-            "properties": {
-                "arch": {
-                    "description": "CPU 架构（仅 container 格式）：amd64 / arm64 / arm/v7 等",
-                    "type": "string"
-                },
-                "checksum": {
-                    "description": "校验值（md5 / sha1 / sha256 / sha512），由上传时计算并存储",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.CheckSumRes"
-                        }
-                    ]
-                },
-                "contentType": {
-                    "description": "MIME 类型（如 application/vnd.docker.distribution.manifest.v2+json）",
-                    "type": "string"
-                },
-                "created": {
-                    "description": "创建时间（Unix 毫秒时间戳）",
-                    "type": "string"
-                },
-                "creatorName": {
-                    "description": "创建人（用户 UID）",
-                    "type": "string"
-                },
-                "format": {
-                    "description": "制品格式：container / helm / raw / generic 等",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.ArtifactFormat"
-                        }
-                    ]
-                },
-                "link": {
-                    "description": "资产下载链接",
-                    "type": "string"
-                },
-                "metadata": {
-                    "description": "包/版本基础元数据（名称、版本、分组、所属空间）",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.ArtifactPkgVerMetadata"
-                        }
-                    ]
-                },
-                "os": {
-                    "description": "操作系统（仅 container 格式）：linux / windows 等",
-                    "type": "string"
-                },
-                "path": {
-                    "description": "文件存储路径（container 为 sha256:xxx digest，其它为相对路径）",
-                    "type": "string"
-                },
-                "size": {
-                    "description": "文件大小（字节）",
-                    "type": "integer"
-                },
-                "status": {
-                    "description": "查询状态：ok / not found / invalid_id / unknown",
-                    "type": "string"
-                },
-                "updated": {
-                    "description": "最后更新时间（Unix 毫秒时间戳）",
-                    "type": "string"
-                }
-            }
-        },
-        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.ArtifactPkgVerMetadata": {
-            "type": "object",
-            "properties": {
-                "group": {
-                    "description": "分组 / 命名空间（container 为 groupName，raw 为点分路径，generic 为目录）",
-                    "type": "string"
-                },
-                "name": {
-                    "description": "包名（即镜像名 / helm chart 名 / 文件名等）",
-                    "type": "string"
-                },
-                "space": {
-                    "description": "所属空间名（global 时为 \"global\"）",
-                    "type": "string"
-                },
-                "version": {
-                    "description": "版本号（docker tag / helm version / raw 版本标识）",
-                    "type": "string"
-                }
-            }
-        },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.ArtifactTreeListReq": {
             "type": "object",
             "properties": {
@@ -12404,23 +12265,6 @@ const docTemplate = `{
                 }
             }
         },
-        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.CheckSumRes": {
-            "type": "object",
-            "properties": {
-                "md5": {
-                    "type": "string"
-                },
-                "sha1": {
-                    "type": "string"
-                },
-                "sha256": {
-                    "type": "string"
-                },
-                "sha512": {
-                    "type": "string"
-                }
-            }
-        },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.CreateArtifactViewReq": {
             "type": "object",
             "properties": {
@@ -12458,17 +12302,6 @@ const docTemplate = `{
                 },
                 "names": {
                     "type": "string"
-                }
-            }
-        },
-        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.ListNodeInfoReq": {
-            "type": "object",
-            "properties": {
-                "entityIDs": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
                 }
             }
         },

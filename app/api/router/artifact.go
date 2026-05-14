@@ -45,10 +45,12 @@ func registerArtifactRoutes(group *gin.RouterGroup, controller *Controller, _ au
 		artifact.DELETE("/entities", controller.Artifact.SoftRemoveByEntity) // deleteAuth
 
 		// --- 查询 ---
-		// 节点信息
-		artifact.POST("/nodeInfo", controller.Artifact.ListNodeInfo) // pullAuth
 		// 树信息
 		artifact.POST("/nodes", controller.Artifact.ListTree) // pullAuth
+
+		// asset 级操作（读）
+		artifact.GET("/assets/:assetID", controller.Artifact.GetAsset)               // pullAuth
+		artifact.GET("/assets/:assetID/history", controller.Artifact.GetBlobHistory) // pullAuth
 
 		// -- 版本控制 --
 		artifact.POST("/packages", controller.Artifact.ListPackages) // pullAuth
@@ -60,10 +62,6 @@ func registerArtifactRoutes(group *gin.RouterGroup, controller *Controller, _ au
 		// group 级操作（读）
 		artifact.GET("/groups/:groupID/assets", controller.Artifact.ListGroupAssets) // pullAuth
 		artifact.GET("/groups/:groupID/archive", controller.Artifact.ArchiveGroup)   // pullAuth
-
-		// asset 级操作（读）
-		artifact.GET("/assets/:assetID", controller.Artifact.GetAsset)               // pullAuth
-		artifact.GET("/assets/:assetID/history", controller.Artifact.GetBlobHistory) // pullAuth
 
 		// 树节点（读）
 		artifact.GET("/nodes/:nodeID/children", controller.Artifact.ListTreeNodes) // pullAuth

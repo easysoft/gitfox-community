@@ -76,30 +76,3 @@ func (c *Controller) ListFormats(ctx *gin.Context) {
 	}
 	resp.OK(ctx, i18n.ArtifactListSuccess, formats)
 }
-
-// @Summary 查询节点详情
-// @Description 兼容参考项目 `/artifacts/nodeInfo`，按 entityIDs 批量查询节点详情。成功时返回原始数组，不包裹通用响应体。
-// @Tags artifacts
-// @Accept application/json
-// @Produce application/json
-// @Param body body model.ListNodeInfoReq true "节点 ID 列表"
-// @Success 200 {array} model.ArtifactNodeInfo "成功"
-// @Failure 400 {object} resp.ObjectResponse "参数错误"
-// @Failure 500 {object} resp.ObjectResponse "服务器错误"
-// @Router /artifacts/nodeInfo [post]
-func (c *Controller) ListNodeInfo(ctx *gin.Context) {
-	var reqBody model.ListNodeInfoReq
-	if err := ctx.ShouldBindBodyWithJSON(&reqBody); err != nil {
-		err = errors.WithI18nKey(err, i18n.ArtifactBodyParamError)
-		resp.BadRequest(ctx, err)
-		return
-	}
-
-	list, err := c.artSvc.ListNodeInfo(ctx, &reqBody)
-	if err != nil {
-		resp.InternalError(ctx, err)
-		return
-	}
-
-	resp.OK(ctx, i18n.ArtifactListSuccess, list)
-}

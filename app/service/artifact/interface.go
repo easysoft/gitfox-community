@@ -49,13 +49,10 @@ type Interface interface {
 	ListGroupAssets(ctx context.Context, groupID int64) ([]*model.ArtifactAssetsRes, error)
 
 	// GetAsset 获取单个制品资源的详细信息。
-	GetAsset(ctx context.Context, assetID int64) (*model.ArtifactAssetsRes, error)
+	GetAsset(ctx context.Context, assetID int64) (*model.ArtifactAssetInfo, error)
 
 	// GetBlobHistory 获取制品资源的 blob 历史记录。
 	GetBlobHistory(ctx context.Context, assetID int64) ([]*model.ArtifactBlobRes, error)
-
-	// ListNodeInfo 兼容参考项目 `/artifacts/nodeInfo`，按 entity/node ID 批量查询节点详情。
-	ListNodeInfo(ctx context.Context, req *model.ListNodeInfoReq) ([]*model.ArtifactNodeInfo, error)
 
 	// ---- 上传/下载 ----
 
