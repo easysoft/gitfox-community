@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"net"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -205,7 +206,7 @@ func getSanitizedMachineName() (string, error) {
 //nolint:gocognit // refactor if required
 func backfillURLs(config *Config) error {
 	// default values for HTTP
-	scheme, host, port, path := schemeHTTP, "localhost", "3000", ""
+	scheme, host, port, basePath := schemeHTTP, "localhost", "3000", ""
 	if config.Server.Host != "" {
 		host = config.Server.Host
 	}
@@ -260,7 +261,7 @@ func backfillURLs(config *Config) error {
 		scheme = u.Scheme
 		host = u.Hostname()
 		port = u.Port()
-		path = u.Path
+		basePath = u.Path
 
 		// overwrite sshhost with base url host, but keep port as is
 		sshHost = u.Hostname()
@@ -271,13 +272,22 @@ func backfillURLs(config *Config) error {
 		sshHost = config.Server.ServerHost
 	}
 
+	clonePort := ""
+	if shouldExposeClonePort(scheme, port, config.URL.ExposeRepoPort) {
+		clonePort = port
+	}
+	sshClonePort := ""
+	if shouldExposeClonePort(schemeSSH, sshPort, config.URL.ExposeRepoPort) {
+		sshClonePort = sshPort
+	}
+
 	// backfill external facing URLs
 	if config.URL.GitSSH == "" {
-		config.URL.GitSSH = combineToRawURL(schemeSSH, sshHost, sshPort, "")
+		config.URL.GitSSH = combineToRawURL(schemeSSH, sshHost, sshClonePort, "")
 	}
 
 	// create base URL object
-	baseURLRaw := combineToRawURL(scheme, host, port, path)
+	baseURLRaw := combineToRawURL(scheme, host, port, basePath)
 	baseURL, err := url.Parse(baseURLRaw)
 	if err != nil {
 		return errors.Newf("failed to parse derived base url '%s': %v", baseURLRaw, err)
@@ -291,7 +301,9 @@ func backfillURLs(config *Config) error {
 		config.URL.API = baseURL.JoinPath("api").String()
 	}
 	if config.URL.Git == "" {
-		config.URL.Git = baseURL.JoinPath("git").String()
+		gitURL := *baseURL
+		gitURL.Host = formatURLHost(gitURL.Hostname(), clonePort)
+		config.URL.Git = gitURL.JoinPath("git").String()
 	}
 	if config.URL.UI == "" {
 		config.URL.UI = baseURL.String()
@@ -303,13 +315,36 @@ func backfillURLs(config *Config) error {
 	return nil
 }
 
-func combineToRawURL(scheme, host, port, path string) string {
-	urlRAW := scheme + "://" + host
-
-	// only add port if explicitly provided
-	if port != "" {
-		urlRAW += ":" + port
+func shouldExposeClonePort(scheme string, port string, exposeRepoPort bool) bool {
+	if !exposeRepoPort || port == "" {
+		return false
 	}
+
+	switch scheme {
+	case schemeHTTP:
+		return port != "80"
+	case schemeHTTPS:
+		return port != "443"
+	case schemeSSH:
+		return port != "22"
+	default:
+		return true
+	}
+}
+
+func formatURLHost(hostname, port string) string {
+	if port == "" {
+		if strings.Contains(hostname, ":") {
+			return "[" + hostname + "]"
+		}
+		return hostname
+	}
+
+	return net.JoinHostPort(hostname, port)
+}
+
+func combineToRawURL(scheme, host, port, path string) string {
+	urlRAW := scheme + "://" + formatURLHost(host, port)
 
 	// only add path if it's not empty and non-root
 	path = strings.Trim(path, "/")

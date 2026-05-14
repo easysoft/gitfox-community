@@ -216,6 +216,9 @@ type URL struct {
 	// Value is derived from Server.HTTP Config unless explicitly specified (e.g. http://localhost:3000).
 	Base string `envconfig:"GITFOX_URL_BASE"`
 
+	// ExposeRepoPort controls whether generated repository clone URLs include non-default ports.
+	ExposeRepoPort bool `envconfig:"GITFOX_REPO_URL_EXPOSE_PORT" default:"true"`
+
 	// Git defines the external URL via which the GIT API is reachable.
 	// NOTE: for routing to work properly, the request path & hostname reaching gitfox
 	// have to statisfy at least one of the following two conditions:
