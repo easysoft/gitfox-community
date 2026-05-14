@@ -48,6 +48,9 @@ type Interface interface {
 	// ListGroupAssets 列出指定分组下直接挂载的资源文件（generic 格式）。
 	ListGroupAssets(ctx context.Context, groupID int64) ([]*model.ArtifactAssetsRes, error)
 
+	// ListAssetPage 按 entityID（group / version / package）分页查询。
+	ListAssetPage(ctx context.Context, req *model.ListAssetReq) (interface{}, int64, error)
+
 	// GetAsset 获取单个制品资源的详细信息。
 	GetAsset(ctx context.Context, assetID int64) (*model.ArtifactAssetInfo, error)
 

@@ -14,6 +14,52 @@
     "host": "localhost:3000",
     "basePath": "/api/v2",
     "paths": {
+        "/artifacts/assets/list": {
+            "post": {
+                "description": "按 entityID（group.{id} 或 version.{id}）分页查询资产列表，支持过滤和排序",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "artifacts"
+                ],
+                "summary": "制品资产分页列表",
+                "parameters": [
+                    {
+                        "description": "分页查询请求",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.ListAssetReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/artifacts/assets/{assetID}": {
             "get": {
                 "description": "获取指定制品文件的详细信息",
@@ -12295,6 +12341,60 @@
                     "type": "string"
                 },
                 "names": {
+                    "type": "string"
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.ListAssetReq": {
+            "type": "object",
+            "required": [
+                "entityID"
+            ],
+            "properties": {
+                "arch": {
+                    "description": "按 CPU 架构过滤（amd64 / arm64 / arm/v7）",
+                    "type": "string"
+                },
+                "creator": {
+                    "description": "按创建人过滤",
+                    "type": "string"
+                },
+                "deleted": {
+                    "description": "是否包含已删除：nil=不过滤，true=仅已删，false=仅未删",
+                    "type": "boolean"
+                },
+                "desc": {
+                    "description": "排序方向：asc / desc",
+                    "type": "string"
+                },
+                "editor": {
+                    "description": "按更新人过滤",
+                    "type": "string"
+                },
+                "entityID": {
+                    "description": "group.{id} 或 version.{id}",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "按文件名模糊过滤",
+                    "type": "string"
+                },
+                "order": {
+                    "description": "排序字段：id / createTime / updateTime",
+                    "type": "string"
+                },
+                "os": {
+                    "description": "按操作系统过滤（linux / windows）",
+                    "type": "string"
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "pageSize": {
+                    "type": "integer"
+                },
+                "version": {
+                    "description": "按版本号过滤（仅 version 类资产有效）",
                     "type": "string"
                 }
             }

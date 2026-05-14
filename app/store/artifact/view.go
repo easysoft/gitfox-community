@@ -140,3 +140,12 @@ func (c *views) HardDeleteExpired(ctx context.Context, before time.Time) ([]int6
 	}
 	return ids, nil
 }
+
+// UpdateName 更新视图名称。
+func (c *views) UpdateName(ctx context.Context, id int64, name string) error {
+	if err := c.db.WithContext(ctx).Model(&artifactView{}).Where("id = ?", id).
+		UpdateColumn("name", name).Error; err != nil {
+		return database.ProcessSQLErrorf(ctx, err)
+	}
+	return nil
+}

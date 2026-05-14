@@ -51,6 +51,7 @@ func registerArtifactRoutes(group *gin.RouterGroup, controller *Controller, _ au
 		// asset 级操作（读）
 		artifact.GET("/assets/:assetID", controller.Artifact.GetAsset)               // pullAuth
 		artifact.GET("/assets/:assetID/history", controller.Artifact.GetBlobHistory) // pullAuth
+		artifact.POST("/assets/list", controller.Artifact.ListAssetPage)             // pullAuth
 
 		// -- 版本控制 --
 		artifact.POST("/packages", controller.Artifact.ListPackages) // pullAuth

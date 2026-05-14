@@ -17,6 +17,57 @@ const maxArtifactViewNameLen = 128
 // 覆盖路径分隔符、点号（避免与 group 路径分隔号冲突）以及 Windows 保留字符。
 var viewNameForbiddenChars = []rune{'/', '\\', '.', ':', '*', '?', '"', '<', '>', '|'}
 
+// ValidateViewName 校验制品库视图名称的合法性。
+// 规则：
+//  1. 非空，长度 ≤ maxArtifactViewNameLen
+//  2. 不得包含空白字符或 viewNameForbiddenChars 中的字符
+//  3. 版本化格式（container/helm/pypi/npm/maven）只允许 ASCII 字母、数字、-、_
+//
+// 返回 trim 后的名称和可能的错误（已带 i18n key）。
+func ValidateViewName(name string, format ArtifactFormat) (string, error) {
+	trimmed := strings.TrimSpace(name)
+	if trimmed == "" {
+		return "", errors.WithI18nKey(
+			fmt.Errorf("artifact view name is required"),
+			i18n.ArtifactViewNameRequired,
+		)
+	}
+	if len([]rune(trimmed)) > maxArtifactViewNameLen {
+		return "", errors.WithI18nKey(
+			fmt.Errorf("artifact view name too long: %d runes", len([]rune(trimmed))),
+			i18n.ArtifactViewNameTooLong,
+		)
+	}
+	for _, rn := range trimmed {
+		if unicode.IsSpace(rn) {
+			return "", errors.WithI18nKey(
+				fmt.Errorf("artifact view name contains whitespace: %q", trimmed),
+				i18n.ArtifactViewNameInvalidChars,
+			)
+		}
+		for _, bad := range viewNameForbiddenChars {
+			if rn == bad {
+				return "", errors.WithI18nKey(
+					fmt.Errorf("artifact view name contains forbidden char %q: %q", bad, trimmed),
+					i18n.ArtifactViewNameInvalidChars,
+				)
+			}
+		}
+	}
+	// 版本化格式：只允许 ASCII 字母、数字、中划线、下划线
+	if IsVersionedFormat(format) {
+		for _, rn := range trimmed {
+			if !isVersionedViewNameRune(rn) {
+				return "", errors.WithI18nKey(
+					fmt.Errorf("versioned artifact view name must be ASCII letters/digits/-/_: %q", trimmed),
+					i18n.ArtifactViewNameNonAsciiNotAllowed,
+				)
+			}
+		}
+	}
+	return trimmed, nil
+}
+
 // SpaceRef 是给 artifact adapter 使用的精简空间引用。
 type SpaceRef struct {
 	ID   int64  `json:"id"`
@@ -116,52 +167,10 @@ func (r *CreateArtifactViewReq) Validate() error {
 		)
 	}
 
-	// 3. Name 非空检查（allow `required` binding 先过，后续再做业务侧统一 i18n 提示）
-	name := strings.TrimSpace(r.Name)
-	if name == "" {
-		return errors.WithI18nKey(
-			fmt.Errorf("artifact view name is required"),
-			i18n.ArtifactViewNameRequired,
-		)
-	}
-
-	// 4. 长度上限
-	if len([]rune(name)) > maxArtifactViewNameLen {
-		return errors.WithI18nKey(
-			fmt.Errorf("artifact view name too long: %d runes", len([]rune(name))),
-			i18n.ArtifactViewNameTooLong,
-		)
-	}
-
-	// 5. 通用字符黑名单（任何 format 都禁止）：空白 / 路径分隔 / 点号 / Windows 保留字符
-	for _, rn := range name {
-		if unicode.IsSpace(rn) {
-			return errors.WithI18nKey(
-				fmt.Errorf("artifact view name contains whitespace: %q", name),
-				i18n.ArtifactViewNameInvalidChars,
-			)
-		}
-		for _, bad := range viewNameForbiddenChars {
-			if rn == bad {
-				return errors.WithI18nKey(
-					fmt.Errorf("artifact view name contains forbidden char %q: %q", bad, name),
-					i18n.ArtifactViewNameInvalidChars,
-				)
-			}
-		}
-	}
-
-	// 6. 版本化格式：Name 必须是 ASCII 字母、数字、中划线、下划线
-	//    非版本化（generic / raw）允许中文等非 ASCII 字符
-	if IsVersionedFormat(ArtifactFormat(r.Format)) {
-		for _, rn := range name {
-			if !isVersionedViewNameRune(rn) {
-				return errors.WithI18nKey(
-					fmt.Errorf("versioned artifact view name must be ASCII letters/digits/-/_: %q", name),
-					i18n.ArtifactViewNameNonAsciiNotAllowed,
-				)
-			}
-		}
+	// 3. Name 合法性校验（复用 ValidateViewName）
+	name, err := ValidateViewName(r.Name, ArtifactFormat(r.Format))
+	if err != nil {
+		return err
 	}
 
 	// 回写 trim 后的 name，后续 service 直接使用
@@ -249,6 +258,23 @@ func (r *ArtifactVersionListReq) Validate() error {
 type ArtifactTreeListReq struct {
 	SpaceRepoReq
 	ArtifactTreeFilter
+}
+
+// ListAssetReq 制品资产分页列表请求。
+// EntityID 只接受 "group.{id}" 或 "version.{id}"。
+type ListAssetReq struct {
+	EntityID string `json:"entityID" binding:"required"` // group.{id} 或 version.{id}
+	Page     int    `json:"page"`
+	PageSize int    `json:"pageSize"`
+	Name     string `json:"name"`    // 按文件名模糊过滤
+	Version  string `json:"version"` // 按版本号过滤（仅 version 类资产有效）
+	OS       string `json:"os"`      // 按操作系统过滤（linux / windows）
+	Arch     string `json:"arch"`    // 按 CPU 架构过滤（amd64 / arm64 / arm/v7）
+	Creator  string `json:"creator"` // 按创建人过滤
+	Editor   string `json:"editor"`  // 按更新人过滤
+	Order    string `json:"order"`   // 排序字段：id / createTime / updateTime
+	Desc     string `json:"desc"`    // 排序方向：asc / desc
+	Deleted  *bool  `json:"deleted"` // 是否包含已删除：nil=不过滤，true=仅已删，false=仅未删
 }
 
 // CreateGroupReq 创建 group 节点的请求参数。

@@ -169,3 +169,13 @@ func (c *packages) GetByAssetID(ctx context.Context, assetID int64) (*model.Arti
 
 // 仅用于 Search 的 SearchOption 中，避免循环引用
 var _ = pkgErrors.ErrResourceNotFound
+
+// UpdateNamespaceByCondition 按条件批量更新 package namespace（用于 container 制品库重命名时同步）。
+func (c *packages) UpdateNamespaceByCondition(ctx context.Context, artifactID int64, oldNamespace, newNamespace, format string) error {
+	if err := c.db.WithContext(ctx).Model(&artifactPackage{}).
+		Where("artifactID = ? AND namespace = ? AND format = ?", artifactID, oldNamespace, format).
+		UpdateColumn("namespace", newNamespace).Error; err != nil {
+		return database.ProcessSQLErrorf(ctx, err)
+	}
+	return nil
+}
