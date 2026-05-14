@@ -25,12 +25,13 @@ const (
 	ArtifactContainerTagNotFound            I18nKey = "artifact.container_tag_not_found"              // 容器镜像标签资产未找到.
 	ArtifactCreateGroupSuccess              I18nKey = "artifact.create_group_success"                 // 制品 Group 创建成功.
 	ArtifactCreateViewSuccess               I18nKey = "artifact.create_view_success"                  // 制品视图创建成功.
+	ArtifactDefaultViewName                 I18nKey = "artifact.default_view_name"                    // 默认制品库
 	ArtifactDefaultViewQueryError           I18nKey = "artifact.default_view_query_error"             // 查询默认视图失败.
 	ArtifactDeleteSuccess                   I18nKey = "artifact.delete_success"                       // 制品删除成功.
 	ArtifactDownloadError                   I18nKey = "artifact.download_error"                       // 制品下载失败.
 	ArtifactDownloadOpenError               I18nKey = "artifact.download_open_error"                  // 打开制品文件失败.
 	ArtifactDownloadSuccess                 I18nKey = "artifact.download_success"                     // 制品下载成功.
-	ArtifactEntityIdInvalid                 I18nKey = "artifact.entity_id_invalid"                    // 实体 ID 不合法,应为 "kind.id" 格式(如 group.11、asset.5).
+	ArtifactEntityIdInvalid                 I18nKey = "artifact.entity_id_invalid"                    // 实体 ID 不合法,应为 kind.id 格式(如 group.11、asset.5).
 	ArtifactGarbageCollectSuccess           I18nKey = "artifact.garbage_collect_success"              // 制品垃圾回收任务创建成功.
 	ArtifactGcExecuteError                  I18nKey = "artifact.gc_execute_error"                     // 执行制品垃圾回收失败.
 	ArtifactGcSchedulerNotConfigured        I18nKey = "artifact.gc_scheduler_not_configured"          // 制品垃圾回收调度器未配置.

@@ -18,6 +18,7 @@ artifact:
 
   # ---- Service layer errors ----
   # View
+  default_view_name: "Default"
   view_name_duplicate: "An artifact view with the same name already exists."
   view_in_recycle_bin: "A view with the same name is in the recycle bin, please restore it or wait for expiration."
   view_expired_cleanup_error: "Failed to clean up expired view."

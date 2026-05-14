@@ -18,6 +18,7 @@ artifact:
 
   # ---- Service 层错误 ----
   # View（视图）
+  default_view_name: "默认制品库"
   view_name_duplicate: "同名制品库视图已存在."
   view_in_recycle_bin: "同名制品库视图在回收站中，请从回收站恢复或等待过期后重建."
   view_expired_cleanup_error: "清理过期视图失败."
