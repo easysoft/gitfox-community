@@ -272,8 +272,8 @@ type ListAssetReq struct {
 	Arch     string `json:"arch"`    // 按 CPU 架构过滤（amd64 / arm64 / arm/v7）
 	Creator  string `json:"creator"` // 按创建人过滤
 	Editor   string `json:"editor"`  // 按更新人过滤
-	Order    string `json:"order"`   // 排序字段：id / createTime / updateTime
-	Desc     string `json:"desc"`    // 排序方向：asc / desc
+	Sort     string `json:"sort"`    // 排序字段：id / createTime / updateTime
+	Order    string `json:"order"`   // 排序方向：asc / desc
 	Deleted  *bool  `json:"deleted"` // 是否包含已删除：nil=不过滤，true=仅已删，false=仅未删
 }
 
