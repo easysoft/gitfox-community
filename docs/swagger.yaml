@@ -570,19 +570,12 @@ definitions:
     properties:
       artifactID:
         type: integer
-      format:
-        type: string
-      groupName:
-        type: string
       packageName:
         type: string
       repoID:
         type: integer
       spaceID:
         type: integer
-    required:
-    - format
-    - packageName
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.CheckSumRes:
     properties:
@@ -609,9 +602,6 @@ definitions:
         type: integer
       spaceID:
         type: integer
-    required:
-    - format
-    - name
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.CreateGroupReq:
     properties:
@@ -633,17 +623,14 @@ definitions:
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.MoveEntityReq:
     properties:
-      entityType:
-        description: '"package" / "asset" / "group"'
+      entityID:
+        description: 实体引用，形如 "group.11" / "asset.5" / "package.1"
         type: string
-      sourceID:
-        description: 源实体 ID
-        type: integer
       targetArtifactID:
-        description: 目标制品库 ID
+        description: 目标制品库 ID（不传或 == 当前 → 不跨库）
         type: integer
       targetGroupID:
-        description: 目标 group ID（package/asset 必填，group 可选）
+        description: 目标 group ID（必填）
         type: integer
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.PermRule:
@@ -679,17 +666,29 @@ definitions:
       format:
         type: string
     type: object
-  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.RenameEntityReq:
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.RelocateEntityReq:
     properties:
-      entityType:
-        description: '"asset" / "group"'
+      entityID:
+        description: 实体引用，形如 "group.11" / "asset.5"
         type: string
       newName:
-        description: 新名称
+        description: 新名称（可选）
         type: string
-      sourceID:
-        description: 源实体 ID
+      targetArtifactID:
+        description: 目标制品库 ID（可选）
         type: integer
+      targetGroupID:
+        description: 目标 group ID（可选）
+        type: integer
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.RenameEntityReq:
+    properties:
+      entityID:
+        description: 实体引用，形如 "group.11" / "asset.5"
+        type: string
+      newName:
+        description: 新名称（必填）
+        type: string
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.SoftRemoveEntitiesReq:
     properties:
@@ -3681,6 +3680,34 @@ paths:
           schema:
             $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
       summary: 移动制品实体
+      tags:
+      - artifacts
+  /artifacts/entities/relocate:
+    post:
+      consumes:
+      - application/json
+      description: |-
+        同时支持移动和重命名 asset 或 group。targetGroupID/newName 任一传入即生效；
+        与当前一致或为空则跳过对应操作；两者都不变则返回错误。整个过程在单事务内完成。
+      parameters:
+      - description: 移动并/或重命名请求
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.RelocateEntityReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "400":
+          description: 参数错误或业务校验失败
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 移动并/或重命名制品实体
       tags:
       - artifacts
   /artifacts/entities/rename:

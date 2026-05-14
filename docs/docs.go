@@ -287,6 +287,46 @@ const docTemplate = `{
                 }
             }
         },
+        "/artifacts/entities/relocate": {
+            "post": {
+                "description": "同时支持移动和重命名 asset 或 group。targetGroupID/newName 任一传入即生效；\n与当前一致或为空则跳过对应操作；两者都不变则返回错误。整个过程在单事务内完成。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "artifacts"
+                ],
+                "summary": "移动并/或重命名制品实体",
+                "parameters": [
+                    {
+                        "description": "移动并/或重命名请求",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.RelocateEntityReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误或业务校验失败",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/artifacts/entities/rename": {
             "post": {
                 "description": "重命名 asset 或 group（package 不支持重命名）",
@@ -12349,19 +12389,9 @@ const docTemplate = `{
         },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.ArtifactVersionListReq": {
             "type": "object",
-            "required": [
-                "format",
-                "packageName"
-            ],
             "properties": {
                 "artifactID": {
                     "type": "integer"
-                },
-                "format": {
-                    "type": "string"
-                },
-                "groupName": {
-                    "type": "string"
                 },
                 "packageName": {
                     "type": "string"
@@ -12393,10 +12423,6 @@ const docTemplate = `{
         },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.CreateArtifactViewReq": {
             "type": "object",
-            "required": [
-                "format",
-                "name"
-            ],
             "properties": {
                 "artifactID": {
                     "type": "integer"
@@ -12449,20 +12475,16 @@ const docTemplate = `{
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.MoveEntityReq": {
             "type": "object",
             "properties": {
-                "entityType": {
-                    "description": "\"package\" / \"asset\" / \"group\"",
+                "entityID": {
+                    "description": "实体引用，形如 \"group.11\" / \"asset.5\" / \"package.1\"",
                     "type": "string"
                 },
-                "sourceID": {
-                    "description": "源实体 ID",
-                    "type": "integer"
-                },
                 "targetArtifactID": {
-                    "description": "目标制品库 ID",
+                    "description": "目标制品库 ID（不传或 == 当前 → 不跨库）",
                     "type": "integer"
                 },
                 "targetGroupID": {
-                    "description": "目标 group ID（package/asset 必填，group 可选）",
+                    "description": "目标 group ID（必填）",
                     "type": "integer"
                 }
             }
@@ -12518,20 +12540,37 @@ const docTemplate = `{
                 }
             }
         },
-        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.RenameEntityReq": {
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.RelocateEntityReq": {
             "type": "object",
             "properties": {
-                "entityType": {
-                    "description": "\"asset\" / \"group\"",
+                "entityID": {
+                    "description": "实体引用，形如 \"group.11\" / \"asset.5\"",
                     "type": "string"
                 },
                 "newName": {
-                    "description": "新名称",
+                    "description": "新名称（可选）",
                     "type": "string"
                 },
-                "sourceID": {
-                    "description": "源实体 ID",
+                "targetArtifactID": {
+                    "description": "目标制品库 ID（可选）",
                     "type": "integer"
+                },
+                "targetGroupID": {
+                    "description": "目标 group ID（可选）",
+                    "type": "integer"
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.RenameEntityReq": {
+            "type": "object",
+            "properties": {
+                "entityID": {
+                    "description": "实体引用，形如 \"group.11\" / \"asset.5\"",
+                    "type": "string"
+                },
+                "newName": {
+                    "description": "新名称（必填）",
+                    "type": "string"
                 }
             }
         },

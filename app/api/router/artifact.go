@@ -36,6 +36,8 @@ func registerArtifactRoutes(group *gin.RouterGroup, controller *Controller, _ au
 		artifact.POST("/entities/move", controller.Artifact.MoveEntity) // pushAuth
 		// 修改制品名/制品目录移动
 		artifact.POST("/entities/rename", controller.Artifact.RenameEntity) // pushAuth
+		// 移动并/或重命名（同一事务）
+		artifact.POST("/entities/relocate", controller.Artifact.RelocateEntity) // pushAuth
 		// 刷新树信息
 		artifact.POST("/tree/refresh", controller.Artifact.RefreshTree) // createAuth
 
