@@ -16,7 +16,7 @@
     "paths": {
         "/artifacts/assets/list": {
             "post": {
-                "description": "按 entityID（group.{id} 或 version.{id}）分页查询资产列表，支持过滤和排序",
+                "description": "按 entityID（group.{id} 或 version.{id}）分页查询资产列表，支持过滤和排序；group 查询传 more=true 时递归包含子目录资产",
                 "consumes": [
                     "application/json"
                 ],
@@ -329,7 +329,7 @@
         },
         "/artifacts/entities/relocate": {
             "post": {
-                "description": "同时支持移动和重命名 asset 或 group。targetGroupID/newName 任一传入即生效；\n与当前一致或为空则跳过对应操作；两者都不变则返回错误。整个过程在单事务内完成。",
+                "description": "同时支持移动和重命名 package / asset / group。targetGroupID 显式传 0 表示根目录（仅 generic group 支持）；\n不传 targetGroupID 表示不移动，仍可正常执行重命名；两者都不变则直接成功。整个过程在单事务内完成。",
                 "consumes": [
                     "application/json"
                 ],
@@ -12355,7 +12355,7 @@
                     "description": "按 CPU 架构过滤（amd64 / arm64 / arm/v7）",
                     "type": "string"
                 },
-                "creator": {
+                "createdBy": {
                     "description": "按创建人过滤",
                     "type": "string"
                 },
@@ -12363,11 +12363,7 @@
                     "description": "是否包含已删除：nil=不过滤，true=仅已删，false=仅未删",
                     "type": "boolean"
                 },
-                "desc": {
-                    "description": "排序方向：asc / desc",
-                    "type": "string"
-                },
-                "editor": {
+                "editedBy": {
                     "description": "按更新人过滤",
                     "type": "string"
                 },
@@ -12375,12 +12371,16 @@
                     "description": "group.{id} 或 version.{id}",
                     "type": "string"
                 },
+                "more": {
+                    "description": "是否展开子目录制品放在同一列表中",
+                    "type": "boolean"
+                },
                 "name": {
                     "description": "按文件名模糊过滤",
                     "type": "string"
                 },
                 "order": {
-                    "description": "排序字段：id / createTime / updateTime",
+                    "description": "排序方向：asc / desc",
                     "type": "string"
                 },
                 "os": {
@@ -12392,6 +12392,10 @@
                 },
                 "pageSize": {
                     "type": "integer"
+                },
+                "sort": {
+                    "description": "排序字段：id / name / size / createdDate / editedDate",
+                    "type": "string"
                 },
                 "version": {
                     "description": "按版本号过滤（仅 version 类资产有效）",
@@ -12411,7 +12415,7 @@
                     "type": "integer"
                 },
                 "targetGroupID": {
-                    "description": "目标 group ID（必填）",
+                    "description": "目标 group ID（必填；generic group 可传 0 表示根目录）",
                     "type": "integer"
                 }
             }
@@ -12483,7 +12487,7 @@
                     "type": "integer"
                 },
                 "targetGroupID": {
-                    "description": "目标 group ID（可选）",
+                    "description": "目标 group ID（可选；generic group 显式传 0 表示根目录）",
                     "type": "integer"
                 }
             }

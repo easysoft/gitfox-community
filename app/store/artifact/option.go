@@ -26,6 +26,15 @@ func (opt AssetExcludeDeletedOption) Apply(db *gorm.DB) *gorm.DB {
 	return db.Where("deleted = 0")
 }
 
+// GroupAssetsOption 按 groupID 查询 assets。
+type GroupAssetsOption struct {
+	GroupID int64
+}
+
+func (opt GroupAssetsOption) Apply(db *gorm.DB) *gorm.DB {
+	return db.Where("groupID = ?", opt.GroupID)
+}
+
 type AssetWithDeletedBeforeOption struct {
 	Before time.Time
 }
@@ -62,6 +71,15 @@ type PackageWithDeletedOption struct{}
 
 func (opt PackageWithDeletedOption) Apply(db *gorm.DB) *gorm.DB {
 	return db.Where("deleted = 1")
+}
+
+// GroupPackagesOption 按 groupID 查询未删除 package。
+type GroupPackagesOption struct {
+	GroupID int64
+}
+
+func (opt GroupPackagesOption) Apply(db *gorm.DB) *gorm.DB {
+	return db.Where("groupID = ?", opt.GroupID).Where("deleted = 0")
 }
 
 type PackageWithDeletedBeforeOption struct {

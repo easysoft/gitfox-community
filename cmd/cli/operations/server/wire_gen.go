@@ -242,7 +242,7 @@ func NewApp(mode string) (*App, func(), error) {
 	}
 	jobScheduler := provider.ProvideArtifactJobScheduler(jobsScheduler)
 	artifactConfig := provider.ProvideArtifactConfig(config)
-	artifactService, err := artifact3.NewService(db, artifactStore, spaceStore, store, userStore, artifactManager, storageDriver, jobScheduler, artifactConfig)
+	artifactService, err := artifact3.NewService(db, artifactStore, spaceStore, store, userStore, artifactManager, storageDriver, jobScheduler, artifactConfig, urlProvider)
 	if err != nil {
 		cleanup2()
 		cleanup()

@@ -209,12 +209,14 @@ func (s *Store) GetVersion(ctx context.Context, artifactID int64,
 }
 
 func (s *Store) ListAssets(ctx context.Context, VersionID int64) ([]*model.ArtifactAssetsRes, error) {
-	// ListAssets 拉取 version 下未删除资产，并联表补齐 blob 与创建人信息。
+	// ListAssets 拉取 version 下未删除资产，并联表补齐 blob 大小与引用信息。
 	result := make([]*model.ArtifactAssetsRes, 0)
 	stmt := s.db.WithContext(ctx).Model(&artifactAsset{}).
 		Select(`ops_artifact_assets.id,ops_artifact_assets.path,ops_artifact_assets.contentType,
-			ops_artifact_assets.checkSum,ops_artifact_assets.metadata,ops_artifact_assets.createdDate,
-			ops_artifact_blobs.size,ops_artifact_blobs.ref,ops_artifact_blobs.createdDate,ops_artifact_blobs.createdBy`).
+			ops_artifact_assets.checkSum,ops_artifact_assets.metadata,
+			ops_artifact_assets.createdBy,ops_artifact_assets.createdDate,
+			ops_artifact_assets.editedBy,ops_artifact_assets.editedDate,
+			ops_artifact_blobs.size,ops_artifact_blobs.ref`).
 		Joins(`LEFT JOIN ops_artifact_blobs on ops_artifact_assets.blobID=ops_artifact_blobs.id`).
 		Where(`ops_artifact_assets.versionID = ?`, VersionID).
 		Where(`ops_artifact_assets.deleted = 0`)
@@ -231,8 +233,10 @@ func (s *Store) ListGroupAssets(ctx context.Context, groupID int64) ([]*model.Ar
 	var dst []*model.ArtifactAssetsRes
 	stmt := s.db.WithContext(ctx).Model(&artifactAsset{}).
 		Select(`ops_artifact_assets.id,ops_artifact_assets.path,ops_artifact_assets.contentType,
-			ops_artifact_assets.checkSum,ops_artifact_assets.metadata,ops_artifact_assets.createdDate,
-			ops_artifact_blobs.size,ops_artifact_blobs.ref,ops_artifact_blobs.createdDate,ops_artifact_blobs.createdBy`).
+			ops_artifact_assets.checkSum,ops_artifact_assets.metadata,
+			ops_artifact_assets.createdBy,ops_artifact_assets.createdDate,
+			ops_artifact_assets.editedBy,ops_artifact_assets.editedDate,
+			ops_artifact_blobs.size,ops_artifact_blobs.ref`).
 		Joins(`LEFT JOIN ops_artifact_blobs on ops_artifact_assets.blobID=ops_artifact_blobs.id`).
 		Where(`ops_artifact_assets.groupID = ?`, groupID).
 		Where(`ops_artifact_assets.deleted = 0`)
@@ -249,8 +253,10 @@ func (s *Store) GetAsset(ctx context.Context, assetID int64) (*model.ArtifactAss
 	var result model.ArtifactAssetsRes
 	stmt := s.db.WithContext(ctx).Model(&artifactAsset{}).
 		Select(`ops_artifact_assets.id,ops_artifact_assets.path,ops_artifact_assets.contentType,
-			ops_artifact_assets.checkSum,ops_artifact_assets.metadata,ops_artifact_assets.createdDate,
-			ops_artifact_blobs.size,ops_artifact_blobs.ref,ops_artifact_blobs.createdDate,ops_artifact_blobs.createdBy`).
+			ops_artifact_assets.checkSum,ops_artifact_assets.metadata,
+			ops_artifact_assets.createdBy,ops_artifact_assets.createdDate,
+			ops_artifact_assets.editedBy,ops_artifact_assets.editedDate,
+			ops_artifact_blobs.size,ops_artifact_blobs.ref`).
 		Joins(`LEFT JOIN ops_artifact_blobs on ops_artifact_assets.blobID=ops_artifact_blobs.id`).
 		Where(`ops_artifact_assets.id = ?`, assetID).
 		Where(`ops_artifact_assets.deleted = 0`)
