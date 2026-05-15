@@ -117,7 +117,7 @@ func (c *Controller) DownloadAsset(ctx *gin.Context) {
 }
 
 // @Summary 制品资产分页列表
-// @Description 按 entityID（group.{id} 或 version.{id}）分页查询资产列表，支持过滤和排序
+// @Description 按 entityID（group.{id} 或 version.{id}）分页查询资产列表，支持过滤和排序；group 查询传 more=true 时递归包含子目录资产
 // @Tags artifacts
 // @Accept application/json
 // @Produce application/json

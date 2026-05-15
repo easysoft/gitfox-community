@@ -646,7 +646,7 @@ type PermRule struct {
 type MoveEntityReq struct {
 	EntityID         string `json:"entityID"`         // 实体引用，形如 "group.11" / "asset.5" / "package.1"
 	TargetArtifactID int64  `json:"targetArtifactID"` // 目标制品库 ID（不传或 == 当前 → 不跨库）
-	TargetGroupID    int64  `json:"targetGroupID"`    // 目标 group ID（必填）
+	TargetGroupID    *int64 `json:"targetGroupID"`    // 目标 group ID（必填；generic group 可传 0 表示根目录）
 }
 
 // RenameEntityReq 重命名实体请求。
@@ -657,14 +657,16 @@ type RenameEntityReq struct {
 
 // RelocateEntityReq 移动并/或重命名实体请求。
 // 语义：
-//   - TargetArtifactID == 0 或与当前一致 → 不跨库；TargetGroupID == 0 或与当前一致 → 不改父级；
+//   - TargetGroupID 未传 → 不移动，即使 TargetArtifactID 有值也只执行重命名；
+//   - TargetGroupID 已传，且 TargetArtifactID == 0 或与当前一致 → 同库移动；
+//     TargetGroupID 显式传 0 → 移动到目标制品库根目录（仅 generic group 支持）；
 //     两者皆不变即「不移动」。
 //   - NewName == "" 或与当前一致 → 不改名。
 //   - 移动 + 改名同时存在时，先移动后改名，整个过程在单事务内完成。
 type RelocateEntityReq struct {
 	EntityID         string `json:"entityID"`         // 实体引用，形如 "group.11" / "asset.5"
 	TargetArtifactID int64  `json:"targetArtifactID"` // 目标制品库 ID（可选）
-	TargetGroupID    int64  `json:"targetGroupID"`    // 目标 group ID（可选）
+	TargetGroupID    *int64 `json:"targetGroupID"`    // 目标 group ID（可选；generic group 显式传 0 表示根目录）
 	NewName          string `json:"newName"`          // 新名称（可选）
 }
 

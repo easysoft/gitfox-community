@@ -27,12 +27,12 @@ artifact:
   view_scope_mismatch: "指定的制品视图与请求中的空间或仓库不匹配."
   view_create_error: "创建制品视图失败."
   view_expired_query_error: "查询过期视图失败."
-  view_format_required: "请选择制品格式（format），可选值：generic, raw, maven, container, helm, pypi, npm."
-  view_format_invalid: "不支持的制品格式，仅支持: generic, raw, maven, container, helm, pypi, npm."
+  view_format_required: "请选择制品格式（format），可选值：generic, raw, container." # generic, raw, maven, container, helm, pypi, npm.
+  view_format_invalid: "不支持的制品格式，仅支持: generic, raw, container." # generic, raw, maven, container, helm, pypi, npm.
   view_name_required: "制品库名称不能为空."
   view_name_too_long: "制品库名称过长，最多 128 个字符."
   view_name_invalid_chars: "制品库名称不得包含空白字符或 / \\ . .. : * ? \" < > | 等特殊字符."
-  view_name_non_ascii_not_allowed: "版本化制品库（container/helm/pypi/npm/maven）的名称仅允许英文字母、数字、中划线和下划线，不允许中文."
+  view_name_non_ascii_not_allowed: "版本化制品库（container/raw）的名称仅允许英文字母、数字、中划线和下划线，不允许中文." # container/raw/helm/pypi/npm/maven
 
   # Parse & Upload
   space_id_required: "当 repoID 存在时，spaceID 是必填的."
@@ -78,7 +78,7 @@ artifact:
   group_query_error: "查询制品分组失败."
   group_artifactid_required: "artifactID 必须大于 0."
   group_artifactid_not_found: "指定的制品ID不存在."
-  group_format_invalid: "不支持的制品格式，仅支持: generic, raw, maven, container, helm, pypi, npm."
+  group_format_invalid: "不支持的制品格式，仅支持: generic, raw, container." # generic, raw, maven, container, helm, pypi, npm.
   group_names_invalid: "分组名称不合法，不能为空且不允许包含空段."
   group_container_no_nesting: "container 格式仅支持单级分组，不允许使用 '.' 嵌套."
   group_duplicate: "同名分组路径已存在，不允许重复创建."
@@ -86,7 +86,7 @@ artifact:
   # Tree
   tree_format_list_error: "查询制品格式列表失败."
   tree_format_required: "通用树查询必须指定 format，除非传入了 nodeID."
-  tree_refresh_format_invalid: "不支持的制品格式，仅支持: generic, raw, maven, container, helm, pypi, npm."
+  tree_refresh_format_invalid: "不支持的制品格式，仅支持: generic, raw, container." # generic, raw, maven, container, helm, pypi, npm.
   tree_level_invalid: "通用树查询的 level 参数不合法，仅支持: format, group, package, version, asset."
   tree_node_list_error: "查询制品树节点列表失败."
   tree_node_not_in_artifact: "指定的 nodeID 不属于当前制品库."
@@ -153,7 +153,7 @@ artifact:
   rename_source_deleted: "源实体已软删除或不存在."
   rename_success: "重命名成功."
   entity_id_invalid: "实体 ID 不合法，应为 kind.id 格式（如 group.11、asset.5）."
-  move_target_group_required: "移动操作必须指定目标 targetGroupID."
+  move_target_group_required: "移动操作必须指定 targetGroupID；仅 generic group 可传 0 表示根目录，package/asset 必须指定有效分组."
   rename_new_name_required: "重命名操作必须指定 newName."
   relocate_no_change: "未传入有效的移动或重命名参数，请至少指定 targetArtifactID/targetGroupID 或 newName."
   relocate_success: "操作成功."

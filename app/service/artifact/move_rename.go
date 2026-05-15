@@ -19,8 +19,7 @@ import (
 // 语义：更新 package.ArtifactID / GroupID / Namespace，并重建 tree node。
 //
 //   - container 格式：忽略传入的 tGroupID，目标 group 直接取目标 view 下唯一的 container group。
-//   - 非 container 格式：tGroupID == 0 视为挂到 format 根；tGroupID > 0 时目标 group 必须属于目标 view，
-//     且格式要与源 package 一致。
+//   - 非 container 格式：目标 group 必须属于目标 view，且格式要与源 package 一致。
 func (s *Service) movePackageInner(ctx context.Context, pkgID, tArtifactID, tGroupID int64) error {
 	// 1. 读源 package
 	srcPkg, err := s.artStore.Packages().GetByID(ctx, pkgID)
@@ -71,25 +70,25 @@ func (s *Service) movePackageInner(ctx context.Context, pkgID, tArtifactID, tGro
 		targetGroupID = groups[0].ID
 		namespace = ""
 	default:
-		if tGroupID > 0 {
-			endpoint, err := s.artStore.Groups().GetEndpointById(ctx, tGroupID)
-			if err != nil {
-				return pkgErrors.WithI18nKey(err, i18n.ArtifactMoveTargetInvalid)
-			}
-			// 目标 group 必须属于目标 view 且格式一致
-			if endpoint.ArtifactID != tArtifactID || endpoint.Format != srcPkg.Format {
-				return pkgErrors.WithI18nKey(
-					fmt.Errorf("target group %d does not belong to artifact %d or format mismatch", tGroupID, tArtifactID),
-					i18n.ArtifactMoveTargetInvalid,
-				)
-			}
-			targetGroupID = tGroupID
-			namespace = endpoint.GroupName()
-		} else {
-			// tGroupID == 0：挂到 format 根
-			targetGroupID = 0
-			namespace = ""
+		if tGroupID <= 0 {
+			return pkgErrors.WithI18nKey(
+				fmt.Errorf("targetGroupID is required for package move"),
+				i18n.ArtifactMoveTargetGroupRequired,
+			)
 		}
+		endpoint, err := s.artStore.Groups().GetEndpointById(ctx, tGroupID)
+		if err != nil {
+			return pkgErrors.WithI18nKey(err, i18n.ArtifactMoveTargetInvalid)
+		}
+		// 目标 group 必须属于目标 view 且格式一致
+		if endpoint.ArtifactID != tArtifactID || endpoint.Format != srcPkg.Format {
+			return pkgErrors.WithI18nKey(
+				fmt.Errorf("target group %d does not belong to artifact %d or format mismatch", tGroupID, tArtifactID),
+				i18n.ArtifactMoveTargetInvalid,
+			)
+		}
+		targetGroupID = tGroupID
+		namespace = endpoint.GroupName()
 	}
 
 	// 5. 同级冲突检查
@@ -252,6 +251,12 @@ func (s *Service) moveGroupInner(ctx context.Context, groupID, tArtifactID, tPar
 		return pkgErrors.WithI18nKey(
 			fmt.Errorf("versioned format %s group cannot be moved", srcGroup.Format),
 			i18n.ArtifactMoveFormatMismatch,
+		)
+	}
+	if tParentGroupID == 0 && srcGroup.Format != model.ArtifactGenericFormat {
+		return pkgErrors.WithI18nKey(
+			fmt.Errorf("only generic groups can be moved to root, got format %s", srcGroup.Format),
+			i18n.ArtifactMoveTargetInvalid,
 		)
 	}
 
@@ -623,15 +628,51 @@ func (s *Service) MoveEntity(ctx context.Context, req *model.MoveEntityReq) erro
 	if err != nil {
 		return err
 	}
-	// 移动操作必须指定目标 group
-	if req.TargetGroupID == 0 {
+	if req.TargetGroupID == nil {
 		return pkgErrors.WithI18nKey(
 			fmt.Errorf("targetGroupID is required for move"),
 			i18n.ArtifactMoveTargetGroupRequired,
 		)
 	}
+	targetGroupID := *req.TargetGroupID
+	if (kind == model.ArtifactEntityKindAsset || kind == model.ArtifactEntityKindPackage) && targetGroupID == 0 {
+		return pkgErrors.WithI18nKey(
+			fmt.Errorf("targetGroupID is required for %s move", kind),
+			i18n.ArtifactMoveTargetGroupRequired,
+		)
+	}
+	targetArtifactID := req.TargetArtifactID
+	if targetArtifactID == 0 {
+		switch kind {
+		case model.ArtifactEntityKindGroup:
+			g, e := s.artStore.Groups().GetById(ctx, id)
+			if e != nil {
+				return pkgErrors.WithI18nKey(e, i18n.ArtifactMoveSourceDeleted)
+			}
+			targetArtifactID = g.ArtifactID
+		case model.ArtifactEntityKindAsset:
+			a, e := s.artStore.Assets().GetById(ctx, id)
+			if e != nil {
+				return pkgErrors.WithI18nKey(e, i18n.ArtifactMoveSourceDeleted)
+			}
+			if a.ArtifactID.Valid {
+				targetArtifactID = a.ArtifactID.Int64
+			}
+		case model.ArtifactEntityKindPackage:
+			p, e := s.artStore.Packages().GetByID(ctx, id)
+			if e != nil {
+				return pkgErrors.WithI18nKey(e, i18n.ArtifactMoveSourceDeleted)
+			}
+			targetArtifactID = p.ArtifactID
+		default:
+			return pkgErrors.WithI18nKey(
+				fmt.Errorf("unsupported entity type for move: %s", kind),
+				i18n.ArtifactMoveEntityTypeInvalid,
+			)
+		}
+	}
 	return s.db.Transaction(func(tx *gorm.DB) error {
-		return s.moveByKind(ctx, kind, id, req.TargetArtifactID, req.TargetGroupID)
+		return s.moveByKind(ctx, kind, id, targetArtifactID, targetGroupID)
 	})
 }
 
@@ -656,7 +697,9 @@ func (s *Service) RenameEntity(ctx context.Context, req *model.RenameEntityReq) 
 // RelocateEntity 同时支持移动 + 重命名，单事务内先移动后改名。
 //
 // 语义：
-//   - TargetArtifactID == 0 或与当前一致，且 TargetGroupID == 0 或与当前一致 → 不移动；
+//   - TargetGroupID 未传 → 不移动，即使 TargetArtifactID 有值也只执行重命名；
+//   - TargetGroupID 已传，且 TargetArtifactID == 0 或与当前一致 → 同库移动；
+//   - TargetGroupID 显式传 0 → 移动到目标制品库根目录（仅 generic group 支持）；
 //   - NewName == "" 或与当前一致 → 不改名；
 //   - 两者都不变 → 返回 ArtifactRelocateNoChange。
 func (s *Service) RelocateEntity(ctx context.Context, req *model.RelocateEntityReq) error {
@@ -716,13 +759,18 @@ func (s *Service) RelocateEntity(ctx context.Context, req *model.RelocateEntityR
 		)
 	}
 
-	// 判断是否需要移动（traget 不传或与当前一致 → 不移动）
+	// 判断是否需要移动：targetGroupID 是移动意图的开关。
+	// 未传 targetGroupID 时，即使 targetArtifactID 有值也不移动，保证纯重命名请求不会被拦截。
 	tArtifactID := req.TargetArtifactID
 	if tArtifactID == 0 {
 		tArtifactID = curArtifactID
 	}
-	tGroupID := req.TargetGroupID
-	needMove := tArtifactID != curArtifactID || (req.TargetGroupID != 0 && req.TargetGroupID != curGroupID)
+	var targetGroupID int64
+	targetGroupIDSpecified := req.TargetGroupID != nil
+	if targetGroupIDSpecified {
+		targetGroupID = *req.TargetGroupID
+	}
+	needMove := targetGroupIDSpecified && (tArtifactID != curArtifactID || targetGroupID != curGroupID)
 
 	// 判断是否需要重命名（NewName 为空或与当前一致 → 不改名）
 	needRename := req.NewName != "" && req.NewName != curName
@@ -734,11 +782,12 @@ func (s *Service) RelocateEntity(ctx context.Context, req *model.RelocateEntityR
 
 	return s.db.Transaction(func(tx *gorm.DB) error {
 		if needMove {
-			// 移动时若未显式指定 tGroupID，沿用当前父级（保持层级不变）
-			if tGroupID == 0 {
-				tGroupID = curGroupID
+			// 移动时若未显式指定 targetGroupID，沿用当前父级（保持层级不变）。
+			// 显式指定 0 则表示移动到目标制品库根目录，由下层按实体类型和格式校验是否支持。
+			if !targetGroupIDSpecified {
+				targetGroupID = curGroupID
 			}
-			if err := s.moveByKind(ctx, kind, id, tArtifactID, tGroupID); err != nil {
+			if err := s.moveByKind(ctx, kind, id, tArtifactID, targetGroupID); err != nil {
 				return err
 			}
 		}

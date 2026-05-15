@@ -275,6 +275,7 @@ type ListAssetReq struct {
 	Sort     string `json:"sort"`    // 排序字段：id / createTime / updateTime
 	Order    string `json:"order"`   // 排序方向：asc / desc
 	Deleted  *bool  `json:"deleted"` // 是否包含已删除：nil=不过滤，true=仅已删，false=仅未删
+	More     bool   `json:"more"`    // 是否展开子目录制品放在同一列表中
 }
 
 // CreateGroupReq 创建 group 节点的请求参数。
