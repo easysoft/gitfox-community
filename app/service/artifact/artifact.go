@@ -9,7 +9,6 @@ import (
 	"io"
 	"io/fs"
 	"net/http"
-	"net/url"
 	"path/filepath"
 	"sort"
 	"strconv"
@@ -37,6 +36,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/rbac"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/storage"
 	storagedriver "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/storage/driver"
+	urlProviderPkg "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/url"
 
 	repoStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
 	spaceStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/space"
@@ -65,15 +65,16 @@ var _ Interface = (*Service)(nil)
 
 // Service 是制品库的核心业务服务。
 type Service struct {
-	db         *gorm.DB
-	artStore   artifactStore.Interface
-	spaceStore spaceStore.Interface
-	repoStore  repoStore.Interface
-	userStore  *userStore.Store
-	perm       *artifactperm.Manager
-	fileStore  storage.ContentStorage
-	scheduler  JobScheduler
-	config     *config.ArtifactConfig // 制品库配置（回收站保留期、GC 间隔等）
+	db          *gorm.DB
+	artStore    artifactStore.Interface
+	spaceStore  spaceStore.Interface
+	repoStore   repoStore.Interface
+	userStore   *userStore.Store
+	perm        *artifactperm.Manager
+	fileStore   storage.ContentStorage
+	scheduler   JobScheduler
+	config      *config.ArtifactConfig // 制品库配置（回收站保留期、GC 间隔等）
+	urlProvider urlProviderPkg.Provider
 }
 
 // NewService 创建制品库服务。使用 StorageDriver 内部构建 ContentStorage，
@@ -88,6 +89,7 @@ func NewService(
 	d storagedriver.StorageDriver,
 	scheduler JobScheduler,
 	cfg *config.ArtifactConfig,
+	urlProvider urlProviderPkg.Provider,
 ) (*Service, error) {
 	fs, err := storage.NewCommonContentStore(context.Background(), d,
 		storage.WithPrefix(artifactStoragePrefix))
@@ -97,15 +99,16 @@ func NewService(
 	// 校验并修正配置：确保 GCInterval >= RecycleBinRetention
 	cfg.Sanitize()
 	return &Service{
-		db:         db,
-		artStore:   artStore,
-		spaceStore: spaceStore,
-		repoStore:  repoStore,
-		userStore:  uStore,
-		perm:       perm,
-		fileStore:  fs,
-		scheduler:  scheduler,
-		config:     cfg,
+		db:          db,
+		artStore:    artStore,
+		spaceStore:  spaceStore,
+		repoStore:   repoStore,
+		userStore:   uStore,
+		perm:        perm,
+		fileStore:   fs,
+		scheduler:   scheduler,
+		config:      cfg,
+		urlProvider: urlProvider,
 	}, nil
 }
 
@@ -616,50 +619,6 @@ func (s *Service) fillContainerVersionItem(ctx context.Context, item *model.Vers
 	item.Arch = info.Arch
 }
 
-func filterVersionList(list []*model.VersionListItem, req *model.ListAssetReq) []*model.VersionListItem {
-	if req.Creator == "" && req.Editor == "" && req.Version == "" {
-		return list
-	}
-	filtered := make([]*model.VersionListItem, 0, len(list))
-	for _, item := range list {
-		if req.Creator != "" && item.CreatedBy != req.Creator {
-			continue
-		}
-		if req.Editor != "" && item.EditedBy != req.Editor {
-			continue
-		}
-		if req.Version != "" && !strings.Contains(item.Version, req.Version) {
-			continue
-		}
-		filtered = append(filtered, item)
-	}
-	return filtered
-}
-
-func sortVersionList(list []*model.VersionListItem, sortField, order string) {
-	if sortField == "" {
-		sortField = "id"
-	}
-	ascending := order != "desc"
-	sort.Slice(list, func(i, j int) bool {
-		var less bool
-		switch sortField {
-		case "createdDate", "createTime":
-			ti, tj := timeVal(list[i].CreatedDate), timeVal(list[j].CreatedDate)
-			less = ti.Before(tj)
-		case "editedDate", "updateTime":
-			ti, tj := timeVal(list[i].EditedDate), timeVal(list[j].EditedDate)
-			less = ti.Before(tj)
-		default: // "id"
-			less = list[i].ID < list[j].ID
-		}
-		if ascending {
-			return less
-		}
-		return !less
-	})
-}
-
 // listAssetPageInner 处理 group / version 的 asset 分页。
 func (s *Service) listAssetPageInner(ctx context.Context, kind model.ArtifactEntityKind, id int64, req *model.ListAssetReq, page, pageSize int) (interface{}, int64, error) {
 	var assets []*model.ArtifactAssetsRes
@@ -707,6 +666,7 @@ func (s *Service) listGroupAssetsForPage(ctx context.Context, groupID int64, rec
 		return assets, err
 	}
 
+	// more=true 时把当前目录下所有子目录资产拉平到同一列表，后续统一过滤、排序和分页。
 	groups, err := s.artStore.Groups().ListDescendants(ctx, groupID)
 	if err != nil {
 		return nil, err
@@ -721,133 +681,17 @@ func (s *Service) listGroupAssetsForPage(ctx context.Context, groupID int64, rec
 	return assets, nil
 }
 
-func filterAssetNodeInfoList(list []*model.ArtifactAssetInfo, req *model.ListAssetReq) []*model.ArtifactAssetInfo {
-	filtered := make([]*model.ArtifactAssetInfo, 0, len(list))
-	for _, info := range list {
-		if req.Name != "" && !strings.Contains(strings.ToLower(info.Path), strings.ToLower(req.Name)) {
-			continue
-		}
-		if req.OS != "" && info.OS != req.OS {
-			continue
-		}
-		if req.Arch != "" && info.Arch != req.Arch {
-			continue
-		}
-		if req.Creator != "" && info.CreatorName != req.Creator {
-			continue
-		}
-		filtered = append(filtered, info)
-	}
-	return filtered
-}
-
-func sortAssetNodeInfoList(list []*model.ArtifactAssetInfo, sortField, order string) {
-	if sortField == "" {
-		sortField = "id"
-	}
-	ascending := order != "desc"
-	sort.Slice(list, func(i, j int) bool {
-		var less bool
-		switch sortField {
-		case "createTime":
-			ti, tj := timeVal(list[i].Created), timeVal(list[j].Created)
-			less = ti.Before(tj)
-		case "updateTime":
-			ti, tj := timeVal(list[i].Updated), timeVal(list[j].Updated)
-			less = ti.Before(tj)
-		default: // "id" — 按 path 字典序作为 fallback
-			less = list[i].Path < list[j].Path
-		}
-		if ascending {
-			return less
-		}
-		return !less
-	})
-}
-
-func timeVal(t *datetime.Local) time.Time {
-	if t == nil {
-		return time.Time{}
-	}
-	return time.Time(*t)
-}
-
-// addLinkForGeneric 仿照参考项目 gitfox: 为 generic 分组下的资产逐个拼出下载链接。
-// 路径形态：/<ArtifactMount>/<spaceName>/<format>/<groupPath>/<asset.Path>。
-// spaceName 为空时按项目既有约定兜底为 "global"（与 container 全局作用域一致），
-// 避免拼出 "/_artifacts//generic/..." 这种空段路径。
-func addLinkForGeneric(data []*model.ArtifactAssetsRes, spaceName, groupPath, format string) error {
-	if format == "" {
-		return nil
-	}
-	if spaceName == "" {
-		spaceName = "global"
-	}
-	for _, res := range data {
-		segments := []string{"_artifacts", spaceName, format}
-		if groupPath != "" {
-			segments = append(segments, strings.Split(strings.Trim(groupPath, "/"), "/")...)
-		}
-		if res.Path != "" {
-			segments = append(segments, strings.Split(strings.Trim(res.Path, "/"), "/")...)
-		}
-		link, err := url.JoinPath("/", segments...)
-		if err != nil {
-			return err
-		}
-		res.Link = link
-		res.EntityID = (&model.ArtifactTreeNodeId{Type: model.ArtifactTreeNodeTypeAsset, Pk: res.Id}).String()
-	}
-	return nil
-}
-
-// applyNodeInfoToAsset 把 nodeinfo 解析出的业务字段映射到 list 接口的资产响应上。
-// 仅 nodeinfo 命中（status=ok）时才覆盖；其它状态保持 store 查询出的基础信息原样返回。
-func applyNodeInfoToAsset(a *model.ArtifactAssetsRes, info *model.ArtifactAssetInfo) {
-	if a == nil || info == nil || info.Status != string(model.ArtifactStatusOK) {
-		return
-	}
-	a.EntityID = (&model.ArtifactTreeNodeId{Type: model.ArtifactTreeNodeTypeAsset, Pk: a.Id}).String()
-	a.Link = info.Link
-	a.OS = info.OS
-	a.Arch = info.Arch
-	if info.Size > 0 {
-		a.Size = info.Size
-	}
-	if info.Created != nil {
-		a.Created = info.Created
-	}
-	if info.Updated != nil {
-		a.Updated = info.Updated
-	}
-	if info.Metadata != nil {
-		a.Name = info.Metadata.Name
-		a.PackageName = info.Metadata.Name
-		a.Group = info.Metadata.Group
-		a.Version = info.Metadata.Version
-	}
-}
-
+// GetAsset 返回单个资产的 nodeInfo 详情。
 func (s *Service) GetAsset(ctx context.Context, assetID int64) (*model.ArtifactAssetInfo, error) {
 	return s.getAssetNodeInfo(ctx, assetID)
 }
 
+// GetBlobHistory 返回资产关联 blob 的历史版本。
 func (s *Service) GetBlobHistory(ctx context.Context, assetID int64) ([]*model.ArtifactBlobRes, error) {
 	return s.artStore.Blobs().History(ctx, assetID)
 }
-func parseNodeInfoEntityID(entityID string) (model.ArtifactEntityKind, int64, error) {
-	if strings.Count(entityID, ".") != 1 {
-		return "", 0, fmt.Errorf("invalid artifact entity id: %s", entityID)
-	}
 
-	parts := strings.Split(entityID, ".")
-	id, err := strconv.ParseInt(parts[1], 10, 64)
-	if err != nil {
-		return "", 0, fmt.Errorf("invalid artifact entity id number: %s", entityID)
-	}
-	return model.ArtifactEntityKind(parts[0]), id, nil
-}
-
+// getVersionNodeInfo 查询 version 节点详情，并按 format 组装下载或 pull 链接。
 func (s *Service) getVersionNodeInfo(ctx context.Context, versionID int64) (*model.ArtifactAssetInfo, error) {
 	ver, err := s.artStore.Versions().GetByID(ctx, versionID)
 	if err != nil {
@@ -885,6 +729,7 @@ func (s *Service) getVersionNodeInfo(ctx context.Context, versionID int64) (*mod
 		if err = s.fillContainerNodeInfo(ctx, info, view, ver); err != nil {
 			return nil, err
 		}
+		info.Link = s.buildContainerPullLink(view, pkg, ver)
 		// container 格式：用 Image/Package 替代 Name/Group，语义更清晰
 		info.Metadata.Image = info.Metadata.Name
 		info.Metadata.Package = info.Metadata.Group
@@ -948,12 +793,13 @@ func (s *Service) getAssetNodeInfo(ctx context.Context, assetID int64) (*model.A
 		// 覆盖 info.Size/Created/Updated，但 container 应保留 layer 累计大小和 manifest 时间。
 		isContainer := info.Format == model.ArtifactContainerFormat
 		var savedSize int64
-		var savedOS, savedArch string
+		var savedOS, savedArch, savedLink string
 		var savedCreated, savedUpdated *datetime.Local
 		if isContainer {
 			savedSize = info.Size
 			savedOS = info.OS
 			savedArch = info.Arch
+			savedLink = info.Link
 			savedCreated = info.Created
 			savedUpdated = info.Updated
 		}
@@ -966,11 +812,12 @@ func (s *Service) getAssetNodeInfo(ctx context.Context, assetID int64) (*model.A
 			info.Size = savedSize
 			info.OS = savedOS
 			info.Arch = savedArch
+			info.Link = savedLink
 			info.Created = savedCreated
 			info.Updated = savedUpdated
 		}
 
-		if info.Metadata != nil {
+		if info.Metadata != nil && !isContainer {
 			// link 下载链接（含 space / format / group / name / version / path 拼成的访问路径）
 			info.Link = buildArtifactAssetLink(info.Metadata.Space, string(info.Format), info.Metadata.Group, info.Metadata.Name, info.Metadata.Version, assetRes.Path)
 		}
@@ -997,6 +844,7 @@ func (s *Service) getAssetNodeInfo(ctx context.Context, assetID int64) (*model.A
 }
 
 func (s *Service) getPrimaryVersionAsset(ctx context.Context, versionID int64) (*model.ArtifactAssetsRes, error) {
+	// 优先选择 main asset；历史数据没有 main 标记时退回到第一个资产。
 	mainAssets, err := s.artStore.Assets().FindMain(ctx, versionID)
 	if err != nil {
 		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactAssetQueryError)
@@ -1071,6 +919,7 @@ func (s *Service) getGroupAssetNodeInfo(
 	dbAsset *model.ArtifactAsset,
 	assetRes *model.ArtifactAssetsRes,
 ) (*model.ArtifactAssetInfo, error) {
+	// group 直挂资产主要用于 generic/raw 目录文件，需要反查 group 路径拼下载链接。
 	group, err := s.artStore.Groups().GetEndpointById(ctx, dbAsset.GroupID.Int64)
 	if err != nil {
 		if pkgErrors.Is(err, pkgErrors.ErrResourceNotFound) {
@@ -1103,6 +952,7 @@ func (s *Service) getStandaloneAssetNodeInfo(
 	dbAsset *model.ArtifactAsset,
 	assetRes *model.ArtifactAssetsRes,
 ) (*model.ArtifactAssetInfo, error) {
+	// standalone asset 不属于 package/version/group，只按 view 级路径返回。
 	view, err := s.ParseSpaceView(ctx, &model.SpaceRepoReq{ArtifactID: dbAsset.ArtifactID.Int64})
 	if err != nil {
 		return nil, err
@@ -1121,76 +971,8 @@ func (s *Service) getStandaloneAssetNodeInfo(
 	return info, nil
 }
 
-func populateNodeInfoAssetFields(info *model.ArtifactAssetInfo, asset *model.ArtifactAssetsRes) {
-	if info == nil || asset == nil {
-		return
-	}
-
-	info.Path = asset.Path
-	info.ContentType = asset.ContentType
-	info.Size = asset.Size
-	info.CreatorName = asset.CreatorName
-	info.Created = asset.Created
-	info.Updated = asset.Updated
-	info.Link = asset.Link
-	info.CheckSum = asset.CheckSum
-}
-
-func buildArtifactAssetLink(spaceName, format, group, packageName, version, assetPath string) string {
-	if spaceName == "" || format == "" || assetPath == "" {
-		return ""
-	}
-
-	segments := []string{"_artifacts", spaceName, format}
-	switch model.ArtifactFormat(format) {
-	case model.ArtifactGenericFormat:
-		segments = appendSlashSegments(segments, group)
-	case model.ArtifactHelmFormat:
-		// helm 仓库直接以文件路径挂载在格式根下
-	default:
-		if group != "" {
-			segments = append(segments, strings.Split(strings.Trim(group, "."), ".")...)
-		}
-		if packageName != "" {
-			segments = append(segments, packageName)
-		}
-		if version != "" {
-			segments = append(segments, version)
-		}
-	}
-	segments = appendSlashSegments(segments, assetPath)
-
-	link, err := url.JoinPath("/", segments...)
-	if err != nil {
-		return ""
-	}
-	return link
-}
-
-func appendSlashSegments(dst []string, p string) []string {
-	trimmed := strings.Trim(p, "/")
-	if trimmed == "" {
-		return dst
-	}
-	return append(dst, strings.Split(trimmed, "/")...)
-}
-
-func nodeInfoSpaceName(view *adapter.ViewDescriptor) string {
-	if view != nil && view.Space != nil {
-		return view.Space.Name
-	}
-	return ""
-}
-
-func invalidNodeInfo() *model.ArtifactAssetInfo {
-	return &model.ArtifactAssetInfo{Status: string(model.ArtifactStatusInvalidId)}
-}
-
-func notFoundNodeInfo() *model.ArtifactAssetInfo {
-	return &model.ArtifactAssetInfo{Status: string(model.ArtifactStatusNotFound)}
-}
-
 func (s *Service) DownloadAsset(ctx context.Context, assetID int64) (io.ReadCloser, *model.ArtifactBlob, error) {
+	// 下载走 asset -> blob -> content store 三段定位，避免直接信任外部传入路径。
 	asset, err := s.artStore.Assets().GetById(ctx, assetID)
 	if err != nil {
 		return nil, nil, pkgErrors.WithI18nKey(err, i18n.ArtifactAssetQueryError)
@@ -1210,6 +992,7 @@ func (s *Service) DownloadAsset(ctx context.Context, assetID int64) (io.ReadClos
 func (s *Service) Upload(ctx context.Context, view *adapter.ViewDescriptor, format model.ArtifactFormat, req *http.Request) ([]*adapter.SavedAsset, error) {
 	var uploader adapter.ArtifactPackageUploader
 
+	// 当前标准上传入口只处理 raw/generic；版本化协议由各自协议控制器处理。
 	switch format {
 	case model.ArtifactRawFormat:
 		uploader = raw.NewUploader(s.fileStore, s.artStore, view)
@@ -1574,12 +1357,14 @@ func (s *Service) appendGroupAssets(ctx context.Context, groupID int64, data []*
 		id := (&model.ArtifactTreeNodeId{Type: model.ArtifactTreeNodeTypeAsset, Pk: asset.Id}).String()
 		item := &model.ArtifactTreeRes{Name: base, Path: "/" + g.GroupPath() + "/" + base, Leaf: true, Format: model.ArtifactFormat(g.Format), Metadata: &model.ArtifactTreeNodeMeta{Id: asset.Id, Type: model.ArtifactTreeNodeTypeAsset, Name: base, NodeID: id, EntityID: id}}
 		item.NodeInfo = &model.ArtifactAssetInfo{
+			ID:          asset.Id,
 			Status:      string(model.ArtifactStatusOK),
 			Format:      model.ArtifactFormat(g.Format),
 			Path:        asset.Path,
 			ContentType: asset.ContentType,
 			Size:        asset.Size,
 			CreatorName: asset.CreatorName,
+			EditedBy:    asset.EditedBy,
 			Created:     asset.Created,
 			Updated:     asset.Updated,
 			CheckSum:    asset.CheckSum,
@@ -1589,135 +1374,10 @@ func (s *Service) appendGroupAssets(ctx context.Context, groupID int64, data []*
 	return data, nil
 }
 
-// filterTreeNodesByLevel 按 level 上限过滤节点类型。
-// 例如 level=package 时，只保留 group/package，不返回 version/asset。
-func filterTreeNodesByLevel(inputs []*model.ArtifactTreeNode, level string) []*model.ArtifactTreeNode {
-	out := make([]*model.ArtifactTreeNode, 0, len(inputs))
-	for _, n := range inputs {
-		if treeNodeLevelRank(n.Type) <= treeLevelRank(level) {
-			out = append(out, n)
-		}
-	}
-	return out
-}
-
-func convertTreeNodesToRes(inputs []*model.ArtifactTreeNode, level string) []*model.ArtifactTreeRes {
-	out := make([]*model.ArtifactTreeRes, 0, len(inputs))
-	for _, n := range inputs {
-		out = append(out, convertTreeNodeToRes(n, level))
-	}
-	return out
-}
-
-// convertTreeNodeToRes 将存储层树节点转换为接口返回模型。
-// 这里只负责“单个节点”的基础映射；children 由上层递归逻辑填充。
-func convertTreeNodeToRes(n *model.ArtifactTreeNode, level string) *model.ArtifactTreeRes {
-	item := &model.ArtifactTreeRes{Name: n.Name, Path: n.Path, Format: n.Format, Leaf: n.Type == model.ArtifactTreeNodeTypeAsset}
-	if n.Type == model.ArtifactTreeNodeTypeVersion {
-		item.Leaf = level != model.ArtifactNodeLevelAsset || n.Format == model.ArtifactContainerFormat
-	}
-	if n.Type == model.ArtifactTreeNodeTypeVersion {
-		item.Metadata = parseArtifactTreePath(n.Path)
-		if item.Metadata == nil {
-			item.Metadata = &model.ArtifactTreeNodeMeta{}
-		}
-		item.Metadata.Type = model.ArtifactTreeNodeTypeVersion
-	} else {
-		item.Metadata = &model.ArtifactTreeNodeMeta{Type: n.Type}
-	}
-	if n.TargetID.Valid {
-		item.Metadata.Id = n.TargetID.Int64
-		id := (&model.ArtifactTreeNodeId{Type: n.Type, Pk: n.TargetID.Int64}).String()
-		item.Metadata.NodeID, item.Metadata.EntityID = id, id
-	}
-	if n.Type == model.ArtifactTreeNodeTypeFormat {
-		item.Metadata.Name = n.Name
-		if n.ArtifactID > 0 {
-			id := (&model.ArtifactTreeNodeId{Type: model.ArtifactTreeNodeTypeArtifact, Pk: n.ArtifactID}).String()
-			item.Metadata.NodeID, item.Metadata.EntityID = id, id
-		}
-	}
-	return item
-}
-
-func normalizeTreePath(path string) (string, bool) {
-	p := strings.TrimSpace(path)
-	if p == "" {
-		return model.ArtifactNodeRoot, false
-	}
-	recursive := strings.HasSuffix(p, "/**")
-	p = strings.TrimSuffix(p, "/**")
-	if p == "" {
-		p = model.ArtifactNodeRoot
-	}
-	if !strings.HasPrefix(p, "/") {
-		p = "/" + p
-	}
-	if p != "/" {
-		p = strings.TrimRight(p, "/")
-	}
-	return p, recursive
-}
-
-func normalizeTreeLevel(level string) (string, error) {
-	if level == "" {
-		return model.ArtifactNodeLevelAsset, nil
-	}
-	switch level {
-	case model.ArtifactNodeLevelFormat, model.ArtifactNodeLevelGroup, model.ArtifactNodeLevelPackage, model.ArtifactNodeLevelVersion, model.ArtifactNodeLevelAsset:
-		return level, nil
-	default:
-		return "", fmt.Errorf("unsupported level: %s", level)
-	}
-}
-
-func treeLevelRank(level string) int {
-	switch level {
-	case model.ArtifactNodeLevelFormat:
-		return 0
-	case model.ArtifactNodeLevelGroup:
-		return 1
-	case model.ArtifactNodeLevelPackage:
-		return 2
-	case model.ArtifactNodeLevelVersion:
-		return 3
-	default:
-		return 4
-	}
-}
-
-func treeNodeLevelRank(t model.ArtifactTreeNodeType) int {
-	switch t {
-	case model.ArtifactTreeNodeTypeFormat:
-		return 0
-	case model.ArtifactTreeNodeTypeGroup:
-		return 1
-	case model.ArtifactTreeNodeTypePackage:
-		return 2
-	case model.ArtifactTreeNodeTypeVersion:
-		return 3
-	case model.ArtifactTreeNodeTypeAsset:
-		return 4
-	default:
-		return 0
-	}
-}
-
-func parseArtifactTreePath(path string) *model.ArtifactTreeNodeMeta {
-	frames := strings.Split(strings.TrimLeft(path, "/"), "/")
-	if len(frames) < 2 {
-		return nil
-	}
-	meta := &model.ArtifactTreeNodeMeta{Name: frames[len(frames)-2], Version: frames[len(frames)-1]}
-	if len(frames) > 2 {
-		meta.Group = strings.Join(frames[:len(frames)-2], ".")
-	}
-	return meta
-}
-
 func (s *Service) statistic(ctx context.Context, report *model.ArtifactStatisticReport) (*model.ArtifactStatisticResponse, error) {
 	res := &model.ArtifactStatisticResponse{}
 
+	// DeleteList 用于 GC 预览/执行结果，按 blob 聚合可回收数量与大小。
 	delData := &model.ArtifactGarbageReportRes{Ids: make([]int64, 0)}
 	for _, d := range report.DeleteList {
 		delData.Count++
@@ -1731,6 +1391,7 @@ func (s *Service) statistic(ctx context.Context, report *model.ArtifactStatistic
 		return res, nil
 	}
 
+	// TagList 只有 versionID 和容量，需回查 version/package/view 信息补齐展示维度。
 	sort.Slice(report.TagList, func(i, j int) bool {
 		return report.TagList[i].VersionID < report.TagList[j].VersionID
 	})
@@ -1752,6 +1413,7 @@ func (s *Service) statistic(ctx context.Context, report *model.ArtifactStatistic
 
 	pkgCapMap := make(map[int64]*model.ArtifactPackageCapacityRes)
 	for _, verInfo := range verInfoList {
+		// 同一个 package 下的多个 version 合并到一个容量对象里。
 		pkgCap, ok := pkgCapMap[verInfo.PackageID]
 		if !ok {
 			pkgCap = &model.ArtifactPackageCapacityRes{
@@ -1793,16 +1455,6 @@ func (s *Service) statistic(ctx context.Context, report *model.ArtifactStatistic
 
 	res.Capacity = pkgCapList
 	return res, nil
-}
-
-func artifactViewScope(info *model.ArtifactVersionInfo) string {
-	if info.ViewRepoID > 0 {
-		return "repo"
-	}
-	if info.ViewSpaceID > 0 {
-		return "space"
-	}
-	return "global"
 }
 
 // ----------------- capacity ------------------
@@ -1880,23 +1532,6 @@ func (s *Service) StatisticSummary(ctx context.Context) (map[string]*model.Artif
 		addStats(res["all"], verStats)
 	}
 	return res, nil
-}
-
-func artifactScopeKey(info *model.ArtifactVersionInfo) string {
-	switch artifactViewScope(info) {
-	case "repo":
-		return "repo:" + info.RepoName
-	case "space":
-		return "space:" + info.SpaceName
-	default:
-		return "global"
-	}
-}
-
-func addStats(dst, src *model.ArtifactStatsObject) {
-	dst.Total += src.Total
-	dst.Active += src.Active
-	dst.Deleted += src.Deleted
 }
 
 func (s *Service) GarbageCollectSoftRemove(ctx context.Context) (*model.ArtifactGarbageReportRes, error) {
@@ -2123,7 +1758,7 @@ func (s *Service) softRemoveGroup(ctx context.Context, group *model.ArtifactGrou
 	for _, g := range targets {
 		// 2.1 直挂在 group 上的活 asset（generic 场景）。
 		directAssets, aErr := s.artStore.Assets().Search(ctx,
-			groupAssetsOption{groupID: g.ID}, artifactStore.AssetExcludeDeletedOption{})
+			artifactStore.GroupAssetsOption{GroupID: g.ID}, artifactStore.AssetExcludeDeletedOption{})
 		if aErr != nil {
 			res.Status = model.ArtifactStatusUnknown
 			return pkgErrors.WithI18nKey(aErr, i18n.ArtifactSoftRemoveGroupQueryError)
@@ -2136,7 +1771,7 @@ func (s *Service) softRemoveGroup(ctx context.Context, group *model.ArtifactGrou
 			)
 		}
 		// 2.2 经 package/version 链路下挂的活 asset（raw / maven 等版本化场景）。
-		pkgs, pErr := s.artStore.Packages().Search(ctx, groupPackagesOption{groupID: g.ID})
+		pkgs, pErr := s.artStore.Packages().Search(ctx, artifactStore.GroupPackagesOption{GroupID: g.ID})
 		if pErr != nil {
 			res.Status = model.ArtifactStatusUnknown
 			return pkgErrors.WithI18nKey(pErr, i18n.ArtifactSoftRemoveGroupQueryError)
@@ -2169,7 +1804,7 @@ func (s *Service) softRemoveGroup(ctx context.Context, group *model.ArtifactGrou
 	//    由深到浅处理，保证子级先落地（Groups().ListDescendants 按 parentID 升序，反转后即从叶子起）。
 	for i := len(targets) - 1; i >= 0; i-- {
 		g := targets[i]
-		pkgs, pErr := s.artStore.Packages().Search(ctx, groupPackagesOption{groupID: g.ID})
+		pkgs, pErr := s.artStore.Packages().Search(ctx, artifactStore.GroupPackagesOption{GroupID: g.ID})
 		if pErr != nil {
 			return pErr
 		}
@@ -2294,18 +1929,6 @@ func (s *Service) deleteTreeNodeByTarget(ctx context.Context, artifactID int64, 
 		return nil
 	}
 	return s.artStore.Nodes().DeleteById(ctx, node.ID)
-}
-
-type groupPackagesOption struct{ groupID int64 }
-
-func (o groupPackagesOption) Apply(db *gorm.DB) *gorm.DB {
-	return db.Where("groupID = ?", o.groupID).Where("deleted = 0")
-}
-
-type groupAssetsOption struct{ groupID int64 }
-
-func (o groupAssetsOption) Apply(db *gorm.DB) *gorm.DB {
-	return db.Where("groupID = ?", o.groupID)
 }
 
 type ArchiveGroup struct {

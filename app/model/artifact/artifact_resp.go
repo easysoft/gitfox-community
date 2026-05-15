@@ -49,7 +49,7 @@ type ArtifactListItem struct {
 	Namespace   string          `gorm:"column:namespace" json:"namespace"`
 	DisplayName string          `gorm:"-" json:"displayName"`
 	Version     string          `gorm:"column:version" json:"version"`
-	UpdateTime  *datetime.Local `gorm:"column:editedDate" json:"updateTime"`
+	UpdateTime  *datetime.Local `gorm:"column:editedDate" json:"editedDate"`
 }
 
 type ArtifactAssetsRes struct {
@@ -58,12 +58,13 @@ type ArtifactAssetsRes struct {
 	ContentType    string          `gorm:"column:contentType" json:"contentType"`
 	Size           int64           `gorm:"column:size" json:"size"`
 	BlobRef        string          `gorm:"column:ref" json:"-"`
-	Creator        string          `gorm:"-" json:"creator"`
-	CreatorName    string          `gorm:"column:createdBy" json:"creatorName"`
+	Creator        string          `gorm:"-" json:"-"`
+	CreatorName    string          `gorm:"column:createdBy" json:"createdBy"`
+	EditedBy       string          `gorm:"column:editedBy" json:"editedBy"`
 	CheckSumString string          `gorm:"column:checkSum" json:"-"`
 	MetadataString string          `gorm:"column:metadata" json:"-"`
-	Created        *datetime.Local `gorm:"column:createdDate" json:"created"`
-	Updated        *datetime.Local `gorm:"column:editedDate" json:"updated"`
+	Created        *datetime.Local `gorm:"column:createdDate" json:"createdDate"`
+	Updated        *datetime.Local `gorm:"column:editedDate" json:"editedDate"`
 
 	CheckSum *CheckSumRes      `gorm:"-" json:"checksum"`
 	Metadata map[string]string `gorm:"-" json:"metadata"`
@@ -108,11 +109,11 @@ type ArtifactBlobRes struct {
 	Path           string          `gorm:"column:path" json:"path"`
 	Size           int64           `gorm:"column:size" json:"size"`
 	BlobRef        string          `gorm:"column:ref" json:"-"`
-	Creator        string          `gorm:"-" json:"creator"`
-	CreatorName    string          `gorm:"column:createdBy" json:"creatorName"`
+	Creator        string          `gorm:"-" json:"-"`
+	CreatorName    string          `gorm:"column:createdBy" json:"createdBy"`
 	CheckSumString string          `gorm:"column:checkSum" json:"-"`
 	MetadataString string          `gorm:"column:metadata" json:"-"`
-	Created        *datetime.Local `gorm:"column:createdDate" json:"created"`
+	Created        *datetime.Local `gorm:"column:createdDate" json:"createdDate"`
 	Deleted        null.Int        `gorm:"column:deleted" json:"deleted"`
 
 	CheckSum *CheckSumRes      `gorm:"-" json:"checksum"`
@@ -130,8 +131,8 @@ type CheckSumRes struct {
 
 type ArtifactVersionsRes struct {
 	Version     string `json:"version"`
-	CreatorName string `json:"creatorName"`
-	Updated     int64  `json:"updated"`
+	CreatorName string `json:"createdBy"`
+	Updated     int64  `json:"editedDate"`
 }
 
 // ==================== 树节点响应 ====================
@@ -201,12 +202,14 @@ const (
 //   - 所属空间          → Metadata.Space
 //   - 大小（Size）      → Size（字节）
 //   - 校验值（CheckSum）→ CheckSum（含 md5/sha1/sha256/sha512）
-//   - 创建人            → CreatorName（用户 UID）
-//   - 创建时间          → Created（Unix 毫秒时间戳）
-//   - 最后更新时间      → Updated（Unix 毫秒时间戳）
+//   - 创建人            → CreatorName（JSON: createdBy）
+//   - 创建时间          → Created（JSON: createdDate）
+//   - 最后更新时间      → Updated（JSON: editedDate）
 //   - 系统/架构         → OS / Arch（仅 container 格式填充，解析自 manifest 元数据；
 //     multi-arch 镜像优先取 linux/amd64，否则取第一个平台）
 type ArtifactAssetInfo struct {
+	// 资产 ID
+	ID int64 `json:"id,omitempty"`
 	// 查询状态：ok / not found / invalid_id / unknown
 	Status string `json:"status"`
 	// 制品格式：container / helm / raw / generic 等
@@ -221,11 +224,13 @@ type ArtifactAssetInfo struct {
 	// 文件大小（字节）
 	Size int64 `json:"size"`
 	// 创建人（用户 UID）
-	CreatorName string `json:"creatorName"`
-	// 创建时间（Unix 毫秒时间戳）
-	Created *datetime.Local `json:"created"`
-	// 最后更新时间（Unix 毫秒时间戳）
-	Updated *datetime.Local `json:"updated"`
+	CreatorName string `json:"createdBy"`
+	// 更新人（用户 UID）
+	EditedBy string `json:"editedBy"`
+	// 创建时间
+	Created *datetime.Local `json:"createdDate"`
+	// 最后更新时间
+	Updated *datetime.Local `json:"editedDate"`
 	// 资产下载链接
 	Link string `json:"link"`
 	// 校验值（md5 / sha1 / sha256 / sha512），由上传时计算并存储
