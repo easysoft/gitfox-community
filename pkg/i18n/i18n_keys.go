@@ -53,7 +53,7 @@ const (
 	ArtifactMoveSiblingConflict             I18nKey = "artifact.move_sibling_conflict"                // 目标位置已存在同级同名实体.
 	ArtifactMoveSourceDeleted               I18nKey = "artifact.move_source_deleted"                  // 源实体已软删除或不存在.
 	ArtifactMoveSuccess                     I18nKey = "artifact.move_success"                         // 移动成功.
-	ArtifactMoveTargetGroupRequired         I18nKey = "artifact.move_target_group_required"           // 移动操作必须指定目标 targetGroupID.
+	ArtifactMoveTargetGroupRequired         I18nKey = "artifact.move_target_group_required"           // 移动操作必须指定 targetGroupID;仅 generic group 可传 0 表示根目录,package/asset 必须指定有效分组.
 	ArtifactMoveTargetInvalid               I18nKey = "artifact.move_target_invalid"                  // 目标位置无效(制品库或目标组不存在).
 	ArtifactPackageDeleteError              I18nKey = "artifact.package_delete_error"                 // 删除制品包失败.
 	ArtifactPackageListError                I18nKey = "artifact.package_list_error"                   // 查询制品包列表失败.
