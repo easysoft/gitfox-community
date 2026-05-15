@@ -666,7 +666,7 @@ func (s *Service) listAssetPageInner(ctx context.Context, kind model.ArtifactEnt
 	var err error
 	switch kind {
 	case model.ArtifactEntityKindGroup:
-		assets, err = s.artStore.ListGroupAssets(ctx, id)
+		assets, err = s.listGroupAssetsForPage(ctx, id, req.More)
 	case model.ArtifactEntityKindVersion:
 		assets, err = s.artStore.ListAssets(ctx, id)
 	}
@@ -699,6 +699,26 @@ func (s *Service) listAssetPageInner(ctx context.Context, kind model.ArtifactEnt
 		end = int(total)
 	}
 	return results[start:end], total, nil
+}
+
+func (s *Service) listGroupAssetsForPage(ctx context.Context, groupID int64, recursive bool) ([]*model.ArtifactAssetsRes, error) {
+	assets, err := s.artStore.ListGroupAssets(ctx, groupID)
+	if err != nil || !recursive {
+		return assets, err
+	}
+
+	groups, err := s.artStore.Groups().ListDescendants(ctx, groupID)
+	if err != nil {
+		return nil, err
+	}
+	for _, group := range groups {
+		groupAssets, e := s.artStore.ListGroupAssets(ctx, group.ID)
+		if e != nil {
+			return nil, e
+		}
+		assets = append(assets, groupAssets...)
+	}
+	return assets, nil
 }
 
 func filterAssetNodeInfoList(list []*model.ArtifactAssetInfo, req *model.ListAssetReq) []*model.ArtifactAssetInfo {
