@@ -363,54 +363,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/artifacts/groups/{groupID}/archive": {
-            "get": {
-                "description": "将 generic 分组资产打包为 zip 下载",
-                "produces": [
-                    "application/zip"
-                ],
-                "tags": [
-                    "artifacts"
-                ],
-                "summary": "归档 generic 分组",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "分组ID",
-                        "name": "groupID",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "空间ID",
-                        "name": "spaceID",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "ZIP 文件流",
-                        "schema": {
-                            "type": "file"
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "服务器错误",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/artifacts/nodes": {
             "post": {
                 "description": "按 artifactID 查询制品树。支持两种定位方式：1）nodeID \u003e 0 时按节点定位当前层，不支持递归；2）否则按 format + path 查询，path 可传 /** 或 /xxx/** 递归返回目录树。level 支持 format/group/package/version/asset，表示最大可见层级。",

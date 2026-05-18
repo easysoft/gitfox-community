@@ -3559,38 +3559,6 @@ paths:
       summary: 创建分组
       tags:
       - artifacts
-  /artifacts/groups/{groupID}/archive:
-    get:
-      description: 将 generic 分组资产打包为 zip 下载
-      parameters:
-      - description: 分组ID
-        in: path
-        name: groupID
-        required: true
-        type: integer
-      - description: 空间ID
-        in: query
-        name: spaceID
-        required: true
-        type: integer
-      produces:
-      - application/zip
-      responses:
-        "200":
-          description: ZIP 文件流
-          schema:
-            type: file
-        "400":
-          description: 参数错误
-          schema:
-            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
-        "500":
-          description: 服务器错误
-          schema:
-            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
-      summary: 归档 generic 分组
-      tags:
-      - artifacts
   /artifacts/nodes:
     post:
       consumes:
