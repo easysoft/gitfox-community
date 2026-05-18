@@ -10,7 +10,6 @@ import (
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/middleware"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/authorizer"
 	ctnHandler "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/handler"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/auth/authn"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
@@ -19,7 +18,7 @@ import (
 )
 
 // NewRouter 创建路由实例并注册所有业务模块的路由
-func NewRouter(mode string, logger *logger.SugaredMateLogger, controller *Controller, artAuthz authorizer.Authorizer, containerHandler *ctnHandler.ContainerHandler, cfg *config.Config) *gin.Engine {
+func NewRouter(mode string, logger *logger.SugaredMateLogger, controller *Controller, containerHandler *ctnHandler.ContainerHandler, cfg *config.Config) *gin.Engine {
 
 	// 根据 mode 设置 Gin 运行模式
 	switch mode {
@@ -66,7 +65,7 @@ func NewRouter(mode string, logger *logger.SugaredMateLogger, controller *Contro
 	registerRunnerRoutes(authGroup, controller)             // Runner 管理相关路由
 	registerUserRoutes(authGroup, controller)               // 用户相关路由
 	registerWebhookRoutes(authGroup, controller)            // Webhook 相关路由
-	registerArtifactRoutes(authGroup, controller, artAuthz) // 制品库相关路由
+	registerArtifactRoutes(authGroup, controller)           // 制品库相关路由
 
 	// 创建需要 Basic 认证的路由组（用于 Git 操作）
 	basicAuthGroup := r.Group("")

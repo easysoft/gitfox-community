@@ -22,7 +22,6 @@ import (
 	user3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/user"
 	webhook2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/webhook"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/router"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/authorizer"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/handler"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/canceler"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/manager"
@@ -75,7 +74,6 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/livelog"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/lock"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pubsub"
-	artifact2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/rbac/artifact"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/ssh"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/storage"
 	"github.com/drone/runner-go/poller"
@@ -234,15 +232,9 @@ func NewApp(mode string) (*App, func(), error) {
 	}
 	artifactStore := artifact.NewStore(db)
 	userStore := user.NewUserStore(db)
-	artifactManager, err := artifact2.ProvideArtifactPermManager(db)
-	if err != nil {
-		cleanup2()
-		cleanup()
-		return nil, nil, err
-	}
 	jobScheduler := provider.ProvideArtifactJobScheduler(jobsScheduler)
 	artifactConfig := provider.ProvideArtifactConfig(config)
-	artifactService, err := artifact3.NewService(db, artifactStore, spaceStore, store, userStore, artifactManager, storageDriver, jobScheduler, artifactConfig, urlProvider)
+	artifactService, err := artifact3.NewService(db, artifactStore, spaceStore, store, userStore, storageDriver, jobScheduler, artifactConfig, urlProvider)
 	if err != nil {
 		cleanup2()
 		cleanup()
@@ -334,7 +326,6 @@ func NewApp(mode string) (*App, func(), error) {
 		return nil, nil, err
 	}
 	poller := provider.ProvideExecutionPoller(runnerRunner, client)
-	artifactAuthorizer := authorizer.New(artifactManager)
 	containerController := provider.ProvideContainerController(artifactStore, artifactService, urlProvider)
 	containerHandler := provider.ProvideContainerHandler(containerController, artifactService, artifactStore, spaceStore)
 	app := &App{
@@ -365,7 +356,6 @@ func NewApp(mode string) (*App, func(), error) {
 		RepoImporterSvc:    repository,
 		TokenStore:         tokenInterface,
 		ArtifactService:    artifactService,
-		ArtifactAuthorizer: artifactAuthorizer,
 		ContainerHandler:   containerHandler,
 		GitService:         gitService,
 	}
@@ -405,7 +395,6 @@ type App struct {
 	RepoImporterSvc    *importer.Repository
 	TokenStore         token.Interface
 	ArtifactService    artifact3.Interface
-	ArtifactAuthorizer authorizer.Authorizer
 	ContainerHandler   *handler.ContainerHandler
 	GitService         git.Interface
 }

@@ -88,7 +88,7 @@ func RunServerWithContext(ctx context.Context, mode string, enableCI bool, onRea
 	addr := fmt.Sprintf("%s:%d", app.SystemConfig.Server.Host, app.SystemConfig.Server.Port)
 	srv := &http.Server{
 		Addr:    addr,
-		Handler: router.NewRouter(mode, app.APILog.SugaredMateLogger, app.Controller, app.ArtifactAuthorizer, app.ContainerHandler, app.SystemConfig),
+		Handler: router.NewRouter(mode, app.APILog.SugaredMateLogger, app.Controller, app.ContainerHandler, app.SystemConfig),
 	}
 
 	// 创建错误通道用于捕获服务器启动错误
