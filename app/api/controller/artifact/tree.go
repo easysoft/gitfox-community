@@ -1,7 +1,6 @@
 package artifact
 
 import (
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
 	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
@@ -50,20 +49,20 @@ func (c *Controller) ListTree(ctx *gin.Context) {
 // @Failure 400 {object} resp.ObjectResponse "参数错误"
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
 // @Router /artifacts/nodes/{nodeID}/children [get]
-func (c *Controller) ListTreeNodes(ctx *gin.Context) {
-	parentID, err := req.PathParamAsPositiveInt64(ctx, "nodeID")
-	if err != nil {
-		err = errors.WithI18nKey(err, i18n.ArtifactPathParamError)
-		resp.BadRequest(ctx, err)
-		return
-	}
-	nodes, err := c.artSvc.ListTreeNodes(ctx, parentID)
-	if err != nil {
-		resp.InternalError(ctx, err)
-		return
-	}
-	resp.OK(ctx, i18n.ArtifactListSuccess, nodes)
-}
+// func (c *Controller) ListTreeNodes(ctx *gin.Context) {
+// 	parentID, err := req.PathParamAsPositiveInt64(ctx, "nodeID")
+// 	if err != nil {
+// 		err = errors.WithI18nKey(err, i18n.ArtifactPathParamError)
+// 		resp.BadRequest(ctx, err)
+// 		return
+// 	}
+// 	nodes, err := c.artSvc.ListTreeNodes(ctx, parentID)
+// 	if err != nil {
+// 		resp.InternalError(ctx, err)
+// 		return
+// 	}
+// 	resp.OK(ctx, i18n.ArtifactListSuccess, nodes)
+// }
 
 // @Summary 重建制品树
 // @Description 按 format 重建制品树节点。format 必传，支持 generic/raw/maven/container/helm/pypi/npm，或 all 表示全量刷新。

@@ -112,3 +112,12 @@ type AssetViewOption struct {
 func (opt AssetViewOption) Apply(db *gorm.DB) *gorm.DB {
 	return db.Where("ops_artifact_assets.artifactID = ?", opt.ArtifactID)
 }
+
+// BlobAssetsOption 按 blobID 查询 assets。
+type BlobAssetsOption struct {
+	BlobID int64
+}
+
+func (opt BlobAssetsOption) Apply(db *gorm.DB) *gorm.DB {
+	return db.Where("blobID = ?", opt.BlobID)
+}

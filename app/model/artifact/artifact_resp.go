@@ -34,10 +34,10 @@ type ArtifactVersionFilter struct {
 }
 
 type ArtifactTreeFilter struct {
-	NodeID int64          `json:"nodeID"`
-	Path   string         `json:"path"`
-	Format ArtifactFormat `json:"format"`
-	Level  string         `json:"level"`
+	EntityID int64          `json:"entityID"`
+	Path     string         `json:"path"`
+	Format   ArtifactFormat `json:"format"`
+	Level    string         `json:"level"`
 }
 
 // ==================== 响应模型 ====================

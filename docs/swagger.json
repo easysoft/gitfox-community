@@ -145,102 +145,6 @@
                 }
             }
         },
-        "/artifacts/assets/{assetID}/history": {
-            "get": {
-                "description": "获取指定制品文件的历史 blob 列表",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "artifacts"
-                ],
-                "summary": "查询文件历史",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "文件ID",
-                        "name": "assetID",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "成功",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "服务器错误",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/artifacts/capacity/all": {
-            "get": {
-                "description": "返回非容器格式制品容量统计",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "artifacts"
-                ],
-                "summary": "容量统计",
-                "responses": {
-                    "200": {
-                        "description": "成功",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "服务器错误",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/artifacts/capacity/container": {
-            "get": {
-                "description": "返回 container 格式制品容量统计",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "artifacts"
-                ],
-                "summary": "容器容量统计",
-                "responses": {
-                    "200": {
-                        "description": "成功",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "服务器错误",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/artifacts/entities": {
             "delete": {
                 "description": "按 entityIDs 批量软删除 asset/version/package/group",
@@ -407,213 +311,6 @@
                 }
             }
         },
-        "/artifacts/entities/{entityID}/permissions": {
-            "get": {
-                "description": "获取指定实体节点的权限配置（含继承信息）",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "artifacts"
-                ],
-                "summary": "获取节点级权限",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "空间ID",
-                        "name": "spaceID",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "实体ID（格式: kind.id，如 package.123）",
-                        "name": "entityID",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "成功",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "服务器错误",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "description": "设置指定实体节点的权限（私有/公开 + 用户角色规则）",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "artifacts"
-                ],
-                "summary": "设置节点级权限",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "空间ID",
-                        "name": "spaceID",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "实体ID（格式: kind.id，如 package.123）",
-                        "name": "entityID",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "权限配置",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.PermissionRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "成功",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "服务器错误",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/artifacts/formats": {
-            "post": {
-                "description": "列出指定作用域下的已用格式。artifactID \u003e 0 时优先按指定视图查询，否则按默认 view 逻辑查询",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "artifacts"
-                ],
-                "summary": "查询格式列表",
-                "parameters": [
-                    {
-                        "description": "查询范围",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.SpaceRepoReq"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "成功",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "服务器错误",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/artifacts/garbage/container": {
-            "get": {
-                "description": "创建 container 制品垃圾回收后台任务",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "artifacts"
-                ],
-                "summary": "触发容器垃圾回收",
-                "responses": {
-                    "200": {
-                        "description": "成功",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "服务器错误",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/artifacts/garbage/soft-remove": {
-            "get": {
-                "description": "创建已软删制品垃圾回收后台任务",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "artifacts"
-                ],
-                "summary": "触发软删垃圾回收",
-                "responses": {
-                    "200": {
-                        "description": "成功",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "服务器错误",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/artifacts/groups": {
             "post": {
                 "description": "创建 group 节点。artifactID 必传且必须大于 0。group 的 format 自动从 artifactID 对应视图中反查，前端不需要传 format。",
@@ -708,99 +405,6 @@
                 }
             }
         },
-        "/artifacts/groups/{groupID}/assets": {
-            "get": {
-                "description": "列出指定分组的制品文件列表",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "artifacts"
-                ],
-                "summary": "查询分组文件列表",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "分组ID",
-                        "name": "groupID",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "成功",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "服务器错误",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/artifacts/members": {
-            "get": {
-                "description": "获取指定空间/仓库的制品库成员列表。",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "artifacts"
-                ],
-                "summary": "获取空间成员列表",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "空间ID（可选，不传或传 0 表示全局）",
-                        "name": "spaceID",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "仓库ID（可选）",
-                        "name": "repoID",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "成功",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "服务器错误",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/artifacts/nodes": {
             "post": {
                 "description": "按 artifactID 查询制品树。支持两种定位方式：1）nodeID \u003e 0 时按节点定位当前层，不支持递归；2）否则按 format + path 查询，path 可传 /** 或 /xxx/** 递归返回目录树。level 支持 format/group/package/version/asset，表示最大可见层级。",
@@ -834,239 +438,6 @@
                     },
                     "400": {
                         "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "服务器错误",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/artifacts/nodes/{nodeID}/children": {
-            "get": {
-                "description": "列出树节点的子节点",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "artifacts"
-                ],
-                "summary": "查询树节点列表",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "节点ID",
-                        "name": "nodeID",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "成功",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "服务器错误",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/artifacts/packages": {
-            "post": {
-                "description": "列出指定作用域下的制品包。artifactID \u003e 0 时优先按指定视图查询，否则按默认 view 逻辑查询",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "artifacts"
-                ],
-                "summary": "查询制品包列表",
-                "parameters": [
-                    {
-                        "description": "查询范围",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.SpaceRepoReq"
-                        }
-                    },
-                    {
-                        "type": "string",
-                        "description": "制品格式",
-                        "name": "format",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "查询关键字",
-                        "name": "query",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "成功",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "服务器错误",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/artifacts/permissions": {
-            "get": {
-                "description": "获取指定空间/仓库的制品库权限配置。",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "artifacts"
-                ],
-                "summary": "获取空间级权限",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "空间ID（可选，不传或传 0 表示全局权限）",
-                        "name": "spaceID",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "仓库ID（可选）",
-                        "name": "repoID",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "成功",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "服务器错误",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "description": "设置指定空间/仓库的制品库权限。spaceID 和 repoID 均为可选：",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "artifacts"
-                ],
-                "summary": "设置空间级权限",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "空间ID（可选，不传或传 0 表示全局权限）",
-                        "name": "spaceID",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "仓库ID（可选）",
-                        "name": "repoID",
-                        "in": "query"
-                    },
-                    {
-                        "description": "权限配置",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.PermissionRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "成功",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "服务器错误",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/artifacts/statistic": {
-            "get": {
-                "description": "返回制品资产汇总统计",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "artifacts"
-                ],
-                "summary": "制品汇总统计",
-                "responses": {
-                    "200": {
-                        "description": "成功",
                         "schema": {
                             "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
                         }
@@ -1153,95 +524,25 @@
                         "name": "artifactID",
                         "in": "formData",
                         "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "成功",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
                     },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "服务器错误",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/artifacts/versions/list": {
-            "post": {
-                "description": "列出指定制品包的版本列表。artifactID \u003e 0 时优先按指定视图查询，否则按默认 view 逻辑查询",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "artifacts"
-                ],
-                "summary": "查询版本列表",
-                "parameters": [
                     {
-                        "description": "查询条件",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.ArtifactVersionListReq"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "成功",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
+                        "type": "string",
+                        "description": "文件名（覆盖 asset.path）",
+                        "name": "name",
+                        "in": "formData",
+                        "required": true
                     },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "服务器错误",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/artifacts/versions/{versionID}/assets": {
-            "get": {
-                "description": "列出指定版本的制品文件列表",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "artifacts"
-                ],
-                "summary": "查询版本文件列表",
-                "parameters": [
                     {
-                        "type": "integer",
-                        "description": "版本ID",
-                        "name": "versionID",
-                        "in": "path",
+                        "type": "string",
+                        "description": "raw 包名（raw 上传必传）",
+                        "name": "packageName",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "制品文件",
+                        "name": "file",
+                        "in": "formData",
                         "required": true
                     }
                 ],
@@ -11753,32 +11054,6 @@
                 "CIStatusDeclined"
             ]
         },
-        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.CasbinRole": {
-            "type": "string",
-            "enum": [
-                "artifact_reader",
-                "artifact_writer",
-                "artifact_admin"
-            ],
-            "x-enum-varnames": [
-                "CasbinArtifactRoleReader",
-                "CasbinArtifactRoleWriter",
-                "CasbinArtifactRoleAdmin"
-            ]
-        },
-        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.CasbinScope": {
-            "type": "string",
-            "enum": [
-                ".",
-                "*",
-                "**"
-            ],
-            "x-enum-varnames": [
-                "CasbinScopeSingle",
-                "CasbinScopeSub",
-                "CasbinScopeRecursive"
-            ]
-        },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ContentEncodingType": {
             "type": "string",
             "enum": [
@@ -12268,33 +11543,16 @@
                 "artifactID": {
                     "type": "integer"
                 },
+                "entityID": {
+                    "type": "integer"
+                },
                 "format": {
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.ArtifactFormat"
                 },
                 "level": {
                     "type": "string"
                 },
-                "nodeID": {
-                    "type": "integer"
-                },
                 "path": {
-                    "type": "string"
-                },
-                "repoID": {
-                    "type": "integer"
-                },
-                "spaceID": {
-                    "type": "integer"
-                }
-            }
-        },
-        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.ArtifactVersionListReq": {
-            "type": "object",
-            "properties": {
-                "artifactID": {
-                    "type": "integer"
-                },
-                "packageName": {
                     "type": "string"
                 },
                 "repoID": {
@@ -12368,7 +11626,7 @@
                     "type": "string"
                 },
                 "entityID": {
-                    "description": "group.{id} 或 version.{id}",
+                    "description": "group.{id} / version.{id} / package.{id} / asset.{id}",
                     "type": "string"
                 },
                 "more": {
@@ -12417,49 +11675,6 @@
                 "targetGroupID": {
                     "description": "目标 group ID（必填；generic group 可传 0 表示根目录）",
                     "type": "integer"
-                }
-            }
-        },
-        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.PermRule": {
-            "type": "object",
-            "properties": {
-                "accounts": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "allowAccounts": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "denyAccounts": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "role": {
-                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.CasbinRole"
-                },
-                "scope": {
-                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.CasbinScope"
-                }
-            }
-        },
-        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.PermissionRequest": {
-            "type": "object",
-            "properties": {
-                "private": {
-                    "type": "boolean"
-                },
-                "rules": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.PermRule"
-                    }
                 }
             }
         },
@@ -12513,20 +11728,6 @@
                     "items": {
                         "type": "string"
                     }
-                }
-            }
-        },
-        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.SpaceRepoReq": {
-            "type": "object",
-            "properties": {
-                "artifactID": {
-                    "type": "integer"
-                },
-                "repoID": {
-                    "type": "integer"
-                },
-                "spaceID": {
-                    "type": "integer"
                 }
             }
         },

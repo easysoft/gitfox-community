@@ -100,8 +100,9 @@ type SpaceRepoReq struct {
 // 上传必须通过 artifactID 精确定位制品库视图，禁止再通过 space/repo 回落推导。
 // 注意：此处不在 tag 层使用 binding:required，以便在控制器里抛出更友好的多语言错误。
 type SpaceRepoFormReq struct {
-	ArtifactID int64  `form:"artifactID"`
-	Name       string `form:"name"`
+	ArtifactID  int64  `form:"artifactID"`
+	Name        string `form:"name"`
+	PackageName string `form:"packageName"`
 }
 
 func (r *SpaceRepoFormReq) Validate() error {
@@ -112,7 +113,7 @@ func (r *SpaceRepoFormReq) Validate() error {
 		)
 	}
 
-	// 文件名必填：generic 用它覆盖 asset.path。
+	// 文件名必填：generic/raw 用它覆盖 asset.path。
 	// 做 TrimSpace 后再判空，避免纯空白被当作有效值。
 	r.Name = strings.TrimSpace(r.Name)
 	if r.Name == "" {
@@ -122,6 +123,8 @@ func (r *SpaceRepoFormReq) Validate() error {
 		)
 	}
 
+	// packageName 是 raw 的包名字段，由 raw adapter 负责做格式级必填和正则校验。
+	r.PackageName = strings.TrimSpace(r.PackageName)
 	return nil
 }
 
@@ -261,9 +264,9 @@ type ArtifactTreeListReq struct {
 }
 
 // ListAssetReq 制品资产分页列表请求。
-// EntityID 只接受 "group.{id}" 或 "version.{id}"。
+// EntityID 接受 "group.{id}" / "version.{id}" / "package.{id}" / "asset.{id}"。
 type ListAssetReq struct {
-	EntityID  string `json:"entityID" binding:"required"` // group.{id} 或 version.{id}
+	EntityID  string `json:"entityID" binding:"required"` // group.{id} / version.{id} / package.{id} / asset.{id}
 	Page      int    `json:"page"`
 	PageSize  int    `json:"pageSize"`
 	Name      string `json:"name"`      // 按文件名模糊过滤

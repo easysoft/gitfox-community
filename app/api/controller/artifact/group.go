@@ -89,20 +89,20 @@ func (c *Controller) CreateGroup(ctx *gin.Context) {
 // @Failure 400 {object} resp.ObjectResponse "参数错误"
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
 // @Router /artifacts/groups/{groupID}/assets [get]
-func (c *Controller) ListGroupAssets(ctx *gin.Context) {
-	groupID, err := req.PathParamAsPositiveInt64(ctx, "groupID")
-	if err != nil {
-		err = errors.WithI18nKey(err, i18n.ArtifactPathParamError)
-		resp.BadRequest(ctx, err)
-		return
-	}
-	assets, err := c.artSvc.ListGroupAssets(ctx, groupID)
-	if err != nil {
-		resp.InternalError(ctx, err)
-		return
-	}
-	resp.OK(ctx, i18n.ArtifactListSuccess, assets)
-}
+// func (c *Controller) ListGroupAssets(ctx *gin.Context) {
+// 	groupID, err := req.PathParamAsPositiveInt64(ctx, "groupID")
+// 	if err != nil {
+// 		err = errors.WithI18nKey(err, i18n.ArtifactPathParamError)
+// 		resp.BadRequest(ctx, err)
+// 		return
+// 	}
+// 	assets, err := c.artSvc.ListGroupAssets(ctx, groupID)
+// 	if err != nil {
+// 		resp.InternalError(ctx, err)
+// 		return
+// 	}
+// 	resp.OK(ctx, i18n.ArtifactListSuccess, assets)
+// }
 
 // @Summary 归档 generic 分组
 // @Description 将 generic 分组资产打包为 zip 下载

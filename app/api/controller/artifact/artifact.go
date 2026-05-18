@@ -17,6 +17,7 @@ package artifact
 import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
 	artifactModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
+	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
 	artifactSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/artifact"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
@@ -36,6 +37,38 @@ func NewController(artSvc artifactSvc.Interface) *Controller {
 // Service 暴露 artifact service，供路由中间件复用统一的视图解析逻辑。
 func (c *Controller) Service() artifactSvc.Interface {
 	return c.artSvc
+}
+
+// @Summary 创建制品库视图
+// @Description 创建一个制品库视图 (测试用)
+// @Tags artifacts
+// @Accept application/json
+// @Produce application/json
+// @Param body body model.CreateArtifactViewReq true "创建参数"
+// @Success 200 {object} resp.ObjectResponse "成功"
+// @Failure 400 {object} resp.ObjectResponse "参数错误"
+// @Failure 500 {object} resp.ObjectResponse "服务器错误"
+// @Router /artifacts/views [post]
+func (c *Controller) CreateView(ctx *gin.Context) {
+	var reqBody model.CreateArtifactViewReq
+	if err := ctx.ShouldBindBodyWithJSON(&reqBody); err != nil {
+		err = errors.WithI18nKey(err, i18n.ArtifactBodyParamError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
+	// 业务规则校验（format 枚举）
+	if err := reqBody.Validate(); err != nil {
+		resp.BadRequest(ctx, err)
+		return
+	}
+
+	view, err := c.artSvc.CreateView(ctx.Request.Context(), &reqBody)
+	if err != nil {
+		resp.InternalError(ctx, err)
+		return
+	}
+	resp.OK(ctx, i18n.ArtifactCreateViewSuccess, view)
 }
 
 // @Summary 移动制品实体
