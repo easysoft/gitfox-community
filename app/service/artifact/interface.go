@@ -36,26 +36,11 @@ type Interface interface {
 
 	// ---- 制品查询 ----
 
-	// ListPackages 列出指定视图下的制品包，支持格式、关键字过滤。
-	ListPackages(ctx context.Context, artifactID int64, filter *model.ArtifactFilter) ([]*model.ArtifactListItem, error)
-
-	// ListVersions 列出制品包的所有版本。
-	ListVersions(ctx context.Context, artifactID int64, packageName, groupName string, format model.ArtifactFormat, opt model.SearchVersionOption) ([]*model.ArtifactVersion, error)
-
-	// ListAssets 列出指定版本下的所有制品资源文件。
-	ListAssets(ctx context.Context, versionID int64) ([]*model.ArtifactAssetsRes, error)
-
-	// ListGroupAssets 列出指定分组下直接挂载的资源文件（generic 格式）。
-	ListGroupAssets(ctx context.Context, groupID int64) ([]*model.ArtifactAssetsRes, error)
-
 	// ListAssetPage 按 entityID（group / version / package）分页查询。
 	ListAssetPage(ctx context.Context, req *model.ListAssetReq) (interface{}, int64, error)
 
 	// GetAsset 获取单个制品资源的详细信息。
 	GetAsset(ctx context.Context, assetID int64) (*model.ArtifactAssetInfo, error)
-
-	// GetBlobHistory 获取制品资源的 blob 历史记录。
-	GetBlobHistory(ctx context.Context, assetID int64) ([]*model.ArtifactBlobRes, error)
 
 	// ---- 上传/下载 ----
 
@@ -81,14 +66,8 @@ type Interface interface {
 
 	// ---- 制品树 ----
 
-	// ListFormats 列出指定视图下的格式根节点。
-	ListFormats(ctx context.Context, artifactID int64) ([]*model.ArtifactTreeNode, error)
-
 	// ListTree 按 path/format/level 聚合查询制品树，兼容参考项目的万能树接口语义。
 	ListTree(ctx context.Context, artifactID int64, filter *model.ArtifactTreeFilter) ([]*model.ArtifactTreeRes, error)
-
-	// ListTreeNodes 列出指定父节点下的子节点。
-	ListTreeNodes(ctx context.Context, parentID int64) ([]*model.ArtifactTreeNode, error)
 
 	// RefreshTree 全量重建制品树节点（groups → packages → versions）。
 	// format 必填：传入具体 format 时仅刷新该 format 下的节点；传入 ArtifactAllFormat ("all") 时全量刷新。
@@ -101,7 +80,7 @@ type Interface interface {
 
 	// ---- 归档下载 ----
 
-	// PrepareArchiveGroup 准备分组归档下载所需的数据（鉴权 + 数据组装）。
+	// PrepareArchiveGroup 准备分组归档下载所需的数据。
 	PrepareArchiveGroup(ctx context.Context, session *authModel.Session, spaceID, repoID, groupID int64) (*ArchiveGroup, error)
 
 	// ArchiveGroup 将已准备好的分组数据写入 zip 流。
@@ -146,23 +125,6 @@ type Interface interface {
 
 	// ListContainerImages 列出容器镜像的 tag 元数据。
 	ListContainerImages(ctx context.Context, view *adapter.ViewDescriptor, packageName, version string) (*container.TagMetadata, error)
-
-	// ---- 权限管理 ----
-
-	// SetEntityPermission 设置实体节点级权限（package/version/group 级别）。
-	SetEntityPermission(ctx context.Context, spaceID int64, entityId string, permReq *model.PermissionRequest) (interface{}, error)
-
-	// GetEntityPermissions 获取实体节点级权限配置（含继承信息）。
-	GetEntityPermissions(ctx context.Context, spaceID int64, entityId string) (*model.ArtifactEntityPermissions, error)
-
-	// SetSpacePermission 设置空间/仓库级权限。
-	SetSpacePermission(ctx context.Context, spaceID, repoID int64, permReq *model.PermissionRequest) (*model.ArtifactPermissions, error)
-
-	// GetSpacePermissions 获取空间/仓库级权限配置。
-	GetSpacePermissions(ctx context.Context, spaceID, repoID int64) (*model.ArtifactPermissions, error)
-
-	// GetSpaceMembers 获取空间/仓库级的制品库成员列表。
-	GetSpaceMembers(ctx context.Context, spaceID, repoID int64) ([]*model.CasbinSubject, error)
 
 	// ---- 移动 & 重命名 ----
 

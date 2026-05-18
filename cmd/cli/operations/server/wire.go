@@ -9,7 +9,6 @@ import (
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/githook"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/router"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/authorizer"
 	ctnHandler "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/handler"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/triggerer"
 	artifactSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/artifact"
@@ -60,7 +59,6 @@ type App struct {
 	RepoImporterSvc    *importerSvc.Repository
 	TokenStore         tokenStore.Interface
 	ArtifactService    artifactSvc.Interface
-	ArtifactAuthorizer authorizer.Authorizer
 	ContainerHandler   *ctnHandler.ContainerHandler
 	GitService         gitPkg.Interface
 }

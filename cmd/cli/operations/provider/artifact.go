@@ -4,7 +4,6 @@ import (
 	"github.com/google/wire"
 
 	artifactController "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/artifact"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/authorizer"
 	ctnCtrl "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/controller/container"
 	ctnHandler "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/handler"
 	artifactSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/artifact"
@@ -12,7 +11,6 @@ import (
 	artifactStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/artifact"
 	spaceStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/space"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
-	artifactRbac "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/rbac/artifact"
 	urlPkg "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/url"
 )
 
@@ -22,9 +20,6 @@ var ArtifactWireSet = wire.NewSet(
 	artifactSvc.NewService,
 	wire.Bind(new(artifactStore.Interface), new(*artifactStore.Store)),
 	artifactStore.NewStore,
-	artifactRbac.WireSet,
-	wire.Bind(new(authorizer.Authorizer), new(*authorizer.ArtifactAuthorizer)),
-	authorizer.New,
 	ProvideArtifactConfig,
 	ProvideArtifactJobScheduler,
 	ProvideContainerController,

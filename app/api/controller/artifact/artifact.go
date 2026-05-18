@@ -3,15 +3,11 @@
 // 控制器按资源域拆成多个文件，便于阅读与维护：
 //
 //	artifact.go    - Controller 基座、构造、Service()
-//	package.go     - ListPackages / ListFormats / ListNodeInfo
-//	version.go     - ListVersions / CreateView
-//	asset.go       - ListAssets / GetAsset / GetBlobHistory / DownloadAsset
-//	group.go       - CreateGroup / ListGroupAssets / ArchiveGroup
-//	tree.go        - ListTree / ListTreeNodes / RefreshTree
+//	asset.go       - GetAsset / DownloadAsset / ListAssetPage
+//	group.go       - CreateGroup  / ArchiveGroup
+//	tree.go        - ListTree / RefreshTree
 //	upload.go      - Upload
-//	statistic.go   - StatisticCapacity / StatisticContainerCapacity / StatisticSummary
-//	admin.go       - SoftRemoveByEntity / GarbageCollectContainer / GarbageCollectSoftRemove
-//	permission.go  - 权限相关 handler（原文件保留）
+//	admin.go       - SoftRemoveByEntity
 package artifact
 
 import (

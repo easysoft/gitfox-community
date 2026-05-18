@@ -39,31 +39,6 @@ func (c *Controller) ListTree(ctx *gin.Context) {
 	resp.OK(ctx, i18n.ArtifactListSuccess, list)
 }
 
-// @Summary 查询树节点列表
-// @Description 列出树节点的子节点
-// @Tags artifacts
-// @Accept application/json
-// @Produce application/json
-// @Param nodeID path int true "节点ID"
-// @Success 200 {object} resp.ObjectResponse "成功"
-// @Failure 400 {object} resp.ObjectResponse "参数错误"
-// @Failure 500 {object} resp.ObjectResponse "服务器错误"
-// @Router /artifacts/nodes/{nodeID}/children [get]
-// func (c *Controller) ListTreeNodes(ctx *gin.Context) {
-// 	parentID, err := req.PathParamAsPositiveInt64(ctx, "nodeID")
-// 	if err != nil {
-// 		err = errors.WithI18nKey(err, i18n.ArtifactPathParamError)
-// 		resp.BadRequest(ctx, err)
-// 		return
-// 	}
-// 	nodes, err := c.artSvc.ListTreeNodes(ctx, parentID)
-// 	if err != nil {
-// 		resp.InternalError(ctx, err)
-// 		return
-// 	}
-// 	resp.OK(ctx, i18n.ArtifactListSuccess, nodes)
-// }
-
 // @Summary 重建制品树
 // @Description 按 format 重建制品树节点。format 必传，支持 generic/raw/maven/container/helm/pypi/npm，或 all 表示全量刷新。
 // @Tags artifacts

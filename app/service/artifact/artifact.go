@@ -26,14 +26,12 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/adapter/raw"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/entity"
 	artModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/model"
-	enum "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
 	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
 	authModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
 	artifactStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/artifact"
 	pkgErrors "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/rbac"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/storage"
 	storagedriver "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/storage/driver"
 	urlProviderPkg "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/url"
@@ -42,7 +40,6 @@ import (
 	spaceStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/space"
 	userStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/user"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
-	artifactperm "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/rbac/artifact"
 	"github.com/opencontainers/go-digest"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
@@ -70,7 +67,6 @@ type Service struct {
 	spaceStore  spaceStore.Interface
 	repoStore   repoStore.Interface
 	userStore   *userStore.Store
-	perm        *artifactperm.Manager
 	fileStore   storage.ContentStorage
 	scheduler   JobScheduler
 	config      *config.ArtifactConfig // 制品库配置（回收站保留期、GC 间隔等）
@@ -85,7 +81,6 @@ func NewService(
 	spaceStore spaceStore.Interface,
 	repoStore repoStore.Interface,
 	uStore *userStore.Store,
-	perm *artifactperm.Manager,
 	d storagedriver.StorageDriver,
 	scheduler JobScheduler,
 	cfg *config.ArtifactConfig,
@@ -104,7 +99,6 @@ func NewService(
 		spaceStore:  spaceStore,
 		repoStore:   repoStore,
 		userStore:   uStore,
-		perm:        perm,
 		fileStore:   fs,
 		scheduler:   scheduler,
 		config:      cfg,
@@ -455,73 +449,6 @@ func (s *Service) lookupContainerGroupName(ctx context.Context, artifactID int64
 	return groups[0].Name, nil
 }
 
-func (s *Service) ListPackages(ctx context.Context, artifactID int64, filter *model.ArtifactFilter) ([]*model.ArtifactListItem, error) {
-	res, err := s.artStore.FindPackages(ctx, artifactID, filter)
-	if err != nil {
-		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactPackageListError)
-	}
-	return res, nil
-}
-
-func (s *Service) ListVersions(ctx context.Context, artifactID int64, packageName, groupName string, format model.ArtifactFormat, opt model.SearchVersionOption) ([]*model.ArtifactVersion, error) {
-	dbPkg, err := s.artStore.Packages().GetByName(ctx, packageName, groupName, artifactID, format)
-	if err != nil {
-		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactPackageQueryError)
-	}
-	opt.PackageID = dbPkg.ID
-	return s.artStore.Versions().Find(ctx, opt)
-}
-
-func (s *Service) ListAssets(ctx context.Context, VersionID int64) ([]*model.ArtifactAssetsRes, error) {
-	assets, err := s.artStore.ListAssets(ctx, VersionID)
-	if err != nil {
-		return nil, err
-	}
-	// 复用 /artifacts/nodeInfo 的逐资产解析链路，
-	// 将 name / packageName / group / version / os / arch / link / entityID 等字段回填到列表响应，
-	// 与 /artifacts/groups/{groupID}/assets 保持同一套语义与同一份实现。
-	for _, a := range assets {
-		info, infoErr := s.getAssetNodeInfo(ctx, a.Id)
-		if infoErr != nil {
-			return nil, infoErr
-		}
-		applyNodeInfoToAsset(a, info)
-	}
-	return assets, nil
-}
-
-func (s *Service) ListGroupAssets(ctx context.Context, groupID int64) ([]*model.ArtifactAssetsRes, error) {
-	assets, err := s.artStore.ListGroupAssets(ctx, groupID)
-	if err != nil {
-		return nil, err
-	}
-	// 复用 /artifacts/nodeInfo 的逐资产解析链路，避免在此处再实现一遍包名 / 版本 / OS / Arch / link 等回填。
-	for _, a := range assets {
-		info, infoErr := s.getAssetNodeInfo(ctx, a.Id)
-		if infoErr != nil {
-			return nil, infoErr
-		}
-		applyNodeInfoToAsset(a, info)
-	}
-
-	// generic 分组下统一以 group 路径 + asset.Path 拼出下载链接
-	group, err := s.artStore.Groups().GetEndpointById(ctx, groupID)
-	if err != nil {
-		// 分组本身不存在视为软失败：保留现有 assets，避免影响列表返回
-		return assets, nil
-	}
-	if group.Format == model.ArtifactGenericFormat {
-		view, err := s.ParseSpaceView(ctx, &model.SpaceRepoReq{ArtifactID: group.ArtifactID})
-		if err != nil {
-			return assets, nil
-		}
-		if err := addLinkForGeneric(assets, nodeInfoSpaceName(view), group.GroupPath(), string(group.Format)); err != nil {
-			return nil, err
-		}
-	}
-	return assets, nil
-}
-
 // ListAssetPage 按 entityID（group.{id} / version.{id} / package.{id} / asset.{id}）分页查询。
 //   - group.{id}：返回该 group 下的 asset 列表（generic 场景）
 //   - version.{id}：返回该 version 下的 asset 列表（raw 场景）
@@ -714,11 +641,6 @@ func (s *Service) listGroupAssetsForPage(ctx context.Context, groupID int64, rec
 // GetAsset 返回单个资产的 nodeInfo 详情。
 func (s *Service) GetAsset(ctx context.Context, assetID int64) (*model.ArtifactAssetInfo, error) {
 	return s.getAssetNodeInfo(ctx, assetID)
-}
-
-// GetBlobHistory 返回资产关联 blob 的历史版本。
-func (s *Service) GetBlobHistory(ctx context.Context, assetID int64) ([]*model.ArtifactBlobRes, error) {
-	return s.artStore.Blobs().History(ctx, assetID)
 }
 
 // getVersionNodeInfo 查询 version 节点详情，并按 format 组装下载或 pull 链接。
@@ -1265,14 +1187,6 @@ func (s *Service) buildFormatForest(ctx context.Context, roots []*model.Artifact
 		data = append(data, item)
 	}
 	return data, nil
-}
-
-func (s *Service) ListFormats(ctx context.Context, artifactID int64) ([]*model.ArtifactTreeNode, error) {
-	return s.artStore.Nodes().ListFormats(ctx, artifactID)
-}
-
-func (s *Service) ListTreeNodes(ctx context.Context, parentID int64) ([]*model.ArtifactTreeNode, error) {
-	return s.artStore.Nodes().ListByParentId(ctx, parentID)
 }
 
 // listTreeCurrentLevel 处理“非递归模式”的当前层查询。
@@ -1993,6 +1907,32 @@ func (s *Service) deleteTreeNodeByTarget(ctx context.Context, artifactID int64, 
 	return s.artStore.Nodes().DeleteById(ctx, node.ID)
 }
 
+func (s *Service) ListContainerImages(ctx context.Context, view *adapter.ViewDescriptor, packageName, version string) (*container.TagMetadata, error) {
+	ver, err := s.artStore.GetVersion(ctx, view.ArtifactID, packageName, "", version, model.ArtifactContainerFormat)
+	if err != nil {
+		return nil, err
+	}
+	assets, err := s.artStore.Assets().Search(ctx,
+		model.SearchAssetOption{VersionID: ver.ID, Kind: model.AssetKindMain},
+		artifactStore.AssetExcludeDeletedOption{},
+	)
+	if err != nil {
+		return nil, err
+	}
+	if len(assets) == 0 {
+		return nil, pkgErrors.WithI18nKey(
+			errors.New("container tag asset not found"),
+			i18n.ArtifactContainerTagNotFound,
+		)
+	}
+	dgst, err := digest.Parse(assets[0].Path)
+	if err != nil {
+		return nil, err
+	}
+	reader := container.NewTagMetadataReader(s.artStore, view)
+	return reader.Parse(ctx, assets[0].ContentType, dgst)
+}
+
 type ArchiveGroup struct {
 	base      *archiveGroupItem
 	subGroups []*archiveGroupItem
@@ -2005,19 +1945,14 @@ func (a *ArchiveGroup) Name() string {
 type archiveGroupItem struct {
 	*model.ArtifactGroup
 	archivePath string
-	entity      *model.ArtifactEntity
 }
 
 func (s *Service) PrepareArchiveGroup(ctx context.Context, session *authModel.Session, spaceID, repoID, groupID int64) (*ArchiveGroup, error) {
+	_ = session
+	_ = spaceID
+	_ = repoID
 	root, err := s.artStore.Groups().GetById(ctx, groupID)
 	if err != nil {
-		return nil, err
-	}
-	rootEntity, err := entity.Parse(ctx, s.artStore, (&model.ArtifactTreeNodeId{Type: model.ArtifactTreeNodeTypeGroup, Pk: root.ID}).String())
-	if err != nil {
-		return nil, err
-	}
-	if err = s.authorizeArtifactAction(ctx, session, spaceID, repoID, rootEntity, enum.CasbinActionArtifactView); err != nil {
 		return nil, err
 	}
 
@@ -2025,63 +1960,20 @@ func (s *Service) PrepareArchiveGroup(ctx context.Context, session *authModel.Se
 	if err != nil {
 		return nil, err
 	}
-	rootGroup := &archiveGroupItem{ArtifactGroup: root, archivePath: root.Name, entity: rootEntity}
+	rootGroup := &archiveGroupItem{ArtifactGroup: root, archivePath: root.Name}
 	parentMap := map[int64]*archiveGroupItem{groupID: rootGroup}
 	archive := &ArchiveGroup{base: rootGroup}
-	denied := make(map[int64]bool)
 	for _, d := range descendants {
 		parent := parentMap[d.ParentID.Int64]
 		if parent == nil {
 			logger.GetLogger(ctx).Errorf("parent group %d does not exist in archive parent map", d.ParentID.Int64)
 			continue
 		}
-		entityNode := parent.entity.Join(&model.ArtifactEntity{Kind: model.ArtifactEntityKindGroup, Id: d.ID, Name: d.Name})
-		item := &archiveGroupItem{ArtifactGroup: d, archivePath: filepath.Join(parent.archivePath, d.Name), entity: entityNode}
+		item := &archiveGroupItem{ArtifactGroup: d, archivePath: filepath.Join(parent.archivePath, d.Name)}
 		parentMap[d.ID] = item
-		if denied[d.ParentID.Int64] {
-			denied[d.ID] = true
-			continue
-		}
-		if err = s.authorizeArtifactAction(ctx, session, spaceID, repoID, entityNode, enum.CasbinActionArtifactPull); err != nil {
-			denied[d.ID] = true
-			logger.GetLogger(ctx).Infof("group %d denied by artifact access control: %v", d.ID, err)
-			continue
-		}
 		archive.subGroups = append(archive.subGroups, item)
 	}
 	return archive, nil
-}
-
-func (s *Service) authorizeArtifactAction(ctx context.Context, session *authModel.Session, spaceID, repoID int64, e *model.ArtifactEntity, action enum.CasbinAction) error {
-	if session == nil || session.User == nil {
-		return pkgErrors.WithI18nKey(
-			errors.New("authentication required"),
-			i18n.ArtifactAuthRequired,
-		)
-	}
-
-	sub := rbac.NewUser(session.User.Account)
-	obj := rbac.NewObject(e.PolicyLocation())
-
-	// 三级作用域查找：repo → space → global
-	// 某一级有策略则覆盖（不回落），无策略则向上继承
-	if repoID > 0 {
-		repoScope := rbac.NewRepoSpace(spaceID, repoID)
-		if s.perm.HasPoliciesForScope(repoScope) {
-			_, _, err := s.perm.Enforce(ctx, sub, repoScope, obj, action)
-			return err
-		}
-	}
-	if spaceID > 0 {
-		spaceScope := rbac.NewSpace(spaceID)
-		if s.perm.HasPoliciesForScope(spaceScope) {
-			_, _, err := s.perm.Enforce(ctx, sub, spaceScope, obj, action)
-			return err
-		}
-	}
-	globalScope := rbac.NewSpace(0)
-	_, _, err := s.perm.Enforce(ctx, sub, globalScope, obj, action)
-	return err
 }
 
 func (s *Service) ArchiveGroup(ctx context.Context, archive *ArchiveGroup, output io.Writer) error {
@@ -2136,32 +2028,6 @@ func (z zipAssetFile) Mode() fs.FileMode  { return 0644 }
 func (z zipAssetFile) ModTime() time.Time { return z.info.ModTime() }
 func (z zipAssetFile) IsDir() bool        { return z.info.IsDir() }
 func (z zipAssetFile) Sys() any           { return nil }
-
-func (s *Service) ListContainerImages(ctx context.Context, view *adapter.ViewDescriptor, packageName, version string) (*container.TagMetadata, error) {
-	ver, err := s.artStore.GetVersion(ctx, view.ArtifactID, packageName, "", version, model.ArtifactContainerFormat)
-	if err != nil {
-		return nil, err
-	}
-	assets, err := s.artStore.Assets().Search(ctx,
-		model.SearchAssetOption{VersionID: ver.ID, Kind: model.AssetKindMain},
-		artifactStore.AssetExcludeDeletedOption{},
-	)
-	if err != nil {
-		return nil, err
-	}
-	if len(assets) == 0 {
-		return nil, pkgErrors.WithI18nKey(
-			errors.New("container tag asset not found"),
-			i18n.ArtifactContainerTagNotFound,
-		)
-	}
-	dgst, err := digest.Parse(assets[0].Path)
-	if err != nil {
-		return nil, err
-	}
-	reader := container.NewTagMetadataReader(s.artStore, view)
-	return reader.Parse(ctx, assets[0].ContentType, dgst)
-}
 
 // RefreshTree 全量重建制品树节点。
 // 遍历顺序：groups → packages(含 raw namespace 补建 group) → versions。
