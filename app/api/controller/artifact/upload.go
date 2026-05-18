@@ -18,6 +18,9 @@ import (
 // @Produce application/json
 // @Param format path string true "制品格式"
 // @Param artifactID formData int true "视图ID（必传，> 0）"
+// @Param name formData string true "文件名（覆盖 asset.path）"
+// @Param packageName formData string false "raw 包名（raw 上传必传）"
+// @Param file formData file true "制品文件"
 // @Success 200 {object} resp.ObjectResponse "成功"
 // @Failure 400 {object} resp.ObjectResponse "参数错误"
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"

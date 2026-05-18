@@ -2,9 +2,7 @@ package artifact
 
 import (
 	"fmt"
-	"net/http"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
 	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
@@ -89,20 +87,20 @@ func (c *Controller) CreateGroup(ctx *gin.Context) {
 // @Failure 400 {object} resp.ObjectResponse "参数错误"
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
 // @Router /artifacts/groups/{groupID}/assets [get]
-func (c *Controller) ListGroupAssets(ctx *gin.Context) {
-	groupID, err := req.PathParamAsPositiveInt64(ctx, "groupID")
-	if err != nil {
-		err = errors.WithI18nKey(err, i18n.ArtifactPathParamError)
-		resp.BadRequest(ctx, err)
-		return
-	}
-	assets, err := c.artSvc.ListGroupAssets(ctx, groupID)
-	if err != nil {
-		resp.InternalError(ctx, err)
-		return
-	}
-	resp.OK(ctx, i18n.ArtifactListSuccess, assets)
-}
+// func (c *Controller) ListGroupAssets(ctx *gin.Context) {
+// 	groupID, err := req.PathParamAsPositiveInt64(ctx, "groupID")
+// 	if err != nil {
+// 		err = errors.WithI18nKey(err, i18n.ArtifactPathParamError)
+// 		resp.BadRequest(ctx, err)
+// 		return
+// 	}
+// 	assets, err := c.artSvc.ListGroupAssets(ctx, groupID)
+// 	if err != nil {
+// 		resp.InternalError(ctx, err)
+// 		return
+// 	}
+// 	resp.OK(ctx, i18n.ArtifactListSuccess, assets)
+// }
 
 // @Summary 归档 generic 分组
 // @Description 将 generic 分组资产打包为 zip 下载
@@ -114,34 +112,34 @@ func (c *Controller) ListGroupAssets(ctx *gin.Context) {
 // @Failure 400 {object} resp.ObjectResponse "参数错误"
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
 // @Router /artifacts/groups/{groupID}/archive [get]
-func (c *Controller) ArchiveGroup(ctx *gin.Context) {
-	groupID, err := req.PathParamAsPositiveInt64(ctx, "groupID")
-	if err != nil {
-		err = errors.WithI18nKey(err, i18n.ArtifactPathParamError)
-		resp.BadRequest(ctx, err)
-		return
-	}
-	spaceID, err := req.QueryParamAsPositiveInt64OrError(ctx, "spaceID")
-	if err != nil {
-		err = errors.WithI18nKey(err, i18n.ArtifactQueryParamError)
-		resp.BadRequest(ctx, err)
-		return
-	}
-	session, _ := req.GetAuthSession(ctx)
-	var repoID int64
-	if rID, _, _ := req.QueryParamAsPositiveInt64(ctx, "repoID"); rID > 0 {
-		repoID = rID
-	}
-	archive, err := c.artSvc.PrepareArchiveGroup(ctx, session, spaceID, repoID, groupID)
-	if err != nil {
-		resp.InternalError(ctx, err)
-		return
-	}
-	ctx.Header("Content-Type", "application/zip")
-	ctx.Header("Content-Disposition", "attachment; filename="+archive.Name())
-	ctx.Status(http.StatusOK)
-	if err := c.artSvc.ArchiveGroup(ctx, archive, ctx.Writer); err != nil {
-		resp.InternalError(ctx, err)
-		return
-	}
-}
+// func (c *Controller) ArchiveGroup(ctx *gin.Context) {
+// 	groupID, err := req.PathParamAsPositiveInt64(ctx, "groupID")
+// 	if err != nil {
+// 		err = errors.WithI18nKey(err, i18n.ArtifactPathParamError)
+// 		resp.BadRequest(ctx, err)
+// 		return
+// 	}
+// 	spaceID, err := req.QueryParamAsPositiveInt64OrError(ctx, "spaceID")
+// 	if err != nil {
+// 		err = errors.WithI18nKey(err, i18n.ArtifactQueryParamError)
+// 		resp.BadRequest(ctx, err)
+// 		return
+// 	}
+// 	session, _ := req.GetAuthSession(ctx)
+// 	var repoID int64
+// 	if rID, _, _ := req.QueryParamAsPositiveInt64(ctx, "repoID"); rID > 0 {
+// 		repoID = rID
+// 	}
+// 	archive, err := c.artSvc.PrepareArchiveGroup(ctx, session, spaceID, repoID, groupID)
+// 	if err != nil {
+// 		resp.InternalError(ctx, err)
+// 		return
+// 	}
+// 	ctx.Header("Content-Type", "application/zip")
+// 	ctx.Header("Content-Disposition", "attachment; filename="+archive.Name())
+// 	ctx.Status(http.StatusOK)
+// 	if err := c.artSvc.ArchiveGroup(ctx, archive, ctx.Writer); err != nil {
+// 		resp.InternalError(ctx, err)
+// 		return
+// 	}
+// }

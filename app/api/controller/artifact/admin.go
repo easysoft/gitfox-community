@@ -48,14 +48,14 @@ func (c *Controller) SoftRemoveByEntity(ctx *gin.Context) {
 // @Success 200 {object} resp.ObjectResponse "成功"
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
 // @Router /artifacts/garbage/container [get]
-func (c *Controller) GarbageCollectContainer(ctx *gin.Context) {
-	data, err := c.artSvc.TriggerGarbageCollectContainer(ctx)
-	if err != nil {
-		resp.InternalError(ctx, err)
-		return
-	}
-	resp.OK(ctx, i18n.ArtifactGarbageCollectSuccess, data)
-}
+// func (c *Controller) GarbageCollectContainer(ctx *gin.Context) {
+// 	data, err := c.artSvc.TriggerGarbageCollectContainer(ctx)
+// 	if err != nil {
+// 		resp.InternalError(ctx, err)
+// 		return
+// 	}
+// 	resp.OK(ctx, i18n.ArtifactGarbageCollectSuccess, data)
+// }
 
 // @Summary 触发软删垃圾回收
 // @Description 创建已软删制品垃圾回收后台任务
@@ -64,11 +64,11 @@ func (c *Controller) GarbageCollectContainer(ctx *gin.Context) {
 // @Success 200 {object} resp.ObjectResponse "成功"
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
 // @Router /artifacts/garbage/soft-remove [get]
-func (c *Controller) GarbageCollectSoftRemove(ctx *gin.Context) {
-	data, err := c.artSvc.TriggerGarbageCollectSoftRemove(ctx)
-	if err != nil {
-		resp.InternalError(ctx, err)
-		return
-	}
-	resp.OK(ctx, i18n.ArtifactGarbageCollectSuccess, data)
-}
+// func (c *Controller) GarbageCollectSoftRemove(ctx *gin.Context) {
+// 	data, err := c.artSvc.TriggerGarbageCollectSoftRemove(ctx)
+// 	if err != nil {
+// 		resp.InternalError(ctx, err)
+// 		return
+// 	}
+// 	resp.OK(ctx, i18n.ArtifactGarbageCollectSuccess, data)
+// }

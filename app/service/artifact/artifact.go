@@ -522,10 +522,11 @@ func (s *Service) ListGroupAssets(ctx context.Context, groupID int64) ([]*model.
 	return assets, nil
 }
 
-// ListAssetPage 按 entityID（group.{id} / version.{id} / package.{id}）分页查询。
+// ListAssetPage 按 entityID（group.{id} / version.{id} / package.{id} / asset.{id}）分页查询。
 //   - group.{id}：返回该 group 下的 asset 列表（generic 场景）
 //   - version.{id}：返回该 version 下的 asset 列表（raw 场景）
 //   - package.{id}：返回该 package 下的 version 列表（docker/helm 场景）
+//   - asset.{id}：按 asset.id 精准定位单条资产（filter/sort/page 仍生效）
 //
 // 先全量查出再内存过滤 + 排序 + 分页。
 func (s *Service) ListAssetPage(ctx context.Context, req *model.ListAssetReq) (interface{}, int64, error) {
@@ -533,9 +534,12 @@ func (s *Service) ListAssetPage(ctx context.Context, req *model.ListAssetReq) (i
 	if err != nil {
 		return nil, 0, err
 	}
-	if kind != model.ArtifactEntityKindGroup && kind != model.ArtifactEntityKindVersion && kind != model.ArtifactEntityKindPackage {
+	if kind != model.ArtifactEntityKindGroup &&
+		kind != model.ArtifactEntityKindVersion &&
+		kind != model.ArtifactEntityKindPackage &&
+		kind != model.ArtifactEntityKindAsset {
 		return nil, 0, pkgErrors.WithI18nKey(
-			fmt.Errorf("entityID must be group.{id}, version.{id} or package.{id}, got %s", req.EntityID),
+			fmt.Errorf("entityID must be group.{id}, version.{id}, package.{id} or asset.{id}, got %s", req.EntityID),
 			i18n.ArtifactEntityIdInvalid,
 		)
 	}
@@ -551,7 +555,33 @@ func (s *Service) ListAssetPage(ctx context.Context, req *model.ListAssetReq) (i
 	if kind == model.ArtifactEntityKindPackage {
 		return s.listVersionPage(ctx, id, req, page, pageSize)
 	}
+	if kind == model.ArtifactEntityKindAsset {
+		return s.listAssetByIDPage(ctx, id, req, page, pageSize)
+	}
 	return s.listAssetPageInner(ctx, kind, id, req, page, pageSize)
+}
+
+// listAssetByIDPage 按 asset.{id} 精准查询单条资产，沿用同一过滤 / 排序 / 分页骨架。
+// asset 不存在或非 OK 状态时返回空列表，避免抛错破坏前端列表渲染。
+func (s *Service) listAssetByIDPage(ctx context.Context, assetID int64, req *model.ListAssetReq, page, pageSize int) (interface{}, int64, error) {
+	results := make([]*model.ArtifactAssetInfo, 0, 1)
+	if info, e := s.getAssetNodeInfo(ctx, assetID); e == nil && info != nil && info.Status == string(model.ArtifactStatusOK) {
+		results = append(results, info)
+	}
+
+	results = filterAssetNodeInfoList(results, req)
+	sortAssetNodeInfoList(results, req.Sort, req.Order)
+
+	total := int64(len(results))
+	start := (page - 1) * pageSize
+	if start >= int(total) {
+		return []*model.ArtifactAssetInfo{}, total, nil
+	}
+	end := start + pageSize
+	if end > int(total) {
+		end = int(total)
+	}
+	return results[start:end], total, nil
 }
 
 // listVersionPage 返回 package 下的 version 分页列表。
@@ -971,22 +1001,22 @@ func (s *Service) getStandaloneAssetNodeInfo(
 	return info, nil
 }
 
-func (s *Service) DownloadAsset(ctx context.Context, assetID int64) (io.ReadCloser, *model.ArtifactBlob, error) {
+func (s *Service) DownloadAsset(ctx context.Context, assetID int64) (io.ReadCloser, *model.ArtifactBlob, string, error) {
 	// 下载走 asset -> blob -> content store 三段定位，避免直接信任外部传入路径。
 	asset, err := s.artStore.Assets().GetById(ctx, assetID)
 	if err != nil {
-		return nil, nil, pkgErrors.WithI18nKey(err, i18n.ArtifactAssetQueryError)
+		return nil, nil, "", pkgErrors.WithI18nKey(err, i18n.ArtifactAssetQueryError)
 	}
 	blob, err := s.artStore.Blobs().GetById(ctx, asset.BlobID)
 	if err != nil {
-		return nil, nil, pkgErrors.WithI18nKey(err, i18n.ArtifactBlobQueryError)
+		return nil, nil, "", pkgErrors.WithI18nKey(err, i18n.ArtifactBlobQueryError)
 	}
 	blobPath := adapter.BlobPath(blob.Ref)
 	reader, err := s.fileStore.Open(ctx, blobPath)
 	if err != nil {
-		return nil, nil, pkgErrors.WithI18nKey(err, i18n.ArtifactDownloadOpenError)
+		return nil, nil, "", pkgErrors.WithI18nKey(err, i18n.ArtifactDownloadOpenError)
 	}
-	return reader, blob, nil
+	return reader, blob, asset.Path, nil
 }
 
 func (s *Service) Upload(ctx context.Context, view *adapter.ViewDescriptor, format model.ArtifactFormat, req *http.Request) ([]*adapter.SavedAsset, error) {
@@ -1112,12 +1142,12 @@ func (s *Service) ListTree(ctx context.Context, artifactID int64, filter *model.
 	}
 	path, recursive := normalizeTreePath(filter.Path)
 
-	// 1) nodeID 分支：精确定位单节点。
-	if filter.NodeID > 0 {
+	// 1) EntityID 分支：精确定位单节点。
+	if filter.EntityID > 0 {
 		if recursive {
-			return nil, pkgErrors.WithI18nKey(errors.New("recursive query is not supported when nodeID is provided"), i18n.ArtifactTreeNodeRecursiveConflict)
+			return nil, pkgErrors.WithI18nKey(errors.New("recursive query is not supported when EntityID is provided"), i18n.ArtifactTreeNodeRecursiveConflict)
 		}
-		currNode, err := s.artStore.Nodes().GetById(ctx, filter.NodeID)
+		currNode, err := s.artStore.Nodes().GetById(ctx, filter.EntityID)
 		if err != nil {
 			return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactTreeNodeListError)
 		}
@@ -1684,13 +1714,27 @@ func (s *Service) softRemoveEntity(ctx context.Context, eid string, res *model.A
 	}
 }
 
+// softRemoveAsset 软删制品资产。
+//
+// blob 引用保护逻辑：
+//   - 先软删 asset 本身（deleted=1）
+//   - 然后检查该 asset 关联的 blob 是否还被其他 active（deleted=0）asset 引用
+//   - 判断方式：按 blobID 查询 ops_artifact_assets 表中 deleted=0 的记录数
+//     （使用 BlobAssetsOption{BlobID} + AssetExcludeDeletedOption 组合查询）
+//   - 如果还有其他 active asset 引用同一 blob → 不软删 blob，等最后一个引用者删除时再处理
+//   - 如果没有任何 active asset 引用了 → 软删 blob（deleted=1），后续由 GC 物理清理
 func (s *Service) softRemoveAsset(ctx context.Context, asset *model.ArtifactAsset, res *model.ArtifactNodeRemoveRes) error {
 	if err := s.artStore.Assets().SoftDeleteById(ctx, asset.ID); err != nil {
 		return err
 	}
 	if asset.BlobID != 0 {
-		if err := s.artStore.Blobs().SoftDeleteById(ctx, asset.BlobID); err != nil {
-			return err
+		// 查询是否还有其他 active asset 引用该 blob（当前 asset 已被软删，不会被查到）
+		refs, _ := s.artStore.Assets().Search(ctx, artifactStore.BlobAssetsOption{BlobID: asset.BlobID}, artifactStore.AssetExcludeDeletedOption{})
+		if len(refs) == 0 {
+			// 没有其他引用了，软删 blob
+			if err := s.artStore.Blobs().SoftDeleteById(ctx, asset.BlobID); err != nil {
+				return err
+			}
 		}
 	}
 	res.Assets++
@@ -1698,14 +1742,16 @@ func (s *Service) softRemoveAsset(ctx context.Context, asset *model.ArtifactAsse
 }
 
 func (s *Service) softRemoveVersion(ctx context.Context, artifactID int64, ver *model.ArtifactVersion, res *model.ArtifactNodeRemoveRes) error {
+	// 判空：有活 asset 时拒绝删除
 	assets, err := s.artStore.Assets().Search(ctx, model.SearchAssetOption{VersionID: ver.ID}, artifactStore.AssetExcludeDeletedOption{})
 	if err != nil {
 		return err
 	}
-	for _, asset := range assets {
-		if err = s.softRemoveAsset(ctx, asset, res); err != nil {
-			return err
-		}
+	if len(assets) > 0 {
+		return pkgErrors.WithI18nKey(
+			fmt.Errorf("version %d still has %d active asset(s)", ver.ID, len(assets)),
+			i18n.ArtifactSoftRemoveVersionNotEmpty,
+		)
 	}
 	if err = s.artStore.Versions().SoftDelete(ctx, ver); err != nil {
 		return err
@@ -1716,14 +1762,30 @@ func (s *Service) softRemoveVersion(ctx context.Context, artifactID int64, ver *
 }
 
 func (s *Service) softRemovePackage(ctx context.Context, pkg *model.ArtifactPackage, res *model.ArtifactNodeRemoveRes) error {
+	// 判空：检查所有 version 下是否有活 asset
 	versions, err := s.artStore.Versions().Find(ctx, model.SearchVersionOption{PackageID: pkg.ID})
 	if err != nil {
 		return err
 	}
 	for _, ver := range versions {
-		if err = s.softRemoveVersion(ctx, pkg.ArtifactID, ver, res); err != nil {
+		activeAssets, aErr := s.artStore.Assets().Search(ctx, model.SearchAssetOption{VersionID: ver.ID}, artifactStore.AssetExcludeDeletedOption{})
+		if aErr != nil {
+			return aErr
+		}
+		if len(activeAssets) > 0 {
+			return pkgErrors.WithI18nKey(
+				fmt.Errorf("package %d still has active asset(s) under version %d", pkg.ID, ver.ID),
+				i18n.ArtifactSoftRemovePackageNotEmpty,
+			)
+		}
+	}
+	// 空包：级联软删 version
+	for _, ver := range versions {
+		if err = s.artStore.Versions().SoftDelete(ctx, ver); err != nil {
 			return err
 		}
+		res.Versions++
+		_ = s.deleteTreeNodeByTarget(ctx, pkg.ArtifactID, model.ArtifactTreeNodeTypeVersion, ver.ID)
 	}
 	if err = s.artStore.Packages().SoftDelete(ctx, pkg); err != nil {
 		return err

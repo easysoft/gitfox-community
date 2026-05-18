@@ -45,8 +45,8 @@ artifact:
   upload_save_error: "Failed to save artifact."
   upload_artifactid_required: "artifactID is required for uploading; please select a target artifact repository and try again."
   upload_file_name_required: "The 'name' form field is required for upload and must not be empty or whitespace only."
-  upload_name_required: "Package 'name' is required for raw uploads."
-  upload_name_invalid: "The 'name' for raw uploads is invalid: only alphanumerics, dashes and underscores are allowed, and no dots."
+  upload_name_required: "Package 'packageName' is required for raw uploads."
+  upload_name_invalid: "The 'packageName' for raw uploads is invalid: only alphanumerics, dashes and underscores are allowed, and no dots."
   upload_version_invalid: "A valid 'version' is required for raw uploads (alphanumerics, dashes, underscores and dots only)."
   upload_raw_group_invalid: "The 'group' for raw uploads must be a dot-separated path (each segment may contain alphanumerics, dashes and underscores only)."
   upload_group_required: "Either 'group' or 'groupId' is required for uploading."
@@ -85,13 +85,13 @@ artifact:
 
   # Tree
   tree_format_list_error: "Failed to list artifact formats."
-  tree_format_required: "format is required for tree queries unless nodeID is provided."
+  tree_format_required: "format is required for tree queries unless entityID is provided."
 
   tree_refresh_format_invalid: "Unsupported artifact format. Supported: generic, raw, container." # generic, raw, maven, container, helm, pypi, npm.
   tree_level_invalid: "Invalid tree query level. Supported values: format, group, package, version, asset."
   tree_node_list_error: "Failed to list artifact tree nodes."
-  tree_node_not_in_artifact: "The specified nodeID does not belong to the current artifact."
-  tree_node_recursive_conflict: "Recursive tree query is not supported when nodeID is provided."
+  tree_node_not_in_artifact: "The specified entityID does not belong to the current artifact."
+  tree_node_recursive_conflict: "Recursive tree query is not supported when entityID is provided."
   tree_refresh_error: "Failed to refresh artifact tree."
 
   # GC & Delete
@@ -103,6 +103,8 @@ artifact:
   soft_remove_entity_id_invalid_number: "The numeric part of artifact entity ID is invalid."
   soft_remove_entity_type_unsupported: "Unsupported artifact entity type."
   soft_remove_error: "Failed to soft-delete artifact."
+  soft_remove_version_not_empty: "Version still has active asset files and cannot be deleted. Please remove all assets under this version first."
+  soft_remove_package_not_empty: "Package still has active asset files and cannot be deleted. Please remove all assets under all versions first."
   soft_remove_artifact_not_empty: "The artifact library still contains active asset files and cannot be deleted. Empty groups, and orphan packages / versions without any asset, are allowed. Please remove all asset files first and try again."
   soft_remove_artifact_not_found: "The specified artifact library does not exist or has been deleted."
   soft_remove_artifact_query_error: "Failed to check the artifact library state."

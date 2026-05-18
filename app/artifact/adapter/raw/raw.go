@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"regexp"
+	"strings"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/adapter"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/adapter/request"
@@ -60,7 +61,12 @@ func (h *uploader) Serve(ctx context.Context, req *http.Request) (int64, error) 
 	h.uploadReq.RegisterWriter(fw)
 	size, hash, err := request.Write(file, fw)
 
-	h.descriptor.MainAsset.Path = fh.Filename
+	// raw 的文件路径以 form 字段 `name` 为准，兼容场景下为空则回退到上传文件名。
+	fileName := strings.TrimSpace(req.FormValue("name"))
+	if fileName == "" {
+		fileName = fh.Filename
+	}
+	h.descriptor.MainAsset.Path = fileName
 	h.descriptor.MainAsset.Size = size
 	h.descriptor.MainAsset.Hash = hash
 	h.descriptor.MainAsset.Ref = ref
@@ -74,23 +80,23 @@ func (h *uploader) Serve(ctx context.Context, req *http.Request) (int64, error) 
 }
 
 func (h *uploader) validateForm(_ context.Context, req *http.Request) error {
-	name := req.FormValue("name")
+	packageName := strings.TrimSpace(req.FormValue("packageName"))
 	namespace := req.FormValue("group")
 	version := req.FormValue("version")
 
-	if name == "" {
+	if packageName == "" {
 		return badRequest(
-			fmt.Errorf("%w: required field: name", adapter.ErrMissFormField),
+			fmt.Errorf("%w: required field: packageName", adapter.ErrMissFormField),
 			i18n.ArtifactUploadNameRequired,
 		)
 	}
-	if ok, _ := regexp.MatchString(_regexPackageName, name); !ok {
+	if ok, _ := regexp.MatchString(_regexPackageName, packageName); !ok {
 		return badRequest(
 			fmt.Errorf("%w: require regex pattern: %s", adapter.ErrInvalidPackageName, _regexPackageName),
 			i18n.ArtifactUploadNameInvalid,
 		)
 	}
-	h.descriptor.Name = name
+	h.descriptor.Name = packageName
 
 	if version == "" {
 		return badRequest(

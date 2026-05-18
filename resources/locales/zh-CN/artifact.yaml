@@ -45,8 +45,8 @@ artifact:
   upload_save_error: "制品保存失败."
   upload_artifactid_required: "上传制品必须指定 artifactID，请确认所选制品库后重试."
   upload_file_name_required: "上传制品必须指定文件名 name，且不能为空或全为空白字符."
-  upload_name_required: "上传 raw 制品必须指定包名 name."
-  upload_name_invalid: "raw 制品的包名 name 格式不合法：仅允许字母、数字、中划线、下划线，且不含点."
+  upload_name_required: "上传 raw 制品必须指定包名 packageName."
+  upload_name_invalid: "raw 制品的包名 packageName 格式不合法：仅允许字母、数字、中划线、下划线，且不含点."
   upload_version_invalid: "上传 raw 制品必须指定版本 version，且只能包含字母数字、中划线、下划线、点."
   upload_raw_group_invalid: "raw 制品的 group 参数格式不合法，需为以英文点号分隔的多级命名（每级仅允许字母数字、中划线、下划线）."
   upload_group_required: "上传制品必须指定 group 或 groupId."
@@ -85,12 +85,12 @@ artifact:
 
   # Tree
   tree_format_list_error: "查询制品格式列表失败."
-  tree_format_required: "通用树查询必须指定 format，除非传入了 nodeID."
+  tree_format_required: "通用树查询必须指定 format，除非传入了 entityID."
   tree_refresh_format_invalid: "不支持的制品格式，仅支持: generic, raw, container." # generic, raw, maven, container, helm, pypi, npm.
   tree_level_invalid: "通用树查询的 level 参数不合法，仅支持: format, group, package, version, asset."
   tree_node_list_error: "查询制品树节点列表失败."
-  tree_node_not_in_artifact: "指定的 nodeID 不属于当前制品库."
-  tree_node_recursive_conflict: "传入 nodeID 时不支持递归查询"
+  tree_node_not_in_artifact: "指定的 entityID 不属于当前制品库."
+  tree_node_recursive_conflict: "传入 entityID 时不支持递归查询"
   tree_refresh_error: "制品树刷新失败."
 
   # GC & Delete
@@ -102,6 +102,8 @@ artifact:
   soft_remove_entity_id_invalid_number: "制品实体 ID 中的数字部分不合法。"
   soft_remove_entity_type_unsupported: "不支持的制品实体类型。"
   soft_remove_error: "制品软删除失败."
+  soft_remove_version_not_empty: "版本下仍有未删除的制品文件，无法删除版本；请先删除版本下的所有制品文件后重试。"
+  soft_remove_package_not_empty: "包下仍有未删除的制品文件，无法删除包；请先删除包下所有版本的制品文件后重试。"
   soft_remove_artifact_not_empty: "制品库中仍有未删除的制品文件（asset），无法删除；空分组、以及无文件的 package / version（上传半成品）可以保留，请先移除全部制品文件后重试。"
   soft_remove_artifact_not_found: "指定的制品库不存在或已被删除."
   soft_remove_artifact_query_error: "校验制品库状态失败."
