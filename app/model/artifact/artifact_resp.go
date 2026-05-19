@@ -183,6 +183,67 @@ func (nid *ArtifactTreeNodeId) String() string {
 	return fmt.Sprintf("%s.%d", nid.Type, nid.Pk)
 }
 
+// ==================== 回收站 ====================
+// ==================== Recycle Bin ====================
+
+// ArtifactRecycleKind 回收站列表的实体类型枚举，与 EntityKind 同集合，仅用于 query 入参校验。
+type ArtifactRecycleKind string
+
+const (
+	ArtifactRecycleKindArtifact ArtifactRecycleKind = "artifact"
+	ArtifactRecycleKindGroup    ArtifactRecycleKind = "group"
+	ArtifactRecycleKindPackage  ArtifactRecycleKind = "package"
+	ArtifactRecycleKindVersion  ArtifactRecycleKind = "version"
+	ArtifactRecycleKindAsset    ArtifactRecycleKind = "asset"
+)
+
+// AllArtifactRecycleKinds 全量合法 kind 集合，供 controller 校验。
+var AllArtifactRecycleKinds = []ArtifactRecycleKind{
+	ArtifactRecycleKindArtifact,
+	ArtifactRecycleKindGroup,
+	ArtifactRecycleKindPackage,
+	ArtifactRecycleKindVersion,
+	ArtifactRecycleKindAsset,
+}
+
+// ArtifactRecycleListReq 回收站列表请求。
+//   - Kind  : 必填，缺省走 asset；只接受 AllArtifactRecycleKinds 集合内的值
+//   - Page  : 缺省 1
+//   - PageSize: 缺省 20，上限 200（store 层兜底）
+type ArtifactRecycleListReq struct {
+	Kind     ArtifactRecycleKind `form:"kind" json:"kind"`
+	Page     int                 `form:"page" json:"page"`
+	PageSize int                 `form:"pageSize" json:"pageSize"`
+}
+
+// ArtifactRecycleItem 回收站列表项。字段语义：
+//   - Kind         : 实体类型
+//   - EntityID     : "kind.id" 实体引用串，与软删 / 恢复接口入参一致
+//   - Id           : 实体表自身主键
+//   - Name         : 实体名（asset/group → name；package → 包名；version → 所属包名；artifact → 视图名）
+//   - Version      : 仅 version 类填
+//   - Group        : package/version 反查所属 group 的点分路径（namespace 等价）
+//   - Path         : 仅 group 类填，从根到自身的点分路径
+//   - Format       : 实体所属制品格式
+//   - ArtifactID   : 自身或经反查得到的所属制品库 ID
+//   - DeletedBy    : 软删人（取 editedBy）
+//   - DeletedDate  : 软删时间（取 editedDate）
+//   - ExpiresAt    : DeletedDate + RecycleBinRetention，到期后由 GC 物理清理
+type ArtifactRecycleItem struct {
+	Kind        ArtifactRecycleKind `json:"kind"`
+	EntityID    string              `json:"entityID"`
+	Id          int64               `json:"id"`
+	Name        string              `json:"name,omitempty"`
+	Version     string              `json:"version,omitempty"`
+	Group       string              `json:"group,omitempty"`
+	Path        string              `json:"path,omitempty"`
+	Format      ArtifactFormat      `json:"format,omitempty"`
+	ArtifactID  int64               `json:"artifactID,omitempty"`
+	DeletedBy   string              `json:"deletedBy,omitempty"`
+	DeletedDate *datetime.Local     `json:"deletedDate,omitempty"`
+	ExpiresAt   *datetime.Local     `json:"expiresAt,omitempty"`
+}
+
 // ==================== 节点详情响应 ====================
 // ==================== Node Info ====================
 

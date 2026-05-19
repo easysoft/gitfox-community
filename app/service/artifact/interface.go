@@ -77,6 +77,11 @@ type Interface interface {
 	// SoftRemove 软删除指定的实体节点（group/package/version/asset），支持级联删除子节点。
 	SoftRemove(ctx context.Context, spaceID int64, req *model.SoftRemoveEntitiesReq) (*model.ArtifactNodeRemoveReport, error)
 
+	// ---- 回收站 ----
+
+	// ListRecycleBin 按 kind 分页查询回收站记录（kind ∈ artifact/group/package/version/asset，默认 asset）。
+	ListRecycleBin(ctx context.Context, req *model.ArtifactRecycleListReq) ([]*model.ArtifactRecycleItem, int64, error)
+
 	// ---- 归档下载 ----
 
 	// PrepareArchiveGroup 准备分组归档下载所需的数据。

@@ -108,9 +108,18 @@ func (c *packages) Update(ctx context.Context, upObj *model.ArtifactPackage) err
 	return nil
 }
 
-func (c *packages) SoftDelete(ctx context.Context, pkg *model.ArtifactPackage) error {
-	pkg.Deleted = 1
-	return c.Update(ctx, pkg)
+// SoftDelete 软删 package 并记录操作人到 editedBy（回收站列表 deletedBy 取此字段）。
+// 仅更新 deleted/editedBy 两列，其它字段保持原值。
+func (c *packages) SoftDelete(ctx context.Context, pkg *model.ArtifactPackage, operator string) error {
+	updates := map[string]interface{}{"deleted": 1}
+	if operator != "" {
+		updates["editedBy"] = operator
+	}
+	if err := c.db.WithContext(ctx).Model(&artifactPackage{ID: pkg.ID}).
+		Updates(updates).Error; err != nil {
+		return database.ProcessSQLErrorf(ctx, err)
+	}
+	return nil
 }
 
 func (c *packages) UnDelete(ctx context.Context, pkg *model.ArtifactPackage) error {

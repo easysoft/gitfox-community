@@ -238,9 +238,14 @@ func (c *groups) All(ctx context.Context) ([]*model.ArtifactGroup, error) {
 	return groupsToModel(rows), nil
 }
 
-func (c *groups) SoftDeleteById(ctx context.Context, groupID int64) error {
+// SoftDeleteById 软删 group 并记录操作人到 editedBy（回收站列表 deletedBy 取此字段）。
+func (c *groups) SoftDeleteById(ctx context.Context, groupID int64, operator string) error {
+	updates := map[string]interface{}{"deleted": 1}
+	if operator != "" {
+		updates["editedBy"] = operator
+	}
 	err := c.db.WithContext(ctx).Model(&artifactGroup{ID: groupID}).
-		UpdateColumn("deleted", 1).Error
+		Updates(updates).Error
 	if err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
 	}

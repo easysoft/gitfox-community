@@ -91,13 +91,16 @@ func (c *views) FindByNameInScope(ctx context.Context, spaceID, repoID int64, na
 	return result, nil
 }
 
-// SoftDelete 软删除视图（将 deleted 标记为 1）。
-// BeforeUpdate 钩子会自动更新 editedDate，复用为"删除时间"，用于回收站保留期的计算基准。
-// 重要：软删后不应再更新该 view 的其他内容，以保证 editedDate 即删除时间。
-func (c *views) SoftDelete(ctx context.Context, view *model.ArtifactView) error {
-	view.Deleted = 1
-	row := viewFromModel(view)
-	if err := c.db.WithContext(ctx).Save(row).Error; err != nil {
+// SoftDelete 软删除视图（将 deleted 标记为 1）并记录操作人到 editedBy（即删除人）。
+// 仅更新 deleted/editedBy 两列：editedDate 由 GORM autoUpdateTime 钩子自动填，
+// 其它字段保持原值，软删动作不应回写整行（避免与并发更新串改）。
+func (c *views) SoftDelete(ctx context.Context, view *model.ArtifactView, operator string) error {
+	updates := map[string]interface{}{"deleted": 1}
+	if operator != "" {
+		updates["editedBy"] = operator
+	}
+	if err := c.db.WithContext(ctx).Model(&artifactView{ID: view.ID}).
+		Updates(updates).Error; err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
 	}
 	return nil

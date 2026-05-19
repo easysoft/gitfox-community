@@ -95,9 +95,14 @@ func (c *blobs) UpdateOptLock(ctx context.Context, upObj *model.ArtifactBlob, mu
 	}
 }
 
-func (c *blobs) SoftDeleteById(ctx context.Context, blobID int64) error {
+// SoftDeleteById 软删 blob 并记录操作人到 editedBy（回收站 / GC 链路据此识别"删除人"）。
+func (c *blobs) SoftDeleteById(ctx context.Context, blobID int64, operator string) error {
+	updates := map[string]interface{}{"deleted": 1}
+	if operator != "" {
+		updates["editedBy"] = operator
+	}
 	err := c.db.WithContext(ctx).Model(&artifactBlob{ID: blobID}).
-		UpdateColumn("deleted", 1).Error
+		Updates(updates).Error
 	if err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
 	}

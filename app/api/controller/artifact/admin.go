@@ -33,7 +33,7 @@ func (c *Controller) SoftRemoveByEntity(ctx *gin.Context) {
 		resp.BadRequest(ctx, err)
 		return
 	}
-	data, err := c.artSvc.SoftRemove(ctx, spaceID, &reqBody)
+	data, err := c.artSvc.SoftRemove(ctx.Request.Context(), spaceID, &reqBody)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return

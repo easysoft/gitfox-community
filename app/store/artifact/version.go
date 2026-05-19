@@ -97,9 +97,18 @@ func (c *versions) Find(ctx context.Context, opt model.SearchVersionOption) ([]*
 	return versionsToModel(rows), nil
 }
 
-func (c *versions) SoftDelete(ctx context.Context, ver *model.ArtifactVersion) error {
-	ver.Deleted = 1
-	return c.Update(ctx, ver)
+// SoftDelete 软删 version 并记录操作人到 editedBy（回收站列表 deletedBy 取此字段）。
+// 仅更新 deleted/editedBy 两列，其它字段保持原值。
+func (c *versions) SoftDelete(ctx context.Context, ver *model.ArtifactVersion, operator string) error {
+	updates := map[string]interface{}{"deleted": 1}
+	if operator != "" {
+		updates["editedBy"] = operator
+	}
+	if err := c.db.WithContext(ctx).Model(&artifactVersion{ID: ver.ID}).
+		Updates(updates).Error; err != nil {
+		return database.ProcessSQLErrorf(ctx, err)
+	}
+	return nil
 }
 
 func (c *versions) UnDelete(ctx context.Context, ver *model.ArtifactVersion) error {

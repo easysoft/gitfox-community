@@ -3638,6 +3638,42 @@ paths:
       summary: 通用树查询
       tags:
       - artifacts
+  /artifacts/recycle/list:
+    get:
+      description: |-
+        分页查询回收站中的实体记录。kind 必填，默认 asset；支持 artifact/group/package/version/asset 五种维度。
+        仅查 deleted=1 的记录，不再做时间窗过滤；前端按 expiresAt 自行展示距离 GC 多久。
+      parameters:
+      - description: 实体类型，可选：artifact/group/package/version/asset，默认 asset
+        in: query
+        name: kind
+        type: string
+      - description: 页码，默认 1
+        in: query
+        name: page
+        type: integer
+      - description: 每页数量，默认 20，最大 200
+        in: query
+        name: pageSize
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 回收站列表
+      tags:
+      - artifacts
   /artifacts/tree/refresh:
     post:
       consumes:

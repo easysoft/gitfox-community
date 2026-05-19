@@ -42,6 +42,9 @@ func registerArtifactRoutes(group *gin.RouterGroup, controller *Controller) {
 		artifact.GET("/assets/:assetID", controller.Artifact.GetAsset)
 		artifact.POST("/assets/list", controller.Artifact.ListAssetPage)
 
+		// 回收站
+		artifact.GET("/recycle/list", controller.Artifact.ListRecycleBin)
+
 		// group 级操作（读）
 		// artifact.GET("/groups/:groupID/archive", controller.Artifact.ArchiveGroup)   // pullAuth
 
