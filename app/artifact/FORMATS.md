@@ -111,7 +111,7 @@ ops_artifact (view, 即"制品库")
 ### 4.1 软删 / 硬删分层
 
 - **软删**（`SoftRemove` 系列）：`deleted` 字段置 1，`editedDate` 作为删除时间戳。
-- **硬删** + 物理清理：由定时 GC（`GarbageCollectSoftRemove`）在保留期过后触发 `hardDeleteViewResources` → 清 package/version/asset/blob/物理文件/group/treenode/meta_asset。
+- **硬删** + 物理清理：由手动 GC（`GarbageCollect` / `GarbageCollectSoftRemove`）在保留期过后清理已软删的 asset/blob/物理文件，以及空的 package/version/group。GC 不物理删除 `ops_artifact` 制品库主表记录。
 
 ### 4.2 按实体层级的软删行为（`softRemove{Asset,Version,Package,Group,Artifact}`）
 
@@ -121,22 +121,21 @@ ops_artifact (view, 即"制品库")
 | `version.{id}` | version | 遍历其 asset 软删 → 软删 version；**不动 package** |
 | `package.{id}` | package | 遍历 version 递归软删 → 软删 package；helm 会重建 `index.yaml` |
 | `group.{id}` | group | 遍历 group 下的 package + 直挂 group 的 asset 递归软删 → 软删 group |
-| `artifact.{id}` | **整个视图** | 只看活 asset；若有则拒绝；若无则顺带软删孤儿 package/version/group，再软删 view |
+| `artifact.{id}` | **整个视图** | 若存在未软删 group/package/version/asset 则拒绝；全部为空后只软删 view |
 
-> 关键不对称：**删 version 不清 package，删 package 不清 group**。这对所有格式统一，不是 container 专属。长期使用会积累"空壳" package / version / group，硬删 GC 才会真正清除。
+> 关键不对称：**删 version 不清 package，删 package 不清 group**。这对所有格式统一，不是 container 专属。长期使用会积累"空壳" package / version / group，硬删 GC 才会真正清除；制品库主表记录只会保持软删状态。
 
 ### 4.3 `artifact.{id}` 判空口径
 
 位置：`softRemoveArtifact`（`app/service/artifact/artifact.go`）。
 
-**允许删除的条件**：仅当 `ops_artifact_assets` 中 `artifactID = view.ID AND deleted = 0` 计数为 0。
+**允许删除的条件**：仅当 view 下未软删的 `group`、`package`、`version`、`asset` 都不存在。
 
 **允许保留的东西**：
-- 空 group（包括嵌套空目录）。
-- 无 asset 的活 package / version（上传中途失败遗留的空壳）。
-- 已软删的 asset（由 GC 保留期内物理清理）。
+- 已软删的 group/package/version/asset（由 GC 保留期后按资源层级物理清理）。
+- 已软删的 view 自身（`ops_artifact` 记录不由 GC 物理删除）。
 
-**多语言提示**：`ArtifactSoftRemoveArtifactNotEmpty`，同时中英双语。
+**多语言提示**：按阻塞资源区分为 `ArtifactSoftRemoveArtifactAssetExists`、`ArtifactSoftRemoveArtifactPackageExists`、`ArtifactSoftRemoveArtifactVersionExists`、`ArtifactSoftRemoveArtifactGroupExists`，同时中英双语。
 
 **事务语义**：路 B（整批回滚）。批量软删一旦命中非空视图，整个请求回滚，不部分成功。
 
@@ -150,7 +149,7 @@ ops_artifact (view, 即"制品库")
 ## 6. 已知落差与后续事项
 
 1. **maven / pypi / npm uploader 缺失**：`IsVersionedFormat` 已将其纳入版本化，但上传链路未实现。
-2. **`ops_artifact_treenode` 在 view 软删后仍存在**：直到 view 被 GC 硬删才连带清 treenode。回收站期间前端需要用 `deleted` 过滤。
+2. **`ops_artifact_treenode` 在 view 软删后仍存在**：GC 不再硬删 `ops_artifact` 制品库主表记录，回收站期间和软删后前端都需要用 `deleted` 过滤。
 3. **`raw` 在 `IsVersionedFormat` 的归属模糊**：它实际有 version 记录，但 `IsVersionedFormat` 返回 false；目前这只影响 rename 约束（raw 允许 rename，版本化拒绝 rename）。若后续语义拆分，需要同步审视此分支。
 4. **generic 无默认 group**：`CreateView` 当前只为 container 铸默认组，generic/raw 首次上传需客户端显式带 `group`/`groupId`。若要让 generic 开箱即用，可以扩展 `ensureDefaultGroupForView` 的触发分支。
 

@@ -579,11 +579,15 @@ type TreeNode struct {
 // ==================== Recycle / Statistic ====================
 
 type ArtifactRecycleBlobDesc struct {
-	AssetID int64
-	Path    string
-	BlobID  int64
-	BlobRef string
-	Size    int64
+	AssetID    int64
+	VersionID  int64
+	GroupID    int64
+	ArtifactID int64
+	Path       string
+	BlobID     int64
+	BlobRef    string
+	DeleteBlob bool
+	Size       int64
 }
 
 type ArtifactVersionCapacityDesc struct {

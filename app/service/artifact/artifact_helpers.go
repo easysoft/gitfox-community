@@ -398,6 +398,10 @@ func convertTreeNodesToRes(inputs []*model.ArtifactTreeNode, level string) []*mo
 }
 
 // convertTreeNodeToRes 将存储层树节点转换为接口返回模型。
+//
+// metadata.id 始终为 ops_artifact_tree_nodes.id（树节点主键）；
+// asset 节点不写入 tree_nodes 表，由调用方决定是否输出（默认留空）。
+// metadata.entityID 是 "kind.pk" 实体引用串，供跨接口定位实体使用。
 func convertTreeNodeToRes(n *model.ArtifactTreeNode, level string) *model.ArtifactTreeRes {
 	item := &model.ArtifactTreeRes{Name: n.Name, Path: n.Path, Format: n.Format, Leaf: n.Type == model.ArtifactTreeNodeTypeAsset}
 	if n.Type == model.ArtifactTreeNodeTypeVersion {
@@ -412,16 +416,17 @@ func convertTreeNodeToRes(n *model.ArtifactTreeNode, level string) *model.Artifa
 	} else {
 		item.Metadata = &model.ArtifactTreeNodeMeta{Type: n.Type}
 	}
+	// Id 取 tree_nodes.id（树节点主键）；EntityID 用 "kind.pk" 实体串。
+	if n.ID > 0 {
+		item.Metadata.Id = n.ID
+	}
 	if n.TargetID.Valid {
-		item.Metadata.Id = n.TargetID.Int64
-		id := (&model.ArtifactTreeNodeId{Type: n.Type, Pk: n.TargetID.Int64}).String()
-		item.Metadata.NodeID, item.Metadata.EntityID = id, id
+		item.Metadata.EntityID = (&model.ArtifactTreeNodeId{Type: n.Type, Pk: n.TargetID.Int64}).String()
 	}
 	if n.Type == model.ArtifactTreeNodeTypeFormat {
 		item.Metadata.Name = n.Name
 		if n.ArtifactID > 0 {
-			id := (&model.ArtifactTreeNodeId{Type: model.ArtifactTreeNodeTypeArtifact, Pk: n.ArtifactID}).String()
-			item.Metadata.NodeID, item.Metadata.EntityID = id, id
+			item.Metadata.EntityID = (&model.ArtifactTreeNodeId{Type: model.ArtifactTreeNodeTypeArtifact, Pk: n.ArtifactID}).String()
 		}
 	}
 	return item

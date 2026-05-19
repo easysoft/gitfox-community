@@ -53,16 +53,6 @@ type ViewInterface interface {
 	// 注意：GORM 的 autoUpdateTime 会自动更新 editedDate，
 	// 因此 editedDate 即为删除时间，用于回收站保留期计算。
 	SoftDelete(ctx context.Context, view *model.ArtifactView) error
-
-	// FindExpiredIDs 查询 editedDate 早于 before 的已软删视图 ID 列表。
-	// 只做查询，不删除，供上层先清理关联资源、再逐条删除 view 记录的正确流程使用。
-	FindExpiredIDs(ctx context.Context, before time.Time) ([]int64, error)
-
-	// HardDeleteExpired 硬删除 editedDate 早于 before 的所有已软删视图。
-	// 返回被删除的 view ID 列表，供上层级联清理关联资源。
-	// Deprecated: 直接使用会先删 view 再清理资源，崩溃时产生孤儿。
-	// 请改用 FindExpiredIDs + hardDeleteViewResources + Delete。
-	HardDeleteExpired(ctx context.Context, before time.Time) ([]int64, error)
 }
 
 type PackageInterface interface {
@@ -184,6 +174,9 @@ type GroupInterface interface {
 	// ListDescendants 列出指定分组的所有后代分组（不限格式）。
 	ListDescendants(ctx context.Context, id int64) ([]*model.ArtifactGroup, error)
 
+	// ListChildren 列出指定分组的直接子分组，包含已软删记录。
+	ListChildren(ctx context.Context, id int64) ([]*model.ArtifactGroup, error)
+
 	// SoftDeleteById 软删除分组（将 deleted 置为 1）。
 	SoftDeleteById(ctx context.Context, groupID int64) error
 
@@ -195,4 +188,7 @@ type GroupInterface interface {
 
 	// DeleteByArtifactID 物理删除指定 view 下的所有分组，供 view 删除时级联使用。
 	DeleteByArtifactID(ctx context.Context, artifactID int64) (int64, error)
+
+	// DeleteById 物理删除指定分组。
+	DeleteById(ctx context.Context, groupID int64) error
 }

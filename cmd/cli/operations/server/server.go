@@ -245,8 +245,7 @@ func (app *App) registerJobHandlers() {
 }
 
 // registerRecurringJobs 注册定时调度任务。
-// 制品库 GC 的 cron 间隔由配置 artifact.gcInterval 驱动（默认 720h = 每30天），
-// 三个 GC 任务通过 minuteOffset 错峰执行，避免同时竞争资源。
+// 制品库 GC 的 cron 间隔由配置 artifact.gcInterval 驱动（默认 720h = 每30天）。
 func (app *App) registerRecurringJobs(ctx context.Context) {
 	// TODO: 制品库 GC 定时任务暂时禁用，待回收站策略确认后恢复
 	// app.SystemConfig.Artifact.Sanitize()
@@ -264,7 +263,6 @@ func (app *App) registerRecurringJobs(ctx context.Context) {
 	// }{
 	// 	{"container GC", artifactSvc.JobNameArtifactContainerGC, artifactSvc.JobTypeArtifactContainerGC, 0},
 	// 	{"soft-remove GC", artifactSvc.JobNameArtifactSoftRemoveGC, artifactSvc.JobTypeArtifactSoftRemoveGC, 15},
-	// 	{"expired view GC", artifactSvc.JobNameArtifactExpiredViewGC, artifactSvc.JobTypeArtifactExpiredViewGC, 30},
 	// }
 
 	// for _, j := range gcJobs {

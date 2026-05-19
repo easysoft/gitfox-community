@@ -41,34 +41,25 @@ func (c *Controller) SoftRemoveByEntity(ctx *gin.Context) {
 	resp.OK(ctx, i18n.ArtifactDeleteSuccess, data)
 }
 
-// @Summary 触发容器垃圾回收
-// @Description 创建 container 制品垃圾回收后台任务
+// @Summary 触发制品垃圾回收
+// @Description 创建已软删且超过回收站保留期的制品垃圾回收后台任务；entity 为空时清理全部，支持 container/raw/generic
 // @Tags artifacts
 // @Produce application/json
+// @Param entity path string false "制品类型，留空表示全部，可选: container/raw/generic"
 // @Success 200 {object} resp.ObjectResponse "成功"
+// @Failure 400 {object} resp.ObjectResponse "参数错误"
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
-// @Router /artifacts/garbage/container [get]
-// func (c *Controller) GarbageCollectContainer(ctx *gin.Context) {
-// 	data, err := c.artSvc.TriggerGarbageCollectContainer(ctx)
-// 	if err != nil {
-// 		resp.InternalError(ctx, err)
-// 		return
-// 	}
-// 	resp.OK(ctx, i18n.ArtifactGarbageCollectSuccess, data)
-// }
-
-// @Summary 触发软删垃圾回收
-// @Description 创建已软删制品垃圾回收后台任务
-// @Tags artifacts
-// @Produce application/json
-// @Success 200 {object} resp.ObjectResponse "成功"
-// @Failure 500 {object} resp.ObjectResponse "服务器错误"
-// @Router /artifacts/garbage/soft-remove [get]
-// func (c *Controller) GarbageCollectSoftRemove(ctx *gin.Context) {
-// 	data, err := c.artSvc.TriggerGarbageCollectSoftRemove(ctx)
-// 	if err != nil {
-// 		resp.InternalError(ctx, err)
-// 		return
-// 	}
-// 	resp.OK(ctx, i18n.ArtifactGarbageCollectSuccess, data)
-// }
+// @Router /artifacts/garbage [get]
+// @Router /artifacts/garbage/{entity} [get]
+func (c *Controller) GarbageCollect(ctx *gin.Context) {
+	data, err := c.artSvc.TriggerGarbageCollect(ctx, model.ArtifactFormat(ctx.Param("entity")))
+	if err != nil {
+		if errors.GetI18nKey(err) == i18n.ArtifactViewFormatInvalid {
+			resp.BadRequest(ctx, err)
+			return
+		}
+		resp.InternalError(ctx, err)
+		return
+	}
+	resp.OK(ctx, i18n.ArtifactGarbageCollectSuccess, data)
+}

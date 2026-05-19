@@ -8,22 +8,30 @@ import (
 	"gorm.io/gorm"
 )
 
+type WithDeletedOption struct{}
+
+func (opt WithDeletedOption) Apply(db *gorm.DB) *gorm.DB {
+	return db.Where("deleted = 1")
+}
+
+type ExcludeDeletedOption struct{}
+
+func (opt ExcludeDeletedOption) Apply(db *gorm.DB) *gorm.DB {
+	return db.Where("deleted = 0")
+}
+
 type AssetVersionedOption struct{}
 
 func (opt AssetVersionedOption) Apply(db *gorm.DB) *gorm.DB {
 	return db.Where("versionID IS NOT NULL").Where("versionID <> 0")
 }
 
-type AssetWithDeletedOption struct{}
-
-func (opt AssetWithDeletedOption) Apply(db *gorm.DB) *gorm.DB {
-	return db.Where("deleted = 1")
+type AssetWithDeletedOption struct {
+	WithDeletedOption
 }
 
-type AssetExcludeDeletedOption struct{}
-
-func (opt AssetExcludeDeletedOption) Apply(db *gorm.DB) *gorm.DB {
-	return db.Where("deleted = 0")
+type AssetExcludeDeletedOption struct {
+	ExcludeDeletedOption
 }
 
 // GroupAssetsOption 按 groupID 查询 assets。
@@ -35,12 +43,17 @@ func (opt GroupAssetsOption) Apply(db *gorm.DB) *gorm.DB {
 	return db.Where("groupID = ?", opt.GroupID)
 }
 
-type AssetWithDeletedBeforeOption struct {
-	Before time.Time
+type AssetVersionOption struct {
+	VersionID int64
 }
 
-func (opt AssetWithDeletedBeforeOption) Apply(db *gorm.DB) *gorm.DB {
-	return db.Where("deleted = 1")
+func (opt AssetVersionOption) Apply(db *gorm.DB) *gorm.DB {
+	return db.Where("versionID = ?", opt.VersionID)
+}
+
+type AssetWithDeletedBeforeOption struct {
+	WithDeletedOption
+	Before time.Time
 }
 
 type ContainerFormatOption struct{}
@@ -49,11 +62,18 @@ func (opt ContainerFormatOption) Apply(db *gorm.DB) *gorm.DB {
 	return db.Where("ops_artifact_assets.format = ?", model.ArtifactContainerFormat)
 }
 
+type AssetFormatOption struct {
+	Format model.ArtifactFormat
+}
+
+func (opt AssetFormatOption) Apply(db *gorm.DB) *gorm.DB {
+	return db.Where("ops_artifact_assets.format = ?", opt.Format)
+}
+
 type ExcludeContainerOption struct{}
 
 func (opt ExcludeContainerOption) Apply(db *gorm.DB) *gorm.DB {
-	return db.Where("versionID IS NOT NULL").Where("versionID <> 0").
-		Where("ops_artifact_assets.format <> ?", model.ArtifactContainerFormat)
+	return db.Where("ops_artifact_assets.format <> ?", model.ArtifactContainerFormat)
 }
 
 type VersionIDsOption struct {
@@ -67,10 +87,8 @@ func (opt VersionIDsOption) Apply(db *gorm.DB) *gorm.DB {
 	return db.Where("ops_artifact_versions.id IN ?", opt.IDs).Order("ops_artifact_versions.id asc")
 }
 
-type PackageWithDeletedOption struct{}
-
-func (opt PackageWithDeletedOption) Apply(db *gorm.DB) *gorm.DB {
-	return db.Where("deleted = 1")
+type PackageWithDeletedOption struct {
+	WithDeletedOption
 }
 
 // GroupPackagesOption 按 groupID 查询未删除 package。
@@ -79,29 +97,37 @@ type GroupPackagesOption struct {
 }
 
 func (opt GroupPackagesOption) Apply(db *gorm.DB) *gorm.DB {
-	return db.Where("groupID = ?", opt.GroupID).Where("deleted = 0")
+	return ExcludeDeletedOption{}.Apply(db.Where("groupID = ?", opt.GroupID))
+}
+
+type PackageGroupOption struct {
+	GroupID int64
+}
+
+func (opt PackageGroupOption) Apply(db *gorm.DB) *gorm.DB {
+	return db.Where("groupID = ?", opt.GroupID)
+}
+
+type VersionPackageOption struct {
+	PackageID int64
+}
+
+func (opt VersionPackageOption) Apply(db *gorm.DB) *gorm.DB {
+	return db.Where("packageID = ?", opt.PackageID)
 }
 
 type PackageWithDeletedBeforeOption struct {
+	WithDeletedOption
 	Before time.Time
 }
 
-func (opt PackageWithDeletedBeforeOption) Apply(db *gorm.DB) *gorm.DB {
-	return db.Where("deleted = 1")
-}
-
-type VersionWithDeletedOption struct{}
-
-func (opt VersionWithDeletedOption) Apply(db *gorm.DB) *gorm.DB {
-	return db.Where("deleted = 1")
+type VersionWithDeletedOption struct {
+	WithDeletedOption
 }
 
 type VersionWithDeletedBeforeOption struct {
+	WithDeletedOption
 	Before time.Time
-}
-
-func (opt VersionWithDeletedBeforeOption) Apply(db *gorm.DB) *gorm.DB {
-	return db.Where("deleted = 1")
 }
 
 // AssetViewOption 按 artifactID 过滤 assets。

@@ -3,7 +3,6 @@ artifact:
   list_success: "制品列表查询成功."
   query_success: "制品详情查询成功."
   upload_success: "制品上传成功."
-  download_success: "制品下载成功."
   garbage_collect_success: "制品垃圾回收任务创建成功."
   delete_success: "制品删除成功."
   create_group_success: "制品 Group 创建成功."
@@ -13,20 +12,15 @@ artifact:
   path_param_error: "Path 参数解析失败."
   body_param_error: "Body 参数解析失败."
   query_param_error: "Query 参数解析失败."
-  permission_update_success: "制品权限更新成功."
-  permission_query_success: "制品权限查询成功."
 
   # ---- Service 层错误 ----
   # View（视图）
   default_view_name: "默认制品库"
   view_name_duplicate: "同名制品库视图已存在."
-  view_in_recycle_bin: "同名制品库视图在回收站中，请从回收站恢复或等待过期后重建."
-  view_expired_cleanup_error: "清理过期视图失败."
   view_not_found: "指定的制品视图不存在."
   view_query_error: "查询制品视图失败."
   view_scope_mismatch: "指定的制品视图与请求中的空间或仓库不匹配."
   view_create_error: "创建制品视图失败."
-  view_expired_query_error: "查询过期视图失败."
   view_format_required: "请选择制品格式（format），可选值：generic, raw, container." # generic, raw, maven, container, helm, pypi, npm.
   view_format_invalid: "不支持的制品格式，仅支持: generic, raw, container." # generic, raw, maven, container, helm, pypi, npm.
   view_name_required: "制品库名称不能为空."
@@ -59,39 +53,31 @@ artifact:
   package_query_error: "查询制品包失败."
   version_query_error: "查询制品版本失败."
   version_list_error: "查询制品版本列表失败."
-  version_delete_error: "删除制品版本失败."
-  package_delete_error: "删除制品包失败."
-  package_list_error: "查询制品包列表失败."
   version_artifactid_required: "查询版本列表必须指定 artifactID，请先选择对应的制品库."
   version_package_required: "查询版本列表必须指定制品包名 packageName，且不能为空或全为空白字符."
 
-  # Asset & Blob & Download
+  # Asset & Blob
   asset_query_error: "查询制品资产失败."
   asset_list_error: "查询制品资产列表失败."
   blob_query_error: "查询制品 Blob 失败."
-  blob_history_error: "查询制品 Blob 历史失败."
   download_open_error: "打开制品文件失败."
-  download_error: "制品下载失败."
 
   # Group
   group_create_error: "创建制品分组失败."
   group_query_error: "查询制品分组失败."
   group_artifactid_required: "artifactID 必须大于 0."
   group_artifactid_not_found: "指定的制品ID不存在."
-  group_format_invalid: "不支持的制品格式，仅支持: generic, raw, container." # generic, raw, maven, container, helm, pypi, npm.
   group_names_invalid: "分组名称不合法，不能为空且不允许包含空段."
   group_container_no_nesting: "container 格式仅支持单级分组，不允许使用 '.' 嵌套."
   group_duplicate: "同名分组路径已存在，不允许重复创建."
 
   # Tree
   tree_format_list_error: "查询制品格式列表失败."
-  tree_format_required: "通用树查询必须指定 format，除非传入了 entityID."
   tree_refresh_format_invalid: "不支持的制品格式，仅支持: generic, raw, container." # generic, raw, maven, container, helm, pypi, npm.
   tree_level_invalid: "通用树查询的 level 参数不合法，仅支持: format, group, package, version, asset."
   tree_node_list_error: "查询制品树节点列表失败."
   tree_node_not_in_artifact: "指定的 entityID 不属于当前制品库."
   tree_node_recursive_conflict: "传入 entityID 时不支持递归查询"
-  tree_refresh_error: "制品树刷新失败."
 
   # GC & Delete
   gc_scheduler_not_configured: "制品垃圾回收调度器未配置."
@@ -104,7 +90,10 @@ artifact:
   soft_remove_error: "制品软删除失败."
   soft_remove_version_not_empty: "版本下仍有未删除的制品文件，无法删除版本；请先删除版本下的所有制品文件后重试。"
   soft_remove_package_not_empty: "包下仍有未删除的制品文件，无法删除包；请先删除包下所有版本的制品文件后重试。"
-  soft_remove_artifact_not_empty: "制品库中仍有未删除的制品文件（asset），无法删除；空分组、以及无文件的 package / version（上传半成品）可以保留，请先移除全部制品文件后重试。"
+  soft_remove_artifact_asset_exists: "制品库中仍有未删除的制品文件（asset），无法删除制品库；请先删除全部制品文件后重试。"
+  soft_remove_artifact_package_exists: "制品库中仍有未删除的包（package），无法删除制品库；请先删除全部包后重试。"
+  soft_remove_artifact_version_exists: "制品库中仍有未删除的版本（version），无法删除制品库；请先删除全部版本后重试。"
+  soft_remove_artifact_group_exists: "制品库中仍有未删除的分组（group），无法删除制品库；请先删除全部分组后重试。"
   soft_remove_artifact_not_found: "指定的制品库不存在或已被删除."
   soft_remove_artifact_query_error: "校验制品库状态失败."
   soft_remove_group_not_empty: "分组或其子分组下仍有未删除的制品文件（asset），无法删除；空的子目录可以一并删除，请先移除全部制品文件后重试。"
@@ -115,29 +104,12 @@ artifact:
   statistic_summary_error: "制品统计概览查询失败."
 
   # Container
-  container_tag_not_found: "容器镜像标签资产未找到."
-  container_image_query_error: "查询容器镜像失败."
   container_domain_invalid: "镜像仓库路径格式无效，请检查前缀是否为 global / space{ID} / repo{ID}."
   container_space_id_invalid: "镜像仓库路径中的空间 ID 无效."
   container_repo_id_invalid: "镜像仓库路径中的仓库 ID 无效."
   container_artifact_not_found: "指定的制品库不存在."
   container_group_not_found: "制品库下未找到容器分组."
   container_image_name_required: "镜像路径缺少制品名或镜像名."
-
-  # Permission
-  auth_required: "需要身份认证."
-  permission_denied: "您没有权限执行该制品操作."
-  permission_set_error: "设置制品权限失败."
-  permission_subject_invalid: "无效的权限主体格式."
-  permission_user_not_found: "未找到权限关联的用户."
-  permission_member_query_error: "查询制品成员列表失败."
-
-  # Archive
-  archive_group_error: "打包制品分组失败."
-  archive_write_error: "写入制品归档文件失败."
-
-  # 硬删资源
-  hard_delete_error: "清理制品关联资源失败."
 
   # Move & Rename
   move_entity_type_invalid: "不支持的移动实体类型."
@@ -146,16 +118,13 @@ artifact:
   move_cycle_detected: "目标父组属于源组的子树，禁止循环引用."
   move_source_deleted: "源实体已软删除或不存在."
   move_target_invalid: "目标位置无效（制品库或目标组不存在）."
-  move_active_upload_session: "源包存在未完成的上传会话，暂不可移动."
   move_success: "移动成功."
   rename_entity_type_invalid: "不支持的重命名实体类型."
   rename_versioned_not_supported: "不支持重命名版本化包或包含版本化包的组."
-  rename_invalid_name: "名称不合法（长度需 1–255，且不得包含 /、\\、.、..）."
   rename_sibling_conflict: "同级已存在同名实体."
   rename_source_deleted: "源实体已软删除或不存在."
   rename_success: "重命名成功."
   entity_id_invalid: "实体 ID 不合法，应为 kind.id 格式（如 group.11、asset.5）."
   move_target_group_required: "移动操作必须指定 targetGroupID；仅 generic group 可传 0 表示根目录，package/asset 必须指定有效分组."
   rename_new_name_required: "重命名操作必须指定 newName."
-  relocate_no_change: "未传入有效的移动或重命名参数，请至少指定 targetArtifactID/targetGroupID 或 newName."
   relocate_success: "操作成功."

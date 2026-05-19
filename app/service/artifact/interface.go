@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/adapter"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/adapter/container"
 	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
 	authModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/storage"
@@ -97,20 +96,17 @@ type Interface interface {
 	// StatisticSummary 汇总各格式的制品数量和容量摘要。
 	StatisticSummary(ctx context.Context) (map[string]*model.ArtifactStatsObject, error)
 
-	// TriggerGarbageCollectContainer 触发容器镜像格式的 GC 异步任务。
-	TriggerGarbageCollectContainer(ctx context.Context) (*model.JobUIDResponse, error)
+	// TriggerGarbageCollect 触发指定格式或全量软删资源的 GC 异步任务。
+	TriggerGarbageCollect(ctx context.Context, entity model.ArtifactFormat) (*model.JobUIDResponse, error)
 
-	// TriggerGarbageCollectSoftRemove 触发软删资源的 GC 异步任务。
-	TriggerGarbageCollectSoftRemove(ctx context.Context) (*model.JobUIDResponse, error)
+	// GarbageCollect 执行指定格式或全量软删资源 GC。
+	GarbageCollect(ctx context.Context, entity model.ArtifactFormat) (*model.ArtifactGarbageReportRes, error)
 
-	// GarbageCollectContainer 执行容器镜像 GC，清理过期 blob。
+	// GarbageCollectContainer 执行容器镜像 GC，清理过期 blob（cron job 调用）。
 	GarbageCollectContainer(ctx context.Context) (*model.ArtifactGarbageReportRes, error)
 
-	// GarbageCollectSoftRemove 执行软删资源 GC，清理过期的 assets/versions/packages。
+	// GarbageCollectSoftRemove 执行软删资源 GC，清理过期的 assets/versions/packages（cron job 调用）。
 	GarbageCollectSoftRemove(ctx context.Context) (*model.ArtifactGarbageReportRes, error)
-
-	// GarbageCollectExpiredViews 清理超过回收站保留期的已软删视图及其全部关联资源。
-	GarbageCollectExpiredViews(ctx context.Context) (int, error)
 
 	// ---- 容器镜像 ----
 
@@ -122,9 +118,6 @@ type Interface interface {
 
 	// ResolveRepoArtifact 按 (repoID, artifactName) 解析 /v2/repo{ID} 路由对应的制品库上下文。
 	ResolveRepoArtifact(ctx context.Context, repoID uint64, artifactName string) (*ContainerArtifactCtx, error)
-
-	// ListContainerImages 列出容器镜像的 tag 元数据。
-	ListContainerImages(ctx context.Context, view *adapter.ViewDescriptor, packageName, version string) (*container.TagMetadata, error)
 
 	// ---- 移动 & 重命名 ----
 

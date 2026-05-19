@@ -34,10 +34,10 @@ type ArtifactVersionFilter struct {
 }
 
 type ArtifactTreeFilter struct {
-	EntityID int64          `json:"entityID"`
-	Path     string         `json:"path"`
-	Format   ArtifactFormat `json:"format"`
-	Level    string         `json:"level"`
+	NodeId int64          `json:"nodeID"`
+	Path   string         `json:"path"`
+	Format ArtifactFormat `json:"format"`
+	Level  string         `json:"level"`
 }
 
 // ==================== 响应模型 ====================
@@ -160,15 +160,17 @@ type ArtifactTreeRes struct {
 }
 
 type ArtifactTreeNodeMeta struct {
+	// Id 是 ops_artifact_tree_nodes.id（树节点主键）。
+	// asset 节点不写入 tree_nodes 表，故该字段留空（按 omitempty 不输出）。
+	// 跨接口实体引用请用 EntityID（"kind.pk" 形式，如 asset.5）。
 	Id      int64                `json:"id,omitempty"`
 	Type    ArtifactTreeNodeType `json:"type"`
 	Name    string               `json:"name,omitempty"`
 	Group   string               `json:"group,omitempty"`
 	Version string               `json:"version,omitempty"`
 
-	// NodeID 已废弃，调用方应改用 EntityID。
-	// Deprecated NodeID, use EntityID instead
-	NodeID   string `json:"nodeID,omitempty"`
+	// EntityID 是 "kind.pk" 形式的实体引用串（如 group.11 / asset.5），
+	// 用于跨接口定位实体（移动 / 重命名 / 软删 / 详情等接口的入参）。
 	EntityID string `json:"entityID,omitempty"`
 }
 
