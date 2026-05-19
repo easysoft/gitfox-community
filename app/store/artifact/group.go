@@ -230,6 +230,23 @@ func (c *groups) ListChildren(ctx context.Context, id int64) ([]*model.ArtifactG
 	return groupsToModel(rows), nil
 }
 
+// FindRootByName 按 (artifactID, format, name) 查找根级 group（parentID=0 OR parentID IS NULL），
+// 包含已软删记录；找不到时返回 (nil, nil)，便于调用方区分「不存在」与「系统错误」。
+func (c *groups) FindRootByName(ctx context.Context, artifactID int64, name string, format model.ArtifactFormat) (*model.ArtifactGroup, error) {
+	var row artifactGroup
+	err := c.db.WithContext(ctx).
+		Where("artifactID = ? AND name = ? AND format = ?", artifactID, name, format).
+		Where("parentID IS NULL OR parentID = 0").
+		Take(&row).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, database.ProcessSQLErrorf(ctx, err)
+	}
+	return groupToModel(&row), nil
+}
+
 func (c *groups) All(ctx context.Context) ([]*model.ArtifactGroup, error) {
 	var rows []*artifactGroup
 	if err := c.db.WithContext(ctx).Where("deleted = 0").Find(&rows).Error; err != nil {

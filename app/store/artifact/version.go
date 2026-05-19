@@ -111,11 +111,6 @@ func (c *versions) SoftDelete(ctx context.Context, ver *model.ArtifactVersion, o
 	return nil
 }
 
-func (c *versions) UnDelete(ctx context.Context, ver *model.ArtifactVersion) error {
-	ver.Deleted = 0
-	return c.Update(ctx, ver)
-}
-
 func (c *versions) Search(ctx context.Context, options ...SearchOption) ([]*model.ArtifactVersionInfo, error) {
 	db := c.db.WithContext(ctx)
 	for _, opt := range options {

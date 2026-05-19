@@ -1831,18 +1831,57 @@ func (s *Service) softRemoveArtifact(ctx context.Context, view *model.ArtifactVi
 		res.Status = model.ArtifactStatusUnknown
 		return pkgErrors.WithI18nKey(err, i18n.ArtifactSoftRemoveArtifactQueryError)
 	}
-	if len(groups) > 0 {
+	// 默认根 group：CreateView 时自动建（如 container 格式），名称与 view 同名、parentID 为 0。
+	// 此类「装饰性」根 group 不应阻塞 view 软删；仅当存在用户自建的非默认 group 时才拒绝。
+	for _, g := range groups {
+		if isDefaultRootGroupOf(view, g) {
+			continue
+		}
 		res.Status = model.ArtifactStatusNotEmpty
 		return pkgErrors.WithI18nKey(
-			fmt.Errorf("artifact view %d still has %d active group(s)", view.ID, len(groups)),
+			fmt.Errorf("artifact view %d still has active non-default group %d", view.ID, g.ID),
 			i18n.ArtifactSoftRemoveArtifactGroupExists,
 		)
+	}
+
+	// view 软删时，默认根 group 一并软删（恢复 view 时再同步恢复，保持对称）。
+	for _, g := range groups {
+		if !isDefaultRootGroupOf(view, g) {
+			continue
+		}
+		if dErr := s.artStore.Groups().SoftDeleteById(ctx, g.ID, operator); dErr != nil {
+			res.Status = model.ArtifactStatusUnknown
+			return pkgErrors.WithI18nKey(dErr, i18n.ArtifactSoftRemoveArtifactQueryError)
+		}
+		_ = s.deleteTreeNodeByTarget(ctx, view.ID, model.ArtifactTreeNodeTypeGroup, g.ID)
 	}
 
 	if err = s.artStore.Views().SoftDelete(ctx, view, operator); err != nil {
 		return err
 	}
 	return nil
+}
+
+// isDefaultRootGroupOf 判定 g 是否为 view 的「默认根 group」：
+//   - 与 view 同 format
+//   - 名称与 view 同名（CreateView 时按视图名建组）
+//   - parentID 为 0（根级，无父组）
+//
+// CreateView 当前仅 container 格式建默认根 group；将来若扩到 generic/raw，识别规则保持兼容。
+func isDefaultRootGroupOf(view *model.ArtifactView, g *model.ArtifactGroup) bool {
+	if view == nil || g == nil {
+		return false
+	}
+	if g.Format != view.Format {
+		return false
+	}
+	if g.Name != view.Name {
+		return false
+	}
+	if g.ParentID.Valid && g.ParentID.Int64 != 0 {
+		return false
+	}
+	return true
 }
 
 func (s *Service) deleteTreeNodeByTarget(ctx context.Context, artifactID int64, nodeType model.ArtifactTreeNodeType, id int64) error {

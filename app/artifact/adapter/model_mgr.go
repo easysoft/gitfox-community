@@ -324,7 +324,7 @@ func (mm *ModelManager) getOrCreateVersion(ctx context.Context) (*model.Artifact
 	currVersion, err := mm.store.Versions().GetByVersion(ctx, mm.pkgModel.ID, mm.pkgDescriptor.Version)
 	if err == nil {
 		if currVersion.IsDeleted() {
-			if e := mm.store.Versions().UnDelete(ctx, currVersion); e != nil {
+			if e := mm.store.Versions().Restore(ctx, currVersion.ID, mm.creator.UID); e != nil {
 				return nil, e
 			}
 		}
@@ -372,7 +372,7 @@ func (mm *ModelManager) getOrCreatePackage(ctx context.Context) (*model.Artifact
 	currPkg, err := mm.store.Packages().GetByName(ctx, desc.Name, desc.Namespace, mm.view.ArtifactID, desc.Format)
 	if err == nil {
 		if currPkg.IsDeleted() {
-			if e := mm.store.Packages().UnDelete(ctx, currPkg); e != nil {
+			if e := mm.store.Packages().Restore(ctx, currPkg.ID, mm.creator.UID); e != nil {
 				return nil, e
 			}
 		}
