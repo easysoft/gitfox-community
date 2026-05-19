@@ -1493,11 +1493,17 @@ func (s *Service) SoftRemove(ctx context.Context, spaceID int64, req *model.Soft
 		}
 	}
 
+	// 取当前会话用户作为「删除人」（editedBy），匿名/系统调用时为空。
+	var operator string
+	if session, ok := request.GetAuthSession(ctx); ok && session != nil && session.User != nil {
+		operator = session.User.Account
+	}
+
 	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		for idx, eid := range ids {
 			res := &model.ArtifactNodeRemoveRes{NodeID: eid, Status: model.ArtifactStatusOK}
 			report.Data[idx] = res
-			if err := s.softRemoveEntity(ctx, eid, res); err != nil {
+			if err := s.softRemoveEntity(ctx, eid, operator, res); err != nil {
 				if res.Status == model.ArtifactStatusOK {
 					res.Status = model.ArtifactStatusUnknown
 				}
@@ -1524,7 +1530,7 @@ func (s *Service) SoftRemove(ctx context.Context, spaceID int64, req *model.Soft
 	return report, nil
 }
 
-func (s *Service) softRemoveEntity(ctx context.Context, eid string, res *model.ArtifactNodeRemoveRes) error {
+func (s *Service) softRemoveEntity(ctx context.Context, eid string, operator string, res *model.ArtifactNodeRemoveRes) error {
 	if strings.Count(eid, ".") != 1 {
 		res.Status = model.ArtifactStatusInvalidId
 		return nil
@@ -1544,7 +1550,7 @@ func (s *Service) softRemoveEntity(ctx context.Context, eid string, res *model.A
 			res.Status = model.ArtifactStatusNotFound
 			return nil
 		}
-		return s.softRemoveAsset(ctx, asset, res)
+		return s.softRemoveAsset(ctx, asset, operator, res)
 	case model.ArtifactTreeNodeTypeVersion:
 		ver, err := s.artStore.Versions().GetByID(ctx, nodeID)
 		if err != nil {
@@ -1556,28 +1562,28 @@ func (s *Service) softRemoveEntity(ctx context.Context, eid string, res *model.A
 			res.Status = model.ArtifactStatusNotFound
 			return nil
 		}
-		return s.softRemoveVersion(ctx, pkg.ArtifactID, ver, res)
+		return s.softRemoveVersion(ctx, pkg.ArtifactID, ver, operator, res)
 	case model.ArtifactTreeNodeTypePackage:
 		pkg, err := s.artStore.Packages().GetByID(ctx, nodeID)
 		if err != nil {
 			res.Status = model.ArtifactStatusNotFound
 			return nil
 		}
-		return s.softRemovePackage(ctx, pkg, res)
+		return s.softRemovePackage(ctx, pkg, operator, res)
 	case model.ArtifactTreeNodeTypeGroup:
 		group, err := s.artStore.Groups().GetById(ctx, nodeID)
 		if err != nil {
 			res.Status = model.ArtifactStatusNotFound
 			return nil
 		}
-		return s.softRemoveGroup(ctx, group, res)
+		return s.softRemoveGroup(ctx, group, operator, res)
 	case model.ArtifactTreeNodeTypeArtifact:
 		view, err := s.artStore.Views().GetByID(ctx, nodeID)
 		if err != nil {
 			res.Status = model.ArtifactStatusNotFound
 			return pkgErrors.WithI18nKey(err, i18n.ArtifactSoftRemoveArtifactNotFound)
 		}
-		return s.softRemoveArtifact(ctx, view, res)
+		return s.softRemoveArtifact(ctx, view, operator, res)
 	default:
 		res.Status = model.ArtifactStatusInvalidId
 		return nil
@@ -1593,8 +1599,8 @@ func (s *Service) softRemoveEntity(ctx context.Context, eid string, res *model.A
 //     （使用 BlobAssetsOption{BlobID} + AssetExcludeDeletedOption 组合查询）
 //   - 如果还有其他 active asset 引用同一 blob → 不软删 blob，等最后一个引用者删除时再处理
 //   - 如果没有任何 active asset 引用了 → 软删 blob（deleted=1），后续由 GC 物理清理
-func (s *Service) softRemoveAsset(ctx context.Context, asset *model.ArtifactAsset, res *model.ArtifactNodeRemoveRes) error {
-	if err := s.artStore.Assets().SoftDeleteById(ctx, asset.ID); err != nil {
+func (s *Service) softRemoveAsset(ctx context.Context, asset *model.ArtifactAsset, operator string, res *model.ArtifactNodeRemoveRes) error {
+	if err := s.artStore.Assets().SoftDeleteById(ctx, asset.ID, operator); err != nil {
 		return err
 	}
 	if asset.BlobID != 0 {
@@ -1602,7 +1608,7 @@ func (s *Service) softRemoveAsset(ctx context.Context, asset *model.ArtifactAsse
 		refs, _ := s.artStore.Assets().Search(ctx, artifactStore.BlobAssetsOption{BlobID: asset.BlobID}, artifactStore.AssetExcludeDeletedOption{})
 		if len(refs) == 0 {
 			// 没有其他引用了，软删 blob
-			if err := s.artStore.Blobs().SoftDeleteById(ctx, asset.BlobID); err != nil {
+			if err := s.artStore.Blobs().SoftDeleteById(ctx, asset.BlobID, operator); err != nil {
 				return err
 			}
 		}
@@ -1611,7 +1617,7 @@ func (s *Service) softRemoveAsset(ctx context.Context, asset *model.ArtifactAsse
 	return nil
 }
 
-func (s *Service) softRemoveVersion(ctx context.Context, artifactID int64, ver *model.ArtifactVersion, res *model.ArtifactNodeRemoveRes) error {
+func (s *Service) softRemoveVersion(ctx context.Context, artifactID int64, ver *model.ArtifactVersion, operator string, res *model.ArtifactNodeRemoveRes) error {
 	// 判空：有活 asset 时拒绝删除
 	assets, err := s.artStore.Assets().Search(ctx, model.SearchAssetOption{VersionID: ver.ID}, artifactStore.AssetExcludeDeletedOption{})
 	if err != nil {
@@ -1623,7 +1629,7 @@ func (s *Service) softRemoveVersion(ctx context.Context, artifactID int64, ver *
 			i18n.ArtifactSoftRemoveVersionNotEmpty,
 		)
 	}
-	if err = s.artStore.Versions().SoftDelete(ctx, ver); err != nil {
+	if err = s.artStore.Versions().SoftDelete(ctx, ver, operator); err != nil {
 		return err
 	}
 	res.Versions++
@@ -1631,7 +1637,7 @@ func (s *Service) softRemoveVersion(ctx context.Context, artifactID int64, ver *
 	return nil
 }
 
-func (s *Service) softRemovePackage(ctx context.Context, pkg *model.ArtifactPackage, res *model.ArtifactNodeRemoveRes) error {
+func (s *Service) softRemovePackage(ctx context.Context, pkg *model.ArtifactPackage, operator string, res *model.ArtifactNodeRemoveRes) error {
 	// 判空：检查所有 version 下是否有活 asset
 	versions, err := s.artStore.Versions().Find(ctx, model.SearchVersionOption{PackageID: pkg.ID})
 	if err != nil {
@@ -1651,13 +1657,13 @@ func (s *Service) softRemovePackage(ctx context.Context, pkg *model.ArtifactPack
 	}
 	// 空包：级联软删 version
 	for _, ver := range versions {
-		if err = s.artStore.Versions().SoftDelete(ctx, ver); err != nil {
+		if err = s.artStore.Versions().SoftDelete(ctx, ver, operator); err != nil {
 			return err
 		}
 		res.Versions++
 		_ = s.deleteTreeNodeByTarget(ctx, pkg.ArtifactID, model.ArtifactTreeNodeTypeVersion, ver.ID)
 	}
-	if err = s.artStore.Packages().SoftDelete(ctx, pkg); err != nil {
+	if err = s.artStore.Packages().SoftDelete(ctx, pkg, operator); err != nil {
 		return err
 	}
 	res.Packages++
@@ -1674,7 +1680,7 @@ func (s *Service) softRemovePackage(ctx context.Context, pkg *model.ArtifactPack
 //   - 任一层级存在活 asset 即拒绝，返回 ArtifactSoftRemoveGroupNotEmpty 触发事务回滚（路 B）；
 //   - 顺带软删子 group 链路上的空壳 package / version（无活 asset 的上传半成品）；
 //   - 每次软删 group / package / version 都同步清对应 tree_node，避免前端刷树残留。
-func (s *Service) softRemoveGroup(ctx context.Context, group *model.ArtifactGroup, res *model.ArtifactNodeRemoveRes) error {
+func (s *Service) softRemoveGroup(ctx context.Context, group *model.ArtifactGroup, operator string, res *model.ArtifactNodeRemoveRes) error {
 	// 1) 收集当前 group + 所有未软删子 group，作为判空与级联软删的目标集合。
 	//    Groups().ListDescendants 返回不含自身，吾在头部追加当前 group 统一处理。
 	descendants, err := s.artStore.Groups().ListDescendants(ctx, group.ID)
@@ -1746,19 +1752,19 @@ func (s *Service) softRemoveGroup(ctx context.Context, group *model.ArtifactGrou
 				return vErr
 			}
 			for _, ver := range versions {
-				if err = s.artStore.Versions().SoftDelete(ctx, ver); err != nil {
+				if err = s.artStore.Versions().SoftDelete(ctx, ver, operator); err != nil {
 					return err
 				}
 				res.Versions++
 				_ = s.deleteTreeNodeByTarget(ctx, g.ArtifactID, model.ArtifactTreeNodeTypeVersion, ver.ID)
 			}
-			if err = s.artStore.Packages().SoftDelete(ctx, pkg); err != nil {
+			if err = s.artStore.Packages().SoftDelete(ctx, pkg, operator); err != nil {
 				return err
 			}
 			res.Packages++
 			_ = s.deleteTreeNodeByTarget(ctx, g.ArtifactID, model.ArtifactTreeNodeTypePackage, pkg.ID)
 		}
-		if err = s.artStore.Groups().SoftDeleteById(ctx, g.ID); err != nil {
+		if err = s.artStore.Groups().SoftDeleteById(ctx, g.ID, operator); err != nil {
 			return err
 		}
 		_ = s.deleteTreeNodeByTarget(ctx, g.ArtifactID, model.ArtifactTreeNodeTypeGroup, g.ID)
@@ -1773,7 +1779,7 @@ func (s *Service) softRemoveGroup(ctx context.Context, group *model.ArtifactGrou
 
 // softRemoveArtifact 软删整个制品库（view）。
 // 判空口径：view 下不能存在任何未软删的 group / package / version / asset。
-func (s *Service) softRemoveArtifact(ctx context.Context, view *model.ArtifactView, res *model.ArtifactNodeRemoveRes) error {
+func (s *Service) softRemoveArtifact(ctx context.Context, view *model.ArtifactView, operator string, res *model.ArtifactNodeRemoveRes) error {
 	activeAssets, err := s.artStore.Assets().Search(ctx, artifactStore.AssetViewOption{ArtifactID: view.ID}, artifactStore.AssetExcludeDeletedOption{})
 	if err != nil {
 		res.Status = model.ArtifactStatusUnknown
@@ -1833,7 +1839,7 @@ func (s *Service) softRemoveArtifact(ctx context.Context, view *model.ArtifactVi
 		)
 	}
 
-	if err = s.artStore.Views().SoftDelete(ctx, view); err != nil {
+	if err = s.artStore.Views().SoftDelete(ctx, view, operator); err != nil {
 		return err
 	}
 	return nil

@@ -48,6 +48,9 @@ const (
 	ArtifactPathParamError                  I18nKey = "artifact.path_param_error"                     // Path 参数解析失败.
 	ArtifactQueryParamError                 I18nKey = "artifact.query_param_error"                    // Query 参数解析失败.
 	ArtifactQuerySuccess                    I18nKey = "artifact.query_success"                        // 制品详情查询成功.
+	ArtifactRecycleKindInvalid              I18nKey = "artifact.recycle_kind_invalid"                 // 不支持的回收站类型,仅支持 artifact/group/package/version/asset.
+	ArtifactRecycleListError                I18nKey = "artifact.recycle_list_error"                   // 查询制品回收站失败.
+	ArtifactRecycleListSuccess              I18nKey = "artifact.recycle_list_success"                 // 制品回收站查询成功.
 	ArtifactRefreshTreeSuccess              I18nKey = "artifact.refresh_tree_success"                 // 制品树刷新成功.
 	ArtifactRelocateSuccess                 I18nKey = "artifact.relocate_success"                     // 操作成功.
 	ArtifactRenameEntityTypeInvalid         I18nKey = "artifact.rename_entity_type_invalid"           // 不支持的重命名实体类型.

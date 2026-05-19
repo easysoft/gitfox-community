@@ -49,10 +49,12 @@ type ViewInterface interface {
 	// UpdateName 更新视图名称。
 	UpdateName(ctx context.Context, id int64, name string) error
 
-	// SoftDelete 软删除视图（将 deleted 置为 1）。
-	// 注意：GORM 的 autoUpdateTime 会自动更新 editedDate，
-	// 因此 editedDate 即为删除时间，用于回收站保留期计算。
-	SoftDelete(ctx context.Context, view *model.ArtifactView) error
+	// SoftDelete 软删除视图（将 deleted 置为 1），并把 operator 写入 editedBy（即"删除人"）。
+	// 注意：GORM 的 autoUpdateTime 会自动更新 editedDate，editedDate 即删除时间。
+	SoftDelete(ctx context.Context, view *model.ArtifactView, operator string) error
+
+	// ListRecycle 列出回收站中的制品库（deleted=1），按 editedDate 倒序分页。
+	ListRecycle(ctx context.Context, page, pageSize int) ([]*model.ArtifactView, int64, error)
 }
 
 type PackageInterface interface {
@@ -65,13 +67,16 @@ type PackageInterface interface {
 	Update(ctx context.Context, upObj *model.ArtifactPackage) error
 	DeleteById(ctx context.Context, packageId int64) error
 	DeleteByIds(ctx context.Context, packageIds ...int64) (int64, error)
-	SoftDelete(ctx context.Context, pkg *model.ArtifactPackage) error
+	SoftDelete(ctx context.Context, pkg *model.ArtifactPackage, operator string) error
 	UnDelete(ctx context.Context, pkg *model.ArtifactPackage) error
 	Search(ctx context.Context, options ...SearchOption) ([]*model.ArtifactPackage, error)
 	GetByAssetID(ctx context.Context, assetID int64) (*model.ArtifactPackage, error)
 
 	// UpdateNamespaceByCondition 按条件批量更新 package namespace。
 	UpdateNamespaceByCondition(ctx context.Context, artifactID int64, oldNamespace, newNamespace, format string) error
+
+	// ListRecycle 列出回收站中的制品包（deleted=1），按 editedDate 倒序分页。
+	ListRecycle(ctx context.Context, page, pageSize int) ([]*model.ArtifactPackage, int64, error)
 }
 
 type VersionInterface interface {
@@ -82,9 +87,12 @@ type VersionInterface interface {
 	DeleteById(ctx context.Context, versionID int64) error
 	DeleteByIds(ctx context.Context, versionIDs ...int64) (int64, error)
 	Find(ctx context.Context, opt model.SearchVersionOption) ([]*model.ArtifactVersion, error)
-	SoftDelete(ctx context.Context, ver *model.ArtifactVersion) error
+	SoftDelete(ctx context.Context, ver *model.ArtifactVersion, operator string) error
 	UnDelete(ctx context.Context, ver *model.ArtifactVersion) error
 	Search(ctx context.Context, options ...SearchOption) ([]*model.ArtifactVersionInfo, error)
+
+	// ListRecycle 列出回收站中的制品版本（deleted=1），按 editedDate 倒序分页。
+	ListRecycle(ctx context.Context, page, pageSize int) ([]*model.ArtifactVersion, int64, error)
 }
 
 type AssetInterface interface {
@@ -97,12 +105,15 @@ type AssetInterface interface {
 	FindMain(ctx context.Context, versionID int64) ([]*model.ArtifactAsset, error)
 	UpdateBlobId(ctx context.Context, assetID int64, blobID int64) error
 	Update(ctx context.Context, asset *model.ArtifactAsset) error
-	SoftDeleteById(ctx context.Context, assetID int64) error
-	SoftDeleteExcludeById(ctx context.Context, versionID int64, assetID int64) error
+	SoftDeleteById(ctx context.Context, assetID int64, operator string) error
+	SoftDeleteExcludeById(ctx context.Context, versionID int64, assetID int64, operator string) error
 	DeleteById(ctx context.Context, assetID int64) error
 	Search(ctx context.Context, option ...SearchOption) ([]*model.ArtifactAsset, error)
 	SearchExtendBlob(ctx context.Context, options ...SearchOption) ([]*model.ArtifactAssetExtendBlob, error)
 	DeleteByArtifactID(ctx context.Context, artifactID int64) (int64, error)
+
+	// ListRecycle 列出回收站中的制品资产（deleted=1），按 editedDate 倒序分页。
+	ListRecycle(ctx context.Context, page, pageSize int) ([]*model.ArtifactAsset, int64, error)
 }
 
 type MetaAssetInterface interface {
@@ -121,7 +132,7 @@ type BlobInterface interface {
 	GetByHistory(ctx context.Context, assetID, createdAt int64) (*model.ArtifactBlob, error)
 	Update(ctx context.Context, upObj *model.ArtifactBlob) error
 	UpdateOptLock(ctx context.Context, upObj *model.ArtifactBlob, mutateFn func(blob *model.ArtifactBlob) error) (*model.ArtifactBlob, error)
-	SoftDeleteById(ctx context.Context, blobID int64) error
+	SoftDeleteById(ctx context.Context, blobID int64, operator string) error
 	DeleteById(ctx context.Context, blobID int64) error
 	History(ctx context.Context, assetID int64) ([]*model.ArtifactBlobRes, error)
 }
@@ -177,8 +188,8 @@ type GroupInterface interface {
 	// ListChildren 列出指定分组的直接子分组，包含已软删记录。
 	ListChildren(ctx context.Context, id int64) ([]*model.ArtifactGroup, error)
 
-	// SoftDeleteById 软删除分组（将 deleted 置为 1）。
-	SoftDeleteById(ctx context.Context, groupID int64) error
+	// SoftDeleteById 软删除分组（将 deleted 置为 1），并把 operator 写入 editedBy（即"删除人"）。
+	SoftDeleteById(ctx context.Context, groupID int64, operator string) error
 
 	// UpdateName 更新分组名称。
 	UpdateName(ctx context.Context, id int64, name string) error
@@ -191,4 +202,7 @@ type GroupInterface interface {
 
 	// DeleteById 物理删除指定分组。
 	DeleteById(ctx context.Context, groupID int64) error
+
+	// ListRecycle 列出回收站中的分组（deleted=1），按 editedDate 倒序分页。
+	ListRecycle(ctx context.Context, page, pageSize int) ([]*model.ArtifactGroup, int64, error)
 }

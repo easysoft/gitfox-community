@@ -131,21 +131,31 @@ func (c *assets) Update(ctx context.Context, upObj *model.ArtifactAsset) error {
 	return nil
 }
 
-func (c *assets) SoftDeleteById(ctx context.Context, assetID int64) error {
+// SoftDeleteById 软删除 asset 并记录操作人到 editedBy（即"删除人"，回收站列表 deletedBy 取此字段）。
+func (c *assets) SoftDeleteById(ctx context.Context, assetID int64, operator string) error {
+	updates := map[string]interface{}{"deleted": 1}
+	if operator != "" {
+		updates["editedBy"] = operator
+	}
 	err := c.db.WithContext(ctx).Model(&artifactAsset{ID: assetID}).
-		UpdateColumn("deleted", 1).Error
+		Updates(updates).Error
 	if err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
 	}
 	return nil
 }
 
-func (c *assets) SoftDeleteExcludeById(ctx context.Context, versionID int64, assetID int64) error {
+// SoftDeleteExcludeById 软删指定 version 下除排除 ID 外的所有活资产，并记录操作人。
+func (c *assets) SoftDeleteExcludeById(ctx context.Context, versionID int64, assetID int64, operator string) error {
+	updates := map[string]interface{}{"deleted": 1}
+	if operator != "" {
+		updates["editedBy"] = operator
+	}
 	err := c.db.WithContext(ctx).Model(&artifactAsset{}).
 		Where("versionID = ?", versionID).
 		Where("id <> ?", assetID).
 		Where("deleted = 0").
-		UpdateColumn("deleted", 1).Error
+		Updates(updates).Error
 	if err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
 	}

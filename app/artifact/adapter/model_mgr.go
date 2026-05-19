@@ -117,7 +117,7 @@ func (mm *ModelManager) createExclusiveAsset(ctx context.Context, ver *model.Art
 		if _, err = mm.updateAsset(ctx, currAsset, descriptor); err != nil {
 			return nil, false, err
 		}
-		if err = mm.store.Assets().SoftDeleteExcludeById(ctx, ver.ID, currAsset.ID); err != nil {
+		if err = mm.store.Assets().SoftDeleteExcludeById(ctx, ver.ID, currAsset.ID, mm.creator.UID); err != nil {
 			return nil, false, err
 		}
 		return currAsset, true, err
@@ -130,7 +130,7 @@ func (mm *ModelManager) createExclusiveAsset(ctx context.Context, ver *model.Art
 	if err = mm.createAsset(ctx, newAsset, descriptor); err != nil {
 		return nil, false, err
 	}
-	if err = mm.store.Assets().SoftDeleteExcludeById(ctx, ver.ID, newAsset.ID); err != nil {
+	if err = mm.store.Assets().SoftDeleteExcludeById(ctx, ver.ID, newAsset.ID, mm.creator.UID); err != nil {
 		return nil, false, err
 	}
 	return newAsset, false, nil
@@ -222,7 +222,7 @@ func (mm *ModelManager) updateAsset(ctx context.Context, current *model.Artifact
 	if err = mm.store.Assets().Update(ctx, current); err != nil {
 		return nil, err
 	}
-	if err = mm.store.Blobs().SoftDeleteById(ctx, previousBlobId); err != nil {
+	if err = mm.store.Blobs().SoftDeleteById(ctx, previousBlobId, mm.creator.UID); err != nil {
 		return nil, err
 	}
 	return current, nil
