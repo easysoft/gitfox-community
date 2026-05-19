@@ -317,6 +317,78 @@ const docTemplate = `{
                 }
             }
         },
+        "/artifacts/garbage": {
+            "get": {
+                "description": "创建已软删且超过回收站保留期的制品垃圾回收后台任务；entity 为空时清理全部，支持 container/raw/generic",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "artifacts"
+                ],
+                "summary": "触发制品垃圾回收",
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/artifacts/garbage/{entity}": {
+            "get": {
+                "description": "创建已软删且超过回收站保留期的制品垃圾回收后台任务；entity 为空时清理全部，支持 container/raw/generic",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "artifacts"
+                ],
+                "summary": "触发制品垃圾回收",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "制品类型，留空表示全部，可选: container/raw/generic",
+                        "name": "entity",
+                        "in": "path"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/artifacts/groups": {
             "post": {
                 "description": "创建 group 节点。artifactID 必传且必须大于 0。group 的 format 自动从 artifactID 对应视图中反查，前端不需要传 format。",
@@ -11501,14 +11573,14 @@ const docTemplate = `{
                 "artifactID": {
                     "type": "integer"
                 },
-                "entityID": {
-                    "type": "integer"
-                },
                 "format": {
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.ArtifactFormat"
                 },
                 "level": {
                     "type": "string"
+                },
+                "nodeID": {
+                    "type": "integer"
                 },
                 "path": {
                     "type": "string"

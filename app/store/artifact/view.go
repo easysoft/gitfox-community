@@ -2,7 +2,6 @@ package artifact
 
 import (
 	"context"
-	"time"
 
 	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
@@ -102,43 +101,6 @@ func (c *views) SoftDelete(ctx context.Context, view *model.ArtifactView) error 
 		return database.ProcessSQLErrorf(ctx, err)
 	}
 	return nil
-}
-
-// FindExpiredIDs 查询所有 editedDate 早于 before 的已软删视图 ID 列表。
-// 只做查询，不执行删除操作，供上层在级联清理关联资源后再逐条删除 view 记录。
-func (c *views) FindExpiredIDs(ctx context.Context, before time.Time) ([]int64, error) {
-	var ids []int64
-	err := c.db.WithContext(ctx).
-		Model(&artifactView{}).
-		Where("deleted = 1 AND editedDate < ?", before).
-		Pluck("id", &ids).Error
-	if err != nil {
-		return nil, database.ProcessSQLErrorf(ctx, err)
-	}
-	return ids, nil
-}
-
-// HardDeleteExpired 物理删除所有 editedDate 早于 before 的已软删视图。
-// 返回被删除的 view ID 列表，供上层级联清理关联的 packages、versions、assets、blobs 等资源。
-//
-// Deprecated: 直接使用此方法会导致先删 view 再清理关联资源，崩溃时产生孤儿资源。
-// 请改用 FindExpiredIDs + hardDeleteViewResources + DeleteByID 的三步流程。
-func (c *views) HardDeleteExpired(ctx context.Context, before time.Time) ([]int64, error) {
-	ids, err := c.FindExpiredIDs(ctx, before)
-	if err != nil {
-		return nil, err
-	}
-	if len(ids) == 0 {
-		return nil, nil
-	}
-
-	// 物理删除这些过期的已软删 view
-	if err = c.db.WithContext(ctx).
-		Where("id IN ?", ids).
-		Delete(&artifactView{}).Error; err != nil {
-		return nil, database.ProcessSQLErrorf(ctx, err)
-	}
-	return ids, nil
 }
 
 // UpdateName 更新视图名称。

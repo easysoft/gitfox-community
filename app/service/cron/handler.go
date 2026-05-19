@@ -5,19 +5,20 @@ import (
 	"encoding/json"
 	"fmt"
 
-	artifactSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/artifact"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
+	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
 	authModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
 	scanModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
 	principalModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/user"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/triggerer"
+	artifactSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/artifact"
 	jobsSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/jobs"
 	pipelineSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/pipeline"
 	repoSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
 	scanSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/scan"
 	scanStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/scan"
-	pkgJobs "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/jobs"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
+	pkgJobs "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/jobs"
 )
 
 type pipelineTriggerHandler struct {
@@ -176,14 +177,35 @@ func RegisterPipelineHandler(scheduler *jobsSvc.Scheduler, t triggerer.Triggerer
 }
 
 func RegisterArtifactGCHandler(scheduler *jobsSvc.Scheduler, svc artifactSvc.Interface) error {
+	if err := scheduler.RegisterHandler(artifactSvc.JobTypeArtifactGC, artifactGCHandler{svc: svc}); err != nil {
+		return err
+	}
 	if err := scheduler.RegisterHandler(artifactSvc.JobTypeArtifactContainerGC, artifactContainerGCHandler{svc: svc}); err != nil {
 		return err
 	}
 	if err := scheduler.RegisterHandler(artifactSvc.JobTypeArtifactSoftRemoveGC, artifactSoftRemoveGCHandler{svc: svc}); err != nil {
 		return err
 	}
-	// 注册过期视图 GC handler，由定时任务自动触发
-	return scheduler.RegisterHandler(artifactSvc.JobTypeArtifactExpiredViewGC, artifactExpiredViewGCHandler{svc: svc})
+	return nil
+}
+
+type artifactGCHandler struct {
+	svc artifactSvc.Interface
+}
+
+type artifactGCInput struct {
+	Entity model.ArtifactFormat `json:"entity,omitempty"`
+}
+
+func (h artifactGCHandler) Handle(ctx context.Context, input string, _ pkgJobs.ProgressReporter) (string, error) {
+	var in artifactGCInput
+	if input != "" {
+		if err := json.Unmarshal([]byte(input), &in); err != nil {
+			return "", fmt.Errorf("failed to parse artifact gc input: %w", err)
+		}
+	}
+	_, err := h.svc.GarbageCollect(ctx, in.Entity)
+	return "", err
 }
 
 type artifactContainerGCHandler struct {
@@ -205,23 +227,6 @@ func (h artifactSoftRemoveGCHandler) Handle(ctx context.Context, input string, _
 	_, err := h.svc.GarbageCollectSoftRemove(ctx)
 	return "", err
 }
-
-// artifactExpiredViewGCHandler 处理过期已软删视图的定时 GC 任务。
-// 清理超过回收站保留期的已软删视图及其全部关联资源（packages/versions/assets/blobs/物理文件）。
-type artifactExpiredViewGCHandler struct {
-	svc artifactSvc.Interface
-}
-
-func (h artifactExpiredViewGCHandler) Handle(ctx context.Context, input string, _ pkgJobs.ProgressReporter) (string, error) {
-	_ = input
-	count, err := h.svc.GarbageCollectExpiredViews(ctx)
-	if err != nil {
-		return "", err
-	}
-	result := fmt.Sprintf("cleaned %d expired views", count)
-	return result, nil
-}
-
 
 func RegisterScanHandler(
 	scheduler *jobsSvc.Scheduler,

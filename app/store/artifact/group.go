@@ -222,6 +222,14 @@ func (c *groups) ListDescendants(ctx context.Context, id int64) ([]*model.Artifa
 	return groupsToModel(rows), nil
 }
 
+func (c *groups) ListChildren(ctx context.Context, id int64) ([]*model.ArtifactGroup, error) {
+	var rows []*artifactGroup
+	if err := c.db.WithContext(ctx).Where("parentID = ?", id).Find(&rows).Error; err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
+	}
+	return groupsToModel(rows), nil
+}
+
 func (c *groups) All(ctx context.Context) ([]*model.ArtifactGroup, error) {
 	var rows []*artifactGroup
 	if err := c.db.WithContext(ctx).Where("deleted = 0").Find(&rows).Error; err != nil {
@@ -235,6 +243,17 @@ func (c *groups) SoftDeleteById(ctx context.Context, groupID int64) error {
 		UpdateColumn("deleted", 1).Error
 	if err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
+	}
+	return nil
+}
+
+func (c *groups) DeleteById(ctx context.Context, groupID int64) error {
+	result := c.db.WithContext(ctx).Delete(&artifactGroup{}, groupID)
+	if result.Error != nil {
+		return database.ProcessSQLErrorf(ctx, result.Error)
+	}
+	if result.RowsAffected == 0 {
+		return pkgErrors.ErrResourceNotFound
 	}
 	return nil
 }

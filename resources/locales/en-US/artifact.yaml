@@ -3,7 +3,6 @@ artifact:
   list_success: "Artifact list queried successfully."
   query_success: "Artifact details queried successfully."
   upload_success: "Artifact uploaded successfully."
-  download_success: "Artifact downloaded successfully."
   garbage_collect_success: "Artifact garbage collection job created successfully."
   delete_success: "Artifact deleted successfully."
   create_group_success: "Artifact group created successfully."
@@ -13,27 +12,22 @@ artifact:
   path_param_error: "Path param parsing failed."
   body_param_error: "Body param parsing failed."
   query_param_error: "Query param parsing failed."
-  permission_update_success: "Artifact permission updated successfully."
-  permission_query_success: "Artifact permission queried successfully."
 
   # ---- Service layer errors ----
   # View
   default_view_name: "Default"
   view_name_duplicate: "An artifact view with the same name already exists."
-  view_in_recycle_bin: "A view with the same name is in the recycle bin, please restore it or wait for expiration."
-  view_expired_cleanup_error: "Failed to clean up expired view."
   view_not_found: "The specified artifact view does not exist."
   view_query_error: "Failed to query artifact view."
   view_scope_mismatch: "The specified artifact view does not match the requested space or repository."
   view_create_error: "Failed to create artifact view."
-  view_expired_query_error: "Failed to query expired views."
   view_format_required: "Artifact format is required. Allowed values: generic, raw, container." # generic, raw, maven, container, helm, pypi, npm.
   view_format_invalid: "Unsupported artifact format. Supported: generic, raw, container." # generic, raw, maven, container, helm, pypi, npm.
   view_name_required: "Artifact view name is required."
   view_name_too_long: "Artifact view name is too long (max 128 chars)."
   view_name_invalid_chars: "Artifact view name must not contain whitespace or any of / \\ . .. : * ? \" < > |."
   view_name_non_ascii_not_allowed: "For versioned artifact repositories (container/raw), the name may only contain ASCII letters, digits, dashes and underscores; non-ASCII characters (e.g. Chinese) are not allowed." # container/raw/helm/pypi/npm/maven
-  
+
   # Parse & Upload
   space_id_required: "spaceID is required when repoID is provided."
   repo_query_error: "Failed to query repository."
@@ -59,40 +53,31 @@ artifact:
   package_query_error: "Failed to query artifact package."
   version_query_error: "Failed to query artifact version."
   version_list_error: "Failed to list artifact versions."
-  version_delete_error: "Failed to delete artifact version."
-  package_delete_error: "Failed to delete artifact package."
-  package_list_error: "Failed to list artifact packages."
   version_artifactid_required: "artifactID is required for listing versions; please select a target artifact repository."
   version_package_required: "packageName is required for listing versions and must not be empty or whitespace only."
 
-  # Asset & Blob & Download
+  # Asset & Blob
   asset_query_error: "Failed to query artifact asset."
   asset_list_error: "Failed to list artifact assets."
   blob_query_error: "Failed to query artifact blob."
-  blob_history_error: "Failed to query artifact blob history."
   download_open_error: "Failed to open artifact file."
-  download_error: "Failed to download artifact."
 
   # Group
   group_create_error: "Failed to create artifact group."
   group_query_error: "Failed to query artifact group."
   group_artifactid_required: "artifactID must be greater than 0."
   group_artifactid_not_found: "The specified artifact ID does not exist."
-  group_format_invalid: "Unsupported artifact format. Supported: generic, raw, container." # generic, raw, maven, container, helm, pypi, npm.
   group_names_invalid: "Group names are invalid, must not be empty or contain empty segments."
   group_container_no_nesting: "Container format only supports a single-level group, nesting with '.' is not allowed."
   group_duplicate: "A group with the same path already exists, duplicate creation is not allowed."
 
   # Tree
   tree_format_list_error: "Failed to list artifact formats."
-  tree_format_required: "format is required for tree queries unless entityID is provided."
-
   tree_refresh_format_invalid: "Unsupported artifact format. Supported: generic, raw, container." # generic, raw, maven, container, helm, pypi, npm.
   tree_level_invalid: "Invalid tree query level. Supported values: format, group, package, version, asset."
   tree_node_list_error: "Failed to list artifact tree nodes."
   tree_node_not_in_artifact: "The specified entityID does not belong to the current artifact."
   tree_node_recursive_conflict: "Recursive tree query is not supported when entityID is provided."
-  tree_refresh_error: "Failed to refresh artifact tree."
 
   # GC & Delete
   gc_scheduler_not_configured: "Artifact garbage collection scheduler is not configured."
@@ -105,7 +90,10 @@ artifact:
   soft_remove_error: "Failed to soft-delete artifact."
   soft_remove_version_not_empty: "Version still has active asset files and cannot be deleted. Please remove all assets under this version first."
   soft_remove_package_not_empty: "Package still has active asset files and cannot be deleted. Please remove all assets under all versions first."
-  soft_remove_artifact_not_empty: "The artifact library still contains active asset files and cannot be deleted. Empty groups, and orphan packages / versions without any asset, are allowed. Please remove all asset files first and try again."
+  soft_remove_artifact_asset_exists: "The artifact library still contains active asset files and cannot be deleted. Remove all assets first."
+  soft_remove_artifact_package_exists: "The artifact library still contains active packages and cannot be deleted. Remove all packages first."
+  soft_remove_artifact_version_exists: "The artifact library still contains active versions and cannot be deleted. Remove all versions first."
+  soft_remove_artifact_group_exists: "The artifact library still contains active groups and cannot be deleted. Remove all groups first."
   soft_remove_artifact_not_found: "The specified artifact library does not exist or has been deleted."
   soft_remove_artifact_query_error: "Failed to check the artifact library state."
   soft_remove_group_not_empty: "The group or one of its sub-groups still contains active asset files and cannot be deleted. Empty sub-groups can be removed together; please delete all asset files first and try again."
@@ -116,29 +104,12 @@ artifact:
   statistic_summary_error: "Failed to query artifact statistics summary."
 
   # Container
-  container_tag_not_found: "Container tag asset not found."
-  container_image_query_error: "Failed to query container image."
   container_domain_invalid: "Invalid container registry path prefix. Expect one of: global / space{ID} / repo{ID}."
   container_space_id_invalid: "Invalid space ID in container registry path."
   container_repo_id_invalid: "Invalid repository ID in container registry path."
   container_artifact_not_found: "The specified artifact registry does not exist."
   container_group_not_found: "No container group found under the artifact registry."
   container_image_name_required: "The container registry path is missing artifactname or imagename."
-
-  # Permission
-  auth_required: "Authentication required."
-  permission_denied: "You do not have permission to perform this artifact operation."
-  permission_set_error: "Failed to set artifact permission."
-  permission_subject_invalid: "Invalid permission subject format."
-  permission_user_not_found: "User not found for permission subject."
-  permission_member_query_error: "Failed to query artifact members."
-
-  # Archive
-  archive_group_error: "Failed to archive artifact group."
-  archive_write_error: "Failed to write artifact archive file."
-
-  # Hard delete resources
-  hard_delete_error: "Failed to clean up artifact-related resources."
 
   # Move & Rename
   move_entity_type_invalid: "Unsupported entity type for move."
@@ -147,16 +118,13 @@ artifact:
   move_cycle_detected: "Target parent is a descendant of source group."
   move_source_deleted: "Source entity is soft-deleted or not found."
   move_target_invalid: "Target artifact or group is invalid."
-  move_active_upload_session: "Source package has active upload sessions."
   move_success: "Move succeeded."
   rename_entity_type_invalid: "Unsupported entity type for rename."
   rename_versioned_not_supported: "Rename is not allowed on versioned packages or groups containing them."
-  rename_invalid_name: "Invalid name. Must be 1..255 chars and must not contain `/`, `\\`, `.`, `..`."
   rename_sibling_conflict: "Sibling with the same name already exists."
   rename_source_deleted: "Source entity is soft-deleted or not found."
   rename_success: "Rename succeeded."
   entity_id_invalid: "Invalid entity ID. Expected format: kind.id (e.g. group.11, asset.5)."
   move_target_group_required: "targetGroupID is required for move; only generic group may use 0 for the root, while package/asset require a valid group."
   rename_new_name_required: "newName is required for rename."
-  relocate_no_change: "No effective move or rename parameters were provided. Specify at least targetArtifactID/targetGroupID or newName."
   relocate_success: "Operation succeeded."

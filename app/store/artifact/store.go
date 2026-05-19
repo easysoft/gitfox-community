@@ -153,20 +153,26 @@ func (s *Store) StatisticAssets(ctx context.Context, retentionTime time.Duration
 			// 引用计数检查：blob 是否仍被 active asset 引用
 			// 若有 active 引用则保留物理文件（BlobRef 置空），只删 asset 记录
 			blobRef := asset.Ref
+			deleteBlob := true
 			if activeBlobRefs[asset.BlobID] > 0 {
 				logger.GetLogger(ctx).Debugf(
 					"skip blob deletion for asset %d: blob %d still referenced by %d active asset(s)",
 					asset.ID, asset.BlobID, activeBlobRefs[asset.BlobID],
 				)
 				blobRef = "" // 置空 BlobRef，garbageCollect 会跳过物理文件删除
+				deleteBlob = false
 			}
 
 			report.DeleteList = append(report.DeleteList, &model.ArtifactRecycleBlobDesc{
-				AssetID: asset.ID,
-				Path:    asset.Path,
-				BlobID:  asset.BlobID,
-				BlobRef: blobRef,
-				Size:    asset.Size,
+				AssetID:    asset.ID,
+				VersionID:  asset.VersionID.Int64,
+				GroupID:    asset.GroupID.Int64,
+				ArtifactID: asset.ArtifactID.Int64,
+				Path:       asset.Path,
+				BlobID:     asset.BlobID,
+				BlobRef:    blobRef,
+				DeleteBlob: deleteBlob,
+				Size:       asset.Size,
 			})
 			continue
 		}

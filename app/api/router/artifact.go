@@ -51,7 +51,7 @@ func registerArtifactRoutes(group *gin.RouterGroup, controller *Controller) {
 		// artifact.GET("/statistic", controller.Artifact.StatisticSummary)                    // pullAuth
 
 		// 管理操作
-		// artifact.GET("/garbage/container", controller.Artifact.GarbageCollectContainer)    // deleteAuth
-		// artifact.GET("/garbage/soft-remove", controller.Artifact.GarbageCollectSoftRemove) // deleteAuth
+		artifact.GET("/garbage", controller.Artifact.GarbageCollect)
+		artifact.GET("/garbage/:entity", controller.Artifact.GarbageCollect)
 	}
 }
