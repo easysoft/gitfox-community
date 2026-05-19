@@ -44,6 +44,7 @@ func registerArtifactRoutes(group *gin.RouterGroup, controller *Controller) {
 
 		// 回收站
 		artifact.GET("/recycle/list", controller.Artifact.ListRecycleBin)
+		artifact.POST("/recycle/restore", controller.Artifact.Restore)
 
 		// group 级操作（读）
 		// artifact.GET("/groups/:groupID/archive", controller.Artifact.ArchiveGroup)   // pullAuth

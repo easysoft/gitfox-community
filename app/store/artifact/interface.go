@@ -38,6 +38,8 @@ type ViewInterface interface {
 	Create(ctx context.Context, newObj *model.CreateArtifactView) (*model.ArtifactView, error)
 	Delete(ctx context.Context, id int64) error
 	GetByID(ctx context.Context, id int64) (*model.ArtifactView, error)
+	// GetByIDIncludingDeleted 按 ID 取视图，不过滤 deleted；用于回收站恢复链路。
+	GetByIDIncludingDeleted(ctx context.Context, id int64) (*model.ArtifactView, error)
 	GetDefault(ctx context.Context, spaceID int64) (*model.ArtifactView, error)
 	GetDefaultByRepoAndSpace(ctx context.Context, repoID, spaceID int64) (*model.ArtifactView, error)
 	GetByName(ctx context.Context, spaceID, repoID int64, name string) (*model.ArtifactView, error)
@@ -52,6 +54,9 @@ type ViewInterface interface {
 	// SoftDelete 软删除视图（将 deleted 置为 1），并把 operator 写入 editedBy（即"删除人"）。
 	// 注意：GORM 的 autoUpdateTime 会自动更新 editedDate，editedDate 即删除时间。
 	SoftDelete(ctx context.Context, view *model.ArtifactView, operator string) error
+
+	// Restore 恢复制品库视图（将 deleted 置为 0），并把 operator 写入 editedBy（即"恢复人"）。
+	Restore(ctx context.Context, viewID int64, operator string) error
 
 	// ListRecycle 列出回收站中的制品库（deleted=1），按 editedDate 倒序分页。
 	ListRecycle(ctx context.Context, page, pageSize int) ([]*model.ArtifactView, int64, error)
@@ -68,7 +73,8 @@ type PackageInterface interface {
 	DeleteById(ctx context.Context, packageId int64) error
 	DeleteByIds(ctx context.Context, packageIds ...int64) (int64, error)
 	SoftDelete(ctx context.Context, pkg *model.ArtifactPackage, operator string) error
-	UnDelete(ctx context.Context, pkg *model.ArtifactPackage) error
+	// Restore 恢复制品包（将 deleted 置为 0），operator 写入 editedBy。
+	Restore(ctx context.Context, packageID int64, operator string) error
 	Search(ctx context.Context, options ...SearchOption) ([]*model.ArtifactPackage, error)
 	GetByAssetID(ctx context.Context, assetID int64) (*model.ArtifactPackage, error)
 
@@ -88,7 +94,8 @@ type VersionInterface interface {
 	DeleteByIds(ctx context.Context, versionIDs ...int64) (int64, error)
 	Find(ctx context.Context, opt model.SearchVersionOption) ([]*model.ArtifactVersion, error)
 	SoftDelete(ctx context.Context, ver *model.ArtifactVersion, operator string) error
-	UnDelete(ctx context.Context, ver *model.ArtifactVersion) error
+	// Restore 恢复制品版本（将 deleted 置为 0），operator 写入 editedBy。
+	Restore(ctx context.Context, versionID int64, operator string) error
 	Search(ctx context.Context, options ...SearchOption) ([]*model.ArtifactVersionInfo, error)
 
 	// ListRecycle 列出回收站中的制品版本（deleted=1），按 editedDate 倒序分页。
@@ -107,6 +114,8 @@ type AssetInterface interface {
 	Update(ctx context.Context, asset *model.ArtifactAsset) error
 	SoftDeleteById(ctx context.Context, assetID int64, operator string) error
 	SoftDeleteExcludeById(ctx context.Context, versionID int64, assetID int64, operator string) error
+	// RestoreById 恢复制品资产（将 deleted 置为 0），operator 写入 editedBy。
+	RestoreById(ctx context.Context, assetID int64, operator string) error
 	DeleteById(ctx context.Context, assetID int64) error
 	Search(ctx context.Context, option ...SearchOption) ([]*model.ArtifactAsset, error)
 	SearchExtendBlob(ctx context.Context, options ...SearchOption) ([]*model.ArtifactAssetExtendBlob, error)
@@ -133,6 +142,8 @@ type BlobInterface interface {
 	Update(ctx context.Context, upObj *model.ArtifactBlob) error
 	UpdateOptLock(ctx context.Context, upObj *model.ArtifactBlob, mutateFn func(blob *model.ArtifactBlob) error) (*model.ArtifactBlob, error)
 	SoftDeleteById(ctx context.Context, blobID int64, operator string) error
+	// RestoreById 恢复制品 blob（将 deleted 置为 0），operator 写入 editedBy。
+	RestoreById(ctx context.Context, blobID int64, operator string) error
 	DeleteById(ctx context.Context, blobID int64) error
 	History(ctx context.Context, assetID int64) ([]*model.ArtifactBlobRes, error)
 }
@@ -188,8 +199,16 @@ type GroupInterface interface {
 	// ListChildren 列出指定分组的直接子分组，包含已软删记录。
 	ListChildren(ctx context.Context, id int64) ([]*model.ArtifactGroup, error)
 
+	// FindRootByName 按 (artifactID, format, name) 查找根级 group（parentID=0），含已软删记录。
+	// 主要用于回收站恢复链路：CreateView 自动建的默认根 group 与 view 同名同 format，
+	// 软删后通过此方法精确定位以便对称恢复。
+	FindRootByName(ctx context.Context, artifactID int64, name string, format model.ArtifactFormat) (*model.ArtifactGroup, error)
+
 	// SoftDeleteById 软删除分组（将 deleted 置为 1），并把 operator 写入 editedBy（即"删除人"）。
 	SoftDeleteById(ctx context.Context, groupID int64, operator string) error
+
+	// RestoreById 恢复分组（将 deleted 置为 0），operator 写入 editedBy。
+	RestoreById(ctx context.Context, groupID int64, operator string) error
 
 	// UpdateName 更新分组名称。
 	UpdateName(ctx context.Context, id int64, name string) error

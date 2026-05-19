@@ -469,6 +469,13 @@ definitions:
     - ArtifactHelmFormat
     - ArtifactPypiFormat
     - ArtifactNpmFormat
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.ArtifactRestoreEntitiesReq:
+    properties:
+      entityIDs:
+        items:
+          type: string
+        type: array
+    type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.ArtifactTreeListReq:
     properties:
       artifactID:
@@ -3672,6 +3679,39 @@ paths:
           schema:
             $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
       summary: 回收站列表
+      tags:
+      - artifacts
+  /artifacts/recycle/restore:
+    post:
+      consumes:
+      - application/json
+      description: |-
+        批量恢复回收站中的 artifact / group / package / version / asset。
+        entityIDs 复用 "kind.id" 串（与软删一致）；恢复时向上级联祖先链路（不向下级联）。
+        单条失败不阻断后续，整体返回汇总报告。
+      parameters:
+      - description: 恢复请求体
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.ArtifactRestoreEntitiesReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功（部分恢复时 status 字段标识失败条目）
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 恢复回收站中的实体
       tags:
       - artifacts
   /artifacts/tree/refresh:

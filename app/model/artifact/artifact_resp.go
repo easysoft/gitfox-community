@@ -338,6 +338,34 @@ type ArtifactNodeRemoveReport struct {
 	Data    []*ArtifactNodeRemoveRes `json:"data"`
 }
 
+// ==================== 恢复（Restore）====================
+// ==================== Restore ====================
+
+// ArtifactRestoreEntitiesReq 恢复请求体，复用 EntityID 串（与软删保持一致）。
+type ArtifactRestoreEntitiesReq struct {
+	EntityIDs []string `json:"entityIDs,omitempty"`
+}
+
+// ArtifactRestoreRes 单条恢复结果。结构与 ArtifactNodeRemoveRes 同形：
+//   - NodeID         : 入参的 EntityID 串（kind.id）
+//   - Status         : 处理状态（ok / not_found / invalid_id / unknown 等）
+//   - Packages/Versions/Assets : 本次恢复链路上各类实体的累计影响计数
+type ArtifactRestoreRes struct {
+	NodeID   string         `json:"nodeID"`
+	Status   ArtifactStatus `json:"status"`
+	Packages int            `json:"packages,omitempty"`
+	Versions int            `json:"versions,omitempty"`
+	Assets   int            `json:"assets,omitempty"`
+}
+
+// ArtifactRestoreReport 批量恢复汇总，结构与 ArtifactNodeRemoveReport 对称。
+type ArtifactRestoreReport struct {
+	Total   int                   `json:"total"`
+	Success int                   `json:"success"`
+	Failed  int                   `json:"failed"`
+	Data    []*ArtifactRestoreRes `json:"data"`
+}
+
 type JobUIDResponse struct {
 	UID string `json:"uid"`
 }

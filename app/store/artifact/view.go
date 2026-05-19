@@ -46,6 +46,15 @@ func (c *views) GetByID(ctx context.Context, id int64) (*model.ArtifactView, err
 	return viewToModel(&row), nil
 }
 
+// GetByIDIncludingDeleted 按 ID 取视图，不过滤 deleted 标记，用于回收站恢复路径。
+func (c *views) GetByIDIncludingDeleted(ctx context.Context, id int64) (*model.ArtifactView, error) {
+	var row artifactView
+	if err := c.db.WithContext(ctx).Take(&row, id).Error; err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
+	}
+	return viewToModel(&row), nil
+}
+
 func (c *views) GetDefault(ctx context.Context, spaceID int64) (*model.ArtifactView, error) {
 	var row artifactView
 	q := artifactView{SpaceID: spaceID, Default: true}

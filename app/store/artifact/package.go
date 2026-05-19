@@ -122,11 +122,6 @@ func (c *packages) SoftDelete(ctx context.Context, pkg *model.ArtifactPackage, o
 	return nil
 }
 
-func (c *packages) UnDelete(ctx context.Context, pkg *model.ArtifactPackage) error {
-	pkg.Deleted = 0
-	return c.Update(ctx, pkg)
-}
-
 func (c *packages) DeleteById(ctx context.Context, packageId int64) error {
 	delNum, err := c.deleteByIds(ctx, packageId)
 	if err != nil {

@@ -60,6 +60,13 @@ const (
 	ArtifactRenameSuccess                   I18nKey = "artifact.rename_success"                       // 重命名成功.
 	ArtifactRenameVersionedNotSupported     I18nKey = "artifact.rename_versioned_not_supported"       // 不支持重命名版本化包或包含版本化包的组.
 	ArtifactRepoQueryError                  I18nKey = "artifact.repo_query_error"                     // 查询仓库失败.
+	ArtifactRestoreEntityIdInvalidFormat    I18nKey = "artifact.restore_entity_id_invalid_format"     // 恢复实体 ID 格式不正确,应为 kind.id 形式.
+	ArtifactRestoreEntityTypeUnsupported    I18nKey = "artifact.restore_entity_type_unsupported"      // 不支持的恢复实体类型.
+	ArtifactRestoreError                    I18nKey = "artifact.restore_error"                        // 恢复制品失败.
+	ArtifactRestoreNotInRecycleBin          I18nKey = "artifact.restore_not_in_recycle_bin"           // 资源未在回收站中,无需恢复.
+	ArtifactRestoreParseError               I18nKey = "artifact.restore_parse_error"                  // 解析恢复实体 ID 失败.
+	ArtifactRestoreQueryError               I18nKey = "artifact.restore_query_error"                  // 校验恢复目标状态失败.
+	ArtifactRestoreSuccess                  I18nKey = "artifact.restore_success"                      // 制品恢复成功.
 	ArtifactSoftRemoveArtifactAssetExists   I18nKey = "artifact.soft_remove_artifact_asset_exists"    // 制品库中仍有未删除的制品文件(asset),无法删除制品库.
 	ArtifactSoftRemoveArtifactGroupExists   I18nKey = "artifact.soft_remove_artifact_group_exists"    // 制品库中仍有未删除的分组(group),无法删除制品库.
 	ArtifactSoftRemoveArtifactNotFound      I18nKey = "artifact.soft_remove_artifact_not_found"       // 指定的制品库不存在或已被删除.

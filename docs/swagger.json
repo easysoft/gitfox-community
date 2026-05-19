@@ -527,6 +527,52 @@
                 }
             }
         },
+        "/artifacts/recycle/restore": {
+            "post": {
+                "description": "批量恢复回收站中的 artifact / group / package / version / asset。\nentityIDs 复用 \"kind.id\" 串（与软删一致）；恢复时向上级联祖先链路（不向下级联）。\n单条失败不阻断后续，整体返回汇总报告。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "artifacts"
+                ],
+                "summary": "恢复回收站中的实体",
+                "parameters": [
+                    {
+                        "description": "恢复请求体",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.ArtifactRestoreEntitiesReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功（部分恢复时 status 字段标识失败条目）",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/artifacts/tree/refresh": {
             "post": {
                 "description": "按 format 重建制品树节点。format 必传，支持 generic/raw/maven/container/helm/pypi/npm，或 all 表示全量刷新。",
@@ -11612,6 +11658,17 @@
                 "ArtifactPypiFormat",
                 "ArtifactNpmFormat"
             ]
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.ArtifactRestoreEntitiesReq": {
+            "type": "object",
+            "properties": {
+                "entityIDs": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
         },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.ArtifactTreeListReq": {
             "type": "object",
