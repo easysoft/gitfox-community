@@ -11,6 +11,9 @@ const (
 
 	// WebhookParentSpace describes a space as webhook owner.
 	WebhookParentSpace WebhookParent = "space"
+
+	DefaultAuthMethod = "token"
+	DefaultAuthHeader = "X-Gitfox-Token"
 )
 
 var webhookParents = sortEnum([]WebhookParent{
