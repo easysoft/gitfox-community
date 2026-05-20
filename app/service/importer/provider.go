@@ -128,7 +128,7 @@ func getScmClientWithTransport(provider repoModel.Provider, slug string, authReq
 				return nil, errors.BadRequest.Wrap(err, "scm provider Host invalid")
 			}
 		} else {
-			c = gitlab.NewDefault()
+			c, _ = gitlab.New("https://jihulab.com")
 		}
 		transport = oauthTransport(provider.Password, oauth2.SchemeBearer)
 

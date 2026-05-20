@@ -73,8 +73,8 @@ func (c *Controller) Create(ctx *gin.Context) {
 		Secret:      reqBody.Secret,
 		Insecure:    reqBody.Insecure,
 		Triggers:    reqBody.Triggers, // triggers 入库时需要在 map 函数中转换为以逗号分隔的字符串
-		AuthMethod:  reqBody.AuthMethod,
-		AuthHeader:  reqBody.AuthHeader,
+		AuthMethod:  constant.DefaultAuthMethod,
+		AuthHeader:  constant.DefaultAuthHeader,
 		Enabled:     reqBody.Enabled,
 	}
 	// 调用 service 层创建 webhook
