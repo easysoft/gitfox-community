@@ -172,3 +172,27 @@ CREATE TABLE IF NOT EXISTS `ops_artifact_blobs` (
     KEY `idx_blobs_assetID_deleted` (`assetID`, `deleted`),
     KEY `idx_blobs_deleted` (`deleted`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='制品文件对象表';
+
+-- 9. 制品元数据资源表
+CREATE TABLE IF NOT EXISTS `ops_artifact_meta_assets` (
+	`id` int unsigned NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+	`artifactLibID` int unsigned NOT NULL COMMENT '所属制品库ID',
+	`type` varchar(50) NOT NULL DEFAULT '' COMMENT '制品库类型:file/docker/raw/helm/pypi/npm/maven/composer',
+	`path` varchar(255) NOT NULL DEFAULT '' COMMENT '元数据路径',
+	`contentType` varchar(100) NOT NULL DEFAULT '' COMMENT '内容类型',
+	`kind` varchar(50) NOT NULL DEFAULT '' COMMENT '元数据类型',
+	`blobID` int unsigned NOT NULL DEFAULT 0 COMMENT '关联文件对象ID',
+	`checkSum` varchar(500) NOT NULL DEFAULT '' COMMENT '校验和',
+	`createdBy` varchar(30) NOT NULL DEFAULT '' COMMENT '创建人',
+	`createdDate` datetime NULL COMMENT '创建时间',
+	`editedBy` varchar(30) NOT NULL DEFAULT '' COMMENT '更新人',
+	`editedDate` datetime NULL COMMENT '更新时间',
+	`deleted` tinyint(1) NOT NULL DEFAULT 0 COMMENT '删除标识，0-未删除，1-已删除',
+	PRIMARY KEY (`id`) USING BTREE
+)
+ENGINE=InnoDB COMMENT='制品元数据资源表';
+
+CREATE UNIQUE INDEX `uk_meta_artifactID_type_path` ON `ops_artifact_meta_assets` (`artifactLibID`, `type`, `path`);
+CREATE INDEX `idx_meta_artifactID_deleted` ON `ops_artifact_meta_assets` (`artifactLibID`, `deleted`);
+CREATE INDEX `idx_meta_blobID` ON `ops_artifact_meta_assets` (`blobID`);
+CREATE INDEX `idx_meta_deleted` ON `ops_artifact_meta_assets` (`deleted`);

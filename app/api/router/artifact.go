@@ -10,7 +10,7 @@ func registerArtifactRoutes(group *gin.RouterGroup, controller *Controller) {
 
 	{
 		// 创建制品库
-		artifact.POST("/views", controller.Artifact.CreateView)
+		artifact.POST("/views", controller.Artifact.CreateArtifact)
 
 		// 创建 group
 		artifact.POST("/groups", controller.Artifact.CreateGroup)

@@ -44,8 +44,8 @@ func (c *Controller) Service() artifactSvc.Interface {
 // @Success 200 {object} resp.ObjectResponse "成功"
 // @Failure 400 {object} resp.ObjectResponse "参数错误"
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
-// @Router /artifacts/views [post]
-func (c *Controller) CreateView(ctx *gin.Context) {
+// @Router /artifacts [post]
+func (c *Controller) CreateArtifact(ctx *gin.Context) {
 	var reqBody model.CreateArtifactViewReq
 	if err := ctx.ShouldBindBodyWithJSON(&reqBody); err != nil {
 		err = errors.WithI18nKey(err, i18n.ArtifactBodyParamError)
