@@ -45,6 +45,21 @@ type AssetKind string
 const (
 	AssetKindMain AssetKind = "main"
 	AssetKindSub  AssetKind = "subordinate"
+
+//Format 是否有 sub asset 说明
+// generic 没有 单个文件，全部 main
+// raw 没有 单个文件，全部 main
+// container（Docker/OCI） 没有 manifest/config/layer blob 都是 main
+// helm 几乎没有（chart 主体一个 tgz） main 居多，prov 签名才会是 sub
+// maven 有 每个 jar 带 .asc/.md5/.sha1/.sha256/.sha512
+// pypi/npm 视实现 一般 main 为主
+
+// Path Kind
+// maven-metadata.xml main
+// maven-metadata.xml.md5 sub
+// maven-metadata.xml.sha1 sub
+// maven-metadata.xml.sha256 sub
+// maven-metadata.xml.sha512 sub
 )
 
 func ValidateAssetKind(kind AssetKind) error {
@@ -125,7 +140,6 @@ type CreateArtifactView struct {
 	RepoID      int64            `json:"repoID"`
 	Type        ArtifactViewType `json:"type"`
 	Format      ArtifactFormat   `json:"format"`
-	Default     bool             `json:"isDefault"`
 	EditedBy    string           `json:"editedBy"`
 	CreatedBy   string           `json:"createdBy"`
 }
@@ -271,7 +285,6 @@ type CreateArtifactAsset struct {
 	Path        string         `json:"path"`
 	ContentType string         `json:"contentType"`
 	Kind        AssetKind      `json:"kind"`
-	Metadata    string         `json:"metadata"`
 	BlobID      int64          `json:"blobID"`
 	CheckSum    string         `json:"checkSum"`
 	CreatedBy   string         `json:"createdBy"`

@@ -176,23 +176,20 @@ func RegisterPipelineHandler(scheduler *jobsSvc.Scheduler, t triggerer.Triggerer
 	return scheduler.RegisterHandler(pipelineSvc.JobTypePipelineCron, handler)
 }
 
+// RegisterArtifactGCHandler 注册制品 GC 的 cron handler。
+// 仅注册通用 JobTypeArtifactGC：自动触发清理全部格式（entity 留空），
+// 用户主动调用 /artifacts/garbage[/:entity] 时按指定 entity 清理。
 func RegisterArtifactGCHandler(scheduler *jobsSvc.Scheduler, svc artifactSvc.Interface) error {
-	if err := scheduler.RegisterHandler(artifactSvc.JobTypeArtifactGC, artifactGCHandler{svc: svc}); err != nil {
-		return err
-	}
-	if err := scheduler.RegisterHandler(artifactSvc.JobTypeArtifactContainerGC, artifactContainerGCHandler{svc: svc}); err != nil {
-		return err
-	}
-	if err := scheduler.RegisterHandler(artifactSvc.JobTypeArtifactSoftRemoveGC, artifactSoftRemoveGCHandler{svc: svc}); err != nil {
-		return err
-	}
-	return nil
+	return scheduler.RegisterHandler(artifactSvc.JobTypeArtifactGC, artifactGCHandler{svc: svc})
 }
 
 type artifactGCHandler struct {
 	svc artifactSvc.Interface
 }
 
+// artifactGCInput 是制品 GC 任务的入参。
+//   - Entity 为空 → 清理全部格式（自动触发场景）
+//   - Entity 指定具体 format → 仅清理该格式（用户主动 API 触发场景）
 type artifactGCInput struct {
 	Entity model.ArtifactFormat `json:"entity,omitempty"`
 }
@@ -205,26 +202,6 @@ func (h artifactGCHandler) Handle(ctx context.Context, input string, _ pkgJobs.P
 		}
 	}
 	_, err := h.svc.GarbageCollect(ctx, in.Entity)
-	return "", err
-}
-
-type artifactContainerGCHandler struct {
-	svc artifactSvc.Interface
-}
-
-func (h artifactContainerGCHandler) Handle(ctx context.Context, input string, _ pkgJobs.ProgressReporter) (string, error) {
-	_ = input
-	_, err := h.svc.GarbageCollectContainer(ctx)
-	return "", err
-}
-
-type artifactSoftRemoveGCHandler struct {
-	svc artifactSvc.Interface
-}
-
-func (h artifactSoftRemoveGCHandler) Handle(ctx context.Context, input string, _ pkgJobs.ProgressReporter) (string, error) {
-	_ = input
-	_, err := h.svc.GarbageCollectSoftRemove(ctx)
 	return "", err
 }
 

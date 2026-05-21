@@ -27,7 +27,6 @@ type Interface interface {
 	// ResolveView 按请求中的 artifactID 或默认视图规则解析实际视图。
 	// 规则：
 	//  1. artifactID > 0：优先按 ID 精确取库
-	//  2. artifactID == 0 或未传：继续按 spaceID/repoID 走默认 view 逻辑
 	ResolveView(ctx context.Context, req *model.SpaceRepoReq) (*model.ArtifactView, error)
 
 	// ParseSpaceView 解析空间+仓库参数，返回视图描述符（包含 artifactID 和路由信息）。
@@ -107,14 +106,9 @@ type Interface interface {
 	// TriggerGarbageCollect 触发指定格式或全量软删资源的 GC 异步任务。
 	TriggerGarbageCollect(ctx context.Context, entity model.ArtifactFormat) (*model.JobUIDResponse, error)
 
-	// GarbageCollect 执行指定格式或全量软删资源 GC。
+	// GarbageCollect 执行指定格式或全量软删资源 GC（cron job / 用户主动 API 共用）。
+	// entity 留空 → 清全部格式；非空 → 仅清指定 format。
 	GarbageCollect(ctx context.Context, entity model.ArtifactFormat) (*model.ArtifactGarbageReportRes, error)
-
-	// GarbageCollectContainer 执行容器镜像 GC，清理过期 blob（cron job 调用）。
-	GarbageCollectContainer(ctx context.Context) (*model.ArtifactGarbageReportRes, error)
-
-	// GarbageCollectSoftRemove 执行软删资源 GC，清理过期的 assets/versions/packages（cron job 调用）。
-	GarbageCollectSoftRemove(ctx context.Context) (*model.ArtifactGarbageReportRes, error)
 
 	// ---- 容器镜像 ----
 

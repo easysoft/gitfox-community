@@ -88,27 +88,7 @@ func (s *Service) triggerGarbageCollect(ctx context.Context, jobType string, ent
 // 执行层（同步）：cron handler / 同步链路实际执行 GC，落地到 storage
 // =============================================================================
 
-// GarbageCollectSoftRemove 清理已软删的非容器格式资源（raw / generic / helm 等）。
-// 仅清回收站保留期外的资源；container 格式由 GarbageCollectContainer 单独处理。
-func (s *Service) GarbageCollectSoftRemove(ctx context.Context) (*model.ArtifactGarbageReportRes, error) {
-	report, err := s.artStore.StatisticAssets(ctx, s.config.RecycleBinRetention, artifactStore.ExcludeContainerOption{})
-	if err != nil {
-		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactGcExecuteError)
-	}
-	return s.garbageCollect(ctx, report.DeleteList)
-}
-
-// GarbageCollectContainer 清理 container 格式制品的孤立 blob / manifest。
-// 容器协议产生的 dangling blob 由此函数处理，与软删通用 GC 互不重叠。
-func (s *Service) GarbageCollectContainer(ctx context.Context) (*model.ArtifactGarbageReportRes, error) {
-	report, err := s.artStore.StatisticAssets(ctx, s.config.RecycleBinRetention, artifactStore.ContainerFormatOption{})
-	if err != nil {
-		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactGcExecuteError)
-	}
-	return s.garbageCollect(ctx, report.DeleteList)
-}
-
-// GarbageCollect 执行指定格式或全量软删资源的 GC。
+// GarbageCollect 执行指定格式或全量软删资源的 GC（cron 自动触发 + 用户主动 API 共用）。
 // entity 为空时清理所有 format；否则只清指定格式，复用 garbageCollect 主流程。
 func (s *Service) GarbageCollect(ctx context.Context, entity model.ArtifactFormat) (*model.ArtifactGarbageReportRes, error) {
 	entity, err := normalizeGarbageCollectEntity(entity)

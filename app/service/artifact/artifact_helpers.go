@@ -336,7 +336,8 @@ func (s *Service) containerRegistryReference() string {
 		return ""
 	}
 	baseURL := *registryURL
-	baseURL.Path = strings.TrimSuffix(strings.TrimRight(baseURL.Path, "/"), "/v2")
+	// 循环剥掉尾部 /v2：uiURL 可能本身就配了 /v2，叠加 GenerateRegistryURL 的 JoinPath("v2") 后 path 会变成 /v2/v2。
+	baseURL.Path = trimTrailingV2(baseURL.Path)
 	baseURL.RawQuery = ""
 	baseURL.Fragment = ""
 	if baseURL.Host == "" {
@@ -357,6 +358,20 @@ func appendSlashSegments(dst []string, p string) []string {
 		return dst
 	}
 	return append(dst, strings.Split(trimmed, "/")...)
+}
+
+// trimTrailingV2 去掉路径尾部所有 "/v2" 后缀。
+// uiURL 若本身已带 /v2，GenerateRegistryURL JoinPath("v2") 会再叠一层，需要循环剥净。
+func trimTrailingV2(p string) string {
+	for {
+		p = strings.TrimRight(p, "/")
+		next := strings.TrimSuffix(p, "/v2")
+		if next == p {
+			break
+		}
+		p = next
+	}
+	return p
 }
 
 // nodeInfoSpaceName 取 nodeInfo 响应中的空间名。

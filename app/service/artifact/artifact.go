@@ -50,8 +50,6 @@ const artifactStoragePrefix = "artifact"
 
 const (
 	JobTypeArtifactGC               = "gitfox:cleanup:artifact-garbage-collector"
-	JobTypeArtifactContainerGC      = "gitfox:cleanup:artifact-container-garbage-collector"
-	JobTypeArtifactSoftRemoveGC     = "gitfox:cleanup:artifact-soft-remove"
 	ArtifactGCJobMaxDurationSeconds = 3600
 )
 
@@ -165,9 +163,6 @@ func (s *Service) CreateView(ctx context.Context, req *model.CreateArtifactViewR
 		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactViewNameDuplicate)
 	}
 
-	// 判断是否为该作用域下的第一个视图：复用已有的 GetDefault 方法，
-	// 如果查不到默认视图，说明当前作用域还没有视图，新建的就自动设为默认。
-	isDefault := !s.hasDefaultView(ctx, req.SpaceID, req.RepoID)
 	viewType := resolveArtifactViewType(req.SpaceID, req.RepoID)
 
 	session, _ := request.GetAuthSession(ctx)
@@ -179,7 +174,6 @@ func (s *Service) CreateView(ctx context.Context, req *model.CreateArtifactViewR
 		RepoID:      req.RepoID,
 		Format:      artifact.ArtifactFormat(req.Format),
 		Type:        viewType,
-		Default:     isDefault,
 		CreatedBy:   session.User.Account,
 		EditedBy:    session.User.Account,
 	}
@@ -227,18 +221,6 @@ func resolveArtifactViewType(spaceID, repoID int64) model.ArtifactViewType {
 	}
 }
 
-// hasDefaultView 检查指定作用域下是否已存在默认视图。
-// 复用已有的 GetDefault / GetDefaultByRepoAndSpace 方法，无需额外的 store 查询。
-func (s *Service) hasDefaultView(ctx context.Context, spaceID, repoID int64) bool {
-	var err error
-	if repoID > 0 {
-		_, err = s.artStore.Views().GetDefaultByRepoAndSpace(ctx, repoID, spaceID)
-	} else {
-		_, err = s.artStore.Views().GetDefault(ctx, spaceID)
-	}
-	return err == nil
-}
-
 // ResolveView 按请求中的 artifactID 或默认视图规则解析实际视图。
 // 规则：
 //  1. artifactID > 0：优先按 ID 精确取库
@@ -247,38 +229,19 @@ func (s *Service) ResolveView(ctx context.Context, req *model.SpaceRepoReq) (*mo
 	if req == nil {
 		req = &model.SpaceRepoReq{}
 	}
-
-	if req.ArtifactID > 0 {
-		view, err := s.artStore.Views().GetByID(ctx, req.ArtifactID)
-		if err != nil {
-			if pkgErrors.Is(err, pkgErrors.ErrResourceNotFound) {
-				return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactViewNotFound)
-			}
-			return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactViewQueryError)
+	view, err := s.artStore.Views().GetByID(ctx, req.ArtifactID)
+	if err != nil {
+		if pkgErrors.Is(err, pkgErrors.ErrResourceNotFound) {
+			return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactViewNotFound)
 		}
-		if req.SpaceID > 0 && view.SpaceID != req.SpaceID {
-			return nil, pkgErrors.WithI18nKey(
-				fmt.Errorf("artifactID %d does not belong to spaceID %d", req.ArtifactID, req.SpaceID),
-				i18n.ArtifactViewScopeMismatch,
-			)
-		}
-		if req.RepoID > 0 {
-			if req.SpaceID == 0 {
-				return nil, pkgErrors.WithI18nKey(
-					errors.New("spaceID is required when repoID is provided"),
-					i18n.ArtifactSpaceIdRequired,
-				)
-			}
-			if view.RepoID != req.RepoID {
-				return nil, pkgErrors.WithI18nKey(
-					fmt.Errorf("artifactID %d does not belong to repoID %d under spaceID %d", req.ArtifactID, req.RepoID, req.SpaceID),
-					i18n.ArtifactViewScopeMismatch,
-				)
-			}
-		}
-		return view, nil
+		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactViewQueryError)
 	}
-
+	if req.SpaceID > 0 && view.SpaceID != req.SpaceID {
+		return nil, pkgErrors.WithI18nKey(
+			fmt.Errorf("artifactID %d does not belong to spaceID %d", req.ArtifactID, req.SpaceID),
+			i18n.ArtifactViewScopeMismatch,
+		)
+	}
 	if req.RepoID > 0 {
 		if req.SpaceID == 0 {
 			return nil, pkgErrors.WithI18nKey(
@@ -286,16 +249,12 @@ func (s *Service) ResolveView(ctx context.Context, req *model.SpaceRepoReq) (*mo
 				i18n.ArtifactSpaceIdRequired,
 			)
 		}
-		view, err := s.artStore.Views().GetDefaultByRepoAndSpace(ctx, req.RepoID, req.SpaceID)
-		if err != nil {
-			return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactDefaultViewQueryError)
+		if view.RepoID != req.RepoID {
+			return nil, pkgErrors.WithI18nKey(
+				fmt.Errorf("artifactID %d does not belong to repoID %d under spaceID %d", req.ArtifactID, req.RepoID, req.SpaceID),
+				i18n.ArtifactViewScopeMismatch,
+			)
 		}
-		return view, nil
-	}
-
-	view, err := s.artStore.Views().GetDefault(ctx, req.SpaceID)
-	if err != nil {
-		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactDefaultViewQueryError)
 	}
 	return view, nil
 }
@@ -614,25 +573,77 @@ func (s *Service) listAssetPageInner(ctx context.Context, kind model.ArtifactEnt
 	return results[start:end], total, nil
 }
 
+// listGroupAssetsForPage 按 group 维度拉资产。
+//   - generic：asset 直挂 group → ListGroupAssets。
+//   - raw / container / helm / maven / pypi / npm：asset 挂 versionID，需要 group → packages(GroupID) → versions → assets。
+//
+// recursive=true 时同样适用：递归到子 group 后按各自 format 选链路。
 func (s *Service) listGroupAssetsForPage(ctx context.Context, groupID int64, recursive bool) ([]*model.ArtifactAssetsRes, error) {
-	assets, err := s.artStore.ListGroupAssets(ctx, groupID)
+	groupSelf, err := s.artStore.Groups().GetById(ctx, groupID)
+	if err != nil {
+		return nil, err
+	}
+
+	assets, err := s.collectGroupAssetsByFormat(ctx, groupSelf)
 	if err != nil || !recursive {
 		return assets, err
 	}
 
 	// more=true 时把当前目录下所有子目录资产拉平到同一列表，后续统一过滤、排序和分页。
-	groups, err := s.artStore.Groups().ListDescendants(ctx, groupID)
+	descendants, err := s.artStore.Groups().ListDescendants(ctx, groupID)
 	if err != nil {
 		return nil, err
 	}
-	for _, group := range groups {
-		groupAssets, e := s.artStore.ListGroupAssets(ctx, group.ID)
+	for _, group := range descendants {
+		groupAssets, e := s.collectGroupAssetsByFormat(ctx, group)
 		if e != nil {
 			return nil, e
 		}
 		assets = append(assets, groupAssets...)
 	}
 	return assets, nil
+}
+
+// collectGroupAssetsByFormat 按 group.Format 选择资产收集策略。
+//   - generic：asset 直挂 group（groupID）→ ListGroupAssets。
+//   - 其它（raw / container / helm / maven / pypi / npm 等）：asset 挂 versionID，
+//     需要 group → packages(GroupID) → versions → assets。
+func (s *Service) collectGroupAssetsByFormat(ctx context.Context, group *model.ArtifactGroup) ([]*model.ArtifactAssetsRes, error) {
+	if group == nil {
+		return nil, nil
+	}
+	if group.Format == model.ArtifactGenericFormat {
+		return s.artStore.ListGroupAssets(ctx, group.ID)
+	}
+	return s.listVersionedGroupAssets(ctx, group.ID)
+}
+
+// listVersionedGroupAssets 把 group 下所有 package 的 version 资产拍平返回。
+// 适用于资产挂 versionID 的格式（raw / container / helm / maven / pypi / npm）。
+func (s *Service) listVersionedGroupAssets(ctx context.Context, groupID int64) ([]*model.ArtifactAssetsRes, error) {
+	pkgs, err := s.artStore.Packages().Search(ctx, artifactStore.GroupPackagesOption{GroupID: groupID})
+	if err != nil {
+		return nil, err
+	}
+	if len(pkgs) == 0 {
+		return nil, nil
+	}
+
+	var results []*model.ArtifactAssetsRes
+	for _, pkg := range pkgs {
+		versions, e := s.artStore.Versions().Find(ctx, model.SearchVersionOption{PackageID: pkg.ID})
+		if e != nil {
+			return nil, e
+		}
+		for _, ver := range versions {
+			versionAssets, ae := s.artStore.ListAssets(ctx, ver.ID)
+			if ae != nil {
+				return nil, ae
+			}
+			results = append(results, versionAssets...)
+		}
+	}
+	return results, nil
 }
 
 // GetAsset 返回单个资产的 nodeInfo 详情。
@@ -896,11 +907,8 @@ func (s *Service) getGroupAssetNodeInfo(
 	return info, nil
 }
 
-func (s *Service) getStandaloneAssetNodeInfo(
-	ctx context.Context,
-	dbAsset *model.ArtifactAsset,
-	assetRes *model.ArtifactAssetsRes,
-) (*model.ArtifactAssetInfo, error) {
+// getStandaloneAssetNodeInfo 获取孤立资产节点信息
+func (s *Service) getStandaloneAssetNodeInfo(ctx context.Context, dbAsset *model.ArtifactAsset, assetRes *model.ArtifactAssetsRes) (*model.ArtifactAssetInfo, error) {
 	// standalone asset 不属于 package/version/group，只按 view 级路径返回。
 	view, err := s.ParseSpaceView(ctx, &model.SpaceRepoReq{ArtifactID: dbAsset.ArtifactID.Int64})
 	if err != nil {
@@ -920,6 +928,7 @@ func (s *Service) getStandaloneAssetNodeInfo(
 	return info, nil
 }
 
+// DownloadAsset 下载资产
 func (s *Service) DownloadAsset(ctx context.Context, assetID int64) (io.ReadCloser, *model.ArtifactBlob, string, error) {
 	// 下载走 asset -> blob -> content store 三段定位，避免直接信任外部传入路径。
 	asset, err := s.artStore.Assets().GetById(ctx, assetID)
@@ -938,6 +947,7 @@ func (s *Service) DownloadAsset(ctx context.Context, assetID int64) (io.ReadClos
 	return reader, blob, asset.Path, nil
 }
 
+// Upload 上传资产
 func (s *Service) Upload(ctx context.Context, view *adapter.ViewDescriptor, format model.ArtifactFormat, req *http.Request) ([]*adapter.SavedAsset, error) {
 	var uploader adapter.ArtifactPackageUploader
 
@@ -1017,6 +1027,7 @@ func (s *Service) ActiveGroupPathExists(ctx context.Context, artifactID int64, n
 	return true, nil
 }
 
+// CreateGroup 创建分组
 func (s *Service) CreateGroup(ctx context.Context, artifactID int64, names []string, format model.ArtifactFormat) (*model.ArtifactGroupEndpoint, error) {
 	var result *model.ArtifactGroupEndpoint
 	session, _ := req.GetAuthSession(ctx)
@@ -1480,6 +1491,7 @@ func (s *Service) StatisticSummary(ctx context.Context) (map[string]*model.Artif
 	return res, nil
 }
 
+// SoftRemove 软删除资产
 func (s *Service) SoftRemove(ctx context.Context, spaceID int64, req *model.SoftRemoveEntitiesReq) (*model.ArtifactNodeRemoveReport, error) {
 	ids := req.EntityIDs
 	report := &model.ArtifactNodeRemoveReport{Total: len(ids), Data: make([]*model.ArtifactNodeRemoveRes, len(ids))}
