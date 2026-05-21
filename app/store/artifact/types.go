@@ -15,16 +15,15 @@ import (
 // 时间字段使用 *datetime.Local，与系统其他 store 层规范一致。
 // service 层及以上使用 app/model/artifact 下的 struct（时间为 *time.Time）。
 
-// artifactView → ops_artifact
+// artifactView → ops_artifact_libs
 type artifactView struct {
 	ID          int64           `gorm:"column:id;primaryKey"`
 	Name        string          `gorm:"column:name"`
 	Description string          `gorm:"column:desc"`
 	SpaceID     int64           `gorm:"column:spaceID"`
 	RepoID      int64           `gorm:"column:repoID"`
-	Format      string          `gorm:"column:format"`
-	Type        string          `gorm:"column:type"`
-	Default     bool            `gorm:"column:isDefault"`
+	Format      string          `gorm:"column:type"`
+	Type        string          `gorm:"column:scope"`
 	CreatedBy   string          `gorm:"column:createdBy"`
 	CreatedDate *datetime.Local `gorm:"column:createdDate"`
 	EditedBy    string          `gorm:"column:editedBy"`
@@ -32,7 +31,7 @@ type artifactView struct {
 	Deleted     int8            `gorm:"column:deleted"`
 }
 
-func (artifactView) TableName() string { return "ops_artifact" }
+func (artifactView) TableName() string { return "ops_artifact_libs" }
 
 func (v *artifactView) BeforeCreate(_ *gorm.DB) error {
 	now := datetime.NowLocalTime()
@@ -50,9 +49,9 @@ func (v *artifactView) BeforeUpdate(_ *gorm.DB) error {
 type artifactGroup struct {
 	ID          int64           `gorm:"column:id;primaryKey"`
 	ParentID    null.Int        `gorm:"column:parentID"`
-	ArtifactID  int64           `gorm:"column:artifactID"`
+	ArtifactID  int64           `gorm:"column:artifactLibID"`
 	Name        string          `gorm:"column:name"`
-	Format      string          `gorm:"column:format"`
+	Format      string          `gorm:"column:type"`
 	CreatedBy   string          `gorm:"column:createdBy"`
 	CreatedDate *datetime.Local `gorm:"column:createdDate"`
 	EditedBy    string          `gorm:"column:editedBy"`
@@ -77,11 +76,11 @@ func (g *artifactGroup) BeforeUpdate(_ *gorm.DB) error {
 // artifactPackage → ops_artifact_packages
 type artifactPackage struct {
 	ID          int64           `gorm:"column:id;primaryKey"`
-	ArtifactID  int64           `gorm:"column:artifactID"`
+	ArtifactID  int64           `gorm:"column:artifactLibID"`
 	Name        string          `gorm:"column:name"`
 	Namespace   string          `gorm:"column:namespace"`
 	GroupID     int64           `gorm:"column:groupID"`
-	Format      string          `gorm:"column:format"`
+	Format      string          `gorm:"column:type"`
 	CreatedBy   string          `gorm:"column:createdBy"`
 	CreatedDate *datetime.Local `gorm:"column:createdDate"`
 	EditedBy    string          `gorm:"column:editedBy"`
@@ -108,7 +107,7 @@ type artifactVersion struct {
 	ID          int64           `gorm:"column:id;primaryKey"`
 	PackageID   int64           `gorm:"column:packageID"`
 	Version     string          `gorm:"column:version"`
-	Metadata    string          `gorm:"column:metadata"`
+	Metadata    string          `gorm:"-"`
 	CreatedBy   string          `gorm:"column:createdBy"`
 	CreatedDate *datetime.Local `gorm:"column:createdDate"`
 	EditedBy    string          `gorm:"column:editedBy"`
@@ -134,15 +133,14 @@ func (v *artifactVersion) BeforeUpdate(_ *gorm.DB) error {
 type artifactAsset struct {
 	ID          int64           `gorm:"column:id;primaryKey"`
 	VersionID   null.Int        `gorm:"column:versionID"`
-	ArtifactID  null.Int        `gorm:"column:artifactID"`
+	ArtifactID  null.Int        `gorm:"column:artifactLibID"`
 	GroupID     null.Int        `gorm:"column:groupID"`
-	Format      string          `gorm:"column:format"`
-	Path        string          `gorm:"column:path"`
+	Format      string          `gorm:"column:type"`
+	Path        string          `gorm:"column:basename"`
 	ContentType string          `gorm:"column:contentType"`
 	Kind        string          `gorm:"column:kind"`
-	Metadata    string          `gorm:"column:metadata"`
 	BlobID      int64           `gorm:"column:blobID"`
-	CheckSum    string          `gorm:"column:checkSum"`
+	CheckSum    string          `gorm:"column:checksum"`
 	CreatedBy   string          `gorm:"column:createdBy"`
 	CreatedDate *datetime.Local `gorm:"column:createdDate"`
 	EditedBy    string          `gorm:"column:editedBy"`
@@ -209,7 +207,7 @@ type artifactBlob struct {
 	EditedBy    string          `gorm:"column:editedBy"`
 	EditedDate  *datetime.Local `gorm:"column:editedDate"`
 	AssetID     int64           `gorm:"column:assetID"`
-	CheckSum    string          `gorm:"column:checkSum"`
+	CheckSum    string          `gorm:"column:checksum"`
 }
 
 func (artifactBlob) TableName() string { return "ops_artifact_blobs" }
@@ -227,15 +225,18 @@ func (b *artifactBlob) BeforeUpdate(_ *gorm.DB) error {
 }
 
 // artifactTreeNode → ops_artifact_tree_nodes
+// 注：新设计稿表中的 type 列承载制品库类型(file/docker/...)，
+// 旧业务字段 Type(节点类型 group/package/version/asset) 在新表无对应列，
+// 这里保留 Type 字段但设为 gorm:"-" 不入库，由业务层自行兜底。
 type artifactTreeNode struct {
 	ID         int64    `gorm:"column:id;primaryKey"`
 	ParentID   null.Int `gorm:"column:parentID"`
-	ArtifactID int64    `gorm:"column:artifactID"`
-	Name       string   `gorm:"column:name"`
-	Path       string   `gorm:"column:path"`
-	Type       string   `gorm:"column:type"`
-	Format     string   `gorm:"column:format"`
-	TargetID   null.Int `gorm:"column:targetID"`
+	ArtifactID int64    `gorm:"column:artifactLibID"`
+	Name       string   `gorm:"column:nodeName"`
+	Path       string   `gorm:"column:nodePath"`
+	Type       string   `gorm:"-"`
+	Format     string   `gorm:"column:type"`
+	TargetID   null.Int `gorm:"column:linkRecord"`
 }
 
 func (artifactTreeNode) TableName() string { return "ops_artifact_tree_nodes" }
@@ -273,7 +274,6 @@ func viewToModel(v *artifactView) *model.ArtifactView {
 		RepoID:      v.RepoID,
 		Format:      model.ArtifactFormat(v.Format),
 		Type:        model.ArtifactViewType(v.Type),
-		Default:     v.Default,
 		CreatedBy:   v.CreatedBy,
 		CreatedDate: v.CreatedDate,
 		EditedBy:    v.EditedBy,
@@ -294,7 +294,6 @@ func viewFromModel(m *model.ArtifactView) *artifactView {
 		RepoID:      m.RepoID,
 		Type:        string(m.Type),
 		Format:      string(m.Format),
-		Default:     m.Default,
 		CreatedBy:   m.CreatedBy,
 		CreatedDate: m.CreatedDate,
 		EditedBy:    m.EditedBy,
@@ -456,7 +455,6 @@ func assetToModel(a *artifactAsset) *model.ArtifactAsset {
 		Path:        a.Path,
 		ContentType: a.ContentType,
 		Kind:        model.AssetKind(a.Kind),
-		Metadata:    a.Metadata,
 		BlobID:      a.BlobID,
 		CheckSum:    a.CheckSum,
 		CreatedBy:   a.CreatedBy,
@@ -480,7 +478,6 @@ func assetFromModel(m *model.ArtifactAsset) *artifactAsset {
 		Path:        m.Path,
 		ContentType: m.ContentType,
 		Kind:        string(m.Kind),
-		Metadata:    m.Metadata,
 		BlobID:      m.BlobID,
 		CheckSum:    m.CheckSum,
 		CreatedBy:   m.CreatedBy,

@@ -29,6 +29,7 @@ type ModelManager struct {
 	treeSyncer *artifactModel.Syncer
 }
 
+// NewModelManager 创建模型管理器
 func NewModelManager(artStore artifactStore.Interface, view *ViewDescriptor, pkg *PackageDescriptor, creator *model.CreatorInfo) *ModelManager {
 	return &ModelManager{
 		store:         artStore,
@@ -88,6 +89,7 @@ func (mm *ModelManager) Sync(ctx context.Context, assetDesc *AssetDescriptor) (*
 	return saved, nil
 }
 
+// createIsolatedAsset 创建孤立资产
 func (mm *ModelManager) createIsolatedAsset(ctx context.Context, descriptor *AssetDescriptor) (*model.ArtifactAsset, error) {
 	currAsset, assetExist, err := mm.getExistAsset(func() (*model.ArtifactAsset, error) {
 		return mm.store.Assets().GetPath(ctx, descriptor.Path, descriptor.Format)
@@ -105,6 +107,7 @@ func (mm *ModelManager) createIsolatedAsset(ctx context.Context, descriptor *Ass
 	return newAsset, nil
 }
 
+// createExclusiveAsset 创建独占资产
 func (mm *ModelManager) createExclusiveAsset(ctx context.Context, ver *model.ArtifactVersion, descriptor *AssetDescriptor) (*model.ArtifactAsset, bool, error) {
 	// exclusive 语义要求同一 version 最终只保留当前资产，其它资产统一软删。
 	currAsset, assetExist, err := mm.getExistAsset(func() (*model.ArtifactAsset, error) {
@@ -136,6 +139,7 @@ func (mm *ModelManager) createExclusiveAsset(ctx context.Context, ver *model.Art
 	return newAsset, false, nil
 }
 
+// createNormalAsset 创建普通资产
 func (mm *ModelManager) createNormalAsset(ctx context.Context, ver *model.ArtifactVersion, descriptor *AssetDescriptor) (*model.ArtifactAsset, bool, error) {
 	currAsset, assetExist, err := mm.getExistAsset(func() (*model.ArtifactAsset, error) {
 		return mm.store.Assets().GetVersionAsset(ctx, descriptor.Path, ver.ID)
@@ -161,6 +165,7 @@ func (mm *ModelManager) createNormalAsset(ctx context.Context, ver *model.Artifa
 	return newAsset, false, nil
 }
 
+// createNormalAssetToGroup 创建普通资产到 group
 func (mm *ModelManager) createNormalAssetToGroup(ctx context.Context, descriptor *AssetDescriptor) (*model.ArtifactAsset, bool, error) {
 	groupID := mm.pkgDescriptor.GroupID
 	if groupID == 0 {
@@ -190,6 +195,7 @@ func (mm *ModelManager) createNormalAssetToGroup(ctx context.Context, descriptor
 	return newAsset, false, nil
 }
 
+// getExistAsset 获取资产是否存在
 func (mm *ModelManager) getExistAsset(mutateFunc func() (*model.ArtifactAsset, error)) (*model.ArtifactAsset, bool, error) {
 	currAsset, err := mutateFunc()
 	if err == nil {
@@ -201,6 +207,7 @@ func (mm *ModelManager) getExistAsset(mutateFunc func() (*model.ArtifactAsset, e
 	return nil, false, err
 }
 
+// updateAsset 更新资产
 func (mm *ModelManager) updateAsset(ctx context.Context, current *model.ArtifactAsset, descriptor *AssetDescriptor) (*model.ArtifactAsset, error) {
 	// 更新资产时会新建 blob 并回链，旧 blob 仅做软删以保留历史引用痕迹。
 	now := time.Now().UnixMilli()
@@ -228,6 +235,7 @@ func (mm *ModelManager) updateAsset(ctx context.Context, current *model.Artifact
 	return current, nil
 }
 
+// createAsset 创建资产
 func (mm *ModelManager) createAsset(ctx context.Context, newObj *model.ArtifactAsset, descriptor *AssetDescriptor) error {
 	now := time.Now().UnixMilli()
 	newBlob, err := mm.createBlob(ctx, descriptor, now)
@@ -250,13 +258,6 @@ func (mm *ModelManager) createAsset(ctx context.Context, newObj *model.ArtifactA
 	if descriptor.Hash != nil {
 		createReq.CheckSum = descriptor.Hash.String()
 	}
-	if descriptor.Metadata != nil {
-		metadata, e := descriptor.Metadata.ToJSON()
-		if e != nil {
-			return e
-		}
-		createReq.Metadata = string(metadata)
-	}
 	created, err := mm.store.Assets().Create(ctx, createReq)
 	if err != nil {
 		return err
@@ -265,11 +266,13 @@ func (mm *ModelManager) createAsset(ctx context.Context, newObj *model.ArtifactA
 	return mm.linkAssetToBlob(ctx, newObj.ID, newBlob)
 }
 
+// linkAssetToBlob 链接资产到 blob
 func (mm *ModelManager) linkAssetToBlob(ctx context.Context, assetID int64, blob *model.ArtifactBlob) error {
 	blob.AssetID = assetID
 	return mm.store.Blobs().Update(ctx, blob)
 }
 
+// createBlob 创建 blob
 func (mm *ModelManager) createBlob(ctx context.Context, descriptor *AssetDescriptor, createTime int64) (*model.ArtifactBlob, error) {
 	createReq := &model.CreateArtifactBlob{
 		StorageID: mm.view.StorageID,
@@ -287,6 +290,7 @@ func (mm *ModelManager) createBlob(ctx context.Context, descriptor *AssetDescrip
 	return blobModel, nil
 }
 
+// validateAsset 验证资产是否需要更新
 func (mm *ModelManager) validateAsset(ctx context.Context, asset *model.ArtifactAsset, descriptor *AssetDescriptor) error {
 	// 若历史 checksum 可解析且 sha256 未变化，则拒绝重复写入相同内容。
 	log := logger.GetLogger(ctx)
@@ -301,6 +305,7 @@ func (mm *ModelManager) validateAsset(ctx context.Context, asset *model.Artifact
 	return nil
 }
 
+// getOrCreateVersion 获取或创建版本
 func (mm *ModelManager) getOrCreateVersion(ctx context.Context) (*model.ArtifactVersion, error) {
 	log := logger.GetLogger(ctx)
 	if mm.versionModel != nil {
@@ -356,6 +361,7 @@ func (mm *ModelManager) getOrCreateVersion(ctx context.Context) (*model.Artifact
 	return createdVer, nil
 }
 
+// updateVerTime 更新版本时间
 func (mm *ModelManager) updateVerTime(ctx context.Context, verModel *model.ArtifactVersion, assetModel *model.ArtifactAsset) error {
 	if verModel.ID != assetModel.VersionID.Int64 {
 		return nil
@@ -364,6 +370,7 @@ func (mm *ModelManager) updateVerTime(ctx context.Context, verModel *model.Artif
 	return mm.store.Versions().Update(ctx, verModel)
 }
 
+// getOrCreatePackage 获取或创建 package
 func (mm *ModelManager) getOrCreatePackage(ctx context.Context) (*model.ArtifactPackage, error) {
 	if mm.pkgModel != nil {
 		return mm.pkgModel, nil

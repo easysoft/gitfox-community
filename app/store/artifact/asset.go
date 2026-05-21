@@ -44,7 +44,6 @@ func (c *assets) Create(ctx context.Context, newObj *model.CreateArtifactAsset) 
 	row.Path = newObj.Path
 	row.ContentType = newObj.ContentType
 	row.Kind = string(newObj.Kind)
-	row.Metadata = newObj.Metadata
 	row.BlobID = newObj.BlobID
 	row.CheckSum = newObj.CheckSum
 	row.EditedBy = newObj.EditedBy

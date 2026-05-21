@@ -40,8 +40,6 @@ type ViewInterface interface {
 	GetByID(ctx context.Context, id int64) (*model.ArtifactView, error)
 	// GetByIDIncludingDeleted 按 ID 取视图，不过滤 deleted；用于回收站恢复链路。
 	GetByIDIncludingDeleted(ctx context.Context, id int64) (*model.ArtifactView, error)
-	GetDefault(ctx context.Context, spaceID int64) (*model.ArtifactView, error)
-	GetDefaultByRepoAndSpace(ctx context.Context, repoID, spaceID int64) (*model.ArtifactView, error)
 	GetByName(ctx context.Context, spaceID, repoID int64, name string) (*model.ArtifactView, error)
 
 	// FindByNameInScope 在指定作用域下查询所有同名 view（不包含已软删的）。

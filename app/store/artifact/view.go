@@ -18,7 +18,6 @@ func (c *views) Create(ctx context.Context, newObj *model.CreateArtifactView) (*
 	view.SpaceID = newObj.SpaceID
 	view.RepoID = newObj.RepoID
 	view.Type = string(newObj.Type)
-	view.Default = newObj.Default
 	view.Name = newObj.Name
 	view.Format = string(newObj.Format)
 	view.Description = newObj.Description
@@ -55,27 +54,9 @@ func (c *views) GetByIDIncludingDeleted(ctx context.Context, id int64) (*model.A
 	return viewToModel(&row), nil
 }
 
-func (c *views) GetDefault(ctx context.Context, spaceID int64) (*model.ArtifactView, error) {
-	var row artifactView
-	q := artifactView{SpaceID: spaceID, Default: true}
-	if err := c.db.WithContext(ctx).Where(&q).Where("deleted = 0").First(&row).Error; err != nil {
-		return nil, database.ProcessSQLErrorf(ctx, err)
-	}
-	return viewToModel(&row), nil
-}
-
 func (c *views) GetByName(ctx context.Context, spaceID, repoID int64, name string) (*model.ArtifactView, error) {
 	var row artifactView
 	q := artifactView{SpaceID: spaceID, RepoID: repoID, Name: name}
-	if err := c.db.WithContext(ctx).Where(&q).Where("deleted = 0").First(&row).Error; err != nil {
-		return nil, database.ProcessSQLErrorf(ctx, err)
-	}
-	return viewToModel(&row), nil
-}
-
-func (c *views) GetDefaultByRepoAndSpace(ctx context.Context, repoID, spaceID int64) (*model.ArtifactView, error) {
-	var row artifactView
-	q := artifactView{RepoID: repoID, SpaceID: spaceID, Default: true}
 	if err := c.db.WithContext(ctx).Where(&q).Where("deleted = 0").First(&row).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
