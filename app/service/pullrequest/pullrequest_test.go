@@ -14,6 +14,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/sha"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 
 	"go.uber.org/mock/gomock"
 	"github.com/stretchr/testify/assert"
@@ -728,4 +729,39 @@ func TestParseDiffPath(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestProcessPullRequestMergeErrorFastForwardNotAncestor(t *testing.T) {
+	t.Parallel()
+
+	err := processPullRequestMergeError(
+		context.Background(),
+		repoModel.MergeMethodFastForward,
+		errors.New("failed to merge \"feature\" to \"main\" in \"repo\" using the \"fast-forward\" merge method: " + fastForwardNotPossibleMessage),
+	)
+
+	assert.Error(t, err)
+	assert.Equal(t, i18n.GitFastForwardTargetNotAncestor, errors.GetI18nKey(err))
+	assert.Equal(t, "target branch latest commit is not an ancestor of source branch", err.Error())
+}
+
+func TestProcessPullRequestMergeErrorOtherMethodFallsBack(t *testing.T) {
+	t.Parallel()
+
+	err := processPullRequestMergeError(
+		context.Background(),
+		repoModel.MergeMethodMerge,
+		errors.New("some other git error"),
+	)
+
+	assert.Error(t, err)
+	assert.Equal(t, i18n.GitExecError, errors.GetI18nKey(err))
+}
+
+func TestProcessPullRequestMergeErrorNil(t *testing.T) {
+	t.Parallel()
+
+	err := processPullRequestMergeError(context.Background(), repoModel.MergeMethodFastForward, nil)
+
+	assert.NoError(t, err)
 }
