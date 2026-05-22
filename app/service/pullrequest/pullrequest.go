@@ -54,6 +54,8 @@ type Service struct {
 	pubsub             pubsub.PubSub
 }
 
+const fastForwardNotPossibleMessage = "target branch has diverged from the source branch, fast-forward not possible"
+
 var _ Interface = (*Service)(nil)
 
 // NewPullRequestSvc 创建 PullRequestService 实例
@@ -176,6 +178,21 @@ func NewPullRequestSvc(
 	}, pubsub.WithChannelNamespace("pullreq"))
 
 	return &service, nil
+}
+
+func processPullRequestMergeError(ctx context.Context, method repoModel.MergeMethod, err error) error {
+	if err == nil {
+		return nil
+	}
+
+	// Fast-forward merge only succeeds when the target tip is an ancestor of the source tip.
+	// Translate this specific git conflict into a user-facing i18n error for PR merges.
+	if method == repoModel.MergeMethodFastForward &&
+		strings.Contains(err.Error(), fastForwardNotPossibleMessage) {
+		return errors.WithI18nKey(errors.New("target branch latest commit is not an ancestor of source branch"), i18n.GitFastForwardTargetNotAncestor)
+	}
+
+	return util.ProcessGitErrorf(ctx, err)
 }
 
 func (s *Service) GetMetadata(ctx context.Context, session *auth.Session, repoid uint, pullreqnumber uint) (*repoModel.DiffStats, error) {
@@ -527,10 +544,10 @@ func (s *Service) Merge(ctx context.Context, session *auth.Session, repoid uint,
 				RefType:         enum.RefTypeUndefined,
 				HeadExpectedSHA: sha.Must(params.SourceSHA),
 				Method:          enum.MergeMethod(params.Method),
-			})
-			if err != nil {
-				return nil, nil, util.ProcessGitErrorf(ctx, err)
-			}
+				})
+				if err != nil {
+					return nil, nil, processPullRequestMergeError(ctx, params.Method, err)
+				}
 
 			// Dry Run（试运行）模式下，更新 Pull Request 的合并状态缓存 。
 			err = s.pullRequestStore.UpdateDiffStatsSafe(ctx, repoid, pr, &repoModel.DiffStats{
@@ -633,7 +650,7 @@ func (s *Service) Merge(ctx context.Context, session *auth.Session, repoid uint,
 		Method:          enum.MergeMethod(params.Method),
 	})
 	if err != nil {
-		return nil, nil, util.ProcessGitErrorf(ctx, err)
+		return nil, nil, processPullRequestMergeError(ctx, params.Method, err)
 	}
 
 	// 处理合并冲突

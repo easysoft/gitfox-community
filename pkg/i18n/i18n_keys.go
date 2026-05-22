@@ -558,6 +558,7 @@ const (
 	GitCreateExecParamError         I18nKey = "git.create_exec_param_error"           // 创建败 git 命令参数失败.
 	GitEmptyRepo                    I18nKey = "git.empty_repo"                        // 仓库为空.
 	GitExecError                    I18nKey = "git.exec_error"                        // 执行 git 命令失败.
+	GitFastForwardTargetNotAncestor I18nKey = "git.fast_forward_target_not_ancestor"  // 目标分支的最新提交不是源分支的祖先.
 	GitGitHookPostReceiveError      I18nKey = "git.git_hook_post_receive_error"       // 处理 git 钩子 post-receive 失败.
 	GitGitHookPostReceiveSuccess    I18nKey = "git.git_hook_post_receive_success"     // Post-receive 钩子处理成功.
 	GitGitHookPreReceiveError       I18nKey = "git.git_hook_pre_receive_error"        // 处理 git 钩子 pre-receive 失败.
