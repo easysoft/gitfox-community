@@ -164,19 +164,19 @@ func (a *artifactAsset) BeforeUpdate(_ *gorm.DB) error {
 
 // artifactMetaAsset → ops_artifact_meta_assets
 type artifactMetaAsset struct {
-	ID          int64           `gorm:"column:id;primaryKey"`
-	ArtifactID  int64           `gorm:"column:artifactID"`
-	Format      string          `gorm:"column:format"`
-	Path        string          `gorm:"column:path"`
-	ContentType string          `gorm:"column:contentType"`
-	Kind        string          `gorm:"column:kind"`
-	BlobID      int64           `gorm:"column:blobID"`
-	CheckSum    string          `gorm:"column:checkSum"`
-	CreatedBy   string          `gorm:"column:createdBy"`
-	CreatedDate *datetime.Local `gorm:"column:createdDate"`
-	EditedBy    string          `gorm:"column:editedBy"`
-	EditedDate  *datetime.Local `gorm:"column:editedDate"`
-	Deleted     int8            `gorm:"column:deleted"`
+	ID            int64           `gorm:"column:id;primaryKey"`
+	ArtifactLibID int64           `gorm:"column:artifactLibID"`
+	Format        string          `gorm:"column:type"`
+	Path          string          `gorm:"column:path"`
+	ContentType   string          `gorm:"column:contentType"`
+	Kind          string          `gorm:"column:kind"`
+	BlobID        int64           `gorm:"column:blobID"`
+	CheckSum      string          `gorm:"column:checksum"`
+	CreatedBy     string          `gorm:"column:createdBy"`
+	CreatedDate   *datetime.Local `gorm:"column:createdDate"`
+	EditedBy      string          `gorm:"column:editedBy"`
+	EditedDate    *datetime.Local `gorm:"column:editedDate"`
+	Deleted       int8            `gorm:"column:deleted"`
 }
 
 func (artifactMetaAsset) TableName() string { return "ops_artifact_meta_assets" }
@@ -504,7 +504,7 @@ func metaAssetToModel(m *artifactMetaAsset) *model.ArtifactMetaAsset {
 	}
 	return &model.ArtifactMetaAsset{
 		ID:          m.ID,
-		ArtifactID:  m.ArtifactID,
+		ArtifactID:  m.ArtifactLibID,
 		Format:      model.ArtifactFormat(m.Format),
 		Path:        m.Path,
 		ContentType: m.ContentType,
@@ -524,19 +524,19 @@ func metaAssetFromModel(src *model.ArtifactMetaAsset) *artifactMetaAsset {
 		return nil
 	}
 	return &artifactMetaAsset{
-		ID:          src.ID,
-		ArtifactID:  src.ArtifactID,
-		Format:      string(src.Format),
-		Path:        src.Path,
-		ContentType: src.ContentType,
-		Kind:        string(src.Kind),
-		BlobID:      src.BlobID,
-		CheckSum:    src.CheckSum,
-		CreatedBy:   src.CreatedBy,
-		CreatedDate: timeToLocal(src.CreatedDate),
-		EditedBy:    src.EditedBy,
-		EditedDate:  timeToLocal(src.EditedDate),
-		Deleted:     src.Deleted,
+		ID:            src.ID,
+		ArtifactLibID: src.ArtifactID,
+		Format:        string(src.Format),
+		Path:          src.Path,
+		ContentType:   src.ContentType,
+		Kind:          string(src.Kind),
+		BlobID:        src.BlobID,
+		CheckSum:      src.CheckSum,
+		CreatedBy:     src.CreatedBy,
+		CreatedDate:   timeToLocal(src.CreatedDate),
+		EditedBy:      src.EditedBy,
+		EditedDate:    timeToLocal(src.EditedDate),
+		Deleted:       src.Deleted,
 	}
 }
 

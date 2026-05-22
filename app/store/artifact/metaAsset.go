@@ -21,7 +21,7 @@ func (s *metaAssets) Create(ctx context.Context, newObj *model.CreateArtifactMet
 		return nil, err
 	}
 	var row artifactMetaAsset
-	row.ArtifactID = newObj.ArtifactID
+	row.ArtifactLibID = newObj.ArtifactID
 	row.Format = string(newObj.Format)
 	row.Path = newObj.Path
 	row.ContentType = newObj.ContentType
@@ -47,7 +47,7 @@ func (s *metaAssets) GetByPath(ctx context.Context, path string, artifactID int6
 		return nil, err
 	}
 	var row artifactMetaAsset
-	q := artifactMetaAsset{Path: path, ArtifactID: artifactID, Format: string(format)}
+	q := artifactMetaAsset{Path: path, ArtifactLibID: artifactID, Format: string(format)}
 	if err := s.db.WithContext(ctx).Where(&q).First(&row).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
@@ -75,7 +75,7 @@ func (s *metaAssets) DeleteById(ctx context.Context, metaAssetId int64) error {
 
 // DeleteByArtifactID 硬删指定 view 下的所有 meta_asset 记录。
 func (s *metaAssets) DeleteByArtifactID(ctx context.Context, artifactID int64) (int64, error) {
-	result := s.db.WithContext(ctx).Where("artifactID = ?", artifactID).Delete(&artifactMetaAsset{})
+	result := s.db.WithContext(ctx).Where("artifactLibID = ?", artifactID).Delete(&artifactMetaAsset{})
 	if result.Error != nil {
 		return 0, database.ProcessSQLErrorf(ctx, result.Error)
 	}

@@ -88,7 +88,7 @@ func (c *packages) ListByNamespace(ctx context.Context, artifactID int64, namesp
 		stmt = stmt.Where("namespace = ?", namespace)
 	}
 	if format != model.ArtifactAllFormat {
-		stmt = stmt.Where("format = ?", format)
+		stmt = stmt.Where("type = ?", format)
 	}
 	if !includeDeleted {
 		stmt = stmt.Where("deleted = 0")
@@ -177,7 +177,7 @@ var _ = pkgErrors.ErrResourceNotFound
 // UpdateNamespaceByCondition 按条件批量更新 package namespace（用于 container 制品库重命名时同步）。
 func (c *packages) UpdateNamespaceByCondition(ctx context.Context, artifactID int64, oldNamespace, newNamespace, format string) error {
 	if err := c.db.WithContext(ctx).Model(&artifactPackage{}).
-		Where("artifactID = ? AND namespace = ? AND format = ?", artifactID, oldNamespace, format).
+		Where("artifactLibID = ? AND namespace = ? AND type = ?", artifactID, oldNamespace, format).
 		UpdateColumn("namespace", newNamespace).Error; err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
 	}

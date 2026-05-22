@@ -44,7 +44,7 @@ type ArtifactTreeFilter struct {
 // ==================== Response Types ====================
 
 type ArtifactListItem struct {
-	Format      string          `gorm:"column:format" json:"format"`
+	Format      string          `gorm:"column:type" json:"format"`
 	Name        string          `gorm:"column:name" json:"name"`
 	Namespace   string          `gorm:"column:namespace" json:"namespace"`
 	DisplayName string          `gorm:"-" json:"displayName"`
@@ -54,15 +54,15 @@ type ArtifactListItem struct {
 
 type ArtifactAssetsRes struct {
 	Id             int64           `gorm:"column:id" json:"id"`
-	Path           string          `gorm:"column:path" json:"path"`
+	Path           string          `gorm:"column:basename" json:"path"`
 	ContentType    string          `gorm:"column:contentType" json:"contentType"`
 	Size           int64           `gorm:"column:size" json:"size"`
 	BlobRef        string          `gorm:"column:ref" json:"-"`
 	Creator        string          `gorm:"-" json:"-"`
 	CreatorName    string          `gorm:"column:createdBy" json:"createdBy"`
 	EditedBy       string          `gorm:"column:editedBy" json:"editedBy"`
-	CheckSumString string          `gorm:"column:checkSum" json:"-"`
-	MetadataString string          `gorm:"column:metadata" json:"-"`
+	CheckSumString string          `gorm:"column:checksum" json:"-"`
+	MetadataString string          `gorm:"-" json:"-"`
 	Created        *datetime.Local `gorm:"column:createdDate" json:"createdDate"`
 	Updated        *datetime.Local `gorm:"column:editedDate" json:"editedDate"`
 
@@ -106,12 +106,12 @@ type VersionListItem struct {
 
 type ArtifactBlobRes struct {
 	Id             int64           `gorm:"column:id" json:"id"`
-	Path           string          `gorm:"column:path" json:"path"`
+	Path           string          `gorm:"column:basename" json:"path"`
 	Size           int64           `gorm:"column:size" json:"size"`
 	BlobRef        string          `gorm:"column:ref" json:"-"`
 	Creator        string          `gorm:"-" json:"-"`
 	CreatorName    string          `gorm:"column:createdBy" json:"createdBy"`
-	CheckSumString string          `gorm:"column:checkSum" json:"-"`
+	CheckSumString string          `gorm:"column:checksum" json:"-"`
 	MetadataString string          `gorm:"column:metadata" json:"-"`
 	Created        *datetime.Local `gorm:"column:createdDate" json:"createdDate"`
 	Deleted        null.Int        `gorm:"column:deleted" json:"deleted"`

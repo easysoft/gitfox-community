@@ -123,9 +123,9 @@ func (c *blobs) DeleteById(ctx context.Context, blobID int64) error {
 func (c *blobs) History(ctx context.Context, assetID int64) ([]*model.ArtifactBlobRes, error) {
 	var dst []*model.ArtifactBlobRes
 	stmt := c.db.WithContext(ctx).Model(&artifactBlob{}).
-		Select(`ops_artifact_blobs.id,ops_artifact_assets.path,ops_artifact_blobs.size,ops_artifact_blobs.ref,
+		Select(`ops_artifact_blobs.id,ops_artifact_assets.basename,ops_artifact_blobs.size,ops_artifact_blobs.ref,
 			ops_artifact_blobs.createdBy,
-			ops_artifact_blobs.checkSum,ops_artifact_blobs.metadata,ops_artifact_blobs.createdDate,ops_artifact_blobs.deleted`).
+			ops_artifact_blobs.checksum,ops_artifact_blobs.metadata,ops_artifact_blobs.createdDate,ops_artifact_blobs.deleted`).
 		Joins(`LEFT JOIN ops_artifact_assets on ops_artifact_blobs.assetID=ops_artifact_assets.id`).
 		Where(`ops_artifact_blobs.assetID = ?`, assetID).
 		Order("ops_artifact_blobs.createdDate DESC")

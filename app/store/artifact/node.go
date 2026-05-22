@@ -114,7 +114,7 @@ func (c *treeNode) getNode(ctx context.Context, obj *model.ArtifactTreeNode) err
 func (c *treeNode) ListFormats(ctx context.Context, artifactID int64) ([]*model.ArtifactTreeNode, error) {
 	q := artifactTreeNode{ArtifactID: artifactID, Path: "/"}
 	var rows []*artifactTreeNode
-	if err := c.db.WithContext(ctx).Where(&q).Order("format").Find(&rows).Error; err != nil {
+	if err := c.db.WithContext(ctx).Where(&q).Order("type").Find(&rows).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
 	return nodesToModel(rows), nil
@@ -165,7 +165,7 @@ func (c *treeNode) RecurseDeleteById(ctx context.Context, nodeID int64) error {
 
 // DeleteByArtifactID 硬删指定 view 下的所有树节点记录。
 func (c *treeNode) DeleteByArtifactID(ctx context.Context, artifactID int64) (int64, error) {
-	result := c.db.WithContext(ctx).Where("artifactID = ?", artifactID).Delete(&artifactTreeNode{})
+	result := c.db.WithContext(ctx).Where("artifactLibID = ?", artifactID).Delete(&artifactTreeNode{})
 	if result.Error != nil {
 		return 0, database.ProcessSQLErrorf(ctx, result.Error)
 	}

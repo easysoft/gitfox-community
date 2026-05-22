@@ -61,13 +61,13 @@ func (s *Store) FindPackages(ctx context.Context, artifactID int64, filter *mode
 	q := artifactPackage{ArtifactID: artifactID}
 
 	stmt := s.db.WithContext(ctx).Model(&artifactPackage{}).
-		Select(`ops_artifact_packages.format, ops_artifact_packages.name, ops_artifact_packages.namespace,
+		Select(`ops_artifact_packages.type, ops_artifact_packages.name, ops_artifact_packages.namespace,
 			ops_artifact_versions.version, ops_artifact_versions.editedDate`).
 		Joins(`JOIN (
 			SELECT v.packageID, MAX(v.editedDate) AS latest_updated
 				FROM ops_artifact_versions v
 				JOIN ops_artifact_packages p ON v.packageID = p.id
-				WHERE p.artifactID = ? AND v.deleted = 0
+				WHERE p.artifactLibID = ? AND v.deleted = 0
 				GROUP BY v.packageID) AS latest_versions
 			ON ops_artifact_packages.id = latest_versions.packageID
 				AND ops_artifact_packages.deleted = 0`, artifactID).
@@ -218,8 +218,8 @@ func (s *Store) ListAssets(ctx context.Context, VersionID int64) ([]*model.Artif
 	// ListAssets 拉取 version 下未删除资产，并联表补齐 blob 大小与引用信息。
 	result := make([]*model.ArtifactAssetsRes, 0)
 	stmt := s.db.WithContext(ctx).Model(&artifactAsset{}).
-		Select(`ops_artifact_assets.id,ops_artifact_assets.path,ops_artifact_assets.contentType,
-			ops_artifact_assets.checkSum,ops_artifact_assets.metadata,
+		Select(`ops_artifact_assets.id,ops_artifact_assets.basename,ops_artifact_assets.contentType,
+			ops_artifact_assets.checksum,
 			ops_artifact_assets.createdBy,ops_artifact_assets.createdDate,
 			ops_artifact_assets.editedBy,ops_artifact_assets.editedDate,
 			ops_artifact_blobs.size,ops_artifact_blobs.ref`).
@@ -238,8 +238,8 @@ func (s *Store) ListGroupAssets(ctx context.Context, groupID int64) ([]*model.Ar
 	// ListGroupAssets 面向 generic/raw group 级资产，查询逻辑与 version 资产分开。
 	var dst []*model.ArtifactAssetsRes
 	stmt := s.db.WithContext(ctx).Model(&artifactAsset{}).
-		Select(`ops_artifact_assets.id,ops_artifact_assets.path,ops_artifact_assets.contentType,
-			ops_artifact_assets.checkSum,ops_artifact_assets.metadata,
+		Select(`ops_artifact_assets.id,ops_artifact_assets.basename,ops_artifact_assets.contentType,
+			ops_artifact_assets.checksum,
 			ops_artifact_assets.createdBy,ops_artifact_assets.createdDate,
 			ops_artifact_assets.editedBy,ops_artifact_assets.editedDate,
 			ops_artifact_blobs.size,ops_artifact_blobs.ref`).
@@ -258,8 +258,8 @@ func (s *Store) GetAsset(ctx context.Context, assetID int64) (*model.ArtifactAss
 	// GetAsset 读取单个资产详情，并把字符串字段反序列化为结构化响应。
 	var result model.ArtifactAssetsRes
 	stmt := s.db.WithContext(ctx).Model(&artifactAsset{}).
-		Select(`ops_artifact_assets.id,ops_artifact_assets.path,ops_artifact_assets.contentType,
-			ops_artifact_assets.checkSum,ops_artifact_assets.metadata,
+		Select(`ops_artifact_assets.id,ops_artifact_assets.basename,ops_artifact_assets.contentType,
+			ops_artifact_assets.checksum,
 			ops_artifact_assets.createdBy,ops_artifact_assets.createdDate,
 			ops_artifact_assets.editedBy,ops_artifact_assets.editedDate,
 			ops_artifact_blobs.size,ops_artifact_blobs.ref`).

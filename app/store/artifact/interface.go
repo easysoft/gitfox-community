@@ -36,22 +36,19 @@ type Interface interface {
 
 type ViewInterface interface {
 	Create(ctx context.Context, newObj *model.CreateArtifactView) (*model.ArtifactView, error)
-	Delete(ctx context.Context, id int64) error
-	GetByID(ctx context.Context, id int64) (*model.ArtifactView, error)
-	// GetByIDIncludingDeleted 按 ID 取视图，不过滤 deleted；用于回收站恢复链路。
-	GetByIDIncludingDeleted(ctx context.Context, id int64) (*model.ArtifactView, error)
-	GetByName(ctx context.Context, spaceID, repoID int64, name string) (*model.ArtifactView, error)
-
-	// FindByNameInScope 在指定作用域下查询所有同名 view（不包含已软删的）。
-	// 返回结果包含 active（deleted=0）
-	FindByNameInScope(ctx context.Context, spaceID, repoID int64, name string) ([]*model.ArtifactView, error)
-
-	// UpdateName 更新视图名称。
-	UpdateName(ctx context.Context, id int64, name string) error
 
 	// SoftDelete 软删除视图（将 deleted 置为 1），并把 operator 写入 editedBy（即"删除人"）。
-	// 注意：GORM 的 autoUpdateTime 会自动更新 editedDate，editedDate 即删除时间。
 	SoftDelete(ctx context.Context, view *model.ArtifactView, operator string) error
+
+	UpdateName(ctx context.Context, id int64, name string) error
+
+	GetByID(ctx context.Context, id int64) (*model.ArtifactView, error)            // 不包含已软删的
+	GetByIDWithDeleted(ctx context.Context, id int64) (*model.ArtifactView, error) // 包含已软删的
+
+	GetByName(ctx context.Context, spaceID, repoID int64, name string) (*model.ArtifactView, error)
+
+	// FindByNameInScope 在指定作用域下查询所有同名 view
+	FindByNameInScope(ctx context.Context, spaceID, repoID int64, name string) ([]*model.ArtifactView, error) // 不包含已软删的
 
 	// Restore 恢复制品库视图（将 deleted 置为 0），并把 operator 写入 editedBy（即"恢复人"）。
 	Restore(ctx context.Context, viewID int64, operator string) error

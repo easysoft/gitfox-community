@@ -120,7 +120,8 @@ func (s *Service) restoreArtifact(
 	ctx context.Context, viewID int64, operator string,
 	syncer *artModel.Syncer, res *model.ArtifactRestoreRes,
 ) error {
-	view, err := s.artStore.Views().GetByIDIncludingDeleted(ctx, viewID)
+	// 查看 view 是否在回收站中
+	view, err := s.artStore.Views().GetByIDWithDeleted(ctx, viewID)
 	if err != nil {
 		res.Status = model.ArtifactStatusNotFound
 		return pkgErrors.WithI18nKey(err, i18n.ArtifactRestoreQueryError)
@@ -133,6 +134,15 @@ func (s *Service) restoreArtifact(
 		)
 	}
 
+	// 如果现在存在重名 view，提示错误
+	if views, err := s.artStore.Views().FindByNameInScope(ctx, view.SpaceID, view.RepoID, view.Name); err == nil && len(views) > 0 {
+		return pkgErrors.WithI18nKey(
+			stderrors.New("artifact name already exists"),
+			i18n.ArtifactRestoreViewNameAlreadyExists,
+		)
+	}
+
+	// 恢复 view
 	if err = s.artStore.Views().Restore(ctx, view.ID, operator); err != nil {
 		return pkgErrors.WithI18nKey(err, i18n.ArtifactRestoreError)
 	}
@@ -387,13 +397,21 @@ func (s *Service) cascadeRestoreView(ctx context.Context, viewID int64, operator
 	if viewID <= 0 {
 		return nil
 	}
-	view, err := s.artStore.Views().GetByIDIncludingDeleted(ctx, viewID)
+	view, err := s.artStore.Views().GetByIDWithDeleted(ctx, viewID)
 	if err != nil {
 		return pkgErrors.WithI18nKey(err, i18n.ArtifactRestoreQueryError)
 	}
 	if view.Deleted != 1 {
 		return nil
 	}
+	// 如果现在存在重名 view，提示错误
+	if views, err := s.artStore.Views().FindByNameInScope(ctx, view.SpaceID, view.RepoID, view.Name); err == nil && len(views) > 0 {
+		return pkgErrors.WithI18nKey(
+			stderrors.New("artifact name already exists"),
+			i18n.ArtifactRestoreViewNameAlreadyExists,
+		)
+	}
+
 	if err = s.artStore.Views().Restore(ctx, view.ID, operator); err != nil {
 		return pkgErrors.WithI18nKey(err, i18n.ArtifactRestoreError)
 	}

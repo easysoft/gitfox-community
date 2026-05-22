@@ -13,6 +13,7 @@ var _ ViewInterface = (*views)(nil)
 
 type views struct{ db *gorm.DB }
 
+// Create 创建视图
 func (c *views) Create(ctx context.Context, newObj *model.CreateArtifactView) (*model.ArtifactView, error) {
 	var view artifactView
 	view.SpaceID = newObj.SpaceID
@@ -30,60 +31,7 @@ func (c *views) Create(ctx context.Context, newObj *model.CreateArtifactView) (*
 	return viewToModel(&view), nil
 }
 
-func (c *views) Delete(ctx context.Context, id int64) error {
-	if err := c.db.WithContext(ctx).Delete(&artifactView{}, id).Error; err != nil {
-		return database.ProcessSQLErrorf(ctx, err)
-	}
-	return nil
-}
-
-func (c *views) GetByID(ctx context.Context, id int64) (*model.ArtifactView, error) {
-	var row artifactView
-	if err := c.db.WithContext(ctx).Where("deleted = 0").Take(&row, id).Error; err != nil {
-		return nil, database.ProcessSQLErrorf(ctx, err)
-	}
-	return viewToModel(&row), nil
-}
-
-// GetByIDIncludingDeleted 按 ID 取视图，不过滤 deleted 标记，用于回收站恢复路径。
-func (c *views) GetByIDIncludingDeleted(ctx context.Context, id int64) (*model.ArtifactView, error) {
-	var row artifactView
-	if err := c.db.WithContext(ctx).Take(&row, id).Error; err != nil {
-		return nil, database.ProcessSQLErrorf(ctx, err)
-	}
-	return viewToModel(&row), nil
-}
-
-func (c *views) GetByName(ctx context.Context, spaceID, repoID int64, name string) (*model.ArtifactView, error) {
-	var row artifactView
-	q := artifactView{SpaceID: spaceID, RepoID: repoID, Name: name}
-	if err := c.db.WithContext(ctx).Where(&q).Where("deleted = 0").First(&row).Error; err != nil {
-		return nil, database.ProcessSQLErrorf(ctx, err)
-	}
-	return viewToModel(&row), nil
-}
-
-// FindByNameInScope 在指定作用域下查询所有同名 view（包含已软删的）。
-// 返回结果包含 active（deleted=0）和 soft-deleted（deleted=1）的 view，
-// 由调用方根据 deleted 状态和 editedDate 判断是否允许创建同名 view。
-func (c *views) FindByNameInScope(ctx context.Context, spaceID, repoID int64, name string) ([]*model.ArtifactView, error) {
-	var rows []*artifactView
-	err := c.db.WithContext(ctx).
-		Where("spaceID = ? AND repoID = ? AND name = ? and deleted = 0", spaceID, repoID, name).
-		Find(&rows).Error
-	if err != nil {
-		return nil, database.ProcessSQLErrorf(ctx, err)
-	}
-	result := make([]*model.ArtifactView, 0, len(rows))
-	for _, r := range rows {
-		result = append(result, viewToModel(r))
-	}
-	return result, nil
-}
-
 // SoftDelete 软删除视图（将 deleted 标记为 1）并记录操作人到 editedBy（即删除人）。
-// 仅更新 deleted/editedBy 两列：editedDate 由 GORM autoUpdateTime 钩子自动填，
-// 其它字段保持原值，软删动作不应回写整行（避免与并发更新串改）。
 func (c *views) SoftDelete(ctx context.Context, view *model.ArtifactView, operator string) error {
 	updates := map[string]interface{}{"deleted": 1}
 	if operator != "" {
@@ -103,4 +51,50 @@ func (c *views) UpdateName(ctx context.Context, id int64, name string) error {
 		return database.ProcessSQLErrorf(ctx, err)
 	}
 	return nil
+}
+
+// GetByID 按 ID 取视图，不过滤 deleted 标记，用于回收站恢复路径。
+func (c *views) GetByID(ctx context.Context, id int64) (*model.ArtifactView, error) {
+	var row artifactView
+	if err := c.db.WithContext(ctx).Where("deleted = 0").Take(&row, id).Error; err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
+	}
+	return viewToModel(&row), nil
+}
+
+// GetByIDWithDeleted 按 ID 取视图，不过滤 deleted 标记，用于回收站恢复路径。
+func (c *views) GetByIDWithDeleted(ctx context.Context, id int64) (*model.ArtifactView, error) {
+	var row artifactView
+	if err := c.db.WithContext(ctx).Take(&row, id).Error; err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
+	}
+	return viewToModel(&row), nil
+}
+
+// GetByName 按名称查询视图 未包含已软删的
+func (c *views) GetByName(ctx context.Context, spaceID, repoID int64, name string) (*model.ArtifactView, error) {
+	var row artifactView
+	q := artifactView{SpaceID: spaceID, RepoID: repoID, Name: name}
+	if err := c.db.WithContext(ctx).Where(&q).Where("deleted = 0").First(&row).Error; err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
+	}
+	return viewToModel(&row), nil
+}
+
+// FindByNameInScope 在指定作用域下查询所有同名 view
+// 返回结果包含 active（deleted=0）和 soft-deleted（deleted=1）的 view，
+// 由调用方根据 deleted 状态和 editedDate 判断是否允许创建同名 view。
+func (c *views) FindByNameInScope(ctx context.Context, spaceID, repoID int64, name string) ([]*model.ArtifactView, error) {
+	var rows []*artifactView
+	err := c.db.WithContext(ctx).
+		Where("spaceID = ? AND repoID = ? AND name = ? and deleted = 0", spaceID, repoID, name).
+		Find(&rows).Error
+	if err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
+	}
+	result := make([]*model.ArtifactView, 0, len(rows))
+	for _, r := range rows {
+		result = append(result, viewToModel(r))
+	}
+	return result, nil
 }

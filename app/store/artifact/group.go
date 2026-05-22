@@ -33,7 +33,7 @@ const artifactGroupOwnerDescendantsQuery = `
 WITH RECURSIVE art_group_descendants(descendant_id,descendant_parentID,descendant_deleted) AS (
     SELECT id, parentID, deleted
     FROM ops_artifact_groups
-    WHERE artifactID = ? AND format = ? AND parentID = 0
+    WHERE artifactLibID = ? AND type = ? AND parentID = 0
         AND (deleted IS NULL OR deleted = 0)
     UNION ALL
     SELECT id, parentID, deleted
@@ -235,7 +235,7 @@ func (c *groups) ListChildren(ctx context.Context, id int64) ([]*model.ArtifactG
 func (c *groups) FindRootByName(ctx context.Context, artifactID int64, name string, format model.ArtifactFormat) (*model.ArtifactGroup, error) {
 	var row artifactGroup
 	err := c.db.WithContext(ctx).
-		Where("artifactID = ? AND name = ? AND format = ?", artifactID, name, format).
+		Where("artifactLibID = ? AND name = ? AND type = ?", artifactID, name, format).
 		Where("parentID IS NULL OR parentID = 0").
 		Take(&row).Error
 	if err != nil {
@@ -292,7 +292,7 @@ func (c *groups) Update(ctx context.Context, upObj *model.ArtifactGroup) error {
 // UpdateNameByArtifactAndFormat 批量更新指定 view 下指定格式的 group name。
 func (c *groups) UpdateNameByArtifactAndFormat(ctx context.Context, artifactID int64, oldName, newName string, format model.ArtifactFormat) error {
 	err := c.db.WithContext(ctx).Model(&artifactGroup{}).
-		Where("artifactID = ? AND name = ? AND format = ?", artifactID, oldName, string(format)).
+		Where("artifactLibID = ? AND name = ? AND type = ?", artifactID, oldName, string(format)).
 		UpdateColumn("name", newName).Error
 	if err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
@@ -302,7 +302,7 @@ func (c *groups) UpdateNameByArtifactAndFormat(ctx context.Context, artifactID i
 
 // DeleteByArtifactID 硬删指定 view 下的所有 group 记录（含已软删的）。
 func (c *groups) DeleteByArtifactID(ctx context.Context, artifactID int64) (int64, error) {
-	result := c.db.WithContext(ctx).Where("artifactID = ?", artifactID).Delete(&artifactGroup{})
+	result := c.db.WithContext(ctx).Where("artifactLibID = ?", artifactID).Delete(&artifactGroup{})
 	if result.Error != nil {
 		return 0, database.ProcessSQLErrorf(ctx, result.Error)
 	}
@@ -321,7 +321,7 @@ func (c *groups) UpdateName(ctx context.Context, id int64, name string) error {
 // UpdateNameByCondition 按条件批量更新分组名称（用于 container 制品库重命名时同步 group）。
 func (c *groups) UpdateNameByCondition(ctx context.Context, artifactID int64, oldName, newName, format string) error {
 	if err := c.db.WithContext(ctx).Model(&artifactGroup{}).
-		Where("artifactID = ? AND name = ? AND format = ?", artifactID, oldName, format).
+		Where("artifactLibID = ? AND name = ? AND type = ?", artifactID, oldName, format).
 		UpdateColumn("name", newName).Error; err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
 	}

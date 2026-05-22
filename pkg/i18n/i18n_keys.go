@@ -48,7 +48,7 @@ const (
 	ArtifactPathParamError                  I18nKey = "artifact.path_param_error"                     // Path 参数解析失败.
 	ArtifactQueryParamError                 I18nKey = "artifact.query_param_error"                    // Query 参数解析失败.
 	ArtifactQuerySuccess                    I18nKey = "artifact.query_success"                        // 制品详情查询成功.
-	ArtifactRecycleKindInvalid              I18nKey = "artifact.recycle_kind_invalid"                 // 不支持的回收站类型,仅支持 artifact/group/package/version/asset.
+	ArtifactRecycleKindInvalid              I18nKey = "artifact.recycle_kind_invalid"                 // 不支持的回收站类型,仅支持 artifact / group / package / vers...
 	ArtifactRecycleListError                I18nKey = "artifact.recycle_list_error"                   // 查询制品回收站失败.
 	ArtifactRecycleListSuccess              I18nKey = "artifact.recycle_list_success"                 // 制品回收站查询成功.
 	ArtifactRefreshTreeSuccess              I18nKey = "artifact.refresh_tree_success"                 // 制品树刷新成功.
@@ -67,12 +67,13 @@ const (
 	ArtifactRestoreParseError               I18nKey = "artifact.restore_parse_error"                  // 解析恢复实体 ID 失败.
 	ArtifactRestoreQueryError               I18nKey = "artifact.restore_query_error"                  // 校验恢复目标状态失败.
 	ArtifactRestoreSuccess                  I18nKey = "artifact.restore_success"                      // 制品恢复成功.
-	ArtifactSoftRemoveArtifactAssetExists   I18nKey = "artifact.soft_remove_artifact_asset_exists"    // 制品库中仍有未删除的制品文件(asset),无法删除制品库.
-	ArtifactSoftRemoveArtifactGroupExists   I18nKey = "artifact.soft_remove_artifact_group_exists"    // 制品库中仍有未删除的分组(group),无法删除制品库.
+	ArtifactRestoreViewNameAlreadyExists    I18nKey = "artifact.restore_view_name_already_exists"     // 制品库名称已存在,无法恢复.
+	ArtifactSoftRemoveArtifactAssetExists   I18nKey = "artifact.soft_remove_artifact_asset_exists"    // 制品库中仍有未删除的制品文件(asset),无法删除制品库；请先删除全部制品文件后重试.
+	ArtifactSoftRemoveArtifactGroupExists   I18nKey = "artifact.soft_remove_artifact_group_exists"    // 制品库中仍有未删除的分组(group),无法删除制品库；请先删除全部分组后重试.
 	ArtifactSoftRemoveArtifactNotFound      I18nKey = "artifact.soft_remove_artifact_not_found"       // 指定的制品库不存在或已被删除.
-	ArtifactSoftRemoveArtifactPackageExists I18nKey = "artifact.soft_remove_artifact_package_exists"  // 制品库中仍有未删除的包(package),无法删除制品库.
+	ArtifactSoftRemoveArtifactPackageExists I18nKey = "artifact.soft_remove_artifact_package_exists"  // 制品库中仍有未删除的包(package),无法删除制品库；请先删除全部包后重试.
 	ArtifactSoftRemoveArtifactQueryError    I18nKey = "artifact.soft_remove_artifact_query_error"     // 校验制品库状态失败.
-	ArtifactSoftRemoveArtifactVersionExists I18nKey = "artifact.soft_remove_artifact_version_exists"  // 制品库中仍有未删除的版本(version),无法删除制品库.
+	ArtifactSoftRemoveArtifactVersionExists I18nKey = "artifact.soft_remove_artifact_version_exists"  // 制品库中仍有未删除的版本(version),无法删除制品库；请先删除全部版本后重试.
 	ArtifactSoftRemoveEntityIdInvalidFormat I18nKey = "artifact.soft_remove_entity_id_invalid_format" // 制品实体 ID 格式不正确,应为 type.id.
 	ArtifactSoftRemoveEntityIdInvalidNumber I18nKey = "artifact.soft_remove_entity_id_invalid_number" // 制品实体 ID 中的数字部分不合法.
 	ArtifactSoftRemoveEntityTypeUnsupported I18nKey = "artifact.soft_remove_entity_type_unsupported"  // 不支持的制品实体类型.

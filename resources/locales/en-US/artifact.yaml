@@ -16,6 +16,7 @@ artifact:
   restore_error: "Failed to restore artifact."
   restore_query_error: "Failed to check restore target state."
   restore_not_in_recycle_bin: "Resource is not in the recycle bin, restore is not needed."
+  restore_view_name_already_exists: "Artifact name already exists, restore is not possible."
   restore_parse_error: "Failed to parse restore entity ID."
   restore_entity_id_invalid_format: "Invalid restore entity ID format. Expected kind.id."
   restore_entity_type_unsupported: "Unsupported restore entity type."
