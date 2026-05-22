@@ -200,9 +200,10 @@ func (p *ArtifactPackage) IsDeleted() bool {
 }
 
 type ArtifactVersion struct {
-	ID        int64  `json:"id"`
-	PackageID int64  `json:"packageID"`
-	Version   string `json:"version"`
+	ID            int64  `json:"id"`
+	ArtifactLibID int64  `json:"artifactLibID"`
+	PackageID     int64  `json:"packageID"`
+	Version       string `json:"version"`
 
 	// Metadata 保存 version 级元数据，例如版本创建者等附加信息。
 	// Metadata store version-level metadata. example: version creator
@@ -216,22 +217,23 @@ type ArtifactVersion struct {
 }
 
 type CreateArtifactVersion struct {
-	PackageID int64  `json:"packageID"`
-	Version   string `json:"version"`
-	Metadata  string `json:"metadata"`
-	CreatedBy string `json:"createdBy"`
+	ArtifactLibID int64  `json:"artifactLibID"`
+	PackageID     int64  `json:"packageID"`
+	Version       string `json:"version"`
+	Metadata      string `json:"metadata"`
+	CreatedBy     string `json:"createdBy"`
 }
 
 type ArtifactVersionInfo struct {
 	ID         int64  `gorm:"column:id"`
 	Version    string `gorm:"column:version"`
-	ArtifactID int64  `gorm:"column:artifactID"`
+	ArtifactID int64  `gorm:"column:artifactLibID"`
 	Deleted    int64  `gorm:"column:deleted"`
 
 	PackageID        int64          `gorm:"column:packageID"`
 	PackageName      string         `gorm:"column:name"`
 	PackageNamespace string         `gorm:"column:namespace"`
-	PackageFormat    ArtifactFormat `gorm:"column:format"`
+	PackageFormat    ArtifactFormat `gorm:"column:type"`
 
 	ViewSpaceID int64  `gorm:"column:spaceID"`
 	ViewRepoID  int64  `gorm:"column:repoID"`
@@ -252,7 +254,7 @@ type ArtifactAsset struct {
 
 	// ArtifactID 用于无版本资产，例如格式级 index 文件。
 	// ArtifactID used for none-version assets, like index file for a format
-	ArtifactID null.Int `json:"artifactID" gorm:"column:artifactID"`
+	ArtifactID null.Int `json:"artifactID" gorm:"column:artifactLibID"`
 
 	// GroupID 用于无版本的文件类资产挂到 group 节点。
 	// GroupID used for file format assets, without version

@@ -59,7 +59,7 @@ type AssetWithDeletedBeforeOption struct {
 type ContainerFormatOption struct{}
 
 func (opt ContainerFormatOption) Apply(db *gorm.DB) *gorm.DB {
-	return db.Where("ops_artifact_assets.format = ?", model.ArtifactContainerFormat)
+	return db.Where("ops_artifact_assets.type = ?", model.ArtifactContainerFormat)
 }
 
 type AssetFormatOption struct {
@@ -67,13 +67,13 @@ type AssetFormatOption struct {
 }
 
 func (opt AssetFormatOption) Apply(db *gorm.DB) *gorm.DB {
-	return db.Where("ops_artifact_assets.format = ?", opt.Format)
+	return db.Where("ops_artifact_assets.type = ?", opt.Format)
 }
 
 type ExcludeContainerOption struct{}
 
 func (opt ExcludeContainerOption) Apply(db *gorm.DB) *gorm.DB {
-	return db.Where("ops_artifact_assets.format <> ?", model.ArtifactContainerFormat)
+	return db.Where("ops_artifact_assets.type <> ?", model.ArtifactContainerFormat)
 }
 
 type VersionIDsOption struct {
@@ -136,7 +136,7 @@ type AssetViewOption struct {
 }
 
 func (opt AssetViewOption) Apply(db *gorm.DB) *gorm.DB {
-	return db.Where("ops_artifact_assets.artifactID = ?", opt.ArtifactID)
+	return db.Where("ops_artifact_assets.artifactLibID = ?", opt.ArtifactID)
 }
 
 // BlobAssetsOption 按 blobID 查询 assets。

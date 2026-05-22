@@ -203,7 +203,7 @@ func (c *assets) SearchExtendBlob(ctx context.Context, options ...SearchOption) 
 // DeleteByArtifactID 硬删指定 view 下的所有 asset 记录（含已软删的）。
 // 注意：只删 asset 记录，不清理关联的 blob 和物理文件，需上层配合处理。
 func (c *assets) DeleteByArtifactID(ctx context.Context, artifactID int64) (int64, error) {
-	result := c.db.WithContext(ctx).Where("artifactID = ?", artifactID).Delete(&artifactAsset{})
+	result := c.db.WithContext(ctx).Where("artifactLibID = ?", artifactID).Delete(&artifactAsset{})
 	if result.Error != nil {
 		return 0, database.ProcessSQLErrorf(ctx, result.Error)
 	}
