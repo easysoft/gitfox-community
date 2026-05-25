@@ -14,7 +14,7 @@ func TestCreateArtifactViewReq_Validate(t *testing.T) {
 		wantErr bool
 		wantKey i18n.I18nKey // 为空表示不校验
 	}{
-		{name: "generic 允许中文", req: CreateArtifactViewReq{Name: "测试库", Format: "generic"}, wantErr: false},
+		{name: "file 允许中文", req: CreateArtifactViewReq{Name: "测试库", Format: "file"}, wantErr: false},
 		{name: "raw 允许中文", req: CreateArtifactViewReq{Name: "中文_raw", Format: "raw"}, wantErr: false},
 		{name: "container 禁中文", req: CreateArtifactViewReq{Name: "测试container", Format: "container"}, wantErr: true, wantKey: i18n.ArtifactViewNameNonAsciiNotAllowed},
 		{name: "helm 禁中文", req: CreateArtifactViewReq{Name: "中文helm", Format: "helm"}, wantErr: true, wantKey: i18n.ArtifactViewNameNonAsciiNotAllowed},
@@ -22,10 +22,10 @@ func TestCreateArtifactViewReq_Validate(t *testing.T) {
 		{name: "pypi 禁中文", req: CreateArtifactViewReq{Name: "中文pypi", Format: "pypi"}, wantErr: true, wantKey: i18n.ArtifactViewNameNonAsciiNotAllowed},
 		{name: "npm 禁中文", req: CreateArtifactViewReq{Name: "中文npm", Format: "npm"}, wantErr: true, wantKey: i18n.ArtifactViewNameNonAsciiNotAllowed},
 		{name: "container 仅 ASCII", req: CreateArtifactViewReq{Name: "my-container_01", Format: "container"}, wantErr: false},
-		{name: "空名称", req: CreateArtifactViewReq{Name: "   ", Format: "generic"}, wantErr: true, wantKey: i18n.ArtifactViewNameRequired},
-		{name: "非法字符 /", req: CreateArtifactViewReq{Name: "bad/name", Format: "generic"}, wantErr: true, wantKey: i18n.ArtifactViewNameInvalidChars},
-		{name: "非法字符 .", req: CreateArtifactViewReq{Name: "bad.name", Format: "generic"}, wantErr: true, wantKey: i18n.ArtifactViewNameInvalidChars},
-		{name: "非法字符 空白", req: CreateArtifactViewReq{Name: "bad name", Format: "generic"}, wantErr: true, wantKey: i18n.ArtifactViewNameInvalidChars},
+		{name: "空名称", req: CreateArtifactViewReq{Name: "   ", Format: "file"}, wantErr: true, wantKey: i18n.ArtifactViewNameRequired},
+		{name: "非法字符 /", req: CreateArtifactViewReq{Name: "bad/name", Format: "file"}, wantErr: true, wantKey: i18n.ArtifactViewNameInvalidChars},
+		{name: "非法字符 .", req: CreateArtifactViewReq{Name: "bad.name", Format: "file"}, wantErr: true, wantKey: i18n.ArtifactViewNameInvalidChars},
+		{name: "非法字符 空白", req: CreateArtifactViewReq{Name: "bad name", Format: "file"}, wantErr: true, wantKey: i18n.ArtifactViewNameInvalidChars},
 		{name: "不支持的 format", req: CreateArtifactViewReq{Name: "ok", Format: "rpm"}, wantErr: true, wantKey: i18n.ArtifactViewFormatInvalid},
 		{name: "空 format", req: CreateArtifactViewReq{Name: "ok", Format: ""}, wantErr: true, wantKey: i18n.ArtifactViewFormatRequired},
 		{name: "空白 format", req: CreateArtifactViewReq{Name: "ok", Format: "   "}, wantErr: true, wantKey: i18n.ArtifactViewFormatRequired},
@@ -57,7 +57,7 @@ func TestRefreshTreeReq_Validate(t *testing.T) {
 	}{
 		{name: "空 format 视为 all", format: "", wantErr: false},
 		{name: "all", format: "all", wantErr: false},
-		{name: "generic", format: "generic", wantErr: false},
+		{name: "file", format: "file", wantErr: false},
 		{name: "container", format: "container", wantErr: false},
 		{name: "helm", format: "helm", wantErr: false},
 		{name: "不支持的 format", format: "rpm", wantErr: true},
@@ -82,13 +82,13 @@ func TestCreateGroupReq_Validate(t *testing.T) {
 		req     CreateGroupReq
 		wantErr bool
 	}{
-		{name: "artifactID 为 0", req: CreateGroupReq{ArtifactID: 0, Names: "a", Format: "generic"}, wantErr: true},
+		{name: "artifactID 为 0", req: CreateGroupReq{ArtifactID: 0, Names: "a", Format: "file"}, wantErr: true},
 		{name: "format 为空（由服务端按 view.Format 回填，不再校验）", req: CreateGroupReq{ArtifactID: 1, Names: "a", Format: ""}, wantErr: false},
 		{name: "format 未知但未启用校验（服务端回填后才生效）", req: CreateGroupReq{ArtifactID: 1, Names: "a", Format: "rpm"}, wantErr: false},
-		{name: "names 含空段", req: CreateGroupReq{ArtifactID: 1, Names: "a..b", Format: "generic"}, wantErr: true},
+		{name: "names 含空段", req: CreateGroupReq{ArtifactID: 1, Names: "a..b", Format: "file"}, wantErr: true},
 		{name: "container 禁嵌套", req: CreateGroupReq{ArtifactID: 1, Names: "a.b", Format: "container"}, wantErr: true},
 		{name: "container 单级合法", req: CreateGroupReq{ArtifactID: 1, Names: "a", Format: "container"}, wantErr: false},
-		{name: "generic 多级合法", req: CreateGroupReq{ArtifactID: 1, Names: "a.b.c", Format: "generic"}, wantErr: false},
+		{name: "file 多级合法", req: CreateGroupReq{ArtifactID: 1, Names: "a.b.c", Format: "file"}, wantErr: false},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

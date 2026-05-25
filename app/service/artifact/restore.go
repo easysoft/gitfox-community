@@ -220,6 +220,11 @@ func (s *Service) restorePackage(
 		return pkgErrors.WithI18nKey(err, i18n.ArtifactRestoreError)
 	}
 	res.Packages++
+	if pkg.Format == model.ArtifactContainerFormat {
+		// container package 只是同 scope 锚点，实际展示节点由 version.ArtifactLibID 决定。
+		// 单独恢复 package 时不恢复锚点 view，也不重建 package tree node，避免出现空 package。
+		return nil
+	}
 	// 向上恢复 group 链 + view。
 	if err = s.cascadeRestoreGroupChainByID(ctx, pkg.GroupID, operator); err != nil {
 		return err
@@ -272,7 +277,7 @@ func (s *Service) restoreVersion(
 	if err = s.cascadeRestoreGroupChainByID(ctx, pkg.GroupID, operator); err != nil {
 		return err
 	}
-	if err = s.cascadeRestoreView(ctx, pkg.ArtifactID, operator); err != nil {
+	if err = s.cascadeRestoreView(ctx, artifactIDForVersion(pkg, ver), operator); err != nil {
 		return err
 	}
 	// 重建 tree_node：version → package → group 链。
@@ -454,7 +459,7 @@ func (s *Service) cascadeRestoreVersionChain(
 	if err = s.cascadeRestoreGroupChainByID(ctx, pkg.GroupID, operator); err != nil {
 		return err
 	}
-	if err = s.cascadeRestoreView(ctx, pkg.ArtifactID, operator); err != nil {
+	if err = s.cascadeRestoreView(ctx, artifactIDForVersion(pkg, ver), operator); err != nil {
 		return err
 	}
 	// 重建 tree_node：取最新（已恢复）记录。

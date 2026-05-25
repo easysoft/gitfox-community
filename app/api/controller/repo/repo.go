@@ -102,7 +102,7 @@ func (ctl *Controller) Create(c *gin.Context) {
 		_, _ = ctl.artSvc.CreateView(c.Request.Context(), &artifactModel.CreateArtifactViewReq{
 			SpaceRepoReq: artifactModel.SpaceRepoReq{SpaceID: int64(reqData.SpaceID), RepoID: int64(data.ID)},
 			Name:         viewName,
-			Format:       string(artifactModel.ArtifactGenericFormat),
+			Format:       string(artifactModel.ArtifactFileFormat),
 		})
 	}
 

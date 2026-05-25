@@ -8,7 +8,7 @@ func (s ArtifactFormat) Sanitize() (ArtifactFormat, bool)       { return Sanitiz
 func GetAllArtifactFormats() ([]ArtifactFormat, ArtifactFormat) { return artifactFormats, "" }
 
 const (
-	ArtifactFormatGeneric ArtifactFormat = "generic"
+	ArtifactFormatGeneric ArtifactFormat = "file"
 	ArtifactFormatRaw     ArtifactFormat = "raw"
 	// ArtifactFormatMaven     ArtifactFormat = "maven"
 	ArtifactFormatContainer ArtifactFormat = "container"

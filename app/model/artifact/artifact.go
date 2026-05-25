@@ -25,7 +25,7 @@ const (
 
 	// ArtifactGenericFormat 表示按目录/文件层级直接存储任意文件。
 	// ArtifactGenericFormat is used for store any files as folder/file style
-	ArtifactGenericFormat ArtifactFormat = "generic"
+	ArtifactFileFormat ArtifactFormat = "file"
 
 	// ArtifactRawFormat 表示按 raw 仓库语义存储文件，要求 package 与 version。
 	// ArtifactRawFormat is used for store any files as maven style, require package and version
@@ -38,7 +38,7 @@ const (
 	ArtifactNpmFormat       ArtifactFormat = "npm"
 )
 
-var AllArtifactFormatList = []ArtifactFormat{ArtifactGenericFormat, ArtifactRawFormat, ArtifactMavenFormat, ArtifactContainerFormat, ArtifactHelmFormat}
+var AllArtifactFormatList = []ArtifactFormat{ArtifactFileFormat, ArtifactRawFormat, ArtifactMavenFormat, ArtifactContainerFormat, ArtifactHelmFormat}
 
 type AssetKind string
 
@@ -225,10 +225,10 @@ type CreateArtifactVersion struct {
 }
 
 type ArtifactVersionInfo struct {
-	ID         int64  `gorm:"column:id"`
-	Version    string `gorm:"column:version"`
-	ArtifactID int64  `gorm:"column:artifactLibID"`
-	Deleted    int64  `gorm:"column:deleted"`
+	ID            int64  `gorm:"column:id"`
+	Version       string `gorm:"column:version"`
+	ArtifactLibID int64  `gorm:"column:artifactLibID"`
+	Deleted       int64  `gorm:"column:deleted"`
 
 	PackageID        int64          `gorm:"column:packageID"`
 	PackageName      string         `gorm:"column:name"`
@@ -545,6 +545,7 @@ func (e *ArtifactGroupEndpoint) names() []string {
 // ==================== Search Options ====================
 
 type SearchVersionOption struct {
+	ArtifactLibID  int64
 	PackageID      int64
 	Page           int    `json:"page"`
 	Size           int    `json:"size"`
@@ -554,6 +555,9 @@ type SearchVersionOption struct {
 
 func (opt SearchVersionOption) Apply(db *gorm.DB) *gorm.DB {
 	q := ArtifactVersion{}
+	if opt.ArtifactLibID != 0 {
+		q.ArtifactLibID = opt.ArtifactLibID
+	}
 	if opt.PackageID != 0 {
 		q.PackageID = opt.PackageID
 	}

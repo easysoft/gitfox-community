@@ -2,10 +2,13 @@ package artifact
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
 	pkgErrors "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/lock"
 
 	"gorm.io/gorm"
 )
@@ -13,6 +16,8 @@ import (
 var _ PackageInterface = (*packages)(nil)
 
 type packages struct{ db *gorm.DB }
+
+var artifactPackageLockManager = lock.ProvideMutexManager()
 
 func (c *packages) Create(ctx context.Context, newObj *model.CreateArtifactPackage) (*model.ArtifactPackage, error) {
 	var row artifactPackage
@@ -44,6 +49,73 @@ func (c *packages) GetByName(ctx context.Context, name, namespace string, artifa
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
 	return packageToModel(&row), nil
+}
+
+// GetByNameInArtifactScope 查询 package 列表所在的 artifact scope 下是否存在指定 name 和 namespace 的 package
+// 如果存在，返回该 package 的 model
+// 如果不存在，返回 nil 和 nil 错误
+// 如果存在多个 package，返回第一个 package 的 model
+func (c *packages) GetByNameInArtifactScope(ctx context.Context, name, namespace string, artifactID int64, format model.ArtifactFormat) (*model.ArtifactPackage, error) {
+	var row artifactPackage
+	err := c.db.WithContext(ctx).
+		Model(&artifactPackage{}).
+		Joins("JOIN ops_artifact_libs package_lib ON package_lib.id = ops_artifact_packages.artifactLibID").
+		Joins("JOIN ops_artifact_libs target_lib ON target_lib.id = ?", artifactID).
+		Where("package_lib.spaceID = target_lib.spaceID").
+		Where("package_lib.repoID = target_lib.repoID").
+		Where("ops_artifact_packages.name = ?", name).
+		Where("ops_artifact_packages.namespace = ?", namespace).
+		Where("ops_artifact_packages.type = ?", format).
+		Order("ops_artifact_packages.id ASC").
+		First(&row).Error
+	if err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
+	}
+	return packageToModel(&row), nil
+}
+
+// LockArtifactScopePackage 锁定 artifact scope 下 package
+func (c *packages) LockArtifactScopePackage(ctx context.Context, artifactID int64, namespace, name string, format model.ArtifactFormat) (func(), error) {
+	lockKey, err := c.artifactScopePackageLockKey(ctx, artifactID, namespace, name, format)
+	if err != nil {
+		return nil, err
+	}
+
+	mx, err := artifactPackageLockManager.NewMutex(
+		lockKey,
+		lock.WithNamespace("artifact-package"),
+		lock.WithExpiry(30*time.Second),
+		lock.WithTries(20),
+		lock.WithRetryDelay(100*time.Millisecond),
+		lock.WithTimeoutFactor(1),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	if err = mx.Lock(ctx); err != nil {
+		return nil, err
+	}
+
+	return func() {
+		releaseCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		_ = mx.Unlock(releaseCtx)
+	}, nil
+}
+
+// artifactScopePackageLockKey 生成 artifact scope 下 package 锁的 key
+// 锁的 key 格式为 space:spaceID/repo:repoID/format:format/namespace:namespace/name:name
+func (c *packages) artifactScopePackageLockKey(ctx context.Context, artifactID int64, namespace, name string, format model.ArtifactFormat) (string, error) {
+	var view artifactView
+	if err := c.db.WithContext(ctx).
+		Select("spaceID", "repoID").
+		Where("id = ?", artifactID).
+		First(&view).Error; err != nil {
+		return "", database.ProcessSQLErrorf(ctx, err)
+	}
+
+	return fmt.Sprintf("space:%d/repo:%d/format:%s/namespace:%s/name:%s", view.SpaceID, view.RepoID, format, namespace, name), nil
 }
 
 func (c *packages) List(ctx context.Context, artifactID int64, includeDeleted bool) ([]*model.ArtifactPackage, error) {

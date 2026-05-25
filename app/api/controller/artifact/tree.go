@@ -40,7 +40,7 @@ func (c *Controller) ListTree(ctx *gin.Context) {
 }
 
 // @Summary 重建制品树
-// @Description 按 format 重建制品树节点。format 必传，支持 generic/raw/maven/container/helm/pypi/npm，或 all 表示全量刷新。
+// @Description 按 format 重建制品树节点。format 必传，支持 file/raw/maven/container/helm/pypi/npm，或 all 表示全量刷新。
 // @Tags artifacts
 // @Accept application/json
 // @Produce application/json

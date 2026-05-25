@@ -82,9 +82,9 @@ func (h *uploader) Serve(ctx context.Context, req *http.Request) (int64, error) 
 	h.descriptor.MainAsset.ContentType = "application/octet-stream"
 	h.descriptor.MainAsset.Kind = model.AssetKindMain
 	h.descriptor.MainAsset.Attr = adapter.AttrAssetNormal
-	h.descriptor.MainAsset.Format = model.ArtifactGenericFormat
+	h.descriptor.MainAsset.Format = model.ArtifactFileFormat
 
-	h.descriptor.Format = model.ArtifactGenericFormat
+	h.descriptor.Format = model.ArtifactFileFormat
 	return size, err
 }
 
@@ -126,7 +126,7 @@ func (h *uploader) validateForm(_ context.Context, req *http.Request) error {
 		if err := validateGenericGroupName(group); err != nil {
 			return err
 		}
-		g, err := h.artStore.Groups().GetEndpointByNames(req.Context(), artifactID, strings.Split(strings.Trim(strings.ReplaceAll(group, "/", "."), "."), "."), model.ArtifactGenericFormat)
+		g, err := h.artStore.Groups().GetEndpointByNames(req.Context(), artifactID, strings.Split(strings.Trim(strings.ReplaceAll(group, "/", "."), "."), "."), model.ArtifactFileFormat)
 		if err != nil {
 			return badRequest(
 				fmt.Errorf("%w: group=%q not found under artifactID=%d: %v", adapter.ErrInvalidGroupName, group, artifactID, err),

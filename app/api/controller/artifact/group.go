@@ -77,8 +77,8 @@ func (c *Controller) CreateGroup(ctx *gin.Context) {
 	resp.OK(ctx, i18n.ArtifactCreateGroupSuccess, ge)
 }
 
-// @Summary 归档 generic 分组
-// @Description 将 generic 分组资产打包为 zip 下载
+// @Summary 归档 file 分组
+// @Description 将 file 分组资产打包为 zip 下载
 // @Tags artifacts
 // @Produce application/zip
 // @Param groupID path int true "分组ID"

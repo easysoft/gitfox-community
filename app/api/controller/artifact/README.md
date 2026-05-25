@@ -21,7 +21,7 @@
 
 | 方法 | 路径 | 接口名称 | 简介 |
 |------|------|---------|------|
-| POST | `/artifacts/groups` | `CreateGroup` | 创建分组节点（generic 包按 `.` 分隔的目录结构） |
+| POST | `/artifacts/groups` | `CreateGroup` | 创建分组节点（file 包按 `.` 分隔的目录结构） |
 
 ### 1.3 上传 / 下载
 
