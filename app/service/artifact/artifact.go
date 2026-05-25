@@ -1479,7 +1479,7 @@ func (s *Service) StatisticSummary(ctx context.Context) (map[string]*model.Artif
 }
 
 // SoftRemove 软删除资产
-func (s *Service) SoftRemove(ctx context.Context, spaceID int64, req *model.SoftRemoveEntitiesReq) (*model.ArtifactNodeRemoveReport, error) {
+func (s *Service) SoftRemove(ctx context.Context, req *model.SoftRemoveEntitiesReq) (*model.ArtifactNodeRemoveReport, error) {
 	ids := req.EntityIDs
 	report := &model.ArtifactNodeRemoveReport{Total: len(ids), Data: make([]*model.ArtifactNodeRemoveRes, len(ids))}
 	for _, eid := range ids {

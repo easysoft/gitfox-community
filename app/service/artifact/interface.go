@@ -74,7 +74,7 @@ type Interface interface {
 	// ---- 删除操作 ----
 
 	// SoftRemove 软删除指定的实体节点（group/package/version/asset），支持级联删除子节点。
-	SoftRemove(ctx context.Context, spaceID int64, req *model.SoftRemoveEntitiesReq) (*model.ArtifactNodeRemoveReport, error)
+	SoftRemove(ctx context.Context, req *model.SoftRemoveEntitiesReq) (*model.ArtifactNodeRemoveReport, error)
 
 	// ---- 回收站 ----
 
@@ -138,13 +138,7 @@ type Interface interface {
 	// RenameGroup 重命名 group。
 	RenameGroup(ctx context.Context, groupID int64, newName string) error
 
-	// MoveEntity 按 entityType 派发到对应的 Move 方法。
-	MoveEntity(ctx context.Context, req *model.MoveEntityReq) error
-
-	// RenameEntity 按 entityType 派发到对应的 Rename 方法。
-	RenameEntity(ctx context.Context, req *model.RenameEntityReq) error
-
-	// RelocateEntity 同时支持移动 + 重命名，单事务内完成。
+	// RelocateEntity 同时支持移动 + 重命名，单事务内完成；通用入口。
 	RelocateEntity(ctx context.Context, req *model.RelocateEntityReq) error
 
 	// FileStore 返回制品库内容存储，供容器镜像控制器直接使用。

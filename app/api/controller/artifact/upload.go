@@ -37,7 +37,7 @@ func (c *Controller) Upload(ctx *gin.Context) {
 		return
 	}
 
-	view, err := c.artSvc.ParseSpaceView(ctx, &model.SpaceRepoReq{
+	view, err := c.artSvc.ParseSpaceView(ctx.Request.Context(), &model.SpaceRepoReq{
 		ArtifactID: reqBody.ArtifactID,
 	})
 	if err != nil {

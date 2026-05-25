@@ -243,46 +243,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/artifacts/entities/move": {
-            "post": {
-                "description": "将 package / asset / group 移动到目标制品库或目标分组",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "artifacts"
-                ],
-                "summary": "移动制品实体",
-                "parameters": [
-                    {
-                        "description": "移动请求",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.MoveEntityReq"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "成功",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误或业务校验失败",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/artifacts/entities/relocate": {
             "post": {
                 "description": "同时支持移动和重命名 package / asset / group。targetGroupID 显式传 0 表示根目录（仅 file group 支持）；\n不传 targetGroupID 表示不移动，仍可正常执行重命名；两者都不变则直接成功。整个过程在单事务内完成。",
@@ -304,46 +264,6 @@ const docTemplate = `{
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.RelocateEntityReq"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "成功",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误或业务校验失败",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/artifacts/entities/rename": {
-            "post": {
-                "description": "重命名 asset 或 group（package 不支持重命名）",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "artifacts"
-                ],
-                "summary": "重命名制品实体",
-                "parameters": [
-                    {
-                        "description": "重命名请求",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.RenameEntityReq"
                         }
                     }
                 ],
@@ -455,7 +375,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/artifacts/recycle/list": {
+        "/artifacts/recycle": {
             "get": {
                 "description": "分页查询回收站中的实体记录。kind 必填，默认 asset；支持 artifact/group/package/version/asset 五种维度。\n仅查 deleted=1 的记录，不再做时间窗过滤；前端按 expiresAt 自行展示距离 GC 多久。",
                 "produces": [
@@ -11732,23 +11652,6 @@ const docTemplate = `{
                 }
             }
         },
-        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.MoveEntityReq": {
-            "type": "object",
-            "properties": {
-                "entityID": {
-                    "description": "实体引用，形如 \"group.11\" / \"asset.5\" / \"package.1\"",
-                    "type": "string"
-                },
-                "targetArtifactID": {
-                    "description": "目标制品库 ID（不传或 == 当前 → 不跨库）",
-                    "type": "integer"
-                },
-                "targetGroupID": {
-                    "description": "目标 group ID（必填；generic group 可传 0 表示根目录）",
-                    "type": "integer"
-                }
-            }
-        },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.RefreshTreeReq": {
             "type": "object",
             "properties": {
@@ -11775,19 +11678,6 @@ const docTemplate = `{
                 "targetGroupID": {
                     "description": "目标 group ID（可选；generic group 显式传 0 表示根目录）",
                     "type": "integer"
-                }
-            }
-        },
-        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.RenameEntityReq": {
-            "type": "object",
-            "properties": {
-                "entityID": {
-                    "description": "实体引用，形如 \"group.11\" / \"asset.5\"",
-                    "type": "string"
-                },
-                "newName": {
-                    "description": "新名称（必填）",
-                    "type": "string"
                 }
             }
         },

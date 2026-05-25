@@ -28,7 +28,7 @@ func (c *Controller) Restore(ctx *gin.Context) {
 		resp.BadRequest(ctx, err)
 		return
 	}
-	report, err := c.artSvc.Restore(ctx, &reqBody)
+	report, err := c.artSvc.Restore(ctx.Request.Context(), &reqBody)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return

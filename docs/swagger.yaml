@@ -564,18 +564,6 @@ definitions:
     required:
     - entityID
     type: object
-  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.MoveEntityReq:
-    properties:
-      entityID:
-        description: 实体引用，形如 "group.11" / "asset.5" / "package.1"
-        type: string
-      targetArtifactID:
-        description: 目标制品库 ID（不传或 == 当前 → 不跨库）
-        type: integer
-      targetGroupID:
-        description: 目标 group ID（必填；generic group 可传 0 表示根目录）
-        type: integer
-    type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.RefreshTreeReq:
     properties:
       format:
@@ -595,15 +583,6 @@ definitions:
       targetGroupID:
         description: 目标 group ID（可选；generic group 显式传 0 表示根目录）
         type: integer
-    type: object
-  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.RenameEntityReq:
-    properties:
-      entityID:
-        description: 实体引用，形如 "group.11" / "asset.5"
-        type: string
-      newName:
-        description: 新名称（必填）
-        type: string
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.SoftRemoveEntitiesReq:
     properties:
@@ -3487,32 +3466,6 @@ paths:
       summary: 按实体批量软删除制品
       tags:
       - artifacts
-  /artifacts/entities/move:
-    post:
-      consumes:
-      - application/json
-      description: 将 package / asset / group 移动到目标制品库或目标分组
-      parameters:
-      - description: 移动请求
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.MoveEntityReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 成功
-          schema:
-            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
-        "400":
-          description: 参数错误或业务校验失败
-          schema:
-            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
-      summary: 移动制品实体
-      tags:
-      - artifacts
   /artifacts/entities/relocate:
     post:
       consumes:
@@ -3539,32 +3492,6 @@ paths:
           schema:
             $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
       summary: 移动并/或重命名制品实体
-      tags:
-      - artifacts
-  /artifacts/entities/rename:
-    post:
-      consumes:
-      - application/json
-      description: 重命名 asset 或 group（package 不支持重命名）
-      parameters:
-      - description: 重命名请求
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.RenameEntityReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 成功
-          schema:
-            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
-        "400":
-          description: 参数错误或业务校验失败
-          schema:
-            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
-      summary: 重命名制品实体
       tags:
       - artifacts
   /artifacts/groups:
@@ -3631,7 +3558,7 @@ paths:
       summary: 通用树查询
       tags:
       - artifacts
-  /artifacts/recycle/list:
+  /artifacts/recycle:
     get:
       description: |-
         分页查询回收站中的实体记录。kind 必填，默认 asset；支持 artifact/group/package/version/asset 五种维度。

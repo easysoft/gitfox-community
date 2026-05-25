@@ -42,7 +42,6 @@ const (
 	ArtifactMoveFormatMismatch              I18nKey = "artifact.move_format_mismatch"                 // 源实体与目标位置格式不匹配.
 	ArtifactMoveSiblingConflict             I18nKey = "artifact.move_sibling_conflict"                // 目标位置已存在同级同名实体.
 	ArtifactMoveSourceDeleted               I18nKey = "artifact.move_source_deleted"                  // 源实体已软删除或不存在.
-	ArtifactMoveSuccess                     I18nKey = "artifact.move_success"                         // 移动成功.
 	ArtifactMoveTargetGroupRequired         I18nKey = "artifact.move_target_group_required"           // 移动操作必须指定 targetGroupID；仅 file group 可传 0 表示根目录,...
 	ArtifactMoveTargetInvalid               I18nKey = "artifact.move_target_invalid"                  // 目标位置无效(制品库或目标组不存在).
 	ArtifactPackageQueryError               I18nKey = "artifact.package_query_error"                  // 查询制品包失败.
@@ -59,7 +58,6 @@ const (
 	ArtifactRenameNewNameRequired           I18nKey = "artifact.rename_new_name_required"             // 重命名操作必须指定 newName.
 	ArtifactRenameSiblingConflict           I18nKey = "artifact.rename_sibling_conflict"              // 同级已存在同名实体.
 	ArtifactRenameSourceDeleted             I18nKey = "artifact.rename_source_deleted"                // 源实体已软删除或不存在.
-	ArtifactRenameSuccess                   I18nKey = "artifact.rename_success"                       // 重命名成功.
 	ArtifactRenameVersionedNotSupported     I18nKey = "artifact.rename_versioned_not_supported"       // 不支持重命名版本化包或包含版本化包的组.
 	ArtifactRepoQueryError                  I18nKey = "artifact.repo_query_error"                     // 查询仓库失败.
 	ArtifactRestoreAllFailed                I18nKey = "artifact.restore_all_failed"                   // 制品恢复全部失败,详见 data 字段.

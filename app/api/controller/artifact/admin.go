@@ -1,7 +1,6 @@
 package artifact
 
 import (
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
 	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
@@ -27,13 +26,8 @@ func (c *Controller) SoftRemoveByEntity(ctx *gin.Context) {
 		resp.BadRequest(ctx, err)
 		return
 	}
-	spaceID, _, err := req.QueryParamAsPositiveInt64(ctx, "spaceID")
-	if err != nil {
-		err = errors.WithI18nKey(err, i18n.ArtifactQueryParamError)
-		resp.BadRequest(ctx, err)
-		return
-	}
-	data, err := c.artSvc.SoftRemove(ctx.Request.Context(), spaceID, &reqBody)
+
+	data, err := c.artSvc.SoftRemove(ctx.Request.Context(), &reqBody)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return

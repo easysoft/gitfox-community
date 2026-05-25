@@ -22,11 +22,7 @@ func registerArtifactRoutes(group *gin.RouterGroup, controller *Controller) {
 		artifact.GET("/assets/:assetID/download", controller.Artifact.DownloadAsset)
 
 		// --- 操作 ---
-		// 移动制品/制品库
-		artifact.POST("/entities/move", controller.Artifact.MoveEntity)
-		// 修改制品名/制品目录移动
-		artifact.POST("/entities/rename", controller.Artifact.RenameEntity)
-		// 移动并/或重命名（同一事务）
+		// 移动并/或重命名 package / asset / group（同一事务，通用入口）
 		artifact.POST("/entities/relocate", controller.Artifact.RelocateEntity)
 		// 刷新树信息
 		artifact.POST("/tree/refresh", controller.Artifact.RefreshTree)
@@ -43,7 +39,7 @@ func registerArtifactRoutes(group *gin.RouterGroup, controller *Controller) {
 		artifact.POST("/assets/list", controller.Artifact.ListAssetPage)
 
 		// 回收站
-		artifact.GET("/recycle/list", controller.Artifact.ListRecycleBin)
+		artifact.GET("/recycle", controller.Artifact.ListRecycleBin)
 		artifact.POST("/recycle/restore", controller.Artifact.Restore)
 
 		// group 级操作（读）

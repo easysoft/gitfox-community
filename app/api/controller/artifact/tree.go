@@ -26,7 +26,7 @@ func (c *Controller) ListTree(ctx *gin.Context) {
 		resp.BadRequest(ctx, err)
 		return
 	}
-	view, err := c.artSvc.ParseSpaceView(ctx, &reqBody.SpaceRepoReq)
+	view, err := c.artSvc.ParseSpaceView(ctx.Request.Context(), &reqBody.SpaceRepoReq)
 	if err != nil {
 		resp.BadRequest(ctx, err)
 		return
@@ -58,7 +58,7 @@ func (c *Controller) RefreshTree(ctx *gin.Context) {
 		resp.BadRequest(ctx, err)
 		return
 	}
-	if err := c.artSvc.RefreshTree(ctx, reqBody.Format); err != nil {
+	if err := c.artSvc.RefreshTree(ctx.Request.Context(), reqBody.Format); err != nil {
 		resp.InternalError(ctx, err)
 		return
 	}
