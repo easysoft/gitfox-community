@@ -42,10 +42,10 @@ func (c *Controller) SoftRemoveByEntity(ctx *gin.Context) {
 }
 
 // @Summary 触发制品垃圾回收
-// @Description 创建已软删且超过回收站保留期的制品垃圾回收后台任务；entity 为空时清理全部，支持 container/raw/generic
+// @Description 创建已软删且超过回收站保留期的制品垃圾回收后台任务；entity 为空时清理全部，支持 container/raw/file
 // @Tags artifacts
 // @Produce application/json
-// @Param entity path string false "制品类型，留空表示全部，可选: container/raw/generic"
+// @Param entity path string false "制品类型，留空表示全部，可选: container/raw/file"
 // @Success 200 {object} resp.ObjectResponse "成功"
 // @Failure 400 {object} resp.ObjectResponse "参数错误"
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"

@@ -570,12 +570,11 @@ func (h *ContainerHandler) loadContainerRequest(c *gin.Context) (*ctnCtrl.Contai
 		return nil, ctnAdapter.ErrNameUnknown.WithDetail(err.Error())
 	}
 
-	// 按新字段语义构造 ContainerReq：GroupName 由 service 从数据库填充，RepoName 即 OCI image 名。
+	// 按新字段语义构造 ContainerReq：RepoName 即 OCI image 名。
 	return &ctnCtrl.ContainerReq{
 		Scope:        scope,
 		ScopeID:      artCtx.ScopeID(),
 		ArtifactName: artifactName,
-		GroupName:    artCtx.GroupName,
 		RepoName:     imageName,
 		View:         artCtx.View,
 	}, nil

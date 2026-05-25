@@ -17,6 +17,7 @@ type versions struct{ db *gorm.DB }
 
 func (c *versions) Create(ctx context.Context, newObj *model.CreateArtifactVersion) (*model.ArtifactVersion, error) {
 	var row artifactVersion
+	row.ArtifactLibID = newObj.ArtifactLibID
 	row.PackageID = newObj.PackageID
 	row.Version = newObj.Version
 	row.Metadata = newObj.Metadata
@@ -36,9 +37,13 @@ func (c *versions) GetByID(ctx context.Context, versionID int64) (*model.Artifac
 	return versionToModel(&row), nil
 }
 
-func (c *versions) GetByVersion(ctx context.Context, packageId int64, version string) (*model.ArtifactVersion, error) {
+func (c *versions) GetByVersion(ctx context.Context, packageID, artifactLibID int64, version string) (*model.ArtifactVersion, error) {
 	var row artifactVersion
-	q := artifactVersion{PackageID: packageId, Version: version}
+	q := artifactVersion{
+		PackageID:     packageID,
+		ArtifactLibID: artifactLibID,
+		Version:       version,
+	}
 	if err := c.db.WithContext(ctx).Where(&q).First(&row).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
@@ -76,9 +81,13 @@ func (c *versions) deleteByIds(ctx context.Context, versionIDs ...int64) (int64,
 	return result.RowsAffected, nil
 }
 
+// Find 查询 version 列表
 func (c *versions) Find(ctx context.Context, opt model.SearchVersionOption) ([]*model.ArtifactVersion, error) {
 	stmt := c.db.WithContext(ctx).Model(&artifactVersion{})
 	// 应用 SearchVersionOption 的查询条件
+	if opt.ArtifactLibID != 0 {
+		stmt = stmt.Where("artifactLibID = ?", opt.ArtifactLibID)
+	}
 	if opt.PackageID != 0 {
 		stmt = stmt.Where("packageID = ?", opt.PackageID)
 	}
@@ -118,19 +127,25 @@ func (c *versions) Search(ctx context.Context, options ...SearchOption) ([]*mode
 	}
 
 	selectFields := []string{
-		"ops_artifact_versions.id", "ops_artifact_versions.version", "ops_artifact_versions.deleted",
-		"ops_artifact_packages.id AS packageID", "ops_artifact_packages.name",
-		"ops_artifact_packages.namespace", "ops_artifact_packages.type",
-		"ops_artifact_packages.artifactLibID",
-		"ops_artifact_libs.spaceID", "ops_artifact_libs.repoID",
-		"ops_space.name AS space_name", "ops_repo.name AS repo_name",
+		"ops_artifact_versions.id",
+		"ops_artifact_versions.version",
+		"ops_artifact_versions.artifactLibID",
+		"ops_artifact_versions.deleted",
+		"ops_artifact_packages.id AS packageID",
+		"ops_artifact_packages.name",
+		"ops_artifact_packages.namespace",
+		"ops_artifact_packages.type",
+		"ops_artifact_libs.spaceID",
+		"ops_artifact_libs.repoID",
+		"ops_space.name AS space_name",
+		"ops_repo.name AS repo_name",
 	}
 
 	var data []*model.ArtifactVersionInfo
 	result := db.Model(&artifactVersion{}).
 		Select(strings.Join(selectFields, ",")).
 		Joins("left join ops_artifact_packages on ops_artifact_packages.id = ops_artifact_versions.packageID").
-		Joins("left join ops_artifact_libs on ops_artifact_libs.id = ops_artifact_packages.artifactLibID").
+		Joins("left join ops_artifact_libs on ops_artifact_libs.id = ops_artifact_versions.artifactLibID").
 		Joins("left join ops_space on ops_space.id = ops_artifact_libs.spaceID").
 		Joins("left join ops_repo on ops_repo.id = ops_artifact_libs.repoID").
 		Scan(&data)

@@ -201,7 +201,7 @@ func (s *Service) listRecycleVersion(ctx context.Context, page, pageSize int) ([
 			item.Name = pkg.Name
 			item.Group = pkg.Namespace
 			item.Format = pkg.Format
-			item.ArtifactID = pkg.ArtifactID
+			item.ArtifactID = artifactIDForVersion(pkg, v)
 		}
 		out = append(out, item)
 	}
@@ -247,7 +247,7 @@ func (s *Service) fillAssetOwnership(ctx context.Context, a *model.ArtifactAsset
 			return
 		}
 		item.Group = pkg.Namespace
-		item.ArtifactID = pkg.ArtifactID
+		item.ArtifactID = artifactIDForVersion(pkg, ver)
 		if item.Format == "" {
 			item.Format = pkg.Format
 		}

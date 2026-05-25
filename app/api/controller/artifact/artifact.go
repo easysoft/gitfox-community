@@ -114,7 +114,7 @@ func (c *Controller) RenameEntity(ctx *gin.Context) {
 }
 
 // @Summary 移动并/或重命名制品实体
-// @Description 同时支持移动和重命名 package / asset / group。targetGroupID 显式传 0 表示根目录（仅 generic group 支持）；
+// @Description 同时支持移动和重命名 package / asset / group。targetGroupID 显式传 0 表示根目录（仅 file group 支持）；
 // @Description 不传 targetGroupID 表示不移动，仍可正常执行重命名；两者都不变则直接成功。整个过程在单事务内完成。
 // @Tags artifacts
 // @Accept application/json

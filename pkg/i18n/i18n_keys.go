@@ -39,10 +39,11 @@ const (
 	ArtifactMoveCycleDetected               I18nKey = "artifact.move_cycle_detected"                  // 目标父组属于源组的子树,禁止循环引用.
 	ArtifactMoveEntityTypeInvalid           I18nKey = "artifact.move_entity_type_invalid"             // 不支持的移动实体类型.
 	ArtifactMoveFormatMismatch              I18nKey = "artifact.move_format_mismatch"                 // 源实体与目标位置格式不匹配.
+	ArtifactMoveContainerNotSupported       I18nKey = "artifact.move_container_not_supported"         // container 格式不支持移动,请使用制品晋级.
 	ArtifactMoveSiblingConflict             I18nKey = "artifact.move_sibling_conflict"                // 目标位置已存在同级同名实体.
 	ArtifactMoveSourceDeleted               I18nKey = "artifact.move_source_deleted"                  // 源实体已软删除或不存在.
 	ArtifactMoveSuccess                     I18nKey = "artifact.move_success"                         // 移动成功.
-	ArtifactMoveTargetGroupRequired         I18nKey = "artifact.move_target_group_required"           // 移动操作必须指定 targetGroupID；仅 generic group 可传 0 表示根...
+	ArtifactMoveTargetGroupRequired         I18nKey = "artifact.move_target_group_required"           // 移动操作必须指定 targetGroupID；仅 file group 可传 0 表示根...
 	ArtifactMoveTargetInvalid               I18nKey = "artifact.move_target_invalid"                  // 目标位置无效(制品库或目标组不存在).
 	ArtifactPackageQueryError               I18nKey = "artifact.package_query_error"                  // 查询制品包失败.
 	ArtifactPathParamError                  I18nKey = "artifact.path_param_error"                     // Path 参数解析失败.
@@ -55,6 +56,7 @@ const (
 	ArtifactRelocateSuccess                 I18nKey = "artifact.relocate_success"                     // 操作成功.
 	ArtifactRenameEntityTypeInvalid         I18nKey = "artifact.rename_entity_type_invalid"           // 不支持的重命名实体类型.
 	ArtifactRenameNewNameRequired           I18nKey = "artifact.rename_new_name_required"             // 重命名操作必须指定 newName.
+	ArtifactRenameContainerNotSupported     I18nKey = "artifact.rename_container_not_supported"       // container 格式不支持重命名.
 	ArtifactRenameSiblingConflict           I18nKey = "artifact.rename_sibling_conflict"              // 同级已存在同名实体.
 	ArtifactRenameSourceDeleted             I18nKey = "artifact.rename_source_deleted"                // 源实体已软删除或不存在.
 	ArtifactRenameSuccess                   I18nKey = "artifact.rename_success"                       // 重命名成功.
@@ -81,6 +83,7 @@ const (
 	ArtifactSoftRemoveGroupNotEmpty         I18nKey = "artifact.soft_remove_group_not_empty"          // 分组或其子分组下仍有未删除的制品文件(asset),无法删除；空的子目录可以一并删除,请先移除...
 	ArtifactSoftRemoveGroupQueryError       I18nKey = "artifact.soft_remove_group_query_error"        // 校验分组状态失败.
 	ArtifactSoftRemovePackageNotEmpty       I18nKey = "artifact.soft_remove_package_not_empty"        // 包下仍有未删除的制品文件,无法删除包；请先删除包下所有版本的制品文件后重试.
+	ArtifactSoftRemovePackageVersionExists  I18nKey = "artifact.soft_remove_package_version_exists"   // 包下仍有未删除的版本(version),无法删除包；请先删除所有制品库下的版本后重试.
 	ArtifactSoftRemoveParseError            I18nKey = "artifact.soft_remove_parse_error"              // 解析制品实体 ID 失败.
 	ArtifactSoftRemoveVersionNotEmpty       I18nKey = "artifact.soft_remove_version_not_empty"        // 版本下仍有未删除的制品文件,无法删除版本；请先删除版本下的所有制品文件后重试.
 	ArtifactSpaceIdRequired                 I18nKey = "artifact.space_id_required"                    // 当 repoID 存在时,spaceID 是必填的.
@@ -93,7 +96,7 @@ const (
 	ArtifactTreeNodeListError               I18nKey = "artifact.tree_node_list_error"                 // 查询制品树节点列表失败.
 	ArtifactTreeNodeNotInArtifact           I18nKey = "artifact.tree_node_not_in_artifact"            // 指定的 entityID 不属于当前制品库.
 	ArtifactTreeNodeRecursiveConflict       I18nKey = "artifact.tree_node_recursive_conflict"         // 传入 entityID 时不支持递归查询
-	ArtifactTreeRefreshFormatInvalid        I18nKey = "artifact.tree_refresh_format_invalid"          // 不支持的制品格式,仅支持: generic, raw, container.
+	ArtifactTreeRefreshFormatInvalid        I18nKey = "artifact.tree_refresh_format_invalid"          // 不支持的制品格式,仅支持: file, raw, container.
 	ArtifactUnsupportedFormat               I18nKey = "artifact.unsupported_format"                   // 不支持的制品格式.
 	ArtifactUploadArtifactidRequired        I18nKey = "artifact.upload_artifactid_required"           // 上传制品必须指定 artifactID,请确认所选制品库后重试.
 	ArtifactUploadFileNameRequired          I18nKey = "artifact.upload_file_name_required"            // 上传制品必须指定文件名 name,且不能为空或全为空白字符.
@@ -115,8 +118,8 @@ const (
 	ArtifactVersionPackageRequired          I18nKey = "artifact.version_package_required"             // 查询版本列表必须指定制品包名 packageName,且不能为空或全为空白字符.
 	ArtifactVersionQueryError               I18nKey = "artifact.version_query_error"                  // 查询制品版本失败.
 	ArtifactViewCreateError                 I18nKey = "artifact.view_create_error"                    // 创建制品视图失败.
-	ArtifactViewFormatInvalid               I18nKey = "artifact.view_format_invalid"                  // 不支持的制品格式,仅支持: generic, raw, container.
-	ArtifactViewFormatRequired              I18nKey = "artifact.view_format_required"                 // 请选择制品格式(format),可选值:generic, raw, container.
+	ArtifactViewFormatInvalid               I18nKey = "artifact.view_format_invalid"                  // 不支持的制品格式,仅支持: file, raw, container.
+	ArtifactViewFormatRequired              I18nKey = "artifact.view_format_required"                 // 请选择制品格式(format),可选值:file, raw, container.
 	ArtifactViewNameDuplicate               I18nKey = "artifact.view_name_duplicate"                  // 同名制品库视图已存在.
 	ArtifactViewNameInvalidChars            I18nKey = "artifact.view_name_invalid_chars"              // 制品库名称不得包含空白字符或 / \ . .. : * ? " < > | 等特殊字符.
 	ArtifactViewNameNonAsciiNotAllowed      I18nKey = "artifact.view_name_non_ascii_not_allowed"      // 版本化制品库(container/raw)的名称仅允许英文字母、数字、中划线和下划线,不允许中文.

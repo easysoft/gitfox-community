@@ -54,41 +54,43 @@ func (s *Store) Assets() AssetInterface         { return s.assets }
 func (s *Store) MetaAssets() MetaAssetInterface { return s.metaAssets }
 func (s *Store) Blobs() BlobInterface           { return s.blobs }
 func (s *Store) Nodes() TreeNodeInterface       { return s.nodes }
-
 func (s *Store) FindPackages(ctx context.Context, artifactID int64, filter *model.ArtifactFilter) ([]*model.ArtifactListItem, error) {
-	// 通过子查询先取每个 package 在当前 view 下的最新 version，再回查 package 列表。
 	result := make([]*model.ArtifactListItem, 0)
-	q := artifactPackage{ArtifactID: artifactID}
 
 	stmt := s.db.WithContext(ctx).Model(&artifactPackage{}).
 		Select(`ops_artifact_packages.type, ops_artifact_packages.name, ops_artifact_packages.namespace,
-			ops_artifact_versions.version, ops_artifact_versions.editedDate`).
+                        ops_artifact_versions.version, ops_artifact_versions.editedDate`).
 		Joins(`JOIN (
-			SELECT v.packageID, MAX(v.editedDate) AS latest_updated
-				FROM ops_artifact_versions v
-				JOIN ops_artifact_packages p ON v.packageID = p.id
-				WHERE p.artifactLibID = ? AND v.deleted = 0
-				GROUP BY v.packageID) AS latest_versions
-			ON ops_artifact_packages.id = latest_versions.packageID
-				AND ops_artifact_packages.deleted = 0`, artifactID).
+                        SELECT v.packageID, MAX(v.editedDate) AS latest_updated
+                                FROM ops_artifact_versions v
+                                JOIN ops_artifact_packages p ON v.packageID = p.id
+                                WHERE v.artifactLibID = ? AND v.deleted = 0 AND p.deleted = 0
+                                GROUP BY v.packageID) AS latest_versions
+                        ON ops_artifact_packages.id = latest_versions.packageID
+                                AND ops_artifact_packages.deleted = 0`, artifactID).
 		Joins(`JOIN ops_artifact_versions
-			ON ops_artifact_versions.packageID = latest_versions.packageID
-				AND ops_artifact_versions.editedDate = latest_versions.latest_updated
-				AND ops_artifact_versions.deleted = 0`)
+                        ON ops_artifact_versions.packageID = latest_versions.packageID
+                                AND ops_artifact_versions.artifactLibID = ?
+                                AND ops_artifact_versions.editedDate = latest_versions.latest_updated
+                                AND ops_artifact_versions.deleted = 0`, artifactID)
 
+	page, size := 0, 0
 	if filter != nil {
+		page, size = filter.Page, filter.Size
 		if filter.Format != "" {
-			q.Format = string(filter.Format)
+			stmt = stmt.Where("ops_artifact_packages.type = ?", filter.Format)
 		}
 		if filter.Query != "" {
-			stmt = stmt.Where("name LIKE ?", fmt.Sprintf("%%%s%%", filter.Query))
+			stmt = stmt.Where("ops_artifact_packages.name LIKE ?", fmt.Sprintf("%%%s%%", filter.Query))
 		}
 	}
 
-	stmt.Where(&q).Order("latest_versions.latest_updated desc").
-		Limit(int(database.Limit(filter.Size))).
-		Offset(int(database.Offset(filter.Page, filter.Size))).
-		Find(&result)
+	if err := stmt.Order("latest_versions.latest_updated desc").
+		Limit(int(database.Limit(size))).
+		Offset(int(database.Offset(page, size))).
+		Find(&result).Error; err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
+	}
 
 	for id, p := range result {
 		result[id].DisplayName = p.Name
@@ -200,14 +202,20 @@ func (s *Store) StatisticAssets(ctx context.Context, retentionTime time.Duration
 	return report, nil
 }
 
-func (s *Store) GetVersion(ctx context.Context, artifactID int64,
-	packageName, groupName, versionName string, format model.ArtifactFormat,
-) (*model.ArtifactVersion, error) {
-	dbPkg, err := s.packages.GetByName(ctx, packageName, groupName, artifactID, format)
+func (s *Store) GetVersion(ctx context.Context, artifactID int64, packageName, groupName, versionName string, format model.ArtifactFormat) (*model.ArtifactVersion, error) {
+	var (
+		dbPkg *model.ArtifactPackage
+		err   error
+	)
+	if format == model.ArtifactContainerFormat {
+		dbPkg, err = s.packages.GetByNameInArtifactScope(ctx, packageName, groupName, artifactID, format)
+	} else {
+		dbPkg, err = s.packages.GetByName(ctx, packageName, groupName, artifactID, format)
+	}
 	if err != nil {
 		return nil, err
 	}
-	dbVer, err := s.versions.GetByVersion(ctx, dbPkg.ID, versionName)
+	dbVer, err := s.versions.GetByVersion(ctx, dbPkg.ID, artifactID, versionName)
 	if err != nil {
 		return nil, err
 	}

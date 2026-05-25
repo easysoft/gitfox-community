@@ -12,7 +12,6 @@ import (
 	"strconv"
 	"time"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/adapter"
 	ctnAdapter "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/adapter/container"
 	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
@@ -77,7 +76,6 @@ func NewController(
 // 对应新路径 /v2/:domainid/:artifactname/:imagename/...
 //   - ScopeID 为 scope=space/repo 时的数字 ID，global 时为 0。
 //   - ArtifactName 取代旧的 ViewName，对应 ops_artifact.name。
-//   - GroupName 由数据库中 container group 记录填充（容器库下唯一一个 group）。
 //   - RepoName 语义不变，即 OCI image 名称。
 type ContainerReq struct {
 	// Scope 作用域：global | space | repo，由路由 :domainid 解析决定。
@@ -86,8 +84,6 @@ type ContainerReq struct {
 	ScopeID uint64
 	// ArtifactName 对应 ops_artifact.name，取代旧的 ViewName。
 	ArtifactName string
-	// GroupName container 分组名（由数据库 container group 记录填充）。
-	GroupName string
 	// RepoName 镜像名（OCI image name）。
 	RepoName string
 	View     *adapter.ViewDescriptor
@@ -246,19 +242,19 @@ type tagInfo struct {
 	blob    *model.ArtifactBlob
 }
 
-// findContainerTag 按镜像名、命名空间（groupName）和 tag 查找镜像版本及关联资源。
-func findContainerTag(ctx context.Context, artStore artifactStore.Interface, artifactID int64, pkgName, groupName, tag string) (*tagInfo, error) {
+// findContainerTag 按镜像名和 tag 查找镜像版本及关联资源。
+func findContainerTag(ctx context.Context, artStore artifactStore.Interface, artifactID int64, pkgName, tag string) (*tagInfo, error) {
 	log := logger.GetLogger(ctx)
-	dbPkg, err := artStore.Packages().GetByName(ctx, pkgName, groupName, artifactID, model.ArtifactContainerFormat)
+	dbPkg, err := artStore.Packages().GetByNameInArtifactScope(ctx, pkgName, "", artifactID, model.ArtifactContainerFormat)
 	if err != nil {
 		return nil, err
 	}
 	if dbPkg.IsDeleted() {
 		// 软删包对读路径等价于不存在（store 层未过滤 deleted，是为了让 push 走 UnDelete 复活）。
-		log.Debugf("【container pull】package %s/%s is soft-deleted, treat as not found", groupName, pkgName)
+		log.Debugf("【container pull】package %s is soft-deleted, treat as not found", pkgName)
 		return nil, pkgErrors.ErrResourceNotFound
 	}
-	dbVer, err := artStore.Versions().GetByVersion(ctx, dbPkg.ID, tag)
+	dbVer, err := artStore.Versions().GetByVersion(ctx, dbPkg.ID, artifactID, tag)
 	if err != nil {
 		return nil, err
 	}
@@ -553,7 +549,7 @@ func (c *Controller) GetContainerTag(ctx context.Context, req *http.Request, man
 func (c *Controller) getContainerTag(ctx context.Context, req *http.Request, manifestReq *ContainerManifestRequest, head bool) (HttpResponseWriter, error) {
 	// TODO: 权限检查
 	view := manifestReq.View
-	t, err := findContainerTag(ctx, c.artStore, view.ArtifactID, manifestReq.RepoName, manifestReq.GroupName, manifestReq.Tag)
+	t, err := findContainerTag(ctx, c.artStore, view.ArtifactID, manifestReq.RepoName, manifestReq.Tag)
 	if err != nil {
 		return nil, err
 	}
@@ -573,20 +569,12 @@ func (c *Controller) PutContainerTag(ctx context.Context, req *http.Request, man
 	// TODO: 权限检查
 	view := manifestReq.View
 
-	// 有 GroupName 时自动创建 group，并将 groupID 与 namespace 传入 descriptor
-	groupID, err := c.getOrCreateGroup(ctx, view.ArtifactID, manifestReq.GroupName)
-	if err != nil {
-		return nil, err
-	}
-
 	uploader := ctnAdapter.NewManifestUploader(c.artStore, view, "")
 	uploader.Prepare(func(desc *adapter.PackageDescriptor) {
 		desc.Name = manifestReq.RepoName
-		desc.Namespace = manifestReq.GroupName // 作为包的命名空间，区分不同 group 下的同名镜像
-		desc.GroupID = groupID                 // 供树节点挂载使用
 		desc.Version = manifestReq.Tag
 	})
-	if err = handleUpload(ctx, req, uploader); err != nil {
+	if err := handleUpload(ctx, req, uploader); err != nil {
 		return nil, err
 	}
 
@@ -601,22 +589,11 @@ func (c *Controller) PutContainerTag(ctx context.Context, req *http.Request, man
 	}), nil
 }
 
-// getOrCreateGroup 在指定 view 下按 groupName 查找或创建 container 格式的一级 group。
-// 使用 RecursiveCreate 保证幂等性（group 存在则直接返回）。
-func (c *Controller) getOrCreateGroup(ctx context.Context, artifactID int64, groupName string) (int64, error) {
-	session, _ := req.GetAuthSession(ctx)
-	ge, err := c.artStore.Groups().RecursiveCreate(ctx, artifactID, []string{groupName}, model.ArtifactContainerFormat, session.User.Account)
-	if err != nil {
-		return 0, err
-	}
-	return ge.ID, nil
-}
-
 // DeleteContainerTag DELETE tag。
 func (c *Controller) DeleteContainerTag(ctx context.Context, req *ContainerManifestRequest) (HttpResponseWriter, error) {
 	// TODO: 权限检查
 	view := req.View
-	t, err := findContainerTag(ctx, c.artStore, view.ArtifactID, req.RepoName, req.GroupName, req.Tag)
+	t, err := findContainerTag(ctx, c.artStore, view.ArtifactID, req.RepoName, req.Tag)
 	if err != nil {
 		return nil, err
 	}
@@ -651,13 +628,14 @@ func (c *Controller) ListTags(ctx context.Context, req *ContainerReq) (*tagList,
 		Tags: make([]string, 0),
 	}
 
-	pkgModel, err := c.artStore.Packages().GetByName(ctx, req.RepoName, req.GroupName, req.View.ArtifactID, model.ArtifactContainerFormat)
+	pkgModel, err := c.artStore.Packages().GetByNameInArtifactScope(ctx, req.RepoName, "", req.View.ArtifactID, model.ArtifactContainerFormat)
 	if err != nil {
 		return &result, nil
 	}
 
 	objects, err := c.artStore.Versions().Find(ctx, model.SearchVersionOption{
-		PackageID: pkgModel.ID,
+		PackageID:     pkgModel.ID,
+		ArtifactLibID: req.View.ArtifactID,
 	})
 	if err != nil {
 		return &result, nil

@@ -125,7 +125,7 @@ func (c *treeNode) ListByParentId(ctx context.Context, parentID int64) ([]*model
 		return nil, errors.New("parentID can not be zero")
 	}
 	var rows []*artifactTreeNode
-	if err := c.db.WithContext(ctx).Where("parentID = ?", parentID).Order("name").Find(&rows).Error; err != nil {
+	if err := c.db.WithContext(ctx).Where("parentID = ?", parentID).Order("nodeName").Find(&rows).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
 	return nodesToModel(rows), nil

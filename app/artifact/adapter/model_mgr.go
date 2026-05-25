@@ -65,7 +65,7 @@ func (mm *ModelManager) Sync(ctx context.Context, assetDesc *AssetDescriptor) (*
 			return nil, err
 		}
 	default:
-		if mm.pkgDescriptor.Format == model.ArtifactGenericFormat {
+		if mm.pkgDescriptor.Format == model.ArtifactFileFormat {
 			asset, updated, err = mm.createNormalAssetToGroup(ctx, assetDesc)
 			if err != nil {
 				return nil, err
@@ -326,7 +326,7 @@ func (mm *ModelManager) getOrCreateVersion(ctx context.Context) (*model.Artifact
 		}
 	}()
 
-	currVersion, err := mm.store.Versions().GetByVersion(ctx, mm.pkgModel.ID, mm.pkgDescriptor.Version)
+	currVersion, err := mm.store.Versions().GetByVersion(ctx, mm.pkgModel.ID, mm.view.ArtifactID, mm.pkgDescriptor.Version)
 	if err == nil {
 		if currVersion.IsDeleted() {
 			if e := mm.store.Versions().Restore(ctx, currVersion.ID, mm.creator.UID); e != nil {
@@ -341,9 +341,10 @@ func (mm *ModelManager) getOrCreateVersion(ctx context.Context) (*model.Artifact
 	}
 
 	verModel := &model.CreateArtifactVersion{
-		PackageID: mm.pkgModel.ID,
-		Version:   mm.pkgDescriptor.Version,
-		CreatedBy: mm.creator.UID,
+		PackageID:     mm.pkgModel.ID,
+		ArtifactLibID: mm.view.ArtifactID,
+		Version:       mm.pkgDescriptor.Version,
+		CreatedBy:     mm.creator.UID,
 	}
 	if mm.pkgDescriptor.VersionMetadata != nil {
 		metadata, e := mm.pkgDescriptor.VersionMetadata.ToJSON()
@@ -376,7 +377,18 @@ func (mm *ModelManager) getOrCreatePackage(ctx context.Context) (*model.Artifact
 		return mm.pkgModel, nil
 	}
 	desc := mm.pkgDescriptor
-	currPkg, err := mm.store.Packages().GetByName(ctx, desc.Name, desc.Namespace, mm.view.ArtifactID, desc.Format)
+	var currPkg *model.ArtifactPackage
+	var err error
+	if desc.Format == model.ArtifactContainerFormat {
+		unlock, e := mm.store.Packages().LockArtifactScopePackage(ctx, mm.view.ArtifactID, desc.Namespace, desc.Name, desc.Format)
+		if e != nil {
+			return nil, e
+		}
+		defer unlock()
+		currPkg, err = mm.store.Packages().GetByNameInArtifactScope(ctx, desc.Name, desc.Namespace, mm.view.ArtifactID, desc.Format)
+	} else {
+		currPkg, err = mm.store.Packages().GetByName(ctx, desc.Name, desc.Namespace, mm.view.ArtifactID, desc.Format)
+	}
 	if err == nil {
 		if currPkg.IsDeleted() {
 			if e := mm.store.Packages().Restore(ctx, currPkg.ID, mm.creator.UID); e != nil {

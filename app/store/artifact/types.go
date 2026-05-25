@@ -104,15 +104,16 @@ func (p *artifactPackage) BeforeUpdate(_ *gorm.DB) error {
 
 // artifactVersion → ops_artifact_versions
 type artifactVersion struct {
-	ID          int64           `gorm:"column:id;primaryKey"`
-	PackageID   int64           `gorm:"column:packageID"`
-	Version     string          `gorm:"column:version"`
-	Metadata    string          `gorm:"-"`
-	CreatedBy   string          `gorm:"column:createdBy"`
-	CreatedDate *datetime.Local `gorm:"column:createdDate"`
-	EditedBy    string          `gorm:"column:editedBy"`
-	EditedDate  *datetime.Local `gorm:"column:editedDate"`
-	Deleted     int8            `gorm:"column:deleted"`
+	ID            int64           `gorm:"column:id;primaryKey"`
+	PackageID     int64           `gorm:"column:packageID"`
+	ArtifactLibID int64           `gorm:"column:artifactLibID"`
+	Version       string          `gorm:"column:version"`
+	Metadata      string          `gorm:"-"`
+	CreatedBy     string          `gorm:"column:createdBy"`
+	CreatedDate   *datetime.Local `gorm:"column:createdDate"`
+	EditedBy      string          `gorm:"column:editedBy"`
+	EditedDate    *datetime.Local `gorm:"column:editedDate"`
+	Deleted       int8            `gorm:"column:deleted"`
 }
 
 func (artifactVersion) TableName() string { return "ops_artifact_versions" }
@@ -225,16 +226,16 @@ func (b *artifactBlob) BeforeUpdate(_ *gorm.DB) error {
 }
 
 // artifactTreeNode → ops_artifact_tree_nodes
-// 注：新设计稿表中的 type 列承载制品库类型(file/docker/...)，
-// 旧业务字段 Type(节点类型 group/package/version/asset) 在新表无对应列，
-// 这里保留 Type 字段但设为 gorm:"-" 不入库，由业务层自行兜底。
+// type 承载制品格式（generic/container/raw...），linkTable 承载树节点类型
+// （format/group/package/version/asset）。linkTable 原名来自旧表设计，这里复用为
+// 节点类型列，保证接口能稳定返回 entityID 前缀并按层级追加资产。
 type artifactTreeNode struct {
 	ID         int64    `gorm:"column:id;primaryKey"`
 	ParentID   null.Int `gorm:"column:parentID"`
 	ArtifactID int64    `gorm:"column:artifactLibID"`
 	Name       string   `gorm:"column:nodeName"`
 	Path       string   `gorm:"column:nodePath"`
-	Type       string   `gorm:"-"`
+	Type       string   `gorm:"column:linkTable"`
 	Format     string   `gorm:"column:type"`
 	TargetID   null.Int `gorm:"column:linkRecord"`
 }
@@ -403,15 +404,16 @@ func versionToModel(v *artifactVersion) *model.ArtifactVersion {
 		return nil
 	}
 	return &model.ArtifactVersion{
-		ID:          v.ID,
-		PackageID:   v.PackageID,
-		Version:     v.Version,
-		Metadata:    v.Metadata,
-		CreatedBy:   v.CreatedBy,
-		CreatedDate: v.CreatedDate,
-		EditedBy:    v.EditedBy,
-		EditedDate:  v.EditedDate,
-		Deleted:     v.Deleted,
+		ID:            v.ID,
+		ArtifactLibID: v.ArtifactLibID,
+		PackageID:     v.PackageID,
+		Version:       v.Version,
+		Metadata:      v.Metadata,
+		CreatedBy:     v.CreatedBy,
+		CreatedDate:   v.CreatedDate,
+		EditedBy:      v.EditedBy,
+		EditedDate:    v.EditedDate,
+		Deleted:       v.Deleted,
 	}
 }
 
@@ -420,15 +422,16 @@ func versionFromModel(m *model.ArtifactVersion) *artifactVersion {
 		return nil
 	}
 	return &artifactVersion{
-		ID:          m.ID,
-		PackageID:   m.PackageID,
-		Version:     m.Version,
-		Metadata:    m.Metadata,
-		CreatedBy:   m.CreatedBy,
-		CreatedDate: m.CreatedDate,
-		EditedBy:    m.EditedBy,
-		EditedDate:  m.EditedDate,
-		Deleted:     m.Deleted,
+		ID:            m.ID,
+		ArtifactLibID: m.ArtifactLibID,
+		PackageID:     m.PackageID,
+		Version:       m.Version,
+		Metadata:      m.Metadata,
+		CreatedBy:     m.CreatedBy,
+		CreatedDate:   m.CreatedDate,
+		EditedBy:      m.EditedBy,
+		EditedDate:    m.EditedDate,
+		Deleted:       m.Deleted,
 	}
 }
 
@@ -590,16 +593,30 @@ func nodeToModel(n *artifactTreeNode) *model.ArtifactTreeNode {
 	if n == nil {
 		return nil
 	}
+	nodeType := model.ArtifactTreeNodeType(n.Type)
+	if nodeType == "" {
+		nodeType = inferTreeNodeType(n)
+	}
 	return &model.ArtifactTreeNode{
 		ID:         n.ID,
 		ParentID:   n.ParentID,
 		ArtifactID: n.ArtifactID,
 		Name:       n.Name,
 		Path:       n.Path,
-		Type:       model.ArtifactTreeNodeType(n.Type),
+		Type:       nodeType,
 		Format:     model.ArtifactFormat(n.Format),
 		TargetID:   n.TargetID,
 	}
+}
+
+func inferTreeNodeType(n *artifactTreeNode) model.ArtifactTreeNodeType {
+	if n.Path == "/" {
+		return model.ArtifactTreeNodeTypeFormat
+	}
+	if n.TargetID.Valid && model.ArtifactFormat(n.Format) == model.ArtifactFileFormat {
+		return model.ArtifactTreeNodeTypeGroup
+	}
+	return ""
 }
 
 func nodeFromModel(m *model.ArtifactTreeNode) *artifactTreeNode {

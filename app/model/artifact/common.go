@@ -266,19 +266,20 @@ type ArtifactTreeListReq struct {
 // ListAssetReq 制品资产分页列表请求。
 // EntityID 接受 "group.{id}" / "version.{id}" / "package.{id}" / "asset.{id}"。
 type ListAssetReq struct {
-	EntityID  string `json:"entityID" binding:"required"` // group.{id} / version.{id} / package.{id} / asset.{id}
-	Page      int    `json:"page"`
-	PageSize  int    `json:"pageSize"`
-	Name      string `json:"name"`      // 按文件名模糊过滤
-	Version   string `json:"version"`   // 按版本号过滤（仅 version 类资产有效）
-	OS        string `json:"os"`        // 按操作系统过滤（linux / windows）
-	Arch      string `json:"arch"`      // 按 CPU 架构过滤（amd64 / arm64 / arm/v7）
-	CreatedBy string `json:"createdBy"` // 按创建人过滤
-	EditedBy  string `json:"editedBy"`  // 按更新人过滤
-	Sort      string `json:"sort"`      // 排序字段：id / name / size / createdDate / editedDate
-	Order     string `json:"order"`     // 排序方向：asc / desc
-	Deleted   *bool  `json:"deleted"`   // 是否包含已删除：nil=不过滤，true=仅已删，false=仅未删
-	More      bool   `json:"more"`      // 是否展开子目录制品放在同一列表中
+	EntityID   string `json:"entityID" binding:"required"` // group.{id} / version.{id} / package.{id} / asset.{id}
+	ArtifactID int64  `json:"artifactID"`                  // 当前制品库 ID；container package 查询版本时必填
+	Page       int    `json:"page"`
+	PageSize   int    `json:"pageSize"`
+	Name       string `json:"name"`      // 按文件名模糊过滤
+	Version    string `json:"version"`   // 按版本号过滤（仅 version 类资产有效）
+	OS         string `json:"os"`        // 按操作系统过滤（linux / windows）
+	Arch       string `json:"arch"`      // 按 CPU 架构过滤（amd64 / arm64 / arm/v7）
+	CreatedBy  string `json:"createdBy"` // 按创建人过滤
+	EditedBy   string `json:"editedBy"`  // 按更新人过滤
+	Sort       string `json:"sort"`      // 排序字段：id / name / size / createdDate / editedDate
+	Order      string `json:"order"`     // 排序方向：asc / desc
+	Deleted    *bool  `json:"deleted"`   // 是否包含已删除：nil=不过滤，true=仅已删，false=仅未删
+	More       bool   `json:"more"`      // 是否展开子目录制品放在同一列表中
 }
 
 // CreateGroupReq 创建 group 节点的请求参数。

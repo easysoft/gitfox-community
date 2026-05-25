@@ -271,7 +271,7 @@ func buildArtifactAssetLink(spaceName, format, group, packageName, version, asse
 
 	segments := []string{"_artifacts", spaceName, format}
 	switch model.ArtifactFormat(format) {
-	case model.ArtifactGenericFormat:
+	case model.ArtifactFileFormat:
 		segments = appendSlashSegments(segments, group)
 	case model.ArtifactHelmFormat:
 		// helm 仓库直接以文件路径挂载在格式根下。

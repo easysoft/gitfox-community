@@ -61,6 +61,8 @@ type PackageInterface interface {
 	Create(ctx context.Context, newObj *model.CreateArtifactPackage) (*model.ArtifactPackage, error)
 	GetByID(ctx context.Context, packageId int64) (*model.ArtifactPackage, error)
 	GetByName(ctx context.Context, name, namespace string, artifactID int64, format model.ArtifactFormat) (*model.ArtifactPackage, error)
+	GetByNameInArtifactScope(ctx context.Context, name, namespace string, artifactID int64, format model.ArtifactFormat) (*model.ArtifactPackage, error)
+	LockArtifactScopePackage(ctx context.Context, artifactID int64, namespace, name string, format model.ArtifactFormat) (func(), error)
 	List(ctx context.Context, artifactID int64, includeDeleted bool) ([]*model.ArtifactPackage, error)
 	ListBatch(ctx context.Context, includeDeleted bool, batchSize int, fn func(pkg *model.ArtifactPackage) error) error
 	ListByNamespace(ctx context.Context, artifactID int64, namespace string, format model.ArtifactFormat, recurse, includeDeleted bool) ([]*model.ArtifactPackage, error)
@@ -83,7 +85,7 @@ type PackageInterface interface {
 type VersionInterface interface {
 	Create(ctx context.Context, newObj *model.CreateArtifactVersion) (*model.ArtifactVersion, error)
 	GetByID(ctx context.Context, versionID int64) (*model.ArtifactVersion, error)
-	GetByVersion(ctx context.Context, packageId int64, version string) (*model.ArtifactVersion, error)
+	GetByVersion(ctx context.Context, packageID, artifactLibID int64, version string) (*model.ArtifactVersion, error)
 	Update(ctx context.Context, ver *model.ArtifactVersion) error
 	DeleteById(ctx context.Context, versionID int64) error
 	DeleteByIds(ctx context.Context, versionIDs ...int64) (int64, error)

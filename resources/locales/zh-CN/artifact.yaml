@@ -32,8 +32,8 @@ artifact:
   view_query_error: "查询制品视图失败."
   view_scope_mismatch: "指定的制品视图与请求中的空间或仓库不匹配."
   view_create_error: "创建制品视图失败."
-  view_format_required: "请选择制品格式（format），可选值：generic, raw, container." # generic, raw, maven, container, helm, pypi, npm.
-  view_format_invalid: "不支持的制品格式，仅支持: generic, raw, container." # generic, raw, maven, container, helm, pypi, npm.
+  view_format_required: "请选择制品格式（format），可选值：file, raw, container." # file, raw, maven, container, helm, pypi, npm.
+  view_format_invalid: "不支持的制品格式，仅支持: file, raw, container." # file, raw, maven, container, helm, pypi, npm.
   view_name_required: "制品库名称不能为空."
   view_name_too_long: "制品库名称过长，最多 128 个字符."
   view_name_invalid_chars: "制品库名称不得包含空白字符或 / \\ . .. : * ? \" < > | 等特殊字符."
@@ -84,7 +84,7 @@ artifact:
 
   # Tree
   tree_format_list_error: "查询制品格式列表失败."
-  tree_refresh_format_invalid: "不支持的制品格式，仅支持: generic, raw, container." # generic, raw, maven, container, helm, pypi, npm.
+  tree_refresh_format_invalid: "不支持的制品格式，仅支持: file, raw, container." # file, raw, maven, container, helm, pypi, npm.
   tree_level_invalid: "通用树查询的 level 参数不合法，仅支持: format, group, package, version, asset."
   tree_node_list_error: "查询制品树节点列表失败."
   tree_node_not_in_artifact: "指定的 entityID 不属于当前制品库."
@@ -101,6 +101,7 @@ artifact:
   soft_remove_error: "制品软删除失败."
   soft_remove_version_not_empty: "版本下仍有未删除的制品文件，无法删除版本；请先删除版本下的所有制品文件后重试。"
   soft_remove_package_not_empty: "包下仍有未删除的制品文件，无法删除包；请先删除包下所有版本的制品文件后重试。"
+  soft_remove_package_version_exists: "包下仍有未删除的版本（version），无法删除包；请先删除所有制品库下的版本后重试。"
   soft_remove_artifact_asset_exists: "制品库中仍有未删除的制品文件（asset），无法删除制品库；请先删除全部制品文件后重试。"
   soft_remove_artifact_package_exists: "制品库中仍有未删除的包（package），无法删除制品库；请先删除全部包后重试。"
   soft_remove_artifact_version_exists: "制品库中仍有未删除的版本（version），无法删除制品库；请先删除全部版本后重试。"
@@ -125,17 +126,19 @@ artifact:
   # Move & Rename
   move_entity_type_invalid: "不支持的移动实体类型."
   move_format_mismatch: "源实体与目标位置格式不匹配."
+  move_container_not_supported: "container 格式制品不支持移动；如需从一个制品库流转到另一个制品库，请使用制品晋级。"
   move_sibling_conflict: "目标位置已存在同级同名实体."
   move_cycle_detected: "目标父组属于源组的子树，禁止循环引用."
   move_source_deleted: "源实体已软删除或不存在."
   move_target_invalid: "目标位置无效（制品库或目标组不存在）."
   move_success: "移动成功."
   rename_entity_type_invalid: "不支持的重命名实体类型."
+  rename_container_not_supported: "container 格式制品不支持重命名；镜像名称是推拉地址的一部分，重命名会导致客户端地址失效。"
   rename_versioned_not_supported: "不支持重命名版本化包或包含版本化包的组."
   rename_sibling_conflict: "同级已存在同名实体."
   rename_source_deleted: "源实体已软删除或不存在."
   rename_success: "重命名成功."
   entity_id_invalid: "实体 ID 不合法，应为 kind.id 格式（如 group.11、asset.5）."
-  move_target_group_required: "移动操作必须指定 targetGroupID；仅 generic group 可传 0 表示根目录，package/asset 必须指定有效分组."
+  move_target_group_required: "移动操作必须指定 targetGroupID；仅 file group 可传 0 表示根目录，package/asset 必须指定有效分组."
   rename_new_name_required: "重命名操作必须指定 newName."
   relocate_success: "操作成功."

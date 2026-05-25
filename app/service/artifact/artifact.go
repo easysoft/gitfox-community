@@ -115,18 +115,11 @@ func (s *Service) FileStore() storage.ContentStorage {
 //  3. 若存在同名的软删视图但已超过保留期 -> 先物理删除过期 view，再正常创建。
 //  4. 无同名记录 -> 正常创建。
 //
-// 默认分组规则：
-//
-//	非版本化格式（generic / raw）在视图创建成功后，会自动生成一个与视图同名、
-//	同 format 的根级分组，避免用户首次上传时还要手动建组。
-//	版本化格式（container / helm / pypi / npm / maven）由各自的 uploader 按协议
-//	自行创建/复用分组，这里不提前插入，以免干扰协议语义。
+// 默认分组规则：创建制品库时不提前插入 group；各格式由上传协议按需创建或选择分组。
 //
 // 注意：ops_artifact 表已移除严格唯一索引（uk_spaceID_repoID_name），
 // 改由此方法在应用层保证名称唯一性，以支持回收站保留期的时间窗口判断。
 func (s *Service) CreateView(ctx context.Context, req *model.CreateArtifactViewReq) (*model.ArtifactView, error) {
-	log := logger.GetLogger(ctx)
-
 	// Validate 已在 controller 侧调过，这里再守一次：直接复用 model 的业务校验，
 	// 确保内部调用链路（非 HTTP）也能命中中文限制等规则。
 	if err := req.Validate(); err != nil {
@@ -182,32 +175,7 @@ func (s *Service) CreateView(ctx context.Context, req *model.CreateArtifactViewR
 		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactViewCreateError)
 	}
 
-	// container：为新视图铸造一个默认根分组，名称与 format 与视图保持一致。
-	if artifact.ArtifactFormat(req.Format) == artifact.ArtifactContainerFormat {
-		if gErr := s.ensureDefaultGroupForView(ctx, view); gErr != nil {
-			log.Warnf("create default group for view %d (%s) failed: %v", view.ID, view.Name, gErr)
-		}
-	}
-
 	return view, nil
-}
-
-// ensureDefaultGroupForView 为非版本化视图创建一个与视图同名的根分组，并同步 tree node。
-// 使用 Groups().RecursiveCreate：本身幂等，若已存在同名根分组会直接复用。
-func (s *Service) ensureDefaultGroupForView(ctx context.Context, view *model.ArtifactView) error {
-	return s.db.Transaction(func(tx *gorm.DB) error {
-		ge, err := s.artStore.Groups().RecursiveCreate(ctx, view.ID, []string{view.Name}, view.Format, view.CreatedBy)
-		if err != nil {
-			return err
-		}
-		if ge == nil || ge.ArtifactGroup == nil {
-			return errors.New("default group endpoint is empty after create")
-		}
-		if _, err = artModel.NewSyncer(s.artStore).SyncTreeNodeForGroup(ctx, ge.ArtifactGroup); err != nil {
-			return err
-		}
-		return nil
-	})
 }
 
 func resolveArtifactViewType(spaceID, repoID int64) model.ArtifactViewType {
@@ -302,11 +270,10 @@ func (s *Service) ParseSpaceView(ctx context.Context, req *model.SpaceRepoReq) (
 // ContainerArtifactCtx 容器镜像定位的查询结果。
 // 供 container handler 构造 ContainerReq 使用，包含下游需要的最小信息。
 type ContainerArtifactCtx struct {
-	Scope     string                  // "global" | "space" | "repo"
-	SpaceID   int64                   // space 作用域下 > 0
-	RepoID    int64                   // repo 作用域下 > 0
-	View      *adapter.ViewDescriptor // artifact 对应的 view descriptor
-	GroupName string                  // 容器制品库下唯一 group 的 name
+	Scope   string                  // "global" | "space" | "repo"
+	SpaceID int64                   // space 作用域下 > 0
+	RepoID  int64                   // repo 作用域下 > 0
+	View    *adapter.ViewDescriptor // artifact 对应的 view descriptor
 }
 
 // ScopeID 返回对应 scope 的数字 ID（global 时为 0）。
@@ -326,8 +293,7 @@ func (c *ContainerArtifactCtx) ScopeID() uint64 {
 //   - ErrResourceNotFound → 包装 i18n.ArtifactContainerArtifactNotFound
 //   - 其它错误 → 包装 i18n.ArtifactViewQueryError
 //
-// 步骤 2：调用 s.lookupContainerGroupName(ctx, view.ID) 取容器 group 名。
-// 步骤 3：组装并返回 ContainerArtifactCtx（含 ViewDescriptor{ArtifactID, Store: s.fileStore, StorageID: 1}）。
+// 步骤 2：组装并返回 ContainerArtifactCtx（含 ViewDescriptor{ArtifactID, Store: s.fileStore, StorageID: 1}）。
 func (s *Service) resolveContainerArtifact(
 	ctx context.Context, scope string, spaceID, repoID int64, artifactName string,
 ) (*ContainerArtifactCtx, error) {
@@ -340,19 +306,15 @@ func (s *Service) resolveContainerArtifact(
 		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactViewQueryError)
 	}
 
-	// 2) 容器库下只有一个 group，复用已有 Groups().ListDescendantsForOwner 取 name
-	groupName, err := s.lookupContainerGroupName(ctx, view.ID)
-	if err != nil {
-		return nil, err
-	}
-
-	// 3) 组装返回值
 	return &ContainerArtifactCtx{
-		Scope:     scope,
-		SpaceID:   spaceID,
-		RepoID:    repoID,
-		View:      &adapter.ViewDescriptor{ArtifactID: view.ID, Store: s.fileStore, StorageID: 1},
-		GroupName: groupName,
+		Scope:   scope,
+		SpaceID: spaceID,
+		RepoID:  repoID,
+		View: &adapter.ViewDescriptor{
+			ArtifactID: view.ID,
+			Store:      s.fileStore,
+			StorageID:  1,
+		},
 	}, nil
 }
 
@@ -386,23 +348,6 @@ func (s *Service) ResolveRepoArtifact(
 		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactRepoQueryError)
 	}
 	return s.resolveContainerArtifact(ctx, "repo", int64(repo.SpaceID), int64(repoID), artifactName)
-}
-
-// lookupContainerGroupName 读取 artifact 下唯一容器 group 的 name。
-// 复用已有 store 方法 Groups().ListDescendantsForOwner：容器库下只会有一个 group，
-// 直接取结果切片的第一条。不新增 store 方法，保持最小改动。
-func (s *Service) lookupContainerGroupName(ctx context.Context, artifactID int64) (string, error) {
-	groups, err := s.artStore.Groups().ListDescendantsForOwner(ctx, artifactID, model.ArtifactContainerFormat)
-	if err != nil {
-		// 查询失败统一包装 container_group_not_found
-		return "", pkgErrors.WithI18nKey(err, i18n.ArtifactContainerGroupNotFound)
-	}
-	if len(groups) == 0 {
-		// 空列表同样视作 container_group_not_found
-		return "", pkgErrors.WithI18nKey(pkgErrors.ErrResourceNotFound, i18n.ArtifactContainerGroupNotFound)
-	}
-	// 容器只会有一个 group，取第一条即可
-	return groups[0].Name, nil
 }
 
 // ListAssetPage 按 entityID（group.{id} / version.{id} / package.{id} / asset.{id}）分页查询。
@@ -469,13 +414,23 @@ func (s *Service) listAssetByIDPage(ctx context.Context, assetID int64, req *mod
 
 // listVersionPage 返回 package 下的 version 分页列表。
 func (s *Service) listVersionPage(ctx context.Context, pkgID int64, req *model.ListAssetReq, page, pageSize int) (interface{}, int64, error) {
-	versions, err := s.artStore.Versions().Find(ctx, model.SearchVersionOption{PackageID: pkgID})
+	// 取 package 信息用于填充 container 扩展字段
+	pkg, _ := s.artStore.Packages().GetByID(ctx, pkgID)
+
+	opt := model.SearchVersionOption{PackageID: pkgID}
+	if pkg != nil && pkg.Format == model.ArtifactContainerFormat {
+		if req.ArtifactID <= 0 {
+			return nil, 0, pkgErrors.WithI18nKey(
+				fmt.Errorf("artifactID is required when listing container package versions"),
+				i18n.ArtifactVersionArtifactidRequired,
+			)
+		}
+		opt.ArtifactLibID = req.ArtifactID
+	}
+	versions, err := s.artStore.Versions().Find(ctx, opt)
 	if err != nil {
 		return nil, 0, pkgErrors.WithI18nKey(err, i18n.ArtifactVersionListError)
 	}
-
-	// 取 package 信息用于填充 container 扩展字段
-	pkg, _ := s.artStore.Packages().GetByID(ctx, pkgID)
 
 	items := make([]*model.VersionListItem, 0, len(versions))
 	for _, ver := range versions {
@@ -519,7 +474,7 @@ func (s *Service) listVersionPage(ctx context.Context, pkgID int64, req *model.L
 
 // fillContainerVersionItem 从 manifest 解析 container version 的 size/os/arch。
 func (s *Service) fillContainerVersionItem(ctx context.Context, item *model.VersionListItem, ver *model.ArtifactVersion, pkg *model.ArtifactPackage) {
-	view, err := s.ParseSpaceView(ctx, &model.SpaceRepoReq{ArtifactID: pkg.ArtifactID})
+	view, err := s.ParseSpaceView(ctx, &model.SpaceRepoReq{ArtifactID: ver.ArtifactLibID})
 	if err != nil {
 		return
 	}
@@ -612,7 +567,7 @@ func (s *Service) collectGroupAssetsByFormat(ctx context.Context, group *model.A
 	if group == nil {
 		return nil, nil
 	}
-	if group.Format == model.ArtifactGenericFormat {
+	if group.Format == model.ArtifactFileFormat {
 		return s.artStore.ListGroupAssets(ctx, group.ID)
 	}
 	return s.listVersionedGroupAssets(ctx, group.ID)
@@ -631,6 +586,9 @@ func (s *Service) listVersionedGroupAssets(ctx context.Context, groupID int64) (
 
 	var results []*model.ArtifactAssetsRes
 	for _, pkg := range pkgs {
+		if pkg.Format == model.ArtifactContainerFormat {
+			continue
+		}
 		versions, e := s.artStore.Versions().Find(ctx, model.SearchVersionOption{PackageID: pkg.ID})
 		if e != nil {
 			return nil, e
@@ -669,7 +627,11 @@ func (s *Service) getVersionNodeInfo(ctx context.Context, versionID int64) (*mod
 		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactPackageQueryError)
 	}
 
-	view, err := s.ParseSpaceView(ctx, &model.SpaceRepoReq{ArtifactID: pkg.ArtifactID})
+	viewID := pkg.ArtifactID
+	if pkg.Format == model.ArtifactContainerFormat {
+		viewID = ver.ArtifactLibID
+	}
+	view, err := s.ParseSpaceView(ctx, &model.SpaceRepoReq{ArtifactID: viewID})
 	if err != nil {
 		return nil, err
 	}
@@ -955,7 +917,7 @@ func (s *Service) Upload(ctx context.Context, view *adapter.ViewDescriptor, form
 	switch format {
 	case model.ArtifactRawFormat:
 		uploader = raw.NewUploader(s.fileStore, s.artStore, view)
-	case model.ArtifactGenericFormat:
+	case model.ArtifactFileFormat:
 		uploader = generic.NewUploader(s.fileStore, s.artStore, view)
 	default:
 		return nil, pkgErrors.WithI18nKey(
@@ -1574,7 +1536,7 @@ func (s *Service) softRemoveEntity(ctx context.Context, eid string, operator str
 			res.Status = model.ArtifactStatusNotFound
 			return nil
 		}
-		return s.softRemoveVersion(ctx, pkg.ArtifactID, ver, operator, res)
+		return s.softRemoveVersion(ctx, artifactIDForVersion(pkg, ver), ver, operator, res)
 	case model.ArtifactTreeNodeTypePackage:
 		pkg, err := s.artStore.Packages().GetByID(ctx, nodeID)
 		if err != nil {
@@ -1655,6 +1617,9 @@ func (s *Service) softRemovePackage(ctx context.Context, pkg *model.ArtifactPack
 	if err != nil {
 		return err
 	}
+	if pkg.Format == model.ArtifactContainerFormat {
+		return s.softRemoveContainerPackage(ctx, pkg, versions, operator, res)
+	}
 	for _, ver := range versions {
 		activeAssets, aErr := s.artStore.Assets().Search(ctx, model.SearchAssetOption{VersionID: ver.ID}, artifactStore.AssetExcludeDeletedOption{})
 		if aErr != nil {
@@ -1673,7 +1638,7 @@ func (s *Service) softRemovePackage(ctx context.Context, pkg *model.ArtifactPack
 			return err
 		}
 		res.Versions++
-		_ = s.deleteTreeNodeByTarget(ctx, pkg.ArtifactID, model.ArtifactTreeNodeTypeVersion, ver.ID)
+		_ = s.deleteTreeNodeByTarget(ctx, artifactIDForVersion(pkg, ver), model.ArtifactTreeNodeTypeVersion, ver.ID)
 	}
 	if err = s.artStore.Packages().SoftDelete(ctx, pkg, operator); err != nil {
 		return err
@@ -1684,6 +1649,56 @@ func (s *Service) softRemovePackage(ctx context.Context, pkg *model.ArtifactPack
 		_ = helm.NewHelmIndex(s.artStore, &adapter.ViewDescriptor{ArtifactID: pkg.ArtifactID, Store: s.fileStore, StorageID: 1}).UpdateRepo(ctx, "/artifacts/helm")
 	}
 	return nil
+}
+
+func (s *Service) softRemoveContainerPackage(
+	ctx context.Context,
+	pkg *model.ArtifactPackage,
+	versions []*model.ArtifactVersion,
+	operator string,
+	res *model.ArtifactNodeRemoveRes,
+) error {
+	if len(versions) > 0 {
+		res.Status = model.ArtifactStatusNotEmpty
+		return pkgErrors.WithI18nKey(
+			fmt.Errorf("container package %d still has %d active version(s)", pkg.ID, len(versions)),
+			i18n.ArtifactSoftRemovePackageVersionExists,
+		)
+	}
+
+	artifactIDs := map[int64]struct{}{}
+	if pkg.ArtifactID != 0 {
+		artifactIDs[pkg.ArtifactID] = struct{}{}
+	}
+	allVersions, err := s.artStore.Versions().Find(ctx, model.SearchVersionOption{PackageID: pkg.ID, IncludeDeleted: true})
+	if err != nil {
+		return err
+	}
+	for _, ver := range allVersions {
+		artifactID := artifactIDForVersion(pkg, ver)
+		if artifactID != 0 {
+			artifactIDs[artifactID] = struct{}{}
+		}
+	}
+
+	if err = s.artStore.Packages().SoftDelete(ctx, pkg, operator); err != nil {
+		return err
+	}
+	res.Packages++
+	for artifactID := range artifactIDs {
+		_ = s.deleteTreeNodeByTarget(ctx, artifactID, model.ArtifactTreeNodeTypePackage, pkg.ID)
+	}
+	return nil
+}
+
+func artifactIDForVersion(pkg *model.ArtifactPackage, ver *model.ArtifactVersion) int64 {
+	if ver != nil && ver.ArtifactLibID != 0 {
+		return ver.ArtifactLibID
+	}
+	if pkg != nil {
+		return pkg.ArtifactID
+	}
+	return 0
 }
 
 // softRemoveGroup 软删指定分组。
@@ -1727,6 +1742,9 @@ func (s *Service) softRemoveGroup(ctx context.Context, group *model.ArtifactGrou
 			return pkgErrors.WithI18nKey(pErr, i18n.ArtifactSoftRemoveGroupQueryError)
 		}
 		for _, pkg := range pkgs {
+			if pkg.Format == model.ArtifactContainerFormat {
+				continue
+			}
 			versions, vErr := s.artStore.Versions().Find(ctx, model.SearchVersionOption{PackageID: pkg.ID})
 			if vErr != nil {
 				res.Status = model.ArtifactStatusUnknown
@@ -1759,6 +1777,9 @@ func (s *Service) softRemoveGroup(ctx context.Context, group *model.ArtifactGrou
 			return pErr
 		}
 		for _, pkg := range pkgs {
+			if pkg.Format == model.ArtifactContainerFormat {
+				continue
+			}
 			versions, vErr := s.artStore.Versions().Find(ctx, model.SearchVersionOption{PackageID: pkg.ID})
 			if vErr != nil {
 				return vErr
@@ -1805,36 +1826,53 @@ func (s *Service) softRemoveArtifact(ctx context.Context, view *model.ArtifactVi
 		)
 	}
 
-	packages, err := s.artStore.Packages().List(ctx, view.ID, false)
-	if err != nil {
-		res.Status = model.ArtifactStatusUnknown
-		return pkgErrors.WithI18nKey(err, i18n.ArtifactSoftRemoveArtifactQueryError)
-	}
-	if len(packages) > 0 {
-		res.Status = model.ArtifactStatusNotEmpty
-		return pkgErrors.WithI18nKey(
-			fmt.Errorf("artifact view %d still has %d active package(s)", view.ID, len(packages)),
-			i18n.ArtifactSoftRemoveArtifactPackageExists,
-		)
-	}
-
-	allPackages, err := s.artStore.Packages().List(ctx, view.ID, true)
-	if err != nil {
-		res.Status = model.ArtifactStatusUnknown
-		return pkgErrors.WithI18nKey(err, i18n.ArtifactSoftRemoveArtifactQueryError)
-	}
-	for _, pkg := range allPackages {
-		versions, vErr := s.artStore.Versions().Find(ctx, model.SearchVersionOption{PackageID: pkg.ID})
+	if view.Format == model.ArtifactContainerFormat {
+		activeVersions, vErr := s.artStore.Versions().Find(ctx, model.SearchVersionOption{ArtifactLibID: view.ID})
 		if vErr != nil {
 			res.Status = model.ArtifactStatusUnknown
 			return pkgErrors.WithI18nKey(vErr, i18n.ArtifactSoftRemoveArtifactQueryError)
 		}
-		if len(versions) > 0 {
+		if len(activeVersions) > 0 {
 			res.Status = model.ArtifactStatusNotEmpty
 			return pkgErrors.WithI18nKey(
-				fmt.Errorf("artifact view %d still has active version(s) under package %d", view.ID, pkg.ID),
+				fmt.Errorf("container artifact view %d still has %d active version(s)", view.ID, len(activeVersions)),
 				i18n.ArtifactSoftRemoveArtifactVersionExists,
 			)
+		}
+	}
+
+	if view.Format != model.ArtifactContainerFormat {
+		packages, pErr := s.artStore.Packages().List(ctx, view.ID, false)
+		if pErr != nil {
+			res.Status = model.ArtifactStatusUnknown
+			return pkgErrors.WithI18nKey(pErr, i18n.ArtifactSoftRemoveArtifactQueryError)
+		}
+		if len(packages) > 0 {
+			res.Status = model.ArtifactStatusNotEmpty
+			return pkgErrors.WithI18nKey(
+				fmt.Errorf("artifact view %d still has %d active package(s)", view.ID, len(packages)),
+				i18n.ArtifactSoftRemoveArtifactPackageExists,
+			)
+		}
+
+		allPackages, pErr := s.artStore.Packages().List(ctx, view.ID, true)
+		if pErr != nil {
+			res.Status = model.ArtifactStatusUnknown
+			return pkgErrors.WithI18nKey(pErr, i18n.ArtifactSoftRemoveArtifactQueryError)
+		}
+		for _, pkg := range allPackages {
+			versions, vErr := s.artStore.Versions().Find(ctx, model.SearchVersionOption{PackageID: pkg.ID})
+			if vErr != nil {
+				res.Status = model.ArtifactStatusUnknown
+				return pkgErrors.WithI18nKey(vErr, i18n.ArtifactSoftRemoveArtifactQueryError)
+			}
+			if len(versions) > 0 {
+				res.Status = model.ArtifactStatusNotEmpty
+				return pkgErrors.WithI18nKey(
+					fmt.Errorf("artifact view %d still has active version(s) under package %d", view.ID, pkg.ID),
+					i18n.ArtifactSoftRemoveArtifactVersionExists,
+				)
+			}
 		}
 	}
 
@@ -1879,7 +1917,7 @@ func (s *Service) softRemoveArtifact(ctx context.Context, view *model.ArtifactVi
 //   - 名称与 view 同名（CreateView 时按视图名建组）
 //   - parentID 为 0（根级，无父组）
 //
-// CreateView 当前仅 container 格式建默认根 group；将来若扩到 generic/raw，识别规则保持兼容。
+// CreateView 当前不再提前创建默认根 group；保留该识别规则用于兼容历史数据和恢复链路。
 func isDefaultRootGroupOf(view *model.ArtifactView, g *model.ArtifactGroup) bool {
 	if view == nil || g == nil {
 		return false
@@ -2043,12 +2081,17 @@ func (s *Service) RefreshTree(ctx context.Context, format string) error {
 			}
 		}
 
-		// 2b. 同步 package 节点
-		if _, pErr := syncer.SyncTreeNodeForPackage(ctx, pkg); pErr != nil {
-			return pErr
+		// 2b. 同步 package 节点。
+		// container package 只是同 scope 锚点，实际展示库由 version.ArtifactLibID 决定；
+		// 这里不按 pkg.ArtifactID 预建 package 节点，避免锚点库出现空 package。
+		if pkg.Format != model.ArtifactContainerFormat {
+			if _, pErr := syncer.SyncTreeNodeForPackage(ctx, pkg); pErr != nil {
+				return pErr
+			}
 		}
 
-		// 2c. 同步该 package 下所有 version 节点
+		// 2c. 同步该 package 下所有 version 节点。
+		// container 会在 SyncTreeNodeForVersion 内按 version.ArtifactLibID 补建 package 父节点。
 		dbVersions, vErr := s.artStore.Versions().Find(ctx, model.SearchVersionOption{PackageID: pkg.ID})
 		if vErr != nil {
 			return vErr

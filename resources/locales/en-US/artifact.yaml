@@ -32,8 +32,8 @@ artifact:
   view_query_error: "Failed to query artifact view."
   view_scope_mismatch: "The specified artifact view does not match the requested space or repository."
   view_create_error: "Failed to create artifact view."
-  view_format_required: "Artifact format is required. Allowed values: generic, raw, container." # generic, raw, maven, container, helm, pypi, npm.
-  view_format_invalid: "Unsupported artifact format. Supported: generic, raw, container." # generic, raw, maven, container, helm, pypi, npm.
+  view_format_required: "Artifact format is required. Allowed values: file, raw, container." # file, raw, maven, container, helm, pypi, npm.
+  view_format_invalid: "Unsupported artifact format. Supported: file, raw, container." # file, raw, maven, container, helm, pypi, npm.
   view_name_required: "Artifact view name is required."
   view_name_too_long: "Artifact view name is too long (max 128 chars)."
   view_name_invalid_chars: "Artifact view name must not contain whitespace or any of / \\ . .. : * ? \" < > |."
@@ -84,7 +84,7 @@ artifact:
 
   # Tree
   tree_format_list_error: "Failed to list artifact formats."
-  tree_refresh_format_invalid: "Unsupported artifact format. Supported: generic, raw, container." # generic, raw, maven, container, helm, pypi, npm.
+  tree_refresh_format_invalid: "Unsupported artifact format. Supported: file, raw, container." # file, raw, maven, container, helm, pypi, npm.
   tree_level_invalid: "Invalid tree query level. Supported values: format, group, package, version, asset."
   tree_node_list_error: "Failed to list artifact tree nodes."
   tree_node_not_in_artifact: "The specified entityID does not belong to the current artifact."
@@ -101,6 +101,7 @@ artifact:
   soft_remove_error: "Failed to soft-delete artifact."
   soft_remove_version_not_empty: "Version still has active asset files and cannot be deleted. Please remove all assets under this version first."
   soft_remove_package_not_empty: "Package still has active asset files and cannot be deleted. Please remove all assets under all versions first."
+  soft_remove_package_version_exists: "Package still has active versions and cannot be deleted. Remove all versions across artifact libraries first."
   soft_remove_artifact_asset_exists: "The artifact library still contains active asset files and cannot be deleted. Remove all assets first."
   soft_remove_artifact_package_exists: "The artifact library still contains active packages and cannot be deleted. Remove all packages first."
   soft_remove_artifact_version_exists: "The artifact library still contains active versions and cannot be deleted. Remove all versions first."
@@ -125,17 +126,19 @@ artifact:
   # Move & Rename
   move_entity_type_invalid: "Unsupported entity type for move."
   move_format_mismatch: "Source format does not match target."
+  move_container_not_supported: "Container artifacts cannot be moved. Use artifact promotion to flow an image from one artifact library to another."
   move_sibling_conflict: "Sibling with the same name already exists at target."
   move_cycle_detected: "Target parent is a descendant of source group."
   move_source_deleted: "Source entity is soft-deleted or not found."
   move_target_invalid: "Target artifact or group is invalid."
   move_success: "Move succeeded."
   rename_entity_type_invalid: "Unsupported entity type for rename."
+  rename_container_not_supported: "Container artifacts cannot be renamed. The image name is part of the push/pull address, and renaming it would break client references."
   rename_versioned_not_supported: "Rename is not allowed on versioned packages or groups containing them."
   rename_sibling_conflict: "Sibling with the same name already exists."
   rename_source_deleted: "Source entity is soft-deleted or not found."
   rename_success: "Rename succeeded."
   entity_id_invalid: "Invalid entity ID. Expected format: kind.id (e.g. group.11, asset.5)."
-  move_target_group_required: "targetGroupID is required for move; only generic group may use 0 for the root, while package/asset require a valid group."
+  move_target_group_required: "targetGroupID is required for move; only file group may use 0 for the root, while package/asset require a valid group."
   rename_new_name_required: "newName is required for rename."
   relocate_success: "Operation succeeded."
