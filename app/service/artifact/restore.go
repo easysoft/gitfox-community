@@ -50,6 +50,19 @@ func (s *Service) Restore(ctx context.Context, restoreReq *model.ArtifactRestore
 		if err := s.restoreEntity(ctx, eid, operator, syncer, res); err != nil {
 			// 单条失败：保留 status，继续下一条；记日志便于排查。
 			logger.GetLogger(ctx).Warnf("restore entity %s failed: %v", eid, err)
+			// 把 i18n key 翻译为当前 locale 文案后写入 res.Reason，前端直接展示即可。
+			if key := pkgErrors.GetI18nKey(err); key != "" {
+				res.Reason = i18n.TWithContext(ctx, string(key))
+				// 已知拒因细化到具体 status，避免一律 unknown。
+				switch key {
+				case i18n.ArtifactRestoreViewNameAlreadyExists,
+					i18n.ArtifactRestoreGroupNameAlreadyExists,
+					i18n.ArtifactRestoreAssetNameAlreadyExists,
+					i18n.ArtifactRestorePackageNameAlreadyExists,
+					i18n.ArtifactRestoreVersionAlreadyExists:
+					res.Status = model.ArtifactStatusNameAlreadyExists
+				}
+			}
 			if res.Status == model.ArtifactStatusOK {
 				res.Status = model.ArtifactStatusUnknown
 			}
@@ -164,10 +177,8 @@ func (s *Service) restoreArtifact(
 }
 
 // restoreGroup 恢复分组及其向上链路（父 group → view）。不向下级联。
-func (s *Service) restoreGroup(
-	ctx context.Context, groupID int64, operator string,
-	syncer *artModel.Syncer, res *model.ArtifactRestoreRes,
-) error {
+// 若同位置（artifactLibID + parentID）已有同名活分组，直接拒绝恢复。
+func (s *Service) restoreGroup(ctx context.Context, groupID int64, operator string, syncer *artModel.Syncer, res *model.ArtifactRestoreRes) error {
 	group, err := s.artStore.Groups().GetById(ctx, groupID)
 	if err != nil {
 		res.Status = model.ArtifactStatusNotFound
@@ -180,6 +191,15 @@ func (s *Service) restoreGroup(
 			i18n.ArtifactRestoreNotInRecycleBin,
 		)
 	}
+
+	parentID := int64(0)
+	if group.ParentID.Valid {
+		parentID = group.ParentID.Int64
+	}
+	if err = s.ensureGroupNameAvailable(ctx, group.ArtifactID, parentID, group.Format, group.Name); err != nil {
+		return err
+	}
+
 	if err = s.artStore.Groups().RestoreById(ctx, group.ID, operator); err != nil {
 		return pkgErrors.WithI18nKey(err, i18n.ArtifactRestoreError)
 	}
@@ -217,7 +237,7 @@ func (s *Service) restorePackage(
 		)
 	}
 	if err = s.artStore.Packages().Restore(ctx, pkg.ID, operator); err != nil {
-		return pkgErrors.WithI18nKey(err, i18n.ArtifactRestoreError)
+		return wrapRestoreDuplicateError(err, i18n.ArtifactRestorePackageNameAlreadyExists)
 	}
 	res.Packages++
 	if pkg.Format == model.ArtifactContainerFormat {
@@ -260,7 +280,7 @@ func (s *Service) restoreVersion(
 		)
 	}
 	if err = s.artStore.Versions().Restore(ctx, ver.ID, operator); err != nil {
-		return pkgErrors.WithI18nKey(err, i18n.ArtifactRestoreError)
+		return wrapRestoreDuplicateError(err, i18n.ArtifactRestoreVersionAlreadyExists)
 	}
 	res.Versions++
 	// 向上：父 package（必要时含其 group 链 + view）。
@@ -270,7 +290,7 @@ func (s *Service) restoreVersion(
 	}
 	if pkg.IsDeleted() {
 		if rErr := s.artStore.Packages().Restore(ctx, pkg.ID, operator); rErr != nil {
-			return pkgErrors.WithI18nKey(rErr, i18n.ArtifactRestoreError)
+			return wrapRestoreDuplicateError(rErr, i18n.ArtifactRestorePackageNameAlreadyExists)
 		}
 		res.Packages++
 	}
@@ -292,6 +312,7 @@ func (s *Service) restoreVersion(
 }
 
 // restoreAsset 恢复资产、关联 blob 及其向上链路（version/group → package/group 链 → view）。
+// 若同 (versionID/groupID, basename) 已有活资产，直接拒绝恢复。
 func (s *Service) restoreAsset(
 	ctx context.Context, assetID int64, operator string,
 	syncer *artModel.Syncer, res *model.ArtifactRestoreRes,
@@ -308,6 +329,11 @@ func (s *Service) restoreAsset(
 			i18n.ArtifactRestoreNotInRecycleBin,
 		)
 	}
+
+	if err = s.ensureAssetNameAvailable(ctx, asset); err != nil {
+		return err
+	}
+
 	if err = s.artStore.Assets().RestoreById(ctx, asset.ID, operator); err != nil {
 		return pkgErrors.WithI18nKey(err, i18n.ArtifactRestoreError)
 	}
@@ -352,6 +378,7 @@ func (s *Service) restoreAsset(
 // =============================================================================
 
 // cascadeRestoreAncestorGroups 沿 parentID 链向上恢复所有 deleted=1 的祖先 group。
+// 每恢复一节都先查活：撞名活节点时给被恢复 group 改名共存。
 func (s *Service) cascadeRestoreAncestorGroups(ctx context.Context, group *model.ArtifactGroup, operator string) error {
 	if group == nil {
 		return nil
@@ -366,6 +393,13 @@ func (s *Service) cascadeRestoreAncestorGroups(ctx context.Context, group *model
 			return pkgErrors.WithI18nKey(err, i18n.ArtifactRestoreQueryError)
 		}
 		if parent.Deleted == 1 {
+			grandParent := int64(0)
+			if parent.ParentID.Valid {
+				grandParent = parent.ParentID.Int64
+			}
+			if rErr := s.ensureGroupNameAvailable(ctx, parent.ArtifactID, grandParent, parent.Format, parent.Name); rErr != nil {
+				return rErr
+			}
 			if rErr := s.artStore.Groups().RestoreById(ctx, parent.ID, operator); rErr != nil {
 				return pkgErrors.WithI18nKey(rErr, i18n.ArtifactRestoreError)
 			}
@@ -381,6 +415,7 @@ func (s *Service) cascadeRestoreAncestorGroups(ctx context.Context, group *model
 
 // cascadeRestoreGroupChainByID 给定起点 groupID（可能为 0），自下而上恢复整链。
 // groupID 为 0 表示无 group 归属（如 raw 包未挂 group），直接返回。
+// 起点节点撞名时直接拒绝恢复。
 func (s *Service) cascadeRestoreGroupChainByID(ctx context.Context, groupID int64, operator string) error {
 	if groupID <= 0 {
 		return nil
@@ -390,6 +425,13 @@ func (s *Service) cascadeRestoreGroupChainByID(ctx context.Context, groupID int6
 		return pkgErrors.WithI18nKey(err, i18n.ArtifactRestoreQueryError)
 	}
 	if group.Deleted == 1 {
+		parentID := int64(0)
+		if group.ParentID.Valid {
+			parentID = group.ParentID.Int64
+		}
+		if rErr := s.ensureGroupNameAvailable(ctx, group.ArtifactID, parentID, group.Format, group.Name); rErr != nil {
+			return rErr
+		}
 		if rErr := s.artStore.Groups().RestoreById(ctx, group.ID, operator); rErr != nil {
 			return pkgErrors.WithI18nKey(rErr, i18n.ArtifactRestoreError)
 		}
@@ -442,7 +484,7 @@ func (s *Service) cascadeRestoreVersionChain(
 	}
 	if ver.IsDeleted() {
 		if rErr := s.artStore.Versions().Restore(ctx, ver.ID, operator); rErr != nil {
-			return pkgErrors.WithI18nKey(rErr, i18n.ArtifactRestoreError)
+			return wrapRestoreDuplicateError(rErr, i18n.ArtifactRestoreVersionAlreadyExists)
 		}
 		res.Versions++
 	}
@@ -452,7 +494,7 @@ func (s *Service) cascadeRestoreVersionChain(
 	}
 	if pkg.IsDeleted() {
 		if rErr := s.artStore.Packages().Restore(ctx, pkg.ID, operator); rErr != nil {
-			return pkgErrors.WithI18nKey(rErr, i18n.ArtifactRestoreError)
+			return wrapRestoreDuplicateError(rErr, i18n.ArtifactRestorePackageNameAlreadyExists)
 		}
 		res.Packages++
 	}
@@ -481,4 +523,92 @@ func (s *Service) findDefaultRootGroup(ctx context.Context, view *model.Artifact
 		return nil, nil
 	}
 	return s.artStore.Groups().FindRootByName(ctx, view.ID, view.Name, view.Format)
+}
+
+// =============================================================================
+// 重名拒绝：恢复时若同位置已有活节点，直接报错
+// =============================================================================
+
+// ensureGroupNameAvailable 检查给定位置（artifactLibID + parentID + format + name）是否已有活分组。
+//
+// parentID == 0 表示根分组，按 FindRootByName 取出再判 Deleted；
+// parentID > 0 走 ListChildren（含软删）后内存过滤出活子节点。
+// 命中活分组时返回 ArtifactRestoreGroupNameAlreadyExists。
+func (s *Service) ensureGroupNameAvailable(ctx context.Context, artifactLibID int64, parentID int64, format model.ArtifactFormat, name string) error {
+	if parentID > 0 {
+		children, err := s.artStore.Groups().ListChildren(ctx, parentID)
+		if err != nil {
+			return pkgErrors.WithI18nKey(err, i18n.ArtifactRestoreQueryError)
+		}
+		for _, c := range children {
+			if c == nil {
+				continue
+			}
+			if c.Name == name && c.Deleted == 0 {
+				return pkgErrors.WithI18nKey(
+					stderrors.New("group name already exists at parent: "+name),
+					i18n.ArtifactRestoreGroupNameAlreadyExists,
+				)
+			}
+		}
+		return nil
+	}
+	root, err := s.artStore.Groups().FindRootByName(ctx, artifactLibID, name, format)
+	if err != nil {
+		return pkgErrors.WithI18nKey(err, i18n.ArtifactRestoreQueryError)
+	}
+	if root != nil && root.Deleted == 0 {
+		return pkgErrors.WithI18nKey(
+			stderrors.New("root group name already exists: "+name),
+			i18n.ArtifactRestoreGroupNameAlreadyExists,
+		)
+	}
+	return nil
+}
+
+// ensureAssetNameAvailable 检查 asset 在 (versionID/groupID, basename) 上是否已有活资产。
+// 仅按 versionID / groupID 单一归属判定；asset.ArtifactID 归属（meta 资产）跳过查重。
+// 命中时返回 ArtifactRestoreAssetNameAlreadyExists。
+func (s *Service) ensureAssetNameAvailable(ctx context.Context, asset *model.ArtifactAsset) error {
+	if asset == nil || asset.Path == "" {
+		return nil
+	}
+	var (
+		row *model.ArtifactAsset
+		err error
+	)
+	switch {
+	case asset.VersionID.Valid && asset.VersionID.Int64 > 0:
+		row, err = s.artStore.Assets().GetVersionAsset(ctx, asset.Path, asset.VersionID.Int64)
+	case asset.GroupID.Valid && asset.GroupID.Int64 > 0:
+		row, err = s.artStore.Assets().GetGroupAsset(ctx, asset.Path, asset.GroupID.Int64)
+	default:
+		return nil
+	}
+	if err != nil {
+		if pkgErrors.Is(err, pkgErrors.ErrResourceNotFound) {
+			return nil
+		}
+		return pkgErrors.WithI18nKey(err, i18n.ArtifactRestoreQueryError)
+	}
+	// 命中的若是恢复目标本身（理论上不会，因为 GetVersionAsset/GetGroupAsset 已过 deleted=0），跳过。
+	if row != nil && row.ID == asset.ID {
+		return nil
+	}
+	return pkgErrors.WithI18nKey(
+		stderrors.New("asset name already exists at location: "+asset.Path),
+		i18n.ArtifactRestoreAssetNameAlreadyExists,
+	)
+}
+
+// wrapRestoreDuplicateError 将 store 层抛出的唯一约束冲突包装成业务 i18n key。
+// 非唯一冲突原样返回；nil 直接返回。
+func wrapRestoreDuplicateError(err error, dupKey i18n.I18nKey) error {
+	if err == nil {
+		return nil
+	}
+	if pkgErrors.Is(err, pkgErrors.ErrDuplicate) {
+		return pkgErrors.WithI18nKey(err, dupKey)
+	}
+	return pkgErrors.WithI18nKey(err, i18n.ArtifactRestoreError)
 }

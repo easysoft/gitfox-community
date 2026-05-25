@@ -175,7 +175,32 @@ func (s *Service) CreateView(ctx context.Context, req *model.CreateArtifactViewR
 		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactViewCreateError)
 	}
 
+	// file 类型：为新视图铸造一个与视图同名的根目录，便于上传时直接挂载。
+	if artifact.ArtifactFormat(req.Format) == artifact.ArtifactFileFormat {
+		if gErr := s.ensureDefaultGroupForView(ctx, view); gErr != nil {
+			logger.GetLogger(ctx).Warnf("create default group for view %d (%s) failed: %v", view.ID, view.Name, gErr)
+		}
+	}
+
 	return view, nil
+}
+
+// ensureDefaultGroupForView 为指定视图铸造一个与视图同名的根分组，并同步 tree node。
+// 使用 Groups().RecursiveCreate 保证幂等，重复调用不会建出多个同名根。
+func (s *Service) ensureDefaultGroupForView(ctx context.Context, view *model.ArtifactView) error {
+	return s.db.Transaction(func(tx *gorm.DB) error {
+		ge, err := s.artStore.Groups().RecursiveCreate(ctx, view.ID, []string{view.Name}, view.Format, view.CreatedBy)
+		if err != nil {
+			return err
+		}
+		if ge == nil || ge.ArtifactGroup == nil {
+			return errors.New("default group endpoint is empty after create")
+		}
+		if _, err = artModel.NewSyncer(s.artStore).SyncTreeNodeForGroup(ctx, ge.ArtifactGroup); err != nil {
+			return err
+		}
+		return nil
+	})
 }
 
 func resolveArtifactViewType(spaceID, repoID int64) model.ArtifactViewType {

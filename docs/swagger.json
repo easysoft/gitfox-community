@@ -14,6 +14,52 @@
     "host": "localhost:3000",
     "basePath": "/api/v2",
     "paths": {
+        "/artifacts": {
+            "post": {
+                "description": "创建一个制品库视图 (测试用)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "artifacts"
+                ],
+                "summary": "创建制品库视图",
+                "parameters": [
+                    {
+                        "description": "创建参数",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.CreateArtifactViewReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/artifacts/assets/list": {
             "post": {
                 "description": "按 entityID（group.{id} 或 version.{id}）分页查询资产列表，支持过滤和排序；group 查询传 more=true 时递归包含子目录资产",
@@ -233,7 +279,7 @@
         },
         "/artifacts/entities/relocate": {
             "post": {
-                "description": "同时支持移动和重命名 package / asset / group。targetGroupID 显式传 0 表示根目录（仅 generic group 支持）；\n不传 targetGroupID 表示不移动，仍可正常执行重命名；两者都不变则直接成功。整个过程在单事务内完成。",
+                "description": "同时支持移动和重命名 package / asset / group。targetGroupID 显式传 0 表示根目录（仅 file group 支持）；\n不传 targetGroupID 表示不移动，仍可正常执行重命名；两者都不变则直接成功。整个过程在单事务内完成。",
                 "consumes": [
                     "application/json"
                 ],
@@ -304,78 +350,6 @@
                     },
                     "400": {
                         "description": "参数错误或业务校验失败",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/artifacts/garbage": {
-            "get": {
-                "description": "创建已软删且超过回收站保留期的制品垃圾回收后台任务；entity 为空时清理全部，支持 container/raw/generic",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "artifacts"
-                ],
-                "summary": "触发制品垃圾回收",
-                "responses": {
-                    "200": {
-                        "description": "成功",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "服务器错误",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/artifacts/garbage/{entity}": {
-            "get": {
-                "description": "创建已软删且超过回收站保留期的制品垃圾回收后台任务；entity 为空时清理全部，支持 container/raw/generic",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "artifacts"
-                ],
-                "summary": "触发制品垃圾回收",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "制品类型，留空表示全部，可选: container/raw/generic",
-                        "name": "entity",
-                        "in": "path"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "成功",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "服务器错误",
                         "schema": {
                             "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
                         }
@@ -575,7 +549,7 @@
         },
         "/artifacts/tree/refresh": {
             "post": {
-                "description": "按 format 重建制品树节点。format 必传，支持 generic/raw/maven/container/helm/pypi/npm，或 all 表示全量刷新。",
+                "description": "按 format 重建制品树节点。format 必传，支持 file/raw/maven/container/helm/pypi/npm，或 all 表示全量刷新。",
                 "consumes": [
                     "application/json"
                 ],
@@ -666,52 +640,6 @@
                         "name": "file",
                         "in": "formData",
                         "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "成功",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "服务器错误",
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/artifacts/views": {
-            "post": {
-                "description": "创建一个制品库视图 (测试用)",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "artifacts"
-                ],
-                "summary": "创建制品库视图",
-                "parameters": [
-                    {
-                        "description": "创建参数",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.CreateArtifactViewReq"
-                        }
                     }
                 ],
                 "responses": {
@@ -11640,7 +11568,7 @@
             "type": "string",
             "enum": [
                 "all",
-                "generic",
+                "file",
                 "raw",
                 "maven",
                 "container",
@@ -11650,7 +11578,7 @@
             ],
             "x-enum-varnames": [
                 "ArtifactAllFormat",
-                "ArtifactGenericFormat",
+                "ArtifactFileFormat",
                 "ArtifactRawFormat",
                 "ArtifactMavenFormat",
                 "ArtifactContainerFormat",
@@ -11745,6 +11673,10 @@
                 "arch": {
                     "description": "按 CPU 架构过滤（amd64 / arm64 / arm/v7）",
                     "type": "string"
+                },
+                "artifactID": {
+                    "description": "当前制品库 ID；container package 查询版本时必填",
+                    "type": "integer"
                 },
                 "createdBy": {
                     "description": "按创建人过滤",
