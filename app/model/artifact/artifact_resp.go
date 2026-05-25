@@ -250,11 +250,12 @@ type ArtifactRecycleItem struct {
 type ArtifactStatus string
 
 const (
-	ArtifactStatusOK        ArtifactStatus = "ok"
-	ArtifactStatusInvalidId ArtifactStatus = "invalid_id"
-	ArtifactStatusNotFound  ArtifactStatus = "not found"
-	ArtifactStatusNotEmpty  ArtifactStatus = "not_empty"
-	ArtifactStatusUnknown   ArtifactStatus = "unknown"
+	ArtifactStatusOK                 ArtifactStatus = "ok"
+	ArtifactStatusInvalidId          ArtifactStatus = "invalid_id"
+	ArtifactStatusNotFound           ArtifactStatus = "not found"
+	ArtifactStatusNotEmpty           ArtifactStatus = "not_empty"
+	ArtifactStatusNameAlreadyExists  ArtifactStatus = "name_already_exists"
+	ArtifactStatusUnknown            ArtifactStatus = "unknown"
 )
 
 // ArtifactAssetInfo
@@ -348,11 +349,13 @@ type ArtifactRestoreEntitiesReq struct {
 
 // ArtifactRestoreRes 单条恢复结果。结构与 ArtifactNodeRemoveRes 同形：
 //   - NodeID         : 入参的 EntityID 串（kind.id）
-//   - Status         : 处理状态（ok / not_found / invalid_id / unknown 等）
+//   - Status         : 处理状态（ok / not_found / invalid_id / name_already_exists / unknown 等）
+//   - Reason         : 失败时的 i18n key，前端按 key 取多语言文案；成功时为空
 //   - Packages/Versions/Assets : 本次恢复链路上各类实体的累计影响计数
 type ArtifactRestoreRes struct {
 	NodeID   string         `json:"nodeID"`
 	Status   ArtifactStatus `json:"status"`
+	Reason   string         `json:"reason,omitempty"`
 	Packages int            `json:"packages,omitempty"`
 	Versions int            `json:"versions,omitempty"`
 	Assets   int            `json:"assets,omitempty"`

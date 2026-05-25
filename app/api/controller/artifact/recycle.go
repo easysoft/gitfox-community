@@ -20,7 +20,7 @@ import (
 // @Success 200 {object} resp.ListResponse "成功"
 // @Failure 400 {object} resp.ObjectResponse "参数错误"
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
-// @Router /artifacts/recycle/list [get]
+// @Router /artifacts/recycle [get]
 func (c *Controller) ListRecycleBin(ctx *gin.Context) {
 	var reqBody model.ArtifactRecycleListReq
 	if err := ctx.ShouldBindQuery(&reqBody); err != nil {

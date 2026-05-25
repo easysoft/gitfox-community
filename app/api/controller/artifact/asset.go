@@ -30,7 +30,7 @@ func (c *Controller) GetAsset(ctx *gin.Context) {
 		resp.BadRequest(ctx, err)
 		return
 	}
-	asset, err := c.artSvc.GetAsset(ctx, assetID)
+	asset, err := c.artSvc.GetAsset(ctx.Request.Context(), assetID)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return
@@ -54,7 +54,7 @@ func (c *Controller) DownloadAsset(ctx *gin.Context) {
 		resp.BadRequest(ctx, err)
 		return
 	}
-	reader, blob, fielname, err := c.artSvc.DownloadAsset(ctx, assetID)
+	reader, blob, fielname, err := c.artSvc.DownloadAsset(ctx.Request.Context(), assetID)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return
@@ -83,7 +83,7 @@ func (c *Controller) ListAssetPage(ctx *gin.Context) {
 		resp.BadRequest(ctx, err)
 		return
 	}
-	data, total, err := c.artSvc.ListAssetPage(ctx, &body)
+	data, total, err := c.artSvc.ListAssetPage(ctx.Request.Context(), &body)
 	if err != nil {
 		resp.BadRequest(ctx, err)
 		return

@@ -28,10 +28,22 @@ func (c *Controller) Restore(ctx *gin.Context) {
 		resp.BadRequest(ctx, err)
 		return
 	}
-	report, err := c.artSvc.Restore(ctx, &reqBody)
+	report, err := c.artSvc.Restore(ctx.Request.Context(), &reqBody)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return
 	}
-	resp.OK(ctx, i18n.ArtifactRestoreSuccess, report)
+
+	// 按整体成败分布选不同 i18n message：
+	// - 全部失败：ArtifactRestoreAllFailed
+	// - 部分失败：ArtifactRestorePartialFailed
+	// - 全部成功：ArtifactRestoreSuccess
+	msg := i18n.ArtifactRestoreSuccess
+	switch {
+	case report.Total > 0 && report.Success == 0:
+		msg = i18n.ArtifactRestoreAllFailed
+	case report.Failed > 0:
+		msg = i18n.ArtifactRestorePartialFailed
+	}
+	resp.OK(ctx, msg, report)
 }
