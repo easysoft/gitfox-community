@@ -190,14 +190,7 @@ func (c *assets) SearchExtendBlob(ctx context.Context, options ...SearchOption) 
 		db = opt.Apply(db)
 	}
 
-	type assetExtendRow struct {
-		artifactAsset
-		StorageID int64  `gorm:"column:storageID"`
-		Ref       string `gorm:"column:ref"`
-		Size      int64  `gorm:"column:size"`
-	}
 	var rows []*assetExtendRow
-
 	result := db.Model(&artifactAsset{}).
 		Select("ops_artifact_assets.*, ops_artifact_blobs.storageID, ops_artifact_blobs.ref, ops_artifact_blobs.size").
 		Joins("left join ops_artifact_blobs on ops_artifact_blobs.id = ops_artifact_assets.blobID").

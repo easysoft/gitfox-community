@@ -163,6 +163,13 @@ func (a *artifactAsset) BeforeUpdate(_ *gorm.DB) error {
 	return nil
 }
 
+type assetExtendRow struct {
+	artifactAsset
+	StorageID int64  `gorm:"column:storageID"`
+	Ref       string `gorm:"column:ref"`
+	Size      int64  `gorm:"column:size"`
+}
+
 // artifactMetaAsset → ops_artifact_meta_assets
 type artifactMetaAsset struct {
 	ID            int64           `gorm:"column:id;primaryKey"`
