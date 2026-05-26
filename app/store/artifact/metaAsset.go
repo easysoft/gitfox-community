@@ -17,7 +17,7 @@ func (s *metaAssets) Create(ctx context.Context, newObj *model.CreateArtifactMet
 	if err := validatorEmpty(newObj.ArtifactID, newObj.Path, newObj.ArtifactID, newObj.Format); err != nil {
 		return nil, err
 	}
-	if err := model.ValidateAssetKind(newObj.Kind); err != nil {
+	if err := model.ValidateAssetRank(newObj.Rank); err != nil {
 		return nil, err
 	}
 	var row artifactMetaAsset
@@ -25,7 +25,7 @@ func (s *metaAssets) Create(ctx context.Context, newObj *model.CreateArtifactMet
 	row.Format = string(newObj.Format)
 	row.Path = newObj.Path
 	row.ContentType = newObj.ContentType
-	row.Kind = string(newObj.Kind)
+	row.Rank = string(newObj.Rank)
 	row.BlobID = newObj.BlobID
 	row.CheckSum = newObj.CheckSum
 	if err := s.db.WithContext(ctx).Create(&row).Error; err != nil {

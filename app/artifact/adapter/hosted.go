@@ -62,7 +62,7 @@ type AssetDescriptor struct {
 	Metadata    MetadataInterface
 	ContentType string
 	Format      model.ArtifactFormat
-	Kind        model.AssetKind
+	Rank        model.AssetRank
 	Hash        *Hash
 }
 

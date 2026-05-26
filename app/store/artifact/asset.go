@@ -30,7 +30,7 @@ func (c *assets) Create(ctx context.Context, newObj *model.CreateArtifactAsset) 
 			return nil, pkgErrors.ErrDuplicate
 		}
 	}
-	if err := model.ValidateAssetKind(newObj.Kind); err != nil {
+	if err := model.ValidateAssetRank(newObj.Rank); err != nil {
 		return nil, err
 	}
 	var row artifactAsset
@@ -43,7 +43,7 @@ func (c *assets) Create(ctx context.Context, newObj *model.CreateArtifactAsset) 
 	row.Format = string(newObj.Format)
 	row.Path = newObj.Path
 	row.ContentType = newObj.ContentType
-	row.Kind = string(newObj.Kind)
+	row.Rank = string(newObj.Rank)
 	row.BlobID = newObj.BlobID
 	row.CheckSum = newObj.CheckSum
 	row.EditedBy = newObj.EditedBy
@@ -189,14 +189,7 @@ func (c *assets) SearchExtendBlob(ctx context.Context, options ...SearchOption) 
 	for _, opt := range options {
 		db = opt.Apply(db)
 	}
-	// 用内部 row 承接 join 结果：列 rank 已重命名，必须由 store 控制 gorm tag，
-	// 否则上层 model.ArtifactAsset.Kind 默认走蛇形 column "kind"，扫不到值。
-	type assetExtendRow struct {
-		artifactAsset
-		StorageID int64  `gorm:"column:storageID"`
-		Ref       string `gorm:"column:ref"`
-		Size      int64  `gorm:"column:size"`
-	}
+
 	var rows []*assetExtendRow
 	result := db.Model(&artifactAsset{}).
 		Select("ops_artifact_assets.*, ops_artifact_blobs.storageID, ops_artifact_blobs.ref, ops_artifact_blobs.size").
@@ -205,6 +198,7 @@ func (c *assets) SearchExtendBlob(ctx context.Context, options ...SearchOption) 
 	if result.Error != nil {
 		return nil, database.ProcessSQLErrorf(ctx, result.Error)
 	}
+
 	data := make([]*model.ArtifactAssetExtendBlob, 0, len(rows))
 	for _, r := range rows {
 		base := assetToModel(&r.artifactAsset)
