@@ -324,7 +324,11 @@ func convertTreeNodesToRes(inputs []*model.ArtifactTreeNode, level string) []*mo
 func convertTreeNodeToRes(n *model.ArtifactTreeNode, level string) *model.ArtifactTreeRes {
 	item := &model.ArtifactTreeRes{Name: n.Name, Path: n.Path, Format: n.Format, Leaf: n.Type == model.ArtifactTreeNodeTypeAsset}
 	if n.Type == model.ArtifactTreeNodeTypeVersion {
-		item.Leaf = level != model.ArtifactNodeLevelAsset || n.Format == model.ArtifactContainerFormat
+		// version 节点是否叶子完全取决于查询是否下钻到 asset 级：
+		//   - level != asset：用户没要 asset 层，version 视为叶子；
+		//   - level == asset：version 下还有 manifest/file asset 子节点，必须保持非叶子。
+		// container 的 version 同样挂着 manifest blob asset，不做格式特殊化。
+		item.Leaf = level != model.ArtifactNodeLevelAsset
 	}
 	if n.Type == model.ArtifactTreeNodeTypeVersion {
 		item.Metadata = parseArtifactTreePath(n.Path)
