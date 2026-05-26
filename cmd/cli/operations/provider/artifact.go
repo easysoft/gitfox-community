@@ -10,6 +10,7 @@ import (
 	jobsSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/jobs"
 	artifactStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/artifact"
 	spaceStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/space"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/auth/authz"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 	urlPkg "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/url"
 )
@@ -44,8 +45,9 @@ func ProvideContainerController(
 	artStore artifactStore.Interface,
 	svc artifactSvc.Interface,
 	urlProvider urlPkg.Provider,
+	authorizer authz.Authorizer,
 ) *ctnCtrl.Controller {
-	return ctnCtrl.NewController(artStore, svc.FileStore(), urlProvider)
+	return ctnCtrl.NewController(artStore, svc.FileStore(), urlProvider, authorizer)
 }
 
 // ProvideContainerHandler 创建容器镜像 Handler。

@@ -146,3 +146,9 @@ artifact:
   move_target_group_required: "targetGroupID is required for move; only file group may use 0 for the root, while package/asset require a valid group."
   rename_new_name_required: "newName is required for rename."
   relocate_success: "Operation succeeded."
+
+  # Container Registry authorization
+  container_auth_required: "Authentication required. Please run docker login first."
+  container_pull_denied: "You do not have pull permission on this artifact registry."
+  container_push_denied: "You do not have push permission on this artifact registry."
+  container_delete_denied: "You do not have delete permission on this artifact registry."

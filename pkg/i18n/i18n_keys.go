@@ -12,9 +12,13 @@ const (
 	ArtifactBlobQueryError                  I18nKey = "artifact.blob_query_error"                     // 查询制品 Blob 失败.
 	ArtifactBodyParamError                  I18nKey = "artifact.body_param_error"                     // Body 参数解析失败.
 	ArtifactContainerArtifactNotFound       I18nKey = "artifact.container_artifact_not_found"         // 指定的制品库不存在.
+	ArtifactContainerAuthRequired           I18nKey = "artifact.container_auth_required"              // 请先完成 docker login 后再执行该操作.
+	ArtifactContainerDeleteDenied           I18nKey = "artifact.container_delete_denied"              // 当前账号无该制品库的删除权限,无法删除镜像.
 	ArtifactContainerDomainInvalid          I18nKey = "artifact.container_domain_invalid"             // 镜像仓库路径格式无效,请检查前缀是否为 global / space{ID} / repo{ID}.
 	ArtifactContainerGroupNotFound          I18nKey = "artifact.container_group_not_found"            // 制品库下未找到容器分组.
 	ArtifactContainerImageNameRequired      I18nKey = "artifact.container_image_name_required"        // 镜像路径缺少制品名或镜像名.
+	ArtifactContainerPullDenied             I18nKey = "artifact.container_pull_denied"                // 当前账号无该制品库的 pull 权限,无法拉取镜像.
+	ArtifactContainerPushDenied             I18nKey = "artifact.container_push_denied"                // 当前账号无该制品库的 push 权限,无法推送镜像.
 	ArtifactContainerRepoIdInvalid          I18nKey = "artifact.container_repo_id_invalid"            // 镜像仓库路径中的仓库 ID 无效.
 	ArtifactContainerSpaceIdInvalid         I18nKey = "artifact.container_space_id_invalid"           // 镜像仓库路径中的空间 ID 无效.
 	ArtifactCreateGroupSuccess              I18nKey = "artifact.create_group_success"                 // 制品 Group 创建成功.

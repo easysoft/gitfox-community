@@ -146,3 +146,9 @@ artifact:
   move_target_group_required: "移动操作必须指定 targetGroupID；仅 file group 可传 0 表示根目录，package/asset 必须指定有效分组."
   rename_new_name_required: "重命名操作必须指定 newName."
   relocate_success: "操作成功."
+
+  # Container Registry 鉴权
+  container_auth_required: "请先完成 docker login 后再执行该操作."
+  container_pull_denied: "当前账号无该制品库的 pull 权限，无法拉取镜像."
+  container_push_denied: "当前账号无该制品库的 push 权限，无法推送镜像."
+  container_delete_denied: "当前账号无该制品库的删除权限，无法删除镜像."

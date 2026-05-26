@@ -14,9 +14,12 @@ import (
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/adapter"
 	ctnAdapter "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/adapter/container"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
 	artifactStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/artifact"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/auth/authz"
 	pkgErrors "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/storage"
 	storagedriver "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/storage/driver"
@@ -54,6 +57,7 @@ type Controller struct {
 	artStore    artifactStore.Interface
 	fileStore   storage.ContentStorage
 	urlProvider urlPkg.Provider
+	authorizer  authz.Authorizer
 }
 
 // NewController 创建容器镜像控制器实例。
@@ -61,11 +65,13 @@ func NewController(
 	artStore artifactStore.Interface,
 	fileStore storage.ContentStorage,
 	urlProvider urlPkg.Provider,
+	authorizer authz.Authorizer,
 ) *Controller {
 	return &Controller{
 		artStore:    artStore,
 		fileStore:   fileStore,
 		urlProvider: urlProvider,
+		authorizer:  authorizer,
 	}
 }
 
@@ -307,8 +313,10 @@ func (c *Controller) GetContainerBlob(ctx context.Context, ctnReq *ContainerReq,
 	return c.getContainerBlob(ctx, ctnReq, dgst, false)
 }
 
-func (c *Controller) getContainerBlob(ctx context.Context, _ *ContainerReq, dgst string, head bool) (HttpResponseWriter, error) {
-	// TODO: 权限检查（pull 需要至少读权限，先空实现）
+func (c *Controller) getContainerBlob(ctx context.Context, ctnReq *ContainerReq, dgst string, head bool) (HttpResponseWriter, error) {
+	if err := c.authorize(ctx, ctnReq.View.ArtifactID, constant.PermissionArtifactPull, i18n.ArtifactContainerPullDenied); err != nil {
+		return nil, err
+	}
 	fr, meta, err := c.GetAssetReader(ctx, dgst, model.ArtifactContainerFormat)
 	if err != nil {
 		return nil, err
@@ -329,8 +337,10 @@ func (c *Controller) getContainerBlob(ctx context.Context, _ *ContainerReq, dgst
 }
 
 // DeleteContainerBlob DELETE /v2/{space}/{name}/blobs/{digest}
-func (c *Controller) DeleteContainerBlob(ctx context.Context, _ *ContainerReq, dgst string) (HttpResponseWriter, error) {
-	// TODO: 权限检查（delete 需要读写权限，先空实现）
+func (c *Controller) DeleteContainerBlob(ctx context.Context, ctnReq *ContainerReq, dgst string) (HttpResponseWriter, error) {
+	if err := c.authorize(ctx, ctnReq.View.ArtifactID, constant.PermissionArtifactDelete, i18n.ArtifactContainerDeleteDenied); err != nil {
+		return nil, err
+	}
 	meta, err := c.GetAssetInfo(ctx, dgst, model.ArtifactContainerFormat)
 	if err != nil {
 		return nil, err
@@ -355,7 +365,9 @@ func (c *Controller) DeleteContainerBlob(ctx context.Context, _ *ContainerReq, d
 
 // SaveContainerBlob 单次上传 blob（带 digest 参数时使用）。
 func (c *Controller) SaveContainerBlob(ctx context.Context, ctnReq *ContainerReq, req *http.Request, reference digest.Digest) (HttpResponseWriter, error) {
-	// TODO: 权限检查（push 需要读写权限，先空实现）
+	if err := c.authorize(ctx, ctnReq.View.ArtifactID, constant.PermissionArtifactPush, i18n.ArtifactContainerPushDenied); err != nil {
+		return nil, err
+	}
 	refDigest := reference.String()
 	uploader := ctnAdapter.NewManifestUploader(c.artStore, ctnReq.View, refDigest)
 
@@ -371,7 +383,9 @@ func (c *Controller) SaveContainerBlob(ctx context.Context, ctnReq *ContainerReq
 
 // StartBlobUpload 启动分块 blob 上传会话。
 func (c *Controller) StartBlobUpload(ctx context.Context, ctnReq *ContainerReq) (HttpResponseWriter, error) {
-	// TODO: 权限检查（push 需要读写权限，先空实现）
+	if err := c.authorize(ctx, ctnReq.View.ArtifactID, constant.PermissionArtifactPush, i18n.ArtifactContainerPushDenied); err != nil {
+		return nil, err
+	}
 	req := ctnAdapter.InitResumeRequest(ctnReq.FullName(), c.artStore, ctnReq.View)
 	return c.getUploadState(ctx, ctnReq, req)
 }
@@ -406,13 +420,17 @@ func (c *Controller) getUploadState(ctx context.Context, ctnReq *ContainerReq, r
 
 // GetBlobUploadStatus 查询上传状态。
 func (c *Controller) GetBlobUploadStatus(ctx context.Context, uploadReq *ContainerUploadRequest) (HttpResponseWriter, error) {
-	// TODO: 权限检查
+	if err := c.authorize(ctx, uploadReq.View.ArtifactID, constant.PermissionArtifactPush, i18n.ArtifactContainerPushDenied); err != nil {
+		return nil, err
+	}
 	return c.getUploadState(ctx, uploadReq.ContainerReq, uploadReq.Resume)
 }
 
 // AppendBlobContent 追加 blob 内容（PATCH）。
 func (c *Controller) AppendBlobContent(ctx context.Context, r *http.Request, uploadReq *ContainerUploadRequest) (HttpResponseWriter, error) {
-	// TODO: 权限检查
+	if err := c.authorize(ctx, uploadReq.View.ArtifactID, constant.PermissionArtifactPush, i18n.ArtifactContainerPushDenied); err != nil {
+		return nil, err
+	}
 	resumeReq := uploadReq.Resume
 	if err := resumeReq.AppendWrite(ctx, r); err != nil {
 		return nil, err
@@ -422,7 +440,9 @@ func (c *Controller) AppendBlobContent(ctx context.Context, r *http.Request, upl
 
 // FinishBlobUpload 完成 blob 上传（PUT）。
 func (c *Controller) FinishBlobUpload(ctx context.Context, r *http.Request, uploadReq *ContainerUploadRequest) (HttpResponseWriter, error) {
-	// TODO: 权限检查
+	if err := c.authorize(ctx, uploadReq.View.ArtifactID, constant.PermissionArtifactPush, i18n.ArtifactContainerPushDenied); err != nil {
+		return nil, err
+	}
 	dgstStr := r.FormValue("digest")
 	if dgstStr == "" {
 		return nil, ctnAdapter.ErrDigestInvalid.WithDetail("digest missing")
@@ -448,7 +468,9 @@ func (c *Controller) FinishBlobUpload(ctx context.Context, r *http.Request, uplo
 
 // CancelBlobUpload 取消上传会话。
 func (c *Controller) CancelBlobUpload(ctx context.Context, uploadReq *ContainerUploadRequest) (HttpResponseWriter, error) {
-	// TODO: 权限检查
+	if err := c.authorize(ctx, uploadReq.View.ArtifactID, constant.PermissionArtifactPush, i18n.ArtifactContainerPushDenied); err != nil {
+		return nil, err
+	}
 	resumeReq := uploadReq.Resume
 	if err := resumeReq.Remove(ctx); err != nil {
 		return nil, err
@@ -472,7 +494,9 @@ func (c *Controller) GetContainerManifest(ctx context.Context, req *http.Request
 }
 
 func (c *Controller) getContainerManifest(ctx context.Context, req *http.Request, manifestReq *ContainerManifestRequest, head bool) (HttpResponseWriter, error) {
-	// TODO: 权限检查
+	if err := c.authorize(ctx, manifestReq.View.ArtifactID, constant.PermissionArtifactPull, i18n.ArtifactContainerPullDenied); err != nil {
+		return nil, err
+	}
 	meta, err := c.GetAssetInfo(ctx, manifestReq.Digest.String(), model.ArtifactContainerFormat)
 	if err != nil {
 		return nil, err
@@ -489,7 +513,9 @@ func (c *Controller) getContainerManifest(ctx context.Context, req *http.Request
 
 // PutManifest PUT manifest by digest。
 func (c *Controller) PutManifest(ctx context.Context, req *http.Request, manifestReq *ContainerManifestRequest) (HttpResponseWriter, error) {
-	// TODO: 权限检查
+	if err := c.authorize(ctx, manifestReq.View.ArtifactID, constant.PermissionArtifactPush, i18n.ArtifactContainerPushDenied); err != nil {
+		return nil, err
+	}
 	refDigest := manifestReq.Digest.String()
 	uploader := ctnAdapter.NewManifestUploader(c.artStore, manifestReq.View, refDigest)
 	if err := handleUpload(ctx, req, uploader); err != nil {
@@ -547,7 +573,9 @@ func (c *Controller) GetContainerTag(ctx context.Context, req *http.Request, man
 }
 
 func (c *Controller) getContainerTag(ctx context.Context, req *http.Request, manifestReq *ContainerManifestRequest, head bool) (HttpResponseWriter, error) {
-	// TODO: 权限检查
+	if err := c.authorize(ctx, manifestReq.View.ArtifactID, constant.PermissionArtifactPull, i18n.ArtifactContainerPullDenied); err != nil {
+		return nil, err
+	}
 	view := manifestReq.View
 	t, err := findContainerTag(ctx, c.artStore, view.ArtifactID, manifestReq.RepoName, manifestReq.Tag)
 	if err != nil {
@@ -566,7 +594,9 @@ func (c *Controller) getContainerTag(ctx context.Context, req *http.Request, man
 
 // PutContainerTag PUT tag（manifest 上传到 tag）。
 func (c *Controller) PutContainerTag(ctx context.Context, req *http.Request, manifestReq *ContainerManifestRequest) (HttpResponseWriter, error) {
-	// TODO: 权限检查
+	if err := c.authorize(ctx, manifestReq.View.ArtifactID, constant.PermissionArtifactPush, i18n.ArtifactContainerPushDenied); err != nil {
+		return nil, err
+	}
 	view := manifestReq.View
 
 	uploader := ctnAdapter.NewManifestUploader(c.artStore, view, "")
@@ -591,7 +621,9 @@ func (c *Controller) PutContainerTag(ctx context.Context, req *http.Request, man
 
 // DeleteContainerTag DELETE tag。
 func (c *Controller) DeleteContainerTag(ctx context.Context, req *ContainerManifestRequest) (HttpResponseWriter, error) {
-	// TODO: 权限检查
+	if err := c.authorize(ctx, req.View.ArtifactID, constant.PermissionArtifactDelete, i18n.ArtifactContainerDeleteDenied); err != nil {
+		return nil, err
+	}
 	view := req.View
 	t, err := findContainerTag(ctx, c.artStore, view.ArtifactID, req.RepoName, req.Tag)
 	if err != nil {
@@ -622,7 +654,9 @@ type tagList struct {
 
 // ListTags GET /v2/{domainid}/{artifactname}/{imagename}/tags/list
 func (c *Controller) ListTags(ctx context.Context, req *ContainerReq) (*tagList, error) {
-	// TODO: 权限检查
+	if err := c.authorize(ctx, req.View.ArtifactID, constant.PermissionArtifactPull, i18n.ArtifactContainerPullDenied); err != nil {
+		return nil, err
+	}
 	var result = tagList{
 		Name: req.RepoName,
 		Tags: make([]string, 0),
