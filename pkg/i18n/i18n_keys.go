@@ -64,7 +64,7 @@ const (
 	ArtifactRenameSourceDeleted             I18nKey = "artifact.rename_source_deleted"                // 源实体已软删除或不存在.
 	ArtifactRenameVersionedNotSupported     I18nKey = "artifact.rename_versioned_not_supported"       // 不支持重命名版本化包或包含版本化包的组.
 	ArtifactRepoQueryError                  I18nKey = "artifact.repo_query_error"                     // 查询仓库失败.
-	ArtifactRestoreAllFailed                I18nKey = "artifact.restore_all_failed"                   // 制品恢复全部失败,详见 data 字段.
+	ArtifactRestoreAllFailed                I18nKey = "artifact.restore_all_failed"                   // 制品恢复全部失败:%s
 	ArtifactRestoreAssetNameAlreadyExists   I18nKey = "artifact.restore_asset_name_already_exists"    // 同位置已存在同名制品文件,无法恢复.
 	ArtifactRestoreEntityIdInvalidFormat    I18nKey = "artifact.restore_entity_id_invalid_format"     // 恢复实体 ID 格式不正确,应为 kind.id 形式.
 	ArtifactRestoreEntityTypeUnsupported    I18nKey = "artifact.restore_entity_type_unsupported"      // 不支持的恢复实体类型.
@@ -73,7 +73,7 @@ const (
 	ArtifactRestoreNotInRecycleBin          I18nKey = "artifact.restore_not_in_recycle_bin"           // 资源未在回收站中,无需恢复.
 	ArtifactRestorePackageNameAlreadyExists I18nKey = "artifact.restore_package_name_already_exists"  // 同名制品包已存在,无法恢复.
 	ArtifactRestoreParseError               I18nKey = "artifact.restore_parse_error"                  // 解析恢复实体 ID 失败.
-	ArtifactRestorePartialFailed            I18nKey = "artifact.restore_partial_failed"               // 部分制品恢复失败,详见 data 字段.
+	ArtifactRestorePartialFailed            I18nKey = "artifact.restore_partial_failed"               // 部分制品恢复失败:%s
 	ArtifactRestoreQueryError               I18nKey = "artifact.restore_query_error"                  // 校验恢复目标状态失败.
 	ArtifactRestoreSuccess                  I18nKey = "artifact.restore_success"                      // 制品恢复成功.
 	ArtifactRestoreVersionAlreadyExists     I18nKey = "artifact.restore_version_already_exists"       // 同名版本已存在,无法恢复.

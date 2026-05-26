@@ -53,6 +53,7 @@ func (s *Service) Restore(ctx context.Context, restoreReq *model.ArtifactRestore
 			// 把 i18n key 翻译为当前 locale 文案后写入 res.Reason，前端直接展示即可。
 			if key := pkgErrors.GetI18nKey(err); key != "" {
 				res.Reason = i18n.TWithContext(ctx, string(key))
+				report.Message += res.Reason + " "
 				// 已知拒因细化到具体 status，避免一律 unknown。
 				switch key {
 				case i18n.ArtifactRestoreViewNameAlreadyExists,

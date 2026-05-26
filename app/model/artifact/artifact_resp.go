@@ -250,12 +250,12 @@ type ArtifactRecycleItem struct {
 type ArtifactStatus string
 
 const (
-	ArtifactStatusOK                 ArtifactStatus = "ok"
-	ArtifactStatusInvalidId          ArtifactStatus = "invalid_id"
-	ArtifactStatusNotFound           ArtifactStatus = "not found"
-	ArtifactStatusNotEmpty           ArtifactStatus = "not_empty"
-	ArtifactStatusNameAlreadyExists  ArtifactStatus = "name_already_exists"
-	ArtifactStatusUnknown            ArtifactStatus = "unknown"
+	ArtifactStatusOK                ArtifactStatus = "ok"
+	ArtifactStatusInvalidId         ArtifactStatus = "invalid_id"
+	ArtifactStatusNotFound          ArtifactStatus = "not found"
+	ArtifactStatusNotEmpty          ArtifactStatus = "not_empty"
+	ArtifactStatusNameAlreadyExists ArtifactStatus = "name_already_exists"
+	ArtifactStatusUnknown           ArtifactStatus = "unknown"
 )
 
 // ArtifactAssetInfo
@@ -363,6 +363,7 @@ type ArtifactRestoreRes struct {
 
 // ArtifactRestoreReport 批量恢复汇总，结构与 ArtifactNodeRemoveReport 对称。
 type ArtifactRestoreReport struct {
+	Message string                `json:"-"`
 	Total   int                   `json:"total"`
 	Success int                   `json:"success"`
 	Failed  int                   `json:"failed"`

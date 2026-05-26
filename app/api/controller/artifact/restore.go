@@ -42,8 +42,13 @@ func (c *Controller) Restore(ctx *gin.Context) {
 	switch {
 	case report.Total > 0 && report.Success == 0:
 		msg = i18n.ArtifactRestoreAllFailed
+		resp.CustomError(ctx, report, msg, report.Message)
+		return
 	case report.Failed > 0:
 		msg = i18n.ArtifactRestorePartialFailed
+		resp.CustomError(ctx, report, msg, report.Message)
+		return
 	}
+
 	resp.OK(ctx, msg, report)
 }
