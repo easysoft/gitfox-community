@@ -139,7 +139,7 @@ type artifactAsset struct {
 	Format      string          `gorm:"column:type"`
 	Path        string          `gorm:"column:basename"`
 	ContentType string          `gorm:"column:contentType"`
-	Kind        string          `gorm:"column:rank"`
+	Rank        string          `gorm:"column:rank"`
 	BlobID      int64           `gorm:"column:blobID"`
 	CheckSum    string          `gorm:"column:checksum"`
 	CreatedBy   string          `gorm:"column:createdBy"`
@@ -170,7 +170,7 @@ type artifactMetaAsset struct {
 	Format        string          `gorm:"column:type"`
 	Path          string          `gorm:"column:path"`
 	ContentType   string          `gorm:"column:contentType"`
-	Kind          string          `gorm:"column:kind"`
+	Rank          string          `gorm:"column:rank"`
 	BlobID        int64           `gorm:"column:blobID"`
 	CheckSum      string          `gorm:"column:checksum"`
 	CreatedBy     string          `gorm:"column:createdBy"`
@@ -457,7 +457,7 @@ func assetToModel(a *artifactAsset) *model.ArtifactAsset {
 		Format:      model.ArtifactFormat(a.Format),
 		Path:        a.Path,
 		ContentType: a.ContentType,
-		Kind:        model.AssetKind(a.Kind),
+		Rank:        model.AssetRank(a.Rank),
 		BlobID:      a.BlobID,
 		CheckSum:    a.CheckSum,
 		CreatedBy:   a.CreatedBy,
@@ -480,7 +480,7 @@ func assetFromModel(m *model.ArtifactAsset) *artifactAsset {
 		Format:      string(m.Format),
 		Path:        m.Path,
 		ContentType: m.ContentType,
-		Kind:        string(m.Kind),
+		Rank:        string(m.Rank),
 		BlobID:      m.BlobID,
 		CheckSum:    m.CheckSum,
 		CreatedBy:   m.CreatedBy,
@@ -511,7 +511,7 @@ func metaAssetToModel(m *artifactMetaAsset) *model.ArtifactMetaAsset {
 		Format:      model.ArtifactFormat(m.Format),
 		Path:        m.Path,
 		ContentType: m.ContentType,
-		Kind:        model.AssetKind(m.Kind),
+		Rank:        model.AssetRank(m.Rank),
 		BlobID:      m.BlobID,
 		CheckSum:    m.CheckSum,
 		CreatedBy:   m.CreatedBy,
@@ -532,7 +532,7 @@ func metaAssetFromModel(src *model.ArtifactMetaAsset) *artifactMetaAsset {
 		Format:        string(src.Format),
 		Path:          src.Path,
 		ContentType:   src.ContentType,
-		Kind:          string(src.Kind),
+		Rank:          string(src.Rank),
 		BlobID:        src.BlobID,
 		CheckSum:      src.CheckSum,
 		CreatedBy:     src.CreatedBy,

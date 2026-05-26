@@ -249,7 +249,7 @@ func (mm *ModelManager) createAsset(ctx context.Context, newObj *model.ArtifactA
 		GroupID:     newObj.GroupID,
 		Format:      descriptor.Format,
 		Path:        descriptor.Path,
-		Kind:        descriptor.Kind,
+		Rank:        descriptor.Rank,
 		ContentType: descriptor.ContentType,
 		BlobID:      newBlob.ID,
 		CreatedBy:   session.User.Account,

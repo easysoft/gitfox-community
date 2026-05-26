@@ -179,72 +179,6 @@ func timeVal(t *datetime.Local) time.Time {
 	return time.Time(*t)
 }
 
-// addLinkForGeneric 为 generic 分组资产补齐下载链接和实体 ID。
-func addLinkForGeneric(data []*model.ArtifactAssetsRes, spaceName, groupPath, format string) error {
-	if format == "" {
-		return nil
-	}
-	if spaceName == "" {
-		spaceName = "global"
-	}
-	for _, res := range data {
-		segments := []string{"_artifacts", spaceName, format}
-		if groupPath != "" {
-			segments = append(segments, strings.Split(strings.Trim(groupPath, "/"), "/")...)
-		}
-		if res.Path != "" {
-			segments = append(segments, strings.Split(strings.Trim(res.Path, "/"), "/")...)
-		}
-		link, err := url.JoinPath("/", segments...)
-		if err != nil {
-			return err
-		}
-		res.Link = link
-		res.EntityID = (&model.ArtifactTreeNodeId{Type: model.ArtifactTreeNodeTypeAsset, Pk: res.Id}).String()
-	}
-	return nil
-}
-
-// applyNodeInfoToAsset 将 nodeInfo 解析出的业务字段回填到资产列表项。
-func applyNodeInfoToAsset(a *model.ArtifactAssetsRes, info *model.ArtifactAssetInfo) {
-	if a == nil || info == nil || info.Status != string(model.ArtifactStatusOK) {
-		return
-	}
-	a.EntityID = (&model.ArtifactTreeNodeId{Type: model.ArtifactTreeNodeTypeAsset, Pk: a.Id}).String()
-	a.Link = info.Link
-	a.OS = info.OS
-	a.Arch = info.Arch
-	if info.Size > 0 {
-		a.Size = info.Size
-	}
-	if info.Created != nil {
-		a.Created = info.Created
-	}
-	if info.Updated != nil {
-		a.Updated = info.Updated
-	}
-	if info.Metadata != nil {
-		a.Name = info.Metadata.Name
-		a.PackageName = info.Metadata.Name
-		a.Group = info.Metadata.Group
-		a.Version = info.Metadata.Version
-	}
-}
-
-// parseNodeInfoEntityID 解析 nodeInfo 入参中的 entityID。
-func parseNodeInfoEntityID(entityID string) (model.ArtifactEntityKind, int64, error) {
-	if strings.Count(entityID, ".") != 1 {
-		return "", 0, fmt.Errorf("invalid artifact entity id: %s", entityID)
-	}
-
-	parts := strings.Split(entityID, ".")
-	id, err := strconv.ParseInt(parts[1], 10, 64)
-	if err != nil {
-		return "", 0, fmt.Errorf("invalid artifact entity id number: %s", entityID)
-	}
-	return model.ArtifactEntityKind(parts[0]), id, nil
-}
-
 // populateNodeInfoAssetFields 将资产基础字段填充到 nodeInfo 响应。
 func populateNodeInfoAssetFields(info *model.ArtifactAssetInfo, asset *model.ArtifactAssetsRes) {
 	if info == nil || asset == nil {
@@ -380,11 +314,6 @@ func nodeInfoSpaceName(view *adapter.ViewDescriptor) string {
 		return view.Space.Name
 	}
 	return ""
-}
-
-// invalidNodeInfo 返回 entityID 无效的 nodeInfo 响应。
-func invalidNodeInfo() *model.ArtifactAssetInfo {
-	return &model.ArtifactAssetInfo{Status: string(model.ArtifactStatusInvalidId)}
 }
 
 // notFoundNodeInfo 返回资源不存在的 nodeInfo 响应。

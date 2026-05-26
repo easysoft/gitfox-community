@@ -303,7 +303,7 @@ func (crr *ResumeRequest) Finish(ctx context.Context, r *http.Request, dgst *dig
 		Format:      model.ArtifactContainerFormat,
 		Path:        dgst.String(),
 		ContentType: "application/octet-stream",
-		Kind:        model.AssetKindMain,
+		Rank:        model.AssetRankMain,
 		BlobID:      dbBlob.ID,
 	}
 

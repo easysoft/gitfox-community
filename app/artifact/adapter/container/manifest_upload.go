@@ -75,7 +75,7 @@ func (h *manifestUploader) Serve(ctx context.Context, req *http.Request) (int64,
 	h.descriptor.MainAsset.Hash = hash
 	h.descriptor.MainAsset.Ref = ref
 	h.descriptor.MainAsset.ContentType = mediaType
-	h.descriptor.MainAsset.Kind = model.AssetKindMain
+	h.descriptor.MainAsset.Rank = model.AssetRankMain
 	if h.digest != "" {
 		// saved manifest as a blob, shared cross spaces
 		h.descriptor.MainAsset.Attr = adapter.AttrAssetIsolated

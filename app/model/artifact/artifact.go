@@ -16,7 +16,7 @@ import (
 )
 
 // ==================== 格式与资产类型 ====================
-// ==================== Format & Kind ====================
+// ==================== Format & Rank ====================
 
 type ArtifactFormat string
 
@@ -40,11 +40,11 @@ const (
 
 var AllArtifactFormatList = []ArtifactFormat{ArtifactFileFormat, ArtifactRawFormat, ArtifactMavenFormat, ArtifactContainerFormat, ArtifactHelmFormat}
 
-type AssetKind string
+type AssetRank string
 
 const (
-	AssetKindMain AssetKind = "main"
-	AssetKindSub  AssetKind = "subordinate"
+	AssetRankMain AssetRank = "main"
+	AssetRankSub  AssetRank = "subordinate"
 
 //Format 是否有 sub asset 说明
 // generic 没有 单个文件，全部 main
@@ -54,7 +54,7 @@ const (
 // maven 有 每个 jar 带 .asc/.md5/.sha1/.sha256/.sha512
 // pypi/npm 视实现 一般 main 为主
 
-// Path Kind
+// Path Rank
 // maven-metadata.xml main
 // maven-metadata.xml.md5 sub
 // maven-metadata.xml.sha1 sub
@@ -62,9 +62,9 @@ const (
 // maven-metadata.xml.sha512 sub
 )
 
-func ValidateAssetKind(kind AssetKind) error {
-	if kind != AssetKindMain && kind != AssetKindSub {
-		return fmt.Errorf("unidentified kind '%s'", kind)
+func ValidateAssetRank(rank AssetRank) error {
+	if rank != AssetRankMain && rank != AssetRankSub {
+		return fmt.Errorf("unidentified rank '%s'", rank)
 	}
 	return nil
 }
@@ -266,7 +266,7 @@ type ArtifactAsset struct {
 
 	Path        string    `json:"path"`
 	ContentType string    `json:"contentType"`
-	Kind        AssetKind `json:"kind"`
+	Rank        AssetRank `json:"rank"`
 	// Metadata 保存 asset 级元数据，例如 helm chart 信息，用于后续重建索引。
 	// Metadata store asset-level metadata. example: helm chart metadata, for rebuild index
 	Metadata    string          `json:"metadata"`
@@ -286,7 +286,7 @@ type CreateArtifactAsset struct {
 	Format      ArtifactFormat `json:"format"`
 	Path        string         `json:"path"`
 	ContentType string         `json:"contentType"`
-	Kind        AssetKind      `json:"kind"`
+	Rank        AssetRank      `json:"rank"`
 	BlobID      int64          `json:"blobID"`
 	CheckSum    string         `json:"checkSum"`
 	CreatedBy   string         `json:"createdBy"`
@@ -307,7 +307,7 @@ type ArtifactMetaAsset struct {
 	Format      ArtifactFormat `json:"format"`
 	Path        string         `json:"path"`
 	ContentType string         `json:"contentType"`
-	Kind        AssetKind      `json:"kind"`
+	Rank        AssetRank      `json:"rank"`
 	BlobID      int64          `json:"blobID"`
 	CheckSum    string         `json:"checkSum"`
 	CreatedBy   string         `json:"createdBy"`
@@ -322,7 +322,7 @@ type CreateArtifactMetaAsset struct {
 	Format      ArtifactFormat `json:"format"`
 	Path        string         `json:"path"`
 	ContentType string         `json:"contentType"`
-	Kind        AssetKind      `json:"kind"`
+	Rank        AssetRank      `json:"rank"`
 	BlobID      int64          `json:"blobID"`
 	CheckSum    string         `json:"checkSum"`
 }
@@ -567,7 +567,7 @@ func (opt SearchVersionOption) Apply(db *gorm.DB) *gorm.DB {
 
 type SearchAssetOption struct {
 	VersionID int64
-	Kind      AssetKind
+	Rank      AssetRank
 	Path      string
 }
 
@@ -576,8 +576,8 @@ func (opt SearchAssetOption) Apply(db *gorm.DB) *gorm.DB {
 		VersionID: null.IntFromPtr(&opt.VersionID),
 	}
 
-	if opt.Kind != ("") {
-		q.Kind = opt.Kind
+	if opt.Rank != ("") {
+		q.Rank = opt.Rank
 	}
 
 	return db.Where(&q)
