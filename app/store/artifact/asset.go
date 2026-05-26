@@ -189,13 +189,32 @@ func (c *assets) SearchExtendBlob(ctx context.Context, options ...SearchOption) 
 	for _, opt := range options {
 		db = opt.Apply(db)
 	}
-	var data []*model.ArtifactAssetExtendBlob
+	// 用内部 row 承接 join 结果：列 rank 已重命名，必须由 store 控制 gorm tag，
+	// 否则上层 model.ArtifactAsset.Kind 默认走蛇形 column "kind"，扫不到值。
+	type assetExtendRow struct {
+		artifactAsset
+		StorageID int64  `gorm:"column:storageID"`
+		Ref       string `gorm:"column:ref"`
+		Size      int64  `gorm:"column:size"`
+	}
+	var rows []*assetExtendRow
 	result := db.Model(&artifactAsset{}).
 		Select("ops_artifact_assets.*, ops_artifact_blobs.storageID, ops_artifact_blobs.ref, ops_artifact_blobs.size").
 		Joins("left join ops_artifact_blobs on ops_artifact_blobs.id = ops_artifact_assets.blobID").
-		Order("id asc").Scan(&data)
+		Order("id asc").Scan(&rows)
 	if result.Error != nil {
 		return nil, database.ProcessSQLErrorf(ctx, result.Error)
+	}
+	data := make([]*model.ArtifactAssetExtendBlob, 0, len(rows))
+	for _, r := range rows {
+		base := assetToModel(&r.artifactAsset)
+		data = append(data, &model.ArtifactAssetExtendBlob{
+			ArtifactAsset: *base,
+			BlobID:        r.BlobID,
+			StorageID:     r.StorageID,
+			Ref:           r.Ref,
+			Size:          r.Size,
+		})
 	}
 	return data, nil
 }

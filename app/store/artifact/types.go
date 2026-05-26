@@ -139,7 +139,7 @@ type artifactAsset struct {
 	Format      string          `gorm:"column:type"`
 	Path        string          `gorm:"column:basename"`
 	ContentType string          `gorm:"column:contentType"`
-	Kind        string          `gorm:"column:kind"`
+	Kind        string          `gorm:"column:rank"`
 	BlobID      int64           `gorm:"column:blobID"`
 	CheckSum    string          `gorm:"column:checksum"`
 	CreatedBy   string          `gorm:"column:createdBy"`
