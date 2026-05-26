@@ -167,12 +167,14 @@ func (h *ContainerHandler) HandleBlobDelete(c *gin.Context) {
 // @Router /v2/{domainid}/{artifactname}/{imagename}/blobs/uploads/ [post]
 func (h *ContainerHandler) HandleBlobUploadStart(c *gin.Context) {
 	ctx := c.Request.Context()
-	// cross mount 不支持
-	if c.Query("from") != "" || c.Query("mount") != "" {
-		renderContainerErr(c, ctnAdapter.ErrUnsupported.WithDetail("cross mount is not supported"))
-		return
-	}
-
+	// cross mount 未实现：按 distribution v2 规范，服务端不支持 mount 时应静默
+	// 降级为普通 init upload（202 + Location），让 docker 客户端回退到 PATCH/PUT
+	// 流程重新上传该层。直接返回 ErrUnsupported 会被客户端视为 endpoint 不可用，
+	// 整套 push 立即 abort，反而更糟。
+	//if c.Query("from") != "" || c.Query("mount") != "" {
+	// 	renderContainerErr(c, ctnAdapter.ErrUnsupported.WithDetail("cross mount is not supported"))
+	// 	return
+	// }
 	ctnReq, err := h.loadContainerRequest(c)
 	if err != nil {
 		renderContainerErr(c, err)

@@ -295,10 +295,10 @@ type CreateArtifactAsset struct {
 
 type ArtifactAssetExtendBlob struct {
 	ArtifactAsset
-	BlobID    int64  `gorm:"column:blobID"`
-	StorageID int64  `gorm:"column:storageID"`
-	Ref       string `gorm:"column:ref"`
-	Size      int64  `gorm:"column:size"`
+	BlobID    int64  `json:"blobID"`
+	StorageID int64  `json:"storageID"`
+	Ref       string `json:"ref"`
+	Size      int64  `json:"size"`
 }
 
 type ArtifactMetaAsset struct {

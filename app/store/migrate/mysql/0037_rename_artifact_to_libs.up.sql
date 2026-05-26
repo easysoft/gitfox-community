@@ -32,12 +32,13 @@ CREATE TABLE IF NOT EXISTS `ops_artifact_libs` (
     `editedBy` varchar(30) NOT NULL DEFAULT '' COMMENT '更新人',
     `editedDate` datetime DEFAULT NULL COMMENT '更新时间',
     `deleted` tinyint(1) NOT NULL DEFAULT 0 COMMENT '删除标识，0-未删除，1-已删除',
-    PRIMARY KEY (`id`) USING BTREE,
-    KEY `idx_artifact_spaceID_repoID_name` (`spaceID`, `repoID`, `name`),
-    KEY `idx_artifact_spaceID_deleted` (`spaceID`, `deleted`),
-    KEY `idx_artifact_repoID_deleted` (`repoID`, `deleted`),
-    KEY `idx_artifact_spaceID_repoID_deleted` (`spaceID`, `repoID`, `deleted`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='制品库主表（支持全局/空间/代码库三级作用域）';
+    PRIMARY KEY (`id`) USING BTREE
+) ENGINE=InnoDB COLLATE=utf8mb4_general_ci COMMENT= '制品库主表（支持全局/空间/代码库三级作用域）';
+
+CREATE INDEX `idx_artifact_spaceID_repoID_name` ON `ops_artifact_libs` (`spaceID`, `repoID`, `name`);
+CREATE INDEX `idx_artifact_spaceID_deleted` ON `ops_artifact_libs` (`spaceID`, `deleted`);
+CREATE INDEX `idx_artifact_repoID_deleted` ON `ops_artifact_libs` (`repoID`, `deleted`);
+CREATE INDEX `idx_artifact_spaceID_repoID_deleted` ON `ops_artifact_libs` (`spaceID`, `repoID`, `deleted`);
 
 
 -- 3. 制品树节点表
@@ -55,13 +56,14 @@ CREATE TABLE IF NOT EXISTS `ops_artifact_tree_nodes` (
     `editedBy` varchar(30) NOT NULL DEFAULT '' COMMENT '更新人',
     `editedDate` datetime DEFAULT NULL COMMENT '更新时间',
     `deleted` tinyint(1) NOT NULL DEFAULT 0 COMMENT '删除标识，0-未删除，1-已删除',
-    PRIMARY KEY (`id`) USING BTREE,
-    UNIQUE KEY `uk_nodes_artifactLibID_nodePath_type` (`artifactLibID`, `nodePath`, `type`),
-    KEY `idx_nodes_parentID_deleted` (`parentID`, `deleted`),
-    KEY `idx_nodes_artifactLibID_linkTable_linkRecord_deleted` (`artifactLibID`, `linkTable`, `linkRecord`, `deleted`),
-    KEY `idx_nodes_artifactLibID_type_deleted` (`artifactLibID`, `type`, `deleted`),
-    KEY `idx_nodes_deleted` (`deleted`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='制品树节点表';
+    PRIMARY KEY (`id`) USING BTREE
+) ENGINE=InnoDB COLLATE=utf8mb4_general_ci COMMENT= '制品树节点表';
+
+CREATE UNIQUE INDEX `uk_nodes_artifactLibID_nodePath_type` ON `ops_artifact_tree_nodes` (`artifactLibID`, `nodePath`, `type`);
+CREATE INDEX `idx_nodes_parentID_deleted` ON `ops_artifact_tree_nodes` (`parentID`, `deleted`);
+CREATE INDEX `idx_nodes_artifactLibID_linkTable_linkRecord_deleted` ON `ops_artifact_tree_nodes` (`artifactLibID`, `linkTable`, `linkRecord`, `deleted`);
+CREATE INDEX `idx_nodes_artifactLibID_type_deleted` ON `ops_artifact_tree_nodes` (`artifactLibID`, `type`, `deleted`);
+CREATE INDEX `idx_nodes_deleted` ON `ops_artifact_tree_nodes` (`deleted`);
 
 
 -- 4. 制品分组表
@@ -76,12 +78,13 @@ CREATE TABLE IF NOT EXISTS `ops_artifact_groups` (
     `editedBy` varchar(30) NOT NULL DEFAULT '' COMMENT '更新人',
     `editedDate` datetime DEFAULT NULL COMMENT '更新时间',
     `deleted` tinyint(1) NOT NULL DEFAULT 0 COMMENT '删除标识，0-未删除，1-已删除',
-    PRIMARY KEY (`id`) USING BTREE,
-    KEY `idx_groups_artifactLibID_deleted` (`artifactLibID`, `deleted`),
-    KEY `idx_groups_artifactLibID_parentID_deleted` (`artifactLibID`, `parentID`, `deleted`),
-    KEY `idx_groups_parentID_deleted` (`parentID`, `deleted`),
-    KEY `idx_groups_artifactLibID_parentID_name` (`artifactLibID`, `parentID`, `name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='制品分组表';
+    PRIMARY KEY (`id`) USING BTREE
+) ENGINE=InnoDB COLLATE=utf8mb4_general_ci COMMENT= '制品分组表';
+
+CREATE INDEX `idx_groups_artifactLibID_deleted` ON `ops_artifact_groups` (`artifactLibID`, `deleted`);
+CREATE INDEX `idx_groups_artifactLibID_parentID_deleted` ON `ops_artifact_groups` (`artifactLibID`, `parentID`, `deleted`);
+CREATE INDEX `idx_groups_parentID_deleted` ON `ops_artifact_groups` (`parentID`, `deleted`);
+CREATE INDEX `idx_groups_artifactLibID_parentID_name` ON `ops_artifact_groups` (`artifactLibID`, `parentID`, `name`);
 
 
 -- 5. 制品包表
@@ -97,13 +100,14 @@ CREATE TABLE IF NOT EXISTS `ops_artifact_packages` (
     `editedBy` varchar(30) NOT NULL DEFAULT '' COMMENT '更新人',
     `editedDate` datetime DEFAULT NULL COMMENT '更新时间',
     `deleted` tinyint(1) NOT NULL DEFAULT 0 COMMENT '删除标识，0-未删除，1-已删除',
-    PRIMARY KEY (`id`) USING BTREE,
-    UNIQUE KEY `uk_pkgs_artifactLibID_name_namespace_type` (`artifactLibID`, `name`, `namespace`, `type`),
-    KEY `idx_pkgs_artifactLibID_type_deleted` (`artifactLibID`, `type`, `deleted`),
-    KEY `idx_pkgs_artifactLibID_namespace_deleted` (`artifactLibID`, `namespace`, `deleted`),
-    KEY `idx_pkgs_groupID_deleted` (`groupID`, `deleted`),
-    KEY `idx_pkgs_deleted` (`deleted`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='制品包表';
+    PRIMARY KEY (`id`) USING BTREE
+) ENGINE=InnoDB COLLATE=utf8mb4_general_ci COMMENT= '制品包表';
+
+CREATE UNIQUE INDEX `uk_pkgs_artifactLibID_name_namespace_type` ON `ops_artifact_packages` (`artifactLibID`, `name`, `namespace`, `type`);
+CREATE INDEX `idx_pkgs_artifactLibID_type_deleted` ON `ops_artifact_packages` (`artifactLibID`, `type`, `deleted`);
+CREATE INDEX `idx_pkgs_artifactLibID_namespace_deleted` ON `ops_artifact_packages` (`artifactLibID`, `namespace`, `deleted`);
+CREATE INDEX `idx_pkgs_groupID_deleted` ON `ops_artifact_packages` (`groupID`, `deleted`);
+CREATE INDEX `idx_pkgs_deleted` ON `ops_artifact_packages` (`deleted`);
 
 
 -- 6. 制品版本表
@@ -117,14 +121,15 @@ CREATE TABLE IF NOT EXISTS `ops_artifact_versions` (
     `editedBy` varchar(30) NOT NULL DEFAULT '' COMMENT '更新人',
     `editedDate` datetime DEFAULT NULL COMMENT '更新时间',
     `deleted` tinyint(1) NOT NULL DEFAULT 0 COMMENT '删除标识，0-未删除，1-已删除',
-    PRIMARY KEY (`id`) USING BTREE,
-    UNIQUE KEY `uk_vers_artifactLibID_packageID_version` (`artifactLibID`, `packageID`, `version`),
-    KEY `idx_vers_artifactLibID_deleted` (`artifactLibID`, `deleted`),
-    KEY `idx_vers_packageID_deleted` (`packageID`, `deleted`),
-    KEY `idx_vers_createdDate` (`createdDate`),
-    KEY `idx_vers_editedDate` (`editedDate`),
-    KEY `idx_vers_deleted` (`deleted`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='制品版本表';
+    PRIMARY KEY (`id`) USING BTREE
+) ENGINE=InnoDB COLLATE=utf8mb4_general_ci COMMENT= '制品版本表';
+
+CREATE UNIQUE INDEX `uk_vers_artifactLibID_packageID_version` ON `ops_artifact_versions` (`artifactLibID`, `packageID`, `version`);
+CREATE INDEX `idx_vers_artifactLibID_deleted` ON `ops_artifact_versions` (`artifactLibID`, `deleted`);
+CREATE INDEX `idx_vers_packageID_deleted` ON `ops_artifact_versions` (`packageID`, `deleted`);
+CREATE INDEX `idx_vers_createdDate` ON `ops_artifact_versions` (`createdDate`);
+CREATE INDEX `idx_vers_editedDate` ON `ops_artifact_versions` (`editedDate`);
+CREATE INDEX `idx_vers_deleted` ON `ops_artifact_versions` (`deleted`);
 
 
 -- 7. 制品资源表
@@ -145,13 +150,14 @@ CREATE TABLE IF NOT EXISTS `ops_artifact_assets` (
     `editedBy` varchar(30) NOT NULL DEFAULT '' COMMENT '更新人',
     `editedDate` datetime DEFAULT NULL COMMENT '更新时间',
     `deleted` tinyint(1) NOT NULL DEFAULT 0 COMMENT '删除标识，0-未删除，1-已删除',
-    PRIMARY KEY (`id`) USING BTREE,
-    KEY `idx_assets_artifactID_type_basename_deleted` (`artifactLibID`, `type`, `basename`, `deleted`),
-    KEY `idx_assets_blobID` (`blobID`),
-    KEY `idx_assets_deleted` (`deleted`),
-    KEY `idx_assets_groupID_basename_deleted` (`groupID`, `basename`, `deleted`),
-    KEY `idx_assets_versionID_basename_deleted` (`versionID`, `basename`, `deleted`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='制品资源表';
+    PRIMARY KEY (`id`) USING BTREE
+) ENGINE=InnoDB COLLATE=utf8mb4_general_ci COMMENT='制品资源表';
+
+CREATE INDEX `idx_assets_artifactID_type_basename_deleted` ON `ops_artifact_assets` (`artifactLibID`, `type`, `basename`, `deleted`);
+CREATE INDEX `idx_assets_blobID` ON `ops_artifact_assets` (`blobID`);
+CREATE INDEX `idx_assets_deleted` ON `ops_artifact_assets` (`deleted`);
+CREATE INDEX `idx_assets_groupID_basename_deleted` ON `ops_artifact_assets` (`groupID`, `basename`, `deleted`);
+CREATE INDEX `idx_assets_versionID_basename_deleted` ON `ops_artifact_assets` (`versionID`, `basename`, `deleted`);
 
 
 -- 8. 制品文件对象表
@@ -169,11 +175,12 @@ CREATE TABLE IF NOT EXISTS `ops_artifact_blobs` (
     `editedBy` varchar(30) NOT NULL DEFAULT '' COMMENT '更新人',
     `editedDate` datetime DEFAULT NULL COMMENT '更新时间',
     `deleted` tinyint(1) NOT NULL DEFAULT 0 COMMENT '删除标识，0-未删除，1-已删除',
-    PRIMARY KEY (`id`) USING BTREE,
-    UNIQUE KEY `uk_blobs_ref_storageID` (`ref`, `storageID`),
-    KEY `idx_blobs_assetID_deleted` (`assetID`, `deleted`),
-    KEY `idx_blobs_deleted` (`deleted`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='制品文件对象表';
+    PRIMARY KEY (`id`) USING BTREE
+) ENGINE=InnoDB COLLATE=utf8mb4_general_ci COMMENT= '制品文件对象表';
+
+CREATE UNIQUE INDEX `uk_blobs_ref_storageID` ON `ops_artifact_blobs` (`ref`, `storageID`);
+CREATE INDEX `idx_blobs_assetID_deleted` ON `ops_artifact_blobs` (`assetID`, `deleted`);
+CREATE INDEX `idx_blobs_deleted` ON `ops_artifact_blobs` (`deleted`);
 
 -- 9. 制品元数据资源表
 CREATE TABLE IF NOT EXISTS `ops_artifact_meta_assets` (
@@ -191,8 +198,7 @@ CREATE TABLE IF NOT EXISTS `ops_artifact_meta_assets` (
 	`editedDate` datetime NULL COMMENT '更新时间',
 	`deleted` tinyint(1) NOT NULL DEFAULT 0 COMMENT '删除标识，0-未删除，1-已删除',
 	PRIMARY KEY (`id`) USING BTREE
-)
-ENGINE=InnoDB COMMENT='制品元数据资源表';
+) ENGINE=InnoDB COLLATE=utf8mb4_general_ci COMMENT= '制品元数据资源表';
 
 CREATE UNIQUE INDEX `uk_meta_artifactID_type_path` ON `ops_artifact_meta_assets` (`artifactLibID`, `type`, `path`);
 CREATE INDEX `idx_meta_artifactID_deleted` ON `ops_artifact_meta_assets` (`artifactLibID`, `deleted`);
