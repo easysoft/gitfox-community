@@ -143,7 +143,7 @@ CREATE TABLE IF NOT EXISTS `ops_artifact_assets` (
     `type` varchar(50) NOT NULL DEFAULT '' COMMENT '制品类型:file/docker/raw/helm/pypi/npm/maven/composer',
     `basename` varchar(255) NOT NULL DEFAULT '' COMMENT '制品名称',
     `contentType` varchar(100) NOT NULL DEFAULT '' COMMENT '内容类型',
-    `rank` varchar(50) NOT NULL DEFAULT '' COMMENT '制品等级 main/sub',
+    `kind` varchar(50) NOT NULL DEFAULT '' COMMENT '制品类型',
     `checksum` varchar(500) NOT NULL DEFAULT '' COMMENT '校验摘要',
     `createdBy` varchar(30) NOT NULL DEFAULT '' COMMENT '创建人',
     `createdDate` datetime DEFAULT NULL COMMENT '创建时间',
