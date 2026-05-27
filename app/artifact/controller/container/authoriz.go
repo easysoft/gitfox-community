@@ -27,7 +27,7 @@ func (c *Controller) authorize(ctx context.Context, artifactID int64, perm const
 		ResourceID:   uint(artifactID),
 	}, perm)
 	if err != nil {
-		logger.GetLogger(ctx).Warnf("【container authz】check failed: artifactID=%d perm=%s err=%v", artifactID, perm, err)
+		logger.GetLogger(ctx).Errorf("【container authz】check failed: artifactID=%d perm=%s err=%v", artifactID, perm, err)
 		return ctnAdapter.ErrDenied.WithDetail(translate(ctx, deniedKey))
 	}
 	if !allowed {

@@ -217,7 +217,7 @@ func (c *Controller) GetAssetReader(ctx context.Context, path string, format mod
 		// 物理文件缺失对客户端等价于 not-found，避免被兜底成 500 UNKNOWN。
 		var pathNotFoundErr storagedriver.PathNotFoundError
 		if errors.As(err, &pathNotFoundErr) {
-			logger.GetLogger(ctx).Warnf("【container pull】asset %d blob %d storage path not found: %s", meta.Id, meta.BlobID, pathNotFoundErr.Path)
+			logger.GetLogger(ctx).Errorf("【container pull】asset %d blob %d storage path not found: %s", meta.Id, meta.BlobID, pathNotFoundErr.Path)
 			return nil, nil, pkgErrors.ErrResourceNotFound
 		}
 		return nil, nil, err
@@ -543,7 +543,7 @@ func (c *Controller) getManifestWriter(ctx context.Context, view *adapter.ViewDe
 		// 物理 manifest blob 缺失等价于 manifest 不存在，避免兜底成 500。
 		var pathNotFoundErr storagedriver.PathNotFoundError
 		if errors.As(err, &pathNotFoundErr) {
-			logger.GetLogger(ctx).Warnf("【container pull】manifest asset %d blob %d storage path not found: %s", desc.Id, desc.BlobID, pathNotFoundErr.Path)
+			logger.GetLogger(ctx).Errorf("【container pull】manifest asset %d blob %d storage path not found: %s", desc.Id, desc.BlobID, pathNotFoundErr.Path)
 			return nil, pkgErrors.ErrResourceNotFound
 		}
 		return nil, err
