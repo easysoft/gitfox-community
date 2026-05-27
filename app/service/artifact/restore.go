@@ -3,10 +3,9 @@ package artifact
 import (
 	"context"
 	stderrors "errors"
-	"strconv"
-	"strings"
 
 	artModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/model"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
 	pkgErrors "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
@@ -29,10 +28,8 @@ import (
 // =============================================================================
 
 // BatchRestore 批量恢复回收站中的实体。entityIDs 为空时直接返回空 report。
-func (s *Service) BatchRestore(ctx context.Context, restoreReq *model.ArtifactRestoreEntitiesReq) (*model.ArtifactRestoreReport, error) {
-	if restoreReq == nil {
-		restoreReq = &model.ArtifactRestoreEntitiesReq{}
-	}
+func (s *Service) BatchRestore(ctx context.Context, restoreReq *model.ArtifactEntitiesReq) (*model.ArtifactRestoreReport, error) {
+
 	ids := restoreReq.EntityIDs
 	report := &model.ArtifactRestoreReport{Total: len(ids), Data: make([]*model.ArtifactRestoreRes, len(ids))}
 
@@ -47,25 +44,13 @@ func (s *Service) BatchRestore(ctx context.Context, restoreReq *model.ArtifactRe
 	for idx, eid := range ids {
 		res := &model.ArtifactRestoreRes{NodeID: eid, Status: model.ArtifactStatusOK}
 		report.Data[idx] = res
-		if err := s.restoreEntity(ctx, eid, operator, syncer, res); err != nil {
-			// 单条失败：保留 status，继续下一条；记日志便于排查。
+		err := s.restoreEntity(ctx, eid, operator, syncer, res)
+		if err != nil {
 			logger.GetLogger(ctx).Warnf("restore entity %s failed: %v", eid, err)
-			// 把 i18n key 翻译为当前 locale 文案后写入 res.Reason，前端直接展示即可。
+			res.Error = err
 			if key := pkgErrors.GetI18nKey(err); key != "" {
 				res.Reason = i18n.TWithContext(ctx, string(key))
 				report.Message += res.Reason + " "
-				// 已知拒因细化到具体 status，避免一律 unknown。
-				switch key {
-				case i18n.ArtifactRestoreViewNameAlreadyExists,
-					i18n.ArtifactRestoreGroupNameAlreadyExists,
-					i18n.ArtifactRestoreAssetNameAlreadyExists,
-					i18n.ArtifactRestorePackageNameAlreadyExists,
-					i18n.ArtifactRestoreVersionAlreadyExists:
-					res.Status = model.ArtifactStatusNameAlreadyExists
-				}
-			}
-			if res.Status == model.ArtifactStatusOK {
-				res.Status = model.ArtifactStatusUnknown
 			}
 		}
 	}
@@ -81,8 +66,7 @@ func (s *Service) BatchRestore(ctx context.Context, restoreReq *model.ArtifactRe
 }
 
 // Restore 恢复回收站中的实体（entityID）
-func (s *Service) Restore(ctx context.Context, EntityID string) (*model.ArtifactRestoreRes, error) {
-
+func (s *Service) Restore(ctx context.Context, restoreReq model.ArtifactEntitieReq) (*model.ArtifactRestoreRes, error) {
 	// 操作人：取当前会话用户作为「恢复人」（editedBy），匿名/系统调用时为空。
 	var operator string
 	if session, ok := req.GetAuthSession(ctx); ok && session != nil && session.User != nil {
@@ -90,24 +74,13 @@ func (s *Service) Restore(ctx context.Context, EntityID string) (*model.Artifact
 	}
 
 	syncer := artModel.NewSyncer(s.artStore)
-	res := &model.ArtifactRestoreRes{NodeID: EntityID, Status: model.ArtifactStatusOK}
-	if err := s.restoreEntity(ctx, EntityID, operator, syncer, res); err != nil {
-		logger.GetLogger(ctx).Warnf("restore entity %s failed: %v", EntityID, err)
+	res := &model.ArtifactRestoreRes{NodeID: restoreReq.EntityID, Status: model.ArtifactStatusOK}
+	err := s.restoreEntity(ctx, restoreReq.EntityID, operator, syncer, res)
+	if err != nil {
+		logger.GetLogger(ctx).Warnf("restore entity %s failed: %v", restoreReq.EntityID, err)
+		res.Error = err
 		if key := pkgErrors.GetI18nKey(err); key != "" {
-			res.Error = err
 			res.Reason = i18n.TWithContext(ctx, string(key))
-			// 已知拒因细化到具体 status，避免一律 unknown。
-			switch key {
-			case i18n.ArtifactRestoreViewNameAlreadyExists,
-				i18n.ArtifactRestoreGroupNameAlreadyExists,
-				i18n.ArtifactRestoreAssetNameAlreadyExists,
-				i18n.ArtifactRestorePackageNameAlreadyExists,
-				i18n.ArtifactRestoreVersionAlreadyExists:
-				res.Status = model.ArtifactStatusNameAlreadyExists
-			}
-		}
-		if res.Status == model.ArtifactStatusOK {
-			res.Status = model.ArtifactStatusUnknown
 		}
 	}
 
@@ -115,43 +88,25 @@ func (s *Service) Restore(ctx context.Context, EntityID string) (*model.Artifact
 }
 
 // restoreEntity 解析 entityID 并按 kind 分派到具体恢复函数。
-func (s *Service) restoreEntity(
-	ctx context.Context, EntityID string, operator string,
-	syncer *artModel.Syncer, res *model.ArtifactRestoreRes,
-) error {
-	if strings.Count(EntityID, ".") != 1 {
-		res.Status = model.ArtifactStatusInvalidId
-		return pkgErrors.WithI18nKey(
-			stderrors.New("invalid entity id format"),
-			i18n.ArtifactRestoreEntityIdInvalidFormat,
-		)
-	}
-	parts := strings.SplitN(EntityID, ".", 2)
-	kind := model.ArtifactTreeNodeType(parts[0])
-	id, err := strconv.ParseInt(parts[1], 10, 64)
-	if err != nil || id <= 0 {
-		res.Status = model.ArtifactStatusInvalidId
-		return pkgErrors.WithI18nKey(
-			stderrors.New("invalid entity id number"),
-			i18n.ArtifactRestoreEntityIdInvalidFormat,
-		)
-	}
+func (s *Service) restoreEntity(ctx context.Context, entityID model.EntityID, operator string, syncer *artModel.Syncer, res *model.ArtifactRestoreRes) error {
+	splitEntityID := entityID.GetEntityID()
 
-	switch kind {
-	case model.ArtifactTreeNodeTypeArtifact:
-		return s.restoreArtifact(ctx, id, operator, syncer, res)
-	case model.ArtifactTreeNodeTypeGroup:
-		return s.restoreGroup(ctx, id, operator, syncer, res)
-	case model.ArtifactTreeNodeTypePackage:
-		return s.restorePackage(ctx, id, operator, syncer, res)
-	case model.ArtifactTreeNodeTypeVersion:
-		return s.restoreVersion(ctx, id, operator, syncer, res)
-	case model.ArtifactTreeNodeTypeAsset:
-		return s.restoreAsset(ctx, id, operator, syncer, res)
+	// 根据 kind 分派到具体恢复函数
+	switch splitEntityID.Kind {
+	case constant.ArtifactEntityKindArtifact:
+		return s.restoreArtifact(ctx, splitEntityID.ID, operator, syncer, res)
+	case constant.ArtifactEntityKindGroup:
+		return s.restoreGroup(ctx, splitEntityID.ID, operator, syncer, res)
+	case constant.ArtifactEntityKindPackage:
+		return s.restorePackage(ctx, splitEntityID.ID, operator, syncer, res)
+	case constant.ArtifactEntityKindVersion:
+		return s.restoreVersion(ctx, splitEntityID.ID, operator, syncer, res)
+	case constant.ArtifactEntityKindAsset:
+		return s.restoreAsset(ctx, splitEntityID.ID, operator, syncer, res)
 	default:
 		res.Status = model.ArtifactStatusInvalidId
 		return pkgErrors.WithI18nKey(
-			stderrors.New("unsupported entity kind: "+string(kind)),
+			stderrors.New("unsupported entity kind: "+string(splitEntityID.Kind)),
 			i18n.ArtifactRestoreEntityTypeUnsupported,
 		)
 	}
@@ -164,10 +119,7 @@ func (s *Service) restoreEntity(
 // restoreArtifact 恢复制品库（view）。若曾自动建过默认根 group（同名同 format / parentID=0），
 // 一并恢复并重建 tree_node 根节点。view 软删时只动 view 自己 + 默认 group，
 // 故无须级联恢复 user-defined group / package / version / asset。
-func (s *Service) restoreArtifact(
-	ctx context.Context, viewID int64, operator string,
-	syncer *artModel.Syncer, res *model.ArtifactRestoreRes,
-) error {
+func (s *Service) restoreArtifact(ctx context.Context, viewID int64, operator string, syncer *artModel.Syncer, res *model.ArtifactRestoreRes) error {
 	// 查看 view 是否在回收站中
 	view, err := s.artStore.Views().GetByIDWithDeleted(ctx, viewID)
 	if err != nil {
@@ -184,22 +136,28 @@ func (s *Service) restoreArtifact(
 
 	// 如果现在存在重名 view，提示错误
 	if views, err := s.artStore.Views().FindByNameInScope(ctx, view.SpaceID, view.RepoID, view.Name); err == nil && len(views) > 0 {
-		return pkgErrors.WithI18nKey(
+		dupErr := pkgErrors.WithI18nKey(
 			stderrors.New("artifact name already exists"),
 			i18n.ArtifactRestoreViewNameAlreadyExists,
 		)
+		res.Status = model.ArtifactStatusNameAlreadyExists
+		return dupErr
 	}
 
 	// 恢复 view
 	if err = s.artStore.Views().Restore(ctx, view.ID, operator); err != nil {
-		return pkgErrors.WithI18nKey(err, i18n.ArtifactRestoreError)
+		wrapped := pkgErrors.WithI18nKey(err, i18n.ArtifactRestoreError)
+		res.Status = model.ArtifactStatusUnknown
+		return wrapped
 	}
 
 	// 默认根 group：与 view 同 format / 同名 / parentID=0；软删时由 softRemoveArtifact 一并软删。
 	defaultGroup, dErr := s.findDefaultRootGroup(ctx, view)
 	if dErr == nil && defaultGroup != nil && defaultGroup.Deleted == 1 {
 		if rErr := s.artStore.Groups().RestoreById(ctx, defaultGroup.ID, operator); rErr != nil {
-			return pkgErrors.WithI18nKey(rErr, i18n.ArtifactRestoreError)
+			wrapped := pkgErrors.WithI18nKey(rErr, i18n.ArtifactRestoreError)
+			res.Status = model.ArtifactStatusUnknown
+			return wrapped
 		}
 		// 同步树节点（幂等：已有则复用）。重新读一次拿最新 deleted=0 的实例。
 		if g, gErr := s.artStore.Groups().GetById(ctx, defaultGroup.ID); gErr == nil && g != nil {
@@ -232,16 +190,21 @@ func (s *Service) restoreGroup(ctx context.Context, groupID int64, operator stri
 		parentID = group.ParentID.Int64
 	}
 	if err = s.ensureGroupNameAvailable(ctx, group.ArtifactID, parentID, group.Format, group.Name); err != nil {
+		res.Status = classifyRestoreErr(err)
 		return err
 	}
 
 	if err = s.artStore.Groups().RestoreById(ctx, group.ID, operator); err != nil {
-		return pkgErrors.WithI18nKey(err, i18n.ArtifactRestoreError)
+		wrapped := pkgErrors.WithI18nKey(err, i18n.ArtifactRestoreError)
+		res.Status = model.ArtifactStatusUnknown
+		return wrapped
 	}
 	if err = s.cascadeRestoreAncestorGroups(ctx, group, operator); err != nil {
+		res.Status = classifyRestoreErr(err)
 		return err
 	}
 	if err = s.cascadeRestoreView(ctx, group.ArtifactID, operator); err != nil {
+		res.Status = classifyRestoreErr(err)
 		return err
 	}
 	// 重建 tree_node：从根 group 一路同步到当前 group。
@@ -272,7 +235,9 @@ func (s *Service) restorePackage(
 		)
 	}
 	if err = s.artStore.Packages().Restore(ctx, pkg.ID, operator); err != nil {
-		return wrapRestoreDuplicateError(err, i18n.ArtifactRestorePackageNameAlreadyExists)
+		wrapped := wrapRestoreDuplicateError(err, i18n.ArtifactRestorePackageNameAlreadyExists)
+		res.Status = model.ArtifactStatusNameAlreadyExists
+		return wrapped
 	}
 	res.Packages++
 	if pkg.Format == model.ArtifactContainerFormat {
@@ -282,9 +247,11 @@ func (s *Service) restorePackage(
 	}
 	// 向上恢复 group 链 + view。
 	if err = s.cascadeRestoreGroupChainByID(ctx, pkg.GroupID, operator); err != nil {
+		res.Status = classifyRestoreErr(err)
 		return err
 	}
 	if err = s.cascadeRestoreView(ctx, pkg.ArtifactID, operator); err != nil {
+		res.Status = classifyRestoreErr(err)
 		return err
 	}
 	// 重建 tree_node：package 节点（其内部会按需补全祖先 group 节点）。
@@ -315,24 +282,31 @@ func (s *Service) restoreVersion(
 		)
 	}
 	if err = s.artStore.Versions().Restore(ctx, ver.ID, operator); err != nil {
-		return wrapRestoreDuplicateError(err, i18n.ArtifactRestoreVersionAlreadyExists)
+		wrapped := wrapRestoreDuplicateError(err, i18n.ArtifactRestoreVersionAlreadyExists)
+		res.Status = model.ArtifactStatusNameAlreadyExists
+		return wrapped
 	}
 	res.Versions++
 	// 向上：父 package（必要时含其 group 链 + view）。
 	pkg, pErr := s.artStore.Packages().GetByID(ctx, ver.PackageID)
 	if pErr != nil {
+		res.Status = model.ArtifactStatusNotFound
 		return pkgErrors.WithI18nKey(pErr, i18n.ArtifactRestoreQueryError)
 	}
 	if pkg.IsDeleted() {
 		if rErr := s.artStore.Packages().Restore(ctx, pkg.ID, operator); rErr != nil {
-			return wrapRestoreDuplicateError(rErr, i18n.ArtifactRestorePackageNameAlreadyExists)
+			wrapped := wrapRestoreDuplicateError(rErr, i18n.ArtifactRestorePackageNameAlreadyExists)
+			res.Status = model.ArtifactStatusNameAlreadyExists
+			return wrapped
 		}
 		res.Packages++
 	}
 	if err = s.cascadeRestoreGroupChainByID(ctx, pkg.GroupID, operator); err != nil {
+		res.Status = classifyRestoreErr(err)
 		return err
 	}
 	if err = s.cascadeRestoreView(ctx, artifactIDForVersion(pkg, ver), operator); err != nil {
+		res.Status = classifyRestoreErr(err)
 		return err
 	}
 	// 重建 tree_node：version → package → group 链。
@@ -366,17 +340,22 @@ func (s *Service) restoreAsset(
 	}
 
 	if err = s.ensureAssetNameAvailable(ctx, asset); err != nil {
+		res.Status = classifyRestoreErr(err)
 		return err
 	}
 
 	if err = s.artStore.Assets().RestoreById(ctx, asset.ID, operator); err != nil {
-		return pkgErrors.WithI18nKey(err, i18n.ArtifactRestoreError)
+		wrapped := pkgErrors.WithI18nKey(err, i18n.ArtifactRestoreError)
+		res.Status = model.ArtifactStatusUnknown
+		return wrapped
 	}
 	res.Assets++
 	// blob：关联恢复（不论引用计数）。GC 仍按 active asset 数判定。
 	if asset.BlobID != 0 {
 		if rErr := s.artStore.Blobs().RestoreById(ctx, asset.BlobID, operator); rErr != nil {
-			return pkgErrors.WithI18nKey(rErr, i18n.ArtifactRestoreError)
+			wrapped := pkgErrors.WithI18nKey(rErr, i18n.ArtifactRestoreError)
+			res.Status = model.ArtifactStatusUnknown
+			return wrapped
 		}
 	}
 
@@ -384,15 +363,18 @@ func (s *Service) restoreAsset(
 	switch {
 	case asset.VersionID.Valid && asset.VersionID.Int64 > 0:
 		if err = s.cascadeRestoreVersionChain(ctx, asset.VersionID.Int64, operator, syncer, res); err != nil {
+			res.Status = classifyRestoreErr(err)
 			return err
 		}
 	case asset.GroupID.Valid && asset.GroupID.Int64 > 0:
 		if err = s.cascadeRestoreGroupChainByID(ctx, asset.GroupID.Int64, operator); err != nil {
+			res.Status = classifyRestoreErr(err)
 			return err
 		}
 		// 取 group.ArtifactID 用于恢复 view。
 		if g, gErr := s.artStore.Groups().GetById(ctx, asset.GroupID.Int64); gErr == nil && g != nil {
 			if err = s.cascadeRestoreView(ctx, g.ArtifactID, operator); err != nil {
+				res.Status = classifyRestoreErr(err)
 				return err
 			}
 			// 重建 tree_node 链路（asset 不入 tree_node 表，但其祖先 group 需要）。
@@ -402,6 +384,7 @@ func (s *Service) restoreAsset(
 		}
 	case asset.ArtifactID.Valid && asset.ArtifactID.Int64 > 0:
 		if err = s.cascadeRestoreView(ctx, asset.ArtifactID.Int64, operator); err != nil {
+			res.Status = classifyRestoreErr(err)
 			return err
 		}
 	}
@@ -646,4 +629,21 @@ func wrapRestoreDuplicateError(err error, dupKey i18n.I18nKey) error {
 		return pkgErrors.WithI18nKey(err, dupKey)
 	}
 	return pkgErrors.WithI18nKey(err, i18n.ArtifactRestoreError)
+}
+
+// classifyRestoreErr 按 err 携带的 i18n key 分类 restore 链路状态：
+// 重名 key → NameAlreadyExists；其余 → Unknown。
+func classifyRestoreErr(err error) model.ArtifactStatus {
+	if err == nil {
+		return model.ArtifactStatusOK
+	}
+	switch pkgErrors.GetI18nKey(err) {
+	case i18n.ArtifactRestoreViewNameAlreadyExists,
+		i18n.ArtifactRestoreGroupNameAlreadyExists,
+		i18n.ArtifactRestoreAssetNameAlreadyExists,
+		i18n.ArtifactRestorePackageNameAlreadyExists,
+		i18n.ArtifactRestoreVersionAlreadyExists:
+		return model.ArtifactStatusNameAlreadyExists
+	}
+	return model.ArtifactStatusUnknown
 }

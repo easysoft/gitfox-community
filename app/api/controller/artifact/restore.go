@@ -22,13 +22,19 @@ import (
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
 // @Router /artifacts/recycle/restore [post]
 func (c *Controller) Restore(ctx *gin.Context) {
-	var reqBody model.ArtifactRestoreEntitieReq
+	var reqBody model.ArtifactEntitieReq
 	if err := ctx.ShouldBindBodyWithJSON(&reqBody); err != nil {
 		err = errors.WithI18nKey(err, i18n.ArtifactBodyParamError)
 		resp.BadRequest(ctx, err)
 		return
 	}
-	report, err := c.artSvc.Restore(ctx.Request.Context(), reqBody.EntityID)
+
+	if err := reqBody.Validate(); err != nil {
+		resp.BadRequest(ctx, err)
+		return
+	}
+
+	report, err := c.artSvc.Restore(ctx.Request.Context(), reqBody)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return

@@ -3,9 +3,8 @@ package artifact
 import (
 	"context"
 	"fmt"
-	"strconv"
-	"strings"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
 	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
 	pkgErrors "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
@@ -486,48 +485,28 @@ type artifactGroupRow struct {
 
 func (artifactGroupRow) TableName() string { return "ops_artifact_groups" }
 
-// parseEntityRef 解析 "kind.id" 形式的 entityID。
-// 失败时返回带 i18n key 的错误。
-func parseEntityRef(entityID string) (model.ArtifactEntityKind, int64, error) {
-	parts := strings.SplitN(entityID, ".", 2)
-	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		return "", 0, pkgErrors.WithI18nKey(
-			fmt.Errorf("invalid entity id: %q", entityID),
-			i18n.ArtifactEntityIdInvalid,
-		)
-	}
-	id, err := strconv.ParseInt(parts[1], 10, 64)
-	if err != nil || id <= 0 {
-		return "", 0, pkgErrors.WithI18nKey(
-			fmt.Errorf("invalid entity id: %q", entityID),
-			i18n.ArtifactEntityIdInvalid,
-		)
-	}
-	return model.ArtifactEntityKind(parts[0]), id, nil
-}
-
-func (s *Service) entityFormat(ctx context.Context, kind model.ArtifactEntityKind, id int64, sourceDeletedKey, entityTypeInvalidKey i18n.I18nKey) (model.ArtifactFormat, error) {
-	switch kind {
-	case model.ArtifactEntityKindArtifact:
-		view, err := s.artStore.Views().GetByID(ctx, id)
+func (s *Service) entityFormat(ctx context.Context, splitEntityID model.SplitEntityID, sourceDeletedKey, entityTypeInvalidKey i18n.I18nKey) (model.ArtifactFormat, error) {
+	switch splitEntityID.Kind {
+	case constant.ArtifactEntityKindArtifact:
+		view, err := s.artStore.Views().GetByID(ctx, splitEntityID.ID)
 		if err != nil {
 			return "", pkgErrors.WithI18nKey(err, sourceDeletedKey)
 		}
 		return view.Format, nil
-	case model.ArtifactEntityKindGroup:
-		group, err := s.artStore.Groups().GetById(ctx, id)
+	case constant.ArtifactEntityKindGroup:
+		group, err := s.artStore.Groups().GetById(ctx, splitEntityID.ID)
 		if err != nil {
 			return "", pkgErrors.WithI18nKey(err, sourceDeletedKey)
 		}
 		return group.Format, nil
-	case model.ArtifactEntityKindPackage:
-		pkg, err := s.artStore.Packages().GetByID(ctx, id)
+	case constant.ArtifactEntityKindPackage:
+		pkg, err := s.artStore.Packages().GetByID(ctx, splitEntityID.ID)
 		if err != nil {
 			return "", pkgErrors.WithI18nKey(err, sourceDeletedKey)
 		}
 		return pkg.Format, nil
-	case model.ArtifactEntityKindVersion:
-		ver, err := s.artStore.Versions().GetByID(ctx, id)
+	case constant.ArtifactEntityKindVersion:
+		ver, err := s.artStore.Versions().GetByID(ctx, splitEntityID.ID)
 		if err != nil {
 			return "", pkgErrors.WithI18nKey(err, sourceDeletedKey)
 		}
@@ -536,22 +515,22 @@ func (s *Service) entityFormat(ctx context.Context, kind model.ArtifactEntityKin
 			return "", pkgErrors.WithI18nKey(err, sourceDeletedKey)
 		}
 		return pkg.Format, nil
-	case model.ArtifactEntityKindAsset:
-		asset, err := s.artStore.Assets().GetById(ctx, id)
+	case constant.ArtifactEntityKindAsset:
+		asset, err := s.artStore.Assets().GetById(ctx, splitEntityID.ID)
 		if err != nil {
 			return "", pkgErrors.WithI18nKey(err, sourceDeletedKey)
 		}
 		return asset.Format, nil
 	default:
 		return "", pkgErrors.WithI18nKey(
-			fmt.Errorf("unsupported entity type: %s", kind),
+			fmt.Errorf("unsupported entity type: %s", splitEntityID.Kind),
 			entityTypeInvalidKey,
 		)
 	}
 }
 
-func (s *Service) rejectContainerMoveRename(ctx context.Context, kind model.ArtifactEntityKind, id int64, key, sourceDeletedKey, entityTypeInvalidKey i18n.I18nKey) error {
-	format, err := s.entityFormat(ctx, kind, id, sourceDeletedKey, entityTypeInvalidKey)
+func (s *Service) rejectContainerMoveRename(ctx context.Context, splitEntityID model.SplitEntityID, key, sourceDeletedKey, entityTypeInvalidKey i18n.I18nKey) error {
+	format, err := s.entityFormat(ctx, splitEntityID, sourceDeletedKey, entityTypeInvalidKey)
 	if err != nil {
 		return err
 	}
@@ -565,17 +544,17 @@ func (s *Service) rejectContainerMoveRename(ctx context.Context, kind model.Arti
 }
 
 // moveByKind 按实体类型派发到对应的 Move 方法（不带事务，由调用方包裹）。
-func (s *Service) moveByKind(ctx context.Context, kind model.ArtifactEntityKind, sourceID, tArtifactID, tGroupID int64) error {
-	switch kind {
-	case model.ArtifactEntityKindPackage:
-		return s.movePackageInner(ctx, sourceID, tArtifactID, tGroupID)
-	case model.ArtifactEntityKindAsset:
-		return s.moveAssetInner(ctx, sourceID, tArtifactID, tGroupID)
-	case model.ArtifactEntityKindGroup:
-		return s.moveGroupInner(ctx, sourceID, tArtifactID, tGroupID)
+func (s *Service) moveByKind(ctx context.Context, splitEntityID model.SplitEntityID, tArtifactID, tGroupID int64) error {
+	switch splitEntityID.Kind {
+	case constant.ArtifactEntityKindPackage:
+		return s.movePackageInner(ctx, splitEntityID.ID, tArtifactID, tGroupID)
+	case constant.ArtifactEntityKindAsset:
+		return s.moveAssetInner(ctx, splitEntityID.ID, tArtifactID, tGroupID)
+	case constant.ArtifactEntityKindGroup:
+		return s.moveGroupInner(ctx, splitEntityID.ID, tArtifactID, tGroupID)
 	default:
 		return pkgErrors.WithI18nKey(
-			fmt.Errorf("unsupported entity type for move: %s", kind),
+			fmt.Errorf("unsupported entity type for move: %s", splitEntityID.Kind),
 			i18n.ArtifactMoveEntityTypeInvalid,
 		)
 	}
@@ -583,27 +562,27 @@ func (s *Service) moveByKind(ctx context.Context, kind model.ArtifactEntityKind,
 
 // renameByKind 按实体类型派发到对应的 Rename 方法（不带事务，由调用方包裹）。
 // package / version 不允许重命名；container 格式的制品库也暂不允许重命名。
-func (s *Service) renameByKind(ctx context.Context, kind model.ArtifactEntityKind, sourceID int64, newName string) error {
-	switch kind {
-	case model.ArtifactEntityKindAsset:
-		return s.renameAssetInner(ctx, sourceID, newName)
-	case model.ArtifactEntityKindGroup:
-		return s.renameGroupInner(ctx, sourceID, newName)
-	case model.ArtifactEntityKindArtifact:
-		return s.renameArtifactInner(ctx, sourceID, newName)
-	case model.ArtifactEntityKindPackage:
+func (s *Service) renameByKind(ctx context.Context, splitEntityID model.SplitEntityID, newName string) error {
+	switch splitEntityID.Kind {
+	case constant.ArtifactEntityKindAsset:
+		return s.renameAssetInner(ctx, splitEntityID.ID, newName)
+	case constant.ArtifactEntityKindGroup:
+		return s.renameGroupInner(ctx, splitEntityID.ID, newName)
+	case constant.ArtifactEntityKindArtifact:
+		return s.renameArtifactInner(ctx, splitEntityID.ID, newName)
+	case constant.ArtifactEntityKindPackage:
 		return pkgErrors.WithI18nKey(
 			fmt.Errorf("rename is not supported for packages"),
 			i18n.ArtifactRenameVersionedNotSupported,
 		)
-	case model.ArtifactEntityKindVersion:
+	case constant.ArtifactEntityKindVersion:
 		return pkgErrors.WithI18nKey(
 			fmt.Errorf("rename is not supported for versions"),
 			i18n.ArtifactRenameVersionedNotSupported,
 		)
 	default:
 		return pkgErrors.WithI18nKey(
-			fmt.Errorf("unsupported entity type for rename: %s", kind),
+			fmt.Errorf("unsupported entity type for rename: %s", splitEntityID.Kind),
 			i18n.ArtifactRenameEntityTypeInvalid,
 		)
 	}
@@ -661,10 +640,7 @@ func (s *Service) renameArtifactInner(ctx context.Context, artifactID int64, new
 //   - NewName == "" 或与当前一致 → 不改名；
 //   - 两者都不变 → 返回 ArtifactRelocateNoChange。
 func (s *Service) RelocateEntity(ctx context.Context, req *model.RelocateEntityReq) error {
-	kind, id, err := parseEntityRef(req.EntityID)
-	if err != nil {
-		return err
-	}
+	splitEntityID := req.EntityID.GetEntityID()
 
 	// 取当前实体的 artifactID / groupID / name，用于与传入参数比对，判断是否真有变化。
 	var (
@@ -672,9 +648,9 @@ func (s *Service) RelocateEntity(ctx context.Context, req *model.RelocateEntityR
 		curGroupID    int64
 		curName       string
 	)
-	switch kind {
-	case model.ArtifactEntityKindGroup:
-		g, e := s.artStore.Groups().GetById(ctx, id)
+	switch splitEntityID.Kind {
+	case constant.ArtifactEntityKindGroup:
+		g, e := s.artStore.Groups().GetById(ctx, splitEntityID.ID)
 		if e != nil {
 			return pkgErrors.WithI18nKey(e, i18n.ArtifactMoveSourceDeleted)
 		}
@@ -683,8 +659,8 @@ func (s *Service) RelocateEntity(ctx context.Context, req *model.RelocateEntityR
 			curGroupID = g.ParentID.Int64
 		}
 		curName = g.Name
-	case model.ArtifactEntityKindAsset:
-		a, e := s.artStore.Assets().GetById(ctx, id)
+	case constant.ArtifactEntityKindAsset:
+		a, e := s.artStore.Assets().GetById(ctx, splitEntityID.ID)
 		if e != nil {
 			return pkgErrors.WithI18nKey(e, i18n.ArtifactMoveSourceDeleted)
 		}
@@ -695,16 +671,16 @@ func (s *Service) RelocateEntity(ctx context.Context, req *model.RelocateEntityR
 			curGroupID = a.GroupID.Int64
 		}
 		curName = a.Path
-	case model.ArtifactEntityKindPackage:
-		p, e := s.artStore.Packages().GetByID(ctx, id)
+	case constant.ArtifactEntityKindPackage:
+		p, e := s.artStore.Packages().GetByID(ctx, splitEntityID.ID)
 		if e != nil {
 			return pkgErrors.WithI18nKey(e, i18n.ArtifactMoveSourceDeleted)
 		}
 		curArtifactID = p.ArtifactID
 		curGroupID = p.GroupID
 		curName = p.Name
-	case model.ArtifactEntityKindArtifact:
-		v, e := s.artStore.Views().GetByID(ctx, id)
+	case constant.ArtifactEntityKindArtifact:
+		v, e := s.artStore.Views().GetByID(ctx, splitEntityID.ID)
 		if e != nil {
 			return pkgErrors.WithI18nKey(e, i18n.ArtifactMoveSourceDeleted)
 		}
@@ -712,7 +688,7 @@ func (s *Service) RelocateEntity(ctx context.Context, req *model.RelocateEntityR
 		curName = v.Name
 	default:
 		return pkgErrors.WithI18nKey(
-			fmt.Errorf("unsupported entity type: %s", kind),
+			fmt.Errorf("unsupported entity type: %s", splitEntityID.Kind),
 			i18n.ArtifactMoveEntityTypeInvalid,
 		)
 	}
@@ -738,12 +714,14 @@ func (s *Service) RelocateEntity(ctx context.Context, req *model.RelocateEntityR
 		return nil
 	}
 	if needMove {
-		if err = s.rejectContainerMoveRename(ctx, kind, id, i18n.ArtifactMoveContainerNotSupported, i18n.ArtifactMoveSourceDeleted, i18n.ArtifactMoveEntityTypeInvalid); err != nil {
+		err := s.rejectContainerMoveRename(ctx, splitEntityID, i18n.ArtifactMoveContainerNotSupported, i18n.ArtifactMoveSourceDeleted, i18n.ArtifactMoveEntityTypeInvalid)
+		if err != nil {
 			return err
 		}
 	}
 	if needRename {
-		if err = s.rejectContainerMoveRename(ctx, kind, id, i18n.ArtifactRenameContainerNotSupported, i18n.ArtifactRenameSourceDeleted, i18n.ArtifactRenameEntityTypeInvalid); err != nil {
+		err := s.rejectContainerMoveRename(ctx, splitEntityID, i18n.ArtifactRenameContainerNotSupported, i18n.ArtifactRenameSourceDeleted, i18n.ArtifactRenameEntityTypeInvalid)
+		if err != nil {
 			return err
 		}
 	}
@@ -755,12 +733,12 @@ func (s *Service) RelocateEntity(ctx context.Context, req *model.RelocateEntityR
 			if !targetGroupIDSpecified {
 				targetGroupID = curGroupID
 			}
-			if err := s.moveByKind(ctx, kind, id, tArtifactID, targetGroupID); err != nil {
+			if err := s.moveByKind(ctx, splitEntityID, tArtifactID, targetGroupID); err != nil {
 				return err
 			}
 		}
 		if needRename {
-			if err := s.renameByKind(ctx, kind, id, req.NewName); err != nil {
+			if err := s.renameByKind(ctx, splitEntityID, req.NewName); err != nil {
 				return err
 			}
 		}

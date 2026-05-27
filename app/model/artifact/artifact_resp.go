@@ -3,7 +3,6 @@ package artifact
 import (
 	"fmt"
 
-	enum "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
 
 	"github.com/guregu/null"
@@ -325,7 +324,7 @@ type ArtifactPkgVerMetadata struct {
 // ==================== Remove / GC ====================
 
 type ArtifactNodeRemoveRes struct {
-	NodeID   string         `json:"nodeID"`
+	NodeID   EntityID       `json:"nodeID"`
 	Status   ArtifactStatus `json:"status"`
 	Packages int            `json:"packages,omitempty"`
 	Versions int            `json:"versions,omitempty"`
@@ -339,25 +338,13 @@ type ArtifactNodeRemoveReport struct {
 	Data    []*ArtifactNodeRemoveRes `json:"data"`
 }
 
-// ==================== 恢复（Restore）====================
-// ==================== Restore ====================
-
-// ArtifactRestoreEntitiesReq 恢复请求体，复用 EntityID 串（与软删保持一致）。
-type ArtifactRestoreEntitiesReq struct {
-	EntityIDs []string `json:"entityIDs,omitempty"`
-}
-
-type ArtifactRestoreEntitieReq struct {
-	EntityID string `json:"entityID,omitempty"`
-}
-
 // ArtifactRestoreRes 单条恢复结果。结构与 ArtifactNodeRemoveRes 同形：
 //   - NodeID         : 入参的 EntityID 串（kind.id）
 //   - Status         : 处理状态（ok / not_found / invalid_id / name_already_exists / unknown 等）
 //   - Reason         : 失败时的 i18n key，前端按 key 取多语言文案；成功时为空
 //   - Packages/Versions/Assets : 本次恢复链路上各类实体的累计影响计数
 type ArtifactRestoreRes struct {
-	NodeID   string         `json:"nodeID"`
+	NodeID   EntityID       `json:"nodeID"`
 	Error    error          `json:"-"`
 	Status   ArtifactStatus `json:"status"`
 	Reason   string         `json:"reason,omitempty"`
@@ -412,30 +399,4 @@ type ArtifactStatsObject struct {
 	Total   int64 `json:"total"`
 	Deleted int64 `json:"deleted"`
 	Active  int64 `json:"active"`
-}
-
-// ==================== 权限响应 ====================
-// ==================== Permission Response ====================
-
-type ArtifactPermissions struct {
-	Private bool                `json:"private"`
-	Rules   []*ArtifactPermRule `json:"rules"`
-}
-
-type ArtifactEntityPermissions struct {
-	ArtifactPermissions
-	Inherit ArtifactPermInherit `json:"inherit"`
-}
-
-type ArtifactPermInherit struct {
-	Inherited       bool     `json:"inherited"`
-	InheritEntityID string   `json:"inheritEntityID"`
-	InheritFrom     string   `json:"inheritFrom"`
-	InheritParents  []string `json:"inheritParents"`
-}
-
-type ArtifactPermRule struct {
-	Subjects []*CasbinSubject `json:"subjects"`
-	Role     enum.CasbinRole  `json:"role"`
-	Scope    enum.CasbinScope `json:"scope"`
 }

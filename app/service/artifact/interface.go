@@ -82,10 +82,10 @@ type Interface interface {
 	ListRecycleBin(ctx context.Context, req *model.ArtifactRecycleListReq) ([]*model.ArtifactRecycleItem, int64, error)
 
 	// BatchRestore 批量恢复回收站中的实体（entityIDs 为 "kind.id" 串）。单条失败继续，最终返回汇总报告。
-	BatchRestore(ctx context.Context, req *model.ArtifactRestoreEntitiesReq) (*model.ArtifactRestoreReport, error)
+	BatchRestore(ctx context.Context, req *model.ArtifactEntitiesReq) (*model.ArtifactRestoreReport, error)
 
 	// Restore 恢复回收站中的实体（entityID）
-	Restore(ctx context.Context, EntityID string) (*model.ArtifactRestoreRes, error)
+	Restore(ctx context.Context, req model.ArtifactEntitieReq) (*model.ArtifactRestoreRes, error)
 	// ---- 归档下载 ----
 
 	// PrepareArchiveGroup 准备分组归档下载所需的数据。
