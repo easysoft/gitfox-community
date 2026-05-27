@@ -11,12 +11,12 @@ import (
 	"net/http"
 	"path/filepath"
 	"sort"
-	"strconv"
 	"strings"
 	"time"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	request "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/adapter"
@@ -383,14 +383,12 @@ func (s *Service) ResolveRepoArtifact(
 //
 // 先全量查出再内存过滤 + 排序 + 分页。
 func (s *Service) ListAssetPage(ctx context.Context, req *model.ListAssetReq) (interface{}, int64, error) {
-	kind, id, err := parseEntityRef(req.EntityID)
-	if err != nil {
-		return nil, 0, err
-	}
-	if kind != model.ArtifactEntityKindGroup &&
-		kind != model.ArtifactEntityKindVersion &&
-		kind != model.ArtifactEntityKindPackage &&
-		kind != model.ArtifactEntityKindAsset {
+	splitEntityID := req.EntityID.GetEntityID()
+
+	if splitEntityID.Kind != constant.ArtifactEntityKindGroup &&
+		splitEntityID.Kind != constant.ArtifactEntityKindVersion &&
+		splitEntityID.Kind != constant.ArtifactEntityKindPackage &&
+		splitEntityID.Kind != constant.ArtifactEntityKindAsset {
 		return nil, 0, pkgErrors.WithI18nKey(
 			fmt.Errorf("entityID must be group.{id}, version.{id}, package.{id} or asset.{id}, got %s", req.EntityID),
 			i18n.ArtifactEntityIdInvalid,
@@ -405,13 +403,13 @@ func (s *Service) ListAssetPage(ctx context.Context, req *model.ListAssetReq) (i
 		pageSize = 20
 	}
 
-	if kind == model.ArtifactEntityKindPackage {
-		return s.listVersionPage(ctx, id, req, page, pageSize)
+	if splitEntityID.Kind == constant.ArtifactEntityKindPackage {
+		return s.listVersionPage(ctx, splitEntityID.ID, req, page, pageSize)
 	}
-	if kind == model.ArtifactEntityKindAsset {
-		return s.listAssetByIDPage(ctx, id, req, page, pageSize)
+	if splitEntityID.Kind == constant.ArtifactEntityKindAsset {
+		return s.listAssetByIDPage(ctx, splitEntityID.ID, req, page, pageSize)
 	}
-	return s.listAssetPageInner(ctx, kind, id, req, page, pageSize)
+	return s.listAssetPageInner(ctx, splitEntityID, req, page, pageSize)
 }
 
 // listAssetByIDPage 按 asset.{id} 精准查询单条资产，沿用同一过滤 / 排序 / 分页骨架。
@@ -513,14 +511,14 @@ func (s *Service) fillContainerVersionItem(ctx context.Context, item *model.Vers
 }
 
 // listAssetPageInner 处理 group / version 的 asset 分页。
-func (s *Service) listAssetPageInner(ctx context.Context, kind model.ArtifactEntityKind, id int64, req *model.ListAssetReq, page, pageSize int) (interface{}, int64, error) {
+func (s *Service) listAssetPageInner(ctx context.Context, splitEntityID model.SplitEntityID, req *model.ListAssetReq, page, pageSize int) (interface{}, int64, error) {
 	var assets []*model.ArtifactAssetsRes
 	var err error
-	switch kind {
-	case model.ArtifactEntityKindGroup:
-		assets, err = s.listGroupAssetsForPage(ctx, id, req.More)
-	case model.ArtifactEntityKindVersion:
-		assets, err = s.artStore.ListAssets(ctx, id)
+	switch splitEntityID.Kind {
+	case constant.ArtifactEntityKindGroup:
+		assets, err = s.listGroupAssetsForPage(ctx, splitEntityID.ID, req.More)
+	case constant.ArtifactEntityKindVersion:
+		assets, err = s.artStore.ListAssets(ctx, splitEntityID.ID)
 	}
 	if err != nil {
 		return nil, 0, pkgErrors.WithI18nKey(err, i18n.ArtifactAssetListError)
@@ -1529,29 +1527,19 @@ func (s *Service) SoftRemove(ctx context.Context, req *model.SoftRemoveEntitiesR
 	return report, nil
 }
 
-func (s *Service) softRemoveEntity(ctx context.Context, eid string, operator string, res *model.ArtifactNodeRemoveRes) error {
-	if strings.Count(eid, ".") != 1 {
-		res.Status = model.ArtifactStatusInvalidId
-		return nil
-	}
-	parts := strings.Split(eid, ".")
-	nodeType := model.ArtifactTreeNodeType(parts[0])
-	nodeID, err := strconv.ParseInt(parts[1], 10, 64)
-	if err != nil {
-		res.Status = model.ArtifactStatusInvalidId
-		return nil
-	}
+func (s *Service) softRemoveEntity(ctx context.Context, eid model.EntityID, operator string, res *model.ArtifactNodeRemoveRes) error {
+	splitEntityID := eid.GetEntityID()
 
-	switch nodeType {
-	case model.ArtifactTreeNodeTypeAsset:
-		asset, err := s.artStore.Assets().GetById(ctx, nodeID)
+	switch splitEntityID.Kind {
+	case constant.ArtifactEntityKindAsset:
+		asset, err := s.artStore.Assets().GetById(ctx, splitEntityID.ID)
 		if err != nil {
 			res.Status = model.ArtifactStatusNotFound
 			return nil
 		}
 		return s.softRemoveAsset(ctx, asset, operator, res)
-	case model.ArtifactTreeNodeTypeVersion:
-		ver, err := s.artStore.Versions().GetByID(ctx, nodeID)
+	case constant.ArtifactEntityKindVersion:
+		ver, err := s.artStore.Versions().GetByID(ctx, splitEntityID.ID)
 		if err != nil {
 			res.Status = model.ArtifactStatusNotFound
 			return nil
@@ -1562,22 +1550,22 @@ func (s *Service) softRemoveEntity(ctx context.Context, eid string, operator str
 			return nil
 		}
 		return s.softRemoveVersion(ctx, artifactIDForVersion(pkg, ver), ver, operator, res)
-	case model.ArtifactTreeNodeTypePackage:
-		pkg, err := s.artStore.Packages().GetByID(ctx, nodeID)
+	case constant.ArtifactEntityKindPackage:
+		pkg, err := s.artStore.Packages().GetByID(ctx, splitEntityID.ID)
 		if err != nil {
 			res.Status = model.ArtifactStatusNotFound
 			return nil
 		}
 		return s.softRemovePackage(ctx, pkg, operator, res)
-	case model.ArtifactTreeNodeTypeGroup:
-		group, err := s.artStore.Groups().GetById(ctx, nodeID)
+	case constant.ArtifactEntityKindGroup:
+		group, err := s.artStore.Groups().GetById(ctx, splitEntityID.ID)
 		if err != nil {
 			res.Status = model.ArtifactStatusNotFound
 			return nil
 		}
 		return s.softRemoveGroup(ctx, group, operator, res)
-	case model.ArtifactTreeNodeTypeArtifact:
-		view, err := s.artStore.Views().GetByID(ctx, nodeID)
+	case constant.ArtifactEntityKindArtifact:
+		view, err := s.artStore.Views().GetByID(ctx, splitEntityID.ID)
 		if err != nil {
 			res.Status = model.ArtifactStatusNotFound
 			return pkgErrors.WithI18nKey(err, i18n.ArtifactSoftRemoveArtifactNotFound)

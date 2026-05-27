@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	enum "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
 
@@ -81,22 +82,6 @@ const (
 
 // ==================== 权限实体类型枚举 ====================
 // ==================== Enum: Entity Kind ====================
-
-type ArtifactEntityKind string
-
-func (s ArtifactEntityKind) String() string {
-	return string(s)
-}
-
-const (
-	ArtifactEntityKindFormat   ArtifactEntityKind = "format"
-	ArtifactEntityKindGroup    ArtifactEntityKind = "group"
-	ArtifactEntityKindPackage  ArtifactEntityKind = "package"
-	ArtifactEntityKindVersion  ArtifactEntityKind = "version"
-	ArtifactEntityKindAsset    ArtifactEntityKind = "asset"
-	ArtifactEntityKindArtifact ArtifactEntityKind = "artifact"
-	ArtifactEntityEmpty        ArtifactEntityKind = "_empty"
-)
 
 // CasbinSubject 保存 Casbin 策略中的主体信息。
 type CasbinSubject struct {
@@ -416,14 +401,14 @@ func (n *ArtifactTreeNode) Parent() *ArtifactTreeNode {
 // ==================== Entity (for permission path) ====================
 
 type ArtifactEntity struct {
-	Kind   ArtifactEntityKind
+	Kind   constant.ArtifactEntityKind
 	Name   string
 	Id     int64
 	Parent *ArtifactEntity
 }
 
 func (e *ArtifactEntity) loc() string {
-	if e.Kind != ArtifactEntityKindFormat {
+	if e.Kind != constant.ArtifactEntityKindFormat {
 		return fmt.Sprintf("%s:%d", e.Kind, e.Id)
 	} else {
 		return e.Name
@@ -482,26 +467,6 @@ func (e *ArtifactEntity) PolicyLocation() string {
 		buff.WriteString(frames[count-1-i])
 	}
 	return buff.String()
-}
-
-// ==================== Entity 工具方法 ====================
-// ==================== Entity Helpers ====================
-
-// ParseEntityKind 将 entityId 字符串（格式 "kind.id"，如 "package.123"）解析为 ArtifactEntity。
-// 用于中间件从 URL 路径参数快速构建 entity，无需查库。
-// 解析失败时返回仓库级 mock entity。
-func ParseEntityKind(entityId string) *ArtifactEntity {
-	parts := strings.SplitN(entityId, ".", 2)
-	if len(parts) != 2 {
-		return &ArtifactEntity{Kind: ArtifactEntityKindFormat, Name: "repository"}
-	}
-	kind := ArtifactEntityKind(parts[0])
-	switch kind {
-	case ArtifactEntityKindGroup, ArtifactEntityKindPackage, ArtifactEntityKindVersion, ArtifactEntityKindAsset:
-		return &ArtifactEntity{Kind: kind, Name: entityId}
-	default:
-		return &ArtifactEntity{Kind: ArtifactEntityKindFormat, Name: "repository"}
-	}
 }
 
 // ==================== 组节点端点 ====================
@@ -674,10 +639,17 @@ type PermRule struct {
 //   - NewName == "" 或与当前一致 → 不改名。
 //   - 移动 + 改名同时存在时，先移动后改名，整个过程在单事务内完成。
 type RelocateEntityReq struct {
-	EntityID         string `json:"entityID"`         // 实体引用，形如 "group.11" / "asset.5"
-	TargetArtifactID int64  `json:"targetArtifactID"` // 目标制品库 ID（可选）
-	TargetGroupID    *int64 `json:"targetGroupID"`    // 目标 group ID（可选；generic group 显式传 0 表示根目录）
-	NewName          string `json:"newName"`          // 新名称（可选）
+	EntityID         EntityID `json:"entityID"`         // 实体引用，形如 "group.11" / "asset.5"
+	TargetArtifactID int64    `json:"targetArtifactID"` // 目标制品库 ID（可选）
+	TargetGroupID    *int64   `json:"targetGroupID"`    // 目标 group ID（可选；generic group 显式传 0 表示根目录）
+	NewName          string   `json:"newName"`          // 新名称（可选）
+}
+
+func (req *RelocateEntityReq) Validate() error {
+	if err := req.EntityID.Validate(); err != nil {
+		return err
+	}
+	return nil
 }
 
 // IsVersionedFormat 判断给定格式是否为版本化格式。

@@ -235,6 +235,7 @@ func (s *Service) buildContainerPullLink(view *adapter.ViewDescriptor, pkg *mode
 		return ""
 	}
 
+	// "global/docker_global_dev/pipeline-helper:v1n"
 	imageRef := strings.Join([]string{
 		containerDomainID(view),
 		view.ArtifactName,
@@ -269,20 +270,8 @@ func (s *Service) containerRegistryReference() string {
 	if registryURL == nil {
 		return ""
 	}
-	baseURL := *registryURL
-	// 循环剥掉尾部 /v2：uiURL 可能本身就配了 /v2，叠加 GenerateRegistryURL 的 JoinPath("v2") 后 path 会变成 /v2/v2。
-	baseURL.Path = trimTrailingV2(baseURL.Path)
-	baseURL.RawQuery = ""
-	baseURL.Fragment = ""
-	if baseURL.Host == "" {
-		return strings.Trim(baseURL.Path, "/")
-	}
 
-	ref := baseURL.Host
-	if p := strings.Trim(baseURL.EscapedPath(), "/"); p != "" {
-		ref += "/" + p
-	}
-	return ref
+	return registryURL.Host
 }
 
 // appendSlashSegments 将斜杠路径拆成 URL path 段。
@@ -292,20 +281,6 @@ func appendSlashSegments(dst []string, p string) []string {
 		return dst
 	}
 	return append(dst, strings.Split(trimmed, "/")...)
-}
-
-// trimTrailingV2 去掉路径尾部所有 "/v2" 后缀。
-// uiURL 若本身已带 /v2，GenerateRegistryURL JoinPath("v2") 会再叠一层，需要循环剥净。
-func trimTrailingV2(p string) string {
-	for {
-		p = strings.TrimRight(p, "/")
-		next := strings.TrimSuffix(p, "/v2")
-		if next == p {
-			break
-		}
-		p = next
-	}
-	return p
 }
 
 // nodeInfoSpaceName 取 nodeInfo 响应中的空间名。
@@ -349,7 +324,11 @@ func convertTreeNodesToRes(inputs []*model.ArtifactTreeNode, level string) []*mo
 func convertTreeNodeToRes(n *model.ArtifactTreeNode, level string) *model.ArtifactTreeRes {
 	item := &model.ArtifactTreeRes{Name: n.Name, Path: n.Path, Format: n.Format, Leaf: n.Type == model.ArtifactTreeNodeTypeAsset}
 	if n.Type == model.ArtifactTreeNodeTypeVersion {
-		item.Leaf = level != model.ArtifactNodeLevelAsset || n.Format == model.ArtifactContainerFormat
+		// version 节点是否叶子完全取决于查询是否下钻到 asset 级：
+		//   - level != asset：用户没要 asset 层，version 视为叶子；
+		//   - level == asset：version 下还有 manifest/file asset 子节点，必须保持非叶子。
+		// container 的 version 同样挂着 manifest blob asset，不做格式特殊化。
+		item.Leaf = level != model.ArtifactNodeLevelAsset
 	}
 	if n.Type == model.ArtifactTreeNodeTypeVersion {
 		item.Metadata = parseArtifactTreePath(n.Path)

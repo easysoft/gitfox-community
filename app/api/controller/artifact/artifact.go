@@ -84,6 +84,12 @@ func (c *Controller) RelocateEntity(ctx *gin.Context) {
 		resp.BadRequest(ctx, err)
 		return
 	}
+
+	if err := body.Validate(); err != nil {
+		resp.BadRequest(ctx, err)
+		return
+	}
+
 	if err := c.artSvc.RelocateEntity(ctx.Request.Context(), &body); err != nil {
 		resp.BadRequest(ctx, err)
 		return
