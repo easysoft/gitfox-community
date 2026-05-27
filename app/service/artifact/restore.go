@@ -28,8 +28,8 @@ import (
 //   - asset 的 blob 关联恢复：直接 blob.deleted=0；GC 仍由 active asset 引用计数判定
 // =============================================================================
 
-// Restore 批量恢复回收站中的实体。entityIDs 为空时直接返回空 report。
-func (s *Service) Restore(ctx context.Context, restoreReq *model.ArtifactRestoreEntitiesReq) (*model.ArtifactRestoreReport, error) {
+// BatchRestore 批量恢复回收站中的实体。entityIDs 为空时直接返回空 report。
+func (s *Service) BatchRestore(ctx context.Context, restoreReq *model.ArtifactRestoreEntitiesReq) (*model.ArtifactRestoreReport, error) {
 	if restoreReq == nil {
 		restoreReq = &model.ArtifactRestoreEntitiesReq{}
 	}
@@ -80,19 +80,53 @@ func (s *Service) Restore(ctx context.Context, restoreReq *model.ArtifactRestore
 	return report, nil
 }
 
+// Restore 恢复回收站中的实体（entityID）
+func (s *Service) Restore(ctx context.Context, EntityID string) (*model.ArtifactRestoreRes, error) {
+
+	// 操作人：取当前会话用户作为「恢复人」（editedBy），匿名/系统调用时为空。
+	var operator string
+	if session, ok := req.GetAuthSession(ctx); ok && session != nil && session.User != nil {
+		operator = session.User.Account
+	}
+
+	syncer := artModel.NewSyncer(s.artStore)
+	res := &model.ArtifactRestoreRes{NodeID: EntityID, Status: model.ArtifactStatusOK}
+	if err := s.restoreEntity(ctx, EntityID, operator, syncer, res); err != nil {
+		logger.GetLogger(ctx).Warnf("restore entity %s failed: %v", EntityID, err)
+		if key := pkgErrors.GetI18nKey(err); key != "" {
+			res.Error = err
+			res.Reason = i18n.TWithContext(ctx, string(key))
+			// 已知拒因细化到具体 status，避免一律 unknown。
+			switch key {
+			case i18n.ArtifactRestoreViewNameAlreadyExists,
+				i18n.ArtifactRestoreGroupNameAlreadyExists,
+				i18n.ArtifactRestoreAssetNameAlreadyExists,
+				i18n.ArtifactRestorePackageNameAlreadyExists,
+				i18n.ArtifactRestoreVersionAlreadyExists:
+				res.Status = model.ArtifactStatusNameAlreadyExists
+			}
+		}
+		if res.Status == model.ArtifactStatusOK {
+			res.Status = model.ArtifactStatusUnknown
+		}
+	}
+
+	return res, nil
+}
+
 // restoreEntity 解析 entityID 并按 kind 分派到具体恢复函数。
 func (s *Service) restoreEntity(
-	ctx context.Context, eid string, operator string,
+	ctx context.Context, EntityID string, operator string,
 	syncer *artModel.Syncer, res *model.ArtifactRestoreRes,
 ) error {
-	if strings.Count(eid, ".") != 1 {
+	if strings.Count(EntityID, ".") != 1 {
 		res.Status = model.ArtifactStatusInvalidId
 		return pkgErrors.WithI18nKey(
 			stderrors.New("invalid entity id format"),
 			i18n.ArtifactRestoreEntityIdInvalidFormat,
 		)
 	}
-	parts := strings.SplitN(eid, ".", 2)
+	parts := strings.SplitN(EntityID, ".", 2)
 	kind := model.ArtifactTreeNodeType(parts[0])
 	id, err := strconv.ParseInt(parts[1], 10, 64)
 	if err != nil || id <= 0 {

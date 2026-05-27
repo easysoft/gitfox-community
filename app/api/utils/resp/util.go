@@ -51,11 +51,6 @@ func Error(c *gin.Context, err error, args ...interface{}) {
 	objectErr(c, err, httpStatus, args...)
 }
 
-// CustomError renders a custom object error response
-func CustomError(c *gin.Context, data interface{}, code i18n.I18nKey, args ...interface{}) {
-	customErr(c, data, code, args...)
-}
-
 // BadRequest renders an object bad request response (400 Bad Request)
 func BadRequest(c *gin.Context, err error, args ...interface{}) {
 	objectErr(c, err, http.StatusBadRequest, args...)
@@ -134,20 +129,6 @@ func objectErr(c *gin.Context, err error, httpStatus int, args ...interface{}) {
 		Message: message,
 		TraceID: traceID,
 		Data:    nil,
-	})
-}
-
-// customErr renders a custom object error response
-// code: i18n key, e.g. "repo.branch.create.error"
-// args: arguments for i18n key
-func customErr(c *gin.Context, data interface{}, code i18n.I18nKey, args ...interface{}) {
-	message := i18n.TGin(c, code, args...)
-	traceID := getTraceID(c)
-	c.JSON(http.StatusBadRequest, ObjectResponse{
-		Code:    constant.RespFailCode,
-		Message: message,
-		TraceID: traceID,
-		Data:    data,
 	})
 }
 

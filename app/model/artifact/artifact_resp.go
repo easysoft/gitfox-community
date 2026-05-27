@@ -347,6 +347,10 @@ type ArtifactRestoreEntitiesReq struct {
 	EntityIDs []string `json:"entityIDs,omitempty"`
 }
 
+type ArtifactRestoreEntitieReq struct {
+	EntityID string `json:"entityID,omitempty"`
+}
+
 // ArtifactRestoreRes 单条恢复结果。结构与 ArtifactNodeRemoveRes 同形：
 //   - NodeID         : 入参的 EntityID 串（kind.id）
 //   - Status         : 处理状态（ok / not_found / invalid_id / name_already_exists / unknown 等）
@@ -354,6 +358,7 @@ type ArtifactRestoreEntitiesReq struct {
 //   - Packages/Versions/Assets : 本次恢复链路上各类实体的累计影响计数
 type ArtifactRestoreRes struct {
 	NodeID   string         `json:"nodeID"`
+	Error    error          `json:"-"`
 	Status   ArtifactStatus `json:"status"`
 	Reason   string         `json:"reason,omitempty"`
 	Packages int            `json:"packages,omitempty"`

@@ -81,9 +81,11 @@ type Interface interface {
 	// ListRecycleBin 按 kind 分页查询回收站记录（kind ∈ artifact/group/package/version/asset，默认 asset）。
 	ListRecycleBin(ctx context.Context, req *model.ArtifactRecycleListReq) ([]*model.ArtifactRecycleItem, int64, error)
 
-	// Restore 批量恢复回收站中的实体（entityIDs 为 "kind.id" 串）。单条失败继续，最终返回汇总报告。
-	Restore(ctx context.Context, req *model.ArtifactRestoreEntitiesReq) (*model.ArtifactRestoreReport, error)
+	// BatchRestore 批量恢复回收站中的实体（entityIDs 为 "kind.id" 串）。单条失败继续，最终返回汇总报告。
+	BatchRestore(ctx context.Context, req *model.ArtifactRestoreEntitiesReq) (*model.ArtifactRestoreReport, error)
 
+	// Restore 恢复回收站中的实体（entityID）
+	Restore(ctx context.Context, EntityID string) (*model.ArtifactRestoreRes, error)
 	// ---- 归档下载 ----
 
 	// PrepareArchiveGroup 准备分组归档下载所需的数据。
