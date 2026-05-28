@@ -8,6 +8,7 @@ import (
 
 	artModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/model"
 	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
+	artifactStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/artifact"
 	pkgErrors "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
@@ -21,13 +22,17 @@ import (
 //   - model.ArtifactAllFormat（"all"）或空值：全量刷新所有格式
 //   - 其它具体 format：仅刷新该 format 下的 groups / packages / versions
 func (s *Service) RefreshTree(ctx context.Context, format string) error {
-	syncer := artModel.NewSyncer(s.artStore)
+	return s.refreshTree(ctx, format, s.artStore)
+}
+
+func (s *Service) refreshTree(ctx context.Context, format string, artStore artifactStore.Interface) error {
+	syncer := artModel.NewSyncer(artStore)
 
 	targetFormat := model.ArtifactFormat(strings.TrimSpace(format))
 	refreshAll := targetFormat == "" || targetFormat == model.ArtifactAllFormat
 
 	// 1. 同步所有 group 树节点
-	groups, err := s.artStore.Groups().All(ctx)
+	groups, err := artStore.Groups().All(ctx)
 	if err != nil {
 		logger.GetLogger(ctx).Errorf("refresh tree: list groups failed: %v", err)
 		return err
@@ -43,7 +48,7 @@ func (s *Service) RefreshTree(ctx context.Context, format string) error {
 	}
 
 	// 2. 遍历所有 packages，同步 package + version 树节点
-	return s.artStore.Packages().ListBatch(ctx, false, 100, func(pkg *model.ArtifactPackage) error {
+	return artStore.Packages().ListBatch(ctx, false, 100, func(pkg *model.ArtifactPackage) error {
 		if !refreshAll && pkg.Format != targetFormat {
 			return nil
 		}
@@ -66,7 +71,7 @@ func (s *Service) RefreshTree(ctx context.Context, format string) error {
 
 		// 2c. 同步该 package 下所有 version 节点。
 		// container 会在 SyncTreeNodeForVersion 内按 version.ArtifactLibID 补建 package 父节点。
-		dbVersions, vErr := s.artStore.Versions().Find(ctx, model.SearchVersionOption{PackageID: pkg.ID})
+		dbVersions, vErr := artStore.Versions().Find(ctx, model.SearchVersionOption{PackageID: pkg.ID})
 		if vErr != nil {
 			return vErr
 		}
