@@ -59,13 +59,12 @@ func (s *Service) Create(ctx context.Context, session *auth.Session, params *rep
 		return nil, errors.WithI18nKey(nil, i18n.I18nKey(i18n.RepoSpaceNotFound))
 	}
 
-	gitResp, isEmpty, err := s.createGitRepository(ctx, params, session)
+	gitResp, _, err := s.createGitRepository(ctx, params, session)
 	if err != nil {
 		return nil, err
 	}
 
 	repo := &repo.Repository{
-		Mutex:         0,
 		SpaceID:       params.SpaceID,
 		Identifier:    params.Identifier,
 		GitUID:        gitResp.UID,
@@ -74,8 +73,8 @@ func (s *Service) Create(ctx context.Context, session *auth.Session, params *rep
 		CreatedBy:     session.User.Account,
 		ForkID:        params.ForkID,
 		DefaultBranch: params.DefaultBranch,
-		Empty:         isEmpty,
 		ACL:           params.ACL,
+		Status:        "active",
 	}
 
 	repoObj, err := s.repoStore.Create(ctx, repo)
@@ -218,7 +217,7 @@ func (s *Service) Update(ctx context.Context, req *repoModel.ReqForUpdate, oldRe
 func (s *Service) GetRepoCheckAccess(ctx context.Context, session *auth.Session, spaceID uint, identifier string, reqPermission []constant.Permission) (*repoModel.Repo, error) {
 
 	// get repo
-	repo, err := s.GetByIdentifier(ctx, spaceID, identifier, []constant.RepoState{constant.RepoStateActive, constant.RepoStateMigrateGitPush})
+	repo, err := s.GetByIdentifier(ctx, spaceID, identifier, []string{"active"})
 	if err != nil {
 		return nil, err
 	}
@@ -270,13 +269,13 @@ func (s *Service) checkRepoPermissions(ctx context.Context, session *auth.Sessio
 	return nil
 }
 
-func (s *Service) GetByIdentifier(ctx context.Context, spaceID uint, identifier string, allowedStates []constant.RepoState) (*repoModel.Repo, error) {
+func (s *Service) GetByIdentifier(ctx context.Context, spaceID uint, identifier string, allowedStates []string) (*repoModel.Repo, error) {
 	repo, err := s.repoStore.GetBySpaceAndIdentifier(ctx, spaceID, identifier)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to find repository: %s", identifier)
 	}
 
-	if len(allowedStates) > 0 && !slice.Contain(allowedStates, constant.RepoState(repo.Status)) {
+	if len(allowedStates) > 0 && !slice.Contain(allowedStates, repo.Status) {
 		return nil, errors.BadRequest.New("Repository is not ready to use.")
 	}
 	// 回填 gitURL 和 gitSSHURL
@@ -293,7 +292,7 @@ func (s *Service) GetByID(ctx context.Context, session *auth.Session, id uint) (
 
 	repo, err := s.repoStore.GetByID(ctx, id)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to find repository: %d", id)
+		return nil, err
 	}
 	// 回填 gitURL 和 gitSSHURL
 	repo.GitURL = s.urlProvider.GenerateGITCloneURL(ctx, repo.Path)

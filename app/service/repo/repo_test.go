@@ -4,7 +4,6 @@ import (
 	"context"
 	"testing"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 	principal "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/user"
@@ -13,8 +12,8 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	urlMock "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/url/mock"
 
-	"go.uber.org/mock/gomock"
 	"github.com/stretchr/testify/assert" // 推荐使用 testify 断言，更简洁
+	"go.uber.org/mock/gomock"
 	"gorm.io/gorm"
 )
 
@@ -299,7 +298,7 @@ type GetByIdentifierTestCase struct {
 	mockURLProvider    func(m *urlMock.MockProvider) // Mock urlProvider URL生成方法
 	inputSpaceID       uint                          // 入参：spaceID
 	inputIdentifier    string                        // 入参：identifier
-	inputAllowedStates []constant.RepoState          // 入参：allowedStates
+	inputAllowedStates []string                      // 入参：allowedStates
 	// 预期结果
 	expectedRepo *repoModel.Repo // 预期返回的repo
 	expectedErr  error           // 预期错误
@@ -318,7 +317,7 @@ func TestGetByIdentifier(t *testing.T) {
 					SpaceID:    100,
 					Identifier: "team1/project1",
 					Path:       "team1/project1",
-					Status:     int(constant.RepoStateActive),
+					Status:     "active",
 				}
 				// 期望调用GetBySpaceAndIdentifier，返回mockRepo和nil错误
 				m.EXPECT().GetBySpaceAndIdentifier(
@@ -334,13 +333,13 @@ func TestGetByIdentifier(t *testing.T) {
 			},
 			inputSpaceID:       100,
 			inputIdentifier:    "team1/project1",
-			inputAllowedStates: []constant.RepoState{}, // 空状态列表
+			inputAllowedStates: []string{}, // 空状态列表
 			expectedRepo: &repoModel.Repo{
 				ID:         1,
 				SpaceID:    100,
 				Identifier: "team1/project1",
 				Path:       "team1/project1",
-				Status:     int(constant.RepoStateActive),
+				Status:     "active",
 				GitURL:     "https://gitfox/team1/project1.git",
 				GitSSHURL:  "git@gitfox:team1/project1.git",
 			},
@@ -354,7 +353,7 @@ func TestGetByIdentifier(t *testing.T) {
 					SpaceID:    100,
 					Identifier: "team1/project2",
 					Path:       "team1/project2",
-					Status:     int(constant.RepoStateActive),
+					Status:     "active",
 				}
 				m.EXPECT().GetBySpaceAndIdentifier(
 					gomock.Any(),
@@ -368,13 +367,13 @@ func TestGetByIdentifier(t *testing.T) {
 			},
 			inputSpaceID:       100,
 			inputIdentifier:    "team1/project2",
-			inputAllowedStates: []constant.RepoState{constant.RepoStateActive}, // 包含Active
+			inputAllowedStates: []string{"active"}, // 包含Active
 			expectedRepo: &repoModel.Repo{
 				ID:         2,
 				SpaceID:    100,
 				Identifier: "team1/project2",
 				Path:       "team1/project2",
-				Status:     int(constant.RepoStateActive),
+				Status:     "active",
 				GitURL:     "https://gitfox/team1/project2.git",
 				GitSSHURL:  "git@gitfox:team1/project2.git",
 			},
@@ -396,7 +395,7 @@ func TestGetByIdentifier(t *testing.T) {
 			},
 			inputSpaceID:       100,
 			inputIdentifier:    "team1/project3",
-			inputAllowedStates: []constant.RepoState{},
+			inputAllowedStates: []string{},
 			expectedRepo:       nil,
 			expectedErr:        errors.Wrapf(errors.NotFound.New("repo not found"), "failed to find repository: %s", "team1/project3"),
 		},
@@ -408,7 +407,7 @@ func TestGetByIdentifier(t *testing.T) {
 					SpaceID:    100,
 					Identifier: "team1/project4",
 					Path:       "team1/project4",
-					Status:     int(constant.RepoStateMigrateDataImport), // 状态为Disabled
+					Status:     "migrate_data_import", // 状态为Disabled
 				}
 				m.EXPECT().GetBySpaceAndIdentifier(
 					gomock.Any(),
@@ -421,7 +420,7 @@ func TestGetByIdentifier(t *testing.T) {
 			},
 			inputSpaceID:       100,
 			inputIdentifier:    "team1/project4",
-			inputAllowedStates: []constant.RepoState{constant.RepoStateActive}, // 仅包含Active
+			inputAllowedStates: []string{"active"}, // 仅包含Active
 			expectedRepo:       nil,
 			expectedErr:        errors.BadRequest.New("Repository is not ready to use."),
 		},
@@ -509,7 +508,7 @@ func TestGetByID(t *testing.T) {
 				mockRepo := &repoModel.Repo{
 					ID:     10,
 					Path:   "team1/project10",
-					Status: int(constant.RepoStateActive),
+					Status: "active",
 				}
 				// 期望调用GetByID，返回mockRepo和nil错误
 				m.EXPECT().GetByID(gomock.Any(), uint(10)).Return(mockRepo, nil)
@@ -523,7 +522,7 @@ func TestGetByID(t *testing.T) {
 			expectedRepo: &repoModel.Repo{
 				ID:        10,
 				Path:      "team1/project10",
-				Status:    int(constant.RepoStateActive),
+				Status:    "active",
 				GitURL:    "https://gitfox/team1/project10.git",
 				GitSSHURL: "git@gitfox:team1/project10.git",
 			},

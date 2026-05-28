@@ -40,6 +40,8 @@ func (r *RepositoryInfo) ToRepo(
 	spaceID uint,
 	identifier string,
 	description string,
+	acl string,
+	product string,
 	user *userModel.User,
 ) (*repoModel.Repo, bool) {
 	now := time.Now().UnixMilli()
@@ -53,8 +55,9 @@ func (r *RepositoryInfo) ToRepo(
 		CreatedBy:     user.Account,
 		ForkID:        &forkID,
 		DefaultBranch: r.DefaultBranch,
-		Status:        int(constant.RepoStateGitImport),
-		ACL:           "open",
+		Status:        "importing", // 标记为导入中状态
+		ACL:           acl,
+		Product:       product,
 		Path:          paths.Concatenate(fmt.Sprint(spaceID), identifier),
 	}, r.IsPublic
 }
@@ -122,14 +125,21 @@ func getScmClientWithTransport(provider repoModel.Provider, slug string, authReq
 		transport = oauthTransport(provider.Password, oauth2.SchemeBearer)
 
 	case constant.RepoProviderTypeGitLab:
-		if provider.Host != "" {
-			c, err = gitlab.New(provider.Host)
-			if err != nil {
-				return nil, errors.BadRequest.Wrap(err, "scm provider Host invalid")
-			}
-		} else {
-			c, _ = gitlab.New("https://jihulab.com")
+		if provider.Host == "" {
+			return nil, errors.BadRequest.New("scm provider Host missing")
 		}
+		c, err = gitlab.New(provider.Host)
+		if err != nil {
+			return nil, errors.BadRequest.Wrap(err, "scm provider Host invalid")
+		}
+		transport = oauthTransport(provider.Password, oauth2.SchemeBearer)
+
+	case constant.RepoProviderTypeGitLabCOM:
+		c = gitlab.NewDefault()
+		transport = oauthTransport(provider.Password, oauth2.SchemeBearer)
+
+	case constant.RepoProviderTypeGitLabCN:
+		c, _ = gitlab.New("https://jihulab.com")
 		transport = oauthTransport(provider.Password, oauth2.SchemeBearer)
 
 	case constant.RepoProviderTypeBitbucket:
@@ -193,6 +203,10 @@ func getScmClientWithTransport(provider repoModel.Provider, slug string, authReq
 
 	default:
 		return nil, errors.BadRequest.Newf("unsupported scm provider: %s", provider)
+	}
+
+	if c == nil {
+		return nil, errors.BadRequest.Newf("failed to initialize scm client for provider: %s", provider.Type)
 	}
 
 	// override default transport if available

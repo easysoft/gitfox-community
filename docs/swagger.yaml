@@ -88,6 +88,8 @@ definitions:
     enum:
     - github
     - gitlab
+    - gitlab.com
+    - gitlab.cn
     - bitbucket
     - stash
     - gitea
@@ -97,6 +99,8 @@ definitions:
     x-enum-varnames:
     - RepoProviderTypeGitHub
     - RepoProviderTypeGitLab
+    - RepoProviderTypeGitLabCOM
+    - RepoProviderTypeGitLabCN
     - RepoProviderTypeBitbucket
     - RepoProviderTypeStash
     - RepoProviderTypeGitea
@@ -1102,6 +1106,20 @@ definitions:
     required:
     - pipelineID
     type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_jobs.State:
+    enum:
+    - scheduled
+    - running
+    - finished
+    - failed
+    - canceled
+    type: string
+    x-enum-varnames:
+    - StateScheduled
+    - StateRunning
+    - StateFinished
+    - StateFailed
+    - StateCanceled
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_pipeline.GroupedPlugins:
     properties:
       desc:
@@ -1313,9 +1331,18 @@ definitions:
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.ImportInput:
     properties:
+      acl:
+        description: 权限（仅支持open/private）
+        enum:
+        - open
+        - private
+        type: string
       description:
         type: string
       identifier:
+        type: string
+      product:
+        description: 关联产品
         type: string
       provider:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.Provider'
@@ -1323,6 +1350,10 @@ definitions:
         type: string
       spaceID:
         type: integer
+    required:
+    - acl
+    - identifier
+    - spaceID
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.Merge:
     properties:
@@ -1456,6 +1487,17 @@ definitions:
           type: string
         type: array
     type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.Progress:
+    properties:
+      failure:
+        type: string
+      progress:
+        type: integer
+      result:
+        type: string
+      state:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_jobs.State'
+    type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.Provider:
     properties:
       host:
@@ -1463,9 +1505,19 @@ definitions:
       password:
         type: string
       type:
-        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.RepoProviderType'
+        allOf:
+        - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.RepoProviderType'
+        enum:
+        - github
+        - gitlab
+        - gitlab.com
+        - gitlab.cn
+        - gitea
+        - gogs
       username:
         type: string
+    required:
+    - type
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.Repo:
     properties:
@@ -6415,7 +6467,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: 基于传入参数导入远端Git仓库，自动处理GitIgnore模板、License协议、README文件生成，支持派生仓库配置
+      description: 基于传入参数导入远端Git仓库
       parameters:
       - description: 导入仓库请求参数
         in: body
@@ -6435,7 +6487,33 @@ paths:
                 data:
                   $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.RepositoryOutput'
               type: object
-      summary: 导入远端仓库
+      summary: 导入代码库
+      tags:
+      - repos
+  /repos/import-progress:
+    get:
+      consumes:
+      - application/json
+      description: 查询导入进度（仅适用于正在导入中的仓库）
+      parameters:
+      - description: 导入仓库ID
+        in: query
+        name: repoID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 查询成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.Progress'
+              type: object
+      summary: 查询导入进度
       tags:
       - repos
   /repos/list:

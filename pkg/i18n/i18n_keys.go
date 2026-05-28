@@ -734,6 +734,8 @@ const (
 	RepoPullPermissionError            I18nKey = "repo.pull_permission_error"             // 您没有权限拉取此仓库.
 	RepoPushPermissionError            I18nKey = "repo.push_permission_error"             // 您没有权限推送此仓库.
 	RepoQueryError                     I18nKey = "repo.query_error"                       // 查询仓库失败
+	RepoQueryImportProgressError       I18nKey = "repo.query_import_progress_error"       // 查询导入进度异常
+	RepoQueryImportProgressSuccess     I18nKey = "repo.query_import_progress_success"     // 查询导入进度成功
 	RepoQueryParamError                I18nKey = "repo.query_param_error"                 // Query 参数解析失败.
 	RepoQuerySuccess                   I18nKey = "repo.query_success"                     // 查询仓库成功
 	RepoSpaceNotFound                  I18nKey = "repo.space_not_found"                   // 所属空间不存在

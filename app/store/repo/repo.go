@@ -90,9 +90,6 @@ func (s *Store) UpdateOptLock(
 
 // updateOptLock 执行一次基于 mutex 的条件更新。命中 0 行视为版本冲突。
 func (s *Store) updateOptLock(ctx context.Context, repo *repoModel.Repo) (*repoModel.Repo, error) {
-	oldMutex := repo.Mutex
-	newMutex := oldMutex + 1
-
 	updates := map[string]any{
 		"spaceID":       repo.SpaceID,
 		"name":          repo.Identifier,
@@ -101,17 +98,14 @@ func (s *Store) updateOptLock(ctx context.Context, repo *repoModel.Repo) (*repoM
 		"gitUID":        repo.GitUID,
 		"defaultBranch": repo.DefaultBranch,
 		"forkID":        repo.ForkID,
-		"empty":         repo.Empty,
 		"acl":           repo.ACL,
 		"mirror":        repo.Mirror,
 		"status":        repo.Status,
-		"synced":        repo.Synced,
 		"editedBy":      repo.EditedBy,
-		"mutex":         newMutex,
 	}
 
 	result := s.db.WithContext(ctx).Model(&Repository{}).
-		Where("id = ? AND mutex = ? AND deleted = 0", repo.ID, oldMutex).
+		Where("id = ? AND deleted = 0", repo.ID).
 		Updates(updates)
 	if result.Error != nil {
 		return nil, database.ProcessSQLErrorf(ctx, result.Error)
@@ -140,12 +134,9 @@ func mapToModel(data Repository) *repoModel.Repo {
 		DefaultBranch: data.DefaultBranch,
 		ForkID:        data.ForkID,
 		Path:          path,
-		Empty:         data.Empty,
 		ACL:           data.ACL,
-		Synced:        data.Synced,
 		Mirror:        data.Mirror,
 		Status:        data.Status,
-		Mutex:         data.Mutex,
 		CreatedBy:     data.CreatedBy,
 		CreatedDate:   data.CreatedDate,
 		EditedBy:      data.EditedBy,

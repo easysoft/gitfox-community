@@ -32,3 +32,5 @@ repo:
   username_required: "Username is empty. Please update your username in the personal center before performing repository operations."
   import_error: "Failed to import repository"
   import_success: "Repository imported successfully"
+  query_import_progress_error: "Failed to query import progress"
+  query_import_progress_success: "Successfully queried import progress"

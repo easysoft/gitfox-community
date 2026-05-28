@@ -7,8 +7,8 @@ type State string
 
 // State enumeration.
 const (
-	StateScheduled State = "scheduled"
 	StateRunning   State = "running"
+	StateScheduled State = "scheduled"
 	StateFinished  State = "finished"
 	StateFailed    State = "failed"
 	StateCanceled  State = "canceled"
