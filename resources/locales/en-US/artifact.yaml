@@ -41,8 +41,8 @@ artifact:
   view_format_invalid: "Unsupported artifact format. Supported: file, raw, container." # file, raw, maven, container, helm, pypi, npm.
   view_name_required: "Artifact view name is required."
   view_name_too_long: "Artifact view name is too long (max 128 chars)."
-  view_name_invalid_chars: "Artifact view name must not contain whitespace or any of / \\ . .. : * ? \" < > |."
-  view_name_non_ascii_not_allowed: "For versioned artifact repositories (container/raw), the name may only contain ASCII letters, digits, dashes and underscores; non-ASCII characters (e.g. Chinese) are not allowed." # container/raw/helm/pypi/npm/maven
+  view_name_invalid_chars: "Artifact view name must not contain whitespace or any of / \"."
+  view_name_non_ascii_not_allowed: "Artifact view name may only contain letters, digits, dashes, underscores Chinese characters and other characters are not allowed.." # container/raw/helm/pypi/npm/maven
 
   # Parse & Upload
   space_id_required: "spaceID is required when repoID is provided."
