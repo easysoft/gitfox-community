@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
-	"time"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
@@ -267,7 +266,7 @@ func listSortAscending(sortField, order string) bool {
 
 // compareTime 比较可空时间，nil 按零值时间处理。
 func compareTime(left, right *datetime.Local) int {
-	lt, rt := timeVal(left), timeVal(right)
+	lt, rt := left.Time(), right.Time()
 	switch {
 	case lt.Before(rt):
 		return -1
@@ -302,12 +301,4 @@ func assetSortName(info *model.ArtifactAssetInfo) string {
 		return strings.ToLower(filepath.Base(info.Path))
 	}
 	return ""
-}
-
-// timeVal 将项目本地时间类型转为标准 time.Time。
-func timeVal(t *datetime.Local) time.Time {
-	if t == nil {
-		return time.Time{}
-	}
-	return time.Time(*t)
 }

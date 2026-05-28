@@ -351,6 +351,14 @@ func (t *Local) String() string {
 	return time.Time(*t).In(CST).Format("2006-01-02 15:04:05")
 }
 
+// Time 将项目本地时间类型转为标准 time.Time。
+func (t *Local) Time() time.Time {
+	if t == nil {
+		return time.Time{}
+	}
+	return time.Time(*t)
+}
+
 // After 判断是否晚于
 func (t *Local) After(t2 Local) bool {
 	return time.Time(*t).After(time.Time(t2))
