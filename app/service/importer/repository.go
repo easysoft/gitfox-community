@@ -246,7 +246,7 @@ func (r *Repository) Handle(ctx context.Context, data string, reportFn pkgJobs.P
 		return "", fmt.Errorf("failed to find repo by id: %w", err)
 	}
 
-	if repo.Status != "importing" {
+	if repo.Status != constant.RepoStateImporting {
 		return "", fmt.Errorf("repository %s is not being imported", repo.Identifier)
 	}
 
@@ -281,7 +281,7 @@ func (r *Repository) Handle(ctx context.Context, data string, reportFn pkgJobs.P
 
 	err = func() error {
 		updated, err := r.repoStore.UpdateOptLock(ctx, repo, func(repo *repoModel.Repo) error {
-			if repo.Status != "importing" {
+			if repo.Status != constant.RepoStateImporting {
 				return errors.New("repository has already finished importing")
 			}
 			repo.GitUID = gitUID
@@ -307,12 +307,12 @@ func (r *Repository) Handle(ctx context.Context, data string, reportFn pkgJobs.P
 		log.Info("update repo in DB")
 
 		updated, err = r.repoStore.UpdateOptLock(ctx, repo, func(repo *repoModel.Repo) error {
-			if repo.Status != "importing" {
+			if repo.Status != constant.RepoStateImporting {
 				return errors.New("repository has already finished importing")
 			}
 
 			repo.GitUID = gitUID
-			repo.Status = "active"
+			repo.Status = constant.RepoStateActive
 
 			return nil
 		})

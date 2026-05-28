@@ -74,7 +74,7 @@ func (s *Service) Create(ctx context.Context, session *auth.Session, params *rep
 		ForkID:        params.ForkID,
 		DefaultBranch: params.DefaultBranch,
 		ACL:           params.ACL,
-		Status:        "active",
+		Status:        constant.RepoStateActive, // 新创建的仓库直接设为 active 状态
 	}
 
 	repoObj, err := s.repoStore.Create(ctx, repo)
@@ -217,7 +217,7 @@ func (s *Service) Update(ctx context.Context, req *repoModel.ReqForUpdate, oldRe
 func (s *Service) GetRepoCheckAccess(ctx context.Context, session *auth.Session, spaceID uint, identifier string, reqPermission []constant.Permission) (*repoModel.Repo, error) {
 
 	// get repo
-	repo, err := s.GetByIdentifier(ctx, spaceID, identifier, []string{"active"})
+	repo, err := s.GetByIdentifier(ctx, spaceID, identifier, []string{constant.RepoStateActive})
 	if err != nil {
 		return nil, err
 	}

@@ -56,7 +56,7 @@ func (c *Controller) PreReceive(
 		return hook.Output{}, err
 	}
 
-	if !in.Internal && repo.Status != "active" {
+	if !in.Internal && repo.Status != constant.RepoStateActive {
 		output.Error = ptr.String("Push not allowed in the current repository state")
 		return output, nil
 	}
@@ -91,7 +91,7 @@ func (c *Controller) PreReceive(
 	}
 
 	// For internal calls - through the application interface (API) - no need to verify protection rules.
-	if !in.Internal && repo.Status == "active" {
+	if !in.Internal && repo.Status == constant.RepoStateActive {
 		// TODO: use store.PrincipalInfoCache once we abstracted principals.
 		_, err := c.userStore.FindByAccount(ctx, in.PrincipalAccount)
 		if err != nil {
@@ -138,7 +138,7 @@ func (c *Controller) PreReceive(
 }
 
 func (c *Controller) blockPullReqRefUpdate(refUpdates changedRefs, state string) bool {
-	if state == "importing" {
+	if state == constant.RepoStateImporting {
 		return false
 	}
 
