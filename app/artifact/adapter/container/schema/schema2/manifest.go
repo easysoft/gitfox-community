@@ -64,6 +64,10 @@ func (m Manifest) GetLayers() []schema.Descriptor {
 	return m.Layers
 }
 
+func (m Manifest) GetConfig() schema.Descriptor {
+	return m.Config
+}
+
 type DeserializedManifest struct {
 	Manifest
 }

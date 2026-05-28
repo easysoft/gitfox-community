@@ -57,6 +57,9 @@ type Manifest interface {
 type ImageManifest interface {
 	Manifest
 	GetLayers() []Descriptor
+	// GetConfig 返回 image config blob 描述符（v2 schema 2 / OCI manifest v1 都有 config 字段）。
+	// 用于读取 config blob 解析真实的 OS / Architecture，避免单平台 manifest 默认回落到 amd64。
+	GetConfig() Descriptor
 }
 
 func ToImage(in Manifest) (ImageManifest, error) {
