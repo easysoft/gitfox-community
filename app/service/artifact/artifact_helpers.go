@@ -3,16 +3,14 @@ package artifact
 import (
 	"fmt"
 	"net/url"
-	"path/filepath"
-	"sort"
 	"strconv"
 	"strings"
-	"time"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/adapter"
 	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
 )
+
+// --- 制品相关 ---
 
 // filterVersionList 按请求条件过滤 package 下的版本列表。
 func filterVersionList(list []*model.VersionListItem, req *model.ListAssetReq) []*model.VersionListItem {
@@ -33,38 +31,6 @@ func filterVersionList(list []*model.VersionListItem, req *model.ListAssetReq) [
 		filtered = append(filtered, item)
 	}
 	return filtered
-}
-
-// sortVersionList 按前端传入字段排序版本列表，默认按 editedDate 倒序。
-func sortVersionList(list []*model.VersionListItem, sortField, order string) {
-	if sortField == "" {
-		sortField = "editedDate"
-	}
-	ascending := listSortAscending(sortField, order)
-	sort.Slice(list, func(i, j int) bool {
-		var cmp int
-		switch sortField {
-		case "createdDate":
-			cmp = compareTime(list[i].CreatedDate, list[j].CreatedDate)
-		case "editedDate":
-			cmp = compareTime(list[i].EditedDate, list[j].EditedDate)
-		case "name", "version":
-			cmp = strings.Compare(strings.ToLower(list[i].Version), strings.ToLower(list[j].Version))
-		case "size":
-			cmp = compareInt64(list[i].Size, list[j].Size)
-		case "id":
-			cmp = compareInt64(list[i].ID, list[j].ID)
-		default:
-			cmp = compareTime(list[i].EditedDate, list[j].EditedDate)
-		}
-		if cmp == 0 {
-			cmp = compareInt64(list[i].ID, list[j].ID)
-		}
-		if ascending {
-			return cmp < 0
-		}
-		return cmp > 0
-	})
 }
 
 // filterAssetNodeInfoList 按名称、平台和操作人过滤资产详情列表。
@@ -89,94 +55,6 @@ func filterAssetNodeInfoList(list []*model.ArtifactAssetInfo, req *model.ListAss
 		filtered = append(filtered, info)
 	}
 	return filtered
-}
-
-// sortAssetNodeInfoList 按资产字段排序，默认按 editedDate 倒序。
-func sortAssetNodeInfoList(list []*model.ArtifactAssetInfo, sortField, order string) {
-	if sortField == "" {
-		sortField = "editedDate"
-	}
-	ascending := listSortAscending(sortField, order)
-	sort.Slice(list, func(i, j int) bool {
-		var cmp int
-		switch sortField {
-		case "createdDate":
-			cmp = compareTime(list[i].Created, list[j].Created)
-		case "editedDate":
-			cmp = compareTime(list[i].Updated, list[j].Updated)
-		case "name":
-			cmp = strings.Compare(assetSortName(list[i]), assetSortName(list[j]))
-		case "size":
-			cmp = compareInt64(list[i].Size, list[j].Size)
-		default:
-			cmp = strings.Compare(list[i].Path, list[j].Path)
-		}
-		if cmp == 0 {
-			cmp = strings.Compare(list[i].Path, list[j].Path)
-		}
-		if ascending {
-			return cmp < 0
-		}
-		return cmp > 0
-	})
-}
-
-// listSortAscending 返回列表排序方向；未传 order 时名称类升序、时间类倒序。
-func listSortAscending(sortField, order string) bool {
-	switch strings.ToLower(order) {
-	case "asc":
-		return true
-	case "desc":
-		return false
-	}
-	return sortField == "id" || sortField == "name" || sortField == "version"
-}
-
-// compareTime 比较可空时间，nil 按零值时间处理。
-func compareTime(left, right *datetime.Local) int {
-	lt, rt := timeVal(left), timeVal(right)
-	switch {
-	case lt.Before(rt):
-		return -1
-	case lt.After(rt):
-		return 1
-	default:
-		return 0
-	}
-}
-
-// compareInt64 比较 int64，便于排序 tie-break。
-func compareInt64(left, right int64) int {
-	switch {
-	case left < right:
-		return -1
-	case left > right:
-		return 1
-	default:
-		return 0
-	}
-}
-
-// assetSortName 提取资产排序名称，优先使用 nodeInfo 元数据名称。
-func assetSortName(info *model.ArtifactAssetInfo) string {
-	if info == nil {
-		return ""
-	}
-	if info.Metadata != nil && info.Metadata.Name != "" {
-		return strings.ToLower(info.Metadata.Name)
-	}
-	if info.Path != "" {
-		return strings.ToLower(filepath.Base(info.Path))
-	}
-	return ""
-}
-
-// timeVal 将项目本地时间类型转为标准 time.Time。
-func timeVal(t *datetime.Local) time.Time {
-	if t == nil {
-		return time.Time{}
-	}
-	return time.Time(*t)
 }
 
 // populateNodeInfoAssetFields 将资产基础字段填充到 nodeInfo 响应。
@@ -296,17 +174,6 @@ func notFoundNodeInfo() *model.ArtifactAssetInfo {
 	return &model.ArtifactAssetInfo{Status: string(model.ArtifactStatusNotFound)}
 }
 
-// filterTreeNodesByLevel 按层级裁剪树节点。
-func filterTreeNodesByLevel(inputs []*model.ArtifactTreeNode, level string) []*model.ArtifactTreeNode {
-	out := make([]*model.ArtifactTreeNode, 0, len(inputs))
-	for _, n := range inputs {
-		if treeNodeLevelRank(n.Type) <= treeLevelRank(level) {
-			out = append(out, n)
-		}
-	}
-	return out
-}
-
 // convertTreeNodesToRes 批量转换树节点为接口响应。
 func convertTreeNodesToRes(inputs []*model.ArtifactTreeNode, level string) []*model.ArtifactTreeRes {
 	out := make([]*model.ArtifactTreeRes, 0, len(inputs))
@@ -316,43 +183,19 @@ func convertTreeNodesToRes(inputs []*model.ArtifactTreeNode, level string) []*mo
 	return out
 }
 
-// convertTreeNodeToRes 将存储层树节点转换为接口返回模型。
-//
-// metadata.id 始终为 ops_artifact_tree_nodes.id（树节点主键）；
-// asset 节点不写入 tree_nodes 表，由调用方决定是否输出（默认留空）。
-// metadata.entityID 是 "kind.pk" 实体引用串，供跨接口定位实体使用。
-func convertTreeNodeToRes(n *model.ArtifactTreeNode, level string) *model.ArtifactTreeRes {
-	item := &model.ArtifactTreeRes{Name: n.Name, Path: n.Path, Format: n.Format, Leaf: n.Type == model.ArtifactTreeNodeTypeAsset}
-	if n.Type == model.ArtifactTreeNodeTypeVersion {
-		// version 节点是否叶子完全取决于查询是否下钻到 asset 级：
-		//   - level != asset：用户没要 asset 层，version 视为叶子；
-		//   - level == asset：version 下还有 manifest/file asset 子节点，必须保持非叶子。
-		// container 的 version 同样挂着 manifest blob asset，不做格式特殊化。
-		item.Leaf = level != model.ArtifactNodeLevelAsset
+// --- Tree相关 ---
+
+// normalizeTreeLevel 规范化树查询层级参数。
+func normalizeTreeLevel(level string) (string, error) {
+	if level == "" {
+		return model.ArtifactNodeLevelAsset, nil
 	}
-	if n.Type == model.ArtifactTreeNodeTypeVersion {
-		item.Metadata = parseArtifactTreePath(n.Path)
-		if item.Metadata == nil {
-			item.Metadata = &model.ArtifactTreeNodeMeta{}
-		}
-		item.Metadata.Type = model.ArtifactTreeNodeTypeVersion
-	} else {
-		item.Metadata = &model.ArtifactTreeNodeMeta{Type: n.Type}
+	switch level {
+	case model.ArtifactNodeLevelFormat, model.ArtifactNodeLevelGroup, model.ArtifactNodeLevelPackage, model.ArtifactNodeLevelVersion, model.ArtifactNodeLevelAsset:
+		return level, nil
+	default:
+		return "", fmt.Errorf("unsupported level: %s", level)
 	}
-	// Id 取 tree_nodes.id（树节点主键）；EntityID 用 "kind.pk" 实体串。
-	if n.ID > 0 {
-		item.Metadata.Id = n.ID
-	}
-	if n.TargetID.Valid {
-		item.Metadata.EntityID = (&model.ArtifactTreeNodeId{Type: n.Type, Pk: n.TargetID.Int64}).String()
-	}
-	if n.Type == model.ArtifactTreeNodeTypeFormat {
-		item.Metadata.Name = n.Name
-		if n.ArtifactID > 0 {
-			item.Metadata.EntityID = (&model.ArtifactTreeNodeId{Type: model.ArtifactTreeNodeTypeArtifact, Pk: n.ArtifactID}).String()
-		}
-	}
-	return item
 }
 
 // normalizeTreePath 规范化树查询路径，并识别是否递归查询。
@@ -375,17 +218,15 @@ func normalizeTreePath(path string) (string, bool) {
 	return p, recursive
 }
 
-// normalizeTreeLevel 规范化树查询层级参数。
-func normalizeTreeLevel(level string) (string, error) {
-	if level == "" {
-		return model.ArtifactNodeLevelAsset, nil
+// filterTreeNodesByLevel 按层级裁剪树节点。
+func filterTreeNodesByLevel(inputs []*model.ArtifactTreeNode, level string) []*model.ArtifactTreeNode {
+	out := make([]*model.ArtifactTreeNode, 0, len(inputs))
+	for _, n := range inputs {
+		if treeNodeLevelRank(n.Type) <= treeLevelRank(level) {
+			out = append(out, n)
+		}
 	}
-	switch level {
-	case model.ArtifactNodeLevelFormat, model.ArtifactNodeLevelGroup, model.ArtifactNodeLevelPackage, model.ArtifactNodeLevelVersion, model.ArtifactNodeLevelAsset:
-		return level, nil
-	default:
-		return "", fmt.Errorf("unsupported level: %s", level)
-	}
+	return out
 }
 
 // treeLevelRank 返回请求层级的排序等级。
@@ -434,6 +275,47 @@ func parseArtifactTreePath(path string) *model.ArtifactTreeNodeMeta {
 	}
 	return meta
 }
+
+// convertTreeNodeToRes 将存储层树节点转换为接口返回模型。
+//
+// metadata.id 始终为 ops_artifact_tree_nodes.id（树节点主键）；
+// asset 节点不写入 tree_nodes 表，由调用方决定是否输出（默认留空）。
+// metadata.entityID 是 "kind.pk" 实体引用串，供跨接口定位实体使用。
+func convertTreeNodeToRes(n *model.ArtifactTreeNode, level string) *model.ArtifactTreeRes {
+	item := &model.ArtifactTreeRes{Name: n.Name, Path: n.Path, Format: n.Format, Leaf: n.Type == model.ArtifactTreeNodeTypeAsset}
+	if n.Type == model.ArtifactTreeNodeTypeVersion {
+		// version 节点是否叶子完全取决于查询是否下钻到 asset 级：
+		//   - level != asset：用户没要 asset 层，version 视为叶子；
+		//   - level == asset：version 下还有 manifest/file asset 子节点，必须保持非叶子。
+		// container 的 version 同样挂着 manifest blob asset，不做格式特殊化。
+		item.Leaf = level != model.ArtifactNodeLevelAsset
+	}
+	if n.Type == model.ArtifactTreeNodeTypeVersion {
+		item.Metadata = parseArtifactTreePath(n.Path)
+		if item.Metadata == nil {
+			item.Metadata = &model.ArtifactTreeNodeMeta{}
+		}
+		item.Metadata.Type = model.ArtifactTreeNodeTypeVersion
+	} else {
+		item.Metadata = &model.ArtifactTreeNodeMeta{Type: n.Type}
+	}
+	// Id 取 tree_nodes.id（树节点主键）；EntityID 用 "kind.pk" 实体串。
+	if n.ID > 0 {
+		item.Metadata.Id = n.ID
+	}
+	if n.TargetID.Valid {
+		item.Metadata.EntityID = (&model.ArtifactTreeNodeId{Type: n.Type, Pk: n.TargetID.Int64}).String()
+	}
+	if n.Type == model.ArtifactTreeNodeTypeFormat {
+		item.Metadata.Name = n.Name
+		if n.ArtifactID > 0 {
+			item.Metadata.EntityID = (&model.ArtifactTreeNodeId{Type: model.ArtifactTreeNodeTypeArtifact, Pk: n.ArtifactID}).String()
+		}
+	}
+	return item
+}
+
+// --- 统计相关 ---
 
 // artifactViewScope 将版本统计信息转换为作用域标识。
 func artifactViewScope(info *model.ArtifactVersionInfo) string {
