@@ -183,7 +183,7 @@ func (r *CreateArtifactViewReq) Validate() error {
 	return nil
 }
 
-// isVersionedViewNameRune 报告字符是否可用于非 file 制品库名称ASCII 字母、数字、中划线、下划线、英文句号。
+// isVersionedViewNameRune 报告字符是否可用于非 file 制品库名称：英文字母、数字、中划线、下划线、英文句号。
 func isVersionedViewNameRune(rn rune) bool {
 	if rn > unicode.MaxASCII {
 		return false
