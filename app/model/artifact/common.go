@@ -22,7 +22,7 @@ var viewNameForbiddenChars = []rune{'/', '\\', '"'}
 //  1. 非空，长度 ≤ maxArtifactViewNameLen
 //  2. 所有格式不得包含空白字符或路径/Windows 保留字符
 //  3. file 格式不额外限制字符集
-//  4. 其它格式仅允许小写英文字母、数字、下划线、连字符和英文句号
+//  4. 其它格式仅允许英文字母、数字、下划线、连字符和英文句号
 //
 // 返回 trim 后的名称和可能的错误（已带 i18n key）。
 func ValidateViewName(name string, format ArtifactFormat) (string, error) {
@@ -183,7 +183,7 @@ func (r *CreateArtifactViewReq) Validate() error {
 	return nil
 }
 
-// isVersionedViewNameRune 报告字符是否可用于非 file 制品库名称：小写 ASCII 字母、数字、中划线、下划线、英文句号。
+// isVersionedViewNameRune 报告字符是否可用于非 file 制品库名称ASCII 字母、数字、中划线、下划线、英文句号。
 func isVersionedViewNameRune(rn rune) bool {
 	if rn > unicode.MaxASCII {
 		return false
