@@ -105,7 +105,7 @@ func (t *TagMetadataReader) parseImage(ctx context.Context, platform *v1.Platfor
 				data.Arch = cfgArch
 			}
 		} else {
-			logger.GetLogger(ctx).Warnf("【container metadata】read image config blob failed, fallback to default os/arch: %v", cfgErr)
+			logger.GetLogger(ctx).Errorf("【container metadata】read image config blob failed, fallback to default os/arch: %v", cfgErr)
 		}
 	}
 
