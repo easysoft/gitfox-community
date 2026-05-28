@@ -14,14 +14,15 @@ import (
 const maxArtifactViewNameLen = 128
 
 // viewNameForbiddenChars 任何 format 下都禁止在 view 名称中出现的字符。
-// 覆盖路径分隔符、点号（避免与 group 路径分隔号冲突）以及 Windows 保留字符。
-var viewNameForbiddenChars = []rune{'/', '\\', '.', ':', '*', '?', '"', '<', '>', '|'}
+// 覆盖路径分隔符以及 Windows 保留字符。
+var viewNameForbiddenChars = []rune{'/', '\\', '"'}
 
 // ValidateViewName 校验制品库视图名称的合法性。
 // 规则：
 //  1. 非空，长度 ≤ maxArtifactViewNameLen
-//  2. 不得包含空白字符或 viewNameForbiddenChars 中的字符
-//  3. 版本化格式（container/helm/pypi/npm/maven）只允许 ASCII 字母、数字、-、_
+//  2. 所有格式不得包含空白字符或路径/Windows 保留字符
+//  3. file 格式不额外限制字符集
+//  4. 其它格式仅允许小写英文字母、数字、下划线、连字符和英文句号
 //
 // 返回 trim 后的名称和可能的错误（已带 i18n key）。
 func ValidateViewName(name string, format ArtifactFormat) (string, error) {
@@ -54,15 +55,15 @@ func ValidateViewName(name string, format ArtifactFormat) (string, error) {
 			}
 		}
 	}
-	// 版本化格式：只允许 ASCII 字母、数字、中划线、下划线
-	if IsVersionedFormat(format) {
-		for _, rn := range trimmed {
-			if !isVersionedViewNameRune(rn) {
-				return "", errors.WithI18nKey(
-					fmt.Errorf("versioned artifact view name must be ASCII letters/digits/-/_: %q", trimmed),
-					i18n.ArtifactViewNameNonAsciiNotAllowed,
-				)
-			}
+	if format == ArtifactFileFormat {
+		return trimmed, nil
+	}
+	for _, rn := range trimmed {
+		if !isVersionedViewNameRune(rn) {
+			return "", errors.WithI18nKey(
+				fmt.Errorf("artifact view name must be  ASCII letters/digits/-/_/.: %q", trimmed),
+				i18n.ArtifactViewNameNonAsciiNotAllowed,
+			)
 		}
 	}
 	return trimmed, nil
@@ -182,7 +183,7 @@ func (r *CreateArtifactViewReq) Validate() error {
 	return nil
 }
 
-// isVersionedViewNameRune 报告字符是否可用于版本化制品库名称：ASCII 字母、数字、中划线、下划线。
+// isVersionedViewNameRune 报告字符是否可用于非 file 制品库名称：小写 ASCII 字母、数字、中划线、下划线、英文句号。
 func isVersionedViewNameRune(rn rune) bool {
 	if rn > unicode.MaxASCII {
 		return false
@@ -194,7 +195,7 @@ func isVersionedViewNameRune(rn rune) bool {
 		return true
 	case rn >= '0' && rn <= '9':
 		return true
-	case rn == '-' || rn == '_':
+	case rn == '-' || rn == '_' || rn == '.':
 		return true
 	}
 	return false
