@@ -22,6 +22,7 @@ import (
 	repoStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	pkgJobs "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/jobs"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	urlUtil "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/url"
@@ -97,19 +98,28 @@ func (r *Repository) LoadRepositoryFromProvider(
 	repoSlug string,
 ) (RepositoryInfo, repoModel.Provider, error) {
 	if repoSlug == "" {
-		return RepositoryInfo{}, provider, errors.BadRequest.New("provider repository identifier is missing")
+		return RepositoryInfo{}, provider, errors.WithI18nKey(
+			errors.BadRequest.New("provider repository identifier is missing"),
+			i18n.RepoProviderRepoIdentifierMissing,
+		)
 	}
 
 	scmClient, err := getScmClientWithTransport(provider, repoSlug, false)
 	if err != nil {
-		return RepositoryInfo{}, provider, errors.BadRequest.Wrap(err, "could not create client")
+		return RepositoryInfo{}, provider, errors.WithI18nKey(
+			errors.BadRequest.Wrap(err, "could not create client"),
+			i18n.RepoProviderScmClientCreateError,
+		)
 	}
 
 	// Augment user information if it's not provided for certain vendors.
 	if provider.Password != "" && provider.Username == "" {
 		user, _, err := scmClient.Users.Find(ctx)
 		if err != nil {
-			return RepositoryInfo{}, provider, errors.BadRequest.Wrap(err, "could not find user")
+			return RepositoryInfo{}, provider, errors.WithI18nKey(
+				errors.BadRequest.Wrap(err, "could not find user"),
+				i18n.RepoProviderUserFindError,
+			)
 		}
 		provider.Username = user.Login
 	}
@@ -117,12 +127,15 @@ func (r *Repository) LoadRepositoryFromProvider(
 	if provider.Type == constant.RepoProviderTypeAzure {
 		repoSlug, err = extractRepoFromSlug(repoSlug)
 		if err != nil {
-			return RepositoryInfo{}, provider, errors.BadRequest.Wrap(err, "invalid slug format")
+			return RepositoryInfo{}, provider, errors.WithI18nKey(
+				errors.BadRequest.Wrap(err, "invalid slug format"),
+				i18n.RepoProviderInvalidSlugFormat,
+			)
 		}
 	}
 	scmRepo, scmResp, err := scmClient.Repositories.Find(ctx, repoSlug)
 	if err = convertSCMError(provider, repoSlug, scmResp, err); err != nil {
-		return RepositoryInfo{}, provider, err
+		return RepositoryInfo{}, provider, errors.WithI18nKey(err, i18n.RepoImportError)
 	}
 
 	return RepositoryInfo{
@@ -148,6 +161,19 @@ func (r *Repository) Run(ctx context.Context, provider repoModel.Provider, repo 
 	}
 
 	return r.scheduler.RunJob(ctx, jobDef.Name, jobDef.Type, jobDef.Data, int(jobDef.Timeout/time.Second))
+}
+
+func (r *Repository) GetProgress(ctx context.Context, repoID uint) (repoModel.Progress, error) {
+	progress, err := r.scheduler.GetJobProgress(ctx, JobIDFromRepoID(int64(repoID)))
+	if err != nil {
+		return repoModel.Progress{}, fmt.Errorf("failed to get job progress: %w", err)
+	}
+
+	return repoModel.Progress{
+		Status:  progress["state"].(simpleJob.State),
+		Result:  progress["result"].(string),
+		Failure: progress["failure"].(string),
+	}, nil
 }
 
 func (r *Repository) getJobDef(jobUID string, input Input) (simpleJob.Definition, error) {
@@ -210,7 +236,7 @@ func (r *Repository) Register(executor *pkgJobs.Executor) error {
 	return executor.Register(JobType, r)
 }
 
-func (r *Repository) Handle(ctx context.Context, data string, _ pkgJobs.ProgressReporter) (string, error) {
+func (r *Repository) Handle(ctx context.Context, data string, reportFn pkgJobs.ProgressReporter) (string, error) {
 	input, err := r.getJobInput(data)
 	if err != nil {
 		return "", err
@@ -233,7 +259,7 @@ func (r *Repository) Handle(ctx context.Context, data string, _ pkgJobs.Progress
 		return "", fmt.Errorf("failed to find repo by id: %w", err)
 	}
 
-	if constant.RepoState(repo.Status) != constant.RepoStateGitImport {
+	if repo.Status != constant.RepoStateImporting {
 		return "", fmt.Errorf("repository %s is not being imported", repo.Identifier)
 	}
 
@@ -243,11 +269,12 @@ func (r *Repository) Handle(ctx context.Context, data string, _ pkgJobs.Progress
 		"repo.id", int64(repo.ID),
 		"repo.path", repo.Path,
 	)
+
 	log.Info("create git repository")
 
 	accountInfo := auth.Session{User: &principal.User{
-		Account: "admin",
-		Email:   "admin@gitfox.com",
+		Account: repo.CreatedBy,
+		Email:   fmt.Sprintf("%s@gitfox.com", repo.CreatedBy),
 	}}
 	gitUID, err := r.createGitRepository(ctx, accountInfo, repo.ID)
 	if err != nil {
@@ -257,8 +284,8 @@ func (r *Repository) Handle(ctx context.Context, data string, _ pkgJobs.Progress
 	log.Infof("successfully created git repository with git_uid '%s'", gitUID)
 
 	err = func() error {
-		repo, err = r.repoStore.UpdateOptLock(ctx, repo, func(repo *repoModel.Repo) error {
-			if repo.Status != int(constant.RepoStateGitImport) {
+		updated, err := r.repoStore.UpdateOptLock(ctx, repo, func(repo *repoModel.Repo) error {
+			if repo.Status != constant.RepoStateImporting {
 				return errors.New("repository has already finished importing")
 			}
 			repo.GitUID = gitUID
@@ -268,6 +295,7 @@ func (r *Repository) Handle(ctx context.Context, data string, _ pkgJobs.Progress
 		if err != nil {
 			return fmt.Errorf("failed to update repository prior to the import: %w", err)
 		}
+		repo = updated
 
 		log.Info("sync repository")
 
@@ -277,22 +305,22 @@ func (r *Repository) Handle(ctx context.Context, data string, _ pkgJobs.Progress
 		}
 
 		log.Infof("successfully synced repository (with default branch: %q)", repo.DefaultBranch)
-
 		log.Info("update repo in DB")
 
-		repo, err = r.repoStore.UpdateOptLock(ctx, repo, func(repo *repoModel.Repo) error {
-			if constant.RepoState(repo.Status) != constant.RepoStateGitImport {
+		updated, err = r.repoStore.UpdateOptLock(ctx, repo, func(repo *repoModel.Repo) error {
+			if repo.Status != constant.RepoStateImporting {
 				return errors.New("repository has already finished importing")
 			}
 
 			repo.GitUID = gitUID
-			repo.Status = int(constant.RepoStateActive)
+			repo.Status = constant.RepoStateActive
 
 			return nil
 		})
 		if err != nil {
 			return fmt.Errorf("failed to update repository after import: %w", err)
 		}
+		repo = updated
 
 		return nil
 	}()

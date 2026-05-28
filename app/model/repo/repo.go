@@ -82,12 +82,9 @@ type Repo struct {
 	GitUID        string `json:"gitUID"`
 	DefaultBranch string `json:"defaultBranch"`
 	ForkID        *uint  `json:"forkID"` // 允许 NULL，用指针类型
-	Empty         bool   `json:"empty"`
 	ACL           string `json:"acl"`
 	Mirror        bool   `json:"mirror"`
-	Synced        uint8  `json:"synced"`
-	Status        int    `json:"status"` // 状态码用 int 类型（兼容枚举映射）
-	Mutex         int    `json:"mutex"`
+	Status        string `json:"status"`
 	// git urls
 	GitURL      string          `json:"gitURL,omitempty"`
 	GitSSHURL   string          `json:"gitSSHURL,omitempty"`
