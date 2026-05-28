@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	gitevents "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/events/git"
 	pullreqevents "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/events/pullreq"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/githook"
@@ -58,7 +59,7 @@ func (c *Controller) PostReceive(
 	out := hook.Output{}
 
 	// report ref events if repo is in an active state (best effort)
-	if repo.Status == "active" {
+	if repo.Status == constant.RepoStateActive {
 		c.reportReferenceEvents(ctx, rgit, repo, in.PrincipalAccount, in.PostReceiveInput)
 	}
 

@@ -55,7 +55,7 @@ func (r *RepositoryInfo) ToRepo(
 		CreatedBy:     user.Account,
 		ForkID:        &forkID,
 		DefaultBranch: r.DefaultBranch,
-		Status:        "importing", // 标记为导入中状态
+		Status:        constant.RepoStateImporting, // 标记为导入中状态
 		ACL:           acl,
 		Product:       product,
 		Path:          paths.Concatenate(fmt.Sprint(spaceID), identifier),

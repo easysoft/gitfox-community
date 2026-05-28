@@ -27,15 +27,3 @@ func (p RepoProviderType) Enum() []any {
 		RepoProviderTypeAzure,
 	}
 }
-
-// RepoImportState represents state of a background job.
-type RepoImportState string
-
-// State enumeration.
-const (
-	JobStateScheduled RepoImportState = "scheduled"
-	JobStateRunning   RepoImportState = "running"
-	JobStateFinished  RepoImportState = "finished"
-	JobStateFailed    RepoImportState = "failed"
-	JobStateCanceled  RepoImportState = "canceled"
-)
