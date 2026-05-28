@@ -222,3 +222,18 @@ func (c *assets) DeleteByArtifactID(ctx context.Context, artifactID int64) (int6
 	}
 	return result.RowsAffected, nil
 }
+
+// MoveArtifactLibByGroupIDs 跨 view 移动 group 子树时，把直挂在这些 group 上的 asset
+// 一并改归属。groupIDs 为空时直接返回 nil；tx 不为 nil 时复用调用方事务连接。
+func (c *assets) MoveArtifactLibByGroupIDs(ctx context.Context, tx *gorm.DB, groupIDs []int64, targetArtifactID int64) error {
+	if len(groupIDs) == 0 {
+		return nil
+	}
+	db := pickDB(tx, c.db)
+	if err := db.WithContext(ctx).Model(&artifactAsset{}).
+		Where("groupID IN ?", groupIDs).
+		UpdateColumn("artifactLibID", targetArtifactID).Error; err != nil {
+		return database.ProcessSQLErrorf(ctx, err)
+	}
+	return nil
+}
