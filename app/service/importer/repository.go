@@ -22,6 +22,7 @@ import (
 	repoStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	pkgJobs "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/jobs"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	urlUtil "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/url"
@@ -97,19 +98,28 @@ func (r *Repository) LoadRepositoryFromProvider(
 	repoSlug string,
 ) (RepositoryInfo, repoModel.Provider, error) {
 	if repoSlug == "" {
-		return RepositoryInfo{}, provider, errors.BadRequest.New("provider repository identifier is missing")
+		return RepositoryInfo{}, provider, errors.WithI18nKey(
+			errors.BadRequest.New("provider repository identifier is missing"),
+			i18n.RepoProviderRepoIdentifierMissing,
+		)
 	}
 
 	scmClient, err := getScmClientWithTransport(provider, repoSlug, false)
 	if err != nil {
-		return RepositoryInfo{}, provider, errors.BadRequest.Wrap(err, "could not create client")
+		return RepositoryInfo{}, provider, errors.WithI18nKey(
+			errors.BadRequest.Wrap(err, "could not create client"),
+			i18n.RepoProviderScmClientCreateError,
+		)
 	}
 
 	// Augment user information if it's not provided for certain vendors.
 	if provider.Password != "" && provider.Username == "" {
 		user, _, err := scmClient.Users.Find(ctx)
 		if err != nil {
-			return RepositoryInfo{}, provider, errors.BadRequest.Wrap(err, "could not find user")
+			return RepositoryInfo{}, provider, errors.WithI18nKey(
+				errors.BadRequest.Wrap(err, "could not find user"),
+				i18n.RepoProviderUserFindError,
+			)
 		}
 		provider.Username = user.Login
 	}
@@ -117,12 +127,15 @@ func (r *Repository) LoadRepositoryFromProvider(
 	if provider.Type == constant.RepoProviderTypeAzure {
 		repoSlug, err = extractRepoFromSlug(repoSlug)
 		if err != nil {
-			return RepositoryInfo{}, provider, errors.BadRequest.Wrap(err, "invalid slug format")
+			return RepositoryInfo{}, provider, errors.WithI18nKey(
+				errors.BadRequest.Wrap(err, "invalid slug format"),
+				i18n.RepoProviderInvalidSlugFormat,
+			)
 		}
 	}
 	scmRepo, scmResp, err := scmClient.Repositories.Find(ctx, repoSlug)
 	if err = convertSCMError(provider, repoSlug, scmResp, err); err != nil {
-		return RepositoryInfo{}, provider, err
+		return RepositoryInfo{}, provider, errors.WithI18nKey(err, i18n.RepoImportError)
 	}
 
 	return RepositoryInfo{
@@ -257,14 +270,6 @@ func (r *Repository) Handle(ctx context.Context, data string, reportFn pkgJobs.P
 		"repo.path", repo.Path,
 	)
 
-	reportProgress := func(progress int, result string) {
-		if _, err := reportFn(progress, result); err != nil {
-			log.Warnw("failed to report import progress", "progress", progress, "error", err)
-		}
-	}
-
-	reportProgress(5, "starting import")
-
 	log.Info("create git repository")
 
 	accountInfo := auth.Session{User: &principal.User{
@@ -277,7 +282,6 @@ func (r *Repository) Handle(ctx context.Context, data string, reportFn pkgJobs.P
 	}
 
 	log.Infof("successfully created git repository with git_uid '%s'", gitUID)
-	reportProgress(20, "git repository created")
 
 	err = func() error {
 		updated, err := r.repoStore.UpdateOptLock(ctx, repo, func(repo *repoModel.Repo) error {
@@ -294,7 +298,6 @@ func (r *Repository) Handle(ctx context.Context, data string, reportFn pkgJobs.P
 		repo = updated
 
 		log.Info("sync repository")
-		reportProgress(30, "syncing repository")
 
 		err = r.syncGitRepository(ctx, &accountInfo, repo, cloneURLWithAuth)
 		if err != nil {
@@ -302,8 +305,6 @@ func (r *Repository) Handle(ctx context.Context, data string, reportFn pkgJobs.P
 		}
 
 		log.Infof("successfully synced repository (with default branch: %q)", repo.DefaultBranch)
-		reportProgress(90, "sync completed")
-
 		log.Info("update repo in DB")
 
 		updated, err = r.repoStore.UpdateOptLock(ctx, repo, func(repo *repoModel.Repo) error {
@@ -346,7 +347,6 @@ func (r *Repository) Handle(ctx context.Context, data string, reportFn pkgJobs.P
 		log.Warnw("failed to publish import completion SSE", "error", err)
 	}
 
-	reportProgress(100, "import completed")
 	log.Info("completed repository import")
 
 	return "", nil
