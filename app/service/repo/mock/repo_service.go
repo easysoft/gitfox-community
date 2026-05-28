@@ -70,7 +70,7 @@ func (mr *MockInterfaceMockRecorder) GetByID(ctx, session, id interface{}) *gomo
 }
 
 // GetByIdentifier mocks base method.
-func (m *MockInterface) GetByIdentifier(ctx context.Context, spaceID uint, identifier string, allowedStates []constant.RepoState) (*repoModel.Repo, error) {
+func (m *MockInterface) GetByIdentifier(ctx context.Context, spaceID uint, identifier string, allowedStates []string) (*repoModel.Repo, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetByIdentifier", ctx, spaceID, identifier, allowedStates)
 	ret0, _ := ret[0].(*repoModel.Repo)

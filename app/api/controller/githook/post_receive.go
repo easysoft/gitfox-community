@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strings"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	gitevents "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/events/git"
 	pullreqevents "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/events/pullreq"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/githook"
@@ -57,12 +56,9 @@ func (c *Controller) PostReceive(
 	}
 	// create output object and have following messages fill its messages
 	out := hook.Output{}
-	// update default branch based on ref update info on empty repos.
-	// as the branch could be different than the configured default value.
-	c.handleEmptyRepoPush(ctx, repo, in.PostReceiveInput, &out)
 
 	// report ref events if repo is in an active state (best effort)
-	if constant.RepoState(repo.Status) == constant.RepoStateActive {
+	if repo.Status == "active" {
 		c.reportReferenceEvents(ctx, rgit, repo, in.PrincipalAccount, in.PostReceiveInput)
 	}
 
@@ -405,62 +401,6 @@ func (c *Controller) verifyBranchExistence(ctx context.Context,
 	}
 
 	return ref.SHA.String(), nil
-}
-
-// handleEmptyRepoPush updates repo default branch on empty repos if push contains branches.
-func (c *Controller) handleEmptyRepoPush(
-	ctx context.Context,
-	repo *repoModel.Repo,
-	in hook.PostReceiveInput,
-	out *hook.Output,
-) {
-	if !repo.Empty {
-		return
-	}
-
-	var newDefaultBranch string
-	// update default branch if corresponding branch does not exist
-	for _, refUpdate := range in.RefUpdates {
-		if strings.HasPrefix(refUpdate.Ref, gitReferenceNamePrefixBranch) && !refUpdate.New.IsNil() {
-			branchName := refUpdate.Ref[len(gitReferenceNamePrefixBranch):]
-			if branchName == repo.DefaultBranch {
-				newDefaultBranch = branchName
-				break
-			}
-			// use the first pushed branch if default branch is not present.
-			if newDefaultBranch == "" {
-				newDefaultBranch = branchName
-			}
-		}
-	}
-	// if newDefaultBranch == "" {
-	// 	out.Error = ptr.String(usererror.ErrEmptyRepoNeedsBranch.Error())
-	// 	return
-	// }
-
-	// TODO: Update repository default branch and empty status
-	// This requires implementing UpdateOptLock method in repoStore or using alternative update mechanism
-	// oldName := repo.DefaultBranch
-	// var err error
-	// repo, err = c.repoStore.UpdateOptLock(ctx, repo, func(r *repoModel.Repo) error {
-	// 	r.Empty = false
-	// 	r.DefaultBranch = newDefaultBranch
-	// 	return nil
-	// })
-	// if err != nil {
-	// 	log.Ctx(ctx).Warn().Err(err).Msgf("failed to update the repo default branch to %s and is_empty to false",
-	// 		newDefaultBranch)
-	// 	return
-	// }
-
-	// if repo.DefaultBranch != oldName {
-	// 	// c.repoReporter.DefaultBranchUpdated(ctx, &repoevents.DefaultBranchUpdatedPayload{
-	// 	// 	RepoID:      repo.ID,
-	// 	// 	PrincipalID: bootstrap.NewSystemServiceSession().Principal.ID,
-	// 	// 	OldName:     oldName,
-	// 	// 	NewName:     repo.DefaultBranch,
-	// 	// })
-	// }
 }
 
 func (c *Controller) getZtFlowBranchNamePre(ctx context.Context, repo *repoModel.Repo, in hook.PostReceiveInput) string {

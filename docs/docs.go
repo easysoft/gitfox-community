@@ -1983,7 +1983,7 @@ const docTemplate = `{
         },
         "/repos/import": {
             "post": {
-                "description": "基于传入参数导入远端Git仓库，自动处理GitIgnore模板、License协议、README文件生成，支持派生仓库配置",
+                "description": "基于传入参数导入远端Git仓库",
                 "consumes": [
                     "application/json"
                 ],
@@ -1993,7 +1993,7 @@ const docTemplate = `{
                 "tags": [
                     "repos"
                 ],
-                "summary": "导入远端仓库",
+                "summary": "导入代码库",
                 "parameters": [
                     {
                         "description": "导入仓库请求参数",
@@ -2018,6 +2018,50 @@ const docTemplate = `{
                                     "properties": {
                                         "data": {
                                             "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.RepositoryOutput"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/repos/import-progress": {
+            "get": {
+                "description": "查询导入进度（仅适用于正在导入中的仓库）",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "repos"
+                ],
+                "summary": "查询导入进度",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "导入仓库ID",
+                        "name": "repoID",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "查询成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.Progress"
                                         }
                                     }
                                 }
@@ -11059,6 +11103,8 @@ const docTemplate = `{
             "enum": [
                 "github",
                 "gitlab",
+                "gitlab.com",
+                "gitlab.cn",
                 "bitbucket",
                 "stash",
                 "gitea",
@@ -11068,6 +11114,8 @@ const docTemplate = `{
             "x-enum-varnames": [
                 "RepoProviderTypeGitHub",
                 "RepoProviderTypeGitLab",
+                "RepoProviderTypeGitLabCOM",
+                "RepoProviderTypeGitLabCN",
                 "RepoProviderTypeBitbucket",
                 "RepoProviderTypeStash",
                 "RepoProviderTypeGitea",
@@ -12458,6 +12506,23 @@ const docTemplate = `{
                 }
             }
         },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_jobs.State": {
+            "type": "string",
+            "enum": [
+                "scheduled",
+                "running",
+                "finished",
+                "failed",
+                "canceled"
+            ],
+            "x-enum-varnames": [
+                "StateScheduled",
+                "StateRunning",
+                "StateFinished",
+                "StateFailed",
+                "StateCanceled"
+            ]
+        },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_pipeline.GroupedPlugins": {
             "type": "object",
             "properties": {
@@ -12757,11 +12822,28 @@ const docTemplate = `{
         },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.ImportInput": {
             "type": "object",
+            "required": [
+                "acl",
+                "identifier",
+                "spaceID"
+            ],
             "properties": {
+                "acl": {
+                    "description": "权限（仅支持open/private）",
+                    "type": "string",
+                    "enum": [
+                        "open",
+                        "private"
+                    ]
+                },
                 "description": {
                     "type": "string"
                 },
                 "identifier": {
+                    "type": "string"
+                },
+                "product": {
+                    "description": "关联产品",
                     "type": "string"
                 },
                 "provider": {
@@ -12958,8 +13040,28 @@ const docTemplate = `{
                 }
             }
         },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.Progress": {
+            "type": "object",
+            "properties": {
+                "failure": {
+                    "type": "string"
+                },
+                "progress": {
+                    "type": "integer"
+                },
+                "result": {
+                    "type": "string"
+                },
+                "state": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_jobs.State"
+                }
+            }
+        },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.Provider": {
             "type": "object",
+            "required": [
+                "type"
+            ],
             "properties": {
                 "host": {
                     "type": "string"
@@ -12968,7 +13070,19 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "type": {
-                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.RepoProviderType"
+                    "enum": [
+                        "github",
+                        "gitlab",
+                        "gitlab.com",
+                        "gitlab.cn",
+                        "gitea",
+                        "gogs"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.RepoProviderType"
+                        }
+                    ]
                 },
                 "username": {
                     "type": "string"
