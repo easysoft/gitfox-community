@@ -125,21 +125,6 @@ type Interface interface {
 
 	// ---- 移动 & 重命名 ----
 
-	// MovePackage 移动 package 到目标制品库（及可选目标 group）。
-	MovePackage(ctx context.Context, pkgID, tArtifactID, tGroupID int64) error
-
-	// MoveAsset 移动组资产到目标 group。
-	MoveAsset(ctx context.Context, assetID, tArtifactID, tGroupID int64) error
-
-	// MoveGroup 移动 group 到目标制品库（及可选目标父 group）。
-	MoveGroup(ctx context.Context, groupID, tArtifactID, tParentGroupID int64) error
-
-	// RenameAsset 重命名组资产。
-	RenameAsset(ctx context.Context, assetID int64, newName string) error
-
-	// RenameGroup 重命名 group。
-	RenameGroup(ctx context.Context, groupID int64, newName string) error
-
 	// RelocateEntity 同时支持移动 + 重命名，单事务内完成；通用入口。
 	RelocateEntity(ctx context.Context, req *model.RelocateEntityReq) error
 
