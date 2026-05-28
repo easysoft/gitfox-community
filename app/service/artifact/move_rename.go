@@ -233,7 +233,7 @@ func (s *Service) MoveAsset(ctx context.Context, assetID, tArtifactID, tGroupID 
 
 // moveGroupInner 在调用方事务内完成一次 group 移动。
 // 语义：更新 group.ArtifactID / ParentID，跨 artifact 时子树内所有 group / asset / package 的 artifactID 一起改。
-func (s *Service) moveGroupInner(ctx context.Context, groupID, tArtifactID, tParentGroupID int64) error {
+func (s *Service) moveGroupInner(ctx context.Context, tx *gorm.DB, groupID, tArtifactID, tParentGroupID int64) error {
 	// 1. 读源 group
 	srcGroup, err := s.artStore.Groups().GetById(ctx, groupID)
 	if err != nil {
@@ -322,31 +322,33 @@ func (s *Service) moveGroupInner(ctx context.Context, groupID, tArtifactID, tPar
 		}
 	}
 
-	// 5. 主表更新：源 group
+	// 5. 主表更新：调 store 层 MoveLocation 写入新归属（事务连接随调用方传入）。
 	oldArtifactID := srcGroup.ArtifactID
-	s.db.WithContext(ctx).Model(&artifactGroupRow{}).Where("id = ?", groupID).
-		Updates(map[string]interface{}{
-			"artifactID": tArtifactID,
-			"parentID":   tParentGroupID,
-		})
+	if mErr := s.artStore.Groups().MoveLocation(ctx, tx, groupID, tArtifactID, tParentGroupID); mErr != nil {
+		if pkgErrors.Is(mErr, pkgErrors.ErrResourceNotFound) {
+			return pkgErrors.WithI18nKey(mErr, i18n.ArtifactMoveSourceDeleted)
+		}
+		return pkgErrors.WithI18nKey(mErr, i18n.ArtifactMoveTargetInvalid)
+	}
 
-	// 6. 跨 artifact 时，子树内所有 group / asset / package 的 artifactID 一起改
+	// 6. 跨 artifact 时，子树内所有 group / asset / package 的 artifactLibID 一起改。
+	//    Groups / Assets / Packages 三个 store 都暴露 MoveArtifactLibByIDs / ByGroupIDs，
+	//    service 不再直接拼 SQL。
 	if oldArtifactID != tArtifactID {
 		descendants, _ := s.artStore.Groups().ListDescendants(ctx, groupID)
 		subtreeIDs := []int64{groupID}
 		for _, d := range descendants {
 			subtreeIDs = append(subtreeIDs, d.ID)
-			s.db.WithContext(ctx).Model(&artifactGroupRow{}).Where("id = ?", d.ID).
-				UpdateColumn("artifactID", tArtifactID)
 		}
-		// 子树下的 assets
-		s.db.WithContext(ctx).Table("ops_artifact_assets").
-			Where("groupID IN ?", subtreeIDs).
-			UpdateColumn("artifactID", tArtifactID)
-		// 子树下的 packages
-		s.db.WithContext(ctx).Table("ops_artifact_packages").
-			Where("groupID IN ?", subtreeIDs).
-			UpdateColumn("artifactID", tArtifactID)
+		if mErr := s.artStore.Groups().MoveArtifactLibByIDs(ctx, tx, subtreeIDs, tArtifactID); mErr != nil {
+			return pkgErrors.WithI18nKey(mErr, i18n.ArtifactMoveTargetInvalid)
+		}
+		if mErr := s.artStore.Assets().MoveArtifactLibByGroupIDs(ctx, tx, subtreeIDs, tArtifactID); mErr != nil {
+			return pkgErrors.WithI18nKey(mErr, i18n.ArtifactMoveTargetInvalid)
+		}
+		if mErr := s.artStore.Packages().MoveArtifactLibByGroupIDs(ctx, tx, subtreeIDs, tArtifactID); mErr != nil {
+			return pkgErrors.WithI18nKey(mErr, i18n.ArtifactMoveTargetInvalid)
+		}
 	}
 
 	// 7. tree 同步：删源侧 tree node，重建
@@ -361,7 +363,7 @@ func (s *Service) moveGroupInner(ctx context.Context, groupID, tArtifactID, tPar
 // MoveGroup 移动 group 到目标 artifact（及可选目标父 group），整个过程在单事务内完成。
 func (s *Service) MoveGroup(ctx context.Context, groupID, tArtifactID, tParentGroupID int64) error {
 	return s.db.Transaction(func(tx *gorm.DB) error {
-		return s.moveGroupInner(ctx, groupID, tArtifactID, tParentGroupID)
+		return s.moveGroupInner(ctx, tx, groupID, tArtifactID, tParentGroupID)
 	})
 }
 
@@ -544,14 +546,16 @@ func (s *Service) rejectContainerMoveRename(ctx context.Context, splitEntityID m
 }
 
 // moveByKind 按实体类型派发到对应的 Move 方法（不带事务，由调用方包裹）。
-func (s *Service) moveByKind(ctx context.Context, splitEntityID model.SplitEntityID, tArtifactID, tGroupID int64) error {
+// tx 由 RelocateEntity 的 Transaction 回调传入，向下透传给各 inner，
+// 让 store 写操作复用同一事务连接。
+func (s *Service) moveByKind(ctx context.Context, tx *gorm.DB, splitEntityID model.SplitEntityID, tArtifactID, tGroupID int64) error {
 	switch splitEntityID.Kind {
 	case constant.ArtifactEntityKindPackage:
 		return s.movePackageInner(ctx, splitEntityID.ID, tArtifactID, tGroupID)
 	case constant.ArtifactEntityKindAsset:
 		return s.moveAssetInner(ctx, splitEntityID.ID, tArtifactID, tGroupID)
 	case constant.ArtifactEntityKindGroup:
-		return s.moveGroupInner(ctx, splitEntityID.ID, tArtifactID, tGroupID)
+		return s.moveGroupInner(ctx, tx, splitEntityID.ID, tArtifactID, tGroupID)
 	default:
 		return pkgErrors.WithI18nKey(
 			fmt.Errorf("unsupported entity type for move: %s", splitEntityID.Kind),
@@ -733,7 +737,7 @@ func (s *Service) RelocateEntity(ctx context.Context, req *model.RelocateEntityR
 			if !targetGroupIDSpecified {
 				targetGroupID = curGroupID
 			}
-			if err := s.moveByKind(ctx, splitEntityID, tArtifactID, targetGroupID); err != nil {
+			if err := s.moveByKind(ctx, tx, splitEntityID, tArtifactID, targetGroupID); err != nil {
 				return err
 			}
 		}
