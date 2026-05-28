@@ -8,11 +8,13 @@ package container
 
 import (
 	"context"
+	"encoding/json"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/adapter"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/adapter/container/schema"
 	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
 	artifactStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/artifact"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 
 	"github.com/opencontainers/go-digest"
 	v1 "github.com/opencontainers/image-spec/specs-go/v1"
@@ -87,17 +89,55 @@ func (t *TagMetadataReader) parseImage(ctx context.Context, platform *v1.Platfor
 
 	var data = ImageMeta{}
 	if platform != nil {
+		// multi-arch index 路径：直接用 index 里的 platform 字段。
 		data.OS = platform.OS
 		data.Arch = platform.Architecture
 	} else {
+		// 单平台 manifest 路径：manifest 顶层不带 platform，需要从 config blob 解析真实 OS/Arch。
+		// 解析失败时回落到 schema.DefaultOS / DefaultArch，仅作兜底，避免破坏现有列表。
 		data.OS = schema.DefaultOS
 		data.Arch = schema.DefaultArch
+		if cfgOS, cfgArch, cfgErr := t.readImageConfigPlatform(ctx, im.GetConfig()); cfgErr == nil {
+			if cfgOS != "" {
+				data.OS = cfgOS
+			}
+			if cfgArch != "" {
+				data.Arch = cfgArch
+			}
+		} else {
+			logger.GetLogger(ctx).Warnf("【container metadata】read image config blob failed, fallback to default os/arch: %v", cfgErr)
+		}
 	}
 
 	for _, layer := range im.GetLayers() {
 		data.Size = data.Size + layer.Size
 	}
 	return &data, nil
+}
+
+// readImageConfigPlatform 从 image config blob 中解析 architecture / os 字段。
+// config blob 的 JSON 结构遵循 OCI image-spec：{"architecture": "...", "os": "...", ...}。
+func (t *TagMetadataReader) readImageConfigPlatform(ctx context.Context, cfg schema.Descriptor) (string, string, error) {
+	if cfg.Digest == "" {
+		return "", "", nil
+	}
+	dbAsset, err := t.artStore.Assets().GetPath(ctx, cfg.Digest.String(), model.ArtifactContainerFormat)
+	if err != nil {
+		return "", "", err
+	}
+	dbBlob, err := t.artStore.Blobs().GetById(ctx, dbAsset.BlobID)
+	if err != nil {
+		return "", "", err
+	}
+	b, err := t.view.Store.Get(ctx, adapter.BlobPath(dbBlob.Ref))
+	if err != nil {
+		return "", "", err
+	}
+	var img v1.Image
+	if err = json.Unmarshal(b, &img); err != nil {
+		return "", "", err
+	}
+	return img.OS, img.Architecture, nil
 }
 
 func (t *TagMetadataReader) parseDigest(ctx context.Context, mediaType string, digest digest.Digest) (schema.Manifest, error) {
