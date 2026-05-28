@@ -318,6 +318,40 @@ func (c *groups) UpdateName(ctx context.Context, id int64, name string) error {
 	return nil
 }
 
+// MoveLocation 调整 group 归属：写入新的 artifactLibID + parentID。
+// tx 不为 nil 时复用调用方事务连接，否则使用 store 自身连接。
+// RowsAffected==0 时返回 ErrResourceNotFound（group 已被删或 ID 不存在）。
+func (c *groups) MoveLocation(ctx context.Context, tx *gorm.DB, groupID, artifactID, parentID int64) error {
+	db := pickDB(tx, c.db)
+	result := db.WithContext(ctx).Model(&artifactGroup{}).Where("id = ?", groupID).
+		UpdateColumns(map[string]interface{}{
+			"artifactLibID": artifactID,
+			"parentID":      parentID,
+		})
+	if result.Error != nil {
+		return database.ProcessSQLErrorf(ctx, result.Error)
+	}
+	if result.RowsAffected == 0 {
+		return pkgErrors.ErrResourceNotFound
+	}
+	return nil
+}
+
+// MoveArtifactLibByIDs 把一批 group 的 artifactLibID 改到目标 view，跨 view 移动子树时使用。
+// ids 为空时直接返回 nil；不强制 RowsAffected 与 ids 数量匹配（已被软删的 group 会少更新）。
+func (c *groups) MoveArtifactLibByIDs(ctx context.Context, tx *gorm.DB, groupIDs []int64, targetArtifactID int64) error {
+	if len(groupIDs) == 0 {
+		return nil
+	}
+	db := pickDB(tx, c.db)
+	if err := db.WithContext(ctx).Model(&artifactGroup{}).
+		Where("id IN ?", groupIDs).
+		UpdateColumn("artifactLibID", targetArtifactID).Error; err != nil {
+		return database.ProcessSQLErrorf(ctx, err)
+	}
+	return nil
+}
+
 // UpdateNameByCondition 按条件批量更新分组名称（用于 container 制品库重命名时同步 group）。
 func (c *groups) UpdateNameByCondition(ctx context.Context, artifactID int64, oldName, newName, format string) error {
 	if err := c.db.WithContext(ctx).Model(&artifactGroup{}).

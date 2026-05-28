@@ -16,6 +16,15 @@ import (
 
 var _ Interface = (*Store)(nil)
 
+// pickDB 选连接：调用方传入 tx 时复用事务连接，nil 时回落到 store 自身连接。
+// 集中收口避免每个 store 方法都写一遍 nil 判断。
+func pickDB(tx, fallback *gorm.DB) *gorm.DB {
+	if tx != nil {
+		return tx
+	}
+	return fallback
+}
+
 // Store 是 artifact store 的聚合实现。
 // Store is the main artifact store implementation.
 type Store struct {
