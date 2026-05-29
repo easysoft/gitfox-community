@@ -19,6 +19,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/encrypt"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/jobs"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/sse"
+	notifyStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/notify"
 	repoStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
@@ -43,6 +44,7 @@ type Repository struct {
 	urlProvider   urlUtil.Provider
 	git           git.Interface
 	repoStore     repoStore.Interface
+	notifyStore   notifyStore.Interface
 	encrypter     encrypt.Encrypter
 	scheduler     *jobs.Scheduler
 	sseStreamer   sse.Streamer
@@ -56,6 +58,7 @@ func NewRepoImporterSvc(
 	urlProvider urlUtil.Provider,
 	git git.Interface,
 	repoStore repoStore.Interface,
+	notifyStore notifyStore.Interface,
 	encrypter encrypt.Encrypter,
 	scheduler *jobs.Scheduler,
 	sseStreamer sse.Streamer,
@@ -65,6 +68,7 @@ func NewRepoImporterSvc(
 		urlProvider:   urlProvider,
 		git:           git,
 		repoStore:     repoStore,
+		notifyStore:   notifyStore,
 		encrypter:     encrypter,
 		scheduler:     scheduler,
 		sseStreamer:   sseStreamer,
@@ -322,10 +326,39 @@ func (r *Repository) Handle(ctx context.Context, data string, reportFn pkgJobs.P
 		}
 		repo = updated
 
+		successData := fmt.Sprintf("%s 导入代码库 [%s] 成功", repo.CreatedBy, repo.Identifier)
+		toList := fmt.Sprintf(",%s,", repo.CreatedBy)
+		successNotify := &notifyStore.Notify{
+			ObjectType: "message",
+			ObjectID:   0,
+			Action:     repo.ID,
+			ToList:     &toList,
+			Data:       &successData,
+			CreatedBy:  repo.CreatedBy,
+			Status:     "wait",
+		}
+		if errNotify := r.notifyStore.Create(context.WithoutCancel(ctx), successNotify); errNotify != nil {
+			log.Errorw("failed to create import success notify", "error", errNotify)
+		}
 		return nil
 	}()
 	if err != nil {
 		log.Errorw("failed repository import - cleanup git repository", "error", err)
+
+		failureData := fmt.Sprintf("%s 导入代码库 [%s] 失败，失败原因：%v", repo.CreatedBy, repo.Identifier, err)
+		toList := fmt.Sprintf(",%s,", repo.CreatedBy)
+		failureNotify := &notifyStore.Notify{
+			ObjectType: "message",
+			ObjectID:   0,
+			Action:     repo.ID,
+			ToList:     &toList,
+			Data:       &failureData,
+			CreatedBy:  repo.CreatedBy,
+			Status:     "wait",
+		}
+		if errNotify := r.notifyStore.Create(context.WithoutCancel(ctx), failureNotify); errNotify != nil {
+			log.Errorw("failed to create import failure notify", "error", errNotify)
+		}
 
 		repo.GitUID = gitUID // make sure to delete the correct directory
 
@@ -333,10 +366,10 @@ func (r *Repository) Handle(ctx context.Context, data string, reportFn pkgJobs.P
 		// 使用 WithoutCancel 避免上游 ctx 已取消时清理动作被连带跳过。
 		cleanupCtx := context.WithoutCancel(ctx)
 		if errDel := r.deleteGitRepository(cleanupCtx, &accountInfo, repo); errDel != nil {
-			log.Warnw("failed to delete git repository after failed import", "error", errDel)
+			log.Errorw("failed to delete git repository after failed import", "error", errDel)
 		}
 		if errDel := r.repoStore.HardDelete(cleanupCtx, repo.ID); errDel != nil {
-			log.Warnw("failed to delete repo record after failed import", "error", errDel)
+			log.Errorw("failed to delete repo record after failed import", "error", errDel)
 		}
 
 		return "", fmt.Errorf("failed to import repository: %w", err)
@@ -344,7 +377,7 @@ func (r *Repository) Handle(ctx context.Context, data string, reportFn pkgJobs.P
 
 	err = r.sseStreamer.Publish(ctx, int64(repo.SpaceID), eventModel.SSETypeRepositoryImportCompleted, repo)
 	if err != nil {
-		log.Warnw("failed to publish import completion SSE", "error", err)
+		log.Errorw("failed to publish import completion SSE", "error", err)
 	}
 
 	log.Info("completed repository import")
