@@ -338,7 +338,7 @@ func (r *Repository) Handle(ctx context.Context, data string, reportFn pkgJobs.P
 			Status:     "wait",
 		}
 		if errNotify := r.notifyStore.Create(context.WithoutCancel(ctx), successNotify); errNotify != nil {
-			log.Warnw("failed to create import success notify", "error", errNotify)
+			log.Errorw("failed to create import success notify", "error", errNotify)
 		}
 		return nil
 	}()
@@ -357,7 +357,7 @@ func (r *Repository) Handle(ctx context.Context, data string, reportFn pkgJobs.P
 			Status:     "wait",
 		}
 		if errNotify := r.notifyStore.Create(context.WithoutCancel(ctx), failureNotify); errNotify != nil {
-			log.Warnw("failed to create import failure notify", "error", errNotify)
+			log.Errorw("failed to create import failure notify", "error", errNotify)
 		}
 
 		repo.GitUID = gitUID // make sure to delete the correct directory
@@ -366,10 +366,10 @@ func (r *Repository) Handle(ctx context.Context, data string, reportFn pkgJobs.P
 		// 使用 WithoutCancel 避免上游 ctx 已取消时清理动作被连带跳过。
 		cleanupCtx := context.WithoutCancel(ctx)
 		if errDel := r.deleteGitRepository(cleanupCtx, &accountInfo, repo); errDel != nil {
-			log.Warnw("failed to delete git repository after failed import", "error", errDel)
+			log.Errorw("failed to delete git repository after failed import", "error", errDel)
 		}
 		if errDel := r.repoStore.HardDelete(cleanupCtx, repo.ID); errDel != nil {
-			log.Warnw("failed to delete repo record after failed import", "error", errDel)
+			log.Errorw("failed to delete repo record after failed import", "error", errDel)
 		}
 
 		return "", fmt.Errorf("failed to import repository: %w", err)
@@ -377,7 +377,7 @@ func (r *Repository) Handle(ctx context.Context, data string, reportFn pkgJobs.P
 
 	err = r.sseStreamer.Publish(ctx, int64(repo.SpaceID), eventModel.SSETypeRepositoryImportCompleted, repo)
 	if err != nil {
-		log.Warnw("failed to publish import completion SSE", "error", err)
+		log.Errorw("failed to publish import completion SSE", "error", err)
 	}
 
 	log.Info("completed repository import")
