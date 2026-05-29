@@ -331,12 +331,13 @@ type ArtifactBlob struct {
 }
 
 type CreateArtifactBlob struct {
-	StorageID int64  `json:"storageID"`
-	Ref       string `json:"ref"`
-	Size      int64  `json:"size"`
-	CreatedBy string `json:"createdBy"`
-	CheckSum  string `json:"checkSum"`
-	Metadata  string `json:"metadata"`
+	StorageID   int64      `json:"storageID"`
+	Ref         string     `json:"ref"`
+	Size        int64      `json:"size"`
+	CreatedDate *time.Time `json:"createdDate"`
+	CreatedBy   string     `json:"createdBy"`
+	CheckSum    string     `json:"checkSum"`
+	Metadata    string     `json:"metadata"`
 }
 
 type ArtifactTreeNode struct {

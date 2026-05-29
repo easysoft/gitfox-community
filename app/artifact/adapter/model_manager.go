@@ -14,7 +14,6 @@ import (
 	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
 	artifactStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/artifact"
 	pkgErrors "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	"github.com/guregu/null"
@@ -30,6 +29,11 @@ type ModelManager struct {
 	versionModel  *model.ArtifactVersion
 
 	treeSyncer *artifactModel.Syncer
+
+	// alreadyExists 由 createNormalAsset / createNormalAssetToGroup 命中
+	// "同名同内容"分支时置 true，Sync 末端读取并写入 SavedAsset.AlreadyExists，
+	// 让 controller 切换为"文件已存在"成功文案。每次 Sync 入口处复位。
+	alreadyExists bool
 }
 
 // NewModelManager 创建模型管理器
@@ -45,6 +49,7 @@ func NewModelManager(artStore artifactStore.Interface, view *ViewDescriptor, pkg
 
 // Sync 按资产属性选择挂载粒度：isolated 走全局路径，exclusive/normal 走版本或 group。
 func (mm *ModelManager) Sync(ctx context.Context, assetDesc *AssetDescriptor) (*SavedAsset, error) {
+	mm.alreadyExists = false
 	var asset *model.ArtifactAsset
 	var updated bool
 	var err error
@@ -88,7 +93,12 @@ func (mm *ModelManager) Sync(ctx context.Context, assetDesc *AssetDescriptor) (*
 		}
 	}
 
-	saved := &SavedAsset{Object: asset, IsOverride: updated, Attr: assetDesc.Attr}
+	saved := &SavedAsset{
+		Object:        asset,
+		IsOverride:    updated,
+		Attr:          assetDesc.Attr,
+		AlreadyExists: mm.alreadyExists,
+	}
 	return saved, nil
 }
 
@@ -145,7 +155,8 @@ func (mm *ModelManager) createExclusiveAsset(ctx context.Context, ver *model.Art
 // createNormalAsset 创建普通资产
 //
 // raw 上传语义（用户面）：同 version 下若已存在同名资产：
-//  1. md5/sha1/sha256 三摘要全等 → 视为重复，返回 ErrAssetDuplicate（带 i18n key），上层据此渲染 400；
+//  1. md5/sha1/sha256 三摘要全等 → 视为同文件已存在，直接复用旧 asset，
+//     标 alreadyExists=true，由 controller 渲染"文件已存在"成功提示，不报错；
 //  2. 任一摘要不同 → 自动追加 `(n)` 后缀（n=1 起递增至空位）保留两份，descriptor.Path 同步改写。
 //
 // 不再走旧的"覆盖更新"分支，避免老 blob 被悄悄替换、用户失去原文件。
@@ -159,7 +170,8 @@ func (mm *ModelManager) createNormalAsset(ctx context.Context, ver *model.Artifa
 	// 如果资产存在，判断是否为重复。
 	if assetExist {
 		if isSameContent(currAsset, descriptor) {
-			return nil, false, duplicateAssetError(descriptor.Path)
+			mm.alreadyExists = true
+			return currAsset, false, nil
 		}
 		newPath, e := mm.resolveAssetPath(descriptor.Path, func(p string) (bool, error) {
 			return mm.versionAssetExists(ctx, p, ver.ID)
@@ -185,7 +197,8 @@ func (mm *ModelManager) createNormalAsset(ctx context.Context, ver *model.Artifa
 // createNormalAssetToGroup 创建普通资产到 group
 //
 // generic/file 上传语义（用户面）：同 group 下若已存在同名资产：
-//  1. md5/sha1/sha256 三摘要全等 → 视为重复，返回 ErrAssetDuplicate；
+//  1. md5/sha1/sha256 三摘要全等 → 视为同文件已存在，直接复用旧 asset，
+//     标 alreadyExists=true，由 controller 渲染"文件已存在"成功提示，不报错；
 //  2. 任一摘要不同 → 自动追加 `(n)` 后缀直至空位，并用新名建一份新的 asset。
 func (mm *ModelManager) createNormalAssetToGroup(ctx context.Context, descriptor *AssetDescriptor) (*model.ArtifactAsset, bool, error) {
 	groupID := mm.pkgDescriptor.GroupID
@@ -199,11 +212,12 @@ func (mm *ModelManager) createNormalAssetToGroup(ctx context.Context, descriptor
 		return nil, false, err
 	}
 	if assetExist {
-		// 如果内容相同，直接返回重复错误。
+		// 内容相同 → 复用旧 asset，由上层渲染"文件已存在"成功提示。
 		if isSameContent(currAsset, descriptor) {
-			return nil, false, duplicateAssetError(descriptor.Path)
+			mm.alreadyExists = true
+			return currAsset, false, nil
 		}
-		// 如果内容不同，追加后缀。
+		// 内容不同 → 追加 (n) 后缀建新 asset。
 		newPath, e := mm.resolveAssetPath(descriptor.Path, func(p string) (bool, error) {
 			return mm.groupAssetExists(ctx, p, groupID)
 		})
@@ -240,15 +254,6 @@ func isSameContent(asset *model.ArtifactAsset, descriptor *AssetDescriptor) bool
 	return h.Md5 == descriptor.Hash.Md5 &&
 		h.Sha1 == descriptor.Hash.Sha1 &&
 		h.Sha256 == descriptor.Hash.Sha256
-}
-
-// duplicateAssetError 构造重复上传错误：带 400 状态与 i18n key，供 controller 渲染。
-func duplicateAssetError(path string) error {
-	err := fmt.Errorf("%w: %s", ErrAssetDuplicate, path)
-	return pkgErrors.WithHttpStatus(
-		pkgErrors.WithI18nKey(err, i18n.ArtifactUploadFileDuplicate),
-		400,
-	)
 }
 
 // resolveAssetPath 在 basePath 基础上追加 `(n)` 后缀直至命中空位。
@@ -362,11 +367,11 @@ func (mm *ModelManager) getExistAsset(mutateFunc func() (*model.ArtifactAsset, e
 // updateAsset 更新资产
 func (mm *ModelManager) updateAsset(ctx context.Context, current *model.ArtifactAsset, descriptor *AssetDescriptor) (*model.ArtifactAsset, error) {
 	// 更新资产时会新建 blob 并回链，旧 blob 仅做软删以保留历史引用痕迹。
-	now := time.Now().UnixMilli()
+	now := time.Now()
 	if err := mm.validateAsset(ctx, current, descriptor); err != nil {
 		return nil, err
 	}
-	newBlob, err := mm.createBlob(ctx, descriptor, now)
+	newBlob, err := mm.createBlob(ctx, descriptor, &now)
 	if err != nil {
 		return nil, err
 	}
@@ -389,8 +394,8 @@ func (mm *ModelManager) updateAsset(ctx context.Context, current *model.Artifact
 
 // createAsset 创建资产
 func (mm *ModelManager) createAsset(ctx context.Context, newObj *model.ArtifactAsset, descriptor *AssetDescriptor) error {
-	now := time.Now().UnixMilli()
-	newBlob, err := mm.createBlob(ctx, descriptor, now)
+	now := time.Now()
+	newBlob, err := mm.createBlob(ctx, descriptor, &now)
 	if err != nil {
 		return err
 	}
@@ -425,12 +430,13 @@ func (mm *ModelManager) linkAssetToBlob(ctx context.Context, assetID int64, blob
 }
 
 // createBlob 创建 blob
-func (mm *ModelManager) createBlob(ctx context.Context, descriptor *AssetDescriptor, createTime int64) (*model.ArtifactBlob, error) {
+func (mm *ModelManager) createBlob(ctx context.Context, descriptor *AssetDescriptor, createTime *time.Time) (*model.ArtifactBlob, error) {
 	createReq := &model.CreateArtifactBlob{
-		StorageID: mm.view.StorageID,
-		Ref:       descriptor.Ref,
-		Size:      descriptor.Size,
-		CreatedBy: mm.creator.UID,
+		StorageID:   mm.view.StorageID,
+		Ref:         descriptor.Ref,
+		Size:        descriptor.Size,
+		CreatedDate: createTime,
+		CreatedBy:   mm.creator.UID,
 	}
 	if descriptor.Hash != nil {
 		createReq.CheckSum = descriptor.Hash.String()
