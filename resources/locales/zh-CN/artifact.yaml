@@ -112,7 +112,7 @@ artifact:
   soft_remove_artifact_group_exists: "制品库中仍有未删除的分组，无法删除制品库；请先删除全部分组后重试。"
   soft_remove_artifact_not_found: "指定的制品库不存在或已被删除."
   soft_remove_artifact_query_error: "校验制品库状态失败."
-  soft_remove_group_not_empty: "分组或其子分组下仍有未删除的制品文件，无法删除；空的子目录可以一并删除，请先移除全部制品文件后重试。"
+  soft_remove_group_not_empty: "删除失败：该目录或子目录下包含未删除的制品。请先清空制品，然后再尝试删除。"
   soft_remove_group_query_error: "校验分组状态失败."
 
   # Statistic

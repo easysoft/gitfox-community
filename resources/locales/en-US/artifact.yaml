@@ -112,7 +112,7 @@ artifact:
   soft_remove_artifact_group_exists: "The artifact library still contains active groups and cannot be deleted. Remove all groups first."
   soft_remove_artifact_not_found: "The specified artifact library does not exist or has been deleted."
   soft_remove_artifact_query_error: "Failed to check the artifact library state."
-  soft_remove_group_not_empty: "The group or one of its sub-groups still contains active asset files and cannot be deleted. Empty sub-groups can be removed together; please delete all asset files first and try again."
+  soft_remove_group_not_empty: "Deletion failed: This directory or its subdirectories contain undeleted artifacts. Please remove all artifacts before retrying."
   soft_remove_group_query_error: "Failed to check the group state."
 
   # Statistic
