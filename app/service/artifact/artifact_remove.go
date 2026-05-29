@@ -407,9 +407,6 @@ func (s *Service) softRemoveArtifact(ctx context.Context, view *model.ArtifactVi
 
 	// view 软删时，默认根 group 一并软删（恢复 view 时再同步恢复，保持对称）。
 	for _, g := range groups {
-		if !isDefaultRootGroupOf(view, g) {
-			continue
-		}
 		if dErr := s.artStore.Groups().SoftDeleteById(ctx, g.ID, operator); dErr != nil {
 			res.Status = model.ArtifactStatusUnknown
 			return pkgErrors.WithI18nKey(dErr, i18n.ArtifactSoftRemoveArtifactQueryError)
