@@ -404,18 +404,6 @@ func (s *Service) softRemoveArtifact(ctx context.Context, view *model.ArtifactVi
 		res.Status = model.ArtifactStatusUnknown
 		return pkgErrors.WithI18nKey(err, i18n.ArtifactSoftRemoveArtifactQueryError)
 	}
-	// 默认根 group：CreateView 时自动建（如 container 格式），名称与 view 同名、parentID 为 0。
-	// 此类「装饰性」根 group 不应阻塞 view 软删；仅当存在用户自建的非默认 group 时才拒绝。
-	for _, g := range groups {
-		if isDefaultRootGroupOf(view, g) {
-			continue
-		}
-		res.Status = model.ArtifactStatusNotEmpty
-		return pkgErrors.WithI18nKey(
-			fmt.Errorf("artifact view %d still has active non-default group %d", view.ID, g.ID),
-			i18n.ArtifactSoftRemoveArtifactGroupExists,
-		)
-	}
 
 	// view 软删时，默认根 group 一并软删（恢复 view 时再同步恢复，保持对称）。
 	for _, g := range groups {
