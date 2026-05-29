@@ -111,7 +111,7 @@ const (
 	ArtifactUploadGroupIdInvalid            I18nKey = "artifact.upload_group_id_invalid"             // 指定的 groupId 不合法或不存在,请确认后重试.
 	ArtifactUploadGroupNameInvalid          I18nKey = "artifact.upload_group_name_invalid"           // 指定的 group 路径不合法:需为以 . 或 / 分隔的多级命名,每段不能为空、不得超过 1...
 	ArtifactUploadGroupPathNotFound         I18nKey = "artifact.upload_group_path_not_found"         // 指定的 group 路径在当前制品库下不存在,请先创建对应分组或检查 artifactID.
-	ArtifactUploadGroupRequired             I18nKey = "artifact.upload_group_required"               // 上传制品必须指定 group 或 groupId.
+	ArtifactUploadGroupRequired             I18nKey = "artifact.upload_group_required"               // 上传制品必须目录.
 	ArtifactUploadNameInvalid               I18nKey = "artifact.upload_name_invalid"                 // raw 制品的包名 packageName 格式不合法:仅允许字母、数字、中划线、下划线,且不含点.
 	ArtifactUploadNameRequired              I18nKey = "artifact.upload_name_required"                // 上传 raw 制品必须指定包名 packageName.
 	ArtifactUploadRawGroupInvalid           I18nKey = "artifact.upload_raw_group_invalid"            // raw 制品的 group 参数格式不合法,需为以英文点号分隔的多级命名(每级仅允许字母数字、...
@@ -128,7 +128,7 @@ const (
 	ArtifactViewFormatInvalid               I18nKey = "artifact.view_format_invalid"                 // 不支持的制品格式,仅支持: file, raw, container.
 	ArtifactViewFormatRequired              I18nKey = "artifact.view_format_required"                // 请选择制品格式(format),可选值:file, raw, container.
 	ArtifactViewNameDuplicate               I18nKey = "artifact.view_name_duplicate"                 // 同名制品库视图已存在.
-	ArtifactViewNameInvalidChars            I18nKey = "artifact.view_name_invalid_chars"             // 制品库名称不得包含空白字符或 / \ : * ? " < > | 等特殊字符.
+	ArtifactViewNameInvalidChars            I18nKey = "artifact.view_name_invalid_chars"             // 制品库名称不得包含空白字符或 / " 等特殊字符.
 	ArtifactViewNameNonAsciiNotAllowed      I18nKey = "artifact.view_name_non_ascii_not_allowed"     // 版本化制品库名称仅允许英文字母、数字、中划线、下划线和英文句号,不允许中文等字符.
 	ArtifactViewNameRequired                I18nKey = "artifact.view_name_required"                  // 制品库名称不能为空.
 	ArtifactViewNameTooLong                 I18nKey = "artifact.view_name_too_long"                  // 制品库名称过长,最多 128 个字符.
