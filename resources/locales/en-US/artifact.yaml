@@ -131,7 +131,7 @@ artifact:
   move_entity_type_invalid: "Unsupported entity type for move."
   move_format_mismatch: "Source format does not match target."
   move_container_not_supported: "Container artifacts cannot be moved. Use artifact promotion to flow an image from one artifact library to another."
-  move_sibling_conflict: "Sibling with the same name already exists at target."
+  move_sibling_conflict: "Target location already exists a same-name artifact."
   move_cycle_detected: "Target parent is a descendant of source group."
   move_source_deleted: "Source entity is soft-deleted or not found."
   move_target_invalid: "Target artifact or group is invalid."
