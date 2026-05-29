@@ -64,6 +64,7 @@ artifact:
   upload_group_name_invalid: "The specified group path is invalid: use '.' or '/' as separator; each segment must be non-empty, no longer than 128 characters, and must not contain whitespace or any of \\ : * ? \" < > |. Unicode characters (e.g. Chinese) are allowed."
   upload_group_path_not_found: "The specified group path does not exist under the current artifact repository; please create the group first or verify the artifactID."
   upload_group_artifact_mismatch: "The specified group does not belong to the current artifact repository; please verify artifactID and group ownership."
+  upload_file_duplicate: "A file with the same name and identical content already exists; upload skipped."
 
   # Package & Version
   package_query_error: "Failed to query artifact package."
@@ -111,7 +112,7 @@ artifact:
   soft_remove_artifact_group_exists: "The artifact library still contains active groups and cannot be deleted. Remove all groups first."
   soft_remove_artifact_not_found: "The specified artifact library does not exist or has been deleted."
   soft_remove_artifact_query_error: "Failed to check the artifact library state."
-  soft_remove_group_not_empty: "The group or one of its sub-groups still contains active asset files and cannot be deleted. Empty sub-groups can be removed together; please delete all asset files first and try again."
+  soft_remove_group_not_empty: "Deletion failed: This directory or its subdirectories contain undeleted artifacts. Please remove all artifacts before retrying."
   soft_remove_group_query_error: "Failed to check the group state."
 
   # Statistic
@@ -130,7 +131,7 @@ artifact:
   move_entity_type_invalid: "Unsupported entity type for move."
   move_format_mismatch: "Source format does not match target."
   move_container_not_supported: "Container artifacts cannot be moved. Use artifact promotion to flow an image from one artifact library to another."
-  move_sibling_conflict: "Sibling with the same name already exists at target."
+  move_sibling_conflict: "Target location already exists a same-name artifact."
   move_cycle_detected: "Target parent is a descendant of source group."
   move_source_deleted: "Source entity is soft-deleted or not found."
   move_target_invalid: "Target artifact or group is invalid."

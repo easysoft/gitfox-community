@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"path"
+	"strings"
 	"time"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
@@ -27,6 +29,11 @@ type ModelManager struct {
 	versionModel  *model.ArtifactVersion
 
 	treeSyncer *artifactModel.Syncer
+
+	// alreadyExists 由 createNormalAsset / createNormalAssetToGroup 命中
+	// "同名同内容"分支时置 true，Sync 末端读取并写入 SavedAsset.AlreadyExists，
+	// 让 controller 切换为"文件已存在"成功文案。每次 Sync 入口处复位。
+	alreadyExists bool
 }
 
 // NewModelManager 创建模型管理器
@@ -42,6 +49,7 @@ func NewModelManager(artStore artifactStore.Interface, view *ViewDescriptor, pkg
 
 // Sync 按资产属性选择挂载粒度：isolated 走全局路径，exclusive/normal 走版本或 group。
 func (mm *ModelManager) Sync(ctx context.Context, assetDesc *AssetDescriptor) (*SavedAsset, error) {
+	mm.alreadyExists = false
 	var asset *model.ArtifactAsset
 	var updated bool
 	var err error
@@ -85,7 +93,12 @@ func (mm *ModelManager) Sync(ctx context.Context, assetDesc *AssetDescriptor) (*
 		}
 	}
 
-	saved := &SavedAsset{Object: asset, IsOverride: updated, Attr: assetDesc.Attr}
+	saved := &SavedAsset{
+		Object:        asset,
+		IsOverride:    updated,
+		Attr:          assetDesc.Attr,
+		AlreadyExists: mm.alreadyExists,
+	}
 	return saved, nil
 }
 
@@ -140,6 +153,13 @@ func (mm *ModelManager) createExclusiveAsset(ctx context.Context, ver *model.Art
 }
 
 // createNormalAsset 创建普通资产
+//
+// raw 上传语义（用户面）：同 version 下若已存在同名资产：
+//  1. md5/sha1/sha256 三摘要全等 → 视为同文件已存在，直接复用旧 asset，
+//     标 alreadyExists=true，由 controller 渲染"文件已存在"成功提示，不报错；
+//  2. 任一摘要不同 → 自动追加 `(n)` 后缀（n=1 起递增至空位）保留两份，descriptor.Path 同步改写。
+//
+// 不再走旧的"覆盖更新"分支，避免老 blob 被悄悄替换、用户失去原文件。
 func (mm *ModelManager) createNormalAsset(ctx context.Context, ver *model.ArtifactVersion, descriptor *AssetDescriptor) (*model.ArtifactAsset, bool, error) {
 	currAsset, assetExist, err := mm.getExistAsset(func() (*model.ArtifactAsset, error) {
 		return mm.store.Assets().GetVersionAsset(ctx, descriptor.Path, ver.ID)
@@ -147,18 +167,27 @@ func (mm *ModelManager) createNormalAsset(ctx context.Context, ver *model.Artifa
 	if err != nil {
 		return nil, false, err
 	}
+	// 如果资产存在，判断是否为重复。
 	if assetExist {
-		_, err = mm.updateAsset(ctx, currAsset, descriptor)
-		if err != nil {
-			return nil, false, err
+		if isSameContent(currAsset, descriptor) {
+			mm.alreadyExists = true
+			return currAsset, false, nil
 		}
-		return currAsset, true, err
+		newPath, e := mm.resolveAssetPath(descriptor.Path, func(p string) (bool, error) {
+			return mm.versionAssetExists(ctx, p, ver.ID)
+		})
+		if e != nil {
+			return nil, false, e
+		}
+		descriptor.Path = newPath
 	}
 	newAsset := &model.ArtifactAsset{
 		GroupID:    null.IntFrom(0),
 		ArtifactID: null.IntFrom(0),
 		VersionID:  null.IntFrom(ver.ID),
 	}
+
+	// 创建新资产。
 	if err = mm.createAsset(ctx, newAsset, descriptor); err != nil {
 		return nil, false, err
 	}
@@ -166,6 +195,11 @@ func (mm *ModelManager) createNormalAsset(ctx context.Context, ver *model.Artifa
 }
 
 // createNormalAssetToGroup 创建普通资产到 group
+//
+// generic/file 上传语义（用户面）：同 group 下若已存在同名资产：
+//  1. md5/sha1/sha256 三摘要全等 → 视为同文件已存在，直接复用旧 asset，
+//     标 alreadyExists=true，由 controller 渲染"文件已存在"成功提示，不报错；
+//  2. 任一摘要不同 → 自动追加 `(n)` 后缀直至空位，并用新名建一份新的 asset。
 func (mm *ModelManager) createNormalAssetToGroup(ctx context.Context, descriptor *AssetDescriptor) (*model.ArtifactAsset, bool, error) {
 	groupID := mm.pkgDescriptor.GroupID
 	if groupID == 0 {
@@ -178,11 +212,19 @@ func (mm *ModelManager) createNormalAssetToGroup(ctx context.Context, descriptor
 		return nil, false, err
 	}
 	if assetExist {
-		_, err = mm.updateAsset(ctx, currAsset, descriptor)
-		if err != nil {
-			return nil, false, err
+		// 内容相同 → 复用旧 asset，由上层渲染"文件已存在"成功提示。
+		if isSameContent(currAsset, descriptor) {
+			mm.alreadyExists = true
+			return currAsset, false, nil
 		}
-		return currAsset, true, err
+		// 内容不同 → 追加 (n) 后缀建新 asset。
+		newPath, e := mm.resolveAssetPath(descriptor.Path, func(p string) (bool, error) {
+			return mm.groupAssetExists(ctx, p, groupID)
+		})
+		if e != nil {
+			return nil, false, e
+		}
+		descriptor.Path = newPath
 	}
 	newAsset := &model.ArtifactAsset{
 		VersionID:  null.IntFrom(0),
@@ -193,6 +235,121 @@ func (mm *ModelManager) createNormalAssetToGroup(ctx context.Context, descriptor
 		return nil, false, err
 	}
 	return newAsset, false, nil
+}
+
+// isSameContent 比对已落库 asset 与新上传 descriptor 是否为同一份内容。
+// 仅当 md5/sha1/sha256 三摘要全部解析成功且全部相等时返回 true，
+// 任一字段缺失或解析失败一律按"内容不同"处理（让重命名分支接管）。
+func isSameContent(asset *model.ArtifactAsset, descriptor *AssetDescriptor) bool {
+	if asset == nil || descriptor == nil || descriptor.Hash == nil {
+		return false
+	}
+	var h Hash
+	if err := json.Unmarshal([]byte(asset.CheckSum), &h); err != nil {
+		return false
+	}
+	if h.Md5 == "" || h.Sha1 == "" || h.Sha256 == "" {
+		return false
+	}
+	return h.Md5 == descriptor.Hash.Md5 &&
+		h.Sha1 == descriptor.Hash.Sha1 &&
+		h.Sha256 == descriptor.Hash.Sha256
+}
+
+// resolveAssetPath 在 basePath 基础上追加 `(n)` 后缀直至命中空位。
+// 拆扩展名优先匹配复合扩展白名单（见 splitNameExt），其余回落到最后一个 dot：
+//   - foo.tar.gz   → foo(1).tar.gz   （命中 .tar.gz 白名单，走 first-dot 保留完整复合扩展）
+//   - foo.min.js   → foo(1).min.js   （命中 .min.js 白名单）
+//   - foo.txt      → foo(1).txt      （单扩展，last-dot 与 first-dot 等价）
+//   - version.1.2.3.txt → version.1.2.3(1).txt（无白名单命中，按 last-dot 切，避免误判点分版本号）
+//   - foo          → foo(1)
+//   - .bashrc      → .bashrc(1)      （首字符为 dot 时不视为扩展名）
+//
+// existsFunc 用于判断候选路径是否已被占用；为防止异常分组下的死循环，加 1000 次硬上限。
+func (mm *ModelManager) resolveAssetPath(basePath string, existsFunc func(string) (bool, error)) (string, error) {
+	stem, ext := splitNameExt(basePath)
+	const maxAttempts = 1000
+	for i := 1; i <= maxAttempts; i++ {
+		candidate := fmt.Sprintf("%s(%d)%s", stem, i, ext)
+		exists, err := existsFunc(candidate)
+		if err != nil {
+			return "", err
+		}
+		if !exists {
+			return candidate, nil
+		}
+	}
+	return "", fmt.Errorf("resolve duplicate-safe path failed for %q after %d attempts", basePath, maxAttempts)
+}
+
+// compoundExtensions 复合扩展名白名单。命中后走 first-dot 切分以保留完整后缀。
+// 命中规则：basename（去掉前导隐藏点后）以白名单条目结尾，且白名单本身的前导 dot
+// 不是 basename 的首字符（避免 ".tar.gz" 这种纯扩展名文件被错切）。
+// 排在前面的更长，避免 ".js" 抢先命中 ".min.js"。
+var compoundExtensions = []string{
+	".tar.gz",
+	".tar.bz2",
+	".tar.xz",
+	".tar.zst",
+	".min.js",
+	".min.css",
+	".spec.ts",
+	".test.ts",
+	".d.ts",
+}
+
+// splitNameExt 按以下顺序拆分文件名与扩展名：
+//  1. 命中复合扩展白名单 → first-dot 风格切（保留 .tar.gz / .min.js 等完整复合扩展）；
+//  2. 其余 → last-dot 风格切（避免 version.1.2.3.txt 类点分版本号被误判）；
+//  3. 首字符为 dot 的隐藏文件（如 .bashrc）不视为扩展名分隔符。
+func splitNameExt(name string) (string, string) {
+	base := path.Base(name)
+	dir := strings.TrimSuffix(name, base)
+
+	// 隐藏文件首字符为 dot：剥离前导 dot 后再做后缀匹配，避免 ".tar.gz" 整段被吃掉。
+	scan := base
+	leadingDots := 0
+	for leadingDots < len(scan) && scan[leadingDots] == '.' {
+		leadingDots++
+	}
+	scanBody := scan[leadingDots:]
+
+	for _, ce := range compoundExtensions {
+		if len(scanBody) > len(ce) && strings.HasSuffix(strings.ToLower(scanBody), ce) {
+			cut := len(scan) - len(ce)
+			return dir + base[:cut], base[cut:]
+		}
+	}
+
+	idx := strings.LastIndex(base, ".")
+	if idx <= 0 {
+		return name, ""
+	}
+	return dir + base[:idx], base[idx:]
+}
+
+// versionAssetExists 判断 version 维度下是否已存在指定 path 的 active 资产。
+func (mm *ModelManager) versionAssetExists(ctx context.Context, p string, versionID int64) (bool, error) {
+	_, err := mm.store.Assets().GetVersionAsset(ctx, p, versionID)
+	if err == nil {
+		return true, nil
+	}
+	if errors.Is(err, pkgErrors.ErrResourceNotFound) {
+		return false, nil
+	}
+	return false, err
+}
+
+// groupAssetExists 判断 group 维度下是否已存在指定 path 的 active 资产。
+func (mm *ModelManager) groupAssetExists(ctx context.Context, p string, groupID int64) (bool, error) {
+	_, err := mm.store.Assets().GetGroupAsset(ctx, p, groupID)
+	if err == nil {
+		return true, nil
+	}
+	if errors.Is(err, pkgErrors.ErrResourceNotFound) {
+		return false, nil
+	}
+	return false, err
 }
 
 // getExistAsset 获取资产是否存在
@@ -210,11 +367,11 @@ func (mm *ModelManager) getExistAsset(mutateFunc func() (*model.ArtifactAsset, e
 // updateAsset 更新资产
 func (mm *ModelManager) updateAsset(ctx context.Context, current *model.ArtifactAsset, descriptor *AssetDescriptor) (*model.ArtifactAsset, error) {
 	// 更新资产时会新建 blob 并回链，旧 blob 仅做软删以保留历史引用痕迹。
-	now := time.Now().UnixMilli()
+	now := time.Now()
 	if err := mm.validateAsset(ctx, current, descriptor); err != nil {
 		return nil, err
 	}
-	newBlob, err := mm.createBlob(ctx, descriptor, now)
+	newBlob, err := mm.createBlob(ctx, descriptor, &now)
 	if err != nil {
 		return nil, err
 	}
@@ -237,8 +394,8 @@ func (mm *ModelManager) updateAsset(ctx context.Context, current *model.Artifact
 
 // createAsset 创建资产
 func (mm *ModelManager) createAsset(ctx context.Context, newObj *model.ArtifactAsset, descriptor *AssetDescriptor) error {
-	now := time.Now().UnixMilli()
-	newBlob, err := mm.createBlob(ctx, descriptor, now)
+	now := time.Now()
+	newBlob, err := mm.createBlob(ctx, descriptor, &now)
 	if err != nil {
 		return err
 	}
@@ -273,12 +430,13 @@ func (mm *ModelManager) linkAssetToBlob(ctx context.Context, assetID int64, blob
 }
 
 // createBlob 创建 blob
-func (mm *ModelManager) createBlob(ctx context.Context, descriptor *AssetDescriptor, createTime int64) (*model.ArtifactBlob, error) {
+func (mm *ModelManager) createBlob(ctx context.Context, descriptor *AssetDescriptor, createTime *time.Time) (*model.ArtifactBlob, error) {
 	createReq := &model.CreateArtifactBlob{
-		StorageID: mm.view.StorageID,
-		Ref:       descriptor.Ref,
-		Size:      descriptor.Size,
-		CreatedBy: mm.creator.UID,
+		StorageID:   mm.view.StorageID,
+		Ref:         descriptor.Ref,
+		Size:        descriptor.Size,
+		CreatedDate: createTime,
+		CreatedBy:   mm.creator.UID,
 	}
 	if descriptor.Hash != nil {
 		createReq.CheckSum = descriptor.Hash.String()
