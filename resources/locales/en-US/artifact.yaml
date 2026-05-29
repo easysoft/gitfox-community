@@ -64,6 +64,7 @@ artifact:
   upload_group_name_invalid: "The specified group path is invalid: use '.' or '/' as separator; each segment must be non-empty, no longer than 128 characters, and must not contain whitespace or any of \\ : * ? \" < > |. Unicode characters (e.g. Chinese) are allowed."
   upload_group_path_not_found: "The specified group path does not exist under the current artifact repository; please create the group first or verify the artifactID."
   upload_group_artifact_mismatch: "The specified group does not belong to the current artifact repository; please verify artifactID and group ownership."
+  upload_file_duplicate: "A file with the same name and identical content already exists; duplicate upload is not allowed."
 
   # Package & Version
   package_query_error: "Failed to query artifact package."
