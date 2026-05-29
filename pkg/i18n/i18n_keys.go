@@ -87,7 +87,7 @@ const (
 	ArtifactSoftRemoveArtifactVersionExists I18nKey = "artifact.soft_remove_artifact_version_exists" // 制品库中仍有未删除的版本,无法删除制品库；请先删除全部版本后重试.
 	ArtifactSoftRemoveEntityTypeUnsupported I18nKey = "artifact.soft_remove_entity_type_unsupported" // 不支持的制品实体类型.
 	ArtifactSoftRemoveError                 I18nKey = "artifact.soft_remove_error"                   // 制品软删除失败.
-	ArtifactSoftRemoveGroupNotEmpty         I18nKey = "artifact.soft_remove_group_not_empty"         // 分组或其子分组下仍有未删除的制品文件,无法删除；空的子目录可以一并删除,请先移除全部制品文件后重试.
+	ArtifactSoftRemoveGroupNotEmpty         I18nKey = "artifact.soft_remove_group_not_empty"         // 删除失败:该目录或子目录下包含未删除的制品.请先清空制品,然后再尝试删除.
 	ArtifactSoftRemoveGroupQueryError       I18nKey = "artifact.soft_remove_group_query_error"       // 校验分组状态失败.
 	ArtifactSoftRemovePackageNotEmpty       I18nKey = "artifact.soft_remove_package_not_empty"       // 包下仍有未删除的制品文件,无法删除包；请先删除包下所有版本的制品文件后重试.
 	ArtifactSoftRemovePackageVersionExists  I18nKey = "artifact.soft_remove_package_version_exists"  // 包下仍有未删除的版本,无法删除包；请先删除所有制品库下的版本后重试.
@@ -106,7 +106,7 @@ const (
 	ArtifactTreeRefreshFormatInvalid        I18nKey = "artifact.tree_refresh_format_invalid"         // 不支持的制品格式,仅支持: file, raw, container.
 	ArtifactUnsupportedFormat               I18nKey = "artifact.unsupported_format"                  // 不支持的制品格式.
 	ArtifactUploadArtifactidRequired        I18nKey = "artifact.upload_artifactid_required"          // 上传制品必须指定 artifactID,请确认所选制品库后重试.
-	ArtifactUploadFileDuplicate             I18nKey = "artifact.upload_file_duplicate"               // 已存在相同内容的同名文件,不允许重复上传.
+	ArtifactUploadFileDuplicate             I18nKey = "artifact.upload_file_duplicate"               // 已存在相同内容的同名文件,已跳过上传.
 	ArtifactUploadFileNameRequired          I18nKey = "artifact.upload_file_name_required"           // 上传制品必须指定文件名 name,且不能为空或全为空白字符.
 	ArtifactUploadGroupArtifactMismatch     I18nKey = "artifact.upload_group_artifact_mismatch"      // 指定的分组不属于当前制品库,请确认 artifactID 与分组归属后重试.
 	ArtifactUploadGroupIdInvalid            I18nKey = "artifact.upload_group_id_invalid"             // 指定的 groupId 不合法或不存在,请确认后重试.
