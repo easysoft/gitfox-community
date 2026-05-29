@@ -156,6 +156,7 @@ func (mm *ModelManager) createNormalAsset(ctx context.Context, ver *model.Artifa
 	if err != nil {
 		return nil, false, err
 	}
+	// 如果资产存在，判断是否为重复。
 	if assetExist {
 		if isSameContent(currAsset, descriptor) {
 			return nil, false, duplicateAssetError(descriptor.Path)
@@ -173,6 +174,8 @@ func (mm *ModelManager) createNormalAsset(ctx context.Context, ver *model.Artifa
 		ArtifactID: null.IntFrom(0),
 		VersionID:  null.IntFrom(ver.ID),
 	}
+
+	// 创建新资产。
 	if err = mm.createAsset(ctx, newAsset, descriptor); err != nil {
 		return nil, false, err
 	}
