@@ -7,7 +7,7 @@
 package server
 
 import (
-	artifact4 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/artifact"
+	artifact3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/artifact"
 	branch3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/branch"
 	commit2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/commit"
 	execution3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/execution"
@@ -27,7 +27,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/manager"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/scheduler"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/triggerer"
-	artifact3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/artifact"
+	artifact2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/artifact"
 	branch2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/branch"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/commit"
 	execution2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/execution"
@@ -51,6 +51,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/branch"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/execution"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/jobs"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/notify"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/pipeline"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/publickey"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/pullrequest"
@@ -188,13 +189,14 @@ func NewApp(mode string) (*App, func(), error) {
 	tagController := tag2.NewController(tagService, repoService)
 	commitService := commit.NewService(urlProvider, gitService)
 	commitController := commit2.NewController(commitService, repoService)
+	notifyStore := notify.NewNotifyStore(db)
 	encrypter, err := provider.ProvideEncrypter(config)
 	if err != nil {
 		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
-	repository := importer.NewRepoImporterSvc(mode, urlProvider, gitService, store, encrypter, jobsScheduler, streamer)
+	repository := importer.NewRepoImporterSvc(mode, urlProvider, gitService, store, notifyStore, encrypter, jobsScheduler, streamer)
 	eventContext := provider.NewEventContext()
 	eventsConfig := provider.NewEventConfig()
 	universalClient := provider.NewEventRedisClient()
@@ -234,7 +236,7 @@ func NewApp(mode string) (*App, func(), error) {
 	userStore := user.NewUserStore(db)
 	jobScheduler := provider.ProvideArtifactJobScheduler(jobsScheduler)
 	artifactConfig := provider.ProvideArtifactConfig(config)
-	artifactService, err := artifact3.NewService(db, artifactStore, spaceStore, store, userStore, storageDriver, jobScheduler, artifactConfig, urlProvider)
+	artifactService, err := artifact2.NewService(db, artifactStore, spaceStore, store, userStore, storageDriver, jobScheduler, artifactConfig, urlProvider)
 	if err != nil {
 		cleanup2()
 		cleanup()
@@ -285,7 +287,7 @@ func NewApp(mode string) (*App, func(), error) {
 		return nil, nil, err
 	}
 	webhookController := webhook2.NewController(webhookService)
-	artifactController := artifact4.NewController(artifactService)
+	artifactController := artifact3.NewController(artifactService)
 	routerController := provider.NewControllers(spaceController, controller, pipelineController, executionController, runnerController, tagController, commitController, repoController, userController, gitController, scanController, fitController, webhookController, artifactController)
 	i18nManager, err := provider.NewI18nManager(config)
 	if err != nil {
@@ -329,35 +331,35 @@ func NewApp(mode string) (*App, func(), error) {
 	containerController := provider.ProvideContainerController(artifactStore, artifactService, urlProvider)
 	containerHandler := provider.ProvideContainerHandler(containerController, artifactService, artifactStore, spaceStore)
 	app := &App{
-		SystemConfig:       config,
-		SystemLog:          systemLog,
-		APILog:             apiLog,
-		DB:                 db,
-		Controller:         routerController,
-		I18nManager:        i18nManager,
-		GithookCtrl:        githookController,
-		SSHServer:          server,
-		UserService:        userService,
-		PipelineService:    pipelineService,
-		TriggerService:     triggerService,
-		Authenticator:      authenticator,
-		EventSystem:        system,
-		EventContext:       eventContext,
-		JobScheduler:       jobsScheduler,
-		Triggerer:          triggererTriggerer,
-		Poller:             poller,
-		ScanRuleSvc:        ruleService,
-		ScanTaskSvc:        scanTaskService,
-		ScanPlanSvc:        scanPlanService,
-		ScanPlanStore:      scanPlanStore,
-		ScanTriggerStore:   scanTriggerStore,
-		RepoStore:          store,
-		RepoService:        repoService,
-		RepoImporterSvc:    repository,
-		TokenStore:         tokenInterface,
-		ArtifactService:    artifactService,
-		ContainerHandler:   containerHandler,
-		GitService:         gitService,
+		SystemConfig:     config,
+		SystemLog:        systemLog,
+		APILog:           apiLog,
+		DB:               db,
+		Controller:       routerController,
+		I18nManager:      i18nManager,
+		GithookCtrl:      githookController,
+		SSHServer:        server,
+		UserService:      userService,
+		PipelineService:  pipelineService,
+		TriggerService:   triggerService,
+		Authenticator:    authenticator,
+		EventSystem:      system,
+		EventContext:     eventContext,
+		JobScheduler:     jobsScheduler,
+		Triggerer:        triggererTriggerer,
+		Poller:           poller,
+		ScanRuleSvc:      ruleService,
+		ScanTaskSvc:      scanTaskService,
+		ScanPlanSvc:      scanPlanService,
+		ScanPlanStore:    scanPlanStore,
+		ScanTriggerStore: scanTriggerStore,
+		RepoStore:        store,
+		RepoService:      repoService,
+		RepoImporterSvc:  repository,
+		TokenStore:       tokenInterface,
+		ArtifactService:  artifactService,
+		ContainerHandler: containerHandler,
+		GitService:       gitService,
 	}
 	return app, func() {
 		cleanup2()
@@ -368,33 +370,33 @@ func NewApp(mode string) (*App, func(), error) {
 // wire.go:
 
 type App struct {
-	SystemConfig       *config.Config
-	SystemLog          *provider.SystemLog
-	APILog             *provider.APILog
-	DB                 *gorm.DB
-	Controller         *router.Controller
-	I18nManager        *provider.I18nManager
-	GithookCtrl        *githook.Controller
-	SSHServer          *ssh.Server
-	UserService        user2.Interface
-	PipelineService    pipeline2.Interface
-	TriggerService     *trigger.Service
-	Authenticator      authn.Authenticator
-	EventSystem        *events.System
-	EventContext       *provider.EventContext
-	JobScheduler       *jobs2.Scheduler
-	Triggerer          triggerer.Triggerer
-	Poller             *poller.Poller
-	ScanRuleSvc        scan2.IRule
-	ScanTaskSvc        scan2.IScanTask
-	ScanPlanSvc        scan2.IScanPlan
-	ScanPlanStore      scan.IScanPlan
-	ScanTriggerStore   scan.IScanTrigger
-	RepoStore          repo.Interface
-	RepoService        repo2.Interface
-	RepoImporterSvc    *importer.Repository
-	TokenStore         token.Interface
-	ArtifactService    artifact3.Interface
-	ContainerHandler   *handler.ContainerHandler
-	GitService         git.Interface
+	SystemConfig     *config.Config
+	SystemLog        *provider.SystemLog
+	APILog           *provider.APILog
+	DB               *gorm.DB
+	Controller       *router.Controller
+	I18nManager      *provider.I18nManager
+	GithookCtrl      *githook.Controller
+	SSHServer        *ssh.Server
+	UserService      user2.Interface
+	PipelineService  pipeline2.Interface
+	TriggerService   *trigger.Service
+	Authenticator    authn.Authenticator
+	EventSystem      *events.System
+	EventContext     *provider.EventContext
+	JobScheduler     *jobs2.Scheduler
+	Triggerer        triggerer.Triggerer
+	Poller           *poller.Poller
+	ScanRuleSvc      scan2.IRule
+	ScanTaskSvc      scan2.IScanTask
+	ScanPlanSvc      scan2.IScanPlan
+	ScanPlanStore    scan.IScanPlan
+	ScanTriggerStore scan.IScanTrigger
+	RepoStore        repo.Interface
+	RepoService      repo2.Interface
+	RepoImporterSvc  *importer.Repository
+	TokenStore       token.Interface
+	ArtifactService  artifact2.Interface
+	ContainerHandler *handler.ContainerHandler
+	GitService       git.Interface
 }

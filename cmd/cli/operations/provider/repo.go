@@ -27,6 +27,7 @@ var RepoWireSet = wire.NewSet(
 	repoSvc.NewRepoSvc,
 	wire.Bind(new(importerSvc.Interface), new(*importerSvc.Repository)),
 	importerSvc.NewRepoImporterSvc,
+	NotifyWireSet,
 	ProvideEncrypter,
 	wire.Bind(new(pullrequestSvc.Interface), new(*pullrequestSvc.Service)),
 	ProvidePullRequestSvc,
