@@ -1044,28 +1044,6 @@ func artifactIDForVersion(pkg *model.ArtifactPackage, ver *model.ArtifactVersion
 	return 0
 }
 
-// isDefaultRootGroupOf 判定 g 是否为 view 的「默认根 group」：
-//   - 与 view 同 format
-//   - 名称与 view 同名（CreateView 时按视图名建组）
-//   - parentID 为 0（根级，无父组）
-//
-// CreateView 当前不再提前创建默认根 group；保留该识别规则用于兼容历史数据和恢复链路。
-func isDefaultRootGroupOf(view *model.ArtifactView, g *model.ArtifactGroup) bool {
-	if view == nil || g == nil {
-		return false
-	}
-	if g.Format != view.Format {
-		return false
-	}
-	if g.Name != view.Name {
-		return false
-	}
-	if g.ParentID.Valid && g.ParentID.Int64 != 0 {
-		return false
-	}
-	return true
-}
-
 type ArchiveGroup struct {
 	base      *archiveGroupItem
 	subGroups []*archiveGroupItem
