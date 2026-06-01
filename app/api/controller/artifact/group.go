@@ -29,16 +29,13 @@ func (c *Controller) CreateGroup(ctx *gin.Context) {
 		return
 	}
 
-	// 先确保 artifactID 合法并反查 view：group 的 format 必须与 artifact 一致，
-	// 不允许前端自行指定，统一以 view.Format 为准。
-	if params.ArtifactID <= 0 {
-		resp.BadRequest(ctx, errors.WithI18nKey(
-			fmt.Errorf("artifactID must be greater than 0, got %d", params.ArtifactID),
-			i18n.ArtifactGroupArtifactidRequired,
-		))
+	// 业务规则校验（artifactID > 0、format 枚举、names 合法、container 不嵌套）
+	if err := params.Validate(); err != nil {
+		resp.BadRequest(ctx, err)
 		return
 	}
 
+	// 反查 view，确保 artifactID 存在且 format 合法
 	view, err := c.artSvc.ResolveView(ctx.Request.Context(), &model.SpaceRepoReq{ArtifactID: params.ArtifactID})
 	if err != nil {
 		resp.BadRequest(ctx, err)
@@ -46,12 +43,6 @@ func (c *Controller) CreateGroup(ctx *gin.Context) {
 	}
 	// 用 view.Format 覆盖前端可能传入的 format，保证 group.format 与 artifact 绑定一致
 	params.Format = string(view.Format)
-
-	// 业务规则校验（artifactID > 0、format 枚举、names 合法、container 不嵌套）
-	if err := params.Validate(); err != nil {
-		resp.BadRequest(ctx, err)
-		return
-	}
 
 	names := params.ParseNames()
 	format := view.Format
@@ -69,6 +60,7 @@ func (c *Controller) CreateGroup(ctx *gin.Context) {
 		))
 		return
 	}
+
 	ge, err := c.artSvc.CreateGroup(ctx.Request.Context(), params.ArtifactID, names, format)
 	if err != nil {
 		resp.InternalError(ctx, err)

@@ -198,7 +198,8 @@ func (t *Syncer) SyncTreeNodeForPackageInArtifact(ctx context.Context, pkg *artm
 // upsertTreeNode 插入或更新节点
 func (t *Syncer) upsertTreeNode(ctx context.Context, node *artmodel.ArtifactTreeNode) error {
 	// 树节点以 owner+format+path 幂等；路径已存在时只纠正类型与目标实体，不重复建点。
-	if upObj, e := t.artStore.Nodes().GetByPath(ctx, node.ArtifactID, node.Path, node.Format); e == nil {
+	upObj, err := t.artStore.Nodes().GetByPath(ctx, node.ArtifactID, node.Path, node.Format)
+	if err == nil {
 		node.ID = upObj.ID
 		if upObj.Type == node.Type && upObj.TargetID == node.TargetID {
 			return nil
@@ -206,7 +207,9 @@ func (t *Syncer) upsertTreeNode(ctx context.Context, node *artmodel.ArtifactTree
 		upObj.Type = node.Type
 		upObj.TargetID = node.TargetID
 		return t.artStore.Nodes().Update(ctx, upObj)
-	} else if errors.Is(e, pkgErrors.ErrResourceNotFound) {
+	}
+
+	if errors.Is(err, pkgErrors.ErrResourceNotFound) {
 		created, err := t.artStore.Nodes().Create(ctx, &artmodel.CreateArtifactTreeNode{
 			ParentID: node.ParentID, ArtifactID: node.ArtifactID, Name: node.Name,
 			Path: node.Path, Type: node.Type, Format: node.Format, TargetID: node.TargetID,
@@ -216,9 +219,12 @@ func (t *Syncer) upsertTreeNode(ctx context.Context, node *artmodel.ArtifactTree
 		}
 		node.ID = created.ID
 		return nil
-	} else {
-		return e
 	}
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // SyncRawGroup 同步 raw namespace 分组
