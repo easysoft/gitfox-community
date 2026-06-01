@@ -41,9 +41,10 @@ func (s *Service) refreshTree(ctx context.Context, format string, artStore artif
 		if !refreshAll && group.Format != targetFormat {
 			continue
 		}
-		if _, gErr := syncer.SyncTreeNodeForGroup(ctx, group); gErr != nil {
-			logger.GetLogger(ctx).Errorf("refresh tree: sync group %d failed: %v", group.ID, gErr)
-			return gErr
+		_, err := syncer.SyncTreeNodeForGroup(ctx, group)
+		if err != nil {
+			logger.GetLogger(ctx).Errorf("refresh tree: sync group %d failed: %v", group.ID, err)
+			return err
 		}
 	}
 

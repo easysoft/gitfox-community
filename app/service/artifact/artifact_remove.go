@@ -405,13 +405,12 @@ func (s *Service) softRemoveArtifact(ctx context.Context, view *model.ArtifactVi
 		return pkgErrors.WithI18nKey(err, i18n.ArtifactSoftRemoveArtifactQueryError)
 	}
 
-	// view 软删时，默认根 group 一并软删（恢复 view 时再同步恢复，保持对称）。
-	for _, g := range groups {
-		if dErr := s.artStore.Groups().SoftDeleteById(ctx, g.ID, operator); dErr != nil {
-			res.Status = model.ArtifactStatusUnknown
-			return pkgErrors.WithI18nKey(dErr, i18n.ArtifactSoftRemoveArtifactQueryError)
-		}
-		_ = s.deleteTreeNodeByTarget(ctx, view.ID, model.ArtifactTreeNodeTypeGroup, g.ID)
+	if len(groups) != 0 {
+		res.Status = model.ArtifactStatusNotEmpty
+		return pkgErrors.WithI18nKey(
+			fmt.Errorf("artifact view %d still has active group(s)", view.ID),
+			i18n.ArtifactSoftRemoveArtifactGroupExists,
+		)
 	}
 
 	if err = s.artStore.Views().SoftDelete(ctx, view, operator); err != nil {

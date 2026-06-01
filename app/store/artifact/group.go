@@ -82,7 +82,7 @@ func (c *groups) GetById(ctx context.Context, id int64) (*model.ArtifactGroup, e
 func (c *groups) GetRoot(ctx context.Context, artifactID int64, name string, format model.ArtifactFormat) (*model.ArtifactGroup, error) {
 	var row artifactGroup
 	q := artifactGroup{ArtifactID: artifactID, Name: name, Format: string(format)}
-	if err := c.db.WithContext(ctx).Where(&q).Where("parentID = 0").First(&row).Error; err != nil {
+	if err := c.db.WithContext(ctx).Where(&q).Where("parentID = 0 and deleted = 0").First(&row).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
 	return groupToModel(&row), nil
@@ -91,7 +91,7 @@ func (c *groups) GetRoot(ctx context.Context, artifactID int64, name string, for
 func (c *groups) GetSubNode(ctx context.Context, parentID int64, name string) (*model.ArtifactGroup, error) {
 	var row artifactGroup
 	q := artifactGroup{ParentID: null.IntFrom(parentID), Name: name}
-	if err := c.db.WithContext(ctx).Where(&q).Take(&row).Error; err != nil {
+	if err := c.db.WithContext(ctx).Where(&q).Where("deleted = 0").Take(&row).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
 	return groupToModel(&row), nil
@@ -145,6 +145,7 @@ func (c *groups) getOrCreate(ctx context.Context, artifactID int64, name string,
 	return dest, nil
 }
 
+// RecursiveCreate 递归创建分组
 func (c *groups) RecursiveCreate(ctx context.Context, artifactID int64, names []string, format model.ArtifactFormat, operator string) (*model.ArtifactGroupEndpoint, error) {
 	obj := new(model.ArtifactGroupEndpoint)
 	rootNode, err := c.getOrCreate(ctx, artifactID, names[0], null.IntFrom(0), format, operator)
