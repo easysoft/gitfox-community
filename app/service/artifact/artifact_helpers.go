@@ -11,28 +11,6 @@ import (
 )
 
 // --- 制品相关 ---
-
-// filterVersionList 按请求条件过滤 package 下的版本列表。
-func filterVersionList(list []*model.VersionListItem, req *model.ListAssetReq) []*model.VersionListItem {
-	if req.CreatedBy == "" && req.EditedBy == "" && req.Version == "" {
-		return list
-	}
-	filtered := make([]*model.VersionListItem, 0, len(list))
-	for _, item := range list {
-		if req.CreatedBy != "" && item.CreatedBy != req.CreatedBy {
-			continue
-		}
-		if req.EditedBy != "" && item.EditedBy != req.EditedBy {
-			continue
-		}
-		if req.Version != "" && !strings.Contains(item.Version, req.Version) {
-			continue
-		}
-		filtered = append(filtered, item)
-	}
-	return filtered
-}
-
 // filterAssetNodeInfoList 按名称、平台和操作人过滤资产详情列表。
 func filterAssetNodeInfoList(list []*model.ArtifactAssetInfo, req *model.ListAssetReq) []*model.ArtifactAssetInfo {
 	filtered := make([]*model.ArtifactAssetInfo, 0, len(list))
