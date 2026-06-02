@@ -5,6 +5,7 @@ import (
 	"time"
 
 	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
 
 	"gorm.io/gorm"
 )
@@ -26,10 +27,9 @@ type Interface interface {
 	MetaAssets() MetaAssetInterface
 	Blobs() BlobInterface
 	Nodes() TreeNodeInterface
-	FindPackages(ctx context.Context, artifactID int64, filter *model.ArtifactFilter) ([]*model.ArtifactListItem, error)
-	GetVersion(ctx context.Context, artifactID int64, packageName, groupName, versionName string, format model.ArtifactFormat) (*model.ArtifactVersion, error)
 	GetAsset(ctx context.Context, assetID int64) (*model.ArtifactAssetsRes, error)
 	ListAssets(ctx context.Context, versionID int64) ([]*model.ArtifactAssetsRes, error)
+	ListAssetsPage(ctx context.Context, req *model.ListAssetReq) (*database.PageResult[*model.ArtifactAssetsRes], error)
 	ListGroupAssets(ctx context.Context, groupID int64) ([]*model.ArtifactAssetsRes, error)
 	StatisticAssets(ctx context.Context, retentionTime time.Duration, options ...SearchOption) (*model.ArtifactStatisticReport, error)
 }

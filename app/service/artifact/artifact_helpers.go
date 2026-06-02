@@ -11,29 +11,6 @@ import (
 )
 
 // --- 制品相关 ---
-// filterAssetNodeInfoList 按名称、平台和操作人过滤资产详情列表。
-func filterAssetNodeInfoList(list []*model.ArtifactAssetInfo, req *model.ListAssetReq) []*model.ArtifactAssetInfo {
-	filtered := make([]*model.ArtifactAssetInfo, 0, len(list))
-	for _, info := range list {
-		if req.Name != "" && !strings.Contains(strings.ToLower(info.Path), strings.ToLower(req.Name)) {
-			continue
-		}
-		if req.OS != "" && info.OS != req.OS {
-			continue
-		}
-		if req.Arch != "" && info.Arch != req.Arch {
-			continue
-		}
-		if req.CreatedBy != "" && info.CreatorName != req.CreatedBy {
-			continue
-		}
-		if req.EditedBy != "" && info.EditedBy != req.EditedBy {
-			continue
-		}
-		filtered = append(filtered, info)
-	}
-	return filtered
-}
 
 // populateNodeInfoAssetFields 将资产基础字段填充到 nodeInfo 响应。
 func populateNodeInfoAssetFields(info *model.ArtifactAssetInfo, asset *model.ArtifactAssetsRes) {

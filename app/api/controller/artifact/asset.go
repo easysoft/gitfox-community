@@ -83,21 +83,14 @@ func (c *Controller) ListAssetPage(ctx *gin.Context) {
 		resp.BadRequest(ctx, err)
 		return
 	}
-	data, total, err := c.artSvc.ListAssetPage(ctx.Request.Context(), &body)
+	pageResult, err := c.artSvc.ListAssetPage(ctx.Request.Context(), &body)
 	if err != nil {
 		resp.BadRequest(ctx, err)
 		return
 	}
-	page, pageSize := body.Page, body.PageSize
-	if page <= 0 {
-		page = 1
-	}
-	if pageSize <= 0 {
-		pageSize = 20
-	}
-	resp.ListSuccess(ctx, data, resp.ListArgs{
-		Total:    total,
-		Page:     int64(page),
-		PageSize: int64(pageSize),
+	resp.ListSuccess(ctx, pageResult.Data, resp.ListArgs{
+		Total:    pageResult.Total,
+		Page:     int64(pageResult.Page),
+		PageSize: int64(pageResult.PageSize),
 	}, i18n.ArtifactListSuccess, nil)
 }
