@@ -60,7 +60,8 @@ func (c *Controller) Upload(ctx *gin.Context) {
 	// 同名同内容命中：assets[0].AlreadyExists=true，切换为"文件已存在"成功提示，
 	// 仍按 200 渲染，前端拿到现有 asset 即可。
 	if len(assets) > 0 && assets[0].AlreadyExists {
-		resp.OK(ctx, i18n.ArtifactUploadFileDuplicate, assets)
+		err = errors.WithI18nKey(err, i18n.ArtifactUploadFileDuplicate)
+		resp.BadRequest(ctx, err)
 		return
 	}
 	resp.OK(ctx, i18n.ArtifactUploadSuccess, assets)

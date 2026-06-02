@@ -701,7 +701,7 @@ func (s *Service) renameArtifactInner(ctx context.Context, tx *gorm.DB, artifact
 		if v.Deleted == 0 && v.ID != artifactID {
 			return pkgErrors.WithI18nKey(
 				fmt.Errorf("artifact view %q already exists", newName),
-				i18n.ArtifactRenameSiblingConflict,
+				i18n.ArtifactViewNameDuplicate,
 			)
 		}
 	}
