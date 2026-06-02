@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
 	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
 	artifactStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/artifact"
 	pkgErrors "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
@@ -27,49 +26,53 @@ func (s *Service) RelocateEntity(ctx context.Context, req *model.RelocateEntityR
 	splitEntityID := req.EntityID.GetEntityID()
 
 	// 取当前实体的 artifactID / groupID / name，用于与传入参数比对，判断是否真有变化。
-	var (
-		curArtifactID int64
-		curGroupID    int64
-		curName       string
-	)
+	var curArtifactID int64
+	var curGroupID int64
+	var curName string
+	var curFormat model.ArtifactFormat
+
 	switch splitEntityID.Kind {
 	case constant.ArtifactEntityKindGroup:
-		g, e := s.artStore.Groups().GetById(ctx, splitEntityID.ID)
-		if e != nil {
-			return pkgErrors.WithI18nKey(e, i18n.ArtifactMoveSourceDeleted)
+		group, err := s.artStore.Groups().GetById(ctx, splitEntityID.ID)
+		if err != nil {
+			return pkgErrors.WithI18nKey(err, i18n.ArtifactMoveSourceDeleted)
 		}
-		curArtifactID = g.ArtifactID
-		if g.ParentID.Valid {
-			curGroupID = g.ParentID.Int64
+		curArtifactID = group.ArtifactID
+		if group.ParentID.Valid {
+			curGroupID = group.ParentID.Int64
 		}
-		curName = g.Name
+		curName = group.Name
+		curFormat = group.Format
 	case constant.ArtifactEntityKindAsset:
-		a, e := s.artStore.Assets().GetById(ctx, splitEntityID.ID)
-		if e != nil {
-			return pkgErrors.WithI18nKey(e, i18n.ArtifactMoveSourceDeleted)
+		asset, err := s.artStore.Assets().GetById(ctx, splitEntityID.ID)
+		if err != nil {
+			return pkgErrors.WithI18nKey(err, i18n.ArtifactMoveSourceDeleted)
 		}
-		if a.ArtifactID.Valid {
-			curArtifactID = a.ArtifactID.Int64
+		if asset.ArtifactID.Valid {
+			curArtifactID = asset.ArtifactID.Int64
 		}
-		if a.GroupID.Valid {
-			curGroupID = a.GroupID.Int64
+		if asset.GroupID.Valid {
+			curGroupID = asset.GroupID.Int64
 		}
-		curName = a.Path
+		curName = asset.Path
+		curFormat = asset.Format
 	case constant.ArtifactEntityKindPackage:
-		p, e := s.artStore.Packages().GetByID(ctx, splitEntityID.ID)
-		if e != nil {
-			return pkgErrors.WithI18nKey(e, i18n.ArtifactMoveSourceDeleted)
+		pack, err := s.artStore.Packages().GetByID(ctx, splitEntityID.ID)
+		if err != nil {
+			return pkgErrors.WithI18nKey(err, i18n.ArtifactMoveSourceDeleted)
 		}
-		curArtifactID = p.ArtifactID
-		curGroupID = p.GroupID
-		curName = p.Name
+		curArtifactID = pack.ArtifactID
+		curGroupID = pack.GroupID
+		curName = pack.Name
+		curFormat = pack.Format
 	case constant.ArtifactEntityKindArtifact:
-		v, e := s.artStore.Views().GetByID(ctx, splitEntityID.ID)
-		if e != nil {
-			return pkgErrors.WithI18nKey(e, i18n.ArtifactMoveSourceDeleted)
+		version, err := s.artStore.Views().GetByID(ctx, splitEntityID.ID)
+		if err != nil {
+			return pkgErrors.WithI18nKey(err, i18n.ArtifactMoveSourceDeleted)
 		}
-		curArtifactID = v.ID
-		curName = v.Name
+		curArtifactID = version.ID
+		curName = version.Name
+		curFormat = version.Format
 	default:
 		return pkgErrors.WithI18nKey(
 			fmt.Errorf("unsupported entity type: %s", splitEntityID.Kind),
@@ -96,16 +99,18 @@ func (s *Service) RelocateEntity(ctx context.Context, req *model.RelocateEntityR
 	if !needMove && !needRename {
 		return nil
 	}
-	if needMove {
-		err := s.rejectContainerMoveRename(ctx, splitEntityID, i18n.ArtifactMoveContainerNotSupported, i18n.ArtifactMoveSourceDeleted, i18n.ArtifactMoveEntityTypeInvalid)
-		if err != nil {
-			return err
+	if curFormat == model.ArtifactContainerFormat {
+		if needMove {
+			return pkgErrors.WithI18nKey(
+				fmt.Errorf("container artifacts do not support move"),
+				i18n.ArtifactMoveContainerNotSupported,
+			)
 		}
-	}
-	if needRename {
-		err := s.rejectContainerMoveRename(ctx, splitEntityID, i18n.ArtifactRenameContainerNotSupported, i18n.ArtifactRenameSourceDeleted, i18n.ArtifactRenameEntityTypeInvalid)
-		if err != nil {
-			return err
+		if needRename {
+			return pkgErrors.WithI18nKey(
+				fmt.Errorf("container artifacts do not support rename"),
+				i18n.ArtifactRenameContainerNotSupported,
+			)
 		}
 	}
 
@@ -127,65 +132,6 @@ func (s *Service) RelocateEntity(ctx context.Context, req *model.RelocateEntityR
 		}
 		return nil
 	})
-}
-
-// rejectContainerMoveRename 拒绝 container 格式的制品库移动或重命名。
-func (s *Service) rejectContainerMoveRename(ctx context.Context, splitEntityID model.SplitEntityID, key, sourceDeletedKey, entityTypeInvalidKey i18n.I18nKey) error {
-	format, err := s.entityFormat(ctx, splitEntityID, sourceDeletedKey, entityTypeInvalidKey)
-	if err != nil {
-		return err
-	}
-	if format != model.ArtifactContainerFormat {
-		return nil
-	}
-	return pkgErrors.WithI18nKey(
-		fmt.Errorf("container artifacts do not support move or rename"),
-		key,
-	)
-}
-
-func (s *Service) entityFormat(ctx context.Context, splitEntityID model.SplitEntityID, sourceDeletedKey, entityTypeInvalidKey i18n.I18nKey) (model.ArtifactFormat, error) {
-	switch splitEntityID.Kind {
-	case constant.ArtifactEntityKindArtifact:
-		view, err := s.artStore.Views().GetByID(ctx, splitEntityID.ID)
-		if err != nil {
-			return "", pkgErrors.WithI18nKey(err, sourceDeletedKey)
-		}
-		return view.Format, nil
-	case constant.ArtifactEntityKindGroup:
-		group, err := s.artStore.Groups().GetById(ctx, splitEntityID.ID)
-		if err != nil {
-			return "", pkgErrors.WithI18nKey(err, sourceDeletedKey)
-		}
-		return group.Format, nil
-	case constant.ArtifactEntityKindPackage:
-		pkg, err := s.artStore.Packages().GetByID(ctx, splitEntityID.ID)
-		if err != nil {
-			return "", pkgErrors.WithI18nKey(err, sourceDeletedKey)
-		}
-		return pkg.Format, nil
-	case constant.ArtifactEntityKindVersion:
-		ver, err := s.artStore.Versions().GetByID(ctx, splitEntityID.ID)
-		if err != nil {
-			return "", pkgErrors.WithI18nKey(err, sourceDeletedKey)
-		}
-		pkg, err := s.artStore.Packages().GetByID(ctx, ver.PackageID)
-		if err != nil {
-			return "", pkgErrors.WithI18nKey(err, sourceDeletedKey)
-		}
-		return pkg.Format, nil
-	case constant.ArtifactEntityKindAsset:
-		asset, err := s.artStore.Assets().GetById(ctx, splitEntityID.ID)
-		if err != nil {
-			return "", pkgErrors.WithI18nKey(err, sourceDeletedKey)
-		}
-		return asset.Format, nil
-	default:
-		return "", pkgErrors.WithI18nKey(
-			fmt.Errorf("unsupported entity type: %s", splitEntityID.Kind),
-			entityTypeInvalidKey,
-		)
-	}
 }
 
 // moveByKind 按实体类型派发到对应的 Move 方法（不带事务，由调用方包裹）。
@@ -377,7 +323,7 @@ func (s *Service) moveAssetInner(ctx context.Context, tx *gorm.DB, assetID, tArt
 		)
 	}
 	// 仅接受组资产：GroupID 必填、不得挂在 version 下
-	if srcAsset.Format == artifact.ArtifactContainerFormat {
+	if srcAsset.Format == model.ArtifactContainerFormat {
 		return pkgErrors.WithI18nKey(
 			fmt.Errorf("asset %d is not a group asset", assetID),
 			i18n.ArtifactMoveEntityTypeInvalid,
@@ -587,7 +533,7 @@ func (s *Service) renameAssetInner(ctx context.Context, tx *gorm.DB, assetID int
 			i18n.ArtifactRenameSourceDeleted,
 		)
 	}
-	if srcAsset.Format == artifact.ArtifactContainerFormat {
+	if srcAsset.Format == model.ArtifactContainerFormat {
 		return pkgErrors.WithI18nKey(
 			fmt.Errorf("container asset %d cannot be renamed", assetID),
 			i18n.ArtifactRenameEntityTypeInvalid,
@@ -686,7 +632,7 @@ func (s *Service) renameArtifactInner(ctx context.Context, tx *gorm.DB, artifact
 	}
 
 	// 1.1 名称合法性校验（复用 CreateView 的规则）
-	trimmed, err := artifact.ValidateViewName(newName, view.Format)
+	trimmed, err := model.ValidateViewName(newName, view.Format)
 	if err != nil {
 		return err
 	}
