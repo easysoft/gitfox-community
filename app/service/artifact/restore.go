@@ -6,6 +6,7 @@ import (
 
 	artModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/model"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
 	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
 	pkgErrors "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
@@ -152,20 +153,12 @@ func (s *Service) restoreArtifact(ctx context.Context, viewID int64, operator st
 	}
 
 	// 默认根 group：与 view 同 format / 同名 / parentID=0；软删时由 softRemoveArtifact 一并软删。
-	defaultGroup, dErr := s.findDefaultRootGroup(ctx, view)
-	if dErr == nil && defaultGroup != nil && defaultGroup.Deleted == 1 {
-		if rErr := s.artStore.Groups().RestoreById(ctx, defaultGroup.ID, operator); rErr != nil {
-			wrapped := pkgErrors.WithI18nKey(rErr, i18n.ArtifactRestoreError)
-			res.Status = model.ArtifactStatusUnknown
-			return wrapped
-		}
-		// 同步树节点（幂等：已有则复用）。重新读一次拿最新 deleted=0 的实例。
-		if g, gErr := s.artStore.Groups().GetById(ctx, defaultGroup.ID); gErr == nil && g != nil {
-			if _, sErr := syncer.SyncTreeNodeForGroup(ctx, g); sErr != nil {
-				logger.GetLogger(ctx).Warnf("sync tree node for default group %d failed: %v", g.ID, sErr)
-			}
+	if artifact.ArtifactFormat(view.Format) == artifact.ArtifactFileFormat {
+		if gErr := s.ensureDefaultGroupForView(ctx, view); gErr != nil {
+			logger.GetLogger(ctx).Warnf("create default group for view %d (%s) failed: %v", view.ID, view.Name, gErr)
 		}
 	}
+
 	return nil
 }
 
@@ -194,15 +187,18 @@ func (s *Service) restoreGroup(ctx context.Context, groupID int64, operator stri
 		return err
 	}
 
+	// 恢复 group
 	if err = s.artStore.Groups().RestoreById(ctx, group.ID, operator); err != nil {
 		wrapped := pkgErrors.WithI18nKey(err, i18n.ArtifactRestoreError)
 		res.Status = model.ArtifactStatusUnknown
 		return wrapped
 	}
+	// 恢复 group 链
 	if err = s.cascadeRestoreAncestorGroups(ctx, group, operator); err != nil {
 		res.Status = classifyRestoreErr(err)
 		return err
 	}
+	// 恢复 view
 	if err = s.cascadeRestoreView(ctx, group.ArtifactID, operator); err != nil {
 		res.Status = classifyRestoreErr(err)
 		return err
@@ -480,11 +476,10 @@ func (s *Service) cascadeRestoreView(ctx context.Context, viewID int64, operator
 	if err = s.artStore.Views().Restore(ctx, view.ID, operator); err != nil {
 		return pkgErrors.WithI18nKey(err, i18n.ArtifactRestoreError)
 	}
-	// view 软删时一并软删的默认 group，恢复时也对称恢复。
-	defaultGroup, dErr := s.findDefaultRootGroup(ctx, view)
-	if dErr == nil && defaultGroup != nil && defaultGroup.Deleted == 1 {
-		if rErr := s.artStore.Groups().RestoreById(ctx, defaultGroup.ID, operator); rErr != nil {
-			return pkgErrors.WithI18nKey(rErr, i18n.ArtifactRestoreError)
+
+	if artifact.ArtifactFormat(view.Format) == artifact.ArtifactFileFormat {
+		if gErr := s.ensureDefaultGroupForView(ctx, view); gErr != nil {
+			logger.GetLogger(ctx).Warnf("create default group for view %d (%s) failed: %v", view.ID, view.Name, gErr)
 		}
 	}
 	return nil
