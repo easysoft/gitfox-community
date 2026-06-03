@@ -120,7 +120,7 @@ func (r *Repository) LoadRepositoryFromProvider(
 	}
 
 	scmRepo, scmResp, err := scmClient.Repositories.Find(ctx, slug)
-	if err = convertSCMError(provider, slug, scmResp, err); err != nil {
+	if err = convertImportError(provider, slug, scmResp, err); err != nil {
 		return RepositoryInfo{}, provider, errors.WithI18nKey(err, i18n.RepoImportError)
 	}
 
@@ -208,12 +208,12 @@ func (r *Repository) getJobInput(data string) (Input, error) {
 var _ pkgJobs.Handler = (*Repository)(nil)
 
 type Input struct {
-	RepoID     int64  `json:"repo_id"`
-	GitUser    string `json:"git_user"`
-	GitPass    string `json:"git_pass"`
-	CloneURL   string `json:"clone_url"`
+	RepoID     int64  `json:"repoID"`
+	GitUser    string `json:"gitUser"`
+	GitPass    string `json:"gitPass"`
+	CloneURL   string `json:"cloneURL"`
 	Mirror     bool   `json:"mirror"`
-	NoticeLang string `json:"notice_lang"`
+	NoticeLang string `json:"noticeLang"`
 }
 
 const JobType = "repository_import"

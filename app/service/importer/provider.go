@@ -267,14 +267,14 @@ func LoadRepositoriesFromProviderSpace(
 	for {
 		if listv2 {
 			scmRepos, scmResp, err = scmClient.Repositories.ListV2(ctx, optsv2)
-			if err = convertSCMError(provider, spaceSlug, scmResp, err); err != nil {
+			if err = convertImportError(provider, spaceSlug, scmResp, err); err != nil {
 				return nil, provider, err
 			}
 			optsv2.Page = scmResp.Page.Next
 			optsv2.URL = scmResp.Page.NextURL
 		} else {
 			scmRepos, scmResp, err = scmClient.Repositories.List(ctx, opts)
-			if err = convertSCMError(provider, spaceSlug, scmResp, err); err != nil {
+			if err = convertImportError(provider, spaceSlug, scmResp, err); err != nil {
 				return nil, provider, err
 			}
 			opts.Page = scmResp.Page.Next
@@ -333,7 +333,7 @@ func extractRepoFromSlug(slug string) (string, error) {
 	return "", errors.BadRequest.New("repo name missing")
 }
 
-func convertSCMError(provider repoModel.Provider, slug string, r *scm.Response, err error) error {
+func convertImportError(provider repoModel.Provider, slug string, r *scm.Response, err error) error {
 	if err == nil {
 		return nil
 	}
