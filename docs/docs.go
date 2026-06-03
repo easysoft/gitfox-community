@@ -9407,7 +9407,7 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
-                        "maximum": 100,
+                        "maximum": 2000,
                         "minimum": 1,
                         "type": "integer",
                         "default": 20,

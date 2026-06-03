@@ -41,7 +41,7 @@ type ListSpaceFilter struct {
 
 	// 分页参数（对应 pagination.PageParam）
 	Page     int `form:"page" binding:"omitempty,min=1"`             // 最小1
-	PageSize int `form:"pageSize" binding:"omitempty,min=1,max=100"` // 1-100
+	PageSize int `form:"pageSize" binding:"omitempty,min=1,max=2000"` // 1-2000
 }
 
 type UndeleteSpaceRequest struct {
