@@ -21,6 +21,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/sse"
 	notifyStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/notify"
 	repoStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/auth/authn"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
@@ -81,10 +82,12 @@ func (r *Repository) Create(ctx context.Context, session *auth.Session, req *rep
 		Identifier:    req.Identifier,
 		GitUID:        req.GitUID,
 		Desc:          req.Desc,
+		Product:       req.Product,
 		CreatedBy:     session.User.Account,
 		DefaultBranch: req.DefaultBranch,
 		Status:        req.Status,
 		ACL:           req.ACL,
+		Mirror:        req.Mirror,
 	}
 
 	repoObj, err := r.repoStore.Create(ctx, repo)
@@ -99,16 +102,16 @@ func (r *Repository) Create(ctx context.Context, session *auth.Session, req *rep
 func (r *Repository) LoadRepositoryFromProvider(
 	ctx context.Context,
 	provider repoModel.Provider,
-	repoSlug string,
+	slug string,
 ) (RepositoryInfo, repoModel.Provider, error) {
-	if repoSlug == "" {
+	if slug == "" {
 		return RepositoryInfo{}, provider, errors.WithI18nKey(
 			errors.BadRequest.New("provider repository identifier is missing"),
 			i18n.RepoProviderRepoIdentifierMissing,
 		)
 	}
 
-	scmClient, err := getScmClientWithTransport(provider, repoSlug, false)
+	scmClient, err := getScmClientWithTransport(provider, slug, false)
 	if err != nil {
 		return RepositoryInfo{}, provider, errors.WithI18nKey(
 			errors.BadRequest.Wrap(err, "could not create client"),
@@ -116,29 +119,8 @@ func (r *Repository) LoadRepositoryFromProvider(
 		)
 	}
 
-	// Augment user information if it's not provided for certain vendors.
-	if provider.Password != "" && provider.Username == "" {
-		user, _, err := scmClient.Users.Find(ctx)
-		if err != nil {
-			return RepositoryInfo{}, provider, errors.WithI18nKey(
-				errors.BadRequest.Wrap(err, "could not find user"),
-				i18n.RepoProviderUserFindError,
-			)
-		}
-		provider.Username = user.Login
-	}
-
-	if provider.Type == constant.RepoProviderTypeAzure {
-		repoSlug, err = extractRepoFromSlug(repoSlug)
-		if err != nil {
-			return RepositoryInfo{}, provider, errors.WithI18nKey(
-				errors.BadRequest.Wrap(err, "invalid slug format"),
-				i18n.RepoProviderInvalidSlugFormat,
-			)
-		}
-	}
-	scmRepo, scmResp, err := scmClient.Repositories.Find(ctx, repoSlug)
-	if err = convertSCMError(provider, repoSlug, scmResp, err); err != nil {
+	scmRepo, scmResp, err := scmClient.Repositories.Find(ctx, slug)
+	if err = convertImportError(provider, slug, scmResp, err); err != nil {
 		return RepositoryInfo{}, provider, errors.WithI18nKey(err, i18n.RepoImportError)
 	}
 
@@ -147,18 +129,18 @@ func (r *Repository) LoadRepositoryFromProvider(
 		Identifier:    scmRepo.Name,
 		CloneURL:      scmRepo.Clone,
 		DefaultBranch: scmRepo.Branch,
-		IsPublic:      true,
+		IsPublic:      !scmRepo.Private,
 	}, provider, nil
 }
 
-func (r *Repository) Run(ctx context.Context, provider repoModel.Provider, repo *repoModel.Repo, public bool, cloneURL string, mirror bool) error {
+func (r *Repository) Run(ctx context.Context, provider repoModel.Provider, repo *repoModel.Repo, cloneURL string, mirror bool, noticeLang string) error {
 	jobDef, err := r.getJobDef(JobIDFromRepoID(int64(repo.ID)), Input{
-		RepoID:   int64(repo.ID),
-		Public:   public,
-		GitUser:  provider.Username,
-		GitPass:  provider.Password,
-		CloneURL: cloneURL,
-		Mirror:   mirror,
+		RepoID:     int64(repo.ID),
+		GitUser:    provider.Username,
+		GitPass:    provider.Password,
+		CloneURL:   cloneURL,
+		Mirror:     mirror,
+		NoticeLang: noticeLang,
 	})
 	if err != nil {
 		return err
@@ -226,12 +208,12 @@ func (r *Repository) getJobInput(data string) (Input, error) {
 var _ pkgJobs.Handler = (*Repository)(nil)
 
 type Input struct {
-	RepoID   int64  `json:"repo_id"`
-	Public   bool   `json:"public"`
-	GitUser  string `json:"git_user"`
-	GitPass  string `json:"git_pass"`
-	CloneURL string `json:"clone_url"`
-	Mirror   bool   `json:"mirror"`
+	RepoID     int64  `json:"repoID"`
+	GitUser    string `json:"gitUser"`
+	GitPass    string `json:"gitPass"`
+	CloneURL   string `json:"cloneURL"`
+	Mirror     bool   `json:"mirror"`
+	NoticeLang string `json:"noticeLang"`
 }
 
 const JobType = "repository_import"
@@ -277,8 +259,8 @@ func (r *Repository) Handle(ctx context.Context, data string, reportFn pkgJobs.P
 	log.Info("create git repository")
 
 	accountInfo := auth.Session{User: &principal.User{
-		Account: repo.CreatedBy,
-		Email:   fmt.Sprintf("%s@gitfox.com", repo.CreatedBy),
+		Account: authn.HeaderAppAdmin,
+		Email:   authn.HeaderAdminEmail,
 	}}
 	gitUID, err := r.createGitRepository(ctx, accountInfo, repo.ID)
 	if err != nil {
@@ -316,7 +298,6 @@ func (r *Repository) Handle(ctx context.Context, data string, reportFn pkgJobs.P
 				return errors.New("repository has already finished importing")
 			}
 
-			repo.GitUID = gitUID
 			repo.Status = constant.RepoStateActive
 
 			return nil
@@ -326,39 +307,12 @@ func (r *Repository) Handle(ctx context.Context, data string, reportFn pkgJobs.P
 		}
 		repo = updated
 
-		successData := fmt.Sprintf("%s 导入代码库 [%s] 成功", repo.CreatedBy, repo.Identifier)
-		toList := fmt.Sprintf(",%s,", repo.CreatedBy)
-		successNotify := &notifyStore.Notify{
-			ObjectType: "message",
-			ObjectID:   0,
-			Action:     repo.ID,
-			ToList:     &toList,
-			Data:       &successData,
-			CreatedBy:  repo.CreatedBy,
-			Status:     "wait",
-		}
-		if errNotify := r.notifyStore.Create(context.WithoutCancel(ctx), successNotify); errNotify != nil {
-			log.Errorw("failed to create import success notify", "error", errNotify)
-		}
+		r.sendNotice(ctx, repo.ID, repo.Identifier, repo.CreatedBy, input.NoticeLang, false, "", log)
 		return nil
 	}()
 	if err != nil {
 		log.Errorw("failed repository import - cleanup git repository", "error", err)
-
-		failureData := fmt.Sprintf("%s 导入代码库 [%s] 失败，失败原因：%v", repo.CreatedBy, repo.Identifier, err)
-		toList := fmt.Sprintf(",%s,", repo.CreatedBy)
-		failureNotify := &notifyStore.Notify{
-			ObjectType: "message",
-			ObjectID:   0,
-			Action:     repo.ID,
-			ToList:     &toList,
-			Data:       &failureData,
-			CreatedBy:  repo.CreatedBy,
-			Status:     "wait",
-		}
-		if errNotify := r.notifyStore.Create(context.WithoutCancel(ctx), failureNotify); errNotify != nil {
-			log.Errorw("failed to create import failure notify", "error", errNotify)
-		}
+		r.sendNotice(ctx, repo.ID, repo.Identifier, repo.CreatedBy, input.NoticeLang, true, err.Error(), log)
 
 		repo.GitUID = gitUID // make sure to delete the correct directory
 
@@ -495,4 +449,34 @@ func (r *Repository) createRPCWriteParams(ctx context.Context,
 		EnvVars: envVars,
 		Mirror:  repo.Mirror,
 	}, nil
+}
+
+func (r *Repository) sendNotice(
+	ctx context.Context,
+	repoID uint,
+	repoName, noticeUser, noticeLang string,
+	isFailed bool,
+	failReason string,
+	log *logger.SugaredMateLogger,
+) {
+	var notice string
+	if isFailed {
+		notice = i18n.TWithLocale(noticeLang, string(i18n.RepoImportNotifyFailure), noticeUser, repoName, failReason)
+	} else {
+		notice = i18n.TWithLocale(noticeLang, string(i18n.RepoImportNotifySuccess), noticeUser, repoName)
+	}
+	toList := fmt.Sprintf(",%s,", noticeUser)
+
+	noticeData := &notifyStore.Notify{
+		ObjectType: "message",
+		ObjectID:   0,
+		Action:     repoID,
+		ToList:     &toList,
+		Data:       &notice,
+		CreatedBy:  noticeUser,
+		Status:     "wait",
+	}
+	if errNotify := r.notifyStore.Create(context.WithoutCancel(ctx), noticeData); errNotify != nil {
+		log.Errorw("failed to create import notify", "error", errNotify)
+	}
 }

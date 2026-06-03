@@ -35,12 +35,13 @@ type RepositoryInfo struct {
 	DefaultBranch string
 }
 
-// ToRepo converts the RepositoryInfo into the types.Repository object marked as being imported and is-public flag.
-func (r *RepositoryInfo) ToRepo(
+// ConvertToRepo converts the RepositoryInfo into the types.Repository object marked as being imported and is-public flag.
+func (r *RepositoryInfo) ConvertToRepo(
 	spaceID uint,
 	identifier string,
 	description string,
 	acl string,
+	mirror bool,
 	product string,
 	user *userModel.User,
 ) (*repoModel.Repo, bool) {
@@ -57,6 +58,7 @@ func (r *RepositoryInfo) ToRepo(
 		DefaultBranch: r.DefaultBranch,
 		Status:        constant.RepoStateImporting, // 标记为导入中状态
 		ACL:           acl,
+		Mirror:        mirror,
 		Product:       product,
 		Path:          paths.Concatenate(fmt.Sprint(spaceID), identifier),
 	}, r.IsPublic
@@ -265,14 +267,14 @@ func LoadRepositoriesFromProviderSpace(
 	for {
 		if listv2 {
 			scmRepos, scmResp, err = scmClient.Repositories.ListV2(ctx, optsv2)
-			if err = convertSCMError(provider, spaceSlug, scmResp, err); err != nil {
+			if err = convertImportError(provider, spaceSlug, scmResp, err); err != nil {
 				return nil, provider, err
 			}
 			optsv2.Page = scmResp.Page.Next
 			optsv2.URL = scmResp.Page.NextURL
 		} else {
 			scmRepos, scmResp, err = scmClient.Repositories.List(ctx, opts)
-			if err = convertSCMError(provider, spaceSlug, scmResp, err); err != nil {
+			if err = convertImportError(provider, spaceSlug, scmResp, err); err != nil {
 				return nil, provider, err
 			}
 			opts.Page = scmResp.Page.Next
@@ -331,7 +333,7 @@ func extractRepoFromSlug(slug string) (string, error) {
 	return "", errors.BadRequest.New("repo name missing")
 }
 
-func convertSCMError(provider repoModel.Provider, slug string, r *scm.Response, err error) error {
+func convertImportError(provider repoModel.Provider, slug string, r *scm.Response, err error) error {
 	if err == nil {
 		return nil
 	}
