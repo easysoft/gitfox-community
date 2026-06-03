@@ -447,7 +447,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.ArtifactRestoreEntitiesReq"
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.ArtifactEntitieReq"
                         }
                     }
                 ],
@@ -11490,6 +11490,14 @@ const docTemplate = `{
                 "WebhookTriggerArtifactDeleted"
             ]
         },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.ArtifactEntitieReq": {
+            "type": "object",
+            "properties": {
+                "entityID": {
+                    "type": "string"
+                }
+            }
+        },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.ArtifactFormat": {
             "type": "string",
             "enum": [
@@ -11512,17 +11520,6 @@ const docTemplate = `{
                 "ArtifactPypiFormat",
                 "ArtifactNpmFormat"
             ]
-        },
-        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.ArtifactRestoreEntitiesReq": {
-            "type": "object",
-            "properties": {
-                "entityIDs": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
         },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.ArtifactTreeListReq": {
             "type": "object",
@@ -11596,14 +11593,6 @@ const docTemplate = `{
                 "entityID"
             ],
             "properties": {
-                "arch": {
-                    "description": "按 CPU 架构过滤（amd64 / arm64 / arm/v7）",
-                    "type": "string"
-                },
-                "artifactID": {
-                    "description": "当前制品库 ID；container package 查询版本时必填",
-                    "type": "integer"
-                },
                 "createdBy": {
                     "description": "按创建人过滤",
                     "type": "string"
@@ -11630,10 +11619,6 @@ const docTemplate = `{
                 },
                 "order": {
                     "description": "排序方向：asc / desc",
-                    "type": "string"
-                },
-                "os": {
-                    "description": "按操作系统过滤（linux / windows）",
                     "type": "string"
                 },
                 "page": {

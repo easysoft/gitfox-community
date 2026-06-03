@@ -372,21 +372,6 @@ func (s *Service) ResolveRepoArtifact(
 	return s.resolveContainerArtifact(ctx, "repo", int64(repo.SpaceID), int64(repoID), artifactName)
 }
 
-// fillContainerVersionItem 从 manifest 解析 container version 的 size/os/arch。
-func (s *Service) fillContainerVersionItem(ctx context.Context, item *model.VersionListItem, ver *model.ArtifactVersion, pkg *model.ArtifactPackage) {
-	view, err := s.ParseSpaceView(ctx, &model.SpaceRepoReq{ArtifactID: ver.ArtifactLibID})
-	if err != nil {
-		return
-	}
-	info := &model.ArtifactAssetInfo{}
-	if err = s.fillContainerNodeInfo(ctx, info, view, ver); err != nil {
-		return
-	}
-	item.Size = info.Size
-	item.OS = info.OS
-	item.Arch = info.Arch
-}
-
 // listGroupAssetsForPage 按 group 维度拉资产。
 //   - generic：asset 直挂 group → ListGroupAssets。
 //   - raw / container / helm / maven / pypi / npm：asset 挂 versionID，需要 group → packages(GroupID) → versions → assets。
@@ -575,12 +560,14 @@ func (s *Service) getAssetNodeInfo(ctx context.Context, assetID int64) (*model.A
 		isContainer := info.Format == model.ArtifactContainerFormat
 		var savedSize int64
 		var savedOS, savedArch, savedLink string
+		var savedImages []*model.ArtifactContainerImage
 		var savedCreated, savedUpdated *datetime.Local
 		if isContainer {
 			savedSize = info.Size
 			savedOS = info.OS
 			savedArch = info.Arch
 			savedLink = info.Link
+			savedImages = info.Images
 			savedCreated = info.Created
 			savedUpdated = info.Updated
 		}
@@ -594,6 +581,7 @@ func (s *Service) getAssetNodeInfo(ctx context.Context, assetID int64) (*model.A
 			info.OS = savedOS
 			info.Arch = savedArch
 			info.Link = savedLink
+			info.Images = savedImages
 			info.Created = savedCreated
 			info.Updated = savedUpdated
 		}
@@ -674,6 +662,8 @@ func (s *Service) fillContainerNodeInfo(
 		return nil
 	}
 
+	info.Images = containerImagesToModel(data.Images)
+
 	// 优先选 linux/amd64；multi-arch 镜像无 linux/amd64 时取第一个平台（与参考项目一致）
 	selected := data.Images[0]
 	for _, image := range data.Images {
@@ -693,6 +683,22 @@ func (s *Service) fillContainerNodeInfo(
 	info.Created = ver.CreatedDate
 	info.Updated = mainAssets[0].CreatedDate
 	return nil
+}
+
+func containerImagesToModel(images []*container.ImageMeta) []*model.ArtifactContainerImage {
+	out := make([]*model.ArtifactContainerImage, 0, len(images))
+	for _, image := range images {
+		if image == nil {
+			continue
+		}
+		out = append(out, &model.ArtifactContainerImage{
+			Digest: image.Digest.String(),
+			OS:     image.OS,
+			Arch:   image.Arch,
+			Size:   image.Size,
+		})
+	}
+	return out
 }
 
 func (s *Service) getGroupAssetNodeInfo(

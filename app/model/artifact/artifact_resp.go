@@ -84,32 +84,12 @@ type ArtifactAssetsRes struct {
 	Arch string `gorm:"-" json:"arch,omitempty"`
 }
 
-// VersionListItem 版本分页列表项（package.{id} 查询时返回）。
-// 包含 version 表原始字段 + container 格式的扩展信息（size/os/arch/image/package）。
-type VersionListItem struct {
-	ID          int64           `json:"id"`
-	PackageID   int64           `json:"packageID"`
-	Version     string          `json:"version"`
-	Metadata    string          `json:"metadata"`
-	CreatedBy   string          `json:"createdBy"`
-	CreatedDate *datetime.Local `json:"createdDate"`
-	EditedBy    string          `json:"editedBy"`
-	EditedDate  *datetime.Local `json:"editedDate"`
-	// 以下为 container 格式扩展字段（非 container 为空）
-	Size    int64  `json:"size,omitempty"`
-	OS      string `json:"os,omitempty"`
-	Arch    string `json:"arch,omitempty"`
-	Image   string `json:"image,omitempty"`
-	Package string `json:"package,omitempty"`
-}
-
 type ArtifactBlobRes struct {
 	Id             int64           `gorm:"column:id" json:"id"`
 	Path           string          `gorm:"column:basename" json:"path"`
 	Size           int64           `gorm:"column:size" json:"size"`
 	BlobRef        string          `gorm:"column:ref" json:"-"`
-	Creator        string          `gorm:"-" json:"-"`
-	CreatorName    string          `gorm:"column:createdBy" json:"createdBy"`
+	CreatedBy      string          `gorm:"column:createdBy" json:"createdBy"`
 	CheckSumString string          `gorm:"column:checksum" json:"-"`
 	MetadataString string          `gorm:"column:metadata" json:"-"`
 	Created        *datetime.Local `gorm:"column:createdDate" json:"createdDate"`
@@ -302,6 +282,15 @@ type ArtifactAssetInfo struct {
 	OS string `json:"os,omitempty"`
 	// CPU 架构（仅 container 格式）：amd64 / arm64 / arm/v7 等
 	Arch string `json:"arch,omitempty"`
+	// 多平台镜像列表（仅 container 格式）：manifest list / OCI index 会返回多个平台。
+	Images []*ArtifactContainerImage `json:"images,omitempty"`
+}
+
+type ArtifactContainerImage struct {
+	Digest string `json:"digest"`
+	OS     string `json:"os"`
+	Arch   string `json:"arch"`
+	Size   int64  `json:"size"`
 }
 
 // ArtifactPkgVerMetadata 制品包/版本的基础定位元数据。

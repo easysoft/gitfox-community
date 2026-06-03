@@ -16,7 +16,7 @@ import (
 // @Tags artifacts
 // @Accept application/json
 // @Produce application/json
-// @Param body body model.ArtifactRestoreEntitiesReq true "恢复请求体"
+// @Param body body model.ArtifactEntitieReq true "恢复请求体"
 // @Success 200 {object} resp.ObjectResponse "成功（部分恢复时 status 字段标识失败条目）"
 // @Failure 400 {object} resp.ObjectResponse "参数错误"
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"

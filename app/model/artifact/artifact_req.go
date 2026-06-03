@@ -77,7 +77,6 @@ func validateEntityID(EntityID EntityID) error {
 	}
 	// 校验 kind 是否为有效 ArtifactEntityKind
 	kind := constant.ArtifactEntityKind(parts[0])
-
 	_, ok := kind.Sanitize()
 	if !ok {
 		return errors.WithI18nKey(fmt.Errorf("unsupported kind: %s", kind), i18n.ArtifactEntityIdKindInvalid)

@@ -236,9 +236,9 @@ func (c *groups) ListChildren(ctx context.Context, id int64) ([]*model.ArtifactG
 func (c *groups) FindRootByName(ctx context.Context, artifactID int64, name string, format model.ArtifactFormat) (*model.ArtifactGroup, error) {
 	var row artifactGroup
 	err := c.db.WithContext(ctx).
-		Where("artifactLibID = ? AND name = ? AND type = ?", artifactID, name, format).
+		Where("artifactLibID = ? AND name = ? AND type = ? and deleted = 0", artifactID, name, format).
 		Where("parentID IS NULL OR parentID = 0").
-		Take(&row).Error
+		First(&row).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil

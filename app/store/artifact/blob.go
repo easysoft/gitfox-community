@@ -148,8 +148,6 @@ func (c *blobs) History(ctx context.Context, assetID int64) ([]*model.ArtifactBl
 			}
 			a.Metadata = metadata
 		}
-
-		a.Creator = a.CreatorName
 	}
 	return dst, nil
 }

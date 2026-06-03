@@ -8,6 +8,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/adapter"
 	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
 	authModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/storage"
 )
 
@@ -34,8 +35,8 @@ type Interface interface {
 
 	// ---- 制品查询 ----
 
-	// ListAssetPage 按 entityID（group / version / package）分页查询。
-	ListAssetPage(ctx context.Context, req *model.ListAssetReq) (interface{}, int64, error)
+	// ListAssetPage 按 entityID（group / version / package / asset）分页查询。
+	ListAssetPage(ctx context.Context, req *model.ListAssetReq) (*database.PageResult[*model.ArtifactAssetInfo], error)
 
 	// GetAsset 获取单个制品资源的详细信息。
 	GetAsset(ctx context.Context, assetID int64) (*model.ArtifactAssetInfo, error)

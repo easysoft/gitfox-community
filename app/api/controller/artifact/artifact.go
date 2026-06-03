@@ -94,5 +94,6 @@ func (c *Controller) RelocateEntity(ctx *gin.Context) {
 		resp.BadRequest(ctx, err)
 		return
 	}
+
 	resp.OK(ctx, i18n.ArtifactRelocateSuccess, nil)
 }
