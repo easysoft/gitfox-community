@@ -35,12 +35,13 @@ type RepositoryInfo struct {
 	DefaultBranch string
 }
 
-// ToRepo converts the RepositoryInfo into the types.Repository object marked as being imported and is-public flag.
-func (r *RepositoryInfo) ToRepo(
+// ConvertToRepo converts the RepositoryInfo into the types.Repository object marked as being imported and is-public flag.
+func (r *RepositoryInfo) ConvertToRepo(
 	spaceID uint,
 	identifier string,
 	description string,
 	acl string,
+	mirror bool,
 	product string,
 	user *userModel.User,
 ) (*repoModel.Repo, bool) {
@@ -57,6 +58,7 @@ func (r *RepositoryInfo) ToRepo(
 		DefaultBranch: r.DefaultBranch,
 		Status:        constant.RepoStateImporting, // 标记为导入中状态
 		ACL:           acl,
+		Mirror:        mirror,
 		Product:       product,
 		Path:          paths.Concatenate(fmt.Sprint(spaceID), identifier),
 	}, r.IsPublic

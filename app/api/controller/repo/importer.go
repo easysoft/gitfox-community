@@ -1,6 +1,8 @@
 package repo
 
 import (
+	"fmt"
+
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
@@ -33,34 +35,34 @@ func (ctl *Controller) Import(c *gin.Context) {
 		return
 	}
 
-	session, ok := req.GetAuthSession(c.Request.Context())
+	session, ok := req.GetAuthSessionWithEmail(c.Request.Context())
 	if !ok {
 		resp.Unauthorized(c, errors.WithI18nKey(nil, i18n.AuthNoSession))
 		return
 	}
 
-	if session.User.Email == "" {
-		resp.BadRequest(c, errors.WithI18nKey(nil, i18n.RepoEmailRequired))
-		return
-	}
-
-	remoteRepository, provider, err := ctl.importerSvc.LoadRepositoryFromProvider(c.Request.Context(), in.Provider, in.Provider.Repo)
+	remoteRepository, provider, err := ctl.importerSvc.LoadRepositoryFromProvider(
+		c.Request.Context(),
+		in.Provider,
+		fmt.Sprintf("%s/%s", in.Provider.RepoGroup, in.Provider.RepoName),
+	)
 	if err != nil {
 		resp.BadRequest(c, err)
 		return
 	}
 
-	repoData, isPublic := remoteRepository.ToRepo(
+	localRepoData, _ := remoteRepository.ConvertToRepo(
 		in.SpaceID,
-		in.Identifier,
+		in.Name,
 		in.Desc,
 		in.ACL,
+		in.Mirror,
 		in.Product,
 		session.User,
 	)
 
 	// 创建代码库
-	repo, err := ctl.importerSvc.Create(c.Request.Context(), session, repoData)
+	repo, err := ctl.importerSvc.Create(c.Request.Context(), session, localRepoData)
 	if err != nil {
 		i18nKey := errors.GetI18nKey(err)
 		if i18nKey == i18n.DbDuplicate {
@@ -72,12 +74,13 @@ func (ctl *Controller) Import(c *gin.Context) {
 		return
 	}
 
+	noticeLang := i18n.GetLocaleFromGin(c)
 	if err := ctl.importerSvc.Run(c.Request.Context(),
 		provider,
 		repo,
-		isPublic,
 		remoteRepository.CloneURL,
-		false,
+		in.Mirror,
+		noticeLang,
 	); err != nil {
 		err = errors.WithI18nKey(err, i18n.RepoImportError)
 		resp.BadRequest(c, err)
