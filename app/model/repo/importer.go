@@ -11,25 +11,26 @@ import (
 )
 
 type ImportInput struct {
-	SpaceID    uint     `json:"spaceID" binding:"required"`
-	Identifier string   `json:"name" binding:"required"`
-	Desc       string   `json:"desc"`
-	ACL        string   `json:"acl" binding:"required,oneof=open private"` // 权限（仅支持open/private）
-	Product    string   `json:"product"`                                   // 关联产品
-	Provider   Provider `json:"provider"`
+	SpaceID  uint     `json:"spaceID" binding:"required"`
+	Name     string   `json:"name" binding:"required"`
+	Desc     string   `json:"desc"`
+	ACL      string   `json:"acl" binding:"required,oneof=open private"` // 权限（仅支持open/private）
+	Mirror   bool     `json:"mirror"`                                    // 是否镜像导入，默认为false
+	Product  string   `json:"product"`                                   // 关联产品
+	Provider Provider `json:"provider"`
 }
 
 var importIdentifierRegex = regexp.MustCompile(`^[a-zA-Z0-9-_.]+$`)
 
-// Validate 校验导入参数中的 Identifier 与 Description。
+// Validate 校验导入参数中的 Name 与 Description。
 func (in *ImportInput) Validate() error {
-	if !importIdentifierRegex.MatchString(in.Identifier) {
+	if !importIdentifierRegex.MatchString(in.Name) {
 		return errors.WithI18nKey(nil, i18n.RepoIdentifierInvalid)
 	}
-	if len(in.Identifier) > 64 {
+	if len(in.Name) > 64 {
 		return errors.WithI18nKey(nil, i18n.RepoIdentifierTooLong)
 	}
-	if strings.HasSuffix(strings.ToLower(in.Identifier), ".git") {
+	if strings.HasSuffix(strings.ToLower(in.Name), ".git") {
 		return errors.WithI18nKey(nil, i18n.RepoIdentifierInvalidGit)
 	}
 	if len(in.Desc) > constant.MaxDescByteCountUTF8MB4 {
@@ -47,7 +48,9 @@ type Provider struct {
 	Host     string                    `json:"host"`
 	Username string                    `json:"username"`
 	Password string                    `json:"password"`
-	Repo     string                    `json:"repo" binding:"required"` // 远端仓库地址（如owner/repo）
+	// Slug 是 provider 上的仓库标识，例如 GitHub 上的 "owner/repo" 或 GitLab 上的 "group/subgroup/repo"。
+	RepoGroup string `json:"repoGroup" binding:"required"`
+	RepoName  string `json:"repoName" binding:"required"`
 }
 
 type Progress struct {

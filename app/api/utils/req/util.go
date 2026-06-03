@@ -25,6 +25,14 @@ func GetAuthSession(ctx context.Context) (*auth.Session, bool) {
 	return v, ok && v != nil
 }
 
+func GetAuthSessionWithEmail(ctx context.Context) (*auth.Session, bool) {
+	v, ok := ctx.Value(authSessionKey).(*auth.Session)
+	if ok && v != nil && v.User.Email != "" {
+		return v, true
+	}
+	return v, false
+}
+
 // GetCookie tries to retrieve the cookie from the request or returns false if it doesn't exist.
 func GetCookie(c *gin.Context, cookieName string) (string, bool) {
 	cookie, err := c.Cookie(cookieName)
