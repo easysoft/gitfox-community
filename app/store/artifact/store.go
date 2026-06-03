@@ -215,26 +215,6 @@ func (s *Store) ListAssetsPage(ctx context.Context, req *model.ListAssetReq) (*d
 	}, nil
 }
 
-// ---- 资产列表分页：链路活性 + 入口路由 ----
-//
-// ---- 资产列表分页：入口活性 + 路由 ----
-//
-// 设计：业务铁律已保证"上游活则下游全活"——
-//   - softRemoveVersion：必先无活 asset（artifact_remove.go:148-166）；
-//   - softRemovePackage：必先所有 version 下无活 asset，再级联软删 version（同文件:168-206）；
-//   - softRemoveGroup  ：级联软删子树所有 package/version/asset（同文件:254-334）；
-//   - softRemoveArtifact：子树皆空才能软删（同文件:338-420）。
-// 故 SQL 只需校验"入口实体自身活"+"asset 自身 deleted=0"——下游冗余校验
-// 既无必要也会拖慢查询，更会因为级联尚未完成等边界把活节点误算。
-//
-// 不同入口活性约束：
-//   - group.{id}    → 校验 group 自身 deleted=0；下挂 asset 由级联铁律保证活
-//   - package.{id}  → 校验 package 自身 deleted=0；下挂 version/asset 同理
-//   - version.{id}  → 校验 version 自身 deleted=0；下挂 asset 同理
-//   - asset.{id}    → 仅 assets.deleted=0（已在 common filter）
-//
-// 回收站口径（req.Deleted=true）：跳过实体自身活性校验，但仍 join 上链拿过滤字段。
-
 // isRecycleQuery 判定是否回收站口径。Deleted=true 即仅查软删 asset。
 func isRecycleQuery(req *model.ListAssetReq) bool {
 	return req.Deleted != nil && *req.Deleted

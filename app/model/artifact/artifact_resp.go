@@ -89,8 +89,7 @@ type ArtifactBlobRes struct {
 	Path           string          `gorm:"column:basename" json:"path"`
 	Size           int64           `gorm:"column:size" json:"size"`
 	BlobRef        string          `gorm:"column:ref" json:"-"`
-	Creator        string          `gorm:"-" json:"-"`
-	CreatorName    string          `gorm:"column:createdBy" json:"createdBy"`
+	CreatedBy      string          `gorm:"column:createdBy" json:"createdBy"`
 	CheckSumString string          `gorm:"column:checksum" json:"-"`
 	MetadataString string          `gorm:"column:metadata" json:"-"`
 	Created        *datetime.Local `gorm:"column:createdDate" json:"createdDate"`
