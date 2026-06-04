@@ -7,7 +7,6 @@ import (
 
 	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
-	pkgErrors "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/lock"
 
 	"gorm.io/gorm"
@@ -227,33 +226,6 @@ func (c *packages) Search(ctx context.Context, options ...SearchOption) ([]*mode
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
 	return packagesToModel(rows), nil
-}
-
-func (c *packages) GetByAssetID(ctx context.Context, assetID int64) (*model.ArtifactPackage, error) {
-	var row artifactPackage
-	db := c.db.WithContext(ctx).Model(&artifactPackage{}).
-		Select("ops_artifact_packages.*").
-		Joins("JOIN ops_artifact_versions ON ops_artifact_packages.id = ops_artifact_versions.packageID").
-		Joins("JOIN ops_artifact_assets ON ops_artifact_versions.id = ops_artifact_assets.versionID").
-		Where("ops_artifact_assets.id = ?", assetID).
-		Where("ops_artifact_assets.deleted = 0")
-	if err := db.First(&row).Error; err != nil {
-		return nil, database.ProcessSQLErrorf(ctx, err)
-	}
-	return packageToModel(&row), nil
-}
-
-// 仅用于 Search 的 SearchOption 中，避免循环引用
-var _ = pkgErrors.ErrResourceNotFound
-
-// UpdateNamespaceByCondition 按条件批量更新 package namespace（用于 container 制品库重命名时同步）。
-func (c *packages) UpdateNamespaceByCondition(ctx context.Context, artifactID int64, oldNamespace, newNamespace, format string) error {
-	if err := c.db.WithContext(ctx).Model(&artifactPackage{}).
-		Where("artifactLibID = ? AND namespace = ? AND type = ?", artifactID, oldNamespace, format).
-		UpdateColumn("namespace", newNamespace).Error; err != nil {
-		return database.ProcessSQLErrorf(ctx, err)
-	}
-	return nil
 }
 
 // MoveArtifactLibByGroupIDs 跨 view 移动 group 子树时，把挂在这些 group 上的 package 一并改归属。

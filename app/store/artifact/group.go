@@ -301,15 +301,6 @@ func (c *groups) UpdateNameByArtifactAndFormat(ctx context.Context, artifactID i
 	return nil
 }
 
-// DeleteByArtifactID 硬删指定 view 下的所有 group 记录（含已软删的）。
-func (c *groups) DeleteByArtifactID(ctx context.Context, artifactID int64) (int64, error) {
-	result := c.db.WithContext(ctx).Where("artifactLibID = ?", artifactID).Delete(&artifactGroup{})
-	if result.Error != nil {
-		return 0, database.ProcessSQLErrorf(ctx, result.Error)
-	}
-	return result.RowsAffected, nil
-}
-
 // UpdateName 更新分组名称。
 func (c *groups) UpdateName(ctx context.Context, id int64, name string) error {
 	if err := c.db.WithContext(ctx).Model(&artifactGroup{}).Where("id = ?", id).

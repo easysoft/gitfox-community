@@ -7,7 +7,10 @@ import (
 	"strings"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/adapter"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/adapter/container"
 	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
+	pkgErrors "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 )
 
 // --- 制品相关 ---
@@ -270,34 +273,35 @@ func convertTreeNodeToRes(n *model.ArtifactTreeNode, level string) *model.Artifa
 	return item
 }
 
-// --- 统计相关 ---
+// --- container ---
 
-// artifactViewScope 将版本统计信息转换为作用域标识。
-func artifactViewScope(info *model.ArtifactVersionInfo) string {
-	if info.ViewRepoID > 0 {
-		return "repo"
+// containerImagesToModel 将 container.ImageMeta 转换为 model.ArtifactContainerImage。
+func containerImagesToModel(images []*container.ImageMeta) []*model.ArtifactContainerImage {
+	out := make([]*model.ArtifactContainerImage, 0, len(images))
+	for _, image := range images {
+		if image == nil {
+			continue
+		}
+		out = append(out, &model.ArtifactContainerImage{
+			Digest: image.Digest.String(),
+			OS:     image.OS,
+			Arch:   image.Arch,
+			Size:   image.Size,
+		})
 	}
-	if info.ViewSpaceID > 0 {
-		return "space"
-	}
-	return "global"
+	return out
 }
 
-// artifactScopeKey 生成统计汇总使用的作用域 key。
-func artifactScopeKey(info *model.ArtifactVersionInfo) string {
-	switch artifactViewScope(info) {
-	case "repo":
-		return "repo:" + info.RepoName
-	case "space":
-		return "space:" + info.SpaceName
-	default:
-		return "global"
-	}
-}
+// --- upload ---
 
-// addStats 将一组统计累加到目标统计对象。
-func addStats(dst, src *model.ArtifactStatsObject) {
-	dst.Total += src.Total
-	dst.Active += src.Active
-	dst.Deleted += src.Deleted
+// wrapUploadError 若 err 已带有专属 i18n key（非默认），直接透传，
+// 否则套上通用 fallback，避免覆盖 adapter 层给出的精准提示。
+func wrapUploadError(err error, fallback i18n.I18nKey) error {
+	if err == nil {
+		return nil
+	}
+	if key := pkgErrors.GetI18nKey(err); key != "" && key != i18n.ErrorDefault {
+		return err
+	}
+	return pkgErrors.WithI18nKey(err, fallback)
 }
