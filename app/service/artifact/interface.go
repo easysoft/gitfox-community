@@ -4,10 +4,12 @@ import (
 	"context"
 	"io"
 	"net/http"
+	"time"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/adapter"
 	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
 	authModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
+	artifactStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/artifact"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/storage"
 )
@@ -97,6 +99,8 @@ type Interface interface {
 
 	// ---- 统计与 GC ----
 
+	StatisticAssets(ctx context.Context, retentionTime time.Duration, options ...artifactStore.SearchOption) (*model.ArtifactStatisticReport, error)
+
 	// StatisticCapacity 统计全量制品资源的容量使用情况。
 	StatisticCapacity(ctx context.Context) (*model.ArtifactStatisticResponse, error)
 
@@ -107,11 +111,11 @@ type Interface interface {
 	StatisticSummary(ctx context.Context) (map[string]*model.ArtifactStatsObject, error)
 
 	// TriggerGarbageCollect 触发指定格式或全量软删资源的 GC 异步任务。
-	TriggerGarbageCollect(ctx context.Context, entity model.ArtifactFormat) (*model.JobUIDResponse, error)
+	TriggerGarbageCollect(ctx context.Context, format string) (*model.JobUIDResponse, error)
 
 	// GarbageCollect 执行指定格式或全量软删资源 GC（cron job / 用户主动 API 共用）。
-	// entity 留空 → 清全部格式；非空 → 仅清指定 format。
-	GarbageCollect(ctx context.Context, entity model.ArtifactFormat) (*model.ArtifactGarbageReportRes, error)
+	// format 留空 → 清全部格式；非空 → 仅清指定 format。
+	GarbageCollect(ctx context.Context, format string) (*model.ArtifactGarbageReportRes, error)
 
 	// ---- 容器镜像 ----
 

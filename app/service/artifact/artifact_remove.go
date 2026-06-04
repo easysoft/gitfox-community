@@ -426,3 +426,14 @@ func (s *Service) deleteTreeNodeByTarget(ctx context.Context, artifactID int64, 
 	}
 	return s.artStore.Nodes().DeleteById(ctx, node.ID)
 }
+
+// deleteFormatTreeNode 删除指定 artifact 下某 format 的根树节点（path="/"）。
+// 当该 format 下已无活 group 时由软删链路调用，避免前端看到空的格式入口。
+// 节点不存在时静默返回（不报错），保持调用方简洁。
+func (s *Service) deleteFormatTreeNode(ctx context.Context, artifactID int64, format model.ArtifactFormat) error {
+	node, err := s.artStore.Nodes().GetByPath(ctx, artifactID, "/", format)
+	if err != nil {
+		return nil
+	}
+	return s.artStore.Nodes().DeleteById(ctx, node.ID)
+}

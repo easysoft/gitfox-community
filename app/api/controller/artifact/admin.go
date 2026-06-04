@@ -1,7 +1,11 @@
 package artifact
 
 import (
+	"fmt"
+	"strings"
+
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
@@ -36,14 +40,22 @@ func (c *Controller) SoftRemoveByEntity(ctx *gin.Context) {
 }
 
 func (c *Controller) GarbageCollect(ctx *gin.Context) {
-	data, err := c.artSvc.TriggerGarbageCollect(ctx, model.ArtifactFormat(ctx.Param("entity")))
-	if err != nil {
-		if errors.GetI18nKey(err) == i18n.ArtifactViewFormatInvalid {
-			resp.BadRequest(ctx, err)
+	req := ctx.Query("format")
+
+	raw := strings.TrimSpace(req)
+	if raw != "" {
+		_, ok := constant.ArtifactFormat(raw).Sanitize()
+		if !ok {
+			resp.BadRequest(ctx, errors.WithI18nKey(fmt.Errorf("unsupported garbage collect format: %s", raw), i18n.ArtifactViewFormatInvalid))
 			return
 		}
+	}
+
+	data, err := c.artSvc.TriggerGarbageCollect(ctx, req)
+	if err != nil {
 		resp.InternalError(ctx, err)
 		return
 	}
+
 	resp.OK(ctx, i18n.ArtifactGarbageCollectSuccess, data)
 }

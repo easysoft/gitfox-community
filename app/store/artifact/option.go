@@ -63,7 +63,7 @@ func (opt ContainerFormatOption) Apply(db *gorm.DB) *gorm.DB {
 }
 
 type AssetFormatOption struct {
-	Format model.ArtifactFormat
+	Format string
 }
 
 func (opt AssetFormatOption) Apply(db *gorm.DB) *gorm.DB {

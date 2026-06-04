@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
-	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
 	authModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
 	scanModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
 	principalModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/user"
@@ -188,10 +187,10 @@ type artifactGCHandler struct {
 }
 
 // artifactGCInput 是制品 GC 任务的入参。
-//   - Entity 为空 → 清理全部格式（自动触发场景）
-//   - Entity 指定具体 format → 仅清理该格式（用户主动 API 触发场景）
+//   - format 为空 → 清理全部格式（自动触发场景）
+//   - format 指定具体 format → 仅清理该格式（用户主动 API 触发场景）
 type artifactGCInput struct {
-	Entity model.ArtifactFormat `json:"entity,omitempty"`
+	Format string `json:"format,omitempty"`
 }
 
 func (h artifactGCHandler) Handle(ctx context.Context, input string, _ pkgJobs.ProgressReporter) (string, error) {
@@ -201,7 +200,7 @@ func (h artifactGCHandler) Handle(ctx context.Context, input string, _ pkgJobs.P
 			return "", fmt.Errorf("failed to parse artifact gc input: %w", err)
 		}
 	}
-	_, err := h.svc.GarbageCollect(ctx, in.Entity)
+	_, err := h.svc.GarbageCollect(ctx, in.Format)
 	return "", err
 }
 
