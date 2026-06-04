@@ -311,6 +311,6 @@ type ArtifactConfig struct {
 // 规则：GCInterval 不得小于 RecycleBinRetention；若未设置则使用默认值 720h。
 func (c *ArtifactConfig) Sanitize() {
 	if c.RecycleBinRetention <= 0 {
-		c.RecycleBinRetention = 120 * time.Hour
+		c.RecycleBinRetention = 720 * time.Hour
 	}
 }
