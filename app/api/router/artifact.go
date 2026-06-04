@@ -30,7 +30,6 @@ func registerArtifactRoutes(group *gin.RouterGroup, controller *Controller) {
 		artifact.GET("/recycle", controller.Artifact.ListRecycleBin)
 		artifact.POST("/recycle/restore", controller.Artifact.Restore)
 		artifact.GET("/garbage", controller.Artifact.GarbageCollect)
-		artifact.GET("/garbage/:entity", controller.Artifact.GarbageCollect)
 
 		// --- group 归档操作 ---
 		// artifact.GET("/groups/:groupID/archive", controller.Artifact.ArchiveGroup)   // pullAuth

@@ -20,6 +20,7 @@ import (
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/adapter"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/adapter/container"
+	containerGC "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/adapter/container/gc"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/adapter/generic"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/adapter/raw"
 	artModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/model"
@@ -966,8 +967,8 @@ func (s *Service) statistic(ctx context.Context, report *model.ArtifactStatistic
 // ----------------- capacity ------------------
 // StatisticContainerCapacity 容器仓库存储统计
 func (s *Service) StatisticContainerCapacity(ctx context.Context) (*model.ArtifactStatisticResponse, error) {
-	// 容量统计不需要过滤保留期，传 0 即可
-	report, err := s.artStore.StatisticAssets(ctx, 0, artifactStore.ContainerFormatOption{})
+	// container 容量按 tag manifest 引用图统计，不能用通用 blobID 引用计数。
+	report, err := containerGC.Statistic(ctx, s.artStore, s.fileStore, 0)
 	if err != nil {
 		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactStatisticCapacityError)
 	}

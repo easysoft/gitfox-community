@@ -563,30 +563,30 @@ type TreeNode struct {
 // ==================== 回收与统计模型 ====================
 // ==================== Recycle / Statistic ====================
 
-type ArtifactRecycleBlobDesc struct {
-	AssetID    int64
-	VersionID  int64
-	GroupID    int64
-	ArtifactID int64
-	Path       string
-	BlobID     int64
-	BlobRef    string
-	DeleteBlob bool
-	Size       int64
-}
-
-type ArtifactVersionCapacityDesc struct {
-	AssetID       int64
-	VersionID     int64
-	ExclusiveSize int64
-	TotalSize     int64
-	ExclusiveRefs int
-	TotalRefs     int
-}
-
 type ArtifactStatisticReport struct {
 	DeleteList []*ArtifactRecycleBlobDesc
 	TagList    []*ArtifactVersionCapacityDesc
+}
+
+type ArtifactRecycleBlobDesc struct {
+	AssetID    int64  // 要硬删的 asset ID
+	VersionID  int64  // asset 所属 version
+	GroupID    int64  // asset 所属 group
+	ArtifactID int64  // asset 所属制品库
+	Path       string // asset 路径
+	BlobID     int64  // asset 关联的 blob ID
+	BlobRef    string // 物理文件 ref，DeleteBlob=true 时用于删文件
+	DeleteBlob bool   // 是否连 blob 记录和物理文件一起删
+	Size       int64  // blob size
+}
+
+type ArtifactVersionCapacityDesc struct {
+	AssetID       int64 // 当前代码没有赋值使用
+	VersionID     int64 // 聚合维度：version ID
+	ExclusiveSize int64 // 独占容量
+	TotalSize     int64 // 总容量
+	ExclusiveRefs int   // 独占 asset 数
+	TotalRefs     int   // 总 asset 数
 }
 
 // ==================== 错误定义 ====================
