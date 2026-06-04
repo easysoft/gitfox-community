@@ -70,7 +70,7 @@ func (c *assets) RestoreById(ctx context.Context, assetID int64, operator string
 	if operator != "" {
 		updates["editedBy"] = operator
 	}
-	if err := c.db.WithContext(ctx).Model(&artifactAsset{ID: assetID}).
+	if err := c.db.WithContext(ctx).Model(&ArtifactAsset{ID: assetID}).
 		Updates(updates).Error; err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
 	}

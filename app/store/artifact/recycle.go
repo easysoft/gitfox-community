@@ -111,10 +111,10 @@ func (c *versions) ListRecycle(ctx context.Context, page, pageSize int) ([]*mode
 func (c *assets) ListRecycle(ctx context.Context, page, pageSize int) ([]*model.ArtifactAsset, int64, error) {
 	offset, limit := recyclePaging(page, pageSize)
 	var (
-		rows  []*artifactAsset
+		rows  []*ArtifactAsset
 		total int64
 	)
-	stmt := c.db.WithContext(ctx).Model(&artifactAsset{}).Where("deleted = 1")
+	stmt := c.db.WithContext(ctx).Model(&ArtifactAsset{}).Where("deleted = 1")
 	if err := stmt.Count(&total).Error; err != nil {
 		return nil, 0, database.ProcessSQLErrorf(ctx, err)
 	}
