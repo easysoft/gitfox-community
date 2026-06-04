@@ -1,7 +1,6 @@
 package config
 
 import (
-	"fmt"
 	"time"
 )
 
@@ -304,51 +303,14 @@ type ArtifactConfig struct {
 	// RecycleBinRetention 回收站保留时长。
 	// 软删除后在此时间窗口内可从回收站恢复，同名制品库不允许重建。
 	// 超过此时间后，资源可被 GC 清理并允许同名重建。
-	// 默认 720h（30天）。
-	RecycleBinRetention time.Duration `yaml:"recycleBinRetention" envconfig:"GITFOX_ARTIFACT_RECYCLE_BIN_RETENTION" default:"720h"`
-
-	// GCInterval GC 定时任务的 cron 间隔周期。
-	// 用于定时清理超过回收站保留期的已软删制品资源。
-	// 此值不得小于 RecycleBinRetention，否则会自动修正为 RecycleBinRetention。
-	// 默认 720h（30天）。
-	GCInterval time.Duration `yaml:"gcInterval" envconfig:"GITFOX_ARTIFACT_GC_INTERVAL" default:"720h"`
+	// 默认 120h（5天）。
+	RecycleBinRetention time.Duration `yaml:"recycleBinRetention" envconfig:"GITFOX_ARTIFACT_RECYCLE_BIN_RETENTION" default:"120h"`
 }
 
 // Sanitize 校验并修正 ArtifactConfig 中的不合理配置。
 // 规则：GCInterval 不得小于 RecycleBinRetention；若未设置则使用默认值 720h。
 func (c *ArtifactConfig) Sanitize() {
 	if c.RecycleBinRetention <= 0 {
-		c.RecycleBinRetention = 720 * time.Hour
+		c.RecycleBinRetention = 120 * time.Hour
 	}
-	if c.GCInterval <= 0 {
-		c.GCInterval = 720 * time.Hour
-	}
-	// GC 间隔不得小于回收站保留期，否则可能误删仍在保留期内的资源
-	if c.GCInterval < c.RecycleBinRetention {
-		c.GCInterval = c.RecycleBinRetention
-	}
-}
-
-// GCCronExpr 将 GCInterval 时长转换为 cron 表达式。
-//
-// 转换规则：
-//   - >= 24h: 按天计算间隔，每 N 天凌晨 baseHour 点执行，cron 格式 "minuteOffset baseHour */N * *"
-//   - < 24h:  按小时计算间隔，每 N 小时执行，cron 格式 "minuteOffset */N * * *"
-//
-// 已知限制：cron 的 day-of-month 字段 */N 表示"每月第 N 天的倍数日"而非"每 N 个自然日"。
-// 例如 */30 实际匹配每月 1 号和 31 号，而非从注册日起每 30 天。
-// minuteOffset 用于错峰：同一时段内多个 GC 任务不撞车。
-func (c *ArtifactConfig) GCCronExpr(baseHour, minuteOffset int) string {
-	hours := int(c.GCInterval.Hours())
-	if hours < 1 {
-		hours = 1
-	}
-	if hours >= 24 {
-		days := hours / 24
-		if days <= 0 {
-			days = 1
-		}
-		return fmt.Sprintf("%d %d */%d * *", minuteOffset, baseHour, days)
-	}
-	return fmt.Sprintf("%d */%d * * *", minuteOffset, hours)
 }
