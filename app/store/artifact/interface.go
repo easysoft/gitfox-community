@@ -2,7 +2,6 @@ package artifact
 
 import (
 	"context"
-	"time"
 
 	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
@@ -31,7 +30,6 @@ type Interface interface {
 	ListAssets(ctx context.Context, versionID int64) ([]*model.ArtifactAssetsRes, error)
 	ListAssetsPage(ctx context.Context, req *model.ListAssetReq) (*database.PageResult[*model.ArtifactAssetsRes], error)
 	ListGroupAssets(ctx context.Context, groupID int64) ([]*model.ArtifactAssetsRes, error)
-	StatisticAssets(ctx context.Context, retentionTime time.Duration, options ...SearchOption) (*model.ArtifactStatisticReport, error)
 }
 
 type ViewInterface interface {

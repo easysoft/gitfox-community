@@ -4,10 +4,12 @@ import (
 	"context"
 	"io"
 	"net/http"
+	"time"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/adapter"
 	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
 	authModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
+	artifactStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/artifact"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/storage"
 )
@@ -96,6 +98,8 @@ type Interface interface {
 	ArchiveGroup(ctx context.Context, archive *ArchiveGroup, output io.Writer) error
 
 	// ---- 统计与 GC ----
+
+	StatisticAssets(ctx context.Context, retentionTime time.Duration, options ...artifactStore.SearchOption) (*model.ArtifactStatisticReport, error)
 
 	// StatisticCapacity 统计全量制品资源的容量使用情况。
 	StatisticCapacity(ctx context.Context) (*model.ArtifactStatisticResponse, error)

@@ -978,7 +978,7 @@ func (s *Service) StatisticContainerCapacity(ctx context.Context) (*model.Artifa
 // StatisticCapacity 非容器仓库存储统计
 func (s *Service) StatisticCapacity(ctx context.Context) (*model.ArtifactStatisticResponse, error) {
 	// 容量统计不需要过滤保留期，传 0 即可
-	report, err := s.artStore.StatisticAssets(ctx, 0, artifactStore.ExcludeContainerOption{})
+	report, err := s.StatisticAssets(ctx, 0, artifactStore.ExcludeContainerOption{})
 	if err != nil {
 		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactStatisticCapacityError)
 	}

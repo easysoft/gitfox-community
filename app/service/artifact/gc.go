@@ -14,6 +14,7 @@ import (
 	pkgErrors "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
 
 	"gorm.io/gorm"
 )
@@ -87,7 +88,7 @@ func (s *Service) GarbageCollect(ctx context.Context, format string) (*model.Art
 // 1. 调用 store.StatisticAssets 统计资源
 // 2. 调用 garbageCollect 执行硬删
 func (s *Service) garbageCollectByOptions(ctx context.Context, options ...artifactStore.SearchOption) (*model.ArtifactGarbageReportRes, error) {
-	report, err := s.artStore.StatisticAssets(ctx, s.config.RecycleBinRetention, options...)
+	report, err := s.StatisticAssets(ctx, s.config.RecycleBinRetention, options...)
 	if err != nil {
 		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactGcExecuteError)
 	}
@@ -314,4 +315,98 @@ func (s *Service) isGroupEmpty(ctx context.Context, store artifactStore.Interfac
 		return false, err
 	}
 	return len(children) == 0, nil
+}
+
+// StatisticAssets 统计制品资源容量，同时计算符合 GC 条件的软删 asset 列表。
+//
+// retentionTime 指定回收站保留时长：只有软删时间（editedDate）早于 now-retentionTime
+// 的 asset 才会被列入 DeleteList。传入 0 则跳过时间过滤（不建议用于生产 GC）。
+//
+// 引用计数保护：blobRefs 只统计 active（deleted=0）asset 对 blob 的引用。
+// 若一个软删 asset 的 blob 仍被其他 active asset 引用，则该 blob 不会被物理删除，
+// 只删除 asset 记录本身（BlobRef 置空以跳过文件删除）。
+func (s *Service) StatisticAssets(ctx context.Context, retentionTime time.Duration, options ...artifactStore.SearchOption) (*model.ArtifactStatisticReport, error) {
+	log := logger.GetLogger(ctx)
+	assetBlobs, err := s.artStore.Assets().SearchExtendBlob(ctx, options...)
+	if err != nil {
+		return nil, err
+	}
+
+	report := &model.ArtifactStatisticReport{
+		DeleteList: make([]*model.ArtifactRecycleBlobDesc, 0),
+		TagList:    make([]*model.ArtifactVersionCapacityDesc, 0),
+	}
+	versionCap := make(map[int64]*model.ArtifactVersionCapacityDesc)
+
+	// 第一遍：只统计 active asset（deleted=0）对 blob 的引用计数。
+	// 此处刻意排除 deleted>0 的 asset，确保引用计数反映的是「仍在使用」的 blob。
+	activeBlobRefs := make(map[int64]int)
+	for _, asset := range assetBlobs {
+		if asset.BlobID == 0 || asset.Deleted > 0 {
+			continue
+		}
+		activeBlobRefs[asset.BlobID]++
+	}
+
+	// 计算回收站保留期截止时间；retentionTime==0 时不做时间过滤
+	retentionCutoff := datetime.NowLocalTime().Add(-retentionTime)
+	log.Debugf("retentionTime: %v, retentionCutoff: %v", retentionTime, retentionCutoff)
+
+	// 第二遍：分类处理每个 asset
+	for _, asset := range assetBlobs {
+		if asset.BlobID == 0 {
+			continue
+		}
+		// 处理已删除 asset
+		if asset.Deleted > 0 {
+			log.Debugf("asset %d is deleted, editedDate: %v", asset.ID, asset.EditedDate)
+			if asset.EditedDate == nil || !asset.EditedDate.Before(*retentionCutoff) {
+				// 仍在保留期内，跳过
+				continue
+			}
+
+			blobRef := asset.Ref
+			deleteBlob := true
+			if activeBlobRefs[asset.BlobID] > 0 {
+				log.Debugf("skip blob deletion for asset %d: blob %d still referenced by %d active asset(s)", asset.ID, asset.BlobID, activeBlobRefs[asset.BlobID])
+				blobRef = "" // 置空 BlobRef，garbageCollect 会跳过物理文件删除
+				deleteBlob = false
+			}
+
+			report.DeleteList = append(report.DeleteList, &model.ArtifactRecycleBlobDesc{
+				AssetID:    asset.ID,
+				VersionID:  asset.VersionID.Int64,
+				GroupID:    asset.GroupID.Int64,
+				ArtifactID: asset.ArtifactID.Int64,
+				Path:       asset.Path,
+				BlobID:     asset.BlobID,
+				BlobRef:    blobRef,
+				DeleteBlob: deleteBlob,
+				Size:       asset.Size,
+			})
+			continue
+		}
+		if asset.VersionID.Ptr() == nil {
+			continue
+		}
+
+		verId := asset.VersionID.Int64
+		verDesc, ok := versionCap[verId]
+		if !ok {
+			versionCap[verId] = &model.ArtifactVersionCapacityDesc{
+				VersionID:     verId,
+				ExclusiveSize: asset.Size,
+				TotalSize:     asset.Size,
+			}
+			continue
+		}
+
+		verDesc.ExclusiveSize += asset.Size
+		verDesc.TotalSize += asset.Size
+	}
+
+	for _, item := range versionCap {
+		report.TagList = append(report.TagList, item)
+	}
+	return report, nil
 }
