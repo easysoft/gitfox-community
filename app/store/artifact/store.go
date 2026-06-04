@@ -17,15 +17,6 @@ import (
 
 var _ Interface = (*Store)(nil)
 
-// pickDB 选连接：调用方传入 tx 时复用事务连接，nil 时回落到 store 自身连接。
-// 集中收口避免每个 store 方法都写一遍 nil 判断。
-func pickDB(tx, fallback *gorm.DB) *gorm.DB {
-	if tx != nil {
-		return tx
-	}
-	return fallback
-}
-
 // Store 是 artifact store 的聚合实现。
 // Store is the main artifact store implementation.
 type Store struct {
@@ -74,7 +65,8 @@ func (s *Store) Nodes() TreeNodeInterface       { return s.nodes }
 // 若一个软删 asset 的 blob 仍被其他 active asset 引用，则该 blob 不会被物理删除，
 // 只删除 asset 记录本身（BlobRef 置空以跳过文件删除）。
 func (s *Store) StatisticAssets(ctx context.Context, retentionTime time.Duration, options ...SearchOption) (*model.ArtifactStatisticReport, error) {
-	assets, err := s.Assets().SearchExtendBlob(ctx, options...)
+	log := logger.GetLogger(ctx)
+	assetBlobs, err := s.Assets().SearchExtendBlob(ctx, options...)
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +80,7 @@ func (s *Store) StatisticAssets(ctx context.Context, retentionTime time.Duration
 	// 第一遍：只统计 active asset（deleted=0）对 blob 的引用计数。
 	// 此处刻意排除 deleted>0 的 asset，确保引用计数反映的是「仍在使用」的 blob。
 	activeBlobRefs := make(map[int64]int)
-	for _, asset := range assets {
+	for _, asset := range assetBlobs {
 		if asset.BlobID == 0 || asset.Deleted > 0 {
 			continue
 		}
@@ -96,34 +88,26 @@ func (s *Store) StatisticAssets(ctx context.Context, retentionTime time.Duration
 	}
 
 	// 计算回收站保留期截止时间；retentionTime==0 时不做时间过滤
-	var retentionCutoff *datetime.Local
-	if retentionTime > 0 {
-		retentionCutoff = datetime.NowLocalTime().Add(-retentionTime)
-	}
+	retentionCutoff := datetime.NowLocalTime().Add(-retentionTime)
+	log.Debugf("retentionTime: %v, retentionCutoff: %v", retentionTime, retentionCutoff)
 
 	// 第二遍：分类处理每个 asset
-	for _, asset := range assets {
+	for _, asset := range assetBlobs {
 		if asset.BlobID == 0 {
 			continue
 		}
+		// 处理已删除 asset
 		if asset.Deleted > 0 {
-			// 保留期检查：editedDate（软删时间）必须早于截止时间
-			if retentionTime > 0 {
-				if asset.EditedDate == nil || !asset.EditedDate.Before(*retentionCutoff) {
-					// 仍在保留期内，跳过
-					continue
-				}
+			log.Debugf("asset %d is deleted, editedDate: %v", asset.ID, asset.EditedDate)
+			if asset.EditedDate == nil || !asset.EditedDate.Before(*retentionCutoff) {
+				// 仍在保留期内，跳过
+				continue
 			}
 
-			// 引用计数检查：blob 是否仍被 active asset 引用
-			// 若有 active 引用则保留物理文件（BlobRef 置空），只删 asset 记录
 			blobRef := asset.Ref
 			deleteBlob := true
 			if activeBlobRefs[asset.BlobID] > 0 {
-				logger.GetLogger(ctx).Debugf(
-					"skip blob deletion for asset %d: blob %d still referenced by %d active asset(s)",
-					asset.ID, asset.BlobID, activeBlobRefs[asset.BlobID],
-				)
+				log.Debugf("skip blob deletion for asset %d: blob %d still referenced by %d active asset(s)", asset.ID, asset.BlobID, activeBlobRefs[asset.BlobID])
 				blobRef = "" // 置空 BlobRef，garbageCollect 会跳过物理文件删除
 				deleteBlob = false
 			}
@@ -145,18 +129,19 @@ func (s *Store) StatisticAssets(ctx context.Context, retentionTime time.Duration
 			continue
 		}
 
-		versionID := asset.VersionID.Int64
-		capItem, ok := versionCap[versionID]
+		verId := asset.VersionID.Int64
+		verDesc, ok := versionCap[verId]
 		if !ok {
-			capItem = &model.ArtifactVersionCapacityDesc{VersionID: versionID}
-			versionCap[versionID] = capItem
+			versionCap[verId] = &model.ArtifactVersionCapacityDesc{
+				VersionID:     verId,
+				ExclusiveSize: asset.Size,
+				TotalSize:     asset.Size,
+			}
+			continue
 		}
-		capItem.TotalSize += asset.Size
-		capItem.TotalRefs++
-		if activeBlobRefs[asset.BlobID] <= 1 {
-			capItem.ExclusiveSize += asset.Size
-			capItem.ExclusiveRefs++
-		}
+
+		verDesc.ExclusiveSize += asset.Size
+		verDesc.TotalSize += asset.Size
 	}
 
 	for _, item := range versionCap {
@@ -169,7 +154,7 @@ func (s *Store) StatisticAssets(ctx context.Context, retentionTime time.Duration
 func (s *Store) ListAssets(ctx context.Context, VersionID int64) ([]*model.ArtifactAssetsRes, error) {
 	// ListAssets 拉取 version 下未删除资产，并联表补齐 blob 大小与引用信息。
 	result := make([]*model.ArtifactAssetsRes, 0)
-	stmt := s.db.WithContext(ctx).Model(&artifactAsset{}).
+	stmt := s.db.WithContext(ctx).Model(&ArtifactAsset{}).
 		Select(`ops_artifact_assets.id,ops_artifact_assets.basename,ops_artifact_assets.contentType,
 			ops_artifact_assets.checksum,
 			ops_artifact_assets.createdBy,ops_artifact_assets.createdDate,
@@ -292,7 +277,7 @@ func applyAssetListCommonFilters(stmt *gorm.DB, req *model.ListAssetReq) *gorm.D
 
 // assetListBaseStmt 资产列表基础语句：仅 SELECT 字段 + LEFT JOIN blobs 拿大小/引用。
 func (s *Store) assetListBaseStmt(ctx context.Context) *gorm.DB {
-	return s.db.WithContext(ctx).Model(&artifactAsset{}).
+	return s.db.WithContext(ctx).Model(&ArtifactAsset{}).
 		Select(`ops_artifact_assets.id,ops_artifact_assets.basename,ops_artifact_assets.contentType,
 			ops_artifact_assets.checksum,
 			ops_artifact_assets.createdBy,ops_artifact_assets.createdDate,
@@ -368,7 +353,7 @@ func assetListSortColumn(sortField string) string {
 func (s *Store) ListGroupAssets(ctx context.Context, groupID int64) ([]*model.ArtifactAssetsRes, error) {
 	// ListGroupAssets 面向 generic/raw group 级资产，查询逻辑与 version 资产分开。
 	var dst []*model.ArtifactAssetsRes
-	stmt := s.db.WithContext(ctx).Model(&artifactAsset{}).
+	stmt := s.db.WithContext(ctx).Model(&ArtifactAsset{}).
 		Select(`ops_artifact_assets.id,ops_artifact_assets.basename,ops_artifact_assets.contentType,
 			ops_artifact_assets.checksum,
 			ops_artifact_assets.createdBy,ops_artifact_assets.createdDate,
@@ -410,7 +395,7 @@ func parseAssetsRes(ctx context.Context, items []*model.ArtifactAssetsRes) {
 func (s *Store) GetAsset(ctx context.Context, assetID int64) (*model.ArtifactAssetsRes, error) {
 	// GetAsset 读取单个资产详情，并把字符串字段反序列化为结构化响应。
 	var result model.ArtifactAssetsRes
-	stmt := s.db.WithContext(ctx).Model(&artifactAsset{}).
+	stmt := s.db.WithContext(ctx).Model(&ArtifactAsset{}).
 		Select(`ops_artifact_assets.id,ops_artifact_assets.basename,ops_artifact_assets.contentType,
 			ops_artifact_assets.checksum,
 			ops_artifact_assets.createdBy,ops_artifact_assets.createdDate,

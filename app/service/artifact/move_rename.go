@@ -480,9 +480,9 @@ func (s *Service) moveGroupInner(ctx context.Context, tx *gorm.DB, groupID, tArt
 		}
 	}
 
-	// 5. 主表更新：调 store 层 MoveLocation 写入新归属（事务连接随调用方传入）。
+	// 5. 主表更新：txStore 已绑定事务连接，后续 store 调用都会落在同一事务内。
 	oldArtifactID := srcGroup.ArtifactID
-	if mErr := txStore.Groups().MoveLocation(ctx, tx, groupID, tArtifactID, tParentGroupID); mErr != nil {
+	if mErr := txStore.Groups().MoveLocation(ctx, groupID, tArtifactID, tParentGroupID); mErr != nil {
 		if pkgErrors.Is(mErr, pkgErrors.ErrResourceNotFound) {
 			return pkgErrors.WithI18nKey(mErr, i18n.ArtifactMoveSourceDeleted)
 		}
@@ -498,13 +498,13 @@ func (s *Service) moveGroupInner(ctx context.Context, tx *gorm.DB, groupID, tArt
 		for _, d := range descendants {
 			subtreeIDs = append(subtreeIDs, d.ID)
 		}
-		if mErr := txStore.Groups().MoveArtifactLibByIDs(ctx, tx, subtreeIDs, tArtifactID); mErr != nil {
+		if mErr := txStore.Groups().MoveArtifactLibByIDs(ctx, subtreeIDs, tArtifactID); mErr != nil {
 			return pkgErrors.WithI18nKey(mErr, i18n.ArtifactMoveTargetInvalid)
 		}
-		if mErr := txStore.Assets().MoveArtifactLibByGroupIDs(ctx, tx, subtreeIDs, tArtifactID); mErr != nil {
+		if mErr := txStore.Assets().MoveArtifactLibByGroupIDs(ctx, subtreeIDs, tArtifactID); mErr != nil {
 			return pkgErrors.WithI18nKey(mErr, i18n.ArtifactMoveTargetInvalid)
 		}
-		if mErr := txStore.Packages().MoveArtifactLibByGroupIDs(ctx, tx, subtreeIDs, tArtifactID); mErr != nil {
+		if mErr := txStore.Packages().MoveArtifactLibByGroupIDs(ctx, subtreeIDs, tArtifactID); mErr != nil {
 			return pkgErrors.WithI18nKey(mErr, i18n.ArtifactMoveTargetInvalid)
 		}
 	}

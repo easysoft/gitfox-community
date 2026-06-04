@@ -131,7 +131,7 @@ func (v *artifactVersion) BeforeUpdate(_ *gorm.DB) error {
 }
 
 // artifactAsset → ops_artifact_assets
-type artifactAsset struct {
+type ArtifactAsset struct {
 	ID          int64           `gorm:"column:id;primaryKey"`
 	VersionID   null.Int        `gorm:"column:versionID"`
 	ArtifactID  null.Int        `gorm:"column:artifactLibID"`
@@ -149,22 +149,22 @@ type artifactAsset struct {
 	Deleted     int8            `gorm:"column:deleted"`
 }
 
-func (artifactAsset) TableName() string { return "ops_artifact_assets" }
+func (ArtifactAsset) TableName() string { return "ops_artifact_assets" }
 
-func (a *artifactAsset) BeforeCreate(_ *gorm.DB) error {
+func (a *ArtifactAsset) BeforeCreate(_ *gorm.DB) error {
 	now := datetime.NowLocalTime()
 	a.CreatedDate = now
 	a.EditedDate = now
 	return nil
 }
 
-func (a *artifactAsset) BeforeUpdate(_ *gorm.DB) error {
+func (a *ArtifactAsset) BeforeUpdate(_ *gorm.DB) error {
 	a.EditedDate = datetime.NowLocalTime()
 	return nil
 }
 
 type assetExtendRow struct {
-	artifactAsset
+	ArtifactAsset
 	StorageID int64  `gorm:"column:storageID"`
 	Ref       string `gorm:"column:ref"`
 	Size      int64  `gorm:"column:size"`
@@ -287,26 +287,6 @@ func viewToModel(v *artifactView) *model.ArtifactView {
 		EditedBy:    v.EditedBy,
 		EditedDate:  v.EditedDate,
 		Deleted:     v.Deleted,
-	}
-}
-
-func viewFromModel(m *model.ArtifactView) *artifactView {
-	if m == nil {
-		return nil
-	}
-	return &artifactView{
-		ID:          m.ID,
-		Name:        m.Name,
-		Description: m.Description,
-		SpaceID:     m.SpaceID,
-		RepoID:      m.RepoID,
-		Type:        string(m.Type),
-		Format:      string(m.Format),
-		CreatedBy:   m.CreatedBy,
-		CreatedDate: m.CreatedDate,
-		EditedBy:    m.EditedBy,
-		EditedDate:  m.EditedDate,
-		Deleted:     m.Deleted,
 	}
 }
 
@@ -452,7 +432,7 @@ func versionsToModel(vs []*artifactVersion) []*model.ArtifactVersion {
 
 // ==================== asset 转换 ====================
 
-func assetToModel(a *artifactAsset) *model.ArtifactAsset {
+func assetToModel(a *ArtifactAsset) *model.ArtifactAsset {
 	if a == nil {
 		return nil
 	}
@@ -475,11 +455,11 @@ func assetToModel(a *artifactAsset) *model.ArtifactAsset {
 	}
 }
 
-func assetFromModel(m *model.ArtifactAsset) *artifactAsset {
+func assetFromModel(m *model.ArtifactAsset) *ArtifactAsset {
 	if m == nil {
 		return nil
 	}
-	return &artifactAsset{
+	return &ArtifactAsset{
 		ID:          m.ID,
 		VersionID:   m.VersionID,
 		ArtifactID:  m.ArtifactID,
@@ -498,7 +478,7 @@ func assetFromModel(m *model.ArtifactAsset) *artifactAsset {
 	}
 }
 
-func assetsToModel(as []*artifactAsset) []*model.ArtifactAsset {
+func assetsToModel(as []*ArtifactAsset) []*model.ArtifactAsset {
 	result := make([]*model.ArtifactAsset, 0, len(as))
 	for _, a := range as {
 		result = append(result, assetToModel(a))

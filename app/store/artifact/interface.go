@@ -82,8 +82,7 @@ type PackageInterface interface {
 	ListRecycle(ctx context.Context, page, pageSize int) ([]*model.ArtifactPackage, int64, error)
 
 	// MoveArtifactLibByGroupIDs 跨 view 移动 group 子树时，批量改 group 下挂 package 的 artifactLibID。
-	// tx 不为 nil 时复用调用方事务连接，nil 时使用 store 默认连接。
-	MoveArtifactLibByGroupIDs(ctx context.Context, tx *gorm.DB, groupIDs []int64, targetArtifactID int64) error
+	MoveArtifactLibByGroupIDs(ctx context.Context, groupIDs []int64, targetArtifactID int64) error
 }
 
 type VersionInterface interface {
@@ -126,8 +125,8 @@ type AssetInterface interface {
 	ListRecycle(ctx context.Context, page, pageSize int) ([]*model.ArtifactAsset, int64, error)
 
 	// MoveArtifactLibByGroupIDs 跨 view 移动 group 子树时，批量改归属在该子树下的 asset
-	// 的 artifactLibID。仅按 groupID 命中（直挂 asset 场景）。tx 不为 nil 时复用调用方事务连接。
-	MoveArtifactLibByGroupIDs(ctx context.Context, tx *gorm.DB, groupIDs []int64, targetArtifactID int64) error
+	// 的 artifactLibID。仅按 groupID 命中（直挂 asset 场景）。
+	MoveArtifactLibByGroupIDs(ctx context.Context, groupIDs []int64, targetArtifactID int64) error
 }
 
 type MetaAssetInterface interface {
@@ -222,13 +221,12 @@ type GroupInterface interface {
 	UpdateNameByCondition(ctx context.Context, artifactID int64, oldName, newName, format string) error
 
 	// MoveLocation 调整分组归属：把指定 group 的 artifactLibID / parentID 指向新位置。
-	// tx 不为 nil 时复用调用方的 *gorm.DB（事务连接），nil 时使用 store 默认连接。
 	// 跨 view 移动时调用方需另行同步子树资产的 artifactLibID（见 MoveArtifactLibByIDs）。
-	MoveLocation(ctx context.Context, tx *gorm.DB, groupID, artifactID, parentID int64) error
+	MoveLocation(ctx context.Context, groupID, artifactID, parentID int64) error
 
 	// MoveArtifactLibByIDs 批量把一批 group 的 artifactLibID 改到目标 view，
-	// 用于跨 view 移动 group 时同步子树。tx 同 MoveLocation。
-	MoveArtifactLibByIDs(ctx context.Context, tx *gorm.DB, groupIDs []int64, targetArtifactID int64) error
+	// 用于跨 view 移动 group 时同步子树。
+	MoveArtifactLibByIDs(ctx context.Context, groupIDs []int64, targetArtifactID int64) error
 
 	// DeleteByArtifactID 物理删除指定 view 下的所有分组，供 view 删除时级联使用。
 	DeleteByArtifactID(ctx context.Context, artifactID int64) (int64, error)
