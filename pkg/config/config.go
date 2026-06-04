@@ -303,8 +303,8 @@ type ArtifactConfig struct {
 	// RecycleBinRetention 回收站保留时长。
 	// 软删除后在此时间窗口内可从回收站恢复，同名制品库不允许重建。
 	// 超过此时间后，资源可被 GC 清理并允许同名重建。
-	// 默认 120h（5天）。
-	RecycleBinRetention time.Duration `yaml:"recycleBinRetention" envconfig:"GITFOX_ARTIFACT_RECYCLE_BIN_RETENTION" default:"120h"`
+	// 默认 720h（30天）。
+	RecycleBinRetention time.Duration `yaml:"recycleBinRetention" envconfig:"GITFOX_ARTIFACT_RECYCLE_BIN_RETENTION" default:"720h"`
 }
 
 // Sanitize 校验并修正 ArtifactConfig 中的不合理配置。
