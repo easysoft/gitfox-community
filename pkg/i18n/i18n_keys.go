@@ -217,6 +217,7 @@ const (
 	BranchNameInvalidDoubleSlash   I18nKey = "branch.name_invalid_double_slash"   // 分支名不得包含连续的斜杠(//).
 	BranchNameInvalidLeadingDot    I18nKey = "branch.name_invalid_leading_dot"    // 分支名不能以点号(.)开头,会被识别为隐藏文件或目录.
 	BranchNameInvalidLeadingHyphen I18nKey = "branch.name_invalid_leading_hyphen" // 分支名不能以连字符(-)开头,会被 Git 命令解析为选项参数.
+	BranchNameInvalidLeadingSlash  I18nKey = "branch.name_invalid_leading_slash"  // 分支名不能以斜杠(/)开头,会导致 Git 创建空目录而非分支.
 	BranchNameInvalidLength        I18nKey = "branch.name_invalid_length"         // 分支名长度不得超过 255 个字符.
 	BranchNameInvalidStart         I18nKey = "branch.name_invalid_start"          // 分支名必须以字母开头,且仅可包含字母、数字与分隔符(/ - _ .).
 	BranchNameInvalidTrailingDot   I18nKey = "branch.name_invalid_trailing_dot"   // 分支名不能以点号(.)结尾.

@@ -43,6 +43,9 @@ func validateBranchName(name string) error {
 	if strings.HasPrefix(name, "-") {
 		return errors.WithI18nKey(fmt.Errorf("branch name cannot start with hyphen"), i18n.BranchNameInvalidLeadingHyphen)
 	}
+	if strings.HasPrefix(name, "/") {
+		return errors.WithI18nKey(fmt.Errorf("branch name cannot start with slash"), i18n.BranchNameInvalidLeadingSlash)
+	}
 	// 结尾限制
 	if strings.HasSuffix(name, "/") {
 		return errors.WithI18nKey(fmt.Errorf("branch name cannot end with slash"), i18n.BranchNameInvalidTrailingSlash)
