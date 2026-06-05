@@ -197,6 +197,7 @@ const (
 	BranchActivateTargetExists     I18nKey = "branch.activate_target_exists"      // 激活目标分支 %s 已存在,请先删除或重命名.
 	BranchArchiveCreateError       I18nKey = "branch.archive_create_error"        // 创建归档分支 archived/%s 失败,可能是因为源分支不存在或名称冲突,请检查后重试.
 	BranchArchiveDeleteError       I18nKey = "branch.archive_delete_error"        // 删除原分支 %s 失败,可能是因为分支不存在或已被其他操作修改,请检查后重试.
+	BranchArchiveError             I18nKey = "branch.archive_error"               // 分支归档失败:%s
 	BranchArchiveIsDefault         I18nKey = "branch.archive_is_default"          // 默认分支不能归档.
 	BranchArchiveRollbackError     I18nKey = "branch.archive_rollback_error"      // 归档分支 %s 失败且回滚也未成功,archived/%s 可能残留,请手动检查并清理.
 	BranchArchiveSuccess           I18nKey = "branch.archive_success"             // 分支归档成功.

@@ -11,6 +11,7 @@ branch:
   list_prefix_error: "Failed to query the list of branch prefixes."
   list_prefix_success: "Query the list of branch prefixes successfully."
   archive_success: "Branches archived successfully."
+  archive_error: "Failed to archive branch %s."
   archive_is_default: "Default branch cannot be archived."
   archive_target_exists: "Archive target branch archived/%s already exists, please delete or rename it first."
   archive_create_error: "Failed to create archive branch archived/%s. The source branch may not exist or there is a name conflict. Please verify and try again."

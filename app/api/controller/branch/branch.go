@@ -303,6 +303,14 @@ func (c *Controller) Archive(ctx *gin.Context) {
 	}
 
 	results := c.branchSvc.BatchArchive(ctx, ctx.Request.Context(), reqBody, session, repoOut)
+	for _, result := range results {
+		if !result.Status {
+			err = errors.WithI18nKey(err, i18n.BranchArchiveError)
+			resp.InternalError(ctx, err, result.Message)
+			return
+		}
+	}
+
 	resp.OK(ctx, i18n.BranchArchiveSuccess, results)
 }
 
