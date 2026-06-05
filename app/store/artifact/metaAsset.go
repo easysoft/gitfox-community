@@ -72,12 +72,3 @@ func (s *metaAssets) DeleteById(ctx context.Context, metaAssetId int64) error {
 	}
 	return nil
 }
-
-// DeleteByArtifactID 硬删指定 view 下的所有 meta_asset 记录。
-func (s *metaAssets) DeleteByArtifactID(ctx context.Context, artifactID int64) (int64, error) {
-	result := s.db.WithContext(ctx).Where("artifactLibID = ?", artifactID).Delete(&artifactMetaAsset{})
-	if result.Error != nil {
-		return 0, database.ProcessSQLErrorf(ctx, result.Error)
-	}
-	return result.RowsAffected, nil
-}

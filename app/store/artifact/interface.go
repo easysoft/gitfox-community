@@ -71,10 +71,6 @@ type PackageInterface interface {
 	// Restore 恢复制品包（将 deleted 置为 0），operator 写入 editedBy。
 	Restore(ctx context.Context, packageID int64, operator string) error
 	Search(ctx context.Context, options ...SearchOption) ([]*model.ArtifactPackage, error)
-	GetByAssetID(ctx context.Context, assetID int64) (*model.ArtifactPackage, error)
-
-	// UpdateNamespaceByCondition 按条件批量更新 package namespace。
-	UpdateNamespaceByCondition(ctx context.Context, artifactID int64, oldNamespace, newNamespace, format string) error
 
 	// ListRecycle 列出回收站中的制品包（deleted=1），按 editedDate 倒序分页。
 	ListRecycle(ctx context.Context, page, pageSize int) ([]*model.ArtifactPackage, int64, error)
@@ -129,39 +125,33 @@ type AssetInterface interface {
 
 type MetaAssetInterface interface {
 	Create(ctx context.Context, newObj *model.CreateArtifactMetaAsset) (*model.ArtifactMetaAsset, error)
+	DeleteById(ctx context.Context, metaAssetId int64) error
+	Update(ctx context.Context, metaAsset *model.ArtifactMetaAsset) error
 	GetById(ctx context.Context, metaAssetId int64) (*model.ArtifactMetaAsset, error)
 	GetByPath(ctx context.Context, path string, artifactID int64, format model.ArtifactFormat) (*model.ArtifactMetaAsset, error)
-	Update(ctx context.Context, metaAsset *model.ArtifactMetaAsset) error
-	DeleteById(ctx context.Context, metaAssetId int64) error
-	DeleteByArtifactID(ctx context.Context, artifactID int64) (int64, error)
 }
 
 type BlobInterface interface {
 	Create(ctx context.Context, newObj *model.CreateArtifactBlob) (*model.ArtifactBlob, error)
-	GetById(ctx context.Context, blobID int64) (*model.ArtifactBlob, error)
-	GetByRef(ctx context.Context, ref string, storageID int64) (*model.ArtifactBlob, error)
-	GetByHistory(ctx context.Context, assetID, createdAt int64) (*model.ArtifactBlob, error)
+	SoftDeleteById(ctx context.Context, blobID int64, operator string) error
+	DeleteById(ctx context.Context, blobID int64) error
 	Update(ctx context.Context, upObj *model.ArtifactBlob) error
 	UpdateOptLock(ctx context.Context, upObj *model.ArtifactBlob, mutateFn func(blob *model.ArtifactBlob) error) (*model.ArtifactBlob, error)
-	SoftDeleteById(ctx context.Context, blobID int64, operator string) error
-	// RestoreById 恢复制品 blob（将 deleted 置为 0），operator 写入 editedBy。
 	RestoreById(ctx context.Context, blobID int64, operator string) error
-	DeleteById(ctx context.Context, blobID int64) error
-	History(ctx context.Context, assetID int64) ([]*model.ArtifactBlobRes, error)
+	GetById(ctx context.Context, blobID int64) (*model.ArtifactBlob, error)
+	GetByRef(ctx context.Context, ref string, storageID int64) (*model.ArtifactBlob, error)
 }
 
 type TreeNodeInterface interface {
 	Create(ctx context.Context, newObj *model.CreateArtifactTreeNode) (*model.ArtifactTreeNode, error)
-	RecurseCreate(ctx context.Context, obj *model.ArtifactTreeNode) error
+	DeleteById(ctx context.Context, nodeID int64) error
+	RecurseDeleteById(ctx context.Context, nodeID int64) error
+	Update(ctx context.Context, upObj *model.ArtifactTreeNode) error
 	GetById(ctx context.Context, id int64) (*model.ArtifactTreeNode, error)
 	GetByPath(ctx context.Context, artifactID int64, path string, format model.ArtifactFormat) (*model.ArtifactTreeNode, error)
 	GetByTarget(ctx context.Context, artifactID int64, nodeType model.ArtifactTreeNodeType, id int64) (*model.ArtifactTreeNode, error)
 	ListFormats(ctx context.Context, artifactID int64) ([]*model.ArtifactTreeNode, error)
 	ListByParentId(ctx context.Context, parentID int64) ([]*model.ArtifactTreeNode, error)
-	Update(ctx context.Context, upObj *model.ArtifactTreeNode) error
-	DeleteById(ctx context.Context, nodeID int64) error
-	RecurseDeleteById(ctx context.Context, nodeID int64) error
-	DeleteByArtifactID(ctx context.Context, artifactID int64) (int64, error)
 }
 
 type GroupInterface interface {
@@ -225,9 +215,6 @@ type GroupInterface interface {
 	// MoveArtifactLibByIDs 批量把一批 group 的 artifactLibID 改到目标 view，
 	// 用于跨 view 移动 group 时同步子树。
 	MoveArtifactLibByIDs(ctx context.Context, groupIDs []int64, targetArtifactID int64) error
-
-	// DeleteByArtifactID 物理删除指定 view 下的所有分组，供 view 删除时级联使用。
-	DeleteByArtifactID(ctx context.Context, artifactID int64) (int64, error)
 
 	// DeleteById 物理删除指定分组。
 	DeleteById(ctx context.Context, groupID int64) error

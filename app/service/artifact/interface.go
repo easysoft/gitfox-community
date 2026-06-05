@@ -52,13 +52,6 @@ type Interface interface {
 	Upload(ctx context.Context, view *adapter.ViewDescriptor, format model.ArtifactFormat, req *http.Request) ([]*adapter.SavedAsset, error)
 
 	// ---- 分组管理 ----
-
-	// ViewExists 检查指定 artifactID 是否存在（仅 active view）。
-	ViewExists(ctx context.Context, artifactID int64) error
-
-	// GroupPathExists 检查指定视图下是否已存在完全相同的分组路径。
-	GroupPathExists(ctx context.Context, artifactID int64, names []string, format model.ArtifactFormat) (bool, error)
-
 	// ActiveGroupPathExists 检查指定视图下是否已存在未软删的同名分组路径。
 	ActiveGroupPathExists(ctx context.Context, artifactID int64, names []string, format model.ArtifactFormat) (bool, error)
 
@@ -92,23 +85,13 @@ type Interface interface {
 	// ---- 归档下载 ----
 
 	// PrepareArchiveGroup 准备分组归档下载所需的数据。
-	PrepareArchiveGroup(ctx context.Context, session *authModel.Session, spaceID, repoID, groupID int64) (*ArchiveGroup, error)
+	PrepareArchiveGroup(ctx context.Context, session *authModel.Session, groupID int64) (*ArchiveGroup, error)
 
 	// ArchiveGroup 将已准备好的分组数据写入 zip 流。
 	ArchiveGroup(ctx context.Context, archive *ArchiveGroup, output io.Writer) error
 
-	// ---- 统计与 GC ----
-
+	// ---- GC ----
 	StatisticAssets(ctx context.Context, retentionTime time.Duration, options ...artifactStore.SearchOption) (*model.ArtifactStatisticReport, error)
-
-	// StatisticCapacity 统计全量制品资源的容量使用情况。
-	StatisticCapacity(ctx context.Context) (*model.ArtifactStatisticResponse, error)
-
-	// StatisticContainerCapacity 统计容器镜像格式的容量使用情况。
-	StatisticContainerCapacity(ctx context.Context) (*model.ArtifactStatisticResponse, error)
-
-	// StatisticSummary 汇总各格式的制品数量和容量摘要。
-	StatisticSummary(ctx context.Context) (map[string]*model.ArtifactStatsObject, error)
 
 	// TriggerGarbageCollect 触发指定格式或全量软删资源的 GC 异步任务。
 	TriggerGarbageCollect(ctx context.Context, format string) (*model.JobUIDResponse, error)

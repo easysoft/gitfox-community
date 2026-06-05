@@ -33,11 +33,5 @@ func registerArtifactRoutes(group *gin.RouterGroup, controller *Controller) {
 
 		// --- group 归档操作 ---
 		// artifact.GET("/groups/:groupID/archive", controller.Artifact.ArchiveGroup)   // pullAuth
-
-		// 统计
-		// artifact.GET("/capacity/all", controller.Artifact.StatisticCapacity)                // pullAuth
-		// artifact.GET("/capacity/container", controller.Artifact.StatisticContainerCapacity) // pullAuth
-		// artifact.GET("/statistic", controller.Artifact.StatisticSummary)                    // pullAuth
-
 	}
 }
