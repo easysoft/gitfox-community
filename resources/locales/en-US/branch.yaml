@@ -23,7 +23,6 @@ branch:
   activate_create_error: "Failed to create activated branch %s. The archived branch may not exist or there is a name conflict. Please verify and try again."
   activate_delete_error: "Failed to delete archived branch %s. The branch may not exist or has been modified by another operation. Please verify and try again."
   archived_prefix_forbidden: "Branch name cannot start with archived/, this prefix is reserved for archived branches."
-  name_invalid_start: "Branch name must start with a letter and may contain only letters, digits and separators (/ - _ .)."
   name_invalid_chars: "Branch name must not contain spaces, tabs, newlines, or any of the special symbols ~ ^ : ? * [ \\ { } @ ! $ & ( ) = + | < > ; \" '."
   name_invalid_dot_dot: "Branch name must not contain consecutive dots (..); Git interprets this as a range selector."
   name_invalid_double_slash: "Branch name must not contain consecutive slashes (//)."
