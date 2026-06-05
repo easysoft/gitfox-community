@@ -1,6 +1,7 @@
 package branch
 
 import (
+	"fmt"
 	"regexp"
 	"strings"
 
@@ -16,11 +17,63 @@ var (
 	alphanumStartRegex = regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9/_.-]*$`)
 	// validPrefixRegex 前缀只能包含字母和数字,必须以分隔符(/-_.)结尾
 	validPrefixRegex = regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9]*[/._-]$`)
+	// branchNameForbiddenChars 分支名禁用字符集合(不含空白,空白单独检测)
+	branchNameForbiddenChars = "~^:?*[\\{}@!$&()=+|<>;\"'"
 )
 
 type ReqForCreate struct {
 	Name   string `json:"name" binding:"required,max=100" example:"dev"`
 	Source string `json:"source"`
+}
+
+func (r *ReqForCreate) Validate() error {
+	return validateBranchName(r.Name)
+}
+
+// validateBranchName 校验分支名是否符合 Git 引用命名规范及项目约束
+func validateBranchName(name string) error {
+	// 长度限制(Git 工具对超过 255 字符的引用名显示异常)
+	if len(name) > 255 {
+		return errors.WithI18nKey(fmt.Errorf("branch name too long"), i18n.BranchNameInvalidLength)
+	}
+	// 开头限制
+	if strings.HasPrefix(name, ".") {
+		return errors.WithI18nKey(fmt.Errorf("branch name cannot start with dot"), i18n.BranchNameInvalidLeadingDot)
+	}
+	if strings.HasPrefix(name, "-") {
+		return errors.WithI18nKey(fmt.Errorf("branch name cannot start with hyphen"), i18n.BranchNameInvalidLeadingHyphen)
+	}
+	if strings.HasPrefix(name, "/") {
+		return errors.WithI18nKey(fmt.Errorf("branch name cannot start with slash"), i18n.BranchNameInvalidLeadingSlash)
+	}
+	// 结尾限制
+	if strings.HasSuffix(name, "/") {
+		return errors.WithI18nKey(fmt.Errorf("branch name cannot end with slash"), i18n.BranchNameInvalidTrailingSlash)
+	}
+	if strings.HasSuffix(name, ".") {
+		return errors.WithI18nKey(fmt.Errorf("branch name cannot end with dot"), i18n.BranchNameInvalidTrailingDot)
+	}
+	if strings.HasSuffix(name, ".lock") {
+		return errors.WithI18nKey(fmt.Errorf("branch name cannot end with .lock"), i18n.BranchNameInvalidTrailingLock)
+	}
+	// 连续序列限制
+	if strings.Contains(name, "..") {
+		return errors.WithI18nKey(fmt.Errorf("branch name contains ..."), i18n.BranchNameInvalidDotDot)
+	}
+	if strings.Contains(name, "//") {
+		return errors.WithI18nKey(fmt.Errorf("branch name contains //"), i18n.BranchNameInvalidDoubleSlash)
+	}
+	// 字符集合禁用(空白 + 特殊符号)
+	for _, ch := range name {
+		if ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r' {
+			return errors.WithI18nKey(fmt.Errorf("branch name contains whitespace"), i18n.BranchNameInvalidChars)
+		}
+		if strings.ContainsRune(branchNameForbiddenChars, ch) {
+			return errors.WithI18nKey(fmt.Errorf("branch name contains forbidden char %q", ch), i18n.BranchNameInvalidChars)
+		}
+	}
+
+	return nil
 }
 
 type ReqForDelete struct {

@@ -55,6 +55,12 @@ func (c *Controller) Create(ctx *gin.Context) {
 		return
 	}
 
+	// 验证请求体
+	if err = reqBody.Validate(); err != nil {
+		resp.BadRequest(ctx, err)
+		return
+	}
+
 	session, ok := req.GetAuthSession(ctx.Request.Context())
 	if !ok {
 		resp.Unauthorized(ctx, errors.WithI18nKey(nil, i18n.AuthNoSession))
@@ -297,6 +303,14 @@ func (c *Controller) Archive(ctx *gin.Context) {
 	}
 
 	results := c.branchSvc.BatchArchive(ctx, ctx.Request.Context(), reqBody, session, repoOut)
+	for _, result := range results {
+		if !result.Status {
+			err = errors.WithI18nKey(err, i18n.BranchArchiveError)
+			resp.InternalError(ctx, err, result.Message)
+			return
+		}
+	}
+
 	resp.OK(ctx, i18n.BranchArchiveSuccess, results)
 }
 
