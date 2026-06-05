@@ -23,6 +23,16 @@ branch:
   activate_create_error: "创建激活分支 %s 失败，可能是因为归档分支不存在或名称冲突，请检查后重试。"
   activate_delete_error: "删除归档分支 %s 失败，可能是因为分支不存在或已被其他操作修改，请检查后重试。"
   archived_prefix_forbidden: "分支名不能以 archived/ 开头，该前缀为归档分支保留。"
+  name_invalid_start: "分支名必须以字母开头，且仅可包含字母、数字与分隔符（/ - _ .）。"
+  name_invalid_chars: "分支名不得包含空格、制表符、换行符或特殊符号 ~ ^ : ? * [ \\ { } @ ! $ & ( ) = + | < > ; \" '。"
+  name_invalid_dot_dot: "分支名不得包含连续的点号（..），该序列会被 Git 解析为范围选择符。"
+  name_invalid_double_slash: "分支名不得包含连续的斜杠（//）。"
+  name_invalid_leading_dot: "分支名不能以点号（.）开头，会被识别为隐藏文件或目录。"
+  name_invalid_leading_hyphen: "分支名不能以连字符（-）开头，会被 Git 命令解析为选项参数。"
+  name_invalid_trailing_slash: "分支名不能以斜杠（/）结尾，会导致 Git 创建空目录而非分支。"
+  name_invalid_trailing_dot: "分支名不能以点号（.）结尾。"
+  name_invalid_trailing_lock: "分支名不能以 .lock 结尾，该后缀为 Git 引用锁文件保留。"
+  name_invalid_length: "分支名长度不得超过 255 个字符。"
 
 branch_type:
   path_param_error: "Path 参数解析失败。"

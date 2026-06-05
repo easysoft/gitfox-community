@@ -22,6 +22,16 @@ branch:
   activate_create_error: "Failed to create activated branch %s. The archived branch may not exist or there is a name conflict. Please verify and try again."
   activate_delete_error: "Failed to delete archived branch %s. The branch may not exist or has been modified by another operation. Please verify and try again."
   archived_prefix_forbidden: "Branch name cannot start with archived/, this prefix is reserved for archived branches."
+  name_invalid_start: "Branch name must start with a letter and may contain only letters, digits and separators (/ - _ .)."
+  name_invalid_chars: "Branch name must not contain spaces, tabs, newlines, or any of the special symbols ~ ^ : ? * [ \\ { } @ ! $ & ( ) = + | < > ; \" '."
+  name_invalid_dot_dot: "Branch name must not contain consecutive dots (..); Git interprets this as a range selector."
+  name_invalid_double_slash: "Branch name must not contain consecutive slashes (//)."
+  name_invalid_leading_dot: "Branch name must not start with a dot (.) as it will be treated as a hidden file or directory."
+  name_invalid_leading_hyphen: "Branch name must not start with a hyphen (-) as it will be parsed as a Git command option."
+  name_invalid_trailing_slash: "Branch name must not end with a slash (/) as it would cause Git to create an empty directory instead of a branch."
+  name_invalid_trailing_dot: "Branch name must not end with a dot (.)."
+  name_invalid_trailing_lock: "Branch name must not end with .lock; this suffix is reserved for Git ref lock files."
+  name_invalid_length: "Branch name length must not exceed 255 characters."
 
 branch_type:
   path_param_error: "Path param parsing failed."

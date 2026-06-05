@@ -55,6 +55,12 @@ func (c *Controller) Create(ctx *gin.Context) {
 		return
 	}
 
+	// 验证请求体
+	if err = reqBody.Validate(); err != nil {
+		resp.BadRequest(ctx, err)
+		return
+	}
+
 	session, ok := req.GetAuthSession(ctx.Request.Context())
 	if !ok {
 		resp.Unauthorized(ctx, errors.WithI18nKey(nil, i18n.AuthNoSession))
