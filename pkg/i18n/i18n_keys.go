@@ -213,15 +213,15 @@ const (
 	BranchListPrefixSuccess        I18nKey = "branch.list_prefix_success"         // 查询分支前缀列表成功.
 	BranchListSuccess              I18nKey = "branch.list_success"                // 查询分支列表成功.
 	BranchNameInvalidChars         I18nKey = "branch.name_invalid_chars"          // 分支名不得包含空格、制表符、换行符或特殊符号 ~ ^ : ? * [ \ { } @ ! $ ...
-	BranchNameInvalidDotDot        I18nKey = "branch.name_invalid_dot_dot"        // 分支名不得包含连续的点号(..),该序列会被 Git 解析为范围选择符.
+	BranchNameInvalidDotDot        I18nKey = "branch.name_invalid_dot_dot"        // 分支名不得包含连续的点号(..).
 	BranchNameInvalidDoubleSlash   I18nKey = "branch.name_invalid_double_slash"   // 分支名不得包含连续的斜杠(//).
-	BranchNameInvalidLeadingDot    I18nKey = "branch.name_invalid_leading_dot"    // 分支名不能以点号(.)开头,会被识别为隐藏文件或目录.
-	BranchNameInvalidLeadingHyphen I18nKey = "branch.name_invalid_leading_hyphen" // 分支名不能以连字符(-)开头,会被 Git 命令解析为选项参数.
-	BranchNameInvalidLeadingSlash  I18nKey = "branch.name_invalid_leading_slash"  // 分支名不能以斜杠(/)开头,会导致 Git 创建空目录而非分支.
+	BranchNameInvalidLeadingDot    I18nKey = "branch.name_invalid_leading_dot"    // 分支名不能以点号(.)开头.
+	BranchNameInvalidLeadingHyphen I18nKey = "branch.name_invalid_leading_hyphen" // 分支名不能以连字符(-)开头.
+	BranchNameInvalidLeadingSlash  I18nKey = "branch.name_invalid_leading_slash"  // 分支名不能以斜杠(/)开头.
 	BranchNameInvalidLength        I18nKey = "branch.name_invalid_length"         // 分支名长度不得超过 255 个字符.
 	BranchNameInvalidTrailingDot   I18nKey = "branch.name_invalid_trailing_dot"   // 分支名不能以点号(.)结尾.
-	BranchNameInvalidTrailingLock  I18nKey = "branch.name_invalid_trailing_lock"  // 分支名不能以 .lock 结尾,该后缀为 Git 引用锁文件保留.
-	BranchNameInvalidTrailingSlash I18nKey = "branch.name_invalid_trailing_slash" // 分支名不能以斜杠(/)结尾,会导致 Git 创建空目录而非分支.
+	BranchNameInvalidTrailingLock  I18nKey = "branch.name_invalid_trailing_lock"  // 分支名不能以 .lock 结尾.
+	BranchNameInvalidTrailingSlash I18nKey = "branch.name_invalid_trailing_slash" // 分支名不能以斜杠(/)结尾.
 	BranchPathParamError           I18nKey = "branch.path_param_error"            // Path 参数解析失败.
 	BranchQueryParamError          I18nKey = "branch.query_param_error"           // Query 参数解析失败.
 
