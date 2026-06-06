@@ -291,12 +291,20 @@ type CreateGroupReq struct {
 	Format     string `json:"format"`
 }
 
+// ParseNames 将 Names 按 "." 拆分为分组路径段。
+// 调用前应先通过 Validate() 确保合法性。
+func (r *CreateGroupReq) ParseNames() []string {
+	return strings.Split(r.Names, ".")
+}
+
 // Validate 对 CreateGroupReq 进行业务规则校验，返回携带 i18n key 的错误。
 // 校验规则：
 //  1. ArtifactID 必须 > 0
 //  2. 若 Format 非空，必须通过 enum.ArtifactFormat.Sanitize() 校验（调用方回填 view.Format 后满足）
 //  3. Names 按 "." 拆分后不能有空段
-//  4. container 格式不支持嵌套（Names 中不能包含 "."）
+//  4. 每段不得包含空白字符（含 Tab/换行/回车/全角空格等 Unicode 空白）或 \\ : * ? " < > | 等保留字符
+//  5. 每段首尾不得为空白字符
+//  6. container 格式不支持嵌套（Names 中不能包含 "."）
 //
 // 注：Format 在控制器阶段会被 view.Format 覆盖，因此这里不再要求前端必传；
 // 若调用方直接走 service 入口也可以显式设置 Format 后再调用此方法。
@@ -312,7 +320,7 @@ func (r *CreateGroupReq) Validate() error {
 		)
 	}
 
-	// 3. Names 合法性校验
+	// 3. Names 合法性校验：先拒空段，再校验每段字符集与首尾空白。
 	parts := strings.Split(r.Names, ".")
 	for _, part := range parts {
 		if strings.TrimSpace(part) == "" {
@@ -320,6 +328,9 @@ func (r *CreateGroupReq) Validate() error {
 				fmt.Errorf("group names contain empty segment: %q", r.Names),
 				i18n.ArtifactGroupNamesInvalid,
 			)
+		}
+		if err := validateGroupSegment(part); err != nil {
+			return err
 		}
 	}
 
@@ -334,8 +345,45 @@ func (r *CreateGroupReq) Validate() error {
 	return nil
 }
 
-// ParseNames 将 Names 按 "." 拆分为分组路径段。
-// 调用前应先通过 Validate() 确保合法性。
-func (r *CreateGroupReq) ParseNames() []string {
-	return strings.Split(r.Names, ".")
+// groupNameForbiddenChars 任何 format 下都禁止在 group 单段名称中出现的字符。
+// 覆盖 Windows 与跨平台保留字符。注意：path 分隔符 `/` 与 `.` 在外层已作为段间分隔被剥离，
+// 不应再出现在单段中，因此不重复列入此表。
+var groupNameForbiddenChars = []rune{'\\', ':', '*', '?', '"', '<', '>', '|'}
+
+// validateGroupSegment 校验 group 单段名称的合法性。
+//  1. 非空；
+//  2. 首尾不允许任何 Unicode 空白字符（空格、Tab、换行、回车、全角空格等）；
+//  3. 段内不允许任何 Unicode 空白字符；
+//  4. 段内不得包含 \\ : * ? " < > | 等保留字符。
+func validateGroupSegment(seg string) error {
+	if seg == "" {
+		return errors.WithI18nKey(
+			fmt.Errorf("group name segment is empty"),
+			i18n.ArtifactGroupNamesInvalid,
+		)
+	}
+	runes := []rune(seg)
+	if unicode.IsSpace(runes[0]) || unicode.IsSpace(runes[len(runes)-1]) {
+		return errors.WithI18nKey(
+			fmt.Errorf("group name segment must not start or end with whitespace: %q", seg),
+			i18n.ArtifactGroupNameLeadingTrailingSpace,
+		)
+	}
+	for _, rn := range runes {
+		if unicode.IsSpace(rn) {
+			return errors.WithI18nKey(
+				fmt.Errorf("group name segment contains whitespace: %q", seg),
+				i18n.ArtifactGroupNameInvalidChars,
+			)
+		}
+		for _, bad := range groupNameForbiddenChars {
+			if rn == bad {
+				return errors.WithI18nKey(
+					fmt.Errorf("group name segment contains forbidden char %q: %q", bad, seg),
+					i18n.ArtifactGroupNameInvalidChars,
+				)
+			}
+		}
+	}
+	return nil
 }

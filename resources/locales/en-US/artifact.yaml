@@ -85,6 +85,8 @@ artifact:
   group_artifactid_required: "artifactID must be greater than 0."
   group_artifactid_not_found: "The specified artifact ID does not exist."
   group_names_invalid: "Group names are invalid, must not be empty or contain empty segments."
+  group_name_invalid_chars: "Group name must not contain whitespace (space, tab, newline, carriage return, ideographic space, etc.) or any of \\ : * ? \" < > |."
+  group_name_leading_trailing_space: "Group name must not start or end with whitespace."
   group_container_no_nesting: "Container format only supports a single-level group, nesting with '.' is not allowed."
   group_duplicate: "A group with the same path already exists, duplicate creation is not allowed."
 
