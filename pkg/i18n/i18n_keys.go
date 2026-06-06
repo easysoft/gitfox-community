@@ -39,6 +39,8 @@ const (
 	ArtifactGroupContainerNoNesting         I18nKey = "artifact.group_container_no_nesting"          // container 格式仅支持单级分组,不允许使用 '.' 嵌套.
 	ArtifactGroupCreateError                I18nKey = "artifact.group_create_error"                  // 创建制品分组失败.
 	ArtifactGroupDuplicate                  I18nKey = "artifact.group_duplicate"                     // 同名分组路径已存在,不允许重复创建.
+	ArtifactGroupNameInvalidChars           I18nKey = "artifact.group_name_invalid_chars"            // 分组名称不得包含空格、Tab、换行、回车、全角空格等任何空白字符或 \ : * ? " < >...
+	ArtifactGroupNameLeadingTrailingSpace   I18nKey = "artifact.group_name_leading_trailing_space"   // 分组名称首尾不得包含空白字符.
 	ArtifactGroupNamesInvalid               I18nKey = "artifact.group_names_invalid"                 // 分组名称不合法,不能为空且不允许包含空段.
 	ArtifactGroupQueryError                 I18nKey = "artifact.group_query_error"                   // 查询制品分组失败.
 	ArtifactListSuccess                     I18nKey = "artifact.list_success"                        // 制品列表查询成功.
