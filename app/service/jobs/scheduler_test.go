@@ -232,7 +232,7 @@ func TestScheduler_addRecurringJob(t *testing.T) {
 					Times(1)
 			}
 
-			err := scheduler.addRecurringJob(context.Background(), tt.jobUID, tt.jobType, tt.cronDef, tt.maxDur)
+			err := scheduler.addRecurringJob(context.Background(), tt.jobUID, tt.jobType, tt.cronDef, "", tt.maxDur)
 
 			if tt.expectError {
 				if err == nil {

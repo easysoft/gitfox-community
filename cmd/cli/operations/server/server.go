@@ -242,6 +242,12 @@ func (app *App) registerJobHandlers() {
 		app.SystemLog.Errorw("[Server] Failed to register repo importer handler", "error", err)
 		panic(err)
 	}
+
+	mirrorSyncHandler := app.RepoImporterSvc.NewMirrorSyncHandler()
+	if err := app.JobScheduler.RegisterHandler(importerSvc.JobTypeMirrorSync, mirrorSyncHandler); err != nil {
+		app.SystemLog.Errorw("[Server] Failed to register mirror sync handler", "error", err)
+		panic(err)
+	}
 }
 
 // registerRecurringJobs 注册定时调度任务。

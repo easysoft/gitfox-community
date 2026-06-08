@@ -12,7 +12,8 @@ import (
 
 type MirrorSyncParams struct {
 	ReadParams
-	Prune bool
+	Prune    bool
+	CloneURL string
 }
 
 func (s *Service) MirrorSyncRepository(ctx context.Context, params *MirrorSyncParams) (bool, error) {

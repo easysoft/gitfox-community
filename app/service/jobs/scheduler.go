@@ -617,6 +617,12 @@ func postExec(job *jobModel.ScheduleJob, resultData, resultErr string) {
 	}
 }
 
+// RunRecurringJob creates or upserts a recurring job that runs according to the given cron expression.
+// This is the public API for registering recurring jobs externally (e.g. mirror sync).
+func (s *Scheduler) RunRecurringJob(ctx context.Context, jobName, jobType, cronDef string, data string, maxDuration time.Duration) error {
+	return s.addRecurringJob(ctx, jobName, jobType, cronDef, data, maxDuration)
+}
+
 // RunJob runs a single job.
 func (s *Scheduler) RunJob(ctx context.Context, jobName, jobType string, data string, maxDurationSeconds int) error {
 	now := time.Now()
@@ -719,17 +725,17 @@ func (s *Scheduler) createSystemJobs(ctx context.Context) error {
 	}()
 
 	// Create purge job
-	if err := s.addRecurringJob(ctx, JobUIDPurge, JobTypePurge, JobCronPurge, 5*time.Second); err != nil {
+	if err := s.addRecurringJob(ctx, JobUIDPurge, JobTypePurge, JobCronPurge, "", 5*time.Second); err != nil {
 		return fmt.Errorf("failed to create purge job: %w", err)
 	}
 
 	// Create overdue job
-	if err := s.addRecurringJob(ctx, JobUIDOverdue, JobTypeOverdue, JobCronOverdue, 5*time.Second); err != nil {
+	if err := s.addRecurringJob(ctx, JobUIDOverdue, JobTypeOverdue, JobCronOverdue, "", 5*time.Second); err != nil {
 		return fmt.Errorf("failed to create overdue job: %w", err)
 	}
 
 	// Create runner job
-	if err := s.addRecurringJob(ctx, jobUIDRunnerHeartbeat, jobTypeRunnerHeartbeat, jobCronRunnerHeartbeat, jobMaxDurationRunnerHeartbeat); err != nil {
+	if err := s.addRecurringJob(ctx, jobUIDRunnerHeartbeat, jobTypeRunnerHeartbeat, jobCronRunnerHeartbeat, "", jobMaxDurationRunnerHeartbeat); err != nil {
 		return fmt.Errorf("failed to create runner job: %w", err)
 	}
 
@@ -741,6 +747,7 @@ func (s *Scheduler) createSystemJobs(ctx context.Context) error {
 func (s *Scheduler) addRecurringJob(
 	ctx context.Context,
 	jobUID, jobType, cronDef string,
+	data string,
 	maxDur time.Duration,
 ) error {
 	// Parse cron expression to get next execution time
@@ -758,7 +765,7 @@ func (s *Scheduler) addRecurringJob(
 		Name:                jobUID,
 		Type:                jobType,
 		Priority:            jobModel.PriorityElevated,
-		Data:                "",
+		Data:                data,
 		Result:              "",
 		MaxDurationSeconds:  int(maxDur / time.Second),
 		MaxRetries:          0,
