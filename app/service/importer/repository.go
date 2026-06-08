@@ -88,6 +88,8 @@ func (r *Repository) Create(ctx context.Context, session *auth.Session, req *rep
 		Status:        req.Status,
 		ACL:           req.ACL,
 		Mirror:        req.Mirror,
+		ProviderID:    req.ProviderID,
+		Connector:     req.Connector,
 	}
 
 	repoObj, err := r.repoStore.Create(ctx, repo)
@@ -104,6 +106,14 @@ func (r *Repository) LoadRepositoryFromProvider(
 	provider repoModel.Provider,
 	slug string,
 ) (RepositoryInfo, repoModel.Provider, error) {
+
+	if provider.Type == constant.RepoProviderTypeSVN {
+		// TODO: 这里需要检查一下 svn 联通性及代码库存在与否
+		return RepositoryInfo{
+			CloneURL: fmt.Sprintf("%s/%s", provider.Host, provider.Slug),
+		}, provider, nil
+	}
+
 	if slug == "" {
 		return RepositoryInfo{}, provider, errors.WithI18nKey(
 			errors.BadRequest.New("provider repository identifier is missing"),
@@ -134,12 +144,17 @@ func (r *Repository) LoadRepositoryFromProvider(
 }
 
 func (r *Repository) Run(ctx context.Context, provider repoModel.Provider, repo *repoModel.Repo, cloneURL string, mirror bool, noticeLang string) error {
+	// 这里的 Input 需要根据 provider 类型进行适当调整
+	auth := provider.Token
+	if provider.Type == constant.RepoProviderTypeSVN || provider.Type == constant.RepoProviderTypeGogs {
+		auth = provider.Password
+	}
+
 	jobDef, err := r.getJobDef(JobIDFromRepoID(int64(repo.ID)), Input{
 		RepoID:     int64(repo.ID),
-		GitUser:    provider.Username,
-		GitPass:    provider.Password,
+		User:       provider.Username,
+		Auth:       auth,
 		CloneURL:   cloneURL,
-		Mirror:     mirror,
 		NoticeLang: noticeLang,
 	})
 	if err != nil {
@@ -209,10 +224,9 @@ var _ pkgJobs.Handler = (*Repository)(nil)
 
 type Input struct {
 	RepoID     int64  `json:"repoID"`
-	GitUser    string `json:"gitUser"`
-	GitPass    string `json:"gitPass"`
+	User       string `json:"user"`
+	Auth       string `json:"auth"`
 	CloneURL   string `json:"cloneURL"`
-	Mirror     bool   `json:"mirror"`
 	NoticeLang string `json:"noticeLang"`
 }
 
@@ -237,7 +251,7 @@ func (r *Repository) Handle(ctx context.Context, data string, reportFn pkgJobs.P
 		return "", fmt.Errorf("failed to parse git clone URL: %w", err)
 	}
 
-	repoURL.User = url.UserPassword(input.GitUser, input.GitPass)
+	repoURL.User = url.UserPassword(input.User, input.Auth)
 	cloneURLWithAuth := repoURL.String()
 
 	repo, err := r.repoStore.GetByID(ctx, uint(input.RepoID))
@@ -256,6 +270,7 @@ func (r *Repository) Handle(ctx context.Context, data string, reportFn pkgJobs.P
 		"repo.path", repo.Path,
 	)
 
+	// TODO: 这里需要判断是否为 subversion, 如果是 svn 则创建 svn 本地仓库，并调用 svn 命令进行导入。
 	log.Info("create git repository")
 
 	accountInfo := auth.Session{User: &principal.User{
@@ -275,7 +290,6 @@ func (r *Repository) Handle(ctx context.Context, data string, reportFn pkgJobs.P
 				return errors.New("repository has already finished importing")
 			}
 			repo.GitUID = gitUID
-			repo.Mirror = input.Mirror
 			return nil
 		})
 		if err != nil {
@@ -306,6 +320,13 @@ func (r *Repository) Handle(ctx context.Context, data string, reportFn pkgJobs.P
 			return fmt.Errorf("failed to update repository after import: %w", err)
 		}
 		repo = updated
+
+		r.sendNotice(ctx, repo.ID, repo.Identifier, repo.CreatedBy, input.NoticeLang, false, "", log)
+
+		// // 如果是镜像仓库，创建定时同步任务（不阻塞导入流程）
+		// if input.Mirror {
+		// 	_ = r.createMirrorSyncJob(context.WithoutCancel(ctx), int64(repo.ID), input.CloneURL, input.User, input.Auth, log)
+		// }
 
 		r.sendNotice(ctx, repo.ID, repo.Identifier, repo.CreatedBy, input.NoticeLang, false, "", log)
 		return nil
@@ -479,4 +500,48 @@ func (r *Repository) sendNotice(
 	if errNotify := r.notifyStore.Create(context.WithoutCancel(ctx), noticeData); errNotify != nil {
 		log.Errorw("failed to create import notify", "error", errNotify)
 	}
+}
+
+// createMirrorSyncJob 为镜像仓库创建定时同步任务。
+// 失败时只记录日志，不阻塞导入流程。
+func (r *Repository) createMirrorSyncJob(ctx context.Context,
+	repoID int64, cloneURL, user, auth string,
+	log *logger.SugaredMateLogger,
+) error {
+	mirrorInput := MirrorSyncInput{
+		RepoID:   repoID,
+		User:     user,
+		Auth:     auth,
+		CloneURL: cloneURL,
+	}
+
+	data, err := json.Marshal(mirrorInput)
+	if err != nil {
+		log.Errorw("failed to marshal mirror sync input", "error", err)
+		return err
+	}
+
+	strData := strings.TrimSpace(string(data))
+	encryptedData, err := r.encrypter.Encrypt(strData)
+	if err != nil {
+		log.Errorw("failed to encrypt mirror sync input", "error", err)
+		return err
+	}
+
+	jobName := MirrorSyncJobName(repoID)
+	cronExpr := SyncIntervalToCron(DefaultMirrorSyncInterval)
+	jobData := base64.StdEncoding.EncodeToString(encryptedData)
+
+	if err := r.scheduler.RunRecurringJob(ctx, jobName, JobTypeMirrorSync, cronExpr, jobData, MirrorSyncJobMaxDuration); err != nil {
+		log.Errorw("failed to create mirror sync recurring job", "error", err)
+		return err
+	}
+
+	log.Infof("created mirror sync recurring job %s with cron %s", jobName, cronExpr)
+	return nil
+}
+
+// NewMirrorSyncHandler 创建一个镜像同步任务处理器，供外部注册到 JobScheduler。
+func (r *Repository) NewMirrorSyncHandler() *MirrorSyncHandler {
+	return NewMirrorSyncHandler(r.git, r.repoStore, r.encrypter)
 }

@@ -158,6 +158,7 @@ func TestIntegration_RecurringJobCronCalculation(t *testing.T) {
 				"test-cron-job",
 				"test-type",
 				tt.cronDef,
+				"",
 				5*time.Second,
 			)
 

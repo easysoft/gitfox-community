@@ -4,6 +4,8 @@ import (
 	"context"
 	"crypto/sha512"
 	"encoding/base32"
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
@@ -16,13 +18,10 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/paths"
 
 	"github.com/drone/go-scm/scm"
-	"github.com/drone/go-scm/scm/driver/azure"
-	"github.com/drone/go-scm/scm/driver/bitbucket"
 	"github.com/drone/go-scm/scm/driver/gitea"
 	"github.com/drone/go-scm/scm/driver/github"
 	"github.com/drone/go-scm/scm/driver/gitlab"
 	"github.com/drone/go-scm/scm/driver/gogs"
-	"github.com/drone/go-scm/scm/driver/stash"
 	"github.com/drone/go-scm/scm/transport"
 	"github.com/drone/go-scm/scm/transport/oauth2"
 )
@@ -44,7 +43,27 @@ func (r *RepositoryInfo) ConvertToRepo(
 	mirror bool,
 	product string,
 	user *userModel.User,
+	provider *repoModel.Provider,
 ) (*repoModel.Repo, bool) {
+	var connectInfo []byte
+	if provider != nil {
+		switch provider.Type {
+		case constant.RepoProviderTypeSVN:
+			svnConnectInfo := repoModel.SVNConnectInfo{
+				Slug:     provider.Slug,
+				User:     provider.Username,
+				Password: base64.StdEncoding.EncodeToString([]byte(provider.Password)),
+			}
+			connectInfo, _ = json.Marshal(svnConnectInfo)
+		default:
+			gitConnectInfo := repoModel.GitConnectInfo{
+				Slug:      provider.Slug,
+				ProjectID: provider.ProjectID,
+			}
+			connectInfo, _ = json.Marshal(gitConnectInfo)
+		}
+	}
+
 	now := time.Now().UnixMilli()
 	gitTempUID := fmt.Sprintf("importing-%s-%d", hash(fmt.Sprintf("%d:%s", spaceID, identifier)), now)
 	forkID := uint(0)
@@ -61,6 +80,8 @@ func (r *RepositoryInfo) ConvertToRepo(
 		Mirror:        mirror,
 		Product:       product,
 		Path:          paths.Concatenate(fmt.Sprint(spaceID), identifier),
+		ProviderID:    provider.ID,
+		Connector:     connectInfo,
 	}, r.IsPublic
 }
 
@@ -105,7 +126,7 @@ func basicAuthTransport(username, password string) http.RoundTripper {
 // so the auth transport is BasicAuth whereas it's Oauth for other providers.
 // It validates that auth credentials are provided if authReq is true.
 func getScmClientWithTransport(provider repoModel.Provider, slug string, authReq bool) (*scm.Client, error) { //nolint:gocognit
-	if authReq && (provider.Username == "" || provider.Password == "") {
+	if authReq && (provider.Username == "" || provider.Token == "") {
 		return nil, errors.BadRequest.New("scm provider authentication credentials missing")
 	}
 	var c *scm.Client
@@ -124,7 +145,7 @@ func getScmClientWithTransport(provider repoModel.Provider, slug string, authReq
 		} else {
 			c = github.NewDefault()
 		}
-		transport = oauthTransport(provider.Password, oauth2.SchemeBearer)
+		transport = oauthTransport(provider.Token, oauth2.SchemeBearer)
 
 	case constant.RepoProviderTypeGitLab:
 		if provider.Host == "" {
@@ -134,37 +155,15 @@ func getScmClientWithTransport(provider repoModel.Provider, slug string, authReq
 		if err != nil {
 			return nil, errors.BadRequest.Wrap(err, "scm provider Host invalid")
 		}
-		transport = oauthTransport(provider.Password, oauth2.SchemeBearer)
+		transport = oauthTransport(provider.Token, oauth2.SchemeBearer)
 
 	case constant.RepoProviderTypeGitLabCOM:
 		c = gitlab.NewDefault()
-		transport = oauthTransport(provider.Password, oauth2.SchemeBearer)
+		transport = oauthTransport(provider.Token, oauth2.SchemeBearer)
 
 	case constant.RepoProviderTypeGitLabCN:
 		c, _ = gitlab.New("https://jihulab.com")
-		transport = oauthTransport(provider.Password, oauth2.SchemeBearer)
-
-	case constant.RepoProviderTypeBitbucket:
-		if provider.Host != "" {
-			c, err = bitbucket.New(provider.Host)
-			if err != nil {
-				return nil, errors.BadRequest.Wrap(err, "scm provider Host invalid")
-			}
-		} else {
-			c = bitbucket.NewDefault()
-		}
-		transport = basicAuthTransport(provider.Username, provider.Password)
-
-	case constant.RepoProviderTypeStash:
-		if provider.Host != "" {
-			c, err = stash.New(provider.Host)
-			if err != nil {
-				return nil, errors.BadRequest.Wrap(err, "scm provider Host invalid")
-			}
-		} else {
-			c = stash.NewDefault()
-		}
-		transport = oauthTransport(provider.Password, oauth2.SchemeBearer)
+		transport = oauthTransport(provider.Token, oauth2.SchemeBearer)
 
 	case constant.RepoProviderTypeGitea:
 		if provider.Host == "" {
@@ -174,7 +173,7 @@ func getScmClientWithTransport(provider repoModel.Provider, slug string, authReq
 		if err != nil {
 			return nil, errors.BadRequest.Wrap(err, "scm provider Host invalid")
 		}
-		transport = authHeaderTransport(provider.Password)
+		transport = authHeaderTransport(provider.Token)
 
 	case constant.RepoProviderTypeGogs:
 		if provider.Host == "" {
@@ -188,23 +187,8 @@ func getScmClientWithTransport(provider repoModel.Provider, slug string, authReq
 		// 统一走 Basic Auth，让同一对 username/password 既能拉 API 又能 git fetch。
 		transport = basicAuthTransport(provider.Username, provider.Password)
 
-	case constant.RepoProviderTypeAzure:
-		org, project, err := extractOrgAndProjectFromSlug(slug)
-		if err != nil {
-			return nil, errors.BadRequest.Wrap(err, "invalid slug format")
-		}
-		if provider.Host != "" {
-			c, err = azure.New(provider.Host, org, project)
-			if err != nil {
-				return nil, errors.BadRequest.Wrap(err, "scm provider Host invalid")
-			}
-		} else {
-			c = azure.NewDefault(org, project)
-		}
-		transport = basicAuthTransport(provider.Username, provider.Password)
-
 	default:
-		return nil, errors.BadRequest.Newf("unsupported scm provider: %s", provider)
+		return nil, errors.BadRequest.Newf("unsupported scm provider: %s", provider.Type)
 	}
 
 	if c == nil {

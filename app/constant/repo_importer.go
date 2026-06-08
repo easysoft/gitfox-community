@@ -3,15 +3,16 @@ package constant
 type RepoProviderType string
 
 const (
-	RepoProviderTypeGitHub    RepoProviderType = "github"
-	RepoProviderTypeGitLab    RepoProviderType = "gitlab"
-	RepoProviderTypeGitLabCOM RepoProviderType = "gitlab.com"
-	RepoProviderTypeGitLabCN  RepoProviderType = "gitlab.cn"
-	RepoProviderTypeBitbucket RepoProviderType = "bitbucket"
-	RepoProviderTypeStash     RepoProviderType = "stash"
-	RepoProviderTypeGitea     RepoProviderType = "gitea"
-	RepoProviderTypeGogs      RepoProviderType = "gogs"
-	RepoProviderTypeAzure     RepoProviderType = "azure"
+	RepoProviderTypeGitHub    RepoProviderType = "Github"
+	RepoProviderTypeGitLab    RepoProviderType = "Gitlab"
+	RepoProviderTypeGitLabCOM RepoProviderType = "Gitlab.com"
+	RepoProviderTypeGitLabCN  RepoProviderType = "Gitlab.cn"
+	RepoProviderTypeBitbucket RepoProviderType = "Bitbucket"
+	RepoProviderTypeStash     RepoProviderType = "Stash"
+	RepoProviderTypeGitea     RepoProviderType = "Gitea"
+	RepoProviderTypeGogs      RepoProviderType = "Gogs"
+	RepoProviderTypeAzure     RepoProviderType = "Azure"
+	RepoProviderTypeSVN       RepoProviderType = "Subversion"
 )
 
 func (p RepoProviderType) Enum() []any {
@@ -25,5 +26,6 @@ func (p RepoProviderType) Enum() []any {
 		RepoProviderTypeGitea,
 		RepoProviderTypeGogs,
 		RepoProviderTypeAzure,
+		RepoProviderTypeSVN,
 	}
 }
