@@ -84,6 +84,8 @@ type Repo struct {
 	ForkID        *uint  `json:"forkID"` // 允许 NULL，用指针类型
 	ACL           string `json:"acl"`
 	Mirror        bool   `json:"mirror"`
+	ProviderID    uint   `json:"providerID"`
+	Connector     []byte `json:"connector"`
 	Status        string `json:"status"`
 	// git urls
 	GitURL      string          `json:"gitURL,omitempty"`

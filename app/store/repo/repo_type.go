@@ -17,6 +17,8 @@ type Repository struct {
 	ForkID        *uint           `gorm:"column:forkID;comment:'派生来源代码库ID'"` // 指针类型：兼容数据库 NULL
 	ACL           string          `gorm:"column:acl;comment:'权限类型（private=私有，open=公开）'"`
 	Mirror        bool            `gorm:"column:mirror;comment:'是否为镜像库（0=普通库，1=镜像库）'"`
+	ProviderID    uint            `gorm:"column:providerID;comment:'源代码库提供商ID'"`
+	Connector     []byte          `gorm:"column:connector;comment:'源代码库连接器信息'"`
 	Status        string          `gorm:"column:status;comment:'代码库状态（active,importing,archived）'"`
 	Synced        uint8           `gorm:"column:synced;comment:'同步标识'"`
 	CreatedBy     string          `gorm:"column:createdBy;comment:'创建人'"`

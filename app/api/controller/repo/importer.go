@@ -1,8 +1,6 @@
 package repo
 
 import (
-	"fmt"
-
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
@@ -44,7 +42,7 @@ func (ctl *Controller) Import(c *gin.Context) {
 	remoteRepository, provider, err := ctl.importerSvc.LoadRepositoryFromProvider(
 		c.Request.Context(),
 		in.Provider,
-		fmt.Sprintf("%s/%s", in.Provider.RepoGroup, in.Provider.RepoName),
+		in.Provider.Slug,
 	)
 	if err != nil {
 		resp.BadRequest(c, err)
@@ -59,6 +57,7 @@ func (ctl *Controller) Import(c *gin.Context) {
 		in.Mirror,
 		in.Product,
 		session.User,
+		&provider,
 	)
 
 	// 创建代码库

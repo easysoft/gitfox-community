@@ -44,17 +44,30 @@ type RepositoryOutput struct {
 }
 
 type Provider struct {
-	Type     constant.RepoProviderType `json:"type" binding:"required,oneof=github gitlab gitlab.com gitlab.cn gitea gogs"`
-	Host     string                    `json:"host"`
-	Username string                    `json:"username"`
-	Password string                    `json:"password"`
-	// Slug 是 provider 上的仓库标识，例如 GitHub 上的 "owner/repo" 或 GitLab 上的 "group/subgroup/repo"。
-	RepoGroup string `json:"repoGroup" binding:"required"`
-	RepoName  string `json:"repoName" binding:"required"`
+	Type      constant.RepoProviderType `json:"type" binding:"required,oneof=Github Gitlab Gitea Gogs Subversion"`
+	ID        uint                      `json:"id" binding:"required"`
+	Host      string                    `json:"host" binding:"required"`
+	Slug      string                    `json:"slug" binding:"required"`
+	ProjectID string                    `json:"projectID"` // gitlab,gitea,github,gogs
+	Token     string                    `json:"token"`     // gitlab,gitea,github
+	// svn,gogs:
+	Username string `json:"username"`
+	Password string `json:"password"`
 }
 
 type Progress struct {
 	Status  jobs.State `json:"status"`
 	Result  string     `json:"result,omitempty"`
 	Failure string     `json:"failure,omitempty"`
+}
+
+type GitConnectInfo struct {
+	Slug      string `json:"slug"`
+	ProjectID string `json:"projectID"`
+}
+
+type SVNConnectInfo struct {
+	Slug     string `json:"slug"`
+	User     string `json:"user"`
+	Password string `json:"password"`
 }
