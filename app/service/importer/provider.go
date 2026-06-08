@@ -126,8 +126,16 @@ func basicAuthTransport(username, password string) http.RoundTripper {
 // so the auth transport is BasicAuth whereas it's Oauth for other providers.
 // It validates that auth credentials are provided if authReq is true.
 func getScmClientWithTransport(provider repoModel.Provider, slug string, authReq bool) (*scm.Client, error) { //nolint:gocognit
-	if authReq && (provider.Username == "" || provider.Token == "") {
-		return nil, errors.BadRequest.New("scm provider authentication credentials missing")
+	if authReq {
+		if provider.Type == constant.RepoProviderTypeGogs {
+			if provider.Username == "" || provider.Password == "" {
+				return nil, errors.BadRequest.New("scm provider authentication credentials missing for Gogs: both username and password are required")
+			}
+		} else {
+			if provider.Token == "" {
+				return nil, errors.BadRequest.Newf("scm provider authentication token missing for %s", provider.Type)
+			}
+		}
 	}
 	var c *scm.Client
 	var err error
@@ -155,14 +163,6 @@ func getScmClientWithTransport(provider repoModel.Provider, slug string, authReq
 		if err != nil {
 			return nil, errors.BadRequest.Wrap(err, "scm provider Host invalid")
 		}
-		transport = oauthTransport(provider.Token, oauth2.SchemeBearer)
-
-	case constant.RepoProviderTypeGitLabCOM:
-		c = gitlab.NewDefault()
-		transport = oauthTransport(provider.Token, oauth2.SchemeBearer)
-
-	case constant.RepoProviderTypeGitLabCN:
-		c, _ = gitlab.New("https://jihulab.com")
 		transport = oauthTransport(provider.Token, oauth2.SchemeBearer)
 
 	case constant.RepoProviderTypeGitea:

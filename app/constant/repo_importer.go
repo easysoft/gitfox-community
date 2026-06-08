@@ -5,8 +5,6 @@ type RepoProviderType string
 const (
 	RepoProviderTypeGitHub    RepoProviderType = "Github"
 	RepoProviderTypeGitLab    RepoProviderType = "Gitlab"
-	RepoProviderTypeGitLabCOM RepoProviderType = "Gitlab.com"
-	RepoProviderTypeGitLabCN  RepoProviderType = "Gitlab.cn"
 	RepoProviderTypeBitbucket RepoProviderType = "Bitbucket"
 	RepoProviderTypeStash     RepoProviderType = "Stash"
 	RepoProviderTypeGitea     RepoProviderType = "Gitea"
@@ -19,8 +17,6 @@ func (p RepoProviderType) Enum() []any {
 	return []any{
 		RepoProviderTypeGitHub,
 		RepoProviderTypeGitLab,
-		RepoProviderTypeGitLabCOM,
-		RepoProviderTypeGitLabCN,
 		RepoProviderTypeBitbucket,
 		RepoProviderTypeStash,
 		RepoProviderTypeGitea,

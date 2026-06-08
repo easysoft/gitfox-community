@@ -44,7 +44,7 @@ type RepositoryOutput struct {
 }
 
 type Provider struct {
-	Type      constant.RepoProviderType `json:"type" binding:"required,oneof=Github Gitlab Gitlab.com Gitlab.cn Gitea Gogs Subversion"`
+	Type      constant.RepoProviderType `json:"type" binding:"required,oneof=Github Gitlab Gitea Gogs Subversion"`
 	ID        uint                      `json:"id" binding:"required"`
 	Host      string                    `json:"host" binding:"required"`
 	Slug      string                    `json:"slug" binding:"required"`
