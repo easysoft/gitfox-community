@@ -121,7 +121,7 @@ func (r *Repository) LoadRepositoryFromProvider(
 		)
 	}
 
-	scmClient, err := getScmClientWithTransport(provider, slug, true)
+	scmClient, err := getScmClientWithTransport(provider, slug)
 	if err != nil {
 		return RepositoryInfo{}, provider, errors.WithI18nKey(
 			errors.BadRequest.Wrap(err, "could not create client"),

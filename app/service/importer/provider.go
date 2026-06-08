@@ -1,7 +1,6 @@
 package importer
 
 import (
-	"context"
 	"crypto/sha512"
 	"encoding/base32"
 	"encoding/base64"
@@ -125,18 +124,22 @@ func basicAuthTransport(username, password string) http.RoundTripper {
 // layer depending on the provider. For example, for bitbucket we support app passwords
 // so the auth transport is BasicAuth whereas it's Oauth for other providers.
 // It validates that auth credentials are provided if authReq is true.
-func getScmClientWithTransport(provider repoModel.Provider, slug string, authReq bool) (*scm.Client, error) { //nolint:gocognit
-	if authReq {
-		if provider.Type == constant.RepoProviderTypeGogs {
-			if provider.Username == "" || provider.Password == "" {
-				return nil, errors.BadRequest.New("scm provider authentication credentials missing for Gogs: both username and password are required")
-			}
-		} else {
-			if provider.Token == "" {
-				return nil, errors.BadRequest.Newf("scm provider authentication token missing for %s", provider.Type)
-			}
+func getScmClientWithTransport(provider repoModel.Provider, slug string) (*scm.Client, error) { //nolint:gocognit
+
+	if provider.Host == "" {
+		return nil, errors.BadRequest.New("scm provider Host missing")
+	}
+
+	if provider.Type == constant.RepoProviderTypeGogs {
+		if provider.Username == "" || provider.Password == "" {
+			return nil, errors.BadRequest.New("scm provider authentication credentials missing for Gogs: both username and password are required")
+		}
+	} else {
+		if provider.Token == "" {
+			return nil, errors.BadRequest.Newf("scm provider authentication token missing for %s", provider.Type)
 		}
 	}
+
 	var c *scm.Client
 	var err error
 	var transport http.RoundTripper
@@ -145,20 +148,13 @@ func getScmClientWithTransport(provider repoModel.Provider, slug string, authReq
 		return nil, errors.BadRequest.New("scm provider can not be empty")
 
 	case constant.RepoProviderTypeGitHub:
-		if provider.Host != "" {
-			c, err = github.New(provider.Host)
-			if err != nil {
-				return nil, errors.BadRequest.Wrap(err, "scm provider Host invalid")
-			}
-		} else {
-			c = github.NewDefault()
+		c, err = github.New(provider.Host)
+		if err != nil {
+			return nil, errors.BadRequest.Wrap(err, "scm provider Host invalid")
 		}
 		transport = oauthTransport(provider.Token, oauth2.SchemeBearer)
 
 	case constant.RepoProviderTypeGitLab:
-		if provider.Host == "" {
-			return nil, errors.BadRequest.New("scm provider Host missing")
-		}
 		c, err = gitlab.New(provider.Host)
 		if err != nil {
 			return nil, errors.BadRequest.Wrap(err, "scm provider Host invalid")
@@ -166,9 +162,6 @@ func getScmClientWithTransport(provider repoModel.Provider, slug string, authReq
 		transport = oauthTransport(provider.Token, oauth2.SchemeBearer)
 
 	case constant.RepoProviderTypeGitea:
-		if provider.Host == "" {
-			return nil, errors.BadRequest.New("scm provider Host missing")
-		}
 		c, err = gitea.New(provider.Host)
 		if err != nil {
 			return nil, errors.BadRequest.Wrap(err, "scm provider Host invalid")
@@ -176,9 +169,6 @@ func getScmClientWithTransport(provider repoModel.Provider, slug string, authReq
 		transport = authHeaderTransport(provider.Token)
 
 	case constant.RepoProviderTypeGogs:
-		if provider.Host == "" {
-			return nil, errors.BadRequest.New("scm provider Host missing")
-		}
 		c, err = gogs.New(provider.Host)
 		if err != nil {
 			return nil, errors.BadRequest.Wrap(err, "scm provider Host invalid")
@@ -201,101 +191,6 @@ func getScmClientWithTransport(provider repoModel.Provider, slug string, authReq
 	}
 
 	return c, nil
-}
-
-//nolint:gocognit
-func LoadRepositoriesFromProviderSpace(
-	ctx context.Context,
-	provider repoModel.Provider,
-	spaceSlug string,
-) ([]RepositoryInfo, repoModel.Provider, error) {
-	if spaceSlug == "" {
-		return nil, provider, errors.BadRequest.New("provider space identifier is missing")
-	}
-
-	var err error
-	scmClient, err := getScmClientWithTransport(provider, spaceSlug, false)
-	if err != nil {
-		return nil, provider, errors.BadRequest.Wrap(err, "could not create client")
-	}
-
-	opts := scm.ListOptions{
-		Size: 100,
-	}
-
-	// Augment user information if it's not provided for certain vendors.
-	if provider.Password != "" && provider.Username == "" {
-		user, _, err := scmClient.Users.Find(ctx)
-		if err != nil {
-			return nil, provider, errors.BadRequest.Wrap(err, "could not find user")
-		}
-		provider.Username = user.Login
-	}
-
-	var optsv2 scm.RepoListOptions
-	listv2 := false
-	if provider.Type == constant.RepoProviderTypeGitHub {
-		listv2 = true
-		optsv2 = scm.RepoListOptions{
-			ListOptions: opts,
-			RepoSearchTerm: scm.RepoSearchTerm{
-				User: spaceSlug,
-			},
-		}
-	}
-
-	repos := make([]RepositoryInfo, 0)
-	var scmRepos []*scm.Repository
-	var scmResp *scm.Response
-
-	for {
-		if listv2 {
-			scmRepos, scmResp, err = scmClient.Repositories.ListV2(ctx, optsv2)
-			if err = convertImportError(provider, spaceSlug, scmResp, err); err != nil {
-				return nil, provider, err
-			}
-			optsv2.Page = scmResp.Page.Next
-			optsv2.URL = scmResp.Page.NextURL
-		} else {
-			scmRepos, scmResp, err = scmClient.Repositories.List(ctx, opts)
-			if err = convertImportError(provider, spaceSlug, scmResp, err); err != nil {
-				return nil, provider, err
-			}
-			opts.Page = scmResp.Page.Next
-			opts.URL = scmResp.Page.NextURL
-		}
-
-		if len(scmRepos) == 0 {
-			break
-		}
-
-		for _, scmRepo := range scmRepos {
-			// in some cases the namespace filter isn't working (e.g. Gitlab)
-			if !strings.EqualFold(scmRepo.Namespace, spaceSlug) {
-				continue
-			}
-
-			repos = append(repos, RepositoryInfo{
-				Space:         scmRepo.Namespace,
-				Identifier:    scmRepo.Name,
-				CloneURL:      scmRepo.Clone,
-				IsPublic:      !scmRepo.Private,
-				DefaultBranch: scmRepo.Branch,
-			})
-		}
-
-		if listv2 {
-			if optsv2.Page == 0 && optsv2.URL == "" {
-				break
-			}
-		} else {
-			if opts.Page == 0 && opts.URL == "" {
-				break
-			}
-		}
-	}
-
-	return repos, provider, nil
 }
 
 func extractOrgAndProjectFromSlug(slug string) (string, string, error) {

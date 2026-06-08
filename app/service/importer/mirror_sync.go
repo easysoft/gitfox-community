@@ -19,9 +19,9 @@ const (
 	// JobTypeMirrorSync 镜像同步任务类型
 	JobTypeMirrorSync = "mirror_sync"
 	// DefaultMirrorSyncInterval 默认镜像同步间隔（分钟）
-	DefaultMirrorSyncInterval = 10
+	DefaultMirrorSyncInterval = 60
 	// MirrorSyncJobMaxDuration 镜像同步任务最大执行时间
-	MirrorSyncJobMaxDuration = 30 * time.Minute
+	MirrorSyncJobMaxDuration = 60 * time.Minute
 )
 
 // MirrorSyncInput 镜像同步任务输入参数（加密存储在 job.Data 中）
