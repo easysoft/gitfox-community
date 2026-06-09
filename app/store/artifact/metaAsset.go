@@ -17,7 +17,7 @@ func (s *metaAssets) Create(ctx context.Context, newObj *model.CreateArtifactMet
 	if err := validatorEmpty(newObj.ArtifactID, newObj.Path, newObj.ArtifactID, newObj.Format); err != nil {
 		return nil, err
 	}
-	if err := model.ValidateAssetKind(newObj.Kind); err != nil {
+	if err := model.ValidateAssetRank(newObj.Rank); err != nil {
 		return nil, err
 	}
 	var row artifactMetaAsset
@@ -25,7 +25,7 @@ func (s *metaAssets) Create(ctx context.Context, newObj *model.CreateArtifactMet
 	row.Format = string(newObj.Format)
 	row.Path = newObj.Path
 	row.ContentType = newObj.ContentType
-	row.Kind = string(newObj.Kind)
+	row.Rank = string(newObj.Rank)
 	row.BlobID = newObj.BlobID
 	row.CheckSum = newObj.CheckSum
 	if err := s.db.WithContext(ctx).Create(&row).Error; err != nil {
@@ -71,13 +71,4 @@ func (s *metaAssets) DeleteById(ctx context.Context, metaAssetId int64) error {
 		return model.ErrMetaAssetNoItemDeleted
 	}
 	return nil
-}
-
-// DeleteByArtifactID 硬删指定 view 下的所有 meta_asset 记录。
-func (s *metaAssets) DeleteByArtifactID(ctx context.Context, artifactID int64) (int64, error) {
-	result := s.db.WithContext(ctx).Where("artifactLibID = ?", artifactID).Delete(&artifactMetaAsset{})
-	if result.Error != nil {
-		return 0, database.ProcessSQLErrorf(ctx, result.Error)
-	}
-	return result.RowsAffected, nil
 }

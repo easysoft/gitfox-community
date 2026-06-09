@@ -3,7 +3,6 @@ package artifact
 import (
 	"fmt"
 
-	enum "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
 
 	"github.com/guregu/null"
@@ -85,32 +84,12 @@ type ArtifactAssetsRes struct {
 	Arch string `gorm:"-" json:"arch,omitempty"`
 }
 
-// VersionListItem 版本分页列表项（package.{id} 查询时返回）。
-// 包含 version 表原始字段 + container 格式的扩展信息（size/os/arch/image/package）。
-type VersionListItem struct {
-	ID          int64           `json:"id"`
-	PackageID   int64           `json:"packageID"`
-	Version     string          `json:"version"`
-	Metadata    string          `json:"metadata"`
-	CreatedBy   string          `json:"createdBy"`
-	CreatedDate *datetime.Local `json:"createdDate"`
-	EditedBy    string          `json:"editedBy"`
-	EditedDate  *datetime.Local `json:"editedDate"`
-	// 以下为 container 格式扩展字段（非 container 为空）
-	Size    int64  `json:"size,omitempty"`
-	OS      string `json:"os,omitempty"`
-	Arch    string `json:"arch,omitempty"`
-	Image   string `json:"image,omitempty"`
-	Package string `json:"package,omitempty"`
-}
-
 type ArtifactBlobRes struct {
 	Id             int64           `gorm:"column:id" json:"id"`
 	Path           string          `gorm:"column:basename" json:"path"`
 	Size           int64           `gorm:"column:size" json:"size"`
 	BlobRef        string          `gorm:"column:ref" json:"-"`
-	Creator        string          `gorm:"-" json:"-"`
-	CreatorName    string          `gorm:"column:createdBy" json:"createdBy"`
+	CreatedBy      string          `gorm:"column:createdBy" json:"createdBy"`
 	CheckSumString string          `gorm:"column:checksum" json:"-"`
 	MetadataString string          `gorm:"column:metadata" json:"-"`
 	Created        *datetime.Local `gorm:"column:createdDate" json:"createdDate"`
@@ -250,12 +229,12 @@ type ArtifactRecycleItem struct {
 type ArtifactStatus string
 
 const (
-	ArtifactStatusOK                 ArtifactStatus = "ok"
-	ArtifactStatusInvalidId          ArtifactStatus = "invalid_id"
-	ArtifactStatusNotFound           ArtifactStatus = "not found"
-	ArtifactStatusNotEmpty           ArtifactStatus = "not_empty"
-	ArtifactStatusNameAlreadyExists  ArtifactStatus = "name_already_exists"
-	ArtifactStatusUnknown            ArtifactStatus = "unknown"
+	ArtifactStatusOK                ArtifactStatus = "ok"
+	ArtifactStatusInvalidId         ArtifactStatus = "invalid_id"
+	ArtifactStatusNotFound          ArtifactStatus = "not found"
+	ArtifactStatusNotEmpty          ArtifactStatus = "not_empty"
+	ArtifactStatusNameAlreadyExists ArtifactStatus = "name_already_exists"
+	ArtifactStatusUnknown           ArtifactStatus = "unknown"
 )
 
 // ArtifactAssetInfo
@@ -303,6 +282,15 @@ type ArtifactAssetInfo struct {
 	OS string `json:"os,omitempty"`
 	// CPU 架构（仅 container 格式）：amd64 / arm64 / arm/v7 等
 	Arch string `json:"arch,omitempty"`
+	// 多平台镜像列表（仅 container 格式）：manifest list / OCI index 会返回多个平台。
+	Images []*ArtifactContainerImage `json:"images,omitempty"`
+}
+
+type ArtifactContainerImage struct {
+	Digest string `json:"digest"`
+	OS     string `json:"os"`
+	Arch   string `json:"arch"`
+	Size   int64  `json:"size"`
 }
 
 // ArtifactPkgVerMetadata 制品包/版本的基础定位元数据。
@@ -325,7 +313,7 @@ type ArtifactPkgVerMetadata struct {
 // ==================== Remove / GC ====================
 
 type ArtifactNodeRemoveRes struct {
-	NodeID   string         `json:"nodeID"`
+	NodeID   EntityID       `json:"nodeID"`
 	Status   ArtifactStatus `json:"status"`
 	Packages int            `json:"packages,omitempty"`
 	Versions int            `json:"versions,omitempty"`
@@ -339,21 +327,14 @@ type ArtifactNodeRemoveReport struct {
 	Data    []*ArtifactNodeRemoveRes `json:"data"`
 }
 
-// ==================== 恢复（Restore）====================
-// ==================== Restore ====================
-
-// ArtifactRestoreEntitiesReq 恢复请求体，复用 EntityID 串（与软删保持一致）。
-type ArtifactRestoreEntitiesReq struct {
-	EntityIDs []string `json:"entityIDs,omitempty"`
-}
-
 // ArtifactRestoreRes 单条恢复结果。结构与 ArtifactNodeRemoveRes 同形：
 //   - NodeID         : 入参的 EntityID 串（kind.id）
 //   - Status         : 处理状态（ok / not_found / invalid_id / name_already_exists / unknown 等）
 //   - Reason         : 失败时的 i18n key，前端按 key 取多语言文案；成功时为空
 //   - Packages/Versions/Assets : 本次恢复链路上各类实体的累计影响计数
 type ArtifactRestoreRes struct {
-	NodeID   string         `json:"nodeID"`
+	NodeID   EntityID       `json:"nodeID"`
+	Error    error          `json:"-"`
 	Status   ArtifactStatus `json:"status"`
 	Reason   string         `json:"reason,omitempty"`
 	Packages int            `json:"packages,omitempty"`
@@ -363,6 +344,7 @@ type ArtifactRestoreRes struct {
 
 // ArtifactRestoreReport 批量恢复汇总，结构与 ArtifactNodeRemoveReport 对称。
 type ArtifactRestoreReport struct {
+	Message string                `json:"-"`
 	Total   int                   `json:"total"`
 	Success int                   `json:"success"`
 	Failed  int                   `json:"failed"`
@@ -406,30 +388,4 @@ type ArtifactStatsObject struct {
 	Total   int64 `json:"total"`
 	Deleted int64 `json:"deleted"`
 	Active  int64 `json:"active"`
-}
-
-// ==================== 权限响应 ====================
-// ==================== Permission Response ====================
-
-type ArtifactPermissions struct {
-	Private bool                `json:"private"`
-	Rules   []*ArtifactPermRule `json:"rules"`
-}
-
-type ArtifactEntityPermissions struct {
-	ArtifactPermissions
-	Inherit ArtifactPermInherit `json:"inherit"`
-}
-
-type ArtifactPermInherit struct {
-	Inherited       bool     `json:"inherited"`
-	InheritEntityID string   `json:"inheritEntityID"`
-	InheritFrom     string   `json:"inheritFrom"`
-	InheritParents  []string `json:"inheritParents"`
-}
-
-type ArtifactPermRule struct {
-	Subjects []*CasbinSubject `json:"subjects"`
-	Role     enum.CasbinRole  `json:"role"`
-	Scope    enum.CasbinScope `json:"scope"`
 }

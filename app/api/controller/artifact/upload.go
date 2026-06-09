@@ -50,13 +50,19 @@ func (c *Controller) Upload(ctx *gin.Context) {
 
 	assets, err := c.artSvc.Upload(ctx.Request.Context(), view, format, ctx.Request)
 	if err != nil {
-		// 若 err 在 adapter / service 层已显式携带 HTTP 状态（如 400），按其渲染；
-		// 否则按 500 渲染。i18n key 通过 GetI18nKey 透传到前端。
 		if errors.GetHttpStatus(err) == http.StatusOK {
 			resp.InternalError(ctx, err)
 		} else {
 			resp.Error(ctx, err)
 		}
+		return
+	}
+
+	// 跳过已存在的文件，不重复上传
+	// 返回失败提示 方便前端处理
+	if len(assets) > 0 && assets[0].AlreadyExists {
+		err = errors.WithI18nKey(err, i18n.ArtifactUploadFileDuplicate)
+		resp.BadRequest(ctx, err)
 		return
 	}
 	resp.OK(ctx, i18n.ArtifactUploadSuccess, assets)

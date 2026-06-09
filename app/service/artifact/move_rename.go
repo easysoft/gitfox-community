@@ -3,11 +3,10 @@ package artifact
 import (
 	"context"
 	"fmt"
-	"strconv"
-	"strings"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
+	artifactStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/artifact"
 	pkgErrors "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 
@@ -15,14 +14,183 @@ import (
 	"gorm.io/gorm"
 )
 
+// RelocateEntity 同时支持移动 + 重命名，单事务内先移动后改名。
+//
+// 语义：
+//   - TargetGroupID 未传 → 不移动，即使 TargetArtifactID 有值也只执行重命名；
+//   - TargetGroupID 已传，且 TargetArtifactID == 0 或与当前一致 → 同库移动；
+//   - TargetGroupID 显式传 0 → 移动到目标制品库根目录（仅 generic group 支持）；
+//   - NewName == "" 或与当前一致 → 不改名；
+//   - 两者都不变 → 返回 ArtifactRelocateNoChange。
+func (s *Service) RelocateEntity(ctx context.Context, req *model.RelocateEntityReq) error {
+	splitEntityID := req.EntityID.GetEntityID()
+
+	// 取当前实体的 artifactID / groupID / name，用于与传入参数比对，判断是否真有变化。
+	var curArtifactID int64
+	var curGroupID int64
+	var curName string
+	var curFormat model.ArtifactFormat
+
+	switch splitEntityID.Kind {
+	case constant.ArtifactEntityKindGroup:
+		group, err := s.artStore.Groups().GetById(ctx, splitEntityID.ID)
+		if err != nil {
+			return pkgErrors.WithI18nKey(err, i18n.ArtifactMoveSourceDeleted)
+		}
+		curArtifactID = group.ArtifactID
+		if group.ParentID.Valid {
+			curGroupID = group.ParentID.Int64
+		}
+		curName = group.Name
+		curFormat = group.Format
+	case constant.ArtifactEntityKindAsset:
+		asset, err := s.artStore.Assets().GetById(ctx, splitEntityID.ID)
+		if err != nil {
+			return pkgErrors.WithI18nKey(err, i18n.ArtifactMoveSourceDeleted)
+		}
+		if asset.ArtifactID.Valid {
+			curArtifactID = asset.ArtifactID.Int64
+		}
+		if asset.GroupID.Valid {
+			curGroupID = asset.GroupID.Int64
+		}
+		curName = asset.Path
+		curFormat = asset.Format
+	case constant.ArtifactEntityKindPackage:
+		pack, err := s.artStore.Packages().GetByID(ctx, splitEntityID.ID)
+		if err != nil {
+			return pkgErrors.WithI18nKey(err, i18n.ArtifactMoveSourceDeleted)
+		}
+		curArtifactID = pack.ArtifactID
+		curGroupID = pack.GroupID
+		curName = pack.Name
+		curFormat = pack.Format
+	case constant.ArtifactEntityKindArtifact:
+		version, err := s.artStore.Views().GetByID(ctx, splitEntityID.ID)
+		if err != nil {
+			return pkgErrors.WithI18nKey(err, i18n.ArtifactMoveSourceDeleted)
+		}
+		curArtifactID = version.ID
+		curName = version.Name
+		curFormat = version.Format
+	default:
+		return pkgErrors.WithI18nKey(
+			fmt.Errorf("unsupported entity type: %s", splitEntityID.Kind),
+			i18n.ArtifactMoveEntityTypeInvalid,
+		)
+	}
+
+	// 判断是否需要移动：targetGroupID 是移动意图的开关。
+	// 未传 targetGroupID 时，即使 targetArtifactID 有值也不移动，保证纯重命名请求不会被拦截。
+	tArtifactID := req.TargetArtifactID
+	if tArtifactID == 0 {
+		tArtifactID = curArtifactID
+	}
+	var targetGroupID int64
+	targetGroupIDSpecified := req.TargetGroupID != nil
+	if targetGroupIDSpecified {
+		targetGroupID = *req.TargetGroupID
+	}
+	needMove := targetGroupIDSpecified && (tArtifactID != curArtifactID || targetGroupID != curGroupID)
+
+	// 判断是否需要重命名（NewName 为空或与当前一致 → 不改名）
+	needRename := req.NewName != "" && req.NewName != curName
+
+	if !needMove && !needRename {
+		return nil
+	}
+	if curFormat == model.ArtifactContainerFormat {
+		if needMove {
+			return pkgErrors.WithI18nKey(
+				fmt.Errorf("container artifacts do not support move"),
+				i18n.ArtifactMoveContainerNotSupported,
+			)
+		}
+		if needRename {
+			return pkgErrors.WithI18nKey(
+				fmt.Errorf("container artifacts do not support rename"),
+				i18n.ArtifactRenameContainerNotSupported,
+			)
+		}
+	}
+
+	return s.db.Transaction(func(tx *gorm.DB) error {
+		if needMove {
+			// 移动时若未显式指定 targetGroupID，沿用当前父级（保持层级不变）。
+			// 显式指定 0 则表示移动到目标制品库根目录，由下层按实体类型和格式校验是否支持。
+			if !targetGroupIDSpecified {
+				targetGroupID = curGroupID
+			}
+			if err := s.moveByKind(ctx, tx, splitEntityID, tArtifactID, targetGroupID); err != nil {
+				return err
+			}
+		}
+		if needRename {
+			if err := s.renameByKind(ctx, tx, splitEntityID, req.NewName); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
+// moveByKind 按实体类型派发到对应的 Move 方法（不带事务，由调用方包裹）。
+// tx 由 RelocateEntity 的 Transaction 回调传入，向下透传给各 inner，
+// 让 store 写操作复用同一事务连接。
+func (s *Service) moveByKind(ctx context.Context, tx *gorm.DB, splitEntityID model.SplitEntityID, tArtifactID, tGroupID int64) error {
+	switch splitEntityID.Kind {
+	case constant.ArtifactEntityKindPackage:
+		return s.movePackageInner(ctx, tx, splitEntityID.ID, tArtifactID, tGroupID)
+	case constant.ArtifactEntityKindAsset:
+		return s.moveAssetInner(ctx, tx, splitEntityID.ID, tArtifactID, tGroupID)
+	case constant.ArtifactEntityKindGroup:
+		return s.moveGroupInner(ctx, tx, splitEntityID.ID, tArtifactID, tGroupID)
+	default:
+		return pkgErrors.WithI18nKey(
+			fmt.Errorf("unsupported entity type for move: %s", splitEntityID.Kind),
+			i18n.ArtifactMoveEntityTypeInvalid,
+		)
+	}
+}
+
+// renameByKind 按实体类型派发到对应的 Rename 方法（不带事务，由调用方包裹）。
+// package / version 不允许重命名；container 格式的制品库也暂不允许重命名。
+func (s *Service) renameByKind(ctx context.Context, tx *gorm.DB, splitEntityID model.SplitEntityID, newName string) error {
+	switch splitEntityID.Kind {
+	case constant.ArtifactEntityKindAsset:
+		return s.renameAssetInner(ctx, tx, splitEntityID.ID, newName)
+	case constant.ArtifactEntityKindGroup:
+		return s.renameGroupInner(ctx, tx, splitEntityID.ID, newName)
+	case constant.ArtifactEntityKindArtifact:
+		return s.renameArtifactInner(ctx, tx, splitEntityID.ID, newName)
+	case constant.ArtifactEntityKindPackage:
+		return pkgErrors.WithI18nKey(
+			fmt.Errorf("rename is not supported for packages"),
+			i18n.ArtifactRenameVersionedNotSupported,
+		)
+	case constant.ArtifactEntityKindVersion:
+		return pkgErrors.WithI18nKey(
+			fmt.Errorf("rename is not supported for versions"),
+			i18n.ArtifactRenameVersionedNotSupported,
+		)
+	default:
+		return pkgErrors.WithI18nKey(
+			fmt.Errorf("unsupported entity type for rename: %s", splitEntityID.Kind),
+			i18n.ArtifactRenameEntityTypeInvalid,
+		)
+	}
+}
+
 // movePackageInner 在单事务（由调用方包裹）内完成一次 package 移动。
 // 语义：更新 package.ArtifactID / GroupID / Namespace，并重建 tree node。
 //
 //   - container 格式：忽略传入的 tGroupID，直接落到目标 view 的 format 根节点。
 //   - 非 container 格式：目标 group 必须属于目标 view，且格式要与源 package 一致。
-func (s *Service) movePackageInner(ctx context.Context, pkgID, tArtifactID, tGroupID int64) error {
+func (s *Service) movePackageInner(ctx context.Context, tx *gorm.DB, pkgID, tArtifactID, tGroupID int64) error {
+	txStore := artifactStore.NewStore(tx)
+
 	// 1. 读源 package
-	srcPkg, err := s.artStore.Packages().GetByID(ctx, pkgID)
+	srcPkg, err := txStore.Packages().GetByID(ctx, pkgID)
 	if err != nil {
 		return pkgErrors.WithI18nKey(err, i18n.ArtifactMoveSourceDeleted)
 	}
@@ -34,11 +202,11 @@ func (s *Service) movePackageInner(ctx context.Context, pkgID, tArtifactID, tGro
 	}
 
 	// 2. 读源/目标 view，校验 format 一致（不允许跨格式制品库）
-	srcView, err := s.artStore.Views().GetByID(ctx, srcPkg.ArtifactID)
+	srcView, err := txStore.Views().GetByID(ctx, srcPkg.ArtifactID)
 	if err != nil {
 		return pkgErrors.WithI18nKey(err, i18n.ArtifactMoveTargetInvalid)
 	}
-	tView, err := s.artStore.Views().GetByID(ctx, tArtifactID)
+	tView, err := txStore.Views().GetByID(ctx, tArtifactID)
 	if err != nil {
 		return pkgErrors.WithI18nKey(err, i18n.ArtifactMoveTargetInvalid)
 	}
@@ -66,7 +234,7 @@ func (s *Service) movePackageInner(ctx context.Context, pkgID, tArtifactID, tGro
 				i18n.ArtifactMoveTargetGroupRequired,
 			)
 		}
-		endpoint, err := s.artStore.Groups().GetEndpointById(ctx, tGroupID)
+		endpoint, err := txStore.Groups().GetEndpointById(ctx, tGroupID)
 		if err != nil {
 			return pkgErrors.WithI18nKey(err, i18n.ArtifactMoveTargetInvalid)
 		}
@@ -84,9 +252,9 @@ func (s *Service) movePackageInner(ctx context.Context, pkgID, tArtifactID, tGro
 	// 5. 同级冲突检查
 	var existing *model.ArtifactPackage
 	if srcPkg.Format == model.ArtifactContainerFormat {
-		existing, err = s.artStore.Packages().GetByNameInArtifactScope(ctx, srcPkg.Name, namespace, tArtifactID, srcPkg.Format)
+		existing, err = txStore.Packages().GetByNameInArtifactScope(ctx, srcPkg.Name, namespace, tArtifactID, srcPkg.Format)
 	} else {
-		existing, err = s.artStore.Packages().GetByName(ctx, srcPkg.Name, namespace, tArtifactID, srcPkg.Format)
+		existing, err = txStore.Packages().GetByName(ctx, srcPkg.Name, namespace, tArtifactID, srcPkg.Format)
 	}
 	if err == nil && existing.ID != srcPkg.ID {
 		return pkgErrors.WithI18nKey(
@@ -102,55 +270,49 @@ func (s *Service) movePackageInner(ctx context.Context, pkgID, tArtifactID, tGro
 	srcPkg.ArtifactID = tArtifactID
 	srcPkg.GroupID = targetGroupID
 	srcPkg.Namespace = namespace
-	if err = s.artStore.Packages().Update(ctx, srcPkg); err != nil {
+	if err = txStore.Packages().Update(ctx, srcPkg); err != nil {
 		return err
 	}
 
 	// 6.1 同步更新该 package 下所有 version 的 asset 的 artifactID
-	versions, err := s.artStore.Versions().Find(ctx, model.SearchVersionOption{PackageID: srcPkg.ID})
+	versions, err := txStore.Versions().Find(ctx, model.SearchVersionOption{PackageID: srcPkg.ID})
 	if err != nil {
 		return err
 	}
 	for _, ver := range versions {
 		ver.ArtifactLibID = tArtifactID
-		if err = s.artStore.Versions().Update(ctx, ver); err != nil {
+		if err = txStore.Versions().Update(ctx, ver); err != nil {
 			return err
 		}
-		assets, err := s.artStore.Assets().Search(ctx, model.SearchAssetOption{VersionID: ver.ID})
+		assets, err := txStore.Assets().Search(ctx, model.SearchAssetOption{VersionID: ver.ID})
 		if err != nil {
 			return err
 		}
 		for _, asset := range assets {
 			asset.ArtifactID = null.IntFrom(tArtifactID)
 			asset.GroupID = null.IntFrom(targetGroupID)
-			if err = s.artStore.Assets().Update(ctx, asset); err != nil {
+			if err = txStore.Assets().Update(ctx, asset); err != nil {
 				return err
 			}
 		}
 	}
 
 	// 7. tree node 同步：清掉源侧 package 子树，再调用 RefreshTree 重建。
-	if node, e := s.artStore.Nodes().GetByTarget(ctx, oldArtifactID, model.ArtifactTreeNodeTypePackage, srcPkg.ID); e == nil && node != nil {
-		if err = s.artStore.Nodes().RecurseDeleteById(ctx, node.ID); err != nil {
+	if node, e := txStore.Nodes().GetByTarget(ctx, oldArtifactID, model.ArtifactTreeNodeTypePackage, srcPkg.ID); e == nil && node != nil {
+		if err = txStore.Nodes().RecurseDeleteById(ctx, node.ID); err != nil {
 			return err
 		}
 	}
-	return s.RefreshTree(ctx, string(srcPkg.Format))
-}
-
-// MovePackage 移动 package 到目标 artifact（及可选目标 group），整个过程在单事务内完成。
-// container 格式会忽略传入的 tGroupID，实际落到目标 artifact 的 format 根节点。
-func (s *Service) MovePackage(ctx context.Context, pkgID, tArtifactID, tGroupID int64) error {
-	return s.db.Transaction(func(tx *gorm.DB) error {
-		return s.movePackageInner(ctx, pkgID, tArtifactID, tGroupID)
-	})
+	return s.refreshTree(ctx, string(srcPkg.Format), txStore)
 }
 
 // moveAssetInner 在调用方事务内完成一次组资产移动。
 // 仅支持组资产（asset.GroupID 有效、versionID 无效）；版本资产随 package / version 移动，不在本方法范畴。
-func (s *Service) moveAssetInner(ctx context.Context, assetID, tArtifactID, tGroupID int64) error {
+func (s *Service) moveAssetInner(ctx context.Context, tx *gorm.DB, assetID, tArtifactID, tGroupID int64) error {
+	txStore := artifactStore.NewStore(tx)
+
 	// 1. 读源 asset
-	srcAsset, err := s.artStore.Assets().GetById(ctx, assetID)
+	srcAsset, err := txStore.Assets().GetById(ctx, assetID)
 	if err != nil {
 		return pkgErrors.WithI18nKey(err, i18n.ArtifactMoveSourceDeleted)
 	}
@@ -161,7 +323,7 @@ func (s *Service) moveAssetInner(ctx context.Context, assetID, tArtifactID, tGro
 		)
 	}
 	// 仅接受组资产：GroupID 必填、不得挂在 version 下
-	if srcAsset.Format == artifact.ArtifactContainerFormat {
+	if srcAsset.Format == model.ArtifactContainerFormat {
 		return pkgErrors.WithI18nKey(
 			fmt.Errorf("asset %d is not a group asset", assetID),
 			i18n.ArtifactMoveEntityTypeInvalid,
@@ -175,11 +337,11 @@ func (s *Service) moveAssetInner(ctx context.Context, assetID, tArtifactID, tGro
 			i18n.ArtifactMoveSourceDeleted,
 		)
 	}
-	srcView, err := s.artStore.Views().GetByID(ctx, srcAsset.ArtifactID.Int64)
+	srcView, err := txStore.Views().GetByID(ctx, srcAsset.ArtifactID.Int64)
 	if err != nil {
 		return pkgErrors.WithI18nKey(err, i18n.ArtifactMoveTargetInvalid)
 	}
-	tView, err := s.artStore.Views().GetByID(ctx, tArtifactID)
+	tView, err := txStore.Views().GetByID(ctx, tArtifactID)
 	if err != nil {
 		return pkgErrors.WithI18nKey(err, i18n.ArtifactMoveTargetInvalid)
 	}
@@ -198,7 +360,7 @@ func (s *Service) moveAssetInner(ctx context.Context, assetID, tArtifactID, tGro
 			i18n.ArtifactMoveTargetInvalid,
 		)
 	}
-	tGroup, err := s.artStore.Groups().GetById(ctx, tGroupID)
+	tGroup, err := txStore.Groups().GetById(ctx, tGroupID)
 	if err != nil {
 		return pkgErrors.WithI18nKey(err, i18n.ArtifactMoveTargetInvalid)
 	}
@@ -210,7 +372,7 @@ func (s *Service) moveAssetInner(ctx context.Context, assetID, tArtifactID, tGro
 	}
 
 	// 5. 同级冲突：同一 group 下同名文件
-	if _, err = s.artStore.Assets().GetGroupAsset(ctx, srcAsset.Path, tGroupID); err == nil {
+	if _, err = txStore.Assets().GetGroupAsset(ctx, srcAsset.Path, tGroupID); err == nil {
 		return pkgErrors.WithI18nKey(
 			fmt.Errorf("asset %q already exists under target group", srcAsset.Path),
 			i18n.ArtifactMoveSiblingConflict,
@@ -222,21 +384,16 @@ func (s *Service) moveAssetInner(ctx context.Context, assetID, tArtifactID, tGro
 	// 6. 主表更新
 	srcAsset.ArtifactID = null.IntFrom(tArtifactID)
 	srcAsset.GroupID = null.IntFrom(tGroupID)
-	return s.artStore.Assets().Update(ctx, srcAsset)
-}
-
-// MoveAsset 移动组资产到目标 group，整个过程在单事务内完成。
-func (s *Service) MoveAsset(ctx context.Context, assetID, tArtifactID, tGroupID int64) error {
-	return s.db.Transaction(func(tx *gorm.DB) error {
-		return s.moveAssetInner(ctx, assetID, tArtifactID, tGroupID)
-	})
+	return txStore.Assets().Update(ctx, srcAsset)
 }
 
 // moveGroupInner 在调用方事务内完成一次 group 移动。
 // 语义：更新 group.ArtifactID / ParentID，跨 artifact 时子树内所有 group / asset / package 的 artifactID 一起改。
-func (s *Service) moveGroupInner(ctx context.Context, groupID, tArtifactID, tParentGroupID int64) error {
+func (s *Service) moveGroupInner(ctx context.Context, tx *gorm.DB, groupID, tArtifactID, tParentGroupID int64) error {
+	txStore := artifactStore.NewStore(tx)
+
 	// 1. 读源 group
-	srcGroup, err := s.artStore.Groups().GetById(ctx, groupID)
+	srcGroup, err := txStore.Groups().GetById(ctx, groupID)
 	if err != nil {
 		return pkgErrors.WithI18nKey(err, i18n.ArtifactMoveSourceDeleted)
 	}
@@ -261,11 +418,11 @@ func (s *Service) moveGroupInner(ctx context.Context, groupID, tArtifactID, tPar
 	}
 
 	// 2. 读源/目标 view，校验 format 严格一致
-	srcView, err := s.artStore.Views().GetByID(ctx, srcGroup.ArtifactID)
+	srcView, err := txStore.Views().GetByID(ctx, srcGroup.ArtifactID)
 	if err != nil {
 		return pkgErrors.WithI18nKey(err, i18n.ArtifactMoveTargetInvalid)
 	}
-	tView, err := s.artStore.Views().GetByID(ctx, tArtifactID)
+	tView, err := txStore.Views().GetByID(ctx, tArtifactID)
 	if err != nil {
 		return pkgErrors.WithI18nKey(err, i18n.ArtifactMoveTargetInvalid)
 	}
@@ -284,7 +441,7 @@ func (s *Service) moveGroupInner(ctx context.Context, groupID, tArtifactID, tPar
 				i18n.ArtifactMoveCycleDetected,
 			)
 		}
-		descendants, _ := s.artStore.Groups().ListDescendants(ctx, groupID)
+		descendants, _ := txStore.Groups().ListDescendants(ctx, groupID)
 		for _, d := range descendants {
 			if d.ID == tParentGroupID {
 				return pkgErrors.WithI18nKey(
@@ -294,7 +451,7 @@ func (s *Service) moveGroupInner(ctx context.Context, groupID, tArtifactID, tPar
 			}
 		}
 		// 验证目标父组存在且属于目标 view
-		tParent, err := s.artStore.Groups().GetById(ctx, tParentGroupID)
+		tParent, err := txStore.Groups().GetById(ctx, tParentGroupID)
 		if err != nil {
 			return pkgErrors.WithI18nKey(err, i18n.ArtifactMoveTargetInvalid)
 		}
@@ -308,14 +465,14 @@ func (s *Service) moveGroupInner(ctx context.Context, groupID, tArtifactID, tPar
 
 	// 4. 同级冲突
 	if tParentGroupID > 0 {
-		if _, err = s.artStore.Groups().GetSubNode(ctx, tParentGroupID, srcGroup.Name); err == nil {
+		if _, err = txStore.Groups().GetSubNode(ctx, tParentGroupID, srcGroup.Name); err == nil {
 			return pkgErrors.WithI18nKey(
 				fmt.Errorf("group %q already exists under target parent", srcGroup.Name),
 				i18n.ArtifactMoveSiblingConflict,
 			)
 		}
 	} else {
-		if _, err = s.artStore.Groups().GetRoot(ctx, tArtifactID, srcGroup.Name, srcGroup.Format); err == nil {
+		if _, err = txStore.Groups().GetRoot(ctx, tArtifactID, srcGroup.Name, srcGroup.Format); err == nil {
 			return pkgErrors.WithI18nKey(
 				fmt.Errorf("root group %q already exists in target artifact", srcGroup.Name),
 				i18n.ArtifactMoveSiblingConflict,
@@ -323,53 +480,50 @@ func (s *Service) moveGroupInner(ctx context.Context, groupID, tArtifactID, tPar
 		}
 	}
 
-	// 5. 主表更新：源 group
+	// 5. 主表更新：txStore 已绑定事务连接，后续 store 调用都会落在同一事务内。
 	oldArtifactID := srcGroup.ArtifactID
-	s.db.WithContext(ctx).Model(&artifactGroupRow{}).Where("id = ?", groupID).
-		Updates(map[string]interface{}{
-			"artifactID": tArtifactID,
-			"parentID":   tParentGroupID,
-		})
+	if mErr := txStore.Groups().MoveLocation(ctx, groupID, tArtifactID, tParentGroupID); mErr != nil {
+		if pkgErrors.Is(mErr, pkgErrors.ErrResourceNotFound) {
+			return pkgErrors.WithI18nKey(mErr, i18n.ArtifactMoveSourceDeleted)
+		}
+		return pkgErrors.WithI18nKey(mErr, i18n.ArtifactMoveTargetInvalid)
+	}
 
-	// 6. 跨 artifact 时，子树内所有 group / asset / package 的 artifactID 一起改
+	// 6. 跨 artifact 时，子树内所有 group / asset / package 的 artifactLibID 一起改。
+	//    Groups / Assets / Packages 三个 store 都暴露 MoveArtifactLibByIDs / ByGroupIDs，
+	//    service 不再直接拼 SQL。
 	if oldArtifactID != tArtifactID {
-		descendants, _ := s.artStore.Groups().ListDescendants(ctx, groupID)
+		descendants, _ := txStore.Groups().ListDescendants(ctx, groupID)
 		subtreeIDs := []int64{groupID}
 		for _, d := range descendants {
 			subtreeIDs = append(subtreeIDs, d.ID)
-			s.db.WithContext(ctx).Model(&artifactGroupRow{}).Where("id = ?", d.ID).
-				UpdateColumn("artifactID", tArtifactID)
 		}
-		// 子树下的 assets
-		s.db.WithContext(ctx).Table("ops_artifact_assets").
-			Where("groupID IN ?", subtreeIDs).
-			UpdateColumn("artifactID", tArtifactID)
-		// 子树下的 packages
-		s.db.WithContext(ctx).Table("ops_artifact_packages").
-			Where("groupID IN ?", subtreeIDs).
-			UpdateColumn("artifactID", tArtifactID)
+		if mErr := txStore.Groups().MoveArtifactLibByIDs(ctx, subtreeIDs, tArtifactID); mErr != nil {
+			return pkgErrors.WithI18nKey(mErr, i18n.ArtifactMoveTargetInvalid)
+		}
+		if mErr := txStore.Assets().MoveArtifactLibByGroupIDs(ctx, subtreeIDs, tArtifactID); mErr != nil {
+			return pkgErrors.WithI18nKey(mErr, i18n.ArtifactMoveTargetInvalid)
+		}
+		if mErr := txStore.Packages().MoveArtifactLibByGroupIDs(ctx, subtreeIDs, tArtifactID); mErr != nil {
+			return pkgErrors.WithI18nKey(mErr, i18n.ArtifactMoveTargetInvalid)
+		}
 	}
 
 	// 7. tree 同步：删源侧 tree node，重建
-	if node, e := s.artStore.Nodes().GetByTarget(ctx, oldArtifactID, model.ArtifactTreeNodeTypeGroup, groupID); e == nil && node != nil {
-		if err = s.artStore.Nodes().RecurseDeleteById(ctx, node.ID); err != nil {
+	if node, e := txStore.Nodes().GetByTarget(ctx, oldArtifactID, model.ArtifactTreeNodeTypeGroup, groupID); e == nil && node != nil {
+		if err = txStore.Nodes().RecurseDeleteById(ctx, node.ID); err != nil {
 			return err
 		}
 	}
-	return s.RefreshTree(ctx, string(srcGroup.Format))
-}
-
-// MoveGroup 移动 group 到目标 artifact（及可选目标父 group），整个过程在单事务内完成。
-func (s *Service) MoveGroup(ctx context.Context, groupID, tArtifactID, tParentGroupID int64) error {
-	return s.db.Transaction(func(tx *gorm.DB) error {
-		return s.moveGroupInner(ctx, groupID, tArtifactID, tParentGroupID)
-	})
+	return s.refreshTree(ctx, string(srcGroup.Format), txStore)
 }
 
 // renameAssetInner 在调用方事务内完成一次组资产重命名。
-func (s *Service) renameAssetInner(ctx context.Context, assetID int64, newName string) error {
+func (s *Service) renameAssetInner(ctx context.Context, tx *gorm.DB, assetID int64, newName string) error {
+	txStore := artifactStore.NewStore(tx)
+
 	// 1. 读源 asset
-	srcAsset, err := s.artStore.Assets().GetById(ctx, assetID)
+	srcAsset, err := txStore.Assets().GetById(ctx, assetID)
 	if err != nil {
 		return pkgErrors.WithI18nKey(err, i18n.ArtifactRenameSourceDeleted)
 	}
@@ -379,7 +533,7 @@ func (s *Service) renameAssetInner(ctx context.Context, assetID int64, newName s
 			i18n.ArtifactRenameSourceDeleted,
 		)
 	}
-	if srcAsset.Format == artifact.ArtifactContainerFormat {
+	if srcAsset.Format == model.ArtifactContainerFormat {
 		return pkgErrors.WithI18nKey(
 			fmt.Errorf("container asset %d cannot be renamed", assetID),
 			i18n.ArtifactRenameEntityTypeInvalid,
@@ -394,7 +548,7 @@ func (s *Service) renameAssetInner(ctx context.Context, assetID int64, newName s
 	}
 
 	// 2. 同级冲突：同 group 下同名文件
-	if _, err = s.artStore.Assets().GetGroupAsset(ctx, newName, srcAsset.GroupID.Int64); err == nil {
+	if _, err = txStore.Assets().GetGroupAsset(ctx, newName, srcAsset.GroupID.Int64); err == nil {
 		return pkgErrors.WithI18nKey(
 			fmt.Errorf("asset %q already exists in group", newName),
 			i18n.ArtifactRenameSiblingConflict,
@@ -405,20 +559,14 @@ func (s *Service) renameAssetInner(ctx context.Context, assetID int64, newName s
 
 	// 3. 更新 path
 	srcAsset.Path = newName
-	return s.artStore.Assets().Update(ctx, srcAsset)
-}
-
-// RenameAsset 重命名组资产，整个过程在单事务内完成。
-func (s *Service) RenameAsset(ctx context.Context, assetID int64, newName string) error {
-	return s.db.Transaction(func(tx *gorm.DB) error {
-		return s.renameAssetInner(ctx, assetID, newName)
-	})
+	return txStore.Assets().Update(ctx, srcAsset)
 }
 
 // renameGroupInner 在调用方事务内完成一次 group 重命名。
-func (s *Service) renameGroupInner(ctx context.Context, groupID int64, newName string) error {
+func (s *Service) renameGroupInner(ctx context.Context, tx *gorm.DB, groupID int64, newName string) error {
 	// 1. 读源 group
-	srcGroup, err := s.artStore.Groups().GetById(ctx, groupID)
+	txStore := artifactStore.NewStore(tx)
+	srcGroup, err := txStore.Groups().GetById(ctx, groupID)
 	if err != nil {
 		return pkgErrors.WithI18nKey(err, i18n.ArtifactRenameSourceDeleted)
 	}
@@ -438,14 +586,14 @@ func (s *Service) renameGroupInner(ctx context.Context, groupID int64, newName s
 
 	// 2. 同级冲突
 	if srcGroup.ParentID.Valid && srcGroup.ParentID.Int64 > 0 {
-		if _, err = s.artStore.Groups().GetSubNode(ctx, srcGroup.ParentID.Int64, newName); err == nil {
+		if _, err = txStore.Groups().GetSubNode(ctx, srcGroup.ParentID.Int64, newName); err == nil {
 			return pkgErrors.WithI18nKey(
 				fmt.Errorf("group %q already exists under parent", newName),
 				i18n.ArtifactRenameSiblingConflict,
 			)
 		}
 	} else {
-		if _, err = s.artStore.Groups().GetRoot(ctx, srcGroup.ArtifactID, newName, srcGroup.Format); err == nil {
+		if _, err = txStore.Groups().GetRoot(ctx, srcGroup.ArtifactID, newName, srcGroup.Format); err == nil {
 			return pkgErrors.WithI18nKey(
 				fmt.Errorf("root group %q already exists", newName),
 				i18n.ArtifactRenameSiblingConflict,
@@ -454,165 +602,25 @@ func (s *Service) renameGroupInner(ctx context.Context, groupID int64, newName s
 	}
 
 	// 3. 主表更新
-	if err := s.artStore.Groups().UpdateName(ctx, groupID, newName); err != nil {
+	if err := txStore.Groups().UpdateName(ctx, groupID, newName); err != nil {
 		return err
 	}
 
 	// 4. tree 同步：删源侧 tree node，重建
-	if node, e := s.artStore.Nodes().GetByTarget(ctx, srcGroup.ArtifactID, model.ArtifactTreeNodeTypeGroup, groupID); e == nil && node != nil {
-		if err = s.artStore.Nodes().RecurseDeleteById(ctx, node.ID); err != nil {
+	if node, e := txStore.Nodes().GetByTarget(ctx, srcGroup.ArtifactID, model.ArtifactTreeNodeTypeGroup, groupID); e == nil && node != nil {
+		if err = txStore.Nodes().RecurseDeleteById(ctx, node.ID); err != nil {
 			return err
 		}
 	}
-	return s.RefreshTree(ctx, string(srcGroup.Format))
-}
-
-// RenameGroup 重命名 group，整个过程在单事务内完成。
-func (s *Service) RenameGroup(ctx context.Context, groupID int64, newName string) error {
-	return s.db.Transaction(func(tx *gorm.DB) error {
-		return s.renameGroupInner(ctx, groupID, newName)
-	})
-}
-
-// artifactGroupRow 用于 GORM 直接操作 ops_artifact_groups 表。
-type artifactGroupRow struct {
-	ID         int64    `gorm:"primaryKey;column:id"`
-	ParentID   null.Int `gorm:"column:parentID"`
-	ArtifactID int64    `gorm:"column:artifactID"`
-	Name       string   `gorm:"column:name"`
-	Format     string   `gorm:"column:format"`
-	Deleted    int8     `gorm:"column:deleted"`
-}
-
-func (artifactGroupRow) TableName() string { return "ops_artifact_groups" }
-
-// parseEntityRef 解析 "kind.id" 形式的 entityID。
-// 失败时返回带 i18n key 的错误。
-func parseEntityRef(entityID string) (model.ArtifactEntityKind, int64, error) {
-	parts := strings.SplitN(entityID, ".", 2)
-	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		return "", 0, pkgErrors.WithI18nKey(
-			fmt.Errorf("invalid entity id: %q", entityID),
-			i18n.ArtifactEntityIdInvalid,
-		)
-	}
-	id, err := strconv.ParseInt(parts[1], 10, 64)
-	if err != nil || id <= 0 {
-		return "", 0, pkgErrors.WithI18nKey(
-			fmt.Errorf("invalid entity id: %q", entityID),
-			i18n.ArtifactEntityIdInvalid,
-		)
-	}
-	return model.ArtifactEntityKind(parts[0]), id, nil
-}
-
-func (s *Service) entityFormat(ctx context.Context, kind model.ArtifactEntityKind, id int64, sourceDeletedKey, entityTypeInvalidKey i18n.I18nKey) (model.ArtifactFormat, error) {
-	switch kind {
-	case model.ArtifactEntityKindArtifact:
-		view, err := s.artStore.Views().GetByID(ctx, id)
-		if err != nil {
-			return "", pkgErrors.WithI18nKey(err, sourceDeletedKey)
-		}
-		return view.Format, nil
-	case model.ArtifactEntityKindGroup:
-		group, err := s.artStore.Groups().GetById(ctx, id)
-		if err != nil {
-			return "", pkgErrors.WithI18nKey(err, sourceDeletedKey)
-		}
-		return group.Format, nil
-	case model.ArtifactEntityKindPackage:
-		pkg, err := s.artStore.Packages().GetByID(ctx, id)
-		if err != nil {
-			return "", pkgErrors.WithI18nKey(err, sourceDeletedKey)
-		}
-		return pkg.Format, nil
-	case model.ArtifactEntityKindVersion:
-		ver, err := s.artStore.Versions().GetByID(ctx, id)
-		if err != nil {
-			return "", pkgErrors.WithI18nKey(err, sourceDeletedKey)
-		}
-		pkg, err := s.artStore.Packages().GetByID(ctx, ver.PackageID)
-		if err != nil {
-			return "", pkgErrors.WithI18nKey(err, sourceDeletedKey)
-		}
-		return pkg.Format, nil
-	case model.ArtifactEntityKindAsset:
-		asset, err := s.artStore.Assets().GetById(ctx, id)
-		if err != nil {
-			return "", pkgErrors.WithI18nKey(err, sourceDeletedKey)
-		}
-		return asset.Format, nil
-	default:
-		return "", pkgErrors.WithI18nKey(
-			fmt.Errorf("unsupported entity type: %s", kind),
-			entityTypeInvalidKey,
-		)
-	}
-}
-
-func (s *Service) rejectContainerMoveRename(ctx context.Context, kind model.ArtifactEntityKind, id int64, key, sourceDeletedKey, entityTypeInvalidKey i18n.I18nKey) error {
-	format, err := s.entityFormat(ctx, kind, id, sourceDeletedKey, entityTypeInvalidKey)
-	if err != nil {
-		return err
-	}
-	if format != model.ArtifactContainerFormat {
-		return nil
-	}
-	return pkgErrors.WithI18nKey(
-		fmt.Errorf("container artifacts do not support move or rename"),
-		key,
-	)
-}
-
-// moveByKind 按实体类型派发到对应的 Move 方法（不带事务，由调用方包裹）。
-func (s *Service) moveByKind(ctx context.Context, kind model.ArtifactEntityKind, sourceID, tArtifactID, tGroupID int64) error {
-	switch kind {
-	case model.ArtifactEntityKindPackage:
-		return s.movePackageInner(ctx, sourceID, tArtifactID, tGroupID)
-	case model.ArtifactEntityKindAsset:
-		return s.moveAssetInner(ctx, sourceID, tArtifactID, tGroupID)
-	case model.ArtifactEntityKindGroup:
-		return s.moveGroupInner(ctx, sourceID, tArtifactID, tGroupID)
-	default:
-		return pkgErrors.WithI18nKey(
-			fmt.Errorf("unsupported entity type for move: %s", kind),
-			i18n.ArtifactMoveEntityTypeInvalid,
-		)
-	}
-}
-
-// renameByKind 按实体类型派发到对应的 Rename 方法（不带事务，由调用方包裹）。
-// package / version 不允许重命名；container 格式的制品库也暂不允许重命名。
-func (s *Service) renameByKind(ctx context.Context, kind model.ArtifactEntityKind, sourceID int64, newName string) error {
-	switch kind {
-	case model.ArtifactEntityKindAsset:
-		return s.renameAssetInner(ctx, sourceID, newName)
-	case model.ArtifactEntityKindGroup:
-		return s.renameGroupInner(ctx, sourceID, newName)
-	case model.ArtifactEntityKindArtifact:
-		return s.renameArtifactInner(ctx, sourceID, newName)
-	case model.ArtifactEntityKindPackage:
-		return pkgErrors.WithI18nKey(
-			fmt.Errorf("rename is not supported for packages"),
-			i18n.ArtifactRenameVersionedNotSupported,
-		)
-	case model.ArtifactEntityKindVersion:
-		return pkgErrors.WithI18nKey(
-			fmt.Errorf("rename is not supported for versions"),
-			i18n.ArtifactRenameVersionedNotSupported,
-		)
-	default:
-		return pkgErrors.WithI18nKey(
-			fmt.Errorf("unsupported entity type for rename: %s", kind),
-			i18n.ArtifactRenameEntityTypeInvalid,
-		)
-	}
+	return s.refreshTree(ctx, string(srcGroup.Format), txStore)
 }
 
 // renameArtifactInner 重命名制品库（view）。
-func (s *Service) renameArtifactInner(ctx context.Context, artifactID int64, newName string) error {
+func (s *Service) renameArtifactInner(ctx context.Context, tx *gorm.DB, artifactID int64, newName string) error {
+	txStore := artifactStore.NewStore(tx)
+
 	// 1. 读 view
-	view, err := s.artStore.Views().GetByID(ctx, artifactID)
+	view, err := txStore.Views().GetByID(ctx, artifactID)
 	if err != nil {
 		return pkgErrors.WithI18nKey(err, i18n.ArtifactRenameSourceDeleted)
 	}
@@ -624,14 +632,14 @@ func (s *Service) renameArtifactInner(ctx context.Context, artifactID int64, new
 	}
 
 	// 1.1 名称合法性校验（复用 CreateView 的规则）
-	trimmed, err := artifact.ValidateViewName(newName, view.Format)
+	trimmed, err := model.ValidateViewName(newName, view.Format)
 	if err != nil {
 		return err
 	}
 	newName = trimmed
 
 	// 2. 同名检查：同作用域下不能有同名活 view
-	existing, err := s.artStore.Views().FindByNameInScope(ctx, view.SpaceID, view.RepoID, newName)
+	existing, err := txStore.Views().FindByNameInScope(ctx, view.SpaceID, view.RepoID, newName)
 	if err != nil {
 		return err
 	}
@@ -639,131 +647,15 @@ func (s *Service) renameArtifactInner(ctx context.Context, artifactID int64, new
 		if v.Deleted == 0 && v.ID != artifactID {
 			return pkgErrors.WithI18nKey(
 				fmt.Errorf("artifact view %q already exists", newName),
-				i18n.ArtifactRenameSiblingConflict,
+				i18n.ArtifactViewNameDuplicate,
 			)
 		}
 	}
 
 	// 3. 更新 view name
-	if err = s.artStore.Views().UpdateName(ctx, artifactID, newName); err != nil {
+	if err = txStore.Views().UpdateName(ctx, artifactID, newName); err != nil {
 		return err
 	}
 
 	return nil
-}
-
-// RelocateEntity 同时支持移动 + 重命名，单事务内先移动后改名。
-//
-// 语义：
-//   - TargetGroupID 未传 → 不移动，即使 TargetArtifactID 有值也只执行重命名；
-//   - TargetGroupID 已传，且 TargetArtifactID == 0 或与当前一致 → 同库移动；
-//   - TargetGroupID 显式传 0 → 移动到目标制品库根目录（仅 generic group 支持）；
-//   - NewName == "" 或与当前一致 → 不改名；
-//   - 两者都不变 → 返回 ArtifactRelocateNoChange。
-func (s *Service) RelocateEntity(ctx context.Context, req *model.RelocateEntityReq) error {
-	kind, id, err := parseEntityRef(req.EntityID)
-	if err != nil {
-		return err
-	}
-
-	// 取当前实体的 artifactID / groupID / name，用于与传入参数比对，判断是否真有变化。
-	var (
-		curArtifactID int64
-		curGroupID    int64
-		curName       string
-	)
-	switch kind {
-	case model.ArtifactEntityKindGroup:
-		g, e := s.artStore.Groups().GetById(ctx, id)
-		if e != nil {
-			return pkgErrors.WithI18nKey(e, i18n.ArtifactMoveSourceDeleted)
-		}
-		curArtifactID = g.ArtifactID
-		if g.ParentID.Valid {
-			curGroupID = g.ParentID.Int64
-		}
-		curName = g.Name
-	case model.ArtifactEntityKindAsset:
-		a, e := s.artStore.Assets().GetById(ctx, id)
-		if e != nil {
-			return pkgErrors.WithI18nKey(e, i18n.ArtifactMoveSourceDeleted)
-		}
-		if a.ArtifactID.Valid {
-			curArtifactID = a.ArtifactID.Int64
-		}
-		if a.GroupID.Valid {
-			curGroupID = a.GroupID.Int64
-		}
-		curName = a.Path
-	case model.ArtifactEntityKindPackage:
-		p, e := s.artStore.Packages().GetByID(ctx, id)
-		if e != nil {
-			return pkgErrors.WithI18nKey(e, i18n.ArtifactMoveSourceDeleted)
-		}
-		curArtifactID = p.ArtifactID
-		curGroupID = p.GroupID
-		curName = p.Name
-	case model.ArtifactEntityKindArtifact:
-		v, e := s.artStore.Views().GetByID(ctx, id)
-		if e != nil {
-			return pkgErrors.WithI18nKey(e, i18n.ArtifactMoveSourceDeleted)
-		}
-		curArtifactID = v.ID
-		curName = v.Name
-	default:
-		return pkgErrors.WithI18nKey(
-			fmt.Errorf("unsupported entity type: %s", kind),
-			i18n.ArtifactMoveEntityTypeInvalid,
-		)
-	}
-
-	// 判断是否需要移动：targetGroupID 是移动意图的开关。
-	// 未传 targetGroupID 时，即使 targetArtifactID 有值也不移动，保证纯重命名请求不会被拦截。
-	tArtifactID := req.TargetArtifactID
-	if tArtifactID == 0 {
-		tArtifactID = curArtifactID
-	}
-	var targetGroupID int64
-	targetGroupIDSpecified := req.TargetGroupID != nil
-	if targetGroupIDSpecified {
-		targetGroupID = *req.TargetGroupID
-	}
-	needMove := targetGroupIDSpecified && (tArtifactID != curArtifactID || targetGroupID != curGroupID)
-
-	// 判断是否需要重命名（NewName 为空或与当前一致 → 不改名）
-	needRename := req.NewName != "" && req.NewName != curName
-
-	if !needMove && !needRename {
-		// 既不移动也不改名，直接成功返回，不视为错误
-		return nil
-	}
-	if needMove {
-		if err = s.rejectContainerMoveRename(ctx, kind, id, i18n.ArtifactMoveContainerNotSupported, i18n.ArtifactMoveSourceDeleted, i18n.ArtifactMoveEntityTypeInvalid); err != nil {
-			return err
-		}
-	}
-	if needRename {
-		if err = s.rejectContainerMoveRename(ctx, kind, id, i18n.ArtifactRenameContainerNotSupported, i18n.ArtifactRenameSourceDeleted, i18n.ArtifactRenameEntityTypeInvalid); err != nil {
-			return err
-		}
-	}
-
-	return s.db.Transaction(func(tx *gorm.DB) error {
-		if needMove {
-			// 移动时若未显式指定 targetGroupID，沿用当前父级（保持层级不变）。
-			// 显式指定 0 则表示移动到目标制品库根目录，由下层按实体类型和格式校验是否支持。
-			if !targetGroupIDSpecified {
-				targetGroupID = curGroupID
-			}
-			if err := s.moveByKind(ctx, kind, id, tArtifactID, targetGroupID); err != nil {
-				return err
-			}
-		}
-		if needRename {
-			if err := s.renameByKind(ctx, kind, id, req.NewName); err != nil {
-				return err
-			}
-		}
-		return nil
-	})
 }

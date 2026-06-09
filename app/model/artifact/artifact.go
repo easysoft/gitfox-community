@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	enum "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
 
@@ -16,7 +17,7 @@ import (
 )
 
 // ==================== 格式与资产类型 ====================
-// ==================== Format & Kind ====================
+// ==================== Format & Rank ====================
 
 type ArtifactFormat string
 
@@ -40,11 +41,11 @@ const (
 
 var AllArtifactFormatList = []ArtifactFormat{ArtifactFileFormat, ArtifactRawFormat, ArtifactMavenFormat, ArtifactContainerFormat, ArtifactHelmFormat}
 
-type AssetKind string
+type AssetRank string
 
 const (
-	AssetKindMain AssetKind = "main"
-	AssetKindSub  AssetKind = "subordinate"
+	AssetRankMain AssetRank = "main"
+	AssetRankSub  AssetRank = "subordinate"
 
 //Format 是否有 sub asset 说明
 // generic 没有 单个文件，全部 main
@@ -54,7 +55,7 @@ const (
 // maven 有 每个 jar 带 .asc/.md5/.sha1/.sha256/.sha512
 // pypi/npm 视实现 一般 main 为主
 
-// Path Kind
+// Path Rank
 // maven-metadata.xml main
 // maven-metadata.xml.md5 sub
 // maven-metadata.xml.sha1 sub
@@ -62,9 +63,9 @@ const (
 // maven-metadata.xml.sha512 sub
 )
 
-func ValidateAssetKind(kind AssetKind) error {
-	if kind != AssetKindMain && kind != AssetKindSub {
-		return fmt.Errorf("unidentified kind '%s'", kind)
+func ValidateAssetRank(rank AssetRank) error {
+	if rank != AssetRankMain && rank != AssetRankSub {
+		return fmt.Errorf("unidentified rank '%s'", rank)
 	}
 	return nil
 }
@@ -81,22 +82,6 @@ const (
 
 // ==================== 权限实体类型枚举 ====================
 // ==================== Enum: Entity Kind ====================
-
-type ArtifactEntityKind string
-
-func (s ArtifactEntityKind) String() string {
-	return string(s)
-}
-
-const (
-	ArtifactEntityKindFormat   ArtifactEntityKind = "format"
-	ArtifactEntityKindGroup    ArtifactEntityKind = "group"
-	ArtifactEntityKindPackage  ArtifactEntityKind = "package"
-	ArtifactEntityKindVersion  ArtifactEntityKind = "version"
-	ArtifactEntityKindAsset    ArtifactEntityKind = "asset"
-	ArtifactEntityKindArtifact ArtifactEntityKind = "artifact"
-	ArtifactEntityEmpty        ArtifactEntityKind = "_empty"
-)
 
 // CasbinSubject 保存 Casbin 策略中的主体信息。
 type CasbinSubject struct {
@@ -266,7 +251,7 @@ type ArtifactAsset struct {
 
 	Path        string    `json:"path"`
 	ContentType string    `json:"contentType"`
-	Kind        AssetKind `json:"kind"`
+	Rank        AssetRank `json:"rank"`
 	// Metadata 保存 asset 级元数据，例如 helm chart 信息，用于后续重建索引。
 	// Metadata store asset-level metadata. example: helm chart metadata, for rebuild index
 	Metadata    string          `json:"metadata"`
@@ -286,7 +271,7 @@ type CreateArtifactAsset struct {
 	Format      ArtifactFormat `json:"format"`
 	Path        string         `json:"path"`
 	ContentType string         `json:"contentType"`
-	Kind        AssetKind      `json:"kind"`
+	Rank        AssetRank      `json:"rank"`
 	BlobID      int64          `json:"blobID"`
 	CheckSum    string         `json:"checkSum"`
 	CreatedBy   string         `json:"createdBy"`
@@ -307,7 +292,7 @@ type ArtifactMetaAsset struct {
 	Format      ArtifactFormat `json:"format"`
 	Path        string         `json:"path"`
 	ContentType string         `json:"contentType"`
-	Kind        AssetKind      `json:"kind"`
+	Rank        AssetRank      `json:"rank"`
 	BlobID      int64          `json:"blobID"`
 	CheckSum    string         `json:"checkSum"`
 	CreatedBy   string         `json:"createdBy"`
@@ -322,7 +307,7 @@ type CreateArtifactMetaAsset struct {
 	Format      ArtifactFormat `json:"format"`
 	Path        string         `json:"path"`
 	ContentType string         `json:"contentType"`
-	Kind        AssetKind      `json:"kind"`
+	Rank        AssetRank      `json:"rank"`
 	BlobID      int64          `json:"blobID"`
 	CheckSum    string         `json:"checkSum"`
 }
@@ -346,12 +331,13 @@ type ArtifactBlob struct {
 }
 
 type CreateArtifactBlob struct {
-	StorageID int64  `json:"storageID"`
-	Ref       string `json:"ref"`
-	Size      int64  `json:"size"`
-	CreatedBy string `json:"createdBy"`
-	CheckSum  string `json:"checkSum"`
-	Metadata  string `json:"metadata"`
+	StorageID   int64      `json:"storageID"`
+	Ref         string     `json:"ref"`
+	Size        int64      `json:"size"`
+	CreatedDate *time.Time `json:"createdDate"`
+	CreatedBy   string     `json:"createdBy"`
+	CheckSum    string     `json:"checkSum"`
+	Metadata    string     `json:"metadata"`
 }
 
 type ArtifactTreeNode struct {
@@ -416,14 +402,14 @@ func (n *ArtifactTreeNode) Parent() *ArtifactTreeNode {
 // ==================== Entity (for permission path) ====================
 
 type ArtifactEntity struct {
-	Kind   ArtifactEntityKind
+	Kind   constant.ArtifactEntityKind
 	Name   string
 	Id     int64
 	Parent *ArtifactEntity
 }
 
 func (e *ArtifactEntity) loc() string {
-	if e.Kind != ArtifactEntityKindFormat {
+	if e.Kind != constant.ArtifactEntityKindFormat {
 		return fmt.Sprintf("%s:%d", e.Kind, e.Id)
 	} else {
 		return e.Name
@@ -482,26 +468,6 @@ func (e *ArtifactEntity) PolicyLocation() string {
 		buff.WriteString(frames[count-1-i])
 	}
 	return buff.String()
-}
-
-// ==================== Entity 工具方法 ====================
-// ==================== Entity Helpers ====================
-
-// ParseEntityKind 将 entityId 字符串（格式 "kind.id"，如 "package.123"）解析为 ArtifactEntity。
-// 用于中间件从 URL 路径参数快速构建 entity，无需查库。
-// 解析失败时返回仓库级 mock entity。
-func ParseEntityKind(entityId string) *ArtifactEntity {
-	parts := strings.SplitN(entityId, ".", 2)
-	if len(parts) != 2 {
-		return &ArtifactEntity{Kind: ArtifactEntityKindFormat, Name: "repository"}
-	}
-	kind := ArtifactEntityKind(parts[0])
-	switch kind {
-	case ArtifactEntityKindGroup, ArtifactEntityKindPackage, ArtifactEntityKindVersion, ArtifactEntityKindAsset:
-		return &ArtifactEntity{Kind: kind, Name: entityId}
-	default:
-		return &ArtifactEntity{Kind: ArtifactEntityKindFormat, Name: "repository"}
-	}
 }
 
 // ==================== 组节点端点 ====================
@@ -567,7 +533,7 @@ func (opt SearchVersionOption) Apply(db *gorm.DB) *gorm.DB {
 
 type SearchAssetOption struct {
 	VersionID int64
-	Kind      AssetKind
+	Rank      AssetRank
 	Path      string
 }
 
@@ -576,8 +542,8 @@ func (opt SearchAssetOption) Apply(db *gorm.DB) *gorm.DB {
 		VersionID: null.IntFromPtr(&opt.VersionID),
 	}
 
-	if opt.Kind != ("") {
-		q.Kind = opt.Kind
+	if opt.Rank != ("") {
+		q.Rank = opt.Rank
 	}
 
 	return db.Where(&q)
@@ -597,30 +563,30 @@ type TreeNode struct {
 // ==================== 回收与统计模型 ====================
 // ==================== Recycle / Statistic ====================
 
-type ArtifactRecycleBlobDesc struct {
-	AssetID    int64
-	VersionID  int64
-	GroupID    int64
-	ArtifactID int64
-	Path       string
-	BlobID     int64
-	BlobRef    string
-	DeleteBlob bool
-	Size       int64
-}
-
-type ArtifactVersionCapacityDesc struct {
-	AssetID       int64
-	VersionID     int64
-	ExclusiveSize int64
-	TotalSize     int64
-	ExclusiveRefs int
-	TotalRefs     int
-}
-
 type ArtifactStatisticReport struct {
 	DeleteList []*ArtifactRecycleBlobDesc
 	TagList    []*ArtifactVersionCapacityDesc
+}
+
+type ArtifactRecycleBlobDesc struct {
+	AssetID    int64  // 要硬删的 asset ID
+	VersionID  int64  // asset 所属 version
+	GroupID    int64  // asset 所属 group
+	ArtifactID int64  // asset 所属制品库
+	Path       string // asset 路径
+	BlobID     int64  // asset 关联的 blob ID
+	BlobRef    string // 物理文件 ref，DeleteBlob=true 时用于删文件
+	DeleteBlob bool   // 是否连 blob 记录和物理文件一起删
+	Size       int64  // blob size
+}
+
+type ArtifactVersionCapacityDesc struct {
+	AssetID       int64 // 当前代码没有赋值使用
+	VersionID     int64 // 聚合维度：version ID
+	ExclusiveSize int64 // 独占容量
+	TotalSize     int64 // 总容量
+	ExclusiveRefs int   // 独占 asset 数
+	TotalRefs     int   // 总 asset 数
 }
 
 // ==================== 错误定义 ====================
@@ -674,10 +640,17 @@ type PermRule struct {
 //   - NewName == "" 或与当前一致 → 不改名。
 //   - 移动 + 改名同时存在时，先移动后改名，整个过程在单事务内完成。
 type RelocateEntityReq struct {
-	EntityID         string `json:"entityID"`         // 实体引用，形如 "group.11" / "asset.5"
-	TargetArtifactID int64  `json:"targetArtifactID"` // 目标制品库 ID（可选）
-	TargetGroupID    *int64 `json:"targetGroupID"`    // 目标 group ID（可选；generic group 显式传 0 表示根目录）
-	NewName          string `json:"newName"`          // 新名称（可选）
+	EntityID         EntityID `json:"entityID"`         // 实体引用，形如 "group.11" / "asset.5"
+	TargetArtifactID int64    `json:"targetArtifactID"` // 目标制品库 ID（可选）
+	TargetGroupID    *int64   `json:"targetGroupID"`    // 目标 group ID（可选；generic group 显式传 0 表示根目录）
+	NewName          string   `json:"newName"`          // 新名称（可选）
+}
+
+func (req *RelocateEntityReq) Validate() error {
+	if err := req.EntityID.Validate(); err != nil {
+		return err
+	}
+	return nil
 }
 
 // IsVersionedFormat 判断给定格式是否为版本化格式。

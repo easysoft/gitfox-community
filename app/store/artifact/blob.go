@@ -2,15 +2,12 @@ package artifact
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
-	"time"
 
 	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
 	pkgErrors "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 
-	"github.com/rs/zerolog/log"
 	"gorm.io/gorm"
 )
 
@@ -50,18 +47,6 @@ func (c *blobs) GetByRef(ctx context.Context, ref string, storageID int64) (*mod
 	var row artifactBlob
 	q := artifactBlob{Ref: ref, StorageID: storageID}
 	if err := c.db.WithContext(ctx).Where(&q).First(&row).Error; err != nil {
-		return nil, database.ProcessSQLErrorf(ctx, err)
-	}
-	return blobToModel(&row), nil
-}
-
-func (c *blobs) GetByHistory(ctx context.Context, assetID, createdAt int64) (*model.ArtifactBlob, error) {
-	var row artifactBlob
-	tm := time.UnixMilli(createdAt)
-	// 用原始 time.Time 查询，GORM 会调用 datetime.Local.Value() 做存储转换
-	if err := c.db.WithContext(ctx).
-		Where("assetID = ? AND createdDate = ?", assetID, tm).
-		First(&row).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
 	return blobToModel(&row), nil
@@ -118,38 +103,4 @@ func (c *blobs) DeleteById(ctx context.Context, blobID int64) error {
 		return model.ErrBlobNoItemDeleted
 	}
 	return nil
-}
-
-func (c *blobs) History(ctx context.Context, assetID int64) ([]*model.ArtifactBlobRes, error) {
-	var dst []*model.ArtifactBlobRes
-	stmt := c.db.WithContext(ctx).Model(&artifactBlob{}).
-		Select(`ops_artifact_blobs.id,ops_artifact_assets.basename,ops_artifact_blobs.size,ops_artifact_blobs.ref,
-			ops_artifact_blobs.createdBy,
-			ops_artifact_blobs.checksum,ops_artifact_blobs.metadata,ops_artifact_blobs.createdDate,ops_artifact_blobs.deleted`).
-		Joins(`LEFT JOIN ops_artifact_assets on ops_artifact_blobs.assetID=ops_artifact_assets.id`).
-		Where(`ops_artifact_blobs.assetID = ?`, assetID).
-		Order("ops_artifact_blobs.createdDate DESC")
-
-	if err := stmt.Find(&dst).Error; err != nil {
-		return nil, database.ProcessSQLErrorf(ctx, err)
-	}
-
-	for _, a := range dst {
-		var checkSum model.CheckSumRes
-		if err := json.Unmarshal([]byte(a.CheckSumString), &checkSum); err != nil {
-			log.Ctx(ctx).Error().Err(err).Msg("parse artifact blob checksum failed")
-		}
-		a.CheckSum = &checkSum
-
-		if a.MetadataString != "" {
-			var metadata map[string]string
-			if err := json.Unmarshal([]byte(a.MetadataString), &metadata); err != nil {
-				log.Ctx(ctx).Error().Err(err).Msg("parse artifact blob metadata failed")
-			}
-			a.Metadata = metadata
-		}
-
-		a.Creator = a.CreatorName
-	}
-	return dst, nil
 }

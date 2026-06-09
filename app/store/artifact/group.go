@@ -82,7 +82,7 @@ func (c *groups) GetById(ctx context.Context, id int64) (*model.ArtifactGroup, e
 func (c *groups) GetRoot(ctx context.Context, artifactID int64, name string, format model.ArtifactFormat) (*model.ArtifactGroup, error) {
 	var row artifactGroup
 	q := artifactGroup{ArtifactID: artifactID, Name: name, Format: string(format)}
-	if err := c.db.WithContext(ctx).Where(&q).Where("parentID = 0").First(&row).Error; err != nil {
+	if err := c.db.WithContext(ctx).Where(&q).Where("parentID = 0 and deleted = 0").First(&row).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
 	return groupToModel(&row), nil
@@ -91,7 +91,7 @@ func (c *groups) GetRoot(ctx context.Context, artifactID int64, name string, for
 func (c *groups) GetSubNode(ctx context.Context, parentID int64, name string) (*model.ArtifactGroup, error) {
 	var row artifactGroup
 	q := artifactGroup{ParentID: null.IntFrom(parentID), Name: name}
-	if err := c.db.WithContext(ctx).Where(&q).Take(&row).Error; err != nil {
+	if err := c.db.WithContext(ctx).Where(&q).Where("deleted = 0").Take(&row).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
 	return groupToModel(&row), nil
@@ -145,6 +145,7 @@ func (c *groups) getOrCreate(ctx context.Context, artifactID int64, name string,
 	return dest, nil
 }
 
+// RecursiveCreate 递归创建分组
 func (c *groups) RecursiveCreate(ctx context.Context, artifactID int64, names []string, format model.ArtifactFormat, operator string) (*model.ArtifactGroupEndpoint, error) {
 	obj := new(model.ArtifactGroupEndpoint)
 	rootNode, err := c.getOrCreate(ctx, artifactID, names[0], null.IntFrom(0), format, operator)
@@ -235,9 +236,9 @@ func (c *groups) ListChildren(ctx context.Context, id int64) ([]*model.ArtifactG
 func (c *groups) FindRootByName(ctx context.Context, artifactID int64, name string, format model.ArtifactFormat) (*model.ArtifactGroup, error) {
 	var row artifactGroup
 	err := c.db.WithContext(ctx).
-		Where("artifactLibID = ? AND name = ? AND type = ?", artifactID, name, format).
+		Where("artifactLibID = ? AND name = ? AND type = ? and deleted = 0", artifactID, name, format).
 		Where("parentID IS NULL OR parentID = 0").
-		Take(&row).Error
+		First(&row).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
@@ -300,19 +301,41 @@ func (c *groups) UpdateNameByArtifactAndFormat(ctx context.Context, artifactID i
 	return nil
 }
 
-// DeleteByArtifactID 硬删指定 view 下的所有 group 记录（含已软删的）。
-func (c *groups) DeleteByArtifactID(ctx context.Context, artifactID int64) (int64, error) {
-	result := c.db.WithContext(ctx).Where("artifactLibID = ?", artifactID).Delete(&artifactGroup{})
-	if result.Error != nil {
-		return 0, database.ProcessSQLErrorf(ctx, result.Error)
-	}
-	return result.RowsAffected, nil
-}
-
 // UpdateName 更新分组名称。
 func (c *groups) UpdateName(ctx context.Context, id int64, name string) error {
 	if err := c.db.WithContext(ctx).Model(&artifactGroup{}).Where("id = ?", id).
 		UpdateColumn("name", name).Error; err != nil {
+		return database.ProcessSQLErrorf(ctx, err)
+	}
+	return nil
+}
+
+// MoveLocation 调整 group 归属：写入新的 artifactLibID + parentID。
+// RowsAffected==0 时返回 ErrResourceNotFound（group 已被删或 ID 不存在）。
+func (c *groups) MoveLocation(ctx context.Context, groupID, artifactID, parentID int64) error {
+	result := c.db.WithContext(ctx).Model(&artifactGroup{}).Where("id = ?", groupID).
+		UpdateColumns(map[string]interface{}{
+			"artifactLibID": artifactID,
+			"parentID":      parentID,
+		})
+	if result.Error != nil {
+		return database.ProcessSQLErrorf(ctx, result.Error)
+	}
+	if result.RowsAffected == 0 {
+		return pkgErrors.ErrResourceNotFound
+	}
+	return nil
+}
+
+// MoveArtifactLibByIDs 把一批 group 的 artifactLibID 改到目标 view，跨 view 移动子树时使用。
+// ids 为空时直接返回 nil；不强制 RowsAffected 与 ids 数量匹配（已被软删的 group 会少更新）。
+func (c *groups) MoveArtifactLibByIDs(ctx context.Context, groupIDs []int64, targetArtifactID int64) error {
+	if len(groupIDs) == 0 {
+		return nil
+	}
+	if err := c.db.WithContext(ctx).Model(&artifactGroup{}).
+		Where("id IN ?", groupIDs).
+		UpdateColumn("artifactLibID", targetArtifactID).Error; err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
 	}
 	return nil

@@ -4,10 +4,13 @@ import (
 	"context"
 	"io"
 	"net/http"
+	"time"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/adapter"
 	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
 	authModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
+	artifactStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/artifact"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/storage"
 )
 
@@ -34,8 +37,8 @@ type Interface interface {
 
 	// ---- 制品查询 ----
 
-	// ListAssetPage 按 entityID（group / version / package）分页查询。
-	ListAssetPage(ctx context.Context, req *model.ListAssetReq) (interface{}, int64, error)
+	// ListAssetPage 按 entityID（group / version / package / asset）分页查询。
+	ListAssetPage(ctx context.Context, req *model.ListAssetReq) (*database.PageResult[*model.ArtifactAssetInfo], error)
 
 	// GetAsset 获取单个制品资源的详细信息。
 	GetAsset(ctx context.Context, assetID int64) (*model.ArtifactAssetInfo, error)
@@ -49,13 +52,6 @@ type Interface interface {
 	Upload(ctx context.Context, view *adapter.ViewDescriptor, format model.ArtifactFormat, req *http.Request) ([]*adapter.SavedAsset, error)
 
 	// ---- 分组管理 ----
-
-	// ViewExists 检查指定 artifactID 是否存在（仅 active view）。
-	ViewExists(ctx context.Context, artifactID int64) error
-
-	// GroupPathExists 检查指定视图下是否已存在完全相同的分组路径。
-	GroupPathExists(ctx context.Context, artifactID int64, names []string, format model.ArtifactFormat) (bool, error)
-
 	// ActiveGroupPathExists 检查指定视图下是否已存在未软删的同名分组路径。
 	ActiveGroupPathExists(ctx context.Context, artifactID int64, names []string, format model.ArtifactFormat) (bool, error)
 
@@ -81,34 +77,28 @@ type Interface interface {
 	// ListRecycleBin 按 kind 分页查询回收站记录（kind ∈ artifact/group/package/version/asset，默认 asset）。
 	ListRecycleBin(ctx context.Context, req *model.ArtifactRecycleListReq) ([]*model.ArtifactRecycleItem, int64, error)
 
-	// Restore 批量恢复回收站中的实体（entityIDs 为 "kind.id" 串）。单条失败继续，最终返回汇总报告。
-	Restore(ctx context.Context, req *model.ArtifactRestoreEntitiesReq) (*model.ArtifactRestoreReport, error)
+	// BatchRestore 批量恢复回收站中的实体（entityIDs 为 "kind.id" 串）。单条失败继续，最终返回汇总报告。
+	BatchRestore(ctx context.Context, req *model.ArtifactEntitiesReq) (*model.ArtifactRestoreReport, error)
 
+	// Restore 恢复回收站中的实体（entityID）
+	Restore(ctx context.Context, req model.ArtifactEntitieReq) (*model.ArtifactRestoreRes, error)
 	// ---- 归档下载 ----
 
 	// PrepareArchiveGroup 准备分组归档下载所需的数据。
-	PrepareArchiveGroup(ctx context.Context, session *authModel.Session, spaceID, repoID, groupID int64) (*ArchiveGroup, error)
+	PrepareArchiveGroup(ctx context.Context, session *authModel.Session, groupID int64) (*ArchiveGroup, error)
 
 	// ArchiveGroup 将已准备好的分组数据写入 zip 流。
 	ArchiveGroup(ctx context.Context, archive *ArchiveGroup, output io.Writer) error
 
-	// ---- 统计与 GC ----
-
-	// StatisticCapacity 统计全量制品资源的容量使用情况。
-	StatisticCapacity(ctx context.Context) (*model.ArtifactStatisticResponse, error)
-
-	// StatisticContainerCapacity 统计容器镜像格式的容量使用情况。
-	StatisticContainerCapacity(ctx context.Context) (*model.ArtifactStatisticResponse, error)
-
-	// StatisticSummary 汇总各格式的制品数量和容量摘要。
-	StatisticSummary(ctx context.Context) (map[string]*model.ArtifactStatsObject, error)
+	// ---- GC ----
+	StatisticAssets(ctx context.Context, retentionTime time.Duration, options ...artifactStore.SearchOption) (*model.ArtifactStatisticReport, error)
 
 	// TriggerGarbageCollect 触发指定格式或全量软删资源的 GC 异步任务。
-	TriggerGarbageCollect(ctx context.Context, entity model.ArtifactFormat) (*model.JobUIDResponse, error)
+	TriggerGarbageCollect(ctx context.Context, format string) (*model.JobUIDResponse, error)
 
 	// GarbageCollect 执行指定格式或全量软删资源 GC（cron job / 用户主动 API 共用）。
-	// entity 留空 → 清全部格式；非空 → 仅清指定 format。
-	GarbageCollect(ctx context.Context, entity model.ArtifactFormat) (*model.ArtifactGarbageReportRes, error)
+	// format 留空 → 清全部格式；非空 → 仅清指定 format。
+	GarbageCollect(ctx context.Context, format string) (*model.ArtifactGarbageReportRes, error)
 
 	// ---- 容器镜像 ----
 
@@ -122,21 +112,6 @@ type Interface interface {
 	ResolveRepoArtifact(ctx context.Context, repoID uint64, artifactName string) (*ContainerArtifactCtx, error)
 
 	// ---- 移动 & 重命名 ----
-
-	// MovePackage 移动 package 到目标制品库（及可选目标 group）。
-	MovePackage(ctx context.Context, pkgID, tArtifactID, tGroupID int64) error
-
-	// MoveAsset 移动组资产到目标 group。
-	MoveAsset(ctx context.Context, assetID, tArtifactID, tGroupID int64) error
-
-	// MoveGroup 移动 group 到目标制品库（及可选目标父 group）。
-	MoveGroup(ctx context.Context, groupID, tArtifactID, tParentGroupID int64) error
-
-	// RenameAsset 重命名组资产。
-	RenameAsset(ctx context.Context, assetID int64, newName string) error
-
-	// RenameGroup 重命名 group。
-	RenameGroup(ctx context.Context, groupID int64, newName string) error
 
 	// RelocateEntity 同时支持移动 + 重命名，单事务内完成；通用入口。
 	RelocateEntity(ctx context.Context, req *model.RelocateEntityReq) error

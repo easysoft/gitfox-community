@@ -112,4 +112,7 @@ type SavedAsset struct {
 	Object     *model.ArtifactAsset
 	IsOverride bool
 	Attr       ModelAttribute
+	// AlreadyExists 标记本次 Sync 命中"同名同内容"分支：未真正落新数据，
+	// 直接复用已有 asset。Controller 层据此切换响应文案为"文件已存在"。
+	AlreadyExists bool
 }

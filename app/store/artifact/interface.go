@@ -2,9 +2,9 @@ package artifact
 
 import (
 	"context"
-	"time"
 
 	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
 
 	"gorm.io/gorm"
 )
@@ -26,12 +26,10 @@ type Interface interface {
 	MetaAssets() MetaAssetInterface
 	Blobs() BlobInterface
 	Nodes() TreeNodeInterface
-	FindPackages(ctx context.Context, artifactID int64, filter *model.ArtifactFilter) ([]*model.ArtifactListItem, error)
-	GetVersion(ctx context.Context, artifactID int64, packageName, groupName, versionName string, format model.ArtifactFormat) (*model.ArtifactVersion, error)
 	GetAsset(ctx context.Context, assetID int64) (*model.ArtifactAssetsRes, error)
 	ListAssets(ctx context.Context, versionID int64) ([]*model.ArtifactAssetsRes, error)
+	ListAssetsPage(ctx context.Context, req *model.ListAssetReq) (*database.PageResult[*model.ArtifactAssetsRes], error)
 	ListGroupAssets(ctx context.Context, groupID int64) ([]*model.ArtifactAssetsRes, error)
-	StatisticAssets(ctx context.Context, retentionTime time.Duration, options ...SearchOption) (*model.ArtifactStatisticReport, error)
 }
 
 type ViewInterface interface {
@@ -73,13 +71,12 @@ type PackageInterface interface {
 	// Restore 恢复制品包（将 deleted 置为 0），operator 写入 editedBy。
 	Restore(ctx context.Context, packageID int64, operator string) error
 	Search(ctx context.Context, options ...SearchOption) ([]*model.ArtifactPackage, error)
-	GetByAssetID(ctx context.Context, assetID int64) (*model.ArtifactPackage, error)
-
-	// UpdateNamespaceByCondition 按条件批量更新 package namespace。
-	UpdateNamespaceByCondition(ctx context.Context, artifactID int64, oldNamespace, newNamespace, format string) error
 
 	// ListRecycle 列出回收站中的制品包（deleted=1），按 editedDate 倒序分页。
 	ListRecycle(ctx context.Context, page, pageSize int) ([]*model.ArtifactPackage, int64, error)
+
+	// MoveArtifactLibByGroupIDs 跨 view 移动 group 子树时，批量改 group 下挂 package 的 artifactLibID。
+	MoveArtifactLibByGroupIDs(ctx context.Context, groupIDs []int64, targetArtifactID int64) error
 }
 
 type VersionInterface interface {
@@ -120,43 +117,41 @@ type AssetInterface interface {
 
 	// ListRecycle 列出回收站中的制品资产（deleted=1），按 editedDate 倒序分页。
 	ListRecycle(ctx context.Context, page, pageSize int) ([]*model.ArtifactAsset, int64, error)
+
+	// MoveArtifactLibByGroupIDs 跨 view 移动 group 子树时，批量改归属在该子树下的 asset
+	// 的 artifactLibID。仅按 groupID 命中（直挂 asset 场景）。
+	MoveArtifactLibByGroupIDs(ctx context.Context, groupIDs []int64, targetArtifactID int64) error
 }
 
 type MetaAssetInterface interface {
 	Create(ctx context.Context, newObj *model.CreateArtifactMetaAsset) (*model.ArtifactMetaAsset, error)
+	DeleteById(ctx context.Context, metaAssetId int64) error
+	Update(ctx context.Context, metaAsset *model.ArtifactMetaAsset) error
 	GetById(ctx context.Context, metaAssetId int64) (*model.ArtifactMetaAsset, error)
 	GetByPath(ctx context.Context, path string, artifactID int64, format model.ArtifactFormat) (*model.ArtifactMetaAsset, error)
-	Update(ctx context.Context, metaAsset *model.ArtifactMetaAsset) error
-	DeleteById(ctx context.Context, metaAssetId int64) error
-	DeleteByArtifactID(ctx context.Context, artifactID int64) (int64, error)
 }
 
 type BlobInterface interface {
 	Create(ctx context.Context, newObj *model.CreateArtifactBlob) (*model.ArtifactBlob, error)
-	GetById(ctx context.Context, blobID int64) (*model.ArtifactBlob, error)
-	GetByRef(ctx context.Context, ref string, storageID int64) (*model.ArtifactBlob, error)
-	GetByHistory(ctx context.Context, assetID, createdAt int64) (*model.ArtifactBlob, error)
+	SoftDeleteById(ctx context.Context, blobID int64, operator string) error
+	DeleteById(ctx context.Context, blobID int64) error
 	Update(ctx context.Context, upObj *model.ArtifactBlob) error
 	UpdateOptLock(ctx context.Context, upObj *model.ArtifactBlob, mutateFn func(blob *model.ArtifactBlob) error) (*model.ArtifactBlob, error)
-	SoftDeleteById(ctx context.Context, blobID int64, operator string) error
-	// RestoreById 恢复制品 blob（将 deleted 置为 0），operator 写入 editedBy。
 	RestoreById(ctx context.Context, blobID int64, operator string) error
-	DeleteById(ctx context.Context, blobID int64) error
-	History(ctx context.Context, assetID int64) ([]*model.ArtifactBlobRes, error)
+	GetById(ctx context.Context, blobID int64) (*model.ArtifactBlob, error)
+	GetByRef(ctx context.Context, ref string, storageID int64) (*model.ArtifactBlob, error)
 }
 
 type TreeNodeInterface interface {
 	Create(ctx context.Context, newObj *model.CreateArtifactTreeNode) (*model.ArtifactTreeNode, error)
-	RecurseCreate(ctx context.Context, obj *model.ArtifactTreeNode) error
+	DeleteById(ctx context.Context, nodeID int64) error
+	RecurseDeleteById(ctx context.Context, nodeID int64) error
+	Update(ctx context.Context, upObj *model.ArtifactTreeNode) error
 	GetById(ctx context.Context, id int64) (*model.ArtifactTreeNode, error)
 	GetByPath(ctx context.Context, artifactID int64, path string, format model.ArtifactFormat) (*model.ArtifactTreeNode, error)
 	GetByTarget(ctx context.Context, artifactID int64, nodeType model.ArtifactTreeNodeType, id int64) (*model.ArtifactTreeNode, error)
 	ListFormats(ctx context.Context, artifactID int64) ([]*model.ArtifactTreeNode, error)
 	ListByParentId(ctx context.Context, parentID int64) ([]*model.ArtifactTreeNode, error)
-	Update(ctx context.Context, upObj *model.ArtifactTreeNode) error
-	DeleteById(ctx context.Context, nodeID int64) error
-	RecurseDeleteById(ctx context.Context, nodeID int64) error
-	DeleteByArtifactID(ctx context.Context, artifactID int64) (int64, error)
 }
 
 type GroupInterface interface {
@@ -213,8 +208,13 @@ type GroupInterface interface {
 	// UpdateNameByCondition 按条件批量更新分组名称。
 	UpdateNameByCondition(ctx context.Context, artifactID int64, oldName, newName, format string) error
 
-	// DeleteByArtifactID 物理删除指定 view 下的所有分组，供 view 删除时级联使用。
-	DeleteByArtifactID(ctx context.Context, artifactID int64) (int64, error)
+	// MoveLocation 调整分组归属：把指定 group 的 artifactLibID / parentID 指向新位置。
+	// 跨 view 移动时调用方需另行同步子树资产的 artifactLibID（见 MoveArtifactLibByIDs）。
+	MoveLocation(ctx context.Context, groupID, artifactID, parentID int64) error
+
+	// MoveArtifactLibByIDs 批量把一批 group 的 artifactLibID 改到目标 view，
+	// 用于跨 view 移动 group 时同步子树。
+	MoveArtifactLibByIDs(ctx context.Context, groupIDs []int64, targetArtifactID int64) error
 
 	// DeleteById 物理删除指定分组。
 	DeleteById(ctx context.Context, groupID int64) error

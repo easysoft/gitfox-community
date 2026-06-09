@@ -74,7 +74,7 @@ func (ctl *SpaceController) Create(c *gin.Context) {
 // @Param deleted query bool false "是否包含已删除，默认false"
 // @Param isOpen query bool false "是否公开空间，默认false"
 // @Param page query int false "页码（默认1）" default(1) minimum(1)
-// @Param pageSize query int false "每页条数（默认20）" default(20) minimum(1) maximum(100)
+// @Param pageSize query int false "每页条数（默认20）" default(20) minimum(1) maximum(2000)
 // @Success 200 {object} resp.ListResponse{data=[]space.SpaceResponse,listArgs=resp.ListArgs}"查询成功：返回空间列表+分页元数据"
 // @Failure 400 {object} resp.ListResponse "参数错误"
 // @Failure 500 {object} resp.ListResponse "服务器错误"

@@ -6,7 +6,6 @@ import (
 
 	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
-	pkgErrors "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 
 	"github.com/guregu/null"
 	"gorm.io/gorm"
@@ -33,45 +32,6 @@ func (c *treeNode) Create(ctx context.Context, newObj *model.CreateArtifactTreeN
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
 	return nodeToModel(&row), nil
-}
-
-func (c *treeNode) RecurseCreate(ctx context.Context, obj *model.ArtifactTreeNode) error {
-	if err := c.getNode(ctx, obj); err == nil {
-		return nil
-	} else if !errors.Is(err, pkgErrors.ErrResourceNotFound) {
-		return err
-	}
-
-	if obj.IsRoot() {
-		parentID := obj.ParentID
-		if !parentID.Valid {
-			parentID = null.IntFrom(0)
-		}
-		created, err := c.Create(ctx, &model.CreateArtifactTreeNode{
-			ParentID: parentID, ArtifactID: obj.ArtifactID, Name: obj.Name,
-			Path: obj.Path, Type: obj.Type, Format: obj.Format, TargetID: obj.TargetID,
-		})
-		if err != nil {
-			return err
-		}
-		obj.ID = created.ID
-		return nil
-	}
-
-	p := obj.Parent()
-	if err := c.RecurseCreate(ctx, p); err != nil {
-		return err
-	}
-	obj.ParentID = null.IntFrom(p.ID)
-	created, err := c.Create(ctx, &model.CreateArtifactTreeNode{
-		ParentID: obj.ParentID, ArtifactID: obj.ArtifactID, Name: obj.Name,
-		Path: obj.Path, Type: obj.Type, Format: obj.Format, TargetID: obj.TargetID,
-	})
-	if err != nil {
-		return err
-	}
-	obj.ID = created.ID
-	return nil
 }
 
 func (c *treeNode) GetById(ctx context.Context, id int64) (*model.ArtifactTreeNode, error) {
@@ -161,13 +121,4 @@ func (c *treeNode) RecurseDeleteById(ctx context.Context, nodeID int64) error {
 		}
 	}
 	return c.DeleteById(ctx, nodeID)
-}
-
-// DeleteByArtifactID 硬删指定 view 下的所有树节点记录。
-func (c *treeNode) DeleteByArtifactID(ctx context.Context, artifactID int64) (int64, error) {
-	result := c.db.WithContext(ctx).Where("artifactLibID = ?", artifactID).Delete(&artifactTreeNode{})
-	if result.Error != nil {
-		return 0, database.ProcessSQLErrorf(ctx, result.Error)
-	}
-	return result.RowsAffected, nil
 }

@@ -71,7 +71,7 @@ func (h *uploader) Serve(ctx context.Context, req *http.Request) (int64, error) 
 	h.descriptor.MainAsset.Hash = hash
 	h.descriptor.MainAsset.Ref = ref
 	h.descriptor.MainAsset.ContentType = "application/octet-stream"
-	h.descriptor.MainAsset.Kind = model.AssetKindMain
+	h.descriptor.MainAsset.Rank = model.AssetRankMain
 	h.descriptor.MainAsset.Attr = adapter.AttrAssetNormal
 	h.descriptor.MainAsset.Format = model.ArtifactRawFormat
 

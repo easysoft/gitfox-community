@@ -136,7 +136,7 @@ func (h *helmIndex) buildIndex(ctx context.Context, contextPath string) (*IndexF
 
 	for _, item := range items {
 		assets, e := h.artStore.Assets().Search(ctx,
-			model.SearchAssetOption{Kind: model.AssetKindMain, VersionID: item.ID},
+			model.SearchAssetOption{Rank: model.AssetRankMain, VersionID: item.ID},
 			artifactStore.AssetExcludeDeletedOption{})
 		if e != nil {
 			log.Errorf("search assets failed: %v", e)

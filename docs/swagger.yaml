@@ -453,6 +453,11 @@ definitions:
     - WebhookTriggerArtifactCreated
     - WebhookTriggerArtifactUpdated
     - WebhookTriggerArtifactDeleted
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.ArtifactEntitieReq:
+    properties:
+      entityID:
+        type: string
+    type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.ArtifactFormat:
     enum:
     - all
@@ -473,13 +478,6 @@ definitions:
     - ArtifactHelmFormat
     - ArtifactPypiFormat
     - ArtifactNpmFormat
-  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.ArtifactRestoreEntitiesReq:
-    properties:
-      entityIDs:
-        items:
-          type: string
-        type: array
-    type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.ArtifactTreeListReq:
     properties:
       artifactID:
@@ -525,12 +523,6 @@ definitions:
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.ListAssetReq:
     properties:
-      arch:
-        description: 按 CPU 架构过滤（amd64 / arm64 / arm/v7）
-        type: string
-      artifactID:
-        description: 当前制品库 ID；container package 查询版本时必填
-        type: integer
       createdBy:
         description: 按创建人过滤
         type: string
@@ -551,9 +543,6 @@ definitions:
         type: string
       order:
         description: 排序方向：asc / desc
-        type: string
-      os:
-        description: 按操作系统过滤（linux / windows）
         type: string
       page:
         type: integer
@@ -3660,7 +3649,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.ArtifactRestoreEntitiesReq'
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.ArtifactEntitieReq'
       produces:
       - application/json
       responses:
@@ -9347,7 +9336,7 @@ paths:
       - default: 20
         description: 每页条数（默认20）
         in: query
-        maximum: 100
+        maximum: 2000
         minimum: 1
         name: pageSize
         type: integer

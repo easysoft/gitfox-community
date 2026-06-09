@@ -13,8 +13,8 @@ artifact:
   recycle_list_error: "Failed to query artifact recycle bin."
   recycle_kind_invalid: "Invalid recycle kind. Supported: artifact / group / package / version / asset."
   restore_success: "Artifact restored successfully."
-  restore_partial_failed: "Some artifacts failed to restore, see the data field for details."
-  restore_all_failed: "All artifact restore requests failed, see the data field for details."
+  restore_partial_failed: "Some artifacts failed to restore: %s"
+  restore_all_failed: "All artifact restore requests failed: %s"
   restore_error: "Failed to restore artifact."
   restore_query_error: "Failed to check restore target state."
   restore_not_in_recycle_bin: "Resource is not in the recycle bin, restore is not needed."
@@ -24,7 +24,6 @@ artifact:
   restore_package_name_already_exists: "Package with same name already exists, restore is not possible."
   restore_version_already_exists: "Version with same name already exists, restore is not possible."
   restore_parse_error: "Failed to parse restore entity ID."
-  restore_entity_id_invalid_format: "Invalid restore entity ID format. Expected kind.id."
   restore_entity_type_unsupported: "Unsupported restore entity type."
   path_param_error: "Path param parsing failed."
   body_param_error: "Body param parsing failed."
@@ -42,8 +41,8 @@ artifact:
   view_format_invalid: "Unsupported artifact format. Supported: file, raw, container." # file, raw, maven, container, helm, pypi, npm.
   view_name_required: "Artifact view name is required."
   view_name_too_long: "Artifact view name is too long (max 128 chars)."
-  view_name_invalid_chars: "Artifact view name must not contain whitespace or any of / \\ . .. : * ? \" < > |."
-  view_name_non_ascii_not_allowed: "For versioned artifact repositories (container/raw), the name may only contain ASCII letters, digits, dashes and underscores; non-ASCII characters (e.g. Chinese) are not allowed." # container/raw/helm/pypi/npm/maven
+  view_name_invalid_chars: "Artifact view name must not contain whitespace or any of / \"."
+  view_name_non_ascii_not_allowed: "Artifact view name may only contain letters, digits, dashes, underscores Chinese characters and other characters are not allowed.." # container/raw/helm/pypi/npm/maven
 
   # Parse & Upload
   space_id_required: "spaceID is required when repoID is provided."
@@ -60,11 +59,12 @@ artifact:
   upload_name_invalid: "The 'packageName' for raw uploads is invalid: only alphanumerics, dashes and underscores are allowed, and no dots."
   upload_version_invalid: "A valid 'version' is required for raw uploads (alphanumerics, dashes, underscores and dots only)."
   upload_raw_group_invalid: "The 'group' for raw uploads must be a dot-separated path (each segment may contain alphanumerics, dashes and underscores only)."
-  upload_group_required: "Either 'group' or 'groupId' is required for uploading."
+  upload_group_required: "Group is required for uploading."
   upload_group_id_invalid: "The specified groupId is invalid or does not exist."
   upload_group_name_invalid: "The specified group path is invalid: use '.' or '/' as separator; each segment must be non-empty, no longer than 128 characters, and must not contain whitespace or any of \\ : * ? \" < > |. Unicode characters (e.g. Chinese) are allowed."
   upload_group_path_not_found: "The specified group path does not exist under the current artifact repository; please create the group first or verify the artifactID."
   upload_group_artifact_mismatch: "The specified group does not belong to the current artifact repository; please verify artifactID and group ownership."
+  upload_file_duplicate: "A file with the same name and identical content already exists; upload skipped."
 
   # Package & Version
   package_query_error: "Failed to query artifact package."
@@ -85,6 +85,8 @@ artifact:
   group_artifactid_required: "artifactID must be greater than 0."
   group_artifactid_not_found: "The specified artifact ID does not exist."
   group_names_invalid: "Group names are invalid, must not be empty or contain empty segments."
+  group_name_invalid_chars: "Group name must not contain whitespace (space, tab, newline, carriage return, ideographic space, etc.) or any of \\ : * ? \" < > |."
+  group_name_leading_trailing_space: "Group name must not start or end with whitespace."
   group_container_no_nesting: "Container format only supports a single-level group, nesting with '.' is not allowed."
   group_duplicate: "A group with the same path already exists, duplicate creation is not allowed."
 
@@ -101,8 +103,6 @@ artifact:
   gc_trigger_error: "Failed to trigger artifact garbage collection."
   gc_execute_error: "Failed to execute artifact garbage collection."
   soft_remove_parse_error: "Failed to parse artifact entity ID."
-  soft_remove_entity_id_invalid_format: "Invalid artifact entity ID format. Expected type.id."
-  soft_remove_entity_id_invalid_number: "The numeric part of artifact entity ID is invalid."
   soft_remove_entity_type_unsupported: "Unsupported artifact entity type."
   soft_remove_error: "Failed to soft-delete artifact."
   soft_remove_version_not_empty: "Version still has active asset files and cannot be deleted. Please remove all assets under this version first."
@@ -114,7 +114,7 @@ artifact:
   soft_remove_artifact_group_exists: "The artifact library still contains active groups and cannot be deleted. Remove all groups first."
   soft_remove_artifact_not_found: "The specified artifact library does not exist or has been deleted."
   soft_remove_artifact_query_error: "Failed to check the artifact library state."
-  soft_remove_group_not_empty: "The group or one of its sub-groups still contains active asset files and cannot be deleted. Empty sub-groups can be removed together; please delete all asset files first and try again."
+  soft_remove_group_not_empty: "Deletion failed: This directory or its subdirectories contain undeleted artifacts. Please remove all artifacts before retrying."
   soft_remove_group_query_error: "Failed to check the group state."
 
   # Statistic
@@ -133,7 +133,7 @@ artifact:
   move_entity_type_invalid: "Unsupported entity type for move."
   move_format_mismatch: "Source format does not match target."
   move_container_not_supported: "Container artifacts cannot be moved. Use artifact promotion to flow an image from one artifact library to another."
-  move_sibling_conflict: "Sibling with the same name already exists at target."
+  move_sibling_conflict: "Target location already exists a same-name artifact."
   move_cycle_detected: "Target parent is a descendant of source group."
   move_source_deleted: "Source entity is soft-deleted or not found."
   move_target_invalid: "Target artifact or group is invalid."
@@ -142,7 +142,16 @@ artifact:
   rename_versioned_not_supported: "Rename is not allowed on versioned packages or groups containing them."
   rename_sibling_conflict: "Sibling with the same name already exists."
   rename_source_deleted: "Source entity is soft-deleted or not found."
-  entity_id_invalid: "Invalid entity ID. Expected format: kind.id (e.g. group.11, asset.5)."
   move_target_group_required: "targetGroupID is required for move; only file group may use 0 for the root, while package/asset require a valid group."
   rename_new_name_required: "newName is required for rename."
   relocate_success: "Operation succeeded."
+
+  # Container Registry authorization
+  container_auth_required: "Authentication required. Please run docker login first."
+  container_pull_denied: "You do not have pull permission on this artifact registry."
+  container_push_denied: "You do not have push permission on this artifact registry."
+  container_delete_denied: "You do not have delete permission on this artifact registry."
+
+  entity_id_invalid: "Invalid entity ID. Expected format: kind.id (e.g. group.11, asset.5)."
+  entity_id_empty: "Entity ID is empty."
+  entity_id_kind_invalid: "Unsupported entity kind."

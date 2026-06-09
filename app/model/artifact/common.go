@@ -14,14 +14,15 @@ import (
 const maxArtifactViewNameLen = 128
 
 // viewNameForbiddenChars 任何 format 下都禁止在 view 名称中出现的字符。
-// 覆盖路径分隔符、点号（避免与 group 路径分隔号冲突）以及 Windows 保留字符。
-var viewNameForbiddenChars = []rune{'/', '\\', '.', ':', '*', '?', '"', '<', '>', '|'}
+// 覆盖路径分隔符以及 Windows 保留字符。
+var viewNameForbiddenChars = []rune{'/', '\\', '"'}
 
 // ValidateViewName 校验制品库视图名称的合法性。
 // 规则：
 //  1. 非空，长度 ≤ maxArtifactViewNameLen
-//  2. 不得包含空白字符或 viewNameForbiddenChars 中的字符
-//  3. 版本化格式（container/helm/pypi/npm/maven）只允许 ASCII 字母、数字、-、_
+//  2. 所有格式不得包含空白字符或路径/Windows 保留字符
+//  3. file 格式不额外限制字符集
+//  4. 其它格式仅允许英文字母、数字、下划线、连字符和英文句号
 //
 // 返回 trim 后的名称和可能的错误（已带 i18n key）。
 func ValidateViewName(name string, format ArtifactFormat) (string, error) {
@@ -54,15 +55,15 @@ func ValidateViewName(name string, format ArtifactFormat) (string, error) {
 			}
 		}
 	}
-	// 版本化格式：只允许 ASCII 字母、数字、中划线、下划线
-	if IsVersionedFormat(format) {
-		for _, rn := range trimmed {
-			if !isVersionedViewNameRune(rn) {
-				return "", errors.WithI18nKey(
-					fmt.Errorf("versioned artifact view name must be ASCII letters/digits/-/_: %q", trimmed),
-					i18n.ArtifactViewNameNonAsciiNotAllowed,
-				)
-			}
+	if format == ArtifactFileFormat {
+		return trimmed, nil
+	}
+	for _, rn := range trimmed {
+		if !isVersionedViewNameRune(rn) {
+			return "", errors.WithI18nKey(
+				fmt.Errorf("artifact view name must be  ASCII letters/digits/-/_/.: %q", trimmed),
+				i18n.ArtifactViewNameNonAsciiNotAllowed,
+			)
 		}
 	}
 	return trimmed, nil
@@ -129,7 +130,7 @@ func (r *SpaceRepoFormReq) Validate() error {
 }
 
 type SoftRemoveEntitiesReq struct {
-	EntityIDs []string `json:"entityIDs,omitempty"`
+	EntityIDs []EntityID `json:"entityIDs,omitempty"`
 }
 
 // ListNodeInfoReq 兼容参考项目 `/artifacts/nodeInfo` 的请求体。
@@ -182,7 +183,7 @@ func (r *CreateArtifactViewReq) Validate() error {
 	return nil
 }
 
-// isVersionedViewNameRune 报告字符是否可用于版本化制品库名称：ASCII 字母、数字、中划线、下划线。
+// isVersionedViewNameRune 报告字符是否可用于非 file 制品库名称：英文字母、数字、中划线、下划线、英文句号。
 func isVersionedViewNameRune(rn rune) bool {
 	if rn > unicode.MaxASCII {
 		return false
@@ -194,7 +195,7 @@ func isVersionedViewNameRune(rn rune) bool {
 		return true
 	case rn >= '0' && rn <= '9':
 		return true
-	case rn == '-' || rn == '_':
+	case rn == '-' || rn == '_' || rn == '.':
 		return true
 	}
 	return false
@@ -266,20 +267,17 @@ type ArtifactTreeListReq struct {
 // ListAssetReq 制品资产分页列表请求。
 // EntityID 接受 "group.{id}" / "version.{id}" / "package.{id}" / "asset.{id}"。
 type ListAssetReq struct {
-	EntityID   string `json:"entityID" binding:"required"` // group.{id} / version.{id} / package.{id} / asset.{id}
-	ArtifactID int64  `json:"artifactID"`                  // 当前制品库 ID；container package 查询版本时必填
-	Page       int    `json:"page"`
-	PageSize   int    `json:"pageSize"`
-	Name       string `json:"name"`      // 按文件名模糊过滤
-	Version    string `json:"version"`   // 按版本号过滤（仅 version 类资产有效）
-	OS         string `json:"os"`        // 按操作系统过滤（linux / windows）
-	Arch       string `json:"arch"`      // 按 CPU 架构过滤（amd64 / arm64 / arm/v7）
-	CreatedBy  string `json:"createdBy"` // 按创建人过滤
-	EditedBy   string `json:"editedBy"`  // 按更新人过滤
-	Sort       string `json:"sort"`      // 排序字段：id / name / size / createdDate / editedDate
-	Order      string `json:"order"`     // 排序方向：asc / desc
-	Deleted    *bool  `json:"deleted"`   // 是否包含已删除：nil=不过滤，true=仅已删，false=仅未删
-	More       bool   `json:"more"`      // 是否展开子目录制品放在同一列表中
+	EntityID  EntityID `json:"entityID" binding:"required"` // group.{id} / version.{id} / package.{id} / asset.{id}
+	Page      int      `json:"page"`
+	PageSize  int      `json:"pageSize"`
+	Name      string   `json:"name"`      // 按文件名模糊过滤
+	Version   string   `json:"version"`   // 按版本号过滤（仅 version 类资产有效）
+	CreatedBy string   `json:"createdBy"` // 按创建人过滤
+	EditedBy  string   `json:"editedBy"`  // 按更新人过滤
+	Sort      string   `json:"sort"`      // 排序字段：id / name / size / createdDate / editedDate
+	Order     string   `json:"order"`     // 排序方向：asc / desc
+	Deleted   *bool    `json:"deleted"`   // 是否包含已删除：nil=不过滤，true=仅已删，false=仅未删
+	More      bool     `json:"more"`      // 是否展开子目录制品放在同一列表中
 }
 
 // CreateGroupReq 创建 group 节点的请求参数。
@@ -293,12 +291,20 @@ type CreateGroupReq struct {
 	Format     string `json:"format"`
 }
 
+// ParseNames 将 Names 按 "." 拆分为分组路径段。
+// 调用前应先通过 Validate() 确保合法性。
+func (r *CreateGroupReq) ParseNames() []string {
+	return strings.Split(r.Names, ".")
+}
+
 // Validate 对 CreateGroupReq 进行业务规则校验，返回携带 i18n key 的错误。
 // 校验规则：
 //  1. ArtifactID 必须 > 0
 //  2. 若 Format 非空，必须通过 enum.ArtifactFormat.Sanitize() 校验（调用方回填 view.Format 后满足）
 //  3. Names 按 "." 拆分后不能有空段
-//  4. container 格式不支持嵌套（Names 中不能包含 "."）
+//  4. 每段不得包含空白字符（含 Tab/换行/回车/全角空格等 Unicode 空白）或 \\ : * ? " < > | 等保留字符
+//  5. 每段首尾不得为空白字符
+//  6. container 格式不支持嵌套（Names 中不能包含 "."）
 //
 // 注：Format 在控制器阶段会被 view.Format 覆盖，因此这里不再要求前端必传；
 // 若调用方直接走 service 入口也可以显式设置 Format 后再调用此方法。
@@ -314,7 +320,7 @@ func (r *CreateGroupReq) Validate() error {
 		)
 	}
 
-	// 3. Names 合法性校验
+	// 3. Names 合法性校验：先拒空段，再校验每段字符集与首尾空白。
 	parts := strings.Split(r.Names, ".")
 	for _, part := range parts {
 		if strings.TrimSpace(part) == "" {
@@ -322,6 +328,9 @@ func (r *CreateGroupReq) Validate() error {
 				fmt.Errorf("group names contain empty segment: %q", r.Names),
 				i18n.ArtifactGroupNamesInvalid,
 			)
+		}
+		if err := validateGroupSegment(part); err != nil {
+			return err
 		}
 	}
 
@@ -336,8 +345,45 @@ func (r *CreateGroupReq) Validate() error {
 	return nil
 }
 
-// ParseNames 将 Names 按 "." 拆分为分组路径段。
-// 调用前应先通过 Validate() 确保合法性。
-func (r *CreateGroupReq) ParseNames() []string {
-	return strings.Split(r.Names, ".")
+// groupNameForbiddenChars 任何 format 下都禁止在 group 单段名称中出现的字符。
+// 覆盖 Windows 与跨平台保留字符。注意：path 分隔符 `/` 与 `.` 在外层已作为段间分隔被剥离，
+// 不应再出现在单段中，因此不重复列入此表。
+var groupNameForbiddenChars = []rune{'\\', ':', '*', '?', '"', '<', '>', '|'}
+
+// validateGroupSegment 校验 group 单段名称的合法性。
+//  1. 非空；
+//  2. 首尾不允许任何 Unicode 空白字符（空格、Tab、换行、回车、全角空格等）；
+//  3. 段内不允许任何 Unicode 空白字符；
+//  4. 段内不得包含 \\ : * ? " < > | 等保留字符。
+func validateGroupSegment(seg string) error {
+	if seg == "" {
+		return errors.WithI18nKey(
+			fmt.Errorf("group name segment is empty"),
+			i18n.ArtifactGroupNamesInvalid,
+		)
+	}
+	runes := []rune(seg)
+	if unicode.IsSpace(runes[0]) || unicode.IsSpace(runes[len(runes)-1]) {
+		return errors.WithI18nKey(
+			fmt.Errorf("group name segment must not start or end with whitespace: %q", seg),
+			i18n.ArtifactGroupNameLeadingTrailingSpace,
+		)
+	}
+	for _, rn := range runes {
+		if unicode.IsSpace(rn) {
+			return errors.WithI18nKey(
+				fmt.Errorf("group name segment contains whitespace: %q", seg),
+				i18n.ArtifactGroupNameInvalidChars,
+			)
+		}
+		for _, bad := range groupNameForbiddenChars {
+			if rn == bad {
+				return errors.WithI18nKey(
+					fmt.Errorf("group name segment contains forbidden char %q: %q", bad, seg),
+					i18n.ArtifactGroupNameInvalidChars,
+				)
+			}
+		}
+	}
+	return nil
 }

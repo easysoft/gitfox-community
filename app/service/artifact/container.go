@@ -1,0 +1,63 @@
+package artifact
+
+import (
+	"context"
+
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/adapter"
+	pkgErrors "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
+)
+
+// ResolveGlobalArtifact 全局作用域下按 artifact name 精确定位制品库及其容器 group。
+// 对应路由：/v2/global/{artifactname}/{imagename}
+func (s *Service) ResolveGlobalArtifact(ctx context.Context, artifactName string) (*ContainerArtifactCtx, error) {
+	return s.resolveContainerArtifact(ctx, "global", 0, 0, artifactName)
+}
+
+// ResolveSpaceArtifact 空间作用域下按 (spaceID, artifactName) 精确定位制品库及其容器 group。
+// 对应路由：/v2/space{spaceID}/{artifactname}/{imagename}
+func (s *Service) ResolveSpaceArtifact(ctx context.Context, spaceID uint64, artifactName string) (*ContainerArtifactCtx, error) {
+	return s.resolveContainerArtifact(ctx, "space", int64(spaceID), 0, artifactName)
+}
+
+// ResolveRepoArtifact 仓库作用域下按 (repoID, artifactName) 精确定位制品库及其容器 group。
+// 对应路由：/v2/repo{repoID}/{artifactname}/{imagename}
+// 与现有 ParseContainerView 行为保持一致：先通过 repoStore 按 ID 反查拿到 repo，
+// 再以 (int64(repo.SpaceID), int64(repoID), artifactName) 调用 resolveContainerArtifact。
+// 不引入新复杂度，保留现有已验证过的查询方式。
+func (s *Service) ResolveRepoArtifact(ctx context.Context, repoID uint64, artifactName string) (*ContainerArtifactCtx, error) {
+	// 通过 repo 反查 spaceID（与现有 ParseContainerView 保持一致，不改动此行为）
+	repo, err := s.repoStore.GetByID(ctx, uint(repoID))
+	if err != nil {
+		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactRepoQueryError)
+	}
+	return s.resolveContainerArtifact(ctx, "repo", int64(repo.SpaceID), int64(repoID), artifactName)
+}
+
+// resolveContainerArtifact 容器路由的统一私有解析流程。
+// 步骤 1：按 (spaceID, repoID, name) 在 ops_artifact 精确查找 view 记录；
+//   - ErrResourceNotFound → 包装 i18n.ArtifactContainerArtifactNotFound
+//   - 其它错误 → 包装 i18n.ArtifactViewQueryError
+//
+// 步骤 2：组装并返回 ContainerArtifactCtx（含 ViewDescriptor{ArtifactID, Store: s.fileStore, StorageID: 1}）。
+func (s *Service) resolveContainerArtifact(ctx context.Context, scope string, spaceID, repoID int64, artifactName string) (*ContainerArtifactCtx, error) {
+	// 1) 按 (spaceID, repoID, name) 精确查找 artifact 视图
+	view, err := s.artStore.Views().GetByName(ctx, spaceID, repoID, artifactName)
+	if err != nil {
+		if pkgErrors.Is(err, pkgErrors.ErrResourceNotFound) {
+			return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactContainerArtifactNotFound)
+		}
+		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactViewQueryError)
+	}
+
+	return &ContainerArtifactCtx{
+		Scope:   scope,
+		SpaceID: spaceID,
+		RepoID:  repoID,
+		View: &adapter.ViewDescriptor{
+			ArtifactID: view.ID,
+			Store:      s.fileStore,
+			StorageID:  1,
+		},
+	}, nil
+}
