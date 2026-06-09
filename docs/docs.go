@@ -11101,26 +11101,24 @@ const docTemplate = `{
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.RepoProviderType": {
             "type": "string",
             "enum": [
-                "github",
-                "gitlab",
-                "gitlab.com",
-                "gitlab.cn",
-                "bitbucket",
-                "stash",
-                "gitea",
-                "gogs",
-                "azure"
+                "GitHub",
+                "GitLab",
+                "Bitbucket",
+                "Stash",
+                "Gitea",
+                "Gogs",
+                "Azure",
+                "Subversion"
             ],
             "x-enum-varnames": [
                 "RepoProviderTypeGitHub",
                 "RepoProviderTypeGitLab",
-                "RepoProviderTypeGitLabCOM",
-                "RepoProviderTypeGitLabCN",
                 "RepoProviderTypeBitbucket",
                 "RepoProviderTypeStash",
                 "RepoProviderTypeGitea",
                 "RepoProviderTypeGogs",
-                "RepoProviderTypeAzure"
+                "RepoProviderTypeAzure",
+                "RepoProviderTypeSVN"
             ]
         },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.RespCode": {
@@ -12494,15 +12492,15 @@ const docTemplate = `{
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_jobs.State": {
             "type": "string",
             "enum": [
-                "scheduled",
                 "running",
+                "scheduled",
                 "finished",
                 "failed",
                 "canceled"
             ],
             "x-enum-varnames": [
-                "StateScheduled",
                 "StateRunning",
+                "StateScheduled",
                 "StateFinished",
                 "StateFailed",
                 "StateCanceled"
@@ -12809,7 +12807,7 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "acl",
-                "identifier",
+                "name",
                 "spaceID"
             ],
             "properties": {
@@ -12821,10 +12819,14 @@ const docTemplate = `{
                         "private"
                     ]
                 },
-                "description": {
+                "desc": {
                     "type": "string"
                 },
-                "identifier": {
+                "mirror": {
+                    "description": "是否镜像导入，默认为false",
+                    "type": "boolean"
+                },
+                "name": {
                     "type": "string"
                 },
                 "product": {
@@ -12833,9 +12835,6 @@ const docTemplate = `{
                 },
                 "provider": {
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.Provider"
-                },
-                "providerRepo": {
-                    "type": "string"
                 },
                 "spaceID": {
                     "type": "integer"
@@ -13031,13 +13030,10 @@ const docTemplate = `{
                 "failure": {
                     "type": "string"
                 },
-                "progress": {
-                    "type": "integer"
-                },
                 "result": {
                     "type": "string"
                 },
-                "state": {
+                "status": {
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_jobs.State"
                 }
             }
@@ -13045,23 +13041,37 @@ const docTemplate = `{
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.Provider": {
             "type": "object",
             "required": [
+                "host",
+                "id",
+                "slug",
                 "type"
             ],
             "properties": {
                 "host": {
                     "type": "string"
                 },
+                "id": {
+                    "type": "integer"
+                },
                 "password": {
+                    "type": "string"
+                },
+                "projectID": {
+                    "type": "string"
+                },
+                "slug": {
+                    "type": "string"
+                },
+                "token": {
                     "type": "string"
                 },
                 "type": {
                     "enum": [
-                        "github",
-                        "gitlab",
-                        "gitlab.com",
-                        "gitlab.cn",
-                        "gitea",
-                        "gogs"
+                        "Github",
+                        "Gitlab",
+                        "Gitea",
+                        "Gogs",
+                        "Subversion"
                     ],
                     "allOf": [
                         {
@@ -13070,6 +13080,7 @@ const docTemplate = `{
                     ]
                 },
                 "username": {
+                    "description": "svn:",
                     "type": "string"
                 }
             }
@@ -13080,6 +13091,12 @@ const docTemplate = `{
                 "acl": {
                     "type": "string"
                 },
+                "connector": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
                 "createdBy": {
                     "type": "string"
                 },
@@ -13103,9 +13120,6 @@ const docTemplate = `{
                     "description": "允许 NULL，用指针类型",
                     "type": "string"
                 },
-                "empty": {
-                    "type": "boolean"
-                },
                 "forkID": {
                     "description": "允许 NULL，用指针类型",
                     "type": "integer"
@@ -13126,9 +13140,6 @@ const docTemplate = `{
                 "mirror": {
                     "type": "boolean"
                 },
-                "mutex": {
-                    "type": "integer"
-                },
                 "name": {
                     "type": "string"
                 },
@@ -13138,15 +13149,14 @@ const docTemplate = `{
                 "product": {
                     "type": "string"
                 },
+                "providerID": {
+                    "type": "integer"
+                },
                 "spaceID": {
                     "type": "integer"
                 },
                 "status": {
-                    "description": "状态码用 int 类型（兼容枚举映射）",
-                    "type": "integer"
-                },
-                "synced": {
-                    "type": "integer"
+                    "type": "string"
                 }
             }
         },
@@ -13156,6 +13166,12 @@ const docTemplate = `{
                 "acl": {
                     "type": "string"
                 },
+                "connector": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
                 "createdBy": {
                     "type": "string"
                 },
@@ -13179,9 +13195,6 @@ const docTemplate = `{
                     "description": "允许 NULL，用指针类型",
                     "type": "string"
                 },
-                "empty": {
-                    "type": "boolean"
-                },
                 "forkID": {
                     "description": "允许 NULL，用指针类型",
                     "type": "integer"
@@ -13199,17 +13212,8 @@ const docTemplate = `{
                 "id": {
                     "type": "integer"
                 },
-                "importing": {
-                    "type": "boolean"
-                },
-                "isPublic": {
-                    "type": "boolean"
-                },
                 "mirror": {
                     "type": "boolean"
-                },
-                "mutex": {
-                    "type": "integer"
                 },
                 "name": {
                     "type": "string"
@@ -13220,15 +13224,14 @@ const docTemplate = `{
                 "product": {
                     "type": "string"
                 },
+                "providerID": {
+                    "type": "integer"
+                },
                 "spaceID": {
                     "type": "integer"
                 },
                 "status": {
-                    "description": "状态码用 int 类型（兼容枚举映射）",
-                    "type": "integer"
-                },
-                "synced": {
-                    "type": "integer"
+                    "type": "string"
                 }
             }
         },

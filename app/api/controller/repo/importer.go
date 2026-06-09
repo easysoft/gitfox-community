@@ -17,7 +17,7 @@ import (
 // @Produce application/json
 // @Param body body repoModel.ImportInput true "导入仓库请求参数"
 // @Success 201 {object} resp.ObjectResponse{data=repoModel.RepositoryOutput} "导入成功（返回仓库核心信息）"
-// @Error 400 {object} resp.ObjectResponse "参数错误（如identifier格式非法、spaceID为空等）"
+// @Error 400 {object} resp.ObjectResponse "参数错误（如name格式非法、spaceID为空等）"
 // @Error 500 {object} resp.ObjectResponse "服务器内部错误（如Git服务调用失败、数据库异常等）"
 // @Router /repos/import [post]
 func (ctl *Controller) Import(c *gin.Context) {
