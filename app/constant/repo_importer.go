@@ -3,8 +3,8 @@ package constant
 type RepoProviderType string
 
 const (
-	RepoProviderTypeGitHub    RepoProviderType = "Github"
-	RepoProviderTypeGitLab    RepoProviderType = "Gitlab"
+	RepoProviderTypeGitHub    RepoProviderType = "GitHub"
+	RepoProviderTypeGitLab    RepoProviderType = "GitLab"
 	RepoProviderTypeBitbucket RepoProviderType = "Bitbucket"
 	RepoProviderTypeStash     RepoProviderType = "Stash"
 	RepoProviderTypeGitea     RepoProviderType = "Gitea"
