@@ -129,15 +129,8 @@ func getScmClientWithTransport(provider repoModel.Provider, slug string) (*scm.C
 	if provider.Host == "" {
 		return nil, errors.BadRequest.New("scm provider Host missing")
 	}
-
-	if provider.Type == constant.RepoProviderTypeGogs {
-		if provider.Username == "" || provider.Password == "" {
-			return nil, errors.BadRequest.New("scm provider authentication credentials missing for Gogs: both username and password are required")
-		}
-	} else {
-		if provider.Token == "" {
-			return nil, errors.BadRequest.Newf("scm provider authentication token missing for %s", provider.Type)
-		}
+	if provider.Token == "" {
+		return nil, errors.BadRequest.Newf("scm provider authentication token missing for %s", provider.Type)
 	}
 
 	var c *scm.Client
@@ -173,9 +166,7 @@ func getScmClientWithTransport(provider repoModel.Provider, slug string) (*scm.C
 		if err != nil {
 			return nil, errors.BadRequest.Wrap(err, "scm provider Host invalid")
 		}
-		// Gogs 的 API 接受 Basic Auth，而 git-over-HTTP 只接受 Basic Auth 且要求登录密码。
-		// 统一走 Basic Auth，让同一对 username/password 既能拉 API 又能 git fetch。
-		transport = basicAuthTransport(provider.Username, provider.Password)
+		transport = authHeaderTransport(provider.Token)
 
 	default:
 		return nil, errors.BadRequest.Newf("unsupported scm provider: %s", provider.Type)

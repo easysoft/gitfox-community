@@ -146,7 +146,7 @@ func (r *Repository) LoadRepositoryFromProvider(
 func (r *Repository) Run(ctx context.Context, provider repoModel.Provider, repo *repoModel.Repo, cloneURL string, mirror bool, noticeLang string) error {
 	// 这里的 Input 需要根据 provider 类型进行适当调整
 	auth := provider.Token
-	if provider.Type == constant.RepoProviderTypeSVN || provider.Type == constant.RepoProviderTypeGogs {
+	if provider.Type == constant.RepoProviderTypeSVN {
 		auth = provider.Password
 	}
 
@@ -253,6 +253,7 @@ func (r *Repository) Handle(ctx context.Context, data string, reportFn pkgJobs.P
 
 	repoURL.User = url.UserPassword(input.User, input.Auth)
 	cloneURLWithAuth := repoURL.String()
+	cloneURLWithAuth = strings.Replace(cloneURLWithAuth, "://:", "://", 1)
 
 	repo, err := r.repoStore.GetByID(ctx, uint(input.RepoID))
 	if err != nil {

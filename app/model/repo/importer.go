@@ -48,9 +48,9 @@ type Provider struct {
 	ID        uint                      `json:"id" binding:"required"`
 	Host      string                    `json:"host" binding:"required"`
 	Slug      string                    `json:"slug" binding:"required"`
-	ProjectID string                    `json:"projectID"` // gitlab,gitea,github,gogs
-	Token     string                    `json:"token"`     // gitlab,gitea,github
-	// svn,gogs:
+	ProjectID string                    `json:"projectID"`
+	Token     string                    `json:"token"`
+	// svn:
 	Username string `json:"username"`
 	Password string `json:"password"`
 }
