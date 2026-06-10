@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -26,9 +25,6 @@ type Service struct {
 
 // New creates a new SVN Service. It verifies that the svn binary is available on PATH.
 func New(cfg *config.Config) (*Service, error) {
-	if _, err := exec.LookPath(command.SvnExecutable); err != nil {
-		return nil, errors.Wrapf(ErrSvnBinaryNotFound, "%v", err)
-	}
 	return &Service{svnRoot: cfg.SVN.Root}, nil
 }
 
