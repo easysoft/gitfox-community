@@ -78,6 +78,7 @@ type Repo struct {
 	SpaceID       uint   `json:"spaceID"`
 	Identifier    string `json:"name"`
 	Desc          string `json:"desc"`
+	SCMType       string `json:"scmType"`
 	Product       string `json:"product"`
 	GitUID        string `json:"gitUID"`
 	DefaultBranch string `json:"defaultBranch"`

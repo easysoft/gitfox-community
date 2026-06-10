@@ -32,6 +32,7 @@ const (
 	schemeHTTPS   = "https"
 	schemeSSH     = "ssh"
 	gitfoxHomeDir = "git"
+	svnHomeDir    = "svn"
 	blobDir       = "blob"
 )
 
@@ -67,6 +68,10 @@ func LoadConfig(mode string) (*Config, error) {
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to get user home directory")
 		}
+	}
+
+	if config.SVN.Root == "" {
+		config.SVN.Root = filepath.Join(config.WorkSpace.Root, svnHomeDir)
 	}
 
 	if config.Git.HookPath == "" {

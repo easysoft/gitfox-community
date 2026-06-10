@@ -28,6 +28,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/events"
 	gitPkg "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/ssh"
+	svnPkg "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/svn"
 	"gorm.io/gorm"
 )
 
@@ -61,6 +62,7 @@ type App struct {
 	ArtifactService    artifactSvc.Interface
 	ContainerHandler   *ctnHandler.ContainerHandler
 	GitService         gitPkg.Interface
+	SvnService         svnPkg.Interface
 }
 
 func NewApp(mode string) (*App, func(), error) {

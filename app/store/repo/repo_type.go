@@ -11,6 +11,7 @@ type Repository struct {
 	SpaceID       uint            `gorm:"column:spaceID;comment:'空间ID'"`
 	Identifier    string          `gorm:"column:name;comment:'代码库唯一标识'"`
 	Desc          string          `gorm:"column:desc;comment:'代码库描述'"` // 关键字兼容：映射数据库 desc 字段
+	SCMType       string          `gorm:"column:scmType;comment:'源代码管理类型'"`
 	Product       string          `gorm:"column:product;comment:'关联产品'"`
 	GitUID        string          `gorm:"column:gitUID;comment:'Git仓库唯一标识'"`
 	DefaultBranch string          `gorm:"column:defaultBranch;comment:'默认分支名'"`

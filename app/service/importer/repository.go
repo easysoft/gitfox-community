@@ -2,10 +2,12 @@ package importer
 
 import (
 	"context"
+	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -22,11 +24,13 @@ import (
 	notifyStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/notify"
 	repoStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/auth/authn"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	pkgJobs "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/jobs"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
+	svnPkg "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/svn"
 	urlUtil "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/url"
 )
 
@@ -41,9 +45,11 @@ var (
 )
 
 type Repository struct {
+	config        *config.Config
 	defaultBranch string
 	urlProvider   urlUtil.Provider
 	git           git.Interface
+	svn           svnPkg.Interface
 	repoStore     repoStore.Interface
 	notifyStore   notifyStore.Interface
 	encrypter     encrypt.Encrypter
@@ -55,9 +61,11 @@ var _ Interface = (*Repository)(nil)
 
 // NewRepoImporterSvc 创建 RepoService 实例
 func NewRepoImporterSvc(
+	config *config.Config,
 	defaultBranch string,
 	urlProvider urlUtil.Provider,
 	git git.Interface,
+	svn svnPkg.Interface,
 	repoStore repoStore.Interface,
 	notifyStore notifyStore.Interface,
 	encrypter encrypt.Encrypter,
@@ -65,9 +73,11 @@ func NewRepoImporterSvc(
 	sseStreamer sse.Streamer,
 ) *Repository {
 	return &Repository{
+		config:        config,
 		defaultBranch: defaultBranch,
 		urlProvider:   urlProvider,
 		git:           git,
+		svn:           svn,
 		repoStore:     repoStore,
 		notifyStore:   notifyStore,
 		encrypter:     encrypter,
@@ -108,9 +118,17 @@ func (r *Repository) LoadRepositoryFromProvider(
 ) (RepositoryInfo, repoModel.Provider, error) {
 
 	if provider.Type == constant.RepoProviderTypeSVN {
-		// TODO: 这里需要检查一下 svn 联通性及代码库存在与否
+		cloneURL := fmt.Sprintf("%s/%s", provider.Host, provider.Slug)
+
+		if _, err := r.svn.InfoRevision(ctx, cloneURL, provider.Username, provider.Password); err != nil {
+			return RepositoryInfo{}, provider, errors.WithI18nKey(
+				errors.BadRequest.Wrap(err, "svn repository not found or unreachable"),
+				i18n.RepoImportError,
+			)
+		}
+
 		return RepositoryInfo{
-			CloneURL: fmt.Sprintf("%s/%s", provider.Host, provider.Slug),
+			CloneURL: cloneURL,
 		}, provider, nil
 	}
 
@@ -151,11 +169,12 @@ func (r *Repository) Run(ctx context.Context, provider repoModel.Provider, repo 
 	}
 
 	jobDef, err := r.getJobDef(JobIDFromRepoID(int64(repo.ID)), Input{
-		RepoID:     int64(repo.ID),
-		User:       provider.Username,
-		Auth:       auth,
-		CloneURL:   cloneURL,
-		NoticeLang: noticeLang,
+		ProviderType: provider.Type,
+		RepoID:       int64(repo.ID),
+		User:         provider.Username,
+		Auth:         auth,
+		CloneURL:     cloneURL,
+		NoticeLang:   noticeLang,
 	})
 	if err != nil {
 		return err
@@ -223,11 +242,12 @@ func (r *Repository) getJobInput(data string) (Input, error) {
 var _ pkgJobs.Handler = (*Repository)(nil)
 
 type Input struct {
-	RepoID     int64  `json:"repoID"`
-	User       string `json:"user"`
-	Auth       string `json:"auth"`
-	CloneURL   string `json:"cloneURL"`
-	NoticeLang string `json:"noticeLang"`
+	ProviderType constant.RepoProviderType `json:"providerType"`
+	RepoID       int64                     `json:"repoID"`
+	User         string                    `json:"user"`
+	Auth         string                    `json:"auth"`
+	CloneURL     string                    `json:"cloneURL"`
+	NoticeLang   string                    `json:"noticeLang"`
 }
 
 const JobType = "repository_import"
@@ -271,7 +291,37 @@ func (r *Repository) Handle(ctx context.Context, data string, reportFn pkgJobs.P
 		"repo.path", repo.Path,
 	)
 
-	// TODO: 这里需要判断是否为 subversion, 如果是 svn 则创建 svn 本地仓库，并调用 svn 命令进行导入。
+	if input.ProviderType == constant.RepoProviderTypeSVN {
+		repo, err = r.firstSyncSvnRepo(ctx, repo, input, log)
+		if err != nil {
+			return "", err
+		}
+	} else {
+		repo, err = r.firstSyncGitRepo(ctx, repo, cloneURLWithAuth, input, log)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	err = r.sseStreamer.Publish(ctx, int64(repo.SpaceID), eventModel.SSETypeRepositoryImportCompleted, repo)
+	if err != nil {
+		log.Errorw("failed to publish import completion SSE", "error", err)
+	}
+
+	log.Info("completed repository import")
+
+	return "", nil
+}
+
+// firstSyncGitRepo 创建空 git 仓库并同步仓库内容，成功后更新库表状态为 Active。
+// 同步失败时会自动清理已创建的 git 仓库和库表记录。
+func (r *Repository) firstSyncGitRepo(
+	ctx context.Context,
+	repo *repoModel.Repo,
+	cloneURLWithAuth string,
+	input Input,
+	log *logger.SugaredMateLogger,
+) (*repoModel.Repo, error) {
 	log.Info("create git repository")
 
 	accountInfo := auth.Session{User: &principal.User{
@@ -280,7 +330,7 @@ func (r *Repository) Handle(ctx context.Context, data string, reportFn pkgJobs.P
 	}}
 	gitUID, err := r.createGitRepository(ctx, accountInfo, repo.ID)
 	if err != nil {
-		return "", fmt.Errorf("failed to create empty git repository: %w", err)
+		return nil, fmt.Errorf("failed to create empty git repository: %w", err)
 	}
 
 	log.Infof("successfully created git repository with git_uid '%s'", gitUID)
@@ -323,13 +373,6 @@ func (r *Repository) Handle(ctx context.Context, data string, reportFn pkgJobs.P
 		repo = updated
 
 		r.sendNotice(ctx, repo.ID, repo.Identifier, repo.CreatedBy, input.NoticeLang, false, "", log)
-
-		// // 如果是镜像仓库，创建定时同步任务（不阻塞导入流程）
-		// if input.Mirror {
-		// 	_ = r.createMirrorSyncJob(context.WithoutCancel(ctx), int64(repo.ID), input.CloneURL, input.User, input.Auth, log)
-		// }
-
-		r.sendNotice(ctx, repo.ID, repo.Identifier, repo.CreatedBy, input.NoticeLang, false, "", log)
 		return nil
 	}()
 	if err != nil {
@@ -348,17 +391,129 @@ func (r *Repository) Handle(ctx context.Context, data string, reportFn pkgJobs.P
 			log.Errorw("failed to delete repo record after failed import", "error", errDel)
 		}
 
-		return "", fmt.Errorf("failed to import repository: %w", err)
+		return nil, fmt.Errorf("failed to import repository: %w", err)
 	}
 
-	err = r.sseStreamer.Publish(ctx, int64(repo.SpaceID), eventModel.SSETypeRepositoryImportCompleted, repo)
+	return repo, nil
+}
+
+// firstSyncSvnRepo 创建本地 SVN 仓库并通过 svnsync 同步远程仓库内容，
+// 成功后更新库表状态为 Active。同步失败时会自动清理已创建的 SVN 仓库和库表记录。
+func (r *Repository) firstSyncSvnRepo(
+	ctx context.Context,
+	repo *repoModel.Repo,
+	input Input,
+	log *logger.SugaredMateLogger,
+) (*repoModel.Repo, error) {
+	log.Info("create svn repository")
+
+	// 构造固定 42 字符的目录名: SHA-256(spaceID-identifier-timestamp)[:31] → base64
+	/* #nosec G401 */
+	hash := sha256.Sum256([]byte(
+		fmt.Sprintf("%d-%s-%d", repo.SpaceID, repo.Identifier, time.Now().UnixMicro()),
+	))
+	encodedDir := base64.RawURLEncoding.EncodeToString(hash[:31]) // 31 bytes → 42 chars
+	repoPath := filepath.Join(r.config.SVN.Root, "repos", encodedDir)
+	workingCopyPath := filepath.Join(r.config.SVN.Root, "repos", encodedDir+"-wc")
+
+	if err := r.svn.CreateRepository(ctx, repoPath); err != nil {
+		return nil, fmt.Errorf("failed to create svn repository: %w", err)
+	}
+
+	log.Infof("successfully created svn repository at '%s'", repoPath)
+
+	// 更新 GitUID 为 encodedDir，确保同步失败时能定位到仓库进行清理
+	updated, err := r.repoStore.UpdateOptLock(ctx, repo, func(repo *repoModel.Repo) error {
+		if repo.Status != constant.RepoStateImporting {
+			return errors.New("repository has already finished importing")
+		}
+		repo.GitUID = encodedDir
+		return nil
+	})
 	if err != nil {
-		log.Errorw("failed to publish import completion SSE", "error", err)
+		return nil, fmt.Errorf("failed to update repository prior to the import: %w", err)
+	}
+	repo = updated
+
+	err = func() error {
+		log.Info("initialize svnsync")
+
+		if err := r.svn.SyncInit(ctx, &svnPkg.SyncInitParams{
+			TargetRepoPath: repoPath,
+			SourceURL:      input.CloneURL,
+			SourceUsername: input.User,
+			SourcePassword: input.Auth,
+		}); err != nil {
+			return fmt.Errorf("failed to initialize svnsync: %w", err)
+		}
+
+		log.Info("sync svn repository")
+
+		if err := r.svn.Sync(ctx, &svnPkg.SyncParams{
+			TargetRepoPath: repoPath,
+			SourceUsername: input.User,
+			SourcePassword: input.Auth,
+		}); err != nil {
+			return fmt.Errorf("failed to sync svn repository from '%s': %w", input.CloneURL, err)
+		}
+
+		log.Info("copy revision properties")
+
+		if err := r.svn.SyncCopyRevProps(ctx, &svnPkg.SyncParams{
+			TargetRepoPath: repoPath,
+			SourceUsername: input.User,
+			SourcePassword: input.Auth,
+		}); err != nil {
+			return fmt.Errorf("failed to copy svn revision properties: %w", err)
+		}
+
+		log.Info("checkout working copy")
+
+		if err := r.svn.Checkout(ctx, &svnPkg.CheckoutParams{
+			SourceURL:  fmt.Sprintf("file://%s", repoPath),
+			TargetPath: workingCopyPath,
+		}); err != nil {
+			return fmt.Errorf("failed to checkout svn working copy: %w", err)
+		}
+
+		log.Infof("successfully checked out svn working copy at '%s'", workingCopyPath)
+
+		log.Info("update repo in DB")
+
+		updated, err := r.repoStore.UpdateOptLock(ctx, repo, func(repo *repoModel.Repo) error {
+			if repo.Status != constant.RepoStateImporting {
+				return errors.New("repository has already finished importing")
+			}
+			repo.Status = constant.RepoStateActive
+			return nil
+		})
+		if err != nil {
+			return fmt.Errorf("failed to update repository after import: %w", err)
+		}
+		repo = updated
+
+		r.sendNotice(ctx, repo.ID, repo.Identifier, repo.CreatedBy, input.NoticeLang, false, "", log)
+		return nil
+	}()
+	if err != nil {
+		log.Errorw("failed repository import - cleanup svn repository", "error", err)
+		r.sendNotice(ctx, repo.ID, repo.Identifier, repo.CreatedBy, input.NoticeLang, true, err.Error(), log)
+
+		cleanupCtx := context.WithoutCancel(ctx)
+		if errDel := r.svn.RemoveRepository(repoPath); errDel != nil {
+			log.Errorw("failed to delete svn repository after failed import", "error", errDel)
+		}
+		if errDel := r.svn.RemoveWorkingCopy(workingCopyPath); errDel != nil {
+			log.Errorw("failed to delete svn working copy after failed import", "error", errDel)
+		}
+		if errDel := r.repoStore.HardDelete(cleanupCtx, repo.ID); errDel != nil {
+			log.Errorw("failed to delete repo record after failed import", "error", errDel)
+		}
+
+		return nil, fmt.Errorf("failed to import repository: %w", err)
 	}
 
-	log.Info("completed repository import")
-
-	return "", nil
+	return repo, nil
 }
 
 func (r *Repository) createGitRepository(ctx context.Context, accountInfo auth.Session, repoID uint) (string, error) {

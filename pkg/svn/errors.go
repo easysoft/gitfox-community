@@ -30,5 +30,6 @@ var (
 	ErrUpdate                 = errors.New("failed to update svn working copy")
 	ErrRemoveRepository       = errors.New("failed to remove svn repository")
 	ErrRemoveWorkingCopy      = errors.New("failed to remove svn working copy")
+	ErrInfo                   = errors.New("failed to get svn info")
 	ErrNoParamsProvided       = errors.New("params not provided")
 )
