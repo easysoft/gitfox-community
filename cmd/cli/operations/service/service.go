@@ -19,6 +19,10 @@ import (
 
 const (
 	ParamInstall = "install"
+
+	// envDepsPrechecked 由 install 阶段透传给子进程 start，
+	// 标记"父进程已完成依赖检查"，子进程据此跳过 git/docker/svn 重复校验。
+	envDepsPrechecked = "GITFOX_DEPS_PRECHECKED"
 )
 
 // lastInitWorkspace 记录 init 成功后的工作目录路径，供 install 命令使用。
@@ -69,17 +73,16 @@ func runInstall(ctx *kingpin.ParseContext) error {
 	headerStyle := lipgloss.NewStyle().Bold(true)
 
 	// ========== 阶段 0：环境依赖检查 ==========
-	var gitOk bool
-	var gitVer string
-	var dockerOk bool
-	var dockerVer string
-	var dockerErr error
+	var gitOk, dockerOk, svnOk bool
+	var gitVer, dockerVer, svnVer string
+	var gitErr, dockerErr, svnErr error
 
 	_ = spinner.New().
 		Title(t(i18n.CliInstallDepChecking)).
 		Action(func() {
-			gitOk, gitVer, _ = CheckGit()
+			gitOk, gitVer, gitErr = CheckGit()
 			dockerOk, dockerVer, dockerErr = CheckDocker()
+			svnOk, svnVer, svnErr = CheckSubversion()
 		}).Run()
 
 	fmt.Println(headerStyle.Render(t(i18n.CliStatusSectionDeps)))
@@ -87,22 +90,35 @@ func runInstall(ctx *kingpin.ParseContext) error {
 	missing := false
 
 	// --- Git ---
-	if gitOk {
-		fmt.Println(okStyle.Render("") + fmt.Sprintf(t(i18n.CliStatusGitOk), gitVer))
+	if gitOk && gitErr == nil {
+		fmt.Println(okStyle.Render(fmt.Sprintf(t(i18n.CliStatusGitOk), gitVer)))
+	} else if gitOk && gitErr != nil {
+		// 版本过低或解析失败：阻断安装
+		fmt.Println(errStyle.Render(gitErr.Error()))
+		missing = true
 	} else {
-		fmt.Println(errStyle.Render("") + t(i18n.CliStatusGitMissing))
+		fmt.Println(errStyle.Render(t(i18n.CliStatusGitMissing)))
 		missing = true
 	}
 
 	// --- Docker ---
 	if dockerOk && dockerErr == nil {
-		fmt.Println(okStyle.Render("") + fmt.Sprintf(t(i18n.CliStatusDockerOk), dockerVer))
+		fmt.Println(okStyle.Render(fmt.Sprintf(t(i18n.CliStatusDockerOk), dockerVer)))
 	} else if dockerOk && dockerErr != nil {
-		fmt.Println(warnStyle.Render("") + dockerErr.Error())
+		fmt.Println(warnStyle.Render(dockerErr.Error()))
 		missing = true
 	} else {
-		fmt.Println(errStyle.Render("") + t(i18n.CliStatusDockerMissing))
+		fmt.Println(errStyle.Render(t(i18n.CliStatusDockerMissing)))
 		missing = true
+	}
+
+	// --- Subversion (非阻塞，仅警告) ---
+	if svnOk && svnErr == nil {
+		fmt.Println(okStyle.Render(fmt.Sprintf(t(i18n.CliStatusSvnOk), svnVer)))
+	} else if svnOk && svnErr != nil {
+		fmt.Println(warnStyle.Render(svnErr.Error()))
+	} else {
+		fmt.Println(warnStyle.Render(t(i18n.CliStatusSvnMissing)))
 	}
 
 	if missing {
@@ -146,6 +162,8 @@ func runInstall(ctx *kingpin.ParseContext) error {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin
+	// 阶段 0 已完成依赖检查，通知子进程 start 跳过重复检查，避免 svn/git/docker 警告重复打印。
+	cmd.Env = append(os.Environ(), envDepsPrechecked+"=1")
 
 	if err := cmd.Run(); err != nil {
 		fmt.Println(errStyle.Render(fmt.Sprintf(t(i18n.CliInstallStartExecFailed), err)))

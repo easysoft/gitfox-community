@@ -15,7 +15,33 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	clii18n "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n/cli"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/hashicorp/go-version"
 )
+
+// 依赖最低版本约束。
+const (
+	// MinGitVersion 是 GitFox 支持的最低 git 客户端版本。
+	MinGitVersion = "2.30.0"
+	// MinSvnVersion 是 GitFox 关联 Subversion 代码库功能要求的最低 svn 客户端版本。
+	MinSvnVersion = "1.14.3"
+)
+
+// threePartVersionRe 匹配输出中的三段式版本号 (X.Y.Z)，用于从 `xxx --version` 文本中抽取版本。
+var threePartVersionRe = regexp.MustCompile(`(\d+\.\d+\.\d+)`)
+
+// extractVersion 从命令原始输出中抽取三段式版本号，并用 go-version 解析为可比较的 *version.Version。
+// 返回原始捕获字符串与解析对象，便于上层既能展示又能比较。
+func extractVersion(raw string) (string, *version.Version, error) {
+	matches := threePartVersionRe.FindStringSubmatch(raw)
+	if len(matches) < 2 {
+		return "", nil, fmt.Errorf("no three-part version in: %s", strings.TrimSpace(raw))
+	}
+	v, err := version.NewVersion(matches[1])
+	if err != nil {
+		return matches[1], nil, err
+	}
+	return matches[1], v, nil
+}
 
 // CheckSudo 检查当前上下文是否具有超级管理员执行权限 (Root/Sudo/Administrator)。
 // 主要由于许多 CLI 的核心命令 (如挂载、停止后台守护进程) 需要穿透系统底层安全限制。
@@ -31,8 +57,11 @@ func CheckSudo() error {
 	}
 }
 
-// CheckGit 检查 git 是否安装并获取版本信息。
-// 返回: (是否安装, 解析道德版本号, 错误信息)
+// CheckGit 检查 git 是否安装、版本是否满足 MinGitVersion，并获取版本信息。
+// 返回: (是否安装, 解析后的版本号, 错误信息)
+//   - ok=false 表示未安装
+//   - ok=true && err==nil 表示安装且版本达标
+//   - ok=true && err!=nil 表示安装但版本过低或解析失败
 func CheckGit() (bool, string, error) {
 	t := clii18n.T
 	if _, err := exec.LookPath("git"); err != nil {
@@ -45,20 +74,18 @@ func CheckGit() (bool, string, error) {
 		return true, "", fmt.Errorf(t(i18n.CliCheckErrExecFailed), "git", err)
 	}
 
-	// 标准输出形如: "git version 2.39.2.windows.1"
 	outStr := strings.TrimSpace(string(output))
-	version := strings.TrimPrefix(outStr, "git version ")
-	if version == outStr {
-		// 没有匹配到 "git version " 前缀，尝试直接用正则提取数字版本
-		re := regexp.MustCompile(`(\d+\.\d+\.\d+(?:\.[-a-zA-Z0-9]+)*)`)
-		if matches := re.FindStringSubmatch(outStr); len(matches) > 1 {
-			return true, matches[1], nil
-		}
-		// 如果正则都没提取出来，退化到返回整段字符串
-		return true, outStr, nil
+	verStr, ver, err := extractVersion(outStr)
+	if err != nil {
+		return true, outStr, fmt.Errorf(t(i18n.CliCheckErrParseFailed), "git", outStr)
 	}
 
-	return true, version, nil
+	minVer, _ := version.NewVersion(MinGitVersion)
+	if ver.LessThan(minVer) {
+		return true, verStr, fmt.Errorf(t(i18n.CliCheckErrVersionTooOld), "git", verStr, MinGitVersion)
+	}
+
+	return true, verStr, nil
 }
 
 // CheckDocker 检查 docker 是否安装、daemon 是否正在运行，并获取版本信息。
@@ -74,22 +101,52 @@ func CheckDocker() (bool, string, error) {
 		return true, "", fmt.Errorf(t(i18n.CliCheckErrExecFailed), "docker", err)
 	}
 
-	// 标准输出形如: "Docker version 24.0.5, build ced0996"
 	outStr := strings.TrimSpace(string(output))
-	re := regexp.MustCompile(`[Vv]ersion\s+(\d+\.\d+\.\d+(?:[-a-zA-Z0-9.]+)*)`)
-	matches := re.FindStringSubmatch(outStr)
-	version := outStr
-	if len(matches) > 1 {
-		version = matches[1]
+	verStr, _, err := extractVersion(outStr)
+	if err != nil {
+		// 解析失败但二进制存在，返回原始输出便于排查
+		verStr = outStr
 	}
 
 	// 验证 Docker daemon 是否正在运行
 	// 注意：不能用 docker info，它会连接 docker.socket 触发 systemd socket activation 把 Docker 拉起来
 	if !isDockerDaemonRunning() {
-		return true, version, fmt.Errorf(t(i18n.CliCheckErrDaemonNotRunning), "docker")
+		return true, verStr, fmt.Errorf(t(i18n.CliCheckErrDaemonNotRunning), "docker")
 	}
 
-	return true, version, nil
+	return true, verStr, nil
+}
+
+// CheckSubversion 检查 svn 客户端是否安装、版本是否满足 MinSvnVersion，并获取版本信息。
+// 此检查为非阻塞性：缺失或版本过低仅以警告形式提示，不阻挡 GitFox 启动。
+// 返回: (是否安装, 解析后的版本号, 错误信息)
+//   - ok=false 表示未安装
+//   - ok=true && err==nil 表示安装且版本达标
+//   - ok=true && err!=nil 表示安装但版本过低或解析/执行失败
+func CheckSubversion() (bool, string, error) {
+	t := clii18n.T
+	if _, err := exec.LookPath("svn"); err != nil {
+		return false, "", fmt.Errorf(t(i18n.CliCheckErrNotFound), "svn")
+	}
+
+	cmd := exec.Command("svn", "--version", "--quiet")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return true, "", fmt.Errorf(t(i18n.CliCheckErrExecFailed), "svn", err)
+	}
+
+	outStr := strings.TrimSpace(string(output))
+	verStr, ver, err := extractVersion(outStr)
+	if err != nil {
+		return true, outStr, fmt.Errorf(t(i18n.CliCheckErrParseFailed), "svn", outStr)
+	}
+
+	minVer, _ := version.NewVersion(MinSvnVersion)
+	if ver.LessThan(minVer) {
+		return true, verStr, fmt.Errorf(t(i18n.CliCheckErrVersionTooOld), "svn", verStr, MinSvnVersion)
+	}
+
+	return true, verStr, nil
 }
 
 // isDockerDaemonRunning 检测 Docker daemon 是否正在运行，且不会触发 systemd socket activation。

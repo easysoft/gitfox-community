@@ -38,34 +38,52 @@ func runStatus(_ *kingpin.ParseContext) error {
 	// =========================================================
 	var gitOk bool
 	var gitVer string
+	var gitErr error
 	var dockerOk bool
 	var dockerVer string
 	var dockerErr error
+	var svnOk bool
+	var svnVer string
+	var svnErr error
 
 	_ = spinner.New().
 		Title(t(i18n.CliStatusChecking)).
 		Action(func() {
-			gitOk, gitVer, _ = CheckGit()
+			gitOk, gitVer, gitErr = CheckGit()
 			dockerOk, dockerVer, dockerErr = CheckDocker()
+			svnOk, svnVer, svnErr = CheckSubversion()
 		}).Run()
 
 	fmt.Println(headerStyle.Render(t(i18n.CliStatusSectionDeps)))
 
 	// --- Git ---
-	if gitOk {
-		fmt.Println(okStyle.Render("") + fmt.Sprintf(t(i18n.CliStatusGitOk), gitVer))
+	if gitOk && gitErr == nil {
+		fmt.Println(okStyle.Render(fmt.Sprintf(t(i18n.CliStatusGitOk), gitVer)))
+	} else if gitOk && gitErr != nil {
+		// 已安装但版本过低或解析失败
+		fmt.Println(warnStyle.Render(gitErr.Error()))
 	} else {
-		fmt.Println(errStyle.Render("") + t(i18n.CliStatusGitMissing))
+		fmt.Println(errStyle.Render(t(i18n.CliStatusGitMissing)))
 	}
 
 	// --- Docker ---
 	if dockerOk && dockerErr == nil {
-		fmt.Println(okStyle.Render("") + fmt.Sprintf(t(i18n.CliStatusDockerOk), dockerVer))
+		fmt.Println(okStyle.Render(fmt.Sprintf(t(i18n.CliStatusDockerOk), dockerVer)))
 	} else if dockerOk && dockerErr != nil {
 		// 已安装但 daemon 未运行
-		fmt.Println(warnStyle.Render("") + dockerErr.Error())
+		fmt.Println(warnStyle.Render(dockerErr.Error()))
 	} else {
-		fmt.Println(errStyle.Render("") + t(i18n.CliStatusDockerMissing))
+		fmt.Println(errStyle.Render(t(i18n.CliStatusDockerMissing)))
+	}
+
+	// --- Subversion (非阻塞，仅警告) ---
+	if svnOk && svnErr == nil {
+		fmt.Println(okStyle.Render(fmt.Sprintf(t(i18n.CliStatusSvnOk), svnVer)))
+	} else if svnOk && svnErr != nil {
+		// 已安装但版本过低或执行失败：影响关联 SVN 代码库功能
+		fmt.Println(warnStyle.Render(svnErr.Error()))
+	} else {
+		fmt.Println(warnStyle.Render(t(i18n.CliStatusSvnMissing)))
 	}
 
 	// =========================================================
@@ -86,8 +104,8 @@ func runStatus(_ *kingpin.ParseContext) error {
 
 		if err == nil && resp.StatusCode == 200 {
 			resp.Body.Close()
-			fmt.Println(okStyle.Render("") + t(i18n.CliStatusServiceRunning))
-			fmt.Println(okStyle.Render("") + fmt.Sprintf(t(i18n.CliStatusServicePort), port))
+			fmt.Println(okStyle.Render(t(i18n.CliStatusServiceRunning)))
+			fmt.Println(okStyle.Render(fmt.Sprintf(t(i18n.CliStatusServicePort), port)))
 		} else {
 			if resp != nil {
 				resp.Body.Close()

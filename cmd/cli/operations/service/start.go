@@ -30,6 +30,7 @@ func RegisterStart(app *kingpin.Application) {
 func runStart(_ *kingpin.ParseContext) error {
 	t := clii18n.T
 	errStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#FF4500"))
+	warnStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#FF8C00"))
 	successStyle := lipgloss.NewStyle().Bold(true)
 
 	// printBanner(t(i18n.CliStartWelcome))
@@ -52,22 +53,35 @@ func runStart(_ *kingpin.ParseContext) error {
 	// =========================================================
 	// 阶段 1. 启动前置依赖拦截 (依赖是否齐全)
 	// =========================================================
-	// fmt.Println(t(i18n.CliStartStepCheckDeps))
-	if ok, _, err := CheckGit(); !ok || err != nil {
-		fmt.Println(errStyle.Render(err.Error()))
-		return nil
-	}
-	//  else {
-	// 	fmt.Println(successStyle.Render("✓ ") + fmt.Sprintf(t(i18n.CliStartCheckGitOk), ver))
-	// }
+	// 若 install 链路已在父进程做过依赖检查，则跳过本阶段，避免 git/docker/svn 警告重复打印。
+	// flag 一次性消费：读完立刻 Unsetenv，避免泄漏给本进程后续 spawn 的子进程。
+	depsPrechecked := os.Getenv(envDepsPrechecked) == "1"
+	_ = os.Unsetenv(envDepsPrechecked)
+	if !depsPrechecked {
+		// fmt.Println(t(i18n.CliStartStepCheckDeps))
+		if ok, _, err := CheckGit(); !ok || err != nil {
+			fmt.Println(errStyle.Render(err.Error()))
+			return nil
+		}
+		//  else {
+		// 	fmt.Println(successStyle.Render("✓ ") + fmt.Sprintf(t(i18n.CliStartCheckGitOk), ver))
+		// }
 
-	if ok, _, err := CheckDocker(); !ok || err != nil {
-		fmt.Println(errStyle.Render(err.Error()))
-		return nil
+		if ok, _, err := CheckDocker(); !ok || err != nil {
+			fmt.Println(errStyle.Render(err.Error()))
+			return nil
+		}
+		// else {
+		// 	fmt.Println(successStyle.Render("✓ ") + fmt.Sprintf(t(i18n.CliStartCheckDockerOk), ver))
+		// }
+
+		// Subversion 仅警告，不阻塞 start：用于支持关联 SVN 代码库功能。
+		if ok, _, err := CheckSubversion(); !ok {
+			fmt.Println(warnStyle.Render(t(i18n.CliStatusSvnMissing)))
+		} else if err != nil {
+			fmt.Println(warnStyle.Render(err.Error()))
+		}
 	}
-	// else {
-	// 	fmt.Println(successStyle.Render("✓ ") + fmt.Sprintf(t(i18n.CliStartCheckDockerOk), ver))
-	// }
 
 	// =========================================================
 	// 阶段 2. 读取环境配制检查 (识别是否允许提供服务)
@@ -123,7 +137,6 @@ func runStart(_ *kingpin.ParseContext) error {
 	// =========================================================
 	// 阶段 3. 智能服务注册决策引擎
 	// =========================================================
-	warnStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#FF8C00"))
 
 	// 3.1 获取当前二进制绝对路径
 	exePath, err := os.Executable()
@@ -331,11 +344,8 @@ func printFailureSummary() {
 		statusCmd = "sudo systemctl status gitfox"
 	}
 
-	headerStyle := lipgloss.NewStyle().
-		Bold(true).
-		Foreground(lipgloss.Color("#FF8C00"))
-	labelStyle := lipgloss.NewStyle().
-		Width(20)
+	headerStyle := lipgloss.NewStyle().Bold(true)
+	labelStyle := lipgloss.NewStyle().Width(20)
 	valueStyle := lipgloss.NewStyle()
 
 	printRow := func(label, value string) {
