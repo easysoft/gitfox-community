@@ -258,6 +258,7 @@ const (
 	CliCheckErrExecFailed                I18nKey = "cli.check_err_exec_failed"                 // 执行 %s 命令失败: %w
 	CliCheckErrNotFound                  I18nKey = "cli.check_err_not_found"                   // 未找到 %s 命令,请确认是否已正确安装并添加到系统环境变量中.
 	CliCheckErrParseFailed               I18nKey = "cli.check_err_parse_failed"                // 无法解析 %s 的版本输出信息: %s
+	CliCheckErrVersionTooOld             I18nKey = "cli.check_err_version_too_old"             // %s 版本过低 (当前: %s, 需要至少: %s),请升级.
 	CliHooksCommand                      I18nKey = "cli.hooks_command"                         // hooks
 	CliHooksDescription                  I18nKey = "cli.hooks_description"                     // 管理 Git 服务器钩子
 	CliHooksPostReceiveDescription       I18nKey = "cli.hooks_post_receive_description"        // 在推送的所有引用更新之后执行的钩子
@@ -379,6 +380,7 @@ const (
 	CliStartCheckComposeOk               I18nKey = "cli.start_check_compose_ok"                // Docker Compose 环境就绪 (版本: %s)
 	CliStartCheckDockerOk                I18nKey = "cli.start_check_docker_ok"                 // Docker 环境就绪 (版本: %s)
 	CliStartCheckGitOk                   I18nKey = "cli.start_check_git_ok"                    // Git 环境就绪 (版本: %s)
+	CliStartCheckSvnOk                   I18nKey = "cli.start_check_svn_ok"                    // Subversion 环境就绪 (版本: %s)
 	CliStartConfirmCancel                I18nKey = "cli.start_confirm_cancel"                  // 操作已取消:本次未注册任何服务.
 	CliStartConfirmNo                    I18nKey = "cli.start_confirm_no"                      // 暂不启动
 	CliStartConfirmRegister              I18nKey = "cli.start_confirm_register"                // 准备就绪:即将向系统后台静默注册并常驻挂载守护进程服务,是否继续?
@@ -408,7 +410,7 @@ const (
 	CliStartFailed                       I18nKey = "cli.start_failed"                          // 服务拉起失败: %v
 	CliStartFailureCheckLog              I18nKey = "cli.start_failure_check_log"               // 查看最后崩溃日志
 	CliStartFailureCheckStatus           I18nKey = "cli.start_failure_check_status"            // 查看服务当前状态
-	CliStartFailureTitle                 I18nKey = "cli.start_failure_title"                   // [ 诊断与排错指南 ]
+	CliStartFailureTitle                 I18nKey = "cli.start_failure_title"                   // 诊断与排错指南
 	CliStartServiceCorrupted             I18nKey = "cli.start_service_corrupted"               // 现有服务配置文件已损坏或无法解析,将重新注册...
 	CliStartServiceExistsDiff            I18nKey = "cli.start_service_exists_diff"             // 检测到系统中已注册的 GitFox 服务指向了另一个二进制文件.
 	CliStartServiceExistsNewDir          I18nKey = "cli.start_service_exists_new_dir"          // 当前工作目录  : %s
@@ -459,6 +461,10 @@ const (
 	CliStatusServicePort                 I18nKey = "cli.status_service_port"                   // 监听端口: %s
 	CliStatusServiceRegistered           I18nKey = "cli.status_service_registered"             // GitFox 守护进程已注册但未响应 (端口: %s).
 	CliStatusServiceRunning              I18nKey = "cli.status_service_running"                // GitFox 服务正常
+	CliStatusSvnExecFailed               I18nKey = "cli.status_svn_exec_failed"                // Subversion 客户端检测失败 (%v),关联 Subversion 代码库功能将无法使用.
+	CliStatusSvnMissing                  I18nKey = "cli.status_svn_missing"                    // Subversion 客户端未安装,关联 Subversion 代码库功能将无法使用,安装文档...
+	CliStatusSvnOk                       I18nKey = "cli.status_svn_ok"                         // Subversion 已安装,版本: %s
+	CliStatusSvnVersionTooOld            I18nKey = "cli.status_svn_version_too_old"            // Subversion 版本过低 (当前: %s, 需要至少: %s),关联 Subversio...
 	CliStatusTitle                       I18nKey = "cli.status_title"                          // GitFox 系统状态报告
 	CliStatusWelcome                     I18nKey = "cli.status_welcome"                        // GitFox · 系统状态
 	CliStopDescription                   I18nKey = "cli.stop_description"                      // 停止gitfox服务

@@ -58,6 +58,7 @@ func stopLinux() error {
 func runStop(_ *kingpin.ParseContext) error {
 	t := clii18n.T
 	errStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#FF4500"))
+	warnStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#FF8C00"))
 	// successStyle := lipgloss.NewStyle().Bold(true)
 
 	// printBanner(t(i18n.CliStopWelcome))
@@ -80,7 +81,6 @@ func runStop(_ *kingpin.ParseContext) error {
 	// ========== 阶段 2. 反向健康检查：确认端口不再响应 ==========
 	if port != "" {
 		if CheckPortDown(healthURL, 5) {
-			warnStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#FF8C00"))
 			fmt.Println(warnStyle.Render(t(i18n.CliStopHealthStillUp)))
 		}
 	}
