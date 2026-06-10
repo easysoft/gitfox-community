@@ -190,7 +190,7 @@ func NewApp(mode string) (*App, func(), error) {
 	tagController := tag2.NewController(tagService, repoService)
 	commitService := commit.NewService(urlProvider, gitService)
 	commitController := commit2.NewController(commitService, repoService)
-	svnInterface, err := svn.ProvideSVN()
+	svnInterface, err := svn.ProvideSVN(config)
 	if err != nil {
 		cleanup2()
 		cleanup()
@@ -203,7 +203,7 @@ func NewApp(mode string) (*App, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	repository := importer.NewRepoImporterSvc(config, mode, urlProvider, gitService, svnInterface, store, notifyStore, encrypter, jobsScheduler, streamer)
+	repository := importer.NewRepoImporterSvc(mode, urlProvider, gitService, svnInterface, store, notifyStore, encrypter, jobsScheduler, streamer)
 	eventContext := provider.NewEventContext()
 	eventsConfig := provider.NewEventConfig()
 	universalClient := provider.NewEventRedisClient()

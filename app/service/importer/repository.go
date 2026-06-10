@@ -7,14 +7,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
-	"path/filepath"
 	"strings"
 	"time"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/githook"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
-	eventModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/event"
 	simpleJob "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/jobs"
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 	principal "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/user"
@@ -24,7 +22,6 @@ import (
 	notifyStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/notify"
 	repoStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/auth/authn"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
@@ -45,7 +42,6 @@ var (
 )
 
 type Repository struct {
-	config        *config.Config
 	defaultBranch string
 	urlProvider   urlUtil.Provider
 	git           git.Interface
@@ -61,7 +57,6 @@ var _ Interface = (*Repository)(nil)
 
 // NewRepoImporterSvc 创建 RepoService 实例
 func NewRepoImporterSvc(
-	config *config.Config,
 	defaultBranch string,
 	urlProvider urlUtil.Provider,
 	git git.Interface,
@@ -73,7 +68,6 @@ func NewRepoImporterSvc(
 	sseStreamer sse.Streamer,
 ) *Repository {
 	return &Repository{
-		config:        config,
 		defaultBranch: defaultBranch,
 		urlProvider:   urlProvider,
 		git:           git,
@@ -92,6 +86,7 @@ func (r *Repository) Create(ctx context.Context, session *auth.Session, req *rep
 		Identifier:    req.Identifier,
 		GitUID:        req.GitUID,
 		Desc:          req.Desc,
+		SCMType:       req.SCMType,
 		Product:       req.Product,
 		CreatedBy:     session.User.Account,
 		DefaultBranch: req.DefaultBranch,
@@ -303,11 +298,6 @@ func (r *Repository) Handle(ctx context.Context, data string, reportFn pkgJobs.P
 		}
 	}
 
-	err = r.sseStreamer.Publish(ctx, int64(repo.SpaceID), eventModel.SSETypeRepositoryImportCompleted, repo)
-	if err != nil {
-		log.Errorw("failed to publish import completion SSE", "error", err)
-	}
-
 	log.Info("completed repository import")
 
 	return "", nil
@@ -413,8 +403,9 @@ func (r *Repository) firstSyncSvnRepo(
 		fmt.Sprintf("%d-%s-%d", repo.SpaceID, repo.Identifier, time.Now().UnixMicro()),
 	))
 	encodedDir := base64.RawURLEncoding.EncodeToString(hash[:31]) // 31 bytes → 42 chars
-	repoPath := filepath.Join(r.config.SVN.Root, "repos", encodedDir)
-	workingCopyPath := filepath.Join(r.config.SVN.Root, "repos", encodedDir+"-wc")
+	paths := r.svn.ResolveRepositoryPaths(encodedDir)
+	repoPath := paths.RepoPath
+	workingCopyPath := paths.WorkingCopyPath
 
 	if err := r.svn.CreateRepository(ctx, repoPath); err != nil {
 		return nil, fmt.Errorf("failed to create svn repository: %w", err)

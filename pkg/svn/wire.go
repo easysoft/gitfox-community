@@ -14,11 +14,14 @@
 
 package svn
 
-import "github.com/google/wire"
+import (
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
+	"github.com/google/wire"
+)
 
 // ProvideSVN returns a new SVN Service implementing Interface.
-func ProvideSVN() (Interface, error) {
-	return New()
+func ProvideSVN(cfg *config.Config) (Interface, error) {
+	return New(cfg)
 }
 
 // SvnWireSet provides the SVN service binding.

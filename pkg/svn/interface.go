@@ -47,6 +47,9 @@ type Interface interface {
 	// RemoveWorkingCopy removes the working copy directory.
 	RemoveWorkingCopy(path string) error
 
+	// ResolveRepositoryPaths assembles repository and working copy paths from an encoded directory name.
+	ResolveRepositoryPaths(encodedDir string) RepositoryPaths
+
 	// SyncInit initializes svnsync for the target repository.
 	SyncInit(ctx context.Context, params *SyncInitParams) error
 

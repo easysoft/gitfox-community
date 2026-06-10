@@ -24,6 +24,7 @@ import (
 	"runtime"
 	"strings"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/svn/command"
 	"github.com/hashicorp/go-version"
@@ -33,14 +34,16 @@ import (
 type Service struct {
 	// traceSvn enables debug logging of svn command execution.
 	traceSvn bool
+	// svnRoot is the root directory for SVN repository storage.
+	svnRoot string
 }
 
 // New creates a new SVN Service. It verifies that the svn binary is available on PATH.
-func New() (*Service, error) {
+func New(cfg *config.Config) (*Service, error) {
 	if _, err := exec.LookPath(command.SvnExecutable); err != nil {
 		return nil, errors.Wrapf(ErrSvnBinaryNotFound, "%v", err)
 	}
-	return &Service{}, nil
+	return &Service{svnRoot: cfg.SVN.Root}, nil
 }
 
 // Version returns the parsed SVN version from running `svn --version`.
