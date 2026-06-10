@@ -105,14 +105,6 @@ func runInstall(ctx *kingpin.ParseContext) error {
 		missing = true
 	}
 
-	// --- Docker Compose ---
-	// if composeOk {
-	// 	fmt.Println(okStyle.Render("") + fmt.Sprintf(t(i18n.CliStatusComposeOk), composeVer))
-	// } else {
-	// 	fmt.Println(errStyle.Render("") + t(i18n.CliStatusComposeMissing))
-	// 	missing = true
-	// }
-
 	if missing {
 		fmt.Println()
 		fmt.Println(errStyle.Render(t(i18n.CliInstallDepMissing)))
