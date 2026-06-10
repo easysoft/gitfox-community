@@ -443,8 +443,6 @@ const (
 	CliStartSummaryWindowsCleaning       I18nKey = "cli.start_summary_windows_cleaning"        // [Service] 正在清理资源...
 	CliStartWelcome                      I18nKey = "cli.start_welcome"                         // GitFox · 启动服务
 	CliStatusChecking                    I18nKey = "cli.status_checking"                       // 正在进行依赖项检查...
-	CliStatusComposeMissing              I18nKey = "cli.status_compose_missing"                // Docker Compose 未安装.安装指南: https://docs.docker.co...
-	CliStatusComposeOk                   I18nKey = "cli.status_compose_ok"                     // Docker Compose 已安装 (版本: %s)
 	CliStatusDescription                 I18nKey = "cli.status_description"                    // 检查gitfox服务状态以及环境依赖项
 	CliStatusDockerMissing               I18nKey = "cli.status_docker_missing"                 // Docker 未安装,安装文档: https://docs.docker.com/engine...
 	CliStatusDockerOk                    I18nKey = "cli.status_docker_ok"                      // Docker 已安装,版本: %s
@@ -746,8 +744,8 @@ const (
 	RepoImportCloneUrlParseError       I18nKey = "repo.import_clone_url_parse_error"      // 解析 Git 克隆 URL 失败
 	RepoImportCreateGitRepoError       I18nKey = "repo.import_create_git_repo_error"      // 创建空 Git 仓库失败
 	RepoImportError                    I18nKey = "repo.import_error"                      // 导入仓库异常
-	RepoImportNotifyFailure            I18nKey = "repo.import_notify_failure"             // 导入失败通知
-	RepoImportNotifySuccess            I18nKey = "repo.import_notify_success"             // 导入成功通知
+	RepoImportNotifyFailure            I18nKey = "repo.import_notify_failure"             // %s 导入代码库 [%s] 失败,失败原因:%s
+	RepoImportNotifySuccess            I18nKey = "repo.import_notify_success"             // %s 导入代码库 [%s] 成功
 	RepoImportRepoNotFound             I18nKey = "repo.import_repo_not_found"             // 导入的仓库不存在
 	RepoImportRepoNotImporting         I18nKey = "repo.import_repo_not_importing"         // 仓库未处于导入中状态
 	RepoImportSuccess                  I18nKey = "repo.import_success"                    // 导入仓库成功

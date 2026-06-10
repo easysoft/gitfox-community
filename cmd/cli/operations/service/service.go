@@ -74,15 +74,12 @@ func runInstall(ctx *kingpin.ParseContext) error {
 	var dockerOk bool
 	var dockerVer string
 	var dockerErr error
-	var composeOk bool
-	var composeVer string
 
 	_ = spinner.New().
 		Title(t(i18n.CliInstallDepChecking)).
 		Action(func() {
 			gitOk, gitVer, _ = CheckGit()
 			dockerOk, dockerVer, dockerErr = CheckDocker()
-			composeOk, composeVer, _ = CheckDockerCompose()
 		}).Run()
 
 	fmt.Println(headerStyle.Render(t(i18n.CliStatusSectionDeps)))
@@ -105,14 +102,6 @@ func runInstall(ctx *kingpin.ParseContext) error {
 		missing = true
 	} else {
 		fmt.Println(errStyle.Render("") + t(i18n.CliStatusDockerMissing))
-		missing = true
-	}
-
-	// --- Docker Compose ---
-	if composeOk {
-		fmt.Println(okStyle.Render("") + fmt.Sprintf(t(i18n.CliStatusComposeOk), composeVer))
-	} else {
-		fmt.Println(errStyle.Render("") + t(i18n.CliStatusComposeMissing))
 		missing = true
 	}
 

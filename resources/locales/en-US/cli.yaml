@@ -208,8 +208,6 @@ cli:
   status_git_missing: "Git: Not installed, installation document: https://git-scm.com/book/en/v2/Getting-Started-Installing-Git"
   status_docker_ok: "Docker: Installed, version: %s"
   status_docker_missing: "Docker: Not installed, installation document: https://docs.docker.com/engine/install/"
-  status_compose_ok: "Docker Compose is installed (Version: %s)"
-  status_compose_missing: "Docker Compose is NOT installed. Install guide: https://docs.docker.com/compose/install/"
   status_section_service: "GitFox Service Status"
   status_service_running: "GitFox service is running normally"
   status_service_not_running: "GitFox service is not running"

@@ -208,8 +208,6 @@ cli:
   status_git_missing: "Git 未安装，安装文档: https://git-scm.com/book/en/v2/Getting-Started-Installing-Git"
   status_docker_ok: "Docker 已安装，版本: %s"
   status_docker_missing: "Docker 未安装，安装文档: https://docs.docker.com/engine/install/"
-  status_compose_ok: "Docker Compose 已安装 (版本: %s)"
-  status_compose_missing: "Docker Compose 未安装。安装指南: https://docs.docker.com/compose/install/"
   status_section_service: "GitFox 服务状态"
   status_service_running: "GitFox 服务正常"
   status_service_not_running: "GitFox 服务未启动"
