@@ -86,26 +86,24 @@ definitions:
     - orderNone
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.RepoProviderType:
     enum:
-    - github
-    - gitlab
-    - gitlab.com
-    - gitlab.cn
-    - bitbucket
-    - stash
-    - gitea
-    - gogs
-    - azure
+    - GitHub
+    - GitLab
+    - Bitbucket
+    - Stash
+    - Gitea
+    - Gogs
+    - Azure
+    - Subversion
     type: string
     x-enum-varnames:
     - RepoProviderTypeGitHub
     - RepoProviderTypeGitLab
-    - RepoProviderTypeGitLabCOM
-    - RepoProviderTypeGitLabCN
     - RepoProviderTypeBitbucket
     - RepoProviderTypeStash
     - RepoProviderTypeGitea
     - RepoProviderTypeGogs
     - RepoProviderTypeAzure
+    - RepoProviderTypeSVN
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.RespCode:
     enum:
     - success
@@ -1097,15 +1095,15 @@ definitions:
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_jobs.State:
     enum:
-    - scheduled
     - running
+    - scheduled
     - finished
     - failed
     - canceled
     type: string
     x-enum-varnames:
-    - StateScheduled
     - StateRunning
+    - StateScheduled
     - StateFinished
     - StateFailed
     - StateCanceled
@@ -1326,22 +1324,23 @@ definitions:
         - open
         - private
         type: string
-      description:
+      desc:
         type: string
-      identifier:
+      mirror:
+        description: 是否镜像导入，默认为false
+        type: boolean
+      name:
         type: string
       product:
         description: 关联产品
         type: string
       provider:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.Provider'
-      providerRepo:
-        type: string
       spaceID:
         type: integer
     required:
     - acl
-    - identifier
+    - name
     - spaceID
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.Merge:
@@ -1480,38 +1479,51 @@ definitions:
     properties:
       failure:
         type: string
-      progress:
-        type: integer
       result:
         type: string
-      state:
+      status:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_jobs.State'
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.Provider:
     properties:
       host:
         type: string
+      id:
+        type: integer
       password:
+        type: string
+      projectID:
+        type: string
+      slug:
+        type: string
+      token:
         type: string
       type:
         allOf:
         - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.RepoProviderType'
         enum:
-        - github
-        - gitlab
-        - gitlab.com
-        - gitlab.cn
-        - gitea
-        - gogs
+        - Github
+        - Gitlab
+        - Gitea
+        - Gogs
+        - Subversion
       username:
+        description: 'svn:'
         type: string
     required:
+    - host
+    - id
+    - slug
     - type
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.Repo:
     properties:
       acl:
         type: string
+      connector:
+        items:
+          type: integer
+        type: array
       createdBy:
         type: string
       createdDate:
@@ -1528,8 +1540,6 @@ definitions:
       editedDate:
         description: 允许 NULL，用指针类型
         type: string
-      empty:
-        type: boolean
       forkID:
         description: 允许 NULL，用指针类型
         type: integer
@@ -1544,26 +1554,27 @@ definitions:
         type: integer
       mirror:
         type: boolean
-      mutex:
-        type: integer
       name:
         type: string
       path:
         type: string
       product:
         type: string
+      providerID:
+        type: integer
       spaceID:
         type: integer
       status:
-        description: 状态码用 int 类型（兼容枚举映射）
-        type: integer
-      synced:
-        type: integer
+        type: string
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.RepositoryOutput:
     properties:
       acl:
         type: string
+      connector:
+        items:
+          type: integer
+        type: array
       createdBy:
         type: string
       createdDate:
@@ -1580,8 +1591,6 @@ definitions:
       editedDate:
         description: 允许 NULL，用指针类型
         type: string
-      empty:
-        type: boolean
       forkID:
         description: 允许 NULL，用指针类型
         type: integer
@@ -1594,27 +1603,20 @@ definitions:
         type: string
       id:
         type: integer
-      importing:
-        type: boolean
-      isPublic:
-        type: boolean
       mirror:
         type: boolean
-      mutex:
-        type: integer
       name:
         type: string
       path:
         type: string
       product:
         type: string
+      providerID:
+        type: integer
       spaceID:
         type: integer
       status:
-        description: 状态码用 int 类型（兼容枚举映射）
-        type: integer
-      synced:
-        type: integer
+        type: string
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.ReqFilter:
     properties:

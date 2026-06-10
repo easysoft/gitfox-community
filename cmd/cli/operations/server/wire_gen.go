@@ -77,6 +77,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pubsub"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/ssh"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/storage"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/svn"
 	"github.com/drone/runner-go/poller"
 	"gorm.io/gorm"
 )
@@ -189,6 +190,12 @@ func NewApp(mode string) (*App, func(), error) {
 	tagController := tag2.NewController(tagService, repoService)
 	commitService := commit.NewService(urlProvider, gitService)
 	commitController := commit2.NewController(commitService, repoService)
+	svnInterface, err := svn.ProvideSVN(config)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
 	notifyStore := notify.NewNotifyStore(db)
 	encrypter, err := provider.ProvideEncrypter(config)
 	if err != nil {
@@ -196,7 +203,7 @@ func NewApp(mode string) (*App, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	repository := importer.NewRepoImporterSvc(mode, urlProvider, gitService, store, notifyStore, encrypter, jobsScheduler, streamer)
+	repository := importer.NewRepoImporterSvc(mode, urlProvider, gitService, svnInterface, store, notifyStore, encrypter, jobsScheduler, streamer)
 	eventContext := provider.NewEventContext()
 	eventsConfig := provider.NewEventConfig()
 	universalClient := provider.NewEventRedisClient()
@@ -360,6 +367,7 @@ func NewApp(mode string) (*App, func(), error) {
 		ArtifactService:  artifactService,
 		ContainerHandler: containerHandler,
 		GitService:       gitService,
+		SvnService:       svnInterface,
 	}
 	return app, func() {
 		cleanup2()
@@ -399,4 +407,5 @@ type App struct {
 	ArtifactService  artifact2.Interface
 	ContainerHandler *handler.ContainerHandler
 	GitService       git.Interface
+	SvnService       svn.Interface
 }

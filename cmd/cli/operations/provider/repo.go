@@ -18,6 +18,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/events"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pubsub"
+	svnPkg "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/svn"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/url"
 )
 
@@ -35,6 +36,7 @@ var RepoWireSet = wire.NewSet(
 	repoStore.NewRepoStore,
 	wire.Bind(new(pullrequestStore.Interface), new(*pullrequestStore.Store)),
 	pullrequestStore.NewPullRequestStore,
+	svnPkg.SvnWireSet,
 )
 
 // ProvideEncrypter returns a field encrypter. When no key is configured,

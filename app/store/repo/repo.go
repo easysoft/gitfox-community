@@ -129,6 +129,7 @@ func mapToModel(data Repository) *repoModel.Repo {
 		Identifier:    data.Identifier,
 		SpaceID:       data.SpaceID,
 		Desc:          data.Desc,
+		SCMType:       data.SCMType,
 		Product:       data.Product,
 		GitUID:        data.GitUID,
 		DefaultBranch: data.DefaultBranch,

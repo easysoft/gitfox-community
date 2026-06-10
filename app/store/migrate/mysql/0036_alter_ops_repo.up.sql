@@ -13,4 +13,5 @@ ALTER TABLE `ops_repo`
     MODIFY COLUMN `acl` varchar(30) NOT NULL DEFAULT 'open' COMMENT '权限:private,open' AFTER `defaultBranch`,
     ADD COLUMN `status` varchar(30) NOT NULL DEFAULT 'active' COMMENT '代码库状态' AFTER `acl`,
     ADD COLUMN `providerID` int unsigned NOT NULL DEFAULT 0 COMMENT '源代码提供商ID' AFTER `mirror`,
-    ADD COLUMN `connector` text COMMENT '连接器信息' AFTER `providerID`;
+    ADD COLUMN `connector` text COMMENT '连接器信息' AFTER `providerID`,
+    ADD COLUMN `scmType` varchar(10) NOT NULL DEFAULT 'git' COMMENT '源代码管理类型' AFTER `desc`;

@@ -14,6 +14,7 @@ type Config struct {
 	SQLite       SQLiteConfig       `yaml:"sqlite"`
 	Docker       DockerConfig       `yaml:"docker"`
 	Git          GitConfig          `yaml:"git"`
+	SVN          SvnConfig          `yaml:"svn"`
 	Job          JobConfig          `yaml:"job"`
 	Webhook      WebhookConfig      `yaml:"webhook"`
 	SSH          SSHConfig          `yaml:"ssh"`
@@ -88,6 +89,11 @@ type GitConfig struct {
 	DefaultBranch string `yaml:"defaultBranch"`
 	Root          string `envconfig:"GITFOX_GIT_ROOT_DIR" yaml:"root"`
 	HookPath      string `yaml:"hookPath"`
+}
+
+// SvnConfig SVN 配置
+type SvnConfig struct {
+	Root string `envconfig:"GITFOX_SVN_ROOT_DIR" yaml:"root"`
 }
 
 // JobConfig holds configuration for job scheduler.

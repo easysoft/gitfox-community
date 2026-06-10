@@ -45,6 +45,7 @@ func (r *RepositoryInfo) ConvertToRepo(
 	provider *repoModel.Provider,
 ) (*repoModel.Repo, bool) {
 	var connectInfo []byte
+	scmType := "git"
 	if provider != nil {
 		switch provider.Type {
 		case constant.RepoProviderTypeSVN:
@@ -54,6 +55,7 @@ func (r *RepositoryInfo) ConvertToRepo(
 				Password: base64.StdEncoding.EncodeToString([]byte(provider.Password)),
 			}
 			connectInfo, _ = json.Marshal(svnConnectInfo)
+			scmType = "svn"
 		default:
 			gitConnectInfo := repoModel.GitConnectInfo{
 				Slug:      provider.Slug,
@@ -71,6 +73,7 @@ func (r *RepositoryInfo) ConvertToRepo(
 		Identifier:    identifier,
 		GitUID:        gitTempUID, // the correct git UID will be set by the job handler
 		Desc:          description,
+		SCMType:       scmType,
 		CreatedBy:     user.Account,
 		ForkID:        &forkID,
 		DefaultBranch: r.DefaultBranch,

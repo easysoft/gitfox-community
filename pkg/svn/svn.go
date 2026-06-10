@@ -1,17 +1,3 @@
-// Copyright 2023 Harness, Inc.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 package svn
 
 import (
@@ -24,6 +10,7 @@ import (
 	"runtime"
 	"strings"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/svn/command"
 	"github.com/hashicorp/go-version"
@@ -33,14 +20,16 @@ import (
 type Service struct {
 	// traceSvn enables debug logging of svn command execution.
 	traceSvn bool
+	// svnRoot is the root directory for SVN repository storage.
+	svnRoot string
 }
 
 // New creates a new SVN Service. It verifies that the svn binary is available on PATH.
-func New() (*Service, error) {
+func New(cfg *config.Config) (*Service, error) {
 	if _, err := exec.LookPath(command.SvnExecutable); err != nil {
 		return nil, errors.Wrapf(ErrSvnBinaryNotFound, "%v", err)
 	}
-	return &Service{}, nil
+	return &Service{svnRoot: cfg.SVN.Root}, nil
 }
 
 // Version returns the parsed SVN version from running `svn --version`.
