@@ -649,44 +649,6 @@ func (r *Repository) sendNotice(
 	}
 }
 
-// createMirrorSyncJob 为镜像仓库创建定时同步任务。
-// 失败时只记录日志，不阻塞导入流程。
-func (r *Repository) createMirrorSyncJob(ctx context.Context,
-	repoID int64, cloneURL, user, auth string,
-	log *logger.SugaredMateLogger,
-) error {
-	mirrorInput := MirrorSyncInput{
-		RepoID:   repoID,
-		User:     user,
-		Auth:     auth,
-		CloneURL: cloneURL,
-	}
-
-	data, err := json.Marshal(mirrorInput)
-	if err != nil {
-		log.Errorw("failed to marshal mirror sync input", "error", err)
-		return err
-	}
-
-	strData := strings.TrimSpace(string(data))
-	encryptedData, err := r.encrypter.Encrypt(strData)
-	if err != nil {
-		log.Errorw("failed to encrypt mirror sync input", "error", err)
-		return err
-	}
-
-	jobName := MirrorSyncJobName(repoID)
-	cronExpr := SyncIntervalToCron(DefaultMirrorSyncInterval)
-	jobData := base64.StdEncoding.EncodeToString(encryptedData)
-
-	if err := r.scheduler.RunRecurringJob(ctx, jobName, JobTypeMirrorSync, cronExpr, jobData, MirrorSyncJobMaxDuration); err != nil {
-		log.Errorw("failed to create mirror sync recurring job", "error", err)
-		return err
-	}
-
-	log.Infof("created mirror sync recurring job %s with cron %s", jobName, cronExpr)
-	return nil
-}
 
 // NewMirrorSyncHandler 创建一个镜像同步任务处理器，供外部注册到 JobScheduler。
 func (r *Repository) NewMirrorSyncHandler() *MirrorSyncHandler {
