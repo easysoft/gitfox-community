@@ -231,18 +231,35 @@ func CheckPort(port string) PortStatus {
 
 func checkPortLinux(port string) PortStatus {
 	result := PortStatus{Port: port}
-	// 优先使用 ss（比 netstat 更现代）
-	out, err := exec.Command("ss", "-tlnp", "sport", "=", ":"+port).Output()
-	if err != nil {
-		// 降级使用 lsof
-		out, err = exec.Command("lsof", "-i", ":"+port, "-sTCP:LISTEN", "-n", "-P").Output()
-		if err != nil {
-			result.Unknown = true
+
+	// 优先使用 ss（iproute2，Linux 主流发行版默认装）
+	if _, err := exec.LookPath("ss"); err == nil {
+		// ss 命令存在：无论端口是否占用，退出码都是 0；
+		// 仅当 fork 失败或 ss 内部异常时才返回非 nil err。
+		out, err := exec.Command("ss", "-tlnp", "sport", "=", ":"+port).Output()
+		if err == nil {
+			return parseSsOutput(string(out), port)
+		}
+	}
+
+	// 降级 lsof（macOS / 部分极简 Linux）
+	if _, err := exec.LookPath("lsof"); err == nil {
+		// lsof 语义不对称：
+		//   - 命中：退出码 0 + 多行输出
+		//   - 未命中：退出码 1 + 空输出   ← 必须当作"端口空闲"
+		//   - 真异常：退出码 1 + stderr 有内容
+		out, err := exec.Command("lsof", "-i", ":"+port, "-sTCP:LISTEN", "-n", "-P").Output()
+		if err == nil {
+			return parseLsofOutput(string(out), port)
+		}
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) && len(out) == 0 {
 			return result
 		}
-		return parseLsofOutput(string(out), port)
 	}
-	return parseSsOutput(string(out), port)
+
+	result.Unknown = true
+	return result
 }
 
 // parseLsofOutput 解析 lsof 输出提取 PID / 进程名
