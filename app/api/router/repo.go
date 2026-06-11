@@ -15,6 +15,8 @@ func registerRepoRoutes(r *gin.RouterGroup, controller *Controller) {
 		repos.POST("/", controller.Repo.Create)
 		repos.POST("/import", controller.Repo.Import)
 		repos.GET("/import-progress", controller.Repo.ImportProgress)
+		repos.POST("/mirror-sync", controller.Repo.MirrorSync)
+		repos.GET("/mirror-sync-progress", controller.Repo.MirrorSyncProgress)
 		reposWithID := repos.Group(":id")
 		{
 			reposWithID.GET("/", controller.Repo.Get)

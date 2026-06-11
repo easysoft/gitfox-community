@@ -74,6 +74,7 @@ func NewApp(mode string) (*App, func(), error) {
 		provider.GitWireSet,
 		provider.SpaceWireSet,
 		provider.RepoWireSet,
+		provider.ProviderWireSet,
 		provider.BranchWireSet,
 		provider.TagWireSet,
 		provider.PipelineWireSet,

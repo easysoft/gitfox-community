@@ -8,11 +8,18 @@ import (
 	"strings"
 	"time"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
+	simpleJob "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/jobs"
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/encrypt"
+	providerStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/provider"
+	repoStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	pkgJobs "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/jobs"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/svn"
 )
 
 const (
@@ -22,44 +29,135 @@ const (
 	MirrorSyncJobMaxDuration = 10 * time.Minute
 )
 
-// MirrorSyncInput 镜像同步任务输入参数（加密存储在 job.Data 中）
+// MirrorSyncInput 镜像同步任务输入参数
 type MirrorSyncInput struct {
 	RepoID int64 `json:"repoID"`
-
-	User     string `json:"user"`
-	Auth     string `json:"auth"`
-	CloneURL string `json:"cloneURL"`
-}
-
-// repoStoreMirrorSync 定义 mirror sync 所需的 repo store 方法
-type repoStoreMirrorSync interface {
-	GetByID(ctx context.Context, id uint) (*repoModel.Repo, error)
 }
 
 // MirrorSyncHandler 镜像同步任务处理器，实现 pkgJobs.Handler
 type MirrorSyncHandler struct {
-	git       git.Interface
-	repoStore repoStoreMirrorSync
-	encrypter encrypt.Encrypter
+	git           git.Interface
+	svn           svn.Interface
+	repoStore     repoStore.Interface
+	providerStore providerStore.Interface
+	encrypter     encrypt.Encrypter
 }
 
 // NewMirrorSyncHandler 创建镜像同步处理器
 func NewMirrorSyncHandler(
-	g git.Interface,
-	repoStore repoStoreMirrorSync,
+	git git.Interface,
+	svn svn.Interface,
+	repoStore repoStore.Interface,
+	providerStore providerStore.Interface,
 	encrypter encrypt.Encrypter,
 ) *MirrorSyncHandler {
 	return &MirrorSyncHandler{
-		git:       g,
-		repoStore: repoStore,
-		encrypter: encrypter,
+		git:           git,
+		svn:           svn,
+		repoStore:     repoStore,
+		providerStore: providerStore,
+		encrypter:     encrypter,
 	}
+}
+
+// CreateMirrorSyncJob 为镜像仓库创建单次同步任务。
+// 创建任务前会将仓库状态更新为 syncing，任务执行成功后由 Handler 更新为 active。
+func (r *Repository) CreateMirrorSyncJob(ctx context.Context, repoID int64) error {
+	log := logger.GetLogger(ctx).With("repo.id", repoID)
+
+	repo, err := r.repoStore.GetByID(ctx, uint(repoID))
+	if err != nil {
+		log.Errorw("failed to find repo for mirror sync", "error", err)
+		return errors.WithI18nKey(
+			fmt.Errorf("failed to find repo for mirror sync: %w", err),
+			i18n.RepoNotFound,
+		)
+	}
+
+	if !repo.Mirror {
+		log.Errorw("not allow to sync non-mirror repo")
+		return errors.WithI18nKey(
+			fmt.Errorf("not allow to sync non-mirror repo"),
+			i18n.RepoMirrorSyncNotMirror,
+		)
+	}
+
+	if repo.Status == constant.RepoStateSyncing {
+		log.Errorw("mirror sync already in progress")
+		return errors.WithI18nKey(
+			fmt.Errorf("mirror sync already in progress"),
+			i18n.RepoMirrorSyncInProgressError,
+		)
+	}
+
+	if _, err := r.repoStore.UpdateOptLock(ctx, repo, func(repo *repoModel.Repo) error {
+		repo.Status = constant.RepoStateSyncing
+		return nil
+	}); err != nil {
+		log.Errorw("failed to update repo status to syncing", "error", err)
+		return errors.WithI18nKey(
+			fmt.Errorf("failed to update repo status to syncing: %w", err),
+			i18n.RepoMirrorSyncError,
+		)
+	}
+
+	mirrorInput := MirrorSyncInput{
+		RepoID: repoID,
+	}
+
+	data, err := json.Marshal(mirrorInput)
+	if err != nil {
+		log.Errorw("failed to marshal mirror sync input", "error", err)
+		return errors.WithI18nKey(
+			fmt.Errorf("failed to marshal mirror sync input: %w", err),
+			i18n.RepoMirrorSyncError,
+		)
+	}
+
+	strData := strings.TrimSpace(string(data))
+	encryptedData, err := r.encrypter.Encrypt(strData)
+	if err != nil {
+		log.Errorw("failed to encrypt mirror sync input", "error", err)
+		return errors.WithI18nKey(
+			fmt.Errorf("failed to encrypt mirror sync input: %w", err),
+			i18n.RepoMirrorSyncError,
+		)
+	}
+
+	jobName := fmt.Sprintf("mirror_sync_%d", repoID)
+	jobData := base64.StdEncoding.EncodeToString(encryptedData)
+
+	if err := r.scheduler.RunJob(ctx, jobName, JobTypeMirrorSync, jobData, int(MirrorSyncJobMaxDuration/time.Second)); err != nil {
+		log.Errorw("failed to run mirror sync job", "error", err)
+		return errors.WithI18nKey(
+			fmt.Errorf("failed to run mirror sync job: %w", err),
+			i18n.RepoMirrorSyncError,
+		)
+	}
+
+	log.Infof("started mirror sync job %s", jobName)
+	return nil
+}
+
+// GetMirrorSyncProgress 查询镜像同步任务的进度。
+func (r *Repository) GetMirrorSyncProgress(ctx context.Context, repoID int64) (repoModel.Progress, error) {
+	jobName := fmt.Sprintf("mirror_sync_%d", repoID)
+	progress, err := r.scheduler.GetJobProgress(ctx, jobName)
+	if err != nil {
+		return repoModel.Progress{}, fmt.Errorf("failed to get mirror sync job progress: %w", err)
+	}
+
+	return repoModel.Progress{
+		Status:  progress["state"].(simpleJob.State),
+		Result:  progress["result"].(string),
+		Failure: progress["failure"].(string),
+	}, nil
 }
 
 var _ pkgJobs.Handler = (*MirrorSyncHandler)(nil)
 
 // Handle 执行镜像同步任务
-func (h *MirrorSyncHandler) Handle(ctx context.Context, data string, reportFn pkgJobs.ProgressReporter) (string, error) {
+func (h *MirrorSyncHandler) Handle(ctx context.Context, data string, reportFn pkgJobs.ProgressReporter) (result string, retErr error) {
 	input, err := h.getJobInput(data)
 	if err != nil {
 		return "", err
@@ -75,35 +173,62 @@ func (h *MirrorSyncHandler) Handle(ctx context.Context, data string, reportFn pk
 		return "", fmt.Errorf("failed to find repo for mirror sync: %w", err)
 	}
 
-	log.Info("mirror sync: start syncing repository")
+	// 同步过程中出现任何错误，将仓库状态更新为 sync_failed
+	defer func() {
+		if retErr != nil {
+			cleanupCtx := context.WithoutCancel(ctx)
+			if _, updateErr := h.repoStore.UpdateOptLock(cleanupCtx, repo, func(repo *repoModel.Repo) error {
+				repo.Status = constant.RepoStateSyncFailed
+				return nil
+			}); updateErr != nil {
+				log.Errorw("failed to update repo status to sync_failed", "error", updateErr)
+			}
+		}
+	}()
 
-	if err := h.syncGitRepo(ctx, repo, input, log); err != nil {
-		return "", err
+	provider, err := h.providerStore.GetByID(ctx, repo.ProviderID)
+	if err != nil {
+		return "", fmt.Errorf("failed to find provider for mirror sync: %w", err)
+	}
+
+	if provider.Type == string(constant.RepoProviderTypeSVN) {
+		log.Info("mirror sync: start syncing SVN repository")
+
+		svnConnectInfo := repoModel.SVNConnectInfo{}
+		if err := json.Unmarshal(repo.Connector, &svnConnectInfo); err != nil {
+			return "", fmt.Errorf("failed to unmarshal SVN connect info: %w", err)
+		}
+
+		passwordBytes, err := base64.StdEncoding.DecodeString(svnConnectInfo.Password)
+		if err != nil {
+			return "", fmt.Errorf("failed to decode SVN password: %w", err)
+		}
+		svnConnectInfo.Password = string(passwordBytes)
+
+		if err := h.syncSvnRepo(ctx, repo.GitUID, svnConnectInfo.User, svnConnectInfo.Password, log); err != nil {
+			return "", err
+		}
+	} else {
+		log.Info("mirror sync: start syncing repository")
+
+		gitConnectInfo := repoModel.GitConnectInfo{}
+		if err := json.Unmarshal(repo.Connector, &gitConnectInfo); err != nil {
+			return "", fmt.Errorf("failed to unmarshal Git connect info: %w", err)
+		}
+		cloneURL := fmt.Sprintf("%s/%s", provider.URL, gitConnectInfo.Slug)
+		if err := h.syncGitRepo(ctx, repo.GitUID, cloneURL, log); err != nil {
+			return "", err
+		}
+	}
+
+	if _, err := h.repoStore.UpdateOptLock(ctx, repo, func(repo *repoModel.Repo) error {
+		repo.Status = constant.RepoStateActive
+		return nil
+	}); err != nil {
+		return "", fmt.Errorf("failed to update repo status after mirror sync: %w", err)
 	}
 
 	return "", nil
-}
-
-// syncGitRepo 执行 Git 仓库的镜像同步。
-func (h *MirrorSyncHandler) syncGitRepo(ctx context.Context, repo *repoModel.Repo, input MirrorSyncInput, log *logger.SugaredMateLogger) error {
-	synced, err := h.git.MirrorSyncRepository(ctx, &git.MirrorSyncParams{
-		ReadParams: git.ReadParams{
-			RepoUID: repo.GitUID,
-		},
-		CloneURL: input.CloneURL,
-		Prune:    true,
-	})
-	if err != nil {
-		return fmt.Errorf("mirror sync failed: %w", err)
-	}
-
-	if synced {
-		log.Info("mirror sync: successfully synced")
-	} else {
-		log.Info("mirror sync: no updates")
-	}
-
-	return nil
 }
 
 // getJobInput 解密并解析任务输入
@@ -127,37 +252,54 @@ func (h *MirrorSyncHandler) getJobInput(data string) (MirrorSyncInput, error) {
 	return input, nil
 }
 
-// CreateMirrorSyncJob 为镜像仓库创建单次同步任务。
-func (r *Repository) CreateMirrorSyncJob(ctx context.Context, repoID int64, cloneURL, user, auth string, log *logger.SugaredMateLogger,
-) error {
-	mirrorInput := MirrorSyncInput{
-		RepoID:   repoID,
-		User:     user,
-		Auth:     auth,
+// syncGitRepo 执行 Git 仓库的镜像同步。
+func (h *MirrorSyncHandler) syncGitRepo(ctx context.Context, gitUID, cloneURL string, log *logger.SugaredMateLogger) error {
+	synced, err := h.git.MirrorSyncRepository(ctx, &git.MirrorSyncParams{
+		ReadParams: git.ReadParams{
+			RepoUID: gitUID,
+		},
 		CloneURL: cloneURL,
-	}
-
-	data, err := json.Marshal(mirrorInput)
+		Prune:    true,
+	})
 	if err != nil {
-		log.Errorw("failed to marshal mirror sync input", "error", err)
-		return err
+		return fmt.Errorf("mirror sync failed: %w", err)
 	}
 
-	strData := strings.TrimSpace(string(data))
-	encryptedData, err := r.encrypter.Encrypt(strData)
+	if synced {
+		log.Info("mirror sync: successfully synced")
+	} else {
+		log.Info("mirror sync: no updates")
+	}
+
+	return nil
+}
+
+func (h *MirrorSyncHandler) syncSvnRepo(ctx context.Context, svnUID, username, password string, log *logger.SugaredMateLogger) error {
+	path := h.svn.ResolveRepositoryPaths(svnUID)
+
+	err := h.svn.Sync(ctx, &svn.SyncParams{
+		TargetRepoPath: path.RepoPath,
+		SourceUsername: username,
+		SourcePassword: password,
+	})
 	if err != nil {
-		log.Errorw("failed to encrypt mirror sync input", "error", err)
-		return err
+		return fmt.Errorf("failed to sync SVN repository: %w", err)
+	}
+	err = h.svn.SyncCopyRevProps(ctx, &svn.SyncParams{
+		TargetRepoPath: path.RepoPath,
+		SourceUsername: username,
+		SourcePassword: password,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to sync SVN repository revision properties: %w", err)
+	}
+	err = h.svn.Update(ctx, &svn.UpdateParams{
+		WorkingCopyPath: path.WorkingCopyPath,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to update SVN working copy: %w", err)
 	}
 
-	jobName := fmt.Sprintf("mirror_sync_%d", repoID)
-	jobData := base64.StdEncoding.EncodeToString(encryptedData)
-
-	if err := r.scheduler.RunJob(ctx, jobName, JobTypeMirrorSync, jobData, int(MirrorSyncJobMaxDuration/time.Second)); err != nil {
-		log.Errorw("failed to run mirror sync job", "error", err)
-		return err
-	}
-
-	log.Infof("started mirror sync job %s", jobName)
+	log.Info("mirror sync: successfully synced")
 	return nil
 }

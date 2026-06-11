@@ -53,6 +53,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/jobs"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/notify"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/pipeline"
+	provider2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/provider"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/publickey"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/pullrequest"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
@@ -196,6 +197,7 @@ func NewApp(mode string) (*App, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
+	providerStore := provider2.NewProviderStore(db)
 	notifyStore := notify.NewNotifyStore(db)
 	encrypter, err := provider.ProvideEncrypter(config)
 	if err != nil {
@@ -203,7 +205,7 @@ func NewApp(mode string) (*App, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	repository := importer.NewRepoImporterSvc(mode, urlProvider, gitService, svnInterface, store, notifyStore, encrypter, jobsScheduler, streamer)
+	repository := importer.NewRepoImporterSvc(mode, urlProvider, gitService, svnInterface, store, providerStore, notifyStore, encrypter, jobsScheduler, streamer)
 	eventContext := provider.NewEventContext()
 	eventsConfig := provider.NewEventConfig()
 	universalClient := provider.NewEventRedisClient()
