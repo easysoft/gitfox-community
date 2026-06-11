@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS `ops_webhook_executions` (
 	`eventID`       VARCHAR(255)     NOT NULL COMMENT '触发事件唯一标识,内部事件ID',
 	`result`        TEXT             NOT NULL COMMENT '执行结果（成功/失败/超时等状态描述）',
 	`duration`      BIGINT           NOT NULL DEFAULT '0' COMMENT '执行耗时（毫秒），从请求发送到接收响应的总时长',
-	`error`         TEXT             NOT NULL DEFAULT '' COMMENT '执行错误信息（无错误则为空字符串）',
+	`error`         TEXT             NULL DEFAULT NULL '' COMMENT '执行错误信息（无错误则为空字符串）',
 	`reqUrl`        VARCHAR(255)     NOT NULL COMMENT '回调请求URL',
 	`reqHeaders`    TEXT     		 NOT NULL DEFAULT '' COMMENT '回调请求头（JSON格式文本存储）',
 	`reqBody`       TEXT             NOT NULL DEFAULT '' COMMENT '回调请求体（JSON/表单等格式文本）',
