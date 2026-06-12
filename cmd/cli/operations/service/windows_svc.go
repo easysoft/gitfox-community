@@ -241,22 +241,6 @@ func inspectWindows() ServiceInfo {
 	return info
 }
 
-// isServiceRegisteredWindows 检查 GitFox Windows 服务是否已注册。
-func isServiceRegisteredWindows() bool {
-	m, err := mgr.Connect()
-	if err != nil {
-		return false
-	}
-	defer m.Disconnect()
-
-	s, err := m.OpenService(windowsServiceName)
-	if err != nil {
-		return false
-	}
-	s.Close()
-	return true
-}
-
 // ─────────────────────────────────────────────
 // 服务运行入口（由 SCM 调用）
 // ─────────────────────────────────────────────
