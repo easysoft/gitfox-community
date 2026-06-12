@@ -48,5 +48,5 @@ CREATE TABLE IF NOT EXISTS `ops_webhook_executions` (
 ENGINE=InnoDB COMMENT='Web钩子执行记录表：存储每次Web钩子回调的请求、响应、执行状态、耗时等全量信息';
 
 
-CREATE INDEX `idx_webhookID` (`webhookID`) USING BTREE COMMENT 'Web钩子ID索引（优化按钩子维度查询执行记录）';
-CREATE INDEX `idx_createdDate` (`createdDate`) USING BTREE COMMENT '执行时间索引（优化按时间范围查询执行记录）';
+CREATE INDEX `idx_webhookID` ON `ops_webhook_executions` (`webhookID`) USING BTREE COMMENT 'Web钩子ID索引（优化按钩子维度查询执行记录）';
+CREATE INDEX `idx_createdDate` ON `ops_webhook_executions` (`createdDate`) USING BTREE COMMENT '执行时间索引（优化按时间范围查询执行记录）';
