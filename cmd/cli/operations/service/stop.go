@@ -35,8 +35,6 @@ func StopService() error {
 	}
 }
 
-// stopWindows 已迁移至 windows.go
-
 func stopLinux() error {
 	if _, err := exec.LookPath("systemctl"); err != nil {
 		return errors.New(clii18n.T(i18n.CliStartErrSystemctlMissing))
@@ -59,8 +57,6 @@ func runStop(_ *kingpin.ParseContext) error {
 	errStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#FF4500"))
 	warnStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#FF8C00"))
 	// successStyle := lipgloss.NewStyle().Bold(true)
-
-	// printBanner(t(i18n.CliStopWelcome))
 
 	// ========== 阶段 0. 权限校验 ==========
 	if err := CheckSudo(); err != nil {

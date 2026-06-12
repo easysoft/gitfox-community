@@ -62,17 +62,11 @@ func runStart(_ *kingpin.ParseContext) error {
 			fmt.Println(errStyle.Render(err.Error()))
 			return nil
 		}
-		//  else {
-		// 	fmt.Println(successStyle.Render("✓ ") + fmt.Sprintf(t(i18n.CliStartCheckGitOk), ver))
-		// }
 
 		if ok, _, err := CheckDocker(); !ok || err != nil {
 			fmt.Println(errStyle.Render(err.Error()))
 			return nil
 		}
-		// else {
-		// 	fmt.Println(successStyle.Render("✓ ") + fmt.Sprintf(t(i18n.CliStartCheckDockerOk), ver))
-		// }
 
 		// Subversion 仅警告，不阻塞 start：用于支持关联 SVN 代码库功能。
 		if ok, _, err := CheckSubversion(); !ok {
@@ -119,19 +113,15 @@ func runStart(_ *kingpin.ParseContext) error {
 		return nil
 	}
 
-	// fmt.Println(t(i18n.CliStartStepCheckDb))
 	if err := CheckDB(dsn); err != nil {
 		fmt.Println(errStyle.Render(fmt.Sprintf(t(i18n.CliStartErrCheckDb), err.Error())))
 		return nil
 	}
-	// fmt.Println(successStyle.Render("✓ ") + t(i18n.CliStartSuccessCheckDb))
 
-	// fmt.Println(t(i18n.CliStartStepCheckZentao))
 	if err := CheckZentao(devopsURL); err != nil {
 		fmt.Println(errStyle.Render(fmt.Sprintf(t(i18n.CliStartErrCheckZentao), err.Error())))
 		return nil
 	}
-	// fmt.Println(successStyle.Render("✓ ") + t(i18n.CliStartSuccessCheckZentao))
 
 	// =========================================================
 	// 阶段 3. 智能服务注册决策引擎
@@ -201,7 +191,6 @@ func runStart(_ *kingpin.ParseContext) error {
 			fmt.Println()
 		} else if existing.ExePath == exePath && existing.WorkDir == workDir {
 			// 同一二进制 + 同一工作目录 → 直接 restart，跳过注册
-			// fmt.Println(t(i18n.CliStartServiceExistsSame))
 			if err := RestartService(); err != nil {
 				fmt.Println(errStyle.Render(fmt.Sprintf(t(i18n.CliStartFailed), err)))
 				return nil
@@ -235,15 +224,6 @@ func runStart(_ *kingpin.ParseContext) error {
 			_ = StopService()
 		}
 	}
-	// else {
-	// 	// 首次注册 → 弹出确认框
-	// 	confirm, confirmErr := confirmPrompt(t(i18n.CliStartConfirmRegister))
-
-	// 	if confirmErr != nil || !confirm {
-	// 		fmt.Println(t(i18n.CliStartConfirmCancel))
-	// 		return nil
-	// 	}
-	// }
 
 	// 执行全新注册
 	if err := RegisterService(exePath, workDir); err != nil {
@@ -290,7 +270,6 @@ func printStartSummary(workDir, host, port string) {
 	appLogsDir := filepath.Join(workDir, "logs")
 
 	headerStyle := lipgloss.NewStyle().Bold(true)
-	//.Foreground(lipgloss.Color("#7D56F4"))
 	labelStyle := lipgloss.NewStyle().
 		Width(20)
 	valueStyle := lipgloss.NewStyle()
@@ -303,8 +282,6 @@ func printStartSummary(workDir, host, port string) {
 	fmt.Println(strings.Repeat("─", 60))
 	printRow(t(i18n.CliStartSummaryAddress), webConsole)
 	printRow(t(i18n.CliStartSummaryAppLog), appLogsDir)
-	// fmt.Println()
-	// fmt.Println(headerStyle.Render(t(i18n.CliStartSummaryManageTitle)))
 	printRow(t(i18n.CliStartSummaryLogCmd), logCmd)
 	fmt.Println(strings.Repeat("─", 60))
 }

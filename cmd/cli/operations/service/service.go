@@ -149,9 +149,6 @@ func runInstall(ctx *kingpin.ParseContext) error {
 	}
 
 	// ========== 阶段 2：在工作目录执行 ./gitfox start ==========
-	// fmt.Println()
-	// fmt.Println(t(i18n.CliInstallStepStart))
-	// fmt.Println()
 
 	binName := "gitfox"
 	if runtime.GOOS == "windows" {

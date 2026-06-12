@@ -64,9 +64,6 @@ func inspectLinux() ServiceInfo {
 	return info
 }
 
-
-// inspectWindows 已迁移至 windows.go
-
 // RestartService 重启已注册的 GitFox 守护进程（不重新生成服务文件）
 func RestartService() error {
 	switch runtime.GOOS {
@@ -112,8 +109,6 @@ func RegisterService(exePath, workDir string) error {
 	}
 }
 
-// registerWindows 已迁移至 windows.go
-
 // registerLinux 将程序注册为 standard systemd unit。
 func registerLinux(exePath, workDir string) error {
 	t := clii18n.T
@@ -155,4 +150,3 @@ WantedBy=multi-user.target
 
 	return nil
 }
-
