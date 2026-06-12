@@ -1,0 +1,81 @@
+package svn
+
+import (
+	"bytes"
+	"context"
+	"strings"
+
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/svn/command"
+)
+
+// DiffParams contains the parameters for svn diff.
+type DiffParams struct {
+	// Path is the absolute path to a working copy file or directory.
+	// Corresponds to: svn diff <Path> ...
+	Path string
+
+	// Revision is the revision or revision range to diff, e.g. "130" or "0:130".
+	// Corresponds to: svn diff -r <Revision> ...
+	Revision string
+
+	// Username is the username for authenticating to the repository.
+	Username string
+
+	// Password is the password for authenticating to the repository.
+	Password string
+}
+
+func (p *DiffParams) Validate() error {
+	if p == nil {
+		return ErrNoParamsProvided
+	}
+	if p.Path == "" {
+		return errors.New("path cannot be empty")
+	}
+	return nil
+}
+
+// Diff runs `svn diff` to show differences between revisions for a working copy file or directory.
+// It returns the stdout output trimmed of leading/trailing whitespace.
+//
+// Example:
+//
+//	diff, err := svc.Diff(ctx, &DiffParams{
+//	    Path:     "/data/svn/repos/xxx/demo-repo/zentaopms/api/v1/lang/zh-cn.php",
+//	    Revision: "0:130",
+//	})
+func (s *Service) Diff(ctx context.Context, params *DiffParams) (string, error) {
+	if err := params.Validate(); err != nil {
+		return "", err
+	}
+
+	stdout := &bytes.Buffer{}
+
+	cmd := command.New("diff",
+		command.WithArg(params.Path),
+		withDiffAuth(params.Username, params.Password),
+	)
+
+	if params.Revision != "" {
+		cmd.Add(command.WithFlag("-r", params.Revision))
+	}
+
+	if err := cmd.Run(ctx, command.WithStdout(stdout)); err != nil {
+		return "", errors.Wrapf(ErrDiff, "%v", err)
+	}
+
+	return strings.TrimSpace(stdout.String()), nil
+}
+
+// withDiffAuth adds --username and --password flags when set.
+func withDiffAuth(username, password string) command.CmdOptionFunc {
+	return func(c *command.Command) {
+		if username != "" {
+			c.Flags = append(c.Flags, "--username", username)
+		}
+		if password != "" {
+			c.Flags = append(c.Flags, "--password", password)
+		}
+	}
+}

@@ -3,6 +3,7 @@ package svn
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"strings"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
@@ -91,11 +92,46 @@ func (s *Service) InfoRevision(ctx context.Context, url, username, password stri
 	})
 }
 
+// GetLatestRevision returns the latest (HEAD) revision number of the repository at the given path.
+// The repoPath is a local filesystem path; it will be converted to a file:// URL internally.
+// Internally it runs: svn info file://<repoPath> --show-item revision
+//
+// Example:
+//
+//	rev, err := svc.GetLatestRevision(ctx, "/data/gitfox-community/svn/repos/xxx/demo", "", "")
+//	// rev will be something like "42"
+func (s *Service) GetLatestRevision(ctx context.Context, repoPath, username, password string) (string, error) {
+	url := fmt.Sprintf("file://%s", repoPath)
+	return s.Info(ctx, &InfoParams{
+		URL:      url,
+		Username: username,
+		Password: password,
+		ShowItem: "revision",
+	})
+}
+
 // InfoXML returns the XML-formatted info for the given URL at the specified revision.
 // This is equivalent to calling Info with Revision and XML: true.
 func (s *Service) InfoXML(ctx context.Context, url, revision, username, password string) (string, error) {
 	return s.Info(ctx, &InfoParams{
 		URL:      url,
+		Revision: revision,
+		Username: username,
+		Password: password,
+		XML:      true,
+	})
+}
+
+// GetPathInfo returns XML-formatted info for a working copy path at the given revision.
+// It is equivalent to: svn info -r <revision> --xml <path>
+// Useful for computing path prefixes (repos-root-url, relative-url, etc.) from the XML output.
+//
+// Example:
+//
+//	xml, err := svc.GetPathInfo(ctx, "/data/svn/repos/xxx/demo-repo/zentaopms/api", "130", "", "")
+func (s *Service) GetPathInfo(ctx context.Context, path, revision, username, password string) (string, error) {
+	return s.Info(ctx, &InfoParams{
+		URL:      path,
 		Revision: revision,
 		Username: username,
 		Password: password,
