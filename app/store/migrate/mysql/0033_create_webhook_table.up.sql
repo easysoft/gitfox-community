@@ -43,9 +43,10 @@ CREATE TABLE IF NOT EXISTS `ops_webhook_executions` (
 	`retriggerable` TINYINT(1)       NOT NULL COMMENT '是否可重触发：1=可重触发，0=不可重触发',
 	`createdDate`   datetime         NULL COMMENT '创建时间',
 	`editedDate`    datetime         NULL COMMENT '更新时间',
-	PRIMARY KEY (`id`) USING BTREE,
-	INDEX `idx_webhookID` (`webhookID`) USING BTREE COMMENT 'Web钩子ID索引（优化按钩子维度查询执行记录）',
-	INDEX `idx_createdDate` (`createdDate`) USING BTREE COMMENT '执行时间索引（优化按时间范围查询执行记录）',
-	CONSTRAINT `fk_webhookID` FOREIGN KEY (`webhookID`) REFERENCES `ops_webhooks` (`id`) ON UPDATE NO ACTION ON DELETE CASCADE
+	PRIMARY KEY (`id`) USING BTREE
 )
 ENGINE=InnoDB COMMENT='Web钩子执行记录表：存储每次Web钩子回调的请求、响应、执行状态、耗时等全量信息';
+
+
+CREATE INDEX `idx_webhookID` (`webhookID`) USING BTREE COMMENT 'Web钩子ID索引（优化按钩子维度查询执行记录）';
+CREATE INDEX `idx_createdDate` (`createdDate`) USING BTREE COMMENT '执行时间索引（优化按时间范围查询执行记录）';
