@@ -8,5 +8,5 @@ const (
 	RepoStateArchived   = "archived"
 	RepoStateImporting  = "importing"
 	RepoStateSyncing    = "syncing"
-	RepoStateSyncFailed = "sync_failed"
+	RepoStateSyncFailed = "syncFailed"
 )
