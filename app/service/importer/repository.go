@@ -20,6 +20,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/jobs"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/sse"
 	notifyStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/notify"
+	providerStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/provider"
 	repoStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/auth/authn"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
@@ -47,6 +48,7 @@ type Repository struct {
 	git           git.Interface
 	svn           svnPkg.Interface
 	repoStore     repoStore.Interface
+	providerStore providerStore.Interface
 	notifyStore   notifyStore.Interface
 	encrypter     encrypt.Encrypter
 	scheduler     *jobs.Scheduler
@@ -62,6 +64,7 @@ func NewRepoImporterSvc(
 	git git.Interface,
 	svn svnPkg.Interface,
 	repoStore repoStore.Interface,
+	providerStore providerStore.Interface,
 	notifyStore notifyStore.Interface,
 	encrypter encrypt.Encrypter,
 	scheduler *jobs.Scheduler,
@@ -74,6 +77,7 @@ func NewRepoImporterSvc(
 		svn:           svn,
 		repoStore:     repoStore,
 		notifyStore:   notifyStore,
+		providerStore: providerStore,
 		encrypter:     encrypter,
 		scheduler:     scheduler,
 		sseStreamer:   sseStreamer,
@@ -140,6 +144,18 @@ func (r *Repository) LoadRepositoryFromProvider(
 			errors.BadRequest.Wrap(err, "could not create client"),
 			i18n.RepoProviderScmClientCreateError,
 		)
+	}
+
+	// Augment user information if it's not provided for certain vendors.
+	if provider.Token != "" && provider.Username == "" {
+		user, _, err := scmClient.Users.Find(ctx)
+		if err != nil {
+			return RepositoryInfo{}, provider, errors.WithI18nKey(
+				fmt.Errorf("could not find user: %s", err),
+				i18n.RepoProviderUserFindError,
+			)
+		}
+		provider.Username = user.Login
 	}
 
 	scmRepo, scmResp, err := scmClient.Repositories.Find(ctx, slug)
@@ -649,8 +665,7 @@ func (r *Repository) sendNotice(
 	}
 }
 
-
 // NewMirrorSyncHandler 创建一个镜像同步任务处理器，供外部注册到 JobScheduler。
 func (r *Repository) NewMirrorSyncHandler() *MirrorSyncHandler {
-	return NewMirrorSyncHandler(r.git, r.repoStore, r.encrypter)
+	return NewMirrorSyncHandler(r.git, r.svn, r.repoStore, r.providerStore, r.encrypter)
 }

@@ -761,6 +761,12 @@ const (
 	RepoLicenseError                   I18nKey = "repo.license_error"                     // 读取 license 异常
 	RepoLineNumberError                I18nKey = "repo.line_number_error"                 // 行号必须大于0, 且结束行号必须大于起始行号
 	RepoMirrorReadOnly                 I18nKey = "repo.mirror_read_only"                  // 镜像仓库只读.
+	RepoMirrorSyncError                I18nKey = "repo.mirror_sync_error"                 // 触发镜像同步任务失败
+	RepoMirrorSyncInProgressError      I18nKey = "repo.mirror_sync_in_progress_error"     // 无法触发镜像同步,任务已在进行中
+	RepoMirrorSyncNotMirror            I18nKey = "repo.mirror_sync_not_mirror"            // 非镜像仓库不允许同步
+	RepoMirrorSyncProgressError        I18nKey = "repo.mirror_sync_progress_error"        // 查询镜像同步进度失败
+	RepoMirrorSyncProgressSuccess      I18nKey = "repo.mirror_sync_progress_success"      // 查询镜像同步进度成功
+	RepoMirrorSyncSuccess              I18nKey = "repo.mirror_sync_success"               // 镜像同步任务已触发
 	RepoNotFound                       I18nKey = "repo.not_found"                         // 仓库不存在.
 	RepoPathParamError                 I18nKey = "repo.path_param_error"                  // Path 参数解析失败.
 	RepoProviderInvalidSlugFormat      I18nKey = "repo.provider_invalid_slug_format"      // 仓库 slug 格式不合法

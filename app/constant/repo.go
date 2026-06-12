@@ -4,7 +4,9 @@ package constant
 const BranchArchivedPrefix = "archived/"
 
 const (
-	RepoStateActive    = "active"
-	RepoStateArchived  = "archived"
-	RepoStateImporting = "importing"
+	RepoStateActive     = "active"
+	RepoStateArchived   = "archived"
+	RepoStateImporting  = "importing"
+	RepoStateSyncing    = "syncing"
+	RepoStateSyncFailed = "sync_failed"
 )

@@ -12,6 +12,7 @@ import (
 	jobModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/jobs"
 	jobsStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/jobs"
 	runnerStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/runner"
+	pkgErrors "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	pkgJobs "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/jobs"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/lock"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
@@ -624,34 +625,61 @@ func (s *Scheduler) RunRecurringJob(ctx context.Context, jobName, jobType, cronD
 }
 
 // RunJob runs a single job.
+// If a job with jobName already exists and is not running, its definition is updated.
+// If it is running, the call is silently ignored.
+// If no such job exists, a new one is created.
 func (s *Scheduler) RunJob(ctx context.Context, jobName, jobType string, data string, maxDurationSeconds int) error {
 	now := time.Now()
 	nowLocal := datetime.Local(now)
 
-	job := &jobModel.ScheduleJob{
-		Name:                jobName,
-		Type:                jobType,
-		Priority:            jobModel.PriorityNormal,
-		Data:                data,
-		MaxDurationSeconds:  maxDurationSeconds,
-		MaxRetries:          0,
-		State:               jobModel.StateScheduled,
-		Scheduled:           &nowLocal,
-		TotalExecutions:     0,
-		RunBy:               "",
-		RunDeadline:         nil,
-		RunProgress:         ProgressMin,
-		LastExecuted:        nil,
-		IsRecurring:         false,
-		RecurringCron:       "",
-		ConsecutiveFailures: 0,
-		LastFailureError:    "",
-		CreatedDate:         datetime.NowLocalTime(),
-		EditedDate:          datetime.NowLocalTime(),
+	existingJob, err := s.jobStore.GetByName(ctx, jobName)
+	if err != nil && !errors.Is(err, pkgErrors.ErrResourceNotFound) {
+		return fmt.Errorf("failed to lookup job by name: %w", err)
 	}
 
-	if err := s.jobStore.Create(ctx, job); err != nil {
-		return fmt.Errorf("failed to add new job to the database: %w", err)
+	if existingJob != nil {
+		if existingJob.State == jobModel.StateRunning {
+			return nil
+		}
+
+		existingJob.Type = jobType
+		existingJob.Priority = jobModel.PriorityNormal
+		existingJob.Data = data
+		existingJob.MaxDurationSeconds = maxDurationSeconds
+		existingJob.MaxRetries = 0
+		existingJob.State = jobModel.StateScheduled
+		existingJob.Scheduled = &nowLocal
+		existingJob.EditedDate = datetime.NowLocalTime()
+
+		if err := s.jobStore.UpdateDefinition(ctx, existingJob); err != nil {
+			return fmt.Errorf("failed to update existing job: %w", err)
+		}
+	} else {
+		job := &jobModel.ScheduleJob{
+			Name:                jobName,
+			Type:                jobType,
+			Priority:            jobModel.PriorityNormal,
+			Data:                data,
+			MaxDurationSeconds:  maxDurationSeconds,
+			MaxRetries:          0,
+			State:               jobModel.StateScheduled,
+			Scheduled:           &nowLocal,
+			TotalExecutions:     0,
+			RunBy:               "",
+			RunDeadline:         nil,
+			RunProgress:         ProgressMin,
+			LastExecuted:        nil,
+			IsRecurring:         false,
+			RecurringCron:       "",
+			ConsecutiveFailures: 0,
+			LastFailureError:    "",
+			CreatedDate:         datetime.NowLocalTime(),
+			EditedDate:          datetime.NowLocalTime(),
+		}
+
+		if err := s.jobStore.Create(ctx, job); err != nil {
+			return fmt.Errorf("failed to create new job: %w", err)
+		}
 	}
 
 	s.scheduleProcessing(now)
