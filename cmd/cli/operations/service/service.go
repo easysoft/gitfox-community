@@ -2,7 +2,6 @@ package service
 
 import (
 	"fmt"
-	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -23,6 +22,14 @@ const (
 	// envDepsPrechecked 由 install 阶段透传给子进程 start，
 	// 标记"父进程已完成依赖检查"，子进程据此跳过 git/docker/svn 重复校验。
 	envDepsPrechecked = "GITFOX_DEPS_PRECHECKED"
+
+	// ProdEnvFileName 是工作目录下生产环境配置文件的固定名称。
+	// 与 configs/prod.env 模板对应，由 init 渲染 + start/upgrade 等命令读取。
+	ProdEnvFileName = "prod.env"
+
+	// ProdYamlFileName 是工作目录下生产环境应用配置的固定名称。
+	// 与 configs/prod.yaml 对应，由 init 释放 + 服务启动时加载。
+	ProdYamlFileName = "prod.yaml"
 )
 
 // lastInitWorkspace 记录 init 成功后的工作目录路径，供 install 命令使用。
@@ -51,6 +58,7 @@ func Register(app *kingpin.Application) {
 	RegisterUninstall(app)
 	RegisterStatus(app)
 	RegisterVersion(app)
+	RegisterUpgrade(app)
 	RegisterServiceRun(app) // Windows SCM 内部子命令 → windows_svc.go / windows_svc_stub.go
 }
 
@@ -170,16 +178,14 @@ func runInstall(ctx *kingpin.ParseContext) error {
 	}
 
 	// ========== 阶段 3：快速探测服务状态（start 内部已做完整健康检查，此处仅判断最终结果） ==========
-	envPath := filepath.Join(workspace, "prod.env")
+	envPath := filepath.Join(workspace, ProdEnvFileName)
 	envMap, _ := godotenv.Read(envPath)
 	host := envMap["GITFOX_SERVER_HOST"]
 	port := envMap["GITFOX_HTTP_PORT"]
 
 	if host != "" && port != "" {
-		healthURL := fmt.Sprintf("http://%s:%s/public/health", host, port)
-		client := http.Client{Timeout: 3 * time.Second}
-		if resp, err := client.Get(healthURL); err == nil && resp.StatusCode == 200 {
-			resp.Body.Close()
+		healthURL := BuildHealthURL(host, port)
+		if CheckHealthOnce(healthURL, 5*time.Second) {
 			printInstallSuccess(workspace, binName)
 			return nil
 		}

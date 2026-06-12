@@ -2,7 +2,6 @@ package service
 
 import (
 	"fmt"
-	"net/http"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -87,7 +86,7 @@ func runStart(_ *kingpin.ParseContext) error {
 	// 阶段 2. 读取环境配制检查 (识别是否允许提供服务)
 	// =========================================================
 	// 查找并校验工作目录下是否存在必要的 prod.env
-	envPath := filepath.Join(workDir, "prod.env")
+	envPath := filepath.Join(workDir, ProdEnvFileName)
 	if _, err := os.Stat(envPath); os.IsNotExist(err) {
 		fmt.Println(errStyle.Render(t(i18n.CliStartErrEnvNotFound)))
 		return nil
@@ -147,14 +146,12 @@ func runStart(_ *kingpin.ParseContext) error {
 	exePath, _ = filepath.EvalSymlinks(exePath)
 
 	// 3.2 先探测服务是否已经在跑且健康（避免重复启动）
-	healthURL := fmt.Sprintf("http://%s:%s/public/health", host, port)
-	preClient := http.Client{Timeout: 2 * time.Second}
+	healthURL := BuildHealthURL(host, port)
 
 	// 预声明在 goto 之前，避免跳过变量声明
 	var existing ServiceInfo
 
-	if resp, err := preClient.Get(healthURL); err == nil && resp.StatusCode == 200 {
-		resp.Body.Close()
+	if CheckHealthOnce(healthURL, 5*time.Second) {
 		fmt.Println(successStyle.Render("✓ ") + fmt.Sprintf(t(i18n.CliStartAlreadyRunning), port))
 		fmt.Println()
 
@@ -261,25 +258,8 @@ healthCheck:
 	// =========================================================
 	// 服务虽然被挂载进了后台，但不代表内部启动未抛出 Panic。
 	// 通过短时长循环测试 /public/health 接口验证内部状态正常。
-	// fmt.Println(fmt.Sprintf(t(i18n.CliStartStepHealthCheck), port))
-	healthURL = fmt.Sprintf("http://%s:%s/public/health", host, port)
-
-	client := http.Client{Timeout: 2 * time.Second}
-	isHealthy := false
-	for i := 0; i < 15; i++ {
-		resp, err := client.Get(healthURL)
-		if err == nil && resp.StatusCode == 200 {
-			resp.Body.Close()
-			isHealthy = true
-			break
-		}
-		if resp != nil {
-			resp.Body.Close()
-		}
-		time.Sleep(1 * time.Second)
-	}
-
-	if !isHealthy {
+	healthURL = BuildHealthURL(host, port)
+	if !WaitForServiceUp(healthURL, 15) {
 		fmt.Println(errStyle.Render(t(i18n.CliStartErrHealthTimeout)))
 		fmt.Println()
 		printFailureSummary()

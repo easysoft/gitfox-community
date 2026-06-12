@@ -168,8 +168,8 @@ func runInit(_ *kingpin.ParseContext) error {
 	// （之前打印警告的逻辑已移动到输入的 Validator 中直接进行硬性拦截）
 
 	// ========== 检查文件是否已存在并询问是否覆盖 ==========
-	targetEnvPath := filepath.Join(workspace, "prod.env")
-	targetYamlPath := filepath.Join(workspace, "prod.yaml")
+	targetEnvPath := filepath.Join(workspace, ProdEnvFileName)
+	targetYamlPath := filepath.Join(workspace, ProdYamlFileName)
 	targetBinPath := filepath.Join(workspace, "gitfox")
 	if runtime.GOOS == "windows" {
 		targetBinPath += ".exe" // windowsBinaryName 的后缀，定义在 windows.go
@@ -538,7 +538,7 @@ func loadExistingEnv() map[string]string {
 	}
 
 	exeDir := filepath.Dir(exePath)
-	envPath := filepath.Join(exeDir, "prod.env")
+	envPath := filepath.Join(exeDir, ProdEnvFileName)
 
 	envMap, err := godotenv.Read(envPath)
 	if err != nil {
@@ -551,7 +551,7 @@ func loadExistingEnv() map[string]string {
 // loadTemplateEnv 从内嵌的 prod.env 模板中读取所有的默认配置键值对
 func loadTemplateEnv() map[string]string {
 	envMap := make(map[string]string)
-	templateBytes, err := configs.FS.ReadFile("prod.env")
+	templateBytes, err := configs.FS.ReadFile(ProdEnvFileName)
 	if err == nil {
 		if parsed, err := godotenv.Unmarshal(string(templateBytes)); err == nil {
 			return parsed
@@ -573,10 +573,10 @@ func saveEnvFile(existing map[string]string, db *dbConfig, workspace, serverHost
 		return "", fmt.Errorf(t(i18n.CliInitErrMkdir), err)
 	}
 
-	envPath := filepath.Join(workspace, "prod.env")
+	envPath := filepath.Join(workspace, ProdEnvFileName)
 
 	// 读取内嵌的配置模板
-	templateBytes, err := configs.FS.ReadFile("prod.env")
+	templateBytes, err := configs.FS.ReadFile(ProdEnvFileName)
 	if err != nil {
 		return "", fmt.Errorf(t(i18n.CliInitErrReadTemplate), err)
 	}
@@ -691,9 +691,9 @@ func backupFile(filePath string) (string, error) {
 
 // copyEmbeddedYaml 将内嵌的 prod.yaml 配置文件释放到目标工作目录。
 func copyEmbeddedYaml(workspace string) error {
-	dstPath := filepath.Join(workspace, "prod.yaml")
+	dstPath := filepath.Join(workspace, ProdYamlFileName)
 
-	yamlBytes, err := configs.FS.ReadFile("prod.yaml")
+	yamlBytes, err := configs.FS.ReadFile(ProdYamlFileName)
 	if err != nil {
 		return fmt.Errorf("read embedded prod.yaml: %w", err)
 	}
