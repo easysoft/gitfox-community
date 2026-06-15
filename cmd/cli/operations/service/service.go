@@ -177,12 +177,10 @@ func runInstall(ctx *kingpin.ParseContext) error {
 	// ========== 阶段 3：快速探测服务状态（start 内部已做完整健康检查，此处仅判断最终结果） ==========
 	envPath := filepath.Join(workspace, ProdEnvFileName)
 	envMap, _ := godotenv.Read(envPath)
-	host := envMap["GITFOX_SERVER_HOST"]
 	port := envMap["GITFOX_HTTP_PORT"]
 
-	if host != "" && port != "" {
-		healthURL := BuildHealthURL(host, port)
-		if CheckHealthOnce(healthURL, 5*time.Second) {
+	if port != "" {
+		if CheckPortWithTimeout(port, 5*time.Second) {
 			printInstallSuccess(workspace, binName)
 			return nil
 		}
