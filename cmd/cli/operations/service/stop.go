@@ -79,7 +79,7 @@ func runStop(_ *kingpin.ParseContext) error {
 
 	// ========== 阶段 2. 反向健康检查：确认端口不再响应 ==========
 	if hc.Port != "" {
-		if CheckPortDown(hc.URL, 5*time.Second) {
+		if !CheckPortWithTimeout(hc.Port, 5*time.Second) {
 			fmt.Println(warnStyle.Render(t(i18n.CliStopHealthStillUp)))
 		}
 	}

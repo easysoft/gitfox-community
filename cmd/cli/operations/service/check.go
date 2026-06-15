@@ -311,73 +311,17 @@ func parseSsOutput(output, port string) PortStatus {
 	return result
 }
 
-// CheckPortDown 反向健康检查：在服务停止后确认端口不再响应。
-//
-// 在 timeout 时间窗口内每秒探测一次健康端点，端点连接被拒绝即视为已下线返回 false；
-// 整个窗口都仍能 200 则返回 true（仍在线）。
-//
-// healthURL 为空时无法探测，sleep 一个轮询周期后视为已下线（避免误报"仍在线"）。
-func CheckPortDown(healthURL string, timeout time.Duration) bool {
-	if healthURL == "" {
-		time.Sleep(timeout)
+// CheckPortWithTimeout 检查指定端口是否被占用，超时后返回 false。
+func CheckPortWithTimeout(port string, timeout time.Duration) bool {
+	if port == "" {
 		return false
 	}
 	deadline := time.Now().Add(timeout)
 	for time.Now().Before(deadline) {
 		time.Sleep(1 * time.Second)
-		// 健康端点没有响应 = 服务确实已停止
-		if !CheckHealthOnce(healthURL, 5*time.Second) {
-			return false
-		}
-	}
-	return true
-}
-
-// =====================================================================
-// 健康探针（公共工具，被 install / start / stop / upgrade 等命令复用）
-// =====================================================================
-
-// healthPath 是 GitFox 服务暴露的健康检查端点路径。
-const healthPath = "/public/health"
-
-// BuildHealthURL 拼装健康检查 URL。host 或 port 任一为空时返回空字符串，
-// 调用方据此判断是否具备探测条件。
-func BuildHealthURL(host, port string) string {
-	if host == "" || port == "" {
-		return ""
-	}
-	return fmt.Sprintf("http://%s:%s%s", host, port, healthPath)
-}
-
-// CheckHealthOnce 单次同步健康探测：URL 非空且 GET 返回 200 视为存活。
-// timeout 为空时使用 5s 默认值。
-func CheckHealthOnce(healthURL string, timeout time.Duration) bool {
-	if healthURL == "" {
-		return false
-	}
-	if timeout <= 0 {
-		timeout = 5 * time.Second
-	}
-	client := http.Client{Timeout: timeout}
-	resp, err := client.Get(healthURL)
-	if err != nil {
-		return false
-	}
-	defer resp.Body.Close()
-	return resp.StatusCode == http.StatusOK
-}
-
-// WaitForServiceUp 轮询等待服务存活。最多 maxRetries 次，每次间隔 1s。
-// 返回 true=已存活，false=超过重试上限仍未存活。
-func WaitForServiceUp(healthURL string, maxRetries int) bool {
-	if healthURL == "" {
-		return false
-	}
-	for range maxRetries {
-		if CheckHealthOnce(healthURL, 5*time.Second) {
+		if CheckPort(port).InUse {
 			return true
 		}
-		time.Sleep(1 * time.Second)
 	}
 	return false
 }
@@ -411,7 +355,6 @@ func readHealthURLFrom(workDir string) (ReadHealthURLResult, error) {
 	return ReadHealthURLResult{
 		Host: host,
 		Port: port,
-		URL:  BuildHealthURL(host, port),
 	}, nil
 }
 
@@ -454,8 +397,6 @@ const (
 	GitfoxHealthConfigMissing
 	// GitfoxHealthAddressMissing prod.env 已读，但 host/port 缺失，无法拼装健康 URL。
 	GitfoxHealthAddressMissing
-	// GitfoxHealthUnreachable 进程在跑但 health 端点未响应或非 200（启动中 / panic / DB 断连）。
-	GitfoxHealthUnreachable
 )
 
 // GitfoxHealthResult 是 CheckGitfoxHealth 的结构化结果。
@@ -518,12 +459,6 @@ func CheckGitfoxHealth() GitfoxHealthResult {
 	// 4) host/port 完整性
 	if hc.URL == "" {
 		result.Status = GitfoxHealthAddressMissing
-		return result
-	}
-
-	// 5) 健康端点
-	if !CheckHealthOnce(hc.URL, 3*time.Second) {
-		result.Status = GitfoxHealthUnreachable
 		return result
 	}
 

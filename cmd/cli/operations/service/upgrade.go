@@ -25,7 +25,7 @@ const (
 	ParamUpgrade = "upgrade"
 
 	// upgradeStopTimeout 等待服务停止的最长时间。
-	upgradeStopTimeout = 30 * time.Second
+	upgradeStopTimeout = 5 * time.Second
 
 	// devVersionFallback 与 common.GetVersionInfo 中 fallback 一致；
 	// 用于识别"未经 task build 注入"的开发构建。
@@ -162,7 +162,7 @@ func runUpgrade(_ *kingpin.ParseContext) error {
 			return nil
 		}
 		// 端口下线确认（用 health 端点反向探测，更彻底）
-		if hc.URL != "" && CheckPortDown(hc.URL, upgradeStopTimeout) {
+		if hc.Port != "" && !CheckPortWithTimeout(hc.Port, upgradeStopTimeout) {
 			fmt.Println(errStyle.Render(t(i18n.CliUpgradeErrStopTimeout)))
 			return nil
 		}
@@ -214,7 +214,7 @@ func runUpgrade(_ *kingpin.ParseContext) error {
 			fmt.Println(errStyle.Render(fmt.Sprintf(t(i18n.CliUpgradeErrStart), err)))
 			return nil
 		}
-		_ = WaitForServiceUp(BuildHealthURL(hc.Host, hc.Port), 15)
+		_ = CheckPortWithTimeout(hc.Port, 15*time.Second)
 	}
 
 	// ========== 阶段 8：摘要 ==========

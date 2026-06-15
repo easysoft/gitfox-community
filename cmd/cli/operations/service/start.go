@@ -135,13 +135,10 @@ func runStart(_ *kingpin.ParseContext) error {
 	}
 	exePath, _ = filepath.EvalSymlinks(exePath)
 
-	// 3.2 先探测服务是否已经在跑且健康（避免重复启动）
-	healthURL := BuildHealthURL(host, port)
-
 	// 预声明在 goto 之前，避免跳过变量声明
 	var existing ServiceInfo
 
-	if CheckHealthOnce(healthURL, 5*time.Second) {
+	if CheckGitfoxHealth().Status == GitfoxHealthOK {
 		fmt.Println(successStyle.Render("✓ ") + fmt.Sprintf(t(i18n.CliStartAlreadyRunning), port))
 		fmt.Println()
 
@@ -155,7 +152,6 @@ func runStart(_ *kingpin.ParseContext) error {
 		}
 
 		// 用户确认重启
-		// fmt.Println()
 		fmt.Println(t(i18n.CliStartServiceRestarting))
 		if err := RestartService(); err != nil {
 			fmt.Println(errStyle.Render(fmt.Sprintf(t(i18n.CliStartFailed), err)))
@@ -238,8 +234,8 @@ healthCheck:
 	// =========================================================
 	// 服务虽然被挂载进了后台，但不代表内部启动未抛出 Panic。
 	// 通过短时长循环测试 /public/health 接口验证内部状态正常。
-	healthURL = BuildHealthURL(host, port)
-	if !WaitForServiceUp(healthURL, 15) {
+	// healthURL = BuildHealthURL(host, port)
+	if !CheckPortWithTimeout(port, 5*time.Second) {
 		fmt.Println(errStyle.Render(t(i18n.CliStartErrHealthTimeout)))
 		fmt.Println()
 		printFailureSummary()

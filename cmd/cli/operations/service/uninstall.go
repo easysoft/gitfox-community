@@ -6,7 +6,6 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
-	"time"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	clii18n "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n/cli"
@@ -64,10 +63,12 @@ func runUninstall(_ *kingpin.ParseContext) error {
 		return nil
 	}
 
-	// ========== 阶段 4. 反向健康检查 ==========
+	// ========== 阶段 4. 反向健康检查端口 ==========
 	if hc.Port != "" {
-		if CheckPortDown(hc.URL, 5*time.Second) {
+		ps := CheckPort(hc.Port)
+		if ps.InUse {
 			fmt.Println(warnStyle.Render(t(i18n.CliStopHealthStillUp)))
+			return nil
 		}
 	}
 
