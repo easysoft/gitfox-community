@@ -541,7 +541,7 @@ func TestGetByID(t *testing.T) {
 			inputID:      11,
 			inputSession: &auth.Session{},
 			expectedRepo: nil,
-			expectedErr:  errors.Wrapf(errors.NotFound.New("repo not found"), "failed to find repository: %d", 11),
+			expectedErr:  errors.NotFound.New("repo not found"),
 		},
 	}
 
