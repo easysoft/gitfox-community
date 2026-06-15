@@ -1,4 +1,4 @@
-CREATE TABLE `ops_provider` (
+CREATE TABLE IF NOT EXISTS `ops_provider` (
   `id` int unsigned NOT NULL AUTO_INCREMENT,
   `type` varchar(30) NOT NULL DEFAULT '' COMMENT 'GitLab,Gitea,Gogs,Subversion,GitHub,Jenkins',
   `name` varchar(50) NOT NULL DEFAULT '' COMMENT '外部服务名称',
