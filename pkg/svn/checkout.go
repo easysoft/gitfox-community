@@ -2,7 +2,6 @@ package svn
 
 import (
 	"context"
-	"fmt"
 	"os"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
@@ -11,12 +10,10 @@ import (
 
 // CheckoutParams contains the parameters for svn checkout.
 type CheckoutParams struct {
-	// SourceURL is the URL of the SVN repository to check out.
-	// e.g. "file:///data/.../demo" or "https://repo.oop.cc/svn/repo/..."
-	SourceURL string
-
-	// TargetPath is the local filesystem path where the working copy will be created.
-	TargetPath string
+	// SvnUID identifies the SVN repository to check out from.
+	// The source URL is constructed as file://{svnRoot}/repos/{svnUID}
+	// and the target path as {svnRoot}/repos/{svnUID}-wc.
+	SvnUID string
 
 	// Username is the username for authenticating to the repository.
 	Username string
@@ -29,45 +26,37 @@ func (p *CheckoutParams) Validate() error {
 	if p == nil {
 		return ErrNoParamsProvided
 	}
-	if p.SourceURL == "" {
-		return errors.New("source url cannot be empty")
-	}
-	if p.TargetPath == "" {
-		return errors.New("target path cannot be empty")
+	if p.SvnUID == "" {
+		return errors.New("svnUID cannot be empty")
 	}
 	return nil
 }
 
-// Checkout creates a working copy from the source repository at the target path.
-// This corresponds to: svn checkout <SourceURL> <TargetPath> --username ... --password ...
+// Checkout creates a working copy from the local SVN repository identified by svnUID.
+// The source URL is constructed as file://{svnRoot}/repos/{svnUID}
+// and the working copy is placed at {svnRoot}/repos/{svnUID}-wc.
 func (s *Service) Checkout(ctx context.Context, params *CheckoutParams) error {
 	if err := params.Validate(); err != nil {
 		return err
 	}
 
+	sourceURL := s.fileURL(params.SvnUID)
+	targetPath := s.workingCopyPath(params.SvnUID)
+
 	// Ensure parent directory exists.
-	if err := os.MkdirAll(params.TargetPath, 0o700); err != nil {
-		return errors.Wrapf(ErrCheckout, "failed to create target directory %s: %v", params.TargetPath, err)
+	if err := os.MkdirAll(targetPath, 0o700); err != nil {
+		return errors.Wrapf(ErrCheckout, "failed to create target directory %s: %v", targetPath, err)
 	}
 
 	cmd := command.New("checkout",
-		command.WithArg(params.SourceURL),
-		command.WithArg(params.TargetPath),
+		command.WithArg(sourceURL),
+		command.WithArg(targetPath),
 		withCheckoutAuth(params.Username, params.Password),
 	)
 	if err := cmd.Run(ctx); err != nil {
 		return errors.Wrapf(ErrCheckout, "%v", err)
 	}
 	return nil
-}
-
-// CheckoutFromRepo creates a working copy from a local SVN repository at the given repo path.
-// This is a convenience wrapper that constructs the file:// URL from the repo path.
-func (s *Service) CheckoutFromRepo(ctx context.Context, repoPath, targetPath string) error {
-	return s.Checkout(ctx, &CheckoutParams{
-		SourceURL:  fmt.Sprintf("file://%s", repoPath),
-		TargetPath: targetPath,
-	})
 }
 
 // withCheckoutAuth adds --username and --password flags when set.

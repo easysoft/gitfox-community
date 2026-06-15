@@ -11,8 +11,9 @@ import (
 
 // LsParams contains the parameters for svn ls.
 type LsParams struct {
-	// Path is the absolute path to a working copy directory.
-	Path string
+	// SvnUID identifies the working copy to list.
+	// The working copy path is resolved as {svnRoot}/repos/{svnUID}-wc.
+	SvnUID string
 
 	// Revision is the revision number to query, e.g. "130".
 	// Corresponds to: svn ls -r <Revision> ...
@@ -33,22 +34,14 @@ func (p *LsParams) Validate() error {
 	if p == nil {
 		return ErrNoParamsProvided
 	}
-	if p.Path == "" {
-		return errors.New("path cannot be empty")
+	if p.SvnUID == "" {
+		return errors.New("svnUID cannot be empty")
 	}
 	return nil
 }
 
 // Ls runs `svn ls` to list directory contents in a working copy.
 // It returns the stdout output trimmed of leading/trailing whitespace.
-//
-// Example:
-//
-//	xml, err := svc.Ls(ctx, &LsParams{
-//	    Path:     "/data/svn/repos/xxx/demo-repo/zentaopms/",
-//	    Revision: "130",
-//	    XML:      true,
-//	})
 func (s *Service) Ls(ctx context.Context, params *LsParams) (string, error) {
 	if err := params.Validate(); err != nil {
 		return "", err
@@ -57,7 +50,7 @@ func (s *Service) Ls(ctx context.Context, params *LsParams) (string, error) {
 	stdout := &bytes.Buffer{}
 
 	cmd := command.New("ls",
-		command.WithArg(params.Path),
+		command.WithArg(s.workingCopyPath(params.SvnUID)),
 		withLsAuth(params.Username, params.Password),
 	)
 

@@ -11,8 +11,9 @@ import (
 
 // BlameParams contains the parameters for svn blame.
 type BlameParams struct {
-	// Path is the absolute path to a working copy file.
-	Path string
+	// SvnUID identifies the working copy to blame.
+	// The working copy path is resolved as {svnRoot}/repos/{svnUID}-wc.
+	SvnUID string
 
 	// Revision is the revision number to query, e.g. "130".
 	// Corresponds to: svn blame -r <Revision> ...
@@ -33,22 +34,14 @@ func (p *BlameParams) Validate() error {
 	if p == nil {
 		return ErrNoParamsProvided
 	}
-	if p.Path == "" {
-		return errors.New("path cannot be empty")
+	if p.SvnUID == "" {
+		return errors.New("svnUID cannot be empty")
 	}
 	return nil
 }
 
 // Blame runs `svn blame` to show line-by-line author and revision info for a file.
 // It returns the stdout output trimmed of leading/trailing whitespace.
-//
-// Example:
-//
-//	xml, err := svc.Blame(ctx, &BlameParams{
-//	    Path:     "/data/svn/repos/xxx/demo-repo/zentaopms/api/v1/lang/zh-cn.php",
-//	    Revision: "130",
-//	    XML:      true,
-//	})
 func (s *Service) Blame(ctx context.Context, params *BlameParams) (string, error) {
 	if err := params.Validate(); err != nil {
 		return "", err
@@ -57,7 +50,7 @@ func (s *Service) Blame(ctx context.Context, params *BlameParams) (string, error
 	stdout := &bytes.Buffer{}
 
 	cmd := command.New("blame",
-		command.WithArg(params.Path),
+		command.WithArg(s.workingCopyPath(params.SvnUID)),
 		withBlameAuth(params.Username, params.Password),
 	)
 

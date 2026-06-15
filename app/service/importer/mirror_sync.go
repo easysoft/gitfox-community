@@ -302,10 +302,8 @@ func (h *MirrorSyncHandler) syncGitRepo(ctx context.Context, gitUID, cloneURL st
 }
 
 func (h *MirrorSyncHandler) syncSvnRepo(ctx context.Context, svnUID, username, password string, log *logger.SugaredMateLogger) error {
-	path := h.svn.ResolveRepositoryPaths(svnUID)
-
 	err := h.svn.Sync(ctx, &svn.SyncParams{
-		TargetRepoPath: path.RepoPath,
+		SvnUID:         svnUID,
 		SourceUsername: username,
 		SourcePassword: password,
 	})
@@ -313,7 +311,7 @@ func (h *MirrorSyncHandler) syncSvnRepo(ctx context.Context, svnUID, username, p
 		return fmt.Errorf("failed to sync SVN repository: %w", err)
 	}
 	err = h.svn.SyncCopyRevProps(ctx, &svn.SyncParams{
-		TargetRepoPath: path.RepoPath,
+		SvnUID:         svnUID,
 		SourceUsername: username,
 		SourcePassword: password,
 	})
@@ -321,7 +319,7 @@ func (h *MirrorSyncHandler) syncSvnRepo(ctx context.Context, svnUID, username, p
 		return fmt.Errorf("failed to sync SVN repository revision properties: %w", err)
 	}
 	err = h.svn.Update(ctx, &svn.UpdateParams{
-		WorkingCopyPath: path.WorkingCopyPath,
+		SvnUID: svnUID,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to update SVN working copy: %w", err)
