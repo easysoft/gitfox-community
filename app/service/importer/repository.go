@@ -315,6 +315,10 @@ func (r *Repository) Handle(ctx context.Context, data string, reportFn pkgJobs.P
 	}
 
 	log.Info("completed repository import")
+	err = r.CreateMirrorSyncCronJob(ctx, input.RepoID, log)
+	if err != nil {
+		return "", fmt.Errorf("completed repository import, but failed to create mirror sync cron job: %w", err)
+	}
 
 	return "", nil
 }

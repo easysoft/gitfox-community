@@ -248,6 +248,10 @@ func (app *App) registerJobHandlers() {
 		app.SystemLog.Errorw("[Server] Failed to register mirror sync handler", "error", err)
 		panic(err)
 	}
+	if err := app.JobScheduler.RegisterHandler(importerSvc.JobTypeMirrorSyncCron, mirrorSyncHandler); err != nil {
+		app.SystemLog.Errorw("[Server] Failed to register mirror sync cron handler", "error", err)
+		panic(err)
+	}
 }
 
 // registerRecurringJobs 注册定时调度任务。

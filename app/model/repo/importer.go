@@ -8,6 +8,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/jobs"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
 )
 
 type ImportInput struct {
@@ -56,9 +57,10 @@ type Provider struct {
 }
 
 type Progress struct {
-	Status  jobs.State `json:"status"`
-	Result  string     `json:"result,omitempty"`
-	Failure string     `json:"failure,omitempty"`
+	Status       jobs.State      `json:"status"` //
+	Result       string          `json:"result,omitempty"`
+	Failure      string          `json:"failure,omitempty"`
+	LastExecuted *datetime.Local `json:"lastExecuted,omitempty"`
 }
 
 type GitConnectInfo struct {
