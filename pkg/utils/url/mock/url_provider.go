@@ -115,6 +115,48 @@ func (mr *MockProviderMockRecorder) GenerateGITCloneURL(ctx, repoPath any) *gomo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateGITCloneURL", reflect.TypeOf((*MockProvider)(nil).GenerateGITCloneURL), ctx, repoPath)
 }
 
+// GenerateMirrorGITCloneSSHURL mocks base method.
+func (m *MockProvider) GenerateMirrorGITCloneSSHURL(ctx context.Context, providerURL, slug string) string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GenerateMirrorGITCloneSSHURL", ctx, providerURL, slug)
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// GenerateMirrorGITCloneSSHURL indicates an expected call of GenerateMirrorGITCloneSSHURL.
+func (mr *MockProviderMockRecorder) GenerateMirrorGITCloneSSHURL(ctx, providerURL, slug any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateMirrorGITCloneSSHURL", reflect.TypeOf((*MockProvider)(nil).GenerateMirrorGITCloneSSHURL), ctx, providerURL, slug)
+}
+
+// GenerateMirrorGITCloneURL mocks base method.
+func (m *MockProvider) GenerateMirrorGITCloneURL(ctx context.Context, providerURL, slug string) string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GenerateMirrorGITCloneURL", ctx, providerURL, slug)
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// GenerateMirrorGITCloneURL indicates an expected call of GenerateMirrorGITCloneURL.
+func (mr *MockProviderMockRecorder) GenerateMirrorGITCloneURL(ctx, providerURL, slug any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateMirrorGITCloneURL", reflect.TypeOf((*MockProvider)(nil).GenerateMirrorGITCloneURL), ctx, providerURL, slug)
+}
+
+// GenerateMirrorSVNCloneURL mocks base method.
+func (m *MockProvider) GenerateMirrorSVNCloneURL(ctx context.Context, providerURL, slug string) string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GenerateMirrorSVNCloneURL", ctx, providerURL, slug)
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// GenerateMirrorSVNCloneURL indicates an expected call of GenerateMirrorSVNCloneURL.
+func (mr *MockProviderMockRecorder) GenerateMirrorSVNCloneURL(ctx, providerURL, slug any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateMirrorSVNCloneURL", reflect.TypeOf((*MockProvider)(nil).GenerateMirrorSVNCloneURL), ctx, providerURL, slug)
+}
+
 // GenerateRegistryURL mocks base method.
 func (m *MockProvider) GenerateRegistryURL(segments ...string) *url.URL {
 	m.ctrl.T.Helper()

@@ -134,7 +134,8 @@ func NewApp(mode string) (*App, func(), error) {
 	}
 	branchStore := branch.NewBranchStore(db)
 	branchService := branch2.NewService(urlProvider, gitService, branchStore)
-	repoService := repo2.NewRepoSvc(gitService, store, spaceStore, urlProvider, membershipAuthorizer)
+	providerStore := provider2.NewProviderStore(db)
+	repoService := repo2.NewRepoSvc(gitService, store, spaceStore, urlProvider, membershipAuthorizer, providerStore)
 	controller := branch3.NewController(branchService, repoService)
 	ciConfig := provider.NewCiConfig(config)
 	pipelineStore := pipeline.NewPipelineStore(db)
@@ -197,7 +198,6 @@ func NewApp(mode string) (*App, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	providerStore := provider2.NewProviderStore(db)
 	notifyStore := notify.NewNotifyStore(db)
 	encrypter, err := provider.ProvideEncrypter(config)
 	if err != nil {

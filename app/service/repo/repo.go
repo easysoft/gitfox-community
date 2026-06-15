@@ -3,6 +3,7 @@ package repo
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"strings"
@@ -14,6 +15,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/utils"
+	providerStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/provider"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/space"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/auth/authz"
@@ -27,11 +29,12 @@ import (
 )
 
 type Service struct {
-	gitSvc      git.Interface
-	repoStore   repo.Interface
-	spaceStore  space.Interface
-	urlProvider url.Provider
-	authorizer  authz.Authorizer
+	gitSvc        git.Interface
+	repoStore     repo.Interface
+	spaceStore    space.Interface
+	urlProvider   url.Provider
+	authorizer    authz.Authorizer
+	providerStore providerStore.Interface
 }
 
 var _ Interface = (*Service)(nil)
@@ -43,14 +46,51 @@ func NewRepoSvc(
 	spaceStore space.Interface,
 	urlProvider url.Provider,
 	authorizer authz.Authorizer,
+	providerStore providerStore.Interface,
 ) *Service {
 	return &Service{
-		gitSvc:      gitSvc,
-		repoStore:   repoStore,
-		spaceStore:  spaceStore,
-		urlProvider: urlProvider,
-		authorizer:  authorizer,
+		gitSvc:        gitSvc,
+		repoStore:     repoStore,
+		spaceStore:    spaceStore,
+		urlProvider:   urlProvider,
+		authorizer:    authorizer,
+		providerStore: providerStore,
 	}
+}
+
+// fillGitURLs 回填 GitURL 和 GitSSHURL。
+// 对于 Mirror 仓库，通过 ProviderID 获取 provider 的 URL 并结合 Connector 中的 slug 拼接；
+// 对于普通仓库，使用 repo.Path 生成 URL。
+func (s *Service) fillGitURLs(ctx context.Context, repo *repoModel.Repo) {
+	if repo.Mirror {
+		provider, err := s.providerStore.GetByID(ctx, repo.ProviderID)
+		if err != nil || provider == nil {
+			return
+		}
+
+		// SVN 镜像仓库
+		if repo.SCMType == "svn" {
+			svnConnectInfo := repoModel.SVNConnectInfo{}
+			if err := json.Unmarshal(repo.Connector, &svnConnectInfo); err != nil {
+				return
+			}
+			repo.SvnURL = s.urlProvider.GenerateMirrorSVNCloneURL(ctx, provider.URL, svnConnectInfo.Slug)
+			return
+		}
+
+		// Git 镜像仓库
+		gitConnectInfo := repoModel.GitConnectInfo{}
+		if err := json.Unmarshal(repo.Connector, &gitConnectInfo); err != nil {
+			return
+		}
+
+		repo.GitURL = s.urlProvider.GenerateMirrorGITCloneURL(ctx, provider.URL, gitConnectInfo.Slug)
+		repo.GitSSHURL = s.urlProvider.GenerateMirrorGITCloneSSHURL(ctx, provider.URL, gitConnectInfo.Slug)
+		return
+	}
+
+	repo.GitURL = s.urlProvider.GenerateGITCloneURL(ctx, repo.Path)
+	repo.GitSSHURL = s.urlProvider.GenerateGITCloneSSHURL(ctx, repo.Path)
 }
 
 func (s *Service) Create(ctx context.Context, session *auth.Session, params *repoModel.CreateRepoReq) (*repoModel.Repo, error) {
@@ -81,8 +121,7 @@ func (s *Service) Create(ctx context.Context, session *auth.Session, params *rep
 	if err != nil {
 		return nil, err
 	}
-	repoObj.GitSSHURL = s.urlProvider.GenerateGITCloneSSHURL(ctx, repoObj.Path)
-	repoObj.GitURL = s.urlProvider.GenerateGITCloneURL(ctx, repoObj.Path)
+	s.fillGitURLs(ctx, repoObj)
 	return repoObj, nil
 }
 
@@ -208,8 +247,12 @@ func (s *Service) Update(ctx context.Context, req *repoModel.ReqForUpdate, oldRe
 	repoPath := spaceInfo.Name + "/" + updatedRepo.Identifier
 
 	// 回填 gitURL 和 gitSSHURL
-	updatedRepo.GitURL = s.urlProvider.GenerateGITCloneURL(ctx, repoPath)
-	updatedRepo.GitSSHURL = s.urlProvider.GenerateGITCloneSSHURL(ctx, repoPath)
+	if updatedRepo.Mirror {
+		s.fillGitURLs(ctx, updatedRepo)
+	} else {
+		updatedRepo.GitURL = s.urlProvider.GenerateGITCloneURL(ctx, repoPath)
+		updatedRepo.GitSSHURL = s.urlProvider.GenerateGITCloneSSHURL(ctx, repoPath)
+	}
 
 	return updatedRepo, nil
 }
@@ -279,8 +322,7 @@ func (s *Service) GetByIdentifier(ctx context.Context, spaceID uint, identifier 
 		return nil, errors.BadRequest.New("Repository is not ready to use.")
 	}
 	// 回填 gitURL 和 gitSSHURL
-	repo.GitURL = s.urlProvider.GenerateGITCloneURL(ctx, repo.Path)
-	repo.GitSSHURL = s.urlProvider.GenerateGITCloneSSHURL(ctx, repo.Path)
+	s.fillGitURLs(ctx, repo)
 
 	return repo, nil
 }
@@ -295,8 +337,7 @@ func (s *Service) GetByID(ctx context.Context, session *auth.Session, id uint) (
 		return nil, err
 	}
 	// 回填 gitURL 和 gitSSHURL
-	repo.GitURL = s.urlProvider.GenerateGITCloneURL(ctx, repo.Path)
-	repo.GitSSHURL = s.urlProvider.GenerateGITCloneSSHURL(ctx, repo.Path)
+	s.fillGitURLs(ctx, repo)
 
 	return repo, nil
 }
@@ -411,8 +452,7 @@ func (s *Service) List(ctx context.Context, session *auth.Session, filter repoMo
 
 	// 为每个仓库填充 Git URL
 	for _, repoObj := range pageResult.Data {
-		repoObj.GitSSHURL = s.urlProvider.GenerateGITCloneSSHURL(ctx, repoObj.Path)
-		repoObj.GitURL = s.urlProvider.GenerateGITCloneURL(ctx, repoObj.Path)
+		s.fillGitURLs(ctx, repoObj)
 	}
 
 	// 计算是否为最后一页
