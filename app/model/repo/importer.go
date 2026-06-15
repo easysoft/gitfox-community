@@ -57,7 +57,7 @@ type Provider struct {
 }
 
 type Progress struct {
-	Status       jobs.State      `json:"status"` //
+	Status       jobs.State      `json:"status"`
 	Result       string          `json:"result,omitempty"`
 	Failure      string          `json:"failure,omitempty"`
 	LastExecuted *datetime.Local `json:"lastExecuted,omitempty"`

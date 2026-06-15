@@ -91,6 +91,7 @@ type Repo struct {
 	// git urls
 	GitURL      string          `json:"gitURL,omitempty"`
 	GitSSHURL   string          `json:"gitSSHURL,omitempty"`
+	SvnURL      string          `json:"svnURL,omitempty"`
 	Path        string          `json:"path"`
 	CreatedBy   string          `json:"createdBy"`
 	CreatedDate *datetime.Local `json:"createdDate"` // 允许 NULL，用指针类型

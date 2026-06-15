@@ -49,6 +49,18 @@ type Provider interface {
 	// NOTE: url is guaranteed to not have any trailing '/'.
 	GenerateGITCloneSSHURL(ctx context.Context, repoPath string) string
 
+	// GenerateMirrorGITCloneURL generates the HTTP clone URL for a mirror repository.
+	// It uses the external provider URL and connector slug instead of the internal repo path.
+	GenerateMirrorGITCloneURL(ctx context.Context, providerURL, slug string) string
+
+	// GenerateMirrorGITCloneSSHURL generates the SSH clone URL for a mirror repository.
+	// It uses the external provider URL and connector slug instead of the internal repo path.
+	GenerateMirrorGITCloneSSHURL(ctx context.Context, providerURL, slug string) string
+
+	// GenerateMirrorSVNCloneURL generates the HTTP clone URL for a mirror SVN repository.
+	// SVN clone URLs do not use the .git suffix or /git/ mount path.
+	GenerateMirrorSVNCloneURL(ctx context.Context, providerURL, slug string) string
+
 	// GenerateUIRepoURL returns the url for the UI screen of a repository.
 	GenerateUIRepoURL(ctx context.Context, repoPath string) string
 
@@ -201,6 +213,57 @@ func (p *provider) GenerateGITCloneSSHURL(_ context.Context, repoPath string) st
 		return ""
 	}
 	return BuildGITCloneSSHURL(p.SSHDefaultUser, p.gitSSHURL, repoPath)
+}
+
+func (p *provider) GenerateMirrorGITCloneURL(_ context.Context, providerURL, slug string) string {
+	u, err := url.Parse(providerURL)
+	if err != nil {
+		return ""
+	}
+
+	slug = path.Clean(slug)
+	if !strings.HasSuffix(slug, GITSuffix) {
+		slug += GITSuffix
+	}
+
+	return u.JoinPath(slug).String()
+}
+
+func (p *provider) GenerateMirrorGITCloneSSHURL(_ context.Context, providerURL, slug string) string {
+	u, err := url.Parse(providerURL)
+	if err != nil {
+		return ""
+	}
+
+	slug = path.Clean(slug)
+	if !strings.HasSuffix(slug, GITSuffix) {
+		slug += GITSuffix
+	}
+
+	host := u.Hostname()
+	port := u.Port()
+	combinedPath := strings.TrimLeft(slug, "/")
+
+	if port != "" && port != "0" && port != "22" {
+		return fmt.Sprintf(
+			"ssh://git@%s/%s",
+			net.JoinHostPort(host, port), combinedPath,
+		)
+	}
+
+	return fmt.Sprintf(
+		"git@%s:%s",
+		host, combinedPath,
+	)
+}
+
+func (p *provider) GenerateMirrorSVNCloneURL(_ context.Context, providerURL, slug string) string {
+	u, err := url.Parse(providerURL)
+	if err != nil {
+		return ""
+	}
+
+	return u.JoinPath(slug).String()
 }
 
 func (p *provider) GenerateUIBuildURL(_ context.Context, repoPath, pipelineIdentifier string, seqNumber int64) string {
