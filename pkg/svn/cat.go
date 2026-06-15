@@ -11,8 +11,9 @@ import (
 
 // CatParams contains the parameters for svn cat.
 type CatParams struct {
-	// Path is the absolute path to a working copy file.
-	Path string
+	// SvnUID identifies the working copy to cat from.
+	// The working copy path is resolved as {svnRoot}/repos/{svnUID}-wc.
+	SvnUID string
 
 	// Revision is the revision number to query, e.g. "130".
 	// Corresponds to: svn cat -r <Revision> ...
@@ -30,21 +31,14 @@ func (p *CatParams) Validate() error {
 	if p == nil {
 		return ErrNoParamsProvided
 	}
-	if p.Path == "" {
-		return errors.New("path cannot be empty")
+	if p.SvnUID == "" {
+		return errors.New("svnUID cannot be empty")
 	}
 	return nil
 }
 
 // Cat runs `svn cat` to output the content of a file at a given revision.
 // It returns the stdout output trimmed of leading/trailing whitespace.
-//
-// Example:
-//
-//	content, err := svc.Cat(ctx, &CatParams{
-//	    Path:     "/data/svn/repos/xxx/demo-repo/zentaopms/api/v1/lang/zh-cn.php",
-//	    Revision: "130",
-//	})
 func (s *Service) Cat(ctx context.Context, params *CatParams) (string, error) {
 	if err := params.Validate(); err != nil {
 		return "", err
@@ -53,7 +47,7 @@ func (s *Service) Cat(ctx context.Context, params *CatParams) (string, error) {
 	stdout := &bytes.Buffer{}
 
 	cmd := command.New("cat",
-		command.WithArg(params.Path),
+		command.WithArg(s.workingCopyPath(params.SvnUID)),
 		withCatAuth(params.Username, params.Password),
 	)
 

@@ -23,6 +23,28 @@ type Service struct {
 	svnRoot string
 }
 
+const (
+	// reposDir is the fixed subdirectory under svnRoot where SVN repositories are stored.
+	reposDir = "repos"
+	// wcSuffix is appended to the repository directory name for working copies.
+	wcSuffix = "-wc"
+)
+
+// repoPath returns the filesystem path for a repository: {svnRoot}/repos/{svnUID}
+func (s *Service) repoPath(svnUID string) string {
+	return filepath.Join(s.svnRoot, reposDir, svnUID)
+}
+
+// workingCopyPath returns the filesystem path for a working copy: {svnRoot}/repos/{svnUID}-wc
+func (s *Service) workingCopyPath(svnUID string) string {
+	return filepath.Join(s.svnRoot, reposDir, svnUID+wcSuffix)
+}
+
+// fileURL returns the file:// URL for a repository: file://{svnRoot}/repos/{svnUID}
+func (s *Service) fileURL(svnUID string) string {
+	return "file://" + s.repoPath(svnUID)
+}
+
 // New creates a new SVN Service. It verifies that the svn binary is available on PATH.
 func New(cfg *config.Config) (*Service, error) {
 	return &Service{svnRoot: cfg.SVN.Root}, nil
@@ -63,10 +85,12 @@ func (s *Service) CheckVersionAtLeast(ctx context.Context, atLeast string) error
 	return nil
 }
 
-// CreateRepository creates a new local SVN repository at the given path using svnadmin create.
-// The parent directory will be created if it does not exist.
+// CreateRepository creates a new local SVN repository for the given svnUID using svnadmin create.
+// The repository will be created at {svnRoot}/repos/{svnUID}.
 // After creation, a permissive pre-revprop-change hook is installed so that svnsync can operate.
-func (s *Service) CreateRepository(ctx context.Context, path string) error {
+func (s *Service) CreateRepository(ctx context.Context, svnUID string) error {
+	path := s.repoPath(svnUID)
+
 	// Ensure parent directory exists.
 	parentDir := filepath.Dir(path)
 	if err := os.MkdirAll(parentDir, 0o700); err != nil {
@@ -82,17 +106,17 @@ func (s *Service) CreateRepository(ctx context.Context, path string) error {
 	}
 
 	// svnsync requires the pre-revprop-change hook to be enabled on the target repository.
-	if err := s.CreatePreRevpropChangeHook(path); err != nil {
+	if err := s.createPreRevpropChangeHook(path); err != nil {
 		return errors.Wrapf(ErrCreateRepository, "%v", err)
 	}
 
 	return nil
 }
 
-// CreatePreRevpropChangeHook creates a permissive pre-revprop-change hook in the repository's
+// createPreRevpropChangeHook creates a permissive pre-revprop-change hook in the repository's
 // hooks directory. This hook allows all revision property changes, which is required for
 // svnsync to function properly.
-func (s *Service) CreatePreRevpropChangeHook(repoPath string) error {
+func (s *Service) createPreRevpropChangeHook(repoPath string) error {
 	hookName := "pre-revprop-change"
 	var content string
 
@@ -111,17 +135,20 @@ func (s *Service) CreatePreRevpropChangeHook(repoPath string) error {
 	return nil
 }
 
-// RemoveRepository removes the local SVN repository directory at the given path.
-// Use this to clean up when import fails at SyncInit, Sync, or Checkout stage.
-func (s *Service) RemoveRepository(path string) error {
+// RemoveRepository removes the local SVN repository directory for the given svnUID.
+// The repository path is resolved as {svnRoot}/repos/{svnUID}.
+func (s *Service) RemoveRepository(svnUID string) error {
+	path := s.repoPath(svnUID)
 	if err := os.RemoveAll(path); err != nil {
 		return errors.Wrapf(ErrRemoveRepository, "failed to remove repository %s: %v", path, err)
 	}
 	return nil
 }
 
-// RemoveWorkingCopy removes the working copy directory at the given path.
-func (s *Service) RemoveWorkingCopy(path string) error {
+// RemoveWorkingCopy removes the working copy directory for the given svnUID.
+// The working copy path is resolved as {svnRoot}/repos/{svnUID}-wc.
+func (s *Service) RemoveWorkingCopy(svnUID string) error {
+	path := s.workingCopyPath(svnUID)
 	if err := os.RemoveAll(path); err != nil {
 		return errors.Wrapf(ErrRemoveWorkingCopy, "failed to remove working copy %s: %v", path, err)
 	}

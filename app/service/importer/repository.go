@@ -119,6 +119,7 @@ func (r *Repository) LoadRepositoryFromProvider(
 	if provider.Type == constant.RepoProviderTypeSVN {
 		cloneURL := fmt.Sprintf("%s/%s", provider.Host, provider.Slug)
 
+		// 保证远端代码库可用
 		if _, err := r.svn.InfoRevision(ctx, cloneURL, provider.Username, provider.Password); err != nil {
 			return RepositoryInfo{}, provider, errors.WithI18nKey(
 				errors.BadRequest.Wrap(err, "svn repository not found or unreachable"),
@@ -422,23 +423,20 @@ func (r *Repository) firstSyncSvnRepo(
 	hash := sha256.Sum256([]byte(
 		fmt.Sprintf("%d-%s-%d", repo.SpaceID, repo.Identifier, time.Now().UnixMicro()),
 	))
-	encodedDir := base64.RawURLEncoding.EncodeToString(hash[:31]) // 31 bytes → 42 chars
-	paths := r.svn.ResolveRepositoryPaths(encodedDir)
-	repoPath := paths.RepoPath
-	workingCopyPath := paths.WorkingCopyPath
+	svnUID := base64.RawURLEncoding.EncodeToString(hash[:31]) // 31 bytes → 42 chars
 
-	if err := r.svn.CreateRepository(ctx, repoPath); err != nil {
+	if err := r.svn.CreateRepository(ctx, svnUID); err != nil {
 		return nil, fmt.Errorf("failed to create svn repository: %w", err)
 	}
 
-	log.Infof("successfully created svn repository at '%s'", repoPath)
+	log.Infof("successfully created svn repository for '%s'", svnUID)
 
-	// 更新 GitUID 为 encodedDir，确保同步失败时能定位到仓库进行清理
+	// 更新 GitUID 为 svnUID，确保同步失败时能定位到仓库进行清理
 	updated, err := r.repoStore.UpdateOptLock(ctx, repo, func(repo *repoModel.Repo) error {
 		if repo.Status != constant.RepoStateImporting {
 			return errors.New("repository has already finished importing")
 		}
-		repo.GitUID = encodedDir
+		repo.GitUID = svnUID
 		return nil
 	})
 	if err != nil {
@@ -450,7 +448,7 @@ func (r *Repository) firstSyncSvnRepo(
 		log.Info("initialize svnsync")
 
 		if err := r.svn.SyncInit(ctx, &svnPkg.SyncInitParams{
-			TargetRepoPath: repoPath,
+			SvnUID:         svnUID,
 			SourceURL:      input.CloneURL,
 			SourceUsername: input.User,
 			SourcePassword: input.Auth,
@@ -461,7 +459,7 @@ func (r *Repository) firstSyncSvnRepo(
 		log.Info("sync svn repository")
 
 		if err := r.svn.Sync(ctx, &svnPkg.SyncParams{
-			TargetRepoPath: repoPath,
+			SvnUID:         svnUID,
 			SourceUsername: input.User,
 			SourcePassword: input.Auth,
 		}); err != nil {
@@ -471,7 +469,7 @@ func (r *Repository) firstSyncSvnRepo(
 		log.Info("copy revision properties")
 
 		if err := r.svn.SyncCopyRevProps(ctx, &svnPkg.SyncParams{
-			TargetRepoPath: repoPath,
+			SvnUID:         svnUID,
 			SourceUsername: input.User,
 			SourcePassword: input.Auth,
 		}); err != nil {
@@ -481,13 +479,12 @@ func (r *Repository) firstSyncSvnRepo(
 		log.Info("checkout working copy")
 
 		if err := r.svn.Checkout(ctx, &svnPkg.CheckoutParams{
-			SourceURL:  fmt.Sprintf("file://%s", repoPath),
-			TargetPath: workingCopyPath,
+			SvnUID: svnUID,
 		}); err != nil {
 			return fmt.Errorf("failed to checkout svn working copy: %w", err)
 		}
 
-		log.Infof("successfully checked out svn working copy at '%s'", workingCopyPath)
+		log.Infof("successfully checked out svn working copy for '%s'", svnUID)
 
 		log.Info("update repo in DB")
 
@@ -511,10 +508,10 @@ func (r *Repository) firstSyncSvnRepo(
 		r.sendNotice(ctx, repo.ID, repo.Identifier, repo.CreatedBy, input.NoticeLang, true, err.Error(), log)
 
 		cleanupCtx := context.WithoutCancel(ctx)
-		if errDel := r.svn.RemoveRepository(repoPath); errDel != nil {
+		if errDel := r.svn.RemoveRepository(svnUID); errDel != nil {
 			log.Errorw("failed to delete svn repository after failed import", "error", errDel)
 		}
-		if errDel := r.svn.RemoveWorkingCopy(workingCopyPath); errDel != nil {
+		if errDel := r.svn.RemoveWorkingCopy(svnUID); errDel != nil {
 			log.Errorw("failed to delete svn working copy after failed import", "error", errDel)
 		}
 		if errDel := r.repoStore.HardDelete(cleanupCtx, repo.ID); errDel != nil {

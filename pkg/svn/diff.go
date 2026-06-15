@@ -11,9 +11,9 @@ import (
 
 // DiffParams contains the parameters for svn diff.
 type DiffParams struct {
-	// Path is the absolute path to a working copy file or directory.
-	// Corresponds to: svn diff <Path> ...
-	Path string
+	// SvnUID identifies the working copy to diff against.
+	// The working copy path is resolved as {svnRoot}/repos/{svnUID}-wc.
+	SvnUID string
 
 	// Revision is the revision or revision range to diff, e.g. "130" or "0:130".
 	// Corresponds to: svn diff -r <Revision> ...
@@ -30,21 +30,14 @@ func (p *DiffParams) Validate() error {
 	if p == nil {
 		return ErrNoParamsProvided
 	}
-	if p.Path == "" {
-		return errors.New("path cannot be empty")
+	if p.SvnUID == "" {
+		return errors.New("svnUID cannot be empty")
 	}
 	return nil
 }
 
 // Diff runs `svn diff` to show differences between revisions for a working copy file or directory.
 // It returns the stdout output trimmed of leading/trailing whitespace.
-//
-// Example:
-//
-//	diff, err := svc.Diff(ctx, &DiffParams{
-//	    Path:     "/data/svn/repos/xxx/demo-repo/zentaopms/api/v1/lang/zh-cn.php",
-//	    Revision: "0:130",
-//	})
 func (s *Service) Diff(ctx context.Context, params *DiffParams) (string, error) {
 	if err := params.Validate(); err != nil {
 		return "", err
@@ -53,7 +46,7 @@ func (s *Service) Diff(ctx context.Context, params *DiffParams) (string, error) 
 	stdout := &bytes.Buffer{}
 
 	cmd := command.New("diff",
-		command.WithArg(params.Path),
+		command.WithArg(s.workingCopyPath(params.SvnUID)),
 		withDiffAuth(params.Username, params.Password),
 	)
 

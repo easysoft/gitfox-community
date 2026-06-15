@@ -75,6 +75,7 @@ func (s *Service) fillGitURLs(ctx context.Context, repo *repoModel.Repo) {
 				return
 			}
 			repo.SvnURL = s.urlProvider.GenerateMirrorSVNCloneURL(ctx, provider.URL, svnConnectInfo.Slug)
+			repo.GitURL = repo.SvnURL
 			return
 		}
 
