@@ -2,7 +2,6 @@ package service
 
 import (
 	"fmt"
-	"net/http"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -63,17 +62,11 @@ func runStart(_ *kingpin.ParseContext) error {
 			fmt.Println(errStyle.Render(err.Error()))
 			return nil
 		}
-		//  else {
-		// 	fmt.Println(successStyle.Render("✓ ") + fmt.Sprintf(t(i18n.CliStartCheckGitOk), ver))
-		// }
 
 		if ok, _, err := CheckDocker(); !ok || err != nil {
 			fmt.Println(errStyle.Render(err.Error()))
 			return nil
 		}
-		// else {
-		// 	fmt.Println(successStyle.Render("✓ ") + fmt.Sprintf(t(i18n.CliStartCheckDockerOk), ver))
-		// }
 
 		// Subversion 仅警告，不阻塞 start：用于支持关联 SVN 代码库功能。
 		if ok, _, err := CheckSubversion(); !ok {
@@ -87,7 +80,7 @@ func runStart(_ *kingpin.ParseContext) error {
 	// 阶段 2. 读取环境配制检查 (识别是否允许提供服务)
 	// =========================================================
 	// 查找并校验工作目录下是否存在必要的 prod.env
-	envPath := filepath.Join(workDir, "prod.env")
+	envPath := filepath.Join(workDir, ProdEnvFileName)
 	if _, err := os.Stat(envPath); os.IsNotExist(err) {
 		fmt.Println(errStyle.Render(t(i18n.CliStartErrEnvNotFound)))
 		return nil
@@ -120,19 +113,15 @@ func runStart(_ *kingpin.ParseContext) error {
 		return nil
 	}
 
-	// fmt.Println(t(i18n.CliStartStepCheckDb))
 	if err := CheckDB(dsn); err != nil {
 		fmt.Println(errStyle.Render(fmt.Sprintf(t(i18n.CliStartErrCheckDb), err.Error())))
 		return nil
 	}
-	// fmt.Println(successStyle.Render("✓ ") + t(i18n.CliStartSuccessCheckDb))
 
-	// fmt.Println(t(i18n.CliStartStepCheckZentao))
 	if err := CheckZentao(devopsURL); err != nil {
 		fmt.Println(errStyle.Render(fmt.Sprintf(t(i18n.CliStartErrCheckZentao), err.Error())))
 		return nil
 	}
-	// fmt.Println(successStyle.Render("✓ ") + t(i18n.CliStartSuccessCheckZentao))
 
 	// =========================================================
 	// 阶段 3. 智能服务注册决策引擎
@@ -146,15 +135,10 @@ func runStart(_ *kingpin.ParseContext) error {
 	}
 	exePath, _ = filepath.EvalSymlinks(exePath)
 
-	// 3.2 先探测服务是否已经在跑且健康（避免重复启动）
-	healthURL := fmt.Sprintf("http://%s:%s/public/health", host, port)
-	preClient := http.Client{Timeout: 2 * time.Second}
-
 	// 预声明在 goto 之前，避免跳过变量声明
 	var existing ServiceInfo
 
-	if resp, err := preClient.Get(healthURL); err == nil && resp.StatusCode == 200 {
-		resp.Body.Close()
+	if CheckGitfoxHealth().Status == GitfoxHealthOK {
 		fmt.Println(successStyle.Render("✓ ") + fmt.Sprintf(t(i18n.CliStartAlreadyRunning), port))
 		fmt.Println()
 
@@ -168,7 +152,6 @@ func runStart(_ *kingpin.ParseContext) error {
 		}
 
 		// 用户确认重启
-		// fmt.Println()
 		fmt.Println(t(i18n.CliStartServiceRestarting))
 		if err := RestartService(); err != nil {
 			fmt.Println(errStyle.Render(fmt.Sprintf(t(i18n.CliStartFailed), err)))
@@ -204,7 +187,6 @@ func runStart(_ *kingpin.ParseContext) error {
 			fmt.Println()
 		} else if existing.ExePath == exePath && existing.WorkDir == workDir {
 			// 同一二进制 + 同一工作目录 → 直接 restart，跳过注册
-			// fmt.Println(t(i18n.CliStartServiceExistsSame))
 			if err := RestartService(); err != nil {
 				fmt.Println(errStyle.Render(fmt.Sprintf(t(i18n.CliStartFailed), err)))
 				return nil
@@ -238,15 +220,6 @@ func runStart(_ *kingpin.ParseContext) error {
 			_ = StopService()
 		}
 	}
-	// else {
-	// 	// 首次注册 → 弹出确认框
-	// 	confirm, confirmErr := confirmPrompt(t(i18n.CliStartConfirmRegister))
-
-	// 	if confirmErr != nil || !confirm {
-	// 		fmt.Println(t(i18n.CliStartConfirmCancel))
-	// 		return nil
-	// 	}
-	// }
 
 	// 执行全新注册
 	if err := RegisterService(exePath, workDir); err != nil {
@@ -261,25 +234,8 @@ healthCheck:
 	// =========================================================
 	// 服务虽然被挂载进了后台，但不代表内部启动未抛出 Panic。
 	// 通过短时长循环测试 /public/health 接口验证内部状态正常。
-	// fmt.Println(fmt.Sprintf(t(i18n.CliStartStepHealthCheck), port))
-	healthURL = fmt.Sprintf("http://%s:%s/public/health", host, port)
-
-	client := http.Client{Timeout: 2 * time.Second}
-	isHealthy := false
-	for i := 0; i < 15; i++ {
-		resp, err := client.Get(healthURL)
-		if err == nil && resp.StatusCode == 200 {
-			resp.Body.Close()
-			isHealthy = true
-			break
-		}
-		if resp != nil {
-			resp.Body.Close()
-		}
-		time.Sleep(1 * time.Second)
-	}
-
-	if !isHealthy {
+	// healthURL = BuildHealthURL(host, port)
+	if !CheckPortWithTimeout(port, 5*time.Second) {
 		fmt.Println(errStyle.Render(t(i18n.CliStartErrHealthTimeout)))
 		fmt.Println()
 		printFailureSummary()
@@ -310,7 +266,6 @@ func printStartSummary(workDir, host, port string) {
 	appLogsDir := filepath.Join(workDir, "logs")
 
 	headerStyle := lipgloss.NewStyle().Bold(true)
-	//.Foreground(lipgloss.Color("#7D56F4"))
 	labelStyle := lipgloss.NewStyle().
 		Width(20)
 	valueStyle := lipgloss.NewStyle()
@@ -323,8 +278,6 @@ func printStartSummary(workDir, host, port string) {
 	fmt.Println(strings.Repeat("─", 60))
 	printRow(t(i18n.CliStartSummaryAddress), webConsole)
 	printRow(t(i18n.CliStartSummaryAppLog), appLogsDir)
-	// fmt.Println()
-	// fmt.Println(headerStyle.Render(t(i18n.CliStartSummaryManageTitle)))
 	printRow(t(i18n.CliStartSummaryLogCmd), logCmd)
 	fmt.Println(strings.Repeat("─", 60))
 }

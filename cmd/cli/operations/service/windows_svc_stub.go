@@ -41,11 +41,6 @@ func inspectWindows() ServiceInfo {
 	return ServiceInfo{Registered: false}
 }
 
-// isServiceRegisteredWindows 非 Windows 平台始终返回 false。
-func isServiceRegisteredWindows() bool {
-	return false
-}
-
 // RegisterServiceRun 非 Windows 平台不注册 service run 子命令。
 func RegisterServiceRun(_ *kingpin.Application) {
 	// 非 Windows 平台无需注册此命令

@@ -2,11 +2,6 @@ package service
 
 import (
 	"fmt"
-	"net/http"
-	"os"
-	"os/exec"
-	"runtime"
-	"time"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	clii18n "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n/cli"
@@ -87,52 +82,25 @@ func runStatus(_ *kingpin.ParseContext) error {
 	}
 
 	// =========================================================
-	// 区块 2. GitFox 服务状态检查
+	// 区块 2. GitFox 服务状态检查（端到端聚合）
 	// =========================================================
 	fmt.Println()
 	fmt.Println(headerStyle.Render(t(i18n.CliStatusSectionService)))
 
-	registered := isServiceRegistered()
-	_, port, healthURL := readHealthURL()
-
-	if !registered {
-		fmt.Println(errStyle.Render(t(i18n.CliStatusServiceNotRunning)))
-	} else if healthURL != "" {
-		// 服务已注册，探测健康接口
-		client := http.Client{Timeout: 3 * time.Second}
-		resp, err := client.Get(healthURL)
-
-		if err == nil && resp.StatusCode == 200 {
-			resp.Body.Close()
-			fmt.Println(okStyle.Render(t(i18n.CliStatusServiceRunning)))
-			fmt.Println(okStyle.Render(fmt.Sprintf(t(i18n.CliStatusServicePort), port)))
-		} else {
-			if resp != nil {
-				resp.Body.Close()
-			}
-			fmt.Println(errStyle.Render(t(i18n.CliStatusServiceNotRunning)))
-		}
-	} else {
-		// 注册了但没有 env 配置可读取端口
+	hr := CheckGitfoxHealth()
+	switch hr.Status {
+	case GitfoxHealthOK:
+		fmt.Println(okStyle.Render(t(i18n.CliStatusServiceRunning)))
+		fmt.Println(okStyle.Render(fmt.Sprintf(t(i18n.CliStatusServicePort), hr.Port)))
+	case GitfoxHealthNotRegistered:
+		fmt.Println(errStyle.Render(t(i18n.CliStatusServiceNotRegistered)))
+	case GitfoxHealthCorrupted:
+		fmt.Println(errStyle.Render(t(i18n.CliStatusServiceCorrupted)))
+	case GitfoxHealthStopped:
+		fmt.Println(errStyle.Render(t(i18n.CliStatusServiceStopped)))
+	default:
+		// 兜底：未知状态当未运行
 		fmt.Println(errStyle.Render(t(i18n.CliStatusServiceNotRunning)))
 	}
 	return nil
-}
-
-// isServiceRegistered 检查当前系统是否已经注册了 GitFox 守护进程服务
-func isServiceRegistered() bool {
-	switch runtime.GOOS {
-	case "linux":
-		// 检查 systemd unit 文件是否存在
-		if _, err := os.Stat("/etc/systemd/system/gitfox.service"); err == nil {
-			return true
-		}
-		// 或者通过 systemctl 判断
-		return exec.Command("systemctl", "is-enabled", "--quiet", "gitfox").Run() == nil
-	case "windows":
-		// isServiceRegisteredWindows 已迁移至 windows.go
-		return isServiceRegisteredWindows()
-	default:
-		return false
-	}
 }

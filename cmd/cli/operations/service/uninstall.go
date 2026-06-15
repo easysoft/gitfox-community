@@ -46,7 +46,11 @@ func runUninstall(_ *kingpin.ParseContext) error {
 		return nil
 	}
 
-	_, port, healthURL := readHealthURL()
+	hc, hcErr := readHealthURL()
+	if hcErr != nil {
+		// 配置缺失不阻断 uninstall：仍要执行 stop + 系统注册移除。
+		fmt.Println(warnStyle.Render(hcErr.Error()))
+	}
 
 	// ========== 阶段 2. 停止服务 ==========
 	fmt.Println(t(i18n.CliStopStep))
@@ -59,10 +63,12 @@ func runUninstall(_ *kingpin.ParseContext) error {
 		return nil
 	}
 
-	// ========== 阶段 4. 反向健康检查 ==========
-	if port != "" {
-		if CheckPortDown(healthURL, 5) {
+	// ========== 阶段 4. 反向健康检查端口 ==========
+	if hc.Port != "" {
+		ps := CheckPort(hc.Port)
+		if ps.InUse {
 			fmt.Println(warnStyle.Render(t(i18n.CliStopHealthStillUp)))
+			return nil
 		}
 	}
 

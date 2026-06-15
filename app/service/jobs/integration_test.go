@@ -9,6 +9,7 @@ import (
 
 	jobModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/jobs"
 	mockStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/jobs/mock"
+	pkgErrors "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	pkgJobs "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/jobs"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
@@ -51,6 +52,12 @@ func TestIntegration_SimpleJobExecution(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to register handler: %v", err)
 	}
+
+	// Expect job lookup (not found, so it will be created)
+	mockJobStore.EXPECT().
+		GetByName(gomock.Any(), "integration-test-job").
+		Return(nil, pkgErrors.ErrResourceNotFound).
+		Times(1)
 
 	// Expect job creation
 	mockJobStore.EXPECT().

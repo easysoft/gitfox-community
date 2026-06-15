@@ -9,6 +9,7 @@ import (
 
 	jobModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/jobs"
 	mockStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/jobs/mock"
+	pkgErrors "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/lock"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pubsub"
@@ -602,6 +603,12 @@ func TestScheduler_RunJob(t *testing.T) {
 		5,
 		24*time.Hour,
 	)
+
+	// Expect job lookup (not found, so it will be created)
+	mockJobStore.EXPECT().
+		GetByName(gomock.Any(), "manual-job").
+		Return(nil, pkgErrors.ErrResourceNotFound).
+		Times(1)
 
 	// Expect job to be created
 	mockJobStore.EXPECT().

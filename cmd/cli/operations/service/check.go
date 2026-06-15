@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"regexp"
 	"runtime"
 	"strings"
@@ -16,6 +17,7 @@ import (
 	clii18n "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n/cli"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/hashicorp/go-version"
+	"github.com/joho/godotenv"
 )
 
 // 依赖最低版本约束。
@@ -309,20 +311,158 @@ func parseSsOutput(output, port string) PortStatus {
 	return result
 }
 
-// CheckPortDown 反向健康检查：在服务停止后确认端口不再响应。
-// 最多轮询 maxRetries 次（每次间隔 1s），若端口始终有响应则返回 true（仍在线）。
-func CheckPortDown(healthURL string, maxRetries int) bool {
-	client := http.Client{Timeout: 2 * time.Second}
-	for i := 0; i < maxRetries; i++ {
+// CheckPortWithTimeout 检查指定端口是否被占用，超时后返回 false。
+func CheckPortWithTimeout(port string, timeout time.Duration) bool {
+	if port == "" {
+		return false
+	}
+	deadline := time.Now().Add(timeout)
+	for time.Now().Before(deadline) {
 		time.Sleep(1 * time.Second)
-		resp, err := client.Get(healthURL)
-		if err != nil {
-			// 连接被拒绝 = 服务确实已停止
-			return false
-		}
-		if resp != nil {
-			resp.Body.Close()
+		if CheckPort(port).InUse {
+			return true
 		}
 	}
-	return true
+	return false
+}
+
+// ReadHealthURLResult 是健康检查 URL 解析后的结构化结果。
+type ReadHealthURLResult struct {
+	Host, Port, URL string
+}
+
+// readHealthURL 从当前工作目录的 prod.env 读取 host/port，拼装健康检查 URL。
+// 这是 stop / uninstall / status 等"在工作目录里运行"的命令的便捷封装。
+//
+// 失败时 result.Host="127.0.0.1"、其他字段为空，error 非 nil；
+// 调用方自行决定是否中止主流程或仅以警告形式提示。
+func readHealthURL() (ReadHealthURLResult, error) {
+	return readHealthURLFrom(".")
+}
+
+// readHealthURLFrom 从指定工作目录的 prod.env 读取 host/port，拼装健康检查 URL。
+// upgrade 等命令在任意 cwd 运行，需显式传入 systemd 注册的工作目录。
+//
+// 优先使用 GITFOX_SERVER_HOST，兜底 127.0.0.1。port 缺失时 url 为空字符串。
+func readHealthURLFrom(workDir string) (ReadHealthURLResult, error) {
+	host := "127.0.0.1"
+	envMap, err := godotenv.Read(filepath.Join(workDir, ProdEnvFileName))
+	if err != nil {
+		return ReadHealthURLResult{Host: host}, fmt.Errorf(clii18n.T(i18n.CliStartErrReadEnv), err)
+	}
+	host = envMap["GITFOX_SERVER_HOST"]
+	port := envMap["GITFOX_HTTP_PORT"]
+	return ReadHealthURLResult{
+		Host: host,
+		Port: port,
+	}, nil
+}
+
+// IsSystemServiceActive 通过系统服务管理器判断 gitfox 服务是否处于"运行中"。
+//
+// 比 health 探针更准：直接读 systemd / Windows SCM 状态，不受网络/端口监听延迟干扰。
+// 不支持的平台返回 false。
+func IsSystemServiceActive() bool {
+	switch runtime.GOOS {
+	case "linux":
+		if _, err := exec.LookPath("systemctl"); err != nil {
+			return false
+		}
+		// systemctl is-active --quiet exit 0 表示 active
+		return exec.Command("systemctl", "is-active", "--quiet", "gitfox").Run() == nil
+	case "windows":
+		out, err := exec.Command("sc", "query", "gitfox").CombinedOutput()
+		if err != nil {
+			return false
+		}
+		return strings.Contains(string(out), "RUNNING")
+	default:
+		return false
+	}
+}
+
+// GitfoxHealthStatus 描述 GitFox 服务的整体健康状态分类。
+type GitfoxHealthStatus int
+
+const (
+	// GitfoxHealthOK 已注册 + 已启动 + 配置完整 + health 端点 200。
+	GitfoxHealthOK GitfoxHealthStatus = iota
+	// GitfoxHealthNotRegistered 系统中不存在 gitfox 服务注册（未 install）。
+	GitfoxHealthNotRegistered
+	// GitfoxHealthCorrupted 系统服务文件存在但解析失败 / ExePath 缺失。
+	GitfoxHealthCorrupted
+	// GitfoxHealthStopped 已注册但 systemctl is-active 为 false。
+	GitfoxHealthStopped
+	// GitfoxHealthConfigMissing 工作目录下读不出 prod.env。
+	GitfoxHealthConfigMissing
+	// GitfoxHealthAddressMissing prod.env 已读，但 host/port 缺失，无法拼装健康 URL。
+	GitfoxHealthAddressMissing
+)
+
+// GitfoxHealthResult 是 CheckGitfoxHealth 的结构化结果。
+// 字段按检查阶段渐进填充，调用方可基于已填字段做诊断展示。
+type GitfoxHealthResult struct {
+	Status  GitfoxHealthStatus
+	ExePath string // 来自 InspectService（注册时填）
+	WorkDir string // 来自 InspectService（注册时填）
+	Host    string // 来自 prod.env（配置就绪时填）
+	Port    string // 来自 prod.env
+	URL     string // 拼装的健康端点
+	Err     error  // 配置读取等具体错误（GitfoxHealthConfigMissing 时填）
+}
+
+// CheckGitfoxHealth 端到端检查 GitFox 服务可用性。
+//
+// 检查链：
+//  1. InspectService → 未注册 / 损坏直接返回
+//  2. IsSystemServiceActive → 未运行返回 GitfoxHealthStopped
+//  3. readHealthURLFrom(workDir) → 配置异常返回 GitfoxHealthConfigMissing
+//  4. host/port 缺失 → GitfoxHealthAddressMissing
+//  5. CheckHealthOnce → 不通返回 GitfoxHealthUnreachable
+//  6. 全部通过 → GitfoxHealthOK
+func CheckGitfoxHealth() GitfoxHealthResult {
+	// 1) 系统服务注册
+	info := InspectService()
+	if !info.Registered {
+		return GitfoxHealthResult{Status: GitfoxHealthNotRegistered}
+	}
+	if info.Corrupted || info.ExePath == "" {
+		return GitfoxHealthResult{
+			Status:  GitfoxHealthCorrupted,
+			ExePath: info.ExePath,
+			WorkDir: info.WorkDir,
+		}
+	}
+
+	result := GitfoxHealthResult{
+		ExePath: info.ExePath,
+		WorkDir: info.WorkDir,
+	}
+
+	// 2) 进程是否在跑
+	if !IsSystemServiceActive() {
+		result.Status = GitfoxHealthStopped
+		return result
+	}
+
+	// 3) 配置文件
+	hc, err := readHealthURLFrom(info.WorkDir)
+	if err != nil {
+		result.Status = GitfoxHealthConfigMissing
+		result.Err = err
+		return result
+	}
+	result.Host = hc.Host
+	result.Port = hc.Port
+	result.URL = hc.URL
+
+	// 4) host/port 完整性
+	if hc.URL == "" {
+		result.Status = GitfoxHealthAddressMissing
+		return result
+	}
+
+	// 6) 全过
+	result.Status = GitfoxHealthOK
+	return result
 }

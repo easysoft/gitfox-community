@@ -4,13 +4,12 @@ import (
 	"errors"
 	"fmt"
 	"os/exec"
-	"path/filepath"
 	"runtime"
+	"time"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	clii18n "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n/cli"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/joho/godotenv"
 	"github.com/quicklyon/kingpin/v2"
 )
 
@@ -36,8 +35,6 @@ func StopService() error {
 	}
 }
 
-// stopWindows 已迁移至 windows.go
-
 func stopLinux() error {
 	if _, err := exec.LookPath("systemctl"); err != nil {
 		return errors.New(clii18n.T(i18n.CliStartErrSystemctlMissing))
@@ -61,15 +58,17 @@ func runStop(_ *kingpin.ParseContext) error {
 	warnStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#FF8C00"))
 	// successStyle := lipgloss.NewStyle().Bold(true)
 
-	// printBanner(t(i18n.CliStopWelcome))
-
 	// ========== 阶段 0. 权限校验 ==========
 	if err := CheckSudo(); err != nil {
 		fmt.Println(errStyle.Render(err.Error()))
 		return nil
 	}
 
-	_, port, healthURL := readHealthURL()
+	hc, hcErr := readHealthURL()
+	if hcErr != nil {
+		// 配置缺失不阻断 stop：服务可能仍在跑，systemctl stop 仍要执行。
+		fmt.Println(warnStyle.Render(hcErr.Error()))
+	}
 
 	// ========== 阶段 1. 执行停止 ==========
 	fmt.Println(t(i18n.CliStopStep))
@@ -79,8 +78,8 @@ func runStop(_ *kingpin.ParseContext) error {
 	}
 
 	// ========== 阶段 2. 反向健康检查：确认端口不再响应 ==========
-	if port != "" {
-		if CheckPortDown(healthURL, 5) {
+	if hc.Port != "" {
+		if !CheckPortWithTimeout(hc.Port, 5*time.Second) {
 			fmt.Println(warnStyle.Render(t(i18n.CliStopHealthStillUp)))
 		}
 	}
@@ -89,23 +88,4 @@ func runStop(_ *kingpin.ParseContext) error {
 	fmt.Println(doneStyle.Render("✓ " + t(i18n.CliStopSuccess)))
 
 	return nil
-}
-
-// readHealthURL 从 prod.env 读取 host 和 port，拼装健康检查 URL。
-// 优先使用 GITFOX_SERVER_HOST，兜底 127.0.0.1。
-func readHealthURL() (host, port, url string) {
-	envMap, err := godotenv.Read(filepath.Join(".", "prod.env"))
-	if err != nil {
-		return "127.0.0.1", "", ""
-	}
-	port = envMap["GITFOX_HTTP_PORT"]
-	host = envMap["GITFOX_SERVER_HOST"]
-	if host == "" {
-		host = "127.0.0.1"
-	}
-	if port == "" {
-		return host, port, ""
-	}
-	url = fmt.Sprintf("http://%s:%s/public/health", host, port)
-	return host, port, url
 }
