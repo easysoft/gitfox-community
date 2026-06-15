@@ -113,3 +113,25 @@ func StopAll() {
 		return true
 	})
 }
+
+// DefaultMirrorSyncInterval 默认镜像同步间隔（分钟）
+const DefaultMirrorSyncInterval = 10
+
+// SyncIntervalToCron 将同步间隔（分钟）转换为 cron 表达式。
+func SyncIntervalToCron(minutes uint) string {
+	if minutes < 1 {
+		minutes = DefaultMirrorSyncInterval
+	}
+	if minutes < 60 {
+		return fmt.Sprintf("*/%d * * * *", minutes)
+	}
+	hours := minutes / 60
+	remainder := minutes % 60
+	if remainder == 0 {
+		if hours == 1 {
+			return "0 * * * *"
+		}
+		return fmt.Sprintf("0 */%d * * *", hours)
+	}
+	return fmt.Sprintf("*/%d * * * *", minutes)
+}

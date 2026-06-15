@@ -124,35 +124,50 @@ func (r *Repository) CreateMirrorSyncJob(ctx context.Context, repoID int64) erro
 }
 
 // GetMirrorSyncProgress 查询镜像同步任务的进度。
+// 手动任务和 cron 任务只要有一个存在即可查询；两个都存在时，返回最近一次执行的数据。
 func (r *Repository) GetMirrorSyncProgress(ctx context.Context, repoID int64) (repoModel.Progress, error) {
 	jobName := fmt.Sprintf("%s_%d", JobTypeMirrorSync, repoID)
-	progress, err := r.scheduler.GetJobProgress(ctx, jobName)
-	if err != nil {
-		return repoModel.Progress{}, fmt.Errorf("failed to get mirror sync job progress: %w", err)
-	}
-
 	cronJobName := fmt.Sprintf("%s_%d", JobTypeMirrorSyncCron, repoID)
-	cronProgress, err := r.scheduler.GetJobProgress(ctx, cronJobName)
-	if err != nil {
-		return repoModel.Progress{}, fmt.Errorf("failed to get mirror sync cron job progress: %w", err)
-	}
-	// 根据 LastExecuted 判断，返回最近一次执行的数据
-	recentProgress := progress
-	progressLastExec, _ := progress["lastExecuted"].(*datetime.Local)
-	cronLastExec, _ := cronProgress["lastExecuted"].(*datetime.Local)
 
-	// 如果 cron 任务最近执行过且比手动任务执行时间更晚，则使用 cron 的进度
-	if cronLastExec != nil && (progressLastExec == nil || time.Time(*cronLastExec).After(time.Time(*progressLastExec))) {
-		recentProgress = cronProgress
+	progress, progressErr := r.scheduler.GetJobProgress(ctx, jobName)
+	cronProgress, cronErr := r.scheduler.GetJobProgress(ctx, cronJobName)
+
+	// 两种 job 都查询失败时才返回 error
+	if progressErr != nil && cronErr != nil {
+		return repoModel.Progress{}, fmt.Errorf("failed to get mirror sync progress: progress=%w, cron=%w", progressErr, cronErr)
 	}
+
+	// 根据 LastExecuted 选择最近一次执行的进度数据
+	recentProgress := pickRecentProgress(progress, progressErr, cronProgress, cronErr)
 
 	lastExecuted, _ := recentProgress["lastExecuted"].(*datetime.Local)
+	status, _ := recentProgress["state"].(simpleJob.State)
+	result, _ := recentProgress["result"].(string)
+	failure, _ := recentProgress["failure"].(string)
 	return repoModel.Progress{
-		Status:       recentProgress["state"].(simpleJob.State),
-		Result:       recentProgress["result"].(string),
-		Failure:      recentProgress["failure"].(string),
+		Status:       status,
+		Result:       result,
+		Failure:      failure,
 		LastExecuted: lastExecuted,
 	}, nil
+}
+
+// pickRecentProgress 根据两个 job 的查询结果和 lastExecuted 时间，返回最近执行的进度。
+// 只有一个存在时直接返回该 job；两个都存在时比较 lastExecuted 取较新的。
+func pickRecentProgress(progress map[string]interface{}, progressErr error, cronProgress map[string]interface{}, cronErr error) map[string]interface{} {
+	if progressErr != nil {
+		return cronProgress
+	}
+	if cronErr != nil {
+		return progress
+	}
+
+	progressLastExec, _ := progress["lastExecuted"].(*datetime.Local)
+	cronLastExec, _ := cronProgress["lastExecuted"].(*datetime.Local)
+	if cronLastExec != nil && (progressLastExec == nil || time.Time(*cronLastExec).After(time.Time(*progressLastExec))) {
+		return cronProgress
+	}
+	return progress
 }
 
 var _ pkgJobs.Handler = (*MirrorSyncHandler)(nil)
