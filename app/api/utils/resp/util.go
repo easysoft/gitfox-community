@@ -111,7 +111,7 @@ func listSuccess(c *gin.Context, data interface{}, listArgs interface{}, code i1
 func objectErr(c *gin.Context, err error, httpStatus int, args ...interface{}) {
 	code := errors.GetI18nKey(err)
 	var message string
-	if code == "" {
+	if code == i18n.ErrorDefault {
 		message = err.Error()
 	} else {
 		message = i18n.TGin(c, code, args...)

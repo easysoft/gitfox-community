@@ -20,6 +20,7 @@ import (
 	pkgJobs "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/jobs"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/svn"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
 )
 
 const (
@@ -31,7 +32,8 @@ const (
 
 // MirrorSyncInput 镜像同步任务输入参数
 type MirrorSyncInput struct {
-	RepoID int64 `json:"repoID"`
+	RepoID  int64  `json:"repoID"`
+	JobType string `json:"jobType"` // 触发类型，定时任务或手动触发
 }
 
 // MirrorSyncHandler 镜像同步任务处理器，实现 pkgJobs.Handler
@@ -82,27 +84,9 @@ func (r *Repository) CreateMirrorSyncJob(ctx context.Context, repoID int64) erro
 		)
 	}
 
-	if repo.Status == constant.RepoStateSyncing {
-		log.Errorw("mirror sync already in progress")
-		return errors.WithI18nKey(
-			fmt.Errorf("mirror sync already in progress"),
-			i18n.RepoMirrorSyncInProgressError,
-		)
-	}
-
-	if _, err := r.repoStore.UpdateOptLock(ctx, repo, func(repo *repoModel.Repo) error {
-		repo.Status = constant.RepoStateSyncing
-		return nil
-	}); err != nil {
-		log.Errorw("failed to update repo status to syncing", "error", err)
-		return errors.WithI18nKey(
-			fmt.Errorf("failed to update repo status to syncing: %w", err),
-			i18n.RepoMirrorSyncError,
-		)
-	}
-
 	mirrorInput := MirrorSyncInput{
-		RepoID: repoID,
+		RepoID:  repoID,
+		JobType: JobTypeMirrorSync,
 	}
 
 	data, err := json.Marshal(mirrorInput)
@@ -141,16 +125,33 @@ func (r *Repository) CreateMirrorSyncJob(ctx context.Context, repoID int64) erro
 
 // GetMirrorSyncProgress 查询镜像同步任务的进度。
 func (r *Repository) GetMirrorSyncProgress(ctx context.Context, repoID int64) (repoModel.Progress, error) {
-	jobName := fmt.Sprintf("mirror_sync_%d", repoID)
+	jobName := fmt.Sprintf("%s_%d", JobTypeMirrorSync, repoID)
 	progress, err := r.scheduler.GetJobProgress(ctx, jobName)
 	if err != nil {
 		return repoModel.Progress{}, fmt.Errorf("failed to get mirror sync job progress: %w", err)
 	}
 
+	cronJobName := fmt.Sprintf("%s_%d", JobTypeMirrorSyncCron, repoID)
+	cronProgress, err := r.scheduler.GetJobProgress(ctx, cronJobName)
+	if err != nil {
+		return repoModel.Progress{}, fmt.Errorf("failed to get mirror sync cron job progress: %w", err)
+	}
+	// 根据 LastExecuted 判断，返回最近一次执行的数据
+	recentProgress := progress
+	progressLastExec, _ := progress["lastExecuted"].(*datetime.Local)
+	cronLastExec, _ := cronProgress["lastExecuted"].(*datetime.Local)
+
+	// 如果 cron 任务最近执行过且比手动任务执行时间更晚，则使用 cron 的进度
+	if cronLastExec != nil && (progressLastExec == nil || time.Time(*cronLastExec).After(time.Time(*progressLastExec))) {
+		recentProgress = cronProgress
+	}
+
+	lastExecuted, _ := recentProgress["lastExecuted"].(*datetime.Local)
 	return repoModel.Progress{
-		Status:  progress["state"].(simpleJob.State),
-		Result:  progress["result"].(string),
-		Failure: progress["failure"].(string),
+		Status:       recentProgress["state"].(simpleJob.State),
+		Result:       recentProgress["result"].(string),
+		Failure:      recentProgress["failure"].(string),
+		LastExecuted: lastExecuted,
 	}, nil
 }
 
@@ -172,6 +173,10 @@ func (h *MirrorSyncHandler) Handle(ctx context.Context, data string, reportFn pk
 	if err != nil {
 		return "", fmt.Errorf("failed to find repo for mirror sync: %w", err)
 	}
+	if repo.Status == constant.RepoStateSyncing {
+		log.Info("repo is syncing")
+		return "", nil
+	}
 
 	// 同步过程中出现任何错误，将仓库状态更新为 sync_failed
 	defer func() {
@@ -185,6 +190,13 @@ func (h *MirrorSyncHandler) Handle(ctx context.Context, data string, reportFn pk
 			}
 		}
 	}()
+
+	if _, err := h.repoStore.UpdateOptLock(ctx, repo, func(repo *repoModel.Repo) error {
+		repo.Status = constant.RepoStateSyncing
+		return nil
+	}); err != nil {
+		return "", fmt.Errorf("failed to update repo status to syncing: %w", err)
+	}
 
 	provider, err := h.providerStore.GetByID(ctx, repo.ProviderID)
 	if err != nil {

@@ -68,7 +68,7 @@ func (ctl *Controller) MirrorSyncProgress(c *gin.Context) {
 
 	progress, err := ctl.importerSvc.GetMirrorSyncProgress(c.Request.Context(), repoID)
 	if err != nil {
-		resp.InternalError(c, err)
+		resp.BadRequest(c, err)
 		return
 	}
 
