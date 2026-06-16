@@ -2135,6 +2135,84 @@ const docTemplate = `{
                 }
             }
         },
+        "/repos/mirror-sync": {
+            "post": {
+                "description": "对指定镜像仓库手动触发一次同步任务",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "repos"
+                ],
+                "summary": "手动触发镜像仓库同步",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "format": "int64",
+                        "description": "镜像仓库 ID",
+                        "name": "repoID",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "同步任务已触发",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/repos/mirror-sync-progress": {
+            "get": {
+                "description": "查询指定镜像仓库的同步任务进度",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "repos"
+                ],
+                "summary": "查询镜像同步进度",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "format": "int64",
+                        "description": "镜像仓库 ID",
+                        "name": "repoID",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "查询成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.Progress"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/repos/{id}": {
             "get": {
                 "description": "根据传入的仓库 ID 获取仓库信息",
@@ -13030,6 +13108,9 @@ const docTemplate = `{
                 "failure": {
                     "type": "string"
                 },
+                "lastExecuted": {
+                    "type": "string"
+                },
                 "result": {
                     "type": "string"
                 },
@@ -13067,8 +13148,8 @@ const docTemplate = `{
                 },
                 "type": {
                     "enum": [
-                        "Github",
-                        "Gitlab",
+                        "GitHub",
+                        "GitLab",
                         "Gitea",
                         "Gogs",
                         "Subversion"
@@ -13152,10 +13233,16 @@ const docTemplate = `{
                 "providerID": {
                     "type": "integer"
                 },
+                "scmType": {
+                    "type": "string"
+                },
                 "spaceID": {
                     "type": "integer"
                 },
                 "status": {
+                    "type": "string"
+                },
+                "svnURL": {
                     "type": "string"
                 }
             }
@@ -13227,10 +13314,16 @@ const docTemplate = `{
                 "providerID": {
                     "type": "integer"
                 },
+                "scmType": {
+                    "type": "string"
+                },
                 "spaceID": {
                     "type": "integer"
                 },
                 "status": {
+                    "type": "string"
+                },
+                "svnURL": {
                     "type": "string"
                 }
             }

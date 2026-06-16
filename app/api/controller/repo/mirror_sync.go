@@ -3,10 +3,14 @@ package repo
 import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
+	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	"github.com/gin-gonic/gin"
 )
+
+// swagger 类型解析需要用到 repoModel，通过包级变量引用避免编译器报 unused import。
+var _ = repoModel.Progress{}
 
 // MirrorSync 手动触发镜像仓库同步
 // @Summary 手动触发镜像仓库同步
