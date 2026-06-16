@@ -1479,6 +1479,8 @@ definitions:
     properties:
       failure:
         type: string
+      lastExecuted:
+        type: string
       result:
         type: string
       status:
@@ -1502,8 +1504,8 @@ definitions:
         allOf:
         - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.RepoProviderType'
         enum:
-        - Github
-        - Gitlab
+        - GitHub
+        - GitLab
         - Gitea
         - Gogs
         - Subversion
@@ -1562,9 +1564,13 @@ definitions:
         type: string
       providerID:
         type: integer
+      scmType:
+        type: string
       spaceID:
         type: integer
       status:
+        type: string
+      svnURL:
         type: string
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.RepositoryOutput:
@@ -1613,9 +1619,13 @@ definitions:
         type: string
       providerID:
         type: integer
+      scmType:
+        type: string
       spaceID:
         type: integer
       status:
+        type: string
+      svnURL:
         type: string
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.ReqFilter:
@@ -6544,6 +6554,55 @@ paths:
           schema:
             $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ListResponse'
       summary: 查询仓库列表
+      tags:
+      - repos
+  /repos/mirror-sync:
+    post:
+      consumes:
+      - application/json
+      description: 对指定镜像仓库手动触发一次同步任务
+      parameters:
+      - description: 镜像仓库 ID
+        format: int64
+        in: query
+        name: repoID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 同步任务已触发
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 手动触发镜像仓库同步
+      tags:
+      - repos
+  /repos/mirror-sync-progress:
+    get:
+      consumes:
+      - application/json
+      description: 查询指定镜像仓库的同步任务进度
+      parameters:
+      - description: 镜像仓库 ID
+        format: int64
+        in: query
+        name: repoID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 查询成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.Progress'
+              type: object
+      summary: 查询镜像同步进度
       tags:
       - repos
   /runner-client/keep-alive:
