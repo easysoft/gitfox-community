@@ -18,6 +18,7 @@ import (
 	// artifactSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/artifact" // TODO: 制品库 GC 定时任务禁用时暂注释
 	cronSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/cron"
 	importerSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/importer"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	clii18n "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n/cli"
 	pkgserver "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/server"
@@ -50,6 +51,11 @@ func (c *command) run(*kingpin.ParseContext) error {
 func RunServerWithContext(ctx context.Context, mode string, enableCI bool, onReady func()) error {
 	app, cleanup, err := NewApp(mode)
 	if err != nil {
+		// 检查是否是配置文件不存在错误
+		if errors.GetType(err) == errors.ConfigNotFoundError {
+			fmt.Fprintf(os.Stderr, "panic: %v\n", err)
+			os.Exit(1)
+		}
 		// 这里无法使用 app.SystemLog 因为 app 初始化失败，只能使用 fmt.Printf
 		fmt.Printf("[Server] Failed to initialize app server: %v\n", err)
 		panic(err)
