@@ -381,10 +381,10 @@ func findConfigFilePaths(mode, ext string) ([]string, error) {
 
 	configPaths, err := file.FindFilesRecursive(exeDir, fileName)
 	if err != nil {
-		return nil, errors.Wrapf(err, "查找 %s 配置文件失败", fileName)
+		return nil, errors.ConfigNotFoundError.Wrapf(err, "查找 %s 配置文件失败", fileName)
 	}
 	if len(configPaths) == 0 {
-		return nil, errors.Newf("未找到配置文件: %s", fileName)
+		return nil, errors.ConfigNotFoundError.Newf("未找到配置文件: %s", fileName)
 	}
 	return configPaths, nil
 }

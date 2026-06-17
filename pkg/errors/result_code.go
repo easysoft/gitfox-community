@@ -15,6 +15,7 @@ const (
 	SystemErr
 	InternalError
 	InvalidArgument
+	ConfigNotFoundError
 )
 
 const defaultI18nKey = i18n.ErrorDefault
