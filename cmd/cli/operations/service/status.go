@@ -35,7 +35,6 @@ func runStatus(_ *kingpin.ParseContext) error {
 	var gitVer string
 	var gitErr error
 	var dockerOk bool
-	var dockerVer string
 	var dockerErr error
 	var svnOk bool
 	var svnVer string
@@ -45,7 +44,7 @@ func runStatus(_ *kingpin.ParseContext) error {
 		Title(t(i18n.CliStatusChecking)).
 		Action(func() {
 			gitOk, gitVer, gitErr = CheckGit()
-			dockerOk, dockerVer, dockerErr = CheckDocker()
+			dockerOk, dockerErr = CheckDocker()
 			svnOk, svnVer, svnErr = CheckSubversion()
 		}).Run()
 
@@ -63,7 +62,7 @@ func runStatus(_ *kingpin.ParseContext) error {
 
 	// --- Docker ---
 	if dockerOk && dockerErr == nil {
-		fmt.Println(okStyle.Render(fmt.Sprintf(t(i18n.CliStatusDockerOk), dockerVer)))
+		fmt.Println(okStyle.Render(t(i18n.CliStatusDockerOk)))
 	} else if dockerOk && dockerErr != nil {
 		// 已安装但 daemon 未运行
 		fmt.Println(warnStyle.Render(dockerErr.Error()))

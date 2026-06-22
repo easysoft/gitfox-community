@@ -7,6 +7,7 @@ replace github.com/drone/runner-go => gitfox.zcorp.cc/git/Pangu/runner-go v1.12.
 require (
 	gitfox.zcorp.cc/git/Pangu/dm-gorm v1.0.0
 	github.com/Masterminds/semver/v3 v3.4.0
+	github.com/Microsoft/go-winio v0.6.1
 	github.com/antonmedv/expr v1.15.5
 	github.com/aws/aws-sdk-go v1.55.2
 	github.com/bmatcuk/doublestar v1.3.4
@@ -47,6 +48,7 @@ require (
 	github.com/mailru/easyjson v0.9.1
 	github.com/matoous/go-nanoid v1.5.0
 	github.com/matoous/go-nanoid/v2 v2.1.0
+	github.com/minio/selfupdate v0.6.0
 	github.com/natessilva/dag v0.0.0-20180124060714-7194b8dcc5c4
 	github.com/opencontainers/go-digest v1.0.0
 	github.com/opencontainers/image-spec v1.1.1
@@ -87,7 +89,6 @@ require (
 	github.com/99designs/httpsignatures-go v0.0.0-20170731043157-88528bf4ca7e // indirect
 	github.com/BobuSumisu/aho-corasick v1.0.3 // indirect
 	github.com/KyleBanks/depth v1.2.1 // indirect
-	github.com/Microsoft/go-winio v0.6.1 // indirect
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
 	github.com/alecthomas/units v0.0.0-20231202071711-9a357b53e9c9 // indirect
 	github.com/anmitsu/go-shlex v0.0.0-20200514113438-38f4b401e2be // indirect
@@ -154,7 +155,6 @@ require (
 	github.com/mattn/go-runewidth v0.0.19 // indirect
 	github.com/mattn/go-sqlite3 v1.14.22 // indirect
 	github.com/microsoft/go-mssqldb v1.9.5 // indirect
-	github.com/minio/selfupdate v0.6.0 // indirect
 	github.com/mitchellh/hashstructure/v2 v2.0.2 // indirect
 	github.com/morikuni/aec v1.1.0 // indirect
 	github.com/muesli/ansi v0.0.0-20230316100256-276c6243b2f6 // indirect

@@ -1,10 +1,13 @@
 package service
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
+	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -90,33 +93,111 @@ func CheckGit() (bool, string, error) {
 	return true, verStr, nil
 }
 
-// CheckDocker 检查 docker 是否安装、daemon 是否正在运行，并获取版本信息。
-func CheckDocker() (bool, string, error) {
+// defaultDockerSocket 是 Linux 下 docker daemon 的默认 unix socket 路径。
+// Windows 默认通过命名管道 \\.\pipe\docker_engine 暴露。
+const (
+	defaultDockerSocket = "/var/run/docker.sock"
+	defaultDockerNpipe  = `\\.\pipe\docker_engine`
+	dockerProbeTimeout  = 2 * time.Second
+)
+
+// CheckDocker 检查 docker daemon 是否可达。
+//
+// 设计原则：GitFox 仅通过挂载 docker.sock 让容器直接调用 daemon，因此
+// 本机不需要安装 docker CLI，也不关心版本号。此函数只验证 socket 可达
+// + daemon 活体。
+//
+// 返回:
+//   - ok=false: socket 不存在或无法连接（视同未安装/未启用）
+//   - ok=true && err!=nil: socket 可达但 daemon 探活失败（ping 异常）
+//   - ok=true && err==nil: daemon 健在
+func CheckDocker() (bool, error) {
 	t := clii18n.T
-	if _, err := exec.LookPath("docker"); err != nil {
-		return false, "", fmt.Errorf(t(i18n.CliCheckErrNotFound), "docker")
+
+	host := dockerHost()
+	client, baseURL, dialErr := newDockerHTTPClient(host)
+	if dialErr != nil {
+		return false, fmt.Errorf(t(i18n.CliCheckErrNotFound), "docker")
 	}
 
-	cmd := exec.Command("docker", "--version")
-	output, err := cmd.CombinedOutput()
+	if err := dockerPing(client, baseURL); err != nil {
+		return true, fmt.Errorf(t(i18n.CliCheckErrDaemonNotRunning), "docker")
+	}
+	return true, nil
+}
+
+// dockerHost 解析 daemon 地址：优先 DOCKER_HOST，否则平台默认。
+//   - unix:///path/to/sock -> unix socket
+//   - npipe:////./pipe/docker_engine -> Windows 命名管道
+//   - tcp://host:port -> 远端 daemon
+//   - 空 -> Linux 用 /var/run/docker.sock；Windows 用 \\.\pipe\docker_engine
+func dockerHost() string {
+	if h := strings.TrimSpace(os.Getenv("DOCKER_HOST")); h != "" {
+		return h
+	}
+	if runtime.GOOS == "windows" {
+		return "npipe://" + defaultDockerNpipe
+	}
+	return "unix://" + defaultDockerSocket
+}
+
+// newDockerHTTPClient 基于 host 构造一个仅用于 daemon 通信的 http.Client。
+// 同时返回 baseURL：unix/npipe 模式下为虚构 "http://docker"；tcp/http 模式下
+// 为真实 host。当 host 指向 unix socket / 命名管道时，先做存在性检查避免在
+// 不可恢复路径上等待 dial 超时。
+func newDockerHTTPClient(host string) (*http.Client, string, error) {
+	u, err := url.Parse(host)
 	if err != nil {
-		return true, "", fmt.Errorf(t(i18n.CliCheckErrExecFailed), "docker", err)
+		return nil, "", err
 	}
 
-	outStr := strings.TrimSpace(string(output))
-	verStr, _, err := extractVersion(outStr)
+	switch u.Scheme {
+	case "unix":
+		path := u.Path
+		if path == "" {
+			path = defaultDockerSocket
+		}
+		if _, statErr := os.Stat(path); statErr != nil {
+			return nil, "", statErr
+		}
+		client := &http.Client{
+			Timeout: dockerProbeTimeout,
+			Transport: &http.Transport{
+				DialContext: func(ctx context.Context, _, _ string) (net.Conn, error) {
+					var d net.Dialer
+					d.Timeout = dockerProbeTimeout
+					return d.DialContext(ctx, "unix", path)
+				},
+			},
+		}
+		return client, "http://docker", nil
+	case "npipe":
+		return newDockerHTTPClientNpipe(u)
+	case "tcp", "http", "https":
+		scheme := "http"
+		if u.Scheme == "https" {
+			scheme = "https"
+		}
+		client := &http.Client{Timeout: dockerProbeTimeout, Transport: &http.Transport{}}
+		return client, scheme + "://" + u.Host, nil
+	default:
+		return nil, "", fmt.Errorf("unsupported docker host scheme: %s", u.Scheme)
+	}
+}
+
+// dockerPing 调用 GET /_ping 判断 daemon 是否真的在响应。
+// unix socket / npipe / tcp 三种路径统一走此 HTTP 探活。
+func dockerPing(client *http.Client, baseURL string) error {
+	req, _ := http.NewRequest(http.MethodGet, baseURL+"/_ping", nil)
+	resp, err := client.Do(req)
 	if err != nil {
-		// 解析失败但二进制存在，返回原始输出便于排查
-		verStr = outStr
+		return err
 	}
-
-	// 验证 Docker daemon 是否正在运行
-	// 注意：不能用 docker info，它会连接 docker.socket 触发 systemd socket activation 把 Docker 拉起来
-	if !isDockerDaemonRunning() {
-		return true, verStr, fmt.Errorf(t(i18n.CliCheckErrDaemonNotRunning), "docker")
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("docker ping http %d", resp.StatusCode)
 	}
-
-	return true, verStr, nil
+	return nil
 }
 
 // CheckSubversion 检查 svn 客户端是否安装、版本是否满足 MinSvnVersion，并获取版本信息。
@@ -149,36 +230,6 @@ func CheckSubversion() (bool, string, error) {
 	}
 
 	return true, verStr, nil
-}
-
-// isDockerDaemonRunning 检测 Docker daemon 是否正在运行，且不会触发 systemd socket activation。
-// Linux 上优先使用 systemctl is-active，若 systemctl 不存在则回退到 pgrep 检测 dockerd 进程。
-// Windows 上通过 sc query 检测服务状态。
-func isDockerDaemonRunning() bool {
-	switch runtime.GOOS {
-	case "linux":
-		// systemctl is-active 只读查询，不触发 socket activation
-		if err := exec.Command("systemctl", "is-active", "--quiet", "docker").Run(); err == nil {
-			return true
-		}
-		// 非 systemd 环境回退：检测 dockerd 进程是否存在
-		if err := exec.Command("pgrep", "-x", "dockerd").Run(); err == nil {
-			return true
-		}
-		// 最后手段：尝试 docker info，如果能成功执行说明 daemon 也在运行（但可能会触发 socket activation）
-		if err := exec.Command("docker", "info").Run(); err == nil {
-			return true
-		}
-		return false
-	case "windows":
-		out, err := exec.Command("sc", "query", "docker").CombinedOutput()
-		if err != nil {
-			return false
-		}
-		return strings.Contains(string(out), "RUNNING")
-	default:
-		return false
-	}
 }
 
 // CheckDB 验证数据库连通性

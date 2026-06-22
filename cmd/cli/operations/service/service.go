@@ -82,14 +82,14 @@ func runInstall(ctx *kingpin.ParseContext) error {
 
 	// ========== 阶段 0：环境依赖检查 ==========
 	var gitOk, dockerOk, svnOk bool
-	var gitVer, dockerVer, svnVer string
+	var gitVer, svnVer string
 	var gitErr, dockerErr, svnErr error
 
 	_ = spinner.New().
 		Title(t(i18n.CliInstallDepChecking)).
 		Action(func() {
 			gitOk, gitVer, gitErr = CheckGit()
-			dockerOk, dockerVer, dockerErr = CheckDocker()
+			dockerOk, dockerErr = CheckDocker()
 			svnOk, svnVer, svnErr = CheckSubversion()
 		}).Run()
 
@@ -111,7 +111,7 @@ func runInstall(ctx *kingpin.ParseContext) error {
 
 	// --- Docker ---
 	if dockerOk && dockerErr == nil {
-		fmt.Println(okStyle.Render(fmt.Sprintf(t(i18n.CliStatusDockerOk), dockerVer)))
+		fmt.Println(okStyle.Render(t(i18n.CliStatusDockerOk)))
 	} else if dockerOk && dockerErr != nil {
 		fmt.Println(warnStyle.Render(dockerErr.Error()))
 		missing = true
