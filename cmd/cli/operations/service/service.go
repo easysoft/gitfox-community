@@ -10,7 +10,6 @@ import (
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	clii18n "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n/cli"
-	"github.com/charmbracelet/huh/spinner"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/joho/godotenv"
 	"github.com/quicklyon/kingpin/v2"
@@ -81,54 +80,7 @@ func runInstall(ctx *kingpin.ParseContext) error {
 	headerStyle := lipgloss.NewStyle().Bold(true)
 
 	// ========== 阶段 0：环境依赖检查 ==========
-	var gitOk, dockerOk, svnOk bool
-	var gitVer, svnVer string
-	var gitErr, dockerErr, svnErr error
-
-	_ = spinner.New().
-		Title(t(i18n.CliInstallDepChecking)).
-		Action(func() {
-			gitOk, gitVer, gitErr = CheckGit()
-			dockerOk, dockerErr = CheckDocker()
-			svnOk, svnVer, svnErr = CheckSubversion()
-		}).Run()
-
-	fmt.Println(headerStyle.Render(t(i18n.CliStatusSectionDeps)))
-
-	missing := false
-
-	// --- Git ---
-	if gitOk && gitErr == nil {
-		fmt.Println(okStyle.Render(fmt.Sprintf(t(i18n.CliStatusGitOk), gitVer)))
-	} else if gitOk && gitErr != nil {
-		// 版本过低或解析失败：阻断安装
-		fmt.Println(errStyle.Render(gitErr.Error()))
-		missing = true
-	} else {
-		fmt.Println(errStyle.Render(t(i18n.CliStatusGitMissing)))
-		missing = true
-	}
-
-	// --- Docker ---
-	if dockerOk && dockerErr == nil {
-		fmt.Println(okStyle.Render(t(i18n.CliStatusDockerOk)))
-	} else if dockerOk && dockerErr != nil {
-		fmt.Println(warnStyle.Render(dockerErr.Error()))
-		missing = true
-	} else {
-		fmt.Println(errStyle.Render(t(i18n.CliStatusDockerMissing)))
-		missing = true
-	}
-
-	// --- Subversion (非阻塞，仅警告) ---
-	if svnOk && svnErr == nil {
-		fmt.Println(okStyle.Render(fmt.Sprintf(t(i18n.CliStatusSvnOk), svnVer)))
-	} else if svnOk && svnErr != nil {
-		fmt.Println(warnStyle.Render(svnErr.Error()))
-	} else {
-		fmt.Println(warnStyle.Render(t(i18n.CliStatusSvnMissing)))
-	}
-
+	missing := Check(headerStyle, okStyle, errStyle, warnStyle)
 	if missing {
 		fmt.Println()
 		fmt.Println(errStyle.Render(t(i18n.CliInstallDepMissing)))
@@ -149,7 +101,6 @@ func runInstall(ctx *kingpin.ParseContext) error {
 	}
 
 	// ========== 阶段 2：在工作目录执行 ./gitfox start ==========
-
 	binName := "gitfox"
 	if runtime.GOOS == "windows" {
 		binName = windowsBinaryName // → windows.go

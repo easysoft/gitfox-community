@@ -18,6 +18,8 @@ import (
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	clii18n "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n/cli"
+	"github.com/charmbracelet/huh/spinner"
+	"github.com/charmbracelet/lipgloss"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/hashicorp/go-version"
 	"github.com/joho/godotenv"
@@ -46,6 +48,56 @@ func extractVersion(raw string) (string, *version.Version, error) {
 		return matches[1], nil, err
 	}
 	return matches[1], v, nil
+}
+
+// Check 检查环境依赖工具是否安装、版本是否达标。
+func Check(headerStyle, okStyle, errStyle, warnStyle lipgloss.Style) (missing bool) {
+	var gitOk, dockerOk, svnOk bool
+	var gitVer, svnVer string
+	var gitErr, dockerErr, svnErr error
+
+	_ = spinner.New().
+		Title(t(i18n.CliInstallDepChecking)).
+		Action(func() {
+			gitOk, gitVer, gitErr = CheckGit()
+			dockerOk, dockerErr = CheckDocker()
+			svnOk, svnVer, svnErr = CheckSubversion()
+		}).Run()
+
+	fmt.Println(headerStyle.Render(t(i18n.CliStatusSectionDeps)))
+
+	// --- Git ---
+	if gitOk && gitErr == nil {
+		fmt.Println(okStyle.Render(fmt.Sprintf(t(i18n.CliStatusGitOk), gitVer)))
+	} else if gitOk && gitErr != nil {
+		fmt.Println(errStyle.Render(gitErr.Error()))
+		missing = true
+	} else {
+		fmt.Println(errStyle.Render(t(i18n.CliStatusGitMissing)))
+		missing = true
+	}
+
+	// --- Docker ---
+	if dockerOk && dockerErr == nil {
+		fmt.Println(okStyle.Render(t(i18n.CliStatusDockerOk)))
+	} else if dockerOk && dockerErr != nil {
+		fmt.Println(warnStyle.Render(dockerErr.Error()))
+		missing = true
+	} else {
+		fmt.Println(errStyle.Render(t(i18n.CliStatusDockerMissing)))
+		missing = true
+	}
+
+	// --- Subversion (非阻塞，仅警告) ---
+	if svnOk && svnErr == nil {
+		fmt.Println(okStyle.Render(fmt.Sprintf(t(i18n.CliStatusSvnOk), svnVer)))
+	} else if svnOk && svnErr != nil {
+		fmt.Println(warnStyle.Render(svnErr.Error()))
+	} else {
+		fmt.Println(warnStyle.Render(t(i18n.CliStatusSvnMissing)))
+	}
+
+	return missing
 }
 
 // CheckSudo 检查当前上下文是否具有超级管理员执行权限 (Root/Sudo/Administrator)。
