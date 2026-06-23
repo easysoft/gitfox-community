@@ -65,9 +65,9 @@ func (s *service) Cancel(ctx context.Context, executionID uint, account string) 
 	// already started, and should now be ignored.
 	now := datetime.NowLocalTime()
 	execution.Status = constant.CIStatusKilled
-	execution.Finished = now
-	if execution.Started == nil {
-		execution.Started = now
+	execution.FinishedDate = now
+	if execution.StartedDate == nil {
+		execution.StartedDate = now
 	}
 
 	err = s.executionStore.Update(ctx, execution)

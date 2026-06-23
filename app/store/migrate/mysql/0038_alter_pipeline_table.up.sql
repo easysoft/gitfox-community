@@ -27,4 +27,4 @@ ALTER TABLE `ops_pipeline_executions`
 -- 新增 comment（branch_updated 事件时的提交关键词匹配）
 ALTER TABLE `ops_triggers`
     CHANGE COLUMN `trigger` `event` varchar(500) NOT NULL DEFAULT '' COMMENT '事件触发动作',
-    ADD COLUMN `comment` varchar(255) NOT NULL DEFAULT '' COMMENT '当事件为 branch_updated 时进行提交关键词匹配' AFTER `pipelineID`;
+    ADD COLUMN `comment` varchar(255) NOT NULL DEFAULT '' COMMENT '当事件为 branch_updated 时进行提交关键词匹配' AFTER `event`;

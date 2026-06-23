@@ -34,11 +34,13 @@ func (s *Store) Create(ctx context.Context, execution *executionModel.Execution)
 		CommitBefore: execution.CommitBefore,
 		Ref:          execution.Ref,
 		Params:       paramsJSON,
-		Started:      execution.Started,
-		Finished:     execution.Finished,
+		StartedDate:  execution.StartedDate,
+		FinishedDate: execution.FinishedDate,
 		Duration:     execution.Duration,
 		Status:       string(execution.Status),
 		Error:        execution.Error,
+		Queue:        execution.Queue,
+		Logs:         execution.Logs,
 		CreatedBy:    execution.CreatedBy,
 	}
 
@@ -74,11 +76,13 @@ func (s *Store) Update(ctx context.Context, execution *executionModel.Execution)
 		CommitBefore: execution.CommitBefore,
 		Ref:          execution.Ref,
 		Params:       paramsJSON,
-		Started:      execution.Started,
-		Finished:     execution.Finished,
+		StartedDate:  execution.StartedDate,
+		FinishedDate: execution.FinishedDate,
 		Duration:     execution.Duration,
 		Status:       string(execution.Status),
 		Error:        execution.Error,
+		Queue:        execution.Queue,
+		Logs:         execution.Logs,
 		CreatedBy:    execution.CreatedBy,
 	}
 
@@ -117,11 +121,13 @@ func mapToModel(e *Execution) *executionModel.Execution {
 		CommitBefore: e.CommitBefore,
 		Ref:          e.Ref,
 		Params:       params,
-		Started:      e.Started,
-		Finished:     e.Finished,
+		StartedDate:  e.StartedDate,
+		FinishedDate: e.FinishedDate,
 		Duration:     e.Duration,
 		Status:       constant.CIStatus(e.Status),
 		Error:        e.Error,
+		Queue:        e.Queue,
+		Logs:         e.Logs,
 		CreatedBy:    e.CreatedBy,
 		CreatedDate:  e.CreatedDate,
 		EditedDate:   e.EditedDate,
@@ -129,10 +135,10 @@ func mapToModel(e *Execution) *executionModel.Execution {
 }
 
 func populateDuration(execution *executionModel.Execution) {
-	if execution == nil || execution.Started == nil || execution.Finished == nil {
+	if execution == nil || execution.StartedDate == nil || execution.FinishedDate == nil {
 		return
 	}
-	duration := time.Time(*execution.Finished).Sub(time.Time(*execution.Started))
+	duration := time.Time(*execution.FinishedDate).Sub(time.Time(*execution.StartedDate))
 	execution.Duration = uint(math.Ceil(duration.Seconds()))
 }
 

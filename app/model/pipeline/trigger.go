@@ -73,7 +73,8 @@ type Trigger struct {
 	ID          int64           `json:"id"`
 	RepoID      int64           `json:"repoID"`
 	PipelineID  int64           `json:"pipelineID"`
-	Trigger     []string        `json:"trigger"`
+	Comment     string          `json:"comment"`
+	Event       []string        `json:"event"`
 	Cron        []string        `json:"cron"`
 	CreatedBy   string          `json:"createdBy"`
 	CreatedDate *datetime.Local `json:"createdDate"`
@@ -105,7 +106,7 @@ func (t *Trigger) Validate() error {
 		}
 	}
 
-	t.Trigger = slice.Unique(t.Trigger)
+	t.Event = slice.Unique(t.Event)
 
 	return nil
 }

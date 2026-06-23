@@ -58,7 +58,9 @@ type PipelineFile struct {
 type Pipeline struct {
 	ID            int64           `json:"id"`
 	Name          string          `json:"name"`
-	Type          string          `json:"type"`
+	Engine        string          `json:"engine"`
+	ProviderID    int64           `json:"providerID"`
+	Scope         string          `json:"scope"`
 	SpaceID       int64           `json:"spaceID"`
 	RepoID        int64           `json:"repoID"`
 	Desc          string          `json:"desc"`
@@ -66,6 +68,9 @@ type Pipeline struct {
 	LatestVersion int             `json:"latestVersion"`
 	DefaultBranch string          `json:"defaultBranch"`
 	YamlPath      string          `json:"yamlPath"`
+	CustomParam   string          `json:"customParam"`
+	LastExec      *datetime.Local `json:"lastExec"`
+	LastResult    string          `json:"lastResult"`
 	CreatedBy     string          `json:"createdBy"`
 	CreatedDate   *datetime.Local `json:"createdDate"`
 	EditedBy      string          `json:"editedBy"`

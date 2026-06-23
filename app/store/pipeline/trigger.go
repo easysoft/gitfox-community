@@ -30,7 +30,7 @@ func (s *Store) UpdateTrigger(ctx context.Context, trigger *pipelineModel.Trigge
 
 	storeTrigger := mapTriggerToStore(trigger)
 	if err := s.db.WithContext(ctx).Model(&Trigger{}).Where("id = ? AND deleted = 0", trigger.ID).
-		Select("repoID", "trigger", "cron", "editedBy", "editedDate").Updates(&storeTrigger).Error; err != nil {
+		Select("repoID", "comment", "event", "cron", "editedBy", "editedDate").Updates(&storeTrigger).Error; err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
 	}
 	return nil
@@ -72,11 +72,11 @@ func (s *Store) GetTriggers(ctx context.Context, filter *pipelineModel.TriggerFi
 
 	result := make([]*pipelineModel.Trigger, 0, len(triggers))
 	for _, t := range triggers {
-		if t.Trigger == "" {
+		if t.Event == "" {
 			continue
 		}
 		if len(filter.Trigger) > 0 {
-			if len(slice.Intersection(filter.Trigger, strings.Split(t.Trigger, ","))) == 0 {
+			if len(slice.Intersection(filter.Trigger, strings.Split(t.Event, ","))) == 0 {
 				continue
 			}
 		}
@@ -99,9 +99,9 @@ const cronSeparator = "|"
 
 // mapTriggerToModel 将 Store 层结构转换为 Model 层结构
 func mapTriggerToModel(t *Trigger) *pipelineModel.Trigger {
-	var triggerList []string
-	if t.Trigger != "" {
-		triggerList = strings.Split(t.Trigger, ",")
+	var eventList []string
+	if t.Event != "" {
+		eventList = strings.Split(t.Event, ",")
 	}
 	var cronList []string
 	if t.Cron != "" {
@@ -111,7 +111,8 @@ func mapTriggerToModel(t *Trigger) *pipelineModel.Trigger {
 		ID:          t.ID,
 		RepoID:      t.RepoID,
 		PipelineID:  t.PipelineID,
-		Trigger:     triggerList,
+		Comment:     t.Comment,
+		Event:       eventList,
 		Cron:        cronList,
 		CreatedBy:   t.CreatedBy,
 		CreatedDate: t.CreatedDate,
@@ -126,7 +127,8 @@ func mapTriggerToStore(t *pipelineModel.Trigger) *Trigger {
 		ID:          t.ID,
 		RepoID:      t.RepoID,
 		PipelineID:  t.PipelineID,
-		Trigger:     strings.Join(t.Trigger, ","),
+		Comment:     t.Comment,
+		Event:       strings.Join(t.Event, ","),
 		Cron:        strings.Join(t.Cron, cronSeparator),
 		CreatedBy:   t.CreatedBy,
 		CreatedDate: t.CreatedDate,

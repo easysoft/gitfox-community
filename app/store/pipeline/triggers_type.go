@@ -10,7 +10,8 @@ type Trigger struct {
 	ID          int64           `gorm:"column:id;primaryKey;autoIncrement;comment:'触发器ID，自增主键'"`
 	RepoID      int64           `gorm:"column:repoID;not null;comment:'关联的仓库ID'"`
 	PipelineID  int64           `gorm:"column:pipelineID;not null;comment:'关联的流水线ID'"`
-	Trigger     string          `gorm:"column:trigger;not null;default:'';comment:'触发动作'"`
+	Comment     string          `gorm:"column:comment;not null;default:'';comment:'当事件为 branch_updated 时进行提交关键词匹配'"`
+	Event       string          `gorm:"column:event;not null;default:'';comment:'事件触发动作'"`
 	Cron        string          `gorm:"column:cron;not null;default:'';comment:'定时配置'"`
 	CreatedBy   string          `gorm:"column:createdBy;not null;default:'';comment:'创建人'"`
 	CreatedDate *datetime.Local `gorm:"column:createdDate;comment:'创建时间'"`

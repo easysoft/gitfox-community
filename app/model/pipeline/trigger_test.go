@@ -179,7 +179,7 @@ func TestTrigger_Validate(t *testing.T) {
 			trigger: &Trigger{
 				PipelineID: 100,
 				RepoID:     1,
-				Trigger:    []string{"push", "pull_request"},
+				Event:     []string{"push", "pull_request"},
 				Cron:       []string{"0 0 * * *"},
 			},
 			expectedError: false,
@@ -189,7 +189,7 @@ func TestTrigger_Validate(t *testing.T) {
 			trigger: &Trigger{
 				PipelineID: 300,
 				RepoID:     1,
-				Trigger:    []string{"cron"},
+				Event:     []string{"cron"},
 				Cron:       []string{"0 0 * * 0"},
 			},
 			expectedError: false,

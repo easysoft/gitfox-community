@@ -131,7 +131,7 @@ func (t *teardown) do(ctx context.Context, stage *stageModel.StageWithSteps) err
 	log.Info().Msg("manager: execution is finished, teardown")
 
 	execution.Status = constant.CIStatusSuccess
-	execution.Finished = datetime.NowLocalTime()
+	execution.FinishedDate = datetime.NowLocalTime()
 	for _, sibling := range stages {
 		if sibling.Status == constant.CIStatusKilled {
 			execution.Status = constant.CIStatusKilled
@@ -146,8 +146,8 @@ func (t *teardown) do(ctx context.Context, stage *stageModel.StageWithSteps) err
 			break
 		}
 	}
-	if execution.Started == nil {
-		execution.Started = execution.Finished
+	if execution.StartedDate == nil {
+		execution.StartedDate = execution.FinishedDate
 	}
 
 	err = t.ExecutionSvc.Update(noContext, execution)

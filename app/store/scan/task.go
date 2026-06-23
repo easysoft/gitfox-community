@@ -58,7 +58,7 @@ func (s *ScanTaskStore) baseTaskInfoQuery(ctx context.Context) *gorm.DB {
 			"ops_repo.name as repoName, "+
 			"t.name as triggerName, "+
 			"e.id as executionNumber, e.ref as executionRef, "+
-			"e.status as executionStatus, e.started as executionStarted, e.finished as executionFinished").
+			"e.status as executionStatus, e.startedDate as executionStarted, e.finishedDate as executionFinished").
 		Joins("INNER JOIN ops_scan_plans ON ops_scan_tasks.planID = ops_scan_plans.id").
 		Joins("INNER JOIN ops_repo ON ops_scan_plans.repoID = ops_repo.id").
 		Joins("INNER JOIN ops_pipeline_executions e ON ops_scan_tasks.executionID = e.id").
@@ -365,16 +365,16 @@ func applyTaskQueryFilter(stmt *gorm.DB, filter scanModel.ScanTaskInfoReqFilter)
 		stmt = stmt.Where("DATE(ops_scan_tasks.createdDate) = ?", filter.CreateDate[:10])
 	}
 	if filter.StartedGt != "" {
-		stmt = stmt.Where("e.started >= ?", filter.StartedGt)
+		stmt = stmt.Where("e.startedDate >= ?", filter.StartedGt)
 	}
 	if filter.StartedLt != "" {
-		stmt = stmt.Where("e.started < ?", filter.StartedLt)
+		stmt = stmt.Where("e.startedDate < ?", filter.StartedLt)
 	}
 	if filter.FinishedGt != "" {
-		stmt = stmt.Where("e.finished >= ?", filter.FinishedGt)
+		stmt = stmt.Where("e.finishedDate >= ?", filter.FinishedGt)
 	}
 	if filter.FinishedLt != "" {
-		stmt = stmt.Where("e.finished < ?", filter.FinishedLt)
+		stmt = stmt.Where("e.finishedDate < ?", filter.FinishedLt)
 	}
 	return stmt
 }
@@ -382,9 +382,9 @@ func applyTaskQueryFilter(stmt *gorm.DB, filter scanModel.ScanTaskInfoReqFilter)
 func normalizeScanTaskSortField(sort string) string {
 	switch strings.TrimSpace(sort) {
 	case "started":
-		return "e.started"
+		return "e.startedDate"
 	case "finished":
-		return "e.finished"
+		return "e.finishedDate"
 	case "repo_id":
 		return "ops_scan_plans.repoID"
 	case "status":
