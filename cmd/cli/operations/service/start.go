@@ -63,7 +63,7 @@ func runStart(_ *kingpin.ParseContext) error {
 			return nil
 		}
 
-		if ok, _, err := CheckDocker(); !ok || err != nil {
+		if ok, err := CheckDocker(); !ok || err != nil {
 			fmt.Println(errStyle.Render(err.Error()))
 			return nil
 		}

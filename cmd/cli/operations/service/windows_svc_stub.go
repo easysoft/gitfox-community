@@ -7,6 +7,9 @@ package service
 
 import (
 	"errors"
+	"fmt"
+	"net/http"
+	"net/url"
 
 	"github.com/quicklyon/kingpin/v2"
 )
@@ -44,4 +47,9 @@ func inspectWindows() ServiceInfo {
 // RegisterServiceRun 非 Windows 平台不注册 service run 子命令。
 func RegisterServiceRun(_ *kingpin.Application) {
 	// 非 Windows 平台无需注册此命令
+}
+
+// newDockerHTTPClientNpipe 非 Windows 平台不支持 npipe，返回错误。
+func newDockerHTTPClientNpipe(_ *url.URL) (*http.Client, string, error) {
+	return nil, "", fmt.Errorf("Windows 服务仅在 Windows 平台可用")
 }

@@ -197,7 +197,7 @@ cli:
   status_section_deps: "环境依赖项检查"
   status_git_ok: "Git 已安装，版本: %s"
   status_git_missing: "Git 未安装，安装文档: https://git-scm.com/book/en/v2/Getting-Started-Installing-Git"
-  status_docker_ok: "Docker 已安装，版本: %s"
+  status_docker_ok: "Docker 可用"
   status_docker_missing: "Docker 未安装，安装文档: https://docs.docker.com/engine/install/"
   status_svn_ok: "Subversion 已安装，版本: %s"
   status_svn_missing: "Subversion 客户端未安装，关联 Subversion 代码库功能将无法使用，安装文档: https://subversion.apache.org/packages.html"

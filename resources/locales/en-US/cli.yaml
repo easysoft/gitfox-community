@@ -197,7 +197,7 @@ cli:
   status_section_deps: "Environment Dependency Check"
   status_git_ok: "Git: Installed, version: %s"
   status_git_missing: "Git: Not installed, installation document: https://git-scm.com/book/en/v2/Getting-Started-Installing-Git"
-  status_docker_ok: "Docker: Installed, version: %s"
+  status_docker_ok: "Docker: Available"
   status_docker_missing: "Docker: Not installed, installation document: https://docs.docker.com/engine/install/"
   status_svn_ok: "Subversion: Installed, version: %s"
   status_svn_missing: "Subversion client: Not installed. Subversion repository association will not work. Installation document: https://subversion.apache.org/packages.html"
