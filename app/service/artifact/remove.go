@@ -135,13 +135,15 @@ func (s *Service) softRemoveAsset(ctx context.Context, asset *model.ArtifactAsse
 		// 查询是否还有其他 active asset 引用该 blob（当前 asset 已被软删，不会被查到）
 		refs, _ := s.artStore.Assets().Search(ctx, artifactStore.BlobAssetsOption{BlobID: asset.BlobID}, artifactStore.AssetExcludeDeletedOption{})
 		if len(refs) == 0 {
-			// 没有其他引用了，软删 blob
 			if err := s.artStore.Blobs().SoftDeleteById(ctx, asset.BlobID, operator); err != nil {
 				return err
 			}
 		}
 	}
-	res.Assets++
+	if res != nil {
+		res.Assets++
+	}
+
 	return nil
 }
 
@@ -152,15 +154,14 @@ func (s *Service) softRemoveVersion(ctx context.Context, artifactID int64, ver *
 		return err
 	}
 	if len(assets) > 0 {
-		return pkgErrors.WithI18nKey(
-			fmt.Errorf("version %d still has %d active asset(s)", ver.ID, len(assets)),
-			i18n.ArtifactSoftRemoveVersionNotEmpty,
-		)
+		return pkgErrors.WithI18nKey(fmt.Errorf("version %d still has %d active asset(s)", ver.ID, len(assets)), i18n.ArtifactSoftRemoveVersionNotEmpty)
 	}
 	if err = s.artStore.Versions().SoftDelete(ctx, ver, operator); err != nil {
 		return err
 	}
-	res.Versions++
+	if res != nil {
+		res.Versions++
+	}
 	_ = s.deleteTreeNodeByTarget(ctx, artifactID, model.ArtifactTreeNodeTypeVersion, ver.ID)
 	return nil
 }
@@ -171,29 +172,16 @@ func (s *Service) softRemovePackage(ctx context.Context, pkg *model.ArtifactPack
 	if err != nil {
 		return err
 	}
-	if pkg.Format == model.ArtifactContainerFormat {
-		return s.softRemoveContainerPackage(ctx, pkg, versions, operator, res)
-	}
-	for _, ver := range versions {
-		activeAssets, aErr := s.artStore.Assets().Search(ctx, model.SearchAssetOption{VersionID: ver.ID}, artifactStore.AssetExcludeDeletedOption{})
-		if aErr != nil {
-			return aErr
-		}
-		if len(activeAssets) > 0 {
-			return pkgErrors.WithI18nKey(
-				fmt.Errorf("package %d still has active asset(s) under version %d", pkg.ID, ver.ID),
-				i18n.ArtifactSoftRemovePackageNotEmpty,
-			)
+
+	// 看一下是否有 version 如果有并且有活的asset直接不允许删除package
+	if len(versions) > 0 {
+		for _, v := range versions {
+			if err := s.softRemoveVersion(ctx, artifactIDForVersion(pkg, v), v, operator, res); err != nil {
+				return err
+			}
 		}
 	}
-	// 空包：级联软删 version
-	for _, ver := range versions {
-		if err = s.artStore.Versions().SoftDelete(ctx, ver, operator); err != nil {
-			return err
-		}
-		res.Versions++
-		_ = s.deleteTreeNodeByTarget(ctx, artifactIDForVersion(pkg, ver), model.ArtifactTreeNodeTypeVersion, ver.ID)
-	}
+
 	if err = s.artStore.Packages().SoftDelete(ctx, pkg, operator); err != nil {
 		return err
 	}
@@ -201,46 +189,6 @@ func (s *Service) softRemovePackage(ctx context.Context, pkg *model.ArtifactPack
 	_ = s.deleteTreeNodeByTarget(ctx, pkg.ArtifactID, model.ArtifactTreeNodeTypePackage, pkg.ID)
 	if pkg.Format == model.ArtifactHelmFormat {
 		_ = helm.NewHelmIndex(s.artStore, &adapter.ViewDescriptor{ArtifactID: pkg.ArtifactID, Store: s.fileStore, StorageID: 1}).UpdateRepo(ctx, "/artifacts/helm")
-	}
-	return nil
-}
-
-func (s *Service) softRemoveContainerPackage(
-	ctx context.Context,
-	pkg *model.ArtifactPackage,
-	versions []*model.ArtifactVersion,
-	operator string,
-	res *model.ArtifactNodeRemoveRes,
-) error {
-	if len(versions) > 0 {
-		res.Status = model.ArtifactStatusNotEmpty
-		return pkgErrors.WithI18nKey(
-			fmt.Errorf("container package %d still has %d active version(s)", pkg.ID, len(versions)),
-			i18n.ArtifactSoftRemovePackageVersionExists,
-		)
-	}
-
-	artifactIDs := map[int64]struct{}{}
-	if pkg.ArtifactID != 0 {
-		artifactIDs[pkg.ArtifactID] = struct{}{}
-	}
-	allVersions, err := s.artStore.Versions().Find(ctx, model.SearchVersionOption{PackageID: pkg.ID, IncludeDeleted: true})
-	if err != nil {
-		return err
-	}
-	for _, ver := range allVersions {
-		artifactID := artifactIDForVersion(pkg, ver)
-		if artifactID != 0 {
-			artifactIDs[artifactID] = struct{}{}
-		}
-	}
-
-	if err = s.artStore.Packages().SoftDelete(ctx, pkg, operator); err != nil {
-		return err
-	}
-	res.Packages++
-	for artifactID := range artifactIDs {
-		_ = s.deleteTreeNodeByTarget(ctx, artifactID, model.ArtifactTreeNodeTypePackage, pkg.ID)
 	}
 	return nil
 }

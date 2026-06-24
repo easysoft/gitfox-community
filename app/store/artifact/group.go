@@ -231,6 +231,20 @@ func (c *groups) ListChildren(ctx context.Context, id int64) ([]*model.ArtifactG
 	return groupsToModel(rows), nil
 }
 
+// Search 按 SearchOption 组合条件查询 group 列表（与 packages.Search / versions.Search 对齐）。
+// GC 链路依赖此方法按「软删 + editedDate < cutoff」筛选过期空壳 group。
+func (c *groups) Search(ctx context.Context, options ...SearchOption) ([]*model.ArtifactGroup, error) {
+	db := c.db.WithContext(ctx).Model(&artifactGroup{})
+	for _, opt := range options {
+		db = opt.Apply(db)
+	}
+	var rows []*artifactGroup
+	if err := db.Order("id asc").Find(&rows).Error; err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
+	}
+	return groupsToModel(rows), nil
+}
+
 // FindRootByName 按 (artifactID, format, name) 查找根级 group（parentID=0 OR parentID IS NULL），
 // 包含已软删记录；找不到时返回 (nil, nil)，便于调用方区分「不存在」与「系统错误」。
 func (c *groups) FindRootByName(ctx context.Context, artifactID int64, name string, format model.ArtifactFormat) (*model.ArtifactGroup, error) {

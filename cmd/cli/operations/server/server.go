@@ -15,7 +15,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/router"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/logger"
 
-	// artifactSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/artifact" // TODO: 制品库 GC 定时任务禁用时暂注释
+	artifactSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/artifact"
 	cronSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/cron"
 	importerSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/importer"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
@@ -261,19 +261,19 @@ func (app *App) registerJobHandlers() {
 }
 
 // registerRecurringJobs 注册定时调度任务。
-// 制品库 GC 的 cron 间隔由配置 artifact.gcInterval 驱动（默认 720h = 每30天）。
+// 制品库 GC：北京时间每天 02:00 触发一次（cron 在 CST 下解析）。
 func (app *App) registerRecurringJobs(ctx context.Context) {
-	// TODO: 制品库 GC 定时任务暂时禁用，待回收站策略确认后恢复。
-	// 启用时使用 JobTypeArtifactGC + 空 entity（清全部格式），无需再分 container / soft-remove。
-	// 示例：
-	//   _ = app.JobScheduler.AddRecurringWithData(
-	//       ctx,
-	//       "gitfox:recurring:artifact-gc",
-	//       artifactSvc.JobTypeArtifactGC,
-	//       "{}",
-	//       app.SystemConfig.Artifact.GCCronExpr(3, 0),
-	//       time.Duration(artifactSvc.ArtifactGCJobMaxDurationSeconds)*time.Second,
-	//   )
+	if err := app.JobScheduler.AddRecurringWithData(
+		ctx,
+		artifactSvc.JobUIDArtifactGC,
+		artifactSvc.JobTypeArtifactGC,
+		"{\"retention_time\":0}",
+		artifactSvc.JobCronArtifactGC,
+		time.Duration(artifactSvc.ArtifactGCJobMaxDurationSeconds)*time.Second,
+	); err != nil {
+		app.SystemLog.Errorw("[Server] Failed to register artifact GC recurring job", "error", err)
+		panic(err)
+	}
 
 	// TODO: 重新协商方案 启动时对账：确保所有 trigger 的 cron job 与 DB 一致（修复上次异常退出可能导致的不一致）
 	// app.SystemLog.Info("[Server] Reconciling pipeline cron jobs...")

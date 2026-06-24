@@ -81,7 +81,60 @@ func (s *Service) GarbageCollect(ctx context.Context, format string) (*model.Art
 	if err != nil {
 		return mergeGarbageReports(nonContainer, container), err
 	}
+
+	// 收口：清理「软删 + 过期 + 空」的 group。
+	// asset 反推链路只能命中"被软删 asset 牵出的 group"，对于直接软删
+	// 整棵 group 子树（softRemoveGroup）的场景，需要这里主动扫表收割。
+	if err = s.garbageCollectExpiredGroups(ctx); err != nil {
+		return mergeGarbageReports(nonContainer, container), err
+	}
+
 	return mergeGarbageReports(nonContainer, container), nil
+}
+
+// garbageCollectExpiredGroups 主动扫描并物理清理「软删超过 RecycleBinRetention 且空」的 group。
+// 每轮事务内 Search + isGroupEmpty 判定 + DeleteById；删一个就重启下一轮，
+// 直到没有可删 group 为止——保证父 group 在子 group 清空后能在后续轮次被收割。
+// 与 collectEmptyDeletedGroups 的差异：此处显式带 cutoff 过滤，避免误清保留期内的软删 group。
+func (s *Service) garbageCollectExpiredGroups(ctx context.Context) error {
+	log := logger.GetLogger(ctx)
+	cutoff := datetime.NowLocalTime().Add(-s.config.RecycleBinRetention).Time()
+	log.Debugf("garbageCollectExpiredGroups cutoff: %v", cutoff)
+
+	for {
+		var deletedThisRound int
+		if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+			txStore := artifactStore.NewStore(tx)
+			groups, err := txStore.Groups().Search(ctx, artifactStore.GroupWithDeletedBeforeOption{Before: cutoff})
+			if err != nil {
+				return err
+			}
+			for _, g := range groups {
+				empty, err := s.isGroupEmpty(ctx, txStore, g.ID)
+				if err != nil {
+					return err
+				}
+				if !empty {
+					continue
+				}
+				if err = txStore.Groups().DeleteById(ctx, g.ID); err != nil {
+					if errors.Is(err, pkgErrors.ErrResourceNotFound) {
+						continue
+					}
+					return err
+				}
+				deletedThisRound++
+			}
+			return nil
+		}); err != nil {
+			log.Errorf("artifact garbage collect expired groups failed: %v", err)
+			return err
+		}
+		if deletedThisRound == 0 {
+			return nil
+		}
+		log.Debugf("artifact garbage collect expired groups: %d in this round", deletedThisRound)
+	}
 }
 
 // garbageCollectByOptions 执行指定格式资源 GC。
@@ -143,11 +196,11 @@ func (s *Service) garbageCollect(ctx context.Context, items []*model.ArtifactRec
 			if item.GroupID > 0 {
 				groupIDs[item.GroupID] = struct{}{}
 			}
-			if err := txStore.Assets().DeleteById(ctx, item.AssetID); err != nil {
+			if err := txStore.Assets().DeleteById(ctx, item.AssetID); err != nil && err != model.ErrAssetNoItemDeleted {
 				return err
 			}
 			if item.DeleteBlob {
-				if err := txStore.Blobs().DeleteById(ctx, item.BlobID); err != nil {
+				if err := txStore.Blobs().DeleteById(ctx, item.BlobID); err != nil && err != model.ErrBlobNoItemDeleted {
 					return err
 				}
 			}
@@ -338,19 +391,24 @@ func (s *Service) StatisticAssets(ctx context.Context, retentionTime time.Durati
 	}
 	versionCap := make(map[int64]*model.ArtifactVersionCapacityDesc)
 
+	// 计算回收站保留期截止时间；retentionTime==0 时不做时间过滤
+	retentionCutoff := datetime.NowLocalTime().Add(-retentionTime)
+	log.Debugf("retentionTime: %v, retentionCutoff: %v", retentionTime, retentionCutoff)
+
 	// 第一遍：只统计 active asset（deleted=0）对 blob 的引用计数。
 	// 此处刻意排除 deleted>0 的 asset，确保引用计数反映的是「仍在使用」的 blob。
 	activeBlobRefs := make(map[int64]int)
 	for _, asset := range assetBlobs {
-		if asset.BlobID == 0 || asset.Deleted > 0 {
+		if asset.BlobID == 0 {
 			continue
 		}
+
+		if asset.Deleted > 0 && asset.EditedDate.Before(*retentionCutoff) {
+			continue
+		}
+
 		activeBlobRefs[asset.BlobID]++
 	}
-
-	// 计算回收站保留期截止时间；retentionTime==0 时不做时间过滤
-	retentionCutoff := datetime.NowLocalTime().Add(-retentionTime)
-	log.Debugf("retentionTime: %v, retentionCutoff: %v", retentionTime, retentionCutoff)
 
 	// 第二遍：分类处理每个 asset
 	for _, asset := range assetBlobs {
@@ -361,7 +419,6 @@ func (s *Service) StatisticAssets(ctx context.Context, retentionTime time.Durati
 		if asset.Deleted > 0 {
 			log.Debugf("asset %d is deleted, editedDate: %v", asset.ID, asset.EditedDate)
 			if asset.EditedDate == nil || !asset.EditedDate.Before(*retentionCutoff) {
-				// 仍在保留期内，跳过
 				continue
 			}
 

@@ -51,9 +51,13 @@ func (opt AssetVersionOption) Apply(db *gorm.DB) *gorm.DB {
 	return db.Where("versionID = ?", opt.VersionID)
 }
 
+// AssetWithDeletedBeforeOption 过滤「已软删 且 editedDate 早于 Before」的 asset。
 type AssetWithDeletedBeforeOption struct {
-	WithDeletedOption
 	Before time.Time
+}
+
+func (opt AssetWithDeletedBeforeOption) Apply(db *gorm.DB) *gorm.DB {
+	return db.Where("ops_artifact_assets.deleted = 1").Where("ops_artifact_assets.editedDate < ?", opt.Before)
 }
 
 type ContainerFormatOption struct{}
@@ -116,18 +120,38 @@ func (opt VersionPackageOption) Apply(db *gorm.DB) *gorm.DB {
 	return db.Where("packageID = ?", opt.PackageID)
 }
 
+// PackageWithDeletedBeforeOption 过滤「已软删 且 editedDate 早于 Before」的 package。
 type PackageWithDeletedBeforeOption struct {
-	WithDeletedOption
 	Before time.Time
+}
+
+func (opt PackageWithDeletedBeforeOption) Apply(db *gorm.DB) *gorm.DB {
+	return db.Where("ops_artifact_packages.deleted = 1").
+		Where("ops_artifact_packages.editedDate < ?", opt.Before)
 }
 
 type VersionWithDeletedOption struct {
 	WithDeletedOption
 }
 
+// VersionWithDeletedBeforeOption 过滤「已软删 且 editedDate 早于 Before」的 version。
 type VersionWithDeletedBeforeOption struct {
-	WithDeletedOption
 	Before time.Time
+}
+
+func (opt VersionWithDeletedBeforeOption) Apply(db *gorm.DB) *gorm.DB {
+	return db.Where("ops_artifact_versions.deleted = 1").
+		Where("ops_artifact_versions.editedDate < ?", opt.Before)
+}
+
+// GroupWithDeletedBeforeOption 过滤「已软删 且 editedDate 早于 Before」的 group。
+type GroupWithDeletedBeforeOption struct {
+	Before time.Time
+}
+
+func (opt GroupWithDeletedBeforeOption) Apply(db *gorm.DB) *gorm.DB {
+	return db.Where("ops_artifact_groups.deleted = 1").
+		Where("ops_artifact_groups.editedDate < ?", opt.Before)
 }
 
 // AssetViewOption 按 artifactID 过滤 assets。
