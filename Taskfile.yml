@@ -226,6 +226,8 @@ tasks:
     deps: [clean, download-ci-plugins]  # 先执行清理和下载 CI 插件
     cmds:
       - go build -o "{{.BIN_DIR}}/gitfox_linux" -ldflags "{{.LDFLAGS}}" ./cmd/cli/main.go
+      - cp "{{$.ROOT_DIR}}/configs/prod.env" "{{.BIN_DIR}}/"
+      - cp "{{$.ROOT_DIR}}/configs/prod.yaml" "{{.BIN_DIR}}/"
       - echo "本地构建完成，二进制文件位于 {{.BIN_DIR}}/gitfox_linux"
 
   cross-build:
