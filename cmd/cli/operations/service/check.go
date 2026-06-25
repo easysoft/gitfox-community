@@ -235,7 +235,8 @@ func newDockerHTTPClient(host string) (*http.Client, string, error) {
 		if u.Scheme == "https" {
 			scheme = "https"
 		}
-		return newDockerHTTPClientTCP(u), scheme + "://" + u.Host, nil
+		client := &http.Client{Timeout: dockerProbeTimeout, Transport: &http.Transport{}}
+		return client, scheme + "://" + u.Host, nil
 	default:
 		return nil, "", fmt.Errorf("unsupported docker host scheme: %s", u.Scheme)
 	}
@@ -264,12 +265,6 @@ func newDockerHTTPClientUnix(u *url.URL) (*http.Client, string, error) {
 	return client, "http://docker", nil
 }
 
-// newDockerHTTPClientTCP 构造 tcp/http(s) 拨号 client。baseURL 由调用方拼装，
-// 避免在两处重复 scheme 判定。
-func newDockerHTTPClientTCP(_ *url.URL) *http.Client {
-	return &http.Client{Timeout: dockerProbeTimeout, Transport: &http.Transport{}}
-}
-
 // dockerPing 调用 GET /_ping 判断 daemon 是否真的在响应。
 // unix socket / npipe / tcp 三种路径统一走此 HTTP 探活，是权威活体判定。
 func dockerPing(client *http.Client, baseURL string) error {
@@ -294,19 +289,13 @@ func CheckDocker() (bool, error) {
 
 	client, baseURL, dialErr := newDockerHTTPClient(host)
 	if dialErr != nil {
-		return true, decorateDockerErr(
-			fmt.Errorf(t(i18n.CliCheckErrDaemonNotRunning), "docker"),
-			host, parsed,
-		)
+		return true, decorateDockerErr(fmt.Errorf(t(i18n.CliCheckErrDaemonNotRunning), "docker"), host, parsed)
 	}
 
 	if err := dockerPing(client, baseURL); err != nil {
-		return true, decorateDockerErr(
-			fmt.Errorf(t(i18n.CliCheckErrDaemonNotRunning), "docker"),
-			host, parsed,
-		)
+		return true, decorateDockerErr(fmt.Errorf(t(i18n.CliCheckErrDaemonNotRunning), "docker"), host, parsed)
 	}
-	return true, nil
+	return false, nil
 }
 
 // describeParsedDockerHost 把 dockerHost 选出的字符串解析成"实际拨号用"的形态描述：
