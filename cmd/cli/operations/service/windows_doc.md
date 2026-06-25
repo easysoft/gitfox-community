@@ -256,13 +256,13 @@ SCM 启动进程 → gitfox.exe service run --workdir C:\gitfox
 |---|---|---|
 | `server/server.go` | 无 | 通用启动引擎 `RunServerWithContext`，所有平台共享 |
 | `service/windows.go` | 无 | Windows 通用辅助（端口检测、日志命令提示、常量定义） |
-| `service/windows_svc.go` | `//go:build windows` | Windows SCM API 实现（注册/停止/卸载/执行/状态查询/管理员检测） |
+| `service/windows_svc.go` | `//go:build windows` | Windows SCM API 实现（注册/停止/卸载/执行/状态查询/管理员检测） + Docker 命名管道拨号实现（`newDockerHTTPClientNpipe` / `newDockerHTTPClientNpipePath`） |
 | `service/windows_svc_stub.go` | `//go:build !windows` | 非 Windows 平台的桩函数（确保跨平台编译） |
 | `service/register.go` | 无 | 服务注册/重启的跨平台调度层 |
 | `service/start.go` | 无 | `gitfox start` 命令的核心决策引擎 |
 | `service/stop.go` | 无 | `gitfox stop` 命令 + `readHealthURL` |
 | `service/uninstall.go` | 无 | `gitfox uninstall` 命令 |
-| `service/check.go` | 无 | 权限/依赖/端口/数据库/禅道检测 |
+| `service/check.go` | 无 | 权限/依赖/端口/数据库/禅道检测；Docker daemon 探测骨架（`CheckDocker` / `dockerHost` / `stripNpipePrefix` / 候选管道选择） |
 
 ---
 
@@ -313,3 +313,135 @@ func checkSudoWindows() error {
 
 在 `install`、`start`、`stop`、`uninstall` 命令入口处统一调用 `CheckSudo()`，
 非管理员用户会立即收到友好的国际化提示，而不是等到 SCM 操作失败后才收到英文系统原始错误。
+
+---
+
+## Docker Daemon 探测（命名管道 / Unix Socket）
+
+### 设计目标
+
+GitFox 通过挂载 docker.sock（Linux）或命名管道（Windows）让容器直接调用 daemon。
+本机不需要安装 docker CLI，也不关心版本号——`CheckDocker` 只验证 **socket / 管道可达 + daemon 活体**。
+
+### 调用链
+
+```
+CheckDocker
+  ├─ dockerHost()                        选 host 字符串
+  │     ├─ DOCKER_HOST 非空 → 用环境变量
+  │     ├─ Windows         → "npipe://" + pickWindowsDockerNpipe()
+  │     └─ Linux           → "unix://" + defaultDockerSocket
+  │
+  ├─ describeParsedDockerHost(host)      生成诊断尾巴用的"实际拨号路径"
+  │     └─ stripNpipePrefix(host)         npipe 命中→直接给路径；否则走 url.Parse
+  │
+  ├─ newDockerHTTPClient(host)           构造 client + baseURL
+  │     ├─ stripNpipePrefix 命中         → newDockerHTTPClientNpipePath（短路绕开 url.Parse）
+  │     └─ url.Parse 后按 scheme 分发：
+  │           ├─ unix    → newDockerHTTPClientUnix
+  │           ├─ npipe   → newDockerHTTPClientNpipe（兜底，正常进不来）
+  │           ├─ tcp/http(s) → newDockerHTTPClientTCP
+  │           └─ default → unsupported scheme 报错
+  │
+  ├─ dockerPing(client, baseURL)         GET /_ping ── 唯一权威活体判定
+  │
+  └─ decorateDockerErr(base, host, parsed)
+        失败时拼 (host=%q, parsed=%q) 双视角诊断
+```
+
+### 状态分类
+
+| `(ok, err)` | 含义 | 文案 |
+|---|---|---|
+| `(true, nil)` | daemon 健在 | `Docker: Available` |
+| `(true, err)` | 已安装但服务未运行（dial 失败 / ping 失败） | `docker is installed but the daemon is not running. (host=..., parsed=...)` |
+| `(false, err)` | host 字符串本身解析失败等极端情况 | `docker command not found ...` |
+
+### Windows 命名管道候选
+
+Docker Desktop 4.x 不再固定使用 `docker_engine` 管道。`pickWindowsDockerNpipe` 按以下顺序探测：
+
+| 候选 | 适用场景 |
+|---|---|
+| `\\.\pipe\dockerDesktopLinuxEngine` | 启用 WSL2 后端的 Docker Desktop（4.x 默认主流形态） |
+| `\\.\pipe\docker_engine` | 传统 Hyper-V 后端 / Docker CE on Windows Server |
+| `\\.\pipe\dockerDesktopWindowsEngine` | Docker Desktop 切换到 Windows containers 时 |
+
+**Stat 是软探测**：命中即用，全部不命中也只是回退默认管道，由 `dockerPing` 给真活体结论。
+
+### 反复踩过的三个坑（不要再踩）
+
+#### 坑 ① npipe URL 含反斜杠 → `url.Parse` 拒收
+
+`net/url.Parse("npipe://\\.\pipe\X")` 会直接返回 `invalid character "\\" in host name`。
+反斜杠不是合法 URL 字符。
+
+**处置**：在 `newDockerHTTPClient` 入口加 `stripNpipePrefix` **短路**——识别 `\\.\pipe\` 与 `npipe://`
+两种形态，绕过 `url.Parse` 直接拨号。`stripNpipePrefix` 兼容形态：
+
+| 输入 | 输出 |
+|---|---|
+| `\\.\pipe\X` | `\\.\pipe\X`（原值返回） |
+| `npipe://\\.\pipe\X` | `\\.\pipe\X` |
+| `npipe:////./pipe/X`（docker CLI 风格） | `\\.\pipe\X` |
+| `npipe://./pipe/X` | `\\.\pipe\X` |
+| 非 npipe（unix / tcp / http） | `("", false)` 走 url.Parse |
+
+#### 坑 ② Windows 命名管道 `os.Stat` 不可靠
+
+`Test-Path` 通但 `os.Stat` 失败的情况存在——前者走 `GetFileAttributes`（宽松），后者走
+`CreateFile`（严格）。Windows 命名管道的 CreateFile 语义不保证"可用实例随时可探测"。
+
+**处置**：拨号前**不再用 Stat 阻断**。`newDockerHTTPClientNpipePath` 直接构造 client 走
+`winio.DialPipeContext`，活体一律交给 `dockerPing`。
+
+> 教训：**只信 Dial / Ping，别信 Stat**。Stat 只在 `pickWindowsDockerNpipe` 做"快速命中候选"用。
+
+#### 坑 ③ Docker Desktop 4.x 默认引擎已变
+
+老版本默认管道是 `docker_engine`，新版（启用 WSL2 后端）改为 `dockerDesktopLinuxEngine`。
+GitFox 早期写死 `docker_engine`，在新机器上误报"未安装"。
+
+**处置**：`defaultDockerNpipe = \\.\pipe\dockerDesktopLinuxEngine`，候选列表首位也是它。
+
+### 诊断信息呈现
+
+错误文案末尾追加 `(host=%q, parsed=%q)` 双视角：
+
+```
+docker is installed but the daemon is not running. (host="npipe://\\.\pipe\dockerDesktopLinuxEngine", parsed="\\.\pipe\dockerDesktopLinuxEngine")
+```
+
+`%q` 强制 Go strconv 转义规则呈现：双引号包裹 + 反斜杠双写。这样无论下游
+`lipgloss` / ANSI 渲染层如何处理，反斜杠都不会被压缩成单层（Windows 终端对原始 `\\` 经常会
+折叠成 `\`，造成"路径错位"假象）。
+
+### 用户排查指南
+
+`gitfox status` 报"daemon is not running" 时，按顺序确认：
+
+```powershell
+# 1. 看 GitFox 走的那条管道在不在
+Test-Path '\\.\pipe\dockerDesktopLinuxEngine'
+
+# 2. 看 docker CLI 实际连的是哪条
+docker context inspect --format '{{.Endpoints.docker.Host}}'
+
+# 3. 看 Docker Desktop 进程是否在跑
+Get-Process 'Docker Desktop','com.docker.backend' -ErrorAction SilentlyContinue
+
+# 4. 看 daemon 是否响应
+docker info --format '{{.ServerVersion}}'
+```
+
+若三、四条都通但 GitFox 仍报错，把 status 输出里 `(host=..., parsed=...)` 这段贴出来。
+
+### 跨平台兜底
+
+| 平台 | 文件 | 实现 |
+|---|---|---|
+| Windows | `windows_svc.go` | `winio.DialPipeContext` 真实拨号 |
+| 其他 | `windows_svc_stub.go` | 桩函数返回 `Windows npipe 仅在 Windows 平台可用` |
+
+桩函数确保 Linux / macOS 编译通过，运行时永远走不到——`dockerHost()` 在非 Windows 平台
+不会返回 npipe scheme。

@@ -33,11 +33,9 @@ const (
 	MinSvnVersion = "1.14.3"
 )
 
-// threePartVersionRe 匹配输出中的三段式版本号 (X.Y.Z)，用于从 `xxx --version` 文本中抽取版本。
 var threePartVersionRe = regexp.MustCompile(`(\d+\.\d+\.\d+)`)
 
 // extractVersion 从命令原始输出中抽取三段式版本号，并用 go-version 解析为可比较的 *version.Version。
-// 返回原始捕获字符串与解析对象，便于上层既能展示又能比较。
 func extractVersion(raw string) (string, *version.Version, error) {
 	matches := threePartVersionRe.FindStringSubmatch(raw)
 	if len(matches) < 2 {
@@ -178,12 +176,6 @@ const (
 )
 
 // windowsDockerNpipeCandidates 是 Windows 下需要按序探测的 docker daemon 命名管道候选。
-//
-//   - dockerDesktopLinuxEngine        : 启用 WSL2 后端的 Docker Desktop（4.x 默认主流形态）
-//   - docker_engine                   : 传统 Hyper-V 后端 Docker Desktop / Docker CE on Windows Server
-//   - dockerDesktopWindowsEngine      : Docker Desktop 切换到 Windows containers 时的引擎管道
-//
-// 任意一条 Stat 命中即采用；全部不命中也只是回退默认管道，由 dockerPing 给真活体结论。
 var windowsDockerNpipeCandidates = []string{
 	`\\.\pipe\dockerDesktopLinuxEngine`,
 	`\\.\pipe\docker_engine`,
@@ -201,10 +193,6 @@ func pickWindowsDockerNpipe() string {
 }
 
 // dockerHost 解析 daemon 地址：优先 DOCKER_HOST，否则平台默认。
-//   - unix:///path/to/sock          -> unix socket
-//   - npipe://\\.\pipe\<name>       -> Windows 命名管道
-//   - tcp://host:port               -> 远端 daemon
-//   - 空 -> Linux 用 /var/run/docker.sock；Windows 在候选列表中按序选首个存在者。
 func dockerHost() string {
 	if h := strings.TrimSpace(os.Getenv("DOCKER_HOST")); h != "" {
 		return h
@@ -219,12 +207,6 @@ func dockerHost() string {
 // 返回 (path, ok)：
 //   - ok=true 表示 host 是命名管道；path 是原始 `\\.\pipe\<name>`
 //   - ok=false 表示 host 不是命名管道，调用方继续走 url.Parse
-//
-// 兼容形态：
-//   - `\\.\pipe\X`               原生 Windows 路径
-//   - `npipe://\\.\pipe\X`       GitFox 拼接的形态（反斜杠 url.Parse 不接受）
-//   - `npipe:////./pipe/X`       docker CLI 风格
-//   - `npipe://./pipe/X`         三斜杠风格
 func stripNpipePrefix(host string) (string, bool) {
 	if strings.HasPrefix(host, `\\.\pipe\`) {
 		return host, true
@@ -249,10 +231,6 @@ func stripNpipePrefix(host string) (string, bool) {
 }
 
 // newDockerHTTPClient 基于 host 构造仅用于 daemon 通信的 http.Client + baseURL。
-//
-// 入口先用 stripNpipePrefix 短路：以 `\\.\pipe\` / `npipe://` 开头的 host 直接走
-// 命名管道拨号，绕开 url.Parse（反斜杠是非法 URL 字符，会被直接拒收）。
-// 其他形态走 url.Parse，按 scheme 分发到 unix / npipe / tcp / http(s)。
 func newDockerHTTPClient(host string) (*http.Client, string, error) {
 	if p, ok := stripNpipePrefix(host); ok {
 		return newDockerHTTPClientNpipePath(p)
@@ -324,12 +302,6 @@ func dockerPing(client *http.Client, baseURL string) error {
 }
 
 // CheckDocker 检查 docker daemon 是否可达。
-//
-// 设计原则：GitFox 仅通过挂载 docker.sock 让容器直接调用 daemon，因此本机不需要安装
-// docker CLI，也不关心版本号。此函数只验证 socket 可达 + daemon 活体。
-//
-// 失败文案末尾追加 (host=..., parsed=...) 双视角诊断信息，便于排查
-// "DOCKER_HOST 写法不规范"、"npipe 反斜杠被 url.Parse 吃掉" 等场景。
 func CheckDocker() (bool, error) {
 	t := clii18n.T
 
@@ -354,9 +326,6 @@ func CheckDocker() (bool, error) {
 }
 
 // describeParsedDockerHost 把 dockerHost 选出的字符串解析成"实际拨号用"的形态描述：
-//   - npipe 命中 stripNpipePrefix → 直接返回原始管道路径 `\\.\pipe\<name>`
-//   - 其他 scheme → 返回 url.Parse 拆出的 "scheme://host[/path]"
-//   - 解析失败 → 返回 `<parse error: ...>`，让用户立刻看到 url.Parse 的拒收原因
 func describeParsedDockerHost(host string) string {
 	if p, ok := stripNpipePrefix(host); ok {
 		return p
@@ -372,11 +341,6 @@ func describeParsedDockerHost(host string) string {
 }
 
 // decorateDockerErr 在 docker 检查失败时给原 error 末尾附上 host / parsed 双视角，
-// 例如：`docker 已安装但服务未运行。 (host="npipe://\\.\pipe\X", parsed="\\.\pipe\X")`
-//
-// 用 %q 强制 Go 的 strconv 转义规则呈现：双引号包裹 + 反斜杠双写。这样无论下游
-// lipgloss / ANSI 渲染层如何处理，反斜杠都不会被压缩成单层（Windows 终端 / Render
-// 输出对原始 \\ 经常会折叠成 \，造成"路径错位"假象）。
 func decorateDockerErr(base error, host, parsed string) error {
 	return fmt.Errorf("%w (host=%q, parsed=%q)", base, host, parsed)
 }
@@ -564,18 +528,11 @@ type ReadHealthURLResult struct {
 }
 
 // readHealthURL 从当前工作目录的 prod.env 读取 host/port，拼装健康检查 URL。
-// 这是 stop / uninstall / status 等"在工作目录里运行"的命令的便捷封装。
-//
-// 失败时 result.Host="127.0.0.1"、其他字段为空，error 非 nil；
-// 调用方自行决定是否中止主流程或仅以警告形式提示。
 func readHealthURL() (ReadHealthURLResult, error) {
 	return readHealthURLFrom(".")
 }
 
 // readHealthURLFrom 从指定工作目录的 prod.env 读取 host/port，拼装健康检查 URL。
-// upgrade 等命令在任意 cwd 运行，需显式传入 systemd 注册的工作目录。
-//
-// 优先使用 GITFOX_SERVER_HOST，兜底 127.0.0.1。port 缺失时 url 为空字符串。
 func readHealthURLFrom(workDir string) (ReadHealthURLResult, error) {
 	host := "127.0.0.1"
 	envMap, err := godotenv.Read(filepath.Join(workDir, ProdEnvFileName))
@@ -591,9 +548,6 @@ func readHealthURLFrom(workDir string) (ReadHealthURLResult, error) {
 }
 
 // IsSystemServiceActive 通过系统服务管理器判断 gitfox 服务是否处于"运行中"。
-//
-// 比 health 探针更准：直接读 systemd / Windows SCM 状态，不受网络/端口监听延迟干扰。
-// 不支持的平台返回 false。
 func IsSystemServiceActive() bool {
 	switch runtime.GOOS {
 	case "linux":
