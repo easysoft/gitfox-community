@@ -53,3 +53,8 @@ func RegisterServiceRun(_ *kingpin.Application) {
 func newDockerHTTPClientNpipe(_ *url.URL) (*http.Client, string, error) {
 	return nil, "", fmt.Errorf("Windows 服务仅在 Windows 平台可用")
 }
+
+// newDockerHTTPClientNpipePath 非 Windows 平台不支持 npipe 原始路径拨号。
+func newDockerHTTPClientNpipePath(_ string) (*http.Client, string, error) {
+	return nil, "", fmt.Errorf("Windows npipe 仅在 Windows 平台可用")
+}

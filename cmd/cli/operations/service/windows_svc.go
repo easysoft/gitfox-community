@@ -381,17 +381,19 @@ func extractWorkDirFromBinaryPath(binPath string) string {
 	return rest
 }
 
-// newDockerHTTPClientNpipe 基于 Windows named pipe 路径构造 docker daemon 通信的 http.Client。
-// 仅在 GOOS=windows 下编译，由 check.go 的 newDockerHTTPClient 在 scheme=="npipe" 时分发至此。
+// newDockerHTTPClientNpipe 基于 Windows named pipe URL 构造 docker daemon 通信的 http.Client。
 func newDockerHTTPClientNpipe(u *url.URL) (*http.Client, string, error) {
-	path := u.Path
-	if path == "" {
-		path = `\\.\pipe\docker_engine`
+	if p, ok := stripNpipePrefix(u.String()); ok {
+		return newDockerHTTPClientNpipePath(p)
 	}
-	if _, err := os.Stat(path); err != nil {
-		return nil, "", err
-	}
+	return newDockerHTTPClientNpipePath(defaultDockerNpipe)
+}
 
+// newDockerHTTPClientNpipePath 直接基于命名管道路径构造拨号 client。
+func newDockerHTTPClientNpipePath(path string) (*http.Client, string, error) {
+	if path == "" {
+		path = defaultDockerNpipe
+	}
 	client := &http.Client{
 		Timeout: dockerProbeTimeout,
 		Transport: &http.Transport{

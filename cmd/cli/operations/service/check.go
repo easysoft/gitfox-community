@@ -145,59 +145,119 @@ func CheckGit() (bool, string, error) {
 	return true, verStr, nil
 }
 
-// defaultDockerSocket 是 Linux 下 docker daemon 的默认 unix socket 路径。
-// Windows 默认通过命名管道 \\.\pipe\docker_engine 暴露。
+// ─────────────────────────────────────────────────────────────────
+// Docker daemon 检查
+// ─────────────────────────────────────────────────────────────────
+//
+//
+//   CheckDocker
+//     ├─ dockerHost()                         选 host 字符串
+//     │     └─ pickWindowsDockerNpipe()        Windows: 三候选 Stat 命中
+//     ├─ newDockerHTTPClient(host)            构造 client + baseURL
+//     │     ├─ stripNpipePrefix(host)          npipe 短路（绕开 url.Parse 反斜杠雷）
+//     │     │     └─ newDockerHTTPClientNpipePath
+//     │     └─ url.Parse → unix / npipe / tcp / http(s) 分发
+//     └─ dockerPing(client, baseURL)          GET /_ping 探活
+//
+// 状态分类：
+//   ok=true,  err=nil  : daemon 健在
+//   ok=true,  err!=nil : 已安装但服务未运行（dial 失败 / ping 失败）
+//   ok=false, err!=nil : host 字符串本身解析失败等极端情况
+//
+// 坑（不要再踩）：
+//   ① npipe URL 含反斜杠，url.Parse 会拒收 → stripNpipePrefix 入口短路
+//   ② Windows 命名管道 os.Stat 不可靠（Test-Path 通但 Stat 失败的情况存在）
+//      → 不用 Stat 做拨号前阻断，活体一律交给 dockerPing
+//   ③ Docker Desktop 4.x 默认引擎是 dockerDesktopLinuxEngine，不再是 docker_engine
+
+// docker 探测相关常量。
 const (
-	defaultDockerSocket = "/var/run/docker.sock"
-	defaultDockerNpipe  = `\\.\pipe\docker_engine`
-	dockerProbeTimeout  = 2 * time.Second
+	defaultDockerSocket = "/var/run/docker.sock"              // Linux unix socket 默认路径
+	defaultDockerNpipe  = `\\.\pipe\dockerDesktopLinuxEngine` // Windows 命名管道默认路径（4.x WSL2 引擎）
+	dockerProbeTimeout  = 2 * time.Second                     // 单次拨号 / ping 超时
 )
 
-// CheckDocker 检查 docker daemon 是否可达。
+// windowsDockerNpipeCandidates 是 Windows 下需要按序探测的 docker daemon 命名管道候选。
 //
-// 设计原则：GitFox 仅通过挂载 docker.sock 让容器直接调用 daemon，因此
-// 本机不需要安装 docker CLI，也不关心版本号。此函数只验证 socket 可达
-// + daemon 活体。
+//   - dockerDesktopLinuxEngine        : 启用 WSL2 后端的 Docker Desktop（4.x 默认主流形态）
+//   - docker_engine                   : 传统 Hyper-V 后端 Docker Desktop / Docker CE on Windows Server
+//   - dockerDesktopWindowsEngine      : Docker Desktop 切换到 Windows containers 时的引擎管道
 //
-// 返回:
-//   - ok=false: socket 不存在或无法连接（视同未安装/未启用）
-//   - ok=true && err!=nil: socket 可达但 daemon 探活失败（ping 异常）
-//   - ok=true && err==nil: daemon 健在
-func CheckDocker() (bool, error) {
-	t := clii18n.T
+// 任意一条 Stat 命中即采用；全部不命中也只是回退默认管道，由 dockerPing 给真活体结论。
+var windowsDockerNpipeCandidates = []string{
+	`\\.\pipe\dockerDesktopLinuxEngine`,
+	`\\.\pipe\docker_engine`,
+	`\\.\pipe\dockerDesktopWindowsEngine`,
+}
 
-	host := dockerHost()
-	client, baseURL, dialErr := newDockerHTTPClient(host)
-	if dialErr != nil {
-		return false, fmt.Errorf(t(i18n.CliCheckErrNotFound), "docker")
+// pickWindowsDockerNpipe 按候选列表顺序选择 Windows 下要拨号的命名管道。
+func pickWindowsDockerNpipe() string {
+	for _, p := range windowsDockerNpipeCandidates {
+		if _, err := os.Stat(p); err == nil {
+			return p
+		}
 	}
-
-	if err := dockerPing(client, baseURL); err != nil {
-		return true, fmt.Errorf(t(i18n.CliCheckErrDaemonNotRunning), "docker")
-	}
-	return true, nil
+	return defaultDockerNpipe
 }
 
 // dockerHost 解析 daemon 地址：优先 DOCKER_HOST，否则平台默认。
-//   - unix:///path/to/sock -> unix socket
-//   - npipe:////./pipe/docker_engine -> Windows 命名管道
-//   - tcp://host:port -> 远端 daemon
-//   - 空 -> Linux 用 /var/run/docker.sock；Windows 用 \\.\pipe\docker_engine
+//   - unix:///path/to/sock          -> unix socket
+//   - npipe://\\.\pipe\<name>       -> Windows 命名管道
+//   - tcp://host:port               -> 远端 daemon
+//   - 空 -> Linux 用 /var/run/docker.sock；Windows 在候选列表中按序选首个存在者。
 func dockerHost() string {
 	if h := strings.TrimSpace(os.Getenv("DOCKER_HOST")); h != "" {
 		return h
 	}
 	if runtime.GOOS == "windows" {
-		return "npipe://" + defaultDockerNpipe
+		return "npipe://" + pickWindowsDockerNpipe()
 	}
 	return "unix://" + defaultDockerSocket
 }
 
-// newDockerHTTPClient 基于 host 构造一个仅用于 daemon 通信的 http.Client。
-// 同时返回 baseURL：unix/npipe 模式下为虚构 "http://docker"；tcp/http 模式下
-// 为真实 host。当 host 指向 unix socket / 命名管道时，先做存在性检查避免在
-// 不可恢复路径上等待 dial 超时。
+// stripNpipePrefix 把 host 还原成可直接用于 npipe 拨号的原始路径。
+// 返回 (path, ok)：
+//   - ok=true 表示 host 是命名管道；path 是原始 `\\.\pipe\<name>`
+//   - ok=false 表示 host 不是命名管道，调用方继续走 url.Parse
+//
+// 兼容形态：
+//   - `\\.\pipe\X`               原生 Windows 路径
+//   - `npipe://\\.\pipe\X`       GitFox 拼接的形态（反斜杠 url.Parse 不接受）
+//   - `npipe:////./pipe/X`       docker CLI 风格
+//   - `npipe://./pipe/X`         三斜杠风格
+func stripNpipePrefix(host string) (string, bool) {
+	if strings.HasPrefix(host, `\\.\pipe\`) {
+		return host, true
+	}
+	const npipeScheme = "npipe://"
+	if !strings.HasPrefix(host, npipeScheme) {
+		return "", false
+	}
+	rest := host[len(npipeScheme):]
+	rest = strings.ReplaceAll(rest, "/", `\`)
+	rest = strings.TrimLeft(rest, `\`)
+	switch {
+	case rest == "":
+		return defaultDockerNpipe, true
+	case strings.HasPrefix(rest, `.\pipe\`):
+		return `\\` + rest, true
+	case strings.HasPrefix(rest, `pipe\`):
+		return `\\.\` + rest, true
+	default:
+		return `\\.\pipe\` + strings.TrimPrefix(rest, `pipe\`), true
+	}
+}
+
+// newDockerHTTPClient 基于 host 构造仅用于 daemon 通信的 http.Client + baseURL。
+//
+// 入口先用 stripNpipePrefix 短路：以 `\\.\pipe\` / `npipe://` 开头的 host 直接走
+// 命名管道拨号，绕开 url.Parse（反斜杠是非法 URL 字符，会被直接拒收）。
+// 其他形态走 url.Parse，按 scheme 分发到 unix / npipe / tcp / http(s)。
 func newDockerHTTPClient(host string) (*http.Client, string, error) {
+	if p, ok := stripNpipePrefix(host); ok {
+		return newDockerHTTPClientNpipePath(p)
+	}
+
 	u, err := url.Parse(host)
 	if err != nil {
 		return nil, "", err
@@ -205,24 +265,7 @@ func newDockerHTTPClient(host string) (*http.Client, string, error) {
 
 	switch u.Scheme {
 	case "unix":
-		path := u.Path
-		if path == "" {
-			path = defaultDockerSocket
-		}
-		if _, statErr := os.Stat(path); statErr != nil {
-			return nil, "", statErr
-		}
-		client := &http.Client{
-			Timeout: dockerProbeTimeout,
-			Transport: &http.Transport{
-				DialContext: func(ctx context.Context, _, _ string) (net.Conn, error) {
-					var d net.Dialer
-					d.Timeout = dockerProbeTimeout
-					return d.DialContext(ctx, "unix", path)
-				},
-			},
-		}
-		return client, "http://docker", nil
+		return newDockerHTTPClientUnix(u)
 	case "npipe":
 		return newDockerHTTPClientNpipe(u)
 	case "tcp", "http", "https":
@@ -230,15 +273,43 @@ func newDockerHTTPClient(host string) (*http.Client, string, error) {
 		if u.Scheme == "https" {
 			scheme = "https"
 		}
-		client := &http.Client{Timeout: dockerProbeTimeout, Transport: &http.Transport{}}
-		return client, scheme + "://" + u.Host, nil
+		return newDockerHTTPClientTCP(u), scheme + "://" + u.Host, nil
 	default:
 		return nil, "", fmt.Errorf("unsupported docker host scheme: %s", u.Scheme)
 	}
 }
 
+// newDockerHTTPClientUnix 构造 unix socket 拨号 client。Stat 不通过即返回失败，
+// 这里 Stat 是可靠的（unix socket 文件存在性 = 监听存在性）。
+func newDockerHTTPClientUnix(u *url.URL) (*http.Client, string, error) {
+	path := u.Path
+	if path == "" {
+		path = defaultDockerSocket
+	}
+	if _, err := os.Stat(path); err != nil {
+		return nil, "", err
+	}
+	client := &http.Client{
+		Timeout: dockerProbeTimeout,
+		Transport: &http.Transport{
+			DialContext: func(ctx context.Context, _, _ string) (net.Conn, error) {
+				var d net.Dialer
+				d.Timeout = dockerProbeTimeout
+				return d.DialContext(ctx, "unix", path)
+			},
+		},
+	}
+	return client, "http://docker", nil
+}
+
+// newDockerHTTPClientTCP 构造 tcp/http(s) 拨号 client。baseURL 由调用方拼装，
+// 避免在两处重复 scheme 判定。
+func newDockerHTTPClientTCP(_ *url.URL) *http.Client {
+	return &http.Client{Timeout: dockerProbeTimeout, Transport: &http.Transport{}}
+}
+
 // dockerPing 调用 GET /_ping 判断 daemon 是否真的在响应。
-// unix socket / npipe / tcp 三种路径统一走此 HTTP 探活。
+// unix socket / npipe / tcp 三种路径统一走此 HTTP 探活，是权威活体判定。
 func dockerPing(client *http.Client, baseURL string) error {
 	req, _ := http.NewRequest(http.MethodGet, baseURL+"/_ping", nil)
 	resp, err := client.Do(req)
@@ -250,6 +321,64 @@ func dockerPing(client *http.Client, baseURL string) error {
 		return fmt.Errorf("docker ping http %d", resp.StatusCode)
 	}
 	return nil
+}
+
+// CheckDocker 检查 docker daemon 是否可达。
+//
+// 设计原则：GitFox 仅通过挂载 docker.sock 让容器直接调用 daemon，因此本机不需要安装
+// docker CLI，也不关心版本号。此函数只验证 socket 可达 + daemon 活体。
+//
+// 失败文案末尾追加 (host=..., parsed=...) 双视角诊断信息，便于排查
+// "DOCKER_HOST 写法不规范"、"npipe 反斜杠被 url.Parse 吃掉" 等场景。
+func CheckDocker() (bool, error) {
+	t := clii18n.T
+
+	host := dockerHost()
+	parsed := describeParsedDockerHost(host)
+
+	client, baseURL, dialErr := newDockerHTTPClient(host)
+	if dialErr != nil {
+		return true, decorateDockerErr(
+			fmt.Errorf(t(i18n.CliCheckErrDaemonNotRunning), "docker"),
+			host, parsed,
+		)
+	}
+
+	if err := dockerPing(client, baseURL); err != nil {
+		return true, decorateDockerErr(
+			fmt.Errorf(t(i18n.CliCheckErrDaemonNotRunning), "docker"),
+			host, parsed,
+		)
+	}
+	return true, nil
+}
+
+// describeParsedDockerHost 把 dockerHost 选出的字符串解析成"实际拨号用"的形态描述：
+//   - npipe 命中 stripNpipePrefix → 直接返回原始管道路径 `\\.\pipe\<name>`
+//   - 其他 scheme → 返回 url.Parse 拆出的 "scheme://host[/path]"
+//   - 解析失败 → 返回 `<parse error: ...>`，让用户立刻看到 url.Parse 的拒收原因
+func describeParsedDockerHost(host string) string {
+	if p, ok := stripNpipePrefix(host); ok {
+		return p
+	}
+	u, err := url.Parse(host)
+	if err != nil {
+		return "<parse error: " + err.Error() + ">"
+	}
+	if u.Path == "" {
+		return u.Scheme + "://" + u.Host
+	}
+	return u.Scheme + "://" + u.Host + u.Path
+}
+
+// decorateDockerErr 在 docker 检查失败时给原 error 末尾附上 host / parsed 双视角，
+// 例如：`docker 已安装但服务未运行。 (host="npipe://\\.\pipe\X", parsed="\\.\pipe\X")`
+//
+// 用 %q 强制 Go 的 strconv 转义规则呈现：双引号包裹 + 反斜杠双写。这样无论下游
+// lipgloss / ANSI 渲染层如何处理，反斜杠都不会被压缩成单层（Windows 终端 / Render
+// 输出对原始 \\ 经常会折叠成 \，造成"路径错位"假象）。
+func decorateDockerErr(base error, host, parsed string) error {
+	return fmt.Errorf("%w (host=%q, parsed=%q)", base, host, parsed)
 }
 
 // CheckSubversion 检查 svn 客户端是否安装、版本是否满足 MinSvnVersion，并获取版本信息。
