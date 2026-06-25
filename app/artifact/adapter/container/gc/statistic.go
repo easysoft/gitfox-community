@@ -12,6 +12,7 @@ import (
 	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
 	artifactStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/artifact"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/storage"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
 
 	"github.com/opencontainers/go-digest"
 )
@@ -44,11 +45,13 @@ type StatisticReport struct {
 // manifest graph. Container blob liveness is defined by digests reachable from
 // active tag manifests, not by simple asset.blobID reference counts.
 func Statistic(ctx context.Context, artStore artifactStore.Interface, fileStore storage.ContentStorage, retentionTime time.Duration) (*model.ArtifactStatisticReport, error) {
+	// 1. 获取所有容器格式的资产 (含 manifest, config, layer)
 	allAssets, err := artStore.Assets().SearchExtendBlob(ctx, ContainerFormatOption{})
 	if err != nil {
 		return nil, err
 	}
 
+	// 2. 构建全局 digest 映射表，初始引用计数 count 置为 0
 	digestRefsMap := make(map[digest.Digest]*digestRef, len(allAssets))
 	for _, asset := range allAssets {
 		if asset == nil {
@@ -61,6 +64,7 @@ func Statistic(ctx context.Context, artStore artifactStore.Interface, fileStore 
 		digestRefsMap[dgst] = &digestRef{count: 0, obj: asset}
 	}
 
+	// 3. 构建 manifest 读取器，用于后续从存储中解析 manifest 的子引用记录
 	manifestGetter := &manifestStore{
 		artStore:  artStore,
 		fileStore: fileStore,
@@ -73,9 +77,10 @@ func Statistic(ctx context.Context, artStore artifactStore.Interface, fileStore 
 		},
 	}
 
+	// 4. 获取作为 GC 根节点的 tag (包括活跃的，以及在回收保留期内的软删 tag)
 	tagSearchOpts := []artifactStore.SearchOption{TagAssetOption{}}
 	if retentionTime > 0 {
-		tagSearchOpts = append(tagSearchOpts, TagUndeletedAndRecentDeletedOption{After: time.Now().Add(-retentionTime)})
+		tagSearchOpts = append(tagSearchOpts, TagUndeletedAndRecentDeletedOption{After: datetime.NowLocalTime().Add(-retentionTime).Time()})
 	} else {
 		tagSearchOpts = append(tagSearchOpts, TagActiveOption{})
 	}
@@ -84,6 +89,7 @@ func Statistic(ctx context.Context, artStore artifactStore.Interface, fileStore 
 		return nil, err
 	}
 
+	// 5. 遍历 GC 根节点 (tag)，递归遍历其 manifest 引用树，标记可达的 digest (count++)
 	assetMarkMap := make(map[int64]*manifestRefs, len(taggedAssets))
 	for _, tagAsset := range taggedAssets {
 		if tagAsset == nil {
@@ -107,6 +113,7 @@ func Statistic(ctx context.Context, artStore artifactStore.Interface, fileStore 
 			if !exist {
 				return
 			}
+			// 累加子节点的引用计数
 			digestRefsMap[d].count += 1
 			manifestRefObj.digests = append(manifestRefObj.digests, d)
 		})
@@ -116,6 +123,7 @@ func Statistic(ctx context.Context, artStore artifactStore.Interface, fileStore 
 
 	}
 
+	// 6. 统计每个 tag 的容量，区分独占容量 (Exclusive) 和总容量 (Total)
 	tagList := make([]*model.ArtifactVersionCapacityDesc, 0, len(assetMarkMap))
 	for _, assetMark := range assetMarkMap {
 		item := &model.ArtifactVersionCapacityDesc{
@@ -140,23 +148,55 @@ func Statistic(ctx context.Context, artStore artifactStore.Interface, fileStore 
 		tagList = append(tagList, item)
 	}
 
+	// 7. 找出待清理的资产。有两种情况需要清理：
+	//    a. 整个 digest 不可达 (count == 0)，则该 digest 下的所有资产都要硬删，且附带物理删除 (DeleteBlob = true)
+	//    b. 整个 digest 依然可达 (count > 0)，但某些特定的 tag 资产已过保留期，
+	//       这些过期的资产行应当从数据库中清理，但底层 blob 不能物理删除 (DeleteBlob = false)。
 	deleteList := make([]*model.ArtifactRecycleBlobDesc, 0)
-	for dgst, d := range digestRefsMap {
-		if d.count != 0 {
+	retentionCutoff := datetime.NowLocalTime().Add(-retentionTime)
+
+	for _, asset := range allAssets {
+		if asset == nil {
 			continue
 		}
-		asset := d.obj
-		deleteList = append(deleteList, &model.ArtifactRecycleBlobDesc{
-			AssetID:    asset.ID,
-			VersionID:  asset.VersionID.Int64,
-			GroupID:    asset.GroupID.Int64,
-			ArtifactID: asset.ArtifactID.Int64,
-			Path:       dgst.String(),
-			BlobID:     asset.BlobID,
-			BlobRef:    asset.Ref,
-			DeleteBlob: true,
-			Size:       asset.Size,
-		})
+		dgst, err := digest.Parse(asset.Path)
+		if err != nil {
+			continue
+		}
+		d, ok := digestRefsMap[dgst]
+		if !ok {
+			continue
+		}
+
+		if d.count == 0 {
+			blobRef := asset.Ref
+			deleteList = append(deleteList, &model.ArtifactRecycleBlobDesc{
+				AssetID:    asset.ID,
+				VersionID:  asset.VersionID.Int64,
+				GroupID:    asset.GroupID.Int64,
+				ArtifactID: asset.ArtifactID.Int64,
+				Path:       dgst.String(),
+				BlobID:     asset.BlobID,
+				BlobRef:    blobRef,
+				DeleteBlob: true,
+				Size:       asset.Size,
+			})
+		} else {
+			isTag := asset.VersionID.Int64 > 0
+			if isTag && asset.Deleted > 0 && asset.EditedDate != nil && asset.EditedDate.Before(*retentionCutoff) {
+				deleteList = append(deleteList, &model.ArtifactRecycleBlobDesc{
+					AssetID:    asset.ID,
+					VersionID:  asset.VersionID.Int64,
+					GroupID:    asset.GroupID.Int64,
+					ArtifactID: asset.ArtifactID.Int64,
+					Path:       dgst.String(),
+					BlobID:     asset.BlobID,
+					BlobRef:    asset.Ref,
+					DeleteBlob: true,
+					Size:       asset.Size,
+				})
+			}
+		}
 	}
 
 	return &model.ArtifactStatisticReport{DeleteList: deleteList, TagList: tagList}, nil

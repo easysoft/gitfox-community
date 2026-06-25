@@ -140,6 +140,8 @@ type BlobInterface interface {
 	RestoreById(ctx context.Context, blobID int64, operator string) error
 	GetById(ctx context.Context, blobID int64) (*model.ArtifactBlob, error)
 	GetByRef(ctx context.Context, ref string, storageID int64) (*model.ArtifactBlob, error)
+
+	GetActiveByChecksum(ctx context.Context, checksum string, storageID int64) (*model.ArtifactBlob, error)
 }
 
 type TreeNodeInterface interface {
@@ -190,6 +192,10 @@ type GroupInterface interface {
 
 	// ListChildren 列出指定分组的直接子分组，包含已软删记录。
 	ListChildren(ctx context.Context, id int64) ([]*model.ArtifactGroup, error)
+
+	// Search 按 SearchOption 组合条件查询分组列表。
+	// GC 链路依赖该方法按「软删 + 过保留期」筛选过期 group。
+	Search(ctx context.Context, options ...SearchOption) ([]*model.ArtifactGroup, error)
 
 	// FindRootByName 按 (artifactID, format, name) 查找根级 group（parentID=0），含已软删记录。
 	// 主要用于回收站恢复链路：CreateView 自动建的默认根 group 与 view 同名同 format，

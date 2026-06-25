@@ -37,6 +37,11 @@ const artifactStoragePrefix = "artifact"
 const (
 	JobTypeArtifactGC               = "gitfox:cleanup:artifact-garbage-collector"
 	ArtifactGCJobMaxDurationSeconds = 3600
+	// JobUIDArtifactGC 是制品库 GC 定时任务的唯一标识，server 启动时上 upsert 注册。
+	JobUIDArtifactGC = "gitfox:recurring:artifact-gc"
+	// JobCronArtifactGC 控制制品库 GC 触发时刻：北京时间每日 02:00 一次。
+	// scheduler.AddRecurringWithData 在 datetime.CST 下解析 cron，因此该表达式按 CST 计算。
+	JobCronArtifactGC = "0 2 * * *"
 )
 
 var _ Interface = (*Service)(nil)

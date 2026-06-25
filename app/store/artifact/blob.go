@@ -52,6 +52,25 @@ func (c *blobs) GetByRef(ctx context.Context, ref string, storageID int64) (*mod
 	return blobToModel(&row), nil
 }
 
+// GetActiveByChecksum 按完整 checksum JSON 串等值匹配未软删 blob，用作上传去重钩子。
+// 多机/多副本上传同 sha256 在历史实现中可能落多行，取 id 最小的一条作为复用目标，保证幂等。
+func (c *blobs) GetActiveByChecksum(ctx context.Context, checksum string, storageID int64) (*model.ArtifactBlob, error) {
+	if checksum == "" || storageID == 0 {
+		return nil, model.ErrArgsValueEmpty
+	}
+	var row artifactBlob
+	err := c.db.WithContext(ctx).
+		Where("storageID = ?", storageID).
+		Where("deleted = 0").
+		Where("checksum = ?", checksum).
+		Order("id asc").
+		First(&row).Error
+	if err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
+	}
+	return blobToModel(&row), nil
+}
+
 func (c *blobs) Update(ctx context.Context, upObj *model.ArtifactBlob) error {
 	row := blobFromModel(upObj)
 	if err := c.db.WithContext(ctx).Save(row).Error; err != nil {

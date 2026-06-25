@@ -429,8 +429,26 @@ func (mm *ModelManager) linkAssetToBlob(ctx context.Context, assetID int64, blob
 	return mm.store.Blobs().Update(ctx, blob)
 }
 
-// createBlob 创建 blob
+// createBlob 创建 blob：优先按 sha256 复用已有 active blob 实现内容去重，
 func (mm *ModelManager) createBlob(ctx context.Context, descriptor *AssetDescriptor, createTime *time.Time) (*model.ArtifactBlob, error) {
+	log := logger.GetLogger(ctx)
+
+	if descriptor.Hash != nil {
+		checksum := descriptor.Hash.String()
+		existing, err := mm.store.Blobs().GetActiveByChecksum(ctx, checksum, mm.view.StorageID)
+		if err != nil && !errors.Is(err, pkgErrors.ErrResourceNotFound) {
+			return nil, err
+		}
+		if existing != nil {
+			if descriptor.Ref != "" && descriptor.Ref != existing.Ref {
+				if delErr := mm.view.Store.Delete(ctx, BlobPath(descriptor.Ref)); delErr != nil {
+					log.Warnf("dedup blob: drop temp ref %s failed: %v", descriptor.Ref, delErr)
+				}
+			}
+			return existing, nil
+		}
+	}
+
 	createReq := &model.CreateArtifactBlob{
 		StorageID:   mm.view.StorageID,
 		Ref:         descriptor.Ref,
@@ -491,6 +509,7 @@ func (mm *ModelManager) getOrCreateVersion(ctx context.Context) (*model.Artifact
 				return nil, e
 			}
 		}
+		currVersion.Deleted = 0
 		mm.versionModel = currVersion
 		return currVersion, nil
 	}
