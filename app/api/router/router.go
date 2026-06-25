@@ -15,6 +15,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/common"
 )
 
 // NewRouter 创建路由实例并注册所有业务模块的路由
@@ -55,17 +56,17 @@ func NewRouter(mode string, logger *logger.SugaredMateLogger, controller *Contro
 	// 创建需要 JWT 认证的路由组
 	authGroup := r.Group("/api/v2")
 	authGroup.Use(middleware.Attempt(authn.Get(authn.AuthKindEasy)))
-	registerSpaceRoutes(authGroup, controller)              // 空间相关路由
-	registerBranchRoutes(authGroup, controller)             // 分支相关路由
-	registerTagRoutes(authGroup, controller)                // 标签相关路由
-	registerCommitRoutes(authGroup, controller)             // 提交相关路由
-	registerRepoRoutes(authGroup, controller)               // 仓库相关路由
-	registerScanRoutes(authGroup, controller)               // 扫描相关路由
-	registerPipelineRoutes(authGroup, controller)           // 流水线相关路由
-	registerRunnerRoutes(authGroup, controller)             // Runner 管理相关路由
-	registerUserRoutes(authGroup, controller)               // 用户相关路由
-	registerWebhookRoutes(authGroup, controller)            // Webhook 相关路由
-	registerArtifactRoutes(authGroup, controller)           // 制品库相关路由
+	registerSpaceRoutes(authGroup, controller)    // 空间相关路由
+	registerBranchRoutes(authGroup, controller)   // 分支相关路由
+	registerTagRoutes(authGroup, controller)      // 标签相关路由
+	registerCommitRoutes(authGroup, controller)   // 提交相关路由
+	registerRepoRoutes(authGroup, controller)     // 仓库相关路由
+	registerScanRoutes(authGroup, controller)     // 扫描相关路由
+	registerPipelineRoutes(authGroup, controller) // 流水线相关路由
+	registerRunnerRoutes(authGroup, controller)   // Runner 管理相关路由
+	registerUserRoutes(authGroup, controller)     // 用户相关路由
+	registerWebhookRoutes(authGroup, controller)  // Webhook 相关路由
+	registerArtifactRoutes(authGroup, controller) // 制品库相关路由
 
 	// 创建需要 Basic 认证的路由组（用于 Git 操作）
 	basicAuthGroup := r.Group("")
@@ -94,13 +95,14 @@ func registerPublicRoutes(r *gin.Engine, controller *Controller) {
 	{
 
 		public.GET("/health", func(c *gin.Context) {
-			c.JSON(200, gin.H{"status": "healthy"})
+			c.JSON(200, gin.H{
+				"status":    "healthy",
+				"version":   common.Version,
+				"gitCommit": common.GitCommitHash,
+				"gitBranch": common.GitBranch,
+				"buildDate": common.BuildDate,
+			})
 		})
-		public.GET("/version", func(c *gin.Context) {
-			c.JSON(200, gin.H{"version": "v1.0.0"})
-		})
-
-		public.GET("/test", controller.Test.Test)
 	}
 }
 
