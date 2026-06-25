@@ -78,8 +78,10 @@ func runStop(_ *kingpin.ParseContext) error {
 	}
 
 	// ========== 阶段 2. 反向健康检查：确认端口不再响应 ==========
+	// 正常路径端口会立即空出，WaitPortFree 首轮命中即早返，不会硬等 5s；
+	// 仅当 5s 仍未空出（异常）才打印 still-up 警告。
 	if hc.Port != "" {
-		if !CheckPortWithTimeout(hc.Port, 5*time.Second) {
+		if !WaitPortFree(hc.Port, 5*time.Second) {
 			fmt.Println(warnStyle.Render(t(i18n.CliStopHealthStillUp)))
 		}
 	}

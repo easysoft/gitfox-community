@@ -131,7 +131,7 @@ func runInstall(ctx *kingpin.ParseContext) error {
 	port := envMap["GITFOX_HTTP_PORT"]
 
 	if port != "" {
-		if CheckPortWithTimeout(port, 5*time.Second) {
+		if WaitPortInUse(port, 5*time.Second) {
 			printInstallSuccess(workspace, binName)
 			return nil
 		}

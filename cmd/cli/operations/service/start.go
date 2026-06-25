@@ -235,7 +235,7 @@ healthCheck:
 	// 服务虽然被挂载进了后台，但不代表内部启动未抛出 Panic。
 	// 通过短时长循环测试 /public/health 接口验证内部状态正常。
 	// healthURL = BuildHealthURL(host, port)
-	if !CheckPortWithTimeout(port, 5*time.Second) {
+	if !WaitPortInUse(port, 5*time.Second) {
 		fmt.Println(errStyle.Render(t(i18n.CliStartErrHealthTimeout)))
 		fmt.Println()
 		printFailureSummary()
