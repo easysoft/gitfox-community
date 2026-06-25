@@ -25,11 +25,8 @@ import (
 	"github.com/joho/godotenv"
 )
 
-// 依赖最低版本约束。
 const (
-	// MinGitVersion 是 GitFox 支持的最低 git 客户端版本。
 	MinGitVersion = "2.30.0"
-	// MinSvnVersion 是 GitFox 关联 Subversion 代码库功能要求的最低 svn 客户端版本。
 	MinSvnVersion = "1.14.3"
 )
 
@@ -99,7 +96,6 @@ func Check(headerStyle, okStyle, errStyle, warnStyle lipgloss.Style) (missing bo
 }
 
 // CheckSudo 检查当前上下文是否具有超级管理员执行权限 (Root/Sudo/Administrator)。
-// 主要由于许多 CLI 的核心命令 (如挂载、停止后台守护进程) 需要穿透系统底层安全限制。
 func CheckSudo() error {
 	switch runtime.GOOS {
 	case "windows":
@@ -113,7 +109,6 @@ func CheckSudo() error {
 }
 
 // CheckGit 检查 git 是否安装、版本是否满足 MinGitVersion，并获取版本信息。
-// 返回: (是否安装, 解析后的版本号, 错误信息)
 //   - ok=false 表示未安装
 //   - ok=true && err==nil 表示安装且版本达标
 //   - ok=true && err!=nil 表示安装但版本过低或解析失败
@@ -146,8 +141,6 @@ func CheckGit() (bool, string, error) {
 // ─────────────────────────────────────────────────────────────────
 // Docker daemon 检查
 // ─────────────────────────────────────────────────────────────────
-//
-//
 //   CheckDocker
 //     ├─ dockerHost()                         选 host 字符串
 //     │     └─ pickWindowsDockerNpipe()        Windows: 三候选 Stat 命中
@@ -156,19 +149,11 @@ func CheckGit() (bool, string, error) {
 //     │     │     └─ newDockerHTTPClientNpipePath
 //     │     └─ url.Parse → unix / npipe / tcp / http(s) 分发
 //     └─ dockerPing(client, baseURL)          GET /_ping 探活
-//
 // 状态分类：
 //   ok=true,  err=nil  : daemon 健在
 //   ok=true,  err!=nil : 已安装但服务未运行（dial 失败 / ping 失败）
 //   ok=false, err!=nil : host 字符串本身解析失败等极端情况
-//
-// 坑（不要再踩）：
-//   ① npipe URL 含反斜杠，url.Parse 会拒收 → stripNpipePrefix 入口短路
-//   ② Windows 命名管道 os.Stat 不可靠（Test-Path 通但 Stat 失败的情况存在）
-//      → 不用 Stat 做拨号前阻断，活体一律交给 dockerPing
-//   ③ Docker Desktop 4.x 默认引擎是 dockerDesktopLinuxEngine，不再是 docker_engine
 
-// docker 探测相关常量。
 const (
 	defaultDockerSocket = "/var/run/docker.sock"              // Linux unix socket 默认路径
 	defaultDockerNpipe  = `\\.\pipe\dockerDesktopLinuxEngine` // Windows 命名管道默认路径（4.x WSL2 引擎）
@@ -204,7 +189,6 @@ func dockerHost() string {
 }
 
 // stripNpipePrefix 把 host 还原成可直接用于 npipe 拨号的原始路径。
-// 返回 (path, ok)：
 //   - ok=true 表示 host 是命名管道；path 是原始 `\\.\pipe\<name>`
 //   - ok=false 表示 host 不是命名管道，调用方继续走 url.Parse
 func stripNpipePrefix(host string) (string, bool) {
