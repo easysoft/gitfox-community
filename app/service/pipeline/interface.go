@@ -51,6 +51,9 @@ type Interface interface {
 	// GetPipelineByID 根据流水线ID获取流水线（deleted=0）
 	GetPipelineByID(ctx context.Context, id int64) (*pipelineModel.Pipeline, error)
 
+	// UpdatePipeline 更新流水线
+	UpdatePipeline(ctx context.Context, pipeline *pipelineModel.Pipeline) error
+
 	// GetPipelineContent 根据流水线ID获取流水线内容
 	GetPipelineContent(ctx context.Context, pipelineID int64) (*pipelineModel.PipelineFile, error)
 

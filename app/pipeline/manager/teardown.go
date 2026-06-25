@@ -157,6 +157,14 @@ func (t *teardown) do(ctx context.Context, stage *stageModel.StageWithSteps) err
 		return err
 	}
 
+	pipeline.LastExec = execution.FinishedDate
+	pipeline.LastResult = string(execution.Status)
+	err = t.PipelineSvc.UpdatePipeline(noContext, pipeline)
+	if err != nil {
+		log.Warn().Err(err).
+			Msg("manager: cannot update the pipeline")
+	}
+
 	executionDetail := executionModel.ExecutionWithStages{
 		Execution: *execution,
 		Stages:    stages,
