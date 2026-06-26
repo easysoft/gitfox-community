@@ -159,7 +159,7 @@ func createRunStep(src *harness.Step, spec *harness.StepRun) *engine.Step {
 		IgnoreStderr: false,
 		IgnoreStdout: false,
 		// Network:      spec.Network,
-		// Privileged:   spec.Privileged,
+		Privileged: spec.Privileged,
 		// Pull:         convertPullPolicy(spec.Pull),
 		// User:         spec.User,
 		// TODO requires implementation
@@ -187,7 +187,7 @@ func createRunStep(src *harness.Step, spec *harness.StepRun) *engine.Step {
 		dst.Image = image.Expand(container.Image)
 		dst.Command = container.Args
 		dst.Network = container.Network
-		dst.Privileged = container.Privileged
+		dst.Privileged = spec.Privileged || container.Privileged
 		dst.Pull = convertPullPolicy(container.Pull)
 		dst.User = container.User
 		// dst.Group = container.Group
