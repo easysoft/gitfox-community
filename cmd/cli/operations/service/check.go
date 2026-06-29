@@ -484,20 +484,20 @@ func parseSsOutput(output, port string) PortStatus {
 const portWaitInterval = 1 * time.Second
 
 func WaitPortInUse(port string, timeout time.Duration) bool {
-	return waitPortCond(port, timeout, func(s PortStatus) bool { return s.InUse })
+	return waitPortCondition(port, timeout, func(s PortStatus) bool { return s.InUse })
 }
 
 func WaitPortFree(port string, timeout time.Duration) bool {
-	return waitPortCond(port, timeout, func(s PortStatus) bool { return !s.InUse })
+	return waitPortCondition(port, timeout, func(s PortStatus) bool { return !s.InUse })
 }
 
-func waitPortCond(port string, timeout time.Duration, cond func(PortStatus) bool) bool {
+func waitPortCondition(port string, timeout time.Duration, condition func(PortStatus) bool) bool {
 	if port == "" {
-		return cond(PortStatus{Port: port})
+		return condition(PortStatus{Port: port})
 	}
 	deadline := time.Now().Add(timeout)
 	for {
-		if cond(CheckPort(port)) {
+		if condition(CheckPort(port)) {
 			return true
 		}
 		if time.Now().After(deadline) {
