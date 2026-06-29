@@ -29,6 +29,8 @@ type Interface interface {
 	// --- 流水线相关 ---
 	// CreatePipeline 创建流水线
 	CreatePipeline(ctx context.Context, pipeline *pipelineModel.Pipeline) (*pipelineModel.Pipeline, error)
+	// UpdatePipeline 更新流水线
+	UpdatePipeline(ctx context.Context, pipeline *pipelineModel.Pipeline) error
 	// GetPipelineByID 根据流水线ID获取流水线（deleted=0）
 	GetPipelineByID(ctx context.Context, id int64) (*pipelineModel.Pipeline, error)
 	// GetPipelineByRepoIDAndName 根据仓库ID和流水线名称获取流水线（deleted=0）

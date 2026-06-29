@@ -6,22 +6,24 @@ import (
 )
 
 type Execution struct {
-	ID          uint            `gorm:"column:id;primaryKey;autoIncrement"`
-	PipelineID  uint            `gorm:"column:pipelineID;not null"`
-	Parent      uint            `gorm:"column:parent;not null;default:0"`
-	Trigger     string          `gorm:"column:trigger;not null"`
+	ID           uint            `gorm:"column:id;primaryKey;autoIncrement"`
+	PipelineID   uint            `gorm:"column:pipelineID;not null"`
+	Parent       uint            `gorm:"column:parent;not null;default:0"`
+	Trigger      string          `gorm:"column:trigger;not null"`
 	Commit       string          `gorm:"column:commit;not null;default:''"`
 	CommitBefore string          `gorm:"column:commitBefore;not null;default:''"`
-	Ref         string          `gorm:"column:ref;not null;default:''"`
-	Params      string          `gorm:"column:params;type:text;not null;default:''"`
-	Started     *datetime.Local `gorm:"column:started"`
-	Finished    *datetime.Local `gorm:"column:finished"`
-	Duration    uint            `gorm:"column:duration;not null;default:0"`
-	Status      string          `gorm:"column:status;not null;default:''"`
-	Error       string          `gorm:"column:error;not null;default:''"`
-	CreatedBy   string          `gorm:"column:createdBy;not null"`
-	CreatedDate *datetime.Local `gorm:"column:createdDate"`
-	EditedDate  *datetime.Local `gorm:"column:editedDate"`
+	Ref          string          `gorm:"column:ref;not null;default:''"`
+	Params       string          `gorm:"column:params;type:text;not null;default:''"`
+	StartedDate  *datetime.Local `gorm:"column:startedDate"`
+	FinishedDate *datetime.Local `gorm:"column:finishedDate"`
+	Duration     uint            `gorm:"column:duration;not null;default:0"`
+	Status       string          `gorm:"column:status;not null;default:''"`
+	Error        string          `gorm:"column:error;not null;default:''"`
+	Queue        uint            `gorm:"column:queue;not null;default:0"`
+	Logs         string          `gorm:"column:logs;type:longtext;default:null"`
+	CreatedBy    string          `gorm:"column:createdBy;not null"`
+	CreatedDate  *datetime.Local `gorm:"column:createdDate"`
+	EditedDate   *datetime.Local `gorm:"column:editedDate"`
 }
 
 func (e *Execution) TableName() string {

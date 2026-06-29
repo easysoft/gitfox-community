@@ -133,7 +133,10 @@ func (c *Controller) tailLiveStream(ctx *gin.Context, stepID uint, f http.Flushe
 			io.WriteString(w, "event: error\ndata: eof\n\n")
 			f.Flush()
 			return
-		case err := <-errc:
+		case err, ok := <-errc:
+			if !ok {
+				return
+			}
 			log.Errorf("received error in the tail channel: %v", err)
 			io.WriteString(w, "event: error\ndata: eof\n\n")
 			f.Flush()
@@ -141,7 +144,10 @@ func (c *Controller) tailLiveStream(ctx *gin.Context, stepID uint, f http.Flushe
 		case <-pingTimer.C:
 			io.WriteString(w, ": ping\n\n")
 			f.Flush()
-		case line := <-linec:
+		case line, ok := <-linec:
+			if !ok {
+				return
+			}
 			writeLine(w, line)
 			f.Flush()
 		}

@@ -98,7 +98,7 @@ func (s *setup) updateExecution(ctx context.Context, execution *executionModel.E
 	if execution.Status != constant.CIStatusPending {
 		return false, nil
 	}
-	execution.Started = datetime.NowLocalTime()
+	execution.StartedDate = datetime.NowLocalTime()
 	execution.Status = constant.CIStatusRunning
 	err := s.ExecutionSvc.Update(ctx, execution)
 	if err != nil {

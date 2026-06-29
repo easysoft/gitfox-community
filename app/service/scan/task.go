@@ -373,7 +373,7 @@ func (s *ScanTaskService) createPipeline(ctx context.Context, repoID int64, in *
 	}
 	p := &pipelineModel.Pipeline{
 		Name:          _codeScanPipelineName,
-		Type:          pipelineType,
+		Scope:         pipelineType,
 		RepoID:        repoID,
 		Desc:          _codeScanDescription,
 		YamlPath:      pipelineModel.PipelineConfigPathInnerPrefix + _codeScanLabel + ".yaml",

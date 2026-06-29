@@ -7,6 +7,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 
 	executionStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/execution"
+	pipelineStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/pipeline"
 	stageStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/stage"
 	stepStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/step"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
@@ -15,6 +16,7 @@ import (
 
 type service struct {
 	executionStore executionStore.Interface
+	pipelineStore  pipelineStore.Interface
 	stageStore     stageStore.Interface
 	stepStore      stepStore.Interface
 	// scheduler      scheduler.Scheduler
@@ -30,12 +32,14 @@ type Canceler interface {
 // all cancellation operations.
 func New(
 	executionStore executionStore.Interface,
+	pipelineStore pipelineStore.Interface,
 	stageStore stageStore.Interface,
 	stepStore stepStore.Interface,
 	// scheduler scheduler.Scheduler,
 ) Canceler {
 	return &service{
 		executionStore: executionStore,
+		pipelineStore:  pipelineStore,
 		stageStore:     stageStore,
 		stepStore:      stepStore,
 	}
@@ -65,14 +69,25 @@ func (s *service) Cancel(ctx context.Context, executionID uint, account string) 
 	// already started, and should now be ignored.
 	now := datetime.NowLocalTime()
 	execution.Status = constant.CIStatusKilled
-	execution.Finished = now
-	if execution.Started == nil {
-		execution.Started = now
+	execution.FinishedDate = now
+	if execution.StartedDate == nil {
+		execution.StartedDate = now
 	}
 
 	err = s.executionStore.Update(ctx, execution)
 	if err != nil {
 		return fmt.Errorf("could not update execution status to canceled: %w", err)
+	}
+
+	pipeline, err := s.pipelineStore.GetPipelineByID(ctx, int64(execution.PipelineID))
+	if err != nil {
+		log.Errorf("[canceler]: could not get pipeline %d: %v", execution.PipelineID, err)
+	} else {
+		pipeline.LastExec = execution.FinishedDate
+		pipeline.LastResult = string(execution.Status)
+		if err := s.pipelineStore.UpdatePipeline(ctx, pipeline); err != nil {
+			log.Errorf("[canceler]: could not update pipeline %d: %v", pipeline.ID, err)
+		}
 	}
 
 	stages, err := s.stageStore.ListWithSteps(ctx, execution.ID)

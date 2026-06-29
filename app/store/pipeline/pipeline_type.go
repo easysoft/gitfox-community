@@ -8,7 +8,9 @@ import (
 type Pipeline struct {
 	ID            int64           `gorm:"column:id;primaryKey;autoIncrement;comment:'流水线ID，自增主键'"`
 	Name          string          `gorm:"column:name;not null;comment:'流水线名称'"`
-	Type          string          `gorm:"column:type;not null;comment:'流水线类型：系统/空间/仓库'"`
+	Engine        string          `gorm:"column:engine;not null;default:'gitfox';comment:'引擎: gitlab, jenkins, gitfox'"`
+	ProviderID    int64           `gorm:"column:providerID;not null;default:0;comment:'关联的外部服务ID'"`
+	Scope         string          `gorm:"column:scope;not null;comment:'流水线类型：系统/空间/仓库'"`
 	SpaceID       int64           `gorm:"column:spaceID;not null;comment:'关联的空间ID'"`
 	RepoID        int64           `gorm:"column:repoID;not null;comment:'关联的代码仓库ID'"`
 	Desc          string          `gorm:"column:desc;not null;default:'';comment:'流水线描述信息'"`
@@ -16,6 +18,9 @@ type Pipeline struct {
 	LatestVersion int             `gorm:"column:latestVersion;not null;default:0;comment:'流水线最新版本'"`
 	DefaultBranch string          `gorm:"column:defaultBranch;not null;comment:'流水线默认分支'"`
 	YamlPath      string          `gorm:"column:yamlPath;not null;default:'';comment:'流水线配置文件路径'"`
+	CustomParam   string          `gorm:"column:customParam;type:text;default:null;comment:'流水线执行传参'"`
+	LastExec      *datetime.Local `gorm:"column:lastExec;comment:'最后一次执行时间'"`
+	LastResult    string          `gorm:"column:lastResult;not null;default:'';comment:'最后一次执行状态'"`
 	CreatedBy     string          `gorm:"column:createdBy;not null;default:'';comment:'创建人'"`
 	CreatedDate   *datetime.Local `gorm:"column:createdDate;comment:'创建时间'"`
 	EditedBy      string          `gorm:"column:editedBy;not null;default:'';comment:'更新人'"`

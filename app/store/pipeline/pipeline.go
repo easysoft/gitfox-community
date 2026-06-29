@@ -17,6 +17,15 @@ func (s *Store) CreatePipeline(ctx context.Context, pipeline *pipelineModel.Pipe
 	return mapPipelineToModel(dbPipeline), nil
 }
 
+// UpdatePipeline 更新流水线
+func (s *Store) UpdatePipeline(ctx context.Context, pipeline *pipelineModel.Pipeline) error {
+	dbPipeline := mapModelToPipeline(pipeline)
+	if err := s.db.WithContext(ctx).Model(&Pipeline{}).Where("id = ?", pipeline.ID).Updates(dbPipeline).Error; err != nil {
+		return database.ProcessSQLErrorf(ctx, err)
+	}
+	return nil
+}
+
 // GetPipelineByID 根据流水线ID获取流水线（deleted=0）
 func (s *Store) GetPipelineByID(ctx context.Context, id int64) (*pipelineModel.Pipeline, error) {
 	var pipeline Pipeline
@@ -44,7 +53,9 @@ func mapModelToPipeline(p *pipelineModel.Pipeline) *Pipeline {
 	return &Pipeline{
 		ID:            p.ID,
 		Name:          p.Name,
-		Type:          p.Type,
+		Engine:        p.Engine,
+		ProviderID:    p.ProviderID,
+		Scope:         p.Scope,
 		SpaceID:       p.SpaceID,
 		RepoID:        p.RepoID,
 		Desc:          p.Desc,
@@ -52,6 +63,9 @@ func mapModelToPipeline(p *pipelineModel.Pipeline) *Pipeline {
 		LatestVersion: p.LatestVersion,
 		DefaultBranch: p.DefaultBranch,
 		YamlPath:      p.YamlPath,
+		CustomParam:   p.CustomParam,
+		LastExec:      p.LastExec,
+		LastResult:    p.LastResult,
 		CreatedBy:     p.CreatedBy,
 		CreatedDate:   p.CreatedDate,
 		EditedBy:      p.EditedBy,
@@ -65,7 +79,9 @@ func mapPipelineToModel(p *Pipeline) *pipelineModel.Pipeline {
 	return &pipelineModel.Pipeline{
 		ID:            p.ID,
 		Name:          p.Name,
-		Type:          p.Type,
+		Engine:        p.Engine,
+		ProviderID:    p.ProviderID,
+		Scope:         p.Scope,
 		SpaceID:       p.SpaceID,
 		RepoID:        p.RepoID,
 		Desc:          p.Desc,
@@ -73,6 +89,9 @@ func mapPipelineToModel(p *Pipeline) *pipelineModel.Pipeline {
 		LatestVersion: p.LatestVersion,
 		DefaultBranch: p.DefaultBranch,
 		YamlPath:      p.YamlPath,
+		CustomParam:   p.CustomParam,
+		LastExec:      p.LastExec,
+		LastResult:    p.LastResult,
 		CreatedBy:     p.CreatedBy,
 		CreatedDate:   p.CreatedDate,
 		EditedBy:      p.EditedBy,

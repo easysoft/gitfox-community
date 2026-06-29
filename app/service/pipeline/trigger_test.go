@@ -35,7 +35,7 @@ func TestCreateTrigger(t *testing.T) {
 			},
 			inputTrigger: &pipelineModel.Trigger{
 				PipelineID: 100,
-				Trigger:    []string{"push", "pull_request"},
+				Event:      []string{"push", "pull_request"},
 				Cron:       []string{"0 0 * * *"},
 				CreatedBy:  "admin",
 			},
@@ -48,7 +48,7 @@ func TestCreateTrigger(t *testing.T) {
 			},
 			inputTrigger: &pipelineModel.Trigger{
 				PipelineID: 100,
-				Trigger:    []string{"push"},
+				Event:      []string{"push"},
 				CreatedBy:  "admin",
 			},
 			expectedErr: ErrDBQuery,
@@ -60,7 +60,7 @@ func TestCreateTrigger(t *testing.T) {
 			},
 			inputTrigger: &pipelineModel.Trigger{
 				PipelineID: 100,
-				Trigger:    []string{"push"},
+				Event:      []string{"push"},
 				Cron:       []string{"0 0 10,14,16 * * ?"},
 				CreatedBy:  "admin",
 			},
@@ -73,7 +73,7 @@ func TestCreateTrigger(t *testing.T) {
 			},
 			inputTrigger: &pipelineModel.Trigger{
 				PipelineID: 200,
-				Trigger:    []string{"cron"},
+				Event:      []string{"cron"},
 				Cron: []string{
 					"0 15 10 ? * MON-FRI",
 					"0 0 10,14,16 * * ?",
@@ -102,7 +102,7 @@ func TestCreateTrigger(t *testing.T) {
 			},
 			inputTrigger: &pipelineModel.Trigger{
 				PipelineID: 100,
-				Trigger:    []string{"push", "tag"},
+				Event:      []string{"push", "tag"},
 				CreatedBy:  "admin",
 			},
 			expectedErr: nil,
@@ -114,7 +114,7 @@ func TestCreateTrigger(t *testing.T) {
 			},
 			inputTrigger: &pipelineModel.Trigger{
 				PipelineID: 100,
-				Trigger:    []string{"push"},
+				Event:      []string{"push"},
 				Cron:       []string{},
 				CreatedBy:  "admin",
 			},
@@ -173,7 +173,7 @@ func TestUpdateTrigger(t *testing.T) {
 			inputTrigger: &pipelineModel.Trigger{
 				ID:         1,
 				PipelineID: 100,
-				Trigger:    []string{"push", "tag"},
+				Event:      []string{"push", "tag"},
 				Cron:       []string{"0 12 * * *"},
 				EditedBy:   "admin",
 			},
@@ -187,7 +187,7 @@ func TestUpdateTrigger(t *testing.T) {
 			inputTrigger: &pipelineModel.Trigger{
 				ID:         1,
 				PipelineID: 100,
-				Trigger:    []string{"push"},
+				Event:      []string{"push"},
 				EditedBy:   "admin",
 			},
 			expectedErr: ErrDBQuery,
@@ -200,7 +200,7 @@ func TestUpdateTrigger(t *testing.T) {
 			inputTrigger: &pipelineModel.Trigger{
 				ID:         1,
 				PipelineID: 100,
-				Trigger:    []string{"push"},
+				Event:      []string{"push"},
 				Cron:       []string{"0 0 10,14,16 * * ?", "0 0/30 9-17 * * ?"},
 				EditedBy:   "admin",
 			},
@@ -214,7 +214,7 @@ func TestUpdateTrigger(t *testing.T) {
 			inputTrigger: &pipelineModel.Trigger{
 				ID:         1,
 				PipelineID: 100,
-				Trigger:    []string{"push"},
+				Event:      []string{"push"},
 				Cron:       []string{},
 				EditedBy:   "admin",
 			},
@@ -228,7 +228,7 @@ func TestUpdateTrigger(t *testing.T) {
 			inputTrigger: &pipelineModel.Trigger{
 				ID:         1,
 				PipelineID: 100,
-				Trigger:    []string{},
+				Event:      []string{},
 				Cron:       []string{},
 				EditedBy:   "admin",
 			},
@@ -286,7 +286,7 @@ func TestGetTriggerByID(t *testing.T) {
 				mockTrigger := &pipelineModel.Trigger{
 					ID:         1,
 					PipelineID: 100,
-					Trigger:    []string{"push", "pull_request"},
+					Event:      []string{"push", "pull_request"},
 					Cron:       []string{"0 0 * * *"},
 					CreatedBy:  "admin",
 				}
@@ -296,7 +296,7 @@ func TestGetTriggerByID(t *testing.T) {
 			expectedResult: &pipelineModel.Trigger{
 				ID:         1,
 				PipelineID: 100,
-				Trigger:    []string{"push", "pull_request"},
+				Event:      []string{"push", "pull_request"},
 				Cron:       []string{"0 0 * * *"},
 				CreatedBy:  "admin",
 			},
@@ -326,7 +326,7 @@ func TestGetTriggerByID(t *testing.T) {
 				mockTrigger := &pipelineModel.Trigger{
 					ID:         2,
 					PipelineID: 200,
-					Trigger:    []string{"cron"},
+					Event:      []string{"cron"},
 					Cron: []string{
 						"0 0 10,14,16 * * ?",
 						"0 0/30 9-17 * * ?",
@@ -340,7 +340,7 @@ func TestGetTriggerByID(t *testing.T) {
 			expectedResult: &pipelineModel.Trigger{
 				ID:         2,
 				PipelineID: 200,
-				Trigger:    []string{"cron"},
+				Event:      []string{"cron"},
 				Cron: []string{
 					"0 0 10,14,16 * * ?",
 					"0 0/30 9-17 * * ?",
@@ -356,7 +356,7 @@ func TestGetTriggerByID(t *testing.T) {
 				mockTrigger := &pipelineModel.Trigger{
 					ID:         3,
 					PipelineID: 300,
-					Trigger:    []string{"push"},
+					Event:    []string{"push"},
 					Cron:       nil,
 					CreatedBy:  "admin",
 				}
@@ -366,7 +366,7 @@ func TestGetTriggerByID(t *testing.T) {
 			expectedResult: &pipelineModel.Trigger{
 				ID:         3,
 				PipelineID: 300,
-				Trigger:    []string{"push"},
+				Event:    []string{"push"},
 				Cron:       nil,
 				CreatedBy:  "admin",
 			},
@@ -425,7 +425,7 @@ func TestDeleteTrigger(t *testing.T) {
 				m.EXPECT().GetTriggerByID(gomock.Any(), int64(1)).Return(&pipelineModel.Trigger{
 					ID:         1,
 					PipelineID: 100,
-					Trigger:    []string{"push"},
+					Event:    []string{"push"},
 					Cron:       []string{},
 				}, nil)
 				m.EXPECT().DeleteTrigger(gomock.Any(), int64(1)).Return(nil)
@@ -506,14 +506,14 @@ func TestGetTriggers(t *testing.T) {
 					{
 						ID:         1,
 						PipelineID: 100,
-						Trigger:    []string{"push"},
+						Event:    []string{"push"},
 						Cron:       []string{"0 0 * * *"},
 						CreatedBy:  "admin",
 					},
 					{
 						ID:         2,
 						PipelineID: 101,
-						Trigger:    []string{"tag"},
+						Event:    []string{"tag"},
 						Cron:       []string{"0 0 10,14,16 * * ?"},
 						CreatedBy:  "user1",
 					},
@@ -525,14 +525,14 @@ func TestGetTriggers(t *testing.T) {
 				{
 					ID:         1,
 					PipelineID: 100,
-					Trigger:    []string{"push"},
+					Event:    []string{"push"},
 					Cron:       []string{"0 0 * * *"},
 					CreatedBy:  "admin",
 				},
 				{
 					ID:         2,
 					PipelineID: 101,
-					Trigger:    []string{"tag"},
+					Event:    []string{"tag"},
 					Cron:       []string{"0 0 10,14,16 * * ?"},
 					CreatedBy:  "user1",
 				},
@@ -546,7 +546,7 @@ func TestGetTriggers(t *testing.T) {
 					{
 						ID:         1,
 						PipelineID: 100,
-						Trigger:    []string{"push"},
+						Event:    []string{"push"},
 						Cron:       []string{"0 0 * * *"},
 						CreatedBy:  "admin",
 					},
@@ -560,7 +560,7 @@ func TestGetTriggers(t *testing.T) {
 				{
 					ID:         1,
 					PipelineID: 100,
-					Trigger:    []string{"push"},
+					Event:    []string{"push"},
 					Cron:       []string{"0 0 * * *"},
 					CreatedBy:  "admin",
 				},
@@ -575,7 +575,7 @@ func TestGetTriggers(t *testing.T) {
 						ID:         1,
 						RepoID:     10,
 						PipelineID: 100,
-						Trigger:    []string{"push"},
+						Event:    []string{"push"},
 						Cron:       []string{"0 0/30 9-17 * * ?"},
 						CreatedBy:  "admin",
 					},
@@ -590,7 +590,7 @@ func TestGetTriggers(t *testing.T) {
 					ID:         1,
 					RepoID:     10,
 					PipelineID: 100,
-					Trigger:    []string{"push"},
+					Event:    []string{"push"},
 					Cron:       []string{"0 0/30 9-17 * * ?"},
 					CreatedBy:  "admin",
 				},
@@ -604,7 +604,7 @@ func TestGetTriggers(t *testing.T) {
 					{
 						ID:         1,
 						PipelineID: 100,
-						Trigger:    []string{"push"},
+						Event:    []string{"push"},
 						Cron:       []string{"0 0 * * *"},
 						CreatedBy:  "admin",
 					},
@@ -618,7 +618,7 @@ func TestGetTriggers(t *testing.T) {
 				{
 					ID:         1,
 					PipelineID: 100,
-					Trigger:    []string{"push"},
+					Event:    []string{"push"},
 					Cron:       []string{"0 0 * * *"},
 					CreatedBy:  "admin",
 				},
@@ -651,7 +651,7 @@ func TestGetTriggers(t *testing.T) {
 					{
 						ID:         1,
 						PipelineID: 100,
-						Trigger:    []string{"cron"},
+						Event:    []string{"cron"},
 						Cron: []string{
 							"0 15 10 ? * MON-FRI",
 							"0 0 10,14,16 * * ?",
@@ -667,7 +667,7 @@ func TestGetTriggers(t *testing.T) {
 				{
 					ID:         1,
 					PipelineID: 100,
-					Trigger:    []string{"cron"},
+					Event:    []string{"cron"},
 					Cron: []string{
 						"0 15 10 ? * MON-FRI",
 						"0 0 10,14,16 * * ?",

@@ -12,6 +12,11 @@ func (s *Service) GetPipelineByID(ctx context.Context, id int64) (*pipelineModel
 	return s.pipelineStore.GetPipelineByID(ctx, id)
 }
 
+// UpdatePipeline 更新流水线
+func (s *Service) UpdatePipeline(ctx context.Context, pipeline *pipelineModel.Pipeline) error {
+	return s.pipelineStore.UpdatePipeline(ctx, pipeline)
+}
+
 func (s *Service) GetPipelineContent(ctx context.Context, pipelineID int64) (*pipelineModel.PipelineFile, error) {
 	pipelineFile, err := s.pipelineStore.GetPipelineContentByPipelineID(ctx, pipelineID)
 	if err != nil {

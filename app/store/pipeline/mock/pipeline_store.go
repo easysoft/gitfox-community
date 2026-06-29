@@ -293,6 +293,20 @@ func (mr *MockInterfaceMockRecorder) ListPlugin(ctx, filter any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListPlugin", reflect.TypeOf((*MockInterface)(nil).ListPlugin), ctx, filter)
 }
 
+// UpdatePipeline mocks base method.
+func (m *MockInterface) UpdatePipeline(ctx context.Context, arg1 *pipeline.Pipeline) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdatePipeline", ctx, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdatePipeline indicates an expected call of UpdatePipeline.
+func (mr *MockInterfaceMockRecorder) UpdatePipeline(ctx, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdatePipeline", reflect.TypeOf((*MockInterface)(nil).UpdatePipeline), ctx, arg1)
+}
+
 // UpdatePipelineContent mocks base method.
 func (m *MockInterface) UpdatePipelineContent(ctx context.Context, content *pipeline.PipelineContent) error {
 	m.ctrl.T.Helper()
