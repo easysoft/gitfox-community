@@ -483,28 +483,21 @@ func parseSsOutput(output, port string) PortStatus {
 // portWaitInterval 是 WaitPortInUse / WaitPortFree 的轮询周期。
 const portWaitInterval = 1 * time.Second
 
-// WaitPortInUse 在 timeout 内轮询等待端口被占用，命中即返回 true。
 func WaitPortInUse(port string, timeout time.Duration) bool {
-	return waitPortState(port, timeout, true)
+	return waitPortCond(port, timeout, func(s PortStatus) bool { return s.InUse })
 }
 
-// WaitPortFree 在 timeout 内轮询等待端口空出，空出即返回 true。
 func WaitPortFree(port string, timeout time.Duration) bool {
-	if port == "" {
-		return true
-	}
-	return waitPortState(port, timeout, false)
+	return waitPortCond(port, timeout, func(s PortStatus) bool { return !s.InUse })
 }
 
-// waitPortState 是 WaitPortInUse / WaitPortFree 的共用轮询骨架。
-// wantInUse=true 等待占用，false 等待空闲。
-func waitPortState(port string, timeout time.Duration, wantInUse bool) bool {
+func waitPortCond(port string, timeout time.Duration, cond func(PortStatus) bool) bool {
 	if port == "" {
-		return false
+		return cond(PortStatus{Port: port})
 	}
 	deadline := time.Now().Add(timeout)
 	for {
-		if CheckPort(port).InUse == wantInUse {
+		if cond(CheckPort(port)) {
 			return true
 		}
 		if time.Now().After(deadline) {
