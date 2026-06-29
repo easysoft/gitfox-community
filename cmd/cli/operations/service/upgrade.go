@@ -25,7 +25,8 @@ const (
 	ParamUpgrade = "upgrade"
 
 	// upgradeStopTimeout 等待服务停止的最长时间。
-	upgradeStopTimeout = 5 * time.Second
+	// systemd 默认给单元 90s 退出窗口；这里多留 30s 容许业务层连接收尾、端口释放。
+	upgradeStopTimeout = 30 * time.Second
 
 	// devVersionFallback 与 common.GetVersionInfo 中 fallback 一致；
 	// 用于识别"未经 task build 注入"的开发构建。
@@ -161,8 +162,8 @@ func runUpgrade(_ *kingpin.ParseContext) error {
 			fmt.Println(errStyle.Render(fmt.Sprintf(t(i18n.CliUpgradeErrStop), err)))
 			return nil
 		}
-		// 端口下线确认（用 health 端点反向探测，更彻底）
-		if hc.Port != "" && !CheckPortWithTimeout(hc.Port, upgradeStopTimeout) {
+		// 端口下线确认：WaitPortFree 在端口真正空出时立即返回 true（早返），
+		if !WaitPortFree(hc.Port, upgradeStopTimeout) {
 			fmt.Println(errStyle.Render(t(i18n.CliUpgradeErrStopTimeout)))
 			return nil
 		}
@@ -214,7 +215,8 @@ func runUpgrade(_ *kingpin.ParseContext) error {
 			fmt.Println(errStyle.Render(fmt.Sprintf(t(i18n.CliUpgradeErrStart), err)))
 			return nil
 		}
-		_ = CheckPortWithTimeout(hc.Port, 15*time.Second)
+		// 等待端口重新被占用即视为新进程已就绪；轮询命中后立即返回，无需等满 15s。
+		_ = WaitPortInUse(hc.Port, 15*time.Second)
 	}
 
 	// ========== 阶段 8：摘要 ==========

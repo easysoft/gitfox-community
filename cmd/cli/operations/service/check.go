@@ -480,19 +480,31 @@ func parseSsOutput(output, port string) PortStatus {
 	return result
 }
 
-// CheckPortWithTimeout 检查指定端口是否被占用，超时后返回 false。
-func CheckPortWithTimeout(port string, timeout time.Duration) bool {
+// portWaitInterval 是 WaitPortInUse / WaitPortFree 的轮询周期。
+const portWaitInterval = 1 * time.Second
+
+func WaitPortInUse(port string, timeout time.Duration) bool {
+	return waitPortCondition(port, timeout, func(s PortStatus) bool { return s.InUse })
+}
+
+func WaitPortFree(port string, timeout time.Duration) bool {
+	return waitPortCondition(port, timeout, func(s PortStatus) bool { return !s.InUse })
+}
+
+func waitPortCondition(port string, timeout time.Duration, condition func(PortStatus) bool) bool {
 	if port == "" {
-		return false
+		return condition(PortStatus{Port: port})
 	}
 	deadline := time.Now().Add(timeout)
-	for time.Now().Before(deadline) {
-		time.Sleep(1 * time.Second)
-		if CheckPort(port).InUse {
+	for {
+		if condition(CheckPort(port)) {
 			return true
 		}
+		if time.Now().After(deadline) {
+			return false
+		}
+		time.Sleep(portWaitInterval)
 	}
-	return false
 }
 
 // ReadHealthURLResult 是健康检查 URL 解析后的结构化结果。
