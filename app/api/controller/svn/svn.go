@@ -65,7 +65,7 @@ func (c *Controller) Exec(ctx *gin.Context) {
 	repoOut, err := c.repoSvc.GetByID(ctx, session, repoID)
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.SvnRepoNotFound)
-		resp.InternalError(ctx, err)
+		resp.NotFound(ctx, err)
 		return
 	}
 
