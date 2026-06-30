@@ -649,9 +649,9 @@ func (r *Repository) sendNotice(
 ) {
 	var notice string
 	if isFailed {
-		notice = i18n.TWithLocale(noticeLang, string(i18n.RepoImportNotifyFailure), noticeUser, repoName, failReason)
+		notice = i18n.TWithLocale(noticeLang, string(i18n.RepoImportNotifyFailure), repoName, failReason)
 	} else {
-		notice = i18n.TWithLocale(noticeLang, string(i18n.RepoImportNotifySuccess), noticeUser, repoName)
+		notice = i18n.TWithLocale(noticeLang, string(i18n.RepoImportNotifySuccess), repoName)
 	}
 	toList := fmt.Sprintf(",%s,", noticeUser)
 
