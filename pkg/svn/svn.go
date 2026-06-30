@@ -40,8 +40,8 @@ func (s *Service) workingCopyPath(svnUID string) string {
 	return filepath.Join(s.svnRoot, reposDir, svnUID+wcSuffix)
 }
 
-// fileURL returns the file:// URL for a repository: file://{svnRoot}/repos/{svnUID}
-func (s *Service) fileURL(svnUID string) string {
+// FileURL returns the file:// URL for a repository: file://{svnRoot}/repos/{svnUID}
+func (s *Service) FileURL(svnUID string) string {
 	return "file://" + s.repoPath(svnUID)
 }
 

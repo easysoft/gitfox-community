@@ -45,7 +45,7 @@ func (s *Service) SyncInit(ctx context.Context, params *SyncInitParams) error {
 
 	cmd := command.New("init",
 		command.WithExecutable(command.SvnsyncExecutable),
-		command.WithArg(s.fileURL(params.SvnUID)),
+		command.WithArg(s.FileURL(params.SvnUID)),
 		command.WithArg(params.SourceURL),
 		withSyncSourceAuth(params.SourceUsername, params.SourcePassword),
 	)
@@ -99,7 +99,7 @@ func (s *Service) Sync(ctx context.Context, params *SyncParams) error {
 
 	cmd := command.New("sync",
 		command.WithExecutable(command.SvnsyncExecutable),
-		command.WithArg(s.fileURL(params.SvnUID)),
+		command.WithArg(s.FileURL(params.SvnUID)),
 		withSyncSourceAuth(params.SourceUsername, params.SourcePassword),
 	)
 	if err := cmd.Run(ctx); err != nil {
@@ -119,7 +119,7 @@ func (s *Service) SyncCopyRevProps(ctx context.Context, params *SyncParams) erro
 
 	cmd := command.New("copy-revprops",
 		command.WithExecutable(command.SvnsyncExecutable),
-		command.WithArg(s.fileURL(params.SvnUID)),
+		command.WithArg(s.FileURL(params.SvnUID)),
 		withSyncSourceAuth(params.SourceUsername, params.SourcePassword),
 	)
 	if err := cmd.Run(ctx); err != nil {

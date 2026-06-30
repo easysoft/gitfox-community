@@ -95,7 +95,7 @@ func (s *Service) InfoRevision(ctx context.Context, url, username, password stri
 // Internally runs: svn info file://{svnRoot}/repos/{svnUID} --show-item revision
 func (s *Service) GetLatestRevision(ctx context.Context, svnUID, username, password string) (string, error) {
 	return s.Info(ctx, &InfoParams{
-		URL:      s.fileURL(svnUID),
+		URL:      s.FileURL(svnUID),
 		Username: username,
 		Password: password,
 		ShowItem: "revision",

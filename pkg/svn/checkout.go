@@ -40,7 +40,7 @@ func (s *Service) Checkout(ctx context.Context, params *CheckoutParams) error {
 		return err
 	}
 
-	sourceURL := s.fileURL(params.SvnUID)
+	sourceURL := s.FileURL(params.SvnUID)
 	targetPath := s.workingCopyPath(params.SvnUID)
 
 	// Ensure parent directory exists.

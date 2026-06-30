@@ -61,7 +61,7 @@ func (s *Service) Log(ctx context.Context, params *LogParams) (string, error) {
 	// Path takes precedence: use working copy path directly, otherwise assemble file:// URL.
 	target := params.Path
 	if target == "" {
-		target = s.fileURL(params.SvnUID)
+		target = s.FileURL(params.SvnUID)
 	}
 
 	cmd := command.New("log",

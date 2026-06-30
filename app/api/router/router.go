@@ -59,6 +59,7 @@ func NewRouter(mode string, logger *logger.SugaredMateLogger, controller *Contro
 	registerSpaceRoutes(authGroup, controller)    // 空间相关路由
 	registerBranchRoutes(authGroup, controller)   // 分支相关路由
 	registerTagRoutes(authGroup, controller)      // 标签相关路由
+	registerSvnRoutes(authGroup, controller)      // SVN 相关路由
 	registerCommitRoutes(authGroup, controller)   // 提交相关路由
 	registerRepoRoutes(authGroup, controller)     // 仓库相关路由
 	registerScanRoutes(authGroup, controller)     // 扫描相关路由

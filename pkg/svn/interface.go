@@ -6,6 +6,9 @@ import (
 
 // Interface defines the SVN operations used by the application layer.
 type Interface interface {
+	// FileURL returns the file:// URL for a repository: file://{svnRoot}/repos/{svnUID}
+	FileURL(svnUID string) string
+
 	// Info runs `svn info` to query information about a repository URL or local path.
 	Info(ctx context.Context, params *InfoParams) (string, error)
 

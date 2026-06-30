@@ -1,0 +1,12 @@
+svn:
+  exec_success: "SVN command executed successfully."
+  body_param_error: "Body param parsing failed."
+  path_param_error: "Path param parsing failed."
+  invalid_func: "Unsupported SVN operation."
+  args_invalid: "SVN parameter validation failed."
+  uid_required: "SVN UID cannot be empty."
+  repo_not_found: "Repository not found."
+  not_svn_repo: "The repository is not a SVN repository."
+  connector_parse_error: "Failed to parse SVN credentials from connector."
+  password_decode_error: "Failed to decode SVN password from connector."
+  exec_failed: "SVN command execution failed."
