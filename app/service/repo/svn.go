@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 	svnModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/svn"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
@@ -23,7 +24,7 @@ import (
 // contentType 由 service 决定（diff -> text/x-diff,其余 -> text/plain）,
 // controller 仅按此设置响应头,不参与业务判断。
 func (s *Service) ExecSvn(ctx context.Context, repo repoModel.Repo, req svnModel.ReqForExec) (output string, contentType string, err error) {
-	if repo.SCMType != "svn" {
+	if repo.SCMType != constant.RepoScmTypeSvn {
 		return "", "", errors.WithI18nKey(
 			errors.Newf("repo %d scmType=%s is not svn", repo.ID, repo.SCMType),
 			i18n.SvnNotSvnRepo,

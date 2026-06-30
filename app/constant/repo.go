@@ -10,3 +10,8 @@ const (
 	RepoStateSyncing    = "syncing"
 	RepoStateSyncFailed = "syncFailed"
 )
+
+const (
+	RepoScmTypeGit = "git"
+	RepoScmTypeSvn = "svn"
+)

@@ -55,7 +55,7 @@ func (r *RepositoryInfo) ConvertToRepo(
 				Password: base64.StdEncoding.EncodeToString([]byte(provider.Password)),
 			}
 			connectInfo, _ = json.Marshal(svnConnectInfo)
-			scmType = "svn"
+			scmType = constant.RepoScmTypeSvn
 		default:
 			gitConnectInfo := repoModel.GitConnectInfo{
 				Slug:      provider.Slug,

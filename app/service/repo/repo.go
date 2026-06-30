@@ -73,7 +73,7 @@ func (s *Service) fillGitURLs(ctx context.Context, repo *repoModel.Repo) {
 		}
 
 		// SVN 镜像仓库
-		if repo.SCMType == "svn" {
+		if repo.SCMType == constant.RepoScmTypeSvn {
 			svnConnectInfo := repoModel.SVNConnectInfo{}
 			if err := json.Unmarshal(repo.Connector, &svnConnectInfo); err != nil {
 				return
