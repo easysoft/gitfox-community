@@ -12,9 +12,6 @@ import (
 	svnPkg "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/svn"
 )
 
-// scmTypeSvn 与 importer / mirror_sync 中保持一致的 SVN 类型标识。
-const scmTypeSvn = "svn"
-
 // ExecSvn 是 SVN 子命令统一调度入口。
 //
 // 业务流程:
@@ -26,7 +23,7 @@ const scmTypeSvn = "svn"
 // contentType 由 service 决定（diff -> text/x-diff,其余 -> text/plain）,
 // controller 仅按此设置响应头,不参与业务判断。
 func (s *Service) ExecSvn(ctx context.Context, repo repoModel.Repo, req svnModel.ReqForExec) (output string, contentType string, err error) {
-	if repo.SCMType != scmTypeSvn {
+	if repo.SCMType != "svn" {
 		return "", "", errors.WithI18nKey(
 			errors.Newf("repo %d scmType=%s is not svn", repo.ID, repo.SCMType),
 			i18n.SvnNotSvnRepo,
