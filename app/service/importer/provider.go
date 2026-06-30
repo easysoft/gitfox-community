@@ -45,7 +45,7 @@ func (r *RepositoryInfo) ConvertToRepo(
 	provider *repoModel.Provider,
 ) (*repoModel.Repo, bool) {
 	var connectInfo []byte
-	scmType := "git"
+	scmType := constant.RepoScmTypeGit
 	if provider != nil {
 		switch provider.Type {
 		case constant.RepoProviderTypeSVN:
