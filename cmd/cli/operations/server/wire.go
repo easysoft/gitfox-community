@@ -77,6 +77,7 @@ func NewApp(mode string) (*App, func(), error) {
 		provider.ProviderWireSet,
 		provider.BranchWireSet,
 		provider.TagWireSet,
+		provider.SvnWireSet,
 		provider.PipelineWireSet,
 		provider.ExecutionWireSet,
 		provider.RunnerWireSet,

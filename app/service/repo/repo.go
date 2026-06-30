@@ -23,6 +23,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
 	gitAPI "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/api"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
+	svnPkg "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/svn"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/slice"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/url"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/resources"
@@ -30,6 +31,7 @@ import (
 
 type Service struct {
 	gitSvc        git.Interface
+	svnSvc        svnPkg.Interface
 	repoStore     repo.Interface
 	spaceStore    space.Interface
 	urlProvider   url.Provider
@@ -42,6 +44,7 @@ var _ Interface = (*Service)(nil)
 // NewRepoSvc 创建 RepoService 实例
 func NewRepoSvc(
 	gitSvc git.Interface,
+	svnSvc svnPkg.Interface,
 	repoStore repo.Interface,
 	spaceStore space.Interface,
 	urlProvider url.Provider,
@@ -50,6 +53,7 @@ func NewRepoSvc(
 ) *Service {
 	return &Service{
 		gitSvc:        gitSvc,
+		svnSvc:        svnSvc,
 		repoStore:     repoStore,
 		spaceStore:    spaceStore,
 		urlProvider:   urlProvider,
@@ -69,7 +73,7 @@ func (s *Service) fillGitURLs(ctx context.Context, repo *repoModel.Repo) {
 		}
 
 		// SVN 镜像仓库
-		if repo.SCMType == "svn" {
+		if repo.SCMType == constant.RepoScmTypeSvn {
 			svnConnectInfo := repoModel.SVNConnectInfo{}
 			if err := json.Unmarshal(repo.Connector, &svnConnectInfo); err != nil {
 				return

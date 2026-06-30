@@ -14,6 +14,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/runner"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/scan"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/space"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/svn"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/tag"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/user"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/webhook"
@@ -31,6 +32,7 @@ func NewControllers(
 	pipelineController *pipeline.Controller,
 	executionController *execution.Controller,
 	runnerController *runner.Controller,
+	svnController *svn.Controller,
 	tagController *tag.Controller,
 	commitController *commit.Controller,
 	repoController *repo.Controller,
@@ -53,6 +55,7 @@ func NewControllers(
 		Pipeline:  pipelineController,
 		Execution: executionController,
 		Runner:    runnerController,
+		Svn:       svnController,
 		Fit:       fitController,
 		Webhook:   webhookController,
 		Artifact:  artifactController,

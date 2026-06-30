@@ -962,6 +962,25 @@ const (
 	SpaceUpdateError             I18nKey = "space.update_error"              // 空间更新失败.
 	SpaceUpdateSuccess           I18nKey = "space.update_success"            // 空间更新成功.
 
+	// Svn 相关常量
+	SvnArgsInvalid         I18nKey = "svn.args_invalid"          // SVN 参数校验失败.
+	SvnBlameFailed         I18nKey = "svn.blame_failed"          // SVN blame 命令执行失败.
+	SvnBodyParamError      I18nKey = "svn.body_param_error"      // Body 参数解析失败.
+	SvnCatFailed           I18nKey = "svn.cat_failed"            // SVN cat 命令执行失败.
+	SvnConnectorParseError I18nKey = "svn.connector_parse_error" // 解析代码库 SVN 凭证失败.
+	SvnDiffFailed          I18nKey = "svn.diff_failed"           // SVN diff 命令执行失败.
+	SvnExecFailed          I18nKey = "svn.exec_failed"           // SVN 命令执行失败.
+	SvnExecSuccess         I18nKey = "svn.exec_success"          // SVN 命令执行成功.
+	SvnInfoFailed          I18nKey = "svn.info_failed"           // SVN info 命令执行失败.
+	SvnInvalidFunc         I18nKey = "svn.invalid_func"          // 不支持的 SVN 操作.
+	SvnLogFailed           I18nKey = "svn.log_failed"            // SVN log 命令执行失败.
+	SvnLsFailed            I18nKey = "svn.ls_failed"             // SVN ls 命令执行失败.
+	SvnNotSvnRepo          I18nKey = "svn.not_svn_repo"          // 该代码库不是 SVN 类型,无法执行 SVN 操作.
+	SvnPasswordDecodeError I18nKey = "svn.password_decode_error" // 解析代码库 SVN 凭证密码失败.
+	SvnPathParamError      I18nKey = "svn.path_param_error"      // Path 参数解析失败.
+	SvnRepoNotFound        I18nKey = "svn.repo_not_found"        // 代码库不存在.
+	SvnUidRequired         I18nKey = "svn.uid_required"          // SVN 仓库标识不能为空.
+
 	// Tag 相关常量
 	TagBodyParamError  I18nKey = "tag.body_param_error"  // Body 参数解析失败.
 	TagCreateError     I18nKey = "tag.create_error"      // 标签创建失败.

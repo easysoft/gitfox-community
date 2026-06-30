@@ -4296,6 +4296,65 @@ const docTemplate = `{
                 }
             }
         },
+        "/repos/{id}/svn/exec": {
+            "post": {
+                "description": "统一调度 SVN 子命令（ls/log/blame/cat/info/diff），原样返回 svn stdout",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "text/plain"
+                ],
+                "tags": [
+                    "svn"
+                ],
+                "summary": "执行 SVN 命令",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "仓库 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "SVN 执行请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_svn.ReqForExec"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "svn 原生 stdout",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "代码库不存在",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/repos/{id}/tags": {
             "post": {
                 "description": "新增一个标签",
@@ -12419,11 +12478,14 @@ const docTemplate = `{
                 "error": {
                     "type": "string"
                 },
-                "finished": {
+                "finishedDate": {
                     "type": "string"
                 },
                 "id": {
                     "type": "integer"
+                },
+                "logs": {
+                    "type": "string"
                 },
                 "params": {
                     "type": "object",
@@ -12437,10 +12499,13 @@ const docTemplate = `{
                 "pipelineID": {
                     "type": "integer"
                 },
+                "queue": {
+                    "type": "integer"
+                },
                 "ref": {
                     "type": "string"
                 },
-                "started": {
+                "startedDate": {
                     "type": "string"
                 },
                 "status": {
@@ -12512,11 +12577,14 @@ const docTemplate = `{
                 "error": {
                     "type": "string"
                 },
-                "finished": {
+                "finishedDate": {
                     "type": "string"
                 },
                 "id": {
                     "type": "integer"
+                },
+                "logs": {
+                    "type": "string"
                 },
                 "params": {
                     "type": "object",
@@ -12530,6 +12598,9 @@ const docTemplate = `{
                 "pipelineID": {
                     "type": "integer"
                 },
+                "queue": {
+                    "type": "integer"
+                },
                 "ref": {
                     "type": "string"
                 },
@@ -12539,7 +12610,7 @@ const docTemplate = `{
                         "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_stage.StageWithSteps"
                     }
                 },
-                "started": {
+                "startedDate": {
                     "type": "string"
                 },
                 "status": {
@@ -12624,6 +12695,9 @@ const docTemplate = `{
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_pipeline.Trigger": {
             "type": "object",
             "properties": {
+                "comment": {
+                    "type": "string"
+                },
                 "createdBy": {
                     "type": "string"
                 },
@@ -12642,6 +12716,12 @@ const docTemplate = `{
                 "editedDate": {
                     "type": "string"
                 },
+                "event": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "id": {
                     "type": "integer"
                 },
@@ -12650,12 +12730,6 @@ const docTemplate = `{
                 },
                 "repoID": {
                     "type": "integer"
-                },
-                "trigger": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
                 }
             }
         },
@@ -15426,6 +15500,46 @@ const docTemplate = `{
                 },
                 "status": {
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.CIStatus"
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_svn.FuncType": {
+            "type": "string",
+            "enum": [
+                "ls",
+                "log",
+                "blame",
+                "cat",
+                "info",
+                "diff"
+            ],
+            "x-enum-varnames": [
+                "FuncLs",
+                "FuncLog",
+                "FuncBlame",
+                "FuncCat",
+                "FuncInfo",
+                "FuncDiff"
+            ]
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_svn.ReqForExec": {
+            "type": "object",
+            "required": [
+                "func"
+            ],
+            "properties": {
+                "args": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
+                "func": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_svn.FuncType"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
                 }
             }
         },

@@ -996,10 +996,12 @@ definitions:
         type: string
       error:
         type: string
-      finished:
+      finishedDate:
         type: string
       id:
         type: integer
+      logs:
+        type: string
       params:
         additionalProperties:
           type: string
@@ -1008,9 +1010,11 @@ definitions:
         type: integer
       pipelineID:
         type: integer
+      queue:
+        type: integer
       ref:
         type: string
-      started:
+      startedDate:
         type: string
       status:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.CIStatus'
@@ -1057,10 +1061,12 @@ definitions:
         type: string
       error:
         type: string
-      finished:
+      finishedDate:
         type: string
       id:
         type: integer
+      logs:
+        type: string
       params:
         additionalProperties:
           type: string
@@ -1069,13 +1075,15 @@ definitions:
         type: integer
       pipelineID:
         type: integer
+      queue:
+        type: integer
       ref:
         type: string
       stages:
         items:
           $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_stage.StageWithSteps'
         type: array
-      started:
+      startedDate:
         type: string
       status:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.CIStatus'
@@ -1133,6 +1141,8 @@ definitions:
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_pipeline.Trigger:
     properties:
+      comment:
+        type: string
       createdBy:
         type: string
       createdDate:
@@ -1145,16 +1155,16 @@ definitions:
         type: string
       editedDate:
         type: string
+      event:
+        items:
+          type: string
+        type: array
       id:
         type: integer
       pipelineID:
         type: integer
       repoID:
         type: integer
-      trigger:
-        items:
-          type: string
-        type: array
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_publickey.AddPublicKeyInput:
     properties:
@@ -3030,6 +3040,36 @@ definitions:
         type: string
       status:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.CIStatus'
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_svn.FuncType:
+    enum:
+    - ls
+    - log
+    - blame
+    - cat
+    - info
+    - diff
+    type: string
+    x-enum-varnames:
+    - FuncLs
+    - FuncLog
+    - FuncBlame
+    - FuncCat
+    - FuncInfo
+    - FuncDiff
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_svn.ReqForExec:
+    properties:
+      args:
+        additionalProperties: {}
+        type: object
+      func:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_svn.FuncType'
+      password:
+        type: string
+      username:
+        type: string
+    required:
+    - func
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_tag.ReqFilter:
     properties:
@@ -5964,6 +6004,45 @@ paths:
       summary: 合并代码Pull Request
       tags:
       - pureq
+  /repos/{id}/svn/exec:
+    post:
+      consumes:
+      - application/json
+      description: 统一调度 SVN 子命令（ls/log/blame/cat/info/diff），原样返回 svn stdout
+      parameters:
+      - description: 仓库 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: SVN 执行请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_svn.ReqForExec'
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: svn 原生 stdout
+          schema:
+            type: string
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "404":
+          description: 代码库不存在
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 执行 SVN 命令
+      tags:
+      - svn
   /repos/{id}/tags:
     post:
       consumes:

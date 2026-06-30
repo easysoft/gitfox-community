@@ -18,6 +18,7 @@ import (
 	runner3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/runner"
 	scan3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/scan"
 	space3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/space"
+	svn2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/svn"
 	tag2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/tag"
 	user3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/user"
 	webhook2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/webhook"
@@ -134,8 +135,13 @@ func NewApp(mode string) (*App, func(), error) {
 	}
 	branchStore := branch.NewBranchStore(db)
 	branchService := branch2.NewService(urlProvider, gitService, branchStore)
+	svnInterface, err := svn.ProvideSVN(config)
+	if err != nil {
+		cleanup()
+		return nil, nil, err
+	}
 	providerStore := provider2.NewProviderStore(db)
-	repoService := repo2.NewRepoSvc(gitService, store, spaceStore, urlProvider, membershipAuthorizer, providerStore)
+	repoService := repo2.NewRepoSvc(gitService, svnInterface, store, spaceStore, urlProvider, membershipAuthorizer, providerStore)
 	controller := branch3.NewController(branchService, repoService)
 	ciConfig := provider.NewCiConfig(config)
 	pipelineStore := pipeline.NewPipelineStore(db)
@@ -188,16 +194,11 @@ func NewApp(mode string) (*App, func(), error) {
 	runnerService := runner2.NewService(runnerStore)
 	url := provider.NewURLConfig(config)
 	runnerController := runner3.NewController(runnerService, url)
+	svnController := svn2.NewController(repoService)
 	tagService := tag.NewService(urlProvider, gitService)
 	tagController := tag2.NewController(tagService, repoService)
 	commitService := commit.NewService(urlProvider, gitService)
 	commitController := commit2.NewController(commitService, repoService)
-	svnInterface, err := svn.ProvideSVN(config)
-	if err != nil {
-		cleanup2()
-		cleanup()
-		return nil, nil, err
-	}
 	notifyStore := notify.NewNotifyStore(db)
 	encrypter, err := provider.ProvideEncrypter(config)
 	if err != nil {
@@ -297,7 +298,7 @@ func NewApp(mode string) (*App, func(), error) {
 	}
 	webhookController := webhook2.NewController(webhookService)
 	artifactController := artifact3.NewController(artifactService)
-	routerController := provider.NewControllers(spaceController, controller, pipelineController, executionController, runnerController, tagController, commitController, repoController, userController, gitController, scanController, fitController, webhookController, artifactController)
+	routerController := provider.NewControllers(spaceController, controller, pipelineController, executionController, runnerController, svnController, tagController, commitController, repoController, userController, gitController, scanController, fitController, webhookController, artifactController)
 	i18nManager, err := provider.NewI18nManager(config)
 	if err != nil {
 		cleanup2()

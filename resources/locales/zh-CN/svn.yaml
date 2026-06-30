@@ -1,0 +1,20 @@
+# SVN 相关翻译
+svn:
+  exec_success: "SVN 命令执行成功。"
+  body_param_error: "Body 参数解析失败。"
+  path_param_error: "Path 参数解析失败。"
+  invalid_func: "不支持的 SVN 操作。"
+  args_invalid: "SVN 参数校验失败。"
+  uid_required: "SVN 仓库标识不能为空。"
+  repo_not_found: "代码库不存在。"
+  not_svn_repo: "该代码库不是 SVN 类型,无法执行 SVN 操作。"
+  connector_parse_error: "解析代码库 SVN 凭证失败。"
+  password_decode_error: "解析代码库 SVN 凭证密码失败。"
+  exec_failed: "SVN 命令执行失败。"
+  ls_failed: "SVN ls 命令执行失败。"
+  log_failed: "SVN log 命令执行失败。"
+  blame_failed: "SVN blame 命令执行失败。"
+  cat_failed: "SVN cat 命令执行失败。"
+  info_failed: "SVN info 命令执行失败。"
+  diff_failed: "SVN diff 命令执行失败。"
+

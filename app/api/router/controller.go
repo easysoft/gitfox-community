@@ -12,6 +12,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/runner"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/scan"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/space"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/svn"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/tag"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/test"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/user"
@@ -25,6 +26,7 @@ type Controller struct {
 	Tag       *tag.Controller
 	Branch    *branch.Controller
 	Space     *space.SpaceController
+	Svn       *svn.Controller
 	Webhook   *webhook.Controller
 	Git       *git.GitController
 	Repo      *repo.Controller
