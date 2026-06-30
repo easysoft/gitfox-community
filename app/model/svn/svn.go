@@ -23,8 +23,6 @@ func (f FuncType) IsValid() bool {
 
 // ReqForExec 是 POST /api/v2/repos/:id/svn/exec 的统一请求体。
 type ReqForExec struct {
-	Func     FuncType       `json:"func" binding:"required"`
-	Args     map[string]any `json:"args"`
-	Username string         `json:"username"`
-	Password string         `json:"password"`
+	Func FuncType       `json:"func" binding:"required"`
+	Args map[string]any `json:"args"`
 }
