@@ -72,8 +72,7 @@ func (c *Controller) Exec(ctx *gin.Context) {
 	// 业务全部下沉到 service：白名单校验、SCMType 判断、Connector 解析、命令分发、Content-Type 选择
 	output, contentType, err := c.repoSvc.ExecSvn(ctx.Request.Context(), *repoOut, reqBody)
 	if err != nil {
-		// service 内已包过 i18n,按错误关联的状态码自适应
-		resp.Error(ctx, err)
+		resp.InternalError(ctx, err)
 		return
 	}
 

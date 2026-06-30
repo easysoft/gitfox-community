@@ -70,7 +70,11 @@ func (s *Service) dispatchSvn(ctx context.Context, r svnModel.ReqForExec, svnUID
 			return "", errors.WithI18nKey(err, i18n.SvnArgsInvalid)
 		}
 		p.SvnUID, p.Username, p.Password = svnUID, username, password
-		return s.svnSvc.Ls(ctx, p)
+		output, err := s.svnSvc.Ls(ctx, p)
+		if err != nil {
+			return "", errors.WithI18nKey(err, i18n.SvnLsFailed)
+		}
+		return output, nil
 
 	case svnModel.FuncLog:
 		p := &svnPkg.LogParams{}
@@ -78,7 +82,11 @@ func (s *Service) dispatchSvn(ctx context.Context, r svnModel.ReqForExec, svnUID
 			return "", errors.WithI18nKey(err, i18n.SvnArgsInvalid)
 		}
 		p.SvnUID, p.Username, p.Password = svnUID, username, password
-		return s.svnSvc.Log(ctx, p)
+		output, err := s.svnSvc.Log(ctx, p)
+		if err != nil {
+			return "", errors.WithI18nKey(err, i18n.SvnLogFailed)
+		}
+		return output, nil
 
 	case svnModel.FuncBlame:
 		p := &svnPkg.BlameParams{}
@@ -86,7 +94,11 @@ func (s *Service) dispatchSvn(ctx context.Context, r svnModel.ReqForExec, svnUID
 			return "", errors.WithI18nKey(err, i18n.SvnArgsInvalid)
 		}
 		p.SvnUID, p.Username, p.Password = svnUID, username, password
-		return s.svnSvc.Blame(ctx, p)
+		output, err := s.svnSvc.Blame(ctx, p)
+		if err != nil {
+			return "", errors.WithI18nKey(err, i18n.SvnBlameFailed)
+		}
+		return output, nil
 
 	case svnModel.FuncCat:
 		p := &svnPkg.CatParams{}
@@ -94,7 +106,11 @@ func (s *Service) dispatchSvn(ctx context.Context, r svnModel.ReqForExec, svnUID
 			return "", errors.WithI18nKey(err, i18n.SvnArgsInvalid)
 		}
 		p.SvnUID, p.Username, p.Password = svnUID, username, password
-		return s.svnSvc.Cat(ctx, p)
+		output, err := s.svnSvc.Cat(ctx, p)
+		if err != nil {
+			return "", errors.WithI18nKey(err, i18n.SvnCatFailed)
+		}
+		return output, nil
 
 	case svnModel.FuncInfo:
 		// Info 走 URL 而非 SvnUID(pkg/svn 当前签名如此),URL 由 svnUID 推导为 file://...。
@@ -104,7 +120,11 @@ func (s *Service) dispatchSvn(ctx context.Context, r svnModel.ReqForExec, svnUID
 		}
 		p.URL = s.svnSvc.FileURL(svnUID)
 		p.Username, p.Password = username, password
-		return s.svnSvc.Info(ctx, p)
+		output, err := s.svnSvc.Info(ctx, p)
+		if err != nil {
+			return "", errors.WithI18nKey(err, i18n.SvnInfoFailed)
+		}
+		return output, nil
 
 	case svnModel.FuncDiff:
 		p := &svnPkg.DiffParams{}
@@ -112,7 +132,11 @@ func (s *Service) dispatchSvn(ctx context.Context, r svnModel.ReqForExec, svnUID
 			return "", errors.WithI18nKey(err, i18n.SvnArgsInvalid)
 		}
 		p.SvnUID, p.Username, p.Password = svnUID, username, password
-		return s.svnSvc.Diff(ctx, p)
+		output, err := s.svnSvc.Diff(ctx, p)
+		if err != nil {
+			return "", errors.WithI18nKey(err, i18n.SvnDiffFailed)
+		}
+		return output, nil
 	}
 
 	// IsValid 已挡,此处理论不可达
