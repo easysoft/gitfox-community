@@ -283,9 +283,12 @@ func (r *Repository) Handle(ctx context.Context, data string, reportFn pkgJobs.P
 		return "", fmt.Errorf("failed to parse git clone URL: %w", err)
 	}
 
-	repoURL.User = url.UserPassword(input.User, input.Auth)
+	if input.ProviderType == constant.RepoProviderTypeGogs {
+		repoURL.User = url.User(input.Auth)
+	} else {
+		repoURL.User = url.UserPassword(input.User, input.Auth)
+	}
 	cloneURLWithAuth := repoURL.String()
-	cloneURLWithAuth = strings.Replace(cloneURLWithAuth, "://:", "://", 1)
 
 	repo, err := r.repoStore.GetByID(ctx, uint(input.RepoID))
 	if err != nil {
