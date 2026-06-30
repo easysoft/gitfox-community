@@ -56,26 +56,27 @@ type PipelineFile struct {
 }
 
 type Pipeline struct {
-	ID            int64           `json:"id"`
-	Name          string          `json:"name"`
-	Engine        string          `json:"engine"`
-	ProviderID    int64           `json:"providerID"`
-	Scope         string          `json:"scope"`
-	SpaceID       int64           `json:"spaceID"`
-	RepoID        int64           `json:"repoID"`
-	Desc          string          `json:"desc"`
-	Status        string          `json:"status"`
-	LatestVersion int             `json:"latestVersion"`
-	DefaultBranch string          `json:"defaultBranch"`
-	YamlPath      string          `json:"yamlPath"`
-	CustomParam   string          `json:"customParam"`
-	LastExec      *datetime.Local `json:"lastExec"`
-	LastResult    string          `json:"lastResult"`
-	CreatedBy     string          `json:"createdBy"`
-	CreatedDate   *datetime.Local `json:"createdDate"`
-	EditedBy      string          `json:"editedBy"`
-	EditedDate    *datetime.Local `json:"editedDate"`
-	Deleted       int8            `json:"deleted"`
+	ID               int64           `json:"id"`
+	Name             string          `json:"name"`
+	Engine           string          `json:"engine"`
+	ProviderID       int64           `json:"providerID"`
+	Scope            string          `json:"scope"`
+	SpaceID          int64           `json:"spaceID"`
+	RepoID           int64           `json:"repoID"`
+	Desc             string          `json:"desc"`
+	Status           string          `json:"status"`
+	LatestVersion    int             `json:"latestVersion"`
+	DefaultBranch    string          `json:"defaultBranch"`
+	YamlPath         string          `json:"yamlPath"`
+	CustomParam      string          `json:"customParam"`
+	ExternalPipeline string          `json:"externalPipeline"`
+	LastExec         *datetime.Local `json:"lastExec"`
+	LastResult       string          `json:"lastResult"`
+	CreatedBy        string          `json:"createdBy"`
+	CreatedDate      *datetime.Local `json:"createdDate"`
+	EditedBy         string          `json:"editedBy"`
+	EditedDate       *datetime.Local `json:"editedDate"`
+	Deleted          int8            `json:"deleted"`
 }
 
 type PipelineContent struct {

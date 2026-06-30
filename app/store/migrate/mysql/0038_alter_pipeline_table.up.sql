@@ -9,6 +9,7 @@ ALTER TABLE `ops_pipeline`
     CHANGE COLUMN `type` `scope` varchar(30) NOT NULL COMMENT '流水线类型：系统/空间/仓库',
     MODIFY COLUMN `status` varchar(30) NOT NULL COMMENT '流水线状态：草稿/激活',
     ADD COLUMN `customParam` TEXT DEFAULT NULL COMMENT 'Jenkins,GitLab 流水线执行传参' AFTER `yamlPath`,
+    ADD COLUMN `externalPipeline` varchar(128) NOT NULL DEFAULT '' COMMENT 'Jenkins/GitLab pipeline' AFTER `customParam`,
     ADD COLUMN `lastExec` datetime DEFAULT NULL COMMENT '最后一次执行时间' AFTER `customParam`,
     ADD COLUMN `lastResult` varchar(30) NOT NULL DEFAULT '' COMMENT '最后一次执行状态' AFTER `lastExec`;
 
