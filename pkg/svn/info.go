@@ -16,6 +16,10 @@ type InfoParams struct {
 	// or "/data/gitfox-community/svn/repos/xxx/demo-repo/zentaopms/api"
 	URL string
 
+	// Subpath is an optional relative subpath inside the URL.
+	// When set, the target becomes {URL}/{Subpath}.
+	Subpath string
+
 	// Revision is the revision number to query. When 0, the HEAD revision is used.
 	// Corresponds to: svn info -r <Revision> ...
 	Revision string
@@ -58,8 +62,13 @@ func (s *Service) Info(ctx context.Context, params *InfoParams) (string, error) 
 
 	stdout := &bytes.Buffer{}
 
+	target := params.URL
+	if params.Subpath != "" {
+		target = strings.TrimRight(target, "/") + "/" + strings.TrimLeft(params.Subpath, "/")
+	}
+
 	cmd := command.New("info",
-		command.WithArg(params.URL),
+		command.WithArg(target),
 		withInfoAuth(params.Username, params.Password),
 	)
 

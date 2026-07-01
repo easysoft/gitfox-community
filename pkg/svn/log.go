@@ -3,6 +3,7 @@ package svn
 import (
 	"bytes"
 	"context"
+	"strconv"
 	"strings"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
@@ -15,6 +16,11 @@ type LogParams struct {
 	// It will be converted to a file:// URL internally.
 	// Use this to query the entire repository (e.g. with ListAllCommits).
 	SvnUID string
+
+	// Subpath is an optional relative subdirectory inside the repository.
+	// When set, the target becomes {file://repo}/{Subpath} so that svn log
+	// filters commits touching that path.
+	Subpath string
 
 	// Path is an optional absolute path to a working copy or a subdirectory within it.
 	// When set, svn log queries commits that affected this specific path.
@@ -31,6 +37,10 @@ type LogParams struct {
 
 	// XML enables XML format output (--xml flag).
 	XML bool
+
+	// Limit caps the number of log entries returned (`--limit N`).
+	// Zero means no limit.
+	Limit int
 
 	// Username is the username for authenticating to the repository.
 	Username string
@@ -62,6 +72,9 @@ func (s *Service) Log(ctx context.Context, params *LogParams) (string, error) {
 	target := params.Path
 	if target == "" {
 		target = s.FileURL(params.SvnUID)
+		if params.Subpath != "" {
+			target = strings.TrimRight(target, "/") + "/" + strings.TrimLeft(params.Subpath, "/")
+		}
 	}
 
 	cmd := command.New("log",
@@ -77,6 +90,9 @@ func (s *Service) Log(ctx context.Context, params *LogParams) (string, error) {
 	}
 	if params.XML {
 		cmd.Add(command.WithFlag("--xml"))
+	}
+	if params.Limit > 0 {
+		cmd.Add(command.WithFlag("--limit", strconv.Itoa(params.Limit)))
 	}
 
 	if err := cmd.Run(ctx, command.WithStdout(stdout)); err != nil {

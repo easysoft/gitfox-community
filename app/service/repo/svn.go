@@ -111,7 +111,8 @@ func (s *Service) dispatchSvn(ctx context.Context, r svnModel.ReqForExec, svnUID
 		return output, nil
 
 	case svnModel.FuncInfo:
-		// Info 走 URL 而非 SvnUID(pkg/svn 当前签名如此),URL 由 svnUID 推导为 file://...。
+		// Info 走 URL 而非 SvnUID(pkg/svn 当前签名如此),URL 由 svnUID 推导为 file://...；
+		// Subpath 反序列化到 p.Subpath 后由 pkg/svn.Info 内部拼接。
 		p := &svnPkg.InfoParams{}
 		if err := json.Unmarshal(rawArgs, p); err != nil {
 			return "", errors.WithI18nKey(err, i18n.SvnArgsInvalid)
