@@ -3,6 +3,7 @@ package svn
 import (
 	"bytes"
 	"context"
+	"path/filepath"
 	"strings"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
@@ -14,6 +15,9 @@ type DiffParams struct {
 	// SvnUID identifies the working copy to diff against.
 	// The working copy path is resolved as {svnRoot}/repos/{svnUID}-wc.
 	SvnUID string
+
+	// Subpath is an optional relative file/dir path inside the working copy.
+	Subpath string
 
 	// Revision is the revision or revision range to diff, e.g. "130" or "0:130".
 	// Corresponds to: svn diff -r <Revision> ...
@@ -45,8 +49,13 @@ func (s *Service) Diff(ctx context.Context, params *DiffParams) (string, error) 
 
 	stdout := &bytes.Buffer{}
 
+	target := s.workingCopyPath(params.SvnUID)
+	if params.Subpath != "" {
+		target = filepath.Join(target, params.Subpath)
+	}
+
 	cmd := command.New("diff",
-		command.WithArg(s.workingCopyPath(params.SvnUID)),
+		command.WithArg(target),
 		withDiffAuth(params.Username, params.Password),
 	)
 

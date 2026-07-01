@@ -3,6 +3,7 @@ package svn
 import (
 	"bytes"
 	"context"
+	"path/filepath"
 	"strings"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
@@ -14,6 +15,10 @@ type CatParams struct {
 	// SvnUID identifies the working copy to cat from.
 	// The working copy path is resolved as {svnRoot}/repos/{svnUID}-wc.
 	SvnUID string
+
+	// Subpath is an optional relative file path inside the working copy.
+	// svn cat requires a file target (not a directory).
+	Subpath string
 
 	// Revision is the revision number to query, e.g. "130".
 	// Corresponds to: svn cat -r <Revision> ...
@@ -46,8 +51,13 @@ func (s *Service) Cat(ctx context.Context, params *CatParams) (string, error) {
 
 	stdout := &bytes.Buffer{}
 
+	target := s.workingCopyPath(params.SvnUID)
+	if params.Subpath != "" {
+		target = filepath.Join(target, params.Subpath)
+	}
+
 	cmd := command.New("cat",
-		command.WithArg(s.workingCopyPath(params.SvnUID)),
+		command.WithArg(target),
 		withCatAuth(params.Username, params.Password),
 	)
 

@@ -3,6 +3,7 @@ package svn
 import (
 	"bytes"
 	"context"
+	"path/filepath"
 	"strings"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
@@ -14,6 +15,10 @@ type BlameParams struct {
 	// SvnUID identifies the working copy to blame.
 	// The working copy path is resolved as {svnRoot}/repos/{svnUID}-wc.
 	SvnUID string
+
+	// Subpath is an optional relative subpath inside the working copy.
+	// When set, blame targets {wc}/{Subpath}.
+	Subpath string
 
 	// Revision is the revision number to query, e.g. "130".
 	// Corresponds to: svn blame -r <Revision> ...
@@ -49,8 +54,13 @@ func (s *Service) Blame(ctx context.Context, params *BlameParams) (string, error
 
 	stdout := &bytes.Buffer{}
 
+	target := s.workingCopyPath(params.SvnUID)
+	if params.Subpath != "" {
+		target = filepath.Join(target, params.Subpath)
+	}
+
 	cmd := command.New("blame",
-		command.WithArg(s.workingCopyPath(params.SvnUID)),
+		command.WithArg(target),
 		withBlameAuth(params.Username, params.Password),
 	)
 

@@ -3,6 +3,7 @@ package svn
 import (
 	"bytes"
 	"context"
+	"path/filepath"
 	"strings"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
@@ -14,6 +15,10 @@ type LsParams struct {
 	// SvnUID identifies the working copy to list.
 	// The working copy path is resolved as {svnRoot}/repos/{svnUID}-wc.
 	SvnUID string
+
+	// Subpath is an optional relative subdirectory inside the working copy.
+	// When set, svn ls targets {wc}/{Subpath} instead of the wc root.
+	Subpath string
 
 	// Revision is the revision number to query, e.g. "130".
 	// Corresponds to: svn ls -r <Revision> ...
@@ -49,8 +54,13 @@ func (s *Service) Ls(ctx context.Context, params *LsParams) (string, error) {
 
 	stdout := &bytes.Buffer{}
 
+	target := s.workingCopyPath(params.SvnUID)
+	if params.Subpath != "" {
+		target = filepath.Join(target, params.Subpath)
+	}
+
 	cmd := command.New("ls",
-		command.WithArg(s.workingCopyPath(params.SvnUID)),
+		command.WithArg(target),
 		withLsAuth(params.Username, params.Password),
 	)
 
