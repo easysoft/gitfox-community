@@ -62,7 +62,7 @@ func (c *Controller) Exec(ctx *gin.Context) {
 	}
 
 	// 通过仓库 ID 获取仓库详情
-	repoOut, err := c.repoSvc.GetByID(ctx, session, repoID)
+	repo, err := c.repoSvc.GetByID(ctx, session, repoID)
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.SvnRepoNotFound)
 		resp.NotFound(ctx, err)
@@ -70,7 +70,7 @@ func (c *Controller) Exec(ctx *gin.Context) {
 	}
 
 	// 业务全部下沉到 service：白名单校验、SCMType 判断、Connector 解析、命令分发、Content-Type 选择
-	output, contentType, err := c.repoSvc.ExecSvn(ctx.Request.Context(), *repoOut, reqBody)
+	output, contentType, err := c.repoSvc.ExecSvnCommand(ctx.Request.Context(), *repo, reqBody)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return
@@ -78,6 +78,6 @@ func (c *Controller) Exec(ctx *gin.Context) {
 
 	// 流式原文返回：保留 svn 原生 stdout,调用方自行解析 XML / diff / 纯文本
 	ctx.Header("Content-Type", contentType)
-	ctx.Header("X-Content-Type-Options", "nosniff")
+	ctx.Header("X-Content-Type-Options", "nosniff") // 防止浏览器嗅探 Content-Type
 	ctx.String(http.StatusOK, output)
 }

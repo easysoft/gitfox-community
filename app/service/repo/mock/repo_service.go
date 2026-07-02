@@ -89,20 +89,20 @@ func (mr *MockInterfaceMockRecorder) Delete(ctx, session, id any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockInterface)(nil).Delete), ctx, session, id)
 }
 
-// ExecSvn mocks base method.
-func (m *MockInterface) ExecSvn(ctx context.Context, arg1 repo.Repo, req svn.ReqForExec) (string, string, error) {
+// ExecSvnCommand mocks base method.
+func (m *MockInterface) ExecSvnCommand(ctx context.Context, arg1 repo.Repo, req svn.ReqForExec) (string, string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ExecSvn", ctx, arg1, req)
+	ret := m.ctrl.Call(m, "ExecSvnCommand", ctx, arg1, req)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(string)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
 }
 
-// ExecSvn indicates an expected call of ExecSvn.
-func (mr *MockInterfaceMockRecorder) ExecSvn(ctx, arg1, req any) *gomock.Call {
+// ExecSvnCommand indicates an expected call of ExecSvnCommand.
+func (mr *MockInterfaceMockRecorder) ExecSvnCommand(ctx, arg1, req any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExecSvn", reflect.TypeOf((*MockInterface)(nil).ExecSvn), ctx, arg1, req)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExecSvnCommand", reflect.TypeOf((*MockInterface)(nil).ExecSvnCommand), ctx, arg1, req)
 }
 
 // GetBlame mocks base method.
