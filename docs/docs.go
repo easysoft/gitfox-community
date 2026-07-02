@@ -4298,7 +4298,7 @@ const docTemplate = `{
         },
         "/repos/{id}/svn/exec": {
             "post": {
-                "description": "统一调度 SVN 子命令（ls/log/blame/cat/info/diff），原样返回 svn stdout",
+                "description": "统一调度 SVN 子命令（ls/log/blame/cat/info/diff）,原样返回 svn stdout",
                 "consumes": [
                     "application/json"
                 ],
@@ -15534,12 +15534,6 @@ const docTemplate = `{
                 },
                 "func": {
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_svn.FuncType"
-                },
-                "password": {
-                    "type": "string"
-                },
-                "username": {
-                    "type": "string"
                 }
             }
         },
