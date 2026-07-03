@@ -970,6 +970,7 @@ const (
 	SvnDiffFailed          I18nKey = "svn.diff_failed"           // SVN diff 命令执行失败.
 	SvnExecFailed          I18nKey = "svn.exec_failed"           // SVN 命令执行失败.
 	SvnExecSuccess         I18nKey = "svn.exec_success"          // SVN 命令执行成功.
+	SvnExportFailed        I18nKey = "svn.export_failed"         // SVN export 命令执行失败.
 	SvnInfoFailed          I18nKey = "svn.info_failed"           // SVN info 命令执行失败.
 	SvnInvalidArgs         I18nKey = "svn.invalid_args"          // SVN 参数校验失败.
 	SvnInvalidCommand      I18nKey = "svn.invalid_command"       // 不支持的 SVN 操作.

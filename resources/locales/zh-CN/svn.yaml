@@ -11,6 +11,7 @@ svn:
   connector_parse_error: "解析代码库 SVN 凭证失败。"
   password_decode_error: "解析代码库 SVN 凭证密码失败。"
   exec_failed: "SVN 命令执行失败。"
+  export_failed: "SVN export 命令执行失败。"
   ls_failed: "SVN ls 命令执行失败。"
   log_failed: "SVN log 命令执行失败。"
   blame_failed: "SVN blame 命令执行失败。"

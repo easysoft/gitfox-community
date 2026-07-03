@@ -27,4 +27,5 @@ type Interface interface {
 	Archive(ctx context.Context, params gitAPI.ArchiveParams, repo repoModel.Repo, w io.Writer) error
 	List(ctx context.Context, session *auth.Session, filter repoModel.ReqFilter) ([]*repoModel.Repo, bool, error)
 	ExecSvnCommand(ctx context.Context, repo repoModel.Repo, req svnModel.ReqForExec) (output string, contentType string, err error)
+	ExportSvn(ctx context.Context, repo repoModel.Repo, revision string, w io.Writer) (bool, error)
 }

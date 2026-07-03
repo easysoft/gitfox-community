@@ -3,7 +3,9 @@ package file
 import (
 	"archive/zip"
 	"bytes"
+	"context"
 	"io"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -264,4 +266,82 @@ func GetZipData(zipFile *zip.ReadCloser) (ZipData, error) {
 	}
 
 	return root, nil
+}
+
+// ZipDir walks root and streams a ZIP archive to w.
+func ZipDir(ctx context.Context, root string, w io.Writer) (err error) {
+	if w == nil {
+		return os.ErrInvalid
+	}
+
+	zipWriter := zip.NewWriter(w)
+	defer func() {
+		if closeErr := zipWriter.Close(); err == nil {
+			err = closeErr
+		}
+	}()
+
+	err = filepath.WalkDir(root, func(path string, entry os.DirEntry, walkErr error) error {
+		if walkErr != nil {
+			return walkErr
+		}
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+		if path == root {
+			return nil
+		}
+
+		info, err := entry.Info()
+		if err != nil {
+			return err
+		}
+		// 仅处理目录、普通文件、符号链接；其它类型跳过
+		if !info.IsDir() && !info.Mode().IsRegular() && info.Mode()&os.ModeSymlink == 0 {
+			return nil
+		}
+
+		relPath, err := filepath.Rel(root, path)
+		if err != nil {
+			return err
+		}
+		header, err := zip.FileInfoHeader(info)
+		if err != nil {
+			return err
+		}
+		header.Name = filepath.ToSlash(relPath)
+		if info.IsDir() {
+			header.Name += "/"
+		} else if info.Mode().IsRegular() {
+			header.Method = zip.Deflate
+		}
+
+		archiveEntry, err := zipWriter.CreateHeader(header)
+		if err != nil {
+			return err
+		}
+		if info.IsDir() {
+			return nil
+		}
+		if info.Mode()&os.ModeSymlink != 0 {
+			target, err := os.Readlink(path)
+			if err != nil {
+				return err
+			}
+			_, err = io.WriteString(archiveEntry, target)
+			return err
+		}
+
+		file, err := os.Open(path)
+		if err != nil {
+			return err
+		}
+		_, copyErr := io.Copy(archiveEntry, file)
+		closeErr := file.Close()
+		if copyErr != nil {
+			return copyErr
+		}
+		return closeErr
+	})
+	return err
 }

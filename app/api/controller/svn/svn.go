@@ -1,6 +1,7 @@
 package svn
 
 import (
+	"fmt"
 	"net/http"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
@@ -9,6 +10,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	"github.com/gin-gonic/gin"
 )
 
@@ -80,4 +82,65 @@ func (c *Controller) Exec(ctx *gin.Context) {
 	ctx.Header("Content-Type", contentType)
 	ctx.Header("X-Content-Type-Options", "nosniff") // 防止浏览器嗅探 Content-Type
 	ctx.String(http.StatusOK, output)
+}
+
+// Export 导出 SVN 仓库并以 ZIP 文件流返回。
+// @Summary 导出 SVN 仓库
+// @Description 导出指定 revision 的 SVN 仓库内容并直接返回 ZIP 文件流，不生成下载 URL
+// @Tags svn
+// @Produce application/zip
+// @Param id path uint true "仓库 ID"
+// @Param revision query string false "SVN revision，留空时使用 HEAD"
+// @Success 200 {file} binary "SVN 仓库 ZIP 归档"
+// @Failure 400 {object} resp.ObjectResponse "参数错误"
+// @Failure 401 {object} resp.ObjectResponse "未授权或无会话"
+// @Failure 404 {object} resp.ObjectResponse "代码库不存在"
+// @Failure 500 {object} resp.ObjectResponse "服务器错误"
+// @Router /repos/{id}/svn/export [get]
+func (c *Controller) Export(ctx *gin.Context) {
+	repoID, err := req.PathParamAsPositiveUint(ctx, "id")
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.SvnPathParamError)
+		resp.BadRequest(ctx, err)
+		return
+	}
+
+	session, ok := req.GetAuthSession(ctx.Request.Context())
+	if !ok {
+		err = errors.WithI18nKey(errors.New("get session failed"), i18n.AuthNoSession)
+		resp.Unauthorized(ctx, err)
+		return
+	}
+
+	repo, err := c.repoSvc.GetByID(ctx, session, repoID)
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.SvnRepoNotFound)
+		resp.NotFound(ctx, err)
+		return
+	}
+
+	// 预设 ZIP 下载响应头。若 ExportSvn 在写响应体之前失败（streamStarted==false）,
+	// 下方分支会清掉这些头，避免 JSON 错误响应被浏览器保存成 .zip 文件。
+	filename := repo.Identifier + ".zip"
+	ctx.Header("Content-Type", "application/zip")                                       // 设置 Content-Type 为 ZIP 归档
+	ctx.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename)) // 下载文件名
+	ctx.Header("X-Content-Type-Options", "nosniff")                                     // 防止浏览器嗅探 Content-Type
+
+	streamStarted, err := c.repoSvc.ExportSvn(ctx.Request.Context(), *repo, ctx.Query("revision"), ctx.Writer)
+	if err != nil {
+		logger.GetLogger(ctx).Errorf("failed to export SVN repository %d: %v", repoID, err)
+		if !streamStarted {
+			// 未向响应体写入任何字节，清掉预设的 ZIP 头，改走 500 JSON 让前端识别错误。
+			h := ctx.Writer.Header()
+			h.Del("Content-Type")
+			h.Del("Content-Disposition")
+			h.Del("X-Content-Type-Options")
+			if errors.GetI18nKey(err) == i18n.ErrorDefault {
+				err = errors.WithI18nKey(err, i18n.SvnExportFailed)
+			}
+			resp.InternalError(ctx, err)
+			return
+		}
+		return
+	}
 }
