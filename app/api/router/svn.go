@@ -9,5 +9,6 @@ func registerSvnRoutes(r *gin.RouterGroup, controller *Controller) {
 	svn := r.Group("/repos/:id/svn")
 	{
 		svn.POST("/exec", controller.Svn.Exec) // 统一执行入口
+		svn.GET("/export", controller.Svn.Export)
 	}
 }

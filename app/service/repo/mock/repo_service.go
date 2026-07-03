@@ -105,6 +105,21 @@ func (mr *MockInterfaceMockRecorder) ExecSvnCommand(ctx, arg1, req any) *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExecSvnCommand", reflect.TypeOf((*MockInterface)(nil).ExecSvnCommand), ctx, arg1, req)
 }
 
+// ExportSvn mocks base method.
+func (m *MockInterface) ExportSvn(ctx context.Context, arg1 repo.Repo, revision string, w io.Writer) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ExportSvn", ctx, arg1, revision, w)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ExportSvn indicates an expected call of ExportSvn.
+func (mr *MockInterfaceMockRecorder) ExportSvn(ctx, arg1, revision, w any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExportSvn", reflect.TypeOf((*MockInterface)(nil).ExportSvn), ctx, arg1, revision, w)
+}
+
 // GetBlame mocks base method.
 func (m *MockInterface) GetBlame(ctx context.Context, req repo.BlameFilter, arg2 repo.Repo, filePath string, w io.Writer) error {
 	m.ctrl.T.Helper()

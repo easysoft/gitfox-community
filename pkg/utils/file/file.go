@@ -99,8 +99,6 @@ func DownloadFile(ctx context.Context, path string, url string) error {
 }
 
 // CreateTempFile creates a temporary file with the given pattern and returns the file, a remove function, and any error.
-// 创建临时文件 pattern: 文件名模板（例如 "plugins.zip"）
-// 返回: 文件对象, 删除函数, 错误信息
 func CreateTempFile(pattern string) (*os.File, func() error, error) {
 	f, err := os.CreateTemp(os.TempDir(), pattern)
 	if err != nil {

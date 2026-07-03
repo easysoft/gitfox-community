@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"io"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
@@ -169,4 +170,31 @@ func svnContentTypeOf(f svnModel.Command) string {
 	default:
 		return "text/plain; charset=utf-8"
 	}
+}
+
+// ExportSvn validates the repository, resolves its stored credentials and
+// streams a ZIP archive of the requested revision to w.
+func (s *Service) ExportSvn(ctx context.Context, repo repoModel.Repo, revision string, w io.Writer) (bool, error) {
+	if repo.SCMType != constant.RepoScmTypeSvn {
+		return false, errors.WithI18nKey(
+			errors.Newf("repo %d scmType=%s is not svn", repo.ID, repo.SCMType),
+			i18n.SvnNotSvnRepo,
+		)
+	}
+
+	username, password, err := parseSvnConnector(repo.Connector)
+	if err != nil {
+		return false, err
+	}
+
+	streamStarted, err := s.svnSvc.Export(ctx, &svnPkg.ExportParams{
+		SvnUID:   repo.GitUID,
+		Revision: revision,
+		Username: username,
+		Password: password,
+	}, w)
+	if err != nil {
+		return streamStarted, errors.WithI18nKey(err, i18n.SvnExportFailed)
+	}
+	return true, nil
 }

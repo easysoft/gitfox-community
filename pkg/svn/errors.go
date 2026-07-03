@@ -22,5 +22,6 @@ var (
 	ErrLs                     = errors.New("failed to get svn ls")
 	ErrCat                    = errors.New("failed to get svn cat")
 	ErrBlame                  = errors.New("failed to get svn blame")
+	ErrExport                 = errors.New("failed to export svn repository")
 	ErrNoParamsProvided       = errors.New("params not provided")
 )

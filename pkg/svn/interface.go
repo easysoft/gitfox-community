@@ -2,6 +2,7 @@ package svn
 
 import (
 	"context"
+	"io"
 )
 
 // Interface defines the SVN operations used by the application layer.
@@ -67,6 +68,9 @@ type Interface interface {
 
 	// Blame runs `svn blame` to show line-by-line author and revision info for a file.
 	Blame(ctx context.Context, params *BlameParams) (string, error)
+
+	// Export writes a ZIP archive of the repository contents to w. The
+	Export(ctx context.Context, params *ExportParams, w io.Writer) (bool, error)
 }
 
 // Ensure *Service implements Interface.
