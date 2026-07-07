@@ -37,7 +37,7 @@ func RequestID(log *logger.SugaredMateLogger) gin.HandlerFunc {
 // 输出字段：http.method, http.url, status_code, response_size_bytes, elapsed_ms, trace_id, client_ip, user_agent
 // 可选输出：query, route_params, request_body(截断), response_body(截断)
 func AccessLog(logger *logger.SugaredMateLogger) gin.HandlerFunc {
-	const logRequestBody = true    // 如需记录请求体，改为 true
+	const logRequestBody = true     // 如需记录请求体，改为 true
 	const logResponseBody = false   // 如需记录响应体，改为 true
 	const maxLoggedBodyBytes = 2048 // 体积上限，超过将截断
 
@@ -54,12 +54,13 @@ func AccessLog(logger *logger.SugaredMateLogger) gin.HandlerFunc {
 		// 可选：记录请求体
 		var reqBody string
 		if logRequestBody {
-			// 仅记录 JSON 或表单，其他类型略过
 			ct := c.ContentType()
 			if strings.Contains(ct, "application/json") || strings.Contains(ct, "application/x-www-form-urlencoded") {
-				b, _ := io.ReadAll(io.LimitReader(c.Request.Body, maxLoggedBodyBytes))
+				var buf bytes.Buffer
+				tr := io.TeeReader(c.Request.Body, &buf)
+				b, _ := io.ReadAll(io.LimitReader(tr, maxLoggedBodyBytes))
 				reqBody = string(b)
-				c.Request.Body = io.NopCloser(bytes.NewBuffer(b))
+				c.Request.Body = io.NopCloser(io.MultiReader(&buf, c.Request.Body))
 			}
 		}
 
