@@ -44,3 +44,5 @@ cmd/cli/gitfox_debug
 cmd/cli/gitfox/*
 
 unit/*
+resources/ciPlugins/plugins.tar.gz
+.opencodereview/*

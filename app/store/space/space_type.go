@@ -16,7 +16,7 @@ type Space struct {
 	ID          uint            `gorm:"column:id;type:int unsigned;primaryKey;autoIncrement;comment:'ID'" json:"id"`
 	Name        string          `gorm:"column:name;type:varchar(200);not null;uniqueIndex:uk_name;comment:'名称'" json:"name"` // 唯一索引
 	Auth        string          `gorm:"column:auth;type:varchar(30);not null;default:'';comment:'空间人员权限类型'" json:"auth"`
-	Permission  string          `gorm:"column:acl;type:varchar(30);not null;default:'open';comment:'权限:private,open'" json:"acl"`
+	ACL         string          `gorm:"column:acl;type:varchar(30);not null;default:'open';comment:'权限:private,open'" json:"acl"`
 	Desc        *string         `gorm:"column:desc;type:varchar(500);not null;default:'';comment:'描述'" json:"desc,omitempty"`
 	CreatedBy   string          `gorm:"column:createdBy;type:varchar(30);not null;default:'';comment:'创建人'" json:"createdBy"`
 	CreatedDate *datetime.Local `gorm:"column:createdDate;type:datetime;comment:'创建时间'" json:"createdDate,omitempty"` // 允许为NULL，指针类型
