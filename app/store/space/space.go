@@ -22,6 +22,7 @@ func (s *SpaceStore) Create(ctx context.Context, req spaceModel.CreateSpaceReque
 
 	data := Space{
 		Name:      req.Name,
+		Code:      req.Code,
 		Auth:      req.Auth,
 		ACL:       req.ACL,
 		Desc:      &req.Desc,
@@ -75,7 +76,9 @@ func (s *SpaceStore) Update(ctx context.Context, id uint, req spaceModel.UpdateS
 
 func (s *SpaceStore) List(ctx context.Context, filter spaceModel.ListSpaceFilter) (*database.PageResult[*Space], error) {
 	tx := s.db.WithContext(ctx).Model(&Space{})
-
+	if filter.Code != "" {
+		tx = tx.Where("code LIKE ?", "%"+filter.Code+"%")
+	}
 	if filter.Name != "" {
 		tx = tx.Where("name LIKE ?", "%"+filter.Name+"%")
 	}
@@ -135,8 +138,8 @@ func (r *SpaceStore) GetByName(ctx context.Context, name string) (*Space, error)
 func (r *SpaceStore) HasRepositories(ctx context.Context, spaceID uint) (bool, error) {
 	var count int64
 	if err := r.db.WithContext(ctx).Table("ops_repo").
-	    Where("space_id = ? AND deleted = 0", spaceID).
-	    Count(&count).Error; err != nil {
+		Where("space_id = ? AND deleted = 0", spaceID).
+		Count(&count).Error; err != nil {
 		return false, database.ProcessSQLErrorf(ctx, err)
 	}
 	return count > 0, nil
@@ -146,8 +149,8 @@ func (r *SpaceStore) HasRepositories(ctx context.Context, spaceID uint) (bool, e
 func (r *SpaceStore) HasArtifacts(ctx context.Context, spaceID uint) (bool, error) {
 	var count int64
 	if err := r.db.WithContext(ctx).Table("ops_artifact_libs").
-	    Where("space_id = ? AND deleted = 0", spaceID).
-	    Count(&count).Error; err != nil {
+		Where("space_id = ? AND deleted = 0", spaceID).
+		Count(&count).Error; err != nil {
 		return false, database.ProcessSQLErrorf(ctx, err)
 	}
 	return count > 0, nil
@@ -200,6 +203,7 @@ func mapToModel(data Space) *spaceModel.SpaceResponse {
 	return &spaceModel.SpaceResponse{
 		ID:          data.ID,
 		Name:        data.Name,
+		Code:        data.Code,
 		Auth:        data.Auth,
 		ACL:         data.ACL,
 		Desc:        desc,

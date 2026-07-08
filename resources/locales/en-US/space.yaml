@@ -21,4 +21,7 @@ space:
   restore_error: "Failed to restore space"
   restore_success: "restore space successfully"
   not_found: "The queried space does not exist"
-  create_duplicate: "Failed to create space, the space already exists" 
+  create_duplicate: "Failed to create space, the space code already exists"
+  code_invalid: "Workspace identifier format is invalid. Only letters, digits, hyphens (-), underscores (_) and dots (.) are allowed; cannot start/end with symbols or end with .git."
+  code_too_long: "Workspace identifier exceeds 50 characters"
+  desc_too_long: "Workspace description exceeds 500 characters"

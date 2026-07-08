@@ -43,6 +43,10 @@ func (ctl *SpaceController) Create(c *gin.Context) {
 		resp.BadRequest(c, err)
 		return
 	}
+	if err = reqData.Validate(); err != nil {
+		resp.BadRequest(c, err)
+		return
+	}
 
 	// 获取包含 logger 和其他上下文信息的 context 传递给 Service 层
 	// 调用服务层创建空间
@@ -68,6 +72,7 @@ func (ctl *SpaceController) Create(c *gin.Context) {
 // @Accept application/json
 // @Produce application/json
 // @Param name query string false "空间名称（模糊查询）"
+// @Param code query string false "空间标识（模糊查询）"
 // @Param permission query string false "空间权限（open-私有，private-公开）" Enums(open, private)
 // @Param owner query string false "负责人"
 // @Param ids query string false "空间ID,逗号分隔"
