@@ -3,7 +3,6 @@ package repo
 import (
 	"context"
 	stderr "errors"
-	"fmt"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/paths"
 
@@ -123,7 +122,11 @@ func (s *Store) updateOptLock(ctx context.Context, repo *repoModel.Repo) (*repoM
 
 // mapToModel 将 repo 转换为 repoResponse
 func mapToModel(data Repository) *repoModel.Repo {
-	path := paths.Concatenate(fmt.Sprint(data.SpaceID), data.Identifier)
+	var path string
+	if data.SpaceCode != "" {
+		path = paths.Concatenate(data.SpaceCode, data.Identifier)
+	}
+
 	return &repoModel.Repo{
 		ID:            data.ID,
 		Identifier:    data.Identifier,
@@ -148,11 +151,14 @@ func mapToModel(data Repository) *repoModel.Repo {
 }
 
 // GetByID returns a repository by its ID.
-// If no repository is found with the given ID, it returns an error.
-// The repository is not checked for existence before calling this method, so if the repository does not exist, an error will be returned.
 func (s *Store) GetByID(ctx context.Context, id uint) (*repoModel.Repo, error) {
 	var repo Repository
-	err := s.db.WithContext(ctx).Where("id = ? AND deleted = 0", id).First(&repo).Error
+	err := s.db.WithContext(ctx).
+		Model(&Repository{}).
+		Select("ops_repo.*, ops_space.code AS spaceCode").
+		Joins("LEFT JOIN ops_space ON ops_space.id = ops_repo.spaceID").
+		Where("ops_repo.id = ? AND ops_repo.deleted = 0", id).
+		First(&repo).Error
 	if err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}

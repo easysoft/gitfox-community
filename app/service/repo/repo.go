@@ -248,8 +248,8 @@ func (s *Service) Update(ctx context.Context, req *repoModel.ReqForUpdate, oldRe
 		return nil, err
 	}
 
-	// 构造 repoPath: spaceName/repoIdentifier
-	repoPath := spaceInfo.Name + "/" + updatedRepo.Identifier
+	// 构造 repoPath: spaceCode/repoIdentifier
+	repoPath := spaceInfo.Code + "/" + updatedRepo.Identifier
 
 	// 回填 gitURL 和 gitSSHURL
 	if updatedRepo.Mirror {

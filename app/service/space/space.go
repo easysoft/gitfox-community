@@ -51,6 +51,14 @@ func (s *Service) GetByID(ctx context.Context, id uint) (*space.Space, error) {
 	return spaceEntity, nil
 }
 
+func (s *Service) GetByCode(ctx context.Context, code string) (*space.Space, error) {
+	spaceEntity, err := s.spaceStore.GetByCode(ctx, code)
+	if err != nil {
+		return nil, err
+	}
+	return spaceEntity, nil
+}
+
 func (s *Service) Update(ctx context.Context, id uint, req spaceModel.UpdateSpaceRequest) (*spaceModel.SpaceResponse, error) {
 	// 直接将 UpdateSpaceRequest 传递给 store 层，由 store 层进行数据转换并返回 SpaceResponse
 	return s.spaceStore.Update(ctx, id, req)
@@ -99,8 +107,8 @@ func (s *Service) Restore(ctx context.Context, id uint) error {
 	return nil
 }
 
-func (s *Service) GetSpaceCheckAccess(ctx context.Context, session *auth.Session, spaceID uint, permissions []constant.Permission) (*space.Space, error) {
-	spaceObj, err := s.spaceStore.GetByID(ctx, spaceID)
+func (s *Service) GetSpaceCheckAccess(ctx context.Context, session *auth.Session, spaceCode string, permissions []constant.Permission) (*space.Space, error) {
+	spaceObj, err := s.spaceStore.GetByCode(ctx, spaceCode)
 	if err != nil {
 		return nil, err
 	}

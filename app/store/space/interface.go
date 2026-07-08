@@ -14,6 +14,7 @@ type Interface interface {
 	List(ctx context.Context, filter spaceModel.ListSpaceFilter) (*database.PageResult[*Space], error)
 	Delete(ctx context.Context, id uint) error
 	GetByID(ctx context.Context, id uint) (*Space, error)
+	GetByCode(ctx context.Context, code string) (*Space, error)
 	GetByName(ctx context.Context, name string) (*Space, error)
 	HasRepositories(ctx context.Context, spaceID uint) (bool, error)
 	HasArtifacts(ctx context.Context, spaceID uint) (bool, error)

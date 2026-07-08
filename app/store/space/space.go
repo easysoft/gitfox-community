@@ -125,6 +125,15 @@ func (r *SpaceStore) GetByID(ctx context.Context, id uint) (*Space, error) {
 	return &out, nil
 }
 
+// GetByCode 根据标识码查询单个空间。
+func (r *SpaceStore) GetByCode(ctx context.Context, code string) (*Space, error) {
+	var out Space
+	if err := r.db.WithContext(ctx).Where("code = ? AND deleted = ?", code, 0).First(&out).Error; err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
+	}
+	return &out, nil
+}
+
 // GetByName 根据名称查询单个空间。
 func (r *SpaceStore) GetByName(ctx context.Context, name string) (*Space, error) {
 	var out Space
