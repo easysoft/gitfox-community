@@ -4355,6 +4355,65 @@ const docTemplate = `{
                 }
             }
         },
+        "/repos/{id}/svn/export": {
+            "get": {
+                "description": "导出指定 revision 的 SVN 仓库内容并直接返回 ZIP 文件流，不生成下载 URL",
+                "produces": [
+                    "application/zip"
+                ],
+                "tags": [
+                    "svn"
+                ],
+                "summary": "导出 SVN 仓库",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "仓库 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "SVN revision，留空时使用 HEAD",
+                        "name": "revision",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "SVN 仓库 ZIP 归档",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权或无会话",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "代码库不存在",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/repos/{id}/tags": {
             "post": {
                 "description": "新增一个标签",
@@ -9543,6 +9602,12 @@ const docTemplate = `{
                         "type": "string",
                         "description": "空间名称（模糊查询）",
                         "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "空间标识（模糊查询）",
+                        "name": "code",
                         "in": "query"
                     },
                     {
@@ -15266,6 +15331,7 @@ const docTemplate = `{
             "required": [
                 "acl",
                 "auth",
+                "code",
                 "createdBy",
                 "name"
             ],
@@ -15285,6 +15351,11 @@ const docTemplate = `{
                         "reset"
                     ],
                     "example": "extend"
+                },
+                "code": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "example": "test_space_01"
                 },
                 "createdBy": {
                     "type": "string"
@@ -15306,6 +15377,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "auth": {
+                    "type": "string"
+                },
+                "code": {
                     "type": "string"
                 },
                 "createdBy": {
@@ -15503,7 +15577,7 @@ const docTemplate = `{
                 }
             }
         },
-        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_svn.FuncType": {
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_svn.Command": {
             "type": "string",
             "enum": [
                 "ls",
@@ -15514,26 +15588,26 @@ const docTemplate = `{
                 "diff"
             ],
             "x-enum-varnames": [
-                "FuncLs",
-                "FuncLog",
-                "FuncBlame",
-                "FuncCat",
-                "FuncInfo",
-                "FuncDiff"
+                "Ls",
+                "Log",
+                "Blame",
+                "Cat",
+                "Info",
+                "Diff"
             ]
         },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_svn.ReqForExec": {
             "type": "object",
             "required": [
-                "func"
+                "command"
             ],
             "properties": {
                 "args": {
                     "type": "object",
                     "additionalProperties": {}
                 },
-                "func": {
-                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_svn.FuncType"
+                "command": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_svn.Command"
                 }
             }
         },
