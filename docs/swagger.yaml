@@ -2891,6 +2891,10 @@ definitions:
         - reset
         example: extend
         type: string
+      code:
+        example: test_space_01
+        maxLength: 50
+        type: string
       createdBy:
         type: string
       desc:
@@ -2902,6 +2906,7 @@ definitions:
     required:
     - acl
     - auth
+    - code
     - createdBy
     - name
     type: object
@@ -2910,6 +2915,8 @@ definitions:
       acl:
         type: string
       auth:
+        type: string
+      code:
         type: string
       createdBy:
         type: string
@@ -3041,7 +3048,7 @@ definitions:
       status:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.CIStatus'
     type: object
-  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_svn.FuncType:
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_svn.Command:
     enum:
     - ls
     - log
@@ -3051,21 +3058,21 @@ definitions:
     - diff
     type: string
     x-enum-varnames:
-    - FuncLs
-    - FuncLog
-    - FuncBlame
-    - FuncCat
-    - FuncInfo
-    - FuncDiff
+    - Ls
+    - Log
+    - Blame
+    - Cat
+    - Info
+    - Diff
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_svn.ReqForExec:
     properties:
       args:
         additionalProperties: {}
         type: object
-      func:
-        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_svn.FuncType'
+      command:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_svn.Command'
     required:
-    - func
+    - command
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_tag.ReqFilter:
     properties:
@@ -6037,6 +6044,45 @@ paths:
           schema:
             $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
       summary: 执行 SVN 命令
+      tags:
+      - svn
+  /repos/{id}/svn/export:
+    get:
+      description: 导出指定 revision 的 SVN 仓库内容并直接返回 ZIP 文件流，不生成下载 URL
+      parameters:
+      - description: 仓库 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: SVN revision，留空时使用 HEAD
+        in: query
+        name: revision
+        type: string
+      produces:
+      - application/zip
+      responses:
+        "200":
+          description: SVN 仓库 ZIP 归档
+          schema:
+            type: file
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "401":
+          description: 未授权或无会话
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "404":
+          description: 代码库不存在
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 导出 SVN 仓库
       tags:
       - svn
   /repos/{id}/tags:
@@ -9439,6 +9485,10 @@ paths:
       - description: 空间名称（模糊查询）
         in: query
         name: name
+        type: string
+      - description: 空间标识（模糊查询）
+        in: query
+        name: code
         type: string
       - description: 空间权限（open-私有，private-公开）
         enum:

@@ -940,9 +940,12 @@ const (
 	// Space 相关常量
 	SpaceArtifactsTitleSuccess   I18nKey = "space.artifacts_title_success"   // 仓库设置保存成功
 	SpaceBodyParamError          I18nKey = "space.body_param_error"          // Body 参数解析失败.
-	SpaceCreateDuplicate         I18nKey = "space.create_duplicate"          // 创建空间异常,空间已存在
+	SpaceCodeInvalid             I18nKey = "space.code_invalid"              // 空间标识不符合规范,仅支持大小写字母、数字、横杠-、下划线 _、点. ,不允许.git结尾
+	SpaceCodeTooLong             I18nKey = "space.code_too_long"             // 空间标识超过50字符
+	SpaceCreateDuplicate         I18nKey = "space.create_duplicate"          // 创建空间异常,空间标识已存在
 	SpaceCreateError             I18nKey = "space.create_error"              // 空间创建失败.
 	SpaceCreateSuccess           I18nKey = "space.create_success"            // 空间创建成功.
+	SpaceDescTooLong             I18nKey = "space.desc_too_long"             // 空间描述信息超过500字符
 	SpaceListError               I18nKey = "space.list_error"                // 查询空间列表失败
 	SpaceListSuccess             I18nKey = "space.list_success"              // 查询空间列表成功
 	SpaceNotFound                I18nKey = "space.not_found"                 // 查询空间不存在

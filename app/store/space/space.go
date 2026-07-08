@@ -21,12 +21,13 @@ func NewSpaceStore(db *gorm.DB) *SpaceStore {
 func (s *SpaceStore) Create(ctx context.Context, req spaceModel.CreateSpaceRequest) (*spaceModel.SpaceResponse, error) {
 
 	data := Space{
-		Name:       req.Name,
-		Auth:       req.Auth,
-		Permission: req.Permission,
-		Desc:       &req.Desc,
-		CreatedBy:  req.CreatedBy,
-		EditedBy:   req.CreatedBy,
+		Name:      req.Name,
+		Code:      req.Code,
+		Auth:      req.Auth,
+		ACL:       req.ACL,
+		Desc:      &req.Desc,
+		CreatedBy: req.CreatedBy,
+		EditedBy:  req.CreatedBy,
 	}
 
 	if err := s.db.WithContext(ctx).Create(&data).Error; err != nil {
@@ -54,8 +55,8 @@ func (s *SpaceStore) Update(ctx context.Context, id uint, req spaceModel.UpdateS
 		if req.Auth != "" {
 			out.Auth = req.Auth
 		}
-		if req.Permission != "" {
-			out.Permission = req.Permission
+		if req.ACL != "" {
+			out.ACL = req.ACL
 		}
 		out.Desc = &req.Desc
 
@@ -75,12 +76,14 @@ func (s *SpaceStore) Update(ctx context.Context, id uint, req spaceModel.UpdateS
 
 func (s *SpaceStore) List(ctx context.Context, filter spaceModel.ListSpaceFilter) (*database.PageResult[*Space], error) {
 	tx := s.db.WithContext(ctx).Model(&Space{})
-
+	if filter.Code != "" {
+		tx = tx.Where("code LIKE ?", "%"+filter.Code+"%")
+	}
 	if filter.Name != "" {
 		tx = tx.Where("name LIKE ?", "%"+filter.Name+"%")
 	}
-	if filter.Permission != "" {
-		tx = tx.Where("acl = ?", filter.Permission)
+	if filter.ACL != "" {
+		tx = tx.Where("acl = ?", filter.ACL)
 	}
 	if !filter.Deleted {
 		tx = tx.Where("deleted = ?", 0)
@@ -134,30 +137,22 @@ func (r *SpaceStore) GetByName(ctx context.Context, name string) (*Space, error)
 // HasRepositories 检查空间是否有关联的代码库
 func (r *SpaceStore) HasRepositories(ctx context.Context, spaceID uint) (bool, error) {
 	var count int64
-	// TODO: 根据实际的代码库表结构修改此查询
-	// 示例：如果代码库表有 space_id 字段
-	// err := r.db.WithContext(ctx).Table("ops_repo").
-	//     Where("space_id = ? AND deleted = 0", spaceID).
-	//     Count(&count).Error
-
-	// 暂时返回 false，表示没有关联代码库，待实现
-	// 实际实现时需要检查代码库表
-	count = 0
+	if err := r.db.WithContext(ctx).Table("ops_repo").
+		Where("space_id = ? AND deleted = 0", spaceID).
+		Count(&count).Error; err != nil {
+		return false, database.ProcessSQLErrorf(ctx, err)
+	}
 	return count > 0, nil
 }
 
 // HasArtifacts 检查空间是否有关联的制品库
 func (r *SpaceStore) HasArtifacts(ctx context.Context, spaceID uint) (bool, error) {
 	var count int64
-	// TODO: 根据实际的制品库表结构修改此查询
-	// 示例：如果制品库表有 space_id 字段
-	// err := r.db.WithContext(ctx).Table("ops_artifact").
-	//     Where("space_id = ? AND deleted = 0", spaceID).
-	//     Count(&count).Error
-
-	// 暂时返回 false，表示没有关联制品库，待实现
-	// 实际实现时需要检查制品库表
-	count = 0
+	if err := r.db.WithContext(ctx).Table("ops_artifact_libs").
+		Where("space_id = ? AND deleted = 0", spaceID).
+		Count(&count).Error; err != nil {
+		return false, database.ProcessSQLErrorf(ctx, err)
+	}
 	return count > 0, nil
 }
 
@@ -208,8 +203,9 @@ func mapToModel(data Space) *spaceModel.SpaceResponse {
 	return &spaceModel.SpaceResponse{
 		ID:          data.ID,
 		Name:        data.Name,
+		Code:        data.Code,
 		Auth:        data.Auth,
-		Permission:  data.Permission,
+		ACL:         data.ACL,
 		Desc:        desc,
 		CreatedBy:   data.CreatedBy,
 		CreatedDate: data.CreatedDate,
