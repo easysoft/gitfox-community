@@ -64,7 +64,13 @@ func runStop(_ *kingpin.ParseContext) error {
 		return nil
 	}
 
-	hc, hcErr := readHealthURL()
+	workDir, err := WorkDir()
+	if err != nil {
+		fmt.Println(errStyle.Render(fmt.Sprintf(t(i18n.CliStopFailed), err)))
+		return nil
+	}
+
+	hc, hcErr := readHealthURL(workDir)
 	if hcErr != nil {
 		// 配置缺失不阻断 stop：服务可能仍在跑，systemctl stop 仍要执行。
 		fmt.Println(warnStyle.Render(hcErr.Error()))

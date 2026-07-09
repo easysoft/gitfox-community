@@ -551,8 +551,8 @@ type ReadHealthURLResult struct {
 }
 
 // readHealthURL 从当前工作目录的 prod.env 读取 host/port，拼装健康检查 URL。
-func readHealthURL() (ReadHealthURLResult, error) {
-	return readHealthURLFrom(".")
+func readHealthURL(workDir string) (ReadHealthURLResult, error) {
+	return readHealthURLFrom(workDir)
 }
 
 // readHealthURLFrom 从指定工作目录的 prod.env 读取 host/port，拼装健康检查 URL。
