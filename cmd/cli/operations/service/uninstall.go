@@ -46,7 +46,13 @@ func runUninstall(_ *kingpin.ParseContext) error {
 		return nil
 	}
 
-	hc, hcErr := readHealthURL()
+	workDir, err := WorkDir()
+	if err != nil {
+		fmt.Println(errStyle.Render(fmt.Sprintf(t(i18n.CliUninstallFailed), err)))
+		return nil
+	}
+
+	hc, hcErr := readHealthURL(workDir)
 	if hcErr != nil {
 		// 配置缺失不阻断 uninstall：仍要执行 stop + 系统注册移除。
 		fmt.Println(warnStyle.Render(hcErr.Error()))

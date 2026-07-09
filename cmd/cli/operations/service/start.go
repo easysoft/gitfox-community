@@ -34,8 +34,8 @@ func runStart(_ *kingpin.ParseContext) error {
 
 	// printBanner(t(i18n.CliStartWelcome))
 
-	// 获取当前执行目录作为 GitFox 的核心工作路径
-	workDir, err := os.Getwd()
+	// 获取当前执行文件所在目录，作为 GitFox 的核心工作路径
+	workDir, err := WorkDir()
 	if err != nil {
 		fmt.Println(errStyle.Render(fmt.Sprintf(t(i18n.CliStartFailed), err)))
 		return nil
