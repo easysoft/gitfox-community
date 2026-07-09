@@ -91,7 +91,7 @@ func containerDomainID(view *adapter.ViewDescriptor) string {
 		return "repo" + strconv.FormatInt(view.Repo.ID, 10)
 	}
 	if view != nil && view.Space != nil && view.Space.ID > 0 {
-		return "space" + strconv.FormatInt(view.Space.ID, 10)
+		return view.Space.Code
 	}
 	return "global"
 }

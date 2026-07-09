@@ -14,10 +14,20 @@ func (s *Service) ResolveGlobalArtifact(ctx context.Context, artifactName string
 	return s.resolveContainerArtifact(ctx, "global", 0, 0, artifactName)
 }
 
-// ResolveSpaceArtifact 空间作用域下按 (spaceID, artifactName) 精确定位制品库及其容器 group。
-// 对应路由：/v2/space{spaceID}/{artifactname}/{imagename}
-func (s *Service) ResolveSpaceArtifact(ctx context.Context, spaceID uint64, artifactName string) (*ContainerArtifactCtx, error) {
-	return s.resolveContainerArtifact(ctx, "space", int64(spaceID), 0, artifactName)
+
+// ResolveSpaceArtifactByCode 空间作用域下按 (spaceCode, artifactName) 精确定位制品库。
+// 对应路由：/v2/{spaceCode}/{artifactname}/{imagename}
+func (s *Service) ResolveSpaceArtifactByCode(ctx context.Context, spaceCode, artifactName string) (*ContainerArtifactCtx, error) {
+	space, err := s.spaceStore.GetByCode(ctx, spaceCode)
+	if err != nil {
+		return nil, err
+	}
+	artCtx, err := s.resolveContainerArtifact(ctx, "space", int64(space.ID), 0, artifactName)
+	if err != nil {
+		return nil, err
+	}
+	artCtx.SpaceCode = space.Code
+	return artCtx, nil
 }
 
 // ResolveRepoArtifact 仓库作用域下按 (repoID, artifactName) 精确定位制品库及其容器 group。

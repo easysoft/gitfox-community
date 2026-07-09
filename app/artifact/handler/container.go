@@ -508,9 +508,9 @@ func (h *ContainerHandler) HandleListTag(c *gin.Context) {
 // 路由形式：/v2/:domainid/:artifactname/:imagename/...
 // :domainid 取值：
 //
-//	"global"        → 全局作用域
-//	"space{ID}"     → 空间作用域
-//	"repo{ID}"      → 仓库作用域
+// "global"        → 全局作用域
+// "{spaceCode}"   → 空间作用域
+// "repo{ID}"      → 仓库作用域
 func (h *ContainerHandler) loadContainerRequest(c *gin.Context) (*ctnCtrl.ContainerReq, error) {
 	log := logger.GetLoggerFromGin(c)
 	ctx := c.Request.Context()
@@ -531,24 +531,10 @@ func (h *ContainerHandler) loadContainerRequest(c *gin.Context) (*ctnCtrl.Contai
 	)
 	switch {
 	case domainID == "global":
-		// 全局作用域：直接按 artifactName 查
 		scope = "global"
 		artCtx, err = h.artSvc.ResolveGlobalArtifact(ctx, artifactName)
 
-	case strings.HasPrefix(domainID, "space"):
-		// 空间作用域：去掉 "space" 前缀后必须全数字
-		idStr := strings.TrimPrefix(domainID, "space")
-		id, parseErr := strconv.ParseUint(idStr, 10, 64)
-		if parseErr != nil || idStr == "" {
-			log.Warnf("【container】invalid space domainid: %q", domainID)
-			return nil, ctnAdapter.ErrNameUnknown.
-				WithDetail(i18n.TGin(c, i18n.ArtifactContainerSpaceIdInvalid))
-		}
-		scope = "space"
-		artCtx, err = h.artSvc.ResolveSpaceArtifact(ctx, id, artifactName)
-
 	case strings.HasPrefix(domainID, "repo"):
-		// 仓库作用域：去掉 "repo" 前缀后必须全数字
 		idStr := strings.TrimPrefix(domainID, "repo")
 		id, parseErr := strconv.ParseUint(idStr, 10, 64)
 		if parseErr != nil || idStr == "" {
@@ -560,10 +546,8 @@ func (h *ContainerHandler) loadContainerRequest(c *gin.Context) (*ctnCtrl.Contai
 		artCtx, err = h.artSvc.ResolveRepoArtifact(ctx, id, artifactName)
 
 	default:
-		// 未知前缀：统一返回 NAME_UNKNOWN
-		log.Warnf("【container】invalid domainid: %q", domainID)
-		return nil, ctnAdapter.ErrNameUnknown.
-			WithDetail(i18n.TGin(c, i18n.ArtifactContainerDomainInvalid))
+		scope = "space"
+		artCtx, err = h.artSvc.ResolveSpaceArtifactByCode(ctx, domainID, artifactName)
 	}
 
 	if err != nil {
@@ -576,6 +560,7 @@ func (h *ContainerHandler) loadContainerRequest(c *gin.Context) (*ctnCtrl.Contai
 	return &ctnCtrl.ContainerReq{
 		Scope:        scope,
 		ScopeID:      artCtx.ScopeID(),
+		SpaceCode:    artCtx.SpaceCode,
 		ArtifactName: artifactName,
 		RepoName:     imageName,
 		View:         artCtx.View,
