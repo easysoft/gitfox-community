@@ -51,3 +51,17 @@ type ScheduleJob struct {
 	EditedDate          *datetime.Local `json:"editedDate"`
 	Deleted             uint8           `json:"deleted"`
 }
+
+// CreateJobRequest 创建/更新定时任务的请求参数
+type CreateJobRequest struct {
+	JobName            string `json:"jobName" binding:"required"`
+	JobType            string `json:"jobType" binding:"required"`
+	JobData            string `json:"jobData" binding:"required"`
+	CronDef            string `json:"cronDef" binding:"required"`
+	MaxDurationSeconds int64  `json:"maxDurationSeconds" binding:"required,min=1"`
+}
+
+// DeleteJobRequest 删除定时任务的请求参数
+type DeleteJobRequest struct {
+	JobName string `json:"jobName" binding:"required"`
+}
