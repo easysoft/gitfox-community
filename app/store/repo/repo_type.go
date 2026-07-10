@@ -22,6 +22,7 @@ type Repository struct {
 	Connector     []byte          `gorm:"column:connector;comment:'源代码库连接器信息'"`
 	Status        string          `gorm:"column:status;comment:'代码库状态（active,importing,archived）'"`
 	Synced        uint8           `gorm:"column:synced;comment:'同步标识'"`
+	SpaceCode     string          `gorm:"->;column:spaceCode;comment:'空间唯一标识(关联查询)'"`
 	CreatedBy     string          `gorm:"column:createdBy;comment:'创建人'"`
 	CreatedDate   *datetime.Local `gorm:"column:createdDate;comment:'创建时间'"`
 	EditedBy      string          `gorm:"column:editedBy;comment:'更新人'"`

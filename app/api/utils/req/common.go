@@ -24,8 +24,8 @@ type SpaceId struct {
 }
 
 type SpaceRepoRef struct {
-	SpaceID uint   `uri:"spaceID" binding:"required"`
-	RepoRef string `uri:"repoRef" binding:"required"`
+	SpaceCode string `uri:"spaceCode" binding:"required"`
+	RepoRef   string `uri:"repoRef" binding:"required"`
 }
 
 const (

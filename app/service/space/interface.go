@@ -15,10 +15,11 @@ type Interface interface {
 	Create(ctx context.Context, req spaceModel.CreateSpaceRequest) (*spaceModel.SpaceResponse, error)
 	List(ctx context.Context, filter spaceModel.ListSpaceFilter) (*database.PageResult[*space.Space], error)
 	GetByID(ctx context.Context, id uint) (*space.Space, error)
+	GetByCode(ctx context.Context, code string) (*space.Space, error)
 	Update(ctx context.Context, id uint, req spaceModel.UpdateSpaceRequest) (*spaceModel.SpaceResponse, error)
 	Delete(ctx context.Context, id uint) error
 	Restore(ctx context.Context, id uint) error
 
-	GetSpaceCheckAccess(ctx context.Context, session *auth.Session, spaceID uint, permissions []constant.Permission) (*space.Space, error)
+	GetSpaceCheckAccess(ctx context.Context, session *auth.Session, spaceCode string, permissions []constant.Permission) (*space.Space, error)
 	Events(ctx context.Context, spaceID uint) (<-chan *sse.Event, <-chan error, func(context.Context) error, error)
 }

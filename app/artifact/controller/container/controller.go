@@ -88,6 +88,8 @@ type ContainerReq struct {
 	Scope string
 	// ScopeID space/repo 作用域下的数字 ID，global 时为 0。
 	ScopeID uint64
+	// SpaceCode space 作用域下的空间标识，供 FullName 拼接使用。
+	SpaceCode string
 	// ArtifactName 对应 ops_artifact.name，取代旧的 ViewName。
 	ArtifactName string
 	// RepoName 镜像名（OCI image name）。
@@ -106,13 +108,10 @@ type ContainerReq struct {
 func (cr *ContainerReq) FullName() string {
 	switch cr.Scope {
 	case "global":
-		// global 作用域：直接以 "global" 为前缀，不带数字 ID
 		return "global/" + cr.ArtifactName + "/" + cr.RepoName
 	case "space":
-		// space 作用域：前缀 space{spaceID}，无分隔符
-		return "space" + strconv.FormatUint(cr.ScopeID, 10) + "/" + cr.ArtifactName + "/" + cr.RepoName
+		return cr.SpaceCode + "/" + cr.ArtifactName + "/" + cr.RepoName
 	default: // repo
-		// repo 作用域：前缀 repo{repoID}，无分隔符
 		return "repo" + strconv.FormatUint(cr.ScopeID, 10) + "/" + cr.ArtifactName + "/" + cr.RepoName
 	}
 }

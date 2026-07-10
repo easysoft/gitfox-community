@@ -2,7 +2,6 @@ package git
 
 import (
 	"context"
-	"strconv"
 	"strings"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
@@ -13,7 +12,7 @@ import (
 )
 
 // GitServicePack 处理 SSH Git 操作 (receive-/upload-pack)
-// repoRef 格式: "spaceID/repoName"，例如 "1/ldg-repo" 或 "1/org/project"（仓库名支持包含斜杠）
+// repoRef 格式: "spaceCode/repoName"，例如 "my_space/ldg-repo" 或 "my_space/org/project"（仓库名支持包含斜杠）
 func (c *GitController) GitServicePack(
 	ctx context.Context,
 	session *auth.Session,
@@ -22,23 +21,24 @@ func (c *GitController) GitServicePack(
 ) error {
 	log := logger.GetLogger(ctx)
 
-	// 解析 repoRef: "1/ldg-repo" -> spaceID=1, repoName="ldg-repo"
-	// 或 "1/org/project" -> spaceID=1, repoName="org/project"
+	// 解析 repoRef: "my_space/ldg-repo" -> spaceCode="my_space", repoName="ldg-repo"
+	// 或 "my_space/org/project" -> spaceCode="my_space", repoName="org/project"
 	// 使用 SplitN 确保只在第一个 / 处分割，后续的 / 都属于 repoName
 	parts := strings.SplitN(repoRef, "/", 2)
 	if len(parts) != 2 {
-		return errors.New("invalid repository path format, expected: spaceID/repoName")
+		return errors.New("invalid repository path format, expected: spaceCode/repoName")
 	}
 
-	// 解析 spaceID
-	spaceID, err := strconv.ParseUint(parts[0], 10, 32)
-	if err != nil {
-		return errors.Wrapf(err, "invalid spaceID: %s", parts[0])
-	}
-
+	spaceCode := parts[0]
 	repoName := strings.TrimSuffix(parts[1], ".git")
 
-	log.Infof("SSH Git operation: spaceID=%d, repoName=%s, service=%s", spaceID, repoName, options.Service)
+	log.Infof("SSH Git operation: spaceCode=%s, repoName=%s, service=%s", spaceCode, repoName, options.Service)
+
+	// 通过 spaceCode 查询 space
+	space, err := c.spaceSvc.GetByCode(ctx, spaceCode)
+	if err != nil {
+		return errors.Wrapf(err, "failed to find space by code: %s", spaceCode)
+	}
 
 	// 根据操作类型确定所需权限
 	permission := constant.PermissionRepoView
@@ -47,7 +47,7 @@ func (c *GitController) GitServicePack(
 	}
 
 	// 查询仓库并检查权限
-	repo, err := c.repoSvc.GetRepoCheckAccess(ctx, session, uint(spaceID), repoName, []constant.Permission{permission})
+	repo, err := c.repoSvc.GetRepoCheckAccess(ctx, session, space.ID, repoName, []constant.Permission{permission})
 	if err != nil {
 		return errors.Wrapf(err, "failed to get repository: %v", err)
 	}

@@ -15,7 +15,6 @@ type Interface interface {
 	Create(ctx context.Context, repo *Repository) (*repoModel.Repo, error)
 	Update(ctx context.Context, repo *Repository, id uint) (*repoModel.Repo, error)
 	UpdateOptLock(ctx context.Context, repo *repoModel.Repo, mutateFn func(repo *repoModel.Repo) error) (*repoModel.Repo, error)
-	FindByRef(ctx context.Context, ref string) (*repoModel.Repo, error)
 	GetByID(ctx context.Context, id uint) (*repoModel.Repo, error)
 	Delete(ctx context.Context, id uint) error
 	HardDelete(ctx context.Context, id uint) error

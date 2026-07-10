@@ -311,7 +311,9 @@ func backfillURLs(config *Config) error {
 		config.URL.Git = gitURL.JoinPath("git").String()
 	}
 	if config.URL.UI == "" {
-		config.URL.UI = baseURL.String()
+		uiURL := *baseURL
+		uiURL.Host = formatURLHost(uiURL.Hostname(), clonePort)
+		config.URL.UI = uiURL.String()
 	}
 	if config.URL.Registry == "" {
 		config.URL.Registry = combineToRawURL(scheme, "host.docker.internal", port, "")

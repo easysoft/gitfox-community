@@ -13,6 +13,7 @@ func TestBackfillURLsRepoPortExposure(t *testing.T) {
 	tests := []struct {
 		name          string
 		cfg           *Config
+		wantUI        string
 		wantGitURL    string
 		wantGitSSHURL string
 	}{
@@ -33,6 +34,7 @@ func TestBackfillURLsRepoPortExposure(t *testing.T) {
 					Port:   3322,
 				},
 			},
+			wantUI:        "http://gitfox.example.com:3000",
 			wantGitURL:    "http://gitfox.example.com:3000/git",
 			wantGitSSHURL: "ssh://gitfox.example.com:3322",
 		},
@@ -53,6 +55,7 @@ func TestBackfillURLsRepoPortExposure(t *testing.T) {
 					Port:   3322,
 				},
 			},
+			wantUI:        "http://gitfox.example.com",
 			wantGitURL:    "http://gitfox.example.com/git",
 			wantGitSSHURL: "ssh://gitfox.example.com",
 		},
@@ -69,6 +72,7 @@ func TestBackfillURLsRepoPortExposure(t *testing.T) {
 					Port:   22,
 				},
 			},
+			wantUI:        "https://gitfox.example.com/base",
 			wantGitURL:    "https://gitfox.example.com/base/git",
 			wantGitSSHURL: "ssh://gitfox.example.com",
 		},
@@ -83,6 +87,9 @@ func TestBackfillURLsRepoPortExposure(t *testing.T) {
 				t.Fatalf("backfillURLs() error = %v", err)
 			}
 
+			if tt.cfg.URL.UI != tt.wantUI {
+				t.Fatalf("UI URL = %q, want %q", tt.cfg.URL.UI, tt.wantUI)
+			}
 			if tt.cfg.URL.Git != tt.wantGitURL {
 				t.Fatalf("Git URL = %q, want %q", tt.cfg.URL.Git, tt.wantGitURL)
 			}

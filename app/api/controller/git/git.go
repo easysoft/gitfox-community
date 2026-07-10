@@ -55,7 +55,7 @@ func NewGitController(gitSvc git.Interface, spaceSvc spaceSvc.Interface, repoSvc
 // @Tags git
 // @Accept application/x-git-upload-pack-request
 // @Produce application/x-git-upload-pack-result
-// @Param spaceID path uint true "空间ID"
+// @Param spaceCode path string true "空间标识码"
 // @Param repoRef path string true "仓库标识 (支持 .git 后缀)"
 // @Param Content-Encoding header string false "内容编码 (如 gzip)"
 // @Param Git-Protocol header string false "Git 协议版本"
@@ -63,7 +63,7 @@ func NewGitController(gitSvc git.Interface, spaceSvc spaceSvc.Interface, repoSvc
 // @Failure 400 {object} resp.ObjectResponse "参数错误或权限不足"
 // @Failure 404 {object} resp.ObjectResponse "仓库不存在"
 // @Failure 500 {object} resp.ObjectResponse "服务器内部错误"
-// @Router /git/{spaceID}/{repoRef}/git-upload-pack [post]
+// @Router /git/{spaceCode}/{repoRef}/git-upload-pack [post]
 func (ctl *GitController) Clone(ctx *gin.Context) {
 	logger := logger.GetLogger(ctx)
 	var params req.SpaceRepoRef
@@ -80,7 +80,7 @@ func (ctl *GitController) Clone(ctx *gin.Context) {
 	repoIdentifier := strings.TrimSuffix(params.RepoRef, ".git")
 
 	// 获取仓库信息
-	repo, err := ctl.getRepoByIdentifier(ctx, session, params.SpaceID, repoIdentifier, constant.PermissionRepoView)
+	repo, err := ctl.getRepoByIdentifier(ctx, session, params.SpaceCode, repoIdentifier, constant.PermissionRepoView)
 	if err != nil {
 		resp.BadRequest(ctx, err)
 		return
@@ -129,7 +129,7 @@ func (ctl *GitController) Clone(ctx *gin.Context) {
 // @Tags git
 // @Accept application/x-git-receive-pack-request
 // @Produce application/x-git-receive-pack-result
-// @Param spaceID path uint true "空间ID"
+// @Param spaceCode path string true "空间标识码"
 // @Param repoRef path string true "仓库标识 (支持 .git 后缀)"
 // @Param Content-Encoding header string false "内容编码 (如 gzip)"
 // @Param Git-Protocol header string false "Git 协议版本"
@@ -137,7 +137,7 @@ func (ctl *GitController) Clone(ctx *gin.Context) {
 // @Failure 400 {object} resp.ObjectResponse "参数错误或权限不足"
 // @Failure 404 {object} resp.ObjectResponse "仓库不存在"
 // @Failure 500 {object} resp.ObjectResponse "服务器内部错误"
-// @Router /git/{spaceID}/{repoRef}/git-receive-pack [post]
+// @Router /git/{spaceCode}/{repoRef}/git-receive-pack [post]
 func (ctl *GitController) Push(ctx *gin.Context) {
 	logger := logger.GetLogger(ctx)
 	var params req.SpaceRepoRef
@@ -155,7 +155,7 @@ func (ctl *GitController) Push(ctx *gin.Context) {
 	repoIdentifier := strings.TrimSuffix(params.RepoRef, ".git")
 
 	// 获取仓库信息
-	repo, err := ctl.getRepoByIdentifier(ctx, session, params.SpaceID, repoIdentifier, constant.PermissionRepoPush)
+	repo, err := ctl.getRepoByIdentifier(ctx, session, params.SpaceCode, repoIdentifier, constant.PermissionRepoPush)
 	if err != nil {
 		resp.BadRequest(ctx, err)
 		return
@@ -213,7 +213,7 @@ func (ctl *GitController) Push(ctx *gin.Context) {
 // @Tags git
 // @Accept */*
 // @Produce application/x-git-upload-pack-advertisement,application/x-git-receive-pack-advertisement
-// @Param spaceID path uint true "空间ID"
+// @Param spaceCode path string true "空间标识码"
 // @Param repoRef path string true "仓库标识 (支持 .git 后缀)"
 // @Param service query string true "Git 服务类型" Enums(git-upload-pack, git-receive-pack)
 // @Param Git-Protocol header string false "Git 协议版本"
@@ -221,7 +221,7 @@ func (ctl *GitController) Push(ctx *gin.Context) {
 // @Failure 400 {object} resp.ObjectResponse "参数错误或权限不足"
 // @Failure 404 {object} resp.ObjectResponse "仓库不存在"
 // @Failure 500 {object} resp.ObjectResponse "服务器内部错误"
-// @Router /git/{spaceID}/{repoRef}/info/refs [get]
+// @Router /git/{spaceCode}/{repoRef}/info/refs [get]
 func (ctl *GitController) InfoRefs(ctx *gin.Context) {
 	logger := logger.GetLogger(ctx)
 	var params req.SpaceRepoRef
@@ -256,7 +256,7 @@ func (ctl *GitController) InfoRefs(ctx *gin.Context) {
 	logger.Infof("Parsed repoRef: %s, repoIdentifier: %s, service: %s, gitService: %s", params.RepoRef, repoIdentifier, service, gitService)
 
 	// 获取仓库信息
-	repo, err := ctl.getRepoByIdentifier(ctx, session, params.SpaceID, repoIdentifier, constant.PermissionRepoView)
+	repo, err := ctl.getRepoByIdentifier(ctx, session, params.SpaceCode, repoIdentifier, constant.PermissionRepoView)
 	if err != nil {
 		resp.BadRequest(ctx, err)
 		return
@@ -280,16 +280,16 @@ func (ctl *GitController) InfoRefs(ctx *gin.Context) {
 	}
 }
 
-// getRepoByIdentifier 通过 identifier 获取仓库并检查权限
-func (ctl *GitController) getRepoByIdentifier(ctx *gin.Context, session *auth.Session, spaceID uint, identifier string, permission constant.Permission) (*repoModel.Repo, error) {
+// getRepoByIdentifier 通过 spaceCode + identifier 获取仓库并检查权限
+func (ctl *GitController) getRepoByIdentifier(ctx *gin.Context, session *auth.Session, spaceCode string, identifier string, permission constant.Permission) (*repoModel.Repo, error) {
 	// 检查空间权限
-	_, err := ctl.spaceSvc.GetSpaceCheckAccess(ctx, session, spaceID, []constant.Permission{constant.PermissionSpaceView})
+	space, err := ctl.spaceSvc.GetSpaceCheckAccess(ctx, session, spaceCode, []constant.Permission{constant.PermissionSpaceView})
 	if err != nil {
 		return nil, err
 	}
 
 	// 通过 identifier 查询仓库
-	repo, err := ctl.repoSvc.GetRepoCheckAccess(ctx, session, spaceID, identifier, []constant.Permission{permission})
+	repo, err := ctl.repoSvc.GetRepoCheckAccess(ctx, session, space.ID, identifier, []constant.Permission{permission})
 	if err != nil {
 		return nil, errors.WithI18nKey(err, i18n.RepoQueryError)
 	}
@@ -313,7 +313,7 @@ func (ctl *GitController) prepareRequest(ctx *gin.Context, params *req.SpaceRepo
 		return nil, "", "", err
 	}
 
-	logger.Infof("origin url %s , spaceID: %d, repoRef: %s", ctx.Request.URL.String(), params.SpaceID, params.RepoRef)
+	logger.Infof("origin url %s , spaceCode: %s, repoRef: %s", ctx.Request.URL.String(), params.SpaceCode, params.RepoRef)
 
 	contentEncoding := req.GetHeaderOrDefault(ctx, req.HeaderContentEncoding, "")
 	gitProtocol := req.GetHeaderOrDefault(ctx, req.HeaderParamGitProtocol, "")

@@ -5,12 +5,13 @@ import (
 )
 
 const (
-	PathParamRepoRef     = "repoRef"
-	PathParamFilePath    = "filePath"
-	QueryParamRepoName   = "repoName"
-	QueryParamBranchName = "branchName"
-	QueryParamRepoID     = "repoID"
-	QueryParamSpaceID    = "spaceID"
+	PathParamRepoRef      = "repoRef"
+	PathParamFilePath     = "filePath"
+	QueryParamRepoName    = "repoName"
+	QueryParamBranchName  = "branchName"
+	QueryParamRepoID      = "repoID"
+	QueryParamSpaceCode   = "spaceCode"
+	QueryParamSpaceID     = "spaceID"
 
 	QueryParamOperation = "Operation"
 

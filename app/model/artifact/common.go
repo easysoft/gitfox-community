@@ -73,6 +73,7 @@ func ValidateViewName(name string, format ArtifactFormat) (string, error) {
 type SpaceRef struct {
 	ID   int64  `json:"id"`
 	Name string `json:"name"`
+	Code string `json:"code"`
 }
 
 // RepoRef 是给 artifact adapter 使用的精简仓库引用。

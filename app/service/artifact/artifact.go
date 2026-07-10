@@ -275,7 +275,7 @@ func (s *Service) fillViewDescriptorScope(ctx context.Context, desc *adapter.Vie
 		if err != nil {
 			return pkgErrors.WithI18nKey(err, i18n.ArtifactSpaceQueryError)
 		}
-		desc.Space = &model.SpaceRef{ID: int64(space.ID), Name: space.Name}
+		desc.Space = &model.SpaceRef{ID: int64(space.ID), Name: space.Name, Code: space.Code}
 	}
 
 	if view.RepoID > 0 {
@@ -312,10 +312,11 @@ func (s *Service) ParseSpaceView(ctx context.Context, req *model.SpaceRepoReq) (
 // ContainerArtifactCtx 容器镜像定位的查询结果。
 // 供 container handler 构造 ContainerReq 使用，包含下游需要的最小信息。
 type ContainerArtifactCtx struct {
-	Scope   string                  // "global" | "space" | "repo"
-	SpaceID int64                   // space 作用域下 > 0
-	RepoID  int64                   // repo 作用域下 > 0
-	View    *adapter.ViewDescriptor // artifact 对应的 view descriptor
+	Scope     string                  // "global" | "space" | "repo"
+	SpaceID   int64                   // space 作用域下 > 0
+	RepoID    int64                   // repo 作用域下 > 0
+	SpaceCode string                  // space 作用域下的空间编码，供 FullName 拼接使用
+	View      *adapter.ViewDescriptor // artifact 对应的 view descriptor
 }
 
 // ScopeID 返回对应 scope 的数字 ID（global 时为 0）。
