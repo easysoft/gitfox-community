@@ -10,6 +10,7 @@ import (
 	artifact3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/artifact"
 	branch3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/branch"
 	commit2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/commit"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/cron"
 	execution3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/execution"
 	fit2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/fit"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/githook"
@@ -298,7 +299,8 @@ func NewApp(mode string) (*App, func(), error) {
 	}
 	webhookController := webhook2.NewController(webhookService)
 	artifactController := artifact3.NewController(artifactService)
-	routerController := provider.NewControllers(spaceController, controller, pipelineController, executionController, runnerController, svnController, tagController, commitController, repoController, userController, gitController, scanController, fitController, webhookController, artifactController)
+	cronController := cron.NewController(jobsScheduler)
+	routerController := provider.NewControllers(spaceController, controller, pipelineController, executionController, runnerController, svnController, tagController, commitController, repoController, userController, gitController, scanController, fitController, webhookController, artifactController, cronController)
 	i18nManager, err := provider.NewI18nManager(config)
 	if err != nil {
 		cleanup2()

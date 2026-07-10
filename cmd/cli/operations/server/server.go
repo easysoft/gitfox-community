@@ -233,6 +233,12 @@ func (app *App) registerJobHandlers() {
 		panic(err)
 	}
 
+	if err := cronSvc.RegisterGitlabPipelineHandler(
+		app.JobScheduler, app.Triggerer, app.PipelineService, app.SystemConfig.Devops, app.TokenStore); err != nil {
+		app.SystemLog.Errorw("[Server] Failed to register GitLab pipeline cron handler", "error", err)
+		panic(err)
+	}
+
 	if err := cronSvc.RegisterScanHandler(
 		app.JobScheduler, app.ScanTaskSvc, app.ScanPlanSvc, app.ScanTriggerStore, app.RepoService, app.GitService); err != nil {
 		app.SystemLog.Errorw("[Server] Failed to register scan cron handler", "error", err)

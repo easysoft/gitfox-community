@@ -1,0 +1,8 @@
+# cron 相关翻译
+cron:
+  body_param_error: "Body 参数解析失败."
+  path_param_error: "Path 参数解析失败."
+  add_success: "定时任务创建/更新成功."
+  add_error: "定时任务创建/更新失败."
+  remove_success: "定时任务删除成功."
+  remove_error: "定时任务删除失败."

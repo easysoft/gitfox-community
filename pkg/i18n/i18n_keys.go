@@ -811,6 +811,14 @@ const (
 	RepoUpdateSuccess                  I18nKey = "repo.update_success"                    // 更新仓库成功
 	RepoUsernameRequired               I18nKey = "repo.username_required"                 // 用户名为空,请在个人中心维护用户名后再进行代码库相关操作
 
+	// Cron 相关常量
+	CronAddError       I18nKey = "cron.add_error"        // 定时任务创建/更新失败
+	CronAddSuccess     I18nKey = "cron.add_success"       // 定时任务创建/更新成功
+	CronBodyParamError I18nKey = "cron.body_param_error"  // Body 参数解析失败
+	CronPathParamError I18nKey = "cron.path_param_error"  // Path 参数解析失败
+	CronRemoveError    I18nKey = "cron.remove_error"      // 定时任务删除失败
+	CronRemoveSuccess  I18nKey = "cron.remove_success"    // 定时任务删除成功
+
 	// Request 相关常量
 	RequestInvalidBooleanParameter         I18nKey = "request.invalid_boolean_parameter"          // 参数必须为布尔值.
 	RequestInvalidContentType              I18nKey = "request.invalid_content_type"               // Content-Type 无效.

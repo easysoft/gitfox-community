@@ -9,6 +9,12 @@ const (
 	RunPolicyAlways    RunPolicy = "always"
 )
 
+const (
+	PipelineEngineGitFox  = "gitfox"
+	PipelineEngineGitLab  = "gitlab"
+	PipelineEngineJenkins = "jenkins"
+)
+
 // RunPolicyList 运行策略列表
 var RunPolicyList = []string{
 	string(RunPolicyOnSuccess),
