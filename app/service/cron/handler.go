@@ -50,18 +50,18 @@ func (h *pipelineTriggerHandler) Handle(ctx context.Context, input string, _ pkg
 	}
 
 	switch pipeline.Engine {
-	case constant.PipelineEngineGitLab:
-		return h.triggerGitlabPipeline(ctx, pipeline)
+	case constant.PipelineEngineGitLab, constant.PipelineEngineJenkins:
+		return h.triggerExternalPipeline(ctx, pipeline)
 	default:
 		return h.triggerPipeline(ctx, pipeline)
 	}
 }
 
-// triggerGitlabPipeline 调用 DevOps 接口触发 GitLab 流水线
-func (h *pipelineTriggerHandler) triggerGitlabPipeline(ctx context.Context, pipeline *pipelineModel.Pipeline) (string, error) {
+// triggerExternalPipeline 调用 DevOps 接口触发外部流水线
+func (h *pipelineTriggerHandler) triggerExternalPipeline(ctx context.Context, pipeline *pipelineModel.Pipeline) (string, error) {
 	entry, err := h.tokenStore.GetDevopsToken(ctx)
 	if err != nil {
-		return "", fmt.Errorf("failed to get devops token for gitlab pipeline trigger: %w", err)
+		return "", fmt.Errorf("failed to get devops token for external pipeline trigger: %w", err)
 	}
 
 	url := fmt.Sprintf("%s/pipelinetrigger?id=%d", h.devopsConfig.URL, pipeline.ID)
@@ -70,10 +70,10 @@ func (h *pipelineTriggerHandler) triggerGitlabPipeline(ctx context.Context, pipe
 	}
 
 	log := logger.GetLogger(ctx)
-	log.Infow("Triggering GitLab pipeline", "pipelineID", pipeline.ID, "url", url)
+	log.Infow("Triggering external pipeline", "pipelineID", pipeline.ID, "url", url)
 
 	if err := httpclient.Request(ctx, "GET", url, headers, nil, nil, nil); err != nil {
-		return "", fmt.Errorf("failed to trigger gitlab pipeline %d: %w", pipeline.ID, err)
+		return "", fmt.Errorf("failed to trigger external pipeline %d: %w", pipeline.ID, err)
 	}
 	return "", nil
 }
