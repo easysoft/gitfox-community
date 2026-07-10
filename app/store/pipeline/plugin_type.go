@@ -8,19 +8,19 @@ import (
 // Plugin 插件表 Store 层结构体
 type Plugin struct {
 	ID          int64           `gorm:"column:id;primaryKey;autoIncrement;comment:'插件ID，自增主键'"`
-	GroupID     int64           `gorm:"column:groupID;not null;comment:'插件分组ID'"`
-	Name        string          `gorm:"column:name;not null;uniqueIndex:uk_plugin_name;comment:'插件名称（唯一标识符）'"`
-	Desc        []byte          `gorm:"column:desc;not null;default:'';comment:'插件描述信息'"`
-	Logo        []byte          `gorm:"column:logo;type:text;not null;default:'';comment:'插件Logo（SVG格式）'"`
-	Yaml        []byte          `gorm:"column:yaml;type:longtext;not null;comment:'插件规范配置（YAML格式）'"`
-	Json        []byte          `gorm:"column:json;type:longtext;not null;comment:'插件规范配置（JSON格式）'"`
-	Type        string          `gorm:"column:type;not null;default:'';index:idx_plugin_type;comment:'插件类型：step/stage'"`
-	Kind        string          `gorm:"column:kind;not null;default:'';comment:'插件 kind'"`
-	CreatedBy   string          `gorm:"column:createdBy;not null;default:'';comment:'创建人'"`
-	CreatedDate *datetime.Local `gorm:"column:createdDate;comment:'创建时间'"`
-	EditedBy    string          `gorm:"column:editedBy;not null;default:'';comment:'更新人'"`
-	EditedDate  *datetime.Local `gorm:"column:editedDate;comment:'更新时间'"`
-	Deleted     int8            `gorm:"column:deleted;not null;default:0;comment:'删除标识，0-未删除，1-已删除'"`
+	GroupID     int64           `gorm:"column:groupID"`
+	Name        string          `gorm:"column:name;uniqueIndex:uk_plugin_name"`
+	Desc        []byte          `gorm:"column:desc"`
+	Logo        []byte          `gorm:"column:logo"`
+	Yaml        []byte          `gorm:"column:yaml"`
+	Json        []byte          `gorm:"column:json"`
+	Type        string          `gorm:"column:type"`
+	Kind        string          `gorm:"column:kind"`
+	CreatedBy   string          `gorm:"column:createdBy"`
+	CreatedDate *datetime.Local `gorm:"column:createdDate"`
+	EditedBy    string          `gorm:"column:editedBy"`
+	EditedDate  *datetime.Local `gorm:"column:editedDate"`
+	Deleted     int8            `gorm:"column:deleted"`
 }
 
 // TableName 指定数据库表名

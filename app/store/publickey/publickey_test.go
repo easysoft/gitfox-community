@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
 	pkgErrors "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -33,7 +34,7 @@ func TestStoreGetByID(t *testing.T) {
 	record := PublicKey{
 		Account:    "tester",
 		Identifier: "key-1",
-		Content:    "ssh-ed25519 AAAA",
+		Content:    database.NoNull("ssh-ed25519 AAAA"),
 		Type:       "ssh-ed25519",
 	}
 	if err := store.db.WithContext(ctx).Create(&record).Error; err != nil {

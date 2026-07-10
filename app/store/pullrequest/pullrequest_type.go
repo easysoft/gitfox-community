@@ -1,6 +1,7 @@
 package pullrequest
 
 import (
+	"database/sql"
 	"database/sql/driver"
 	"errors"
 	"strings"
@@ -48,35 +49,35 @@ func (ss StringSlice) Value() (driver.Value, error) {
 // PullRequest 合并请求表（ops_ppm）Store层结构体
 type PullRequest struct {
 	ID                uint            `gorm:"column:id;primaryKey;autoIncrement;comment:'自增主键'"`
-	Title             string          `gorm:"column:title;not null;comment:'PR 标题'"`
-	Desc              string          `gorm:"column:desc;type:text;not null;comment:'拉取请求详细描述'"`
-	RepoID            uint            `gorm:"column:repoID;not null;comment:'关联zt_repo表的id'"`
-	SourceRepoID      uint            `gorm:"column:sourceRepoID;not null;comment:'源仓库ID'"`
-	SourceBranch      string          `gorm:"column:sourceBranch;not null;comment:'源分支名称'"`
-	SourceSHA         string          `gorm:"column:sourceSHA;type:char(40);not null;comment:'源分支最新提交的SHA-1值'"`
-	TargetRepoID      uint            `gorm:"column:targetRepoID;not null;comment:'目标仓库ID'"`
-	TargetBranch      string          `gorm:"column:targetBranch;not null;comment:'目标分支名称'"`
-	MergedDate        *datetime.Local `gorm:"column:mergedDate;comment:'合并时间'"`
-	MergedBy          *string         `gorm:"column:mergedBy;comment:'执行合并操作的用户ID'"`
-	MergeMethod       string          `gorm:"column:mergeMethod;comment:'合并方法'"`
-	MergeTargetSHA    string          `gorm:"column:mergeTargetSHA;type:char(40);comment:'合并时目标分支的SHA'"`
-	MergeBaseSHA      string          `gorm:"column:mergeBaseSHA;type:char(40);not null;default:'';comment:'合并基准SHA'"`
-	MergeSHA          string          `gorm:"column:mergeSHA;type:char(40);comment:'合并后生成的commit SHA'"`
-	MergeCheckStatus  string          `gorm:"column:mergeCheckStatus;not null;comment:'合并前检查状态'"`
-	MergeConflicts    StringSlice     `gorm:"column:mergeConflicts;type:text;comment:'冲突文件列表'"`
-	RebaseCheckStatus string          `gorm:"column:rebaseCheckStatus;not null;default:'unchecked';comment:'变基检查状态'"`
-	RebaseConflicts   StringSlice     `gorm:"column:rebaseConflicts;type:text;comment:'变基冲突详情'"`
-	CommitCount       *uint           `gorm:"column:commitCount;comment:'PR包含的commit数量'"`
-	FileCount         *uint           `gorm:"column:fileCount;comment:'PR修改的文件数量'"`
-	Flow              int8            `gorm:"column:flow;not null;default:0;comment:'流程标识'"`
-	ReviewFlowID      uint            `gorm:"column:reviewFlowID;not null;default:0;comment:'关联的评审流程ID'"`
-	Additions         *uint           `gorm:"column:additions;comment:'新增的代码行数'"`
-	Deletions         *uint           `gorm:"column:deletions;comment:'删除的代码行数'"`
-	Status            string          `gorm:"column:status;not null;comment:'拉取请求状态'"`
-	CreatedBy         string          `gorm:"column:createdBy;not null;default:'';comment:'创建人'"`
-	CreatedDate       *datetime.Local `gorm:"column:createdDate;comment:'创建时间'"`
-	EditedBy          string          `gorm:"column:editedBy;not null;default:'';comment:'更新人'"`
-	EditedDate        *datetime.Local `gorm:"column:editedDate;comment:'更新时间'"`
+	Title             string          `gorm:"column:title"`
+	Desc              sql.NullString  `gorm:"column:desc"`
+	RepoID            uint            `gorm:"column:repoID"`
+	SourceRepoID      uint            `gorm:"column:sourceRepoID"`
+	SourceBranch      string          `gorm:"column:sourceBranch"`
+	SourceSHA         string          `gorm:"column:sourceSHA"`
+	TargetRepoID      uint            `gorm:"column:targetRepoID"`
+	TargetBranch      string          `gorm:"column:targetBranch"`
+	MergedDate        *datetime.Local `gorm:"column:mergedDate"`
+	MergedBy          *string         `gorm:"column:mergedBy"`
+	MergeMethod       string          `gorm:"column:mergeMethod"`
+	MergeTargetSHA    string          `gorm:"column:mergeTargetSHA"`
+	MergeBaseSHA      string          `gorm:"column:mergeBaseSHA"`
+	MergeSHA          string          `gorm:"column:mergeSHA"`
+	MergeCheckStatus  string          `gorm:"column:mergeCheckStatus"`
+	MergeConflicts    StringSlice     `gorm:"column:mergeConflicts"`
+	RebaseCheckStatus string          `gorm:"column:rebaseCheckStatus"`
+	RebaseConflicts   StringSlice     `gorm:"column:rebaseConflicts"`
+	CommitCount       *uint           `gorm:"column:commitCount"`
+	FileCount         *uint           `gorm:"column:fileCount"`
+	Flow              int8            `gorm:"column:flow"`
+	ReviewFlowID      uint            `gorm:"column:reviewFlowID"`
+	Additions         *uint           `gorm:"column:additions"`
+	Deletions         *uint           `gorm:"column:deletions"`
+	Status            string          `gorm:"column:status"`
+	CreatedBy         string          `gorm:"column:createdBy"`
+	CreatedDate       *datetime.Local `gorm:"column:createdDate"`
+	EditedBy          string          `gorm:"column:editedBy"`
+	EditedDate        *datetime.Local `gorm:"column:editedDate"`
 }
 
 // TableName 指定数据库表名

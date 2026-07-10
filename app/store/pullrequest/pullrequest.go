@@ -325,7 +325,7 @@ func mapPullRequestToModel(data PullRequest) *repoModel.PullRequest {
 	return &repoModel.PullRequest{
 		ID:                data.ID,
 		Title:             data.Title,
-		Desc:              data.Desc,
+		Desc:              data.Desc.String,
 		RepoID:            data.RepoID,
 		SourceRepoID:      data.SourceRepoID,
 		SourceBranch:      data.SourceBranch,
@@ -360,7 +360,7 @@ func mapModelToStore(data *repoModel.PullRequest) *PullRequest {
 	return &PullRequest{
 		ID:                data.ID,
 		Title:             data.Title,
-		Desc:              data.Desc,
+		Desc:              database.NullIfEmpty(data.Desc),
 		RepoID:            data.RepoID,
 		SourceRepoID:      data.SourceRepoID,
 		SourceBranch:      data.SourceBranch,

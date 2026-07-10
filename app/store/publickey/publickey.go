@@ -77,7 +77,7 @@ func (s *Store) Create(ctx context.Context, publicKey PublicKey) error {
 
 		// 校验是否已存在相同内容的公钥
 		for _, existingKey := range existingKeys {
-			if existingKey.Content == publicKey.Content {
+			if existingKey.Content == publicKey.Content.String {
 				err = errors.New("Key is already in use")
 				err = errors.WithI18nKey(err, i18n.AuthPubKeyAddAlreadyInUse)
 				return err

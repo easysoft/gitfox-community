@@ -33,7 +33,7 @@ func (s *Store) Create(ctx context.Context, execution *executionModel.Execution)
 		Commit:       execution.Commit,
 		CommitBefore: execution.CommitBefore,
 		Ref:          execution.Ref,
-		Params:       paramsJSON,
+		Params:       database.NoNull(paramsJSON),
 		StartedDate:  execution.StartedDate,
 		FinishedDate: execution.FinishedDate,
 		Duration:     execution.Duration,
@@ -75,7 +75,7 @@ func (s *Store) Update(ctx context.Context, execution *executionModel.Execution)
 		Commit:       execution.Commit,
 		CommitBefore: execution.CommitBefore,
 		Ref:          execution.Ref,
-		Params:       paramsJSON,
+		Params:       database.NoNull(paramsJSON),
 		StartedDate:  execution.StartedDate,
 		FinishedDate: execution.FinishedDate,
 		Duration:     execution.Duration,
@@ -108,8 +108,8 @@ func (s *Store) GetByID(ctx context.Context, id uint) (*executionModel.Execution
 // mapToModel converts database model to business model
 func mapToModel(e *Execution) *executionModel.Execution {
 	var params map[string]string
-	if e.Params != "" {
-		_ = json.Unmarshal([]byte(e.Params), &params)
+	if e.Params.String != "" {
+		_ = json.Unmarshal([]byte(e.Params.String), &params)
 	}
 
 	return &executionModel.Execution{
