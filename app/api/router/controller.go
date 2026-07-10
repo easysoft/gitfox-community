@@ -4,6 +4,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/artifact"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/branch"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/commit"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/cron"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/execution"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/fit"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/git"
@@ -36,5 +37,6 @@ type Controller struct {
 	Execution *execution.Controller
 	Test      *test.TestController
 	Fit       *fit.Controller
+	Cron      *cron.Controller
 	Artifact  *artifact.Controller
 }

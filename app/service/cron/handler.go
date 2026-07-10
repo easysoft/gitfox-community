@@ -7,6 +7,7 @@ import (
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	authModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
+	pipelineModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/pipeline"
 	scanModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
 	principalModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/user"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/triggerer"
@@ -16,13 +17,19 @@ import (
 	repoSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
 	scanSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/scan"
 	scanStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/scan"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/token"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/httpclient"
 	pkgJobs "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/jobs"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 )
 
 type pipelineTriggerHandler struct {
-	triggerer   triggerer.Triggerer
-	pipelineSvc pipelineSvc.Interface
+	triggerer    triggerer.Triggerer
+	pipelineSvc  pipelineSvc.Interface
+	devopsConfig config.DevopsConfig
+	tokenStore   token.Interface
 }
 
 type pipelineJobInput struct {
@@ -37,13 +44,45 @@ func (h *pipelineTriggerHandler) Handle(ctx context.Context, input string, _ pkg
 	if in.PipelineID <= 0 {
 		return "", fmt.Errorf("invalid pipelineID %d in cron job input", in.PipelineID)
 	}
-	if _, err := h.pipelineSvc.GetPipelineByID(ctx, in.PipelineID); err != nil {
+	pipeline, err := h.pipelineSvc.GetPipelineByID(ctx, in.PipelineID)
+	if err != nil {
 		return "", fmt.Errorf("failed to get pipeline %d: %w", in.PipelineID, err)
 	}
 
-	gitRef, err := h.resolveGitRef(ctx, in.PipelineID)
+	switch pipeline.Engine {
+	case constant.PipelineEngineGitLab:
+		return h.triggerGitlabPipeline(ctx, pipeline)
+	default:
+		return h.triggerPipeline(ctx, pipeline)
+	}
+}
+
+// triggerGitlabPipeline 调用 DevOps 接口触发 GitLab 流水线
+func (h *pipelineTriggerHandler) triggerGitlabPipeline(ctx context.Context, pipeline *pipelineModel.Pipeline) (string, error) {
+	entry, err := h.tokenStore.GetDevopsToken(ctx)
 	if err != nil {
-		return "", fmt.Errorf("failed to resolve gitRef for pipeline %d: %w", in.PipelineID, err)
+		return "", fmt.Errorf("failed to get devops token for gitlab pipeline trigger: %w", err)
+	}
+
+	url := fmt.Sprintf("%s/pipelinetrigger?id=%d", h.devopsConfig.URL, pipeline.ID)
+	headers := map[string]string{
+		"Authorization": entry.Key,
+	}
+
+	log := logger.GetLogger(ctx)
+	log.Infow("Triggering GitLab pipeline", "pipelineID", pipeline.ID, "url", url)
+
+	if err := httpclient.Request(ctx, "GET", url, headers, nil, nil, nil); err != nil {
+		return "", fmt.Errorf("failed to trigger gitlab pipeline %d: %w", pipeline.ID, err)
+	}
+	return "", nil
+}
+
+// triggerPipeline 通过内部 triggerer 触发流水线
+func (h *pipelineTriggerHandler) triggerPipeline(ctx context.Context, pipeline *pipelineModel.Pipeline) (string, error) {
+	gitRef, err := h.resolveGitRef(ctx, pipeline.ID)
+	if err != nil {
+		return "", fmt.Errorf("failed to resolve gitRef for pipeline %d: %w", pipeline.ID, err)
 	}
 
 	hook := &triggerer.Hook{
@@ -53,8 +92,8 @@ func (h *pipelineTriggerHandler) Handle(ctx context.Context, input string, _ pkg
 		Params:  map[string]string{"gitRef": gitRef},
 	}
 
-	if _, err = h.triggerer.Trigger(ctx, uint(in.PipelineID), hook); err != nil {
-		return "", fmt.Errorf("failed to trigger pipeline %d: %w", in.PipelineID, err)
+	if _, err = h.triggerer.Trigger(ctx, uint(pipeline.ID), hook); err != nil {
+		return "", fmt.Errorf("failed to trigger pipeline %d: %w", pipeline.ID, err)
 	}
 	return "", nil
 }
@@ -173,6 +212,11 @@ func (h *scanTriggerHandler) Handle(ctx context.Context, input string, _ pkgJobs
 func RegisterPipelineHandler(scheduler *jobsSvc.Scheduler, t triggerer.Triggerer, svc pipelineSvc.Interface) error {
 	handler := &pipelineTriggerHandler{triggerer: t, pipelineSvc: svc}
 	return scheduler.RegisterHandler(pipelineSvc.JobTypePipelineCron, handler)
+}
+
+func RegisterGitlabPipelineHandler(scheduler *jobsSvc.Scheduler, t triggerer.Triggerer, svc pipelineSvc.Interface, devopsConfig config.DevopsConfig, tokenStore token.Interface) error {
+	handler := &pipelineTriggerHandler{triggerer: t, pipelineSvc: svc, devopsConfig: devopsConfig, tokenStore: tokenStore}
+	return scheduler.RegisterHandler(pipelineSvc.JobTypeGitLabPipelineCron, handler)
 }
 
 // RegisterArtifactGCHandler 注册制品 GC 的 cron handler。

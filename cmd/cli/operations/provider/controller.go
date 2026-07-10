@@ -6,6 +6,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/artifact"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/branch"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/commit"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/cron"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/execution"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/fit"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/git"
@@ -42,6 +43,7 @@ func NewControllers(
 	fitController *fit.Controller,
 	webhookController *webhook.Controller,
 	artifactController *artifact.Controller,
+	cronController *cron.Controller,
 ) *router.Controller {
 	return &router.Controller{
 		Space:     spaceController,
@@ -59,5 +61,6 @@ func NewControllers(
 		Fit:       fitController,
 		Webhook:   webhookController,
 		Artifact:  artifactController,
+		Cron:      cronController,
 	}
 }

@@ -13,7 +13,9 @@ import (
 
 const (
 	// JobTypePipelineCron is the job type registered in the scheduler for pipeline cron triggers.
-	JobTypePipelineCron = "gitfox:pipeline:cron-trigger"
+	JobTypePipelineCron        = "gitfox:pipeline:cron-trigger"
+	JobTypeGitLabPipelineCron  = "gitlab:pipeline:cron-trigger"
+	JobTypeJenkinsPipelineCron = "jenkins:pipeline:cron-trigger"
 
 	// maxCronExprs is the upper bound of cron expressions per trigger.
 	maxCronExprs = 5

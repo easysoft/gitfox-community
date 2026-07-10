@@ -1,0 +1,8 @@
+# cron translations
+cron:
+  body_param_error: "Failed to parse request body."
+  path_param_error: "Failed to parse path parameter."
+  add_success: "Cron job created/updated successfully."
+  add_error: "Failed to create/update cron job."
+  remove_success: "Cron job deleted successfully."
+  remove_error: "Failed to delete cron job."
