@@ -1,6 +1,8 @@
 package pipeline
 
 import (
+	"database/sql"
+
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
 	"gorm.io/gorm"
 )
@@ -52,8 +54,8 @@ type PipelineContent struct {
 	ID          int64           `gorm:"column:id;primaryKey;autoIncrement;comment:'自增主键'"`
 	PipelineID  int64           `gorm:"column:pipelineID;not null;comment:'关联的流水线ID'"`
 	Version     int             `gorm:"column:version;not null;default:0;comment:'流水线版本'"`
-	Data        []byte          `gorm:"column:data;type:longtext;not null;default:'';comment:'流水线内容'"`
-	Variables   string          `gorm:"column:variables;type:text;not null;default:'';comment:'流水线参数'"`
+	Data        []byte          `gorm:"column:data"`
+	Variables   sql.NullString  `gorm:"column:variables"`
 	CreatedBy   string          `gorm:"column:createdBy;not null;default:'';comment:'创建人'"`
 	CreatedDate *datetime.Local `gorm:"column:createdDate;comment:'创建时间'"`
 	EditedBy    string          `gorm:"column:editedBy;not null;default:'';comment:'更新人'"`

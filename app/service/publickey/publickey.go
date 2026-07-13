@@ -90,10 +90,10 @@ func (s Service) Create(ctx context.Context, session *auth.Session, params *Publ
 	input := publickey.PublicKey{
 		Account:     session.User.Account,
 		Identifier:  params.Identifier,
-		Fingerprint: key.Fingerprint(), // 根据公钥内容计算的指纹（稳定摘要），用于快速查重与匹配。
-		Content:     params.Content,    // 公钥原始内容（如 ssh-ed25519 AAAA... user@host ），用于精确匹配与验证
-		Comment:     comment,           // 公钥末尾的注释部分（通常是 user@host ），便于展示和识别。
-		Type:        key.Type(),        // 公钥算法类型（如 ssh-ed25519 、 ssh-rsa ），用于展示与后续策略控制。
+		Fingerprint: key.Fingerprint(),               // 根据公钥内容计算的指纹（稳定摘要），用于快速查重与匹配。
+		Content:     database.NoNull(params.Content), // 公钥原始内容（如 ssh-ed25519 AAAA... user@host ），用于精确匹配与验证
+		Comment:     comment,                         // 公钥末尾的注释部分（通常是 user@host ），便于展示和识别。
+		Type:        key.Type(),                      // 公钥算法类型（如 ssh-ed25519 、 ssh-rsa ），用于展示与后续策略控制。
 	}
 
 	err = s.publicKeyStore.Create(ctx, input)
@@ -120,7 +120,7 @@ func (s Service) Update(ctx context.Context, session *auth.Session, id int64, pa
 		input = publickey.PublicKey{
 			Identifier:  params.Identifier,
 			Fingerprint: key.Fingerprint(),
-			Content:     params.Content,
+			Content:     database.NoNull(params.Content),
 			Comment:     comment,
 			Type:        key.Type(),
 		}

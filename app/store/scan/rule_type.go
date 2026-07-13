@@ -1,6 +1,8 @@
 package scan
 
 import (
+	"database/sql"
+
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
 	"gorm.io/gorm"
@@ -18,14 +20,14 @@ type Rule struct {
 	Tag         string                    `gorm:"column:tag"`
 	Priority    constant.ScanRulePriority `gorm:"column:priority"`
 	Type        constant.ScanRuleType     `gorm:"column:type"`
-	Content     string                    `gorm:"column:content"`
-	ContentEn   string                    `gorm:"column:contentEn"`
+	Content     sql.NullString            `gorm:"column:content"`
+	ContentEn   sql.NullString            `gorm:"column:contentEn"`
 	IsCustom    bool                      `gorm:"column:isCustom"`
 	Status      constant.ScanRuleStatus   `gorm:"column:status"`
 	CreatedBy   string                    `gorm:"column:createdBy"`
-	CreatedDate *datetime.Local                `gorm:"column:createdDate"`
+	CreatedDate *datetime.Local           `gorm:"column:createdDate"`
 	EditedBy    string                    `gorm:"column:editedBy"`
-	EditedDate  *datetime.Local                `gorm:"column:editedDate"`
+	EditedDate  *datetime.Local           `gorm:"column:editedDate"`
 	Deleted     bool                      `gorm:"column:deleted"`
 }
 

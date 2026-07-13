@@ -57,7 +57,7 @@ func (s *Store) Create(ctx context.Context, stage *stageModel.Stage) error {
 		Status:       string(stage.Status),
 		ErrorType:    stage.ErrorType,
 		ErrorCode:    stage.ErrorCode,
-		ErrorLog:     stage.ErrorLog,
+		ErrorLog:     database.NullIfEmpty(stage.ErrorLog),
 	}
 
 	if err := db.Create(dbStage).Error; err != nil {
@@ -111,7 +111,7 @@ func (s *Store) Update(ctx context.Context, stage *stageModel.Stage) error {
 		Status:       string(stage.Status),
 		ErrorType:    stage.ErrorType,
 		ErrorCode:    stage.ErrorCode,
-		ErrorLog:     stage.ErrorLog,
+		ErrorLog:     database.NullIfEmpty(stage.ErrorLog),
 	}
 
 	if err := db.Model(&Stage{}).Where("id = ?", stage.ID).Updates(dbStage).Error; err != nil {
@@ -227,7 +227,7 @@ func mapToModel(s *Stage) *stageModel.Stage {
 		Status:       constant.CIStatus(s.Status),
 		ErrorType:    s.ErrorType,
 		ErrorCode:    s.ErrorCode,
-		ErrorLog:     s.ErrorLog,
+		ErrorLog:     s.ErrorLog.String,
 	}
 }
 

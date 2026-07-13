@@ -43,7 +43,7 @@ func mapModelToPipelineContent(content *pipelineModel.PipelineContent) *Pipeline
 		PipelineID: content.PipelineID,
 		Version:    content.Version,
 		Data:       content.Data,
-		Variables:  content.Variables,
+		Variables:  database.NoNull(content.Variables),
 		CreatedBy:  content.CreatedBy,
 	}
 }
@@ -64,7 +64,7 @@ func mapPipelineContentToModel(content PipelineContent) *pipelineModel.PipelineC
 		Version:     content.Version,
 		Data:        decodedData,          // 解码后的原始字节数据
 		DataStr:     string(content.Data), // 数据库中的 base64 字符串
-		Variables:   content.Variables,
+		Variables:   content.Variables.String,
 		CreatedBy:   content.CreatedBy,
 		CreatedDate: content.CreatedDate,
 		EditedBy:    content.EditedBy,

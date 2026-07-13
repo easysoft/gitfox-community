@@ -1,6 +1,7 @@
 package token
 
 import (
+	"database/sql"
 	"time"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
@@ -9,11 +10,11 @@ import (
 )
 
 type Token struct {
-	ID         int64  `gorm:"column:id;primaryKey"`
-	Account    string `gorm:"column:account"`
-	Type       string `gorm:"column:type"`
-	Identifier string `gorm:"column:identifier"`
-	Token      string `gorm:"column:token"`
+	ID         int64          `gorm:"column:id;primaryKey"`
+	Account    string         `gorm:"column:account"`
+	Type       string         `gorm:"column:type"`
+	Identifier string         `gorm:"column:identifier"`
+	Token      sql.NullString `gorm:"column:token"`
 
 	ExpirationDate *time.Time `gorm:"column:expirationDate"` // ExpiresDate is an optional date that if specified restricts the validity of a token.
 	CreatedBy      string     `gorm:"column:createdBy"`
