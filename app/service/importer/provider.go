@@ -75,7 +75,7 @@ func (r *RepositoryInfo) ConvertToRepo(
 		Desc:          description,
 		SCMType:       scmType,
 		CreatedBy:     user.Account,
-		ForkID:        &forkID,
+		ForkID:        forkID,
 		DefaultBranch: r.DefaultBranch,
 		Status:        constant.RepoStateImporting, // 标记为导入中状态
 		ACL:           acl,

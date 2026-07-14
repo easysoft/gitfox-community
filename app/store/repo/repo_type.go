@@ -15,7 +15,7 @@ type Repository struct {
 	Product       string          `gorm:"column:product;comment:'关联产品'"`
 	GitUID        string          `gorm:"column:gitUID;comment:'Git仓库唯一标识'"`
 	DefaultBranch string          `gorm:"column:defaultBranch;comment:'默认分支名'"`
-	ForkID        *uint           `gorm:"column:forkID;comment:'派生来源代码库ID'"` // 指针类型：兼容数据库 NULL
+	ForkID        uint            `gorm:"column:forkID;comment:'派生来源代码库ID'"`
 	ACL           string          `gorm:"column:acl;comment:'权限类型（private=私有，open=公开）'"`
 	Mirror        bool            `gorm:"column:mirror;comment:'是否为镜像库（0=普通库，1=镜像库）'"`
 	ProviderID    uint            `gorm:"column:providerID;comment:'源代码库提供商ID'"`

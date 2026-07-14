@@ -80,7 +80,7 @@ type PullRequest struct {
 	TargetRepoID      uint              `json:"targetRepoID"`
 	TargetBranch      string            `json:"targetBranch"`
 	MergedDate        *datetime.Local   `json:"mergedDate"`
-	MergedBy          *string           `json:"mergedBy"`
+	MergedBy          string            `json:"mergedBy"`
 	MergeMethod       MergeMethod       `json:"mergeMethod"`
 	MergeTargetSHA    string            `json:"mergeTargetSHA"`
 	MergeBaseSHA      string            `json:"mergeBaseSHA"`
@@ -89,12 +89,12 @@ type PullRequest struct {
 	MergeConflicts    []string          `json:"mergeConflicts"`
 	RebaseCheckStatus MergeCheckStatus  `json:"rebaseCheckStatus"`
 	RebaseConflicts   []string          `json:"rebaseConflicts"`
-	CommitCount       *uint             `json:"commitCount"`
-	FileCount         *uint             `json:"fileCount"`
+	CommitCount       uint              `json:"commitCount"`
+	FileCount         uint              `json:"fileCount"`
 	Flow              int8              `json:"flow"`
 	ReviewFlowID      uint              `json:"reviewFlowID"`
-	Additions         *uint             `json:"additions"`
-	Deletions         *uint             `json:"deletions"`
+	Additions         uint              `json:"additions"`
+	Deletions         uint              `json:"deletions"`
 	Status            PullRequestStatus `json:"status"`
 	CreatedBy         string            `json:"createdBy"`
 	CreatedDate       *datetime.Local   `json:"createdDate"`

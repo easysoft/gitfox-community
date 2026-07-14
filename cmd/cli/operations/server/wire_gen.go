@@ -289,7 +289,7 @@ func NewApp(mode string) (*App, func(), error) {
 	scanPlanConditionService := scan2.NewScanPlanConditionService(store, scanPlanStore, scanConditionStore)
 	scanController := scan3.NewScanController(ruleSetService, ruleService, solutionService, scanTaskService, scanPlanService, scanTriggerService, scanConditionService, scanPlanConditionService, repoService, gitService)
 	fitService := fit.NewService(tokenInterface, devopsConfig)
-	fitController := fit2.NewController(fitService, repoService)
+	fitController := fit2.NewController(fitService, repoService, service)
 	webhookStore := webhook.NewWebhookStore(db)
 	webhookService, err := provider.ProvideWebhookService(eventContext, gitService, readerFactory, eventsReaderFactory, webhookStore, store, repoService, pullrequestStore, urlProvider)
 	if err != nil {

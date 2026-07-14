@@ -113,8 +113,8 @@ func (s *Service) triggerPREventOnBranchUpdate(ctx context.Context,
 
 			// reset merge-check fields for new run
 			pr.MergeSHA = ""
-			pr.CommitCount = nil
-			pr.FileCount = nil
+			pr.CommitCount = 0
+			pr.FileCount = 0
 			pr.MarkAsMergeUnchecked()
 
 			return nil

@@ -7,6 +7,7 @@ import (
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 	fitSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/fit"
 	repoSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
+	spaceSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/space"
 	svcUtils "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/utils"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
@@ -21,15 +22,17 @@ var (
 
 // Controller 处理 fit 相关的 HTTP 请求（Basic 认证，直连外部系统）
 type Controller struct {
-	fitSvc  fitSvc.Interface
-	repoSvc repoSvc.Interface
+	fitSvc   fitSvc.Interface
+	repoSvc  repoSvc.Interface
+	spaceSvc spaceSvc.Interface
 }
 
 // NewController 创建 fit 处理器实例
-func NewController(fitSvc fitSvc.Interface, repoSvc repoSvc.Interface) *Controller {
+func NewController(fitSvc fitSvc.Interface, repoSvc repoSvc.Interface, spaceSvc spaceSvc.Interface) *Controller {
 	return &Controller{
-		fitSvc:  fitSvc,
-		repoSvc: repoSvc,
+		fitSvc:   fitSvc,
+		repoSvc:  repoSvc,
+		spaceSvc: spaceSvc,
 	}
 }
 
@@ -73,14 +76,14 @@ func (ctl *Controller) GetBranchPermission(c *gin.Context) {
 // @Tags fit
 // @Accept application/json
 // @Produce application/json
-// @Param id path uint true "空间 ID"
+// @Param code path string true "空间编码"
 // @Param repoName query string true "仓库名称"
 // @Success 200 {object} resp.ObjectResponse{data=repoModel.Repo} "查询成功"
 // @Failure 400 {object} resp.ObjectResponse "参数错误"
 // @Failure 401 {object} resp.ObjectResponse "未授权"
-// @Failure 404 {object} resp.ObjectResponse "仓库不存在"
+// @Failure 404 {object} resp.ObjectResponse "空间或仓库不存在"
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
-// @Router /fit/spaces/{id} [get]
+// @Router /fit/spaces/{code} [get]
 func (ctl *Controller) GetRepoByName(c *gin.Context) {
 	session, ok := req.GetAuthSession(c.Request.Context())
 	if !ok {
@@ -88,9 +91,15 @@ func (ctl *Controller) GetRepoByName(c *gin.Context) {
 		return
 	}
 
-	spaceID, err := req.PathParamAsPositiveUint(c, "id")
+	spaceCode, err := req.PathParamOrError(c, "code")
 	if err != nil {
 		resp.BadRequest(c, errors.WithI18nKey(err, i18n.SpacePathParamError))
+		return
+	}
+
+	space, err := ctl.spaceSvc.GetByCode(c.Request.Context(), spaceCode)
+	if err != nil {
+		resp.NotFound(c, errors.WithI18nKey(err, i18n.SpaceNotFound))
 		return
 	}
 
@@ -100,7 +109,7 @@ func (ctl *Controller) GetRepoByName(c *gin.Context) {
 		return
 	}
 
-	repo, err := ctl.repoSvc.GetRepoCheckAccess(c.Request.Context(), session, spaceID, repoName, []constant.Permission{constant.PermissionRepoView})
+	repo, err := ctl.repoSvc.GetRepoCheckAccess(c.Request.Context(), session, space.ID, repoName, []constant.Permission{constant.PermissionRepoView})
 	if err != nil {
 		if errors.IsNotFound(err) {
 			resp.NotFound(c, err)

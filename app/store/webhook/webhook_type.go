@@ -8,8 +8,8 @@ import (
 // Webhook 对应数据库表 ops_webhooks
 type Webhook struct {
 	ID               uint            `gorm:"column:id"`
-	SpaceID          *int64          `gorm:"column:spaceID"`
-	RepoID           *int64          `gorm:"column:repoID"`
+	SpaceID          int64           `gorm:"column:spaceID"`
+	RepoID           int64           `gorm:"column:repoID"`
 	DisplayName      string          `gorm:"column:displayName"`
 	Desc             string          `gorm:"column:desc"`
 	URL              string          `gorm:"column:url"`
@@ -19,7 +19,7 @@ type Webhook struct {
 	Internal         bool            `gorm:"column:internal"`
 	AuthMethod       string          `gorm:"column:authMethod"`
 	AuthHeader       string          `gorm:"column:authHeader"`
-	LatestExecResult *string         `gorm:"column:latestExecResult"`
+	LatestExecResult string          `gorm:"column:latestExecResult"`
 	Enabled          bool            `gorm:"column:enabled"`
 	CreatedBy        string          `gorm:"column:createdBy"`
 	CreatedDate      *datetime.Local `gorm:"column:createdDate"`
