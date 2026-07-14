@@ -238,10 +238,10 @@ func (s *Service) updateMergeData(
 		fileCount := uint(mergeOutput.ChangedFileCount)
 		additions := uint(mergeOutput.Additions)
 		deletions := uint(mergeOutput.Deletions)
-		pr.CommitCount = &commitCount
-		pr.FileCount = &fileCount
-		pr.Additions = &additions
-		pr.Deletions = &deletions
+		pr.CommitCount = commitCount
+		pr.FileCount = fileCount
+		pr.Additions = additions
+		pr.Deletions = deletions
 
 		return nil
 	})

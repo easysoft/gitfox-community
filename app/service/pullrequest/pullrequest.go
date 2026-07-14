@@ -207,12 +207,12 @@ func (s *Service) GetMetadata(ctx context.Context, session *auth.Session, repoid
 		return nil, err
 	}
 
-	if pr.CommitCount != nil && pr.FileCount != nil && pr.Additions != nil && pr.Deletions != nil {
+	if pr.CommitCount != 0 && pr.FileCount != 0 && pr.Additions != 0 && pr.Deletions != 0 {
 		return &repoModel.DiffStats{
-			Commits:      *pr.CommitCount,
-			FilesChanged: *pr.FileCount,
-			Additions:    *pr.Additions,
-			Deletions:    *pr.Deletions,
+			Commits:      pr.CommitCount,
+			FilesChanged: pr.FileCount,
+			Additions:    pr.Additions,
+			Deletions:    pr.Deletions,
 		}, nil
 	}
 
@@ -544,10 +544,10 @@ func (s *Service) Merge(ctx context.Context, session *auth.Session, repoid uint,
 				RefType:         enum.RefTypeUndefined,
 				HeadExpectedSHA: sha.Must(params.SourceSHA),
 				Method:          enum.MergeMethod(params.Method),
-				})
-				if err != nil {
-					return nil, nil, processPullRequestMergeError(ctx, params.Method, err)
-				}
+			})
+			if err != nil {
+				return nil, nil, processPullRequestMergeError(ctx, params.Method, err)
+			}
 
 			// Dry Run（试运行）模式下，更新 Pull Request 的合并状态缓存 。
 			err = s.pullRequestStore.UpdateDiffStatsSafe(ctx, repoid, pr, &repoModel.DiffStats{

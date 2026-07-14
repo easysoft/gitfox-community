@@ -18,7 +18,7 @@ type CreateRepoReq struct {
 	DefaultBranch string `json:"defaultBranch"`                             // 默认分支（默认main）
 	Desc          string `json:"desc" binding:"max=500"`                    // 仓库描述（最大500字符）
 	Product       string `json:"product"`                                   // 关联产品
-	ForkID        *uint  `json:"forkID" binding:"omitempty"`                // 派生来源ID（可选）
+	ForkID        uint   `json:"forkID" binding:"omitempty"`                // 派生来源ID（可选）
 	ACL           string `json:"acl" binding:"required,oneof=open private"` // 权限（仅支持open/private）
 	Ignore        string `json:"ignore"`                                    // GitIgnore类型（如go/java）
 	License       string `json:"license"`                                   // 许可证类型（如mit/apache）
@@ -82,7 +82,7 @@ type Repo struct {
 	Product       string `json:"product"`
 	GitUID        string `json:"gitUID"`
 	DefaultBranch string `json:"defaultBranch"`
-	ForkID        *uint  `json:"forkID"` // 允许 NULL，用指针类型
+	ForkID        uint   `json:"forkID"`
 	ACL           string `json:"acl"`
 	Mirror        bool   `json:"mirror"`
 	ProviderID    uint   `json:"providerID"`

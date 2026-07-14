@@ -58,7 +58,7 @@ type PullRequest struct {
 	TargetRepoID      uint            `gorm:"column:targetRepoID"`
 	TargetBranch      string          `gorm:"column:targetBranch"`
 	MergedDate        *datetime.Local `gorm:"column:mergedDate"`
-	MergedBy          *string         `gorm:"column:mergedBy"`
+	MergedBy          string          `gorm:"column:mergedBy"`
 	MergeMethod       string          `gorm:"column:mergeMethod"`
 	MergeTargetSHA    string          `gorm:"column:mergeTargetSHA"`
 	MergeBaseSHA      string          `gorm:"column:mergeBaseSHA"`
@@ -67,12 +67,12 @@ type PullRequest struct {
 	MergeConflicts    StringSlice     `gorm:"column:mergeConflicts"`
 	RebaseCheckStatus string          `gorm:"column:rebaseCheckStatus"`
 	RebaseConflicts   StringSlice     `gorm:"column:rebaseConflicts"`
-	CommitCount       *uint           `gorm:"column:commitCount"`
-	FileCount         *uint           `gorm:"column:fileCount"`
+	CommitCount       uint            `gorm:"column:commitCount"`
+	FileCount         uint            `gorm:"column:fileCount"`
 	Flow              int8            `gorm:"column:flow"`
 	ReviewFlowID      uint            `gorm:"column:reviewFlowID"`
-	Additions         *uint           `gorm:"column:additions"`
-	Deletions         *uint           `gorm:"column:deletions"`
+	Additions         uint            `gorm:"column:additions"`
+	Deletions         uint            `gorm:"column:deletions"`
 	Status            string          `gorm:"column:status"`
 	CreatedBy         string          `gorm:"column:createdBy"`
 	CreatedDate       *datetime.Local `gorm:"column:createdDate"`

@@ -16,8 +16,8 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/sha"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 
-	"go.uber.org/mock/gomock"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/mock/gomock"
 )
 
 var (
@@ -62,10 +62,10 @@ func TestGetMetadata(t *testing.T) {
 					RepoID:       100,
 					SourceSHA:    "abc123",
 					MergeBaseSHA: "def456",
-					CommitCount:  &commitCount,
-					FileCount:    &fileCount,
-					Additions:    &additions,
-					Deletions:    &deletions,
+					CommitCount:  commitCount,
+					FileCount:    fileCount,
+					Additions:    additions,
+					Deletions:    deletions,
 				}
 				m.EXPECT().GetByID(gomock.Any(), uint(100), uint(1)).Return(mockPR, nil)
 			},
@@ -108,10 +108,10 @@ func TestGetMetadata(t *testing.T) {
 					RepoID:       100,
 					SourceSHA:    "abc123",
 					MergeBaseSHA: "def456",
-					CommitCount:  nil, // 无缓存
-					FileCount:    nil,
-					Additions:    nil,
-					Deletions:    nil,
+					CommitCount:  0, // 无缓存
+					FileCount:    0,
+					Additions:    0,
+					Deletions:    0,
 				}
 				m.EXPECT().GetByID(gomock.Any(), uint(100), uint(2)).Return(mockPR, nil)
 			},
@@ -737,7 +737,7 @@ func TestProcessPullRequestMergeErrorFastForwardNotAncestor(t *testing.T) {
 	err := processPullRequestMergeError(
 		context.Background(),
 		repoModel.MergeMethodFastForward,
-		errors.New("failed to merge \"feature\" to \"main\" in \"repo\" using the \"fast-forward\" merge method: " + fastForwardNotPossibleMessage),
+		errors.New("failed to merge \"feature\" to \"main\" in \"repo\" using the \"fast-forward\" merge method: "+fastForwardNotPossibleMessage),
 	)
 
 	assert.Error(t, err)
