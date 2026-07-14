@@ -2,7 +2,10 @@ module gitfox.zcorp.cc/git/Pangu/gitfox-community
 
 go 1.25.1
 
-replace github.com/drone/runner-go => gitfox.zcorp.cc/git/Pangu/runner-go v1.12.6
+replace (
+	gitfox.zcorp.cc/git/Pangu/dm-gorm v1.0.0 => gitfox.zcorp.cc/git/Pangu/dm-gorm.git v1.0.0
+	github.com/drone/runner-go => gitfox.zcorp.cc/git/Pangu/runner-go.git v1.12.6
+)
 
 require (
 	gitfox.zcorp.cc/git/Pangu/dm-gorm v1.0.0
