@@ -171,12 +171,12 @@ func (s *Service) Create(ctx context.Context, info webhookModel.Webhook) (*webho
 		triggerParts[i] = string(t)
 	}
 
-	var repoID *int64
-	var spaceID *int64
+	var repoID int64
+	var spaceID int64
 	if info.ParentType == string(constant.WebhookParentRepo) {
-		repoID = &info.ParentID
+		repoID = info.ParentID
 	} else if info.ParentType == string(constant.WebhookParentSpace) {
-		spaceID = &info.ParentID
+		spaceID = info.ParentID
 	}
 
 	webhook := &webhookStore.Webhook{

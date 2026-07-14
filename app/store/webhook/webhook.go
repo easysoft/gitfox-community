@@ -282,18 +282,18 @@ func mapToModel(data Webhook) *webhookModel.Webhook {
 	}
 
 	var latestExecResult *constant.WebhookExecutionResult
-	if data.LatestExecResult != nil {
-		r := constant.WebhookExecutionResult(*data.LatestExecResult)
+	if data.LatestExecResult != "" {
+		r := constant.WebhookExecutionResult(data.LatestExecResult)
 		latestExecResult = &r
 	}
 
 	parentID := int64(0)
 	parentType := ""
-	if data.RepoID != nil {
-		parentID = *data.RepoID
+	if data.RepoID != 0 {
+		parentID = data.RepoID
 		parentType = string(constant.WebhookParentRepo)
-	} else if data.SpaceID != nil {
-		parentID = *data.SpaceID
+	} else if data.SpaceID != 0 {
+		parentID = data.SpaceID
 		parentType = string(constant.WebhookParentSpace)
 	}
 

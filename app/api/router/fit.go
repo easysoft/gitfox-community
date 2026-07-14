@@ -21,7 +21,7 @@ func registerFitRoutes(r *gin.RouterGroup, controller *Controller) {
 
 		spaces := fit.Group("/spaces")
 		{
-			spaces.GET("/:id", controller.Fit.GetRepoByName)
+			spaces.GET("/:code", controller.Fit.GetRepoByName)
 		}
 	}
 }
