@@ -3,9 +3,11 @@ package repo
 import (
 	"context"
 	stderr "errors"
+	"fmt"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/paths"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
 	"gorm.io/gorm"
@@ -226,4 +228,20 @@ func (s *Store) List(ctx context.Context, filter repoModel.ReqFilter) (*database
 		Page:     pageResult.Page,
 		PageSize: pageResult.PageSize,
 	}, nil
+}
+
+// 查询迁移的历史代码库
+func (s *Store) GetMigrate(ctx context.Context) ([]*repoModel.Repo, error) {
+	var repos []*Repository
+	err := s.db.WithContext(ctx).Where("gitUID like ?", fmt.Sprintf("%s%%", constant.MigrateRepoGitUID)).Find(&repos).Error
+	if err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
+	}
+	// 转换为 model 类型
+	repoModels := make([]*repoModel.Repo, len(repos))
+	for i, repo := range repos {
+		repoModels[i] = mapToModel(*repo)
+	}
+
+	return repoModels, nil
 }

@@ -116,6 +116,21 @@ func (mr *MockInterfaceMockRecorder) GetBySpaceAndIdentifier(ctx, spaceID, ident
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBySpaceAndIdentifier", reflect.TypeOf((*MockInterface)(nil).GetBySpaceAndIdentifier), ctx, spaceID, identifier)
 }
 
+// GetMigrate mocks base method.
+func (m *MockInterface) GetMigrate(ctx context.Context) ([]*repo.Repo, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMigrate", ctx)
+	ret0, _ := ret[0].([]*repo.Repo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetMigrate indicates an expected call of GetMigrate.
+func (mr *MockInterfaceMockRecorder) GetMigrate(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMigrate", reflect.TypeOf((*MockInterface)(nil).GetMigrate), ctx)
+}
+
 // HardDelete mocks base method.
 func (m *MockInterface) HardDelete(ctx context.Context, id uint) error {
 	m.ctrl.T.Helper()

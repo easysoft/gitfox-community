@@ -454,6 +454,11 @@ func (s *Service) createRepositoryInternal(
 	// only execute file creation logic if files are provided
 	//nolint: nestif
 
+	// Empty repositories do not need a working copy clone.
+	if len(files) == 0 {
+		return nil
+	}
+
 	// we need temp dir for cloning
 	tempDir, err := os.MkdirTemp("", "*-"+base.RepoUID)
 	if err != nil {

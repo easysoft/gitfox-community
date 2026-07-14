@@ -23,6 +23,11 @@ type fakeRepoStore struct {
 	err  error
 }
 
+// GetMigrate implements [repo.Interface].
+func (f *fakeRepoStore) GetMigrate(ctx context.Context) ([]*repoModel.Repo, error) {
+	return nil, nil
+}
+
 func (f *fakeRepoStore) Create(ctx context.Context, repo *repoStore.Repository) (*repoModel.Repo, error) {
 	return nil, nil
 }

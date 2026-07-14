@@ -12,4 +12,5 @@ import (
 type Interface interface {
 	// GetByID returns a provider by its ID.
 	GetByID(ctx context.Context, id uint) (*providerModel.Provider, error)
+	GetByIDs(ctx context.Context, ids []uint) (map[uint]*providerModel.Provider, error)
 }

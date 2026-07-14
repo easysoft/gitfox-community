@@ -32,6 +32,20 @@ func (s *Store) GetByID(ctx context.Context, id uint) (*providerModel.Provider, 
 	return mapToModel(p), nil
 }
 
+func (s *Store) GetByIDs(ctx context.Context, ids []uint) (map[uint]*providerModel.Provider, error) {
+	var providers []*Provider
+	err := s.db.WithContext(ctx).Where("id IN ? AND deleted = 0", ids).Find(&providers).Error
+	if err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
+	}
+
+	providerModel := make(map[uint]*providerModel.Provider, len(providers))
+	for _, provider := range providers {
+		providerModel[provider.ID] = mapToModel(*provider)
+	}
+	return providerModel, nil
+}
+
 // mapToModel converts a store Provider to the model Provider.
 func mapToModel(p Provider) *providerModel.Provider {
 	return &providerModel.Provider{
