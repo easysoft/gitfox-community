@@ -39,11 +39,11 @@ func (s *Store) GetByIDs(ctx context.Context, ids []uint) (map[uint]*providerMod
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
 
-	providerModel := make(map[uint]*providerModel.Provider, len(providers))
+	providerModels := make(map[uint]*providerModel.Provider, len(providers))
 	for _, provider := range providers {
-		providerModel[provider.ID] = mapToModel(*provider)
+		providerModels[provider.ID] = mapToModel(*provider)
 	}
-	return providerModel, nil
+	return providerModels, nil
 }
 
 // mapToModel converts a store Provider to the model Provider.
