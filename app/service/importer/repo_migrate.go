@@ -17,20 +17,20 @@ func (r *Repository) Migrate(ctx context.Context) error {
 	log := logger.GetLogger(ctx)
 
 	// 先查询数据库，找出迁移过来的代码库列表
-	migrateDate, err := r.repoStore.GetMigrate(ctx)
+	migrateData, err := r.repoStore.GetMigrate(ctx)
 	if err != nil {
 		return err
 	}
-	if len(migrateDate) == 0 {
+	if len(migrateData) == 0 {
 		log.Infow("startup repo migrate: no candidate repos found")
 		return nil
 	}
-	log.Infow("startup repo migrate: loaded candidates", "count", len(migrateDate))
+	log.Infow("startup repo migrate: loaded candidates", "count", len(migrateData))
 
 	// 过滤出 providerId 列表
-	providerIDs := make([]uint, 0, len(migrateDate))
-	providerSet := make(map[uint]struct{}, len(migrateDate))
-	for _, repo := range migrateDate {
+	providerIDs := make([]uint, 0, len(migrateData))
+	providerSet := make(map[uint]struct{}, len(migrateData))
+	for _, repo := range migrateData {
 		if _, exists := providerSet[repo.ProviderID]; exists {
 			continue
 		}
@@ -54,7 +54,7 @@ func (r *Repository) Migrate(ctx context.Context) error {
 	failed := 0
 	scheduled := 0
 
-	for _, repo := range migrateDate {
+	for _, repo := range migrateData {
 		total++
 		jobName := JobIDFromRepoID(int64(repo.ID))
 		log.Infow("startup repo migrate: evaluating repo",
