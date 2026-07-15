@@ -224,7 +224,7 @@ func (s *Store) UpdateDiffStatsSafe(
 	targetRepoID uint,
 	pr *repoModel.PullRequest,
 	diffStats *repoModel.DiffStats,
-) error {
+) (*repoModel.PullRequest, error) {
 	err := s.db.Transaction(func(tx *gorm.DB) error {
 
 		if pr.SourceSHA != diffStats.HeadHash {
@@ -241,16 +241,40 @@ func (s *Store) UpdateDiffStatsSafe(
 			"additions":   diffStats.Additions,
 			"deletions":   diffStats.Deletions,
 		}
+
+		if diffStats.MergeTargetSHA != "" {
+			updates["mergeTargetSHA"] = diffStats.MergeTargetSHA
+		}
+		if diffStats.MergeBaseSHA != "" {
+			updates["mergeBaseSHA"] = diffStats.MergeBaseSHA
+		}
+		if diffStats.MergeSHA != nil {
+			updates["mergeSHA"] = *diffStats.MergeSHA
+		}
+
+		if diffStats.MergeCheckStatus != "" {
+			updates["mergeCheckStatus"] = diffStats.MergeCheckStatus
+			updates["mergeConflicts"] = StringSlice(diffStats.MergeConflicts)
+		}
+
+		if diffStats.RebaseCheckStatus != "" {
+			updates["rebaseCheckStatus"] = diffStats.RebaseCheckStatus
+			updates["rebaseConflicts"] = StringSlice(diffStats.RebaseConflicts)
+		}
+
 		if err := tx.WithContext(ctx).Model(&PullRequest{}).Where("targetRepoID = ? AND id = ?", targetRepoID, pr.ID).Updates(updates).Error; err != nil {
 			return err
 		}
 		return nil
 	})
-
 	if err != nil {
-		return database.ProcessSQLErrorf(ctx, err)
+		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
-	return nil
+	pr, err = s.GetByID(ctx, targetRepoID, pr.ID)
+	if err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
+	}
+	return pr, nil
 }
 
 // UpdateMergeAfter 安全的更新PR合并信息
