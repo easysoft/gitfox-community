@@ -223,6 +223,12 @@ func (app *App) runMigrations() {
 		app.SystemLog.Errorw("[Server] Failed to set devops token", "error", err)
 		panic(err)
 	}
+
+	// 迁移过来的代码库导入
+	if err := app.RepoImporterSvc.Migrate(context.Background()); err != nil {
+		app.SystemLog.Errorw("[Server] Failed to migrate repo", "error", err)
+		panic(err)
+	}
 }
 
 // registerJobHandlers 注册后台任务处理器（Pipeline Cron、Scan Cron、Artifact GC）。

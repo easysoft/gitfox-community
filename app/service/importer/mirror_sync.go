@@ -188,6 +188,10 @@ func (h *MirrorSyncHandler) Handle(ctx context.Context, data string, reportFn pk
 	if err != nil {
 		return "", fmt.Errorf("failed to find repo for mirror sync: %w", err)
 	}
+	if strings.HasPrefix(repo.GitUID, constant.MigrateRepoGitUID) {
+		log.Infow("mirror sync: skip repo with migrate placeholder gitUID", "repo.gitUID", repo.GitUID)
+		return "", nil
+	}
 	if repo.Status == constant.RepoStateSyncing {
 		log.Info("repo is syncing")
 		return "", nil

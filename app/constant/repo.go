@@ -15,3 +15,5 @@ const (
 	RepoScmTypeGit = "git"
 	RepoScmTypeSvn = "svn"
 )
+
+const MigrateRepoGitUID = "empty_gituid_"

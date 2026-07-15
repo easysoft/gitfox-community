@@ -344,6 +344,8 @@ func (r *Repository) firstSyncGitRepo(
 		Account: authn.HeaderAppAdmin,
 		Email:   authn.HeaderAdminEmail,
 	}}
+
+	oldGitUID := repo.GitUID
 	gitUID, err := r.createGitRepository(ctx, accountInfo, repo.ID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create empty git repository: %w", err)
@@ -403,6 +405,20 @@ func (r *Repository) firstSyncGitRepo(
 		if errDel := r.deleteGitRepository(cleanupCtx, &accountInfo, repo); errDel != nil {
 			log.Errorw("failed to delete git repository after failed import", "error", errDel)
 		}
+
+		// 如果是迁移的仓库，不删除库表记录，将 gitUID 置为导入时的标记
+		if strings.HasPrefix(oldGitUID, constant.MigrateRepoGitUID) {
+			_, err = r.repoStore.UpdateOptLock(ctx, repo, func(repo *repoModel.Repo) error {
+				repo.GitUID = oldGitUID
+				return nil
+			})
+			if err != nil {
+				return nil, fmt.Errorf("failed to update repository after import: %w", err)
+			}
+
+			return nil, fmt.Errorf("failed to import repository: %w", err)
+		}
+
 		if errDel := r.repoStore.HardDelete(cleanupCtx, repo.ID); errDel != nil {
 			log.Errorw("failed to delete repo record after failed import", "error", errDel)
 		}
@@ -435,6 +451,8 @@ func (r *Repository) firstSyncSvnRepo(
 	}
 
 	log.Infof("successfully created svn repository for '%s'", svnUID)
+
+	oldGitUID := repo.GitUID
 
 	// 更新 GitUID 为 svnUID，确保同步失败时能定位到仓库进行清理
 	updated, err := r.repoStore.UpdateOptLock(ctx, repo, func(repo *repoModel.Repo) error {
@@ -519,6 +537,20 @@ func (r *Repository) firstSyncSvnRepo(
 		if errDel := r.svn.RemoveWorkingCopy(svnUID); errDel != nil {
 			log.Errorw("failed to delete svn working copy after failed import", "error", errDel)
 		}
+
+		// 如果是迁移的仓库，不删除库表记录，将 gitUID 置为迁移过来的标记
+		if strings.HasPrefix(oldGitUID, constant.MigrateRepoGitUID) {
+			_, err = r.repoStore.UpdateOptLock(ctx, repo, func(repo *repoModel.Repo) error {
+				repo.GitUID = oldGitUID
+				return nil
+			})
+			if err != nil {
+				return nil, fmt.Errorf("failed to update repository after import: %w", err)
+			}
+
+			return nil, fmt.Errorf("failed to import repository: %w", err)
+		}
+
 		if errDel := r.repoStore.HardDelete(cleanupCtx, repo.ID); errDel != nil {
 			log.Errorw("failed to delete repo record after failed import", "error", errDel)
 		}
