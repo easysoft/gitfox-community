@@ -46,7 +46,7 @@ func (ctl *Controller) CreateOrUpdate(ctx *gin.Context) {
 	}
 
 	jobData := reqBody.JobData
-	if reqBody.JobType == pipelineSvc.JobTypeGitLabPipelineCron {
+	if reqBody.JobType == pipelineSvc.JobTypeGitLabPipelineCron || reqBody.JobType == pipelineSvc.JobTypeJenkinsPipelineCron {
 		pipelineID, _ := strconv.ParseInt(reqBody.JobData, 10, 64)
 		data, _ := json.Marshal(map[string]interface{}{
 			"pipelineID": pipelineID,

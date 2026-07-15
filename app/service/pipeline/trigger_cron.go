@@ -16,6 +16,14 @@ const (
 	JobTypePipelineCron        = "gitfox:pipeline:cron-trigger"
 	JobTypeGitLabPipelineCron  = "gitlab:pipeline:cron-trigger"
 	JobTypeJenkinsPipelineCron = "jenkins:pipeline:cron-trigger"
+	JobPipelineSyncCron        = "external:pipeline:cron-sync"
+
+	// JobUIDPipelineSync is the unique job name for the external pipeline sync cron job.
+	JobUIDPipelineSync = "external:pipeline:sync"
+	// JobCronPipelineSync runs the external pipeline sync every 5 minutes.
+	JobCronPipelineSync = "*/5 * * * *"
+	// JobPipelineSyncMaxDuration is the maximum execution duration for the pipeline sync job.
+	JobPipelineSyncMaxDuration = 2 * time.Minute
 
 	// maxCronExprs is the upper bound of cron expressions per trigger.
 	maxCronExprs = 5

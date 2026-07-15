@@ -18,6 +18,7 @@ const (
 	LogTypeScan      = "scan"
 	LogTypeSystem    = "system"
 	LogTypeJob       = "job"
+	LogTypeDefault   = "default"
 )
 
 func getLogPath(c config.LoggingConfig, logType string) string {
@@ -34,6 +35,11 @@ func getLogPath(c config.LoggingConfig, logType string) string {
 		return filepath.Join(c.LogDir, c.LogSystemConf.Filename)
 	case LogTypeJob:
 		return filepath.Join(c.LogDir, c.LogJobConf.Filename)
+	case LogTypeDefault:
+		if c.LogDefaultConf.Filename == "" {
+			return filepath.Join(c.LogDir, "default.log")
+		}
+		return filepath.Join(c.LogDir, c.LogDefaultConf.Filename)
 	default:
 		// 如果传入未知类型，默认使用 system 日志
 		return filepath.Join(c.LogDir, c.LogSystemConf.Filename)

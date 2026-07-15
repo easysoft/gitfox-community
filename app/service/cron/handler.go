@@ -219,6 +219,43 @@ func RegisterGitlabPipelineHandler(scheduler *jobsSvc.Scheduler, t triggerer.Tri
 	return scheduler.RegisterHandler(pipelineSvc.JobTypeGitLabPipelineCron, handler)
 }
 
+func RegisterJenkinsPipelineHandler(scheduler *jobsSvc.Scheduler, t triggerer.Triggerer, svc pipelineSvc.Interface, devopsConfig config.DevopsConfig, tokenStore token.Interface) error {
+	handler := &pipelineTriggerHandler{triggerer: t, pipelineSvc: svc, devopsConfig: devopsConfig, tokenStore: tokenStore}
+	return scheduler.RegisterHandler(pipelineSvc.JobTypeJenkinsPipelineCron, handler)
+}
+
+// 定时触发外部流水线同步
+type pipelineSyncHandler struct {
+	devopsConfig config.DevopsConfig
+	tokenStore   token.Interface
+}
+
+func (h *pipelineSyncHandler) Handle(ctx context.Context, input string, _ pkgJobs.ProgressReporter) (string, error) {
+
+	entry, err := h.tokenStore.GetDevopsToken(ctx)
+	if err != nil {
+		return "", fmt.Errorf("failed to get devops token for external pipeline sync: %w", err)
+	}
+
+	url := fmt.Sprintf("%s/syncexternalpipeline", h.devopsConfig.URL)
+	headers := map[string]string{
+		"Authorization": entry.Key,
+	}
+
+	log := logger.GetLogger(ctx)
+	log.Infow("sync external pipeline", "url", url)
+
+	if err := httpclient.Request(ctx, "GET", url, headers, nil, nil, nil); err != nil {
+		return "", fmt.Errorf("failed to sync external pipeline: %w", err)
+	}
+	return "", nil
+}
+
+func RegisterPipelineSyncHandler(scheduler *jobsSvc.Scheduler, devopsConfig config.DevopsConfig, tokenStore token.Interface) error {
+	handler := &pipelineSyncHandler{devopsConfig: devopsConfig, tokenStore: tokenStore}
+	return scheduler.RegisterHandler(pipelineSvc.JobPipelineSyncCron, handler)
+}
+
 // RegisterArtifactGCHandler 注册制品 GC 的 cron handler。
 // 仅注册通用 JobTypeArtifactGC：自动触发清理全部格式（entity 留空），
 // 用户主动调用 /artifacts/garbage[/:entity] 时按指定 entity 清理。

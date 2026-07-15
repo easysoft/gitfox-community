@@ -6,6 +6,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
+
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 )
 
 // ContextLogger 是 logger 在 Context 中的 key
@@ -17,17 +19,44 @@ type contextKey string
 const LoggerContextKey = contextKey(ContextLogger)
 
 var (
-	defaultLogger     *SugaredMateLogger
-	defaultLoggerOnce sync.Once
+	defaultLogger       *SugaredMateLogger
+	defaultLoggerOnce   sync.Once
+	defaultLogConfig    *config.LoggingConfig
+	defaultLogConfigMu  sync.RWMutex
 )
 
+// InitDefaultLogger 使用指定的配置初始化默认 logger。
+// 应在应用启动时尽早调用（在首次调用 GetLogger 之前）。
+// 如果未调用此函数，则回退到仅输出到 stderr 的 zap.NewProduction()。
+func InitDefaultLogger(cfg config.LoggingConfig) {
+	defaultLogConfigMu.Lock()
+	defer defaultLogConfigMu.Unlock()
+	defaultLogConfig = &cfg
+}
+
 // getDefaultLogger 获取或创建默认的 logger（不带 trace_id）
+// 如果已通过 InitDefaultLogger 设置了配置，则使用 lumberjack 轮转写入文件；
+// 否则回退到仅输出 stderr 的 zap.NewProduction()。
 func getDefaultLogger() *SugaredMateLogger {
 	defaultLoggerOnce.Do(func() {
-		zapLogger, _ := zap.NewProduction()
-		defaultLogger = &SugaredMateLogger{
-			base:          &ZapMateLogger{Logger: zapLogger},
-			SugaredLogger: zapLogger.Sugar(),
+		defaultLogConfigMu.RLock()
+		cfg := defaultLogConfig
+		defaultLogConfigMu.RUnlock()
+
+		if cfg != nil {
+			// 使用专用的 default 日志类型，与 system.log 分离避免 lumberjack 轮转冲突
+			zapLogger := NewZapLogger(*cfg, LogTypeDefault)
+			defaultLogger = &SugaredMateLogger{
+				base:          &ZapMateLogger{Logger: zapLogger, lock: new(sync.Mutex), entryChan: make(chan *logEntry, 1), wg: new(sync.WaitGroup)},
+				SugaredLogger: zapLogger.Sugar(),
+			}
+		} else {
+			// 未设置配置时的后备方案
+			zapLogger, _ := zap.NewProduction()
+			defaultLogger = &SugaredMateLogger{
+				base:          &ZapMateLogger{Logger: zapLogger},
+				SugaredLogger: zapLogger.Sugar(),
+			}
 		}
 	})
 	return defaultLogger

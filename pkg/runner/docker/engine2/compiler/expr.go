@@ -66,7 +66,7 @@ func evalif(code string, inputs map[string]interface{}) (bool, bool, error) {
 	// the pipeline is in a failing state.
 	isSuccess = false
 	output2, err2 := expr.Run(program, builtins)
-	if err1 != nil {
+	if err2 != nil {
 		return false, false, err2
 	}
 

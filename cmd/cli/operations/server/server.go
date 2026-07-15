@@ -18,6 +18,7 @@ import (
 	artifactSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/artifact"
 	cronSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/cron"
 	importerSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/importer"
+	pipelineSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/pipeline"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	clii18n "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n/cli"
@@ -239,6 +240,18 @@ func (app *App) registerJobHandlers() {
 		panic(err)
 	}
 
+	if err := cronSvc.RegisterJenkinsPipelineHandler(
+		app.JobScheduler, app.Triggerer, app.PipelineService, app.SystemConfig.Devops, app.TokenStore); err != nil {
+		app.SystemLog.Errorw("[Server] Failed to register Jenkins pipeline cron handler", "error", err)
+		panic(err)
+	}
+
+	if err := cronSvc.RegisterPipelineSyncHandler(
+		app.JobScheduler, app.SystemConfig.Devops, app.TokenStore); err != nil {
+		app.SystemLog.Errorw("[Server] Failed to register external pipeline sync handler", "error", err)
+		panic(err)
+	}
+
 	if err := cronSvc.RegisterScanHandler(
 		app.JobScheduler, app.ScanTaskSvc, app.ScanPlanSvc, app.ScanTriggerStore, app.RepoService, app.GitService); err != nil {
 		app.SystemLog.Errorw("[Server] Failed to register scan cron handler", "error", err)
@@ -267,8 +280,8 @@ func (app *App) registerJobHandlers() {
 }
 
 // registerRecurringJobs 注册定时调度任务。
-// 制品库 GC：北京时间每天 02:00 触发一次（cron 在 CST 下解析）。
 func (app *App) registerRecurringJobs(ctx context.Context) {
+	// 制品库 GC：北京时间每天 02:00 触发一次（cron 在 CST 下解析）。
 	if err := app.JobScheduler.AddRecurringWithData(
 		ctx,
 		artifactSvc.JobUIDArtifactGC,
@@ -278,6 +291,19 @@ func (app *App) registerRecurringJobs(ctx context.Context) {
 		time.Duration(artifactSvc.ArtifactGCJobMaxDurationSeconds)*time.Second,
 	); err != nil {
 		app.SystemLog.Errorw("[Server] Failed to register artifact GC recurring job", "error", err)
+		panic(err)
+	}
+
+	// 外部流水线同步：每 5 分钟触发一次
+	if err := app.JobScheduler.AddRecurringWithData(
+		ctx,
+		pipelineSvc.JobUIDPipelineSync,
+		pipelineSvc.JobPipelineSyncCron,
+		"",
+		pipelineSvc.JobCronPipelineSync,
+		pipelineSvc.JobPipelineSyncMaxDuration,
+	); err != nil {
+		app.SystemLog.Errorw("[Server] Failed to register pipeline sync recurring job", "error", err)
 		panic(err)
 	}
 
