@@ -28,7 +28,7 @@ func recyclePaging(page, pageSize int) (offset, limit int) {
 }
 
 // ListRecycle 列出回收站中的制品库（ops_artifact 软删记录）。
-func (c *views) ListRecycle(ctx context.Context, page, pageSize int) ([]*model.ArtifactView, int64, error) {
+func (c *libs) ListRecycle(ctx context.Context, page, pageSize int) ([]*model.ArtifactView, int64, error) {
 	offset, limit := recyclePaging(page, pageSize)
 	var (
 		rows  []*artifactView

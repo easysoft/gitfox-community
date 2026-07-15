@@ -51,6 +51,9 @@ type ViewInterface interface {
 	// Restore 恢复制品库视图（将 deleted 置为 0），并把 operator 写入 editedBy（即"恢复人"）。
 	Restore(ctx context.Context, viewID int64, operator string) error
 
+	// ListByScope 列出指定作用域下的所有未软删视图。
+	ListByScope(ctx context.Context, spaceID int64, repoID int64) ([]*model.ArtifactView, error)
+
 	// ListRecycle 列出回收站中的制品库（deleted=1），按 editedDate 倒序分页。
 	ListRecycle(ctx context.Context, page, pageSize int) ([]*model.ArtifactView, int64, error)
 }

@@ -391,7 +391,7 @@ func (s *Service) getVersionNodeInfo(ctx context.Context, versionID int64) (*mod
 	}
 
 	populateNodeInfoAssetFields(info, assetRes)
-	info.Link = buildArtifactAssetLink(nodeInfoSpaceName(view), string(pkg.Format), pkg.Namespace, pkg.Name, ver.Version, assetRes.Path)
+	info.Link = buildArtifactAssetLink(nodeInfoSpaceCode(view), nodeInfoRepoIdentifier(view), view.ArtifactName, string(pkg.Format), pkg.Namespace, pkg.Name, ver.Version, assetRes.Path)
 	return info, nil
 }
 
@@ -489,7 +489,7 @@ func (s *Service) getGroupAssetNodeInfo(ctx context.Context, dbAsset *model.Arti
 		},
 	}
 	populateNodeInfoAssetFields(info, assetRes)
-	info.Link = buildArtifactAssetLink(nodeInfoSpaceName(view), string(dbAsset.Format), group.GroupPath(), "", "", assetRes.Path)
+	info.Link = buildArtifactAssetLink(nodeInfoSpaceCode(view), nodeInfoRepoIdentifier(view), view.ArtifactName, string(dbAsset.Format), group.GroupPath(), "", "", assetRes.Path)
 	return info, nil
 }
 
