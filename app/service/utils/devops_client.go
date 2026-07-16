@@ -3,6 +3,7 @@ package utils
 import (
 	"context"
 	"fmt"
+	"net/url"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/httpclient"
 )
@@ -25,7 +26,7 @@ type BranchPermissionResult struct {
 
 // GetBranchPermission 获取分支权限
 func GetBranchPermission(ctx context.Context, baseURL string, repoID int64, branchName string, authorization string) (*BranchPermissionResult, error) {
-	url := fmt.Sprintf("%s/branchrules?id=%d&branchName=%s", baseURL, repoID, branchName)
+	url := fmt.Sprintf("%s/branchrules?id=%d&branchName=%s", baseURL, repoID, url.QueryEscape(branchName))
 	headers := map[string]string{
 		"Authorization": authorization,
 	}
