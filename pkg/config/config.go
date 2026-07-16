@@ -177,6 +177,7 @@ type LoggingConfig struct {
 	LogScanConf      LogScanConfig      `yaml:"logScanConf"`
 	LogSystemConf    LogSystemConfig    `yaml:"logSystemConf"`
 	LogJobConf       LogJobConfig       `yaml:"logJobConf"`
+	LogDefaultConf   LogDefaultConfig   `yaml:"logDefaultConf"`
 }
 
 // LogAPIServerConfig
@@ -206,6 +207,11 @@ type LogSystemConfig struct {
 
 // LogJobConfig
 type LogJobConfig struct {
+	Filename string `yaml:"filename"`
+}
+
+// LogDefaultConfig 默认日志配置（GetLogger 无法从 context 中获取 logger 时使用）
+type LogDefaultConfig struct {
 	Filename string `yaml:"filename"`
 }
 

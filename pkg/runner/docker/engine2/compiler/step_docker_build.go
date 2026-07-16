@@ -29,7 +29,7 @@ func createDockerBuildSteps(stage *harness.Stage, src *harness.Step,
 		spec.Dockerfile = "Dockerfile"
 	}
 
-	if spec.Platforms == nil || len(spec.Platforms) == 0 {
+	if len(spec.Platforms) == 0 {
 		spec.Platforms = []string{"linux/amd64"}
 	}
 
