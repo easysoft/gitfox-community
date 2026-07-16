@@ -137,7 +137,7 @@ func TestGetMetadata(t *testing.T) {
 				m.EXPECT().DiffStats(gomock.Any(), gomock.Any()).Return(mockOutput, nil)
 			},
 			mockPRStoreUpd: func(m *prStoreMock.MockInterface) {
-				m.EXPECT().UpdateDiffStatsSafe(gomock.Any(), uint(100), gomock.Any(), gomock.Any()).Return(nil)
+				m.EXPECT().UpdateDiffStatsSafe(gomock.Any(), uint(100), gomock.Any(), gomock.Any()).Return((*repoModel.PullRequest)(nil), nil)
 			},
 			inputRepoID:   100,
 			inputPRNumber: 2,

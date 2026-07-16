@@ -130,11 +130,12 @@ func (mr *MockInterfaceMockRecorder) ResetMergeCheckStatus(ctx, targetRepoID, ta
 }
 
 // UpdateDiffStatsSafe mocks base method.
-func (m *MockInterface) UpdateDiffStatsSafe(ctx context.Context, repoID uint, pr *repo.PullRequest, diffStats *repo.DiffStats) error {
+func (m *MockInterface) UpdateDiffStatsSafe(ctx context.Context, repoID uint, pr *repo.PullRequest, diffStats *repo.DiffStats) (*repo.PullRequest, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateDiffStatsSafe", ctx, repoID, pr, diffStats)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(*repo.PullRequest)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // UpdateDiffStatsSafe indicates an expected call of UpdateDiffStatsSafe.

@@ -18,7 +18,7 @@ type Interface interface {
 	UpdateMergeCheckStatus(ctx context.Context, repoID uint, id uint, status repoModel.MergeCheckStatus, conflicts *string) error
 	UpdateRebaseCheckStatus(ctx context.Context, repoID uint, id uint, status repoModel.MergeCheckStatus, conflicts *string) error
 	ResetMergeCheckStatus(ctx context.Context, targetRepoID uint, targetBranch string) error
-	UpdateDiffStatsSafe(ctx context.Context, repoID uint, pr *repoModel.PullRequest, diffStats *repoModel.DiffStats) error
+	UpdateDiffStatsSafe(ctx context.Context, repoID uint, pr *repoModel.PullRequest, diffStats *repoModel.DiffStats) (*repoModel.PullRequest, error)
 	UpdateMergeAfterSafe(ctx context.Context, repoID uint, pr *repoModel.PullRequest, mergeAfter *repoModel.MergeAfter) error
 	CountByTargetRepoID(ctx context.Context, targetRepoID uint) (int64, error)
 	CountByStatus(ctx context.Context, targetRepoID uint, status repoModel.PullRequestStatus) (int64, error)

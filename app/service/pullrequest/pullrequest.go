@@ -38,6 +38,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/stream"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/url"
+	"github.com/gotidy/ptr"
 )
 
 type Service struct {
@@ -209,6 +210,7 @@ func (s *Service) GetMetadata(ctx context.Context, session *auth.Session, repoid
 
 	if pr.CommitCount != 0 && pr.FileCount != 0 && pr.Additions != 0 && pr.Deletions != 0 {
 		return &repoModel.DiffStats{
+			MergeSHA:     ptr.String(""),
 			Commits:      pr.CommitCount,
 			FilesChanged: pr.FileCount,
 			Additions:    pr.Additions,
@@ -234,10 +236,12 @@ func (s *Service) GetMetadata(ctx context.Context, session *auth.Session, repoid
 	}
 
 	// updata diff stats
-	err = s.pullRequestStore.UpdateDiffStatsSafe(ctx, repoid, pr, re)
+	_, err = s.pullRequestStore.UpdateDiffStatsSafe(ctx, repoid, pr, re)
 	if err != nil {
 		return nil, err
 	}
+
+	re.MergeSHA = ptr.String("")
 
 	return re, nil
 }
@@ -265,6 +269,7 @@ func (s *Service) GetDiffStats(ctx context.Context, session *auth.Session, repoi
 	}
 
 	re := &repoModel.DiffStats{
+		MergeSHA:     ptr.String(""),
 		Commits:      uint(output.Commits),
 		FilesChanged: uint(output.FilesChanged),
 		Additions:    uint(output.Additions),
@@ -549,17 +554,26 @@ func (s *Service) Merge(ctx context.Context, session *auth.Session, repoid uint,
 				return nil, nil, processPullRequestMergeError(ctx, params.Method, err)
 			}
 
+			df := &repoModel.DiffStats{
+				MergeTargetSHA: mergeOutput.BaseSHA.String(),
+				MergeBaseSHA:   mergeOutput.MergeBaseSHA.String(),
+				MergeSHA:       ptr.String(""),
+				HeadHash:       mergeOutput.HeadSHA.String(),
+				Commits:        uint(mergeOutput.CommitCount),
+				FilesChanged:   uint(mergeOutput.ChangedFileCount),
+				Additions:      uint(mergeOutput.Additions),
+				Deletions:      uint(mergeOutput.Deletions),
+			}
+			df.UpdateMergeOutcome(params.Method, mergeOutput.ConflictFiles)
+
 			// Dry Run（试运行）模式下，更新 Pull Request 的合并状态缓存 。
-			err = s.pullRequestStore.UpdateDiffStatsSafe(ctx, repoid, pr, &repoModel.DiffStats{
-				HeadHash:     mergeOutput.MergeSHA.String(),
-				Commits:      uint(mergeOutput.CommitCount),
-				FilesChanged: uint(mergeOutput.ChangedFileCount),
-				Additions:    uint(mergeOutput.Additions),
-				Deletions:    uint(mergeOutput.Deletions),
-			})
+			newPr, err := s.pullRequestStore.UpdateDiffStatsSafe(ctx, repoid, pr, df)
 			if err != nil {
 				logger.Errorf("failed to update unchecked pull request diff stats,err:%v", err)
+			} else {
+				pr = newPr
 			}
+
 			// TODO: send sse event
 		}
 
@@ -655,16 +669,22 @@ func (s *Service) Merge(ctx context.Context, session *auth.Session, repoid uint,
 
 	// 处理合并冲突
 	if mergeOutput.MergeSHA.String() == "" || len(mergeOutput.ConflictFiles) > 0 {
-		err = s.pullRequestStore.UpdateDiffStatsSafe(ctx, repoid, pr, &repoModel.DiffStats{
-			HeadHash:     mergeOutput.MergeSHA.String(),
-			Commits:      uint(mergeOutput.CommitCount),
-			FilesChanged: uint(mergeOutput.ChangedFileCount),
-			Additions:    uint(mergeOutput.Additions),
-			Deletions:    uint(mergeOutput.Deletions),
-		})
-
+		df := &repoModel.DiffStats{
+			MergeTargetSHA: mergeOutput.BaseSHA.String(),
+			MergeBaseSHA:   mergeOutput.MergeBaseSHA.String(),
+			MergeSHA:       ptr.String(""),
+			HeadHash:       mergeOutput.HeadSHA.String(),
+			Commits:        uint(mergeOutput.CommitCount),
+			FilesChanged:   uint(mergeOutput.ChangedFileCount),
+			Additions:      uint(mergeOutput.Additions),
+			Deletions:      uint(mergeOutput.Deletions),
+		}
+		df.UpdateMergeOutcome(params.Method, mergeOutput.ConflictFiles)
+		newPr, err := s.pullRequestStore.UpdateDiffStatsSafe(ctx, repoid, pr, df)
 		if err != nil {
 			logger.Errorf("failed to update pull request with conflict files,err:%v", err)
+		} else {
+			pr = newPr
 		}
 
 		// TODO: send sse event
@@ -679,21 +699,22 @@ func (s *Service) Merge(ctx context.Context, session *auth.Session, repoid uint,
 
 	logger.Infof("successfully merged PR")
 
+	mergeSHA := mergeOutput.MergeSHA.String()
 	// 合并成功后收尾工作
 	err = s.pullRequestStore.UpdateMergeAfterSafe(ctx, repoid, pr, &repoModel.MergeAfter{
 		DiffStats: repoModel.DiffStats{
-			HeadHash:     mergeOutput.MergeSHA.String(),
-			Commits:      uint(mergeOutput.CommitCount),
-			FilesChanged: uint(mergeOutput.ChangedFileCount),
-			Additions:    uint(mergeOutput.Additions),
-			Deletions:    uint(mergeOutput.Deletions),
+			HeadHash:       mergeOutput.HeadSHA.String(),
+			Commits:        uint(mergeOutput.CommitCount),
+			FilesChanged:   uint(mergeOutput.ChangedFileCount),
+			Additions:      uint(mergeOutput.Additions),
+			Deletions:      uint(mergeOutput.Deletions),
+			MergeTargetSHA: mergeOutput.BaseSHA.String(),
+			MergeBaseSHA:   mergeOutput.MergeBaseSHA.String(),
+			MergeSHA:       &mergeSHA,
 		},
-		MergedBy:       &session.User.Account,
-		MergedDate:     datetime.NowLocalTime(),
-		MergeMethod:    repoModel.MergeMethod(params.Method),
-		MergeTargetSHA: mergeOutput.MergeBaseSHA.String(),
-		MergeBaseSHA:   mergeOutput.MergeBaseSHA.String(),
-		MergeSHA:       mergeOutput.MergeSHA.String(),
+		MergedBy:    &session.User.Account,
+		MergedDate:  datetime.NowLocalTime(),
+		MergeMethod: repoModel.MergeMethod(params.Method),
 	})
 	if err != nil {
 		return nil, nil, err

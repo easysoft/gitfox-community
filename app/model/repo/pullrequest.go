@@ -112,6 +112,14 @@ func (pr *PullRequest) MarkAsMergeUnchecked() {
 
 // DiffStats shows total number of commits and modified files. 展示该 PR 包含的提交（Commit）总数、发生变更的文件总数、新增的代码行数、删除的代码行数
 type DiffStats struct {
+	MergeTargetSHA    string           `json:"mergeTargetSHA"`
+	MergeBaseSHA      string           `json:"mergeBaseSHA"`
+	MergeSHA          *string          `json:"mergeSHA"`
+	MergeCheckStatus  MergeCheckStatus `json:"mergeCheckStatus"`
+	MergeConflicts    []string         `json:"mergeConflicts"`
+	RebaseCheckStatus MergeCheckStatus `json:"rebaseCheckStatus"`
+	RebaseConflicts   []string         `json:"rebaseConflicts"`
+
 	HeadHash     string `json:"headHash,omitempty"`     // 该 PR 最新的 Commit SHA
 	Commits      uint   `json:"commits,omitempty"`      // 该 PR 包含的提交（Commit）总数
 	FilesChanged uint   `json:"filesChanged,omitempty"` // 发生变更的文件总数
@@ -119,15 +127,35 @@ type DiffStats struct {
 	Deletions    uint   `json:"deletions,omitempty"`    // 删除的代码行数
 }
 
+// UpdateMergeOutcome stores the mergeability result for the selected method.
+func (pr *DiffStats) UpdateMergeOutcome(method MergeMethod, conflictFiles []string) {
+	switch method {
+	case MergeMethodMerge, MergeMethodSquash:
+		if len(conflictFiles) > 0 {
+			pr.MergeCheckStatus = MergeCheckStatusConflict
+			pr.MergeConflicts = conflictFiles
+		} else {
+			pr.MergeCheckStatus = MergeCheckStatusMergeable
+			pr.MergeConflicts = nil
+		}
+	case MergeMethodRebase:
+		if len(conflictFiles) > 0 {
+			pr.RebaseCheckStatus = MergeCheckStatusConflict
+			pr.RebaseConflicts = conflictFiles
+		} else {
+			pr.RebaseCheckStatus = MergeCheckStatusMergeable
+			pr.RebaseConflicts = nil
+		}
+	case MergeMethodFastForward:
+		// Fast-forward merges cannot produce conflicts.
+	}
+}
+
 type MergeAfter struct {
 	DiffStats
-
-	MergedBy       *string         `json:"mergedBy"`
-	MergedDate     *datetime.Local `json:"mergedDate"`
-	MergeMethod    MergeMethod     `json:"mergeMethod"`
-	MergeTargetSHA string          `json:"mergeTargetSHA"`
-	MergeBaseSHA   string          `json:"mergeBaseSHA"`
-	MergeSHA       string          `json:"mergeSHA"`
+	MergedBy    *string         `json:"mergedBy"`
+	MergedDate  *datetime.Local `json:"mergedDate"`
+	MergeMethod MergeMethod     `json:"mergeMethod"`
 }
 
 // MergeCheck 合并检查结果
