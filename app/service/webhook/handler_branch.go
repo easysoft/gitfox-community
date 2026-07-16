@@ -36,6 +36,7 @@ func (s *Service) handleEventBranchCreated(ctx context.Context,
 			if err != nil {
 				return nil, err
 			}
+			commits := []webhookModel.CommitInfo{commitInfo}
 			repoInfo := webhookModel.RepositoryInfo{
 				ID:            int64(repo.ID),
 				Identifier:    repo.Identifier,
@@ -59,9 +60,11 @@ func (s *Service) handleEventBranchCreated(ctx context.Context,
 					},
 				},
 				ReferenceDetailsSegment: webhookModel.ReferenceDetailsSegment{
-					SHA:        event.Payload.SHA,
-					Commit:     &commitInfo,
-					HeadCommit: &commitInfo,
+					SHA:               event.Payload.SHA,
+					Commit:            &commitInfo,
+					Commits:           &commits,
+					TotalCommitsCount: 1,
+					HeadCommit:        &commitInfo,
 				},
 				ReferenceUpdateSegment: webhookModel.ReferenceUpdateSegment{
 					OldSHA: commitModel.NilSHA,
@@ -189,11 +192,11 @@ func (s *Service) fetchCommitsInfoForEvent(
 	newSHA string,
 ) ([]webhookModel.CommitInfo, int, error) {
 	out, err := s.git.ListCommits(ctx, &git.ListCommitsParams{
-		ReadParams: git.ReadParams{RepoUID: repoUID},
-		GitREF:     newSHA,
-		After:      oldSHA,
-		Page:       1,
-		Limit:      MaxWebhookCommitFileStats,
+		ReadParams:   git.ReadParams{RepoUID: repoUID},
+		GitREF:       newSHA,
+		After:        oldSHA,
+		Page:         1,
+		Limit:        MaxWebhookCommitFileStats,
 		IncludeStats: true,
 	})
 	if err != nil {

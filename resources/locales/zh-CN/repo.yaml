@@ -37,6 +37,7 @@ repo:
   email_required: "用户邮箱为空，请在个人中心维护用户邮箱后再进行代码库相关操作"
   username_required: "用户名为空，请在个人中心维护用户名后再进行代码库相关操作"
   import_error: "导入仓库异常"
+  import_svn_not_found_or_unreachable: "SVN 仓库未找到或无法访问，请检查 URL 或认证信息"
   import_success: "导入仓库成功"
   query_import_progress_error: "查询导入进度异常"
   query_import_progress_success: "查询导入进度成功"
