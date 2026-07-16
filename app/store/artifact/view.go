@@ -81,21 +81,6 @@ func (c *libs) GetByName(ctx context.Context, spaceID, repoID int64, name string
 	return viewToModel(&row), nil
 }
 
-// ListByScope 列出指定 (spaceID, repoID) 下所有未软删的视图。
-func (c *libs) ListByScope(ctx context.Context, spaceID int64, repoID int64) ([]*model.ArtifactView, error) {
-	var rows []*artifactView
-	err := c.db.WithContext(ctx).
-		Where("spaceID = ? AND repoID = ? AND deleted = 0", spaceID, repoID).
-		Find(&rows).Error
-	if err != nil {
-		return nil, database.ProcessSQLErrorf(ctx, err)
-	}
-	result := make([]*model.ArtifactView, 0, len(rows))
-	for _, r := range rows {
-		result = append(result, viewToModel(r))
-	}
-	return result, nil
-}
 
 // FindByNameInScope 在指定作用域下查询所有同名 view
 // 返回结果包含 active（deleted=0）和 soft-deleted（deleted=1）的 view，
