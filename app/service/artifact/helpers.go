@@ -34,15 +34,23 @@ func populateNodeInfoAssetFields(info *model.ArtifactAssetInfo, asset *model.Art
 }
 
 // buildArtifactAssetLink 生成普通制品资产的下载路径。
-func buildArtifactAssetLink(spaceName, format, group, packageName, version, assetPath string) string {
-	if spaceName == "" || format == "" || assetPath == "" {
+// 空间级: /api/v2/space/{spaceCode}/_{format}/{viewName}/[groupPath/][packageName/][version/]{assetPath}
+// 代码库级: /api/v2/space/{spaceCode}/repo/{repoIdentifier}/_{format}/{viewName}/[groupPath/][packageName/][version/]{assetPath}
+func buildArtifactAssetLink(spaceCode, repoIdentifier, viewName, format, group, packageName, version, assetPath string) string {
+	if spaceCode == "" || format == "" || assetPath == "" {
 		return ""
 	}
 
-	segments := []string{"_artifacts", spaceName, format}
+	segments := []string{"api", "v2", "space", spaceCode}
+	if repoIdentifier != "" {
+		segments = append(segments, "repo", repoIdentifier)
+	}
+	segments = append(segments, "_"+format)
+	if viewName != "" {
+		segments = append(segments, viewName)
+	}
+
 	switch model.ArtifactFormat(format) {
-	case model.ArtifactFileFormat:
-		segments = appendSlashSegments(segments, group)
 	case model.ArtifactHelmFormat:
 		// helm 仓库直接以文件路径挂载在格式根下。
 	default:
@@ -123,6 +131,22 @@ func appendSlashSegments(dst []string, p string) []string {
 func nodeInfoSpaceName(view *adapter.ViewDescriptor) string {
 	if view != nil && view.Space != nil {
 		return view.Space.Name
+	}
+	return ""
+}
+
+// nodeInfoSpaceCode 取 nodeInfo 响应中的空间 Code。
+func nodeInfoSpaceCode(view *adapter.ViewDescriptor) string {
+	if view != nil && view.Space != nil {
+		return view.Space.Code
+	}
+	return ""
+}
+
+// nodeInfoRepoIdentifier 取 nodeInfo 响应中的代码库标识。
+func nodeInfoRepoIdentifier(view *adapter.ViewDescriptor) string {
+	if view != nil && view.Repo != nil {
+		return view.Repo.Name
 	}
 	return ""
 }

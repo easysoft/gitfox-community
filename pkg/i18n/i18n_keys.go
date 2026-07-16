@@ -30,6 +30,7 @@ const (
 	ArtifactEntityIdEmpty                   I18nKey = "artifact.entity_id_empty"                     // 实体 ID 不能为空.
 	ArtifactEntityIdInvalid                 I18nKey = "artifact.entity_id_invalid"                   // 实体 ID 不合法,应为 kind.id 格式(如 group.11、asset.5).
 	ArtifactEntityIdKindInvalid             I18nKey = "artifact.entity_id_kind_invalid"              // 不支持的实体类型.
+	ArtifactFilepathInvalid                 I18nKey = "artifact.filepath_invalid"                    // 无效的文件路径:需要至少 _format/artifactLibName/fileName
 	ArtifactGarbageCollectSuccess           I18nKey = "artifact.garbage_collect_success"             // 制品垃圾回收任务创建成功.
 	ArtifactGcExecuteError                  I18nKey = "artifact.gc_execute_error"                    // 执行制品垃圾回收失败.
 	ArtifactGcSchedulerNotConfigured        I18nKey = "artifact.gc_scheduler_not_configured"         // 制品垃圾回收调度器未配置.
@@ -559,6 +560,14 @@ const (
 	ConditionNotFound           I18nKey = "condition.not_found"            // 触发器条件不存在.
 	ConditionPathParamError     I18nKey = "condition.path_param_error"     // 路径参数解析失败.
 
+	// Cron 相关常量
+	CronAddError       I18nKey = "cron.add_error"        // 定时任务创建/更新失败.
+	CronAddSuccess     I18nKey = "cron.add_success"      // 定时任务创建/更新成功.
+	CronBodyParamError I18nKey = "cron.body_param_error" // Body 参数解析失败.
+	CronPathParamError I18nKey = "cron.path_param_error" // Path 参数解析失败.
+	CronRemoveError    I18nKey = "cron.remove_error"     // 定时任务删除失败.
+	CronRemoveSuccess  I18nKey = "cron.remove_success"   // 定时任务删除成功.
+
 	// Db 相关常量
 	DbCheckConstraintViolation I18nKey = "db.check_constraint_violation" // 检查约束冲突.
 	DbConnectionFailed         I18nKey = "db.connection_failed"          // 数据库连接失败.
@@ -811,14 +820,6 @@ const (
 	RepoUpdateSuccess                  I18nKey = "repo.update_success"                    // 更新仓库成功
 	RepoUsernameRequired               I18nKey = "repo.username_required"                 // 用户名为空,请在个人中心维护用户名后再进行代码库相关操作
 
-	// Cron 相关常量
-	CronAddError       I18nKey = "cron.add_error"        // 定时任务创建/更新失败
-	CronAddSuccess     I18nKey = "cron.add_success"       // 定时任务创建/更新成功
-	CronBodyParamError I18nKey = "cron.body_param_error"  // Body 参数解析失败
-	CronPathParamError I18nKey = "cron.path_param_error"  // Path 参数解析失败
-	CronRemoveError    I18nKey = "cron.remove_error"      // 定时任务删除失败
-	CronRemoveSuccess  I18nKey = "cron.remove_success"    // 定时任务删除成功
-
 	// Request 相关常量
 	RequestInvalidBooleanParameter         I18nKey = "request.invalid_boolean_parameter"          // 参数必须为布尔值.
 	RequestInvalidContentType              I18nKey = "request.invalid_content_type"               // Content-Type 无效.
@@ -948,7 +949,7 @@ const (
 	// Space 相关常量
 	SpaceArtifactsTitleSuccess   I18nKey = "space.artifacts_title_success"   // 仓库设置保存成功
 	SpaceBodyParamError          I18nKey = "space.body_param_error"          // Body 参数解析失败.
-	SpaceCodeInvalid             I18nKey = "space.code_invalid"              // 空间标识不符合规范,仅支持大小写字母、数字、横杠-、下划线 _、点. ,不允许.git结尾
+	SpaceCodeInvalid             I18nKey = "space.code_invalid"              // 空间标识不符合规范,首字符必须是字母数字,不能以 . _ - 开头,中间可包含字母数字点下划线...
 	SpaceCodeTooLong             I18nKey = "space.code_too_long"             // 空间标识超过50字符
 	SpaceCreateDuplicate         I18nKey = "space.create_duplicate"          // 创建空间异常,空间标识已存在
 	SpaceCreateError             I18nKey = "space.create_error"              // 空间创建失败.

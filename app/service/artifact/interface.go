@@ -48,6 +48,10 @@ type Interface interface {
 	// DownloadAsset 下载制品资源，返回文件流和 blob 元信息。
 	DownloadAsset(ctx context.Context, assetID int64) (io.ReadCloser, *model.ArtifactBlob, string, error)
 
+	// DownloadAssetByPath 按制品路径下载资源，返回文件流和 blob 元信息。
+	// spaceCode 为空间 code，filepath 为 _format/viewName/groupPath/packageName/version/fileName
+	DownloadAssetByPath(ctx context.Context, spaceCode string, filepath string) (io.ReadCloser, *model.ArtifactBlob, string, error)
+
 	// Upload 上传制品，自动根据 format 分发到对应的适配器处理。
 	Upload(ctx context.Context, view *adapter.ViewDescriptor, format model.ArtifactFormat, req *http.Request) ([]*adapter.SavedAsset, error)
 

@@ -20,7 +20,7 @@ var _ Interface = (*Store)(nil)
 type Store struct {
 	db         *gorm.DB
 	groups     *groups
-	views      *views
+	views      *libs
 	packages   *packages
 	versions   *versions
 	assets     *assets
@@ -35,7 +35,7 @@ func NewStore(db *gorm.DB) *Store {
 	return &Store{
 		db:         db,
 		groups:     &groups{db: db},
-		views:      &views{db: db},
+		views:      &libs{db: db},
 		packages:   &packages{db: db},
 		versions:   &versions{db: db},
 		assets:     &assets{db: db},
