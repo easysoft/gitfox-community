@@ -112,6 +112,7 @@ func (pr *PullRequest) MarkAsMergeUnchecked() {
 
 // DiffStats shows total number of commits and modified files. 展示该 PR 包含的提交（Commit）总数、发生变更的文件总数、新增的代码行数、删除的代码行数
 type DiffStats struct {
+	SourceSHA         string           `json:"sourceSHA"`
 	MergeTargetSHA    string           `json:"mergeTargetSHA"`
 	MergeBaseSHA      string           `json:"mergeBaseSHA"`
 	MergeSHA          *string          `json:"mergeSHA"`

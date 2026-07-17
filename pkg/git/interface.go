@@ -38,6 +38,7 @@ type Interface interface {
 	UpdateDefaultBranch(ctx context.Context, params *UpdateDefaultBranchParams) error
 	GetRef(ctx context.Context, params GetRefParams) (GetRefResponse, error)
 	DeleteRef(ctx context.Context, params DeleteRefParams) error
+	WalkReferences(ctx context.Context, repoUID, patterns string) ([]string, error)
 	PathsDetails(ctx context.Context, params PathsDetailsParams) (PathsDetailsOutput, error)
 	Summary(ctx context.Context, params SummaryParams) (SummaryOutput, error)
 	// ListBranchesV2 对ListBranches的补充，历史接口没法过滤ztflow分支
