@@ -18,7 +18,7 @@ func (c *libs) Restore(ctx context.Context, viewID int64, operator string) error
 	if operator != "" {
 		updates["editedBy"] = operator
 	}
-	if err := c.db.WithContext(ctx).Model(&artifactView{ID: viewID}).
+	if err := c.db.WithContext(ctx).Model(&artifactLib{ID: viewID}).
 		Updates(updates).Error; err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
 	}

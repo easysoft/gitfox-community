@@ -40,13 +40,13 @@ func (s *Service) DownloadAsset(ctx context.Context, assetID int64) (io.ReadClos
 }
 
 // DownloadAssetByPath 按制品完整路径下载资源。
-// filepath 为 _format/viewName/groupPath/packageName/version/fileName
-// 代码库级: filepath 为 repo/repoIdentifier/_format/viewName/groupPath/packageName/version/fileName
+// 空间级: viewName/groupPath/packageName/version/fileName
+// 代码库级: repo/repoIdentifier/viewName/groupPath/packageName/version/fileName
 func (s *Service) DownloadAssetByPath(ctx context.Context, spaceCode string, filepath string) (io.ReadCloser, *model.ArtifactBlob, string, error) {
 	segments := splitAndDecode(filepath)
-	if len(segments) < 3 {
+	if len(segments) < 2 {
 		return nil, nil, "", pkgErrors.WithI18nKey(
-			fmt.Errorf("invalid filepath: need at least _format/viewName/fileName, got %d segments", len(segments)),
+			fmt.Errorf("invalid filepath: need at least viewName/fileName, got %d segments", len(segments)),
 			i18n.ArtifactFilepathInvalid,
 		)
 	}
@@ -57,11 +57,11 @@ func (s *Service) DownloadAssetByPath(ctx context.Context, spaceCode string, fil
 	}
 
 	var repoID int64
-	var formatSegment, libName string
+	var libName string
 	var remainingPath []string
 
 	if segments[0] == "repo" {
-		if len(segments) < 5 {
+		if len(segments) < 4 {
 			return nil, nil, "", pkgErrors.WithI18nKey(
 				fmt.Errorf("invalid repo-level filepath: too few segments"),
 				i18n.ArtifactFilepathInvalid,
@@ -73,33 +73,16 @@ func (s *Service) DownloadAssetByPath(ctx context.Context, spaceCode string, fil
 			return nil, nil, "", pkgErrors.WithI18nKey(err, i18n.ArtifactRepoQueryError)
 		}
 		repoID = int64(repo.ID)
-		formatSegment = segments[2]
-		libName = segments[3]
-		remainingPath = segments[4:]
+		libName = segments[2]
+		remainingPath = segments[3:]
 	} else {
-		formatSegment = segments[0]
-		libName = segments[1]
-		remainingPath = segments[2:]
+		libName = segments[0]
+		remainingPath = segments[1:]
 	}
 
-	formatStr := strings.TrimPrefix(formatSegment, "_")
-	if formatStr == formatSegment {
-		return nil, nil, "", pkgErrors.WithI18nKey(
-			fmt.Errorf("invalid format segment, expected _file/_raw etc: %s", formatSegment),
-			i18n.ArtifactFilepathInvalid,
-		)
-	}
-
-	artifactLib, err := s.artStore.Views().GetByName(ctx, int64(space.ID), repoID, libName)
+	artifactLib, err := s.artStore.Views().GetByCode(ctx, int64(space.ID), repoID, libName)
 	if err != nil {
 		return nil, nil, "", pkgErrors.WithI18nKey(err, i18n.ArtifactViewQueryError)
-	}
-
-	if string(artifactLib.Format) != formatStr {
-		return nil, nil, "", pkgErrors.WithI18nKey(
-			fmt.Errorf("view format mismatch: expected %s, got %s", formatStr, artifactLib.Format),
-			i18n.ArtifactFilepathInvalid,
-		)
 	}
 
 	asset, err := s.resolveAssetInView(ctx, artifactLib, remainingPath)
@@ -339,6 +322,6 @@ func (s *Service) getStandaloneAssetNodeInfo(ctx context.Context, dbAsset *model
 		},
 	}
 	populateNodeInfoAssetFields(info, assetRes)
-	info.Link = buildArtifactAssetLink(nodeInfoSpaceCode(view), nodeInfoRepoIdentifier(view), view.ArtifactName, string(dbAsset.Format), "", "", "", assetRes.Path)
+	info.Link = buildArtifactAssetLink(nodeInfoSpaceCode(view), nodeInfoRepoIdentifier(view), view.ArtifactCode, string(dbAsset.Format), "", "", "", assetRes.Path)
 	return info, nil
 }

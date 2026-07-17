@@ -15,10 +15,11 @@ import (
 // 时间字段使用 *datetime.Local，与系统其他 store 层规范一致。
 // service 层及以上使用 app/model/artifact 下的 struct（时间为 *time.Time）。
 
-// artifactView → ops_artifact_libs
-type artifactView struct {
+// artifactLib → ops_artifact_libs
+type artifactLib struct {
 	ID          int64           `gorm:"column:id;primaryKey"`
 	Name        string          `gorm:"column:name"`
+	Code        string          `gorm:"column:code"`
 	Description string          `gorm:"column:desc"`
 	SpaceID     int64           `gorm:"column:spaceID"`
 	RepoID      int64           `gorm:"column:repoID"`
@@ -31,16 +32,16 @@ type artifactView struct {
 	Deleted     int8            `gorm:"column:deleted"`
 }
 
-func (artifactView) TableName() string { return "ops_artifact_libs" }
+func (artifactLib) TableName() string { return "ops_artifact_libs" }
 
-func (v *artifactView) BeforeCreate(_ *gorm.DB) error {
+func (v *artifactLib) BeforeCreate(_ *gorm.DB) error {
 	now := datetime.NowLocalTime()
 	v.CreatedDate = now
 	v.EditedDate = now
 	return nil
 }
 
-func (v *artifactView) BeforeUpdate(_ *gorm.DB) error {
+func (v *artifactLib) BeforeUpdate(_ *gorm.DB) error {
 	v.EditedDate = datetime.NowLocalTime()
 	return nil
 }
@@ -270,13 +271,14 @@ func timeToLocal(t *time.Time) *datetime.Local {
 
 // ==================== view 转换 ====================
 
-func viewToModel(v *artifactView) *model.ArtifactView {
+func viewToModel(v *artifactLib) *model.ArtifactView {
 	if v == nil {
 		return nil
 	}
 	return &model.ArtifactView{
 		ID:          v.ID,
 		Name:        v.Name,
+		Code:        v.Code,
 		Description: v.Description,
 		SpaceID:     v.SpaceID,
 		RepoID:      v.RepoID,
