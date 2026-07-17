@@ -52,7 +52,6 @@ func buildArtifactAssetLink(spaceCode, repoIdentifier, viewName, format, group, 
 
 	switch model.ArtifactFormat(format) {
 	case model.ArtifactHelmFormat:
-		// helm 仓库直接以文件路径挂载在格式根下。
 	default:
 		if group != "" {
 			segments = append(segments, strings.Split(strings.Trim(group, "."), ".")...)
@@ -66,11 +65,11 @@ func buildArtifactAssetLink(spaceCode, repoIdentifier, viewName, format, group, 
 	}
 	segments = appendSlashSegments(segments, assetPath)
 
-	link, err := url.JoinPath("/", segments...)
-	if err != nil {
-		return ""
+	escaped := make([]string, len(segments))
+	for i, seg := range segments {
+		escaped[i] = url.PathEscape(seg)
 	}
-	return link
+	return "/" + strings.Join(escaped, "/")
 }
 
 // buildContainerPullLink 生成容器镜像可直接 docker pull 的引用。
