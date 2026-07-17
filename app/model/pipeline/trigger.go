@@ -74,7 +74,7 @@ type Trigger struct {
 	RepoID      int64           `json:"repoID"`
 	PipelineID  int64           `json:"pipelineID"`
 	Comment     string          `json:"comment"`
-	Event       []string        `json:"event"`
+	Event       []string        `json:"trigger"`
 	Cron        []string        `json:"cron"`
 	CreatedBy   string          `json:"createdBy"`
 	CreatedDate *datetime.Local `json:"createdDate"`
