@@ -50,14 +50,6 @@ func buildArtifactAssetLink(spaceCode, repoIdentifier, viewCode, format, group, 
 	}
 
 	switch model.ArtifactFormat(format) {
-	case model.ArtifactFileFormat:
-		segments = appendSlashSegments(segments, group)
-		if packageName != "" {
-			segments = append(segments, packageName)
-		}
-		if version != "" {
-			segments = append(segments, version)
-		}
 	case model.ArtifactHelmFormat:
 	default:
 		if group != "" {
