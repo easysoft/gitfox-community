@@ -31,10 +31,10 @@ func recyclePaging(page, pageSize int) (offset, limit int) {
 func (c *libs) ListRecycle(ctx context.Context, page, pageSize int) ([]*model.ArtifactView, int64, error) {
 	offset, limit := recyclePaging(page, pageSize)
 	var (
-		rows  []*artifactView
+		rows  []*artifactLib
 		total int64
 	)
-	stmt := c.db.WithContext(ctx).Model(&artifactView{}).Where("deleted = 1")
+	stmt := c.db.WithContext(ctx).Model(&artifactLib{}).Where("deleted = 1")
 	if err := stmt.Count(&total).Error; err != nil {
 		return nil, 0, database.ProcessSQLErrorf(ctx, err)
 	}

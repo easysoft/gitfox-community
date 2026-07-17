@@ -106,7 +106,7 @@ func (c *packages) LockArtifactScopePackage(ctx context.Context, artifactID int6
 // artifactScopePackageLockKey 生成 artifact scope 下 package 锁的 key
 // 锁的 key 格式为 space:spaceID/repo:repoID/format:format/namespace:namespace/name:name
 func (c *packages) artifactScopePackageLockKey(ctx context.Context, artifactID int64, namespace, name string, format model.ArtifactFormat) (string, error) {
-	var view artifactView
+	var view artifactLib
 	if err := c.db.WithContext(ctx).
 		Select("spaceID", "repoID").
 		Where("id = ?", artifactID).

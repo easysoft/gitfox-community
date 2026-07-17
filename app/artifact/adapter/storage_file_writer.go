@@ -101,6 +101,7 @@ func TemporaryPath(p string) string {
 type ViewDescriptor struct {
 	ArtifactID     int64
 	ArtifactName   string
+	ArtifactCode   string
 	ArtifactFormat artifact.ArtifactFormat
 	StorageID      int64
 	Store          storage.ContentStorage

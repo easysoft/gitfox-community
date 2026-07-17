@@ -153,6 +153,7 @@ func (s *Service) CreateView(ctx context.Context, req *model.CreateArtifactViewR
 	// 情况4：无冲突，正常创建
 	v := &model.CreateArtifactView{
 		Name:        req.Name,
+		Code:        req.Code,
 		Description: req.Description,
 		SpaceID:     req.SpaceID,
 		RepoID:      req.RepoID,
@@ -299,6 +300,7 @@ func (s *Service) ParseSpaceView(ctx context.Context, req *model.SpaceRepoReq) (
 	desc := &adapter.ViewDescriptor{
 		ArtifactID:     view.ID,
 		ArtifactName:   view.Name,
+		ArtifactCode:   view.Code,
 		ArtifactFormat: view.Format,
 		Store:          s.fileStore,
 		StorageID:      1,
@@ -391,7 +393,7 @@ func (s *Service) getVersionNodeInfo(ctx context.Context, versionID int64) (*mod
 	}
 
 	populateNodeInfoAssetFields(info, assetRes)
-	info.Link = buildArtifactAssetLink(nodeInfoSpaceCode(view), nodeInfoRepoIdentifier(view), view.ArtifactName, string(pkg.Format), pkg.Namespace, pkg.Name, ver.Version, assetRes.Path)
+	info.Link = buildArtifactAssetLink(nodeInfoSpaceCode(view), nodeInfoRepoIdentifier(view), view.ArtifactCode, string(pkg.Format), pkg.Namespace, pkg.Name, ver.Version, assetRes.Path)
 	return info, nil
 }
 
@@ -489,7 +491,7 @@ func (s *Service) getGroupAssetNodeInfo(ctx context.Context, dbAsset *model.Arti
 		},
 	}
 	populateNodeInfoAssetFields(info, assetRes)
-	info.Link = buildArtifactAssetLink(nodeInfoSpaceCode(view), nodeInfoRepoIdentifier(view), view.ArtifactName, string(dbAsset.Format), group.GroupPath(), "", "", assetRes.Path)
+	info.Link = buildArtifactAssetLink(nodeInfoSpaceCode(view), nodeInfoRepoIdentifier(view), view.ArtifactCode, string(dbAsset.Format), group.GroupPath(), "", "", assetRes.Path)
 	return info, nil
 }
 

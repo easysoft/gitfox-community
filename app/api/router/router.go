@@ -127,5 +127,5 @@ func registerNoAuthRoutes(r *gin.Engine, controller *Controller) {
 	r.GET("/api/v2/spaces/:id/events", controller.Space.Events)
 
 	// 制品文件下载接口（无需鉴权，用于直接 curl/wget 下载）
-	r.GET("/api/v2/space/:code/*filepath", controller.Artifact.DownloadAssetByPath)
+	r.GET("/_artifacts/space/:code/*filepath", controller.Artifact.DownloadAssetByPath)
 }

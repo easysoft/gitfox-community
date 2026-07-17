@@ -34,25 +34,31 @@ func populateNodeInfoAssetFields(info *model.ArtifactAssetInfo, asset *model.Art
 }
 
 // buildArtifactAssetLink 生成普通制品资产的下载路径。
-// 空间级: /api/v2/space/{spaceCode}/_{format}/{viewName}/[groupPath/][packageName/][version/]{assetPath}
-// 代码库级: /api/v2/space/{spaceCode}/repo/{repoIdentifier}/_{format}/{viewName}/[groupPath/][packageName/][version/]{assetPath}
-func buildArtifactAssetLink(spaceCode, repoIdentifier, viewName, format, group, packageName, version, assetPath string) string {
+// 空间级: /_artifacts/space/{spaceCode}/{viewCode}/[groupPath/][packageName/][version/]{assetPath}
+// 代码库级: /_artifacts/space/{spaceCode}/repo/{repoIdentifier}/{viewCode}/[groupPath/][packageName/][version/]{assetPath}
+func buildArtifactAssetLink(spaceCode, repoIdentifier, viewCode, format, group, packageName, version, assetPath string) string {
 	if spaceCode == "" || format == "" || assetPath == "" {
 		return ""
 	}
 
-	segments := []string{"api", "v2", "space", spaceCode}
+	segments := []string{"_artifacts", "space", spaceCode}
 	if repoIdentifier != "" {
 		segments = append(segments, "repo", repoIdentifier)
 	}
-	segments = append(segments, "_"+format)
-	if viewName != "" {
-		segments = append(segments, viewName)
+	if viewCode != "" {
+		segments = append(segments, viewCode)
 	}
 
 	switch model.ArtifactFormat(format) {
+	case model.ArtifactFileFormat:
+		segments = appendSlashSegments(segments, group)
+		if packageName != "" {
+			segments = append(segments, packageName)
+		}
+		if version != "" {
+			segments = append(segments, version)
+		}
 	case model.ArtifactHelmFormat:
-		// helm 仓库直接以文件路径挂载在格式根下。
 	default:
 		if group != "" {
 			segments = append(segments, strings.Split(strings.Trim(group, "."), ".")...)
@@ -66,11 +72,11 @@ func buildArtifactAssetLink(spaceCode, repoIdentifier, viewName, format, group, 
 	}
 	segments = appendSlashSegments(segments, assetPath)
 
-	link, err := url.JoinPath("/", segments...)
-	if err != nil {
-		return ""
+	escaped := make([]string, len(segments))
+	for i, seg := range segments {
+		escaped[i] = url.PathEscape(seg)
 	}
-	return link
+	return "/" + strings.Join(escaped, "/")
 }
 
 // buildContainerPullLink 生成容器镜像可直接 docker pull 的引用。

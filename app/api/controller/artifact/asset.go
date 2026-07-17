@@ -71,11 +71,11 @@ func (c *Controller) DownloadAsset(ctx *gin.Context) {
 // @Description 通过制品完整路径直接下载文件，无需鉴权。
 // @Tags artifacts
 // @Produce application/octet-stream
-// @Param filepath path string true "制品路径，格式: spaceCode/_format/viewName/groupPath/packageName/version/fileName"
+// @Param filepath path string true "制品路径，格式: viewName/groupPath/packageName/version/fileName"
 // @Success 200 {file} file "文件流"
 // @Failure 400 {object} resp.ObjectResponse "参数错误"
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
-// @Router /space/{filepath} [get]
+// @Router /_artifacts/space/{code}/{filepath} [get]
 func (c *Controller) DownloadAssetByPath(ctx *gin.Context) {
 	spaceCode,err := req.PathParam(ctx, "code")
 	if err != nil {
