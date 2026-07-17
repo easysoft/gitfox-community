@@ -20,8 +20,8 @@ type Execution struct {
 	CommitBefore string            `json:"commitBefore"`
 	Ref          string            `json:"ref"`
 	Params       map[string]string `json:"params"`
-	StartedDate  *datetime.Local   `json:"startedDate"`
-	FinishedDate *datetime.Local   `json:"finishedDate"`
+	StartedDate  *datetime.Local   `json:"started"`
+	FinishedDate *datetime.Local   `json:"finished"`
 	Duration     uint              `json:"duration"`
 	Status       constant.CIStatus `json:"status"`
 	Error        string            `json:"error"`
