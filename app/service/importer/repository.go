@@ -123,7 +123,7 @@ func (r *Repository) LoadRepositoryFromProvider(
 		if _, err := r.svn.InfoRevision(ctx, cloneURL, provider.Username, provider.Password); err != nil {
 			return RepositoryInfo{}, provider, errors.WithI18nKey(
 				errors.BadRequest.Wrap(err, "svn repository not found or unreachable"),
-				i18n.RepoImportError,
+				i18n.RepoImportSvnNotFoundOrUnreachable,
 			)
 		}
 
