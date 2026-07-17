@@ -21,7 +21,7 @@ type Execution struct {
 	Duration     uint            `gorm:"column:duration"`
 	Status       string          `gorm:"column:status"`
 	Error        string          `gorm:"column:error"`
-	Queue        uint            `gorm:"column:queue"`
+	Number       uint            `gorm:"column:number"`
 	Logs         string          `gorm:"column:logs"`
 	CreatedBy    string          `gorm:"column:createdBy"`
 	CreatedDate  *datetime.Local `gorm:"column:createdDate"`

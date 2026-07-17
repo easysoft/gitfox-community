@@ -147,12 +147,14 @@ func (s *Service) RetriggerExecution(ctx context.Context, webhookExecutionID uin
 func (s *Service) executeWebhook(ctx context.Context, webhook *webhookModel.Webhook, eventID, triggerType string, body any, rerunOfID *int64) (*webhookModel.Execution, error) {
 	log := logger.GetLogger(ctx)
 	execution := &webhookModel.Execution{
-		RetriggerID: rerunOfID,
 		WebhookID:   webhook.ID,
 		EventID:     eventID,
 		TriggerType: triggerType,
 		Result:      constant.WebhookExecutionResultFatalError,
 		Error:       "An unknown error occurred",
+	}
+	if rerunOfID != nil {
+		execution.RetriggerID = *rerunOfID
 	}
 	start := time.Now()
 	defer func(oCtx context.Context) {

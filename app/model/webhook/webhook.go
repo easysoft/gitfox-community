@@ -76,7 +76,7 @@ type Execution struct {
 	RespStatus     string                          `json:"respStatus"`
 	RespHeaders    string                          `json:"respHeaders"`
 	RespBody       string                          `json:"respBody"`
-	RetriggerID    *int64                          `json:"retriggerID"`
+	RetriggerID    int64                           `json:"retriggerID"`
 	ReTriggerable  bool                            `json:"reTriggerable"`
 	CreatedDate    *datetime.Local                 `json:"createdDate"`
 	EditedDate     *datetime.Local                 `json:"editedDate"`

@@ -25,7 +25,7 @@ type Execution struct {
 	Duration     uint              `json:"duration"`
 	Status       constant.CIStatus `json:"status"`
 	Error        string            `json:"error"`
-	Queue        uint              `json:"queue"`
+	Number       uint              `json:"number"`
 	Logs         string            `json:"logs"`
 	CreatedBy    string            `json:"createdBy"`
 	CreatedDate  *datetime.Local   `json:"createdDate"`

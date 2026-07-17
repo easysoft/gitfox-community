@@ -219,10 +219,9 @@ func (s *ScanTaskStore) NextRepoNumber(ctx context.Context, repoID int64) (int64
 // ==================== 映射函数 ====================
 
 func mapScanTaskToModel(data ScanTask) *scanModel.ScanTask {
-	var triggerID *int64
-	if data.TriggerID != nil {
-		id := int64(*data.TriggerID)
-		triggerID = &id
+	var triggerID int64
+	if data.TriggerID != 0 {
+		triggerID = int64(data.TriggerID)
 	}
 	return &scanModel.ScanTask{
 		ID:          int64(data.ID),
@@ -288,8 +287,8 @@ func mapTaskJoinToScanTaskInfo(in *taskJoin) *scanModel.ScanTaskInfo {
 		info.Trigger = &scanModel.ScanTaskTrigger{
 			Type: in.TriggerType,
 		}
-		if in.TriggerID != nil {
-			info.Trigger.ID = int64(*in.TriggerID)
+		if in.TriggerID != 0 {
+			info.Trigger.ID = int64(in.TriggerID)
 			info.Trigger.Name = in.TriggerName
 		}
 	} else {
