@@ -451,6 +451,12 @@ func (s *Service) createRepositoryInternal(
 			base.RepoUID, err)
 	}
 
+	// setup server hook symlinks pointing to configured server hook binary
+	// IMPORTANT: Setup hooks after repo creation to avoid issues with externally dependent services.
+	if err = s.createDelegateHooks(repoPath); err != nil {
+		return errors.InternalError.Wrapf(err, "failed to setup createDelegateHooks, gitHookPath: %s", s.gitHookPath)
+	}
+
 	// only execute file creation logic if files are provided
 	//nolint: nestif
 
@@ -515,20 +521,6 @@ func (s *Service) createRepositoryInternal(
 		); err != nil {
 			return err
 		}
-	}
-
-	// setup server hook symlinks pointing to configured server hook binary
-	// IMPORTANT: Setup hooks after repo creation to avoid issues with externally dependent services.
-	// for _, hook := range gitServerHookNames {
-	// 	hookPath := path.Join(repoPath, gitHooksDir, hook)
-	// 	err = os.Symlink(s.gitHookPath, hookPath)
-	// 	if err != nil {
-	// 		return errors.Internal(err, "failed to setup symlink for hook '%s' ('%s' -> '%s')",
-	// 			hook, hookPath, s.gitHookPath)
-	// 	}
-	// }
-	if err = s.createDelegateHooks(repoPath); err != nil {
-		return errors.InternalError.Wrapf(err, "failed to setup createDelegateHooks, gitHookPath: %s", s.gitHookPath)
 	}
 
 	log.Infof("repository created. Path: %s", repoPath)
