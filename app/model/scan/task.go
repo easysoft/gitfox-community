@@ -11,10 +11,10 @@ type ScanTask struct {
 	ExecutionID int64                        `json:"executionID"`
 	RepoNumber  int64                        `json:"repoNumber"`
 	PlanNumber  int64                        `json:"planNumber"`
-	TriggerId   *int64                       `json:"triggerID"`
+	TriggerId   int64                        `json:"triggerID"`
 	TriggerType constant.ScanPlanTriggerType `json:"triggerType"`
 	Status      constant.ScanTaskStatus      `json:"status"`
-	Result      *constant.ScanTaskResult     `json:"result"`
+	Result      constant.ScanTaskResult      `json:"result"`
 	CreatedBy   string                       `json:"createdBy"`
 	CreatedDate *datetime.Local              `json:"createdDate"`
 	EditedDate  *datetime.Local              `json:"editedDate"`
@@ -39,7 +39,7 @@ type ScanTaskInfo struct {
 	PlanNumber      int64                    `json:"planNumber"`
 	Trigger         *ScanTaskTrigger         `json:"trigger"`
 	Status          constant.ScanTaskStatus  `json:"status"`
-	Result          *constant.ScanTaskResult `json:"result"`
+	Result          constant.ScanTaskResult  `json:"result"`
 	ScanType        constant.ScanType        `json:"scanType"`
 	IssueNumber     int64                    `json:"issueNumber"`
 	Cost            int64                    `json:"cost"`

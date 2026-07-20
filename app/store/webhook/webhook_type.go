@@ -60,7 +60,7 @@ type Execution struct {
 	RespStatus     string          `gorm:"column:respStatus"`
 	RespHeaders    string          `gorm:"column:respHeaders"`
 	RespBody       string          `gorm:"column:respBody"`
-	RetriggerID    *uint           `gorm:"column:retriggerID"`
+	RetriggerID    uint            `gorm:"column:retriggerID"`
 	Retriggerable  bool            `gorm:"column:retriggerable"`
 	CreatedDate    *datetime.Local `gorm:"column:createdDate"`
 	EditedDate     *datetime.Local `gorm:"column:editedDate"`

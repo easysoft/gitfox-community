@@ -13,10 +13,10 @@ type ScanTask struct {
 	ExecutionID uint64                       `gorm:"column:executionID"`
 	RepoNumber  int64                        `gorm:"column:repoNumber"`
 	PlanNumber  int64                        `gorm:"column:planNumber"`
-	TriggerID   *uint64                      `gorm:"column:triggerID"`
+	TriggerID   uint64                       `gorm:"column:triggerID"`
 	TriggerType constant.ScanPlanTriggerType `gorm:"column:triggerType"`
 	Status      constant.ScanTaskStatus      `gorm:"column:status"`
-	Result      *constant.ScanTaskResult     `gorm:"column:result"`
+	Result      constant.ScanTaskResult      `gorm:"column:result"`
 	CreatedBy   string                       `gorm:"column:createdBy"`
 	CreatedDate *datetime.Local              `gorm:"column:createdDate"`
 	EditedDate  *datetime.Local              `gorm:"column:editedDate"`

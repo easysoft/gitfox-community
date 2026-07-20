@@ -39,7 +39,7 @@ func (s *Store) Create(ctx context.Context, execution *executionModel.Execution)
 		Duration:     execution.Duration,
 		Status:       string(execution.Status),
 		Error:        execution.Error,
-		Queue:        execution.Queue,
+		Number:       execution.Number,
 		Logs:         execution.Logs,
 		CreatedBy:    execution.CreatedBy,
 	}
@@ -81,7 +81,7 @@ func (s *Store) Update(ctx context.Context, execution *executionModel.Execution)
 		Duration:     execution.Duration,
 		Status:       string(execution.Status),
 		Error:        execution.Error,
-		Queue:        execution.Queue,
+		Number:       execution.Number,
 		Logs:         execution.Logs,
 		CreatedBy:    execution.CreatedBy,
 	}
@@ -126,7 +126,7 @@ func mapToModel(e *Execution) *executionModel.Execution {
 		Duration:     e.Duration,
 		Status:       constant.CIStatus(e.Status),
 		Error:        e.Error,
-		Queue:        e.Queue,
+		Number:       e.Number,
 		Logs:         e.Logs,
 		CreatedBy:    e.CreatedBy,
 		CreatedDate:  e.CreatedDate,

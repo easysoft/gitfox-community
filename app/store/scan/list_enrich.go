@@ -23,7 +23,7 @@ func applyLatestTaskToTrigger(m *scanModel.ScanTrigger, task *latestTaskJoin) {
 	if task.CreatedDate != nil {
 		m.LatestTaskCreated = task.CreatedDate
 	}
-	m.LatestTaskResult = task.Result
+	m.LatestTaskResult = &task.Result
 	status := convertExecutionTaskStatus(task.ExecutionStatus)
 	m.LatestTaskStatus = &status
 }
@@ -37,7 +37,7 @@ func applyLatestTaskToPlan(m *scanModel.ScanPlan, task *latestTaskJoin) {
 	if task.CreatedDate != nil {
 		m.LatestTaskCreated = task.CreatedDate
 	}
-	m.LatestTaskResult = task.Result
+	m.LatestTaskResult = &task.Result
 	status := convertExecutionTaskStatus(task.ExecutionStatus)
 	m.LatestTaskStatus = &status
 }
@@ -275,8 +275,8 @@ func loadLatestTasksByTriggerIDs(ctx context.Context, db *gorm.DB, triggerIDs []
 	}
 
 	for i := range tasks {
-		if tasks[i].TriggerID != nil {
-			latestTaskMap[*tasks[i].TriggerID] = &tasks[i]
+		if tasks[i].TriggerID != 0 {
+			latestTaskMap[tasks[i].TriggerID] = &tasks[i]
 		}
 	}
 	return latestTaskMap, nil

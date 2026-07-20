@@ -263,6 +263,46 @@ func (p *provider) GenerateMirrorSVNCloneURL(_ context.Context, providerURL, slu
 		return ""
 	}
 
+	// Normalize "scheme:///path" → "scheme://host/path".
+	// url.Parse puts everything after :// into Path when no host is present,
+	// but SVN URLs should always have a host (the first path segment).
+	if u.Host == "" && u.Path != "" {
+		trimmed := strings.Trim(u.Path, "/")
+		if idx := strings.Index(trimmed, "/"); idx > 0 {
+			u.Host = trimmed[:idx]
+			u.Path = "/" + trimmed[idx+1:]
+		} else {
+			u.Host = trimmed
+			u.Path = ""
+		}
+	}
+
+	trimmedSlug := strings.Trim(slug, "/")
+
+	// Dedup: slug = "host/path" or "host" — providerURL already fully contains slug.
+	if u.Host != "" {
+		hostAndPath := u.Host
+		if p := strings.Trim(u.Path, "/"); p != "" {
+			hostAndPath += "/" + p
+		}
+		if hostAndPath == trimmedSlug {
+			return u.String()
+		}
+	}
+
+	// Dedup: slug = path only — providerURL's path already matches.
+	if trimmedPath := strings.Trim(u.Path, "/"); trimmedPath != "" && trimmedPath == trimmedSlug {
+		return u.String()
+	}
+
+	// Build: no host in providerURL — the slug provides the host.
+	if u.Host == "" {
+		if idx := strings.Index(trimmedSlug, "/"); idx > 0 {
+			return u.Scheme + "://" + trimmedSlug[:idx] + "/" + trimmedSlug[idx+1:]
+		}
+		return u.Scheme + "://" + trimmedSlug
+	}
+
 	return u.JoinPath(slug).String()
 }
 

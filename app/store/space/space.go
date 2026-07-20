@@ -147,7 +147,7 @@ func (r *SpaceStore) GetByName(ctx context.Context, name string) (*Space, error)
 func (r *SpaceStore) HasRepositories(ctx context.Context, spaceID uint) (bool, error) {
 	var count int64
 	if err := r.db.WithContext(ctx).Table("ops_repo").
-		Where("space_id = ? AND deleted = 0", spaceID).
+		Where("spaceID = ? AND deleted = 0", spaceID).
 		Count(&count).Error; err != nil {
 		return false, database.ProcessSQLErrorf(ctx, err)
 	}
@@ -158,7 +158,7 @@ func (r *SpaceStore) HasRepositories(ctx context.Context, spaceID uint) (bool, e
 func (r *SpaceStore) HasArtifacts(ctx context.Context, spaceID uint) (bool, error) {
 	var count int64
 	if err := r.db.WithContext(ctx).Table("ops_artifact_libs").
-		Where("space_id = ? AND deleted = 0", spaceID).
+		Where("spaceID = ? AND deleted = 0", spaceID).
 		Count(&count).Error; err != nil {
 		return false, database.ProcessSQLErrorf(ctx, err)
 	}

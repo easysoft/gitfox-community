@@ -196,13 +196,10 @@ func (s *Store) CreateExecution(ctx context.Context, execution *webhookModel.Exe
 		RespStatus:     execution.RespStatus,
 		RespHeaders:    execution.RespHeaders,
 		RespBody:       execution.RespBody,
+		RetriggerID:    uint(execution.RetriggerID),
 		Retriggerable:  execution.ReTriggerable,
 		CreatedDate:    execution.CreatedDate,
 		EditedDate:     execution.EditedDate,
-	}
-	if execution.RetriggerID != nil {
-		id := uint(*execution.RetriggerID)
-		entity.RetriggerID = &id
 	}
 	if err := s.db.WithContext(ctx).Create(entity).Error; err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
@@ -246,11 +243,6 @@ func (s *Store) ListExecutions(ctx context.Context, webhookID uint, filter webho
 }
 
 func mapExecutionToModel(data Execution) *webhookModel.Execution {
-	var retriggerID *int64
-	if data.RetriggerID != nil {
-		id := int64(*data.RetriggerID)
-		retriggerID = &id
-	}
 	return &webhookModel.Execution{
 		ID:             int64(data.ID),
 		WebhookID:      int64(data.WebhookID),
@@ -266,7 +258,7 @@ func mapExecutionToModel(data Execution) *webhookModel.Execution {
 		RespStatus:     data.RespStatus,
 		RespHeaders:    data.RespHeaders,
 		RespBody:       data.RespBody,
-		RetriggerID:    retriggerID,
+		RetriggerID:    int64(data.RetriggerID),
 		ReTriggerable:  data.Retriggerable,
 		CreatedDate:    data.CreatedDate,
 		EditedDate:     data.EditedDate,

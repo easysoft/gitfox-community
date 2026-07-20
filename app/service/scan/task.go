@@ -129,8 +129,7 @@ func (s *ScanTaskService) Create(ctx context.Context, in *ScanTaskInput) (*scanM
 	} else {
 		task.TriggerType = in.Trigger.Type
 		if in.Trigger.ID != 0 {
-			triggerID := uint64(in.Trigger.ID)
-			task.TriggerID = &triggerID
+			task.TriggerID = uint64(in.Trigger.ID)
 		}
 	}
 
