@@ -126,7 +126,7 @@ func (h *uploader) validateForm(_ context.Context, req *http.Request) error {
 		if err := validateGenericGroupName(group); err != nil {
 			return err
 		}
-		g, err := h.artStore.Groups().GetEndpointByNames(req.Context(), artifactID, strings.Split(strings.Trim(strings.ReplaceAll(group, "/", "."), "."), "."), model.ArtifactFileFormat)
+		g, err := h.artStore.Groups().GetEndpointByNames(req.Context(), artifactID, strings.Split(strings.Trim(group, "/"), "/"), model.ArtifactFileFormat)
 		if err != nil {
 			return badRequest(
 				fmt.Errorf("%w: group=%q not found under artifactID=%d: %v", adapter.ErrInvalidGroupName, group, artifactID, err),

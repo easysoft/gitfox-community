@@ -244,7 +244,7 @@ type ListAssetReq struct {
 }
 
 // CreateGroupReq 创建 group 节点的请求参数。
-// Names 为以 "." 分隔的分组路径，如 "a.b.c" 表示三级分组。
+// Names 为以 "/" 分隔的分组路径，如 "a/b/c" 表示三级分组。若段内包含 "." 则视为名称的一部分。
 // ArtifactID 必填：必须大于 0。
 // Format 不必由前端传入：服务端会根据 artifactID 反查对应视图的 format 并回填，
 // 若前端传了也会被覆盖，以保证 group 的 format 与 artifact 绑定一致。
@@ -254,26 +254,26 @@ type CreateGroupReq struct {
 	Format     string `json:"format"`
 }
 
-// ParseNames 将 Names 按 "." 拆分为分组路径段。
+// ParseNames 将 Names 按 "/" 拆分为分组路径段。
 // 调用前应先通过 Validate() 确保合法性。
 func (r *CreateGroupReq) ParseNames() []string {
-	return strings.Split(r.Names, ".")
+	return strings.Split(r.Names, "/")
 }
 
 // Validate 对 CreateGroupReq 进行业务规则校验，返回携带 i18n key 的错误。
 // 校验规则：
 //  1. ArtifactID 必须 > 0
 //  2. 若 Format 非空，必须通过 enum.ArtifactFormat.Sanitize() 校验（调用方回填 view.Format 后满足）
-//  3. Names 按 "." 拆分后不能有空段
+//  3. Names 按 "/" 拆分后不能有空段
 //  4. 每段不得包含空白字符（含 Tab/换行/回车/全角空格等 Unicode 空白）或 \\ : * ? " < > | 等保留字符
 //  5. 每段首尾不得为空白字符
-//  6. container 格式不支持嵌套（Names 中不能包含 "."）
+//  6. container 格式不支持嵌套（Names 中不能包含 "/"）
 //
 // 注：Format 在控制器阶段会被 view.Format 覆盖，因此这里不再要求前端必传；
 // 若调用方直接走 service 入口也可以显式设置 Format 后再调用此方法。
 func (r *CreateGroupReq) Validate() error {
-	// 0. 兼容 "/" 分隔符：统一替换为 "."
-	r.Names = strings.Trim(strings.ReplaceAll(r.Names, "/", "."), ".")
+	// 0. 规范化分隔符：统一使用 "/" 作为路径分隔符，去除首尾 "/"
+	r.Names = strings.Trim(r.Names, "/")
 
 	// 1. ArtifactID 校验
 	if r.ArtifactID <= 0 {
@@ -284,7 +284,7 @@ func (r *CreateGroupReq) Validate() error {
 	}
 
 	// 3. Names 合法性校验：先拒空段，再校验每段字符集与首尾空白。
-	parts := strings.Split(r.Names, ".")
+	parts := strings.Split(r.Names, "/")
 	for _, part := range parts {
 		if strings.TrimSpace(part) == "" {
 			return errors.WithI18nKey(
