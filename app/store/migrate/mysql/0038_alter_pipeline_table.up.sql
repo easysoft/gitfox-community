@@ -16,12 +16,12 @@ ALTER TABLE `ops_pipeline`
 -- 重构 ops_pipeline_executions：
 -- 将 started 重命名为 startedDate
 -- 将 finished 重命名为 finishedDate
--- 新增 queue（Jenkins 队列号）、logs（流水线日志）
+-- 新增 number（Jenkins 队列号）、logs（流水线日志）
 ALTER TABLE `ops_pipeline_executions`
     CHANGE COLUMN `started` `startedDate` datetime DEFAULT NULL COMMENT '执行开始时间',
     CHANGE COLUMN `finished` `finishedDate` datetime DEFAULT NULL COMMENT '执行结束时间',
-    ADD COLUMN `queue` int unsigned NOT NULL DEFAULT 0 COMMENT 'Jenkins队列号，用于后续状态查询和去重' AFTER `error`,
-    ADD COLUMN `logs` longtext DEFAULT NULL COMMENT 'Jenkins,GitLab的流水线日志，支持 longtext（最大 4GB）' AFTER `queue`;
+    ADD COLUMN `number` int unsigned NOT NULL DEFAULT 0 COMMENT 'Jenkins队列号，用于后续状态查询和去重' AFTER `error`,
+    ADD COLUMN `logs` longtext DEFAULT NULL COMMENT 'Jenkins,GitLab的流水线日志，支持 longtext（最大 4GB）' AFTER `number`;
 
 -- 重构 ops_triggers：
 -- 将 trigger 重命名为 event
