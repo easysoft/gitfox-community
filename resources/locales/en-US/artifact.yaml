@@ -155,3 +155,5 @@ artifact:
   entity_id_invalid: "Invalid entity ID. Expected format: kind.id (e.g. group.11, asset.5)."
   entity_id_empty: "Entity ID is empty."
   entity_id_kind_invalid: "Unsupported entity kind."
+
+  filepath_invalid: "invalid filepath: need at least _format/artifactLibName/fileName"

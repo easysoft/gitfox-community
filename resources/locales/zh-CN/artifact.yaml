@@ -50,6 +50,7 @@ artifact:
   space_query_error: "查询空间失败."
   default_view_query_error: "查询默认视图失败."
   unsupported_format: "不支持的制品格式."
+
   upload_serve_error: "制品上传处理失败."
   upload_validate_error: "制品上传验证失败."
   upload_save_error: "制品保存失败."
@@ -155,3 +156,5 @@ artifact:
   entity_id_invalid: "实体 ID 不合法，应为 kind.id 格式（如 group.11、asset.5）."
   entity_id_empty: "实体 ID 不能为空."
   entity_id_kind_invalid: "不支持的实体类型."
+
+  filepath_invalid: "无效的文件路径：需要至少 _format/artifactLibName/fileName"

@@ -142,6 +142,7 @@ type ListNodeInfoReq struct {
 type CreateArtifactViewReq struct {
 	SpaceRepoReq
 	Name        string `json:"name"`
+	Code        string `json:"code"`
 	Description string `json:"description"`
 	Format      string `json:"format"`
 }

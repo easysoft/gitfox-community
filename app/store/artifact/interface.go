@@ -45,6 +45,9 @@ type ViewInterface interface {
 
 	GetByName(ctx context.Context, spaceID, repoID int64, name string) (*model.ArtifactView, error)
 
+	// GetByCode 按 (spaceID, repoID, code) 查询视图的唯一 code 标识。
+	GetByCode(ctx context.Context, spaceID, repoID int64, code string) (*model.ArtifactView, error)
+
 	// FindByNameInScope 在指定作用域下查询所有同名 view
 	FindByNameInScope(ctx context.Context, spaceID, repoID int64, name string) ([]*model.ArtifactView, error) // 不包含已软删的
 

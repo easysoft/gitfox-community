@@ -34,17 +34,23 @@ func populateNodeInfoAssetFields(info *model.ArtifactAssetInfo, asset *model.Art
 }
 
 // buildArtifactAssetLink 生成普通制品资产的下载路径。
-func buildArtifactAssetLink(spaceName, format, group, packageName, version, assetPath string) string {
-	if spaceName == "" || format == "" || assetPath == "" {
+// 空间级: /_artifacts/space/{spaceCode}/{viewCode}/[groupPath/][packageName/][version/]{assetPath}
+// 代码库级: /_artifacts/space/{spaceCode}/repo/{repoIdentifier}/{viewCode}/[groupPath/][packageName/][version/]{assetPath}
+func buildArtifactAssetLink(spaceCode, repoIdentifier, viewCode, format, group, packageName, version, assetPath string) string {
+	if spaceCode == "" || format == "" || assetPath == "" {
 		return ""
 	}
 
-	segments := []string{"_artifacts", spaceName, format}
+	segments := []string{"_artifacts", "space", spaceCode}
+	if repoIdentifier != "" {
+		segments = append(segments, "repo", repoIdentifier)
+	}
+	if viewCode != "" {
+		segments = append(segments, viewCode)
+	}
+
 	switch model.ArtifactFormat(format) {
-	case model.ArtifactFileFormat:
-		segments = appendSlashSegments(segments, group)
 	case model.ArtifactHelmFormat:
-		// helm 仓库直接以文件路径挂载在格式根下。
 	default:
 		if group != "" {
 			segments = append(segments, strings.Split(strings.Trim(group, "."), ".")...)
@@ -58,11 +64,11 @@ func buildArtifactAssetLink(spaceName, format, group, packageName, version, asse
 	}
 	segments = appendSlashSegments(segments, assetPath)
 
-	link, err := url.JoinPath("/", segments...)
-	if err != nil {
-		return ""
+	escaped := make([]string, len(segments))
+	for i, seg := range segments {
+		escaped[i] = url.PathEscape(seg)
 	}
-	return link
+	return "/" + strings.Join(escaped, "/")
 }
 
 // buildContainerPullLink 生成容器镜像可直接 docker pull 的引用。
@@ -123,6 +129,22 @@ func appendSlashSegments(dst []string, p string) []string {
 func nodeInfoSpaceName(view *adapter.ViewDescriptor) string {
 	if view != nil && view.Space != nil {
 		return view.Space.Name
+	}
+	return ""
+}
+
+// nodeInfoSpaceCode 取 nodeInfo 响应中的空间 Code。
+func nodeInfoSpaceCode(view *adapter.ViewDescriptor) string {
+	if view != nil && view.Space != nil {
+		return view.Space.Code
+	}
+	return ""
+}
+
+// nodeInfoRepoIdentifier 取 nodeInfo 响应中的代码库标识。
+func nodeInfoRepoIdentifier(view *adapter.ViewDescriptor) string {
+	if view != nil && view.Repo != nil {
+		return view.Repo.Name
 	}
 	return ""
 }

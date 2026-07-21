@@ -13,12 +13,12 @@ import (
 // =============================================================================
 
 // Restore 恢复制品库视图（将 deleted 置为 0），并把 operator 写入 editedBy（即恢复人）。
-func (c *views) Restore(ctx context.Context, viewID int64, operator string) error {
+func (c *libs) Restore(ctx context.Context, viewID int64, operator string) error {
 	updates := map[string]interface{}{"deleted": 0}
 	if operator != "" {
 		updates["editedBy"] = operator
 	}
-	if err := c.db.WithContext(ctx).Model(&artifactView{ID: viewID}).
+	if err := c.db.WithContext(ctx).Model(&artifactLib{ID: viewID}).
 		Updates(updates).Error; err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
 	}

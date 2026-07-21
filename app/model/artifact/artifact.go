@@ -97,6 +97,7 @@ type CasbinSubject struct {
 type ArtifactView struct {
 	ID          int64            `json:"id"`
 	Name        string           `json:"name"`
+	Code        string           `json:"code"`
 	Description string           `json:"description"`
 	SpaceID     int64            `json:"spaceID"`
 	RepoID      int64            `json:"repoID"`
@@ -120,6 +121,7 @@ const (
 
 type CreateArtifactView struct {
 	Name        string           `json:"name"`
+	Code        string           `json:"code"`
 	Description string           `json:"description"`
 	SpaceID     int64            `json:"spaceID"`
 	RepoID      int64            `json:"repoID"`

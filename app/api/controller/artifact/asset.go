@@ -3,6 +3,7 @@ package artifact
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
@@ -62,6 +63,45 @@ func (c *Controller) DownloadAsset(ctx *gin.Context) {
 	defer reader.Close()
 
 	ctx.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s", fielname))
+	ctx.Header("Content-Length", strconv.FormatInt(blob.Size, 10))
+	ctx.DataFromReader(200, blob.Size, "application/octet-stream", reader, nil)
+}
+
+// @Summary 按路径下载文件
+// @Description 通过制品完整路径直接下载文件，无需鉴权。
+// @Tags artifacts
+// @Produce application/octet-stream
+// @Param filepath path string true "制品路径，格式: viewName/groupPath/packageName/version/fileName"
+// @Success 200 {file} file "文件流"
+// @Failure 400 {object} resp.ObjectResponse "参数错误"
+// @Failure 500 {object} resp.ObjectResponse "服务器错误"
+// @Router /_artifacts/space/{code}/{filepath} [get]
+func (c *Controller) DownloadAssetByPath(ctx *gin.Context) {
+	spaceCode,err := req.PathParam(ctx, "code")
+	if err != nil {
+		resp.BadRequest(ctx, errors.WithI18nKey(
+			fmt.Errorf("spaceCode is required"),
+			i18n.ArtifactPathParamError,
+		))
+		return
+	}
+	filepath,err := req.PathParam(ctx,"filepath")
+	if err != nil {
+		resp.BadRequest(ctx, errors.WithI18nKey(
+			fmt.Errorf("filepath is required"),
+			i18n.ArtifactPathParamError,
+		))
+		return
+	}
+	filepath = strings.TrimPrefix(filepath, "/")
+	reader, blob, filename, err := c.artSvc.DownloadAssetByPath(ctx.Request.Context(), spaceCode, filepath)
+	if err != nil {
+		resp.InternalError(ctx, err)
+		return
+	}
+	defer reader.Close()
+
+	ctx.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
 	ctx.Header("Content-Length", strconv.FormatInt(blob.Size, 10))
 	ctx.DataFromReader(200, blob.Size, "application/octet-stream", reader, nil)
 }
