@@ -280,7 +280,6 @@ func (s *Service) GetDiffStats(ctx context.Context, session *auth.Session, repoi
 }
 
 func (s *Service) MergeCheck(ctx context.Context, session *auth.Session, repoid uint, pathTopath string) (*repoModel.MergeCheck, error) {
-	logger := logger.GetLogger(ctx)
 	repo, err := s.repoSvc.GetRepoCheckAccessByID(ctx, session, repoid, []constant.Permission{constant.PermissionRepoView})
 	if err != nil {
 		return nil, err
@@ -349,39 +348,6 @@ func (s *Service) MergeCheck(ctx context.Context, session *auth.Session, repoid 
 			return data, err
 		}
 		return data, gitUtil.ProcessGitErrorf(ctx, err)
-	}
-
-	df := &repoModel.DiffStats{
-		SourceSHA:      mergeOutput.HeadSHA.String(),
-		MergeTargetSHA: mergeOutput.BaseSHA.String(),
-		MergeBaseSHA:   mergeOutput.MergeBaseSHA.String(),
-		MergeSHA:       ptr.String(""),
-		HeadHash:       mergeOutput.HeadSHA.String(),
-		Commits:        uint(mergeOutput.CommitCount),
-		FilesChanged:   uint(mergeOutput.ChangedFileCount),
-		Additions:      uint(mergeOutput.Additions),
-		Deletions:      uint(mergeOutput.Deletions),
-	}
-	df.UpdateMergeOutcome(repoModel.MergeMethodMerge, mergeOutput.ConflictFiles)
-	df.UpdateMergeOutcome(repoModel.MergeMethodRebase, mergeOutput.ConflictFiles)
-
-	// 查出对应 source/target branch 的所有 open PR，逐个刷新合并状态缓存。
-	// Merge Check 是路径参数触发（target...source），并未直接绑定某个 PR，
-	// 所以走 List 反查；SourceSHA 已随 HeadHash 变化的 PR 会被 UpdateDiffStatsSafe 内部拦下，忽略即可。
-	openPRs, listErr := s.pullRequestStore.List(ctx, &repoModel.PullRequestFilter{
-		TargetRepoID: repoid,
-		SourceBranch: strings.TrimPrefix(info.HeadRef, "refs/heads/"),
-		TargetBranch: strings.TrimPrefix(info.BaseRef, "refs/heads/"),
-		Status:       repoModel.PullRequestStatusOpen,
-	})
-
-	if listErr != nil {
-		logger.Errorf("[mergeCheck-%d(%s)]failed to list open pull requests,err:%v", repoid, pathTopath, listErr)
-	}
-	for _, openPR := range openPRs {
-		if _, upErr := s.pullRequestStore.UpdateDiffStatsSafe(ctx, repoid, openPR, df); upErr != nil {
-			logger.Errorf("[mergeCheck-%d(%s)]failed to update pr#%d diff stats,err:%v", repoid, pathTopath, openPR.ID, upErr)
-		}
 	}
 
 	if len(mergeOutput.ConflictFiles) > 0 {
@@ -668,14 +634,8 @@ func (s *Service) Merge(ctx context.Context, session *auth.Session, repoid uint,
 	if params.Title == "" {
 		switch params.Method {
 		case repoModel.MergeMethodMerge:
-			if params.Message != "" && !strings.Contains(params.Message, "Merge branch") {
-				params.Title = fmt.Sprintf("Merge branch '%s' of %s (#%d)", pr.SourceBranch, repo.Path, pr.ID)
-			}
 
-			// TODO: 这个还保留不？
-			// if pr.Flow == repoModel.PullRequestFlowZentao || strings.HasPrefix(pr.SourceBranch, "ztflow-") {
-			// 	params.Title = fmt.Sprintf("Merge branch '%s' of %s (#%d)", pr.TargetBranch, repo.Path, pr.ID)
-			// }
+			params.Title = fmt.Sprintf("Merge branch '%s' of %s (#%d)", pr.TargetBranch, repo.Path, pr.ID)
 		case repoModel.MergeMethodSquash:
 			params.Title = fmt.Sprintf("%s (#%d)", pr.Title, pr.ID)
 		case repoModel.MergeMethodRebase, repoModel.MergeMethodFastForward:
@@ -690,7 +650,7 @@ func (s *Service) Merge(ctx context.Context, session *auth.Session, repoid uint,
 		BaseBranch:      pr.TargetBranch,
 		HeadRepoUID:     repo.GitUID,
 		HeadBranch:      pr.SourceBranch,
-		Message:         git.CommitMessage(params.Title, params.Message),
+		Message:         params.Title,
 		Committer:       committer,
 		CommitterDate:   &now,
 		Author:          author,
@@ -775,7 +735,7 @@ func (s *Service) Merge(ctx context.Context, session *auth.Session, repoid uint,
 
 	// 清理 ztflow 临时分支和 agit 引用
 	var branchDeleted bool
-	if pr.Flow == 1 {
+	if pr.Flow == repoModel.PullRequestFlowZentao {
 		errDelete := s.gitSvc.DeleteBranch(ctx, &git.DeleteBranchParams{
 			WriteParams: writeParams,
 			BranchName:  pr.SourceBranch,
