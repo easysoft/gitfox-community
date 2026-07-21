@@ -68,6 +68,16 @@ func (m MergeMethod) Check() (MergeMethod, bool) {
 	}
 }
 
+// PullRequestFlow the flow of pull request
+type PullRequestFlow int
+
+const (
+	// PullRequestFlowGithub github flow from head branch to base branch
+	PullRequestFlowGithub PullRequestFlow = iota
+	// PullRequestFlowZentao Zentao flow pull request, head branch is not exist
+	PullRequestFlowZentao
+)
+
 // PullRequest 合并请求表（ops_ppm）Model层结构体
 type PullRequest struct {
 	ID                uint              `json:"id"`
@@ -91,7 +101,7 @@ type PullRequest struct {
 	RebaseConflicts   []string          `json:"rebaseConflicts"`
 	CommitCount       uint              `json:"commitCount"`
 	FileCount         uint              `json:"fileCount"`
-	Flow              int8              `json:"flow"`
+	Flow              PullRequestFlow   `json:"flow"`
 	ReviewFlowID      uint              `json:"reviewFlowID"`
 	Additions         uint              `json:"additions"`
 	Deletions         uint              `json:"deletions"`
@@ -112,6 +122,7 @@ func (pr *PullRequest) MarkAsMergeUnchecked() {
 
 // DiffStats shows total number of commits and modified files. 展示该 PR 包含的提交（Commit）总数、发生变更的文件总数、新增的代码行数、删除的代码行数
 type DiffStats struct {
+	SourceSHA         string           `json:"sourceSHA"`
 	MergeTargetSHA    string           `json:"mergeTargetSHA"`
 	MergeBaseSHA      string           `json:"mergeBaseSHA"`
 	MergeSHA          *string          `json:"mergeSHA"`

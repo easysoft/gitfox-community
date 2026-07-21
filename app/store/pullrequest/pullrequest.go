@@ -227,10 +227,6 @@ func (s *Store) UpdateDiffStatsSafe(
 ) (*repoModel.PullRequest, error) {
 	err := s.db.Transaction(func(tx *gorm.DB) error {
 
-		if pr.SourceSHA != diffStats.HeadHash {
-			return errors.New("source SHA has changed")
-		}
-
 		if pr.Status != repoModel.PullRequestStatusOpen {
 			return errors.New("Pull request must be open")
 		}
@@ -244,6 +240,9 @@ func (s *Store) UpdateDiffStatsSafe(
 
 		if diffStats.MergeTargetSHA != "" {
 			updates["mergeTargetSHA"] = diffStats.MergeTargetSHA
+		}
+		if diffStats.SourceSHA != "" {
+			updates["sourceSHA"] = diffStats.SourceSHA
 		}
 		if diffStats.MergeBaseSHA != "" {
 			updates["mergeBaseSHA"] = diffStats.MergeBaseSHA
@@ -367,7 +366,7 @@ func mapPullRequestToModel(data PullRequest) *repoModel.PullRequest {
 		RebaseConflicts:   []string(data.RebaseConflicts),
 		CommitCount:       data.CommitCount,
 		FileCount:         data.FileCount,
-		Flow:              data.Flow,
+		Flow:              repoModel.PullRequestFlow(data.Flow),
 		ReviewFlowID:      data.ReviewFlowID,
 		Additions:         data.Additions,
 		Deletions:         data.Deletions,
@@ -402,7 +401,7 @@ func mapModelToStore(data *repoModel.PullRequest) *PullRequest {
 		RebaseConflicts:   StringSlice(data.RebaseConflicts),
 		CommitCount:       data.CommitCount,
 		FileCount:         data.FileCount,
-		Flow:              data.Flow,
+		Flow:              int8(data.Flow),
 		ReviewFlowID:      data.ReviewFlowID,
 		Additions:         data.Additions,
 		Deletions:         data.Deletions,
