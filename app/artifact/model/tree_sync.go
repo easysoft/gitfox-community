@@ -69,7 +69,7 @@ func (t *Syncer) SyncTreeNodeForGroup(ctx context.Context, group *artmodel.Artif
 		Path:       joinPath([]string{parentNode.Path, group.Name}, "/"),
 		Type:       artmodel.ArtifactTreeNodeTypeGroup,
 		Format:     group.Format,
-		TargetID:   null.IntFrom(group.ID),
+		TargetID:   group.ID,
 	}
 
 	if err = t.upsertTreeNode(ctx, treeNode); err != nil {
@@ -141,7 +141,7 @@ func (t *Syncer) SyncTreeNodeForVersion(ctx context.Context, ver *artmodel.Artif
 		Path:       joinPath([]string{parentNode.Path, ver.Version}, "/"),
 		Type:       artmodel.ArtifactTreeNodeTypeVersion,
 		Format:     pkg.Format,
-		TargetID:   null.IntFrom(ver.ID),
+		TargetID:   ver.ID,
 	}
 	if err = t.upsertTreeNode(ctx, treeNode); err != nil {
 		return nil, err
@@ -186,7 +186,7 @@ func (t *Syncer) SyncTreeNodeForPackageInArtifact(ctx context.Context, pkg *artm
 		Path:       joinPath([]string{parentNode.Path, pkg.Name}, "/"),
 		Type:       artmodel.ArtifactTreeNodeTypePackage,
 		Format:     pkg.Format,
-		TargetID:   null.IntFrom(pkg.ID),
+		TargetID:   pkg.ID,
 	}
 
 	if err = t.upsertTreeNode(ctx, treeNode); err != nil {

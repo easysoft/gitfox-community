@@ -121,15 +121,15 @@ func (s *Service) resolveFileFormatAsset(ctx context.Context, artifactID int64, 
 		if err != nil {
 			continue
 		}
-		if !node.TargetID.Valid {
+		if !(node.TargetID > 0) {
 			continue
 		}
 
 		switch node.Type {
 		case model.ArtifactTreeNodeTypeVersion:
-			return s.artStore.Assets().GetVersionAsset(ctx, fileName, node.TargetID.Int64)
+			return s.artStore.Assets().GetVersionAsset(ctx, fileName, node.TargetID)
 		default:
-			return s.artStore.Assets().GetGroupAsset(ctx, fileName, node.TargetID.Int64)
+			return s.artStore.Assets().GetGroupAsset(ctx, fileName, node.TargetID)
 		}
 	}
 

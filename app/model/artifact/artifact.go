@@ -350,7 +350,7 @@ type ArtifactTreeNode struct {
 	Path       string               `json:"path"`
 	Type       ArtifactTreeNodeType `json:"type"`
 	Format     ArtifactFormat       `json:"format"`
-	TargetID   null.Int             `json:"targetID"`
+	TargetID   int64                `json:"targetID"`
 }
 
 type CreateArtifactTreeNode struct {
@@ -360,7 +360,7 @@ type CreateArtifactTreeNode struct {
 	Path       string               `json:"path"`
 	Type       ArtifactTreeNodeType `json:"type"`
 	Format     ArtifactFormat       `json:"format"`
-	TargetID   null.Int             `json:"targetID"`
+	TargetID   int64                `json:"targetID"`
 }
 
 func (n *ArtifactTreeNode) Key() string {
