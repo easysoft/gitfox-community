@@ -283,8 +283,8 @@ func convertTreeNodeToRes(n *model.ArtifactTreeNode, level string) *model.Artifa
 	if n.ID > 0 {
 		item.Metadata.Id = n.ID
 	}
-	if n.TargetID.Valid {
-		item.Metadata.EntityID = (&model.ArtifactTreeNodeId{Type: n.Type, Pk: n.TargetID.Int64}).String()
+	if n.TargetID > 0 {
+		item.Metadata.EntityID = (&model.ArtifactTreeNodeId{Type: n.Type, Pk: n.TargetID}).String()
 	}
 	if n.Type == model.ArtifactTreeNodeTypeFormat {
 		item.Metadata.Name = n.Name

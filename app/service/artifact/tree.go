@@ -180,7 +180,7 @@ func (s *Service) ListTree(ctx context.Context, artifactID int64, filter *model.
 // 注意 container layer blob 走 isolated（VersionID=0，见 manifest_upload.go::AttrAssetIsolated），
 // 不会被这里错列；这一段只会返回挂在 version 上的 main asset（manifest）。
 func (s *Service) listTreeCurrentLevel(ctx context.Context, node *model.ArtifactTreeNode, level string) ([]*model.ArtifactTreeRes, error) {
-	if node.Type == model.ArtifactTreeNodeTypeVersion && node.TargetID.Valid {
+	if node.Type == model.ArtifactTreeNodeTypeVersion && node.TargetID > 0 {
 		if level == model.ArtifactNodeLevelAsset {
 			return s.listVersionAssetAsTree(ctx, node)
 		}
@@ -193,8 +193,8 @@ func (s *Service) listTreeCurrentLevel(ctx context.Context, node *model.Artifact
 	// 先按 level 裁掉超过目标层级的节点，再做响应模型转换。
 	children = filterTreeNodesByLevel(children, level)
 	data := convertTreeNodesToRes(children, level)
-	if node.Type == model.ArtifactTreeNodeTypeGroup && node.TargetID.Valid && level == model.ArtifactNodeLevelAsset {
-		return s.appendGroupAssets(ctx, node.TargetID.Int64, data)
+	if node.Type == model.ArtifactTreeNodeTypeGroup && node.TargetID > 0 && level == model.ArtifactNodeLevelAsset {
+		return s.appendGroupAssets(ctx, node.TargetID, data)
 	}
 	return data, nil
 }
@@ -263,7 +263,7 @@ func (s *Service) buildFormatForest(ctx context.Context, roots []*model.Artifact
 // container 同样按 version → asset 下钻：asset 不在 tree 表里，必须走 listVersionAssetAsTree
 // 直查 ops_artifact_assets。container layer 走 isolated（VersionID=0），不会被这里错列。
 func (s *Service) buildTreeChildren(ctx context.Context, node *model.ArtifactTreeNode, level string) ([]*model.ArtifactTreeRes, error) {
-	if node.Type == model.ArtifactTreeNodeTypeVersion && node.TargetID.Valid {
+	if node.Type == model.ArtifactTreeNodeTypeVersion && node.TargetID > 0 {
 		if level == model.ArtifactNodeLevelAsset {
 			return s.listVersionAssetAsTree(ctx, node)
 		}
@@ -284,8 +284,8 @@ func (s *Service) buildTreeChildren(ctx context.Context, node *model.ArtifactTre
 		item.Leaf = len(item.Children) == 0
 		data = append(data, item)
 	}
-	if node.Type == model.ArtifactTreeNodeTypeGroup && node.TargetID.Valid && level == model.ArtifactNodeLevelAsset {
-		return s.appendGroupAssets(ctx, node.TargetID.Int64, data)
+	if node.Type == model.ArtifactTreeNodeTypeGroup && node.TargetID > 0 && level == model.ArtifactNodeLevelAsset {
+		return s.appendGroupAssets(ctx, node.TargetID, data)
 	}
 	return data, nil
 }
@@ -293,7 +293,7 @@ func (s *Service) buildTreeChildren(ctx context.Context, node *model.ArtifactTre
 // listVersionAssetAsTree 将 version 节点下的资产转换成树节点返回。
 // 参考项目里 version 在 asset 级别会直接展开成文件，这里保持同样语义。
 func (s *Service) listVersionAssetAsTree(ctx context.Context, node *model.ArtifactTreeNode) ([]*model.ArtifactTreeRes, error) {
-	assets, err := s.artStore.ListAssets(ctx, node.TargetID.Int64)
+	assets, err := s.artStore.ListAssets(ctx, node.TargetID)
 	if err != nil {
 		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactAssetQueryError)
 	}
