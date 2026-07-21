@@ -472,7 +472,7 @@ func (s *Service) Commits(ctx context.Context, session *auth.Session, repoid uin
 	return commits, output.TotalCommits, nil
 }
 
-func (s *Service) Merge(ctx context.Context, session *auth.Session, repoid uint, pullreqID uint, params repoModel.Merge) (*repoModel.MergeResponse, *repoModel.MergeViolations, error) {
+func (s *Service) Merge(ctx context.Context, session *auth.Session, repoid uint, pullreqID uint, params repoModel.Merge) (*repoModel.MergeResponse, error) {
 	var err error
 	logger := logger.GetLogger(ctx)
 
@@ -484,7 +484,7 @@ func (s *Service) Merge(ctx context.Context, session *auth.Session, repoid uint,
 	// 检查repo 权限
 	repo, err := s.repoSvc.GetRepoCheckAccessByID(ctx, session, repoid, []constant.Permission{requiredPermission})
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	// 加锁
 	const timeout = 3 * time.Minute
@@ -495,27 +495,27 @@ func (s *Service) Merge(ctx context.Context, session *auth.Session, repoid uint,
 
 	unlock, err := s.locker.LockPR(ctx, int64(repo.ID), lockID, timeout+30*time.Second)
 	if err != nil {
-		return nil, nil, errors.WithI18nKey(err, i18n.PullrequestMergeLockError)
+		return nil, errors.WithI18nKey(err, i18n.PullrequestMergeLockError)
 	}
 	defer unlock()
 
 	pr, err := s.pullRequestStore.GetByID(ctx, repoid, pullreqID)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	// 检查pr 状态
 	if pr.Status == repoModel.PullRequestStatusMerged {
-		return nil, nil, errors.WithI18nKey(err, i18n.PullrequestMergeAlreadyMerged)
+		return nil, errors.WithI18nKey(err, i18n.PullrequestMergeAlreadyMerged)
 	}
 	if pr.SourceSHA != params.SourceSHA {
-		return nil, nil, errors.WithI18nKey(err, i18n.PullrequestMergeSourceShaNotMatch)
+		return nil, errors.WithI18nKey(err, i18n.PullrequestMergeSourceShaNotMatch)
 	}
 
 	// 准备 RPC 参数
 	writeParams, err := utils.CreateRPCInternalWriteParams(ctx, s.urlProvider, session, repo)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	// 模拟合并
@@ -550,7 +550,7 @@ func (s *Service) Merge(ctx context.Context, session *auth.Session, repoid uint,
 				Method:          enum.MergeMethod(params.Method),
 			})
 			if err != nil {
-				return nil, nil, processPullRequestMergeError(ctx, params.Method, err)
+				return nil, processPullRequestMergeError(ctx, params.Method, err)
 			}
 
 			df := &repoModel.DiffStats{
@@ -590,7 +590,7 @@ func (s *Service) Merge(ctx context.Context, session *auth.Session, repoid uint,
 			ConflictFiles: conflicts,
 		}
 
-		return out, nil, nil
+		return out, nil
 	}
 
 	// --- 正式合并 ---
@@ -661,7 +661,7 @@ func (s *Service) Merge(ctx context.Context, session *auth.Session, repoid uint,
 		Method:          enum.MergeMethod(params.Method),
 	})
 	if err != nil {
-		return nil, nil, processPullRequestMergeError(ctx, params.Method, err)
+		return nil, processPullRequestMergeError(ctx, params.Method, err)
 	}
 
 	// 处理合并冲突
@@ -689,10 +689,8 @@ func (s *Service) Merge(ctx context.Context, session *auth.Session, repoid uint,
 
 		logger.Errorf("aborting pull request merge because of conflicts,conflictFiles:%v", mergeOutput.ConflictFiles)
 
-		return nil, &repoModel.MergeViolations{
-			ConflictFiles: mergeOutput.ConflictFiles,
-			Message:       fmt.Sprintf("Merge blocked by conflicting files: %v", mergeOutput.ConflictFiles),
-		}, nil
+		err = errors.Newf("Merge blocked by conflicting files: %v", mergeOutput.ConflictFiles)
+		return nil, errors.WithI18nKey(err, i18n.PullrequestMergeViolations)
 	}
 
 	logger.Infof("successfully merged PR")
@@ -715,7 +713,7 @@ func (s *Service) Merge(ctx context.Context, session *auth.Session, repoid uint,
 		MergeMethod: repoModel.MergeMethod(params.Method),
 	})
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	// 触发 Merged 事件，这可能会触发 Webhooks 或 CI/CD 流水线。
@@ -759,7 +757,7 @@ func (s *Service) Merge(ctx context.Context, session *auth.Session, repoid uint,
 			return &repoModel.MergeResponse{
 				SHA:           mergeOutput.MergeSHA.String(),
 				BranchDeleted: branchDeleted,
-			}, nil, nil
+			}, nil
 		}
 
 		refs, err := s.gitSvc.WalkReferences(ctx, repo.GitUID, pattern)
@@ -769,7 +767,7 @@ func (s *Service) Merge(ctx context.Context, session *auth.Session, repoid uint,
 			return &repoModel.MergeResponse{
 				SHA:           mergeOutput.MergeSHA.String(),
 				BranchDeleted: branchDeleted,
-			}, nil, nil
+			}, nil
 		}
 
 		for _, ref := range refs {
@@ -781,7 +779,7 @@ func (s *Service) Merge(ctx context.Context, session *auth.Session, repoid uint,
 	return &repoModel.MergeResponse{
 		SHA:           mergeOutput.MergeSHA.String(),
 		BranchDeleted: branchDeleted,
-	}, nil, nil
+	}, nil
 }
 
 func (s *Service) deleteRef(ctx context.Context, repo *repoModel.Repo, sourceBranch, ref string) {
