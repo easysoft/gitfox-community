@@ -16,6 +16,11 @@ import (
 	"gorm.io/gorm"
 )
 
+const (
+	DefaultArtifactLibName string = "Default"
+	DefaultArtifactLibCode string = "default"
+)
+
 // ==================== 格式与资产类型 ====================
 // ==================== Format & Rank ====================
 
