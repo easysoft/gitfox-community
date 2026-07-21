@@ -95,6 +95,27 @@ func (s *Service) DeleteRef(ctx context.Context, params DeleteRefParams) error {
 	return s.git.DeleteRef(ctx, repoPath, params.Name)
 }
 
+func (s *Service) WalkReferences(ctx context.Context, repoUID, patterns string) ([]string, error) {
+	refs := make([]string, 0)
+
+	repoPath := getFullPathForRepo(s.reposRoot, repoUID)
+	err := s.git.WalkReferences(ctx, repoPath,
+		func(entry api.WalkReferencesEntry) error {
+			refs = append(refs, entry[api.GitReferenceFieldRefName])
+			return nil
+		},
+		&api.WalkReferencesOptions{
+			// "refs/for/main#*"
+			Patterns: []string{patterns},
+			Fields:   []api.GitReferenceField{api.GitReferenceFieldRefName},
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+	return refs, nil
+}
+
 type UpdateRefParams struct {
 	WriteParams
 	Type enum.RefType

@@ -16,6 +16,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/sha"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 
+	"github.com/gotidy/ptr"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 )
@@ -93,6 +94,7 @@ func TestGetMetadata(t *testing.T) {
 				User: &principal.User{ID: 1, Account: "testuser"},
 			},
 			expectedResult: &repoModel.DiffStats{
+				MergeSHA:     ptr.String(""),
 				Commits:      5,
 				FilesChanged: 10,
 				Additions:    100,
@@ -145,6 +147,7 @@ func TestGetMetadata(t *testing.T) {
 				User: &principal.User{ID: 1, Account: "testuser"},
 			},
 			expectedResult: &repoModel.DiffStats{
+				MergeSHA:     ptr.String(""),
 				Commits:      3,
 				FilesChanged: 8,
 				Additions:    50,
@@ -294,6 +297,7 @@ func TestGetDiffStats(t *testing.T) {
 				User: &principal.User{ID: 1, Account: "testuser"},
 			},
 			expectedResult: &repoModel.DiffStats{
+				MergeSHA:     ptr.String(""),
 				Commits:      5,
 				FilesChanged: 10,
 				Additions:    100,
@@ -330,6 +334,7 @@ func TestGetDiffStats(t *testing.T) {
 				User: &principal.User{ID: 1, Account: "testuser"},
 			},
 			expectedResult: &repoModel.DiffStats{
+				MergeSHA:     ptr.String(""),
 				Commits:      3,
 				FilesChanged: 5,
 				Additions:    30,

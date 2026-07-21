@@ -97,6 +97,19 @@ func (s *Service) List(ctx context.Context, req commitModel.ReqFilter, repo repo
 		gitRef = repo.DefaultBranch
 	}
 
+	// 带时区偏移：2026-06-30T15:39:33+08:00  → time.RFC3339
+	var until time.Time
+	var err error
+	if req.Until != "" {
+		until, err = time.Parse(time.RFC3339, req.Until)
+		if err != nil {
+			err = errors.WithI18nKey(err, i18n.GitExecError)
+			return commitModel.RespForList{}, err
+		}
+	} else {
+		until = time.Now().Local()
+	}
+
 	rpcOut, err := s.gitPkg.ListCommits(ctx, &git.ListCommitsParams{
 		ReadParams:   git.ReadParams{RepoUID: repo.GitUID},
 		GitREF:       gitRef,
@@ -105,7 +118,7 @@ func (s *Service) List(ctx context.Context, req commitModel.ReqFilter, repo repo
 		Limit:        int32(req.PageSize),
 		Path:         req.Path,
 		Since:        req.Since,
-		Until:        req.Until,
+		Until:        until.Unix(),
 		IncludeStats: req.IncludeStats,
 		Committer:    req.Committer,
 		Author:       req.Author,
