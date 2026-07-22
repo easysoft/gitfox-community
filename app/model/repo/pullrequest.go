@@ -182,6 +182,12 @@ type FileDiff struct {
 	StartLine int    `json:"start_line"`
 }
 
+// BranchCompareRequest 分支对比请求体
+type BranchCompareRequest struct {
+	Source string `json:"source" binding:"required"` // 源分支
+	Target string `json:"target" binding:"required"` // 目标分支
+}
+
 type Merge struct {
 	Method    MergeMethod `json:"method"`    // 合并策略: merge , squash , rebase , fast-forward (*DryRun 时可选)
 	SourceSHA string      `json:"sourceSHA"` // 源分支当前的 Commit SHA，用于乐观锁并发控制

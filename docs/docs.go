@@ -20,6 +20,47 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/_artifacts/space/{code}/{filepath}": {
+            "get": {
+                "description": "通过制品完整路径直接下载文件，无需鉴权。",
+                "produces": [
+                    "application/octet-stream"
+                ],
+                "tags": [
+                    "artifacts"
+                ],
+                "summary": "按路径下载文件",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "制品路径，格式: viewName/groupPath/packageName/version/fileName",
+                        "name": "filepath",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "文件流",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/artifacts": {
             "post": {
                 "description": "创建一个制品库视图 (测试用)",
@@ -590,6 +631,96 @@ const docTemplate = `{
                 }
             }
         },
+        "/cron/jobs": {
+            "post": {
+                "description": "创建或更新一个 recurring cron job（通过 upsert 实现）",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cron"
+                ],
+                "summary": "创建或更新定时任务",
+                "parameters": [
+                    {
+                        "description": "定时任务参数",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_jobs.CreateJobRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "操作成功",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "根据 jobName 删除一个 recurring cron job",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cron"
+                ],
+                "summary": "删除定时任务",
+                "parameters": [
+                    {
+                        "description": "删除定时任务参数",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_jobs.DeleteJobRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "删除成功",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/fit/repos/{id}/settings/advanced": {
             "get": {
                 "description": "通过外部 DevOps 系统获取分支权限信息，不经过本地数据库",
@@ -653,7 +784,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/fit/spaces/{id}": {
+        "/fit/spaces/{code}": {
             "get": {
                 "description": "根据空间 ID 和仓库标识名获取仓库信息，带权限校验",
                 "consumes": [
@@ -668,9 +799,9 @@ const docTemplate = `{
                 "summary": "根据空间和仓库名获取仓库",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "空间 ID",
-                        "name": "id",
+                        "type": "string",
+                        "description": "空间编码",
+                        "name": "code",
                         "in": "path",
                         "required": true
                     },
@@ -714,7 +845,7 @@ const docTemplate = `{
                         }
                     },
                     "404": {
-                        "description": "仓库不存在",
+                        "description": "空间或仓库不存在",
                         "schema": {
                             "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
                         }
@@ -781,7 +912,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/git/{spaceID}/{repoRef}/git-receive-pack": {
+        "/git/{spaceCode}/{repoRef}/git-receive-pack": {
             "post": {
                 "description": "处理 Git 客户端的 push 请求，通过 receive-pack 协议接收仓库对象数据并更新引用",
                 "consumes": [
@@ -796,9 +927,9 @@ const docTemplate = `{
                 "summary": "Git Push 操作",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "空间ID",
-                        "name": "spaceID",
+                        "type": "string",
+                        "description": "空间标识码",
+                        "name": "spaceCode",
                         "in": "path",
                         "required": true
                     },
@@ -850,7 +981,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/git/{spaceID}/{repoRef}/git-upload-pack": {
+        "/git/{spaceCode}/{repoRef}/git-upload-pack": {
             "post": {
                 "description": "处理 Git 客户端的 clone 和 fetch 请求，通过 upload-pack 协议发送仓库对象数据",
                 "consumes": [
@@ -865,9 +996,9 @@ const docTemplate = `{
                 "summary": "Git Clone/Fetch 操作",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "空间ID",
-                        "name": "spaceID",
+                        "type": "string",
+                        "description": "空间标识码",
+                        "name": "spaceCode",
                         "in": "path",
                         "required": true
                     },
@@ -919,7 +1050,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/git/{spaceID}/{repoRef}/info/refs": {
+        "/git/{spaceCode}/{repoRef}/info/refs": {
             "get": {
                 "description": "处理 Git 客户端的 info/refs 请求，返回仓库的引用信息(分支、标签等)，用于 Smart HTTP 协议的初始握手",
                 "consumes": [
@@ -935,9 +1066,9 @@ const docTemplate = `{
                 "summary": "Git Info/Refs 请求",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "空间ID",
-                        "name": "spaceID",
+                        "type": "string",
+                        "description": "空间标识码",
+                        "name": "spaceCode",
                         "in": "path",
                         "required": true
                     },
@@ -3695,9 +3826,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/repos/{id}/diff-stats/{targetPathToSourcePath}": {
-            "get": {
-                "description": "根据传入的仓库 ID 和 路径获取 Pull Request 差异统计信息",
+        "/repos/{id}/diff-stats": {
+            "post": {
+                "description": "根据传入的仓库 ID、源分支和目标分支获取 Pull Request 差异统计信息",
                 "consumes": [
                     "application/json"
                 ],
@@ -3717,11 +3848,13 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "type": "string",
-                        "description": "目标路径到源路径",
-                        "name": "targetPathToSourcePath",
-                        "in": "path",
-                        "required": true
+                        "description": "源分支和目标分支",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.BranchCompareRequest"
+                        }
                     }
                 ],
                 "responses": {
@@ -3746,9 +3879,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/repos/{id}/merge-check/{targetPathToSourcePath}": {
+        "/repos/{id}/merge-check": {
             "post": {
-                "description": "根据传入的仓库 ID 和 路径获取 Pull Request 合并检查信息",
+                "description": "根据传入的仓库 ID、源分支和目标分支获取 Pull Request 合并检查信息",
                 "consumes": [
                     "application/json"
                 ],
@@ -3768,11 +3901,13 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "type": "string",
-                        "description": "目标路径到源路径",
-                        "name": "targetPathToSourcePath",
-                        "in": "path",
-                        "required": true
+                        "description": "源分支和目标分支",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.BranchCompareRequest"
+                        }
                     }
                 ],
                 "responses": {
@@ -11801,6 +11936,9 @@ const docTemplate = `{
                 "artifactID": {
                     "type": "integer"
                 },
+                "code": {
+                    "type": "string"
+                },
                 "description": {
                     "type": "string"
                 },
@@ -12431,7 +12569,7 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "until": {
-                    "type": "integer"
+                    "type": "string"
                 }
             }
         },
@@ -12543,7 +12681,7 @@ const docTemplate = `{
                 "error": {
                     "type": "string"
                 },
-                "finishedDate": {
+                "finished": {
                     "type": "string"
                 },
                 "id": {
@@ -12551,6 +12689,9 @@ const docTemplate = `{
                 },
                 "logs": {
                     "type": "string"
+                },
+                "number": {
+                    "type": "integer"
                 },
                 "params": {
                     "type": "object",
@@ -12564,13 +12705,10 @@ const docTemplate = `{
                 "pipelineID": {
                     "type": "integer"
                 },
-                "queue": {
-                    "type": "integer"
-                },
                 "ref": {
                     "type": "string"
                 },
-                "startedDate": {
+                "started": {
                     "type": "string"
                 },
                 "status": {
@@ -12642,7 +12780,7 @@ const docTemplate = `{
                 "error": {
                     "type": "string"
                 },
-                "finishedDate": {
+                "finished": {
                     "type": "string"
                 },
                 "id": {
@@ -12650,6 +12788,9 @@ const docTemplate = `{
                 },
                 "logs": {
                     "type": "string"
+                },
+                "number": {
+                    "type": "integer"
                 },
                 "params": {
                     "type": "object",
@@ -12663,9 +12804,6 @@ const docTemplate = `{
                 "pipelineID": {
                     "type": "integer"
                 },
-                "queue": {
-                    "type": "integer"
-                },
                 "ref": {
                     "type": "string"
                 },
@@ -12675,7 +12813,7 @@ const docTemplate = `{
                         "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_stage.StageWithSteps"
                     }
                 },
-                "startedDate": {
+                "started": {
                     "type": "string"
                 },
                 "status": {
@@ -12700,6 +12838,45 @@ const docTemplate = `{
                 },
                 "pipelineID": {
                     "type": "integer"
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_jobs.CreateJobRequest": {
+            "type": "object",
+            "required": [
+                "cronDef",
+                "jobData",
+                "jobName",
+                "jobType",
+                "maxDurationSeconds"
+            ],
+            "properties": {
+                "cronDef": {
+                    "type": "string"
+                },
+                "jobData": {
+                    "type": "string"
+                },
+                "jobName": {
+                    "type": "string"
+                },
+                "jobType": {
+                    "type": "string"
+                },
+                "maxDurationSeconds": {
+                    "type": "integer",
+                    "minimum": 1
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_jobs.DeleteJobRequest": {
+            "type": "object",
+            "required": [
+                "jobName"
+            ],
+            "properties": {
+                "jobName": {
+                    "type": "string"
                 }
             }
         },
@@ -12781,12 +12958,6 @@ const docTemplate = `{
                 "editedDate": {
                     "type": "string"
                 },
-                "event": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
                 "id": {
                     "type": "integer"
                 },
@@ -12795,6 +12966,12 @@ const docTemplate = `{
                 },
                 "repoID": {
                     "type": "integer"
+                },
+                "trigger": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },
@@ -12880,6 +13057,23 @@ const docTemplate = `{
                 },
                 "identifier": {
                     "description": "公钥标识符",
+                    "type": "string"
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.BranchCompareRequest": {
+            "type": "object",
+            "required": [
+                "source",
+                "target"
+            ],
+            "properties": {
+                "source": {
+                    "description": "源分支",
+                    "type": "string"
+                },
+                "target": {
+                    "description": "目标分支",
                     "type": "string"
                 }
             }
@@ -12975,6 +13169,36 @@ const docTemplate = `{
                 },
                 "headHash": {
                     "description": "该 PR 最新的 Commit SHA",
+                    "type": "string"
+                },
+                "mergeBaseSHA": {
+                    "type": "string"
+                },
+                "mergeCheckStatus": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.MergeCheckStatus"
+                },
+                "mergeConflicts": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "mergeSHA": {
+                    "type": "string"
+                },
+                "mergeTargetSHA": {
+                    "type": "string"
+                },
+                "rebaseCheckStatus": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.MergeCheckStatus"
+                },
+                "rebaseConflicts": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "sourceSHA": {
                     "type": "string"
                 }
             }
@@ -13118,6 +13342,19 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.MergeCheckStatus": {
+            "type": "string",
+            "enum": [
+                "unchecked",
+                "conflict",
+                "mergeable"
+            ],
+            "x-enum-varnames": [
+                "MergeCheckStatusUnchecked",
+                "MergeCheckStatusConflict",
+                "MergeCheckStatusMergeable"
+            ]
         },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.MergeMethod": {
             "type": "string",
@@ -13341,7 +13578,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "forkID": {
-                    "description": "允许 NULL，用指针类型",
                     "type": "integer"
                 },
                 "gitSSHURL": {
@@ -13422,7 +13658,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "forkID": {
-                    "description": "允许 NULL，用指针类型",
                     "type": "integer"
                 },
                 "gitSSHURL": {
