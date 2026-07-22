@@ -24,12 +24,11 @@ import (
 	"github.com/drone/drone-go/drone"
 	"github.com/drone/runner-go/client"
 	"github.com/drone/runner-go/environ"
-	droneLogger "github.com/drone/runner-go/logger"
 	"github.com/drone/runner-go/pipeline"
 	legacy "github.com/drone/runner-go/pipeline/runtime"
 	"github.com/drone/runner-go/secret"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
+	gitfoxLogger "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 )
 
 var noContext = context.Background()
@@ -67,7 +66,7 @@ type Runner struct {
 // Run runs the pipeline stage.
 func (s *Runner) Run(ctx context.Context, stage *drone.Stage) error {
 	stageInfo := fmt.Sprintf("stage.id=%d, stage.name=%s, stage.number=%d", stage.ID, stage.Name, stage.Number)
-	logger := logger.GetLogger(ctx)
+	logger := gitfoxLogger.GetLogger(ctx)
 	logger.Infof("[pipeline]: stage received, %s", stageInfo)
 
 	// delivery to a single agent is not guaranteed, which means
@@ -106,7 +105,7 @@ func (s *Runner) Run(ctx context.Context, stage *drone.Stage) error {
 
 func (s *Runner) run(ctx context.Context, stage *drone.Stage, data *client.Context) error {
 	stageInfo := fmt.Sprintf("stage.id=%d, stage.name=%s, stage.number=%d", stage.ID, stage.Name, stage.Number)
-	logger := logger.GetLogger(ctx)
+	logger := gitfoxLogger.GetLogger(ctx)
 	logger.Infof("[pipeline]: run started, %s", stageInfo)
 
 	ctxdone, cancel := context.WithCancel(ctx)
@@ -285,7 +284,7 @@ func (s *Runner) run(ctx context.Context, stage *drone.Stage, data *client.Conte
 
 	logger.Infof("[pipeline]: updated stage to running, %s", stageInfo)
 
-	ctxlogger := droneLogger.WithContext(ctxcancel, droneLogger.FromContext(ctx))
+	ctxlogger := gitfoxLogger.WithContext(ctxcancel, gitfoxLogger.FromContext(ctx).Named("pipeline"))
 	ctxExec := extend.WithSecretContext(ctxlogger, usedSecrets)
 	if err := s.Exec(ctxExec, spec, state); err != nil {
 		logger.Infof("[pipeline]: stage failed, duration=%d, %s, err=%v", stage.Stopped-stage.Started, stageInfo, err)

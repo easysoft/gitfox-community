@@ -8,6 +8,8 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/logger"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/runner/docker/engine/resource"
 
+	gitfoxLogger "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
+
 	"github.com/drone/drone-go/drone"
 	runnerclient "github.com/drone/runner-go/client"
 	"github.com/drone/runner-go/poller"
@@ -20,6 +22,7 @@ func NewExecutionPoller(
 ) *poller.Poller {
 	runWithRecovery := func(ctx context.Context, stage *drone.Stage) (err error) {
 		ctx = logger.WithUnwrappedZerolog(ctx)
+		ctx = gitfoxLogger.WithLogger(ctx, gitfoxLogger.GetLogger(ctx))
 		defer func() {
 			if r := recover(); r != nil {
 				err = fmt.Errorf("panic received: %s", debug.Stack())
