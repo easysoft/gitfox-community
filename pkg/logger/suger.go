@@ -216,3 +216,50 @@ func (ps invalidPairs) MarshalLogArray(enc zapcore.ArrayEncoder) error {
 	}
 	return err
 }
+
+// ---- drone/runner-go/logger.Logger 接口兼容方法 ----
+
+// Trace 记录一条 trace 级别的日志。由于 zap 没有原生 trace 级别，映射到 debug 级别。
+func (s *SugaredMateLogger) Trace(args ...interface{}) {
+	s.asynclog(zap.DebugLevel, "", args, nil)
+}
+
+// Tracef 使用格式字符串记录一条 trace 级别的日志。
+func (s *SugaredMateLogger) Tracef(template string, args ...interface{}) {
+	s.asynclog(zap.DebugLevel, template, args, nil)
+}
+
+// Traceln 记录一条 trace 级别的日志，参数间以空格分隔。
+func (s *SugaredMateLogger) Traceln(args ...interface{}) {
+	s.asynclog(zap.DebugLevel, "", args, nil)
+}
+
+// Debugln 记录一条 debug 级别的日志，通过异步日志路径。
+func (s *SugaredMateLogger) Debugln(args ...interface{}) {
+	s.asynclog(zap.DebugLevel, "", args, nil)
+}
+
+// Infoln 记录一条 info 级别的日志，通过异步日志路径。
+func (s *SugaredMateLogger) Infoln(args ...interface{}) {
+	s.asynclog(zap.InfoLevel, "", args, nil)
+}
+
+// Warnln 记录一条 warn 级别的日志，通过异步日志路径。
+func (s *SugaredMateLogger) Warnln(args ...interface{}) {
+	s.asynclog(zap.WarnLevel, "", args, nil)
+}
+
+// Errorln 记录一条 error 级别的日志，通过异步日志路径。
+func (s *SugaredMateLogger) Errorln(args ...interface{}) {
+	s.asynclog(zap.ErrorLevel, "", args, nil)
+}
+
+// WithError 返回一个附加了 error 字段的新 logger，用于链式调用。
+func (s *SugaredMateLogger) WithError(err error) *SugaredMateLogger {
+	return s.With(zap.Error(err))
+}
+
+// WithField 返回一个附加了单个字段的新 logger，用于链式调用。
+func (s *SugaredMateLogger) WithField(key string, value interface{}) *SugaredMateLogger {
+	return s.With(zap.Any(key, value))
+}
