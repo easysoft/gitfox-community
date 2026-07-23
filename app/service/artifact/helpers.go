@@ -73,14 +73,14 @@ func buildArtifactAssetLink(spaceCode, repoIdentifier, viewCode, format, group, 
 
 // buildContainerPullLink 生成容器镜像可直接 docker pull 的引用。
 func (s *Service) buildContainerPullLink(view *adapter.ViewDescriptor, pkg *model.ArtifactPackage, ver *model.ArtifactVersion) string {
-	if view == nil || pkg == nil || ver == nil || view.ArtifactName == "" || pkg.Name == "" || ver.Version == "" {
+	if view == nil || pkg == nil || ver == nil || view.ArtifactCode == "" || pkg.Name == "" || ver.Version == "" {
 		return ""
 	}
 
 	// "global/docker_global_dev/pipeline-helper:v1n"
 	imageRef := strings.Join([]string{
 		containerDomainID(view),
-		view.ArtifactName,
+		view.ArtifactCode,
 		pkg.Name,
 	}, "/") + ":" + ver.Version
 
