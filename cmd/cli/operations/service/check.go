@@ -168,9 +168,6 @@ var windowsDockerNpipeCandidates = []string{
 }
 
 // pickWindowsDockerNpipe 按候选列表顺序选择 Windows 下要拨号的命名管道。
-// Windows named pipe 不是普通文件，不能依赖 os.Stat 判断存在性；由平台实现
-// dockerNpipeExists 使用原生 pipe API 探测。
-// 全部候选均不存在时返回 ("", false)，不再伪造默认 host。
 func pickWindowsDockerNpipe() (string, bool) {
 	for _, p := range windowsDockerNpipeCandidates {
 		if dockerNpipeExists(p) {
