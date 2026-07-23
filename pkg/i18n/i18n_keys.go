@@ -128,6 +128,7 @@ const (
 	ArtifactVersionListError                I18nKey = "artifact.version_list_error"                  // 查询制品版本列表失败.
 	ArtifactVersionPackageRequired          I18nKey = "artifact.version_package_required"            // 查询版本列表必须指定制品包名 packageName,且不能为空或全为空白字符.
 	ArtifactVersionQueryError               I18nKey = "artifact.version_query_error"                 // 查询制品版本失败.
+	ArtifactViewCodeInvalid                 I18nKey = "artifact.view_code_invalid"                   // 制品库标识不符合规范,首尾字符必须是字母数字,不能以 . _ - 开头,中间可包含字母数字.-_
 	ArtifactViewCreateError                 I18nKey = "artifact.view_create_error"                   // 创建制品视图失败.
 	ArtifactViewFormatInvalid               I18nKey = "artifact.view_format_invalid"                 // 不支持的制品格式,仅支持: file, raw, container.
 	ArtifactViewFormatRequired              I18nKey = "artifact.view_format_required"                // 请选择制品格式(format),可选值:file, raw, container.

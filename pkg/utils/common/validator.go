@@ -9,6 +9,8 @@ import (
 
 var (
 	dnsMatcher *regexp.Regexp = regexp.MustCompile(`^(?:[a-zA-Z0-9](?:[a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)*(?:xn--[a-zA-Z0-9\-]{1,59}|[a-zA-Z0-9](?:[a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)$`)
+
+	codeMatcher *regexp.Regexp = regexp.MustCompile(`^[a-zA-Z0-9]([a-zA-Z0-9._-]*[a-zA-Z0-9])?$`)
 )
 
 // IsIp check if the string is a ip address.
@@ -68,4 +70,9 @@ func IsDns(dns string) bool {
 // IsDbHost 判断是否是合法的数据库主机地址（域名或 IP，不含端口和协议）
 func IsDbHost(host string) bool {
 	return IsIp(host) || IsDns(host)
+}
+
+// IsValidCode 校验标识符是否符合规范：首尾字符必须是字母或数字，中间可包含字母、数字、点、下划线、中划线。
+func IsValidCode(code string) bool {
+	return codeMatcher.MatchString(code)
 }

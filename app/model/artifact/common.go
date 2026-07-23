@@ -8,6 +8,7 @@ import (
 	enum "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
+	common "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/common"
 )
 
 // maxArtifactViewNameLen 制品库视图名称的最大长度（与 DB 字段保持一致的冗余保护）。
@@ -155,8 +156,6 @@ type CreateArtifactViewReq struct {
 //  4. 版本化 format（container/helm/pypi/npm/maven）的 Name 仅允许 ASCII 字母、数字、中划线、下划线
 //     （generic / raw 允许中文等非 ASCII 字符）
 func (r *CreateArtifactViewReq) Validate() error {
-
-	// 1. Format 必填校验：空值给出更友好的提示，避免落到 "不支持的格式"。
 	if strings.TrimSpace(r.Format) == "" {
 		return errors.WithI18nKey(
 			fmt.Errorf("artifact format is required"),
@@ -178,9 +177,11 @@ func (r *CreateArtifactViewReq) Validate() error {
 	if err != nil {
 		return err
 	}
-
-	// 回写 trim 后的 name，后续 service 直接使用
 	r.Name = name
+
+	if !common.IsValidCode(r.Code) {
+		return errors.WithI18nKey(nil, i18n.ArtifactViewCodeInvalid)
+	}
 
 	return nil
 }

@@ -34,6 +34,7 @@ artifact:
   default_view_name: "Default"
   view_name_duplicate: "An artifact view with the same name already exists."
   view_not_found: "The specified artifact view does not exist."
+  view_code_invalid: "artifact identifier format is invalid. Only letters, digits, hyphens (-), underscores (_) and dots (.) are allowed"
   view_query_error: "Failed to query artifact view."
   view_scope_mismatch: "The specified artifact view does not match the requested space or repository."
   view_create_error: "Failed to create artifact view."
