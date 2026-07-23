@@ -29,8 +29,8 @@ func registerRepoRoutes(r *gin.RouterGroup, controller *Controller) {
 			reposWithID.GET(fmt.Sprintf("/blame/*%s", req.PathParamFilePath), controller.Repo.Blame)
 
 			// pullrequest 相关路由
-			reposWithID.GET(fmt.Sprintf("/diff-stats/*%s", req.TargetPathToSourcePath), controller.Repo.GetDiffStats)
-			reposWithID.POST(fmt.Sprintf("/merge-check/*%s", req.TargetPathToSourcePath), controller.Repo.MergeCheck)
+			reposWithID.POST("/diff-stats", controller.Repo.GetDiffStats)
+			reposWithID.POST("/merge-check", controller.Repo.MergeCheck)
 			repopull := reposWithID.Group("/pullreq")
 			{
 				repopull.GET(fmt.Sprintf("/:%s/metadata", req.PullrequestID), controller.Repo.Metadata)

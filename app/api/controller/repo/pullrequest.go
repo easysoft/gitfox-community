@@ -51,17 +51,17 @@ func (ctl *Controller) Metadata(ctx *gin.Context) {
 
 // GetDiffStats 获取代码Pull Request 差异统计信息
 // @Summary 获取代码Pull Request 差异统计信息
-// @Description 根据传入的仓库 ID 和 路径获取 Pull Request 差异统计信息
+// @Description 根据传入的仓库 ID、源分支和目标分支获取 Pull Request 差异统计信息
 // @Tags pureq
 // @Accept application/json
 // @Produce application/json
 // @Param id path uint true "仓库 ID"
-// @Param targetPathToSourcePath path string true "目标路径到源路径"
+// @Param body body repoModel.BranchCompareRequest true "源分支和目标分支"
 // @Success 200 {object} resp.ObjectResponse{data=repoModel.DiffStats} "获取成功（返回差异统计信息）"
-// @Error 400 {object} resp.ObjectResponse "参数错误（如TargetPathToSourcePath格式非法、为空等）"
+// @Error 400 {object} resp.ObjectResponse "参数错误（如源分支或目标分支为空）"
 // @Error 401 {object} resp.ObjectResponse "未授权（会话不存在或已过期）"
 // @Error 500 {object} resp.ObjectResponse "服务器内部错误（如Git服务调用失败、数据库异常等）"
-// @Router /repos/{id}/diff-stats/{targetPathToSourcePath} [get]
+// @Router /repos/{id}/diff-stats [post]
 func (ctl *Controller) GetDiffStats(ctx *gin.Context) {
 	session, ok := req.GetAuthSession(ctx.Request.Context())
 	if !ok {
@@ -76,8 +76,6 @@ func (ctl *Controller) GetDiffStats(ctx *gin.Context) {
 		return
 	}
 
-	pathToPath = strings.TrimPrefix(pathToPath, "/")
-
 	data, err := ctl.pullrequestSvc.GetDiffStats(ctx.Request.Context(), session, repoID, pathToPath)
 	if err != nil {
 		resp.InternalError(ctx, err)
@@ -89,17 +87,17 @@ func (ctl *Controller) GetDiffStats(ctx *gin.Context) {
 
 // MergeCheck 获取代码Pull Request 合并检查信息
 // @Summary 获取代码Pull Request 合并检查信息
-// @Description 根据传入的仓库 ID 和 路径获取 Pull Request 合并检查信息
+// @Description 根据传入的仓库 ID、源分支和目标分支获取 Pull Request 合并检查信息
 // @Tags pureq
 // @Accept application/json
 // @Produce application/json
 // @Param id path uint true "仓库 ID"
-// @Param targetPathToSourcePath path string true "目标路径到源路径"
+// @Param body body repoModel.BranchCompareRequest true "源分支和目标分支"
 // @Success 200 {object} resp.ObjectResponse{data=repoModel.MergeCheck} "获取成功（返回合并检查信息）"
-// @Error 400 {object} resp.ObjectResponse "参数错误（如TargetPathToSourcePath格式非法、为空等）"
+// @Error 400 {object} resp.ObjectResponse "参数错误（如源分支或目标分支为空）"
 // @Error 401 {object} resp.ObjectResponse "未授权（会话不存在或已过期）"
 // @Error 500 {object} resp.ObjectResponse "服务器内部错误（如Git服务调用失败、数据库异常等）"
-// @Router /repos/{id}/merge-check/{targetPathToSourcePath} [post]
+// @Router /repos/{id}/merge-check [post]
 func (ctl *Controller) MergeCheck(ctx *gin.Context) {
 	session, ok := req.GetAuthSession(ctx.Request.Context())
 	if !ok {
@@ -113,8 +111,6 @@ func (ctl *Controller) MergeCheck(ctx *gin.Context) {
 		resp.BadRequest(ctx, err)
 		return
 	}
-
-	pathToPath = strings.TrimPrefix(pathToPath, "/")
 
 	data, err := ctl.pullrequestSvc.MergeCheck(ctx.Request.Context(), session, repoID, pathToPath)
 	if err != nil {
@@ -357,14 +353,9 @@ func (ctl *Controller) Merge(ctx *gin.Context) {
 		return
 	}
 
-	mergeResp, mergeViolations, err := ctl.pullrequestSvc.Merge(ctx.Request.Context(), session, repoID, pullreqID, params)
+	mergeResp, err := ctl.pullrequestSvc.Merge(ctx.Request.Context(), session, repoID, pullreqID, params)
 	if err != nil {
 		resp.InternalError(ctx, err, err.Error())
-		return
-	}
-
-	if mergeViolations != nil {
-		resp.OK(ctx, i18n.PullrequestMergeViolations, mergeViolations)
 		return
 	}
 
@@ -435,21 +426,21 @@ func GetReqQueryParamID(ctx *gin.Context) (uint, uint, error) {
 	return repoID, pullreqID, nil
 }
 
-// GetReqQueryParamIDAndPath 从路径参数中获取仓库 ID 和路径参数
+// GetReqQueryParamIDAndPath 获取仓库 ID 和分支对比参数
 func GetReqQueryParamIDAndPath(ctx *gin.Context) (uint, string, error) {
+	var param repoModel.BranchCompareRequest
 	repoID, err := req.PathParamAsPositiveUint(ctx, "id")
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.PullrequestPathParamError)
 		return 0, "", err
 	}
 
-	pathToPath, err := req.PathParamOrError(ctx, req.TargetPathToSourcePath)
-	if err != nil {
-		err = errors.WithI18nKey(err, i18n.PullrequestPathParamError)
+	if err := ctx.ShouldBindJSON(&param); err != nil {
+		err = errors.WithI18nKey(err, i18n.PullrequestBodyParamError)
 		return 0, "", err
 	}
 
-	return repoID, pathToPath, nil
+	return repoID, param.Target + "..." + param.Source, nil
 }
 
 // GetFileDiffFromQuery 从查询参数中获取文件差异信息

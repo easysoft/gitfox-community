@@ -451,82 +451,69 @@ func (s *Service) createRepositoryInternal(
 			base.RepoUID, err)
 	}
 
-	// only execute file creation logic if files are provided
-	//nolint: nestif
-
 	// Empty repositories do not need a working copy clone.
-	if len(files) == 0 {
-		return nil
-	}
-
-	// we need temp dir for cloning
-	tempDir, err := os.MkdirTemp("", "*-"+base.RepoUID)
-	if err != nil {
-		return fmt.Errorf("error creating temp dir for repo %s: %w", base.RepoUID, err)
-	}
-	defer func(path string) {
-		// when repo is successfully created remove temp dir
-		errRm := os.RemoveAll(path)
-		if errRm != nil {
-			log.Errorf("failed to cleanup temporary dir. %w", errRm)
-		}
-	}(tempDir)
-
-	// Clone repository to temp dir
-	if err = s.git.Clone(ctx, repoPath, tempDir, api.CloneRepoOptions{Mirror: base.Mirror}); err != nil {
-		return errors.Newf("createRepositoryInternal: failed to clone repo: %v", err)
-	}
-
-	// logic for receiving files
-	filePaths := make([]string, 0, 16)
-	for _, file := range files {
-		var filePath string
-		filePath, err = s.handleFileUploadIfAvailable(ctx, tempDir, file)
-		if errors.Is(err, io.EOF) {
-			log.Info("received stream EOF")
-			break
-		}
+	if len(files) > 0 {
+		// we need temp dir for cloning
+		tempDir, err := os.MkdirTemp("", "*-"+base.RepoUID)
 		if err != nil {
-			return errors.InternalError.Wrapf(err, "failed to receive file %s", file)
+			return fmt.Errorf("error creating temp dir for repo %s: %w", base.RepoUID, err)
+		}
+		defer func(path string) {
+			// when repo is successfully created remove temp dir
+			errRm := os.RemoveAll(path)
+			if errRm != nil {
+				log.Errorf("failed to cleanup temporary dir. %w", errRm)
+			}
+		}(tempDir)
+
+		// Clone repository to temp dir
+		if err = s.git.Clone(ctx, repoPath, tempDir, api.CloneRepoOptions{Mirror: base.Mirror}); err != nil {
+			return errors.Newf("createRepositoryInternal: failed to clone repo: %v", err)
 		}
 
-		filePaths = append(filePaths, filePath)
-	}
+		// logic for receiving files
+		filePaths := make([]string, 0, 16)
+		for _, file := range files {
+			var filePath string
+			filePath, err = s.handleFileUploadIfAvailable(ctx, tempDir, file)
+			if errors.Is(err, io.EOF) {
+				log.Info("received stream EOF")
+				break
+			}
+			if err != nil {
+				return errors.InternalError.Wrapf(err, "failed to receive file %s", file)
+			}
 
-	if len(filePaths) > 0 {
-		if committer == nil {
-			committer = &base.Actor
+			filePaths = append(filePaths, filePath)
 		}
-		if author == nil {
-			author = committer
-		}
-		// NOTE: This creates the branch in origin repo (as it doesn't exist as of now)
-		// TODO: this should at least be a constant and not hardcoded?
-		if err = s.addFilesAndPush(ctx,
-			tempDir,
-			filePaths, "HEAD:"+defaultBranch,
-			nil,
-			author,
-			authorDate,
-			committer,
-			committerDate,
-			"origin",
-			"initial commit",
-		); err != nil {
-			return err
+
+		if len(filePaths) > 0 {
+			if committer == nil {
+				committer = &base.Actor
+			}
+			if author == nil {
+				author = committer
+			}
+			// NOTE: This creates the branch in origin repo (as it doesn't exist as of now)
+			// TODO: this should at least be a constant and not hardcoded?
+			if err = s.addFilesAndPush(ctx,
+				tempDir,
+				filePaths, "HEAD:"+defaultBranch,
+				nil,
+				author,
+				authorDate,
+				committer,
+				committerDate,
+				"origin",
+				"initial commit",
+			); err != nil {
+				return err
+			}
 		}
 	}
 
 	// setup server hook symlinks pointing to configured server hook binary
 	// IMPORTANT: Setup hooks after repo creation to avoid issues with externally dependent services.
-	// for _, hook := range gitServerHookNames {
-	// 	hookPath := path.Join(repoPath, gitHooksDir, hook)
-	// 	err = os.Symlink(s.gitHookPath, hookPath)
-	// 	if err != nil {
-	// 		return errors.Internal(err, "failed to setup symlink for hook '%s' ('%s' -> '%s')",
-	// 			hook, hookPath, s.gitHookPath)
-	// 	}
-	// }
 	if err = s.createDelegateHooks(repoPath); err != nil {
 		return errors.InternalError.Wrapf(err, "failed to setup createDelegateHooks, gitHookPath: %s", s.gitHookPath)
 	}

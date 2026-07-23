@@ -52,7 +52,7 @@ func (c *treeNode) GetByPath(ctx context.Context, artifactID int64, path string,
 
 func (c *treeNode) GetByTarget(ctx context.Context, artifactID int64, nodeType model.ArtifactTreeNodeType, id int64) (*model.ArtifactTreeNode, error) {
 	var row artifactTreeNode
-	q := artifactTreeNode{ArtifactID: artifactID, Type: string(nodeType), TargetID: null.IntFrom(id)}
+	q := artifactTreeNode{ArtifactID: artifactID, Type: string(nodeType), TargetID: id}
 	if err := c.db.WithContext(ctx).Where(&q).Take(&row).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}

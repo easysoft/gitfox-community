@@ -207,7 +207,8 @@ func NewApp(mode string) (*App, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	repository := importer.NewRepoImporterSvc(mode, urlProvider, gitService, svnInterface, store, providerStore, notifyStore, encrypter, jobsScheduler, streamer)
+	webhookStore := webhook.NewWebhookStore(db)
+	repository := importer.NewRepoImporterSvc(mode, urlProvider, gitService, svnInterface, store, providerStore, notifyStore, encrypter, jobsScheduler, streamer, devopsConfig, webhookStore)
 	eventContext := provider.NewEventContext()
 	eventsConfig := provider.NewEventConfig()
 	universalClient := provider.NewEventRedisClient()
@@ -290,7 +291,6 @@ func NewApp(mode string) (*App, func(), error) {
 	scanController := scan3.NewScanController(ruleSetService, ruleService, solutionService, scanTaskService, scanPlanService, scanTriggerService, scanConditionService, scanPlanConditionService, repoService, gitService)
 	fitService := fit.NewService(tokenInterface, devopsConfig)
 	fitController := fit2.NewController(fitService, repoService, service)
-	webhookStore := webhook.NewWebhookStore(db)
 	webhookService, err := provider.ProvideWebhookService(eventContext, gitService, readerFactory, eventsReaderFactory, webhookStore, store, repoService, pullrequestStore, urlProvider)
 	if err != nil {
 		cleanup2()

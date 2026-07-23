@@ -245,7 +245,7 @@ type artifactTreeNode struct {
 	Path       string   `gorm:"column:nodePath"`
 	Type       string   `gorm:"column:linkTable"`
 	Format     string   `gorm:"column:type"`
-	TargetID   null.Int `gorm:"column:linkRecord"`
+	TargetID   int64    `gorm:"column:linkRecord"`
 }
 
 func (artifactTreeNode) TableName() string { return "ops_artifact_tree_nodes" }
@@ -602,7 +602,7 @@ func inferTreeNodeType(n *artifactTreeNode) model.ArtifactTreeNodeType {
 	if n.Path == "/" {
 		return model.ArtifactTreeNodeTypeFormat
 	}
-	if n.TargetID.Valid && model.ArtifactFormat(n.Format) == model.ArtifactFileFormat {
+	if n.TargetID > 0 && model.ArtifactFormat(n.Format) == model.ArtifactFileFormat {
 		return model.ArtifactTreeNodeTypeGroup
 	}
 	return ""

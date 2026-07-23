@@ -22,7 +22,9 @@ import (
 	notifyStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/notify"
 	providerStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/provider"
 	repoStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
+	webhookStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/webhook"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/auth/authn"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
@@ -53,6 +55,8 @@ type Repository struct {
 	encrypter     encrypt.Encrypter
 	scheduler     *jobs.Scheduler
 	sseStreamer   sse.Streamer
+	devopsConfig  config.DevopsConfig
+	webhookStore  webhookStore.Interface
 }
 
 var _ Interface = (*Repository)(nil)
@@ -69,6 +73,8 @@ func NewRepoImporterSvc(
 	encrypter encrypt.Encrypter,
 	scheduler *jobs.Scheduler,
 	sseStreamer sse.Streamer,
+	devopsConfig config.DevopsConfig,
+	webhookStore webhookStore.Interface,
 ) *Repository {
 	return &Repository{
 		defaultBranch: defaultBranch,
@@ -81,6 +87,8 @@ func NewRepoImporterSvc(
 		encrypter:     encrypter,
 		scheduler:     scheduler,
 		sseStreamer:   sseStreamer,
+		devopsConfig:  devopsConfig,
+		webhookStore:  webhookStore,
 	}
 }
 
@@ -324,9 +332,45 @@ func (r *Repository) Handle(ctx context.Context, data string, reportFn pkgJobs.P
 		if err != nil {
 			return "", fmt.Errorf("completed repository import, but failed to create mirror sync cron job: %w", err)
 		}
+	} else {
+		if err = r.createDefaultWebhook(ctx, repo, log); err != nil {
+			return "", fmt.Errorf("completed repository import, but failed to create webhook: %w", err)
+		}
 	}
 
 	return "", nil
+}
+
+// createDefaultWebhook 创建默认 zentao webhook，如已存在同名 webhook 则跳过。
+func (r *Repository) createDefaultWebhook(ctx context.Context, repo *repoModel.Repo, log *logger.SugaredMateLogger) error {
+	displayName := fmt.Sprintf("zentao-%d-%s", repo.ID, time.Now().Format("20060102"))
+	_, err := r.webhookStore.GetByRepoIDAndDisplayName(ctx, int64(repo.ID), displayName)
+	if err == nil {
+		log.Infof("webhook with display name %s already exists, skipping creation", displayName)
+		return nil
+	}
+	if !errors.Is(err, errors.ErrResourceNotFound) {
+		log.Errorf("failed to check webhook existence: %v", err)
+		return err
+	}
+
+	wh := &webhookStore.Webhook{
+		RepoID:      int64(repo.ID),
+		DisplayName: displayName,
+		URL:         fmt.Sprintf("%s/gitfox/webhook?repoID=%d", r.devopsConfig.URL, repo.ID),
+		IsSSL:       false,
+		Internal:    false,
+		AuthMethod:  constant.DefaultAuthMethod,
+		AuthHeader:  constant.DefaultAuthHeader,
+		Enabled:     true,
+		CreatedBy:   repo.CreatedBy,
+		EditedBy:    repo.CreatedBy,
+	}
+	if _, err = r.webhookStore.Create(ctx, wh); err != nil {
+		log.Errorf("failed to create webhook: %v", err)
+		return err
+	}
+	return nil
 }
 
 // firstSyncGitRepo 创建空 git 仓库并同步仓库内容，成功后更新库表状态为 Active。

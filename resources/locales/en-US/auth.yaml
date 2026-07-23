@@ -1,7 +1,7 @@
 auth:
   no_data: "the request doesn't contain any auth data that can be used by the Authorizer"
   failed: "authentication failed" 
-  no_session: "the request doesn't contain any session data that can be used by the Authorizer"
+  no_session: "the request doesn't contain any session data that can be used by the Authorizer, please check if the email is configured"
   session_token_not_allowed: "session tokens are not allowed for usage with git"
   user_not_found: "user not found"
   user_pass_error: "user password error"

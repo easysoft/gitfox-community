@@ -23,6 +23,6 @@ space:
   restore_success: "恢复空间成功"
   not_found: "查询空间不存在"
   create_duplicate: "创建空间异常，空间标识已存在"
-  code_invalid: "空间标识不符合规范,首字符必须是字母数字，不能以 . _ - 开头,中间可包含字母数字点下划线横杠,不允许.git结尾"
+  code_invalid: "空间标识不符合规范，首尾字符必须是字母数字，不能以 . _ - 开头，中间可包含字母数字.-_，不允许.git结尾"
   code_too_long: "空间标识超过50字符"
   desc_too_long: "空间描述信息超过500字符"

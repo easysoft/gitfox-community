@@ -329,7 +329,7 @@ func (c *Controller) suggestPullRequest(
 			SourceSHA:         sourceSHA,
 			MergeBaseSHA:      mergeBaseSHA.String(),
 			MergeTargetSHA:    targetSHA,
-			Flow:              1, // PullRequestFlowZentao
+			Flow:              repoModel.PullRequestFlowZentao,
 			ReviewFlowID:      uint(rule.ReviewFlowID),
 		}
 		if err := c.pullreqStore.Create(ctx, pr); err != nil {

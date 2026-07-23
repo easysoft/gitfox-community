@@ -14,7 +14,7 @@ import (
 	"github.com/drone/drone-go/drone"
 	"github.com/drone/runner-go/environ"
 	"github.com/drone/runner-go/livelog/extractor"
-	"github.com/drone/runner-go/logger"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	"github.com/drone/runner-go/pipeline"
 	"github.com/hashicorp/go-multierror"
 	"github.com/natessilva/dag"

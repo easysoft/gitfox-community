@@ -46,7 +46,7 @@ type ReqFilter struct {
 	After        string  `json:"after" form:"after"`
 	Path         string  `json:"path" form:"path"`
 	Since        int64   `json:"since" form:"since"`
-	Until        int64   `json:"until" form:"until"`
+	Until        string  `json:"until" form:"until"`
 	Committer    string  `json:"committer" form:"committer"`
 	CommitterIDs []int64 `json:"committerIDs" form:"committerIDs"`
 	Author       string  `json:"author" form:"author"`

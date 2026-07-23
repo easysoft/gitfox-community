@@ -126,3 +126,14 @@ func GetContextWithLogger(c *gin.Context) context.Context {
 
 	return ctx
 }
+
+// FromContext 从 context.Context 中获取 logger，与 drone/runner-go/logger.FromContext 兼容。
+// 如果上下文中不存在项目 logger，返回默认 logger。
+func FromContext(ctx context.Context) *SugaredMateLogger {
+	return GetLogger(ctx)
+}
+
+// WithContext 将 logger 写入 context.Context 并返回新 context，与 drone/runner-go/logger.WithContext 兼容。
+func WithContext(ctx context.Context, log *SugaredMateLogger) context.Context {
+	return WithLogger(ctx, log)
+}
