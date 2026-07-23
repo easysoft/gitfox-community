@@ -30,7 +30,7 @@ func (req *CreateSpaceRequest) Validate() error {
 
 	codeLower := strings.ToLower(req.Code)
 	if strings.HasSuffix(codeLower, ".git") {
-		return errors.WithI18nKey(nil, i18n.RepoIdentifierInvalidGit)
+		return errors.WithI18nKey(nil, i18n.SpaceCodeInvalid)
 	}
 
 	if len(req.Desc) > 500 {
