@@ -950,7 +950,7 @@ const (
 	// Space 相关常量
 	SpaceArtifactsTitleSuccess   I18nKey = "space.artifacts_title_success"   // 仓库设置保存成功
 	SpaceBodyParamError          I18nKey = "space.body_param_error"          // Body 参数解析失败.
-	SpaceCodeInvalid             I18nKey = "space.code_invalid"              // 空间标识不符合规范,首尾字符必须是字母数字,不能以 . _ - 开头,中间可包含字母数字点下划...
+	SpaceCodeInvalid             I18nKey = "space.code_invalid"              // 空间标识不符合规范,首尾字符必须是字母数字,不能以 . _ - 开头,中间可包含字母数字.-_...
 	SpaceCodeTooLong             I18nKey = "space.code_too_long"             // 空间标识超过50字符
 	SpaceCreateDuplicate         I18nKey = "space.create_duplicate"          // 创建空间异常,空间标识已存在
 	SpaceCreateError             I18nKey = "space.create_error"              // 空间创建失败.
