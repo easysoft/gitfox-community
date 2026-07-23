@@ -21,7 +21,7 @@ import (
 	"github.com/docker/docker/api/types/volume"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/errdefs"
-	"github.com/drone/runner-go/logger"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	"github.com/drone/runner-go/registry/auths"
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 )

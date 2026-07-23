@@ -497,6 +497,8 @@ definitions:
     properties:
       artifactID:
         type: integer
+      code:
+        type: string
       description:
         type: string
       format:
@@ -924,7 +926,7 @@ definitions:
       since:
         type: integer
       until:
-        type: integer
+        type: string
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.ReqForCreate:
     properties:
@@ -996,12 +998,14 @@ definitions:
         type: string
       error:
         type: string
-      finishedDate:
+      finished:
         type: string
       id:
         type: integer
       logs:
         type: string
+      number:
+        type: integer
       params:
         additionalProperties:
           type: string
@@ -1010,11 +1014,9 @@ definitions:
         type: integer
       pipelineID:
         type: integer
-      queue:
-        type: integer
       ref:
         type: string
-      startedDate:
+      started:
         type: string
       status:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.CIStatus'
@@ -1061,12 +1063,14 @@ definitions:
         type: string
       error:
         type: string
-      finishedDate:
+      finished:
         type: string
       id:
         type: integer
       logs:
         type: string
+      number:
+        type: integer
       params:
         additionalProperties:
           type: string
@@ -1075,15 +1079,13 @@ definitions:
         type: integer
       pipelineID:
         type: integer
-      queue:
-        type: integer
       ref:
         type: string
       stages:
         items:
           $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_stage.StageWithSteps'
         type: array
-      startedDate:
+      started:
         type: string
       status:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.CIStatus'
@@ -1100,6 +1102,33 @@ definitions:
         type: integer
     required:
     - pipelineID
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_jobs.CreateJobRequest:
+    properties:
+      cronDef:
+        type: string
+      jobData:
+        type: string
+      jobName:
+        type: string
+      jobType:
+        type: string
+      maxDurationSeconds:
+        minimum: 1
+        type: integer
+    required:
+    - cronDef
+    - jobData
+    - jobName
+    - jobType
+    - maxDurationSeconds
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_jobs.DeleteJobRequest:
+    properties:
+      jobName:
+        type: string
+    required:
+    - jobName
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_jobs.State:
     enum:
@@ -1155,16 +1184,16 @@ definitions:
         type: string
       editedDate:
         type: string
-      event:
-        items:
-          type: string
-        type: array
       id:
         type: integer
       pipelineID:
         type: integer
       repoID:
         type: integer
+      trigger:
+        items:
+          type: string
+        type: array
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_publickey.AddPublicKeyInput:
     properties:
@@ -1227,6 +1256,18 @@ definitions:
       identifier:
         description: 公钥标识符
         type: string
+    type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.BranchCompareRequest:
+    properties:
+      source:
+        description: 源分支
+        type: string
+      target:
+        description: 目标分支
+        type: string
+    required:
+    - source
+    - target
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.ContentType:
     enum:
@@ -1297,6 +1338,26 @@ definitions:
         type: integer
       headHash:
         description: 该 PR 最新的 Commit SHA
+        type: string
+      mergeBaseSHA:
+        type: string
+      mergeCheckStatus:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.MergeCheckStatus'
+      mergeConflicts:
+        items:
+          type: string
+        type: array
+      mergeSHA:
+        type: string
+      mergeTargetSHA:
+        type: string
+      rebaseCheckStatus:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.MergeCheckStatus'
+      rebaseConflicts:
+        items:
+          type: string
+        type: array
+      sourceSHA:
         type: string
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.EventTrigger:
@@ -1395,6 +1456,16 @@ definitions:
         description: 目标分支最新提交 SHA
         type: string
     type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.MergeCheckStatus:
+    enum:
+    - unchecked
+    - conflict
+    - mergeable
+    type: string
+    x-enum-varnames:
+    - MergeCheckStatusUnchecked
+    - MergeCheckStatusConflict
+    - MergeCheckStatusMergeable
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.MergeMethod:
     enum:
     - merge
@@ -1553,7 +1624,6 @@ definitions:
         description: 允许 NULL，用指针类型
         type: string
       forkID:
-        description: 允许 NULL，用指针类型
         type: integer
       gitSSHURL:
         type: string
@@ -1608,7 +1678,6 @@ definitions:
         description: 允许 NULL，用指针类型
         type: string
       forkID:
-        description: 允许 NULL，用指针类型
         type: integer
       gitSSHURL:
         type: string
@@ -3415,6 +3484,33 @@ info:
   title: GitFox API
   version: "1.0"
 paths:
+  /_artifacts/space/{code}/{filepath}:
+    get:
+      description: 通过制品完整路径直接下载文件，无需鉴权。
+      parameters:
+      - description: '制品路径，格式: viewName/groupPath/packageName/version/fileName'
+        in: path
+        name: filepath
+        required: true
+        type: string
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: 文件流
+          schema:
+            type: file
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 按路径下载文件
+      tags:
+      - artifacts
   /artifacts:
     post:
       consumes:
@@ -3802,6 +3898,65 @@ paths:
       summary: 上传制品
       tags:
       - artifacts
+  /cron/jobs:
+    delete:
+      consumes:
+      - application/json
+      description: 根据 jobName 删除一个 recurring cron job
+      parameters:
+      - description: 删除定时任务参数
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_jobs.DeleteJobRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 删除成功
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 删除定时任务
+      tags:
+      - cron
+    post:
+      consumes:
+      - application/json
+      description: 创建或更新一个 recurring cron job（通过 upsert 实现）
+      parameters:
+      - description: 定时任务参数
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_jobs.CreateJobRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 操作成功
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 创建或更新定时任务
+      tags:
+      - cron
   /fit/repos/{id}/settings/advanced:
     get:
       consumes:
@@ -3841,17 +3996,17 @@ paths:
       summary: 获取分支权限
       tags:
       - fit
-  /fit/spaces/{id}:
+  /fit/spaces/{code}:
     get:
       consumes:
       - application/json
       description: 根据空间 ID 和仓库标识名获取仓库信息，带权限校验
       parameters:
-      - description: 空间 ID
+      - description: 空间编码
         in: path
-        name: id
+        name: code
         required: true
-        type: integer
+        type: string
       - description: 仓库名称
         in: query
         name: repoName
@@ -3878,7 +4033,7 @@ paths:
           schema:
             $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
         "404":
-          description: 仓库不存在
+          description: 空间或仓库不存在
           schema:
             $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
         "500":
@@ -3920,17 +4075,17 @@ paths:
       summary: 获取当前用户信息
       tags:
       - users
-  /git/{spaceID}/{repoRef}/git-receive-pack:
+  /git/{spaceCode}/{repoRef}/git-receive-pack:
     post:
       consumes:
       - application/x-git-receive-pack-request
       description: 处理 Git 客户端的 push 请求，通过 receive-pack 协议接收仓库对象数据并更新引用
       parameters:
-      - description: 空间ID
+      - description: 空间标识码
         in: path
-        name: spaceID
+        name: spaceCode
         required: true
-        type: integer
+        type: string
       - description: 仓库标识 (支持 .git 后缀)
         in: path
         name: repoRef
@@ -3966,17 +4121,17 @@ paths:
       summary: Git Push 操作
       tags:
       - git
-  /git/{spaceID}/{repoRef}/git-upload-pack:
+  /git/{spaceCode}/{repoRef}/git-upload-pack:
     post:
       consumes:
       - application/x-git-upload-pack-request
       description: 处理 Git 客户端的 clone 和 fetch 请求，通过 upload-pack 协议发送仓库对象数据
       parameters:
-      - description: 空间ID
+      - description: 空间标识码
         in: path
-        name: spaceID
+        name: spaceCode
         required: true
-        type: integer
+        type: string
       - description: 仓库标识 (支持 .git 后缀)
         in: path
         name: repoRef
@@ -4012,17 +4167,17 @@ paths:
       summary: Git Clone/Fetch 操作
       tags:
       - git
-  /git/{spaceID}/{repoRef}/info/refs:
+  /git/{spaceCode}/{repoRef}/info/refs:
     get:
       consumes:
       - '*/*'
       description: 处理 Git 客户端的 info/refs 请求，返回仓库的引用信息(分支、标签等)，用于 Smart HTTP 协议的初始握手
       parameters:
-      - description: 空间ID
+      - description: 空间标识码
         in: path
-        name: spaceID
+        name: spaceCode
         required: true
-        type: integer
+        type: string
       - description: 仓库标识 (支持 .git 后缀)
         in: path
         name: repoRef
@@ -5632,22 +5787,23 @@ paths:
       summary: 获取仓库指定 GitRef Diff
       tags:
       - repos
-  /repos/{id}/diff-stats/{targetPathToSourcePath}:
-    get:
+  /repos/{id}/diff-stats:
+    post:
       consumes:
       - application/json
-      description: 根据传入的仓库 ID 和 路径获取 Pull Request 差异统计信息
+      description: 根据传入的仓库 ID、源分支和目标分支获取 Pull Request 差异统计信息
       parameters:
       - description: 仓库 ID
         in: path
         name: id
         required: true
         type: integer
-      - description: 目标路径到源路径
-        in: path
-        name: targetPathToSourcePath
+      - description: 源分支和目标分支
+        in: body
+        name: body
         required: true
-        type: string
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.BranchCompareRequest'
       produces:
       - application/json
       responses:
@@ -5663,22 +5819,23 @@ paths:
       summary: 获取代码Pull Request 差异统计信息
       tags:
       - pureq
-  /repos/{id}/merge-check/{targetPathToSourcePath}:
+  /repos/{id}/merge-check:
     post:
       consumes:
       - application/json
-      description: 根据传入的仓库 ID 和 路径获取 Pull Request 合并检查信息
+      description: 根据传入的仓库 ID、源分支和目标分支获取 Pull Request 合并检查信息
       parameters:
       - description: 仓库 ID
         in: path
         name: id
         required: true
         type: integer
-      - description: 目标路径到源路径
-        in: path
-        name: targetPathToSourcePath
+      - description: 源分支和目标分支
+        in: body
+        name: body
         required: true
-        type: string
+        schema:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.BranchCompareRequest'
       produces:
       - application/json
       responses:
