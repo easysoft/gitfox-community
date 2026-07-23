@@ -146,6 +146,7 @@ const (
 	AuthFailed                      I18nKey = "auth.failed"                           // 尝试认证失败
 	AuthNoData                      I18nKey = "auth.no_data"                          // 请求不包含任何可用于 Authorizer 的认证数据
 	AuthNoSession                   I18nKey = "auth.no_session"                       // 请求不包含任何会话数据,无法进行授权,请检查是否配置邮箱
+	AuthNoSessionCheckZentaoEmail   I18nKey = "auth.no_session_check_zentao_email"    // 请检查禅道邮箱是否存在
 	AuthPubKeyAddAlreadyInUse       I18nKey = "auth.pub_key_add_already_in_use"       // key::公钥已存在
 	AuthPubKeyAddBodyParamError     I18nKey = "auth.pub_key_add_body_param_error"     // 公钥添加请求体参数解析失败
 	AuthPubKeyAddContentEmpty       I18nKey = "auth.pub_key_add_content_empty"        // key::公钥内容不能为空
