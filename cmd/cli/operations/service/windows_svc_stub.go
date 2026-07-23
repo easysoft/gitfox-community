@@ -9,7 +9,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"net/url"
 
 	"github.com/quicklyon/kingpin/v2"
 )
@@ -41,10 +40,10 @@ func inspectWindows() ServiceInfo {
 func RegisterServiceRun(_ *kingpin.Application) {
 }
 
-func newDockerHTTPClientNpipe(_ *url.URL) (*http.Client, string, error) {
-	return nil, "", fmt.Errorf("Windows 服务仅在 Windows 平台可用")
-}
-
 func newDockerHTTPClientNpipePath(_ string) (*http.Client, string, error) {
 	return nil, "", fmt.Errorf("Windows npipe 仅在 Windows 平台可用")
+}
+
+func dockerNpipeExists(_ string) bool {
+	return false
 }

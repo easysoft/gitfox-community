@@ -256,7 +256,7 @@ SCM 启动进程 → gitfox.exe service run --workdir C:\gitfox
 |---|---|---|
 | `server/server.go` | 无 | 通用启动引擎 `RunServerWithContext`，所有平台共享 |
 | `service/windows.go` | 无 | Windows 通用辅助（端口检测、日志命令提示、常量定义） |
-| `service/windows_svc.go` | `//go:build windows` | Windows SCM API 实现（注册/停止/卸载/执行/状态查询/管理员检测） + Docker 命名管道拨号实现（`newDockerHTTPClientNpipe` / `newDockerHTTPClientNpipePath`） |
+| `service/windows_svc.go` | `//go:build windows` | Windows SCM API 实现（注册/停止/卸载/执行/状态查询/管理员检测） + Docker 命名管道拨号实现（`newDockerHTTPClientNpipePath`） |
 | `service/windows_svc_stub.go` | `//go:build !windows` | 非 Windows 平台的桩函数（确保跨平台编译） |
 | `service/register.go` | 无 | 服务注册/重启的跨平台调度层 |
 | `service/start.go` | 无 | `gitfox start` 命令的核心决策引擎 |
@@ -329,8 +329,10 @@ GitFox 通过挂载 docker.sock（Linux）或命名管道（Windows）让容器�
 CheckDocker
   ├─ dockerHost()                        选 host 字符串
   │     ├─ DOCKER_HOST 非空 → 用环境变量
-  │     ├─ Windows         → "npipe://" + pickWindowsDockerNpipe()
-  │     └─ Linux           → "unix://" + defaultDockerSocket
+  │     ├─ Windows 命中管道 → "npipe://" + path
+  │     ├─ Windows 无管道   → ""（未安装）
+  │     ├─ Linux           → "unix://" + defaultDockerSocket
+  │     └─ 其他平台         → ""（无隐式默认值）
   │
   ├─ describeParsedDockerHost(host)      生成诊断尾巴用的"实际拨号路径"
   │     └─ stripNpipePrefix(host)         npipe 命中→直接给路径；否则走 url.Parse
@@ -339,8 +341,7 @@ CheckDocker
   │     ├─ stripNpipePrefix 命中         → newDockerHTTPClientNpipePath（短路绕开 url.Parse）
   │     └─ url.Parse 后按 scheme 分发：
   │           ├─ unix    → newDockerHTTPClientUnix
-  │           ├─ npipe   → newDockerHTTPClientNpipe（兜底，正常进不来）
-  │           ├─ tcp/http(s) → newDockerHTTPClientTCP
+  │           ├─ tcp/http(s) → 标准 HTTP client
   │           └─ default → unsupported scheme 报错
   │
   ├─ dockerPing(client, baseURL)         GET /_ping ── 唯一权威活体判定
@@ -355,7 +356,7 @@ CheckDocker
 |---|---|---|
 | `(true, nil)` | daemon 健在 | `Docker: Available` |
 | `(true, err)` | 已安装但服务未运行（dial 失败 / ping 失败） | `docker is installed but the daemon is not running. (host=..., parsed=...)` |
-| `(false, err)` | host 字符串本身解析失败等极端情况 | `docker command not found ...` |
+| `(false, nil)` | socket / named pipe 不存在，视为 Docker 未安装 | `Docker 未安装 ...` |
 
 ### Windows 命名管道候选
 
@@ -367,7 +368,9 @@ Docker Desktop 4.x 不再固定使用 `docker_engine` 管道。`pickWindowsDocke
 | `\\.\pipe\docker_engine` | 传统 Hyper-V 后端 / Docker CE on Windows Server |
 | `\\.\pipe\dockerDesktopWindowsEngine` | Docker Desktop 切换到 Windows containers 时 |
 
-**Stat 是软探测**：命中即用，全部不命中也只是回退默认管道，由 `dockerPing` 给真活体结论。
+**Windows 使用原生 named-pipe 探测**：命名管道不是普通文件，不依赖 `os.Stat`。探测到管道端点即视为已安装，
+后续由 `dockerPing` 判断 daemon 是否真正响应；候选全部不存在时返回 `("", false)`，直接判定为未安装，
+不再回退到一个已经确认不存在的默认管道。
 
 ### 反复踩过的三个坑（不要再踩）
 
@@ -387,15 +390,15 @@ Docker Desktop 4.x 不再固定使用 `docker_engine` 管道。`pickWindowsDocke
 | `npipe://./pipe/X` | `\\.\pipe\X` |
 | 非 npipe（unix / tcp / http） | `("", false)` 走 url.Parse |
 
-#### 坑 ② Windows 命名管道 `os.Stat` 不可靠
+#### 坑 ② Windows 命名管道不能用 `os.Stat` 判断
 
-`Test-Path` 通但 `os.Stat` 失败的情况存在——前者走 `GetFileAttributes`（宽松），后者走
-`CreateFile`（严格）。Windows 命名管道的 CreateFile 语义不保证"可用实例随时可探测"。
+`Test-Path` 通但 `os.Stat` 失败的情况存在。named pipe 属于 Windows 的管道命名空间，
+不能把普通文件元数据查询结果直接当作管道端点存在性的结论。
 
-**处置**：拨号前**不再用 Stat 阻断**。`newDockerHTTPClientNpipePath` 直接构造 client 走
-`winio.DialPipeContext`，活体一律交给 `dockerPing`。
+**处置**：候选选择和 host 存在性检查都走 `winio.DialPipeContext`：
+找不到管道判定为未安装，管道忙、超时或权限不足仍视为端点存在，再由 `dockerPing` 判定 daemon 状态。
 
-> 教训：**只信 Dial / Ping，别信 Stat**。Stat 只在 `pickWindowsDockerNpipe` 做"快速命中候选"用。
+> 教训：**只信原生 pipe API / Ping，不信 Stat**。
 
 #### 坑 ③ Docker Desktop 4.x 默认引擎已变
 
