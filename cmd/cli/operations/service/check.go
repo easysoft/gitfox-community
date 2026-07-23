@@ -143,16 +143,16 @@ func CheckGit() (bool, string, error) {
 // ─────────────────────────────────────────────────────────────────
 //   CheckDocker
 //     ├─ dockerHost()                         选 host 字符串
-//     │     └─ pickWindowsDockerNpipe()        Windows: 三候选 Stat 命中
+//     │     └─ pickWindowsDockerNpipe()        Windows: 三候选命名管道探测
 //     ├─ newDockerHTTPClient(host)            构造 client + baseURL
 //     │     ├─ stripNpipePrefix(host)          npipe 短路（绕开 url.Parse 反斜杠雷）
 //     │     │     └─ newDockerHTTPClientNpipePath
-//     │     └─ url.Parse → unix / npipe / tcp / http(s) 分发
+//     │     └─ url.Parse → unix / tcp / http(s) 分发
 //     └─ dockerPing(client, baseURL)          GET /_ping 探活
 // 状态分类：
 //   ok=true,  err=nil  : daemon 健在
 //   ok=true,  err!=nil : 已安装但服务未运行（dial 失败 / ping 失败）
-//   ok=false, err!=nil : host 字符串本身解析失败等极端情况
+//   ok=false, err=nil  : socket / named pipe 不存在，视为未安装
 
 const (
 	defaultDockerSocket = "/var/run/docker.sock"              // Linux unix socket 默认路径
@@ -168,13 +168,16 @@ var windowsDockerNpipeCandidates = []string{
 }
 
 // pickWindowsDockerNpipe 按候选列表顺序选择 Windows 下要拨号的命名管道。
-func pickWindowsDockerNpipe() string {
+// Windows named pipe 不是普通文件，不能依赖 os.Stat 判断存在性；由平台实现
+// dockerNpipeExists 使用原生 pipe API 探测。
+// 全部候选均不存在时返回 ("", false)，不再伪造默认 host。
+func pickWindowsDockerNpipe() (string, bool) {
 	for _, p := range windowsDockerNpipeCandidates {
-		if _, err := os.Stat(p); err == nil {
-			return p
+		if dockerNpipeExists(p) {
+			return p, true
 		}
 	}
-	return defaultDockerNpipe
+	return "", false
 }
 
 // stripNpipePrefix 把 host 还原成可直接用于 npipe 拨号的原始路径。
@@ -217,8 +220,6 @@ func newDockerHTTPClient(host string) (*http.Client, string, error) {
 	switch u.Scheme {
 	case "unix":
 		return newDockerHTTPClientUnix(u)
-	case "npipe":
-		return newDockerHTTPClientNpipe(u)
 	case "tcp", "http", "https":
 		scheme := "http"
 		if u.Scheme == "https" {
@@ -269,7 +270,7 @@ func dockerPing(client *http.Client, baseURL string) error {
 
 // CheckDocker 检查 docker daemon 是否可达。
 // 语义：
-//   - installed=false : 没有可用 host（socket / npipe 缺失，且无显式 DOCKER_HOST）
+//   - installed=false : host 端点不存在（socket / npipe 缺失）
 //   - installed=true, err!=nil : 有 host 但 ping 不通（daemon 未启动 / 不响应）
 //   - installed=true, err==nil : ping 通，daemon 健在
 func CheckDocker() (bool, error) {
@@ -277,7 +278,7 @@ func CheckDocker() (bool, error) {
 
 	// 解析 host 检查存在
 	host := dockerHost()
-	if !dockerHostExists(host) {
+	if host == "" || !dockerHostExists(host) {
 		return false, nil
 	}
 
@@ -297,15 +298,24 @@ func CheckDocker() (bool, error) {
 	return true, nil
 }
 
-// dockerHost 解析 daemon 地址：优先 DOCKER_HOST，否则平台默认。
+// dockerHost 解析 daemon 地址：优先 DOCKER_HOST，否则仅使用 Windows / Linux 平台默认值。
 func dockerHost() string {
 	if h := strings.TrimSpace(os.Getenv("DOCKER_HOST")); h != "" {
 		return h
 	}
-	if runtime.GOOS == "windows" {
-		return "npipe://" + pickWindowsDockerNpipe()
+
+	switch runtime.GOOS {
+	case "windows":
+		path, ok := pickWindowsDockerNpipe()
+		if !ok {
+			return ""
+		}
+		return "npipe://" + path
+	case "linux":
+		return "unix://" + defaultDockerSocket
+	default:
+		return ""
 	}
-	return "unix://" + defaultDockerSocket
 }
 
 // describeParsedDockerHost 把 dockerHost 选出的字符串解析成"实际拨号用"的形态描述：
@@ -327,10 +337,11 @@ func describeParsedDockerHost(host string) string {
 //   - unix socket / npipe：文件或管道存在即认为"已安装"
 //   - tcp/http(s)：只要用户显式给出 host，就视为"已安装"（远程 daemon 无法本地探测）
 //   - 其它 scheme 或解析失败：认为不存在
+//
+// Windows named pipe 的存在性由平台实现使用原生 pipe API 判断，不能用 os.Stat 替代。
 func dockerHostExists(host string) bool {
 	if p, ok := stripNpipePrefix(host); ok {
-		_, err := os.Stat(p)
-		return err == nil
+		return dockerNpipeExists(p)
 	}
 	u, err := url.Parse(host)
 	if err != nil {

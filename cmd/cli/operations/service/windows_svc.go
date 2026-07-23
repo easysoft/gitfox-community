@@ -16,7 +16,6 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -381,14 +380,6 @@ func extractWorkDirFromBinaryPath(binPath string) string {
 	return rest
 }
 
-// newDockerHTTPClientNpipe 基于 Windows named pipe URL 构造 docker daemon 通信的 http.Client。
-func newDockerHTTPClientNpipe(u *url.URL) (*http.Client, string, error) {
-	if p, ok := stripNpipePrefix(u.String()); ok {
-		return newDockerHTTPClientNpipePath(p)
-	}
-	return newDockerHTTPClientNpipePath(defaultDockerNpipe)
-}
-
 // newDockerHTTPClientNpipePath 直接基于命名管道路径构造拨号 client。
 func newDockerHTTPClientNpipePath(path string) (*http.Client, string, error) {
 	if path == "" {
@@ -403,4 +394,28 @@ func newDockerHTTPClientNpipePath(path string) (*http.Client, string, error) {
 		},
 	}
 	return client, "http://docker", nil
+}
+
+// dockerNpipeExists 判断 Windows named pipe 是否存在。
+// os.Stat 对命名管道并不可靠，使用 CreateFile（由 winio.DialPipeContext 封装）
+// 进行探测：找不到管道时返回 false；连接成功、管道忙或权限不足都说明管道端点存在。
+func dockerNpipeExists(path string) bool {
+	if path == "" {
+		return false
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+	defer cancel()
+
+	conn, err := winio.DialPipeContext(ctx, path)
+	if err == nil {
+		_ = conn.Close()
+		return true
+	}
+
+	// 这些错误明确表示 named pipe 端点不存在；其他错误（例如忙、超时、
+	// 权限不足）均视为端点存在，交由后续 dockerPing 判定服务是否可用。
+	return !errors.Is(err, windows.ERROR_FILE_NOT_FOUND) &&
+		!errors.Is(err, windows.ERROR_PATH_NOT_FOUND) &&
+		!errors.Is(err, windows.ERROR_INVALID_NAME)
 }
