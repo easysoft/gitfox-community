@@ -35,7 +35,7 @@ func (ctl *Controller) Import(c *gin.Context) {
 
 	session, ok := req.GetAuthSessionWithEmail(c.Request.Context())
 	if !ok {
-		resp.Unauthorized(c, errors.WithI18nKey(nil, i18n.AuthNoSession))
+		resp.Unauthorized(c, errors.WithI18nKey(nil, i18n.AuthNoSessionCheckZentaoEmail))
 		return
 	}
 
