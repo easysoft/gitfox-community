@@ -128,7 +128,7 @@ const (
 	ArtifactVersionListError                I18nKey = "artifact.version_list_error"                  // 查询制品版本列表失败.
 	ArtifactVersionPackageRequired          I18nKey = "artifact.version_package_required"            // 查询版本列表必须指定制品包名 packageName,且不能为空或全为空白字符.
 	ArtifactVersionQueryError               I18nKey = "artifact.version_query_error"                 // 查询制品版本失败.
-	ArtifactViewCodeInvalid                 I18nKey = "artifact.view_code_invalid"                   // 制品库标识不符合规范,首尾字符必须是字母数字,不能以 . _ - 开头,中间可包含字母数字.-_
+	ArtifactViewCodeInvalid                 I18nKey = "artifact.view_code_invalid"                   // 制品库标识不符合规范,首尾字符必须是字母数字,中间可包含字母数字.-_
 	ArtifactViewCreateError                 I18nKey = "artifact.view_create_error"                   // 创建制品视图失败.
 	ArtifactViewFormatInvalid               I18nKey = "artifact.view_format_invalid"                 // 不支持的制品格式,仅支持: file, raw, container.
 	ArtifactViewFormatRequired              I18nKey = "artifact.view_format_required"                // 请选择制品格式(format),可选值:file, raw, container.
@@ -952,7 +952,7 @@ const (
 	// Space 相关常量
 	SpaceArtifactsTitleSuccess   I18nKey = "space.artifacts_title_success"   // 仓库设置保存成功
 	SpaceBodyParamError          I18nKey = "space.body_param_error"          // Body 参数解析失败.
-	SpaceCodeInvalid             I18nKey = "space.code_invalid"              // 空间标识不符合规范,首尾字符必须是字母数字,不能以 . _ - 开头,中间可包含字母数字.-_...
+	SpaceCodeInvalid             I18nKey = "space.code_invalid"              // 空间标识不符合规范,首尾字符必须是字母数字,中间可包含字母数字.-_,不允许.git结尾
 	SpaceCodeTooLong             I18nKey = "space.code_too_long"             // 空间标识超过50字符
 	SpaceCreateDuplicate         I18nKey = "space.create_duplicate"          // 创建空间异常,空间标识已存在
 	SpaceCreateError             I18nKey = "space.create_error"              // 空间创建失败.

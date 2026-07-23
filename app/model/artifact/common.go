@@ -14,60 +14,37 @@ import (
 // maxArtifactViewNameLen 制品库视图名称的最大长度（与 DB 字段保持一致的冗余保护）。
 const maxArtifactViewNameLen = 128
 
-// viewNameForbiddenChars 任何 format 下都禁止在 view 名称中出现的字符。
-// 覆盖路径分隔符以及 Windows 保留字符。
-var viewNameForbiddenChars = []rune{'/', '\\', '"'}
-
-// ValidateViewName 校验制品库视图名称的合法性。
-// 规则：
-//  1. 非空，长度 ≤ maxArtifactViewNameLen
-//  2. 所有格式不得包含空白字符或路径/Windows 保留字符
-//  3. file 格式不额外限制字符集
-//  4. 其它格式仅允许英文字母、数字、下划线、连字符和英文句号
-//
-// 返回 trim 后的名称和可能的错误（已带 i18n key）。
 func ValidateViewName(name string, format ArtifactFormat) (string, error) {
-	trimmed := strings.TrimSpace(name)
-	if trimmed == "" {
+	name = strings.TrimSpace(name)
+	if name == "" {
 		return "", errors.WithI18nKey(
 			fmt.Errorf("artifact view name is required"),
 			i18n.ArtifactViewNameRequired,
 		)
 	}
-	if len([]rune(trimmed)) > maxArtifactViewNameLen {
+	if len([]rune(name)) > maxArtifactViewNameLen {
 		return "", errors.WithI18nKey(
-			fmt.Errorf("artifact view name too long: %d runes", len([]rune(trimmed))),
+			fmt.Errorf("artifact view name too long: %d runes", len([]rune(name))),
 			i18n.ArtifactViewNameTooLong,
 		)
 	}
-	for _, rn := range trimmed {
-		if unicode.IsSpace(rn) {
-			return "", errors.WithI18nKey(
-				fmt.Errorf("artifact view name contains whitespace: %q", trimmed),
-				i18n.ArtifactViewNameInvalidChars,
-			)
-		}
-		for _, bad := range viewNameForbiddenChars {
-			if rn == bad {
-				return "", errors.WithI18nKey(
-					fmt.Errorf("artifact view name contains forbidden char %q: %q", bad, trimmed),
-					i18n.ArtifactViewNameInvalidChars,
-				)
-			}
-		}
-	}
+
+	var valid bool
 	if format == ArtifactFileFormat {
-		return trimmed, nil
+		valid = !strings.ContainsFunc(name, unicode.IsSpace) &&
+			!strings.ContainsAny(name, "\\/\"")
+	} else {
+		valid = !strings.ContainsFunc(name, unicode.IsSpace) && common.IsValidCode(name)
 	}
-	for _, rn := range trimmed {
-		if !isVersionedViewNameRune(rn) {
-			return "", errors.WithI18nKey(
-				fmt.Errorf("artifact view name must be  ASCII letters/digits/-/_/.: %q", trimmed),
-				i18n.ArtifactViewNameNonAsciiNotAllowed,
-			)
-		}
+
+	if !valid {
+		return "", errors.WithI18nKey(
+			fmt.Errorf("artifact view name contains invalid characters: %q", name),
+			i18n.ArtifactViewNameInvalidChars,
+		)
 	}
-	return trimmed, nil
+
+	return name, nil
 }
 
 // SpaceRef 是给 artifact adapter 使用的精简空间引用。
@@ -186,23 +163,6 @@ func (r *CreateArtifactViewReq) Validate() error {
 	return nil
 }
 
-// isVersionedViewNameRune 报告字符是否可用于非 file 制品库名称：英文字母、数字、中划线、下划线、英文句号。
-func isVersionedViewNameRune(rn rune) bool {
-	if rn > unicode.MaxASCII {
-		return false
-	}
-	switch {
-	case rn >= 'a' && rn <= 'z':
-		return true
-	case rn >= 'A' && rn <= 'Z':
-		return true
-	case rn >= '0' && rn <= '9':
-		return true
-	case rn == '-' || rn == '_' || rn == '.':
-		return true
-	}
-	return false
-}
 
 // RefreshTreeReq 接收 `/artifacts/tree/refresh` 的请求参数。
 // Format 必填：值必须通过 enum.ArtifactFormat.Sanitize() 校验，或为 ArtifactAllFormat ("all")
