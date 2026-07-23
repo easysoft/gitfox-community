@@ -1,11 +1,11 @@
 package space
 
 import (
-	"regexp"
 	"strings"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
+	common "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/common"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
 )
 
@@ -20,7 +20,7 @@ type CreateSpaceRequest struct {
 
 func (req *CreateSpaceRequest) Validate() error {
 	// 校验Code字符规则（符合Git仓库命名规范）
-	if !regexp.MustCompile(`^[a-zA-Z0-9]([a-zA-Z0-9._-]*[a-zA-Z0-9])?$`).MatchString(req.Code) {
+	if !common.IsValidCode(req.Code) {
 		return errors.WithI18nKey(nil, i18n.SpaceCodeInvalid)
 	}
 
