@@ -529,7 +529,7 @@ func (s *Service) Merge(ctx context.Context, session *auth.Session, repoid uint,
 		checkMergeability := func(method repoModel.MergeMethod) bool {
 			switch method {
 			case repoModel.MergeMethodMerge, repoModel.MergeMethodSquash:
-				return pr.MergeCheckStatus == repoModel.MergeCheckStatusUnchecked
+				return pr.MergeCheckStatus == repoModel.MergeCheckStatusUnchecked || pr.MergeCheckStatus == ""
 			case repoModel.MergeMethodRebase:
 				return pr.RebaseCheckStatus == repoModel.MergeCheckStatusUnchecked
 			case repoModel.MergeMethodFastForward: // Not important for fast-forward merge
