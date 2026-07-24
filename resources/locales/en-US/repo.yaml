@@ -54,5 +54,5 @@ repo:
   import_notify_failure: "Failed to import repository [%s], reason: %s"
   provider_repo_identifier_missing: "Provider repository identifier is missing"
   provider_scm_client_create_error: "Could not create SCM client"
-  provider_user_find_error: "Could not find user from provider"
+  provider_user_find_error: "Failed to query user information from the provider, please check the authentication configuration or network connection"
   provider_invalid_slug_format: "Invalid repository slug format"

@@ -54,5 +54,5 @@ repo:
   import_notify_failure: "导入代码库 [%s] 失败，失败原因：%s"
   provider_repo_identifier_missing: "未提供外部仓库标识"
   provider_scm_client_create_error: "创建 SCM 客户端失败"
-  provider_user_find_error: "查询外部仓库用户信息失败"
+  provider_user_find_error: "查询外部仓库用户信息失败，请检查服务的认证配置或网络连接"
   provider_invalid_slug_format: "仓库 slug 格式不合法"
