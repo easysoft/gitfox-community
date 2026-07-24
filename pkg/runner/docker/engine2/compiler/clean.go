@@ -15,7 +15,7 @@ const cleanStepName = "clean"
 func createStageClean() *engine.Step {
 	return &engine.Step{
 		Name:      cleanStepName,
-		Image:     "hub.zentao.net/ci/pipeline-helper",
+		Image:     "hub.zentao.net/ci/pipeline-helper:gitfox-community",
 		Envs:      make(map[string]string),
 		RunPolicy: engine.RunAlways,
 	}

@@ -389,7 +389,7 @@ func (c *CompilerImpl) Compile(ctx context.Context, args Args) (*engine.Spec, er
 		step.Labels = stageLabels
 		step.Pull = engine.PullAlways
 		step.Volumes = append(step.Volumes, mount)
-		setupScript(step, "finish_stage", "linux")
+		setupScript(step, "clean_stage", "linux")
 		spec.Steps = append(spec.Steps, step)
 	}
 	if platform_.Os != "windows" {
