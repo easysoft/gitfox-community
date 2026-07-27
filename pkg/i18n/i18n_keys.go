@@ -654,6 +654,7 @@ const (
 	GitTagNotFound                  I18nKey = "git.tag_not_found"                     // 标签不存在
 	GitTimeout                      I18nKey = "git.timeout"                           // Git 操作超时.
 	GitUnrelatedHistories           I18nKey = "git.unrelated_histories"               // 不相关的历史记录.
+	GitUnsupportedOption            I18nKey = "git.unsupported_option"                 // 当前 git 版本不支持参数 %s，请升级 Git 版本.
 
 	// Issue 相关常量
 	IssueBodyParamError   I18nKey = "issue.body_param_error"   // 请求体参数解析失败.

@@ -35,3 +35,4 @@ git:
   invalid_signature: "Invalid signature."
   hook_failed: "Git hook execution failed."
   timeout: "Git operation timeout."
+  unsupported_option: "Current git version does not support option %s. Please upgrade Git."
