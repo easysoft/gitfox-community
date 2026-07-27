@@ -46,7 +46,7 @@ func (s *Service) ResolveRepoArtifact(ctx context.Context, repoID uint64, artifa
 // resolveContainerArtifact 容器路由的统一私有解析流程。
 // 步骤 1：按 (spaceID, repoID, code) 在 ops_artifact 精确查找 view 记录；
 //   - ErrResourceNotFound → 包装 i18n.ArtifactContainerArtifactNotFound
-//   - 其它错误 → 包装 i18n.ArtifactViewQueryError
+//   - 其它错误 → 包装 i18n.ArtifactLibQueryError
 //
 // 步骤 2：组装并返回 ContainerArtifactCtx（含 ViewDescriptor{ArtifactID, Store: s.fileStore, StorageID: 1}）。
 func (s *Service) resolveContainerArtifact(ctx context.Context, scope string, spaceID, repoID int64, artifactCode string) (*ContainerArtifactCtx, error) {
@@ -56,7 +56,7 @@ func (s *Service) resolveContainerArtifact(ctx context.Context, scope string, sp
 		if pkgErrors.Is(err, pkgErrors.ErrResourceNotFound) {
 			return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactContainerArtifactNotFound)
 		}
-		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactViewQueryError)
+		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactLibQueryError)
 	}
 
 	return &ContainerArtifactCtx{

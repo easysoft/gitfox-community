@@ -32,18 +32,18 @@ artifact:
   # ---- Service 层错误 ----
   # View（视图）
   default_view_name: "默认制品库"
-  view_name_duplicate: "同名制品库视图已存在."
-  view_code_invalid: "制品库标识不符合规范，首尾字符必须是字母数字，中间可包含字母数字.-_"
-  view_not_found: "指定的制品视图不存在."
-  view_query_error: "查询制品视图失败."
-  view_scope_mismatch: "指定的制品视图与请求中的空间或仓库不匹配."
-  view_create_error: "创建制品视图失败."
-  view_format_required: "请选择制品格式（format），可选值：file, raw, container." # file, raw, maven, container, helm, pypi, npm.
-  view_format_invalid: "不支持的制品格式，仅支持: file, raw, container." # file, raw, maven, container, helm, pypi, npm.
-  view_name_required: "制品库名称不能为空."
-  view_name_too_long: "制品库名称过长，最多 128 个字符."
-  view_name_invalid_chars: "制品库名称不得包含空白字符或 / \" 等特殊字符."
-  view_name_non_ascii_not_allowed: "版本化制品库名称仅允许英文字母、数字、中划线、下划线和英文句号，不允许中文等字符." # container/raw/helm/pypi/npm/maven
+  lib_name_duplicate: "同名制品库视图已存在."
+  lib_code_invalid: "制品库标识不符合规范，首尾字符必须是字母数字，中间可包含字母数字.-_"
+  lib_not_found: "指定的制品视图不存在."
+  lib_query_error: "查询制品视图失败."
+  lib_scope_mismatch: "指定的制品视图与请求中的空间或仓库不匹配."
+  lib_create_error: "创建制品视图失败."
+  lib_format_required: "请选择制品格式（format），可选值：file, raw, container." # file, raw, maven, container, helm, pypi, npm.
+  lib_format_invalid: "不支持的制品格式，仅支持: file, raw, container." # file, raw, maven, container, helm, pypi, npm.
+  lib_name_required: "制品库名称不能为空."
+  lib_name_too_long: "制品库名称过长，最多 128 个字符."
+  lib_name_invalid_chars: "制品库名称不得包含空白字符或 / \" 等特殊字符."
+  lib_name_non_ascii_not_allowed: "版本化制品库名称仅允许英文字母、数字、中划线、下划线和英文句号，不允许中文等字符." # container/raw/helm/pypi/npm/maven
 
   # Parse & Upload
   space_id_required: "当 repoID 存在时，spaceID 是必填的."

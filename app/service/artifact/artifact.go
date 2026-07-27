@@ -97,22 +97,9 @@ func (s *Service) FileStore() storage.ContentStorage {
 	return s.fileStore
 }
 
-// CreateView 创建制品库视图。
-//
-// 名称唯一性规则（同一作用域 spaceID + repoID 下）：
-//  1. 若存在同名的 active 视图（deleted=0）-> 拒绝，返回"名称已存在"。
-//  2. 若存在同名的软删视图（deleted=1）且仍在回收站保留期内
-//     （editedDate 距今 < config.RecycleBinRetention）-> 拒绝，提示用户从回收站恢复。
-//  3. 若存在同名的软删视图但已超过保留期 -> 先物理删除过期 view，再正常创建。
-//  4. 无同名记录 -> 正常创建。
-//
+// CreateLib 创建制品库视图。
 // 默认分组规则：创建制品库时不提前插入 group；各格式由上传协议按需创建或选择分组。
-//
-// 注意：ops_artifact 表已移除严格唯一索引（uk_spaceID_repoID_name），
-// 改由此方法在应用层保证名称唯一性，以支持回收站保留期的时间窗口判断。
-func (s *Service) CreateView(ctx context.Context, req *model.CreateArtifactViewReq) (*model.ArtifactView, error) {
-	// Validate 已在 controller 侧调过，这里再守一次：直接复用 model 的业务校验，
-	// 确保内部调用链路（非 HTTP）也能命中中文限制等规则。
+func (s *Service) CreateLib(ctx context.Context, req *model.CreateArtifactLibReq) (*model.ArtifactView, error) {
 	if err := req.Validate(); err != nil {
 		return nil, err
 	}
@@ -140,11 +127,11 @@ func (s *Service) CreateView(ctx context.Context, req *model.CreateArtifactViewR
 	// 查询同作用域下所有同名 view（ 不包含已软删的）
 	existing, err := s.artStore.Views().FindByNameInScope(ctx, req.SpaceID, req.RepoID, req.Name)
 	if err != nil {
-		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactViewQueryError)
+		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactLibQueryError)
 	}
 
 	if len(existing) != 0 {
-		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactViewNameDuplicate)
+		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactLibNameDuplicate)
 	}
 
 	viewType := resolveArtifactViewType(req.SpaceID, req.RepoID)
@@ -164,7 +151,7 @@ func (s *Service) CreateView(ctx context.Context, req *model.CreateArtifactViewR
 	}
 	view, err := s.artStore.Views().Create(ctx, v)
 	if err != nil {
-		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactViewCreateError)
+		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactLibCreateError)
 	}
 
 	// file 类型：为新视图铸造一个与视图同名的根目录，便于上传时直接挂载。
@@ -232,25 +219,25 @@ func (s *Service) ensureDefaultGroupForView(ctx context.Context, view *model.Art
 	})
 }
 
-// ResolveView 按请求中的 artifactID 或默认视图规则解析实际视图。
+// ResolveLib 按请求中的 artifactID 或默认视图规则解析实际视图。
 // 规则：
 //  1. artifactID > 0：优先按 ID 精确取库
 //  2. artifactID == 0 或未传：继续按现有默认 view 逻辑解析
-func (s *Service) ResolveView(ctx context.Context, req *model.SpaceRepoReq) (*model.ArtifactView, error) {
+func (s *Service) ResolveLib(ctx context.Context, req *model.SpaceRepoReq) (*model.ArtifactView, error) {
 	if req == nil {
 		req = &model.SpaceRepoReq{}
 	}
 	view, err := s.artStore.Views().GetByID(ctx, req.ArtifactID)
 	if err != nil {
 		if pkgErrors.Is(err, pkgErrors.ErrResourceNotFound) {
-			return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactViewNotFound)
+			return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactLibNotFound)
 		}
-		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactViewQueryError)
+		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactLibQueryError)
 	}
 	if req.SpaceID > 0 && view.SpaceID != req.SpaceID {
 		return nil, pkgErrors.WithI18nKey(
 			fmt.Errorf("artifactID %d does not belong to spaceID %d", req.ArtifactID, req.SpaceID),
-			i18n.ArtifactViewScopeMismatch,
+			i18n.ArtifactLibScopeMismatch,
 		)
 	}
 	if req.RepoID > 0 {
@@ -263,7 +250,7 @@ func (s *Service) ResolveView(ctx context.Context, req *model.SpaceRepoReq) (*mo
 		if view.RepoID != req.RepoID {
 			return nil, pkgErrors.WithI18nKey(
 				fmt.Errorf("artifactID %d does not belong to repoID %d under spaceID %d", req.ArtifactID, req.RepoID, req.SpaceID),
-				i18n.ArtifactViewScopeMismatch,
+				i18n.ArtifactLibScopeMismatch,
 			)
 		}
 	}
@@ -290,9 +277,9 @@ func (s *Service) fillViewDescriptorScope(ctx context.Context, desc *adapter.Vie
 	return nil
 }
 
-// ParseSpaceView 解析 SpaceRepoReq 参数为 ViewDescriptor。
-func (s *Service) ParseSpaceView(ctx context.Context, req *model.SpaceRepoReq) (*adapter.ViewDescriptor, error) {
-	view, err := s.ResolveView(ctx, req)
+// ParseSpaceLib 解析 SpaceRepoReq 参数为 ViewDescriptor。
+func (s *Service) ParseSpaceLib(ctx context.Context, req *model.SpaceRepoReq) (*adapter.ViewDescriptor, error) {
+	view, err := s.ResolveLib(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -355,7 +342,7 @@ func (s *Service) getVersionNodeInfo(ctx context.Context, versionID int64) (*mod
 	if pkg.Format == model.ArtifactContainerFormat {
 		viewID = ver.ArtifactLibID
 	}
-	view, err := s.ParseSpaceView(ctx, &model.SpaceRepoReq{ArtifactID: viewID})
+	view, err := s.ParseSpaceLib(ctx, &model.SpaceRepoReq{ArtifactID: viewID})
 	if err != nil {
 		return nil, err
 	}
@@ -476,7 +463,7 @@ func (s *Service) getGroupAssetNodeInfo(ctx context.Context, dbAsset *model.Arti
 		return nil, pkgErrors.WithI18nKey(err, i18n.ArtifactGroupQueryError)
 	}
 
-	view, err := s.ParseSpaceView(ctx, &model.SpaceRepoReq{ArtifactID: group.ArtifactID})
+	view, err := s.ParseSpaceLib(ctx, &model.SpaceRepoReq{ArtifactID: group.ArtifactID})
 	if err != nil {
 		return nil, err
 	}

@@ -46,7 +46,7 @@ func (c *Controller) GarbageCollect(ctx *gin.Context) {
 	if raw != "" {
 		_, ok := constant.ArtifactFormat(raw).Sanitize()
 		if !ok {
-			resp.BadRequest(ctx, errors.WithI18nKey(fmt.Errorf("unsupported garbage collect format: %s", raw), i18n.ArtifactViewFormatInvalid))
+			resp.BadRequest(ctx, errors.WithI18nKey(fmt.Errorf("unsupported garbage collect format: %s", raw), i18n.ArtifactLibFormatInvalid))
 			return
 		}
 	}

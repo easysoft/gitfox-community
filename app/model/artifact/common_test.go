@@ -10,20 +10,20 @@ import (
 func TestCreateArtifactViewReq_Validate(t *testing.T) {
 	cases := []struct {
 		name    string
-		req     CreateArtifactViewReq
+		req     CreateArtifactLibReq
 		wantErr bool
 		wantKey i18n.I18nKey // 为空表示不校验
 	}{
-		{name: "file 允许中文英文点和大写", req: CreateArtifactViewReq{Name: "测试.Test_name-01", Format: "file"}, wantErr: false},
-		{name: "raw 允许英文点", req: CreateArtifactViewReq{Name: "a.b_c-d", Format: "raw"}, wantErr: false},
-		{name: "container 允许英文点", req: CreateArtifactViewReq{Name: "my.container_01", Format: "container"}, wantErr: false},
-		{name: "container 禁中文", req: CreateArtifactViewReq{Name: "测试container", Format: "container"}, wantErr: true, wantKey: i18n.ArtifactViewNameNonAsciiNotAllowed},
-		{name: "空名称", req: CreateArtifactViewReq{Name: "   ", Format: "file"}, wantErr: true, wantKey: i18n.ArtifactViewNameRequired},
-		{name: "非法字符 /", req: CreateArtifactViewReq{Name: "bad/name", Format: "file"}, wantErr: true, wantKey: i18n.ArtifactViewNameInvalidChars},
-		{name: "非法字符 空白", req: CreateArtifactViewReq{Name: "bad name", Format: "file"}, wantErr: true, wantKey: i18n.ArtifactViewNameInvalidChars},
-		{name: "不支持的 format", req: CreateArtifactViewReq{Name: "ok", Format: "rpm"}, wantErr: true, wantKey: i18n.ArtifactViewFormatInvalid},
-		{name: "空 format", req: CreateArtifactViewReq{Name: "ok", Format: ""}, wantErr: true, wantKey: i18n.ArtifactViewFormatRequired},
-		{name: "空白 format", req: CreateArtifactViewReq{Name: "ok", Format: "   "}, wantErr: true, wantKey: i18n.ArtifactViewFormatRequired},
+		{name: "file 允许中文英文点和大写", req: CreateArtifactLibReq{Name: "测试.Test_name-01", Format: "file"}, wantErr: false},
+		{name: "raw 允许英文点", req: CreateArtifactLibReq{Name: "a.b_c-d", Format: "raw"}, wantErr: false},
+		{name: "container 允许英文点", req: CreateArtifactLibReq{Name: "my.container_01", Format: "container"}, wantErr: false},
+		{name: "container 禁中文", req: CreateArtifactLibReq{Name: "测试container", Format: "container"}, wantErr: true, wantKey: i18n.ArtifactLibNameNonAsciiNotAllowed},
+		{name: "空名称", req: CreateArtifactLibReq{Name: "   ", Format: "file"}, wantErr: true, wantKey: i18n.ArtifactLibNameRequired},
+		{name: "非法字符 /", req: CreateArtifactLibReq{Name: "bad/name", Format: "file"}, wantErr: true, wantKey: i18n.ArtifactLibNameInvalidChars},
+		{name: "非法字符 空白", req: CreateArtifactLibReq{Name: "bad name", Format: "file"}, wantErr: true, wantKey: i18n.ArtifactLibNameInvalidChars},
+		{name: "不支持的 format", req: CreateArtifactLibReq{Name: "ok", Format: "rpm"}, wantErr: true, wantKey: i18n.ArtifactLibFormatInvalid},
+		{name: "空 format", req: CreateArtifactLibReq{Name: "ok", Format: ""}, wantErr: true, wantKey: i18n.ArtifactLibFormatRequired},
+		{name: "空白 format", req: CreateArtifactLibReq{Name: "ok", Format: "   "}, wantErr: true, wantKey: i18n.ArtifactLibFormatRequired},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

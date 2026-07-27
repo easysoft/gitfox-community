@@ -32,18 +32,18 @@ artifact:
   # ---- Service layer errors ----
   # View
   default_view_name: "Default"
-  view_name_duplicate: "An artifact view with the same name already exists."
-  view_not_found: "The specified artifact view does not exist."
-  view_code_invalid: "artifact identifier format is invalid. Only letters, digits, hyphens (-), underscores (_) and dots (.) are allowed"
-  view_query_error: "Failed to query artifact view."
-  view_scope_mismatch: "The specified artifact view does not match the requested space or repository."
-  view_create_error: "Failed to create artifact view."
-  view_format_required: "Artifact format is required. Allowed values: file, raw, container." # file, raw, maven, container, helm, pypi, npm.
-  view_format_invalid: "Unsupported artifact format. Supported: file, raw, container." # file, raw, maven, container, helm, pypi, npm.
-  view_name_required: "Artifact view name is required."
-  view_name_too_long: "Artifact view name is too long (max 128 chars)."
-  view_name_invalid_chars: "Artifact view name must not contain whitespace or any of / \"."
-  view_name_non_ascii_not_allowed: "Artifact view name may only contain letters, digits, dashes, underscores Chinese characters and other characters are not allowed.." # container/raw/helm/pypi/npm/maven
+  lib_name_duplicate: "An artifact view with the same name already exists."
+  lib_not_found: "The specified artifact view does not exist."
+  lib_code_invalid: "artifact identifier format is invalid. Only letters, digits, hyphens (-), underscores (_) and dots (.) are allowed"
+  lib_query_error: "Failed to query artifact view."
+  lib_scope_mismatch: "The specified artifact view does not match the requested space or repository."
+  lib_create_error: "Failed to create artifact view."
+  lib_format_required: "Artifact format is required. Allowed values: file, raw, container." # file, raw, maven, container, helm, pypi, npm.
+  lib_format_invalid: "Unsupported artifact format. Supported: file, raw, container." # file, raw, maven, container, helm, pypi, npm.
+  lib_name_required: "Artifact view name is required."
+  lib_name_too_long: "Artifact view name is too long (max 128 chars)."
+  lib_name_invalid_chars: "Artifact view name must not contain whitespace or any of / \"."
+  lib_name_non_ascii_not_allowed: "Artifact view name may only contain letters, digits, dashes, underscores Chinese characters and other characters are not allowed.." # container/raw/helm/pypi/npm/maven
 
   # Parse & Upload
   space_id_required: "spaceID is required when repoID is provided."
