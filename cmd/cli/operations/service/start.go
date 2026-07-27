@@ -233,9 +233,7 @@ healthCheck:
 	// 阶段 4. 结果验证：存活状态探针轮询 (Health Check)
 	// =========================================================
 	// 服务虽然被挂载进了后台，但不代表内部启动未抛出 Panic。
-	// 通过短时长循环测试 /public/health 接口验证内部状态正常。
-	// healthURL = BuildHealthURL(host, port)
-	if !WaitPortInUse(port, 5*time.Second) {
+	if !WaitPortInUse(port, 15*time.Second) {
 		fmt.Println(errStyle.Render(t(i18n.CliStartErrHealthTimeout)))
 		fmt.Println()
 		printFailureSummary()
