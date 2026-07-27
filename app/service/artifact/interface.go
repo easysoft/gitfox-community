@@ -106,14 +106,14 @@ type Interface interface {
 
 	// ---- 容器镜像 ----
 
-	// ResolveGlobalArtifact 按 artifactName 解析 /v2/global 路由对应的制品库上下文。
-	ResolveGlobalArtifact(ctx context.Context, artifactName string) (*ContainerArtifactCtx, error)
+	// ResolveGlobalArtifact 按 artifactCode 解析 /v2/global 路由对应的制品库上下文。
+	ResolveGlobalArtifact(ctx context.Context, artifactCode string) (*ContainerArtifactCtx, error)
 
-	// ResolveSpaceArtifactByCode 按 (spaceCode, artifactName) 解析 /v2/{spaceCode} 路由对应的制品库上下文。
-	ResolveSpaceArtifactByCode(ctx context.Context, spaceCode string, artifactName string) (*ContainerArtifactCtx, error)
+	// ResolveSpaceArtifactByCode 按 (spaceCode, artifactCode) 解析 /v2/{spaceCode} 路由对应的制品库上下文。
+	ResolveSpaceArtifactByCode(ctx context.Context, spaceCode string, artifactCode string) (*ContainerArtifactCtx, error)
 
-	// ResolveRepoArtifact 按 (repoID, artifactName) 解析 /v2/repo{ID} 路由对应的制品库上下文。
-	ResolveRepoArtifact(ctx context.Context, repoID uint64, artifactName string) (*ContainerArtifactCtx, error)
+	// ResolveRepoArtifact 按 (repoID, artifactCode) 解析 /v2/repo{ID} 路由对应的制品库上下文。
+	ResolveRepoArtifact(ctx context.Context, repoID uint64, artifactCode string) (*ContainerArtifactCtx, error)
 
 	// ---- 移动 & 重命名 ----
 
