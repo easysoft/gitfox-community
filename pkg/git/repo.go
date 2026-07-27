@@ -299,14 +299,14 @@ func (s *Service) SyncRepository(
 	// sync repo content
 	err = s.git.Sync(ctx, repoPath, params.Source, params.RefSpecs)
 	if err != nil {
-		return nil, fmt.Errorf("failed to sync from source repo: %w", err)
+		return nil, fmt.Errorf("failed to sync from source repo: %w", util.ProcessGitErrorf(ctx, err))
 	}
 	logger.GetLogger(ctx).Debugf("SyncRepository: git repo synced, mirror: %v", params.Mirror)
 	// if mirror set source as remote
 	if params.Mirror {
 		err = s.git.MirrorAddFetch(ctx, repoPath, "origin", params.Source)
 		if err != nil {
-			return nil, fmt.Errorf("MirrorRepository: failed to add fetch remote: %w", err)
+			return nil, fmt.Errorf("MirrorRepository: failed to add fetch remote: %w", util.ProcessGitErrorf(ctx, err))
 		}
 	}
 
@@ -315,14 +315,14 @@ func (s *Service) SyncRepository(
 		// get default branch from remote repo (returns api.ErrNoDefaultBranch if repo is empty!)
 		defaultBranch, err = s.git.GetRemoteDefaultBranch(ctx, params.Source)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get default branch from source repo: %w", err)
+			return nil, fmt.Errorf("failed to get default branch from source repo: %w", util.ProcessGitErrorf(ctx, err))
 		}
 	}
 
 	// set default branch
 	err = s.git.SetDefaultBranch(ctx, repoPath, defaultBranch, true)
 	if err != nil {
-		return nil, fmt.Errorf("failed to set default branch of repo: %w", err)
+		return nil, fmt.Errorf("failed to set default branch of repo: %w", util.ProcessGitErrorf(ctx, err))
 	}
 
 	return &SyncRepositoryOutput{

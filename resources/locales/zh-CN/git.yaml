@@ -35,3 +35,4 @@ git:
   invalid_signature: "无效的签名。"
   hook_failed: "Git 钩子执行失败。"
   timeout: "Git 操作超时。"
+  unsupported_option: "当前 git 版本不支持参数 %s，请升级 Git 版本。"
