@@ -205,6 +205,7 @@ cli:
   status_svn_exec_failed: "Subversion 客户端检测失败 (%v)，关联 Subversion 代码库功能将无法使用。"
   status_section_service: "GitFox 服务状态"
   status_service_running: "GitFox 服务正常"
+  status_service_config_missing: "GitFox 服务配置文件缺失，建议重新执行 install。"
   status_service_not_running: "GitFox 服务未启动"
   status_service_corrupted: "GitFox 服务注册文件损坏（缺少可执行路径），建议重新执行 install。"
   status_service_stopped: "GitFox 服务已注册但未启动，可执行 gitfox start。"

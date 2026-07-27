@@ -555,7 +555,7 @@ func waitPortCondition(port string, timeout time.Duration, condition func(PortSt
 
 // ReadHealthURLResult 是健康检查 URL 解析后的结构化结果。
 type ReadHealthURLResult struct {
-	Host, Port, URL string
+	Host, Port string
 }
 
 // readHealthURL 从当前工作目录的 prod.env 读取 host/port，拼装健康检查 URL。
@@ -612,8 +612,6 @@ const (
 	GitfoxHealthStopped
 	// GitfoxHealthConfigMissing 工作目录下读不出 prod.env。
 	GitfoxHealthConfigMissing
-	// GitfoxHealthAddressMissing prod.env 已读，但 host/port 缺失，无法拼装健康 URL。
-	GitfoxHealthAddressMissing
 )
 
 // GitfoxHealthResult 是 CheckGitfoxHealth 的结构化结果。
@@ -671,14 +669,6 @@ func CheckGitfoxHealth() GitfoxHealthResult {
 	}
 	result.Host = hc.Host
 	result.Port = hc.Port
-	result.URL = hc.URL
-
-	// 4) host/port 完整性
-	if hc.URL == "" {
-		result.Status = GitfoxHealthAddressMissing
-		return result
-	}
-
 	// 6) 全过
 	result.Status = GitfoxHealthOK
 	return result
