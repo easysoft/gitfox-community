@@ -64,7 +64,13 @@ type ServerConfig struct {
 // DatabaseConfig 数据库配置
 type DatabaseConfig struct {
 	Driver     string `envconfig:"GITFOX_DB_DRIVER" default:"mysql"`
-	Datasource string `envconfig:"GITFOX_DB_DATASOURCE" required:"true"`
+	Datasource string `envconfig:"GITFOX_DB_DATASOURCE"`
+	Host       string `envconfig:"GITFOX_DB_HOST"`
+	Port       string `envconfig:"GITFOX_DB_PORT" default:"3306"`
+	User       string `envconfig:"GITFOX_DB_USER"`
+	Password   string `envconfig:"GITFOX_DB_PASSWORD"`
+	Name       string `envconfig:"GITFOX_DB_NAME"`
+	Timezone   string `envconfig:"GITFOX_DB_TIMEZONE" default:"Local"`
 
 	PrintSQL        bool          `yaml:"printSQL"`
 	MaxIdleConn     int           `yaml:"maxIdleConn"`

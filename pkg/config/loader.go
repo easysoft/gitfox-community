@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"unicode"
 
@@ -50,6 +51,11 @@ func LoadConfig(mode string) (*Config, error) {
 	err = loadFromEnvVars(mode, config)
 	if err != nil {
 		return nil, err
+	}
+
+	// Datasource 为空时从拆分字段组合 DSN
+	if config.Database.Datasource == "" {
+		config.Database.Datasource = composeDatasource(config)
 	}
 
 	// 使用默认值覆盖配置
@@ -138,14 +144,23 @@ func loadFromFile(filePath string, config *Config) error {
 	return nil
 }
 
+var getenvHookRe = regexp.MustCompile(`Getenv\(("([^"]*)"|'([^']*)')\)`)
+
 // loadFromEnvVars 从gitfox.env文件中加载并设置为环境变量
 func loadFromEnvVars(mode string, config *Config) error {
 	configPaths, err := findConfigFilePaths(mode, "env")
 	if err != nil {
 		return err
 	}
+
+	tempFile, cleanup, err := preprocessEnvFile(configPaths[0])
+	if err != nil {
+		return errors.SystemErr.Wrapf(err, "failed to preprocess env file")
+	}
+	defer cleanup()
+
 	//加载.env文件中配置至环境变量，若环境变量已存在则不覆盖
-	err = godotenv.Load(configPaths[0])
+	err = godotenv.Load(tempFile)
 	if err != nil {
 		return errors.SystemErr.Wrapf(err, "failed to load env file")
 	}
@@ -155,7 +170,42 @@ func loadFromEnvVars(mode string, config *Config) error {
 		return err
 	}
 	return nil
+}
 
+func preprocessEnvFile(filePath string) (string, func(), error) {
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		return "", nil, err
+	}
+
+	content := getenvHookRe.ReplaceAllStringFunc(string(data), func(match string) string {
+		submatch := getenvHookRe.FindStringSubmatch(match)
+		if submatch == nil {
+			return match
+		}
+		varName := submatch[2]
+		if varName == "" {
+			varName = submatch[3]
+		}
+		return os.Getenv(varName)
+	})
+
+	tmpFile, err := os.CreateTemp("", "gitfox-env-*")
+	if err != nil {
+		return "", nil, err
+	}
+
+	if _, err := tmpFile.WriteString(content); err != nil {
+		tmpFile.Close()
+		os.Remove(tmpFile.Name())
+		return "", nil, err
+	}
+	if err := tmpFile.Close(); err != nil {
+		os.Remove(tmpFile.Name())
+		return "", nil, err
+	}
+
+	return tmpFile.Name(), func() { os.Remove(tmpFile.Name()) }, nil
 }
 
 // getSanitizedMachineName gets the name of the machine and returns it in sanitized format.
@@ -389,4 +439,14 @@ func findConfigFilePaths(mode, ext string) ([]string, error) {
 		return nil, errors.ConfigNotFoundError.Newf("未找到配置文件: %s", fileName)
 	}
 	return configPaths, nil
+}
+
+func composeDatasource(config *Config) string {
+	return fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true&loc=%s",
+		config.Database.User,
+		config.Database.Password,
+		config.Database.Host,
+		config.Database.Port,
+		config.Database.Name,
+		config.Database.Timezone)
 }
