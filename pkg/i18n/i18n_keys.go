@@ -449,6 +449,7 @@ const (
 	CliStatusSectionDeps                 I18nKey = "cli.status_section_deps"                   // 环境依赖项检查
 	CliStatusSectionPorts                I18nKey = "cli.status_section_ports"                  // 端口占用检查
 	CliStatusSectionService              I18nKey = "cli.status_section_service"                // GitFox 服务状态
+	CliStatusServiceConfigMissing        I18nKey = "cli.status_service_config_missing"         // GitFox 服务配置文件缺失,建议重新执行 install.
 	CliStatusServiceCorrupted            I18nKey = "cli.status_service_corrupted"              // GitFox 服务注册文件损坏(缺少可执行路径),建议重新执行 install.
 	CliStatusServiceNotReady             I18nKey = "cli.status_service_not_ready"              // GitFox 服务进程在运行,但健康端点未响应(可能仍在启动中或内部异常).
 	CliStatusServiceNotRegistered        I18nKey = "cli.status_service_not_registered"         // GitFox 服务尚未注册到系统,请先执行 install 完成首次部署.
@@ -811,7 +812,7 @@ const (
 	RepoProviderInvalidSlugFormat      I18nKey = "repo.provider_invalid_slug_format"        // 仓库 slug 格式不合法
 	RepoProviderRepoIdentifierMissing  I18nKey = "repo.provider_repo_identifier_missing"    // 未提供外部仓库标识
 	RepoProviderScmClientCreateError   I18nKey = "repo.provider_scm_client_create_error"    // 创建 SCM 客户端失败
-	RepoProviderUserFindError          I18nKey = "repo.provider_user_find_error"            // 查询外部仓库用户信息失败
+	RepoProviderUserFindError          I18nKey = "repo.provider_user_find_error"            // 查询外部仓库用户信息失败,请检查服务的认证配置或网络连接
 	RepoPullPermissionError            I18nKey = "repo.pull_permission_error"               // 您没有权限拉取此仓库.
 	RepoPushPermissionError            I18nKey = "repo.push_permission_error"               // 您没有权限推送此仓库.
 	RepoQueryError                     I18nKey = "repo.query_error"                         // 查询仓库失败
