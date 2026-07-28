@@ -23,14 +23,14 @@ type ScanIssue struct {
 	UpdatedByTaskID int64                         `gorm:"column:updatedByTaskID"`
 	Status          constant.ScanIssueStatus      `gorm:"column:status"`
 	ScanMethod      constant.ScanMethod           `gorm:"column:scanMethod"`
-	Resolution      *constant.ScanIssueResolution `gorm:"column:resolution"`
+	Resolution      *constant.ScanIssueResolution `gorm:"column:resolution;default:''"`
 	Payload         []byte                        `gorm:"column:payload"`
 	CreatedDate     *datetime.Local               `gorm:"column:createdDate"`
 	EditedDate      *datetime.Local               `gorm:"column:editedDate"`
 	Deleted         bool                          `gorm:"column:deleted"`
 	Resolved        *datetime.Local               `gorm:"column:resolved"`
 	Closed          *datetime.Local               `gorm:"column:closed"`
-	Ignored         *int64                        `gorm:"column:ignored"`
+	Ignored         *int64                        `gorm:"column:ignored;default:0"`
 }
 
 func (r *ScanIssue) TableName() string { return "ops_scan_issues" }
