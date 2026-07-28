@@ -654,7 +654,7 @@ const (
 	GitTagNotFound                  I18nKey = "git.tag_not_found"                     // 标签不存在
 	GitTimeout                      I18nKey = "git.timeout"                           // Git 操作超时.
 	GitUnrelatedHistories           I18nKey = "git.unrelated_histories"               // 不相关的历史记录.
-	GitUnsupportedOption            I18nKey = "git.unsupported_option"                 // 当前 git 版本不支持参数 %s，请升级 Git 版本.
+	GitUnsupportedOption            I18nKey = "git.unsupported_option"                // 当前 git 版本不支持参数 %s，请升级 Git 版本.
 
 	// Issue 相关常量
 	IssueBodyParamError   I18nKey = "issue.body_param_error"   // 请求体参数解析失败.
@@ -769,7 +769,7 @@ const (
 	// Repo 相关常量
 	RepoBodyParamError                 I18nKey = "repo.body_param_error"                    // Body 参数解析失败.
 	RepoCreateDuplicate                I18nKey = "repo.create_duplicate"                    // 创建仓库失败,仓库已存在
-	RepoCreateError                    I18nKey = "repo.create_error"                        // 创建仓库异常.请确保git在环境变量中且版本大于2.30.0
+	RepoCreateError                    I18nKey = "repo.create_error"                        // 创建仓库异常.请确保git在环境变量中且版本大于2.42.0
 	RepoCreateSuccess                  I18nKey = "repo.create_success"                      // 创建仓库成功
 	RepoDefaultBranchArchivedForbidden I18nKey = "repo.default_branch_archived_forbidden"   // 默认分支不能以 archived/ 开头,该前缀为归档分支保留.
 	RepoDeleteError                    I18nKey = "repo.delete_error"                        // 删除仓库失败.
