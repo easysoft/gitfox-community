@@ -21,14 +21,14 @@ var httpcli = &http.Client{
 	Transport: &http.Transport{
 		Proxy: http.ProxyFromEnvironment,
 		DialContext: (&net.Dialer{
-			Timeout:   10 * time.Second,
+			Timeout:   20 * time.Second,
 			KeepAlive: 30 * time.Second,
 		}).DialContext,
 		MaxIdleConnsPerHost: 5,
 		MaxConnsPerHost:     50,
 		IdleConnTimeout:     2 * time.Minute,
 	},
-	Timeout: 10 * time.Second,
+	Timeout: 20 * time.Second,
 }
 
 // BaseResult 基础返回体
