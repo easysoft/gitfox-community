@@ -11,7 +11,6 @@ import (
 	"unicode"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/file"
 
 	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
@@ -119,11 +118,11 @@ func LoadConfig(mode string) (*Config, error) {
 
 // loadFromYaml loads the configuration from a YAML file based on the mode.
 func loadFromYaml(mode string, config *Config) error {
-	configPaths, err := findConfigFilePaths(mode, "yaml")
+	configPath, err := findConfigFilePaths(mode, "yaml")
 	if err != nil {
 		return err
 	}
-	err = loadFromFile(configPaths[0], config)
+	err = loadFromFile(configPath, config)
 	if err != nil {
 		return err
 	}
@@ -148,12 +147,12 @@ var getenvHookRe = regexp.MustCompile(`Getenv\(("([^"]*)"|'([^']*)')\)`)
 
 // loadFromEnvVars 从gitfox.env文件中加载并设置为环境变量
 func loadFromEnvVars(mode string, config *Config) error {
-	configPaths, err := findConfigFilePaths(mode, "env")
+	configPath, err := findConfigFilePaths(mode, "env")
 	if err != nil {
 		return err
 	}
 
-	tempFile, cleanup, err := preprocessEnvFile(configPaths[0])
+	tempFile, cleanup, err := preprocessEnvFile(configPath)
 	if err != nil {
 		return errors.SystemErr.Wrapf(err, "failed to preprocess env file")
 	}
@@ -413,11 +412,11 @@ func combineToRawURL(scheme, host, port, path string) string {
 }
 
 // findConfigFilePaths finds configuration file paths based on the mode and extension.
-func findConfigFilePaths(mode, ext string) ([]string, error) {
+func findConfigFilePaths(mode, ext string) (string, error) {
 	// 获取当前可执行文件的绝对路径
 	exePath, err := os.Executable()
 	if err != nil {
-		return nil, errors.New("获取可执行文件路径失败: " + err.Error())
+		return "", errors.New("获取可执行文件路径失败: " + err.Error())
 	}
 
 	// 获取可执行文件所在目录（配置文件与二进制同目录）
@@ -431,14 +430,13 @@ func findConfigFilePaths(mode, ext string) ([]string, error) {
 		fileName = fmt.Sprintf("%s.%s", mode, ext)
 	}
 
-	configPaths, err := file.FindFilesRecursive(exeDir, fileName)
-	if err != nil {
-		return nil, errors.ConfigNotFoundError.Wrapf(err, "查找 %s 配置文件失败", fileName)
-	}
-	if len(configPaths) == 0 {
-		return nil, errors.ConfigNotFoundError.Newf("未找到配置文件: %s", fileName)
-	}
-	return configPaths, nil
+
+	configPath := filepath.Join(exeDir, fileName)
+		if _, err := os.Stat(configPath); err != nil {
+			return "", errors.ConfigNotFoundError.Newf("未找到配置文件: %s", configPath)
+		}
+
+	return configPath, nil
 }
 
 func composeDatasource(config *Config) string {
@@ -450,3 +448,4 @@ func composeDatasource(config *Config) string {
 		config.Database.Name,
 		config.Database.Timezone)
 }
+
