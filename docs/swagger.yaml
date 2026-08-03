@@ -926,7 +926,7 @@ definitions:
       since:
         type: integer
       until:
-        type: string
+        type: integer
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.ReqForCreate:
     properties:
@@ -2192,23 +2192,33 @@ definitions:
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanIssueInfo:
     properties:
-      closed:
+      closedDate:
+        type: string
+      content:
+        type: string
+      createdBy:
         type: string
       createdByTaskID:
         type: integer
       createdDate:
         type: string
+      editedBy:
+        type: string
+      endLine:
+        type: integer
+      filePath:
+        type: string
       id:
         type: integer
-      ignored:
+      ignoredDate:
         type: integer
       key:
         type: string
-      line:
-        type: integer
-      message:
+      newCode:
         type: string
-      path:
+      oldCode:
+        type: string
+      oldFilePath:
         type: string
       payload:
         items:
@@ -2218,13 +2228,15 @@ definitions:
         type: integer
       planName:
         type: string
+      ppmID:
+        type: integer
       repoBranch:
         type: string
       repoID:
         type: integer
       resolution:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanIssueResolution'
-      resolved:
+      resolvedDate:
         type: string
       ruleID:
         type: integer
@@ -2238,8 +2250,12 @@ definitions:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleType'
       scanMethod:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanMethod'
+      startLine:
+        type: integer
       status:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanIssueStatus'
+      title:
+        type: string
       trigger:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTaskTrigger'
       updatedByTaskID:
@@ -2266,17 +2282,19 @@ definitions:
     properties:
       branch:
         type: string
+      content:
+        type: string
       createDate:
         type: string
       createdGt:
         type: string
       createdLt:
         type: string
-      file:
+      filePath:
         type: string
       id:
         type: integer
-      message:
+      oldFilePath:
         type: string
       order:
         default: desc
@@ -2288,6 +2306,8 @@ definitions:
         default: 20
         type: integer
       planID:
+        type: integer
+      ppmID:
         type: integer
       repoID:
         type: integer
@@ -2308,6 +2328,8 @@ definitions:
         type: string
       status:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanIssueStatus'
+      title:
+        type: string
       tool:
         type: string
       updatedGt:
@@ -2623,15 +2645,17 @@ definitions:
     properties:
       branch:
         type: string
+      content:
+        type: string
       createDate:
         type: string
       detectionStatus:
         type: string
-      file:
+      filepath:
         type: string
       id:
         type: integer
-      message:
+      oldfilepath:
         type: string
       order:
         default: desc
@@ -2643,6 +2667,8 @@ definitions:
         default: 20
         type: integer
       planID:
+        type: integer
+      ppmID:
         type: integer
       repoID:
         type: integer
@@ -2661,6 +2687,8 @@ definitions:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanIssueStatus'
       taskID:
         type: integer
+      title:
+        type: string
       tool:
         type: string
     type: object
@@ -10136,7 +10164,7 @@ paths:
       summary: OCI v2 协议探测
       tags:
       - container
-  /v2/{domainid}/{artifactname}/{imagename}/blobs/{digest}:
+  /v2/{domainid}/{artifactCode}/{imagename}/blobs/{digest}:
     delete:
       description: 根据 digest 删除指定容器镜像空间下的 Blob。
       parameters:
@@ -10145,9 +10173,9 @@ paths:
         name: domainid
         required: true
         type: string
-      - description: 制品库名称（ops_artifact.name）
+      - description: 制品库编码（ops_artifact.code）
         in: path
-        name: artifactname
+        name: artifactCode
         required: true
         type: string
       - description: 镜像名称
@@ -10186,9 +10214,9 @@ paths:
         name: domainid
         required: true
         type: string
-      - description: 制品库名称（ops_artifact.name）
+      - description: 制品库编码（ops_artifact.code）
         in: path
-        name: artifactname
+        name: artifactCode
         required: true
         type: string
       - description: 镜像名称
@@ -10229,9 +10257,9 @@ paths:
         name: domainid
         required: true
         type: string
-      - description: 制品库名称（ops_artifact.name）
+      - description: 制品库编码（ops_artifact.code）
         in: path
-        name: artifactname
+        name: artifactCode
         required: true
         type: string
       - description: 镜像名称
@@ -10262,7 +10290,7 @@ paths:
       summary: 检查 Blob 是否存在
       tags:
       - container
-  /v2/{domainid}/{artifactname}/{imagename}/blobs/uploads/:
+  /v2/{domainid}/{artifactCode}/{imagename}/blobs/uploads/:
     post:
       consumes:
       - application/octet-stream
@@ -10273,9 +10301,9 @@ paths:
         name: domainid
         required: true
         type: string
-      - description: 制品库名称（ops_artifact.name）
+      - description: 制品库编码（ops_artifact.code）
         in: path
-        name: artifactname
+        name: artifactCode
         required: true
         type: string
       - description: 镜像名称
@@ -10305,7 +10333,7 @@ paths:
       summary: 发起 Blob 上传
       tags:
       - container
-  /v2/{domainid}/{artifactname}/{imagename}/blobs/uploads/{uuid}:
+  /v2/{domainid}/{artifactCode}/{imagename}/blobs/uploads/{uuid}:
     delete:
       description: 取消正在进行的分块上传会话，释放已上传的临时数据。
       parameters:
@@ -10314,9 +10342,9 @@ paths:
         name: domainid
         required: true
         type: string
-      - description: 制品库名称（ops_artifact.name）
+      - description: 制品库编码（ops_artifact.code）
         in: path
-        name: artifactname
+        name: artifactCode
         required: true
         type: string
       - description: 镜像名称
@@ -10360,9 +10388,9 @@ paths:
         name: domainid
         required: true
         type: string
-      - description: 制品库名称（ops_artifact.name）
+      - description: 制品库编码（ops_artifact.code）
         in: path
-        name: artifactname
+        name: artifactCode
         required: true
         type: string
       - description: 镜像名称
@@ -10403,9 +10431,9 @@ paths:
         name: domainid
         required: true
         type: string
-      - description: 制品库名称（ops_artifact.name）
+      - description: 制品库编码（ops_artifact.code）
         in: path
-        name: artifactname
+        name: artifactCode
         required: true
         type: string
       - description: 镜像名称
@@ -10451,9 +10479,9 @@ paths:
         name: domainid
         required: true
         type: string
-      - description: 制品库名称（ops_artifact.name）
+      - description: 制品库编码（ops_artifact.code）
         in: path
-        name: artifactname
+        name: artifactCode
         required: true
         type: string
       - description: 镜像名称
@@ -10494,7 +10522,7 @@ paths:
       summary: 完成 Blob 上传
       tags:
       - container
-  /v2/{domainid}/{artifactname}/{imagename}/manifests/{reference}:
+  /v2/{domainid}/{artifactCode}/{imagename}/manifests/{reference}:
     delete:
       description: 根据 reference（tag 或 digest）删除容器镜像的 Manifest 及关联数据。
       parameters:
@@ -10503,9 +10531,9 @@ paths:
         name: domainid
         required: true
         type: string
-      - description: 制品库名称（ops_artifact.name）
+      - description: 制品库编码（ops_artifact.code）
         in: path
-        name: artifactname
+        name: artifactCode
         required: true
         type: string
       - description: 镜像名称
@@ -10544,9 +10572,9 @@ paths:
         name: domainid
         required: true
         type: string
-      - description: 制品库名称（ops_artifact.name）
+      - description: 制品库编码（ops_artifact.code）
         in: path
-        name: artifactname
+        name: artifactCode
         required: true
         type: string
       - description: 镜像名称
@@ -10588,9 +10616,9 @@ paths:
         name: domainid
         required: true
         type: string
-      - description: 制品库名称（ops_artifact.name）
+      - description: 制品库编码（ops_artifact.code）
         in: path
-        name: artifactname
+        name: artifactCode
         required: true
         type: string
       - description: 镜像名称
@@ -10631,9 +10659,9 @@ paths:
         name: domainid
         required: true
         type: string
-      - description: 制品库名称（ops_artifact.name）
+      - description: 制品库编码（ops_artifact.code）
         in: path
-        name: artifactname
+        name: artifactCode
         required: true
         type: string
       - description: 镜像名称
@@ -10664,7 +10692,7 @@ paths:
       summary: 上传 Manifest
       tags:
       - container
-  /v2/{domainid}/{artifactname}/{imagename}/tags/list:
+  /v2/{domainid}/{artifactCode}/{imagename}/tags/list:
     get:
       description: 列出指定容器镜像的所有 Tag 列表。
       parameters:
@@ -10673,9 +10701,9 @@ paths:
         name: domainid
         required: true
         type: string
-      - description: 制品库名称（ops_artifact.name）
+      - description: 制品库编码（ops_artifact.code）
         in: path
-        name: artifactname
+        name: artifactCode
         required: true
         type: string
       - description: 镜像名称

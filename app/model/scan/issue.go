@@ -15,9 +15,15 @@ import (
 type ScanIssue struct {
 	Key             string                        `json:"key"`
 	RuleID          int64                         `json:"ruleID"`
-	Message         string                        `json:"message"`
-	Path            string                        `json:"path"`
-	Line            int64                         `json:"line"`
+	PpmID           int64                         `json:"ppmID,omitempty"`
+	Title           string                        `json:"title"`
+	Content         string                        `json:"content,omitempty"`
+	FilePath        string                        `json:"filePath"`
+	OldFilePath     string                        `json:"oldFilePath,omitempty"`
+	StartLine       int64                         `json:"startLine"`
+	EndLine         int64                         `json:"endLine"`
+	OldCode         string                        `json:"oldCode,omitempty"`
+	NewCode         string                        `json:"newCode,omitempty"`
 	RepoID          int64                         `json:"repoID"`
 	RepoBranch      string                        `json:"repoBranch"`
 	CreatedByTaskID int64                         `json:"createdByTaskID"`
@@ -26,6 +32,8 @@ type ScanIssue struct {
 	ScanMethod      constant.ScanMethod           `json:"scanMethod"`
 	Resolution      *constant.ScanIssueResolution `json:"resolution"`
 	Payload         json.RawMessage               `json:"payload"`
+	CreatedBy       string                        `json:"createdBy,omitempty"`
+	EditedBy        string                        `json:"editedBy,omitempty"`
 }
 
 // SetPayload 设置扩展数据
@@ -48,7 +56,7 @@ type ScanIssueKey struct {
 	CreatedByTaskID int64                    `json:"createdByTaskID"`
 	UpdatedByTaskID int64                    `json:"updatedByTaskID"`
 	Status          constant.ScanIssueStatus `json:"status"`
-	Ignored         *int64                   `json:"ignored"`
+	IgnoredDate     *int64                   `json:"ignoredDate"`
 }
 
 // ScanIssueReport 扫描报告统计
@@ -221,14 +229,17 @@ type ScanTaskUploadReportReq struct {
 // ScanTaskIssueReqFilter 任务问题列表查询过滤条件
 type ScanTaskIssueReqFilter struct {
 	ID              int64                    `json:"id,omitempty" form:"id"`
-	Message         string                   `json:"message,omitempty" form:"message"`
-	File            string                   `json:"file,omitempty" form:"file"`
+	Title           string                   `json:"title,omitempty" form:"title"`
+	Content         string                   `json:"content,omitempty" form:"content"`
+	Filepath        string                   `json:"filePath,omitempty" form:"filePath"`
+	OldFilepath     string                   `json:"oldFilePath,omitempty" form:"oldFilePath"`
 	RuleType        constant.ScanRuleType    `json:"ruleType,omitempty" form:"ruleType"`
 	Tool            string                   `json:"tool,omitempty" form:"tool"`
 	RulePriority    string                   `json:"rulePriority,omitempty" form:"rulePriority"`
 	CreateDate      string                   `json:"createDate,omitempty" form:"createDate"`
 	TaskID          int64                    `json:"taskID" form:"taskID"`
 	RepoID          int64                    `json:"repoID,omitempty" form:"repoID"`
+	PpmID           int64                    `json:"ppmID,omitempty" form:"ppmID"`
 	Branch          string                   `json:"branch,omitempty" form:"branch"`
 	RuleID          int64                    `json:"ruleID,omitempty" form:"ruleID"`
 	Status          constant.ScanIssueStatus `json:"status,omitempty" form:"status"`
@@ -245,9 +256,12 @@ type ScanTaskIssueReqFilter struct {
 type ScanIssueReqFilter struct {
 	ID           int64                    `json:"id,omitempty" form:"id"`
 	RepoID       int64                    `json:"repoID,omitempty" form:"repoID"`
+	PpmID        int64                    `json:"ppmID,omitempty" form:"ppmID"`
 	Branch       string                   `json:"branch,omitempty" form:"branch"`
-	File         string                   `json:"file,omitempty" form:"file"`
-	Message      string                   `json:"message,omitempty" form:"message"`
+	Filepath     string                   `json:"filePath,omitempty" form:"filePath"`
+	OldFilepath  string                   `json:"oldFilePath,omitempty" form:"oldFilePath"`
+	Title        string                   `json:"title,omitempty" form:"title"`
+	Content      string                   `json:"content,omitempty" form:"content"`
 	RuleID       int64                    `json:"ruleID,omitempty" form:"ruleID"`
 	RulePriority string                   `json:"rulePriority,omitempty" form:"rulePriority"`
 	RuleType     constant.ScanRuleType    `json:"ruleType,omitempty" form:"ruleType"`
@@ -303,9 +317,15 @@ type ScanIssueInfo struct {
 	RuleKey         string                        `json:"ruleKey"`
 	RulePriority    constant.ScanRulePriority     `json:"rulePriority"`
 	RuleType        constant.ScanRuleType         `json:"ruleType"`
-	Message         string                        `json:"message"`
-	Path            string                        `json:"path"`
-	Line            int64                         `json:"line"`
+	Title           string                        `json:"title"`
+	Content         string                        `json:"content,omitempty"`
+	FilePath        string                        `json:"filePath"`
+	OldFilePath     string                        `json:"oldFilePath,omitempty"`
+	StartLine       int64                         `json:"startLine"`
+	EndLine         int64                         `json:"endLine"`
+	OldCode         string                        `json:"oldCode,omitempty"`
+	NewCode         string                        `json:"newCode,omitempty"`
+	PpmID           int64                         `json:"ppmID,omitempty"`
 	RepoID          int64                         `json:"repoID"`
 	RepoBranch      string                        `json:"repoBranch"`
 	Status          constant.ScanIssueStatus      `json:"status"`
@@ -317,8 +337,10 @@ type ScanIssueInfo struct {
 	PlanID          int64                         `json:"planID"`
 	PlanName        string                        `json:"planName"`
 	CreatedDate     *datetime.Local               `json:"createdDate"`
-	Resolved        *datetime.Local               `json:"resolved"`
-	Closed          *datetime.Local               `json:"closed"`
-	Ignored         *int64                        `json:"ignored"`
+	ResolvedDate    *datetime.Local               `json:"resolvedDate"`
+	ClosedDate      *datetime.Local               `json:"closedDate"`
+	IgnoredDate     *int64                        `json:"ignoredDate"`
+	CreatedBy       string                        `json:"createdBy,omitempty"`
+	EditedBy        string                        `json:"editedBy,omitempty"`
 	Trigger         *ScanTaskTrigger              `json:"trigger"`
 }

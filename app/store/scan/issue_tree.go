@@ -19,9 +19,9 @@ func (s *ScanIssueStore) listDistinctFilesByRepo(ctx context.Context, repoID int
 	var dst []*scanModel.IssueFileRaw
 	err := s.db.WithContext(ctx).
 		Table("ops_scan_issues").
-		Select("repoBranch, path, COUNT(*) AS totalCount").
+		Select("repoBranch, filePath, COUNT(*) AS totalCount").
 		Where("repoID = ? AND deleted = ?", repoID, false).
-		Group("repoBranch, path").
+		Group("repoBranch, filePath").
 		Order("totalCount DESC").
 		Find(&dst).Error
 	if err != nil {
@@ -34,12 +34,12 @@ func (s *ScanIssueStore) listDistinctFilesByTask(ctx context.Context, filter *sc
 	var dst []*scanModel.IssueFileRaw
 	err := s.db.WithContext(ctx).
 		Table("ops_scan_issues AS i").
-		Select("i.repoBranch, i.path, COUNT(*) AS totalCount").
+		Select("i.repoBranch, i.filePath, COUNT(*) AS totalCount").
 		Joins("LEFT JOIN ops_scan_tasks AS t ON i.updatedByTaskID = t.id").
 		Joins("LEFT JOIN ops_scan_plans AS p ON t.planID = p.id").
 		Where("p.id = ? AND i.repoID = ? AND i.repoBranch = ? AND i.createdByTaskID <= ? AND i.deleted = ?",
 			filter.PlanID, filter.RepoID, filter.Branch, filter.TaskID, false).
-		Group("i.repoBranch, i.path").
+		Group("i.repoBranch, i.filePath").
 		Order("totalCount DESC").
 		Find(&dst).Error
 	if err != nil {

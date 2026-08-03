@@ -1218,17 +1218,17 @@ func (mr *MockIScanIssueMockRecorder) CreateIssueBindByTaskID(ctx, taskID, issue
 }
 
 // DisappearedByTask mocks base method.
-func (m *MockIScanIssue) DisappearedByTask(ctx context.Context, taskID uint, issueIDs []int64) error {
+func (m *MockIScanIssue) DisappearedByTask(ctx context.Context, taskID uint, issueIDs []int64, operator string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DisappearedByTask", ctx, taskID, issueIDs)
+	ret := m.ctrl.Call(m, "DisappearedByTask", ctx, taskID, issueIDs, operator)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // DisappearedByTask indicates an expected call of DisappearedByTask.
-func (mr *MockIScanIssueMockRecorder) DisappearedByTask(ctx, taskID, issueIDs any) *gomock.Call {
+func (mr *MockIScanIssueMockRecorder) DisappearedByTask(ctx, taskID, issueIDs, operator any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DisappearedByTask", reflect.TypeOf((*MockIScanIssue)(nil).DisappearedByTask), ctx, taskID, issueIDs)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DisappearedByTask", reflect.TypeOf((*MockIScanIssue)(nil).DisappearedByTask), ctx, taskID, issueIDs, operator)
 }
 
 // Get mocks base method.
@@ -1351,74 +1351,74 @@ func (mr *MockIScanIssueMockRecorder) ListKeysByTask(ctx, repoID, branch, taskID
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListKeysByTask", reflect.TypeOf((*MockIScanIssue)(nil).ListKeysByTask), ctx, repoID, branch, taskID, method)
 }
 
-// UpdateByTaskID mocks base method.
-func (m *MockIScanIssue) UpdateByTaskID(ctx context.Context, taskID uint, issueIDs []int64) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateByTaskID", ctx, taskID, issueIDs)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// UpdateByTaskID indicates an expected call of UpdateByTaskID.
-func (mr *MockIScanIssueMockRecorder) UpdateByTaskID(ctx, taskID, issueIDs any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateByTaskID", reflect.TypeOf((*MockIScanIssue)(nil).UpdateByTaskID), ctx, taskID, issueIDs)
-}
-
-// UpdateResolution mocks base method.
-func (m *MockIScanIssue) UpdateResolution(ctx context.Context, ids []int64, resolution *constant.ScanIssueResolution) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateResolution", ctx, ids, resolution)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// UpdateResolution indicates an expected call of UpdateResolution.
-func (mr *MockIScanIssueMockRecorder) UpdateResolution(ctx, ids, resolution any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateResolution", reflect.TypeOf((*MockIScanIssue)(nil).UpdateResolution), ctx, ids, resolution)
-}
-
-// UpdateStatus mocks base method.
-func (m *MockIScanIssue) UpdateStatus(ctx context.Context, ids []int64, status constant.ScanIssueStatus) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateStatus", ctx, ids, status)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// UpdateStatus indicates an expected call of UpdateStatus.
-func (mr *MockIScanIssueMockRecorder) UpdateStatus(ctx, ids, status any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockIScanIssue)(nil).UpdateStatus), ctx, ids, status)
-}
-
-// UpdateTimestamps mocks base method.
-func (m *MockIScanIssue) UpdateTimestamps(ctx context.Context, in scan.ScanIssueUpdateStatusReq) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateTimestamps", ctx, in)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// UpdateTimestamps indicates an expected call of UpdateTimestamps.
-func (mr *MockIScanIssueMockRecorder) UpdateTimestamps(ctx, in any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateTimestamps", reflect.TypeOf((*MockIScanIssue)(nil).UpdateTimestamps), ctx, in)
-}
-
 // ResetExpiredIgnore mocks base method.
-func (m *MockIScanIssue) ResetExpiredIgnore(ctx context.Context, ids []int64) error {
+func (m *MockIScanIssue) ResetExpiredIgnore(ctx context.Context, ids []int64, operator string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ResetExpiredIgnore", ctx, ids)
+	ret := m.ctrl.Call(m, "ResetExpiredIgnore", ctx, ids, operator)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // ResetExpiredIgnore indicates an expected call of ResetExpiredIgnore.
-func (mr *MockIScanIssueMockRecorder) ResetExpiredIgnore(ctx, ids any) *gomock.Call {
+func (mr *MockIScanIssueMockRecorder) ResetExpiredIgnore(ctx, ids, operator any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ResetExpiredIgnore", reflect.TypeOf((*MockIScanIssue)(nil).ResetExpiredIgnore), ctx, ids)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ResetExpiredIgnore", reflect.TypeOf((*MockIScanIssue)(nil).ResetExpiredIgnore), ctx, ids, operator)
+}
+
+// UpdateByTaskID mocks base method.
+func (m *MockIScanIssue) UpdateByTaskID(ctx context.Context, taskID uint, issueIDs []int64, operator string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateByTaskID", ctx, taskID, issueIDs, operator)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateByTaskID indicates an expected call of UpdateByTaskID.
+func (mr *MockIScanIssueMockRecorder) UpdateByTaskID(ctx, taskID, issueIDs, operator any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateByTaskID", reflect.TypeOf((*MockIScanIssue)(nil).UpdateByTaskID), ctx, taskID, issueIDs, operator)
+}
+
+// UpdateResolution mocks base method.
+func (m *MockIScanIssue) UpdateResolution(ctx context.Context, ids []int64, resolution *constant.ScanIssueResolution, operator string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateResolution", ctx, ids, resolution, operator)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateResolution indicates an expected call of UpdateResolution.
+func (mr *MockIScanIssueMockRecorder) UpdateResolution(ctx, ids, resolution, operator any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateResolution", reflect.TypeOf((*MockIScanIssue)(nil).UpdateResolution), ctx, ids, resolution, operator)
+}
+
+// UpdateStatus mocks base method.
+func (m *MockIScanIssue) UpdateStatus(ctx context.Context, ids []int64, status constant.ScanIssueStatus, operator string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateStatus", ctx, ids, status, operator)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateStatus indicates an expected call of UpdateStatus.
+func (mr *MockIScanIssueMockRecorder) UpdateStatus(ctx, ids, status, operator any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockIScanIssue)(nil).UpdateStatus), ctx, ids, status, operator)
+}
+
+// UpdateTimestamps mocks base method.
+func (m *MockIScanIssue) UpdateTimestamps(ctx context.Context, in scan.ScanIssueUpdateStatusReq, operator string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateTimestamps", ctx, in, operator)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateTimestamps indicates an expected call of UpdateTimestamps.
+func (mr *MockIScanIssueMockRecorder) UpdateTimestamps(ctx, in, operator any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateTimestamps", reflect.TypeOf((*MockIScanIssue)(nil).UpdateTimestamps), ctx, in, operator)
 }
 
 // MockIScanTask is a mock of IScanTask interface.

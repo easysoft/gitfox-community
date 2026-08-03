@@ -10499,7 +10499,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/v2/{domainid}/{artifactname}/{imagename}/blobs/uploads/": {
+        "/v2/{domainid}/{artifactCode}/{imagename}/blobs/uploads/": {
             "post": {
                 "description": "发起一个新的 Blob 上传会话。如果 query 中包含 digest 参数则执行单次上传（monolithic），否则初始化分块上传。",
                 "consumes": [
@@ -10522,8 +10522,8 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "制品库名称（ops_artifact.name）",
-                        "name": "artifactname",
+                        "description": "制品库编码（ops_artifact.code）",
+                        "name": "artifactCode",
                         "in": "path",
                         "required": true
                     },
@@ -10562,7 +10562,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/v2/{domainid}/{artifactname}/{imagename}/blobs/uploads/{uuid}": {
+        "/v2/{domainid}/{artifactCode}/{imagename}/blobs/uploads/{uuid}": {
             "get": {
                 "description": "查询分块上传会话的当前状态，返回已上传的字节范围。",
                 "produces": [
@@ -10582,8 +10582,8 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "制品库名称（ops_artifact.name）",
-                        "name": "artifactname",
+                        "description": "制品库编码（ops_artifact.code）",
+                        "name": "artifactCode",
                         "in": "path",
                         "required": true
                     },
@@ -10644,8 +10644,8 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "制品库名称（ops_artifact.name）",
-                        "name": "artifactname",
+                        "description": "制品库编码（ops_artifact.code）",
+                        "name": "artifactCode",
                         "in": "path",
                         "required": true
                     },
@@ -10717,8 +10717,8 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "制品库名称（ops_artifact.name）",
-                        "name": "artifactname",
+                        "description": "制品库编码（ops_artifact.code）",
+                        "name": "artifactCode",
                         "in": "path",
                         "required": true
                     },
@@ -10786,8 +10786,8 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "制品库名称（ops_artifact.name）",
-                        "name": "artifactname",
+                        "description": "制品库编码（ops_artifact.code）",
+                        "name": "artifactCode",
                         "in": "path",
                         "required": true
                     },
@@ -10834,7 +10834,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/v2/{domainid}/{artifactname}/{imagename}/blobs/{digest}": {
+        "/v2/{domainid}/{artifactCode}/{imagename}/blobs/{digest}": {
             "get": {
                 "description": "根据 digest 下载指定容器镜像空间下的 Blob 内容（镜像层数据）。",
                 "produces": [
@@ -10854,8 +10854,8 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "制品库名称（ops_artifact.name）",
-                        "name": "artifactname",
+                        "description": "制品库编码（ops_artifact.code）",
+                        "name": "artifactCode",
                         "in": "path",
                         "required": true
                     },
@@ -10916,8 +10916,8 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "制品库名称（ops_artifact.name）",
-                        "name": "artifactname",
+                        "description": "制品库编码（ops_artifact.code）",
+                        "name": "artifactCode",
                         "in": "path",
                         "required": true
                     },
@@ -10975,8 +10975,8 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "制品库名称（ops_artifact.name）",
-                        "name": "artifactname",
+                        "description": "制品库编码（ops_artifact.code）",
+                        "name": "artifactCode",
                         "in": "path",
                         "required": true
                     },
@@ -11016,7 +11016,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/v2/{domainid}/{artifactname}/{imagename}/manifests/{reference}": {
+        "/v2/{domainid}/{artifactCode}/{imagename}/manifests/{reference}": {
             "get": {
                 "description": "根据 reference（tag 或 digest）下载容器镜像的 Manifest 内容。",
                 "produces": [
@@ -11036,8 +11036,8 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "制品库名称（ops_artifact.name）",
-                        "name": "artifactname",
+                        "description": "制品库编码（ops_artifact.code）",
+                        "name": "artifactCode",
                         "in": "path",
                         "required": true
                     },
@@ -11102,8 +11102,8 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "制品库名称（ops_artifact.name）",
-                        "name": "artifactname",
+                        "description": "制品库编码（ops_artifact.code）",
+                        "name": "artifactCode",
                         "in": "path",
                         "required": true
                     },
@@ -11161,8 +11161,8 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "制品库名称（ops_artifact.name）",
-                        "name": "artifactname",
+                        "description": "制品库编码（ops_artifact.code）",
+                        "name": "artifactCode",
                         "in": "path",
                         "required": true
                     },
@@ -11220,8 +11220,8 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "制品库名称（ops_artifact.name）",
-                        "name": "artifactname",
+                        "description": "制品库编码（ops_artifact.code）",
+                        "name": "artifactCode",
                         "in": "path",
                         "required": true
                     },
@@ -11261,7 +11261,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/v2/{domainid}/{artifactname}/{imagename}/tags/list": {
+        "/v2/{domainid}/{artifactCode}/{imagename}/tags/list": {
             "get": {
                 "description": "列出指定容器镜像的所有 Tag 列表。",
                 "produces": [
@@ -11281,8 +11281,8 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "制品库名称（ops_artifact.name）",
-                        "name": "artifactname",
+                        "description": "制品库编码（ops_artifact.code）",
+                        "name": "artifactCode",
                         "in": "path",
                         "required": true
                     },
@@ -12569,7 +12569,7 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "until": {
-                    "type": "string"
+                    "type": "integer"
                 }
             }
         },
@@ -14431,7 +14431,13 @@ const docTemplate = `{
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanIssueInfo": {
             "type": "object",
             "properties": {
-                "closed": {
+                "closedDate": {
+                    "type": "string"
+                },
+                "content": {
+                    "type": "string"
+                },
+                "createdBy": {
                     "type": "string"
                 },
                 "createdByTaskID": {
@@ -14440,22 +14446,31 @@ const docTemplate = `{
                 "createdDate": {
                     "type": "string"
                 },
+                "editedBy": {
+                    "type": "string"
+                },
+                "endLine": {
+                    "type": "integer"
+                },
+                "filePath": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "integer"
                 },
-                "ignored": {
+                "ignoredDate": {
                     "type": "integer"
                 },
                 "key": {
                     "type": "string"
                 },
-                "line": {
-                    "type": "integer"
-                },
-                "message": {
+                "newCode": {
                     "type": "string"
                 },
-                "path": {
+                "oldCode": {
+                    "type": "string"
+                },
+                "oldFilePath": {
                     "type": "string"
                 },
                 "payload": {
@@ -14470,6 +14485,9 @@ const docTemplate = `{
                 "planName": {
                     "type": "string"
                 },
+                "ppmID": {
+                    "type": "integer"
+                },
                 "repoBranch": {
                     "type": "string"
                 },
@@ -14479,7 +14497,7 @@ const docTemplate = `{
                 "resolution": {
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanIssueResolution"
                 },
-                "resolved": {
+                "resolvedDate": {
                     "type": "string"
                 },
                 "ruleID": {
@@ -14500,8 +14518,14 @@ const docTemplate = `{
                 "scanMethod": {
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanMethod"
                 },
+                "startLine": {
+                    "type": "integer"
+                },
                 "status": {
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanIssueStatus"
+                },
+                "title": {
+                    "type": "string"
                 },
                 "trigger": {
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTaskTrigger"
@@ -14543,6 +14567,9 @@ const docTemplate = `{
                 "branch": {
                     "type": "string"
                 },
+                "content": {
+                    "type": "string"
+                },
                 "createDate": {
                     "type": "string"
                 },
@@ -14552,13 +14579,13 @@ const docTemplate = `{
                 "createdLt": {
                     "type": "string"
                 },
-                "file": {
+                "filePath": {
                     "type": "string"
                 },
                 "id": {
                     "type": "integer"
                 },
-                "message": {
+                "oldFilePath": {
                     "type": "string"
                 },
                 "order": {
@@ -14574,6 +14601,9 @@ const docTemplate = `{
                     "default": 20
                 },
                 "planID": {
+                    "type": "integer"
+                },
+                "ppmID": {
                     "type": "integer"
                 },
                 "repoID": {
@@ -14603,6 +14633,9 @@ const docTemplate = `{
                 },
                 "status": {
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanIssueStatus"
+                },
+                "title": {
+                    "type": "string"
                 },
                 "tool": {
                     "type": "string"
@@ -15080,19 +15113,22 @@ const docTemplate = `{
                 "branch": {
                     "type": "string"
                 },
+                "content": {
+                    "type": "string"
+                },
                 "createDate": {
                     "type": "string"
                 },
                 "detectionStatus": {
                     "type": "string"
                 },
-                "file": {
+                "filepath": {
                     "type": "string"
                 },
                 "id": {
                     "type": "integer"
                 },
-                "message": {
+                "oldfilepath": {
                     "type": "string"
                 },
                 "order": {
@@ -15108,6 +15144,9 @@ const docTemplate = `{
                     "default": 20
                 },
                 "planID": {
+                    "type": "integer"
+                },
+                "ppmID": {
                     "type": "integer"
                 },
                 "repoID": {
@@ -15134,6 +15173,9 @@ const docTemplate = `{
                 },
                 "taskID": {
                     "type": "integer"
+                },
+                "title": {
+                    "type": "string"
                 },
                 "tool": {
                     "type": "string"

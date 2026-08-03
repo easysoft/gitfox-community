@@ -119,13 +119,13 @@ type IScanIssue interface {
 	Get(ctx context.Context, id uint) (*scanModel.ScanIssueInfo, error)
 	List(ctx context.Context, filter scanModel.ScanIssueReqFilter) (*database.PageResult[*scanModel.ScanIssueInfo], error)
 	ListByIDs(ctx context.Context, ids []int64) ([]*scanModel.ScanIssueInfo, error)
-	UpdateStatus(ctx context.Context, ids []int64, status constant.ScanIssueStatus) error
-	UpdateResolution(ctx context.Context, ids []int64, resolution *constant.ScanIssueResolution) error
-	UpdateTimestamps(ctx context.Context, in scanModel.ScanIssueUpdateStatusReq) error
-	ResetExpiredIgnore(ctx context.Context, ids []int64) error
+	UpdateStatus(ctx context.Context, ids []int64, status constant.ScanIssueStatus, operator string) error
+	UpdateResolution(ctx context.Context, ids []int64, resolution *constant.ScanIssueResolution, operator string) error
+	UpdateTimestamps(ctx context.Context, in scanModel.ScanIssueUpdateStatusReq, operator string) error
+	ResetExpiredIgnore(ctx context.Context, ids []int64, operator string) error
 	ListKeysByTask(ctx context.Context, repoID int64, branch string, taskID uint, method constant.ScanMethod) ([]*scanModel.ScanIssueKey, error)
-	UpdateByTaskID(ctx context.Context, taskID uint, issueIDs []int64) error
-	DisappearedByTask(ctx context.Context, taskID uint, issueIDs []int64) error
+	UpdateByTaskID(ctx context.Context, taskID uint, issueIDs []int64, operator string) error
+	DisappearedByTask(ctx context.Context, taskID uint, issueIDs []int64, operator string) error
 	CreateIssueBindByTaskID(ctx context.Context, taskID uint, issueKeys []string) error
 	ListByTaskForResult(ctx context.Context, taskID uint, planID int64) ([]*scanModel.Rule, error)
 	ListByTaskID(ctx context.Context, taskID uint, filter scanModel.ScanTaskIssueReqFilter) (*database.PageResult[*scanModel.ScanIssueInfo], error)
