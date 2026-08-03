@@ -151,6 +151,48 @@ func (t IssueInputSmell) UniqueKey() string {
 	return fmt.Sprintf("%s/%s/%d/%d,'%s',`%s`", t.RuleKey, t.Location.Path, t.Location.Range.StartLine, t.Location.Range.EndLine, t.Message, t.Snippet)
 }
 
+// AIReportResponse AI 审查报告顶层结构
+type AIReportResponse struct {
+	Status   string           `json:"status"`
+	Summary  *AIReportSummary `json:"summary"`
+	Comments []*IssueInputAI  `json:"comments"`
+}
+
+// AIReportSummary AI 审查报告摘要
+type AIReportSummary struct {
+	FilesReviewed int    `json:"files_reviewed"`
+	Comments      int    `json:"comments"`
+	TotalTokens   int64  `json:"total_tokens"`
+	InputTokens   int64  `json:"input_tokens"`
+	OutputTokens  int64  `json:"output_tokens"`
+	Elapsed       string `json:"elapsed"`
+}
+
+// IssueInputAI AI 类型的 issue 输入
+type IssueInputAI struct {
+	Path           string `json:"path"`
+	Content        string `json:"content"`
+	SuggestionCode string `json:"suggestion_code"`
+	ExistingCode   string `json:"existing_code"`
+	StartLine      int64  `json:"start_line"`
+	EndLine        int64  `json:"end_line"`
+	Category       string `json:"category"`
+	Severity       string `json:"severity"`
+}
+
+// IssuePayloadAI AI 类型 issue 的扩展数据
+type IssuePayloadAI struct {
+	Category       string `json:"category"`
+	Severity       string `json:"severity"`
+	SuggestionCode string `json:"suggestion_code"`
+	ExistingCode   string `json:"existing_code"`
+}
+
+// UniqueKey 生成唯一标识
+func (t IssueInputAI) UniqueKey() string {
+	return fmt.Sprintf("ai/%s/%d/%d", t.Path, t.StartLine, t.EndLine)
+}
+
 // GenerateIssueKey 根据任务信息生成 issue 唯一 key
 func GenerateIssueKey(repoID int64, executionTarget, part string) string {
 	in := []byte(fmt.Sprintf("%s,%d,%s", part, repoID, executionTarget))
