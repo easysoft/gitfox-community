@@ -2206,8 +2206,6 @@ definitions:
         type: string
       endLine:
         type: integer
-      filePath:
-        type: string
       id:
         type: integer
       ignoredDate:
@@ -2218,7 +2216,7 @@ definitions:
         type: string
       oldCode:
         type: string
-      oldFilePath:
+      path:
         type: string
       payload:
         items:
@@ -2290,12 +2288,8 @@ definitions:
         type: string
       createdLt:
         type: string
-      filePath:
-        type: string
       id:
         type: integer
-      oldFilePath:
-        type: string
       order:
         default: desc
         type: string
@@ -2305,6 +2299,8 @@ definitions:
       pageSize:
         default: 20
         type: integer
+      path:
+        type: string
       planID:
         type: integer
       ppmID:
@@ -2651,12 +2647,8 @@ definitions:
         type: string
       detectionStatus:
         type: string
-      filepath:
-        type: string
       id:
         type: integer
-      oldfilepath:
-        type: string
       order:
         default: desc
         type: string
@@ -2666,6 +2658,8 @@ definitions:
       pageSize:
         default: 20
         type: integer
+      path:
+        type: string
       planID:
         type: integer
       ppmID:

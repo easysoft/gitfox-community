@@ -131,7 +131,7 @@ func (s *ScanTaskService) analyzeCheckIssues(
 	for _, check := range expanded {
 		inIssue := &scanModel.ScanIssue{
 			Title:      check.Message,
-			FilePath:   check.Location.Path,
+			Path:       check.Location.Path,
 			StartLine:  check.Location.Range.StartLine,
 			ScanMethod: constant.ScanMethodCheck,
 		}
@@ -170,7 +170,7 @@ func (s *ScanTaskService) analyzeSmellIssues(
 	for _, smell := range smells {
 		inIssue := &scanModel.ScanIssue{
 			Title:      smell.Message,
-			FilePath:   smell.Location.Path,
+			Path:       smell.Location.Path,
 			StartLine:  smell.Location.Range.StartLine,
 			ScanMethod: constant.ScanMethodSmell,
 		}
@@ -347,7 +347,7 @@ func (s *ScanTaskService) saveIssues(ctx context.Context, comp *scanModel.ScanIs
 				Key:             item.Key,
 				RuleID:          item.RuleID,
 				Title:           item.Title,
-				FilePath:        item.FilePath,
+				Path:            item.Path,
 				StartLine:       item.StartLine,
 				RepoID:          item.RepoID,
 				RepoBranch:      item.RepoBranch,

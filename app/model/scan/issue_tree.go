@@ -31,7 +31,7 @@ type IssueTaskFilter struct {
 // IssueFileRaw 文件维度聚合原始数据
 type IssueFileRaw struct {
 	Branch string `gorm:"column:repoBranch"`
-	File   string `gorm:"column:filePath"`
+	File   string `gorm:"column:path"`
 	Count  int    `gorm:"column:totalCount"`
 }
 

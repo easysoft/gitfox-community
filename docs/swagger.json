@@ -14446,9 +14446,6 @@
                 "endLine": {
                     "type": "integer"
                 },
-                "filePath": {
-                    "type": "string"
-                },
                 "id": {
                     "type": "integer"
                 },
@@ -14464,7 +14461,7 @@
                 "oldCode": {
                     "type": "string"
                 },
-                "oldFilePath": {
+                "path": {
                     "type": "string"
                 },
                 "payload": {
@@ -14573,14 +14570,8 @@
                 "createdLt": {
                     "type": "string"
                 },
-                "filePath": {
-                    "type": "string"
-                },
                 "id": {
                     "type": "integer"
-                },
-                "oldFilePath": {
-                    "type": "string"
                 },
                 "order": {
                     "type": "string",
@@ -14593,6 +14584,9 @@
                 "pageSize": {
                     "type": "integer",
                     "default": 20
+                },
+                "path": {
+                    "type": "string"
                 },
                 "planID": {
                     "type": "integer"
@@ -15116,14 +15110,8 @@
                 "detectionStatus": {
                     "type": "string"
                 },
-                "filepath": {
-                    "type": "string"
-                },
                 "id": {
                     "type": "integer"
-                },
-                "oldfilepath": {
-                    "type": "string"
                 },
                 "order": {
                     "type": "string",
@@ -15136,6 +15124,9 @@
                 "pageSize": {
                     "type": "integer",
                     "default": 20
+                },
+                "path": {
+                    "type": "string"
                 },
                 "planID": {
                     "type": "integer"

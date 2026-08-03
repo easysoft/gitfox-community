@@ -14452,9 +14452,6 @@ const docTemplate = `{
                 "endLine": {
                     "type": "integer"
                 },
-                "filePath": {
-                    "type": "string"
-                },
                 "id": {
                     "type": "integer"
                 },
@@ -14470,7 +14467,7 @@ const docTemplate = `{
                 "oldCode": {
                     "type": "string"
                 },
-                "oldFilePath": {
+                "path": {
                     "type": "string"
                 },
                 "payload": {
@@ -14579,14 +14576,8 @@ const docTemplate = `{
                 "createdLt": {
                     "type": "string"
                 },
-                "filePath": {
-                    "type": "string"
-                },
                 "id": {
                     "type": "integer"
-                },
-                "oldFilePath": {
-                    "type": "string"
                 },
                 "order": {
                     "type": "string",
@@ -14599,6 +14590,9 @@ const docTemplate = `{
                 "pageSize": {
                     "type": "integer",
                     "default": 20
+                },
+                "path": {
+                    "type": "string"
                 },
                 "planID": {
                     "type": "integer"
@@ -15122,14 +15116,8 @@ const docTemplate = `{
                 "detectionStatus": {
                     "type": "string"
                 },
-                "filepath": {
-                    "type": "string"
-                },
                 "id": {
                     "type": "integer"
-                },
-                "oldfilepath": {
-                    "type": "string"
                 },
                 "order": {
                     "type": "string",
@@ -15142,6 +15130,9 @@ const docTemplate = `{
                 "pageSize": {
                     "type": "integer",
                     "default": 20
+                },
+                "path": {
+                    "type": "string"
                 },
                 "planID": {
                     "type": "integer"

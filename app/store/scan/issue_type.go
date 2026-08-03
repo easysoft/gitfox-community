@@ -16,8 +16,7 @@ type ScanIssue struct {
 	RuleID          int64                         `gorm:"column:ruleID"`
 	Title           string                        `gorm:"column:title"`
 	Content         string                        `gorm:"column:content"`
-	FilePath        string                        `gorm:"column:filePath"`
-	OldFilePath     string                        `gorm:"column:oldFilePath"`
+	Path            string                        `gorm:"column:path"`
 	StartLine       int64                         `gorm:"column:startLine"`
 	EndLine         int64                         `gorm:"column:endLine"`
 	OldCode         string                        `gorm:"column:oldCode"`
@@ -76,8 +75,7 @@ type issueJoin struct {
 	RuleType        constant.ScanRuleType         `gorm:"column:ruleType"`
 	Title           string                        `gorm:"column:title"`
 	Content         string                        `gorm:"column:content"`
-	FilePath        string                        `gorm:"column:filePath"`
-	OldFilePath     string                        `gorm:"column:oldFilePath"`
+	Path            string                        `gorm:"column:path"`
 	StartLine       int64                         `gorm:"column:startLine"`
 	EndLine         int64                         `gorm:"column:endLine"`
 	OldCode         string                        `gorm:"column:oldCode"`
@@ -121,8 +119,7 @@ func mapIssueJoinToModel(in *issueJoin) *scanModel.ScanIssueInfo {
 		RuleType:        in.RuleType,
 		Title:           in.Title,
 		Content:         in.Content,
-		FilePath:        in.FilePath,
-		OldFilePath:     in.OldFilePath,
+		Path:            in.Path,
 		StartLine:       in.StartLine,
 		EndLine:         in.EndLine,
 		OldCode:         in.OldCode,

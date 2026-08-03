@@ -75,7 +75,7 @@ func (s *ScanIssueStore) Get(ctx context.Context, id uint) (*scanModel.ScanIssue
 		Table("ops_scan_issues AS i").
 		Select("i.id, i.issueKey, i.ruleID, r.name AS ruleName, r.ruleKey AS ruleKey, "+
 			"r.priority AS rulePriority, r.type AS ruleType, "+
-			"i.title, i.content, i.filePath, i.oldFilePath, i.startLine, i.endLine, i.oldCode, i.newCode, "+
+			"i.title, i.content, i.path, i.startLine, i.endLine, i.oldCode, i.newCode, "+
 			"i.ppmID, i.repoID, i.repoBranch, "+
 			"i.status, i.scanMethod, i.resolution, i.payload, i.createdByTaskID, i.updatedByTaskID, "+
 			"i.createdBy, i.editedBy, "+
@@ -97,7 +97,7 @@ func (s *ScanIssueStore) List(ctx context.Context, filter scanModel.ScanIssueReq
 		Table("ops_scan_issues AS i").
 		Select("i.id, i.issueKey, i.ruleID, r.name AS ruleName, r.ruleKey AS ruleKey, "+
 			"r.priority AS rulePriority, r.type AS ruleType, "+
-			"i.title, i.content, i.filePath, i.oldFilePath, i.startLine, i.endLine, i.oldCode, i.newCode, "+
+			"i.title, i.content, i.path, i.startLine, i.endLine, i.oldCode, i.newCode, "+
 			"i.ppmID, i.repoID, i.repoBranch, "+
 			"i.status, i.scanMethod, i.resolution, i.payload, i.createdByTaskID, i.updatedByTaskID, "+
 			"i.createdBy, i.editedBy, "+
@@ -129,11 +129,8 @@ func (s *ScanIssueStore) List(ctx context.Context, filter scanModel.ScanIssueReq
 	if filter.ScanMethod != "" {
 		stmt = stmt.Where("i.scanMethod = ?", filter.ScanMethod)
 	}
-	if filter.Filepath != "" {
-		stmt = stmt.Where("i.filePath = ?", filter.Filepath)
-	}
-	if filter.OldFilepath != "" {
-		stmt = stmt.Where("i.oldFilePath = ?", filter.OldFilepath)
+	if filter.Path != "" {
+		stmt = stmt.Where("i.path = ?", filter.Path)
 	}
 	if filter.Title != "" {
 		stmt = stmt.Where("i.title LIKE ?", "%"+filter.Title+"%")
@@ -208,7 +205,7 @@ func (s *ScanIssueStore) ListByIDs(ctx context.Context, ids []int64) ([]*scanMod
 		Table("ops_scan_issues AS i").
 		Select("i.id, i.issueKey, i.ruleID, r.name AS ruleName, r.ruleKey AS ruleKey, "+
 			"r.priority AS rulePriority, r.type AS ruleType, "+
-			"i.title, i.content, i.filePath, i.oldFilePath, i.startLine, i.endLine, i.oldCode, i.newCode, "+
+			"i.title, i.content, i.path, i.startLine, i.endLine, i.oldCode, i.newCode, "+
 			"i.ppmID, i.repoID, i.repoBranch, "+
 			"i.status, i.scanMethod, i.resolution, i.payload, i.createdByTaskID, i.updatedByTaskID, "+
 			"i.createdBy, i.editedBy, i.resolvedDate, i.closedDate, i.ignoredDate, "+
@@ -412,7 +409,7 @@ func (s *ScanIssueStore) ListByTaskID(ctx context.Context, taskID uint, filter s
 		Table("ops_scan_issue_task_binds AS bind").
 		Select("i.id, i.issueKey, i.ruleID, r.name AS ruleName, r.ruleKey AS ruleKey, "+
 			"r.priority AS rulePriority, r.type AS ruleType, "+
-			"i.title, i.content, i.filePath, i.oldFilePath, i.startLine, i.endLine, i.oldCode, i.newCode, "+
+			"i.title, i.content, i.path,  i.startLine, i.endLine, i.oldCode, i.newCode, "+
 			"i.ppmID, i.repoID, i.repoBranch, "+
 			"i.status, i.scanMethod, i.resolution, i.payload, i.createdByTaskID, i.updatedByTaskID, "+
 			"i.createdBy, i.editedBy, "+
@@ -439,11 +436,8 @@ func (s *ScanIssueStore) ListByTaskID(ctx context.Context, taskID uint, filter s
 	if filter.ScanMethod != "" {
 		stmt = stmt.Where("i.scanMethod = ?", filter.ScanMethod)
 	}
-	if filter.Filepath != "" {
-		stmt = stmt.Where("i.filePath = ?", filter.Filepath)
-	}
-	if filter.OldFilepath != "" {
-		stmt = stmt.Where("i.oldFilePath = ?", filter.OldFilepath)
+	if filter.Path != "" {
+		stmt = stmt.Where("i.path = ?", filter.Path)
 	}
 	if filter.Title != "" {
 		stmt = stmt.Where("i.title LIKE ?", "%"+filter.Title+"%")

@@ -18,8 +18,7 @@ type ScanIssue struct {
 	PpmID           int64                         `json:"ppmID,omitempty"`
 	Title           string                        `json:"title"`
 	Content         string                        `json:"content,omitempty"`
-	FilePath        string                        `json:"filePath"`
-	OldFilePath     string                        `json:"oldFilePath,omitempty"`
+	Path            string                        `json:"path"`
 	StartLine       int64                         `json:"startLine"`
 	EndLine         int64                         `json:"endLine"`
 	OldCode         string                        `json:"oldCode,omitempty"`
@@ -231,8 +230,7 @@ type ScanTaskIssueReqFilter struct {
 	ID              int64                    `json:"id,omitempty" form:"id"`
 	Title           string                   `json:"title,omitempty" form:"title"`
 	Content         string                   `json:"content,omitempty" form:"content"`
-	Filepath        string                   `json:"filePath,omitempty" form:"filePath"`
-	OldFilepath     string                   `json:"oldFilePath,omitempty" form:"oldFilePath"`
+	Path            string                   `json:"path,omitempty" form:"path"`
 	RuleType        constant.ScanRuleType    `json:"ruleType,omitempty" form:"ruleType"`
 	Tool            string                   `json:"tool,omitempty" form:"tool"`
 	RulePriority    string                   `json:"rulePriority,omitempty" form:"rulePriority"`
@@ -258,8 +256,7 @@ type ScanIssueReqFilter struct {
 	RepoID       int64                    `json:"repoID,omitempty" form:"repoID"`
 	PpmID        int64                    `json:"ppmID,omitempty" form:"ppmID"`
 	Branch       string                   `json:"branch,omitempty" form:"branch"`
-	Filepath     string                   `json:"filePath,omitempty" form:"filePath"`
-	OldFilepath  string                   `json:"oldFilePath,omitempty" form:"oldFilePath"`
+	Path         string                   `json:"path,omitempty" form:"path"`
 	Title        string                   `json:"title,omitempty" form:"title"`
 	Content      string                   `json:"content,omitempty" form:"content"`
 	RuleID       int64                    `json:"ruleID,omitempty" form:"ruleID"`
@@ -319,8 +316,7 @@ type ScanIssueInfo struct {
 	RuleType        constant.ScanRuleType         `json:"ruleType"`
 	Title           string                        `json:"title"`
 	Content         string                        `json:"content,omitempty"`
-	FilePath        string                        `json:"filePath"`
-	OldFilePath     string                        `json:"oldFilePath,omitempty"`
+	Path            string                        `json:"path"`
 	StartLine       int64                         `json:"startLine"`
 	EndLine         int64                         `json:"endLine"`
 	OldCode         string                        `json:"oldCode,omitempty"`
