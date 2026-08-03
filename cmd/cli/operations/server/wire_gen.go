@@ -16,6 +16,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/githook"
 	pipeline3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/pipeline"
 	repo3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/repo"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/review"
 	runner3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/runner"
 	scan3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/scan"
 	space3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/space"
@@ -281,7 +282,7 @@ func NewApp(mode string) (*App, func(), error) {
 	scanIssueStore := scan.NewScanIssueStore(db)
 	scanConditionStore := scan.NewScanConditionStore(db)
 	cronScheduler := provider.ProvideScanCronScheduler(jobsScheduler)
-	scanTaskService := scan2.NewScanTaskService(config, scanTaskStore, scanPlanStore, solutionStore, scanIssueStore, scanConditionStore, ruleSetStore, ruleStore, store, pipelineStore, triggererTriggerer, cronScheduler, txRunnerImpl)
+	scanTaskService := scan2.NewScanTaskService(config, scanTaskStore, scanPlanStore, solutionStore, scanIssueStore, scanConditionStore, ruleSetStore, ruleStore, store, pipelineStore, pullrequestStore, pipelineService, triggererTriggerer, cronScheduler, txRunnerImpl)
 	scanTriggerStore := scan.NewScanTriggerStore(db)
 	scanPlanService := scan2.NewScanPlanService(scanPlanStore, store, solutionStore, ruleSetStore, ruleStore, scanTriggerStore, scanConditionStore)
 	scanTriggerSolutionStore := scan.NewScanTriggerSolutionStore(db)
@@ -289,6 +290,7 @@ func NewApp(mode string) (*App, func(), error) {
 	scanConditionService := scan2.NewScanConditionService(scanConditionStore, store, scanPlanStore, scanTriggerStore, cronScheduler)
 	scanPlanConditionService := scan2.NewScanPlanConditionService(store, scanPlanStore, scanConditionStore)
 	scanController := scan3.NewScanController(ruleSetService, ruleService, solutionService, scanTaskService, scanPlanService, scanTriggerService, scanConditionService, scanPlanConditionService, repoService, gitService)
+	reviewController := review.NewReviewController(scanTaskService)
 	fitService := fit.NewService(tokenInterface, devopsConfig)
 	fitController := fit2.NewController(fitService, repoService, service)
 	webhookService, err := provider.ProvideWebhookService(eventContext, gitService, readerFactory, eventsReaderFactory, webhookStore, store, repoService, pullrequestStore, urlProvider)
@@ -300,7 +302,7 @@ func NewApp(mode string) (*App, func(), error) {
 	webhookController := webhook2.NewController(webhookService)
 	artifactController := artifact3.NewController(artifactService)
 	cronController := cron.NewController(jobsScheduler)
-	routerController := provider.NewControllers(spaceController, controller, pipelineController, executionController, runnerController, svnController, tagController, commitController, repoController, userController, gitController, scanController, fitController, webhookController, artifactController, cronController)
+	routerController := provider.NewControllers(spaceController, controller, pipelineController, executionController, runnerController, svnController, tagController, commitController, repoController, userController, gitController, scanController, reviewController, fitController, webhookController, artifactController, cronController)
 	i18nManager, err := provider.NewI18nManager(config)
 	if err != nil {
 		cleanup2()
@@ -308,7 +310,8 @@ func NewApp(mode string) (*App, func(), error) {
 		return nil, nil, err
 	}
 	server := provider.ProvideSSHServer(config, interface2, gitController)
-	triggerService, err := provider.ProvideTriggerService(eventContext, pipelineService, triggererTriggerer, store, urlProvider, scanTriggerService, scanPlanService, scanTaskService, readerFactory, eventsReaderFactory)
+	codeReviewService := provider.ProvideCodeReviewService(config, pipelineStore, pipelineService, triggererTriggerer)
+	triggerService, err := provider.ProvideTriggerService(eventContext, pipelineService, triggererTriggerer, store, urlProvider, scanTriggerService, scanPlanService, scanTaskService, codeReviewService, readerFactory, eventsReaderFactory)
 	if err != nil {
 		cleanup2()
 		cleanup()

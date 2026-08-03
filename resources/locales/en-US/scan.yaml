@@ -187,3 +187,9 @@ issue:
   update_error: "Failed to update issue."
   tree_query_success: "Issue tree queried successfully."
   tree_query_error: "Failed to query issue tree."
+
+codeReview:
+  path_param_error: "Path param parsing failed."
+  body_param_error: "Body param parsing failed."
+  report_upload_success: "Code review report uploaded successfully."
+  report_upload_error: "Failed to upload code review report."

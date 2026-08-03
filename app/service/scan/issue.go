@@ -11,6 +11,7 @@ import (
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
+	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 	scanModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
 	scanStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/scan"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
@@ -45,12 +46,22 @@ func expandTypecheckIssue(check *scanModel.IssueInputCheck) []*scanModel.IssueIn
 }
 
 // AnalyzeTaskUploadReport 分析上传的扫描报告
-func (s *ScanTaskService) AnalyzeTaskUploadReport(
-	ctx context.Context, taskID uint, method string, content []byte,
-) (*scanModel.ScanIssueReport, error) {
-	task, err := s.taskStore.GetTaskInfo(ctx, taskID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get task info: %w", err)
+func (s *ScanTaskService) AnalyzeTaskUploadReport(ctx context.Context, repoID uint, taskID uint, method string, content []byte) (*scanModel.ScanIssueReport, error) {
+
+	var err error
+	task := &scanModel.ScanTaskInfo{}
+	ppm := &repoModel.PullRequest{}
+
+	if method == "ai" {
+		ppm, err = s.pullRequestStore.GetByID(ctx, repoID, taskID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get pull request: %w", err)
+		}
+	} else {
+		task, err = s.taskStore.GetTaskInfo(ctx, taskID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get task info: %w", err)
+		}
 	}
 
 	report := &scanModel.ScanIssueReport{}
@@ -62,11 +73,23 @@ func (s *ScanTaskService) AnalyzeTaskUploadReport(
 		inputIssues, err = s.analyzeCheckIssues(ctx, content, task, report)
 	case constant.ScanMethodSmell:
 		inputIssues, err = s.analyzeSmellIssues(ctx, content, task, report)
+	case constant.ScanMethodAI:
+		inputIssues, err = s.analyzeAIIssues(content, repoID, report)
 	default:
 		return nil, fmt.Errorf("unsupported scan method: %s", method)
 	}
 	if err != nil {
 		return nil, err
+	}
+
+	if scanMethod == constant.ScanMethodAI {
+		// AI 类型的 issues 直接批量插入
+		if err := s.saveAIIssues(ctx, inputIssues, ppm); err != nil {
+			return nil, err
+		}
+		report.Add = len(inputIssues)
+		report.Total = len(inputIssues)
+		return report, nil
 	}
 
 	compData, err := s.compareIssues(ctx, task, scanMethod, inputIssues, report)
@@ -182,6 +205,49 @@ func (s *ScanTaskService) analyzeSmellIssues(
 		inIssue.RuleID = ruleID
 		inIssue.Key = scanModel.GenerateIssueKey(task.RepoID, task.ExecutionRef, smell.UniqueKey())
 		if err := inIssue.SetPayload(smell.IssuePayloadSmell); err != nil {
+			return nil, err
+		}
+		issues = append(issues, inIssue)
+	}
+	return issues, nil
+}
+
+// analyzeAIIssues 解析 ai 类型的 issues
+func (s *ScanTaskService) analyzeAIIssues(content []byte, repoID uint, report *scanModel.ScanIssueReport) ([]*scanModel.ScanIssue, error) {
+	var aiReport scanModel.AIReportResponse
+	if err := json.Unmarshal(content, &aiReport); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal AI report: %w", err)
+	}
+
+	if aiReport.Status != "success" || len(aiReport.Comments) == 0 {
+		return nil, nil
+	}
+
+	report.Total = len(aiReport.Comments)
+
+	var issues []*scanModel.ScanIssue
+	for _, comment := range aiReport.Comments {
+		title := comment.Content
+		if runes := []rune(title); len(runes) > 30 {
+			title = string(runes[:30])
+		}
+		inIssue := &scanModel.ScanIssue{
+			Title:      title,
+			Content:    comment.Content,
+			Path:       comment.Path,
+			StartLine:  comment.StartLine,
+			EndLine:    comment.EndLine,
+			ScanMethod: constant.ScanMethodAI,
+			OldCode:    comment.ExistingCode,
+			NewCode:    comment.SuggestionCode,
+		}
+		inIssue.Key = scanModel.GenerateIssueKey(int64(repoID), "", comment.UniqueKey())
+		if err := inIssue.SetPayload(scanModel.IssuePayloadAI{
+			Category:       comment.Category,
+			Severity:       comment.Severity,
+			SuggestionCode: comment.SuggestionCode,
+			ExistingCode:   comment.ExistingCode,
+		}); err != nil {
 			return nil, err
 		}
 		issues = append(issues, inIssue)
@@ -365,6 +431,50 @@ func (s *ScanTaskService) saveIssues(ctx context.Context, comp *scanModel.ScanIs
 			if err := s.issueStore.BatchCreate(ctx, storeIssues[p[0]:p[1]]); err != nil {
 				return err
 			}
+		}
+	}
+	return nil
+}
+
+// saveAIIssues 直接批量插入 AI 类型的 issues，不经过 diff 比对
+func (s *ScanTaskService) saveAIIssues(ctx context.Context, issues []*scanModel.ScanIssue, ppm *repoModel.PullRequest) error {
+	if len(issues) == 0 {
+		return nil
+	}
+
+	storeIssues := make([]*scanStore.ScanIssue, 0, len(issues))
+	emptyResolution := constant.ScanIssueResolutionNull
+	emptyIgnoredDate := int64(0)
+	for _, item := range issues {
+		item.PpmID = int64(ppm.ID)
+		item.RepoID = int64(ppm.RepoID)
+		item.RepoBranch = ppm.SourceBranch
+		item.Status = constant.ScanIssueStatusWait
+		item.ScanMethod = constant.ScanMethodAI
+		storeIssues = append(storeIssues, &scanStore.ScanIssue{
+			Key:         item.Key,
+			Title:       item.Title,
+			Content:     item.Content,
+			Path:        item.Path,
+			StartLine:   item.StartLine,
+			EndLine:     item.EndLine,
+			OldCode:     item.OldCode,
+			NewCode:     item.NewCode,
+			PpmID:       item.PpmID,
+			RepoID:      item.RepoID,
+			Status:      item.Status,
+			ScanMethod:  item.ScanMethod,
+			Resolution:  &emptyResolution,
+			IgnoredDate: &emptyIgnoredDate,
+			Payload:     item.Payload,
+			CreatedBy:   ppm.CreatedBy,
+		})
+	}
+
+	pages := paginateIndex(len(storeIssues), 1000)
+	for _, p := range pages {
+		if err := s.issueStore.BatchCreate(ctx, storeIssues[p[0]:p[1]]); err != nil {
+			return err
 		}
 	}
 	return nil

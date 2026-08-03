@@ -19,7 +19,7 @@ func (s *Service) handleEventPullReqCreated(ctx context.Context, event *events.E
 		Commit:       event.Payload.SourceSHA,
 		CommitBefore: event.Payload.MergeBaseSHA,
 	}
-	return s.trigger(ctx, event.Payload.SourceRepoID, hook)
+	return s.trigger(ctx, event.Payload.SourceRepoID, event.Payload.PullReqID, hook)
 }
 
 func (s *Service) handleEventPullReqReopened(ctx context.Context, event *events.Event[*pullreqevents.ReopenedPayload]) error {
@@ -31,7 +31,7 @@ func (s *Service) handleEventPullReqReopened(ctx context.Context, event *events.
 		Commit:       event.Payload.SourceSHA,
 		CommitBefore: event.Payload.MergeBaseSHA,
 	}
-	return s.trigger(ctx, event.Payload.SourceRepoID, hook)
+	return s.trigger(ctx, event.Payload.SourceRepoID, event.Payload.PullReqID, hook)
 }
 
 func (s *Service) handleEventPullReqBranchUpdated(ctx context.Context, event *events.Event[*pullreqevents.BranchUpdatedPayload]) error {
@@ -43,7 +43,7 @@ func (s *Service) handleEventPullReqBranchUpdated(ctx context.Context, event *ev
 		Commit:       event.Payload.NewSHA,
 		CommitBefore: event.Payload.OldSHA,
 	}
-	return s.trigger(ctx, event.Payload.SourceRepoID, hook)
+	return s.trigger(ctx, event.Payload.SourceRepoID, event.Payload.PullReqID, hook)
 }
 
 func (s *Service) handleEventPullReqClosed(ctx context.Context, event *events.Event[*pullreqevents.ClosedPayload]) error {
@@ -54,7 +54,7 @@ func (s *Service) handleEventPullReqClosed(ctx context.Context, event *events.Ev
 		Match:   event.Payload.SourceBranch,
 		Commit:  event.Payload.SourceSHA,
 	}
-	return s.trigger(ctx, event.Payload.SourceRepoID, hook)
+	return s.trigger(ctx, event.Payload.SourceRepoID, event.Payload.PullReqID, hook)
 }
 
 func (s *Service) handleEventPullReqMerged(
@@ -68,5 +68,5 @@ func (s *Service) handleEventPullReqMerged(
 		Match:   event.Payload.TargetBranch,
 		Commit:  event.Payload.MergeSHA,
 	}
-	return s.trigger(ctx, event.Payload.SourceRepoID, hook)
+	return s.trigger(ctx, event.Payload.SourceRepoID, event.Payload.PullReqID, hook)
 }

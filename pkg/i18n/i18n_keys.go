@@ -924,6 +924,12 @@ const (
 	ScanTaskRetryNotFailed      I18nKey = "scanTask.retry_not_failed"      // 仅失败的扫描任务可以重试.
 	ScanTaskRetrySuccess        I18nKey = "scanTask.retry_success"         // 扫描任务重试成功.
 
+	// CodeReview 相关常量
+	CodeReviewBodyParamError      I18nKey = "codeReview.body_param_error"      // 请求体参数解析失败.
+	CodeReviewPathParamError      I18nKey = "codeReview.path_param_error"      // 路径参数解析失败.
+	CodeReviewReportUploadError   I18nKey = "codeReview.report_upload_error"   // 代码评审报告上传失败.
+	CodeReviewReportUploadSuccess I18nKey = "codeReview.report_upload_success" // 代码评审报告上传成功.
+
 	// Solution 相关常量
 	SolutionAlreadyExists       I18nKey = "solution.already_exists"        // 扫描方案名称已存在.
 	SolutionBindError           I18nKey = "solution.bind_error"            // 扫描方案绑定规则集失败.

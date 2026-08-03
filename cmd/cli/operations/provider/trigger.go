@@ -6,6 +6,7 @@ import (
 	gitevents "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/events/git"
 	pullreqevents "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/events/pullreq"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/triggerer"
+	reviewSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/codereview"
 	pipelineSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/pipeline"
 	scanSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/scan"
 	triggerSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/trigger"
@@ -29,6 +30,7 @@ func ProvideTriggerService(
 	scanTriggerSvc scanSvc.IScanTrigger,
 	planSvc scanSvc.IScanPlan,
 	taskSvc scanSvc.IScanTask,
+	codeReviewSvc reviewSvc.Interface,
 	gitReaderFactory *events.ReaderFactory[*gitevents.Reader],
 	pullReqEvFactory *events.ReaderFactory[*pullreqevents.Reader],
 ) (*triggerSvc.Service, error) {
@@ -47,6 +49,7 @@ func ProvideTriggerService(
 		scanTriggerSvc,
 		planSvc,
 		taskSvc,
+		codeReviewSvc,
 		gitReaderFactory,
 		pullReqEvFactory,
 	)

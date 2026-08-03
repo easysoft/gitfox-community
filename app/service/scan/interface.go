@@ -108,7 +108,7 @@ type IScanTask interface {
 	Delete(ctx context.Context, id uint) error
 	SetupCron(ctx context.Context, trigger *scanModel.ScanTrigger) error
 	RecycleCron(ctx context.Context, trigger *scanModel.ScanTrigger) error
-	AnalyzeTaskUploadReport(ctx context.Context, taskID uint, method string, content []byte) (*scanModel.ScanIssueReport, error)
+	AnalyzeTaskUploadReport(ctx context.Context, repoID uint, taskID uint, method string, content []byte) (*scanModel.ScanIssueReport, error)
 	GetIssueInfo(ctx context.Context, issueID uint) (*scanModel.ScanIssueInfo, error)
 	ListIssueInfos(ctx context.Context, filter scanModel.ScanIssueReqFilter) (*database.PageResult[*scanModel.ScanIssueInfo], error)
 	ListIssueInfosByIDs(ctx context.Context, ids []int64) ([]*scanModel.ScanIssueInfo, error)
