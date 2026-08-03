@@ -2,6 +2,7 @@ package database
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"time"
@@ -19,14 +20,18 @@ import (
 type DaMengDB gorm.DB
 
 // https://gitee.com/chunanyong/dm#https://gitee.com/link?target=https%3A%2F%2Fpackage.dameng.com%2Feco%2Fadapter
-func NewDaMengDB(conf config.DatabaseConfig) (*DaMengDB, func() error, error) {
+func NewDaMengDB(dbConf config.DatabaseConfig, logConf config.LoggingConfig) (*DaMengDB, func() error, error) {
+	gormWriter := io.Writer(os.Stdout)
+	if !logConf.Stdout {
+		gormWriter = io.Discard
+	}
 	db, err := gorm.Open(dm.Open("dm://SYSDBA:0831will.DB@127.0.0.1:9906"), &gorm.Config{
 		NamingStrategy: schema.NamingStrategy{
 			TablePrefix:   "ops_", // 表名前缀，"repo" 的表应为 "ops_repo"
 			SingularTable: true,   // 使用单数表名，启用此选项时，"repo" 的表将为 "repo"
 		},
 		Logger: logger.New(
-			log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
+			log.New(gormWriter, "\r\n", log.LstdFlags), // io writer
 			logger.Config{
 				SlowThreshold:             time.Second, // 慢 SQL 阈值
 				LogLevel:                  logger.Info, // Log level
@@ -40,7 +45,7 @@ func NewDaMengDB(conf config.DatabaseConfig) (*DaMengDB, func() error, error) {
 		return nil, nil, err
 	}
 
-	if conf.PrintSQL {
+	if dbConf.PrintSQL {
 		db = db.Debug()
 	}
 
@@ -52,13 +57,13 @@ func NewDaMengDB(conf config.DatabaseConfig) (*DaMengDB, func() error, error) {
 		return nil, nil, err
 	}
 	// SetMaxIdleConns 用于设置连接池中空闲连接的最大数量。
-	sqlDB.SetMaxIdleConns(conf.MaxIdleConn)
+	sqlDB.SetMaxIdleConns(dbConf.MaxIdleConn)
 
 	// SetMaxOpenConns 设置打开数据库连接的最大数量。
-	sqlDB.SetMaxOpenConns(conf.MaxOpenConn)
+	sqlDB.SetMaxOpenConns(dbConf.MaxOpenConn)
 
 	// SetConnMaxLifetime 设置了连接可复用的最大时间。
-	sqlDB.SetConnMaxLifetime(time.Second * conf.ConnMaxLifeTime)
+	sqlDB.SetConnMaxLifetime(time.Second * dbConf.ConnMaxLifeTime)
 
 	// SetConnMaxIdleTime 设置连接最长空闲时间。
 	//sqlDB.SetConnMaxIdleTime(time.Duration(conf.ConnMaxLifeTime) * time.Second)

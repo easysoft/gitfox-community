@@ -2,6 +2,7 @@ package database
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -19,7 +20,7 @@ import (
 type SqliteDB gorm.DB
 
 // NewSQLiteDB 创建 SQLite 数据库连接
-func NewSQLiteDB(conf config.SQLiteConfig) (*SqliteDB, func() error, error) {
+func NewSQLiteDB(conf config.SQLiteConfig, logConf config.LoggingConfig) (*SqliteDB, func() error, error) {
 	// 确保数据库目录存在
 	dir := filepath.Dir(conf.Path)
 	// 检查目录是否可以创建
@@ -37,6 +38,10 @@ func NewSQLiteDB(conf config.SQLiteConfig) (*SqliteDB, func() error, error) {
 	// 构建 DSN
 	dsn := buildSQLiteDSN(conf)
 
+	gormWriter := io.Writer(os.Stdout)
+	if !logConf.Stdout {
+		gormWriter = io.Discard
+	}
 	// 配置 GORM
 	gormConfig := &gorm.Config{
 		NamingStrategy: schema.NamingStrategy{
@@ -44,7 +49,7 @@ func NewSQLiteDB(conf config.SQLiteConfig) (*SqliteDB, func() error, error) {
 			NoLowerCase:   false, // 使用 snake_case 命名
 		},
 		Logger: logger.New(
-			log.New(os.Stdout, "\r\n", log.LstdFlags),
+			log.New(gormWriter, "\r\n", log.LstdFlags),
 			logger.Config{
 				SlowThreshold:             time.Second,
 				LogLevel:                  logger.Info,

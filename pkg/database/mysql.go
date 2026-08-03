@@ -2,6 +2,7 @@ package database
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"strings"
@@ -21,18 +22,22 @@ type MysqlDB gorm.DB
 
 // 参考 https://github.com/go-sql-driver/mysql#loc
 // 参考 https://github.com/go-sql-driver/mysql#system-variables
-func NewMysqlDB(conf config.DatabaseConfig) (*MysqlDB, func() error, error) {
-	if !strings.Contains(conf.Datasource, "parseTime") {
-		conf.Datasource += "?parseTime=true&loc=Local"
+func NewMysqlDB(dbConf config.DatabaseConfig, logConf config.LoggingConfig) (*MysqlDB, func() error, error) {
+	if !strings.Contains(dbConf.Datasource, "parseTime") {
+		dbConf.Datasource += "?parseTime=true&loc=Local"
 	}
-	db, err := gorm.Open(mysql.Open(conf.Datasource), &gorm.Config{
+	gormWriter := io.Writer(os.Stdout)
+	if !logConf.Stdout {
+		gormWriter = io.Discard
+	}
+	db, err := gorm.Open(mysql.Open(dbConf.Datasource), &gorm.Config{
 		NamingStrategy: schema.NamingStrategy{
 			TablePrefix:   "ops_", // 表名前缀，"repo" 的表应为 "ops_repo"
 			SingularTable: true,   // 使用单数表名，启用此选项时，"repo" 的表将为 "repo"
 			NoLowerCase:   false,  // 跳过名称的 snake_casing 格式
 		},
 		Logger: logger.New(
-			log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
+			log.New(gormWriter, "\r\n", log.LstdFlags), // io writer
 			logger.Config{
 				SlowThreshold:             time.Second, // 慢 SQL 阈值
 				LogLevel:                  logger.Info, // Log level
@@ -46,7 +51,7 @@ func NewMysqlDB(conf config.DatabaseConfig) (*MysqlDB, func() error, error) {
 		return nil, nil, err
 	}
 
-	if conf.PrintSQL {
+	if dbConf.PrintSQL {
 		db = db.Debug()
 	}
 
@@ -58,13 +63,13 @@ func NewMysqlDB(conf config.DatabaseConfig) (*MysqlDB, func() error, error) {
 		return nil, nil, err
 	}
 	// SetMaxIdleConns 用于设置连接池中空闲连接的最大数量。
-	sqlDB.SetMaxIdleConns(conf.MaxIdleConn)
+	sqlDB.SetMaxIdleConns(dbConf.MaxIdleConn)
 
 	// SetMaxOpenConns 设置打开数据库连接的最大数量。
-	sqlDB.SetMaxOpenConns(conf.MaxOpenConn)
+	sqlDB.SetMaxOpenConns(dbConf.MaxOpenConn)
 
 	// SetConnMaxLifetime 设置了连接可复用的最大时间。
-	sqlDB.SetConnMaxLifetime(time.Second * conf.ConnMaxLifeTime)
+	sqlDB.SetConnMaxLifetime(time.Second * dbConf.ConnMaxLifeTime)
 
 	// SetConnMaxIdleTime 设置连接最长空闲时间。
 	//sqlDB.SetConnMaxIdleTime(time.Duration(conf.ConnMaxLifeTime) * time.Second)
