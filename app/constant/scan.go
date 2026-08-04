@@ -317,11 +317,13 @@ type ScanMethod string
 const (
 	ScanMethodCheck ScanMethod = "check"
 	ScanMethodSmell ScanMethod = "smell"
+	ScanMethodAI    ScanMethod = "ai"
 )
 
 var scanMethods = sortEnum([]ScanMethod{
 	ScanMethodCheck,
 	ScanMethodSmell,
+	ScanMethodAI,
 })
 
 func (ScanMethod) Enum() []interface{}              { return toInterfaceSlice(scanMethods) }
