@@ -286,9 +286,9 @@ func (s *ScanTaskService) compareIssues(
 	now := time.Now().Unix()
 	for _, item := range existIssues {
 		if _, exist := listBMap[item.Key]; exist {
-			// ignore 状态：未过期跳过；过期则重置
+			// ignore 状态：永久忽略（-1）直接跳过；未过期跳过；过期则重置
 			if item.Status == constant.ScanIssueStatusIgnore {
-				if item.IgnoredDate != nil && now <= *item.IgnoredDate {
+				if item.IgnoredDate != nil && (now <= *item.IgnoredDate || *item.IgnoredDate == -1) {
 					report.Skip++
 					continue
 				}
@@ -309,7 +309,7 @@ func (s *ScanTaskService) compareIssues(
 	}
 
 	if len(expiredIgnoreIDs) > 0 {
-		if err := s.issueStore.ResetExpiredIgnore(ctx, expiredIgnoreIDs, GetOperator(ctx)); err != nil {
+		if err := s.issueStore.ResetExpiredIgnore(ctx, expiredIgnoreIDs, req.GetOperator(ctx)); err != nil {
 			return nil, err
 		}
 	}
@@ -329,7 +329,7 @@ func (s *ScanTaskService) saveIssues(ctx context.Context, comp *scanModel.ScanIs
 	if len(comp.Updated) > 0 {
 		pages := paginateIndex(len(comp.Updated), 1000)
 		for _, p := range pages {
-			if err := s.issueStore.UpdateByTaskID(ctx, uint(task.ID), comp.Updated[p[0]:p[1]], GetOperator(ctx)); err != nil {
+			if err := s.issueStore.UpdateByTaskID(ctx, uint(task.ID), comp.Updated[p[0]:p[1]], req.GetOperator(ctx)); err != nil {
 				return err
 			}
 		}
@@ -477,17 +477,17 @@ func (s *ScanTaskService) ListIssueInfosByIDs(ctx context.Context, ids []int64) 
 
 // UpdateIssuesStatus 批量更新扫描问题状态
 func (s *ScanTaskService) UpdateIssuesStatus(ctx context.Context, ids []int64, status constant.ScanIssueStatus) error {
-	return s.issueStore.UpdateStatus(ctx, ids, status, GetOperator(ctx))
+	return s.issueStore.UpdateStatus(ctx, ids, status, req.GetOperator(ctx))
 }
 
 // SetIssuesStatus 批量更新扫描问题状态和/或解决方案（事务）
 func (s *ScanTaskService) SetIssuesStatus(ctx context.Context, in scanModel.ScanIssueUpdateStatusReq) error {
 	return s.tx.WithTx(ctx, func(ctx context.Context) error {
 		if in.Status != nil {
-			if err := s.issueStore.UpdateStatus(ctx, in.IDs, *in.Status, GetOperator(ctx)); err != nil {
+			if err := s.issueStore.UpdateStatus(ctx, in.IDs, *in.Status, req.GetOperator(ctx)); err != nil {
 				return err
 			}
-			if err := s.issueStore.UpdateTimestamps(ctx, in, GetOperator(ctx)); err != nil {
+			if err := s.issueStore.UpdateTimestamps(ctx, in, req.GetOperator(ctx)); err != nil {
 				return err
 			}
 		}
@@ -496,18 +496,10 @@ func (s *ScanTaskService) SetIssuesStatus(ctx context.Context, in scanModel.Scan
 			if *in.Resolution != constant.ScanIssueResolutionNull {
 				resolution = in.Resolution
 			}
-			if err := s.issueStore.UpdateResolution(ctx, in.IDs, resolution, GetOperator(ctx)); err != nil {
+			if err := s.issueStore.UpdateResolution(ctx, in.IDs, resolution, req.GetOperator(ctx)); err != nil {
 				return err
 			}
 		}
 		return nil
 	})
-}
-
-func GetOperator(ctx context.Context) string {
-	var operator string
-	if session, ok := req.GetAuthSession(ctx); ok && session != nil && session.User != nil {
-		operator = session.User.Account
-	}
-	return operator
 }
