@@ -354,6 +354,9 @@ func (c *Controller) suggestPullRequest(
 			out.Error = strPtr("failed to create a new pull request")
 			return
 		}
+		if err := utils.SubmitCodeReview(ctx, c.devopsConfig.URL, int64(pr.ID), string(pr.CreatedBy), entry.Key); err != nil {
+			log.Errorf("failed to submit code review for PPM %d: %v", pr.ID, err)
+		}
 		c.prReporter.Created(ctx, &pullreqevents.CreatedPayload{
 			Base:         eventBase(pr, principalAccount),
 			SourceBranch: sourceBranch,
