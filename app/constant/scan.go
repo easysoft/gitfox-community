@@ -194,6 +194,86 @@ func GetAllScanRuleTypes() ([]ScanRuleType, ScanRuleType) {
 	return scanRuleTypes, scanRuleTypeNone
 }
 
+// AiScanIssueCategory ai扫描问题分类
+type AiScanIssueCategory string
+
+const (
+	AiScanIssueCategoryCritical AiScanIssueCategory = "critical" // 严重
+	AiScanIssueCategoryHigh     AiScanIssueCategory = "high"     // 高
+	AiScanIssueCategoryMedium   AiScanIssueCategory = "medium"   // 中等
+	AiScanIssueCategoryLow      AiScanIssueCategory = "low"      // 低
+	AiScanIssueCategoryNone     AiScanIssueCategory = ""
+)
+
+var aiScanIssueCategories = sortEnum([]AiScanIssueCategory{
+	AiScanIssueCategoryCritical,
+	AiScanIssueCategoryHigh,
+	AiScanIssueCategoryMedium,
+	AiScanIssueCategoryLow,
+})
+
+func (s AiScanIssueCategory) String() string    { return string(s) }
+func (AiScanIssueCategory) Enum() []interface{} { return toInterfaceSlice(aiScanIssueCategories) }
+func (s AiScanIssueCategory) Sanitize() (AiScanIssueCategory, bool) {
+	return Sanitize(s, GetAllAiScanIssueCategories)
+}
+func (s AiScanIssueCategory) IsValid() bool {
+	types, _ := GetAllAiScanIssueCategories()
+	for _, t := range types {
+		if s == t {
+			return true
+		}
+	}
+	return false
+}
+func GetAllAiScanIssueCategories() ([]AiScanIssueCategory, AiScanIssueCategory) {
+	return aiScanIssueCategories, AiScanIssueCategoryNone
+}
+
+// AiScanIssueSeverity ai扫描问题严重程度
+type AiScanIssueSeverity string
+
+const (
+	AiScanIssueSeverityBug             AiScanIssueSeverity = "bug"             // 缺陷
+	AiScanIssueSeveritySecurity        AiScanIssueSeverity = "security"        // 安全
+	AiScanIssueSeverityPerformance     AiScanIssueSeverity = "performance"     // 性能
+	AiScanIssueSeverityMaintainability AiScanIssueSeverity = "maintainability" // 可维护性
+	AiScanIssueSeverityTest            AiScanIssueSeverity = "test"            // 测试
+	AiScanIssueSeverityStyle           AiScanIssueSeverity = "style"           // 代码异味
+	AiScanIssueSeverityDocumentation   AiScanIssueSeverity = "documentation"   // 文档
+	AiScanIssueSeverityOther           AiScanIssueSeverity = "other"           // 其他
+)
+
+var aiScanIssueSeverities = sortEnum([]AiScanIssueSeverity{
+	AiScanIssueSeverityBug,
+	AiScanIssueSeveritySecurity,
+	AiScanIssueSeverityPerformance,
+	AiScanIssueSeverityMaintainability,
+	AiScanIssueSeverityTest,
+	AiScanIssueSeverityStyle,
+	AiScanIssueSeverityDocumentation,
+	AiScanIssueSeverityOther,
+})
+
+func (s AiScanIssueSeverity) String() string    { return string(s) }
+func (AiScanIssueSeverity) Enum() []interface{} { return toInterfaceSlice(aiScanIssueSeverities) }
+func (s AiScanIssueSeverity) Sanitize() (AiScanIssueSeverity, bool) {
+	return Sanitize(s, GetAllAiScanIssueSeverities)
+}
+
+func (s AiScanIssueSeverity) IsValid() bool {
+	types, _ := GetAllAiScanIssueSeverities()
+	for _, t := range types {
+		if s == t {
+			return true
+		}
+	}
+	return false
+}
+func GetAllAiScanIssueSeverities() ([]AiScanIssueSeverity, AiScanIssueSeverity) {
+	return aiScanIssueSeverities, AiScanIssueSeverityOther
+}
+
 // ScanType 扫描类型
 type ScanType string
 
