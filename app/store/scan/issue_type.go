@@ -36,6 +36,8 @@ type ScanIssue struct {
 	ResolvedDate    *datetime.Local               `gorm:"column:resolvedDate"`
 	ClosedDate      *datetime.Local               `gorm:"column:closedDate"`
 	IgnoredDate     *int64                        `gorm:"column:ignoredDate"`
+	Category        string                        `gorm:"column:category"`
+	Severity        string                        `gorm:"column:severity"`
 	CreatedBy       string                        `gorm:"column:createdBy"`
 	EditedBy        string                        `gorm:"column:editedBy"`
 }
@@ -95,6 +97,8 @@ type issueJoin struct {
 	ResolvedDate    *datetime.Local               `gorm:"column:resolvedDate"`
 	ClosedDate      *datetime.Local               `gorm:"column:closedDate"`
 	IgnoredDate     *int64                        `gorm:"column:ignoredDate"`
+	Category        string                        `gorm:"column:category"`
+	Severity        string                        `gorm:"column:severity"`
 	CreatedBy       string                        `gorm:"column:createdBy"`
 	EditedBy        string                        `gorm:"column:editedBy"`
 	TriggerID       int64                         `gorm:"column:triggerID"`
@@ -139,6 +143,8 @@ func mapIssueJoinToModel(in *issueJoin) *scanModel.ScanIssueInfo {
 		ResolvedDate:    in.ResolvedDate,
 		ClosedDate:      in.ClosedDate,
 		IgnoredDate:     in.IgnoredDate,
+		Category:        constant.AiScanIssueCategory(in.Category),
+		Severity:        constant.AiScanIssueSeverity(in.Severity),
 		CreatedBy:       in.CreatedBy,
 		EditedBy:        in.EditedBy,
 		Trigger:         trigger,

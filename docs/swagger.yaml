@@ -42,6 +42,69 @@ definitions:
       traceID:
         type: string
     type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.AiScanIssueCategory:
+    enum:
+    - critical
+    - high
+    - medium
+    - low
+    - ""
+    type: string
+    x-enum-comments:
+      AiScanIssueCategoryCritical: 严重
+      AiScanIssueCategoryHigh: 高
+      AiScanIssueCategoryLow: 低
+      AiScanIssueCategoryMedium: 中等
+    x-enum-descriptions:
+    - 严重
+    - 高
+    - 中等
+    - 低
+    - ""
+    x-enum-varnames:
+    - AiScanIssueCategoryCritical
+    - AiScanIssueCategoryHigh
+    - AiScanIssueCategoryMedium
+    - AiScanIssueCategoryLow
+    - AiScanIssueCategoryNone
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.AiScanIssueSeverity:
+    enum:
+    - bug
+    - security
+    - performance
+    - maintainability
+    - test
+    - style
+    - documentation
+    - other
+    type: string
+    x-enum-comments:
+      AiScanIssueSeverityBug: 缺陷
+      AiScanIssueSeverityDocumentation: 文档
+      AiScanIssueSeverityMaintainability: 可维护性
+      AiScanIssueSeverityOther: 其他
+      AiScanIssueSeverityPerformance: 性能
+      AiScanIssueSeveritySecurity: 安全
+      AiScanIssueSeverityStyle: 代码异味
+      AiScanIssueSeverityTest: 测试
+    x-enum-descriptions:
+    - 缺陷
+    - 安全
+    - 性能
+    - 可维护性
+    - 测试
+    - 代码异味
+    - 文档
+    - 其他
+    x-enum-varnames:
+    - AiScanIssueSeverityBug
+    - AiScanIssueSeveritySecurity
+    - AiScanIssueSeverityPerformance
+    - AiScanIssueSeverityMaintainability
+    - AiScanIssueSeverityTest
+    - AiScanIssueSeverityStyle
+    - AiScanIssueSeverityDocumentation
+    - AiScanIssueSeverityOther
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.CIStatus:
     enum:
     - skipped
@@ -226,10 +289,12 @@ definitions:
     enum:
     - check
     - smell
+    - ai
     type: string
     x-enum-varnames:
     - ScanMethodCheck
     - ScanMethodSmell
+    - ScanMethodAI
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanPlanTriggerType:
     enum:
     - manual
@@ -2192,6 +2257,8 @@ definitions:
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanIssueInfo:
     properties:
+      category:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.AiScanIssueCategory'
       closedDate:
         type: string
       content:
@@ -2248,6 +2315,8 @@ definitions:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleType'
       scanMethod:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanMethod'
+      severity:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.AiScanIssueSeverity'
       startLine:
         type: integer
       status:
@@ -2280,6 +2349,8 @@ definitions:
     properties:
       branch:
         type: string
+      category:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.AiScanIssueCategory'
       content:
         type: string
       createDate:
@@ -2319,6 +2390,8 @@ definitions:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleType'
       scanMethod:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanMethod'
+      severity:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.AiScanIssueSeverity'
       sort:
         default: id
         type: string
@@ -2641,6 +2714,8 @@ definitions:
     properties:
       branch:
         type: string
+      category:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.AiScanIssueCategory'
       content:
         type: string
       createDate:
@@ -2674,6 +2749,8 @@ definitions:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleType'
       scanMethod:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanMethod'
+      severity:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.AiScanIssueSeverity'
       sort:
         default: id
         type: string
