@@ -474,7 +474,7 @@ func (s *Service) getGroupAssetNodeInfo(ctx context.Context, dbAsset *model.Arti
 		Metadata: &model.ArtifactPkgVerMetadata{
 			Space: nodeInfoSpaceName(view),
 			Name:  filepath.Base(assetRes.Path),
-			Group: strings.ReplaceAll(group.GroupName(), ".", "/"),
+			Group: group.GroupPath(),
 		},
 	}
 	populateNodeInfoAssetFields(info, assetRes)
