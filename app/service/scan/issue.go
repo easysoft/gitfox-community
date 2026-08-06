@@ -422,6 +422,8 @@ func (s *ScanTaskService) saveIssues(ctx context.Context, comp *scanModel.ScanIs
 				Status:          item.Status,
 				ScanMethod:      item.ScanMethod,
 				Resolution:      item.Resolution,
+				Category:        item.Category.String(),
+				Severity:        item.Severity.String(),
 				Payload:         item.Payload,
 				CreatedBy:       task.CreatedBy,
 			})

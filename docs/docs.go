@@ -11384,6 +11384,79 @@ const docTemplate = `{
                 }
             }
         },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.AiScanIssueCategory": {
+            "type": "string",
+            "enum": [
+                "critical",
+                "high",
+                "medium",
+                "low",
+                ""
+            ],
+            "x-enum-comments": {
+                "AiScanIssueCategoryCritical": "严重",
+                "AiScanIssueCategoryHigh": "高",
+                "AiScanIssueCategoryLow": "低",
+                "AiScanIssueCategoryMedium": "中等"
+            },
+            "x-enum-descriptions": [
+                "严重",
+                "高",
+                "中等",
+                "低",
+                ""
+            ],
+            "x-enum-varnames": [
+                "AiScanIssueCategoryCritical",
+                "AiScanIssueCategoryHigh",
+                "AiScanIssueCategoryMedium",
+                "AiScanIssueCategoryLow",
+                "AiScanIssueCategoryNone"
+            ]
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.AiScanIssueSeverity": {
+            "type": "string",
+            "enum": [
+                "bug",
+                "security",
+                "performance",
+                "maintainability",
+                "test",
+                "style",
+                "documentation",
+                "other"
+            ],
+            "x-enum-comments": {
+                "AiScanIssueSeverityBug": "缺陷",
+                "AiScanIssueSeverityDocumentation": "文档",
+                "AiScanIssueSeverityMaintainability": "可维护性",
+                "AiScanIssueSeverityOther": "其他",
+                "AiScanIssueSeverityPerformance": "性能",
+                "AiScanIssueSeveritySecurity": "安全",
+                "AiScanIssueSeverityStyle": "代码异味",
+                "AiScanIssueSeverityTest": "测试"
+            },
+            "x-enum-descriptions": [
+                "缺陷",
+                "安全",
+                "性能",
+                "可维护性",
+                "测试",
+                "代码异味",
+                "文档",
+                "其他"
+            ],
+            "x-enum-varnames": [
+                "AiScanIssueSeverityBug",
+                "AiScanIssueSeveritySecurity",
+                "AiScanIssueSeverityPerformance",
+                "AiScanIssueSeverityMaintainability",
+                "AiScanIssueSeverityTest",
+                "AiScanIssueSeverityStyle",
+                "AiScanIssueSeverityDocumentation",
+                "AiScanIssueSeverityOther"
+            ]
+        },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.CIStatus": {
             "type": "string",
             "enum": [
@@ -11601,11 +11674,13 @@ const docTemplate = `{
             "type": "string",
             "enum": [
                 "check",
-                "smell"
+                "smell",
+                "ai"
             ],
             "x-enum-varnames": [
                 "ScanMethodCheck",
-                "ScanMethodSmell"
+                "ScanMethodSmell",
+                "ScanMethodAI"
             ]
         },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanPlanTriggerType": {
@@ -14431,6 +14506,9 @@ const docTemplate = `{
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanIssueInfo": {
             "type": "object",
             "properties": {
+                "category": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.AiScanIssueCategory"
+                },
                 "closedDate": {
                     "type": "string"
                 },
@@ -14515,6 +14593,9 @@ const docTemplate = `{
                 "scanMethod": {
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanMethod"
                 },
+                "severity": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.AiScanIssueSeverity"
+                },
                 "startLine": {
                     "type": "integer"
                 },
@@ -14563,6 +14644,9 @@ const docTemplate = `{
             "properties": {
                 "branch": {
                     "type": "string"
+                },
+                "category": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.AiScanIssueCategory"
                 },
                 "content": {
                     "type": "string"
@@ -14620,6 +14704,9 @@ const docTemplate = `{
                 },
                 "scanMethod": {
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanMethod"
+                },
+                "severity": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.AiScanIssueSeverity"
                 },
                 "sort": {
                     "type": "string",
@@ -15107,6 +15194,9 @@ const docTemplate = `{
                 "branch": {
                     "type": "string"
                 },
+                "category": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.AiScanIssueCategory"
+                },
                 "content": {
                     "type": "string"
                 },
@@ -15154,6 +15244,9 @@ const docTemplate = `{
                 },
                 "scanMethod": {
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanMethod"
+                },
+                "severity": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.AiScanIssueSeverity"
                 },
                 "sort": {
                     "type": "string",
