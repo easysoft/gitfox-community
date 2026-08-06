@@ -8,7 +8,6 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
-	"strings"
 	"syscall"
 	"time"
 
@@ -47,9 +46,9 @@ func (c *command) run(*kingpin.ParseContext) error {
 	}()
 
 	mode := c.mode
-	if filepath.IsAbs(c.mode) || strings.Contains(c.mode, string(filepath.Separator)) {
+	if filepath.IsAbs(c.mode) {
+		config.SetConfigDir(filepath.Dir(c.mode))
 		mode = filepath.Base(c.mode)
-		config.SetConfigDir(c.mode)
 	}
 
 	return RunServerWithContext(ctx, mode, c.enableCI, nil)
