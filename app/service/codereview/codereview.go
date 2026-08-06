@@ -59,7 +59,13 @@ func (s *CodeReviewService) TriggerCodeReview(ctx context.Context, in *CodeRevie
 	// 注入 gitfox 调用接口时需要的参数
 	in.Hook.Params["GITFOX_API_ENDPOINT"] = s.config.URL.Base + "/api/v2"
 	in.Hook.Params["PLUGIN_TOKEN"] = s.config.PipelineAuth.Password
-	// 注入评审所需参数
+	// 注入评审所需参数（OCR LLM 配置）
+	// in.Hook.Params["OCR_LLM_PROVIDER"] = "zai"
+	// in.Hook.Params["OCR_LLM_URL"] = "https://zai-new.sh.oop.cc/v1"
+	// in.Hook.Params["OCR_LLM_PROTOCOL"] = "openai"
+	// in.Hook.Params["OCR_LLM_API_KEY"] = "sk-uGaJPSqEgQJpXLtt46fWTXlNqA4fvcGI0pUGbCVRoryTS2G9"
+	// in.Hook.Params["OCR_LLM_MODEL"] = "gpt-4o-mini"
+	// in.Hook.Params["OCR_LLM_LANGUAGE"] = "中文"
 
 	// 获取或创建代码审查流水线
 	pipeline, err := s.getReviewPipeline(ctx, int64(in.Repo.ID), in.Hook)
