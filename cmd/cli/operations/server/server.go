@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
+	"strings"
 	"syscall"
 	"time"
 
@@ -19,6 +21,7 @@ import (
 	cronSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/cron"
 	importerSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/importer"
 	pipelineSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/pipeline"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	clii18n "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n/cli"
@@ -43,7 +46,13 @@ func (c *command) run(*kingpin.ParseContext) error {
 		cancel()
 	}()
 
-	return RunServerWithContext(ctx, c.mode, c.enableCI, nil)
+	mode := c.mode
+	if filepath.IsAbs(c.mode) || strings.Contains(c.mode, string(filepath.Separator)) {
+		mode = filepath.Base(c.mode)
+		config.SetConfigDir(c.mode)
+	}
+
+	return RunServerWithContext(ctx, mode, c.enableCI, nil)
 }
 
 // RunServerWithContext 是 GitFox 的通用启动引擎。
