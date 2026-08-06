@@ -79,9 +79,9 @@ func NewController(
 
 // ContainerReq 容器镜像请求的基础参数。
 //
-// 对应新路径 /v2/:domainid/:artifactname/:imagename/...
+// 对应新路径 /v2/:domainid/:artifactCode/:imagename/...
 //   - ScopeID 为 scope=space/repo 时的数字 ID，global 时为 0。
-//   - ArtifactName 取代旧的 ViewName，对应 ops_artifact.name。
+//   - ArtifactCode 对应 ops_artifact.code。
 //   - RepoName 语义不变，即 OCI image 名称。
 type ContainerReq struct {
 	// Scope 作用域：global | space | repo，由路由 :domainid 解析决定。
@@ -90,8 +90,8 @@ type ContainerReq struct {
 	ScopeID uint64
 	// SpaceCode space 作用域下的空间标识，供 FullName 拼接使用。
 	SpaceCode string
-	// ArtifactName 对应 ops_artifact.name，取代旧的 ViewName。
-	ArtifactName string
+	// ArtifactCode 对应 ops_artifact.code
+	ArtifactCode string
 	// RepoName 镜像名（OCI image name）。
 	RepoName string
 	View     *adapter.ViewDescriptor
@@ -100,19 +100,19 @@ type ContainerReq struct {
 // FullName 返回 OCI repository name，即 URL 中 /v2/ 之后到操作路径之前的部分。
 // 新格式（不兼容旧格式，不保留任何兼容层）：
 //
-//	global: "global/{artifactname}/{imagename}"
-//	space:  "space{spaceID}/{artifactname}/{imagename}"
-//	repo:   "repo{repoID}/{artifactname}/{imagename}"
+//	global: "global/{artifactCode}/{imagename}"
+//	space:  "space{spaceID}/{artifactCode}/{imagename}"
+//	repo:   "repo{repoID}/{artifactCode}/{imagename}"
 //
 // 在途 blob upload session 会因格式变化而失效，这是升级的预期代价，不做兼容迁移。
 func (cr *ContainerReq) FullName() string {
 	switch cr.Scope {
 	case "global":
-		return "global/" + cr.ArtifactName + "/" + cr.RepoName
+		return "global/" + cr.ArtifactCode + "/" + cr.RepoName
 	case "space":
-		return cr.SpaceCode + "/" + cr.ArtifactName + "/" + cr.RepoName
+		return cr.SpaceCode + "/" + cr.ArtifactCode + "/" + cr.RepoName
 	default: // repo
-		return "repo" + strconv.FormatUint(cr.ScopeID, 10) + "/" + cr.ArtifactName + "/" + cr.RepoName
+		return "repo" + strconv.FormatUint(cr.ScopeID, 10) + "/" + cr.ArtifactCode + "/" + cr.RepoName
 	}
 }
 
@@ -651,7 +651,7 @@ type tagList struct {
 	Tags []string `json:"tags"`
 }
 
-// ListTags GET /v2/{domainid}/{artifactname}/{imagename}/tags/list
+// ListTags GET /v2/{domainid}/{artifactCode}/{imagename}/tags/list
 func (c *Controller) ListTags(ctx context.Context, req *ContainerReq) (*tagList, error) {
 	if err := c.authorize(ctx, req.View.ArtifactID, constant.PermissionArtifactPull, i18n.ArtifactContainerPullDenied); err != nil {
 		return nil, err

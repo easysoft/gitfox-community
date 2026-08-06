@@ -45,6 +45,8 @@ func runStatus(_ *kingpin.ParseContext) error {
 		fmt.Println(errStyle.Render(t(i18n.CliStatusServiceCorrupted)))
 	case GitfoxHealthStopped:
 		fmt.Println(errStyle.Render(t(i18n.CliStatusServiceStopped)))
+	case GitfoxHealthConfigMissing:
+		fmt.Println(errStyle.Render(t(i18n.CliStatusServiceConfigMissing)))
 	default:
 		// 兜底：未知状态当未运行
 		fmt.Println(errStyle.Render(t(i18n.CliStatusServiceNotRunning)))

@@ -68,4 +68,7 @@ var (
 
 	// ErrGitTimeout 表示 Git 操作超时
 	ErrGitTimeout = WithI18nKey(GitError.New("git operation timeout"), i18n.GitTimeout)
+
+	// ErrGitUnsupportedOption 表示 Git 版本不支持某个参数
+	ErrGitUnsupportedOption = WithI18nKey(GitError.New("unsupported git option"), i18n.GitUnsupportedOption)
 )

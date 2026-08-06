@@ -12,7 +12,7 @@ import (
 // 路径形式：
 //
 //	/v2/                                           — Basic 挑战
-//	/v2/:domainid/:artifactname/:imagename/...
+//	/v2/:domainid/:artifactCode/:imagename/...
 //
 // :domainid 支持三种取值，由 handler 解析：
 //
@@ -28,7 +28,7 @@ func registerContainerRoutes(r *gin.Engine, handler *ctnHandler.ContainerHandler
 	auth := authn.ContainerRegistryBasicAuth("gitfox_registry")
 
 	// 统一路由组：所有作用域共用一条路径模板，domainid 由 handler 解析。
-	g := v2.Group("/:domainid/:artifactname/:imagename", auth)
+	g := v2.Group("/:domainid/:artifactCode/:imagename", auth)
 	registerContainerOps(g, handler)
 }
 

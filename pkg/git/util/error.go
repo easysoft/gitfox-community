@@ -103,7 +103,19 @@ func ProcessGitErrorf(ctx context.Context, err error) error {
 	case isInvalidSignatureError(errMsg):
 		translatedError = errors.ErrGitInvalidSignature
 
-	// 15. 默认：其他 Git 错误
+	// 15. Git 版本不支持该参数（如 --atomic 等新版本才有的选项）
+	case isUnknownOptionError(errMsg):
+		optionName := extractUnknownOption(errMsg)
+		if optionName != "" {
+			translatedError = errors.GitError.Newf(
+				"current git version does not support option '%s', please upgrade git",
+				optionName,
+			)
+		} else {
+			translatedError = errors.ErrGitUnsupportedOption
+		}
+
+	// 16. 默认：其他 Git 错误
 	default:
 		translatedError = errors.ErrGitCommandFailed
 	}
@@ -276,4 +288,38 @@ func isObjectNotFoundError(errMsg string) bool {
 func isInvalidSignatureError(errMsg string) bool {
 	return strings.Contains(errMsg, "invalid signature") ||
 		strings.Contains(errMsg, "bad signature")
+}
+
+// isUnknownOptionError 检查是否是 Git 版本不支持某参数的错误
+// 例如: unknown option `atomic'
+func isUnknownOptionError(errMsg string) bool {
+	return strings.Contains(errMsg, "unknown option")
+}
+
+// extractUnknownOption 从 Git 错误信息中提取不支持的参数名
+// 例如从 "unknown option `atomic'" 中提取 "atomic"
+func extractUnknownOption(errMsg string) string {
+	// 尝试匹配 backtick 包裹的选项名: `option'
+	const prefix = "unknown option `"
+	start := strings.Index(errMsg, prefix)
+	if start == -1 {
+		// 尝试匹配单引号包裹的选项名: 'option'
+		const altPrefix = "unknown option '"
+		start = strings.Index(errMsg, altPrefix)
+		if start == -1 {
+			return ""
+		}
+		start += len(altPrefix)
+		end := strings.Index(errMsg[start:], "'")
+		if end == -1 {
+			return ""
+		}
+		return errMsg[start : start+end]
+	}
+	start += len(prefix)
+	end := strings.Index(errMsg[start:], "'")
+	if end == -1 {
+		return ""
+	}
+	return errMsg[start : start+end]
 }

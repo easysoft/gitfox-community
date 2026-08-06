@@ -12,7 +12,7 @@ repo:
   query_error: "查询仓库失败"
   query_success: "查询仓库成功"
   line_number_error: "行号必须大于0, 且结束行号必须大于起始行号"
-  create_error: "创建仓库异常。请确保git在环境变量中且版本大于2.30.0"
+  create_error: "创建仓库异常。请确保git在环境变量中且版本大于2.42.0"
   create_success: "创建仓库成功"
   create_duplicate: "创建仓库失败，仓库已存在"
   update_success: "更新仓库成功"

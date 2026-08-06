@@ -205,6 +205,7 @@ cli:
   status_svn_exec_failed: "Subversion client check failed (%v). Subversion repository association will not work."
   status_section_service: "GitFox Service Status"
   status_service_running: "GitFox service is running normally"
+  status_service_config_missing: "GitFox service configuration file is missing; please re-run 'install'."
   status_service_not_running: "GitFox service is not running"
   status_service_corrupted: "GitFox service registration is corrupted (missing executable path); please re-run 'install'."
   status_service_stopped: "GitFox service is registered but not started; run 'gitfox start' to bring it up."
