@@ -125,12 +125,12 @@ const (
 	ArtifactUploadFileNameRequired          I18nKey = "artifact.upload_file_name_required"           // 上传制品必须指定文件名 name,且不能为空或全为空白字符.
 	ArtifactUploadGroupArtifactMismatch     I18nKey = "artifact.upload_group_artifact_mismatch"      // 指定的分组不属于当前制品库,请确认 artifactID 与分组归属后重试.
 	ArtifactUploadGroupIdInvalid            I18nKey = "artifact.upload_group_id_invalid"             // 指定的 groupId 不合法或不存在,请确认后重试.
-	ArtifactUploadGroupNameInvalid          I18nKey = "artifact.upload_group_name_invalid"           // 指定的 group 路径不合法:需为以 . 或 / 分隔的多级命名,每段不能为空、不得超过 1...
+	ArtifactUploadGroupNameInvalid          I18nKey = "artifact.upload_group_name_invalid"           // 指定的 group 路径不合法:不能为空、不得超过 128 字符 ...
 	ArtifactUploadGroupPathNotFound         I18nKey = "artifact.upload_group_path_not_found"         // 指定的 group 路径在当前制品库下不存在,请先创建对应分组或检查 artifactID.
 	ArtifactUploadGroupRequired             I18nKey = "artifact.upload_group_required"               // 上传制品必须指定目录.
-	ArtifactUploadNameInvalid               I18nKey = "artifact.upload_name_invalid"                 // raw 制品的包名 packageName 格式不合法:仅允许字母、数字、中划线、下划线,且不含点.
+	ArtifactUploadNameInvalid               I18nKey = "artifact.upload_name_invalid"                 // raw 制品的包名 packageName 格式不合法:仅允许字母、数字、中划线、下划线和点.
 	ArtifactUploadNameRequired              I18nKey = "artifact.upload_name_required"                // 上传 raw 制品必须指定包名 packageName.
-	ArtifactUploadRawGroupInvalid           I18nKey = "artifact.upload_raw_group_invalid"            // raw 制品的 group 参数格式不合法,需为以英文点号分隔的多级命名(每级仅允许字母数字、...
+	ArtifactUploadRawGroupInvalid           I18nKey = "artifact.upload_raw_group_invalid"            // raw 制品的 group 参数格式不合法,仅允许字母数字、中划线、下划线和点
 	ArtifactUploadSaveError                 I18nKey = "artifact.upload_save_error"                   // 制品保存失败.
 	ArtifactUploadServeError                I18nKey = "artifact.upload_serve_error"                  // 制品上传处理失败.
 	ArtifactUploadSuccess                   I18nKey = "artifact.upload_success"                      // 制品上传成功.

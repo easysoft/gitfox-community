@@ -147,43 +147,40 @@ func (h *uploader) validateForm(_ context.Context, req *http.Request) error {
 
 // validateGenericGroupName 校验 generic 上传时传入的 group 字符串。
 // 约束（与 CreateArtifactViewReq 对 generic/raw 放行中文的口径一致）：
-//  1. 以 `.` 拆分后每一段都不能为空（不允许前导 / 尾随 / 连续 `.`）；
 //  2. 每段 rune 数不得超过 maxGenericGroupSegmentLen；
 //  3. 禁止空白字符（含全角空格等），禁止控制字符；
 //  4. 禁止路径分隔与 Windows 保留字符：`/ \ : * ? " < > |`；
-//  5. 允许中文、字母、数字、中划线、下划线及其他非保留 Unicode。
+//  5. 允许中文、字母、数字、中划线、下划线、英文点及其他非保留 Unicode。
 func validateGenericGroupName(group string) error {
 	if group == "" {
 		return badRequest(adapter.ErrInvalidGroupName, i18n.ArtifactUploadGroupNameInvalid)
 	}
-	parts := strings.Split(group, ".")
-	for _, seg := range parts {
-		if seg == "" {
+
+	if group == "" {
+		return badRequest(
+			fmt.Errorf("%w: empty segment in group=%q", adapter.ErrInvalidGroupName, group),
+			i18n.ArtifactUploadGroupNameInvalid,
+		)
+	}
+	if len([]rune(group)) > maxGenericGroupSegmentLen {
+		return badRequest(
+			fmt.Errorf("%w: segment too long in group=%q", adapter.ErrInvalidGroupName, group),
+			i18n.ArtifactUploadGroupNameInvalid,
+		)
+	}
+	for _, rn := range group {
+		if unicode.IsSpace(rn) || unicode.IsControl(rn) {
 			return badRequest(
-				fmt.Errorf("%w: empty segment in group=%q", adapter.ErrInvalidGroupName, group),
+				fmt.Errorf("%w: group segment contains whitespace or control char: %q", adapter.ErrInvalidGroupName, group),
 				i18n.ArtifactUploadGroupNameInvalid,
 			)
 		}
-		if len([]rune(seg)) > maxGenericGroupSegmentLen {
-			return badRequest(
-				fmt.Errorf("%w: segment too long in group=%q", adapter.ErrInvalidGroupName, group),
-				i18n.ArtifactUploadGroupNameInvalid,
-			)
-		}
-		for _, rn := range seg {
-			if unicode.IsSpace(rn) || unicode.IsControl(rn) {
+		for _, bad := range genericGroupForbiddenChars {
+			if rn == bad {
 				return badRequest(
-					fmt.Errorf("%w: group segment contains whitespace or control char: %q", adapter.ErrInvalidGroupName, seg),
+					fmt.Errorf("%w: group segment contains forbidden char %q: %q", adapter.ErrInvalidGroupName, bad, group),
 					i18n.ArtifactUploadGroupNameInvalid,
 				)
-			}
-			for _, bad := range genericGroupForbiddenChars {
-				if rn == bad {
-					return badRequest(
-						fmt.Errorf("%w: group segment contains forbidden char %q: %q", adapter.ErrInvalidGroupName, bad, seg),
-						i18n.ArtifactUploadGroupNameInvalid,
-					)
-				}
 			}
 		}
 	}
