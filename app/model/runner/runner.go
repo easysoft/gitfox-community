@@ -15,11 +15,12 @@ type Runner struct {
 	IP          string                      `json:"ip"`
 	OS          string                      `json:"os"`
 	Arch        string                      `json:"arch"`
-	Labels      map[string]string           `json:"labels"`
+	Labels      []string                    `json:"labels"`
 	Token       string                      `json:"token,omitempty"`
-	HeartBeat   *int                        `json:"heartBeat"`
+	HeartBeat   int                         `json:"heartBeat"`
 	Online      constant.RunnerStatus       `json:"online"`
 	Status      constant.RunnerActiveStatus `json:"status"`
+	IsDefault   bool                        `json:"isDefault"`
 	CreatedBy   string                      `json:"createdBy"`
 	CreatedDate *datetime.Local             `json:"createdDate"`
 	EditedBy    string                      `json:"editedBy"`

@@ -1,26 +1,41 @@
 package runner
 
 import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"time"
+
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/manager"
 	runnerModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/runner"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/runner"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/livelog"
+	urlprovider "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/url"
+	"github.com/drone/drone-go/drone"
+	"github.com/drone/runner-go/client"
 	"github.com/gin-gonic/gin"
 )
 
 type Controller struct {
-	runnerSvc runner.Interface
-	urlConfig config.URL
+	runnerSvc   runner.Interface
+	urlConfig   config.URL
+	urlProvider urlprovider.Provider
+	execManager manager.ExecutionManager
 }
 
 // NewController 创建 runner 管理控制器
-func NewController(runnerSvc runner.Interface, urlConfig config.URL) *Controller {
+func NewController(runnerSvc runner.Interface, urlConfig config.URL, urlProvider urlprovider.Provider, execManager manager.ExecutionManager) *Controller {
 	return &Controller{
-		runnerSvc: runnerSvc,
-		urlConfig: urlConfig,
+		runnerSvc:   runnerSvc,
+		urlConfig:   urlConfig,
+		urlProvider: urlProvider,
+		execManager: execManager,
 	}
 }
 
@@ -324,6 +339,10 @@ func (ctl *Controller) Register(c *gin.Context) {
 	}
 
 	// 构建 runner 模型
+	var labels []string
+	for k := range reqData.Labels {
+		labels = append(labels, k)
+	}
 	runner := &runnerModel.Runner{
 		Name:      reqData.Name,
 		Desc:      reqData.Desc,
@@ -332,7 +351,7 @@ func (ctl *Controller) Register(c *gin.Context) {
 		IP:        reqData.IP,
 		OS:        reqData.OS,
 		Arch:      reqData.Arch,
-		Labels:    reqData.Labels,
+		Labels:    labels,
 		CreatedBy: account,
 		EditedBy:  account,
 	}
@@ -385,4 +404,297 @@ func (ctl *Controller) UpdateHeartBeat(c *gin.Context) {
 	}
 
 	resp.OK(c, i18n.RunnerUpdateHeartBeatSuccess, runner)
+}
+
+// ReqStageRequest 拉取 stage 请求体
+type ReqStageRequest struct {
+	Type   string            `json:"type"`
+	OS     string            `json:"os"`
+	Arch   string            `json:"arch"`
+	Labels map[string]string `json:"labels,omitempty"`
+}
+
+// ReqStageAccept 接受 stage 请求体
+type ReqStageAccept struct {
+	Machine string `json:"machine"`
+}
+
+// validateRunnerToken 从请求头中验证 X-Runner-Token 并返回对应的 runner
+func (ctl *Controller) validateRunnerToken(c *gin.Context) (*runnerModel.Runner, error) {
+	runnerToken := c.GetHeader("X-Runner-Token")
+	if runnerToken == "" {
+		return nil, errors.WithI18nKey(nil, i18n.RunnerInvalidToken)
+	}
+	return ctl.runnerSvc.ValidateRunnerToken(c.Request.Context(), runnerToken)
+}
+
+// Ping runner 连通性检查
+func (ctl *Controller) Ping(c *gin.Context) {
+	resp.OK(c, i18n.RunnerUpdateHeartBeatSuccess, gin.H{"status": "ok"})
+}
+
+// RequestStage 拉取下一个待执行的 stage
+func (ctl *Controller) RequestStage(c *gin.Context) {
+	runner, err := ctl.validateRunnerToken(c)
+	if err != nil {
+		resp.Unauthorized(c, err)
+		return
+	}
+
+	var reqData ReqStageRequest
+	if err := c.ShouldBindJSON(&reqData); err != nil {
+		err = errors.WithI18nKey(err, i18n.RunnerBodyParamError)
+		resp.BadRequest(c, err)
+		return
+	}
+
+	ctxTimeout, cancel := context.WithTimeout(c.Request.Context(), 15*time.Second)
+	defer cancel()
+
+	stage, err := ctl.execManager.Request(ctxTimeout, &manager.Request{
+		Token:  runner.Token,
+		Type:   reqData.Type,
+		OS:     reqData.OS,
+		Arch:   reqData.Arch,
+		Labels: reqData.Labels,
+	})
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RunnerStageRequestError)
+		resp.InternalError(c, err)
+		return
+	}
+
+	resp.OK(c, i18n.RunnerStageRequestSuccess, manager.ConvertToDroneStageWithoutSteps(stage))
+}
+
+// AcceptStage 接受 stage 并标记为已分配
+func (ctl *Controller) AcceptStage(c *gin.Context) {
+	if _, err := ctl.validateRunnerToken(c); err != nil {
+		resp.Unauthorized(c, err)
+		return
+	}
+
+	stageID, err := req.PathParamAsPositiveInt64(c, "stageID")
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RunnerPathParamError)
+		resp.BadRequest(c, err)
+		return
+	}
+
+	var reqData ReqStageAccept
+	if err := c.ShouldBindJSON(&reqData); err != nil {
+		err = errors.WithI18nKey(err, i18n.RunnerBodyParamError)
+		resp.BadRequest(c, err)
+		return
+	}
+
+	stage, err := ctl.execManager.Accept(c.Request.Context(), stageID, reqData.Machine)
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RunnerStageAcceptError)
+		resp.InternalError(c, err)
+		return
+	}
+
+	resp.OK(c, i18n.RunnerStageAcceptSuccess, manager.ConvertToDroneStageWithoutSteps(stage))
+}
+
+// DetailStage 获取 stage 执行详情
+func (ctl *Controller) DetailStage(c *gin.Context) {
+	if _, err := ctl.validateRunnerToken(c); err != nil {
+		resp.Unauthorized(c, err)
+		return
+	}
+
+	stageID, err := req.PathParamAsPositiveInt64(c, "stageID")
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RunnerPathParamError)
+		resp.BadRequest(c, err)
+		return
+	}
+
+	details, err := ctl.execManager.Details(c.Request.Context(), stageID)
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RunnerStageDetailError)
+		resp.InternalError(c, err)
+		return
+	}
+
+	resp.OK(c, i18n.RunnerStageDetailSuccess, &client.Context{
+		Build:  manager.ConvertToDroneBuild(&details.Execution.Execution),
+		Stage:  manager.ConvertToDroneStage(details.Stage),
+		Config: manager.ConvertToDroneFile(details.Config),
+		Netrc:  manager.ConvertToDroneNetrc(details.Netrc),
+		System: &drone.System{
+			Proto: ctl.urlProvider.GetAPIProto(c.Request.Context()),
+			Host:  ctl.urlProvider.GetAPIHostname(c.Request.Context()),
+		},
+	})
+}
+
+// UpdateStage 更新 stage 状态
+func (ctl *Controller) UpdateStage(c *gin.Context) {
+	if _, err := ctl.validateRunnerToken(c); err != nil {
+		resp.Unauthorized(c, err)
+		return
+	}
+
+	var reqData drone.Stage
+	if err := c.ShouldBindJSON(&reqData); err != nil {
+		err = errors.WithI18nKey(err, i18n.RunnerBodyParamError)
+		resp.BadRequest(c, err)
+		return
+	}
+
+	convertedStage := manager.ConvertFromDroneStage(&reqData)
+	status := constant.ParseCIStatus(reqData.Status)
+
+	var err error
+	if status == constant.CIStatusPending || status == constant.CIStatusRunning {
+		err = ctl.execManager.BeforeStage(c.Request.Context(), convertedStage)
+	} else {
+		err = ctl.execManager.AfterStage(c.Request.Context(), convertedStage)
+	}
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RunnerStageUpdateError)
+		resp.InternalError(c, err)
+		return
+	}
+
+	resp.OK(c, i18n.RunnerStageUpdateSuccess, manager.ConvertToDroneStage(convertedStage))
+}
+
+// UpdateStep 更新 step 状态
+func (ctl *Controller) UpdateStep(c *gin.Context) {
+	if _, err := ctl.validateRunnerToken(c); err != nil {
+		resp.Unauthorized(c, err)
+		return
+	}
+
+	var reqData drone.Step
+	if err := c.ShouldBindJSON(&reqData); err != nil {
+		err = errors.WithI18nKey(err, i18n.RunnerBodyParamError)
+		resp.BadRequest(c, err)
+		return
+	}
+
+	convertedStep := manager.ConvertFromDroneStep(&reqData)
+	status := constant.ParseCIStatus(reqData.Status)
+
+	var err error
+	if status == constant.CIStatusPending || status == constant.CIStatusRunning {
+		err = ctl.execManager.BeforeStep(c.Request.Context(), convertedStep)
+	} else {
+		err = ctl.execManager.AfterStep(c.Request.Context(), convertedStep)
+	}
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RunnerStepUpdateError)
+		resp.InternalError(c, err)
+		return
+	}
+
+	resp.OK(c, i18n.RunnerStepUpdateSuccess, manager.ConvertToDroneStep(convertedStep))
+}
+
+// WatchBuild 监听 build 取消请求
+func (ctl *Controller) WatchBuild(c *gin.Context) {
+	if _, err := ctl.validateRunnerToken(c); err != nil {
+		resp.Unauthorized(c, err)
+		return
+	}
+
+	buildID, err := req.PathParamAsPositiveInt64(c, "buildID")
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RunnerPathParamError)
+		resp.BadRequest(c, err)
+		return
+	}
+
+	canceled, err := ctl.execManager.Watch(c.Request.Context(), buildID)
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RunnerBuildWatchError)
+		resp.InternalError(c, err)
+		return
+	}
+
+	resp.OK(c, i18n.RunnerBuildWatchSuccess, gin.H{"canceled": canceled})
+}
+
+// BatchLogs 批量写流水线日志
+func (ctl *Controller) BatchLogs(c *gin.Context) {
+	if _, err := ctl.validateRunnerToken(c); err != nil {
+		resp.Unauthorized(c, err)
+		return
+	}
+
+	stepID, err := req.PathParamAsPositiveInt64(c, "stepID")
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RunnerPathParamError)
+		resp.BadRequest(c, err)
+		return
+	}
+
+	var lines []*drone.Line
+	if err := c.ShouldBindJSON(&lines); err != nil {
+		err = errors.WithI18nKey(err, i18n.RunnerBodyParamError)
+		resp.BadRequest(c, err)
+		return
+	}
+
+	for _, l := range lines {
+		line := manager.ConvertFromDroneLine(l)
+		if err := ctl.execManager.Write(c.Request.Context(), stepID, line); err != nil {
+			err = errors.WithI18nKey(err, i18n.RunnerLogBatchError)
+			resp.InternalError(c, err)
+			return
+		}
+	}
+
+	resp.OK(c, i18n.RunnerLogBatchSuccess, nil)
+}
+
+// UploadLogs 上传完整流水线日志
+func (ctl *Controller) UploadLogs(c *gin.Context) {
+	if _, err := ctl.validateRunnerToken(c); err != nil {
+		resp.Unauthorized(c, err)
+		return
+	}
+
+	stepID, err := req.PathParamAsPositiveInt64(c, "stepID")
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RunnerPathParamError)
+		resp.BadRequest(c, err)
+		return
+	}
+
+	var lines []*drone.Line
+	if err := c.ShouldBindJSON(&lines); err != nil {
+		err = errors.WithI18nKey(err, i18n.RunnerBodyParamError)
+		resp.BadRequest(c, err)
+		return
+	}
+
+	var buffer bytes.Buffer
+	logLines := []livelog.Line{}
+	for _, l := range lines {
+		logLines = append(logLines, *manager.ConvertFromDroneLine(l))
+	}
+	out, err := json.Marshal(logLines)
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RunnerLogUploadError)
+		resp.InternalError(c, err)
+		return
+	}
+	if _, err = buffer.Write(out); err != nil {
+		err = errors.WithI18nKey(err, i18n.RunnerLogUploadError)
+		resp.InternalError(c, err)
+		return
+	}
+
+	if err := ctl.execManager.UploadLogs(c.Request.Context(), stepID, &buffer); err != nil {
+		err = errors.WithI18nKey(err, i18n.RunnerLogUploadError)
+		resp.InternalError(c, err)
+		return
+	}
+
+	resp.OK(c, i18n.RunnerLogUploadSuccess, nil)
 }

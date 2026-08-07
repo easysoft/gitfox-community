@@ -47,7 +47,7 @@ func (s *Service) Create(ctx context.Context, runner *runnerModel.Runner, runner
 	runner.IP = runnerIP
 	runner.Online = "online"
 	runner.Status = "enable"
-	runner.HeartBeat = &now
+	runner.HeartBeat = now
 
 	return s.runnerStore.Create(ctx, runner)
 }
@@ -73,7 +73,7 @@ func (s *Service) UpdateRunnerHeartbeat(ctx context.Context, runnerID uint) erro
 	now := int(time.Now().Unix())
 	runnerInfo := &runnerModel.Runner{
 		ID:        runnerID,
-		HeartBeat: &now,
+		HeartBeat: now,
 		Online:    "online", // 心跳更新时设置为在线
 	}
 	return s.runnerStore.Update(ctx, runnerInfo)
