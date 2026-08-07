@@ -26,6 +26,7 @@ func RequestID(log *logger.SugaredMateLogger) gin.HandlerFunc {
 		requestLogger := log.With("trace_id", traceID)
 		c.Set(logger.ContextLogger, requestLogger)
 		ctx := c.Request.Context()
+		ctx = logger.WithTraceID(ctx, traceID)
 		ctx = context.WithValue(ctx, logger.LoggerContextKey, requestLogger)
 		c.Request = c.Request.WithContext(ctx)
 

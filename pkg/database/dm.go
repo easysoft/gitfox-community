@@ -2,9 +2,6 @@ package database
 
 import (
 	"fmt"
-	"io"
-	"log"
-	"os"
 	"time"
 
 	"gorm.io/gorm"
@@ -21,32 +18,30 @@ type DaMengDB gorm.DB
 
 // https://gitee.com/chunanyong/dm#https://gitee.com/link?target=https%3A%2F%2Fpackage.dameng.com%2Feco%2Fadapter
 func NewDaMengDB(dbConf config.DatabaseConfig, logConf config.LoggingConfig) (*DaMengDB, func() error, error) {
-	gormWriter := io.Writer(os.Stdout)
-	if !logConf.Stdout {
-		gormWriter = io.Discard
+	gormWriter := buildGormWriter(logConf, true)
+	logLevel := logger.Warn
+	if dbConf.PrintSQL {
+		logLevel = logger.Info
+	}
+	slowThreshold := dbConf.SlowThreshold
+	if slowThreshold <= 0 {
+		slowThreshold = 500 * time.Millisecond
 	}
 	db, err := gorm.Open(dm.Open("dm://SYSDBA:0831will.DB@127.0.0.1:9906"), &gorm.Config{
 		NamingStrategy: schema.NamingStrategy{
 			TablePrefix:   "ops_", // 表名前缀，"repo" 的表应为 "ops_repo"
 			SingularTable: true,   // 使用单数表名，启用此选项时，"repo" 的表将为 "repo"
 		},
-		Logger: logger.New(
-			log.New(gormWriter, "\r\n", log.LstdFlags), // io writer
-			logger.Config{
-				SlowThreshold:             time.Second, // 慢 SQL 阈值
-				LogLevel:                  logger.Info, // Log level
-				Colorful:                  false,       // 禁用彩色打印
-				IgnoreRecordNotFoundError: false,       // 忽略ErrRecordNotFound（记录未找到）错误
-			},
-		),
+		Logger: newGormLogger(gormWriter, logger.Config{
+			SlowThreshold:             slowThreshold, // 慢 SQL 阈值
+			LogLevel:                  logLevel,
+			Colorful:                  false, // 禁用彩色打印
+			IgnoreRecordNotFoundError: false, // 忽略ErrRecordNotFound（记录未找到）错误
+		}),
 	})
 
 	if err != nil {
 		return nil, nil, err
-	}
-
-	if dbConf.PrintSQL {
-		db = db.Debug()
 	}
 
 	sqlDB, err := db.DB()

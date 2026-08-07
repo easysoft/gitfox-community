@@ -1,0 +1,30 @@
+package database
+
+import (
+	"io"
+	"os"
+
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
+	applogger "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
+)
+
+// buildGormWriter 构建 GORM 日志输出 writer。
+// writeToFile 为 true 时始终写入 sql.log 文件（保证慢 SQL/错误在 printSQL=false 时也能落地），
+// stdout 开启时同时输出到终端。
+func buildGormWriter(logConf config.LoggingConfig, writeToFile bool) io.Writer {
+	var writers []io.Writer
+	if writeToFile {
+		writers = append(writers, applogger.NewSQLFileWriter(logConf))
+	}
+	if logConf.Stdout {
+		writers = append(writers, os.Stdout)
+	}
+	switch len(writers) {
+	case 0:
+		return io.Discard
+	case 1:
+		return writers[0]
+	default:
+		return io.MultiWriter(writers...)
+	}
+}

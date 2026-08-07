@@ -2,8 +2,6 @@ package database
 
 import (
 	"fmt"
-	"io"
-	"log"
 	"os"
 	"path/filepath"
 	"time"
@@ -38,25 +36,19 @@ func NewSQLiteDB(conf config.SQLiteConfig, logConf config.LoggingConfig) (*Sqlit
 	// 构建 DSN
 	dsn := buildSQLiteDSN(conf)
 
-	gormWriter := io.Writer(os.Stdout)
-	if !logConf.Stdout {
-		gormWriter = io.Discard
-	}
+	gormWriter := buildGormWriter(logConf, false)
 	// 配置 GORM
 	gormConfig := &gorm.Config{
 		NamingStrategy: schema.NamingStrategy{
 			SingularTable: true,  // 使用单数表名
 			NoLowerCase:   false, // 使用 snake_case 命名
 		},
-		Logger: logger.New(
-			log.New(gormWriter, "\r\n", log.LstdFlags),
-			logger.Config{
-				SlowThreshold:             time.Second,
-				LogLevel:                  logger.Info,
-				Colorful:                  false,
-				IgnoreRecordNotFoundError: false,
-			},
-		),
+		Logger: newGormLogger(gormWriter, logger.Config{
+			SlowThreshold:             time.Second,
+			LogLevel:                  logger.Info,
+			Colorful:                  false,
+			IgnoreRecordNotFoundError: false,
+		}),
 	}
 	// 打开数据库连接
 	db, err := gorm.Open(sqlite.Open(dsn), gormConfig)

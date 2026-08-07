@@ -16,7 +16,8 @@ ssh:
 
 # 数据库配置
 database:
-  printSQL: true
+  printSQL: false
+  slowThreshold: 500ms
   maxIdleConn: 10
   maxOpenConn: 100
   connMaxLifeTime: 3600s # 1800s
@@ -74,6 +75,8 @@ logging:
     filename: system.log
   logJobConf:
     filename: job.log
+  logSQLConf:
+    filename: sql.log
 
 middleware:
   logRequestBody: true

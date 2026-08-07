@@ -2,9 +2,6 @@ package database
 
 import (
 	"fmt"
-	"io"
-	"log"
-	"os"
 	"strings"
 	"time"
 
@@ -26,9 +23,14 @@ func NewMysqlDB(dbConf config.DatabaseConfig, logConf config.LoggingConfig) (*My
 	if !strings.Contains(dbConf.Datasource, "parseTime") {
 		dbConf.Datasource += "?parseTime=true&loc=Local"
 	}
-	gormWriter := io.Writer(os.Stdout)
-	if !logConf.Stdout {
-		gormWriter = io.Discard
+	gormWriter := buildGormWriter(logConf, true)
+	logLevel := logger.Warn
+	if dbConf.PrintSQL {
+		logLevel = logger.Info
+	}
+	slowThreshold := dbConf.SlowThreshold
+	if slowThreshold <= 0 {
+		slowThreshold = 500 * time.Millisecond
 	}
 	db, err := gorm.Open(mysql.Open(dbConf.Datasource), &gorm.Config{
 		NamingStrategy: schema.NamingStrategy{
@@ -36,23 +38,16 @@ func NewMysqlDB(dbConf config.DatabaseConfig, logConf config.LoggingConfig) (*My
 			SingularTable: true,   // 使用单数表名，启用此选项时，"repo" 的表将为 "repo"
 			NoLowerCase:   false,  // 跳过名称的 snake_casing 格式
 		},
-		Logger: logger.New(
-			log.New(gormWriter, "\r\n", log.LstdFlags), // io writer
-			logger.Config{
-				SlowThreshold:             time.Second, // 慢 SQL 阈值
-				LogLevel:                  logger.Info, // Log level
-				Colorful:                  false,       // 禁用彩色打印
-				IgnoreRecordNotFoundError: false,       // 忽略ErrRecordNotFound（记录未找到）错误
-			},
-		),
+		Logger: newGormLogger(gormWriter, logger.Config{
+			SlowThreshold:             slowThreshold, // 慢 SQL 阈值
+			LogLevel:                  logLevel,
+			Colorful:                  false, // 禁用彩色打印
+			IgnoreRecordNotFoundError: false, // 忽略ErrRecordNotFound（记录未找到）错误
+		}),
 	})
 
 	if err != nil {
 		return nil, nil, err
-	}
-
-	if dbConf.PrintSQL {
-		db = db.Debug()
 	}
 
 	sqlDB, err := db.DB()

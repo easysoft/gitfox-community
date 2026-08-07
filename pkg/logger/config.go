@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"io"
 	"os"
 	"path/filepath"
 
@@ -18,6 +19,7 @@ const (
 	LogTypeScan      = "scan"
 	LogTypeSystem    = "system"
 	LogTypeJob       = "job"
+	LogTypeSQL       = "sql"
 	LogTypeDefault   = "default"
 )
 
@@ -35,6 +37,11 @@ func getLogPath(c config.LoggingConfig, logType string) string {
 		return filepath.Join(c.LogDir, c.LogSystemConf.Filename)
 	case LogTypeJob:
 		return filepath.Join(c.LogDir, c.LogJobConf.Filename)
+	case LogTypeSQL:
+		if c.LogSQLConf.Filename == "" {
+			return filepath.Join(c.LogDir, "sql.log")
+		}
+		return filepath.Join(c.LogDir, c.LogSQLConf.Filename)
 	case LogTypeDefault:
 		if c.LogDefaultConf.Filename == "" {
 			return filepath.Join(c.LogDir, "default.log")
@@ -154,4 +161,25 @@ func NewZapLogger(config config.LoggingConfig, logType string) *zap.Logger {
 		zap.WithCaller(config.Caller),
 	)
 
+}
+
+// NewSQLFileWriter 创建用于 GORM SQL 日志输出的文件写入器
+// 返回一个 lumberjack 实例，支持按大小轮转、按时间清理
+// 调用方无需关闭该 writer（lumberjack 会在每次写入后自动轮转）
+func NewSQLFileWriter(config config.LoggingConfig) io.Writer {
+	logPath := getLogPath(config, LogTypeSQL)
+	if logPath == "" {
+		return io.Discard
+	}
+	if err := ensureLogDir(logPath); err != nil {
+		return io.Discard
+	}
+	return &lumberjack.Logger{
+		Filename:   logPath,
+		MaxSize:    config.MaxSize,
+		MaxBackups: config.MaxCount,
+		MaxAge:     config.MaxAge,
+		Compress:   false,
+		LocalTime:  true,
+	}
 }
