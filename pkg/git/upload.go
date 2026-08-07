@@ -22,9 +22,8 @@ import (
 	"time"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/api"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	"github.com/easysoft/gitfox/errors"
-
-	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -100,10 +99,10 @@ func (s *Service) handleFileUploadIfAvailable(
 	basePath string,
 	file File,
 ) (string, error) {
-	log := log.Ctx(ctx)
+	log := logger.GetLogger(ctx)
 
 	fullPath := filepath.Join(basePath, file.Path)
-	log.Info().Msgf("saving file at path %s", fullPath)
+	log.Infof("saving file at path %s", fullPath)
 	_, err := s.store.Save(fullPath, bytes.NewReader(file.Content))
 	if err != nil {
 		return "", errors.Internal(err, "cannot save file to the store: %s", fullPath)

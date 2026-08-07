@@ -13,7 +13,6 @@ import (
 	"github.com/drone/drone-go/drone"
 	runnerclient "github.com/drone/runner-go/client"
 	"github.com/drone/runner-go/poller"
-	"github.com/rs/zerolog/log"
 )
 
 func NewExecutionPoller(
@@ -21,7 +20,7 @@ func NewExecutionPoller(
 	client runnerclient.Client,
 ) *poller.Poller {
 	runWithRecovery := func(ctx context.Context, stage *drone.Stage) (err error) {
-		ctx = logger.WithUnwrappedZerolog(ctx)
+		ctx = logger.WithUnwrappedLogger(ctx)
 		ctx = gitfoxLogger.WithLogger(ctx, gitfoxLogger.GetLogger(ctx))
 		defer func() {
 			if r := recover(); r != nil {
@@ -30,7 +29,7 @@ func NewExecutionPoller(
 
 			// the caller of this method (poller.Poller) discards the error - log it here
 			if err != nil {
-				log.Ctx(ctx).Error().Err(err).Msgf("An error occurred while calling runner.Run in Poller")
+				gitfoxLogger.GetLogger(ctx).Errorw("An error occurred while calling runner.Run in Poller", "error", err)
 			}
 		}()
 		return runner.Run(ctx, stage)

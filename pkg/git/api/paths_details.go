@@ -18,7 +18,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/rs/zerolog/log"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 )
 
 type PathDetails struct {
@@ -37,7 +37,7 @@ func (g *Git) PathsDetails(ctx context.Context,
 	if err != nil {
 		return nil, fmt.Errorf("failed to get path details: %w", err)
 	}
-	log.Ctx(ctx).Debug().Msgf("Resolved revision %s to commit %s, paths_num: %d, paths: %v", rev, commitSHA, len(paths), paths)
+	logger.GetLogger(ctx).Debugf("Resolved revision %s to commit %s, paths_num: %d, paths: %v", rev, commitSHA, len(paths), paths)
 	results := make([]PathDetails, len(paths))
 
 	for i, path := range paths {

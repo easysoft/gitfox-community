@@ -13,8 +13,7 @@ import (
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/command"
-
-	"github.com/rs/zerolog/log"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 )
 
 // ProcessGitErrorf 处理 Git 错误并转换为应用层 GitError 类型错误
@@ -27,7 +26,7 @@ func ProcessGitErrorf(ctx context.Context, err error) error {
 	errMsg := err.Error()
 
 	// 记录原始错误
-	log.Ctx(ctx).Warn().Err(err).Msg("git error occurred")
+	logger.GetLogger(ctx).Warnw("git error occurred", "error", err)
 
 	// 识别特定的 Git 错误类型，并包装底层错误
 	// 按照错误出现频率排序，最常见的错误放在前面以提高性能

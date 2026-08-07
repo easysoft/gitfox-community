@@ -14,7 +14,7 @@ import (
 	"github.com/quicklyon/kingpin/v2"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/router"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/logger"
+	pipelineLogger "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/logger"
 
 	artifactSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/artifact"
 	cronSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/cron"
@@ -146,7 +146,7 @@ func RunServerWithContext(ctx context.Context, mode string, enableCI bool, onRea
 	if enableCI {
 		// start poller for CI build executions (non-critical for API)
 		go app.Poller.Poll(
-			logger.WithWrappedZerolog(pollerCtx),
+			pipelineLogger.WithWrappedLogger(pollerCtx),
 			int(app.SystemConfig.Ci.ParallelWorkers),
 		)
 	}
@@ -218,23 +218,25 @@ func RunServerWithContext(ctx context.Context, mode string, enableCI bool, onRea
 
 // runMigrations 执行启动时的数据迁移任务。
 func (app *App) runMigrations() {
-	if err := app.ScanRuleSvc.Migrate(context.Background()); err != nil {
+	migrateCtx := context.Background()
+
+	if err := app.ScanRuleSvc.Migrate(migrateCtx); err != nil {
 		app.SystemLog.Errorw("[Server] Failed to migrate scan rules", "error", err)
 		panic(err)
 	}
 
-	if err := app.PipelineService.Migrate(context.Background(), app.SystemConfig.Ci.PluginsZipUrl); err != nil {
+	if err := app.PipelineService.Migrate(migrateCtx, app.SystemConfig.Ci.PluginsZipUrl); err != nil {
 		app.SystemLog.Errorw("[Server] Failed to migrate plugins", "error", err)
 		panic(err)
 	}
 
-	if err := app.TokenStore.SetDevopsToken(context.Background()); err != nil {
+	if err := app.TokenStore.SetDevopsToken(migrateCtx); err != nil {
 		app.SystemLog.Errorw("[Server] Failed to set devops token", "error", err)
 		panic(err)
 	}
 
 	// 迁移过来的代码库导入
-	if err := app.RepoImporterSvc.Migrate(context.Background()); err != nil {
+	if err := app.RepoImporterSvc.Migrate(migrateCtx); err != nil {
 		app.SystemLog.Errorw("[Server] Failed to migrate repo", "error", err)
 		panic(err)
 	}

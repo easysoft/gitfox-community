@@ -18,9 +18,8 @@ import (
 	"fmt"
 	"strings"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	"github.com/easysoft/gitfox/errors"
-
-	"github.com/rs/zerolog/log"
 )
 
 var (
@@ -125,7 +124,7 @@ func processGitErrorf(err error, format string, args ...interface{}) error {
 	fallbackErr := errors.Internal(err, format, args...)
 
 	// always log internal error together with message.
-	log.Warn().Msgf("%v: [GIT] %v", fallbackErr, err)
+	logger.Warnf("%v: [GIT] %v", fallbackErr, err)
 
 	switch {
 	case strings.Contains(err.Error(), "no such file or directory"):

@@ -8,20 +8,20 @@ import (
 	"testing"
 	"time"
 
-	"gorm.io/gorm/logger"
+	gormlogger "gorm.io/gorm/logger"
 
-	applogger "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 )
 
 func TestGormLoggerTraceWithTraceID(t *testing.T) {
 	var buf bytes.Buffer
-	l := newGormLogger(&buf, logger.Config{
+	l := newGormLogger(&buf, gormlogger.Config{
 		SlowThreshold: time.Second,
-		LogLevel:      logger.Info,
+		LogLevel:      gormlogger.Info,
 		Colorful:      false,
 	})
 
-	ctx := applogger.WithTraceID(context.Background(), "trace-abc-123")
+	ctx := logger.WithTraceID(context.Background(), "trace-abc-123")
 	l.Trace(ctx, time.Now(), func() (string, int64) {
 		return "SELECT * FROM users WHERE id = 1", 1
 	}, nil)
@@ -37,9 +37,9 @@ func TestGormLoggerTraceWithTraceID(t *testing.T) {
 
 func TestGormLoggerTraceWithoutTraceID(t *testing.T) {
 	var buf bytes.Buffer
-	l := newGormLogger(&buf, logger.Config{
+	l := newGormLogger(&buf, gormlogger.Config{
 		SlowThreshold: time.Second,
-		LogLevel:      logger.Info,
+		LogLevel:      gormlogger.Info,
 		Colorful:      false,
 	})
 
@@ -58,13 +58,13 @@ func TestGormLoggerTraceWithoutTraceID(t *testing.T) {
 
 func TestGormLoggerTraceError(t *testing.T) {
 	var buf bytes.Buffer
-	l := newGormLogger(&buf, logger.Config{
+	l := newGormLogger(&buf, gormlogger.Config{
 		SlowThreshold: time.Second,
-		LogLevel:      logger.Error,
+		LogLevel:      gormlogger.Error,
 		Colorful:      false,
 	})
 
-	ctx := applogger.WithTraceID(context.Background(), "trace-err")
+	ctx := logger.WithTraceID(context.Background(), "trace-err")
 	l.Trace(ctx, time.Now(), func() (string, int64) {
 		return "SELECT * FROM missing", -1
 	}, errors.New("table not found"))
@@ -80,9 +80,9 @@ func TestGormLoggerTraceError(t *testing.T) {
 
 func TestGormLoggerTraceSilent(t *testing.T) {
 	var buf bytes.Buffer
-	l := newGormLogger(&buf, logger.Config{
+	l := newGormLogger(&buf, gormlogger.Config{
 		SlowThreshold: time.Second,
-		LogLevel:      logger.Silent,
+		LogLevel:      gormlogger.Silent,
 		Colorful:      false,
 	})
 
@@ -97,14 +97,14 @@ func TestGormLoggerTraceSilent(t *testing.T) {
 
 func TestGormLoggerTraceSlowThreshold(t *testing.T) {
 	var buf bytes.Buffer
-	l := newGormLogger(&buf, logger.Config{
+	l := newGormLogger(&buf, gormlogger.Config{
 		SlowThreshold: 1 * time.Nanosecond,
-		LogLevel:      logger.Warn,
+		LogLevel:      gormlogger.Warn,
 		Colorful:      false,
 	})
 
 	time.Sleep(2 * time.Millisecond)
-	ctx := applogger.WithTraceID(context.Background(), "trace-slow")
+	ctx := logger.WithTraceID(context.Background(), "trace-slow")
 	l.Trace(ctx, time.Now(), func() (string, int64) {
 		return "SELECT * FROM big_table", 100
 	}, nil)
@@ -120,9 +120,9 @@ func TestGormLoggerTraceSlowThreshold(t *testing.T) {
 
 func TestGormLoggerTraceWarnFastQueryNoOutput(t *testing.T) {
 	var buf bytes.Buffer
-	l := newGormLogger(&buf, logger.Config{
+	l := newGormLogger(&buf, gormlogger.Config{
 		SlowThreshold: 500 * time.Millisecond,
-		LogLevel:      logger.Warn,
+		LogLevel:      gormlogger.Warn,
 		Colorful:      false,
 	})
 
@@ -142,14 +142,14 @@ func TestGormLoggerTraceWarnFastQueryNoOutput(t *testing.T) {
 
 func TestGormLoggerTraceWarnSlowQueryOutput(t *testing.T) {
 	var buf bytes.Buffer
-	l := newGormLogger(&buf, logger.Config{
+	l := newGormLogger(&buf, gormlogger.Config{
 		SlowThreshold: 1 * time.Nanosecond,
-		LogLevel:      logger.Warn,
+		LogLevel:      gormlogger.Warn,
 		Colorful:      false,
 	})
 
 	time.Sleep(2 * time.Millisecond)
-	ctx := applogger.WithTraceID(context.Background(), "trace-warn-slow")
+	ctx := logger.WithTraceID(context.Background(), "trace-warn-slow")
 	l.Trace(ctx, time.Now(), func() (string, int64) {
 		return "SELECT * FROM big_table WHERE status = 1", 5
 	}, nil)

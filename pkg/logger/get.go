@@ -22,10 +22,10 @@ const LoggerContextKey = contextKey(ContextLogger)
 const traceIDContextKey = contextKey("trace_id")
 
 var (
-	defaultLogger       *SugaredMateLogger
-	defaultLoggerOnce   sync.Once
-	defaultLogConfig    *config.LoggingConfig
-	defaultLogConfigMu  sync.RWMutex
+	defaultLogger      *SugaredMateLogger
+	defaultLoggerOnce  sync.Once
+	defaultLogConfig   *config.LoggingConfig
+	defaultLogConfigMu sync.RWMutex
 )
 
 // InitDefaultLogger 使用指定的配置初始化默认 logger。

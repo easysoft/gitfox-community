@@ -3,13 +3,16 @@ package middleware
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"io"
 	"strings"
 	"time"
 
+	"github.com/gin-gonic/gin"
+
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/random"
-	"github.com/gin-gonic/gin"
 )
 
 // 统一日志前缀
@@ -37,10 +40,12 @@ func RequestID(log *logger.SugaredMateLogger) gin.HandlerFunc {
 // AccessLog 统一 API 访问日志输出
 // 输出字段：http.method, http.url, status_code, response_size_bytes, elapsed_ms, trace_id, client_ip, user_agent
 // 可选输出：query, route_params, request_body(截断), response_body(截断)
-func AccessLog(logger *logger.SugaredMateLogger) gin.HandlerFunc {
-	const logRequestBody = true     // 如需记录请求体，改为 true
-	const logResponseBody = false   // 如需记录响应体，改为 true
-	const maxLoggedBodyBytes = 2048 // 体积上限，超过将截断
+// 是否打印 request_body / response_body 由配置文件 middleware.logRequestBody / logResponseBody 控制。
+func AccessLog(logger *logger.SugaredMateLogger, mwConfig config.MiddlewareConfig) gin.HandlerFunc {
+	maxLoggedBodyBytes := mwConfig.MaxLoggedBodyBytes
+	if maxLoggedBodyBytes <= 0 {
+		maxLoggedBodyBytes = 2048
+	}
 
 	return func(c *gin.Context) {
 		start := time.Now()
@@ -52,14 +57,14 @@ func AccessLog(logger *logger.SugaredMateLogger) gin.HandlerFunc {
 		query := c.Request.URL.RawQuery
 		routeParams := c.Params
 
-		// 可选：记录请求体
+		// 可选：记录请求体（按用户真实请求的 body 打印）
 		var reqBody string
-		if logRequestBody {
+		if mwConfig.LogRequestBody {
 			ct := c.ContentType()
 			if strings.Contains(ct, "application/json") || strings.Contains(ct, "application/x-www-form-urlencoded") {
 				var buf bytes.Buffer
 				tr := io.TeeReader(c.Request.Body, &buf)
-				b, _ := io.ReadAll(io.LimitReader(tr, maxLoggedBodyBytes))
+				b, _ := io.ReadAll(io.LimitReader(tr, int64(maxLoggedBodyBytes)))
 				reqBody = string(b)
 				c.Request.Body = io.NopCloser(io.MultiReader(&buf, c.Request.Body))
 			}
@@ -67,7 +72,7 @@ func AccessLog(logger *logger.SugaredMateLogger) gin.HandlerFunc {
 
 		// 可选：包装响应 writer 以截获响应体
 		var bw *bytes.Buffer
-		if logResponseBody {
+		if mwConfig.LogResponseBody {
 			bw = &bytes.Buffer{}
 			c.Writer = &bodyLogWriter{ResponseWriter: c.Writer, buf: bw}
 		}
@@ -94,19 +99,29 @@ func AccessLog(logger *logger.SugaredMateLogger) gin.HandlerFunc {
 			"route_params", routeParams,
 		}
 
-		if logRequestBody && reqBody != "" {
-			fields = append(fields, "request_body", reqBody)
+		if mwConfig.LogRequestBody && reqBody != "" {
+			fields = append(fields, "request_body", parseBody(reqBody))
 		}
-		if logResponseBody && bw != nil && bw.Len() > 0 {
+		if mwConfig.LogResponseBody && bw != nil && bw.Len() > 0 {
 			resp := bw.String()
 			if len(resp) > maxLoggedBodyBytes {
 				resp = resp[:maxLoggedBodyBytes]
 			}
-			fields = append(fields, "response_body", resp)
+			fields = append(fields, "response_body", parseBody(resp))
 		}
 
 		logger.Infow(AccessLogPrefix, fields...)
 	}
+}
+
+// parseBody 将请求/响应体解析为 JSON 对象，方便日志聚合工具直接查询字段。
+// 解析失败（如 form-urlencoded、截断的 body、非法 JSON）时回退为原始字符串。
+func parseBody(s string) interface{} {
+	var obj interface{}
+	if err := json.Unmarshal([]byte(s), &obj); err == nil {
+		return obj
+	}
+	return s
 }
 
 type bodyLogWriter struct {

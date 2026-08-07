@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
-	applogger "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 )
 
 // buildGormWriter 构建 GORM 日志输出 writer。
@@ -14,7 +14,7 @@ import (
 func buildGormWriter(logConf config.LoggingConfig, writeToFile bool) io.Writer {
 	var writers []io.Writer
 	if writeToFile {
-		writers = append(writers, applogger.NewSQLFileWriter(logConf))
+		writers = append(writers, logger.NewSQLFileWriter(logConf))
 	}
 	if logConf.Stdout {
 		writers = append(writers, os.Stdout)
