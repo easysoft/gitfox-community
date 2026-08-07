@@ -9,8 +9,8 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/manager"
 	runnerModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/runner"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/manager"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/runner"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
@@ -406,19 +406,6 @@ func (ctl *Controller) UpdateHeartBeat(c *gin.Context) {
 	resp.OK(c, i18n.RunnerUpdateHeartBeatSuccess, runner)
 }
 
-// ReqStageRequest 拉取 stage 请求体
-type ReqStageRequest struct {
-	Type   string            `json:"type"`
-	OS     string            `json:"os"`
-	Arch   string            `json:"arch"`
-	Labels map[string]string `json:"labels,omitempty"`
-}
-
-// ReqStageAccept 接受 stage 请求体
-type ReqStageAccept struct {
-	Machine string `json:"machine"`
-}
-
 // validateRunnerToken 从请求头中验证 X-Runner-Token 并返回对应的 runner
 func (ctl *Controller) validateRunnerToken(c *gin.Context) (*runnerModel.Runner, error) {
 	runnerToken := c.GetHeader("X-Runner-Token")
@@ -441,7 +428,7 @@ func (ctl *Controller) RequestStage(c *gin.Context) {
 		return
 	}
 
-	var reqData ReqStageRequest
+	var reqData runnerModel.ReqStageRequest
 	if err := c.ShouldBindJSON(&reqData); err != nil {
 		err = errors.WithI18nKey(err, i18n.RunnerBodyParamError)
 		resp.BadRequest(c, err)
@@ -481,7 +468,7 @@ func (ctl *Controller) AcceptStage(c *gin.Context) {
 		return
 	}
 
-	var reqData ReqStageAccept
+	var reqData runnerModel.ReqStageAccept
 	if err := c.ShouldBindJSON(&reqData); err != nil {
 		err = errors.WithI18nKey(err, i18n.RunnerBodyParamError)
 		resp.BadRequest(c, err)

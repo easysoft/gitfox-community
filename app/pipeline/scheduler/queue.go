@@ -163,13 +163,13 @@ func (q *queue) signal(ctx context.Context) error {
 		return err
 	}
 
-	// 初始化可用 runner token 列表
+	// 初始化可用 runner token 列表及 token→runner 映射
+	availableRunnerMap := make(map[string]*runnerModel.Runner, len(availableRunners))
 	var availableRunnerTokenList []string
-	if len(availableRunners) != 0 {
-		for _, runner := range availableRunners {
-			if runner.Token != "" {
-				availableRunnerTokenList = append(availableRunnerTokenList, runner.Token)
-			}
+	for _, runner := range availableRunners {
+		if runner.Token != "" {
+			availableRunnerTokenList = append(availableRunnerTokenList, runner.Token)
+			availableRunnerMap[runner.Token] = runner
 		}
 	}
 	logger.Infof("[pipeline]: available agent runner tokens, count=%d", len(availableRunnerTokenList))
@@ -216,8 +216,18 @@ func (q *queue) signal(ctx context.Context) error {
 				}
 			}
 
-			if len(item.Labels) > 0 || len(w.labels) > 0 {
-				if !checkLabels(item.Labels, w.labels) {
+			// agent 用 DB 中的 labels，docker 沿用请求中的 labels(nil)
+			var workerLabels []string
+			if w.typ == "agent" {
+				if runner, ok := availableRunnerMap[w.token]; ok {
+					workerLabels = runner.Labels
+				}
+			} else {
+				workerLabels = mapKeys(w.labels)
+			}
+
+			if len(item.Labels) > 0 || len(workerLabels) > 0 {
+				if !checkLabels(mapKeys(item.Labels), workerLabels) {
 					logger.Infof("[pipeline]: worker skipped (labels mismatch), stage_id=%d", item.ID)
 					continue
 				}
@@ -274,16 +284,35 @@ type worker struct {
 	done     <-chan struct{}
 }
 
-func checkLabels(a, b map[string]string) bool {
-	//if len(a) != len(b) {
-	//	return false
-	//}
-	for k, v := range a {
-		if w, ok := b[k]; !ok || v != w {
+// checkLabels 检查 stage 的所有 label 是否都在 runner labels 中存在
+// stageLabels 和 runnerLabels 都是 []string
+func checkLabels(stageLabels, runnerLabels []string) bool {
+	if len(stageLabels) == 0 {
+		return true
+	}
+	runnerSet := make(map[string]struct{}, len(runnerLabels))
+	for _, l := range runnerLabels {
+		runnerSet[l] = struct{}{}
+	}
+	for _, l := range stageLabels {
+		if _, ok := runnerSet[l]; !ok {
 			return false
 		}
 	}
 	return true
+}
+
+// mapKeys 将 map[string]string 的 key 提取为 []string
+// item.Labels 改为 []string 后可删除此函数
+func mapKeys(m map[string]string) []string {
+	if len(m) == 0 {
+		return nil
+	}
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	return keys
 }
 
 // matchResource is a helper function that returns.

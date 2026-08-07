@@ -63,6 +63,19 @@ type RegisterRunnerReq struct {
 	Labels   map[string]string `json:"labels"`
 }
 
+// ReqStageRequest 拉取 stage 请求体
+type ReqStageRequest struct {
+	Type   string            `json:"type"`
+	OS     string            `json:"os"`
+	Arch   string            `json:"arch"`
+	Labels map[string]string `json:"labels,omitempty"`
+}
+
+// ReqStageAccept 接受 stage 请求体
+type ReqStageAccept struct {
+	Machine string `json:"machine"`
+}
+
 // GenerateTokenResponse 生成 token 响应
 type GenerateTokenResponse struct {
 	Token string `json:"token"`
