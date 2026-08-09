@@ -68,6 +68,11 @@ func (j *runnerHeartbeatJob) Handle(ctx context.Context, _ string, reporter pkgJ
 	for _, runner := range res.Data {
 		// 由于已经过滤了在线状态，无需再次检查 offline 状态
 
+		// 跳过 isDefault=true 的 runner，不需要心跳检测
+		if runner.IsDefault {
+			continue
+		}
+
 		// 检查心跳时间
 		if runner.HeartBeat == 0 {
 			// 如果没有心跳时间，标记为离线

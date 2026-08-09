@@ -339,7 +339,7 @@ func NewApp(mode string) (*App, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	poller := provider.ProvideExecutionPoller(runnerRunner, client)
+	poller := provider.ProvideExecutionPoller(runnerRunner, client, runnerStore, config)
 	containerController := provider.ProvideContainerController(artifactStore, artifactService, urlProvider, membershipAuthorizer)
 	containerHandler := provider.ProvideContainerHandler(containerController, artifactService, artifactStore, spaceStore)
 	app := &App{

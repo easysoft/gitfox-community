@@ -26,14 +26,18 @@ func (s *Store) Create(ctx context.Context, step *stepModel.Step) error {
 	return nil
 }
 
-// Update updates a step
+// Update updates a step.
+// Scheduling metadata (code, depends, fail_policy, group_id) are set once
+// at creation and omitted from updates — runners must not overwrite them.
 func (s *Store) Update(ctx context.Context, step *stepModel.Step) error {
 	db := dbtx.GetOrmAccessor(ctx, s.db)
 	populateDuration(step)
 
 	dbStep := mapToDBModel(step)
 
-	if err := db.Model(&Step{}).Where("id = ?", step.ID).Updates(dbStep).Error; err != nil {
+	if err := db.Model(&Step{}).Where("id = ?", step.ID).
+		Omit("code", "depends", "fail_policy", "group_id").
+		Updates(dbStep).Error; err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
 	}
 

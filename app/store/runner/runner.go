@@ -210,6 +210,7 @@ func mapToModel(r *Runner) *runnerModel.Runner {
 		HeartBeat:   r.HeartBeat,
 		Online:      constant.RunnerStatus(r.Online),
 		Status:      constant.RunnerActiveStatus(r.Status),
+		IsDefault:   r.IsDefault,
 		CreatedBy:   r.CreatedBy,
 		CreatedDate: r.CreatedDate,
 		EditedBy:    r.EditedBy,
