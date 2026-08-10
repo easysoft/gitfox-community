@@ -15,6 +15,7 @@ type Runner struct {
 	IP          string                      `json:"ip"`
 	OS          string                      `json:"os"`
 	Arch        string                      `json:"arch"`
+	Runtime     string                      `json:"runtime"`
 	Labels      []string                    `json:"labels"`
 	Token       string                      `json:"token,omitempty"`
 	HeartBeat   int                         `json:"heartBeat"`
@@ -60,6 +61,7 @@ type RegisterRunnerReq struct {
 	IP       string            `json:"ip"`
 	OS       string            `json:"os"`
 	Arch     string            `json:"arch"`
+	Runtime  string            `json:"runtime"`
 	Labels   map[string]string `json:"labels"`
 }
 

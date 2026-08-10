@@ -15,6 +15,7 @@ type Runner struct {
 	IP          string          `gorm:"column:ip;not null;default:''"`
 	OS          string          `gorm:"column:os;not null;default:''"`
 	Arch        string          `gorm:"column:arch;not null;default:''"`
+	Runtime     string          `gorm:"column:runtime;not null;default:''"`
 	Labels      string          `gorm:"column:labels;not null;default:''"`
 	Token       string          `gorm:"column:token;not null"`
 	HeartBeat   int             `gorm:"column:heartBeat"`

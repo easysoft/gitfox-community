@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"net/http"
 	"time"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
@@ -366,6 +367,7 @@ func (ctl *Controller) Register(c *gin.Context) {
 		IP:        reqData.IP,
 		OS:        reqData.OS,
 		Arch:      reqData.Arch,
+		Runtime:   reqData.Runtime,
 		Labels:    labels,
 		CreatedBy: account,
 		EditedBy:  account,
@@ -423,7 +425,7 @@ func (ctl *Controller) UpdateHeartBeat(c *gin.Context) {
 		return
 	}
 
-	resp.OK(c, i18n.RunnerUpdateHeartBeatSuccess, runner)
+	resp.Accepted(c, i18n.RunnerUpdateHeartBeatSuccess, runner)
 }
 
 // validateRunnerToken 从请求头中验证 X-Runner-Token 并返回对应的 runner
@@ -466,6 +468,13 @@ func (ctl *Controller) RequestStage(c *gin.Context) {
 		Labels: reqData.Labels,
 	})
 	if err != nil {
+		// context deadline exceeded is normal long-polling behavior —
+		// no stage was available within the timeout window.
+		// Return 204 to signal the runner should retry.
+		if errors.Is(err, context.DeadlineExceeded) {
+			c.Status(http.StatusNoContent)
+			return
+		}
 		err = errors.WithI18nKey(err, i18n.RunnerStageRequestError)
 		resp.InternalError(c, err)
 		return

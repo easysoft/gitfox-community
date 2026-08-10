@@ -114,6 +114,7 @@ func registerDefaultRunners(
 			IP:        netutil.LocalIP(),
 			OS:        runtime.GOOS,
 			Arch:      runtime.GOARCH,
+			Runtime:   resource.Runtime,
 			Token:     token,
 			Online:    constant.RunnerOnline,
 			Status:    constant.RunnerEnable,

@@ -46,6 +46,11 @@ func Created(c *gin.Context, code i18n.I18nKey, data interface{}) {
 	objectOk(c, code, http.StatusCreated, data)
 }
 
+// Accepted renders an object accepted response (202 Accepted)
+func Accepted(c *gin.Context, code i18n.I18nKey, data interface{}) {
+	objectOk(c, code, http.StatusAccepted, data)
+}
+
 // ObjectError renders an object error response (400 Bad Request or 500 Internal Server Error)
 func Error(c *gin.Context, err error, args ...interface{}) {
 	httpStatus := errors.GetHttpStatus(err)
