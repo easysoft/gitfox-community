@@ -23,9 +23,8 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/hook"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/sha"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/sharedrepo"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	"github.com/easysoft/gitfox/errors"
-
-	"github.com/rs/zerolog/log"
 )
 
 var (
@@ -257,7 +256,7 @@ func (s *Service) ListCommitTags(
 
 //nolint:gocognit
 func (s *Service) CreateCommitTag(ctx context.Context, params *CreateCommitTagParams) (*CreateCommitTagOutput, error) {
-	log.Ctx(ctx).Debug().Msg("CreateCommitTag")
+	logger.GetLogger(ctx).Debug("CreateCommitTag")
 	if err := params.Validate(); err != nil {
 		return nil, err
 	}
@@ -363,7 +362,7 @@ func (s *Service) CreateCommitTag(ctx context.Context, params *CreateCommitTagPa
 }
 
 func (s *Service) DeleteTag(ctx context.Context, params *DeleteTagParams) error {
-	log.Ctx(ctx).Debug().Msg("DeleteTag")
+	logger.GetLogger(ctx).Debug("DeleteTag")
 	if err := params.Validate(); err != nil {
 		return err
 	}
@@ -419,7 +418,7 @@ func (s *Service) listCommitTagsLoadReferenceData(
 		return nil, fmt.Errorf("failed to walk tag references: %w", err)
 	}
 
-	log.Ctx(ctx).Trace().Msgf("git api returned %d tags", len(tags))
+	logger.GetLogger(ctx).Tracef("git api returned %d tags", len(tags))
 
 	return tags, nil
 }

@@ -64,9 +64,16 @@ type ServerConfig struct {
 // DatabaseConfig 数据库配置
 type DatabaseConfig struct {
 	Driver     string `envconfig:"GITFOX_DB_DRIVER" default:"mysql"`
-	Datasource string `envconfig:"GITFOX_DB_DATASOURCE" required:"true"`
+	Datasource string `envconfig:"GITFOX_DB_DATASOURCE"`
+	Host       string `envconfig:"GITFOX_DB_HOST"`
+	Port       string `envconfig:"GITFOX_DB_PORT" default:"3306"`
+	User       string `envconfig:"GITFOX_DB_USER"`
+	Password   string `envconfig:"GITFOX_DB_PASSWORD"`
+	Name       string `envconfig:"GITFOX_DB_NAME"`
+	Timezone   string `envconfig:"GITFOX_DB_TIMEZONE" default:"Local"`
 
 	PrintSQL        bool          `yaml:"printSQL"`
+	SlowThreshold   time.Duration `yaml:"slowThreshold"` // 慢 SQL 阈值，<=0 时默认 500ms
 	MaxIdleConn     int           `yaml:"maxIdleConn"`
 	MaxOpenConn     int           `yaml:"maxOpenConn"`
 	ConnMaxLifeTime time.Duration `yaml:"connMaxLifeTime"`
@@ -178,6 +185,12 @@ type LoggingConfig struct {
 	LogSystemConf    LogSystemConfig    `yaml:"logSystemConf"`
 	LogJobConf       LogJobConfig       `yaml:"logJobConf"`
 	LogDefaultConf   LogDefaultConfig   `yaml:"logDefaultConf"`
+	LogSQLConf       LogSQLConfig       `yaml:"logSQLConf"`
+}
+
+// LogSQLConfig SQL 日志配置
+type LogSQLConfig struct {
+	Filename string `yaml:"filename" default:"sql.log"`
 }
 
 // LogAPIServerConfig

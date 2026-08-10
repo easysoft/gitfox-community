@@ -12,7 +12,8 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/utils"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
-	"github.com/rs/zerolog/log"
+
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 )
 
 func (s *Service) GetContent(ctx context.Context, session *auth.Session, repo *repoModel.Repo, gitRef string, repoPath string, includeLatestCommit bool, flattenDirectories bool) (*repoModel.GetContentOutput, error) {
@@ -98,7 +99,7 @@ func (s *Service) getFileContent(ctx context.Context,
 
 	defer func() {
 		if err := output.Content.Close(); err != nil {
-			log.Ctx(ctx).Warn().Err(err).Msgf("failed to close blob content reader.")
+			logger.GetLogger(ctx).Warnw("failed to close blob content reader.", "error", err)
 		}
 	}()
 
@@ -131,7 +132,7 @@ func (s *Service) getSymlinkContent(ctx context.Context,
 
 	defer func() {
 		if err := output.Content.Close(); err != nil {
-			log.Ctx(ctx).Warn().Err(err).Msgf("failed to close blob content reader.")
+			logger.GetLogger(ctx).Warnw("failed to close blob content reader.", "error", err)
 		}
 	}()
 

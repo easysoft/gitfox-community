@@ -43,6 +43,8 @@ type BranchUpdatedPayload struct {
 	OldSHA  string `json:"oldSHA"`
 	NewSHA  string `json:"newSHA"`
 	Forced  bool   `json:"forced"`
+	// CommitMessage is the full message of the commit NewSHA points to (best effort, may be empty).
+	CommitMessage string `json:"commitMessage,omitempty"`
 }
 
 func (r *Reporter) BranchUpdated(ctx context.Context, payload *BranchUpdatedPayload) {

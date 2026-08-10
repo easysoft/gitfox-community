@@ -21,9 +21,8 @@ import (
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/api"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	"github.com/easysoft/gitfox/errors"
-
-	"github.com/rs/zerolog/log"
 )
 
 type InfoRefsParams struct {
@@ -44,7 +43,7 @@ func (s *Service) GetInfoRefs(ctx context.Context, w io.Writer, params *InfoRefs
 	}
 
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
-	log.Ctx(ctx).Debug().Msgf("GetInfoRefs, repoPath: %v", repoPath)
+	logger.GetLogger(ctx).Debugf("GetInfoRefs, repoPath: %v", repoPath)
 	err := s.git.InfoRefs(ctx, repoPath, params.Service, w, environ...)
 	if err != nil {
 		return fmt.Errorf("failed to fetch info references: %w", err)

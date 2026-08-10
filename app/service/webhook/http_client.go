@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/rs/zerolog/log"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 )
 
 var (
@@ -54,9 +54,8 @@ func newHTTPClient(allowLoopback bool, allowPrivateNetwork bool, disableSSLVerif
 			// otherwise best effort close connection
 			cErr := con.Close()
 			if cErr != nil {
-				log.Ctx(ctx).Warn().Err(err).
-					Msgf("failed to close potentially malicious connection to '%s' (resolved: '%s')",
-						addr, con.RemoteAddr())
+				logger.GetLogger(ctx).Warnw(fmt.Sprintf("failed to close potentially malicious connection to '%s' (resolved: '%s')",
+					addr, con.RemoteAddr()), "error", err)
 			}
 		}()
 
