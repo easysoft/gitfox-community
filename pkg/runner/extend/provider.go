@@ -10,7 +10,8 @@ import (
 	schema "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pipeline/spec"
 
 	"github.com/drone/runner-go/environ/provider"
-	"github.com/rs/zerolog/log"
+
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 )
 
 type StageDynamicEnvProvider struct {
@@ -26,7 +27,7 @@ func NewStageDynamicEnvProvider(store storage.PipelineStorage, stageStore stageS
 }
 
 func (p *StageDynamicEnvProvider) List(ctx context.Context, in *provider.Request) ([]*provider.Variable, error) {
-	log.Ctx(ctx).Debug().Msgf("start to list stage dynamicEnvs")
+	logger.GetLogger(ctx).Debug("start to list stage dynamicEnvs")
 	if p.store == nil {
 		return nil, nil
 	}
@@ -71,7 +72,7 @@ func (p *StageDynamicEnvProvider) List(ctx context.Context, in *provider.Request
 			dynamicEnvs = append(dynamicEnvs, &provider.Variable{
 				Name: key, Data: value,
 			})
-			log.Ctx(ctx).Info().Msgf("add variable: %s", key)
+			logger.GetLogger(ctx).Infof("add variable: %s", key)
 		}
 	}
 

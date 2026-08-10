@@ -73,6 +73,7 @@ type DatabaseConfig struct {
 	Timezone   string `envconfig:"GITFOX_DB_TIMEZONE" default:"Local"`
 
 	PrintSQL        bool          `yaml:"printSQL"`
+	SlowThreshold   time.Duration `yaml:"slowThreshold"` // 慢 SQL 阈值，<=0 时默认 500ms
 	MaxIdleConn     int           `yaml:"maxIdleConn"`
 	MaxOpenConn     int           `yaml:"maxOpenConn"`
 	ConnMaxLifeTime time.Duration `yaml:"connMaxLifeTime"`
@@ -184,6 +185,12 @@ type LoggingConfig struct {
 	LogSystemConf    LogSystemConfig    `yaml:"logSystemConf"`
 	LogJobConf       LogJobConfig       `yaml:"logJobConf"`
 	LogDefaultConf   LogDefaultConfig   `yaml:"logDefaultConf"`
+	LogSQLConf       LogSQLConfig       `yaml:"logSQLConf"`
+}
+
+// LogSQLConfig SQL 日志配置
+type LogSQLConfig struct {
+	Filename string `yaml:"filename" default:"sql.log"`
 }
 
 // LogAPIServerConfig

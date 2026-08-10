@@ -33,7 +33,6 @@ const (
 	schemeSSH     = "ssh"
 	gitfoxHomeDir = "git"
 	svnHomeDir    = "svn"
-	blobDir       = "blob"
 )
 
 // LoadConfig loads the configuration based on the provided mode.
@@ -411,30 +410,39 @@ func combineToRawURL(scheme, host, port, path string) string {
 	return urlRAW
 }
 
+var configDir string
+
+// SetConfigDir 设置配置文件所在目录，覆盖默认的二进制同目录行为。
+func SetConfigDir(dir string) {
+	configDir = dir
+}
+
 // findConfigFilePaths finds configuration file paths based on the mode and extension.
 func findConfigFilePaths(mode, ext string) (string, error) {
-	// 获取当前可执行文件的绝对路径
 	exePath, err := os.Executable()
 	if err != nil {
 		return "", errors.New("获取可执行文件路径失败: " + err.Error())
 	}
 
-	// 获取可执行文件所在目录（配置文件与二进制同目录）
-	exeDir := filepath.Dir(exePath)
+	exeDir := configDir
+	if exeDir == "" {
+		exeDir = filepath.Dir(exePath)
+	}
+
 	var fileName string
-	// 根据模式确定配置文件名
 	if mode == Debug {
-		exeDir = filepath.Join(filepath.Dir(filepath.Dir(exeDir)), "configs")
+		if configDir == "" {
+			exeDir = filepath.Join(filepath.Dir(filepath.Dir(exeDir)), "configs")
+		}
 		fileName = fmt.Sprintf("%s.%s", Local, ext)
 	} else {
 		fileName = fmt.Sprintf("%s.%s", mode, ext)
 	}
 
-
 	configPath := filepath.Join(exeDir, fileName)
-		if _, err := os.Stat(configPath); err != nil {
-			return "", errors.ConfigNotFoundError.Newf("未找到配置文件: %s", configPath)
-		}
+	if _, err := os.Stat(configPath); err != nil {
+		return "", errors.ConfigNotFoundError.Newf("未找到配置文件: %s", configPath)
+	}
 
 	return configPath, nil
 }

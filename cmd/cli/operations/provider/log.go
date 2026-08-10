@@ -31,6 +31,8 @@ func NewSystemLogger(config *config.Config) *SystemLog {
 	// 初始化默认 logger，确保所有通过 logger.GetLogger(ctx) 获取的 logger
 	// 都使用 lumberjack 轮转策略输出到文件（而非仅输出到 stderr）
 	logger.InitDefaultLogger(config.Logging)
+	// 初始化全局 logger，供 git/webhook/pipeline 等无 context 模块调用
+	logger.InitGlobalLogger(config.Logging)
 
 	return &SystemLog{
 		logger.NewZapMateLogger(config.Logging, logger.LogTypeSystem).SetAsyncer(1000).Sugar(),

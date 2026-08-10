@@ -16,7 +16,8 @@ ssh:
 
 # 数据库配置
 database:
-  printSQL: true
+  printSQL: false
+  slowThreshold: 500ms
   maxIdleConn: 10
   maxOpenConn: 100
   connMaxLifeTime: 3600s # 1800s
@@ -53,9 +54,9 @@ registry:
 
 # 日志配置
 logging:
-  level: 0                             # 日志输出的最低级别  -1~5：debug,info,warn,error,dpanic,panic,fatal
-  stdout: true                          # 是否输出到终端？  true=是，false=否
-  encoder: json                       # 日志编码格式，json 或 console，默认为 console
+  level: 0                               # 日志输出的最低级别  -1~5：debug,info,warn,error,dpanic,panic,fatal
+  stdout: false                          # 是否输出到终端？  true=是，false=否
+  encoder: json                          # 日志编码格式，json 或 console，默认为 console
   maxAge: 90                             # 日志文件最大保存时间，单位：天，-1：禁用此选项
   maxCount: 20                           # 日志文件最大保存数量
   maxSize: 500                           # 日志文件切割大小，单位：MB
@@ -74,6 +75,8 @@ logging:
     filename: system.log
   logJobConf:
     filename: job.log
+  logSQLConf:
+    filename: sql.log
 
 middleware:
   logRequestBody: true

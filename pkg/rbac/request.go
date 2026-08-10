@@ -11,7 +11,7 @@ import (
 
 	enum "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 
-	"github.com/rs/zerolog/log"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 )
 
 type Request struct {
@@ -42,13 +42,13 @@ func CompareRequests(want, exist []*Request) (add, remove []*Request) {
 	for key, req := range wantMap {
 		if _, ok := existMap[key]; !ok {
 			add = append(add, req)
-			log.Debug().Msgf("set item to add: %s", key)
+			logger.Debugf("set item to add: %s", key)
 		}
 	}
 	for key, req := range existMap {
 		if _, ok := wantMap[key]; !ok {
 			remove = append(remove, req)
-			log.Debug().Msgf("set item to remove: %s", key)
+			logger.Debugf("set item to remove: %s", key)
 		}
 	}
 

@@ -35,7 +35,7 @@ func NewRouter(mode string, logger *logger.SugaredMateLogger, controller *Contro
 	// 注册全局中间件
 	r.Use(
 		middleware.RequestID(logger),                    // 生成trace_id并透传，同时注入logger到上下文
-		middleware.AccessLog(logger),                    // 统一访问日志输出
+		middleware.AccessLog(logger, cfg.Middleware),    // 统一访问日志输出（由配置控制请求/响应体打印）
 		middleware.CORS(middleware.DefaultCORSConfig()), // 跨域处理中间件
 		i18n.GinMiddleware(nil),                         // 国际化中间件 使用初始化配置
 	)

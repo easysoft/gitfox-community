@@ -25,9 +25,8 @@ import (
 	"time"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/command"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	"github.com/easysoft/gitfox/errors"
-
-	"github.com/rs/zerolog/log"
 )
 
 type CloneRepoOptions struct {
@@ -393,10 +392,10 @@ func (g *Git) Push(
 	)
 
 	if g.traceGit {
-		log.Ctx(ctx).Trace().
-			Str("git", "push").
-			Err(err).
-			Msgf("IN:\n%#v\n\nSTDOUT:\n%s\n\nSTDERR:\n%s", opts, outbuf.String(), errbuf.String())
+		logger.GetLogger(ctx).With(
+			"git", "push",
+			"error", err,
+		).Tracef("IN:\n%#v\n\nSTDOUT:\n%s\n\nSTDERR:\n%s", opts, outbuf.String(), errbuf.String())
 	}
 
 	if err != nil {
@@ -481,7 +480,7 @@ func parseGitCountObjectsOutput(ctx context.Context, output string) ObjectCount 
 		case "size-garbage:":
 			fmt.Sscanf(fields[1], "%d", &info.SizeGarbage)
 		default:
-			log.Ctx(ctx).Warn().Msgf("line '%s: %s' not processed", fields[0], fields[1])
+			logger.GetLogger(ctx).Warnf("line '%s: %s' not processed", fields[0], fields[1])
 		}
 	}
 
