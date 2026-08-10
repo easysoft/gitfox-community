@@ -27,13 +27,13 @@ func NewDB(cfg *config.Config, systemLog *SystemLog) (*gorm.DB, func(), error) {
 	switch driver {
 	case "mysql":
 		var mysqlDB *database.MysqlDB
-		mysqlDB, cleanup, err = database.NewMysqlDB(cfg.Database)
+		mysqlDB, cleanup, err = database.NewMysqlDB(cfg.Database, cfg.Logging)
 		if mysqlDB != nil {
 			db = mysqlDB.DB()
 		}
 	case "dm":
 		var dmDB *database.DaMengDB
-		dmDB, cleanup, err = database.NewDaMengDB(cfg.Database)
+		dmDB, cleanup, err = database.NewDaMengDB(cfg.Database, cfg.Logging)
 		if dmDB != nil {
 			db = dmDB.DB()
 		}
@@ -62,7 +62,7 @@ func NewDB(cfg *config.Config, systemLog *SystemLog) (*gorm.DB, func(), error) {
 func NewSqliteDB(config *config.Config, systemLog *SystemLog) (*database.SqliteDB, func(), error) {
 	systemLog.Infow("[Provider] Initializing SQLite database", "path", config.SQLite.Path)
 
-	db, cleanup, err := database.NewSQLiteDB(config.SQLite)
+	db, cleanup, err := database.NewSQLiteDB(config.SQLite, config.Logging)
 	if err != nil {
 		systemLog.Errorw("[Provider] Failed to create SQLite connection", "error", err)
 		return nil, nil, err

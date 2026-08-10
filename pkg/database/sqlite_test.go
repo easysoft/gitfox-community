@@ -22,14 +22,14 @@ type TestUser struct {
 }
 
 func TestInitSQLiteDB(t *testing.T) {
-	config := config.SQLiteConfig{Path: "./gitfox_test.db"}
-	dbWrapper, _, _ := NewSQLiteDB(config)
+	cfg := config.SQLiteConfig{Path: "./gitfox_test.db"}
+	dbWrapper, _, _ := NewSQLiteDB(cfg, config.LoggingConfig{Stdout: true})
 	if dbWrapper == nil {
 		t.Fatal("Failed to initialize database")
 	}
 
 	// 验证数据库文件是否创建
-	if _, err := os.Stat(config.Path); os.IsNotExist(err) {
+	if _, err := os.Stat(cfg.Path); os.IsNotExist(err) {
 		t.Fatalf("Database file was not created")
 	}
 
@@ -42,12 +42,12 @@ func TestInitSQLiteDB(t *testing.T) {
 		t.Fatalf("Failed to ping database: %v", err)
 	}
 
-	t.Logf("File-based SQLite database connection successful: %s", config.Path)
+	t.Logf("File-based SQLite database connection successful: %s", cfg.Path)
 }
 
 func TestSQLiteDB_CRUD_Operations(t *testing.T) {
-	config := config.SQLiteConfig{Path: "./gitfox_test.db"}
-	dbWrapper, _, _ := NewSQLiteDB(config)
+	cfg := config.SQLiteConfig{Path: "./gitfox_test.db"}
+	dbWrapper, _, _ := NewSQLiteDB(cfg, config.LoggingConfig{Stdout: true})
 	if dbWrapper == nil {
 		t.Fatal("Failed to initialize database")
 	}
@@ -120,8 +120,8 @@ func TestSQLiteDB_CRUD_Operations(t *testing.T) {
 
 func TestSQLiteDB_Transaction(t *testing.T) {
 
-	config := config.SQLiteConfig{Path: "./gitfox_test.db"}
-	dbWrapper, _, _ := NewSQLiteDB(config)
+	cfg := config.SQLiteConfig{Path: "./gitfox_test.db"}
+	dbWrapper, _, _ := NewSQLiteDB(cfg, config.LoggingConfig{Stdout: true})
 	if dbWrapper == nil {
 		t.Fatal("Failed to initialize database")
 	}
@@ -166,8 +166,8 @@ func TestSQLiteDB_Transaction(t *testing.T) {
 }
 
 func TestSQLiteDB_ConnectionPool(t *testing.T) {
-	config := config.SQLiteConfig{Path: "./gitfox_test.db"}
-	dbWrapper, _, _ := NewSQLiteDB(config)
+	cfg := config.SQLiteConfig{Path: "./gitfox_test.db"}
+	dbWrapper, _, _ := NewSQLiteDB(cfg, config.LoggingConfig{Stdout: true})
 	if dbWrapper == nil {
 		t.Fatal("Failed to initialize database")
 	}
@@ -189,8 +189,8 @@ func TestSQLiteDB_ConnectionPool(t *testing.T) {
 func TestSQLiteDB_WALMode(t *testing.T) {
 	tempDir := t.TempDir()
 	dbPath := filepath.Join(tempDir, "wal_test.db")
-	config := config.SQLiteConfig{Path: dbPath}
-	dbWrapper, _, _ := NewSQLiteDB(config)
+	cfg := config.SQLiteConfig{Path: dbPath}
+	dbWrapper, _, _ := NewSQLiteDB(cfg, config.LoggingConfig{Stdout: true})
 	if dbWrapper == nil {
 		t.Fatal("Failed to initialize database")
 	}
@@ -212,8 +212,8 @@ func TestSQLiteDB_WALMode(t *testing.T) {
 
 func TestSQLiteDB_ErrorHandling(t *testing.T) {
 	// 测试无效路径
-	config := config.SQLiteConfig{Path: "/invalid/path/test.db"}
-	db, _, _ := NewSQLiteDB(config)
+	cfg := config.SQLiteConfig{Path: "/invalid/path/test.db"}
+	db, _, _ := NewSQLiteDB(cfg, config.LoggingConfig{Stdout: true})
 	if db == nil {
 		t.Fatal("Failed to initialize database")
 	}
@@ -225,13 +225,13 @@ func TestSQLiteDB_ErrorHandling(t *testing.T) {
 		}
 	}()
 
-	NewSQLiteDB(config) // 这应该会 panic
+	NewSQLiteDB(cfg, config.LoggingConfig{Stdout: true}) // 这应该会 panic
 }
 
 func BenchmarkSQLiteDB_Insert(b *testing.B) {
 
-	config := config.SQLiteConfig{Path: "./gitfox_test.db"}
-	dbWrapper, _, _ := NewSQLiteDB(config)
+	cfg := config.SQLiteConfig{Path: "./gitfox_test.db"}
+	dbWrapper, _, _ := NewSQLiteDB(cfg, config.LoggingConfig{Stdout: true})
 	if dbWrapper == nil {
 		b.Fatal("Failed to initialize database")
 	}
@@ -251,8 +251,8 @@ func BenchmarkSQLiteDB_Insert(b *testing.B) {
 
 func BenchmarkSQLiteDB_Select(b *testing.B) {
 
-	config := config.SQLiteConfig{Path: "./gitfox_test.db"}
-	dbWrapper, _, _ := NewSQLiteDB(config)
+	cfg := config.SQLiteConfig{Path: "./gitfox_test.db"}
+	dbWrapper, _, _ := NewSQLiteDB(cfg, config.LoggingConfig{Stdout: true})
 	if dbWrapper == nil {
 		b.Fatal("Failed to initialize database")
 	}

@@ -26,8 +26,8 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/merge"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/parser"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/sha"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	"github.com/easysoft/gitfox/errors"
-	"github.com/rs/zerolog/log"
 )
 
 // MergeParams is input structure object for merging operation.
@@ -125,7 +125,7 @@ type MergeOutput struct {
 //
 //nolint:gocognit,gocyclo,cyclop
 func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, error) {
-	log.Ctx(ctx).Debug().Msg("Merge")
+	logger.GetLogger(ctx).Debug("Merge")
 	err := params.Validate()
 	if err != nil {
 		return MergeOutput{}, fmt.Errorf("params not valid: %w", err)

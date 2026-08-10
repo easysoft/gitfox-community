@@ -22,9 +22,8 @@ import (
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/command"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/sha"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	"github.com/easysoft/gitfox/errors"
-
-	"github.com/rs/zerolog/log"
 )
 
 // CreateRefUpdater creates new RefUpdater object using the provided git hook ClientFactory.
@@ -210,9 +209,7 @@ func (u *RefUpdater) Pre(ctx context.Context, alternateDirs ...string) error {
 		return fmt.Errorf("pre-receive call failed with: %w", err)
 	}
 	if out.Error != nil {
-		log.Ctx(ctx).Debug().
-			Str("err", *out.Error).
-			Msgf("Pre-receive blocked ref update\nMessages\n%v", out.Messages)
+		logger.GetLogger(ctx).Debugw(fmt.Sprintf("Pre-receive blocked ref update\nMessages\n%v", out.Messages), "err", *out.Error)
 		return errors.PreconditionFailed("pre-receive hook blocked reference update: %q", *out.Error)
 	}
 

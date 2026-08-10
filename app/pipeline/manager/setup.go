@@ -3,8 +3,6 @@ package manager
 import (
 	"context"
 
-	"github.com/rs/zerolog/log"
-
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	eventModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/event"
 	executionModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/execution"
@@ -14,6 +12,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/sse"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/stage"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/step"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
 )
 
@@ -28,23 +27,24 @@ type setup struct {
 func (s *setup) do(ctx context.Context, stage *stageModel.StageWithSteps) error {
 	execution, err := s.ExecutionSvc.GetByID(noContext, stage.ExecutionID)
 	if err != nil {
-		log.Error().Err(err).Msg("manager: cannot find the execution")
+		logger.Errorw("manager: cannot find the execution", "error", err)
 		return err
 	}
 
-	log := log.With().
-		Uint("execution.id", execution.ID).
-		Uint("stage.id", stage.ID).
-		Logger()
+	log := logger.GetLogger(ctx).With(
+		"execution.id", execution.ID,
+		"stage.id", stage.ID,
+	)
 
 	if len(stage.ErrorLog) > 500 {
 		stage.ErrorLog = stage.ErrorLog[:500]
 	}
 	err = s.StageSvc.Update(noContext, &stage.Stage)
 	if err != nil {
-		log.Error().Err(err).
-			Str("stage.status", string(stage.Status)).
-			Msg("manager: cannot update the stage")
+		log.Errorw("manager: cannot update the stage",
+			"error", err,
+			"stage.status", string(stage.Status),
+		)
 		return err
 	}
 
@@ -55,28 +55,29 @@ func (s *setup) do(ctx context.Context, stage *stageModel.StageWithSteps) error 
 		}
 		err := s.StepSvc.Create(noContext, step)
 		if err != nil {
-			log.Error().Err(err).
-				Str("stage.status", string(stage.Status)).
-				Str("step.name", step.Name).
-				Uint("step.id", step.ID).
-				Msg("manager: cannot persist the step")
+			log.Errorw("manager: cannot persist the step",
+				"error", err,
+				"stage.status", string(stage.Status),
+				"step.name", step.Name,
+				"step.id", step.ID,
+			)
 			return err
 		}
 	}
 
 	_, err = s.updateExecution(noContext, execution)
 	if err != nil {
-		log.Error().Err(err).Msg("manager: cannot update the execution")
+		log.Errorw("manager: cannot update the execution", "error", err)
 		return err
 	}
 	pipeline, err := s.PipelineSvc.GetPipelineByID(ctx, int64(execution.PipelineID))
 	if err != nil {
-		log.Error().Err(err).Msg("manager: cannot find pipeline")
+		log.Errorw("manager: cannot find pipeline", "error", err)
 		return err
 	}
 	stages, err := s.StageSvc.ListWithSteps(noContext, execution.ID)
 	if err != nil {
-		log.Error().Err(err).Msg("manager: could not list stages with steps")
+		log.Errorw("manager: could not list stages with steps", "error", err)
 		return err
 	}
 	executionDetail := executionModel.ExecutionWithStages{
@@ -85,7 +86,7 @@ func (s *setup) do(ctx context.Context, stage *stageModel.StageWithSteps) error 
 	}
 	err = s.SSEStreamer.Publish(noContext, pipeline.SpaceID, eventModel.SSETypeExecutionRunning, executionDetail)
 	if err != nil {
-		log.Warn().Err(err).Msg("manager: could not publish execution event")
+		log.Warnw("manager: could not publish execution event", "error", err)
 	}
 
 	return nil

@@ -33,9 +33,10 @@ import (
 	"github.com/easysoft/gitfox/errors"
 
 	"github.com/gliderlabs/ssh"
-	"github.com/rs/zerolog/log"
 	gossh "golang.org/x/crypto/ssh"
 	"golang.org/x/exp/slices"
+
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 )
 
 type Server struct {
@@ -129,7 +130,7 @@ func (s *Server) ListenAndServe() error {
 
 // 优雅关闭 SSH 服务器
 func (s *Server) Shutdown(ctx context.Context) error {
-	log.Debug().Msgf("stopping ssh service: %v", s.internal.Addr)
+	logger.Debugf("stopping ssh service: %v", s.internal.Addr)
 	err := s.internal.Shutdown(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to stop ssh service: %w", err)
@@ -144,38 +145,38 @@ func (s *Server) Shutdown(ctx context.Context) error {
 // - 将认证成功的用户信息存储到上下文中
 func (s *Server) publicKeyHandler(ctx ssh.Context, key ssh.PublicKey) bool {
 	if slices.Contains(publickey.DisallowedTypes, key.Type()) {
-		log.Warn().Msgf("public key type not supported: %s", key.Type())
+		logger.Warnf("public key type not supported: %s", key.Type())
 		return false
 	}
 
 	if s.DefaultUser != "" && ctx.User() != s.DefaultUser {
-		log.Warn().Msgf("invalid SSH username %s - must use %s for all git operations via ssh",
+		logger.Warnf("invalid SSH username %s - must use %s for all git operations via ssh",
 			ctx.User(), s.DefaultUser)
-		log.Warn().Msgf("failed authentication attempt from %s", ctx.RemoteAddr())
+		logger.Warnf("failed authentication attempt from %s", ctx.RemoteAddr())
 		return false
 	}
 
 	user, keyID, err := s.Verifier.ValidateKey(ctx, key)
 	if errors.IsNotFound(err) {
-		log.Debug().Err(err).Msg("public key is unknown")
+		logger.Debugw("public key is unknown", "error", err)
 		return false
 	}
 	if err != nil {
-		log.Warn().Err(err).Msg("failed to validate public key")
+		logger.Warnw("failed to validate public key", "error", err)
 		return false
 	}
 
 	// check if we have a certificate
 	if cert, ok := key.(*gossh.Certificate); ok {
 		if len(s.TrustedUserCAKeys) == 0 {
-			log.Warn().Msg("Certificate Rejected: No trusted certificate authorities for this server")
-			log.Warn().Msgf("Failed authentication attempt from %s", ctx.RemoteAddr())
+			logger.Warn("Certificate Rejected: No trusted certificate authorities for this server")
+			logger.Warnf("Failed authentication attempt from %s", ctx.RemoteAddr())
 			return false
 		}
 
 		if cert.CertType != gossh.UserCert {
-			log.Warn().Msg("Certificate Rejected: Not a user certificate")
-			log.Warn().Msgf("Failed authentication attempt from %s", ctx.RemoteAddr())
+			logger.Warn("Certificate Rejected: Not a user certificate")
+			logger.Warnf("Failed authentication attempt from %s", ctx.RemoteAddr())
 			return false
 		}
 
@@ -208,7 +209,7 @@ func (s *Server) sessionHandler(session ssh.Session) {
 	// 标记密钥为已验证(仅在会话成功建立后)
 	if keyID, ok := session.Context().Value(principalID).(int64); ok {
 		if err := s.Verifier.MarkKeyAsVerified(session.Context(), keyID); err != nil {
-			log.Warn().Err(err).Msg("failed to mark key as verified")
+			logger.Warnw("failed to mark key as verified", "error", err)
 		}
 	}
 
@@ -278,10 +279,10 @@ func (s *Server) sessionHandler(session ssh.Session) {
 		},
 	)
 	if err != nil {
-		log.Error().Err(err).Msg("git service pack failed")
+		logger.Errorw("git service pack failed", "error", err)
 		_, err = io.Copy(session.Stderr(), strings.NewReader(err.Error()))
 		if err != nil {
-			log.Error().Err(err).Msg("error writing to session stderr")
+			logger.Errorw("error writing to session stderr", "error", err)
 		}
 	}
 }
@@ -291,17 +292,17 @@ func (s *Server) sessionHandler(session ssh.Session) {
 func sendKeepAliveMsg(ctx context.Context, session ssh.Session, interval time.Duration) {
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
-	log.Ctx(ctx).Debug().Str("remote_addr", session.RemoteAddr().String()).Msgf("sendKeepAliveMsg")
+	logger.GetLogger(ctx).Debugw("sendKeepAliveMsg", "remote_addr", session.RemoteAddr().String())
 
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			log.Ctx(ctx).Debug().Msg("send keepalive message to ssh client")
+			logger.GetLogger(ctx).Debug("send keepalive message to ssh client")
 			_, err := session.SendRequest(KeepAliveMsg, true, nil)
 			if err != nil {
-				log.Ctx(ctx).Debug().Err(err).Msg("failed to send keepalive message to ssh client")
+				logger.GetLogger(ctx).Debugw("failed to send keepalive message to ssh client", "error", err)
 			}
 		}
 	}
@@ -310,5 +311,5 @@ func sendKeepAliveMsg(ctx context.Context, session ssh.Session, interval time.Du
 // - SSH 连接失败时的回调函数
 // - 记录连接失败的日志
 func sshConnectionFailed(conn net.Conn, err error) {
-	log.Err(err).Msgf("failed connection from %s with error: %v", conn.RemoteAddr(), err)
+	logger.Errorw(fmt.Sprintf("failed connection from %s with error: %v", conn.RemoteAddr(), err), "error", err)
 }

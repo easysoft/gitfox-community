@@ -31,6 +31,7 @@ func (s *Service) handleEventBranchUpdated(ctx context.Context,
 		Match:        strings.TrimPrefix(event.Payload.Ref, "refs/heads/"),
 		Commit:       event.Payload.NewSHA,
 		CommitBefore: event.Payload.OldSHA,
+		CommitMatch:  event.Payload.CommitMessage,
 	}
 	return s.trigger(ctx, event.Payload.RepoID, hook)
 }
