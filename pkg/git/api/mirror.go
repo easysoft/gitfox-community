@@ -8,12 +8,12 @@ package api
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/command"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/util"
-
-	"github.com/rs/zerolog/log"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 )
 
 // GetRemoteName returns the name of the remote.
@@ -37,7 +37,7 @@ func (g *Git) MirrorAddFetch(ctx context.Context, repoPath, remote, sourceRepo s
 	if err := cmdRemote.Run(ctx, command.WithDir(repoPath)); err != nil {
 		return err
 	}
-	log.Ctx(ctx).Info().Msg("mirror remote added success")
+	logger.GetLogger(ctx).Info("mirror remote added success")
 	// typo push miror
 	// cmdConfigHead := command.New("config",
 	// 	command.WithFlag("--add"),
@@ -83,7 +83,10 @@ func (g *Git) MirrorFetch(ctx context.Context, repoPath, remote string, prune bo
 	}
 	remoteURL, remoteErr := g.GetRemoteURL(ctx, repoPath, remote)
 	if remoteErr != nil {
-		log.Ctx(ctx).Err(remoteErr).Msgf("SyncMirrors [repo: %v Remote: %v]: GetRemoteAddress Error %v", repoPath, remoteURL, remoteErr)
+		logger.GetLogger(ctx).Errorw(
+			fmt.Sprintf("SyncMirrors [repo: %v Remote: %v]: GetRemoteAddress Error %v", repoPath, remoteURL, remoteErr),
+			"error", remoteErr,
+		)
 		return remoteErr, false
 	}
 	cmd := command.New("fetch",
@@ -103,7 +106,7 @@ func (g *Git) MirrorFetch(ctx context.Context, repoPath, remote string, prune bo
 		stdoutMessage := util.SanitizeCredentialURLs(stdout)
 		// Now check if the error is a resolve reference due to broken reference
 		if strings.Contains(stderr, "unable to resolve reference") && strings.Contains(stderr, "reference broken") {
-			log.Ctx(ctx).Warn().Msgf("SyncMirrors [repo: %v Remote: %v]: failed to update mirror repository due to broken references:\nStdout: %s\nStderr: %s\nErr: %v\nAttempting Prune", repoPath, remoteURL, stdoutMessage, stderrMessage, err)
+			logger.GetLogger(ctx).Warnf("SyncMirrors [repo: %v Remote: %v]: failed to update mirror repository due to broken references:\nStdout: %s\nStderr: %s\nErr: %v\nAttempting Prune", repoPath, remoteURL, stdoutMessage, stderrMessage, err)
 			err = nil
 			// Attempt to prune the repository
 			// Attempt prune
@@ -123,7 +126,10 @@ func (g *Git) MirrorFetch(ctx context.Context, repoPath, remote string, prune bo
 
 		// If there is still an error (or there always was an error)
 		if err != nil {
-			log.Ctx(ctx).Err(err).Msgf("SyncMirrors [repo: %v Remote: %v]: failed to update mirror repository:\nStdout: %s\nStderr: %s\nErr: %v", repoPath, remoteURL, stdoutMessage, stderrMessage, err)
+			logger.GetLogger(ctx).Errorw(
+				fmt.Sprintf("SyncMirrors [repo: %v Remote: %v]: failed to update mirror repository:\nStdout: %s\nStderr: %s\nErr: %v", repoPath, remoteURL, stdoutMessage, stderrMessage, err),
+				"error", err,
+			)
 			return nil, false
 		}
 	}
@@ -149,7 +155,10 @@ func (g *Git) pruneBrokenReferences(ctx context.Context,
 		// contain a password
 		stderrMessage := util.SanitizeCredentialURLs(stderr)
 		stdoutMessage := util.SanitizeCredentialURLs(stdout)
-		log.Ctx(ctx).Err(pruneErr).Msgf("Failed to prune mirror repository %s references:\nStdout: %s\nStderr: %s\nErr: %v", repoPath, stdoutMessage, stderrMessage, pruneErr)
+		logger.GetLogger(ctx).Errorw(
+			fmt.Sprintf("Failed to prune mirror repository %s references:\nStdout: %s\nStderr: %s\nErr: %v", repoPath, stdoutMessage, stderrMessage, pruneErr),
+			"error", pruneErr,
+		)
 	}
 	return pruneErr
 }

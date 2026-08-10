@@ -25,7 +25,7 @@ import (
 
 	"github.com/easysoft/gitfox/errors"
 
-	"github.com/rs/zerolog/log"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 )
 
 func TestCreateBareRepository(t *testing.T) {
@@ -82,7 +82,7 @@ func TestCommandContextTimeout(t *testing.T) {
 		return
 	}
 
-	log.Info().Msgf("outbuffer %s", outbuffer.String())
+	logger.Infof("outbuffer %s", outbuffer.String())
 
 	cmd = New("cat-file", WithFlag("--batch"))
 

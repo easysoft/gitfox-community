@@ -35,9 +35,9 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/parser"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/sha"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/tempdir"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	"github.com/easysoft/gitfox/errors"
 
-	"github.com/rs/zerolog/log"
 	"golang.org/x/exp/slices"
 )
 
@@ -74,9 +74,7 @@ func NewSharedRepo(
 
 func (r *SharedRepo) Close(ctx context.Context) {
 	if err := tempdir.RemoveTemporaryPath(r.repoPath); err != nil {
-		log.Ctx(ctx).Err(err).
-			Str("path", r.repoPath).
-			Msg("Failed to remove temporary shared directory")
+		logger.GetLogger(ctx).Errorw("Failed to remove temporary shared directory", "error", err, "path", r.repoPath)
 	}
 }
 
@@ -336,7 +334,7 @@ func (r *SharedRepo) MergeTree(
 		output := strings.TrimSpace(stdout.String())
 		lines := strings.Split(output, "\n")
 		if len(lines) < 2 {
-			log.Ctx(ctx).Err(err).Str("output", output).Msg("unexpected output of merge-tree in shared repo")
+			logger.GetLogger(ctx).Errorw("unexpected output of merge-tree in shared repo", "error", err, "output", output)
 			return sha.None, nil, fmt.Errorf("unexpected output of merge-tree in shared repo: %w", err)
 		}
 
@@ -624,7 +622,7 @@ func (r *SharedRepo) PatchTextFile(
 		err := patchTextFileWritePatchedFile(scanner, payloads, lineEnding, pipeWriter)
 		pipErr := pipeWriter.CloseWithError(err)
 		if pipErr != nil {
-			log.Ctx(ctx).Warn().Err(pipErr).Msgf("failed to close pipe writer with error: %s", err)
+			logger.GetLogger(ctx).Warnw(fmt.Sprintf("failed to close pipe writer with error: %s", err), "error", pipErr)
 		}
 	}()
 
@@ -939,9 +937,7 @@ func (r *SharedRepo) MoveObjects(ctx context.Context) error {
 
 		errRename := os.Rename(f.fullPath, dstPath)
 		if errRename == nil {
-			log.Ctx(ctx).Debug().
-				Str("object", f.relPath).
-				Msg("moved git object")
+			logger.GetLogger(ctx).Debugw("moved git object", "object", f.relPath)
 			continue
 		}
 
@@ -968,17 +964,11 @@ func (r *SharedRepo) MoveObjects(ctx context.Context) error {
 			return nil
 		}()
 		if copyError != nil {
-			log.Ctx(ctx).Err(copyError).
-				Str("object", f.relPath).
-				Str("renameErr", errRename.Error()).
-				Msg("failed to move or copy git object")
+			logger.GetLogger(ctx).Errorw("failed to move or copy git object", "error", copyError, "object", f.relPath, "renameErr", errRename.Error())
 			return fmt.Errorf("failed to move or copy git object: %w", copyError)
 		}
 
-		log.Ctx(ctx).Warn().
-			Str("object", f.relPath).
-			Str("renameErr", errRename.Error()).
-			Msg("copied git object")
+		logger.GetLogger(ctx).Warnw("copied git object", "object", f.relPath, "renameErr", errRename.Error())
 	}
 
 	return nil

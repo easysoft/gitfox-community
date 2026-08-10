@@ -25,9 +25,8 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/parser"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/sha"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/sharedrepo"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	"github.com/easysoft/gitfox/errors"
-
-	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -89,7 +88,7 @@ type CommitFilesResponse struct {
 
 //nolint:gocognit,nestif
 func (s *Service) CommitFiles(ctx context.Context, params *CommitFilesParams) (CommitFilesResponse, error) {
-	log.Ctx(ctx).Debug().Msg("CommitFiles")
+	logger.GetLogger(ctx).Debug("CommitFiles")
 	if err := params.Validate(); err != nil {
 		return CommitFilesResponse{}, err
 	}

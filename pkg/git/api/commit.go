@@ -31,9 +31,9 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/command"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/enum"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/sha"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/common"
 	"github.com/golang-module/carbon/v2"
-	"github.com/rs/zerolog/log"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -547,7 +547,7 @@ func convertFileDiffStatus(ctx context.Context, c string) enum.FileDiffStatus {
 	case strings.HasPrefix(c, "R"):
 		return enum.FileDiffStatusRenamed
 	default:
-		log.Ctx(ctx).Warn().Msgf("encountered unknown change type %s", c)
+		logger.GetLogger(ctx).Warnf("encountered unknown change type %s", c)
 		return enum.FileDiffStatusUndefined
 	}
 }
@@ -855,7 +855,7 @@ func getCommitFromBatchReader(
 
 		return commit, nil
 	default:
-		log.Warn().Msgf("Unknown object type: %s", output.Type)
+		logger.Warnf("Unknown object type: %s", output.Type)
 		_, err = rd.Discard(int(output.Size) + 1)
 		if err != nil {
 			return nil, fmt.Errorf("reader Discard failed: %w", err)

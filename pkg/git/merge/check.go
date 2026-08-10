@@ -22,9 +22,8 @@ import (
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/command"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/sharedrepo"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	"github.com/easysoft/gitfox/errors"
-
-	"github.com/rs/zerolog/log"
 )
 
 // FindConflicts checks if two git revisions are mergeable and returns list of conflict files if they are not.
@@ -56,14 +55,14 @@ func FindConflicts(
 
 	lines := strings.Split(output, "\000")
 	if len(lines) < 2 {
-		log.Ctx(ctx).Error().Str("output", output).Msg("Unexpected merge-tree output")
+		logger.GetLogger(ctx).Errorw("Unexpected merge-tree output", "output", output)
 		return false, "", nil, errors.Internal(nil,
 			"Failed to find conflicts between %s and %s: Unexpected git output", base, head)
 	}
 
 	status, err := strconv.Atoi(lines[0])
 	if err != nil {
-		log.Ctx(ctx).Err(err).Str("output", output).Msg("Unexpected merge status")
+		logger.GetLogger(ctx).Errorw("Unexpected merge status", "error", err, "output", output)
 		return false, "", nil, errors.Internal(nil,
 			"Failed to find conflicts between %s and %s: Unexpected merge status", base, head)
 	}

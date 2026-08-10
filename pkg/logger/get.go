@@ -18,11 +18,14 @@ type contextKey string
 
 const LoggerContextKey = contextKey(ContextLogger)
 
+// traceIDContextKey 用于在 context.Context 中存储 trace_id 的 key
+const traceIDContextKey = contextKey("trace_id")
+
 var (
-	defaultLogger       *SugaredMateLogger
-	defaultLoggerOnce   sync.Once
-	defaultLogConfig    *config.LoggingConfig
-	defaultLogConfigMu  sync.RWMutex
+	defaultLogger      *SugaredMateLogger
+	defaultLoggerOnce  sync.Once
+	defaultLogConfig   *config.LoggingConfig
+	defaultLogConfigMu sync.RWMutex
 )
 
 // InitDefaultLogger 使用指定的配置初始化默认 logger。
@@ -121,10 +124,25 @@ func GetContextWithLogger(c *gin.Context) context.Context {
 	}
 
 	if val, exists := c.Get("trace_id"); exists {
-		ctx = context.WithValue(ctx, contextKey("trace_id"), val)
+		ctx = context.WithValue(ctx, traceIDContextKey, val)
 	}
 
 	return ctx
+}
+
+// WithTraceID 将 trace_id 添加到 context.Context 中
+func WithTraceID(ctx context.Context, traceID string) context.Context {
+	return context.WithValue(ctx, traceIDContextKey, traceID)
+}
+
+// GetTraceID 从 context.Context 中获取 trace_id，未设置时返回空字符串
+func GetTraceID(ctx context.Context) string {
+	if val := ctx.Value(traceIDContextKey); val != nil {
+		if traceID, ok := val.(string); ok {
+			return traceID
+		}
+	}
+	return ""
 }
 
 // FromContext 从 context.Context 中获取 logger，与 drone/runner-go/logger.FromContext 兼容。

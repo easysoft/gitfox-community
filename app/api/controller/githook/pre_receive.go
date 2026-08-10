@@ -38,7 +38,6 @@ import (
 	// "github.com/easysoft/gitfox/types/enum"
 
 	"github.com/gotidy/ptr"
-	"github.com/rs/zerolog"
 	"golang.org/x/exp/slices"
 )
 
@@ -257,10 +256,4 @@ func groupRefsByAction(refUpdates []hook.ReferenceUpdate, forced []bool) (c chan
 		}
 	}
 	return
-}
-
-func loggingWithRefUpdate(refUpdate hook.ReferenceUpdate) func(c zerolog.Context) zerolog.Context {
-	return func(c zerolog.Context) zerolog.Context {
-		return c.Str("ref", refUpdate.Ref).Str("old_sha", refUpdate.Old.String()).Str("new_sha", refUpdate.New.String())
-	}
 }

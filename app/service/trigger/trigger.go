@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/bmatcuk/doublestar/v4"
@@ -174,6 +175,11 @@ func (s *Service) triggerPipeline(ctx context.Context, repoID int64, hook *trigg
 
 	var errs error
 	for _, t := range triggers {
+		if hook.Action == constant.TriggerActionBranchUpdated {
+			if !s.isCommentMatch(hook.CommitMatch, t.Comment) {
+				continue
+			}
+		}
 		pipelineInfo, err := s.pipelineSvc.GetPipelineByID(ctx, t.PipelineID)
 		if err != nil {
 			errs = multierror.Append(errs, fmt.Errorf("failed to get pipeline info %d: %w", t.PipelineID, err))
@@ -260,6 +266,19 @@ func (s *Service) isBranchMatch(branches *scanModel.Pattern, ref string) bool {
 	}
 	for _, pattern := range branches.Include {
 		if ok, _ := doublestar.Match(pattern, ref); ok {
+			return true
+		}
+	}
+	return false
+}
+
+func (s *Service) isCommentMatch(commitMessage, comment string) bool {
+	if comment == "" {
+		return true
+	}
+	commentList := strings.Split(comment, ",")
+	for _, c := range commentList {
+		if strings.Contains(commitMessage, c) {
 			return true
 		}
 	}

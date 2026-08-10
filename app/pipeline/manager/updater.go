@@ -13,7 +13,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/stage"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/step"
 
-	"github.com/rs/zerolog/log"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 )
 
 type updater struct {
@@ -25,42 +25,42 @@ type updater struct {
 }
 
 func (u *updater) do(ctx context.Context, step *stepModel.Step) error {
-	log := log.Ctx(ctx).With().
-		Str("step.name", step.Name).
-		Str("step.status", string(step.Status)).
-		Int64("step.id", int64(step.ID)).
-		Logger()
+	log := logger.GetLogger(ctx).With(
+		"step.name", step.Name,
+		"step.status", string(step.Status),
+		"step.id", int64(step.ID),
+	)
 
 	if len(step.ErrorLog) > 500 {
 		step.ErrorLog = step.ErrorLog[:500]
 	}
 	err := u.StepSvc.Update(noContext, step)
 	if err != nil {
-		log.Error().Err(err).Msg("manager: cannot update step")
+		log.Errorw("manager: cannot update step", "error", err)
 		return err
 	}
 
 	stage, err := u.StageSvc.GetByID(noContext, step.StageID)
 	if err != nil {
-		log.Error().Err(err).Msg("manager: cannot find stage")
+		log.Errorw("manager: cannot find stage", "error", err)
 		return nil
 	}
 
 	execution, err := u.ExecutionSvc.GetByID(noContext, stage.ExecutionID)
 	if err != nil {
-		log.Error().Err(err).Msg("manager: cannot find execution")
+		log.Errorw("manager: cannot find execution", "error", err)
 		return nil
 	}
 
 	pipeline, err := u.PipelineSvc.GetPipelineByID(noContext, int64(execution.PipelineID))
 	if err != nil {
-		log.Error().Err(err).Msg("manager: cannot find pipeline")
+		log.Errorw("manager: cannot find pipeline", "error", err)
 		return nil
 	}
 
 	stages, err := u.StageSvc.ListWithSteps(noContext, stage.ExecutionID)
 	if err != nil {
-		log.Error().Err(err).Msg("manager: cannot find stages")
+		log.Errorw("manager: cannot find stages", "error", err)
 		return nil
 	}
 
@@ -70,7 +70,7 @@ func (u *updater) do(ctx context.Context, step *stepModel.Step) error {
 	}
 	err = u.SSEStreamer.Publish(noContext, pipeline.SpaceID, eventModel.SSETypeExecutionUpdated, executionDetail)
 	if err != nil {
-		log.Warn().Err(err).Msg("manager: cannot publish execution updated event")
+		log.Warnw("manager: cannot publish execution updated event", "error", err)
 	}
 
 	return nil
