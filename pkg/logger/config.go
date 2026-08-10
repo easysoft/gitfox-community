@@ -1,12 +1,15 @@
 package logger
 
 import (
+	"io"
 	"os"
 	"path/filepath"
+	"sync"
+	"time"
 
+	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"gopkg.in/natefinch/lumberjack.v2"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 )
@@ -18,6 +21,7 @@ const (
 	LogTypeScan      = "scan"
 	LogTypeSystem    = "system"
 	LogTypeJob       = "job"
+	LogTypeSQL       = "sql"
 	LogTypeDefault   = "default"
 )
 
@@ -35,6 +39,11 @@ func getLogPath(c config.LoggingConfig, logType string) string {
 		return filepath.Join(c.LogDir, c.LogSystemConf.Filename)
 	case LogTypeJob:
 		return filepath.Join(c.LogDir, c.LogJobConf.Filename)
+	case LogTypeSQL:
+		if c.LogSQLConf.Filename == "" {
+			return filepath.Join(c.LogDir, "sql.log")
+		}
+		return filepath.Join(c.LogDir, c.LogSQLConf.Filename)
 	case LogTypeDefault:
 		if c.LogDefaultConf.Filename == "" {
 			return filepath.Join(c.LogDir, "default.log")
@@ -55,6 +64,41 @@ func ensureLogDir(logPath string) error {
 	return os.MkdirAll(logDir, 0755)
 }
 
+var (
+	rotatelogsRegistry = make(map[string]*rotatelogs.RotateLogs)
+	rotatelogsMu       sync.Mutex
+)
+
+// sharedRotatelogs 返回指定日志路径对应的 rotatelogs 实例（如 system.log.2026-08-07）。
+func sharedRotatelogs(config config.LoggingConfig, logPath string) (*rotatelogs.RotateLogs, error) {
+	rotatelogsMu.Lock()
+	defer rotatelogsMu.Unlock()
+	if rl, ok := rotatelogsRegistry[logPath]; ok {
+		return rl, nil
+	}
+
+	opts := []rotatelogs.Option{
+		rotatelogs.WithRotationTime(time.Hour * 24),
+	}
+	// 按天保留（MaxAge 天），MaxAge 与 MaxCount 不能同时设置，优先 MaxAge
+	if config.MaxAge > 0 {
+		opts = append(opts, rotatelogs.WithMaxAge(time.Hour*24*time.Duration(config.MaxAge)))
+	} else if config.MaxCount > 0 {
+		opts = append(opts, rotatelogs.WithRotationCount(uint(config.MaxCount)))
+	}
+	// 单日文件超过 maxSize 时额外轮转（生成 .1 .2 等序号后缀）
+	if config.MaxSize > 0 {
+		opts = append(opts, rotatelogs.WithRotationSize(int64(config.MaxSize)*1024*1024))
+	}
+
+	rl, err := rotatelogs.New(logPath+".%Y-%m-%d", opts...)
+	if err != nil {
+		return nil, err
+	}
+	rotatelogsRegistry[logPath] = rl
+	return rl, nil
+}
+
 // filepath : zap config file path
 // section  : Config options
 func NewZapLogger(config config.LoggingConfig, logType string) *zap.Logger {
@@ -65,6 +109,12 @@ func NewZapLogger(config config.LoggingConfig, logType string) *zap.Logger {
 	if err := ensureLogDir(logPath); err != nil {
 		panic("failed to create log directory: " + err.Error())
 	}
+
+	rotLogWriter, err := sharedRotatelogs(config, logPath)
+	if err != nil {
+		panic("failed to create log writer: " + err.Error())
+	}
+
 	return zap.New(
 		zapcore.NewCore(
 			func() zapcore.Encoder {
@@ -91,61 +141,19 @@ func NewZapLogger(config config.LoggingConfig, logType string) *zap.Logger {
 				return zapcore.NewConsoleEncoder(encoderConfig)
 			}(),
 
-			// Lumberjack 策略（当前启用）
-			// - 按文件大小轮转 ：当文件达到 max-size MB 时创建新文件
-			// - 保留文件数量 ：最多保留 max-count 个备份文件
+			// Rotatelogs 策略
+			// - 按天轮转 ：每天创建新文件，文件名包含日期（如 system.log.2026-08-07）
 			// - 按时间清理 ：保留 max-age 天的日志文件
-			// - 文件命名 ：使用序号后缀（如 app.log , app.log.1 , app.log.2 ）
-			// - 压缩 ：不压缩旧文件（ Compress: false ）
-			// - 时区 ：使用本地时间（ LocalTime: true ）
+			// - 单日超过 max-size MB 时额外轮转（序号后缀）
 			zapcore.NewMultiWriteSyncer(
 				func() (writer []zapcore.WriteSyncer) {
-					writer = append(writer,
-						zapcore.AddSync(
-							&lumberjack.Logger{
-								Filename:   logPath,
-								MaxSize:    config.MaxSize,
-								MaxBackups: config.MaxCount,
-								MaxAge:     config.MaxAge,
-								Compress:   false,
-								LocalTime:  true,
-							}),
-					)
+					writer = append(writer, zapcore.AddSync(rotLogWriter))
 					if config.Stdout {
 						writer = append(writer, zapcore.AddSync(os.Stdout))
 					}
 					return writer
 				}()...,
 			),
-
-			// Rotatelogs 策略（已禁用）
-			// - 按时间轮转 ：每天创建新文件
-			// - 保留文件数量 ：最多保留 max-count 个备份文件
-			// - 按时间清理 ：保留 max-age 天的日志文件
-			// - 文件命名 ：使用日期后缀（如 app.log.2023-01-01 ）
-			// - 压缩 ：不压缩旧文件（ Compress: false ）
-			// - 时区 ：使用本地时间（ LocalTime: true ）
-
-			// zapcore.NewMultiWriteSyncer(
-			// 	func() []zapcore.WriteSyncer {
-			// 		hook, err := rotatelogs.New(
-			// 			logSec.GetString("file-name")+".%Y-%m-%d",
-			// 			rotatelogs.WithLinkName(logSec.GetString("file-name")),
-			// 			rotatelogs.WithMaxAge(time.Hour*24*time.Duration(logSec.GetInt("max-age"))),
-			// 			rotatelogs.WithRotationTime(time.Hour*24),
-			// 			rotatelogs.WithRotationSize(logSec.GetInt64("max-size")*1024*1024),
-			// 			//rotatelogs.WithRotationCount(logSec.GetUint("max-count")),
-			// 		)
-			// 		if err != nil {
-			// 			panic(hook)
-			// 		}
-			// 		writes := []zapcore.WriteSyncer{zapcore.AddSync(hook)}
-			// 		if logSec.GetBool("stdout") {
-			// 			writes = append(writes, zapcore.AddSync(os.Stdout))
-			// 		}
-			// 		return writes
-			// 	}()...,
-			// ),
 			zapcore.Level(config.Level),
 		),
 
@@ -154,4 +162,22 @@ func NewZapLogger(config config.LoggingConfig, logType string) *zap.Logger {
 		zap.WithCaller(config.Caller),
 	)
 
+}
+
+// NewSQLFileWriter 创建用于 GORM SQL 日志输出的文件写入器
+// 按日期轮转，文件名包含日期（如 sql.log.2026-08-07）
+// 调用方无需关闭该 writer（rotatelogs 会在每次写入后自动处理轮转）
+func NewSQLFileWriter(config config.LoggingConfig) io.Writer {
+	logPath := getLogPath(config, LogTypeSQL)
+	if logPath == "" {
+		return io.Discard
+	}
+	if err := ensureLogDir(logPath); err != nil {
+		return io.Discard
+	}
+	rl, err := sharedRotatelogs(config, logPath)
+	if err != nil {
+		return io.Discard
+	}
+	return rl
 }

@@ -23,9 +23,8 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/check"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/hook"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/sha"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	"github.com/easysoft/gitfox/errors"
-
-	"github.com/rs/zerolog/log"
 )
 
 type BranchSortOption int
@@ -94,7 +93,7 @@ type ListBranchesOutput struct {
 }
 
 func (s *Service) CreateBranch(ctx context.Context, params *CreateBranchParams) (*CreateBranchOutput, error) {
-	log.Ctx(ctx).Debug().Msg("CreateBranch")
+	logger.GetLogger(ctx).Debug("CreateBranch")
 	if err := params.Validate(); err != nil {
 		return nil, err
 	}
@@ -161,7 +160,7 @@ func (s *Service) GetBranch(ctx context.Context, params *GetBranchParams) (*GetB
 }
 
 func (s *Service) DeleteBranch(ctx context.Context, params *DeleteBranchParams) error {
-	log.Ctx(ctx).Debug().Msg("DeleteBranch")
+	logger.GetLogger(ctx).Debug("DeleteBranch")
 	if params == nil {
 		return ErrNoParamsProvided
 	}
@@ -272,7 +271,7 @@ func (s *Service) listBranchesLoadReferenceData(
 		return nil, fmt.Errorf("failed to walk branch references: %w", err)
 	}
 
-	log.Ctx(ctx).Trace().Msgf("git api returned %d branches", len(branches))
+	logger.GetLogger(ctx).Tracef("git api returned %d branches", len(branches))
 
 	return branches, nil
 }

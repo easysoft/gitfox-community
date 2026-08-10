@@ -121,7 +121,6 @@ func objectErr(c *gin.Context, err error, httpStatus int, args ...interface{}) {
 		"error", err,
 		"code", code,
 		"message", message,
-		"trace_id", traceID,
 	)
 	c.JSON(httpStatus, ObjectResponse{
 		Code:    constant.RespFailCode,

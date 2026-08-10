@@ -8,7 +8,8 @@ import (
 	jobsStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/jobs"
 	pkgJobs "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/jobs"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/lock"
-	"github.com/rs/zerolog/log"
+
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 )
 
 const (
@@ -42,7 +43,7 @@ func (j *jobOverdue) Handle(ctx context.Context, _ string, _ pkgJobs.ProgressRep
 
 	defer func() {
 		if err := mx.Unlock(ctx); err != nil {
-			log.Err(err).Msg("[JobScheduler] failed to release global lock after reclaiming overdue jobs")
+			logger.Errorw("[JobScheduler] failed to release global lock after reclaiming overdue jobs", "error", err)
 		}
 	}()
 

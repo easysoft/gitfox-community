@@ -25,10 +25,10 @@ import (
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/cache"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/sha"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	"github.com/easysoft/gitfox/errors"
 
 	"github.com/go-redis/redis/v8"
-	"github.com/rs/zerolog/log"
 )
 
 func NewInMemoryLastCommitCache(
@@ -40,7 +40,7 @@ func NewInMemoryLastCommitCache(
 }
 
 func logCacheErrFn(ctx context.Context, err error) {
-	log.Ctx(ctx).Warn().Msgf("failed to use cache: %s", err.Error())
+	logger.GetLogger(ctx).Warnf("failed to use cache: %s", err.Error())
 }
 
 func NewRedisLastCommitCache(

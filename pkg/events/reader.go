@@ -7,7 +7,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/rs/zerolog/log"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 )
 
 // ReaderFactoryFunc is an abstraction of a factory method that creates customized Reader implementations (type [R]).
@@ -38,11 +38,11 @@ func (f *ReaderFactory[R]) Launch(ctx context.Context,
 	}
 
 	// setup ctx with copied logger that has extra fields set
-	log := log.Ctx(ctx).With().
-		Str("events.category", f.category).
-		Str("events.group_name", groupName).
-		Str("events.reader_name", readerName).
-		Logger()
+	log := logger.GetLogger(ctx).With(
+		"events.category", f.category,
+		"events.group_name", groupName,
+		"events.reader_name", readerName,
+	)
 
 	// create new stream consumer using factory method
 	streamConsumer, err := f.streamConsumerFactoryFn(groupName, readerName)
@@ -72,18 +72,18 @@ func (f *ReaderFactory[R]) Launch(ctx context.Context,
 	// hook into all available logs
 	go func(errorCh <-chan error) {
 		for err := range errorCh {
-			log.Err(err).Msg("received an error from stream consumer")
+			log.Errorw("received an error from stream consumer", "error", err)
 		}
 	}(streamConsumer.Errors())
 
 	go func(infoCh <-chan string) {
 		for s := range infoCh {
-			log.Info().Msgf("stream consumer: %s", s)
+			log.Infof("stream consumer: %s", s)
 		}
 	}(streamConsumer.Infos())
 
 	// prepare context (inject logger and make canceable)
-	ctx = log.WithContext(ctx)
+	ctx = logger.WithLogger(ctx, log)
 	ctx, cancelFn := context.WithCancel(ctx)
 
 	// start consumer
@@ -186,18 +186,18 @@ func ReaderRegisterEvent[T interface{}](reader *GenericReader,
 			event.ID = messageID
 
 			// update ctx with event type for proper logging
-			log := log.Ctx(ctx).With().
-				Str("events.type", string(eventType)).
-				Str("events.id", event.ID).
-				Logger()
-			ctx = log.WithContext(ctx)
+			log := logger.GetLogger(ctx).With(
+				"events.type", string(eventType),
+				"events.id", event.ID,
+			)
+			ctx = logger.WithLogger(ctx, log)
 
 			// call provided handler with correctly typed payload
 			err = fn(ctx, &event)
 
 			// handle discardEventError
 			if errors.Is(err, errDiscardEvent) {
-				log.Warn().Err(err).Msgf("discarding event '%s'", event.ID)
+				log.Warnw(fmt.Sprintf("discarding event '%s'", event.ID), "error", err)
 				return nil
 			}
 

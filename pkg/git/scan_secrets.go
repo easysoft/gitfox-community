@@ -23,9 +23,9 @@ import (
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/api"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/sharedrepo"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	"github.com/easysoft/gitfox/errors"
 
-	"github.com/rs/zerolog/log"
 	"github.com/zricethezav/gitleaks/v8/detect"
 	"github.com/zricethezav/gitleaks/v8/report"
 	"github.com/zricethezav/gitleaks/v8/sources"
@@ -135,14 +135,14 @@ func (s *Service) setupGitleaksIgnoreInSharedRepo(
 	treePath string,
 ) (string, error) {
 	if treePath == "" {
-		log.Ctx(ctx).Debug().Msgf("no path to .gitleaksignore file provided, run without")
+		logger.GetLogger(ctx).Debugf("no path to .gitleaksignore file provided, run without")
 		return "", nil
 	}
 
 	// ensure file exists in tree for the provided revision, otherwise ignore and continue
 	node, err := s.git.GetTreeNode(ctx, sharedRepo.Directory(), rev, treePath)
 	if errors.IsNotFound(err) {
-		log.Ctx(ctx).Debug().Msgf("no .gitleaksignore file found at %q, run without", treePath)
+		logger.GetLogger(ctx).Debugf("no .gitleaksignore file found at %q, run without", treePath)
 		return "", nil
 	}
 	if err != nil {
@@ -152,7 +152,7 @@ func (s *Service) setupGitleaksIgnoreInSharedRepo(
 	// if node isn't of type blob it won't contain any gitleaks related content - run without .gitleaksignore.
 	// NOTE: We don't do any further checks for binary files or handle symlinks.
 	if node.NodeType != api.TreeNodeTypeBlob {
-		log.Ctx(ctx).Warn().Msgf(
+		logger.GetLogger(ctx).Warnf(
 			"tree node at path %q is of type %d instead of %d (blob), run without .gitleaksignore",
 			treePath,
 			node.NodeType,
@@ -161,7 +161,7 @@ func (s *Service) setupGitleaksIgnoreInSharedRepo(
 		return "", nil
 	}
 
-	log.Ctx(ctx).Debug().Msgf(".gitleaksignore file found in tree at %q", treePath)
+	logger.GetLogger(ctx).Debugf(".gitleaksignore file found in tree at %q", treePath)
 
 	// read blob data from bare repo
 	blob, err := api.GetBlob(
@@ -177,7 +177,7 @@ func (s *Service) setupGitleaksIgnoreInSharedRepo(
 	}
 	defer func() {
 		if err := blob.Content.Close(); err != nil {
-			log.Ctx(ctx).Warn().Err(err).Msgf("failed to close blob content reader for .gitleaksignore file")
+			logger.GetLogger(ctx).Warnw("failed to close blob content reader for .gitleaksignore file", "error", err)
 		}
 	}()
 
@@ -189,7 +189,7 @@ func (s *Service) setupGitleaksIgnoreInSharedRepo(
 	}
 	defer func() {
 		if err := f.Close(); err != nil {
-			log.Ctx(ctx).Warn().Err(err).Msgf("failed to close tmp .gitleaksignore file at %q", filePath)
+			logger.GetLogger(ctx).Warnw(fmt.Sprintf("failed to close tmp .gitleaksignore file at %q", filePath), "error", err)
 		}
 	}()
 

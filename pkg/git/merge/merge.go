@@ -22,9 +22,8 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/hook"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/sha"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/sharedrepo"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	"github.com/easysoft/gitfox/errors"
-
-	"github.com/rs/zerolog/log"
 )
 
 var (
@@ -190,7 +189,7 @@ func Rebase(
 			//    Git's `git rebase` is dropping such commits on default (and so does Github)
 			//    https://git-scm.com/docs/git-rebase#Documentation/git-rebase.txt---emptydropkeepask
 			if treeSHA.Equal(lastTreeSHA) {
-				log.Ctx(ctx).Debug().Msgf("skipping commit %s as it's empty after rebase", commitSHA)
+				logger.GetLogger(ctx).Debugf("skipping commit %s as it's empty after rebase", commitSHA)
 				continue
 			}
 

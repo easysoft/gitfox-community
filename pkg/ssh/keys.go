@@ -12,8 +12,9 @@ import (
 
 	"github.com/easysoft/gitfox/errors"
 	"github.com/gliderlabs/ssh"
-	"github.com/rs/zerolog/log"
 	gossh "golang.org/x/crypto/ssh"
+
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 )
 
 // - 设置 SSH 服务器的主机密钥
@@ -43,7 +44,7 @@ func (s *Server) setupHostKeys() error {
 	for _, key := range keys {
 		err := s.internal.SetOption(ssh.HostKeyFile(key))
 		if err != nil {
-			log.Err(err).Msg("failed to set host key to ssh server")
+			logger.Errorw("failed to set host key to ssh server", "error", err)
 		}
 	}
 
@@ -62,7 +63,7 @@ func createKeyIfNotExists(path string) error {
 		return fmt.Errorf("failed to check for for existence of key: %w", err)
 	}
 
-	log.Debug().Msgf("generate new key at %q", path)
+	logger.Debugf("generate new key at %q", path)
 
 	dir := filepath.Dir(path)
 	if err := os.MkdirAll(dir, os.ModePerm); err != nil {
