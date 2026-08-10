@@ -9,6 +9,7 @@ replace (
 
 require (
 	gitfox.zcorp.cc/git/Pangu/dm-gorm v1.0.0
+	github.com/HuaweiCloudDeveloper/gaussdb-go v1.0.0-rc1
 	github.com/Masterminds/semver/v3 v3.4.0
 	github.com/Microsoft/go-winio v0.6.1
 	github.com/antonmedv/expr v1.15.5
@@ -72,6 +73,7 @@ require (
 	golang.org/x/exp v0.0.0-20251219203646-944ab1f22d93
 	golang.org/x/term v0.42.0
 	gopkg.in/yaml.v3 v3.0.1
+	gorm.io/driver/gaussdb v0.1.0
 	gorm.io/driver/mysql v1.6.0
 	gorm.io/driver/sqlite v1.6.0
 	gorm.io/gorm v1.31.1
@@ -178,6 +180,7 @@ require (
 	github.com/shopspring/decimal v1.4.0 // indirect
 	github.com/spf13/viper v1.21.0 // indirect
 	github.com/swaggest/refl v1.4.0 // indirect
+	github.com/tjfoc/gmsm v1.4.1 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect

@@ -59,6 +59,9 @@ ENV GITFOX_SQLITE_FILE=/data/gitfox/sqlite/sqlite.db
 ENV GITFOX_LOG_LEVEL=-1
 ENV GITFOX_DB_DRIVER=mysql
 ENV GITFOX_DB_DATASOURCE=root:pass4GitFox@tcp(mysql:3306)/gitfox-community?parseTime=true&loc=Local
+# GaussDB 连接示例（切换驱动时覆盖 GITFOX_DB_DRIVER 与 GITFOX_DB_DATASOURCE）
+# ENV GITFOX_DB_DRIVER=gaussdb
+# ENV GITFOX_DB_DATASOURCE=host=127.0.0.1 port=8000 user=gaussdb password=gaussdb dbname=gitfox-community sslmode=disable
 ENV GITFOX_DOCKER_HOST=unix:///var/run/docker.sock
 ENV GITFOX_DOCKER_API_VERSION=1.40
 ENV GITFOX_URL_BASE=http://gitfox.oop.cc:3052

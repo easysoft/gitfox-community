@@ -37,6 +37,12 @@ func NewDB(cfg *config.Config, systemLog *SystemLog) (*gorm.DB, func(), error) {
 		if dmDB != nil {
 			db = dmDB.DB()
 		}
+	case "gaussdb":
+		var gaussDB *database.GaussDB
+		gaussDB, cleanup, err = database.NewGaussDB(cfg.Database)
+		if gaussDB != nil {
+			db = gaussDB.DB()
+		}
 	default:
 		systemLog.Errorw("[Provider] Unsupported database driver", "driver", driver)
 		return nil, nil, fmt.Errorf("unsupported database driver: %s", driver)
