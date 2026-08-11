@@ -55,9 +55,14 @@ func (s *Service) Create(ctx context.Context, runner *runnerModel.Runner, runner
 // Update 更新 runner
 func (s *Service) Update(ctx context.Context, runner *runnerModel.Runner) error {
 	// Check if runner exists
-	_, err := s.runnerStore.GetByID(ctx, runner.ID)
+	existing, err := s.runnerStore.GetByID(ctx, runner.ID)
 	if err != nil {
 		return errors.NotFound.Newf("runner not found: %d", runner.ID)
+	}
+
+	// 内置 runner 不允许通过 API 修改
+	if existing.IsDefault {
+		return errors.BadRequest.Newf("cannot modify default runner")
 	}
 
 	return s.runnerStore.Update(ctx, runner)
@@ -66,10 +71,16 @@ func (s *Service) Update(ctx context.Context, runner *runnerModel.Runner) error 
 // UpdateRunnerHeartbeat 更新 runner 心跳
 func (s *Service) UpdateRunnerHeartbeat(ctx context.Context, runnerID uint) error {
 	// Check if runner exists
-	_, err := s.runnerStore.GetByID(ctx, runnerID)
+	existing, err := s.runnerStore.GetByID(ctx, runnerID)
 	if err != nil {
 		return errors.NotFound.Newf("runner not found: %d", runnerID)
 	}
+
+	// 内置 runner 不需要外部心跳更新
+	if existing.IsDefault {
+		return errors.BadRequest.Newf("cannot update heartbeat for default runner")
+	}
+
 	now := int(time.Now().Unix())
 	runnerInfo := &runnerModel.Runner{
 		ID:        runnerID,
@@ -106,9 +117,14 @@ func (s *Service) List(ctx context.Context, filter *runnerModel.ReqFilter) (*dat
 // Delete soft deletes a runner by ID
 func (s *Service) Delete(ctx context.Context, id uint) error {
 	// Check if runner exists
-	_, err := s.runnerStore.GetByID(ctx, id)
+	existing, err := s.runnerStore.GetByID(ctx, id)
 	if err != nil {
 		return errors.NotFound.Newf("runner not found: %d", id)
+	}
+
+	// 内置 runner 不允许删除
+	if existing.IsDefault {
+		return errors.BadRequest.Newf("cannot delete default runner")
 	}
 
 	return s.runnerStore.Delete(ctx, id)

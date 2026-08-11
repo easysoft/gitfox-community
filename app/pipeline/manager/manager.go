@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/rs/zerolog/log"
-
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	events "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/events/pipeline"
 	pullreqevents "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/events/pullreq"
@@ -25,6 +23,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/step"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/livelog"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	urlprovider "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/url"
 )
 
@@ -152,13 +151,13 @@ func New(
 
 // Request requests the next available build stage for execution.
 func (m *Manager) Request(ctx context.Context, args *Request) (*stageModel.Stage, error) {
-	log := log.With().
-		Str("token", args.Token).
-		Str("type", args.Type).
-		Str("os", args.OS).
-		Str("arch", args.Arch).
-		Logger()
-	log.Debug().Msg("manager: request queue item")
+	log := logger.GetLogger(ctx).With(
+		"token", args.Token,
+		"type", args.Type,
+		"os", args.OS,
+		"arch", args.Arch,
+	)
+	log.Debug("manager: request queue item")
 
 	stage, err := m.Scheduler.Request(ctx, scheduler.Filter{
 		Token:    args.Token,
@@ -172,11 +171,11 @@ func (m *Manager) Request(ctx context.Context, args *Request) (*stageModel.Stage
 		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
 			return nil, ctx.Err()
 		}
-		log.Debug().Err(err).Msg("manager: context canceled")
+		log.Debugw("manager: context canceled", "error", err)
 		return nil, err
 	}
 	if err != nil {
-		log.Warn().Err(err).Msg("manager: request queue item error")
+		log.Warnw("manager: request queue item error", "error", err)
 		return nil, err
 	}
 	return stage, nil
@@ -185,19 +184,19 @@ func (m *Manager) Request(ctx context.Context, args *Request) (*stageModel.Stage
 // Accept accepts the build stage for execution. It is possible for multiple
 // agents to pull the same stage from the queue.
 func (m *Manager) Accept(_ context.Context, id int64, machine string) (*stageModel.Stage, error) {
-	log := log.With().
-		Int64("stage-id", id).
-		Str("machine", machine).
-		Logger()
-	log.Debug().Msg("manager: accept stage")
+	log := logger.GetLogger(noContext).With(
+		"stage-id", id,
+		"machine", machine,
+	)
+	log.Debug("manager: accept stage")
 
 	stage, err := m.StageSvc.GetByID(noContext, uint(id))
 	if err != nil {
-		log.Warn().Err(err).Msg("manager: cannot find stage")
+		log.Warnw("manager: cannot find stage", "error", err)
 		return nil, err
 	}
 	if stage.Host != "" {
-		log.Debug().Msg("manager: stage already assigned. abort.")
+		log.Debug("manager: stage already assigned. abort.")
 		return nil, fmt.Errorf("stage already assigned, abort")
 	}
 
@@ -205,9 +204,9 @@ func (m *Manager) Accept(_ context.Context, id int64, machine string) (*stageMod
 	stage.Host = machine
 	stage.Status = constant.CIStatusPending
 	if err := m.StageSvc.Update(noContext, stage); err != nil {
-		log.Debug().Err(err).Msg("manager: cannot update stage")
+		log.Debugw("manager: cannot update stage", "error", err)
 	} else {
-		log.Info().Msg("manager: stage accepted")
+		log.Info("manager: stage accepted")
 	}
 	return stage, err
 }
@@ -216,7 +215,10 @@ func (m *Manager) Accept(_ context.Context, id int64, machine string) (*stageMod
 func (m *Manager) Write(ctx context.Context, step int64, line *livelog.Line) error {
 	err := m.Logz.Write(ctx, step, line)
 	if err != nil {
-		log.Warn().Int64("step-id", step).Err(err).Msg("manager: cannot write to log stream")
+		logger.Warnw("manager: cannot write to log stream",
+			"step-id", step,
+			"error", err,
+		)
 		return err
 	}
 	return nil
@@ -226,17 +228,26 @@ func (m *Manager) Write(ctx context.Context, step int64, line *livelog.Line) err
 func (m *Manager) UploadLogs(ctx context.Context, stepID int64, r io.Reader) error {
 	step, err := m.StepSvc.GetByID(ctx, uint(stepID))
 	if err != nil {
-		log.Error().Err(err).Int64("step-id", stepID).Msg("manager: cannot upload complete logs")
+		logger.Errorw("manager: cannot upload complete logs",
+			"error", err,
+			"step-id", stepID,
+		)
 		return err
 	}
 	stage, err := m.StageSvc.GetByID(ctx, step.StageID)
 	if err != nil {
-		log.Error().Err(err).Int64("step-id", stepID).Msg("manager: cannot upload complete logs")
+		logger.Errorw("manager: cannot upload complete logs",
+			"error", err,
+			"step-id", stepID,
+		)
 		return err
 	}
 	execution, err := m.ExecutionSvc.GetByID(ctx, stage.ExecutionID)
 	if err != nil {
-		log.Error().Err(err).Int64("step-id", stepID).Msg("manager: cannot upload complete logs")
+		logger.Errorw("manager: cannot upload complete logs",
+			"error", err,
+			"step-id", stepID,
+		)
 		return err
 	}
 	if err := m.PipelineSvc.CreateLogs(ctx, &pipelineModel.S3Logs{
@@ -245,7 +256,10 @@ func (m *Manager) UploadLogs(ctx context.Context, stepID int64, r io.Reader) err
 		StageID:     fmt.Sprint(step.StageID),
 		StepID:      fmt.Sprint(stepID),
 	}, r); err != nil {
-		log.Error().Err(err).Int64("step-id", stepID).Msg("manager: cannot upload complete logs")
+		logger.Errorw("manager: cannot upload complete logs",
+			"error", err,
+			"step-id", stepID,
+		)
 		return err
 	}
 	return nil
@@ -253,34 +267,34 @@ func (m *Manager) UploadLogs(ctx context.Context, stepID int64, r io.Reader) err
 
 // Details provides details about the stage.
 func (m *Manager) Details(ctx context.Context, stageID int64) (*ExecutionContext, error) {
-	log := log.With().
-		Int64("stage-id", stageID).
-		Logger()
-	log.Debug().Msg("manager: fetching stage details")
+	log := logger.GetLogger(ctx).With(
+		"stage-id", stageID,
+	)
+	log.Debug("manager: fetching stage details")
 
 	stage, err := m.StageSvc.GetByIDWithSteps(noContext, uint(stageID))
 	if err != nil {
-		log.Warn().Err(err).Msg("manager: cannot find stage")
+		log.Warnw("manager: cannot find stage", "error", err)
 		return nil, err
 	}
 
 	execution, err := m.ExecutionSvc.GetByID(noContext, stage.ExecutionID)
 	if err != nil {
-		log.Warn().Err(err).Msg("manager: cannot find build")
+		log.Warnw("manager: cannot find build", "error", err)
 		return nil, err
 	}
 	stages, err := m.StageSvc.ListWithSteps(noContext, stage.ExecutionID)
 	if err != nil {
-		log.Warn().Err(err).Msg("manager: cannot list stages")
+		log.Warnw("manager: cannot list stages", "error", err)
 		return nil, err
 	}
 	executionDetails := executionModel.ExecutionWithStages{
 		Execution: *execution,
 		Stages:    stages,
 	}
-	log = log.With().
-		Int64("build", int64(execution.ID)).
-		Logger()
+	log = log.With(
+		"build", int64(execution.ID),
+	)
 
 	// TODO: Currently we fetch all the secrets from the same space.
 	// This logic can be updated when needed.
@@ -292,19 +306,19 @@ func (m *Manager) Details(ctx context.Context, stageID int64) (*ExecutionContext
 
 	pipeline, err := m.PipelineSvc.GetPipelineByID(noContext, int64(execution.PipelineID))
 	if err != nil {
-		log.Warn().Err(err).Msg("manager: cannot find pipeline")
+		log.Warnw("manager: cannot find pipeline", "error", err)
 		return nil, err
 	}
 	// Fetch contents of YAML from the execution ref at the pipeline config path.
 	file, err := m.PipelineSvc.GetPipelineContent(noContext, pipeline.ID)
 	if err != nil {
-		log.Warn().Err(err).Msg("manager: cannot fetch file")
+		log.Warnw("manager: cannot fetch file", "error", err)
 		return nil, err
 	}
 
 	netrc, err := m.createNetrc(ctx)
 	if err != nil {
-		log.Warn().Err(err).Msg("manager: failed to create netrc")
+		log.Warnw("manager: failed to create netrc", "error", err)
 		return nil, err
 	}
 
@@ -319,17 +333,17 @@ func (m *Manager) Details(ctx context.Context, stageID int64) (*ExecutionContext
 
 // Before signals the build step is about to start.
 func (m *Manager) BeforeStep(_ context.Context, step *stepModel.Step) error {
-	log := log.With().
-		Str("step.status", string(step.Status)).
-		Str("step.name", step.Name).
-		Int64("step.id", int64(step.ID)).
-		Logger()
+	log := logger.GetLogger(noContext).With(
+		"step.status", string(step.Status),
+		"step.name", step.Name,
+		"step.id", int64(step.ID),
+	)
 
-	log.Debug().Msg("manager: updating step status")
+	log.Debug("manager: updating step status")
 
 	err := m.Logz.Create(noContext, int64(step.ID))
 	if err != nil {
-		log.Warn().Err(err).Msg("manager: cannot create log stream")
+		log.Warnw("manager: cannot create log stream", "error", err)
 		return err
 	}
 	updater := &updater{
@@ -344,12 +358,12 @@ func (m *Manager) BeforeStep(_ context.Context, step *stepModel.Step) error {
 
 // After signals the build step is complete.
 func (m *Manager) AfterStep(_ context.Context, step *stepModel.Step) error {
-	log := log.With().
-		Str("step.status", string(step.Status)).
-		Str("step.name", step.Name).
-		Int64("step.id", int64(step.ID)).
-		Logger()
-	log.Debug().Msg("manager: updating step status")
+	log := logger.GetLogger(noContext).With(
+		"step.status", string(step.Status),
+		"step.name", step.Name,
+		"step.id", int64(step.ID),
+	)
+	log.Debug("manager: updating step status")
 
 	var retErr error
 	updater := &updater{
@@ -362,11 +376,11 @@ func (m *Manager) AfterStep(_ context.Context, step *stepModel.Step) error {
 
 	if err := updater.do(noContext, step); err != nil {
 		retErr = err
-		log.Warn().Err(err).Msg("manager: cannot update step")
+		log.Warnw("manager: cannot update step", "error", err)
 	}
 
 	if err := m.Logz.Delete(noContext, int64(step.ID)); err != nil && !errors.Is(err, livelog.ErrStreamNotFound) {
-		log.Warn().Err(err).Msg("manager: cannot teardown log stream")
+		log.Warnw("manager: cannot teardown log stream", "error", err)
 	}
 	return retErr
 }
@@ -425,10 +439,10 @@ func (m *Manager) Watch(ctx context.Context, executionID int64) (bool, error) {
 	// complete, return true.
 	execution, err := m.ExecutionSvc.GetByID(ctx, uint(executionID))
 	if err != nil {
-		log := log.With().
-			Int64("execution.id", executionID).
-			Logger()
-		log.Warn().Msg("manager: cannot find build")
+		log := logger.GetLogger(ctx).With(
+			"execution.id", executionID,
+		)
+		log.Warn("manager: cannot find build")
 		return ok, fmt.Errorf("could not find build for cancellation: %w", err)
 	}
 	return execution.Status.IsDone(), nil

@@ -33,7 +33,7 @@ func newRunnerHeartbeatJob(runnerStore runnerStore.Interface, mxManager lock.Mut
 // Handle 检测 runner 心跳并更新离线状态
 func (j *runnerHeartbeatJob) Handle(ctx context.Context, _ string, reporter pkgJobs.ProgressReporter) (string, error) {
 	log := logger.GetLogger(ctx)
-	log.Info("starting runner heartbeat check")
+	log.Debug("starting runner heartbeat check")
 
 	// 设置初始进度
 	if _, err := reporter(10, "initializing"); err != nil {
@@ -53,7 +53,7 @@ func (j *runnerHeartbeatJob) Handle(ctx context.Context, _ string, reporter pkgJ
 		return "", fmt.Errorf("failed to list runners: %w", err)
 	}
 
-	log.Infof("total_runners: %d found runners for heartbeat check", len(res.Data))
+	log.Debugf("total_runners: %d found runners for heartbeat check", len(res.Data))
 
 	// 设置进度
 	if _, err := reporter(30, "scanning runners"); err != nil {
@@ -67,6 +67,11 @@ func (j *runnerHeartbeatJob) Handle(ctx context.Context, _ string, reporter pkgJ
 	// 检查每个 runner 的心跳
 	for _, runner := range res.Data {
 		// 由于已经过滤了在线状态，无需再次检查 offline 状态
+
+		// 跳过 isDefault=true 的 runner，不需要心跳检测
+		if runner.IsDefault {
+			continue
+		}
 
 		// 检查心跳时间
 		if runner.HeartBeat == 0 {
@@ -101,7 +106,7 @@ func (j *runnerHeartbeatJob) Handle(ctx context.Context, _ string, reporter pkgJ
 	}
 
 	result := fmt.Sprintf("checked %d runners, marked %d as offline", len(res.Data), offlineCount)
-	log.Infof("completed runner heartbeat check, total_checked: %d, marked_offline: %d", len(res.Data), offlineCount)
+	log.Debugf("completed runner heartbeat check, total_checked: %d, marked_offline: %d", len(res.Data), offlineCount)
 
 	return result, nil
 }

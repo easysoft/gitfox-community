@@ -47,7 +47,8 @@ type Hook struct {
 	// 用于匹配 scan trigger 的字段，与 Ref 可能不同
 	// 比如对于 branch 事件，Ref 是 refs/heads/main，而 Match 是 main；对于 tag 事件，Ref 是 refs/tags/v1.0，而 Match 是 v1.0
 	// 比如对于 pull request 事件，Ref 是 refs/pullreq/123/head，而 Match 根据 action 的不同而不同
-	Match string `json:"match"`
+	Match       string `json:"match"`
+	CommitMatch string `json:"commitMatch"`
 	// 重试相关字段
 	RetrySourceID     *int64 `json:"retry_source_id,omitempty"`
 	RetryCount        int    `json:"retry_count,omitempty"`

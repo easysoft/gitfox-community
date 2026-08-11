@@ -21,9 +21,41 @@ type embedded struct {
 	config      *config.Config
 	urlProvider urlprovider.Provider
 	manager     ExecutionManager
+	tokenPool   chan string // pre-generated tokens for default runners (nil until InitTokens called)
 }
 
 var _ client.Client = (*embedded)(nil)
+
+// TokenInitializer allows runtime injection of pre-generated runner tokens.
+type TokenInitializer interface {
+	InitTokens(tokens []string)
+}
+
+// InitTokens fills the token pool with pre-generated tokens.
+// Once initialized, Request() will draw from this pool instead of generating random tokens.
+func (e *embedded) InitTokens(tokens []string) {
+	pool := make(chan string, len(tokens))
+	for _, t := range tokens {
+		pool <- t
+	}
+	e.tokenPool = pool
+}
+
+// getToken returns a token from the pool, or generates a random one as fallback.
+// When the pool is initialized, the caller must return the token after use.
+func (e *embedded) getToken() string {
+	if e.tokenPool != nil {
+		return <-e.tokenPool
+	}
+	return generateInternalToken()
+}
+
+// returnToken returns a token to the pool. Safe to call when pool is nil (no-op).
+func (e *embedded) returnToken(token string) {
+	if e.tokenPool != nil {
+		e.tokenPool <- token
+	}
+}
 
 func NewEmbeddedClient(
 	manager ExecutionManager,
@@ -67,8 +99,11 @@ func (e *embedded) Ping(_ context.Context, _ string) error {
 
 // Request requests the next available build stage for execution.
 func (e *embedded) Request(ctx context.Context, args *client.Filter) (*drone.Stage, error) {
+	token := e.getToken()
+	defer e.returnToken(token)
+
 	request := &Request{
-		Token:  generateInternalToken(),
+		Token:  token,
 		Type:   args.Type,
 		OS:     args.OS,
 		Arch:   args.Arch,

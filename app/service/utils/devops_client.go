@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"strings"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/httpclient"
 )
@@ -35,4 +36,16 @@ func GetBranchPermission(ctx context.Context, baseURL string, repoID int64, bran
 		return nil, fmt.Errorf("failed to get branch rule: %w", err)
 	}
 	return &result, nil
+}
+
+// SubmitCodeReview 提交 PPM 代码评审
+func SubmitCodeReview(ctx context.Context, baseURL string, ppmID int64, createdBy string, authorization string) error {
+	endpoint := fmt.Sprintf("%s/ppm/submitCodeReview?id=%d&createdBy=%s", strings.TrimRight(baseURL, "/"), ppmID, createdBy)
+	headers := map[string]string{
+		"Authorization": authorization,
+	}
+	if err := httpclient.Request(ctx, "GET", endpoint, headers, nil, nil, nil); err != nil {
+		return fmt.Errorf("failed to submit code review for PPM %d: %w", ppmID, err)
+	}
+	return nil
 }

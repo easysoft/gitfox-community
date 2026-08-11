@@ -4,12 +4,15 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"net/http"
 	"time"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	runnerModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/runner"
+	stageModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/stage"
+	stepModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/step"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/manager"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/runner"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
@@ -17,8 +20,6 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/livelog"
 	urlprovider "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/url"
-	"github.com/drone/drone-go/drone"
-	"github.com/drone/runner-go/client"
 	"github.com/gin-gonic/gin"
 )
 
@@ -166,8 +167,13 @@ func (ctl *Controller) UpdateBasicInfo(c *gin.Context) {
 
 	err = ctl.runnerSvc.Update(c.Request.Context(), runner)
 	if err != nil {
-		err = errors.WithI18nKey(err, i18n.RunnerUpdateError)
-		resp.InternalError(c, err)
+		if errors.GetType(err) == errors.BadRequest {
+			err = errors.WithI18nKey(err, i18n.RunnerDefaultOperateError)
+			resp.BadRequest(c, err)
+		} else {
+			err = errors.WithI18nKey(err, i18n.RunnerUpdateError)
+			resp.InternalError(c, err)
+		}
 		return
 	}
 
@@ -228,8 +234,13 @@ func (ctl *Controller) UpdateStatus(c *gin.Context) {
 
 	err = ctl.runnerSvc.Update(c.Request.Context(), runner)
 	if err != nil {
-		err = errors.WithI18nKey(err, i18n.RunnerUpdateError)
-		resp.InternalError(c, err)
+		if errors.GetType(err) == errors.BadRequest {
+			err = errors.WithI18nKey(err, i18n.RunnerDefaultOperateError)
+			resp.BadRequest(c, err)
+		} else {
+			err = errors.WithI18nKey(err, i18n.RunnerUpdateError)
+			resp.InternalError(c, err)
+		}
 		return
 	}
 
@@ -261,6 +272,11 @@ func (ctl *Controller) Delete(c *gin.Context) {
 		if errors.IsNotFound(err) {
 			err = errors.WithI18nKey(err, i18n.RunnerQueryError)
 			resp.NotFound(c, err)
+			return
+		}
+		if errors.GetType(err) == errors.BadRequest {
+			err = errors.WithI18nKey(err, i18n.RunnerDefaultOperateError)
+			resp.BadRequest(c, err)
 			return
 		}
 		err = errors.WithI18nKey(err, i18n.RunnerDeleteError)
@@ -351,6 +367,7 @@ func (ctl *Controller) Register(c *gin.Context) {
 		IP:        reqData.IP,
 		OS:        reqData.OS,
 		Arch:      reqData.Arch,
+		Runtime:   reqData.Runtime,
 		Labels:    labels,
 		CreatedBy: account,
 		EditedBy:  account,
@@ -398,12 +415,17 @@ func (ctl *Controller) UpdateHeartBeat(c *gin.Context) {
 	// 更新心跳
 	err = ctl.runnerSvc.UpdateRunnerHeartbeat(c.Request.Context(), runner.ID)
 	if err != nil {
-		err = errors.WithI18nKey(err, i18n.RunnerUpdateHeartBeatError)
-		resp.InternalError(c, err)
+		if errors.GetType(err) == errors.BadRequest {
+			err = errors.WithI18nKey(err, i18n.RunnerDefaultOperateError)
+			resp.BadRequest(c, err)
+		} else {
+			err = errors.WithI18nKey(err, i18n.RunnerUpdateHeartBeatError)
+			resp.InternalError(c, err)
+		}
 		return
 	}
 
-	resp.OK(c, i18n.RunnerUpdateHeartBeatSuccess, runner)
+	resp.Accepted(c, i18n.RunnerUpdateHeartBeatSuccess, runner)
 }
 
 // validateRunnerToken 从请求头中验证 X-Runner-Token 并返回对应的 runner
@@ -446,12 +468,19 @@ func (ctl *Controller) RequestStage(c *gin.Context) {
 		Labels: reqData.Labels,
 	})
 	if err != nil {
+		// context deadline exceeded is normal long-polling behavior —
+		// no stage was available within the timeout window.
+		// Return 204 to signal the runner should retry.
+		if errors.Is(err, context.DeadlineExceeded) {
+			c.Status(http.StatusNoContent)
+			return
+		}
 		err = errors.WithI18nKey(err, i18n.RunnerStageRequestError)
 		resp.InternalError(c, err)
 		return
 	}
 
-	resp.OK(c, i18n.RunnerStageRequestSuccess, manager.ConvertToDroneStageWithoutSteps(stage))
+	resp.OK(c, i18n.RunnerStageRequestSuccess, stage)
 }
 
 // AcceptStage 接受 stage 并标记为已分配
@@ -482,7 +511,7 @@ func (ctl *Controller) AcceptStage(c *gin.Context) {
 		return
 	}
 
-	resp.OK(c, i18n.RunnerStageAcceptSuccess, manager.ConvertToDroneStageWithoutSteps(stage))
+	resp.OK(c, i18n.RunnerStageAcceptSuccess, stage)
 }
 
 // DetailStage 获取 stage 执行详情
@@ -506,16 +535,7 @@ func (ctl *Controller) DetailStage(c *gin.Context) {
 		return
 	}
 
-	resp.OK(c, i18n.RunnerStageDetailSuccess, &client.Context{
-		Build:  manager.ConvertToDroneBuild(&details.Execution.Execution),
-		Stage:  manager.ConvertToDroneStage(details.Stage),
-		Config: manager.ConvertToDroneFile(details.Config),
-		Netrc:  manager.ConvertToDroneNetrc(details.Netrc),
-		System: &drone.System{
-			Proto: ctl.urlProvider.GetAPIProto(c.Request.Context()),
-			Host:  ctl.urlProvider.GetAPIHostname(c.Request.Context()),
-		},
-	})
+	resp.OK(c, i18n.RunnerStageDetailSuccess, details)
 }
 
 // UpdateStage 更新 stage 状态
@@ -525,21 +545,18 @@ func (ctl *Controller) UpdateStage(c *gin.Context) {
 		return
 	}
 
-	var reqData drone.Stage
+	var reqData stageModel.StageWithSteps
 	if err := c.ShouldBindJSON(&reqData); err != nil {
 		err = errors.WithI18nKey(err, i18n.RunnerBodyParamError)
 		resp.BadRequest(c, err)
 		return
 	}
 
-	convertedStage := manager.ConvertFromDroneStage(&reqData)
-	status := constant.ParseCIStatus(reqData.Status)
-
 	var err error
-	if status == constant.CIStatusPending || status == constant.CIStatusRunning {
-		err = ctl.execManager.BeforeStage(c.Request.Context(), convertedStage)
+	if reqData.Status == constant.CIStatusPending || reqData.Status == constant.CIStatusRunning {
+		err = ctl.execManager.BeforeStage(c.Request.Context(), &reqData)
 	} else {
-		err = ctl.execManager.AfterStage(c.Request.Context(), convertedStage)
+		err = ctl.execManager.AfterStage(c.Request.Context(), &reqData)
 	}
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.RunnerStageUpdateError)
@@ -547,7 +564,7 @@ func (ctl *Controller) UpdateStage(c *gin.Context) {
 		return
 	}
 
-	resp.OK(c, i18n.RunnerStageUpdateSuccess, manager.ConvertToDroneStage(convertedStage))
+	resp.OK(c, i18n.RunnerStageUpdateSuccess, &reqData)
 }
 
 // UpdateStep 更新 step 状态
@@ -557,21 +574,18 @@ func (ctl *Controller) UpdateStep(c *gin.Context) {
 		return
 	}
 
-	var reqData drone.Step
+	var reqData stepModel.Step
 	if err := c.ShouldBindJSON(&reqData); err != nil {
 		err = errors.WithI18nKey(err, i18n.RunnerBodyParamError)
 		resp.BadRequest(c, err)
 		return
 	}
 
-	convertedStep := manager.ConvertFromDroneStep(&reqData)
-	status := constant.ParseCIStatus(reqData.Status)
-
 	var err error
-	if status == constant.CIStatusPending || status == constant.CIStatusRunning {
-		err = ctl.execManager.BeforeStep(c.Request.Context(), convertedStep)
+	if reqData.Status == constant.CIStatusPending || reqData.Status == constant.CIStatusRunning {
+		err = ctl.execManager.BeforeStep(c.Request.Context(), &reqData)
 	} else {
-		err = ctl.execManager.AfterStep(c.Request.Context(), convertedStep)
+		err = ctl.execManager.AfterStep(c.Request.Context(), &reqData)
 	}
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.RunnerStepUpdateError)
@@ -579,7 +593,7 @@ func (ctl *Controller) UpdateStep(c *gin.Context) {
 		return
 	}
 
-	resp.OK(c, i18n.RunnerStepUpdateSuccess, manager.ConvertToDroneStep(convertedStep))
+	resp.OK(c, i18n.RunnerStepUpdateSuccess, &reqData)
 }
 
 // WatchBuild 监听 build 取消请求
@@ -620,7 +634,7 @@ func (ctl *Controller) BatchLogs(c *gin.Context) {
 		return
 	}
 
-	var lines []*drone.Line
+	var lines []*livelog.Line
 	if err := c.ShouldBindJSON(&lines); err != nil {
 		err = errors.WithI18nKey(err, i18n.RunnerBodyParamError)
 		resp.BadRequest(c, err)
@@ -628,8 +642,7 @@ func (ctl *Controller) BatchLogs(c *gin.Context) {
 	}
 
 	for _, l := range lines {
-		line := manager.ConvertFromDroneLine(l)
-		if err := ctl.execManager.Write(c.Request.Context(), stepID, line); err != nil {
+		if err := ctl.execManager.Write(c.Request.Context(), stepID, l); err != nil {
 			err = errors.WithI18nKey(err, i18n.RunnerLogBatchError)
 			resp.InternalError(c, err)
 			return
@@ -653,18 +666,21 @@ func (ctl *Controller) UploadLogs(c *gin.Context) {
 		return
 	}
 
-	var lines []*drone.Line
+	var lines []*livelog.Line
 	if err := c.ShouldBindJSON(&lines); err != nil {
 		err = errors.WithI18nKey(err, i18n.RunnerBodyParamError)
 		resp.BadRequest(c, err)
 		return
 	}
 
-	var buffer bytes.Buffer
-	logLines := []livelog.Line{}
-	for _, l := range lines {
-		logLines = append(logLines, *manager.ConvertFromDroneLine(l))
+	logLines := make([]livelog.Line, len(lines))
+	for i, l := range lines {
+		if l != nil {
+			logLines[i] = *l
+		}
 	}
+
+	var buffer bytes.Buffer
 	out, err := json.Marshal(logLines)
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.RunnerLogUploadError)

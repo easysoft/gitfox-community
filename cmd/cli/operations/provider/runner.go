@@ -67,6 +67,8 @@ func ProvideExecutionRunner(
 func ProvideExecutionPoller(
 	runner dockerRunner.Runner,
 	client runnerclient.Client,
+	rStore runnerStore.Interface,
+	cfg *config.Config,
 ) *poller.Poller {
-	return dockerRunner.NewExecutionPoller(runner, client)
+	return dockerRunner.NewExecutionPoller(runner, client, rStore, cfg)
 }

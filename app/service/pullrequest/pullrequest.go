@@ -734,45 +734,7 @@ func (s *Service) Merge(ctx context.Context, session *auth.Session, repoid uint,
 	// 清理 ztflow 临时分支和 agit 引用
 	var branchDeleted bool
 	if pr.Flow == repoModel.PullRequestFlowZentao {
-		errDelete := s.gitSvc.DeleteBranch(ctx, &git.DeleteBranchParams{
-			WriteParams: writeParams,
-			BranchName:  pr.SourceBranch,
-		})
-		if errDelete != nil {
-			logger.Warnf("failed to delete ztflow source branch %s after merging: %v",
-				pr.SourceBranch, errDelete)
-		} else {
-			branchDeleted = true
-			logger.Infof("deleted ztflow source branch %s after merge", pr.SourceBranch)
-		}
-
-		// ztflow-i-main#d1
-		branchPre := strings.Join(strings.Split(pr.SourceBranch, "-")[:2], "-")
-		branchOrigin := strings.TrimPrefix(pr.SourceBranch, branchPre+"-")
-		branchOrigin = fmt.Sprintf("refs/for/%s", branchOrigin)
-		pattern, err := toAgitRefPattern(branchOrigin)
-		if err != nil || pattern == "" {
-			logger.Warnf("repo uid %s failed to convert ref %s to pattern: %v", repo.GitUID, branchOrigin, err)
-			s.deleteRef(ctx, repo, pr.SourceBranch, branchOrigin)
-			return &repoModel.MergeResponse{
-				SHA:           mergeOutput.MergeSHA.String(),
-				BranchDeleted: branchDeleted,
-			}, nil
-		}
-
-		refs, err := s.gitSvc.WalkReferences(ctx, repo.GitUID, pattern)
-		if err != nil || len(refs) == 0 {
-			logger.Warnf("repo uid %s failed to walk references %s(source: %s)", repo.GitUID, pattern, pr.SourceBranch)
-			s.deleteRef(ctx, repo, pr.SourceBranch, branchOrigin)
-			return &repoModel.MergeResponse{
-				SHA:           mergeOutput.MergeSHA.String(),
-				BranchDeleted: branchDeleted,
-			}, nil
-		}
-
-		for _, ref := range refs {
-			s.deleteRef(ctx, repo, pr.SourceBranch, ref)
-		}
+		branchDeleted = s.cleanupZtflowAgitRefs(ctx, repo, writeParams, pr.SourceBranch)
 	}
 
 	// 返回结果
@@ -795,7 +757,49 @@ func (s *Service) deleteRef(ctx context.Context, repo *repoModel.Repo, sourceBra
 	} else {
 		logger.Infof("repo uid %s delete force review flow branch %s(source: %s)", repo.GitUID, ref, sourceBranch)
 	}
-	return
+}
+
+// cleanupZtflowAgitRefs 清理 ztflow PR 的临时分支和 AGit 引用（refs/for/*）
+// 返回是否成功删除了 ztflow 源分支
+func (s *Service) cleanupZtflowAgitRefs(ctx context.Context, repo *repoModel.Repo, writeParams git.WriteParams, sourceBranch string) bool {
+	logger := logger.GetLogger(ctx)
+	var branchDeleted bool
+
+	// 删除 ztflow 临时分支
+	errDelete := s.gitSvc.DeleteBranch(ctx, &git.DeleteBranchParams{
+		WriteParams: writeParams,
+		BranchName:  sourceBranch,
+	})
+	if errDelete != nil {
+		logger.Warnf("failed to delete ztflow source branch %s: %v", sourceBranch, errDelete)
+	} else {
+		branchDeleted = true
+		logger.Infof("deleted ztflow source branch %s", sourceBranch)
+	}
+
+	// 清理 AGit refs/for/* 引用
+	branchPre := strings.Join(strings.Split(sourceBranch, "-")[:2], "-")
+	branchOrigin := strings.TrimPrefix(sourceBranch, branchPre+"-")
+	branchOrigin = fmt.Sprintf("refs/for/%s", branchOrigin)
+	pattern, err := toAgitRefPattern(branchOrigin)
+	if err != nil || pattern == "" {
+		logger.Warnf("repo uid %s failed to convert ref %s to pattern: %v", repo.GitUID, branchOrigin, err)
+		s.deleteRef(ctx, repo, sourceBranch, branchOrigin)
+		return branchDeleted
+	}
+
+	refs, err := s.gitSvc.WalkReferences(ctx, repo.GitUID, pattern)
+	if err != nil || len(refs) == 0 {
+		logger.Warnf("repo uid %s failed to walk references %s(source: %s)", repo.GitUID, pattern, sourceBranch)
+		s.deleteRef(ctx, repo, sourceBranch, branchOrigin)
+		return branchDeleted
+	}
+
+	for _, ref := range refs {
+		s.deleteRef(ctx, repo, sourceBranch, ref)
+	}
+
+	return branchDeleted
 }
 
 // refs/for/main#xiaoli -> refs/for/main#*
@@ -914,6 +918,21 @@ func (s *Service) TriggerEvent(
 			SourceBranch: pr.SourceBranch,
 			SourceSHA:    pr.SourceSHA,
 		})
+
+		// 清理 ztflow 临时分支和 AGit 引用
+		if pr.Flow == repoModel.PullRequestFlowZentao {
+			sourceRepo, err := s.repoStore.GetByID(ctx, pr.SourceRepoID)
+			if err != nil {
+				logger.GetLogger(ctx).Warnf("failed to load source repo %d for agit cleanup: %v", pr.SourceRepoID, err)
+			} else {
+				writeParams, err := createSystemRPCWriteParams(ctx, s.urlProvider, int64(sourceRepo.ID), sourceRepo.GitUID)
+				if err != nil {
+					logger.GetLogger(ctx).Warnf("failed to create write params for repo %s: %v", sourceRepo.GitUID, err)
+				} else {
+					s.cleanupZtflowAgitRefs(ctx, sourceRepo, writeParams, pr.SourceBranch)
+				}
+			}
+		}
 	case repoModel.EventTriggerTypeReopen:
 		s.pullreqEvReporter.Reopened(ctx, &pullreqevents.ReopenedPayload{
 			Base: pullreqevents.Base{

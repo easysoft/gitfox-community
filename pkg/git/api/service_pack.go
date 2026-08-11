@@ -17,6 +17,7 @@ package api
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"regexp"
 	"strconv"
@@ -24,9 +25,8 @@ import (
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/command"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	"github.com/easysoft/gitfox/errors"
-
-	"github.com/rs/zerolog/log"
 )
 
 var safeGitProtocolHeader = regexp.MustCompile(`^[0-9a-zA-Z]+=[0-9a-zA-Z]+(:[0-9a-zA-Z]+=[0-9a-zA-Z]+)*$`)
@@ -58,7 +58,7 @@ func (g *Git) InfoRefs(
 	if _, err := w.Write([]byte("0000")); err != nil {
 		return errors.Internal(err, "failed to flush data in InfoRefs %s service", service)
 	}
-	log.Ctx(ctx).Debug().Msg(stdout.String())
+	logger.GetLogger(ctx).Debug(stdout.String())
 	if _, err := io.Copy(w, stdout); err != nil {
 		return errors.Internal(err, "streaming InfoRefs %s service failed", service)
 	}
@@ -115,7 +115,10 @@ func (g *Git) ServicePack(
 		command.WithEnvs(options.Env...),
 	)
 	if err != nil && err.Error() != "signal: killed" {
-		log.Ctx(ctx).Err(err).Msgf("Fail to serve RPC(%s) in %s: %v", options.Service, repoPath, err)
+		logger.GetLogger(ctx).Errorw(
+			fmt.Sprintf("Fail to serve RPC(%s) in %s: %v", options.Service, repoPath, err),
+			"error", err,
+		)
 	}
 	return err
 }

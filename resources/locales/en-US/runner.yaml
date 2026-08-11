@@ -17,6 +17,7 @@ runner:
   invalid_token: "Runner token is invalid or expired."
   update_heart_beat_error: "Failed to update runner heartbeat."
   update_heart_beat_success: "Update runner heartbeat successfully."
+  default_operate_error: "Cannot operate on default runner."
   stage_request_error: "Failed to request stage."
   stage_request_success: "Stage requested successfully."
   stage_accept_error: "Failed to accept stage."

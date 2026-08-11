@@ -54,7 +54,7 @@ func newQueue(store stageStore.Interface, runnerStore runnerStore.Interface, loc
 	return q, nil
 }
 
-// getAvailableRunners 获取数据库中所有未删除，未停用，在线的 runner
+// getAvailableRunners 获取数据库中所有未删除，未停用，在线的 runner（排除内置 runner）
 func (q *queue) getAvailableRunners(ctx context.Context) ([]*runnerModel.Runner, error) {
 	filter := &runnerModel.ReqFilter{
 		Page:     1,
@@ -68,9 +68,17 @@ func (q *queue) getAvailableRunners(ctx context.Context) ([]*runnerModel.Runner,
 		return nil, err
 	}
 
-	logger.GetLogger(ctx).Debugf("retrieved available runners from database, total_runners_found=%d", len(res.Data))
+	// 过滤掉内置 runner（isDefault=true），内置 runner 由嵌入式 poller 管理，不需要参与 agent 调度
+	var agentRunners []*runnerModel.Runner
+	for _, r := range res.Data {
+		if !r.IsDefault {
+			agentRunners = append(agentRunners, r)
+		}
+	}
 
-	return res.Data, nil
+	logger.GetLogger(ctx).Debugf("retrieved available runners from database, total_runners_found=%d, agent_runners=%d", len(res.Data), len(agentRunners))
+
+	return agentRunners, nil
 }
 
 func (q *queue) Schedule() error {
@@ -125,7 +133,7 @@ func (q *queue) Request(ctx context.Context, params Filter) (*stageModel.Stage, 
 //nolint:gocognit // refactor if needed.
 func (q *queue) signal(ctx context.Context) error {
 	logger := logger.GetLogger(ctx)
-	logger.Infof("[pipeline]: queue signal triggered")
+	logger.Debugf("[pipeline]: queue signal triggered")
 	if err := q.globMx.Lock(ctx); err != nil {
 		logger.Infof("[pipeline]: failed to acquire global lock, err=%v", err)
 		return err
@@ -140,13 +148,13 @@ func (q *queue) signal(ctx context.Context) error {
 	count := len(q.workers)
 	pause := q.paused
 	q.Unlock()
-	logger.Infof("[pipeline]: queue state snapshot, workers=%d, paused=%v", count, pause)
+	logger.Debugf("[pipeline]: queue state snapshot, workers=%d, paused=%v", count, pause)
 	if pause {
-		logger.Infof("[pipeline]: queue is paused, skipping signal")
+		logger.Debugf("[pipeline]: queue is paused, skipping signal")
 		return nil
 	}
 	if count == 0 {
-		logger.Infof("[pipeline]: no workers available, skipping signal")
+		logger.Debugf("[pipeline]: no workers available, skipping signal")
 		return nil
 	}
 	items, err := q.store.ListIncomplete(ctx)
@@ -154,7 +162,7 @@ func (q *queue) signal(ctx context.Context) error {
 		logger.Infof("[pipeline]: failed to list incomplete stages, err=%v", err)
 		return err
 	}
-	logger.Infof("[pipeline]: incomplete stages fetched from DB, count=%d", len(items))
+	logger.Debugf("[pipeline]: incomplete stages fetched from DB, count=%d", len(items))
 
 	// 查找数据库 runners 表中所有未删除，未停用，在线的 agent runner
 	availableRunners, err := q.getAvailableRunners(ctx)
@@ -172,11 +180,11 @@ func (q *queue) signal(ctx context.Context) error {
 			availableRunnerMap[runner.Token] = runner
 		}
 	}
-	logger.Infof("[pipeline]: available agent runner tokens, count=%d", len(availableRunnerTokenList))
+	logger.Debugf("[pipeline]: available agent runner tokens, count=%d", len(availableRunnerTokenList))
 
 	q.Lock()
 	defer q.Unlock()
-	logger.Infof("[pipeline]: starting stage-worker matching, stages=%d, workers=%d", len(items), len(q.workers))
+	logger.Debugf("[pipeline]: starting stage-worker matching, stages=%d, workers=%d", len(items), len(q.workers))
 	for _, item := range items {
 		if item.Status == constant.CIStatusRunning {
 			logger.Infof("[pipeline]: skip stage (already running), stage_id=%d", item.ID)
@@ -189,47 +197,41 @@ func (q *queue) signal(ctx context.Context) error {
 		for w := range q.workers {
 			// the worker must match the resource kind and type
 			if !matchResource(w.typ, item.Type) {
-				logger.Infof("[pipeline]: worker skipped (type mismatch), stage_id=%d, worker_type=%s, stage_type=%s", item.ID, w.typ, item.Type)
+				logger.Debugf("[pipeline]: worker skipped (type mismatch), stage_id=%d, worker_type=%s, stage_type=%s", item.ID, w.typ, item.Type)
 				continue
 			}
 
 			// agent 类型的 runner 增加校验逻辑
 			if w.typ == "agent" {
 				if len(availableRunnerTokenList) == 0 {
-					logger.Infof("[pipeline]: worker skipped (agent type but no available runner tokens), stage_id=%d", item.ID)
+					logger.Debugf("[pipeline]: worker skipped (agent type but no available runner tokens), stage_id=%d", item.ID)
 					continue
 				}
 				if !slices.Contains(availableRunnerTokenList, w.token) {
-					logger.Infof("[pipeline]: worker skipped (agent token not in available list), stage_id=%d, worker_token=%s", item.ID, w.token)
+					logger.Debugf("[pipeline]: worker skipped (agent token not in available list), stage_id=%d, worker_token=%s", item.ID, w.token)
 					continue
 				}
-			}
 
-			if w.os != "" || w.arch != "" {
-				if w.os != item.OS {
-					logger.Infof("[pipeline]: worker skipped (OS mismatch), stage_id=%d, worker_os=%s, stage_os=%s", item.ID, w.os, item.OS)
-					continue
+				if w.os != "" || w.arch != "" {
+					if w.os != item.OS {
+						logger.Debugf("[pipeline]: worker skipped (OS mismatch), stage_id=%d, worker_os=%s, stage_os=%s", item.ID, w.os, item.OS)
+						continue
+					}
+					if w.arch != item.Arch {
+						logger.Debugf("[pipeline]: worker skipped (arch mismatch), stage_id=%d, worker_arch=%s, stage_arch=%s", item.ID, w.arch, item.Arch)
+						continue
+					}
 				}
-				if w.arch != item.Arch {
-					logger.Infof("[pipeline]: worker skipped (arch mismatch), stage_id=%d, worker_arch=%s, stage_arch=%s", item.ID, w.arch, item.Arch)
-					continue
-				}
-			}
-
-			// agent 用 DB 中的 labels，docker 沿用请求中的 labels(nil)
-			var workerLabels []string
-			if w.typ == "agent" {
+				// agent 用 DB 中的 labels 做匹配
+				var workerLabels []string
 				if runner, ok := availableRunnerMap[w.token]; ok {
 					workerLabels = runner.Labels
 				}
-			} else {
-				workerLabels = mapKeys(w.labels)
-			}
-
-			if len(item.Labels) > 0 || len(workerLabels) > 0 {
-				if !checkLabels(mapKeys(item.Labels), workerLabels) {
-					logger.Infof("[pipeline]: worker skipped (labels mismatch), stage_id=%d", item.ID)
-					continue
+				if len(item.Labels) > 0 || len(workerLabels) > 0 {
+					if !checkLabels(mapKeys(item.Labels), workerLabels) {
+						logger.Debugf("[pipeline]: worker skipped (labels mismatch), stage_id=%d", item.ID)
+						continue
+					}
 				}
 			}
 
@@ -250,7 +252,7 @@ func (q *queue) signal(ctx context.Context) error {
 			logger.Infof("[pipeline]: no matching worker found for stage, stage_id=%d", item.ID)
 		}
 	}
-	logger.Infof("[pipeline]: signal completed, remaining_workers=%d", len(q.workers))
+	logger.Debugf("[pipeline]: signal completed, remaining_workers=%d", len(q.workers))
 	return nil
 }
 
@@ -315,13 +317,12 @@ func mapKeys(m map[string]string) []string {
 	return keys
 }
 
-// matchResource is a helper function that returns.
 func matchResource(typea, typeb string) bool {
 	if typea == "" {
-		typea = "docker"
+		typea = "inner"
 	}
 	if typeb == "" {
-		typeb = "docker"
+		typeb = "inner"
 	}
 	return typea == typeb
 }

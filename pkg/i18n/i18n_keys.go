@@ -906,6 +906,7 @@ const (
 	RunnerUpdateHeartBeatError   I18nKey = "runner.update_heart_beat_error"   // 更新 Runner 心跳失败.
 	RunnerUpdateHeartBeatSuccess I18nKey = "runner.update_heart_beat_success" // 更新 Runner 心跳成功.
 	RunnerUpdateSuccess          I18nKey = "runner.update_success"            // 更新 Runner 成功.
+	RunnerDefaultOperateError    I18nKey = "runner.default_operate_error"     // 内置 Runner 不允许此操作.
 
 	// Runner Stage 相关常量
 	RunnerStageRequestError   I18nKey = "runner.stage_request_error"   // 拉取 Stage 失败.

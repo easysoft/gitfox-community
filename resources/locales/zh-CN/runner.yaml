@@ -17,6 +17,7 @@ runner:
   invalid_token: "Runner Token 无效或已过期。"
   update_heart_beat_error: "更新 Runner 心跳失败。"
   update_heart_beat_success: "更新 Runner 心跳成功。"
+  default_operate_error: "内置 Runner 不允许此操作。"
   stage_request_error: "拉取 Stage 失败。"
   stage_request_success: "拉取 Stage 成功。"
   stage_accept_error: "接受 Stage 失败。"

@@ -4,6 +4,7 @@ import (
 	"compress/gzip"
 	"context"
 	"fmt"
+	"net/http"
 	"strings"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/githook"
@@ -65,6 +66,10 @@ func NewGitController(gitSvc git.Interface, spaceSvc spaceSvc.Interface, repoSvc
 // @Failure 500 {object} resp.ObjectResponse "服务器内部错误"
 // @Router /git/{spaceCode}/{repoRef}/git-upload-pack [post]
 func (ctl *GitController) Clone(ctx *gin.Context) {
+
+	resp.NoCache(ctx.Writer)
+	ctx.Writer.Header().Set("Content-Type", fmt.Sprintf("application/x-git-%s-result", constant.GitServiceTypeUploadPack))
+
 	logger := logger.GetLogger(ctx)
 	var params req.SpaceRepoRef
 	var err error
@@ -72,7 +77,12 @@ func (ctl *GitController) Clone(ctx *gin.Context) {
 	// 公共解析逻辑
 	session, contentEncoding, gitProtocol, err := ctl.prepareRequest(ctx, &params)
 	if err != nil {
-		resp.BadRequest(ctx, err)
+		resp.GitError(ctx, err, http.StatusBadRequest, false)
+		return
+	}
+	if session.User.Email == "" {
+		err = errors.WithI18nKey(errors.New("user email is empty"), i18n.AuthNoSessionCheckZentaoEmail)
+		resp.GitError(ctx, err, http.StatusUnauthorized, false)
 		return
 	}
 
@@ -82,7 +92,7 @@ func (ctl *GitController) Clone(ctx *gin.Context) {
 	// 获取仓库信息
 	repo, err := ctl.getRepoByIdentifier(ctx, session, params.SpaceCode, repoIdentifier, constant.PermissionRepoView)
 	if err != nil {
-		resp.BadRequest(ctx, err)
+		resp.GitError(ctx, err, http.StatusBadRequest, false)
 		return
 	}
 
@@ -91,7 +101,7 @@ func (ctl *GitController) Clone(ctx *gin.Context) {
 		gzipReader, gErr := gzip.NewReader(dataReader)
 		if gErr != nil {
 			gErr = errors.WithI18nKey(gErr, i18n.ErrorGzipFailedToCreateReader)
-			resp.InternalError(ctx, gErr)
+			resp.GitError(ctx, gErr, http.StatusInternalServerError, false)
 			return
 		}
 
@@ -103,14 +113,12 @@ func (ctl *GitController) Clone(ctx *gin.Context) {
 		dataReader = gzipReader
 	}
 
-	resp.NoCache(ctx.Writer)
-	ctx.Writer.Header().Set("Content-Type", fmt.Sprintf("application/x-git-%s-result", constant.GitServiceTypeUploadPack))
-
 	// 调用 ServicePack 处理 Git 协议
 	options := api.ServicePackOptions{
 		Service:      constant.GitServiceTypeUploadPack,
 		StatelessRPC: true,
 		Stdout:       ctx.Writer,
+		Stderr:       ctx.Writer,
 		Stdin:        dataReader,
 		Protocol:     gitProtocol,
 	}
@@ -118,7 +126,7 @@ func (ctl *GitController) Clone(ctx *gin.Context) {
 	err = ctl.gitSvc.GitServicePack(ctx, session, repo, options)
 	if err != nil {
 		logger.Errorf("GitServicePack failed: %v", err)
-		resp.InternalError(ctx, err)
+		resp.GitError(ctx, err, http.StatusInternalServerError, false)
 		return
 	}
 }
@@ -139,6 +147,10 @@ func (ctl *GitController) Clone(ctx *gin.Context) {
 // @Failure 500 {object} resp.ObjectResponse "服务器内部错误"
 // @Router /git/{spaceCode}/{repoRef}/git-receive-pack [post]
 func (ctl *GitController) Push(ctx *gin.Context) {
+
+	resp.NoCache(ctx.Writer)
+	ctx.Writer.Header().Set("Content-Type", fmt.Sprintf("application/x-git-%s-result", constant.GitServiceTypeReceivePack))
+
 	logger := logger.GetLogger(ctx)
 	var params req.SpaceRepoRef
 	var err error
@@ -147,7 +159,13 @@ func (ctl *GitController) Push(ctx *gin.Context) {
 	session, contentEncoding, gitProtocol, err := ctl.prepareRequest(ctx, &params)
 	if err != nil {
 		err = errors.WithI18nKey(err, i18n.RequestInvalidRequestBody)
-		resp.BadRequest(ctx, err)
+		resp.GitError(ctx, err, http.StatusBadRequest, true)
+		return
+	}
+
+	if session.User.Email == "" {
+		err = errors.WithI18nKey(errors.New("user email is empty"), i18n.AuthNoSessionCheckZentaoEmail)
+		resp.GitError(ctx, err, http.StatusUnauthorized, true)
 		return
 	}
 
@@ -157,7 +175,7 @@ func (ctl *GitController) Push(ctx *gin.Context) {
 	// 获取仓库信息
 	repo, err := ctl.getRepoByIdentifier(ctx, session, params.SpaceCode, repoIdentifier, constant.PermissionRepoPush)
 	if err != nil {
-		resp.BadRequest(ctx, err)
+		resp.GitError(ctx, err, http.StatusBadRequest, true)
 		return
 	}
 
@@ -166,7 +184,7 @@ func (ctl *GitController) Push(ctx *gin.Context) {
 		gzipReader, gErr := gzip.NewReader(dataReader)
 		if gErr != nil {
 			gErr = errors.WithI18nKey(gErr, i18n.ErrorGzipFailedToCreateReader)
-			resp.InternalError(ctx, gErr)
+			resp.GitError(ctx, gErr, http.StatusInternalServerError, true)
 			return
 		}
 
@@ -178,13 +196,10 @@ func (ctl *GitController) Push(ctx *gin.Context) {
 		dataReader = gzipReader
 	}
 
-	resp.NoCache(ctx.Writer)
-	ctx.Writer.Header().Set("Content-Type", fmt.Sprintf("application/x-git-%s-result", constant.GitServiceTypeReceivePack))
-
 	// need, err := ctl.settingsSvc.NeedFitClient(ctx, repo.ID, constant.KeyRequireFitClient)
 	// if err != nil {
 	// 	err = errors.WithI18nKey(err, i18n.DbError)
-	// 	resp.InternalError(ctx, err)
+	// 	resp.GitError(ctx, err, http.StatusInternalServerError, true)
 	// 	return
 	// }
 
@@ -193,6 +208,7 @@ func (ctl *GitController) Push(ctx *gin.Context) {
 		Service:      constant.GitServiceTypeReceivePack,
 		StatelessRPC: true,
 		Stdout:       ctx.Writer,
+		Stderr:       ctx.Writer,
 		Stdin:        dataReader,
 		Protocol:     gitProtocol,
 		IsWrite:      true,
@@ -202,7 +218,7 @@ func (ctl *GitController) Push(ctx *gin.Context) {
 	err = ctl.gitSvc.GitServicePack(ctx, session, repo, options)
 	if err != nil {
 		logger.Errorf("GitServicePack failed: %v", err)
-		resp.InternalError(ctx, err)
+		resp.GitError(ctx, err, http.StatusInternalServerError, true)
 		return
 	}
 }

@@ -30,6 +30,7 @@ type RestrictedGIT interface {
 	IsAncestor(ctx context.Context, params git.IsAncestorParams) (git.IsAncestorOutput, error)
 	ScanSecrets(ctx context.Context, param *git.ScanSecretsParams) (*git.ScanSecretsOutput, error)
 	GetBranch(ctx context.Context, params *git.GetBranchParams) (*git.GetBranchOutput, error)
+	GetCommit(ctx context.Context, params *git.GetCommitParams) (*git.GetCommitOutput, error)
 	Diff(ctx context.Context, in *git.DiffParams, files ...api.FileDiffRequest) (<-chan *git.FileDiff, <-chan error)
 	GetBlob(ctx context.Context, params *git.GetBlobParams) (*git.GetBlobOutput, error)
 	FindOversizeFiles(
