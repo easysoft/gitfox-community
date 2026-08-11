@@ -47,12 +47,22 @@ func NewGaussDB(dbConf config.DatabaseConfig, logConf config.LoggingConfig) (*Ga
 		return nil, nil, err
 	}
 
+	// 获取底层 *sql.DB（包装前，此时 db.ConnPool 即 *sql.DB）
 	sqlDB, err := db.DB()
 	if err != nil {
 		return nil, nil, err
 	}
 	if err = sqlDB.Ping(); err != nil {
 		return nil, nil, err
+	}
+
+	// 包装连接池：GaussDB 预建表使用驼峰列名（如 isCustom），
+	// 未加引号的标识符会被 GaussDB 折叠为小写，导致 Column not found。
+	// 通过 SQLRewriter 在 SQL 执行前给驼峰标识符加双引号。
+	pool := &RewritingConnPool{DB: sqlDB, Rewriter: GaussDBSQLRewriter{}}
+	db.ConnPool = pool
+	if db.Statement != nil {
+		db.Statement.ConnPool = pool
 	}
 	// SetMaxIdleConns 用于设置连接池中空闲连接的最大数量。
 	sqlDB.SetMaxIdleConns(dbConf.MaxIdleConn)
