@@ -254,7 +254,7 @@ func createMigrateScanRuleSolutions(ctx context.Context, tx *gorm.DB, rulesFile 
 	var boundRuleSetIDs []int64
 	if err := tx.Model(&SolutionRuleSets{}).
 		Where("solutionID = ? AND deleted = ?", solution.ID, 0).
-		Pluck("ruleSetID", &boundRuleSetIDs).Error; err != nil {
+		Pluck("rulesetID", &boundRuleSetIDs).Error; err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
 	}
 	boundSet := make(map[int64]struct{}, len(boundRuleSetIDs))
@@ -269,9 +269,9 @@ func createMigrateScanRuleSolutions(ctx context.Context, tx *gorm.DB, rulesFile 
 
 		// 尝试恢复被软删的历史绑定
 		result := tx.Model(&SolutionRuleSets{}).
-			Where("solutionID = ? AND ruleSetID = ? AND deleted = ?", solution.ID, uint64(ruleSetID), 1).
+			Where("solutionID = ? AND rulesetID = ? AND deleted = ?", solution.ID, uint64(ruleSetID), 1).
 			Updates(map[string]interface{}{
-				"deleted":    false,
+				"deleted":    0,
 				"editedBy":   "system",
 				"editedDate": now,
 			})

@@ -80,7 +80,7 @@ func (s *SolutionStore) List(ctx context.Context, filter scanModel.SolutionReqFi
 		Select(`s.*,
 			(SELECT COUNT(*) FROM ops_scan_solution_rulesets WHERE solutionID = s.id AND deleted = ?) AS rulesets_count,
 			(SELECT COUNT(*) FROM ops_scan_solution_rulesets AS ssr
-				JOIN ops_scan_ruleset_rules AS srr ON srr.rulesetID = ssr.ruleSetID AND srr.deleted = ?
+				JOIN ops_scan_ruleset_rules AS srr ON srr.rulesetID = ssr.rulesetID AND srr.deleted = ?
 				WHERE ssr.solutionID = s.id AND ssr.deleted = ?) AS rules_count`, 0, 0, 0).
 		Where("s.deleted = ?", 0)
 
@@ -161,7 +161,7 @@ func (s *SolutionStore) GetRulesetIDList(ctx context.Context, solutionID uint) (
 	var rulesetIDs []int64
 	err := s.db.WithContext(ctx).Model(&SolutionRuleSets{}).
 		Where("solutionID = ? AND deleted = ?", solutionID, 0).
-		Pluck("ruleSetID", &rulesetIDs).Error
+		Pluck("rulesetID", &rulesetIDs).Error
 	if err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
@@ -179,7 +179,7 @@ func (s *SolutionStore) ListRulesets(ctx context.Context, solutionID uint) ([]*s
 	err := s.db.WithContext(ctx).
 		Table("ops_scan_solution_rulesets AS ssr").
 		Select("r.*, (SELECT COUNT(*) FROM ops_scan_ruleset_rules WHERE rulesetID = r.id AND deleted = ?) as rules_count", 0).
-		Joins("LEFT JOIN ops_scan_rulesets AS r ON ssr.ruleSetID = r.id").
+		Joins("LEFT JOIN ops_scan_rulesets AS r ON ssr.rulesetID = r.id").
 		Where("ssr.solutionID = ? AND ssr.deleted = ?", solutionID, 0).
 		Find(&rulesetsWithCount).Error
 	if err != nil {
@@ -247,7 +247,7 @@ func (s *SolutionStore) BindRulesets(ctx context.Context, solutionID uint, rules
 
 		for _, rulesetID := range rulesetIDs {
 			var existing SolutionRuleSets
-			err := tx.Where("solutionID = ? AND ruleSetID = ?", solutionID, rulesetID).First(&existing).Error
+			err := tx.Where("solutionID = ? AND rulesetID = ?", solutionID, rulesetID).First(&existing).Error
 
 			if err == gorm.ErrRecordNotFound {
 				newRecord := SolutionRuleSets{
@@ -262,7 +262,7 @@ func (s *SolutionStore) BindRulesets(ctx context.Context, solutionID uint, rules
 				return database.ProcessSQLErrorf(ctx, err)
 			} else if existing.Deleted != 0 {
 				if err := tx.Model(&SolutionRuleSets{}).
-					Where("solutionID = ? AND ruleSetID = ?", solutionID, rulesetID).
+					Where("solutionID = ? AND rulesetID = ?", solutionID, rulesetID).
 					Update("deleted", 0).Error; err != nil {
 					return database.ProcessSQLErrorf(ctx, err)
 				}
@@ -275,7 +275,7 @@ func (s *SolutionStore) BindRulesets(ctx context.Context, solutionID uint, rules
 // UnbindRulesets 解除扫描方案与规则集的绑定
 func (s *SolutionStore) UnbindRulesets(ctx context.Context, solutionID uint, rulesetIDs []uint) error {
 	if err := s.db.WithContext(ctx).Model(&SolutionRuleSets{}).
-		Where("solutionID = ? AND ruleSetID IN ?", solutionID, rulesetIDs).
+		Where("solutionID = ? AND rulesetID IN ?", solutionID, rulesetIDs).
 		Update("deleted", 1).Error; err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
 	}

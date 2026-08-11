@@ -63,6 +63,46 @@ func TestGaussDBSQLRewriter_RewriteSQL(t *testing.T) {
 			in:   `ORDER BY "ops_scan_rules"."createdDate" DESC`,
 			want: `ORDER BY "ops_scan_rules"."createdDate" DESC`,
 		},
+		{
+			name: "GaussDB保留字 online 加引号（WHERE）",
+			in:   `SELECT count(*) FROM "ops_runner" WHERE deleted = 0 AND online = 'online' AND status = 'enable'`,
+			want: `SELECT count(*) FROM "ops_runner" WHERE deleted = 0 AND "online" = 'online' AND status = 'enable'`,
+		},
+		{
+			name: "GaussDB保留字 online 加引号（ORDER BY）",
+			in:   `SELECT * FROM "ops_runner" ORDER BY online ASC, status ASC`,
+			want: `SELECT * FROM "ops_runner" ORDER BY "online" ASC, status ASC`,
+		},
+		{
+			name: "GaussDB保留字 online 加引号（UPDATE SET）",
+			in:   `UPDATE "ops_runner" SET online = 'offline', status = 'disable' WHERE deleted = 0`,
+			want: `UPDATE "ops_runner" SET "online" = 'offline', status = 'disable' WHERE deleted = 0`,
+		},
+		{
+			name: "GaussDB保留字 desc 加引号（WHERE）",
+			in:   `SELECT count(*) FROM "ops_runner" WHERE desc = ''`,
+			want: `SELECT count(*) FROM "ops_runner" WHERE "desc" = ''`,
+		},
+		{
+			name: "保留字字符串值不受影响",
+			in:   `WHERE online = 'online' AND name = 'descValue'`,
+			want: `WHERE "online" = 'online' AND name = 'descValue'`,
+		},
+		{
+			name: "ORDER BY 排序方向 desc 不加引号",
+			in:   `SELECT * FROM "ops_runner" WHERE deleted = 0 ORDER BY createdDate desc`,
+			want: `SELECT * FROM "ops_runner" WHERE deleted = 0 ORDER BY "createdDate" desc`,
+		},
+		{
+			name: "ORDER BY 多字段含保留字列名与排序方向",
+			in:   `SELECT * FROM "ops_runner" ORDER BY online asc, status desc`,
+			want: `SELECT * FROM "ops_runner" ORDER BY "online" asc, status desc`,
+		},
+		{
+			name: "ORDER BY 已加引号的排序方向",
+			in:   `SELECT * FROM "ops_runner" ORDER BY "createdDate" desc LIMIT 10`,
+			want: `SELECT * FROM "ops_runner" ORDER BY "createdDate" desc LIMIT 10`,
+		},
 	}
 
 	rw := GaussDBSQLRewriter{}

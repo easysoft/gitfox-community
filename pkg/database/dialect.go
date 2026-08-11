@@ -10,16 +10,23 @@ type SQLRewriter interface {
 }
 
 // GaussDBSQLRewriter 是 SQLRewriter 的 GaussDB 实现。
-// GaussDB 预建表使用驼峰列名（如 isCustom、createdBy），而 PostgreSQL/GaussDB
-// 协议对未加引号的标识符会强制折叠为小写，导致 Column "iscustom" does not exist。
-// 该重写器给未加引号的驼峰标识符加双引号，保留其大小写。
+// 该重写器给未加引号的驼峰标识符或保留字列名加双引号。
 type GaussDBSQLRewriter struct{}
 
-// RewriteSQL 给 SQL 中未加引号的驼峰标识符加双引号。
+// gaussdbReservedColumnWords 是必须加引号才能作为列名使用的 GaussDB 保留字。
+var gaussdbReservedColumnWords = map[string]struct{}{
+	"online": {},
+	"desc":   {},
+}
+
+// RewriteSQL 给 SQL 中未加引号的驼峰标识符或 GaussDB 保留字列名加双引号。
 // 跳过单引号字符串字面量与已加双引号的标识符，避免误改字符串值或重复加引号。
+// 特殊处理 ORDER BY 子句：其中的 desc/asc 是排序方向关键字，不加引号。
 func (GaussDBSQLRewriter) RewriteSQL(sql string) string {
 	var out []byte
 	i, n := 0, len(sql)
+	inOrderBy := false // 是否处于 ORDER BY 子句
+	lastWord := ""     // 上一个标识符（大写），用于识别 "ORDER BY"
 	for i < n {
 		c := sql[i]
 		switch {
@@ -62,19 +69,66 @@ func (GaussDBSQLRewriter) RewriteSQL(sql string) string {
 				i++
 			}
 			word := sql[start:i]
-			if isCamelCase(word) {
+			upper := gaussDBUpper(word)
+			// 更新 ORDER BY 上下文
+			switch upper {
+			case "ORDER":
+				inOrderBy = false // 等待随后的 BY
+			case "BY":
+				if lastWord == "ORDER" {
+					inOrderBy = true
+				}
+			default:
+				if inOrderBy && isSQLClauseKeyword(upper) {
+					inOrderBy = false // 遇到其他子句关键字，退出 ORDER BY 上下文
+				}
+			}
+			// desc/asc 作为 ORDER BY 排序方向时不加引号
+			isOrderByDirection := inOrderBy && (upper == "DESC" || upper == "ASC")
+			if (isCamelCase(word) || isGaussDBReservedColumnWord(word)) && !isOrderByDirection {
 				out = append(out, '"')
 				out = append(out, word...)
 				out = append(out, '"')
 			} else {
 				out = append(out, word...)
 			}
+			lastWord = upper
 		default:
 			out = append(out, c)
 			i++
 		}
 	}
 	return string(out)
+}
+
+// gaussDBUpper 返回单词的大写形式（用于识别 SQL 关键字）。
+func gaussDBUpper(word string) string {
+	var buf []byte
+	for i := 0; i < len(word); i++ {
+		c := word[i]
+		if c >= 'a' && c <= 'z' {
+			c -= 'a' - 'A'
+		}
+		buf = append(buf, c)
+	}
+	return string(buf)
+}
+
+// isSQLClauseKeyword 判断单词是否为会结束 ORDER BY 子句的 SQL 子句关键字。
+func isSQLClauseKeyword(upper string) bool {
+	switch upper {
+	case "SELECT", "FROM", "WHERE", "AND", "OR", "GROUP", "HAVING",
+		"LIMIT", "OFFSET", "UPDATE", "SET", "INSERT", "INTO", "VALUES",
+		"JOIN", "LEFT", "INNER", "RIGHT", "ON", "DELETE", "UNION":
+		return true
+	}
+	return false
+}
+
+// isGaussDBReservedColumnWord 判断单词是否为需要加引号的 GaussDB 保留字列名。
+func isGaussDBReservedColumnWord(word string) bool {
+	_, ok := gaussdbReservedColumnWords[word]
+	return ok
 }
 
 // isIdentifierStart 判断 byte 是否为标识符起始字符（字母或下划线）。

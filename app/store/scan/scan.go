@@ -76,7 +76,7 @@ func (r *SolutionRules) BeforeUpdate(tx *gorm.DB) error {
 type SolutionRuleSets struct {
 	ID          uint64          `gorm:"column:id;primaryKey"`
 	SolutionID  uint64          `gorm:"column:solutionID"`
-	RuleSetID   uint64          `gorm:"column:ruleSetID"`
+	RuleSetID   uint64          `gorm:"column:rulesetID"`
 	CreatedBy   string          `gorm:"column:createdBy"`
 	CreatedDate *datetime.Local `gorm:"column:createdDate"`
 	EditedBy    string          `gorm:"column:editedBy"`
