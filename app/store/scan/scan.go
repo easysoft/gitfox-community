@@ -15,7 +15,7 @@ type RuleSetRules struct {
 	CreatedDate *datetime.Local `gorm:"column:createdDate"`
 	EditedBy    string          `gorm:"column:editedBy"`
 	EditedDate  *datetime.Local `gorm:"column:editedDate"`
-	Deleted     bool            `gorm:"column:deleted"`
+	Deleted     uint8           `gorm:"column:deleted"`
 }
 
 // TableName 指定数据库表名
@@ -44,13 +44,13 @@ type SolutionRules struct {
 	Desc        string                  `gorm:"column:desc"`
 	DescEn      string                  `gorm:"column:descEn"`
 	Tag         string                  `gorm:"column:tag"`
-	IsCustom    bool                    `gorm:"column:isCustom"`
+	IsCustom    uint8                   `gorm:"column:isCustom"`
 	Status      constant.ScanRuleStatus `gorm:"column:status"`
 	CreatedBy   string                  `gorm:"column:createdBy"`
 	CreatedDate *datetime.Local         `gorm:"column:createdDate"`
 	EditedBy    string                  `gorm:"column:editedBy"`
 	EditedDate  *datetime.Local         `gorm:"column:editedDate"`
-	Deleted     bool                    `gorm:"column:deleted"`
+	Deleted     uint8                   `gorm:"column:deleted"`
 }
 
 // TableName 指定数据库表名
@@ -81,7 +81,7 @@ type SolutionRuleSets struct {
 	CreatedDate *datetime.Local `gorm:"column:createdDate"`
 	EditedBy    string          `gorm:"column:editedBy"`
 	EditedDate  *datetime.Local `gorm:"column:editedDate"`
-	Deleted     bool            `gorm:"column:deleted"`
+	Deleted     uint8           `gorm:"column:deleted"`
 }
 
 // TableName 指定数据库表名
@@ -108,7 +108,7 @@ type RuleMigration struct {
 	Version     string          `gorm:"column:version"`
 	CreatedBy   string          `gorm:"column:createdBy"`
 	CreatedDate *datetime.Local `gorm:"column:createdDate"`
-	Deleted     bool            `gorm:"column:deleted"`
+	Deleted     uint8           `gorm:"column:deleted"`
 }
 
 func (r *RuleMigration) TableName() string {

@@ -71,7 +71,7 @@ func mapModelToPipeline(p *pipelineModel.Pipeline) *Pipeline {
 		CreatedDate:      p.CreatedDate,
 		EditedBy:         p.EditedBy,
 		EditedDate:       p.EditedDate,
-		Deleted:          p.Deleted,
+		Deleted:          uint8(p.Deleted),
 	}
 }
 
@@ -98,6 +98,6 @@ func mapPipelineToModel(p *Pipeline) *pipelineModel.Pipeline {
 		CreatedDate:      p.CreatedDate,
 		EditedBy:         p.EditedBy,
 		EditedDate:       p.EditedDate,
-		Deleted:          p.Deleted,
+		Deleted:          int8(p.Deleted),
 	}
 }

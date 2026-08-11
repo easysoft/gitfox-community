@@ -186,12 +186,12 @@ func (s *Service) Create(ctx context.Context, info webhookModel.Webhook) (*webho
 		Desc:        info.Description,
 		URL:         info.URL,
 		Secret:      info.Secret,
-		IsSSL:       !info.Insecure,
+		IsSSL:       database.BoolToUint8(!info.Insecure),
 		Triggers:    strings.Join(triggerParts, ","),
-		Internal:    info.Internal,
+		Internal:    database.BoolToUint8(info.Internal),
 		AuthMethod:  string(info.AuthMethod),
 		AuthHeader:  info.AuthHeader,
-		Enabled:     info.Enabled,
+		Enabled:     database.BoolToUint8(info.Enabled),
 		CreatedBy:   info.CreatedBy,
 		EditedBy:    info.EditedBy,
 	}
@@ -258,7 +258,7 @@ func (s *Service) Update(ctx context.Context, webhookID uint, req webhookModel.R
 		updates["secret"] = *req.Secret
 	}
 	if req.Insecure != nil {
-		updates["isSSL"] = !*req.Insecure
+		updates["isSSL"] = database.BoolToUint8(!*req.Insecure)
 	}
 	if req.AuthMethod != nil {
 		updates["authMethod"] = string(*req.AuthMethod)
@@ -267,7 +267,7 @@ func (s *Service) Update(ctx context.Context, webhookID uint, req webhookModel.R
 		updates["authHeader"] = *req.AuthHeader
 	}
 	if req.Enabled != nil {
-		updates["enabled"] = *req.Enabled
+		updates["enabled"] = database.BoolToUint8(*req.Enabled)
 	}
 
 	return s.webhookStore.Update(ctx, webhookID, updates)

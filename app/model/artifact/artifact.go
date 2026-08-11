@@ -220,7 +220,7 @@ type ArtifactVersionInfo struct {
 	ID            int64  `gorm:"column:id"`
 	Version       string `gorm:"column:version"`
 	ArtifactLibID int64  `gorm:"column:artifactLibID"`
-	Deleted       int64  `gorm:"column:deleted"`
+	Deleted       uint8  `gorm:"column:deleted"`
 
 	PackageID        int64          `gorm:"column:packageID"`
 	PackageName      string         `gorm:"column:name"`

@@ -39,7 +39,7 @@ func NewDB(cfg *config.Config, systemLog *SystemLog) (*gorm.DB, func(), error) {
 		}
 	case "gaussdb":
 		var gaussDB *database.GaussDB
-		gaussDB, cleanup, err = database.NewGaussDB(cfg.Database)
+		gaussDB, cleanup, err = database.NewGaussDB(cfg.Database, cfg.Logging)
 		if gaussDB != nil {
 			db = gaussDB.DB()
 		}

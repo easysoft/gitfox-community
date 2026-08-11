@@ -269,7 +269,7 @@ func (s *Store) DeleteOld(ctx context.Context, olderThan time.Time) (int64, erro
 
 	result := s.db.WithContext(ctx).
 		Where("isRecurring = ? AND state IN (?, ?, ?) AND lastExecuted < ?",
-			false, jobModel.StateFinished, jobModel.StateFailed, jobModel.StateCanceled, olderThanLocal).
+			0, jobModel.StateFinished, jobModel.StateFailed, jobModel.StateCanceled, olderThanLocal).
 		Delete(&ScheduleJob{})
 
 	if result.Error != nil {
@@ -308,7 +308,7 @@ func mapJobToModel(j ScheduleJob) *jobModel.ScheduleJob {
 		RunDeadline:         j.RunDeadline,
 		RunProgress:         j.RunProgress,
 		LastExecuted:        j.LastExecuted,
-		IsRecurring:         j.IsRecurring,
+		IsRecurring:         j.IsRecurring != 0,
 		RecurringCron:       j.RecurringCron,
 		ConsecutiveFailures: j.ConsecutiveFailures,
 		LastFailureError:    j.LastFailureError.String,
@@ -338,7 +338,7 @@ func mapJobToStore(j *jobModel.ScheduleJob) *ScheduleJob {
 		RunDeadline:         j.RunDeadline,
 		RunProgress:         j.RunProgress,
 		LastExecuted:        j.LastExecuted,
-		IsRecurring:         j.IsRecurring,
+		IsRecurring:         database.BoolToUint8(j.IsRecurring),
 		RecurringCron:       j.RecurringCron,
 		ConsecutiveFailures: j.ConsecutiveFailures,
 		LastFailureError:    database.NoNull(j.LastFailureError),

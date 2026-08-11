@@ -81,7 +81,7 @@ func (s *ScanIssueStore) Get(ctx context.Context, id uint) (*scanModel.ScanIssue
 		Joins("INNER JOIN ops_scan_rules AS r ON i.ruleID = r.id").
 		Joins("LEFT JOIN ops_scan_tasks AS t ON i.updatedByTaskID = t.id").
 		Joins("LEFT JOIN ops_scan_plans AS p ON t.planID = p.id").
-		Where("i.id = ? AND i.deleted = ?", id, false).
+		Where("i.id = ? AND i.deleted = ?", id, 0).
 		First(&item).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
@@ -100,7 +100,7 @@ func (s *ScanIssueStore) List(ctx context.Context, filter scanModel.ScanIssueReq
 		Joins("INNER JOIN ops_scan_rules AS r ON i.ruleID = r.id").
 		Joins("LEFT JOIN ops_scan_tasks AS t ON i.updatedByTaskID = t.id").
 		Joins("LEFT JOIN ops_scan_plans AS p ON t.planID = p.id").
-		Where("i.deleted = ?", false)
+		Where("i.deleted = ?", 0)
 
 	if filter.ID != 0 {
 		stmt = stmt.Where("i.id = ?", filter.ID)
@@ -198,7 +198,7 @@ func (s *ScanIssueStore) ListByIDs(ctx context.Context, ids []int64) ([]*scanMod
 			"t.triggerID, t.triggerType").
 		Joins("INNER JOIN ops_scan_rules AS r ON i.ruleID = r.id").
 		Joins("LEFT JOIN ops_scan_tasks AS t ON i.updatedByTaskID = t.id").
-		Where("i.id IN ? AND i.deleted = ?", ids, false).
+		Where("i.id IN ? AND i.deleted = ?", ids, 0).
 		Find(&issues).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
@@ -215,7 +215,7 @@ func (s *ScanIssueStore) UpdateResolution(ctx context.Context, ids []int64, reso
 		return nil
 	}
 	if err := s.db.WithContext(ctx).Model(&ScanIssue{}).
-		Where("id IN ? AND deleted = ?", ids, false).
+		Where("id IN ? AND deleted = ?", ids, 0).
 		Updates(map[string]any{"resolution": resolution}).Error; err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
 	}
@@ -228,7 +228,7 @@ func (s *ScanIssueStore) UpdateStatus(ctx context.Context, ids []int64, status c
 		return nil
 	}
 	if err := s.db.WithContext(ctx).Model(&ScanIssue{}).
-		Where("id IN ? AND deleted = ?", ids, false).
+		Where("id IN ? AND deleted = ?", ids, 0).
 		Update("status", status).Error; err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
 	}
@@ -255,7 +255,7 @@ func (s *ScanIssueStore) UpdateTimestamps(ctx context.Context, in scanModel.Scan
 		return nil
 	}
 	if err := s.db.WithContext(ctx).Model(&ScanIssue{}).
-		Where("id IN ? AND deleted = ?", in.IDs, false).
+		Where("id IN ? AND deleted = ?", in.IDs, 0).
 		Updates(fields).Error; err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
 	}
@@ -268,7 +268,7 @@ func (s *ScanIssueStore) ResetExpiredIgnore(ctx context.Context, ids []int64) er
 		return nil
 	}
 	if err := s.db.WithContext(ctx).Model(&ScanIssue{}).
-		Where("id IN ? AND deleted = ?", ids, false).
+		Where("id IN ? AND deleted = ?", ids, 0).
 		Updates(map[string]any{
 			"status":     constant.ScanIssueStatusWait,
 			"resolution": nil,
@@ -285,7 +285,7 @@ func (s *ScanIssueStore) ListKeysByTask(
 	var issues []*ScanIssue
 	if err := s.db.WithContext(ctx).
 		Select("id, issueKey, createdByTaskID, updatedByTaskID, status, ignored").
-		Where("repoID = ? AND repoBranch = ? AND scanMethod = ? AND deleted = ?", repoID, branch, method, false).
+		Where("repoID = ? AND repoBranch = ? AND scanMethod = ? AND deleted = ?", repoID, branch, method, 0).
 		Find(&issues).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
@@ -323,7 +323,7 @@ func (s *ScanIssueStore) DisappearedByTask(ctx context.Context, taskID uint, iss
 		return nil
 	}
 	if err := s.db.WithContext(ctx).Model(&ScanIssue{}).
-		Where("id IN ? AND deleted = ?", issueIDs, false).
+		Where("id IN ? AND deleted = ?", issueIDs, 0).
 		Updates(map[string]any{
 			"updatedByTaskID": taskID,
 			"status":          constant.ScanIssueStatusClosed,
@@ -343,7 +343,7 @@ func (s *ScanIssueStore) CreateIssueBindByTaskID(ctx context.Context, taskID uin
 	var issues []*ScanIssue
 	if err := s.db.WithContext(ctx).
 		Select("id").
-		Where("issueKey IN ? AND deleted = ?", issueKeys, false).
+		Where("issueKey IN ? AND deleted = ?", issueKeys, 0).
 		Find(&issues).Error; err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
 	}
@@ -380,7 +380,7 @@ func (s *ScanIssueStore) ListByTaskID(ctx context.Context, taskID uint, filter s
 		Joins("INNER JOIN ops_scan_rules AS r ON i.ruleID = r.id").
 		Joins("LEFT JOIN ops_scan_tasks AS t ON i.updatedByTaskID = t.id").
 		Joins("LEFT JOIN ops_scan_plans AS p ON t.planID = p.id").
-		Where("bind.taskID = ? AND i.deleted = ?", taskID, false)
+		Where("bind.taskID = ? AND i.deleted = ?", taskID, 0)
 
 	if filter.ID != 0 {
 		stmt = stmt.Where("i.id = ?", filter.ID)
@@ -452,7 +452,7 @@ func (s *ScanIssueStore) ListByTaskForResult(ctx context.Context, taskID uint, p
 		Select("r.id, r.ruleKey, r.priority, r.type").
 		Joins("INNER JOIN ops_scan_issues AS i ON bind.issueID = i.id").
 		Joins("INNER JOIN ops_scan_rules AS r ON i.ruleID = r.id").
-		Where("bind.taskID = ? AND i.deleted = ?", taskID, false).
+		Where("bind.taskID = ? AND i.deleted = ?", taskID, 0).
 		Find(&rules).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}

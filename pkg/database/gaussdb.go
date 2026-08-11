@@ -2,8 +2,6 @@ package database
 
 import (
 	"fmt"
-	"log"
-	"os"
 	"time"
 
 	"gorm.io/driver/gaussdb"
@@ -21,30 +19,32 @@ type GaussDB gorm.DB
 // NewGaussDB 创建 GaussDB 数据库连接
 // DSN 格式参考 https://github.com/HuaweiCloudDeveloper/gaussdb-go
 // 例如: host=localhost user=gorm password=gorm dbname=gorm port=8000 sslmode=disable TimeZone=Asia/Shanghai
-func NewGaussDB(conf config.DatabaseConfig) (*GaussDB, func() error, error) {
-	db, err := gorm.Open(gaussdb.Open(conf.Datasource), &gorm.Config{
+func NewGaussDB(dbConf config.DatabaseConfig, logConf config.LoggingConfig) (*GaussDB, func() error, error) {
+	gormWriter := buildGormWriter(logConf, true)
+	logLevel := logger.Warn
+	if dbConf.PrintSQL {
+		logLevel = logger.Info
+	}
+	slowThreshold := dbConf.SlowThreshold
+	if slowThreshold <= 0 {
+		slowThreshold = 500 * time.Millisecond
+	}
+	db, err := gorm.Open(gaussdb.Open(dbConf.Datasource), &gorm.Config{
 		NamingStrategy: schema.NamingStrategy{
 			TablePrefix:   "ops_", // 表名前缀，"repo" 的表应为 "ops_repo"
 			SingularTable: true,   // 使用单数表名，启用此选项时，"repo" 的表将为 "repo"
-			NoLowerCase:   false,  // 跳过名称的 snake_casing 格式
+			NoLowerCase:   true,   // 跳过名称的 snake_casing 格式
 		},
-		Logger: logger.New(
-			log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
-			logger.Config{
-				SlowThreshold:             time.Second, // 慢 SQL 阈值
-				LogLevel:                  logger.Info, // Log level
-				Colorful:                  false,       // 禁用彩色打印
-				IgnoreRecordNotFoundError: false,       // 忽略ErrRecordNotFound（记录未找到）错误
-			},
-		),
+		Logger: newGormLogger(gormWriter, logger.Config{
+			SlowThreshold:             slowThreshold, // 慢 SQL 阈值
+			LogLevel:                  logLevel,
+			Colorful:                  false, // 禁用彩色打印
+			IgnoreRecordNotFoundError: false, // 忽略ErrRecordNotFound（记录未找到）错误
+		}),
 	})
 
 	if err != nil {
 		return nil, nil, err
-	}
-
-	if conf.PrintSQL {
-		db = db.Debug()
 	}
 
 	sqlDB, err := db.DB()
@@ -55,16 +55,16 @@ func NewGaussDB(conf config.DatabaseConfig) (*GaussDB, func() error, error) {
 		return nil, nil, err
 	}
 	// SetMaxIdleConns 用于设置连接池中空闲连接的最大数量。
-	sqlDB.SetMaxIdleConns(conf.MaxIdleConn)
+	sqlDB.SetMaxIdleConns(dbConf.MaxIdleConn)
 
 	// SetMaxOpenConns 设置打开数据库连接的最大数量。
-	sqlDB.SetMaxOpenConns(conf.MaxOpenConn)
+	sqlDB.SetMaxOpenConns(dbConf.MaxOpenConn)
 
 	// SetConnMaxLifetime 设置了连接可复用的最大时间。
-	sqlDB.SetConnMaxLifetime(time.Second * conf.ConnMaxLifeTime)
+	sqlDB.SetConnMaxLifetime(time.Second * dbConf.ConnMaxLifeTime)
 
 	// SetConnMaxIdleTime 设置连接最长空闲时间。
-	//sqlDB.SetConnMaxIdleTime(time.Duration(conf.ConnMaxLifeTime) * time.Second)
+	//sqlDB.SetConnMaxIdleTime(time.Duration(dbConf.ConnMaxLifeTime) * time.Second)
 
 	// 返回清理函数
 	cleanup := func() error {

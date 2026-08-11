@@ -66,7 +66,7 @@ type Entry struct {
 	CalledTime  uint       `gorm:"column:calledTime;not null;default:0"`
 	EditedBy    string     `gorm:"column:editedBy;type:varchar(30);not null;default:''"`
 	EditedDate  *time.Time `gorm:"column:editedDate"`
-	Deleted     string     `gorm:"column:deleted;type:enum('0','1');not null;default:'0'"`
+	Deleted     uint8      `gorm:"column:deleted;not null;default:0"`
 }
 
 func (Entry) TableName() string {

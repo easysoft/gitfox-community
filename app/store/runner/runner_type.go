@@ -24,7 +24,7 @@ type Runner struct {
 	CreatedDate *datetime.Local `gorm:"column:createdDate"`
 	EditedBy    string          `gorm:"column:editedBy"`
 	EditedDate  *datetime.Local `gorm:"column:editedDate"`
-	Deleted     int8            `gorm:"column:deleted;not null;default:0"`
+	Deleted     uint8           `gorm:"column:deleted;not null;default:0"`
 }
 
 func (r *Runner) TableName() string {

@@ -29,7 +29,7 @@ type artifactLib struct {
 	CreatedDate *datetime.Local `gorm:"column:createdDate"`
 	EditedBy    string          `gorm:"column:editedBy"`
 	EditedDate  *datetime.Local `gorm:"column:editedDate"`
-	Deleted     int8            `gorm:"column:deleted"`
+	Deleted     uint8           `gorm:"column:deleted"`
 }
 
 func (artifactLib) TableName() string { return "ops_artifact_libs" }
@@ -57,7 +57,7 @@ type artifactGroup struct {
 	CreatedDate *datetime.Local `gorm:"column:createdDate"`
 	EditedBy    string          `gorm:"column:editedBy"`
 	EditedDate  *datetime.Local `gorm:"column:editedDate"`
-	Deleted     int8            `gorm:"column:deleted"`
+	Deleted     uint8           `gorm:"column:deleted"`
 }
 
 func (artifactGroup) TableName() string { return "ops_artifact_groups" }
@@ -86,7 +86,7 @@ type artifactPackage struct {
 	CreatedDate *datetime.Local `gorm:"column:createdDate"`
 	EditedBy    string          `gorm:"column:editedBy"`
 	EditedDate  *datetime.Local `gorm:"column:editedDate"`
-	Deleted     int8            `gorm:"column:deleted"`
+	Deleted     uint8           `gorm:"column:deleted"`
 }
 
 func (artifactPackage) TableName() string { return "ops_artifact_packages" }
@@ -114,7 +114,7 @@ type artifactVersion struct {
 	CreatedDate   *datetime.Local `gorm:"column:createdDate"`
 	EditedBy      string          `gorm:"column:editedBy"`
 	EditedDate    *datetime.Local `gorm:"column:editedDate"`
-	Deleted       int8            `gorm:"column:deleted"`
+	Deleted       uint8           `gorm:"column:deleted"`
 }
 
 func (artifactVersion) TableName() string { return "ops_artifact_versions" }
@@ -147,7 +147,7 @@ type ArtifactAsset struct {
 	CreatedDate *datetime.Local `gorm:"column:createdDate"`
 	EditedBy    string          `gorm:"column:editedBy"`
 	EditedDate  *datetime.Local `gorm:"column:editedDate"`
-	Deleted     int8            `gorm:"column:deleted"`
+	Deleted     uint8           `gorm:"column:deleted"`
 }
 
 func (ArtifactAsset) TableName() string { return "ops_artifact_assets" }
@@ -185,7 +185,7 @@ type artifactMetaAsset struct {
 	CreatedDate   *datetime.Local `gorm:"column:createdDate"`
 	EditedBy      string          `gorm:"column:editedBy"`
 	EditedDate    *datetime.Local `gorm:"column:editedDate"`
-	Deleted       int8            `gorm:"column:deleted"`
+	Deleted       uint8           `gorm:"column:deleted"`
 }
 
 func (artifactMetaAsset) TableName() string { return "ops_artifact_meta_assets" }
@@ -210,7 +210,7 @@ type artifactBlob struct {
 	Size        int64           `gorm:"column:size"`
 	Downloads   int64           `gorm:"column:downloads"`
 	Metadata    string          `gorm:"column:metadata"`
-	Deleted     int8            `gorm:"column:deleted"`
+	Deleted     uint8           `gorm:"column:deleted"`
 	CreatedBy   string          `gorm:"column:createdBy"`
 	CreatedDate *datetime.Local `gorm:"column:createdDate"`
 	EditedBy    string          `gorm:"column:editedBy"`
@@ -288,7 +288,7 @@ func viewToModel(v *artifactLib) *model.ArtifactView {
 		CreatedDate: v.CreatedDate,
 		EditedBy:    v.EditedBy,
 		EditedDate:  v.EditedDate,
-		Deleted:     v.Deleted,
+		Deleted:     int8(v.Deleted),
 	}
 }
 
@@ -308,7 +308,7 @@ func groupToModel(g *artifactGroup) *model.ArtifactGroup {
 		CreatedDate: g.CreatedDate,
 		EditedBy:    g.EditedBy,
 		EditedDate:  g.EditedDate,
-		Deleted:     g.Deleted,
+		Deleted:     int8(g.Deleted),
 	}
 }
 
@@ -326,7 +326,7 @@ func groupFromModel(m *model.ArtifactGroup) *artifactGroup {
 		CreatedDate: m.CreatedDate,
 		EditedBy:    m.EditedBy,
 		EditedDate:  m.EditedDate,
-		Deleted:     m.Deleted,
+		Deleted:     uint8(m.Deleted),
 	}
 }
 
@@ -355,7 +355,7 @@ func packageToModel(p *artifactPackage) *model.ArtifactPackage {
 		CreatedDate: localToTime(p.CreatedDate),
 		EditedBy:    p.EditedBy,
 		EditedDate:  localToTime(p.EditedDate),
-		Deleted:     p.Deleted,
+		Deleted:     int8(p.Deleted),
 	}
 }
 
@@ -374,7 +374,7 @@ func packageFromModel(m *model.ArtifactPackage) *artifactPackage {
 		CreatedDate: timeToLocal(m.CreatedDate),
 		EditedBy:    m.EditedBy,
 		EditedDate:  timeToLocal(m.EditedDate),
-		Deleted:     m.Deleted,
+		Deleted:     uint8(m.Deleted),
 	}
 }
 
@@ -402,7 +402,7 @@ func versionToModel(v *artifactVersion) *model.ArtifactVersion {
 		CreatedDate:   v.CreatedDate,
 		EditedBy:      v.EditedBy,
 		EditedDate:    v.EditedDate,
-		Deleted:       v.Deleted,
+		Deleted:       int8(v.Deleted),
 	}
 }
 
@@ -420,7 +420,7 @@ func versionFromModel(m *model.ArtifactVersion) *artifactVersion {
 		CreatedDate:   m.CreatedDate,
 		EditedBy:      m.EditedBy,
 		EditedDate:    m.EditedDate,
-		Deleted:       m.Deleted,
+		Deleted:       uint8(m.Deleted),
 	}
 }
 
@@ -453,7 +453,7 @@ func assetToModel(a *ArtifactAsset) *model.ArtifactAsset {
 		CreatedDate: a.CreatedDate,
 		EditedBy:    a.EditedBy,
 		EditedDate:  a.EditedDate,
-		Deleted:     a.Deleted,
+		Deleted:     int8(a.Deleted),
 	}
 }
 
@@ -476,7 +476,7 @@ func assetFromModel(m *model.ArtifactAsset) *ArtifactAsset {
 		CreatedDate: m.CreatedDate,
 		EditedBy:    m.EditedBy,
 		EditedDate:  m.EditedDate,
-		Deleted:     m.Deleted,
+		Deleted:     uint8(m.Deleted),
 	}
 }
 
@@ -507,7 +507,7 @@ func metaAssetToModel(m *artifactMetaAsset) *model.ArtifactMetaAsset {
 		CreatedDate: localToTime(m.CreatedDate),
 		EditedBy:    m.EditedBy,
 		EditedDate:  localToTime(m.EditedDate),
-		Deleted:     m.Deleted,
+		Deleted:     int8(m.Deleted),
 	}
 }
 
@@ -528,7 +528,7 @@ func metaAssetFromModel(src *model.ArtifactMetaAsset) *artifactMetaAsset {
 		CreatedDate:   timeToLocal(src.CreatedDate),
 		EditedBy:      src.EditedBy,
 		EditedDate:    timeToLocal(src.EditedDate),
-		Deleted:       src.Deleted,
+		Deleted:       uint8(src.Deleted),
 	}
 }
 
@@ -545,7 +545,7 @@ func blobToModel(b *artifactBlob) *model.ArtifactBlob {
 		Size:        b.Size,
 		Downloads:   b.Downloads,
 		Metadata:    b.Metadata,
-		Deleted:     b.Deleted,
+		Deleted:     int8(b.Deleted),
 		CreatedBy:   b.CreatedBy,
 		CreatedDate: localToTime(b.CreatedDate),
 		EditedBy:    b.EditedBy,
@@ -566,7 +566,7 @@ func blobFromModel(m *model.ArtifactBlob) *artifactBlob {
 		Size:        m.Size,
 		Downloads:   m.Downloads,
 		Metadata:    m.Metadata,
-		Deleted:     m.Deleted,
+		Deleted:     uint8(m.Deleted),
 		CreatedBy:   m.CreatedBy,
 		CreatedDate: timeToLocal(m.CreatedDate),
 		EditedBy:    m.EditedBy,

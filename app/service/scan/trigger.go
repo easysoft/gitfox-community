@@ -57,7 +57,7 @@ func (s *ScanTriggerService) Create(ctx context.Context, session *authModel.Sess
 		CronBranch: req.CronBranch,
 		Keywords:   req.Keywords,
 		Actions:    scanStore.JoinActions(deduplicateActions(req.Actions)),
-		Disabled:   req.Disabled,
+		Disabled:   database.BoolToUint8(req.Disabled),
 		CreatedBy:  session.User.Account,
 		EditedBy:   session.User.Account,
 	}
@@ -136,7 +136,7 @@ func (s *ScanTriggerService) Update(ctx context.Context, session *authModel.Sess
 		trigger.ScanType = string(req.ScanType)
 	}
 	if req.Disabled != nil {
-		trigger.Disabled = *req.Disabled
+		trigger.Disabled = database.BoolToUint8(*req.Disabled)
 	}
 
 	if err := s.triggerStore.Update(ctx, trigger); err != nil {

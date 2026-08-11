@@ -30,3 +30,13 @@ func NullIfEmpty(s string) sql.NullString {
 func NoNull(s string) sql.NullString {
 	return sql.NullString{String: s, Valid: true}
 }
+
+// BoolToUint8 将 bool 转换为 uint8（true=1，false=0）。
+// GaussDB 中对应 MySQL tinyint 的列使用 int 类型，Go bool 无法直接编码，
+// 因此模型层与 store 层相互转换时需要显式转换。
+func BoolToUint8(b bool) uint8 {
+	if b {
+		return 1
+	}
+	return 0
+}

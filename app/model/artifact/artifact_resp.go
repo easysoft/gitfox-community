@@ -4,8 +4,6 @@ import (
 	"fmt"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
-
-	"github.com/guregu/null"
 )
 
 // ==================== 查询过滤条件 ====================
@@ -93,7 +91,7 @@ type ArtifactBlobRes struct {
 	CheckSumString string          `gorm:"column:checksum" json:"-"`
 	MetadataString string          `gorm:"column:metadata" json:"-"`
 	Created        *datetime.Local `gorm:"column:createdDate" json:"createdDate"`
-	Deleted        null.Int        `gorm:"column:deleted" json:"deleted"`
+	Deleted        uint8           `gorm:"column:deleted" json:"deleted"`
 
 	CheckSum *CheckSumRes      `gorm:"-" json:"checksum"`
 	Metadata map[string]string `gorm:"-" json:"metadata"`

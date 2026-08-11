@@ -35,7 +35,7 @@ func (s *ScanConditionStore) BatchDelete(ctx context.Context, repoID uint, planI
 	}
 	if err := s.db.WithContext(ctx).Model(&ScanPlanCondition{}).
 		Where("repoID = ? AND planID = ? AND triggerID = ? AND id IN ?", repoID, planID, triggerID, ids).
-		Update("deleted", true).Error; err != nil {
+		Update("deleted", 1).Error; err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
 	}
 	return nil
@@ -43,7 +43,7 @@ func (s *ScanConditionStore) BatchDelete(ctx context.Context, repoID uint, planI
 
 func (s *ScanConditionStore) List(ctx context.Context, triggerID uint) ([]*scanModel.ScanCondition, error) {
 	var conditions []*ScanPlanCondition
-	if err := s.db.WithContext(ctx).Where("triggerID = ? AND deleted = ?", triggerID, false).Find(&conditions).Error; err != nil {
+	if err := s.db.WithContext(ctx).Where("triggerID = ? AND deleted = ?", triggerID, 0).Find(&conditions).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
 
@@ -56,7 +56,7 @@ func (s *ScanConditionStore) List(ctx context.Context, triggerID uint) ([]*scanM
 
 func (s *ScanConditionStore) ListByPlanID(ctx context.Context, planID uint) ([]*scanModel.ScanCondition, error) {
 	var conditions []*ScanPlanCondition
-	if err := s.db.WithContext(ctx).Where("planID = ? AND deleted = ?", planID, false).Find(&conditions).Error; err != nil {
+	if err := s.db.WithContext(ctx).Where("planID = ? AND deleted = ?", planID, 0).Find(&conditions).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
 
@@ -78,7 +78,7 @@ func (s *ScanConditionStore) Create(ctx context.Context, condition *ScanPlanCond
 
 func (s *ScanConditionStore) GetByID(ctx context.Context, id uint) (*scanModel.ScanCondition, error) {
 	var condition ScanPlanCondition
-	if err := s.db.WithContext(ctx).Where("id = ? AND deleted = ?", id, false).First(&condition).Error; err != nil {
+	if err := s.db.WithContext(ctx).Where("id = ? AND deleted = ?", id, 0).First(&condition).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
 	return mapScanConditionToModel(condition), nil
@@ -93,7 +93,7 @@ func (s *ScanConditionStore) Update(ctx context.Context, condition *ScanPlanCond
 
 func (s *ScanConditionStore) Delete(ctx context.Context, id uint) error {
 	if err := s.db.WithContext(ctx).Model(&ScanPlanCondition{}).
-		Where("id = ?", id).Update("deleted", true).Error; err != nil {
+		Where("id = ?", id).Update("deleted", 1).Error; err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
 	}
 	return nil
@@ -102,7 +102,7 @@ func (s *ScanConditionStore) Delete(ctx context.Context, id uint) error {
 func (s *ScanConditionStore) ListByPlan(ctx context.Context, repoID, planID uint) ([]*scanModel.ScanCondition, error) {
 	var conditions []*ScanPlanCondition
 	if err := s.db.WithContext(ctx).
-		Where("repoID = ? AND planID = ? AND triggerID = 0 AND deleted = ?", repoID, planID, false).
+		Where("repoID = ? AND planID = ? AND triggerID = 0 AND deleted = ?", repoID, planID, 0).
 		Find(&conditions).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
@@ -125,7 +125,7 @@ func (s *ScanConditionStore) BatchDeleteByIDs(ctx context.Context, repoID, planI
 	}
 	if err := s.db.WithContext(ctx).Model(&ScanPlanCondition{}).
 		Where("repoID = ? AND planID = ? AND triggerID = 0 AND id IN ?", repoID, planID, ids).
-		Update("deleted", true).Error; err != nil {
+		Update("deleted", 1).Error; err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
 	}
 	return nil
@@ -145,6 +145,6 @@ func mapScanConditionToModel(data ScanPlanCondition) *scanModel.ScanCondition {
 		CreatedDate: data.CreatedDate,
 		EditedBy:    data.EditedBy,
 		EditedDate:  data.EditedDate,
-		Deleted:     data.Deleted,
+		Deleted:     data.Deleted != 0,
 	}
 }

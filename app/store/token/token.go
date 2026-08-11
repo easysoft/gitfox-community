@@ -98,7 +98,7 @@ func (s *tokensStore) GetByIdentifier(ctx context.Context, account string, ident
 func (s *tokensStore) GetDevopsToken(ctx context.Context) (*Entry, error) {
 	var entry Entry
 
-	if err := s.db.WithContext(ctx).Where("name = 'GitFox' and code = 'gitfox' and deleted = '0'").First(&entry).Error; err != nil {
+	if err := s.db.WithContext(ctx).Where("name = 'GitFox' and code = 'gitfox' and deleted = 0").First(&entry).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
 
@@ -107,7 +107,7 @@ func (s *tokensStore) GetDevopsToken(ctx context.Context) (*Entry, error) {
 
 func (s *tokensStore) SetDevopsToken(ctx context.Context) error {
 	var count int64
-	if err := s.db.WithContext(ctx).Model(&Entry{}).Where("name = 'GitFox' and code = 'gitfox' and deleted = '0'").Count(&count).Error; err != nil {
+	if err := s.db.WithContext(ctx).Model(&Entry{}).Where("name = 'GitFox' and code = 'gitfox' and deleted = 0").Count(&count).Error; err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
 	}
 	if count > 0 {
@@ -134,7 +134,7 @@ func (s *tokensStore) SetDevopsToken(ctx context.Context) error {
 		IP:         "*",
 		Desc:       "devops 调用 gitfox API 时使用",
 		CreatedBy:  "admin",
-		Deleted:    "0",
+		Deleted:    0,
 	}
 
 	if err := s.db.WithContext(ctx).Create(entry).Error; err != nil {

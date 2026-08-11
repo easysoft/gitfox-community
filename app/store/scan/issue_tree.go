@@ -20,7 +20,7 @@ func (s *ScanIssueStore) listDistinctFilesByRepo(ctx context.Context, repoID int
 	err := s.db.WithContext(ctx).
 		Table("ops_scan_issues").
 		Select("repoBranch, path, COUNT(*) AS totalCount").
-		Where("repoID = ? AND deleted = ?", repoID, false).
+		Where("repoID = ? AND deleted = ?", repoID, 0).
 		Group("repoBranch, path").
 		Order("totalCount DESC").
 		Find(&dst).Error
@@ -60,7 +60,7 @@ func (s *ScanIssueStore) listDistinctRulesByRepo(ctx context.Context, repoID int
 	var dst []*scanModel.IssueRuleRaw
 	subQuery := s.db.Table("ops_scan_issues").
 		Select("ruleID, COUNT(*) AS totalCount").
-		Where("repoID = ? AND deleted = ?", repoID, false).
+		Where("repoID = ? AND deleted = ?", repoID, 0).
 		Group("ruleID")
 
 	err := s.db.WithContext(ctx).

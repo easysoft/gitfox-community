@@ -67,7 +67,7 @@ func (s *RuleStore) GetRuleMigrationVersion(ctx context.Context, tx *gorm.DB, pl
 		return "", errors.New("plugin or lang is empty")
 	}
 	var migration RuleMigration
-	err := tx.Where("name = ? AND deleted = ?", getRuleMigrationName(plugin, lang), false).First(&migration).Error
+	err := tx.Where("name = ? AND deleted = ?", getRuleMigrationName(plugin, lang), 0).First(&migration).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return "", nil
@@ -87,7 +87,7 @@ func insertRules(ctx context.Context, tx *gorm.DB, rulesFile *resources.RulesFil
 
 	if !firstRun {
 		// 删除默认规则
-		if err := tx.Where("plugin = ? AND lang = ? AND isCustom = ? AND deleted = ?", rulesFile.Plugin, rulesFile.Lang, false, false).Delete(&Rule{}).Error; err != nil {
+		if err := tx.Where("plugin = ? AND lang = ? AND isCustom = ? AND deleted = ?", rulesFile.Plugin, rulesFile.Lang, 0, 0).Delete(&Rule{}).Error; err != nil {
 			return database.ProcessSQLErrorf(ctx, err)
 		}
 	}
@@ -106,13 +106,13 @@ func insertRules(ctx context.Context, tx *gorm.DB, rulesFile *resources.RulesFil
 			Type:        constant.ScanRuleType(ruleJSON.Type),
 			Content:     database.NoNull(ruleJSON.Content),
 			ContentEn:   database.NoNull(ruleJSON.ContentEn),
-			IsCustom:    false,
+			IsCustom:    0,
 			Status:      constant.ScanRuleStatusEnabled,
 			CreatedBy:   "system",
 			CreatedDate: now,
 			EditedBy:    "system",
 			EditedDate:  now,
-			Deleted:     false,
+			Deleted:     0,
 		}
 		err := tx.Create(rule).Error
 		if err != nil {
@@ -150,13 +150,13 @@ func createMigrateScanRuleSet(ctx context.Context, tx *gorm.DB, rulesFile *resou
 	}
 
 	var oldRuleSet RuleSet
-	err := tx.Where("name = ? AND lang = ? AND plugin = ? AND isCustom = ? AND deleted = ?", ruleSetName, rulesFile.Lang, rulesFile.Plugin, false, false).Find(&oldRuleSet).Error
+	err := tx.Where("name = ? AND lang = ? AND plugin = ? AND isCustom = ? AND deleted = ?", ruleSetName, rulesFile.Lang, rulesFile.Plugin, 0, 0).Find(&oldRuleSet).Error
 	if err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
 	}
 
 	if oldRuleSet.ID != 0 {
-		if err = tx.Where("id = ? AND isCustom = ? AND deleted = ?", oldRuleSet.ID, false, false).Delete(&RuleSet{}).Error; err != nil {
+		if err = tx.Where("id = ? AND isCustom = ? AND deleted = ?", oldRuleSet.ID, 0, 0).Delete(&RuleSet{}).Error; err != nil {
 			return database.ProcessSQLErrorf(ctx, err)
 		}
 
@@ -172,14 +172,14 @@ func createMigrateScanRuleSet(ctx context.Context, tx *gorm.DB, rulesFile *resou
 		Desc:        ruleSetName,
 		DescEn:      ruleSetNameEn,
 		Lang:        constant.ScanLangName(rulesFile.Lang),
-		IsCustom:    false,
+		IsCustom:    0,
 		Status:      constant.ScanRuleStatusEnabled,
 		Plugin:      rulesFile.Plugin,
 		CreatedBy:   "system",
 		CreatedDate: now,
 		EditedBy:    "system",
 		EditedDate:  now,
-		Deleted:     false,
+		Deleted:     0,
 	}
 	err = tx.Create(ruleSet).Error
 	if err != nil {
@@ -197,7 +197,7 @@ func createMigrateScanRuleSet(ctx context.Context, tx *gorm.DB, rulesFile *resou
 func createMigrateScanRuleSetRules(ctx context.Context, tx *gorm.DB, ruleSet *RuleSet, now *datetime.Local) error {
 	// 获取所有规则的ID
 	var ruleIDs []int64
-	if err := tx.Model(&Rule{}).Select("id").Where("lang = ? AND plugin = ? AND isCustom = ? AND deleted = ?", ruleSet.Lang, ruleSet.Plugin, false, false).Scan(&ruleIDs).Error; err != nil {
+	if err := tx.Model(&Rule{}).Select("id").Where("lang = ? AND plugin = ? AND isCustom = ? AND deleted = ?", ruleSet.Lang, ruleSet.Plugin, 0, 0).Scan(&ruleIDs).Error; err != nil {
 		return err
 	}
 
@@ -218,7 +218,7 @@ func createMigrateScanRuleSolutions(ctx context.Context, tx *gorm.DB, rulesFile 
 	}
 
 	var solution SolutionRules
-	err := tx.Where("name = ? AND isCustom = ? AND deleted = ?", solutionName, false, false).First(&solution).Error
+	err := tx.Where("name = ? AND isCustom = ? AND deleted = ?", solutionName, 0, 0).First(&solution).Error
 	if err != nil {
 		if err != gorm.ErrRecordNotFound {
 			return database.ProcessSQLErrorf(ctx, err)
@@ -228,13 +228,13 @@ func createMigrateScanRuleSolutions(ctx context.Context, tx *gorm.DB, rulesFile 
 			Name:        solutionName,
 			Desc:        solutionName,
 			DescEn:      solutionNameEn,
-			IsCustom:    false,
+			IsCustom:    0,
 			Status:      constant.ScanRuleStatusEnabled,
 			CreatedBy:   "system",
 			CreatedDate: now,
 			EditedBy:    "system",
 			EditedDate:  now,
-			Deleted:     false,
+			Deleted:     0,
 		}
 		if err = tx.Create(&solution).Error; err != nil {
 			return database.ProcessSQLErrorf(ctx, err)
@@ -243,7 +243,7 @@ func createMigrateScanRuleSolutions(ctx context.Context, tx *gorm.DB, rulesFile 
 
 	// 获取默认规则集ID（按语言）
 	var ruleSetIDs []int64
-	if err := tx.Model(&RuleSet{}).Select("id").Where("lang = ? AND isCustom = ? AND deleted = ?", rulesFile.Lang, false, false).Scan(&ruleSetIDs).Error; err != nil {
+	if err := tx.Model(&RuleSet{}).Select("id").Where("lang = ? AND isCustom = ? AND deleted = ?", rulesFile.Lang, 0, 0).Scan(&ruleSetIDs).Error; err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
 	}
 	if len(ruleSetIDs) == 0 {
@@ -253,7 +253,7 @@ func createMigrateScanRuleSolutions(ctx context.Context, tx *gorm.DB, rulesFile 
 	// 查询已有有效绑定
 	var boundRuleSetIDs []int64
 	if err := tx.Model(&SolutionRuleSets{}).
-		Where("solutionID = ? AND deleted = ?", solution.ID, false).
+		Where("solutionID = ? AND deleted = ?", solution.ID, 0).
 		Pluck("ruleSetID", &boundRuleSetIDs).Error; err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
 	}
@@ -269,7 +269,7 @@ func createMigrateScanRuleSolutions(ctx context.Context, tx *gorm.DB, rulesFile 
 
 		// 尝试恢复被软删的历史绑定
 		result := tx.Model(&SolutionRuleSets{}).
-			Where("solutionID = ? AND ruleSetID = ? AND deleted = ?", solution.ID, uint64(ruleSetID), true).
+			Where("solutionID = ? AND ruleSetID = ? AND deleted = ?", solution.ID, uint64(ruleSetID), 1).
 			Updates(map[string]interface{}{
 				"deleted":    false,
 				"editedBy":   "system",
@@ -290,7 +290,7 @@ func createMigrateScanRuleSolutions(ctx context.Context, tx *gorm.DB, rulesFile 
 			CreatedDate: now,
 			EditedBy:    "system",
 			EditedDate:  now,
-			Deleted:     false,
+			Deleted:     0,
 		}
 		if err := tx.Create(solutionRuleSet).Error; err != nil {
 			return database.ProcessSQLErrorf(ctx, err)
@@ -306,7 +306,7 @@ func updateOrCreateMigrateScanRuleVersion(ctx context.Context, tx *gorm.DB, rule
 
 	// 先查询是否存在
 	var existing RuleMigration
-	err := tx.Where("name = ? AND deleted = ?", migrationName, false).First(&existing).Error
+	err := tx.Where("name = ? AND deleted = ?", migrationName, 0).First(&existing).Error
 
 	if err == gorm.ErrRecordNotFound {
 		// 不存在，创建新记录
@@ -315,7 +315,7 @@ func updateOrCreateMigrateScanRuleVersion(ctx context.Context, tx *gorm.DB, rule
 			Version:     rulesFile.Version,
 			CreatedBy:   "system",
 			CreatedDate: now,
-			Deleted:     false,
+			Deleted:     0,
 		}
 		if err = tx.Create(&migration).Error; err != nil {
 			return database.ProcessSQLErrorf(ctx, err)
@@ -351,7 +351,7 @@ func rulesSetBindRules(ctx context.Context, tx *gorm.DB, ruleSet *RuleSet, ruleI
 			CreatedDate: now,
 			EditedBy:    "system",
 			EditedDate:  now,
-			Deleted:     false,
+			Deleted:     0,
 		}
 		if err := tx.Create(newRuleSetRule).Error; err != nil {
 			return database.ProcessSQLErrorf(ctx, err)

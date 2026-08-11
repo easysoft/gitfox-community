@@ -16,7 +16,7 @@ type Settings struct {
 	CreatedDate *time.Time `gorm:"column:createdDate"` // 允许为NULL，指针类型
 	EditedBy    string     `gorm:"column:editedBy"`
 	EditedDate  *time.Time `gorm:"column:editedDate"` // 允许为NULL，指针类型
-	Deleted     int8       `gorm:"column:deleted"`
+	Deleted     uint8      `gorm:"column:deleted"`
 }
 
 func (Settings) TableName() string {
