@@ -448,6 +448,15 @@ func findConfigFilePaths(mode, ext string) (string, error) {
 }
 
 func composeDatasource(config *Config) string {
+	// GaussDB（openGauss 兼容 PostgreSQL 协议）使用 key=value 形式的 DSN
+	if config.Database.Driver == "gaussdb" {
+		return fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+			config.Database.Host,
+			config.Database.Port,
+			config.Database.User,
+			config.Database.Password,
+			config.Database.Name)
+	}
 	return fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true&loc=%s",
 		config.Database.User,
 		config.Database.Password,
@@ -456,4 +465,3 @@ func composeDatasource(config *Config) string {
 		config.Database.Name,
 		config.Database.Timezone)
 }
-
