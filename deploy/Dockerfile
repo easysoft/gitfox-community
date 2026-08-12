@@ -10,13 +10,12 @@ ARG TARGETARCH
 
 ENV TZ=${TZ}
 
-# RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apk/repositories \
-#     && apk --no-cache add git bash musl tzdata curl \
-#     && ln -sf /usr/share/zoneinfo/${TZ} /etc/localtime \
-#     && echo ${TZ} > /etc/timezone \
-#     && date \
-#     # && apk del --no-cache tzdata \
-#     && rm -rf /var/cache/apk/*
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apk/repositories \
+    && apk --no-cache add git bash tzdata curl \
+    && ln -sf /usr/share/zoneinfo/${TZ} /etc/localtime \
+    && echo ${TZ} > /etc/timezone \
+    && date \
+    && rm -rf /var/cache/apk/*
 
 # setup app dir and its content
 WORKDIR /app
