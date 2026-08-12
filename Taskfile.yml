@@ -34,7 +34,6 @@ vars:
   - os: windows
     arches: [amd64]       # Windows支持的架构
 
-  DOCKER_ARCHS: [amd64, arm64]
 
 
 tasks:
@@ -271,24 +270,9 @@ tasks:
           {{end}}
     parallel: true
 
-  docker:build:
-    desc: 外部交叉编译 linux 多架构可执行文件
-    deps: [clean, download-ci-plugins]
-    cmds:
-      - for: { var: DOCKER_ARCHS, as: arch }
-        cmd: |
-          DIST_DIR="{{$.BIN_DIR}}/linux-{{.arch}}"
-          mkdir -p "$DIST_DIR"
-          GOOS=linux GOARCH={{.arch}} CGO_ENABLED=0 \
-          go build -o "$DIST_DIR/gitfox" -ldflags "{{$.LDFLAGS}}" \
-          "{{$.ROOT_DIR}}/cmd/cli/main.go"
-          cp "{{$.ROOT_DIR}}/configs/prod.env" "$DIST_DIR/"
-          cp "{{$.ROOT_DIR}}/configs/prod.yaml" "$DIST_DIR/"
-          echo "完成: linux/{{.arch}} -> $DIST_DIR/gitfox"
-
   docker:push:
     desc: 构建多架构 Docker 镜像并推送至 hub.zentao.net
-    deps: [docker:build]
+    deps: [cross-build]
     vars:
       IMAGE: 'hub.zentao.net/app/gitfox-community'
       DOCKER_TAG_DATE:
@@ -304,7 +288,7 @@ tasks:
 
   docker:build:local:
     desc: 本地构建 Docker 镜像（不推送，默认当前主机架构）
-    deps: [docker:build]
+    deps: [cross-build]
     vars:
       IMAGE: 'gitfox-community'
       DOCKER_TAG_DATE:
