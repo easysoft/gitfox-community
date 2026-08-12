@@ -35,12 +35,12 @@ ENV GITFOX_DB_TIMEZONE=Asia/Shanghai
 ENV GITFOX_DB_DRIVER=gaussdb
 #ENV GITFOX_DB_DATASOURCE=host=127.0.0.1 port=8000 user=gaussdb password=gaussdb dbname=gitfox-community sslmode=disable
 
-ENV GITFOX_SERVER_PROTO=http
+#ENV GITFOX_SERVER_PROTO=http
 # 对外域名/ip
-ENV GITFOX_SERVER_HOST=gitfox.oop.cc
+#ENV GITFOX_SERVER_HOST=gitfox.oop.cc
 
 # 代码库地址是否暴露端口
-ENV GITFOX_REPO_URL_EXPOSE_PORT=true
+#ENV GITFOX_REPO_URL_EXPOSE_PORT=true
 
 # GitFox http端口
 ENV GITFOX_HTTP_PORT=3000
@@ -49,7 +49,7 @@ ENV GITFOX_HTTP_PORT=3000
 ENV GITFOX_SSH_PORT=3322
 
 # 禅道访问 域名+/api.php/v1
-ENV GITFOX_DEVOPS_URL=http://xxx/api.php/v1
+#ENV GITFOX_DEVOPS_URL=http://xxx/api.php/v1
 
 # 日志输出的最低级别  -1~5：debug,info,warn,error,dpanic,panic,fatal
 ENV GITFOX_LOG_LEVEL=0
