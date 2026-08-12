@@ -32,14 +32,6 @@ func NewService(runnerStore runner.Interface) *Service {
 // Create creates a new runner
 func (s *Service) Create(ctx context.Context, runner *runnerModel.Runner, runnerToken, runnerIP string) error {
 
-	// 如果该 runner token 已注册过，且该 runner 没有被软删除，无需重复注册(应对 runner 重启的情况）
-	runnerInfoOld, err := s.runnerStore.GetByToken(ctx, runnerToken)
-	if err == nil {
-		if runnerInfoOld.Token == runnerToken {
-			return nil
-		}
-	}
-
 	// Set default data
 	now := int(time.Now().Unix())
 	runner.Token = runnerToken

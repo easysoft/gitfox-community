@@ -337,6 +337,14 @@ func (ctl *Controller) Register(c *gin.Context) {
 		resp.Unauthorized(c, errors.WithI18nKey(nil, i18n.RunnerInvalidToken))
 		return
 	}
+
+	// 如果该 runner token 已注册过，且该 runner 没有被软删除，无需重复注册（应对 runner 重启的情况）
+	registedrunner, err := ctl.runnerSvc.ValidateRunnerToken(c.Request.Context(), runnerToken)
+	if err == nil && registedrunner.Token == runnerToken {
+		resp.OK(c, i18n.RunnerRegisterSuccess, registedrunner)
+		return
+	}
+
 	// 验证临时 token，获取对应的 account 信息
 	account, err := ctl.runnerSvc.ValidateTempRunnerToken(c.Request.Context(), runnerToken)
 	if err != nil {
