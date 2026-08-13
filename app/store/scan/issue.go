@@ -78,12 +78,13 @@ func (s *ScanIssueStore) Get(ctx context.Context, id uint) (*scanModel.ScanIssue
 			"i.title, i.content, i.path, i.startLine, i.endLine, i.oldCode, i.newCode, i.category, i.severity, "+
 			"i.ppmID, i.repoID, i.repoBranch, "+
 			"i.status, i.scanMethod, i.resolution, i.payload, i.createdByTaskID, i.updatedByTaskID, "+
-			"i.createdBy, i.editedBy, "+
+			"i.createdBy, i.editedBy, pp.title AS ppmTitle, "+
 			"t.planID, p.name AS planName, i.createdDate, i.resolvedDate, i.closedDate, i.ignoredDate, "+
 			"t.triggerID, t.triggerType").
 		Joins("INNER JOIN ops_scan_rules AS r ON i.ruleID = r.id").
 		Joins("LEFT JOIN ops_scan_tasks AS t ON i.updatedByTaskID = t.id").
 		Joins("LEFT JOIN ops_scan_plans AS p ON t.planID = p.id").
+		Joins("LEFT JOIN ops_ppm AS pp ON i.ppmID = pp.id").
 		Where("i.id = ? AND i.deleted = ?", id, false).
 		First(&item).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
@@ -100,12 +101,13 @@ func (s *ScanIssueStore) List(ctx context.Context, filter scanModel.ScanIssueReq
 			"i.title, i.content, i.path, i.startLine, i.endLine, i.oldCode, i.newCode, i.category, i.severity, "+
 			"i.ppmID, i.repoID, i.repoBranch, "+
 			"i.status, i.scanMethod, i.resolution, i.payload, i.createdByTaskID, i.updatedByTaskID, "+
-			"i.createdBy, i.editedBy, "+
+			"i.createdBy, i.editedBy, pp.title AS ppmTitle, "+
 			"t.planID, p.name AS planName, i.createdDate, i.resolvedDate, i.closedDate, i.ignoredDate, "+
 			"t.triggerID, t.triggerType").
 		Joins("INNER JOIN ops_scan_rules AS r ON i.ruleID = r.id").
 		Joins("LEFT JOIN ops_scan_tasks AS t ON i.updatedByTaskID = t.id").
 		Joins("LEFT JOIN ops_scan_plans AS p ON t.planID = p.id").
+		Joins("LEFT JOIN ops_ppm AS pp ON i.ppmID = pp.id").
 		Where("i.deleted = ?", false)
 
 	if filter.ID != 0 {
@@ -126,8 +128,8 @@ func (s *ScanIssueStore) List(ctx context.Context, filter scanModel.ScanIssueReq
 	if filter.Status != "" {
 		stmt = stmt.Where("i.status = ?", filter.Status)
 	}
-	if filter.ScanMethod != "" {
-		stmt = stmt.Where("i.scanMethod = ?", filter.ScanMethod)
+	if filter.ScanMethods != nil {
+		stmt = stmt.Where("i.scanMethod IN ?", filter.ScanMethods)
 	}
 	if filter.Path != "" {
 		stmt = stmt.Where("i.path = ?", filter.Path)
@@ -214,10 +216,11 @@ func (s *ScanIssueStore) ListByIDs(ctx context.Context, ids []int64) ([]*scanMod
 			"i.title, i.content, i.path, i.startLine, i.endLine, i.oldCode, i.newCode, i.category, i.severity, "+
 			"i.ppmID, i.repoID, i.repoBranch, "+
 			"i.status, i.scanMethod, i.resolution, i.payload, i.createdByTaskID, i.updatedByTaskID, "+
-			"i.createdBy, i.editedBy, i.resolvedDate, i.closedDate, i.ignoredDate, "+
+			"i.createdBy, i.editedBy, pp.title AS ppmTitle, i.resolvedDate, i.closedDate, i.ignoredDate, "+
 			"t.triggerID, t.triggerType").
 		Joins("INNER JOIN ops_scan_rules AS r ON i.ruleID = r.id").
 		Joins("LEFT JOIN ops_scan_tasks AS t ON i.updatedByTaskID = t.id").
+		Joins("LEFT JOIN ops_ppm AS pp ON i.ppmID = pp.id").
 		Where("i.id IN ? AND i.deleted = ?", ids, false).
 		Find(&issues).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
@@ -418,13 +421,14 @@ func (s *ScanIssueStore) ListByTaskID(ctx context.Context, taskID uint, filter s
 			"i.title, i.content, i.path,  i.startLine, i.endLine, i.oldCode, i.newCode, i.category, i.severity, "+
 			"i.ppmID, i.repoID, i.repoBranch, "+
 			"i.status, i.scanMethod, i.resolution, i.payload, i.createdByTaskID, i.updatedByTaskID, "+
-			"i.createdBy, i.editedBy, "+
+			"i.createdBy, i.editedBy, pp.title AS ppmTitle, "+
 			"t.planID, p.name AS planName, i.createdDate, i.resolvedDate, i.closedDate, i.ignoredDate, "+
 			"t.triggerID, t.triggerType").
 		Joins("INNER JOIN ops_scan_issues AS i ON bind.issueID = i.id").
 		Joins("INNER JOIN ops_scan_rules AS r ON i.ruleID = r.id").
 		Joins("LEFT JOIN ops_scan_tasks AS t ON i.updatedByTaskID = t.id").
 		Joins("LEFT JOIN ops_scan_plans AS p ON t.planID = p.id").
+		Joins("LEFT JOIN ops_ppm AS pp ON i.ppmID = pp.id").
 		Where("bind.taskID = ? AND i.deleted = ?", taskID, false)
 
 	if filter.ID != 0 {
@@ -439,8 +443,8 @@ func (s *ScanIssueStore) ListByTaskID(ctx context.Context, taskID uint, filter s
 	if filter.Status != "" {
 		stmt = stmt.Where("i.status = ?", filter.Status)
 	}
-	if filter.ScanMethod != "" {
-		stmt = stmt.Where("i.scanMethod = ?", filter.ScanMethod)
+	if filter.ScanMethods != nil {
+		stmt = stmt.Where("i.scanMethod IN ?", filter.ScanMethods)
 	}
 	if filter.Path != "" {
 		stmt = stmt.Where("i.path = ?", filter.Path)
