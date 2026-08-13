@@ -227,7 +227,7 @@ func (q *queue) signal(ctx context.Context) error {
 				if runner, ok := availableRunnerMap[w.token]; ok {
 					workerLabels = runner.Labels
 				}
-				if len(item.Labels) > 0 || len(workerLabels) > 0 {
+				if len(item.Labels) > 0 {
 					if !checkLabels(mapKeys(item.Labels), workerLabels) {
 						logger.Debugf("[pipeline]: worker skipped (labels mismatch), stage_id=%d", item.ID)
 						continue
