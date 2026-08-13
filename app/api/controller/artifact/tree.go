@@ -26,12 +26,12 @@ func (c *Controller) ListTree(ctx *gin.Context) {
 		resp.BadRequest(ctx, err)
 		return
 	}
-	view, err := c.artSvc.ParseSpaceView(ctx.Request.Context(), &reqBody.SpaceRepoReq)
+	lib, err := c.artSvc.ParseSpaceLib(ctx.Request.Context(), &reqBody.SpaceRepoReq)
 	if err != nil {
 		resp.BadRequest(ctx, err)
 		return
 	}
-	list, err := c.artSvc.ListTree(ctx, view.ArtifactID, &reqBody.ArtifactTreeFilter)
+	list, err := c.artSvc.ListTree(ctx, lib.ArtifactID, &reqBody.ArtifactTreeFilter)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return

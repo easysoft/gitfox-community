@@ -35,17 +35,17 @@ func (c *Controller) CreateGroup(ctx *gin.Context) {
 		return
 	}
 
-	// 反查 view，确保 artifactID 存在且 format 合法
-	view, err := c.artSvc.ResolveView(ctx.Request.Context(), &model.SpaceRepoReq{ArtifactID: params.ArtifactID})
+	// 反查 lib，确保 artifactID 存在且 format 合法
+	lib, err := c.artSvc.ResolveLib(ctx.Request.Context(), &model.SpaceRepoReq{ArtifactID: params.ArtifactID})
 	if err != nil {
 		resp.BadRequest(ctx, err)
 		return
 	}
-	// 用 view.Format 覆盖前端可能传入的 format，保证 group.format 与 artifact 绑定一致
-	params.Format = string(view.Format)
+	// 用 lib.Format 覆盖前端可能传入的 format，保证 group.format 与 artifact 绑定一致
+	params.Format = string(lib.Format)
 
 	names := params.ParseNames()
-	format := view.Format
+	format := lib.Format
 
 	// 检查分组路径是否已存在（仅活的 group 算重复，软删的允许重建）
 	exists, err := c.artSvc.ActiveGroupPathExists(ctx.Request.Context(), params.ArtifactID, names, format)
