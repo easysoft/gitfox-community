@@ -245,19 +245,19 @@ func (app *App) runMigrations() {
 // registerJobHandlers 注册后台任务处理器（Pipeline Cron、Scan Cron、Artifact GC）。
 func (app *App) registerJobHandlers() {
 	if err := cronSvc.RegisterPipelineHandler(
-		app.JobScheduler, app.Triggerer, app.PipelineService); err != nil {
+		app.JobScheduler, app.Triggerer, app.PipelineService, app.RepoService); err != nil {
 		app.SystemLog.Errorw("[Server] Failed to register pipeline cron handler", "error", err)
 		panic(err)
 	}
 
 	if err := cronSvc.RegisterGitlabPipelineHandler(
-		app.JobScheduler, app.Triggerer, app.PipelineService, app.SystemConfig.Devops, app.TokenStore); err != nil {
+		app.JobScheduler, app.Triggerer, app.PipelineService, app.RepoService, app.SystemConfig.Devops, app.TokenStore); err != nil {
 		app.SystemLog.Errorw("[Server] Failed to register GitLab pipeline cron handler", "error", err)
 		panic(err)
 	}
 
 	if err := cronSvc.RegisterJenkinsPipelineHandler(
-		app.JobScheduler, app.Triggerer, app.PipelineService, app.SystemConfig.Devops, app.TokenStore); err != nil {
+		app.JobScheduler, app.Triggerer, app.PipelineService, app.RepoService, app.SystemConfig.Devops, app.TokenStore); err != nil {
 		app.SystemLog.Errorw("[Server] Failed to register Jenkins pipeline cron handler", "error", err)
 		panic(err)
 	}
