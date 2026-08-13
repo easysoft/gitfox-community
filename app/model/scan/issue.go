@@ -287,7 +287,7 @@ type ScanTaskIssueReqFilter struct {
 	Branch          string                       `json:"branch,omitempty" form:"branch"`
 	RuleID          int64                        `json:"ruleID,omitempty" form:"ruleID"`
 	Status          constant.ScanIssueStatus     `json:"status,omitempty" form:"status"`
-	ScanMethod      constant.ScanMethod          `json:"scanMethod,omitempty" form:"scanMethod"`
+	ScanMethods     []constant.ScanMethod        `json:"scanMethods,omitempty" form:"scanMethods"`
 	PlanID          int64                        `json:"planID,omitempty" form:"planID"`
 	DetectionStatus string                       `json:"detectionStatus,omitempty" form:"detectionStatus"`
 	Sort            string                       `json:"sort,omitempty" form:"sort" default:"id"`
@@ -312,7 +312,7 @@ type ScanIssueReqFilter struct {
 	RuleType     constant.ScanRuleType        `json:"ruleType,omitempty" form:"ruleType"`
 	Tool         string                       `json:"tool,omitempty" form:"tool"`
 	Status       constant.ScanIssueStatus     `json:"status,omitempty" form:"status"`
-	ScanMethod   constant.ScanMethod          `json:"scanMethod,omitempty" form:"scanMethod"`
+	ScanMethods  []constant.ScanMethod        `json:"scanMethods,omitempty" form:"scanMethods"`
 	CreateDate   string                       `json:"createDate,omitempty" form:"createDate"`
 	CreatedFilter
 	UpdatedFilter
@@ -372,6 +372,7 @@ type ScanIssueInfo struct {
 	Category        constant.AiScanIssueCategory  `json:"category,omitempty"`
 	Severity        constant.AiScanIssueSeverity  `json:"severity,omitempty"`
 	PpmID           int64                         `json:"ppmID,omitempty"`
+	PpmTitle        string                        `json:"ppmTitle,omitempty"`
 	RepoID          int64                         `json:"repoID"`
 	RepoBranch      string                        `json:"repoBranch"`
 	Status          constant.ScanIssueStatus      `json:"status"`

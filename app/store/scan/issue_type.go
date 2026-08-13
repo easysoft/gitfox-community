@@ -83,6 +83,7 @@ type issueJoin struct {
 	OldCode         string                        `gorm:"column:oldCode"`
 	NewCode         string                        `gorm:"column:newCode"`
 	PpmID           int64                         `gorm:"column:ppmID"`
+	PpmTitle        string                        `gorm:"column:ppmTitle"`
 	RepoID          int64                         `gorm:"column:repoID"`
 	RepoBranch      string                        `gorm:"column:repoBranch"`
 	Status          constant.ScanIssueStatus      `gorm:"column:status"`
@@ -129,6 +130,7 @@ func mapIssueJoinToModel(in *issueJoin) *scanModel.ScanIssueInfo {
 		OldCode:         in.OldCode,
 		NewCode:         in.NewCode,
 		PpmID:           in.PpmID,
+		PpmTitle:        in.PpmTitle,
 		RepoID:          in.RepoID,
 		RepoBranch:      in.RepoBranch,
 		Status:          in.Status,
