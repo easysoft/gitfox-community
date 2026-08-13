@@ -32,18 +32,18 @@ artifact:
   # ---- Service layer errors ----
   # View
   default_view_name: "Default"
-  view_name_duplicate: "An artifact view with the same name already exists."
-  view_not_found: "The specified artifact view does not exist."
-  view_code_invalid: "artifact identifier format is invalid. Only letters, digits, hyphens (-), underscores (_) and dots (.) are allowed"
-  view_query_error: "Failed to query artifact view."
-  view_scope_mismatch: "The specified artifact view does not match the requested space or repository."
-  view_create_error: "Failed to create artifact view."
-  view_format_required: "Artifact format is required. Allowed values: file, raw, container." # file, raw, maven, container, helm, pypi, npm.
-  view_format_invalid: "Unsupported artifact format. Supported: file, raw, container." # file, raw, maven, container, helm, pypi, npm.
-  view_name_required: "Artifact view name is required."
-  view_name_too_long: "Artifact view name is too long (max 128 chars)."
-  view_name_invalid_chars: "Artifact view name must not contain whitespace or any of / \"."
-  view_name_non_ascii_not_allowed: "Artifact view name may only contain letters, digits, dashes, underscores Chinese characters and other characters are not allowed.." # container/raw/helm/pypi/npm/maven
+  lib_name_duplicate: "An artifact view with the same name already exists."
+  lib_not_found: "The specified artifact view does not exist."
+  lib_code_invalid: "artifact identifier format is invalid. Only letters, digits, hyphens (-), underscores (_) and dots (.) are allowed"
+  lib_query_error: "Failed to query artifact view."
+  lib_scope_mismatch: "The specified artifact view does not match the requested space or repository."
+  lib_create_error: "Failed to create artifact view."
+  lib_format_required: "Artifact format is required. Allowed values: file, raw, container." # file, raw, maven, container, helm, pypi, npm.
+  lib_format_invalid: "Unsupported artifact format. Supported: file, raw, container." # file, raw, maven, container, helm, pypi, npm.
+  lib_name_required: "Artifact view name is required."
+  lib_name_too_long: "Artifact view name is too long (max 128 chars)."
+  lib_name_invalid_chars: "Artifact view name must not contain whitespace or any of / \"."
+  lib_name_non_ascii_not_allowed: "Artifact view name may only contain letters, digits, dashes, underscores Chinese characters and other characters are not allowed.." # container/raw/helm/pypi/npm/maven
 
   # Parse & Upload
   space_id_required: "spaceID is required when repoID is provided."
@@ -57,12 +57,12 @@ artifact:
   upload_artifactid_required: "artifactID is required for uploading; please select a target artifact repository and try again."
   upload_file_name_required: "The 'name' form field is required for upload and must not be empty or whitespace only."
   upload_name_required: "Package 'packageName' is required for raw uploads."
-  upload_name_invalid: "The 'packageName' for raw uploads is invalid: only alphanumerics, dashes and underscores are allowed, and no dots."
+  upload_name_invalid: "The 'packageName' for raw uploads is invalid: only alphanumerics, dashes and underscores are allowed and dots."
   upload_version_invalid: "A valid 'version' is required for raw uploads (alphanumerics, dashes, underscores and dots only)."
-  upload_raw_group_invalid: "The 'group' for raw uploads must be a dot-separated path (each segment may contain alphanumerics, dashes and underscores only)."
+  upload_raw_group_invalid: "The 'group' for raw uploads must be a dot-separated path (each segment may contain alphanumerics, dashes, underscores and dots only)."
   upload_group_required: "Group is required for uploading."
   upload_group_id_invalid: "The specified groupId is invalid or does not exist."
-  upload_group_name_invalid: "The specified group path is invalid: use '.' or '/' as separator; each segment must be non-empty, no longer than 128 characters, and must not contain whitespace or any of \\ : * ? \" < > |. Unicode characters (e.g. Chinese) are allowed."
+  upload_group_name_invalid: "The specified group path is invalid: each segment must be non-empty, no longer than 128 characters, and must not contain whitespace or any of \\ : * ? \" < > |. Unicode characters (e.g. Chinese) are allowed."
   upload_group_path_not_found: "The specified group path does not exist under the current artifact repository; please create the group first or verify the artifactID."
   upload_group_artifact_mismatch: "The specified group does not belong to the current artifact repository; please verify artifactID and group ownership."
   upload_file_duplicate: "A file with the same name and identical content already exists; upload skipped."

@@ -44,6 +44,18 @@ const (
 	ArtifactGroupNameLeadingTrailingSpace   I18nKey = "artifact.group_name_leading_trailing_space"   // 分组名称首尾不得包含空白字符.
 	ArtifactGroupNamesInvalid               I18nKey = "artifact.group_names_invalid"                 // 分组名称不合法,不能为空且不允许包含空段.
 	ArtifactGroupQueryError                 I18nKey = "artifact.group_query_error"                   // 查询制品分组失败.
+	ArtifactLibCodeInvalid                  I18nKey = "artifact.lib_code_invalid"                    // 制品库标识不符合规范,首尾字符必须是字母数字,中间可包含字母数字.-_
+	ArtifactLibCreateError                  I18nKey = "artifact.lib_create_error"                    // 创建制品视图失败.
+	ArtifactLibFormatInvalid                I18nKey = "artifact.lib_format_invalid"                  // 不支持的制品格式,仅支持: file, raw, container.
+	ArtifactLibFormatRequired               I18nKey = "artifact.lib_format_required"                 // 请选择制品格式(format),可选值:file, raw, container.
+	ArtifactLibNameDuplicate                I18nKey = "artifact.lib_name_duplicate"                  // 同名制品库视图已存在.
+	ArtifactLibNameInvalidChars             I18nKey = "artifact.lib_name_invalid_chars"              // 制品库名称不得包含空白字符或 / " 等特殊字符.
+	ArtifactLibNameNonAsciiNotAllowed       I18nKey = "artifact.lib_name_non_ascii_not_allowed"      // 版本化制品库名称仅允许英文字母、数字、中划线、下划线和英文句号,不允许中文等字符.
+	ArtifactLibNameRequired                 I18nKey = "artifact.lib_name_required"                   // 制品库名称不能为空.
+	ArtifactLibNameTooLong                  I18nKey = "artifact.lib_name_too_long"                   // 制品库名称过长,最多 128 个字符.
+	ArtifactLibNotFound                     I18nKey = "artifact.lib_not_found"                       // 指定的制品视图不存在.
+	ArtifactLibQueryError                   I18nKey = "artifact.lib_query_error"                     // 查询制品视图失败.
+	ArtifactLibScopeMismatch                I18nKey = "artifact.lib_scope_mismatch"                  // 指定的制品视图与请求中的空间或仓库不匹配.
 	ArtifactListSuccess                     I18nKey = "artifact.list_success"                        // 制品列表查询成功.
 	ArtifactMoveContainerNotSupported       I18nKey = "artifact.move_container_not_supported"        // container 格式制品不支持移动；如需从一个制品库流转到另一个制品库,请使用制品晋级.
 	ArtifactMoveCycleDetected               I18nKey = "artifact.move_cycle_detected"                 // 目标父组属于源组的子树,禁止循环引用.
@@ -113,12 +125,12 @@ const (
 	ArtifactUploadFileNameRequired          I18nKey = "artifact.upload_file_name_required"           // 上传制品必须指定文件名 name,且不能为空或全为空白字符.
 	ArtifactUploadGroupArtifactMismatch     I18nKey = "artifact.upload_group_artifact_mismatch"      // 指定的分组不属于当前制品库,请确认 artifactID 与分组归属后重试.
 	ArtifactUploadGroupIdInvalid            I18nKey = "artifact.upload_group_id_invalid"             // 指定的 groupId 不合法或不存在,请确认后重试.
-	ArtifactUploadGroupNameInvalid          I18nKey = "artifact.upload_group_name_invalid"           // 指定的 group 路径不合法:需为以 . 或 / 分隔的多级命名,每段不能为空、不得超过 1...
+	ArtifactUploadGroupNameInvalid          I18nKey = "artifact.upload_group_name_invalid"           // 指定的 group 路径不合法:不能为空、不得超过 128 字符 ...
 	ArtifactUploadGroupPathNotFound         I18nKey = "artifact.upload_group_path_not_found"         // 指定的 group 路径在当前制品库下不存在,请先创建对应分组或检查 artifactID.
 	ArtifactUploadGroupRequired             I18nKey = "artifact.upload_group_required"               // 上传制品必须指定目录.
-	ArtifactUploadNameInvalid               I18nKey = "artifact.upload_name_invalid"                 // raw 制品的包名 packageName 格式不合法:仅允许字母、数字、中划线、下划线,且不含点.
+	ArtifactUploadNameInvalid               I18nKey = "artifact.upload_name_invalid"                 // raw 制品的包名 packageName 格式不合法:仅允许字母、数字、中划线、下划线和点.
 	ArtifactUploadNameRequired              I18nKey = "artifact.upload_name_required"                // 上传 raw 制品必须指定包名 packageName.
-	ArtifactUploadRawGroupInvalid           I18nKey = "artifact.upload_raw_group_invalid"            // raw 制品的 group 参数格式不合法,需为以英文点号分隔的多级命名(每级仅允许字母数字、...
+	ArtifactUploadRawGroupInvalid           I18nKey = "artifact.upload_raw_group_invalid"            // raw 制品的 group 参数格式不合法,仅允许字母数字、中划线、下划线和点
 	ArtifactUploadSaveError                 I18nKey = "artifact.upload_save_error"                   // 制品保存失败.
 	ArtifactUploadServeError                I18nKey = "artifact.upload_serve_error"                  // 制品上传处理失败.
 	ArtifactUploadSuccess                   I18nKey = "artifact.upload_success"                      // 制品上传成功.
@@ -128,18 +140,6 @@ const (
 	ArtifactVersionListError                I18nKey = "artifact.version_list_error"                  // 查询制品版本列表失败.
 	ArtifactVersionPackageRequired          I18nKey = "artifact.version_package_required"            // 查询版本列表必须指定制品包名 packageName,且不能为空或全为空白字符.
 	ArtifactVersionQueryError               I18nKey = "artifact.version_query_error"                 // 查询制品版本失败.
-	ArtifactViewCodeInvalid                 I18nKey = "artifact.view_code_invalid"                   // 制品库标识不符合规范,首尾字符必须是字母数字,中间可包含字母数字.-_
-	ArtifactViewCreateError                 I18nKey = "artifact.view_create_error"                   // 创建制品视图失败.
-	ArtifactViewFormatInvalid               I18nKey = "artifact.view_format_invalid"                 // 不支持的制品格式,仅支持: file, raw, container.
-	ArtifactViewFormatRequired              I18nKey = "artifact.view_format_required"                // 请选择制品格式(format),可选值:file, raw, container.
-	ArtifactViewNameDuplicate               I18nKey = "artifact.view_name_duplicate"                 // 同名制品库视图已存在.
-	ArtifactViewNameInvalidChars            I18nKey = "artifact.view_name_invalid_chars"             // 制品库名称不得包含空白字符或 / " 等特殊字符.
-	ArtifactViewNameNonAsciiNotAllowed      I18nKey = "artifact.view_name_non_ascii_not_allowed"     // 版本化制品库名称仅允许英文字母、数字、中划线、下划线和英文句号,不允许中文等字符.
-	ArtifactViewNameRequired                I18nKey = "artifact.view_name_required"                  // 制品库名称不能为空.
-	ArtifactViewNameTooLong                 I18nKey = "artifact.view_name_too_long"                  // 制品库名称过长,最多 128 个字符.
-	ArtifactViewNotFound                    I18nKey = "artifact.view_not_found"                      // 指定的制品视图不存在.
-	ArtifactViewQueryError                  I18nKey = "artifact.view_query_error"                    // 查询制品视图失败.
-	ArtifactViewScopeMismatch               I18nKey = "artifact.view_scope_mismatch"                 // 指定的制品视图与请求中的空间或仓库不匹配.
 
 	// Auth 相关常量
 	AuthAuthUserLoginSuccess        I18nKey = "auth.auth_user_login_success"          // 用户登录成功
