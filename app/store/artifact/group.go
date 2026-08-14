@@ -17,14 +17,14 @@ var _ GroupInterface = (*groups)(nil)
 type groups struct{ db *gorm.DB }
 
 const artifactGroupAncestorsQuery = `
-WITH RECURSIVE art_group_ancestors(group_ancestor_id, group_ancestor_uid, group_ancestor_parent_id) AS (
-	SELECT id, name, parentID
+WITH RECURSIVE art_group_ancestors(group_ancestor_id, group_ancestor_uid, group_ancestor_parent_id, group_ancestor_depth) AS (
+	SELECT id, name, parentID, 0
 	FROM ops_artifact_groups
 	WHERE id = ?
 	UNION
-	SELECT id, name, parentID
-	FROM ops_artifact_groups
-	JOIN art_group_ancestors ON id = group_ancestor_parent_id
+	SELECT g.id, g.name, g.parentID, a.group_ancestor_depth + 1
+	FROM ops_artifact_groups g
+	JOIN art_group_ancestors a ON g.id = a.group_ancestor_parent_id
 )
 `
 
@@ -177,7 +177,7 @@ func (c *groups) RecursiveCreate(ctx context.Context, artifactID int64, names []
 func (c *groups) GetEndpointById(ctx context.Context, id int64) (*model.ArtifactGroupEndpoint, error) {
 	query := artifactGroupAncestorsQuery + `
 		SELECT * ` + `
-		FROM ops_artifact_groups INNER JOIN art_group_ancestors ON id = group_ancestor_id order by id`
+		FROM ops_artifact_groups INNER JOIN art_group_ancestors ON id = group_ancestor_id order by group_ancestor_depth desc`
 	var rows []*artifactGroup
 	if err := c.db.WithContext(ctx).Raw(query, id).Scan(&rows).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
