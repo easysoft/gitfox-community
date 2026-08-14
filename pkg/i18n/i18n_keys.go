@@ -1055,4 +1055,6 @@ const (
 	WebhookQuerySuccess              I18nKey = "webhook.query_success"               // webhook 详情查询成功.
 	WebhookUpdateError               I18nKey = "webhook.update_error"                // webhook 更新失败.
 	WebhookUpdateSuccess             I18nKey = "webhook.update_success"              // webhook 更新成功.
+
+	AICodeReviewRuleListSuccess I18nKey = "aicodereview.rule_list_success" // AI代码评审规则列表查询成功.
 )

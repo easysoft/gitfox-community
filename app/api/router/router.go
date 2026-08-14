@@ -128,4 +128,7 @@ func registerNoAuthRoutes(r *gin.Engine, controller *Controller) {
 
 	// 制品文件下载接口（无需鉴权，用于直接 curl/wget 下载）
 	r.GET("/_artifacts/space/:code/*filepath", controller.Artifact.DownloadAssetByPath)
+
+	// AI 代码评审规则列表（无需鉴权，用于流水线访问）
+	r.GET("/api/v2/scan/aicodereview/rules", controller.Scan.Rules)
 }

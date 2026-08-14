@@ -150,3 +150,8 @@ type IScanTask interface {
 	NextPlanNumber(ctx context.Context, planID uint64) (int64, error)
 	NextRepoNumber(ctx context.Context, repoID int64) (int64, error)
 }
+
+type IAIReview interface {
+	// GetRules get AI code review rules
+	GetRules(ctx context.Context) ([]*scanModel.AIReviewRule, error)
+}
