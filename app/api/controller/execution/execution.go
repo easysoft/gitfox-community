@@ -207,6 +207,10 @@ func (c *Controller) Create(ctx *gin.Context) {
 	if !ok {
 		ref = ""
 	}
+	cloneURL, ok := reqBody.Params["gitURL"]
+	if !ok {
+		cloneURL = ""
+	}
 
 	session, ok := req.GetAuthSession(ctx.Request.Context())
 	if !ok {
@@ -223,24 +227,30 @@ func (c *Controller) Create(ctx *gin.Context) {
 
 	// 获取分支信息以取得 SHA
 	var commitSHA string
-	if ref != "" && pipeline.RepoID != 0 {
+	if pipeline.RepoID != 0 {
 		repo, err := c.repoService.GetByID(ctx, session, uint(pipeline.RepoID))
 		if err != nil {
 			resp.InternalError(ctx, err)
 			return
 		}
-		branchOut, err := c.gitPkg.GetBranch(ctx, &git.GetBranchParams{
-			ReadParams: git.ReadParams{RepoUID: repo.GitUID},
-			BranchName: ref,
-		})
-		if err != nil {
-			resp.InternalError(ctx, err)
-			return
+		if cloneURL == "" {
+			cloneURL = repo.GitURL
 		}
-		commitSHA = branchOut.Branch.SHA.String()
+		if ref != "" {
+			branchOut, err := c.gitPkg.GetBranch(ctx, &git.GetBranchParams{
+				ReadParams: git.ReadParams{RepoUID: repo.GitUID},
+				BranchName: ref,
+			})
+			if err != nil {
+				resp.InternalError(ctx, err)
+				return
+			}
+			commitSHA = branchOut.Branch.SHA.String()
+		}
 	}
 
 	// Create manual hook for execution.
+	reqBody.Params["gitURL"] = cloneURL
 	hook := &triggerer.Hook{
 		Trigger:     session.User.Account, // who/what triggered the build, different from commit author
 		TriggeredBy: session.User.ID,
