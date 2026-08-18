@@ -36,7 +36,7 @@ func (s *Store) GetRules(ctx context.Context) ([]*model.AIReviewRule, error) {
 		extensions := strings.Split(strings.Trim(rule.Extension, ","), ",")
 		for _, extension := range extensions {
 			if extension != "" {
-				extensionList = append(extensions, "*."+extension)
+				extensionList = append(extensionList, "*."+extension)
 			}
 		}
 		ruleModels[i] = &model.AIReviewRule{
