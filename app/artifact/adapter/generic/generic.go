@@ -11,6 +11,7 @@ import (
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/adapter"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/adapter/request"
+	artModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/model"
 	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
 	artifactStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/artifact"
 	pkgErrors "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
@@ -126,20 +127,39 @@ func (h *uploader) validateForm(_ context.Context, req *http.Request) error {
 		if err := validateGenericGroupName(group); err != nil {
 			return err
 		}
-		g, err := h.artStore.Groups().GetEndpointByNames(req.Context(), artifactID, strings.Split(strings.Trim(group, "/"), "/"), model.ArtifactFileFormat)
+		names := strings.Split(strings.Trim(group, "/"), "/")
+		ge, err := h.artStore.Groups().GetEndpointByNames(req.Context(), artifactID, names, model.ArtifactFileFormat)
 		if err != nil {
-			return badRequest(
-				fmt.Errorf("%w: group=%q not found under artifactID=%d: %v", adapter.ErrInvalidGroupName, group, artifactID, err),
-				i18n.ArtifactUploadGroupPathNotFound,
-			)
+			// 目录路径不存在 → 递归创建目录并同步树节点，支持上传时按需建目录。
+			// 仅当"不存在"（not found）时降级创建；其余错误保持原报错口径。
+			if !pkgErrors.Is(err, pkgErrors.ErrResourceNotFound) {
+				return badRequest(
+					fmt.Errorf("%w: group=%q query failed under artifactID=%d: %v", adapter.ErrInvalidGroupName, group, artifactID, err),
+					i18n.ArtifactGroupQueryError,
+				)
+			}
+			ge, err = h.artStore.Groups().RecursiveCreate(req.Context(), artifactID, names, model.ArtifactFileFormat, h.uploadReq.LoadCreator(req.Context()).UID)
+			if err != nil {
+				return badRequest(
+					fmt.Errorf("%w: group=%q create failed under artifactID=%d: %v", adapter.ErrInvalidGroupName, group, artifactID, err),
+					i18n.ArtifactGroupCreateError,
+				)
+			}
+			// 同步新建目录的树节点，供树形浏览展示；未显式同步则目录不出现在树中。
+			if _, err = artModel.NewSyncer(h.artStore).SyncTreeNodeForGroup(req.Context(), ge.ArtifactGroup); err != nil {
+				return badRequest(
+					fmt.Errorf("%w: group=%q tree node sync failed: %v", adapter.ErrInvalidGroupName, group, err),
+					i18n.ArtifactGroupCreateError,
+				)
+			}
 		}
-		if g.ArtifactGroup == nil || g.ArtifactGroup.ArtifactID != artifactID {
+		if ge.ArtifactGroup == nil || ge.ArtifactGroup.ArtifactID != artifactID {
 			return badRequest(
 				fmt.Errorf("%w: group=%q does not belong to artifactID=%d", adapter.ErrInvalidGroupName, group, artifactID),
 				i18n.ArtifactUploadGroupArtifactMismatch,
 			)
 		}
-		h.descriptor.GroupID = g.ID
+		h.descriptor.GroupID = ge.ArtifactGroup.ID
 	}
 
 	return nil
