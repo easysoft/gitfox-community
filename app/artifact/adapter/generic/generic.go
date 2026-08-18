@@ -166,7 +166,7 @@ func (h *uploader) validateForm(_ context.Context, req *http.Request) error {
 }
 
 // validateGenericGroupName 校验 generic 上传时传入的 group 字符串。
-// 约束（与 CreateArtifactViewReq 对 generic/raw 放行中文的口径一致）：
+// 约束（与 CreateArtifactLibReq 对 generic/raw 放行中文的口径一致）：
 //  2. 每段 rune 数不得超过 maxGenericGroupSegmentLen；
 //  3. 禁止空白字符（含全角空格等），禁止控制字符；
 //  4. 禁止路径分隔与 Windows 保留字符：`/ \ : * ? " < > |`；
