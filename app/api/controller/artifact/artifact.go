@@ -31,7 +31,7 @@ func (c *Controller) Service() artifactSvc.Interface {
 // @Tags artifacts
 // @Accept application/json
 // @Produce application/json
-// @Param body body model.CreateArtifactViewReq true "创建参数"
+// @Param body body model.CreateArtifactLibReq true "创建参数"
 // @Success 200 {object} resp.ObjectResponse "成功"
 // @Failure 400 {object} resp.ObjectResponse "参数错误"
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"

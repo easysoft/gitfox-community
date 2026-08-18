@@ -81,7 +81,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.CreateArtifactViewReq"
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.CreateArtifactLibReq"
                         }
                     }
                 ],
@@ -599,6 +599,12 @@ const docTemplate = `{
                         "type": "string",
                         "description": "raw 包名（raw 上传必传）",
                         "name": "packageName",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "上传目录路径（支持多级 a/b/c，不存在时自动递归创建；与 groupID 二选一）",
+                        "name": "group",
                         "in": "formData"
                     },
                     {
@@ -10499,7 +10505,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/v2/{domainid}/{artifactname}/{imagename}/blobs/uploads/": {
+        "/v2/{domainid}/{artifactCode}/{imagename}/blobs/uploads/": {
             "post": {
                 "description": "发起一个新的 Blob 上传会话。如果 query 中包含 digest 参数则执行单次上传（monolithic），否则初始化分块上传。",
                 "consumes": [
@@ -10522,8 +10528,8 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "制品库名称（ops_artifact.name）",
-                        "name": "artifactname",
+                        "description": "制品库编码（ops_artifact.code）",
+                        "name": "artifactCode",
                         "in": "path",
                         "required": true
                     },
@@ -10562,7 +10568,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/v2/{domainid}/{artifactname}/{imagename}/blobs/uploads/{uuid}": {
+        "/v2/{domainid}/{artifactCode}/{imagename}/blobs/uploads/{uuid}": {
             "get": {
                 "description": "查询分块上传会话的当前状态，返回已上传的字节范围。",
                 "produces": [
@@ -10582,8 +10588,8 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "制品库名称（ops_artifact.name）",
-                        "name": "artifactname",
+                        "description": "制品库编码（ops_artifact.code）",
+                        "name": "artifactCode",
                         "in": "path",
                         "required": true
                     },
@@ -10644,8 +10650,8 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "制品库名称（ops_artifact.name）",
-                        "name": "artifactname",
+                        "description": "制品库编码（ops_artifact.code）",
+                        "name": "artifactCode",
                         "in": "path",
                         "required": true
                     },
@@ -10717,8 +10723,8 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "制品库名称（ops_artifact.name）",
-                        "name": "artifactname",
+                        "description": "制品库编码（ops_artifact.code）",
+                        "name": "artifactCode",
                         "in": "path",
                         "required": true
                     },
@@ -10786,8 +10792,8 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "制品库名称（ops_artifact.name）",
-                        "name": "artifactname",
+                        "description": "制品库编码（ops_artifact.code）",
+                        "name": "artifactCode",
                         "in": "path",
                         "required": true
                     },
@@ -10834,7 +10840,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/v2/{domainid}/{artifactname}/{imagename}/blobs/{digest}": {
+        "/v2/{domainid}/{artifactCode}/{imagename}/blobs/{digest}": {
             "get": {
                 "description": "根据 digest 下载指定容器镜像空间下的 Blob 内容（镜像层数据）。",
                 "produces": [
@@ -10854,8 +10860,8 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "制品库名称（ops_artifact.name）",
-                        "name": "artifactname",
+                        "description": "制品库编码（ops_artifact.code）",
+                        "name": "artifactCode",
                         "in": "path",
                         "required": true
                     },
@@ -10916,8 +10922,8 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "制品库名称（ops_artifact.name）",
-                        "name": "artifactname",
+                        "description": "制品库编码（ops_artifact.code）",
+                        "name": "artifactCode",
                         "in": "path",
                         "required": true
                     },
@@ -10975,8 +10981,8 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "制品库名称（ops_artifact.name）",
-                        "name": "artifactname",
+                        "description": "制品库编码（ops_artifact.code）",
+                        "name": "artifactCode",
                         "in": "path",
                         "required": true
                     },
@@ -11016,7 +11022,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/v2/{domainid}/{artifactname}/{imagename}/manifests/{reference}": {
+        "/v2/{domainid}/{artifactCode}/{imagename}/manifests/{reference}": {
             "get": {
                 "description": "根据 reference（tag 或 digest）下载容器镜像的 Manifest 内容。",
                 "produces": [
@@ -11036,8 +11042,8 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "制品库名称（ops_artifact.name）",
-                        "name": "artifactname",
+                        "description": "制品库编码（ops_artifact.code）",
+                        "name": "artifactCode",
                         "in": "path",
                         "required": true
                     },
@@ -11102,8 +11108,8 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "制品库名称（ops_artifact.name）",
-                        "name": "artifactname",
+                        "description": "制品库编码（ops_artifact.code）",
+                        "name": "artifactCode",
                         "in": "path",
                         "required": true
                     },
@@ -11161,8 +11167,8 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "制品库名称（ops_artifact.name）",
-                        "name": "artifactname",
+                        "description": "制品库编码（ops_artifact.code）",
+                        "name": "artifactCode",
                         "in": "path",
                         "required": true
                     },
@@ -11220,8 +11226,8 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "制品库名称（ops_artifact.name）",
-                        "name": "artifactname",
+                        "description": "制品库编码（ops_artifact.code）",
+                        "name": "artifactCode",
                         "in": "path",
                         "required": true
                     },
@@ -11261,7 +11267,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/v2/{domainid}/{artifactname}/{imagename}/tags/list": {
+        "/v2/{domainid}/{artifactCode}/{imagename}/tags/list": {
             "get": {
                 "description": "列出指定容器镜像的所有 Tag 列表。",
                 "produces": [
@@ -11281,8 +11287,8 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "制品库名称（ops_artifact.name）",
-                        "name": "artifactname",
+                        "description": "制品库编码（ops_artifact.code）",
+                        "name": "artifactCode",
                         "in": "path",
                         "required": true
                     },
@@ -11930,7 +11936,7 @@ const docTemplate = `{
                 }
             }
         },
-        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.CreateArtifactViewReq": {
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.CreateArtifactLibReq": {
             "type": "object",
             "properties": {
                 "artifactID": {
@@ -12569,7 +12575,7 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "until": {
-                    "type": "string"
+                    "type": "integer"
                 }
             }
         },
@@ -13862,6 +13868,9 @@ const docTemplate = `{
                 "os": {
                     "type": "string"
                 },
+                "runtime": {
+                    "type": "string"
+                },
                 "version": {
                     "type": "string"
                 }
@@ -13967,9 +13976,12 @@ const docTemplate = `{
                 "ip": {
                     "type": "string"
                 },
+                "isDefault": {
+                    "type": "boolean"
+                },
                 "labels": {
-                    "type": "object",
-                    "additionalProperties": {
+                    "type": "array",
+                    "items": {
                         "type": "string"
                     }
                 },
@@ -13980,6 +13992,9 @@ const docTemplate = `{
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.RunnerStatus"
                 },
                 "os": {
+                    "type": "string"
+                },
+                "runtime": {
                     "type": "string"
                 },
                 "status": {
