@@ -143,7 +143,7 @@ func (s *ScanPlanStore) List(ctx context.Context, repoID uint, filter scanModel.
 				WHERE deleted = ?
 				GROUP BY planID
 			) t2 ON t1.id = t2.max_id
-		) latest_task ON ops_scan_plans.id = latest_task.planID`, false).
+		) latest_task ON ops_scan_plans.id = latest_task.planID`, 0).
 		Joins("LEFT JOIN ops_pipeline_executions e ON latest_task.executionID = e.id").
 		Where("ops_scan_plans.deleted = ?", 0)
 
