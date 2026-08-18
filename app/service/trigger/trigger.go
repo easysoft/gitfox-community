@@ -15,7 +15,6 @@ import (
 	pipelineModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/pipeline"
 	scanModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/triggerer"
-	reviewSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/codereview"
 	pipelineSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/pipeline"
 	scanSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/scan"
 	repoStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
@@ -62,7 +61,7 @@ type Service struct {
 	scanTriggerSvc scanSvc.IScanTrigger
 	planSvc        scanSvc.IScanPlan
 	taskSvc        scanSvc.IScanTask
-	reviewSvc      reviewSvc.Interface
+	reviewSvc      scanSvc.IAIReview
 }
 
 func New(
@@ -75,7 +74,7 @@ func New(
 	scanTriggerSvc scanSvc.IScanTrigger,
 	planSvc scanSvc.IScanPlan,
 	taskSvc scanSvc.IScanTask,
-	reviewSvc reviewSvc.Interface,
+	reviewSvc scanSvc.IAIReview,
 	gitReaderFactory *events.ReaderFactory[*gitevents.Reader],
 	pullreqEvReaderFactory *events.ReaderFactory[*pullreqevents.Reader],
 ) (*Service, error) {
@@ -291,7 +290,7 @@ func (s *Service) triggerReviewPipeline(ctx context.Context, repoID, ppmID int64
 	hook.Params["gitRef"] = hook.Ref
 	hook.Parent = int64(repo.SpaceID)
 
-	if _, err := s.reviewSvc.TriggerCodeReview(ctx, &reviewSvc.CodeReviewInput{
+	if _, err := s.reviewSvc.TriggerCodeReview(ctx, &scanSvc.CodeReviewInput{
 		PullReqID: ppmID,
 		Repo:      repo,
 		Hook:      hook,

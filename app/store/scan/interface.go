@@ -124,6 +124,7 @@ type IScanIssue interface {
 	UpdateTimestamps(ctx context.Context, in scanModel.ScanIssueUpdateStatusReq, operator string) error
 	ResetExpiredIgnore(ctx context.Context, ids []int64, operator string) error
 	ListKeysByTask(ctx context.Context, repoID int64, branch string, taskID uint, method constant.ScanMethod) ([]*scanModel.ScanIssueKey, error)
+	ListExistingKeys(ctx context.Context, keys []string) ([]string, error)
 	UpdateByTaskID(ctx context.Context, taskID uint, issueIDs []int64, operator string) error
 	DisappearedByTask(ctx context.Context, taskID uint, issueIDs []int64, operator string) error
 	CreateIssueBindByTaskID(ctx context.Context, taskID uint, issueKeys []string) error
@@ -149,4 +150,9 @@ type IScanTask interface {
 	Delete(ctx context.Context, id uint) error
 	NextPlanNumber(ctx context.Context, planID uint64) (int64, error)
 	NextRepoNumber(ctx context.Context, repoID int64) (int64, error)
+}
+
+type IAIReview interface {
+	// GetRules get AI code review rules
+	GetRules(ctx context.Context) ([]*scanModel.AIReviewRule, error)
 }

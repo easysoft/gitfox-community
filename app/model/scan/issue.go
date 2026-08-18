@@ -184,8 +184,6 @@ type IssueInputAI struct {
 
 // IssuePayloadAI AI 类型 issue 的扩展数据
 type IssuePayloadAI struct {
-	Category       string `json:"category"`
-	Severity       string `json:"severity"`
 	SuggestionCode string `json:"suggestion_code"`
 	ExistingCode   string `json:"existing_code"`
 }

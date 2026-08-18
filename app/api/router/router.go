@@ -63,7 +63,6 @@ func NewRouter(mode string, logger *logger.SugaredMateLogger, controller *Contro
 	registerCommitRoutes(authGroup, controller)   // 提交相关路由
 	registerRepoRoutes(authGroup, controller)     // 仓库相关路由
 	registerScanRoutes(authGroup, controller)     // 扫描相关路由
-	registerReviewRoutes(authGroup, controller)   // 评审相关路由
 	registerPipelineRoutes(authGroup, controller) // 流水线相关路由
 	registerRunnerRoutes(authGroup, controller)   // Runner 管理相关路由
 	registerUserRoutes(authGroup, controller)     // 用户相关路由
@@ -129,4 +128,7 @@ func registerNoAuthRoutes(r *gin.Engine, controller *Controller) {
 
 	// 制品文件下载接口（无需鉴权，用于直接 curl/wget 下载）
 	r.GET("/_artifacts/space/:code/*filepath", controller.Artifact.DownloadAssetByPath)
+
+	// AI 代码评审规则列表（无需鉴权，用于流水线访问）
+	r.GET("/api/v2/scan/aicodereview/rules", controller.Scan.GetAIReviewRules)
 }

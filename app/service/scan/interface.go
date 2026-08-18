@@ -6,6 +6,7 @@ import (
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	authModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
+	executionModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/execution"
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 	scanModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/triggerer"
@@ -116,4 +117,9 @@ type IScanTask interface {
 	SetIssuesStatus(ctx context.Context, in scanModel.ScanIssueUpdateStatusReq) error
 	GetIssueFileTree(ctx context.Context, repoID, taskID int64) (*scanModel.TreeNode, error)
 	GetIssueRuleTree(ctx context.Context, repoID, taskID int64) (*scanModel.TreeNode, error)
+}
+
+type IAIReview interface {
+	GetAIReviewRules(ctx context.Context) ([]*scanModel.AIReviewRule, error)
+	TriggerCodeReview(ctx context.Context, in *CodeReviewInput) (*executionModel.Execution, error)
 }

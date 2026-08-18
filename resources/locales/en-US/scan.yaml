@@ -193,3 +193,4 @@ codeReview:
   body_param_error: "Body param parsing failed."
   report_upload_success: "Code review report uploaded successfully."
   report_upload_error: "Failed to upload code review report."
+  rule_list_success: "AI code review rules queried successfully."

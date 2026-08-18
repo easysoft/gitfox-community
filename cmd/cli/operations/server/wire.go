@@ -97,7 +97,6 @@ func NewApp(mode string) (*App, func(), error) {
 		provider.GitEventWireSet,
 		provider.PullReqEventWireSet,
 		provider.PipelineEventWireSet,
-		provider.CodeReviewWireSet,
 		provider.TriggerWireSet,
 		provider.PubSubProvider,
 		provider.JobWireSet,

@@ -22,5 +22,5 @@ spec:
             type: run
             spec:
               container:
-                image: hub.zentao.net/ci/gitfox-review:gitfox-community
+                image: hub.zentao.net/ci/gitfox-plugin:ai-codereview
                 pull: always

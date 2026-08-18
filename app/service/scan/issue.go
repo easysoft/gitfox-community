@@ -15,6 +15,7 @@ import (
 	scanModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
 	scanStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/scan"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 )
 
 // typecheckSubErrorRe 匹配 typecheck 消息中的子错误，格式：./path:line:col: message
@@ -219,7 +220,7 @@ func (s *ScanTaskService) analyzeAIIssues(content []byte, repoID uint, report *s
 		return nil, fmt.Errorf("failed to unmarshal AI report: %w", err)
 	}
 
-	if aiReport.Status != "success" || len(aiReport.Comments) == 0 {
+	if aiReport.Status != "complete" || len(aiReport.Comments) == 0 {
 		return nil, nil
 	}
 
@@ -240,11 +241,11 @@ func (s *ScanTaskService) analyzeAIIssues(content []byte, repoID uint, report *s
 			ScanMethod: constant.ScanMethodAI,
 			OldCode:    comment.ExistingCode,
 			NewCode:    comment.SuggestionCode,
+			Category:   constant.AiScanIssueCategory(comment.Category),
+			Severity:   constant.AiScanIssueSeverity(comment.Severity),
 		}
 		inIssue.Key = scanModel.GenerateIssueKey(int64(repoID), "", comment.UniqueKey())
 		if err := inIssue.SetPayload(scanModel.IssuePayloadAI{
-			Category:       comment.Category,
-			Severity:       comment.Severity,
 			SuggestionCode: comment.SuggestionCode,
 			ExistingCode:   comment.ExistingCode,
 		}); err != nil {
@@ -438,13 +439,13 @@ func (s *ScanTaskService) saveIssues(ctx context.Context, comp *scanModel.ScanIs
 	return nil
 }
 
-// saveAIIssues 直接批量插入 AI 类型的 issues，不经过 diff 比对
+// saveAIIssues 直接批量插入 AI 类型的 issues
 func (s *ScanTaskService) saveAIIssues(ctx context.Context, issues []*scanModel.ScanIssue, ppm *repoModel.PullRequest) error {
 	if len(issues) == 0 {
 		return nil
 	}
 
-	storeIssues := make([]*scanStore.ScanIssue, 0, len(issues))
+	rawIssues := make([]*scanStore.ScanIssue, 0, len(issues))
 	emptyResolution := constant.ScanIssueResolutionNull
 	emptyIgnoredDate := int64(0)
 	for _, item := range issues {
@@ -453,7 +454,7 @@ func (s *ScanTaskService) saveAIIssues(ctx context.Context, issues []*scanModel.
 		item.RepoBranch = ppm.SourceBranch
 		item.Status = constant.ScanIssueStatusWait
 		item.ScanMethod = constant.ScanMethodAI
-		storeIssues = append(storeIssues, &scanStore.ScanIssue{
+		rawIssues = append(rawIssues, &scanStore.ScanIssue{
 			Key:         item.Key,
 			Title:       item.Title,
 			Content:     item.Content,
@@ -470,12 +471,46 @@ func (s *ScanTaskService) saveAIIssues(ctx context.Context, issues []*scanModel.
 			IgnoredDate: &emptyIgnoredDate,
 			Payload:     item.Payload,
 			CreatedBy:   ppm.CreatedBy,
+			Category:    string(item.Category),
+			Severity:    string(item.Severity),
 		})
+	}
+
+	// 预校验：已存在的 issue 不重复插入
+	keys := make([]string, 0, len(rawIssues))
+	for _, item := range rawIssues {
+		keys = append(keys, item.Key)
+	}
+	existingKeys, err := s.issueStore.ListExistingKeys(ctx, keys)
+	if err != nil {
+		return err
+	}
+
+	storeIssues := rawIssues
+	if len(existingKeys) > 0 {
+		existingSet := make(map[string]struct{}, len(existingKeys))
+		for _, k := range existingKeys {
+			existingSet[k] = struct{}{}
+		}
+		filterIssues := rawIssues[:0]
+		for _, item := range rawIssues {
+			if _, ok := existingSet[item.Key]; !ok {
+				filterIssues = append(filterIssues, item)
+			}
+		}
+		storeIssues = filterIssues
+	}
+	if len(storeIssues) == 0 {
+		return nil
 	}
 
 	pages := paginateIndex(len(storeIssues), 1000)
 	for _, p := range pages {
 		if err := s.issueStore.BatchCreate(ctx, storeIssues[p[0]:p[1]]); err != nil {
+			// 并发插入仍可能冲突，已存在的 issue 不重复插入，跳过本批继续
+			if errors.Is(err, errors.ErrDuplicate) {
+				continue
+			}
 			return err
 		}
 	}

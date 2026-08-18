@@ -193,3 +193,4 @@ codeReview:
   body_param_error: "请求体参数解析失败。"
   report_upload_success: "代码评审报告上传成功。"
   report_upload_error: "代码评审报告上传失败。"
+  rule_list_success: "AI代码评审规则列表查询成功。"
