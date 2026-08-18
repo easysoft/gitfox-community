@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func (c *ScanController) Rules(ctx *gin.Context) {
+func (c *ScanController) GetAIReviewRules(ctx *gin.Context) {
 	result, err := c.aicodereviewSvc.GetAIReviewRules(ctx.Request.Context())
 	if err != nil {
 		resp.BadRequest(ctx, err)

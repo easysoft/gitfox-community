@@ -9,7 +9,7 @@ import (
 type AIReviewRule struct {
 	ID          uint            `gorm:"column:id;type:int unsigned;primaryKey;autoIncrement;comment:'ID'" json:"id"`
 	Language    string          `gorm:"column:language;type:varchar(50);not null;default:'';comment:'编程语言'" json:"language"`
-	Extention   string          `gorm:"column:extention;type:varchar(100);not null;default:'';comment:'文件后缀名'" json:"extention"`
+	Extension   string          `gorm:"column:extension;type:varchar(100);not null;default:'';comment:'文件后缀名'" json:"extension"`
 	Rule        string          `gorm:"column:rule;type:text;default:null;comment:'评审规则文本'" json:"rule"`
 	CreatedBy   string          `gorm:"column:createdBy;type:varchar(30);not null;default:'';comment:'创建人'" json:"createdBy"`
 	CreatedDate *datetime.Local `gorm:"column:createdDate;type:datetime;comment:'创建时间'" json:"createdDate,omitempty"` // 允许为NULL，指针类型

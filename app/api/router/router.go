@@ -130,5 +130,5 @@ func registerNoAuthRoutes(r *gin.Engine, controller *Controller) {
 	r.GET("/_artifacts/space/:code/*filepath", controller.Artifact.DownloadAssetByPath)
 
 	// AI 代码评审规则列表（无需鉴权，用于流水线访问）
-	r.GET("/api/v2/scan/aicodereview/rules", controller.Scan.Rules)
+	r.GET("/api/v2/scan/aicodereview/rules", controller.Scan.GetAIReviewRules)
 }

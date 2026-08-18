@@ -31,15 +31,18 @@ func (s *Store) GetRules(ctx context.Context) ([]*model.AIReviewRule, error) {
 	}
 	// 转换为 model 类型
 	ruleModels := make([]*model.AIReviewRule, len(rules))
+	extensionList := make([]string, 0)
 	for i, rule := range rules {
-		extentions := strings.Split(strings.Trim(rule.Extention, ","), ",")
-		for j, extention := range extentions {
-			extentions[j] = "*." + extention
+		extensions := strings.Split(strings.Trim(rule.Extension, ","), ",")
+		for _, extension := range extensions {
+			if extension != "" {
+				extensionList = append(extensions, "*."+extension)
+			}
 		}
 		ruleModels[i] = &model.AIReviewRule{
 			ID:        rule.ID,
 			Language:  rule.Language,
-			Extention: extentions,
+			Extension: extensionList,
 			Rule:      rule.Rule,
 		}
 	}
