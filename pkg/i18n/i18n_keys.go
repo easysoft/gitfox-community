@@ -906,6 +906,25 @@ const (
 	RunnerUpdateHeartBeatError   I18nKey = "runner.update_heart_beat_error"   // 更新 Runner 心跳失败.
 	RunnerUpdateHeartBeatSuccess I18nKey = "runner.update_heart_beat_success" // 更新 Runner 心跳成功.
 	RunnerUpdateSuccess          I18nKey = "runner.update_success"            // 更新 Runner 成功.
+	RunnerDefaultOperateError    I18nKey = "runner.default_operate_error"     // 内置 Runner 不允许此操作.
+
+	// Runner Stage 相关常量
+	RunnerStageRequestError   I18nKey = "runner.stage_request_error"   // 拉取 Stage 失败.
+	RunnerStageRequestSuccess I18nKey = "runner.stage_request_success" // 拉取 Stage 成功.
+	RunnerStageAcceptError    I18nKey = "runner.stage_accept_error"    // 接受 Stage 失败.
+	RunnerStageAcceptSuccess  I18nKey = "runner.stage_accept_success"  // 接受 Stage 成功.
+	RunnerStageDetailError    I18nKey = "runner.stage_detail_error"    // 获取 Stage 详情失败.
+	RunnerStageDetailSuccess  I18nKey = "runner.stage_detail_success"  // 获取 Stage 详情成功.
+	RunnerStageUpdateError    I18nKey = "runner.stage_update_error"    // 更新 Stage 状态失败.
+	RunnerStageUpdateSuccess  I18nKey = "runner.stage_update_success"  // 更新 Stage 状态成功.
+	RunnerStepUpdateError     I18nKey = "runner.step_update_error"     // 更新 Step 状态失败.
+	RunnerStepUpdateSuccess   I18nKey = "runner.step_update_success"   // 更新 Step 状态成功.
+	RunnerBuildWatchError     I18nKey = "runner.build_watch_error"     // 监听 Build 取消失败.
+	RunnerBuildWatchSuccess   I18nKey = "runner.build_watch_success"   // 监听 Build 取消成功.
+	RunnerLogBatchError       I18nKey = "runner.log_batch_error"       // 批量写日志失败.
+	RunnerLogBatchSuccess     I18nKey = "runner.log_batch_success"     // 批量写日志成功.
+	RunnerLogUploadError      I18nKey = "runner.log_upload_error"      // 上传日志失败.
+	RunnerLogUploadSuccess    I18nKey = "runner.log_upload_success"    // 上传日志成功.
 
 	// ScanTask 相关常量
 	ScanTaskBodyParamError      I18nKey = "scanTask.body_param_error"      // 请求体参数解析失败.

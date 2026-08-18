@@ -15,8 +15,9 @@ var (
 
 // Defines the Resource Kind and Type.
 const (
-	Kind = "pipeline"
-	Type = "docker"
+	Kind    = "pipeline"
+	Type    = "inner"
+	Runtime = "Docker"
 )
 
 // Pipeline is a pipeline resource that executes pipelines

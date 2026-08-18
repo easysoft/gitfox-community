@@ -54,7 +54,7 @@ func newQueue(store stageStore.Interface, runnerStore runnerStore.Interface, loc
 	return q, nil
 }
 
-// getAvailableRunners 获取数据库中所有未删除，未停用，在线的 runner
+// getAvailableRunners 获取数据库中所有未删除，未停用，在线的 runner（排除内置 runner）
 func (q *queue) getAvailableRunners(ctx context.Context) ([]*runnerModel.Runner, error) {
 	filter := &runnerModel.ReqFilter{
 		Page:     1,
@@ -68,9 +68,17 @@ func (q *queue) getAvailableRunners(ctx context.Context) ([]*runnerModel.Runner,
 		return nil, err
 	}
 
-	logger.GetLogger(ctx).Debugf("retrieved available runners from database, total_runners_found=%d", len(res.Data))
+	// 过滤掉内置 runner（isDefault=true），内置 runner 由嵌入式 poller 管理，不需要参与 agent 调度
+	var agentRunners []*runnerModel.Runner
+	for _, r := range res.Data {
+		if !r.IsDefault {
+			agentRunners = append(agentRunners, r)
+		}
+	}
 
-	return res.Data, nil
+	logger.GetLogger(ctx).Debugf("retrieved available runners from database, total_runners_found=%d, agent_runners=%d", len(res.Data), len(agentRunners))
+
+	return agentRunners, nil
 }
 
 func (q *queue) Schedule() error {
@@ -163,13 +171,13 @@ func (q *queue) signal(ctx context.Context) error {
 		return err
 	}
 
-	// 初始化可用 runner token 列表
+	// 初始化可用 runner token 列表及 token→runner 映射
+	availableRunnerMap := make(map[string]*runnerModel.Runner, len(availableRunners))
 	var availableRunnerTokenList []string
-	if len(availableRunners) != 0 {
-		for _, runner := range availableRunners {
-			if runner.Token != "" {
-				availableRunnerTokenList = append(availableRunnerTokenList, runner.Token)
-			}
+	for _, runner := range availableRunners {
+		if runner.Token != "" {
+			availableRunnerTokenList = append(availableRunnerTokenList, runner.Token)
+			availableRunnerMap[runner.Token] = runner
 		}
 	}
 	logger.Debugf("[pipeline]: available agent runner tokens, count=%d", len(availableRunnerTokenList))
@@ -203,23 +211,27 @@ func (q *queue) signal(ctx context.Context) error {
 					logger.Debugf("[pipeline]: worker skipped (agent token not in available list), stage_id=%d, worker_token=%s", item.ID, w.token)
 					continue
 				}
-			}
 
-			if w.os != "" || w.arch != "" {
-				if w.os != item.OS {
-					logger.Debugf("[pipeline]: worker skipped (OS mismatch), stage_id=%d, worker_os=%s, stage_os=%s", item.ID, w.os, item.OS)
-					continue
+				if w.os != "" || w.arch != "" {
+					if w.os != item.OS {
+						logger.Debugf("[pipeline]: worker skipped (OS mismatch), stage_id=%d, worker_os=%s, stage_os=%s", item.ID, w.os, item.OS)
+						continue
+					}
+					if w.arch != item.Arch {
+						logger.Debugf("[pipeline]: worker skipped (arch mismatch), stage_id=%d, worker_arch=%s, stage_arch=%s", item.ID, w.arch, item.Arch)
+						continue
+					}
 				}
-				if w.arch != item.Arch {
-					logger.Debugf("[pipeline]: worker skipped (arch mismatch), stage_id=%d, worker_arch=%s, stage_arch=%s", item.ID, w.arch, item.Arch)
-					continue
+				// agent 用 DB 中的 labels 做匹配
+				var workerLabels []string
+				if runner, ok := availableRunnerMap[w.token]; ok {
+					workerLabels = runner.Labels
 				}
-			}
-
-			if len(item.Labels) > 0 || len(w.labels) > 0 {
-				if !checkLabels(item.Labels, w.labels) {
-					logger.Debugf("[pipeline]: worker skipped (labels mismatch), stage_id=%d", item.ID)
-					continue
+				if len(item.Labels) > 0 {
+					if !checkLabels(mapKeys(item.Labels), workerLabels) {
+						logger.Debugf("[pipeline]: worker skipped (labels mismatch), stage_id=%d", item.ID)
+						continue
+					}
 				}
 			}
 
@@ -274,25 +286,43 @@ type worker struct {
 	done     <-chan struct{}
 }
 
-func checkLabels(a, b map[string]string) bool {
-	//if len(a) != len(b) {
-	//	return false
-	//}
-	for k, v := range a {
-		if w, ok := b[k]; !ok || v != w {
+// checkLabels 检查 stage 的所有 label 是否都在 runner labels 中存在
+// stageLabels 和 runnerLabels 都是 []string
+func checkLabels(stageLabels, runnerLabels []string) bool {
+	if len(stageLabels) == 0 {
+		return true
+	}
+	runnerSet := make(map[string]struct{}, len(runnerLabels))
+	for _, l := range runnerLabels {
+		runnerSet[l] = struct{}{}
+	}
+	for _, l := range stageLabels {
+		if _, ok := runnerSet[l]; !ok {
 			return false
 		}
 	}
 	return true
 }
 
-// matchResource is a helper function that returns.
+// mapKeys 将 map[string]string 的 key 提取为 []string
+// item.Labels 改为 []string 后可删除此函数
+func mapKeys(m map[string]string) []string {
+	if len(m) == 0 {
+		return nil
+	}
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	return keys
+}
+
 func matchResource(typea, typeb string) bool {
 	if typea == "" {
-		typea = "docker"
+		typea = "inner"
 	}
 	if typeb == "" {
-		typeb = "docker"
+		typeb = "inner"
 	}
 	return typea == typeb
 }
