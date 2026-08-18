@@ -187,3 +187,6 @@ issue:
   update_error: "Failed to update issue."
   tree_query_success: "Issue tree queried successfully."
   tree_query_error: "Failed to query issue tree."
+
+aicodereview:
+  rule_list_success: "AI code review rules queried successfully."

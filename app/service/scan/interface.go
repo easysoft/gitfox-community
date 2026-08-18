@@ -117,3 +117,7 @@ type IScanTask interface {
 	GetIssueFileTree(ctx context.Context, repoID, taskID int64) (*scanModel.TreeNode, error)
 	GetIssueRuleTree(ctx context.Context, repoID, taskID int64) (*scanModel.TreeNode, error)
 }
+
+type IAIReview interface {
+	GetAIReviewRules(ctx context.Context) ([]*scanModel.AIReviewRule, error)
+}
