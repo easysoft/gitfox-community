@@ -37,7 +37,7 @@ func (c *Controller) Upload(ctx *gin.Context) {
 		return
 	}
 
-	view, err := c.artSvc.ParseSpaceView(ctx.Request.Context(), &model.SpaceRepoReq{
+	lib, err := c.artSvc.ParseSpaceLib(ctx.Request.Context(), &model.SpaceRepoReq{
 		ArtifactID: reqBody.ArtifactID,
 	})
 	if err != nil {
@@ -48,7 +48,7 @@ func (c *Controller) Upload(ctx *gin.Context) {
 	formatStr := ctx.Param("format")
 	format := model.ArtifactFormat(formatStr)
 
-	assets, err := c.artSvc.Upload(ctx.Request.Context(), view, format, ctx.Request)
+	assets, err := c.artSvc.Upload(ctx.Request.Context(), lib, format, ctx.Request)
 	if err != nil {
 		if errors.GetHttpStatus(err) == http.StatusOK {
 			resp.InternalError(ctx, err)

@@ -82,7 +82,7 @@ func (s *Service) DownloadAssetByPath(ctx context.Context, spaceCode string, fil
 
 	artifactLib, err := s.artStore.Views().GetByCode(ctx, int64(space.ID), repoID, libName)
 	if err != nil {
-		return nil, nil, "", pkgErrors.WithI18nKey(err, i18n.ArtifactViewQueryError)
+		return nil, nil, "", pkgErrors.WithI18nKey(err, i18n.ArtifactLibQueryError)
 	}
 
 	asset, err := s.resolveAssetInView(ctx, artifactLib, remainingPath)
@@ -308,7 +308,7 @@ func (s *Service) getAssetNodeInfo(ctx context.Context, assetID int64) (*model.A
 }
 
 func (s *Service) getStandaloneAssetNodeInfo(ctx context.Context, dbAsset *model.ArtifactAsset, assetRes *model.ArtifactAssetsRes) (*model.ArtifactAssetInfo, error) {
-	view, err := s.ParseSpaceView(ctx, &model.SpaceRepoReq{ArtifactID: dbAsset.ArtifactID.Int64})
+	lib, err := s.ParseSpaceLib(ctx, &model.SpaceRepoReq{ArtifactID: dbAsset.ArtifactID.Int64})
 	if err != nil {
 		return nil, err
 	}
@@ -317,11 +317,11 @@ func (s *Service) getStandaloneAssetNodeInfo(ctx context.Context, dbAsset *model
 		Status: string(model.ArtifactStatusOK),
 		Format: dbAsset.Format,
 		Metadata: &model.ArtifactPkgVerMetadata{
-			Space: nodeInfoSpaceName(view),
+			Space: nodeInfoSpaceName(lib),
 			Name:  filepath.Base(assetRes.Path),
 		},
 	}
 	populateNodeInfoAssetFields(info, assetRes)
-	info.Link = buildArtifactAssetLink(nodeInfoSpaceCode(view), nodeInfoRepoIdentifier(view), view.ArtifactCode, string(dbAsset.Format), "", "", "", assetRes.Path)
+	info.Link = buildArtifactAssetLink(nodeInfoSpaceCode(lib), nodeInfoRepoIdentifier(lib), lib.ArtifactCode, string(dbAsset.Format), "", "", "", assetRes.Path)
 	return info, nil
 }

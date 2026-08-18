@@ -340,7 +340,7 @@ func backfillURLs(config *Config) error {
 	}
 
 	// create base URL object
-	baseURLRaw := combineToRawURL(scheme, host, port, basePath)
+	baseURLRaw := combineToRawURL(scheme, host, clonePort, basePath)
 	baseURL, err := url.Parse(baseURLRaw)
 	if err != nil {
 		return errors.Newf("failed to parse derived base url '%s': %v", baseURLRaw, err)

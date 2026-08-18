@@ -28,6 +28,7 @@ import (
 type pipelineTriggerHandler struct {
 	triggerer    triggerer.Triggerer
 	pipelineSvc  pipelineSvc.Interface
+	repoSvc      repoSvc.Interface
 	devopsConfig config.DevopsConfig
 	tokenStore   token.Interface
 }
@@ -90,6 +91,24 @@ func (h *pipelineTriggerHandler) triggerPipeline(ctx context.Context, pipeline *
 		Ref:     gitRef,
 		Trigger: "system",
 		Params:  map[string]string{"gitRef": gitRef},
+	}
+
+	if pipeline.RepoID != 0 {
+		session := &authModel.Session{
+			Principal: &principalModel.Principal{
+				App:         "system",
+				DisplayName: "system",
+				Admin:       true,
+			},
+			User: &principalModel.User{
+				Account: "system",
+			},
+		}
+		repo, err := h.repoSvc.GetByID(ctx, session, uint(pipeline.RepoID))
+		if err != nil {
+			return "", fmt.Errorf("failed to get repo %d for pipeline %d: %w", pipeline.RepoID, pipeline.ID, err)
+		}
+		hook.Params["gitURL"] = repo.GitURL
 	}
 
 	if _, err = h.triggerer.Trigger(ctx, uint(pipeline.ID), hook); err != nil {
@@ -209,18 +228,18 @@ func (h *scanTriggerHandler) Handle(ctx context.Context, input string, _ pkgJobs
 	return "", nil
 }
 
-func RegisterPipelineHandler(scheduler *jobsSvc.Scheduler, t triggerer.Triggerer, svc pipelineSvc.Interface) error {
-	handler := &pipelineTriggerHandler{triggerer: t, pipelineSvc: svc}
+func RegisterPipelineHandler(scheduler *jobsSvc.Scheduler, t triggerer.Triggerer, svc pipelineSvc.Interface, rs repoSvc.Interface) error {
+	handler := &pipelineTriggerHandler{triggerer: t, pipelineSvc: svc, repoSvc: rs}
 	return scheduler.RegisterHandler(pipelineSvc.JobTypePipelineCron, handler)
 }
 
-func RegisterGitlabPipelineHandler(scheduler *jobsSvc.Scheduler, t triggerer.Triggerer, svc pipelineSvc.Interface, devopsConfig config.DevopsConfig, tokenStore token.Interface) error {
-	handler := &pipelineTriggerHandler{triggerer: t, pipelineSvc: svc, devopsConfig: devopsConfig, tokenStore: tokenStore}
+func RegisterGitlabPipelineHandler(scheduler *jobsSvc.Scheduler, t triggerer.Triggerer, svc pipelineSvc.Interface, rs repoSvc.Interface, devopsConfig config.DevopsConfig, tokenStore token.Interface) error {
+	handler := &pipelineTriggerHandler{triggerer: t, pipelineSvc: svc, repoSvc: rs, devopsConfig: devopsConfig, tokenStore: tokenStore}
 	return scheduler.RegisterHandler(pipelineSvc.JobTypeGitLabPipelineCron, handler)
 }
 
-func RegisterJenkinsPipelineHandler(scheduler *jobsSvc.Scheduler, t triggerer.Triggerer, svc pipelineSvc.Interface, devopsConfig config.DevopsConfig, tokenStore token.Interface) error {
-	handler := &pipelineTriggerHandler{triggerer: t, pipelineSvc: svc, devopsConfig: devopsConfig, tokenStore: tokenStore}
+func RegisterJenkinsPipelineHandler(scheduler *jobsSvc.Scheduler, t triggerer.Triggerer, svc pipelineSvc.Interface, rs repoSvc.Interface, devopsConfig config.DevopsConfig, tokenStore token.Interface) error {
+	handler := &pipelineTriggerHandler{triggerer: t, pipelineSvc: svc, repoSvc: rs, devopsConfig: devopsConfig, tokenStore: tokenStore}
 	return scheduler.RegisterHandler(pipelineSvc.JobTypeJenkinsPipelineCron, handler)
 }
 

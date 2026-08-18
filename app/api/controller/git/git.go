@@ -81,7 +81,7 @@ func (ctl *GitController) Clone(ctx *gin.Context) {
 		return
 	}
 	if session.User.Email == "" {
-		err = errors.WithI18nKey(errors.New("user email is empty"), i18n.AuthNoSessionCheckZentaoEmail)
+		err = errors.WithI18nKey(errors.New("user email is empty"), i18n.RepoEmailRequired)
 		resp.GitError(ctx, err, http.StatusUnauthorized, false)
 		return
 	}
@@ -164,7 +164,7 @@ func (ctl *GitController) Push(ctx *gin.Context) {
 	}
 
 	if session.User.Email == "" {
-		err = errors.WithI18nKey(errors.New("user email is empty"), i18n.AuthNoSessionCheckZentaoEmail)
+		err = errors.WithI18nKey(errors.New("user email is empty"), i18n.RepoEmailRequired)
 		resp.GitError(ctx, err, http.StatusUnauthorized, true)
 		return
 	}
