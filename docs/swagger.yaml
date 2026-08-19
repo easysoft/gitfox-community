@@ -493,7 +493,7 @@ definitions:
       spaceID:
         type: integer
     type: object
-  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.CreateArtifactViewReq:
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.CreateArtifactLibReq:
     properties:
       artifactID:
         type: integer
@@ -926,7 +926,7 @@ definitions:
       since:
         type: integer
       until:
-        type: string
+        type: integer
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_commit.ReqForCreate:
     properties:
@@ -1814,6 +1814,8 @@ definitions:
         type: string
       os:
         type: string
+      runtime:
+        type: string
       version:
         type: string
     required:
@@ -1884,15 +1886,19 @@ definitions:
         type: integer
       ip:
         type: string
+      isDefault:
+        type: boolean
       labels:
-        additionalProperties:
+        items:
           type: string
-        type: object
+        type: array
       name:
         type: string
       online:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.RunnerStatus'
       os:
+        type: string
+      runtime:
         type: string
       status:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.RunnerActiveStatus'
@@ -3522,7 +3528,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.CreateArtifactViewReq'
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.CreateArtifactLibReq'
       produces:
       - application/json
       responses:
@@ -3874,6 +3880,10 @@ paths:
       - description: raw 包名（raw 上传必传）
         in: formData
         name: packageName
+        type: string
+      - description: 上传目录路径（支持多级 a/b/c，不存在时自动递归创建；与 groupID 二选一）
+        in: formData
+        name: group
         type: string
       - description: 制品文件
         in: formData
@@ -10136,7 +10146,7 @@ paths:
       summary: OCI v2 协议探测
       tags:
       - container
-  /v2/{domainid}/{artifactname}/{imagename}/blobs/{digest}:
+  /v2/{domainid}/{artifactCode}/{imagename}/blobs/{digest}:
     delete:
       description: 根据 digest 删除指定容器镜像空间下的 Blob。
       parameters:
@@ -10145,9 +10155,9 @@ paths:
         name: domainid
         required: true
         type: string
-      - description: 制品库名称（ops_artifact.name）
+      - description: 制品库编码（ops_artifact.code）
         in: path
-        name: artifactname
+        name: artifactCode
         required: true
         type: string
       - description: 镜像名称
@@ -10186,9 +10196,9 @@ paths:
         name: domainid
         required: true
         type: string
-      - description: 制品库名称（ops_artifact.name）
+      - description: 制品库编码（ops_artifact.code）
         in: path
-        name: artifactname
+        name: artifactCode
         required: true
         type: string
       - description: 镜像名称
@@ -10229,9 +10239,9 @@ paths:
         name: domainid
         required: true
         type: string
-      - description: 制品库名称（ops_artifact.name）
+      - description: 制品库编码（ops_artifact.code）
         in: path
-        name: artifactname
+        name: artifactCode
         required: true
         type: string
       - description: 镜像名称
@@ -10262,7 +10272,7 @@ paths:
       summary: 检查 Blob 是否存在
       tags:
       - container
-  /v2/{domainid}/{artifactname}/{imagename}/blobs/uploads/:
+  /v2/{domainid}/{artifactCode}/{imagename}/blobs/uploads/:
     post:
       consumes:
       - application/octet-stream
@@ -10273,9 +10283,9 @@ paths:
         name: domainid
         required: true
         type: string
-      - description: 制品库名称（ops_artifact.name）
+      - description: 制品库编码（ops_artifact.code）
         in: path
-        name: artifactname
+        name: artifactCode
         required: true
         type: string
       - description: 镜像名称
@@ -10305,7 +10315,7 @@ paths:
       summary: 发起 Blob 上传
       tags:
       - container
-  /v2/{domainid}/{artifactname}/{imagename}/blobs/uploads/{uuid}:
+  /v2/{domainid}/{artifactCode}/{imagename}/blobs/uploads/{uuid}:
     delete:
       description: 取消正在进行的分块上传会话，释放已上传的临时数据。
       parameters:
@@ -10314,9 +10324,9 @@ paths:
         name: domainid
         required: true
         type: string
-      - description: 制品库名称（ops_artifact.name）
+      - description: 制品库编码（ops_artifact.code）
         in: path
-        name: artifactname
+        name: artifactCode
         required: true
         type: string
       - description: 镜像名称
@@ -10360,9 +10370,9 @@ paths:
         name: domainid
         required: true
         type: string
-      - description: 制品库名称（ops_artifact.name）
+      - description: 制品库编码（ops_artifact.code）
         in: path
-        name: artifactname
+        name: artifactCode
         required: true
         type: string
       - description: 镜像名称
@@ -10403,9 +10413,9 @@ paths:
         name: domainid
         required: true
         type: string
-      - description: 制品库名称（ops_artifact.name）
+      - description: 制品库编码（ops_artifact.code）
         in: path
-        name: artifactname
+        name: artifactCode
         required: true
         type: string
       - description: 镜像名称
@@ -10451,9 +10461,9 @@ paths:
         name: domainid
         required: true
         type: string
-      - description: 制品库名称（ops_artifact.name）
+      - description: 制品库编码（ops_artifact.code）
         in: path
-        name: artifactname
+        name: artifactCode
         required: true
         type: string
       - description: 镜像名称
@@ -10494,7 +10504,7 @@ paths:
       summary: 完成 Blob 上传
       tags:
       - container
-  /v2/{domainid}/{artifactname}/{imagename}/manifests/{reference}:
+  /v2/{domainid}/{artifactCode}/{imagename}/manifests/{reference}:
     delete:
       description: 根据 reference（tag 或 digest）删除容器镜像的 Manifest 及关联数据。
       parameters:
@@ -10503,9 +10513,9 @@ paths:
         name: domainid
         required: true
         type: string
-      - description: 制品库名称（ops_artifact.name）
+      - description: 制品库编码（ops_artifact.code）
         in: path
-        name: artifactname
+        name: artifactCode
         required: true
         type: string
       - description: 镜像名称
@@ -10544,9 +10554,9 @@ paths:
         name: domainid
         required: true
         type: string
-      - description: 制品库名称（ops_artifact.name）
+      - description: 制品库编码（ops_artifact.code）
         in: path
-        name: artifactname
+        name: artifactCode
         required: true
         type: string
       - description: 镜像名称
@@ -10588,9 +10598,9 @@ paths:
         name: domainid
         required: true
         type: string
-      - description: 制品库名称（ops_artifact.name）
+      - description: 制品库编码（ops_artifact.code）
         in: path
-        name: artifactname
+        name: artifactCode
         required: true
         type: string
       - description: 镜像名称
@@ -10631,9 +10641,9 @@ paths:
         name: domainid
         required: true
         type: string
-      - description: 制品库名称（ops_artifact.name）
+      - description: 制品库编码（ops_artifact.code）
         in: path
-        name: artifactname
+        name: artifactCode
         required: true
         type: string
       - description: 镜像名称
@@ -10664,7 +10674,7 @@ paths:
       summary: 上传 Manifest
       tags:
       - container
-  /v2/{domainid}/{artifactname}/{imagename}/tags/list:
+  /v2/{domainid}/{artifactCode}/{imagename}/tags/list:
     get:
       description: 列出指定容器镜像的所有 Tag 列表。
       parameters:
@@ -10673,9 +10683,9 @@ paths:
         name: domainid
         required: true
         type: string
-      - description: 制品库名称（ops_artifact.name）
+      - description: 制品库编码（ops_artifact.code）
         in: path
-        name: artifactname
+        name: artifactCode
         required: true
         type: string
       - description: 镜像名称

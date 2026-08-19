@@ -125,12 +125,11 @@ const (
 	ArtifactUploadFileNameRequired          I18nKey = "artifact.upload_file_name_required"           // 上传制品必须指定文件名 name,且不能为空或全为空白字符.
 	ArtifactUploadGroupArtifactMismatch     I18nKey = "artifact.upload_group_artifact_mismatch"      // 指定的分组不属于当前制品库,请确认 artifactID 与分组归属后重试.
 	ArtifactUploadGroupIdInvalid            I18nKey = "artifact.upload_group_id_invalid"             // 指定的 groupId 不合法或不存在,请确认后重试.
-	ArtifactUploadGroupNameInvalid          I18nKey = "artifact.upload_group_name_invalid"           // 指定的 group 路径不合法:不能为空、不得超过 128 字符 ...
-	ArtifactUploadGroupPathNotFound         I18nKey = "artifact.upload_group_path_not_found"         // 指定的 group 路径在当前制品库下不存在,请先创建对应分组或检查 artifactID.
+	ArtifactUploadGroupNameInvalid          I18nKey = "artifact.upload_group_name_invalid"           // 指定的 group 路径不合法:不能为空、不得超过 128 字符,且不得包含空白字符或 \ :...
 	ArtifactUploadGroupRequired             I18nKey = "artifact.upload_group_required"               // 上传制品必须指定目录.
 	ArtifactUploadNameInvalid               I18nKey = "artifact.upload_name_invalid"                 // raw 制品的包名 packageName 格式不合法:仅允许字母、数字、中划线、下划线和点.
 	ArtifactUploadNameRequired              I18nKey = "artifact.upload_name_required"                // 上传 raw 制品必须指定包名 packageName.
-	ArtifactUploadRawGroupInvalid           I18nKey = "artifact.upload_raw_group_invalid"            // raw 制品的 group 参数格式不合法,仅允许字母数字、中划线、下划线和点
+	ArtifactUploadRawGroupInvalid           I18nKey = "artifact.upload_raw_group_invalid"            // raw 制品的 group 参数格式不合法,仅允许字母数字、中划线、下划线和点.
 	ArtifactUploadSaveError                 I18nKey = "artifact.upload_save_error"                   // 制品保存失败.
 	ArtifactUploadServeError                I18nKey = "artifact.upload_serve_error"                  // 制品上传处理失败.
 	ArtifactUploadSuccess                   I18nKey = "artifact.upload_success"                      // 制品上传成功.
@@ -146,7 +145,6 @@ const (
 	AuthFailed                      I18nKey = "auth.failed"                           // 尝试认证失败
 	AuthNoData                      I18nKey = "auth.no_data"                          // 请求不包含任何可用于 Authorizer 的认证数据
 	AuthNoSession                   I18nKey = "auth.no_session"                       // 请求不包含任何会话数据,无法进行授权,请检查是否配置邮箱
-	AuthNoSessionCheckZentaoEmail   I18nKey = "auth.no_session_check_zentao_email"    // 请检查禅道邮箱是否存在
 	AuthPubKeyAddAlreadyInUse       I18nKey = "auth.pub_key_add_already_in_use"       // key::公钥已存在
 	AuthPubKeyAddBodyParamError     I18nKey = "auth.pub_key_add_body_param_error"     // 公钥添加请求体参数解析失败
 	AuthPubKeyAddContentEmpty       I18nKey = "auth.pub_key_add_content_empty"        // key::公钥内容不能为空
@@ -654,7 +652,7 @@ const (
 	GitTagNotFound                  I18nKey = "git.tag_not_found"                     // 标签不存在
 	GitTimeout                      I18nKey = "git.timeout"                           // Git 操作超时.
 	GitUnrelatedHistories           I18nKey = "git.unrelated_histories"               // 不相关的历史记录.
-	GitUnsupportedOption            I18nKey = "git.unsupported_option"                // 当前 git 版本不支持参数 %s，请升级 Git 版本.
+	GitUnsupportedOption            I18nKey = "git.unsupported_option"                // 当前 git 版本不支持参数 %s,请升级 Git 版本.
 
 	// Issue 相关常量
 	IssueBodyParamError   I18nKey = "issue.body_param_error"   // 请求体参数解析失败.
