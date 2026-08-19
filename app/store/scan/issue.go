@@ -81,7 +81,7 @@ func (s *ScanIssueStore) Get(ctx context.Context, id uint) (*scanModel.ScanIssue
 			"i.createdBy, i.editedBy, pp.title AS ppmTitle, "+
 			"t.planID, p.name AS planName, i.createdDate, i.resolvedDate, i.closedDate, i.ignoredDate, "+
 			"t.triggerID, t.triggerType").
-		Joins("INNER JOIN ops_scan_rules AS r ON i.ruleID = r.id").
+		Joins("LEFT JOIN ops_scan_rules AS r ON i.ruleID = r.id").
 		Joins("LEFT JOIN ops_scan_tasks AS t ON i.updatedByTaskID = t.id").
 		Joins("LEFT JOIN ops_scan_plans AS p ON t.planID = p.id").
 		Joins("LEFT JOIN ops_ppm AS pp ON i.ppmID = pp.id").
@@ -104,7 +104,7 @@ func (s *ScanIssueStore) List(ctx context.Context, filter scanModel.ScanIssueReq
 			"i.createdBy, i.editedBy, pp.title AS ppmTitle, "+
 			"t.planID, p.name AS planName, i.createdDate, i.resolvedDate, i.closedDate, i.ignoredDate, "+
 			"t.triggerID, t.triggerType").
-		Joins("INNER JOIN ops_scan_rules AS r ON i.ruleID = r.id").
+		Joins("LEFT JOIN ops_scan_rules AS r ON i.ruleID = r.id").
 		Joins("LEFT JOIN ops_scan_tasks AS t ON i.updatedByTaskID = t.id").
 		Joins("LEFT JOIN ops_scan_plans AS p ON t.planID = p.id").
 		Joins("LEFT JOIN ops_ppm AS pp ON i.ppmID = pp.id").
@@ -218,7 +218,7 @@ func (s *ScanIssueStore) ListByIDs(ctx context.Context, ids []int64) ([]*scanMod
 			"i.status, i.scanMethod, i.resolution, i.payload, i.createdByTaskID, i.updatedByTaskID, "+
 			"i.createdBy, i.editedBy, pp.title AS ppmTitle, i.resolvedDate, i.closedDate, i.ignoredDate, "+
 			"t.triggerID, t.triggerType").
-		Joins("INNER JOIN ops_scan_rules AS r ON i.ruleID = r.id").
+		Joins("LEFT JOIN ops_scan_rules AS r ON i.ruleID = r.id").
 		Joins("LEFT JOIN ops_scan_tasks AS t ON i.updatedByTaskID = t.id").
 		Joins("LEFT JOIN ops_ppm AS pp ON i.ppmID = pp.id").
 		Where("i.id IN ? AND i.deleted = ?", ids, false).
