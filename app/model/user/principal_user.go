@@ -2,11 +2,12 @@ package principal
 
 // 用户实体
 type User struct {
-	ID       int64  `json:"id"`
-	Account  string `json:"account"`
-	Email    string `json:"email"`
-	Password string `json:"-"`
-	IsAdmin  bool   `json:"is_admin"`
+	ID          int64  `json:"id"`
+	Account     string `json:"account"`
+	DisplayName string `json:"display_name"`
+	Email       string `json:"email"`
+	Password    string `json:"-"`
+	IsAdmin     bool   `json:"is_admin"`
 
 	// todo: 后续根据需要添加其他字段
 }

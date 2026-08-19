@@ -115,6 +115,21 @@ func (mr *MockInterfaceMockRecorder) List(ctx, filter any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockInterface)(nil).List), ctx, filter)
 }
 
+// ListReviewerAccountsByRequestID mocks base method.
+func (m *MockInterface) ListReviewerAccountsByRequestID(ctx context.Context, requestID uint) ([]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListReviewerAccountsByRequestID", ctx, requestID)
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListReviewerAccountsByRequestID indicates an expected call of ListReviewerAccountsByRequestID.
+func (mr *MockInterfaceMockRecorder) ListReviewerAccountsByRequestID(ctx, requestID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListReviewerAccountsByRequestID", reflect.TypeOf((*MockInterface)(nil).ListReviewerAccountsByRequestID), ctx, requestID)
+}
+
 // ResetMergeCheckStatus mocks base method.
 func (m *MockInterface) ResetMergeCheckStatus(ctx context.Context, targetRepoID uint, targetBranch string) error {
 	m.ctrl.T.Helper()

@@ -23,7 +23,7 @@ type Store struct {
 func (s *Store) FindByID(ctx context.Context, id int64) (*principal.User, error) {
 	var user User
 	user.ID = id
-	err := s.db.WithContext(ctx).Select("id, account, email, password, role").First(&user).Error
+	err := s.db.WithContext(ctx).Select("id, account, email, password, role, realname").First(&user).Error
 	if err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
@@ -33,7 +33,7 @@ func (s *Store) FindByID(ctx context.Context, id int64) (*principal.User, error)
 
 func (s *Store) FindByAccount(ctx context.Context, account string) (*principal.User, error) {
 	var user User
-	err := s.db.WithContext(ctx).Select("id, account, email, password, role").Where("account = ?", account).First(&user).Error
+	err := s.db.WithContext(ctx).Select("id, account, email, password, role, realname").Where("account = ?", account).First(&user).Error
 	if err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
@@ -43,7 +43,7 @@ func (s *Store) FindByAccount(ctx context.Context, account string) (*principal.U
 
 func (s *Store) FindByEmail(ctx context.Context, email string) (*principal.User, error) {
 	var user User
-	err := s.db.WithContext(ctx).Select("id, account, email, password, role").Where("email = ?", email).First(&user).Error
+	err := s.db.WithContext(ctx).Select("id, account, email, password, role, realname").Where("email = ?", email).First(&user).Error
 
 	if err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)

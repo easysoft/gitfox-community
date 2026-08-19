@@ -75,7 +75,7 @@ func (s *ScanTaskService) AnalyzeTaskUploadReport(ctx context.Context, repoID ui
 	case constant.ScanMethodSmell:
 		inputIssues, err = s.analyzeSmellIssues(ctx, content, task, report)
 	case constant.ScanMethodAI:
-		inputIssues, err = s.analyzeAIIssues(content, repoID, report)
+		inputIssues, err = s.analyzeAIIssues(content, repoID, int64(ppm.ID), report)
 	default:
 		return nil, fmt.Errorf("unsupported scan method: %s", method)
 	}
@@ -214,7 +214,7 @@ func (s *ScanTaskService) analyzeSmellIssues(
 }
 
 // analyzeAIIssues 解析 ai 类型的 issues
-func (s *ScanTaskService) analyzeAIIssues(content []byte, repoID uint, report *scanModel.ScanIssueReport) ([]*scanModel.ScanIssue, error) {
+func (s *ScanTaskService) analyzeAIIssues(content []byte, repoID uint, ppmID int64, report *scanModel.ScanIssueReport) ([]*scanModel.ScanIssue, error) {
 	var aiReport scanModel.AIReportResponse
 	if err := json.Unmarshal(content, &aiReport); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal AI report: %w", err)
@@ -228,6 +228,7 @@ func (s *ScanTaskService) analyzeAIIssues(content []byte, repoID uint, report *s
 
 	var issues []*scanModel.ScanIssue
 	for _, comment := range aiReport.Comments {
+		comment.PpmID = ppmID
 		title := comment.Content
 		if runes := []rune(title); len(runes) > 30 {
 			title = string(runes[:30])

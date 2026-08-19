@@ -6,10 +6,11 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/webhook"
 	gitevents "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/events/git"
 	pullreqevents "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/events/pullreq"
-	webhookSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/webhook"
 	repoSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
+	webhookSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/webhook"
 	pullreqStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/pullrequest"
 	repoStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
+	userStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/user"
 	webhookStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/webhook"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/events"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
@@ -33,6 +34,7 @@ func ProvideWebhookService(
 	repoStore repoStore.Interface,
 	repoSvc repoSvc.Interface,
 	pullreqStore pullreqStore.Interface,
+	userStore userStore.Interface,
 	urlProvider url.Provider,
 ) (*webhookSvc.Service, error) {
 	cfg := webhookSvc.Config{
@@ -51,6 +53,7 @@ func ProvideWebhookService(
 		repoStore,
 		repoSvc,
 		pullreqStore,
+		userStore,
 		urlProvider,
 	)
 }
