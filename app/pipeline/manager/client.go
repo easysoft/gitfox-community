@@ -148,6 +148,11 @@ func (e *embedded) Detail(ctx context.Context, stage *drone.Stage) (*client.Cont
 			Proto: e.urlProvider.GetAPIProto(ctx),
 			Host:  e.urlProvider.GetAPIHostname(ctx),
 		},
+		// Repo: 临时兼容。legacy runner（runner-go pipeline/runtime）会直接解引用
+		// data.Repo（日志、timeout、environ），nil 会 panic。当前 Detail 未提供仓库
+		// 信息，给一个默认值兜底；Timeout 单位是分钟，0 会导致 legacy run 的
+		// context.WithTimeout 立即超时，所以必须给一个非 0 的超时时间。
+		Repo: &drone.Repo{Timeout: int64((10 * time.Hour).Minutes())},
 		// Secrets: ConvertToDroneSecrets(details.Secrets),
 	}, nil
 }
