@@ -190,6 +190,10 @@ func (q *queue) signal(ctx context.Context) error {
 			logger.Infof("[pipeline]: skip stage (already running), stage_id=%d", item.ID)
 			continue
 		}
+		if item.Host != "" {
+			logger.Infof("[pipeline]: skip stage (already assigned), stage_id=%d, host=%s", item.ID, item.Host)
+			continue
+		}
 		logger.Infof("[pipeline]: trying to match stage, stage_id=%d, type=%s, os=%s, arch=%s", item.ID, item.Type, item.OS, item.Arch)
 
 		matched := false
