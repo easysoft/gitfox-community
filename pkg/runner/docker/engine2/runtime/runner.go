@@ -33,6 +33,10 @@ import (
 
 var noContext = context.Background()
 
+// watchRetryInterval is the delay between Watch attempts when the
+// cancellation watch is interrupted by a transient error.
+const watchRetryInterval = 3 * time.Second
+
 // Runner runs the pipeline.
 type Runner struct {
 	// Machine provides the runner with the name of the host
@@ -120,12 +124,28 @@ func (s *Runner) run(ctx context.Context, stage *drone.Stage, data *client.Conte
 	// cancellation requests. If a build is cancelled the running
 	// stage should also be cancelled.
 	go func() {
-		done, _ := s.Client.Watch(ctxdone, data.Build.ID)
-		if done {
-			cancel()
-			logger.GetLogger(ctx).Infof("[pipeline]: received cancellation, %s", stageInfo)
-		} else {
-			logger.GetLogger(ctx).Infof("[pipeline]: done listening for cancellations, %s", stageInfo)
+		for {
+			done, err := s.Client.Watch(ctxdone, data.Build.ID)
+			if done {
+				cancel()
+				logger.GetLogger(ctx).Infof("[pipeline]: received cancellation, %s", stageInfo)
+				return
+			}
+			if ctxdone.Err() != nil {
+				// the stage finished or the parent context was
+				// cancelled, nothing more to listen for.
+				logger.GetLogger(ctx).Infof("[pipeline]: done listening for cancellations, %s", stageInfo)
+				return
+			}
+			// Watch returned without a cancel signal (e.g. a transient
+			// error). Retry after a short delay so the stage does not
+			// permanently lose the cancellation notification.
+			logger.GetLogger(ctx).Warnf("[pipeline]: watch interrupted unexpectedly, err=%v, retrying, %s", err, stageInfo)
+			select {
+			case <-ctxdone.Done():
+				return
+			case <-time.After(watchRetryInterval):
+			}
 		}
 	}()
 

@@ -2,6 +2,7 @@ package manager
 
 import (
 	"context"
+	"fmt"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	eventModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/event"
@@ -35,6 +36,21 @@ func (s *setup) do(ctx context.Context, stage *stageModel.StageWithSteps) error 
 		"execution.id", execution.ID,
 		"stage.id", stage.ID,
 	)
+
+	// do not start the stage if the execution was cancelled while the
+	// stage was in-flight from the queue. The canceler has already
+	// marked the stage as killed/skipped, so refuse to start and return
+	// an error to interrupt the runner.
+	if execution.Status == constant.CIStatusKilled {
+		log.Warnw("manager: execution was cancelled, refuse to start stage",
+			"stage.status", string(stage.Status),
+		)
+		stage.Status = constant.CIStatusSkipped
+		if err := s.StageSvc.Update(noContext, &stage.Stage); err != nil {
+			log.Errorw("manager: cannot update stage to skipped", "error", err)
+		}
+		return fmt.Errorf("execution %d was cancelled", execution.ID)
+	}
 
 	if len(stage.ErrorLog) > 500 {
 		stage.ErrorLog = stage.ErrorLog[:500]
