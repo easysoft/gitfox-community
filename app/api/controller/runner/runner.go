@@ -567,6 +567,16 @@ func (ctl *Controller) UpdateStage(c *gin.Context) {
 		err = ctl.execManager.AfterStage(c.Request.Context(), &reqData)
 	}
 	if err != nil {
+		// the stage was refused because the execution was cancelled
+		// (setup.do). The canceler already wrote a terminal state for
+		// the stage, so signal the agent with 409 (mapped to
+		// client.ErrOptimisticLock) instead of a generic 500 — the
+		// agent must not overwrite the cancelled stage with an error
+		// status.
+		if errors.Is(err, manager.ErrStageCancelled) {
+			resp.Error(c, errors.WithHttpStatus(err, http.StatusConflict))
+			return
+		}
 		err = errors.WithI18nKey(err, i18n.RunnerStageUpdateError)
 		resp.InternalError(c, err)
 		return
@@ -596,6 +606,14 @@ func (ctl *Controller) UpdateStep(c *gin.Context) {
 		err = ctl.execManager.AfterStep(c.Request.Context(), &reqData)
 	}
 	if err != nil {
+		// the step is already in a terminal state (written by the
+		// canceler) or does not exist (the stage was refused to
+		// start). Signal the agent with 409 so it stops updating the
+		// step instead of overwriting the server's terminal state.
+		if errors.Is(err, manager.ErrStepTerminal) {
+			resp.Error(c, errors.WithHttpStatus(err, http.StatusConflict))
+			return
+		}
 		err = errors.WithI18nKey(err, i18n.RunnerStepUpdateError)
 		resp.InternalError(c, err)
 		return

@@ -2,6 +2,7 @@ package manager
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
@@ -16,6 +17,14 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
 )
+
+// ErrStageCancelled is returned when a stage is refused to start because
+// the execution was cancelled while the stage was in-flight from the
+// queue. The canceler has already written a terminal state (killed/
+// skipped) for the stage, so the runner must not overwrite it — the API
+// layer maps this sentinel to an HTTP 409 so remote agents recognise the
+// stage is no longer theirs.
+var ErrStageCancelled = errors.New("stage refused: execution was cancelled")
 
 type setup struct {
 	SSEStreamer  sse.Streamer
@@ -49,7 +58,7 @@ func (s *setup) do(ctx context.Context, stage *stageModel.StageWithSteps) error 
 		if err := s.StageSvc.Update(noContext, &stage.Stage); err != nil {
 			log.Errorw("manager: cannot update stage to skipped", "error", err)
 		}
-		return fmt.Errorf("execution %d was cancelled", execution.ID)
+		return fmt.Errorf("%w: execution %d", ErrStageCancelled, execution.ID)
 	}
 
 	if len(stage.ErrorLog) > 500 {
