@@ -172,6 +172,7 @@ type AIReportSummary struct {
 
 // IssueInputAI AI 类型的 issue 输入
 type IssueInputAI struct {
+	PpmID          int64  `json:"ppmID,omitempty"`
 	Path           string `json:"path"`
 	Content        string `json:"content"`
 	SuggestionCode string `json:"suggestion_code"`
@@ -184,15 +185,13 @@ type IssueInputAI struct {
 
 // IssuePayloadAI AI 类型 issue 的扩展数据
 type IssuePayloadAI struct {
-	Category       string `json:"category"`
-	Severity       string `json:"severity"`
 	SuggestionCode string `json:"suggestion_code"`
 	ExistingCode   string `json:"existing_code"`
 }
 
 // UniqueKey 生成唯一标识
 func (t IssueInputAI) UniqueKey() string {
-	return fmt.Sprintf("ai/%s/%d/%d", t.Path, t.StartLine, t.EndLine)
+	return fmt.Sprintf("ai/%d/%s/%d/%d", t.PpmID, t.Path, t.StartLine, t.EndLine)
 }
 
 // GenerateIssueKey 根据任务信息生成 issue 唯一 key

@@ -61,6 +61,12 @@ type Interface interface {
 	// 如果 runtime=true，取 key 和 默认值 defaultValue；如果 runtime=false，取 key 和 固定值 value
 	GetPipelineVariables(ctx context.Context, pipelineID int64) (map[string]string, error)
 
+	// CreateEmbeddedPipeline 创建内置流水线（从 embedded 资源读取 YAML 配置）
+	CreateEmbeddedPipeline(ctx context.Context, yamlLabel string, pipeline *pipelineModel.Pipeline) (*pipelineModel.Pipeline, error)
+
+	// UpdateEmbeddedPipelineContent 更新内置流水线内容（从 embedded 资源读取 YAML 配置）
+	UpdateEmbeddedPipelineContent(ctx context.Context, yamlLabel string, pipelineID int64) error
+
 	// Migrate migrates the pipeline plugin to the latest version.
 	Migrate(ctx context.Context, url string) error
 	// GetGroupedPlugins 获取按分组归类的插件列表

@@ -19,7 +19,7 @@ func (s *Service) handleEventBranchCreated(ctx context.Context, event *events.Ev
 		Commit:       event.Payload.SHA,
 		CommitBefore: event.Payload.SHA,
 	}
-	return s.trigger(ctx, event.Payload.RepoID, hook)
+	return s.trigger(ctx, event.Payload.RepoID, 0, hook)
 }
 
 func (s *Service) handleEventBranchUpdated(ctx context.Context,
@@ -32,5 +32,5 @@ func (s *Service) handleEventBranchUpdated(ctx context.Context,
 		Commit:       event.Payload.NewSHA,
 		CommitBefore: event.Payload.OldSHA,
 	}
-	return s.trigger(ctx, event.Payload.RepoID, hook)
+	return s.trigger(ctx, event.Payload.RepoID, 0, hook)
 }

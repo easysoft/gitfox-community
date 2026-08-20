@@ -146,7 +146,6 @@ const (
 	AuthFailed                      I18nKey = "auth.failed"                           // 尝试认证失败
 	AuthNoData                      I18nKey = "auth.no_data"                          // 请求不包含任何可用于 Authorizer 的认证数据
 	AuthNoSession                   I18nKey = "auth.no_session"                       // 请求不包含任何会话数据,无法进行授权,请检查是否配置邮箱
-	AuthNoSessionCheckZentaoEmail   I18nKey = "auth.no_session_check_zentao_email"    // 请检查禅道邮箱是否存在
 	AuthPubKeyAddAlreadyInUse       I18nKey = "auth.pub_key_add_already_in_use"       // key::公钥已存在
 	AuthPubKeyAddBodyParamError     I18nKey = "auth.pub_key_add_body_param_error"     // 公钥添加请求体参数解析失败
 	AuthPubKeyAddContentEmpty       I18nKey = "auth.pub_key_add_content_empty"        // key::公钥内容不能为空
@@ -539,6 +538,13 @@ const (
 	CliVersionVersion                    I18nKey = "cli.version_version"                       // 版本
 	CliVersionWelcome                    I18nKey = "cli.version_welcome"                       // gitfox版本信息
 
+	// CodeReview 相关常量
+	CodeReviewBodyParamError      I18nKey = "codeReview.body_param_error"      // 请求体参数解析失败.
+	CodeReviewPathParamError      I18nKey = "codeReview.path_param_error"      // 路径参数解析失败.
+	CodeReviewReportUploadError   I18nKey = "codeReview.report_upload_error"   // 代码评审报告上传失败.
+	CodeReviewReportUploadSuccess I18nKey = "codeReview.report_upload_success" // 代码评审报告上传成功.
+	CodeReviewRuleListSuccess     I18nKey = "codeReview.rule_list_success"     // AI代码评审规则列表查询成功.
+
 	// Commit 相关常量
 	CommitActionDecodeError    I18nKey = "commit.action_decode_error"    // 解码提交文件内容时失败.
 	CommitBodyParamError       I18nKey = "commit.body_param_error"       // Body 参数解析失败.
@@ -654,7 +660,7 @@ const (
 	GitTagNotFound                  I18nKey = "git.tag_not_found"                     // 标签不存在
 	GitTimeout                      I18nKey = "git.timeout"                           // Git 操作超时.
 	GitUnrelatedHistories           I18nKey = "git.unrelated_histories"               // 不相关的历史记录.
-	GitUnsupportedOption            I18nKey = "git.unsupported_option"                // 当前 git 版本不支持参数 %s，请升级 Git 版本.
+	GitUnsupportedOption            I18nKey = "git.unsupported_option"                // 当前 git 版本不支持参数 %s,请升级 Git 版本.
 
 	// Issue 相关常量
 	IssueBodyParamError   I18nKey = "issue.body_param_error"   // 请求体参数解析失败.
@@ -1055,6 +1061,4 @@ const (
 	WebhookQuerySuccess              I18nKey = "webhook.query_success"               // webhook 详情查询成功.
 	WebhookUpdateError               I18nKey = "webhook.update_error"                // webhook 更新失败.
 	WebhookUpdateSuccess             I18nKey = "webhook.update_success"              // webhook 更新成功.
-
-	AICodeReviewRuleListSuccess I18nKey = "aicodereview.rule_list_success" // AI代码评审规则列表查询成功.
 )

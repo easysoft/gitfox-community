@@ -99,3 +99,22 @@ func (p *PullRequest) BeforeUpdate(tx *gorm.DB) error {
 	p.EditedDate = now
 	return nil
 }
+
+// RequestReviewer 评审人员表（ops_request_reviewers）Store层结构体
+type RequestReviewer struct {
+	ID          uint            `gorm:"column:id;primaryKey;autoIncrement;comment:'ID'"`
+	RequestID   uint            `gorm:"column:requestID;comment:'关联合并请求ID'"`
+	RepoID      uint            `gorm:"column:repoID;comment:'关联仓库ID'"`
+	Decision    string          `gorm:"column:decision;comment:'最新审核决策'"`
+	SHA         string          `gorm:"column:sha;comment:'审核对应的代码提交SHA校验值'"`
+	Account     string          `gorm:"column:account;comment:'评审人'"`
+	Opinion     sql.NullString  `gorm:"column:opinion;comment:'评审意见'"`
+	CreatedBy   string          `gorm:"column:createdBy;comment:'创建人'"`
+	CreatedDate *datetime.Local `gorm:"column:createdDate;comment:'创建时间'"`
+	EditedDate  *datetime.Local `gorm:"column:editedDate;comment:'更新时间'"`
+}
+
+// TableName 指定数据库表名
+func (r *RequestReviewer) TableName() string {
+	return "ops_request_reviewers"
+}

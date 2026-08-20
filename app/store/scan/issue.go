@@ -342,6 +342,21 @@ func (s *ScanIssueStore) ListKeysByTask(
 	return result, nil
 }
 
+// ListExistingKeys 查询指定 issueKey 集合中已存在的 key
+func (s *ScanIssueStore) ListExistingKeys(ctx context.Context, keys []string) ([]string, error) {
+	if len(keys) == 0 {
+		return nil, nil
+	}
+	var issueKeys []string
+	if err := s.db.WithContext(ctx).
+		Model(&ScanIssue{}).
+		Where("issueKey IN ?", keys).
+		Pluck("issueKey", &issueKeys).Error; err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
+	}
+	return issueKeys, nil
+}
+
 // UpdateByTaskID 批量更新 issue 的 updatedByTaskID
 func (s *ScanIssueStore) UpdateByTaskID(ctx context.Context, taskID uint, issueIDs []int64, operator string) error {
 	if len(issueIDs) == 0 {
