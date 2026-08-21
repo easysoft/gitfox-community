@@ -68,7 +68,7 @@ type Runner struct {
 }
 
 // Run runs the pipeline stage.
-func (s *Runner) Run(ctx context.Context, stage *drone.Stage) error {
+func (s *Runner) Run(ctx context.Context, stage *drone.Stage) (err error) {
 	stageInfo := fmt.Sprintf("stage.id=%d, stage.name=%s, stage.number=%d", stage.ID, stage.Name, stage.Number)
 	logger.GetLogger(ctx).Infof("[pipeline]: stage received, %s", stageInfo)
 
@@ -77,7 +77,7 @@ func (s *Runner) Run(ctx context.Context, stage *drone.Stage) error {
 	// receipt of the stage can assume ownership.
 
 	stage.Machine = s.Machine
-	err := s.Client.Accept(ctx, stage)
+	err = s.Client.Accept(ctx, stage)
 	if err != nil && err == client.ErrOptimisticLock {
 		logger.GetLogger(ctx).Infof("[pipeline]: stage accepted by another runner, %s", stageInfo)
 		return nil
@@ -88,6 +88,31 @@ func (s *Runner) Run(ctx context.Context, stage *drone.Stage) error {
 	}
 
 	logger.GetLogger(ctx).Infof("[pipeline]: stage accepted, %s", stageInfo)
+
+	// The stage is now claimed by this runner (host assigned, status pending).
+	// Any failure from here on — including a panic — must be reported back as
+	// a terminal status; otherwise the stage stays pending with host assigned
+	// forever, is never re-dispatched and blocks the pipeline queue.
+	defer func() {
+		var panicked interface{}
+		if r := recover(); r != nil {
+			panicked = r
+			err = fmt.Errorf("panic received: %v", r)
+		}
+		if err == nil {
+			return
+		}
+		stage.Status = drone.StatusError
+		stage.Error = err.Error()
+		stage.Stopped = time.Now().Unix()
+		if upErr := s.Client.Update(ctx, stage); upErr != nil {
+			logger.GetLogger(ctx).Errorf("[pipeline]: cannot report stage failure, %s, err=%v", stageInfo, upErr)
+		}
+		if panicked != nil {
+			// re-panic so the caller (poller runWithRecovery) still logs the stack
+			panic(panicked)
+		}
+	}()
 
 	data, err := s.Client.Detail(ctx, stage)
 	if err != nil {

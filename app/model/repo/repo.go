@@ -27,6 +27,7 @@ type CreateRepoReq struct {
 
 // ReqFilter stores repo query parameters.
 type ReqFilter struct {
+	SpaceID  uint   `json:"space" form:"space"` // 空间标识
 	Query    string `json:"query" form:"query"`
 	Page     int    `json:"page" form:"page" default:"1"`
 	PageSize int    `json:"pageSize" form:"pageSize" default:"20"`

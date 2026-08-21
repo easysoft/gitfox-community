@@ -199,10 +199,12 @@ func (s *Store) List(ctx context.Context, filter repoModel.ReqFilter) (*database
 
 	// 默认只查询未删除的仓库
 	tx = tx.Where("deleted = ?", 0)
-
 	// 如果有 query 参数，模糊搜索 identifier
 	if filter.Query != "" {
 		tx = tx.Where("name LIKE ?", "%"+filter.Query+"%")
+	}
+	if filter.SpaceID != 0 {
+		tx = tx.Where("spaceID = ?", filter.SpaceID)
 	}
 
 	// 按 ID 降序排序
