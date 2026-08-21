@@ -25,7 +25,7 @@ type Interface interface {
 	Delete(ctx context.Context, session *auth.Session, id uint) error
 	GetContent(ctx context.Context, session *auth.Session, repo *repoModel.Repo, gitRef string, repoPath string, includeLatestCommit bool, flattenDirectories bool) (*repoModel.GetContentOutput, error)
 	Archive(ctx context.Context, params gitAPI.ArchiveParams, repo repoModel.Repo, w io.Writer) error
-	List(ctx context.Context, session *auth.Session, filter repoModel.ReqFilter) ([]*repoModel.Repo, bool, error)
+	List(ctx context.Context, session *auth.Session, filter repoModel.ReqFilter) ([]*repoModel.Repo, int64, bool, error)
 	ExecSvnCommand(ctx context.Context, repo repoModel.Repo, req svnModel.ReqForExec) (output string, contentType string, err error)
 	ExportSvn(ctx context.Context, repo repoModel.Repo, revision string, w io.Writer) (bool, error)
 }

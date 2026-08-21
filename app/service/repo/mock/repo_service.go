@@ -224,13 +224,14 @@ func (mr *MockInterfaceMockRecorder) GetRepoCheckAccessByID(ctx, session, repoID
 }
 
 // List mocks base method.
-func (m *MockInterface) List(ctx context.Context, session *auth.Session, filter repo.ReqFilter) ([]*repo.Repo, bool, error) {
+func (m *MockInterface) List(ctx context.Context, session *auth.Session, filter repo.ReqFilter) ([]*repo.Repo, int64, bool, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "List", ctx, session, filter)
 	ret0, _ := ret[0].([]*repo.Repo)
-	ret1, _ := ret[1].(bool)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
+	ret1, _ := ret[1].(int64)
+	ret2, _ := ret[2].(bool)
+	ret3, _ := ret[3].(error)
+	return ret0, ret1, ret2, ret3
 }
 
 // List indicates an expected call of List.
