@@ -5,7 +5,7 @@ import (
 )
 
 var (
-	Version       string = "2.1"
+	Version       string
 	BuildDate     string
 	GitCommitHash string
 	GitBranch     string
