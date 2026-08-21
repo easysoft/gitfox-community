@@ -6,10 +6,12 @@ package runtime
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"regexp"
 	"time"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/manager"
 	harness "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pipeline/spec"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pipeline/spec/parse/expand"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pipeline/spec/parse/normalize"
@@ -100,6 +102,16 @@ func (s *Runner) Run(ctx context.Context, stage *drone.Stage) (err error) {
 			err = fmt.Errorf("panic received: %v", r)
 		}
 		if err == nil {
+			return
+		}
+		// The server has already written a terminal state for this stage
+		// (killed/skipped) — either the execution was cancelled while the
+		// stage was in flight (BeforeStage refused) or the canceler marked
+		// the step terminal mid-execution (step update refused). Reporting
+		// StatusError here would overwrite the server's terminal state, so
+		// skip the report for both sentinels.
+		if errors.Is(err, manager.ErrStageCancelled) || errors.Is(err, manager.ErrStepTerminal) {
+			logger.GetLogger(ctx).Infof("[pipeline]: stage already terminal on server, skip error report, %s, err=%v", stageInfo, err)
 			return
 		}
 		stage.Status = drone.StatusError
