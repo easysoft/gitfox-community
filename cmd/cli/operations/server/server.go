@@ -237,8 +237,7 @@ func (app *App) runMigrations() {
 
 	// 迁移过来的代码库导入
 	if err := app.RepoImporterSvc.Migrate(migrateCtx); err != nil {
-		app.SystemLog.Errorw("[Server] Failed to migrate repo", "error", err)
-		panic(err)
+		app.SystemLog.Errorw("[Server] Failed to migrate repo, please check the default.log for the specific reason for the failure.", "error", err)
 	}
 }
 
