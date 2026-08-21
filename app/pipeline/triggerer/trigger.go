@@ -20,6 +20,8 @@ import (
 	stageStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/stage"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database/dbtx"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	v1yaml "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pipeline/spec"
 	normalize "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pipeline/spec/parse/normalize"
@@ -137,11 +139,17 @@ func (t *triggerer) Trigger(
 	// For V1 YAML - for now we can just parse the stages and create them sequentially.
 	stages, err := parseV1Stages(ctx, file.Data, execution, base, t.pipelineService)
 	if err != nil {
-		return nil, fmt.Errorf("could not parse v1 YAML into stages: %w", err)
+		return nil, errors.WithI18nKey(
+			fmt.Errorf("could not parse v1 YAML into stages: %w", err),
+			i18n.PipelineTriggerV1ParseError,
+		)
 	}
 
 	if err := t.createExecutionWithStagesWithTx(ctx, execution, stages); err != nil {
-		return nil, fmt.Errorf("could not create execution: %w", err)
+		return nil, errors.WithI18nKey(
+			fmt.Errorf("could not create execution: %w", err),
+			i18n.ExecutionTriggerError,
+		)
 	}
 
 	for _, stage := range stages {

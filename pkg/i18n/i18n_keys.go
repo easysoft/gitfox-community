@@ -688,6 +688,7 @@ const (
 	PipelineTriggerParamError          I18nKey = "pipeline.trigger_param_error"            // 触发参数解析失败.
 	PipelineTriggerUpdateError         I18nKey = "pipeline.trigger_update_error"           // 触发更新失败.
 	PipelineTriggerUpdateSuccess       I18nKey = "pipeline.trigger_update_success"         // 触发更新成功.
+	PipelineTriggerV1ParseError        I18nKey = "pipeline.trigger_v1_parse_error"         // 流水线 YAML 解析失败.
 
 	// Plan 相关常量
 	PlanAlreadyExists            I18nKey = "plan.already_exists"              // 扫描计划名称已存在.
@@ -887,6 +888,9 @@ const (
 
 	// Runner 相关常量
 	RunnerBodyParamError         I18nKey = "runner.body_param_error"          // Body 参数解析失败.
+	RunnerBuildWatchError        I18nKey = "runner.build_watch_error"         // 监听 Build 取消失败.
+	RunnerBuildWatchSuccess      I18nKey = "runner.build_watch_success"       // 监听 Build 取消成功.
+	RunnerDefaultOperateError    I18nKey = "runner.default_operate_error"     // 内置 Runner 不允许此操作.
 	RunnerDeleteError            I18nKey = "runner.delete_error"              // 删除 Runner 失败.
 	RunnerDeleteSuccess          I18nKey = "runner.delete_success"            // 删除 Runner 成功.
 	RunnerGenerateTokenError     I18nKey = "runner.generate_token_error"      // 生成 Runner Token 失败.
@@ -894,35 +898,30 @@ const (
 	RunnerInvalidToken           I18nKey = "runner.invalid_token"             // Runner Token 无效或已过期.
 	RunnerListError              I18nKey = "runner.list_error"                // 查询 Runner 列表失败.
 	RunnerListSuccess            I18nKey = "runner.list_success"              // 查询 Runner 列表成功.
+	RunnerLogBatchError          I18nKey = "runner.log_batch_error"           // 批量写日志失败.
+	RunnerLogBatchSuccess        I18nKey = "runner.log_batch_success"         // 批量写日志成功.
+	RunnerLogUploadError         I18nKey = "runner.log_upload_error"          // 上传日志失败.
+	RunnerLogUploadSuccess       I18nKey = "runner.log_upload_success"        // 上传日志成功.
 	RunnerPathParamError         I18nKey = "runner.path_param_error"          // Path 参数解析失败.
 	RunnerQueryError             I18nKey = "runner.query_error"               // 查询 Runner 失败.
 	RunnerQueryParamError        I18nKey = "runner.query_param_error"         // Query 参数解析失败.
 	RunnerQuerySuccess           I18nKey = "runner.query_success"             // 查询 Runner 成功.
 	RunnerRegisterError          I18nKey = "runner.register_error"            // 注册 Runner 失败.
 	RunnerRegisterSuccess        I18nKey = "runner.register_success"          // 注册 Runner 成功.
+	RunnerStageAcceptError       I18nKey = "runner.stage_accept_error"        // 接受 Stage 失败.
+	RunnerStageAcceptSuccess     I18nKey = "runner.stage_accept_success"      // 接受 Stage 成功.
+	RunnerStageDetailError       I18nKey = "runner.stage_detail_error"        // 获取 Stage 详情失败.
+	RunnerStageDetailSuccess     I18nKey = "runner.stage_detail_success"      // 获取 Stage 详情成功.
+	RunnerStageRequestError      I18nKey = "runner.stage_request_error"       // 拉取 Stage 失败.
+	RunnerStageRequestSuccess    I18nKey = "runner.stage_request_success"     // 拉取 Stage 成功.
+	RunnerStageUpdateError       I18nKey = "runner.stage_update_error"        // 更新 Stage 状态失败.
+	RunnerStageUpdateSuccess     I18nKey = "runner.stage_update_success"      // 更新 Stage 状态成功.
+	RunnerStepUpdateError        I18nKey = "runner.step_update_error"         // 更新 Step 状态失败.
+	RunnerStepUpdateSuccess      I18nKey = "runner.step_update_success"       // 更新 Step 状态成功.
 	RunnerUpdateError            I18nKey = "runner.update_error"              // 更新 Runner 失败.
 	RunnerUpdateHeartBeatError   I18nKey = "runner.update_heart_beat_error"   // 更新 Runner 心跳失败.
 	RunnerUpdateHeartBeatSuccess I18nKey = "runner.update_heart_beat_success" // 更新 Runner 心跳成功.
 	RunnerUpdateSuccess          I18nKey = "runner.update_success"            // 更新 Runner 成功.
-	RunnerDefaultOperateError    I18nKey = "runner.default_operate_error"     // 内置 Runner 不允许此操作.
-
-	// Runner Stage 相关常量
-	RunnerStageRequestError   I18nKey = "runner.stage_request_error"   // 拉取 Stage 失败.
-	RunnerStageRequestSuccess I18nKey = "runner.stage_request_success" // 拉取 Stage 成功.
-	RunnerStageAcceptError    I18nKey = "runner.stage_accept_error"    // 接受 Stage 失败.
-	RunnerStageAcceptSuccess  I18nKey = "runner.stage_accept_success"  // 接受 Stage 成功.
-	RunnerStageDetailError    I18nKey = "runner.stage_detail_error"    // 获取 Stage 详情失败.
-	RunnerStageDetailSuccess  I18nKey = "runner.stage_detail_success"  // 获取 Stage 详情成功.
-	RunnerStageUpdateError    I18nKey = "runner.stage_update_error"    // 更新 Stage 状态失败.
-	RunnerStageUpdateSuccess  I18nKey = "runner.stage_update_success"  // 更新 Stage 状态成功.
-	RunnerStepUpdateError     I18nKey = "runner.step_update_error"     // 更新 Step 状态失败.
-	RunnerStepUpdateSuccess   I18nKey = "runner.step_update_success"   // 更新 Step 状态成功.
-	RunnerBuildWatchError     I18nKey = "runner.build_watch_error"     // 监听 Build 取消失败.
-	RunnerBuildWatchSuccess   I18nKey = "runner.build_watch_success"   // 监听 Build 取消成功.
-	RunnerLogBatchError       I18nKey = "runner.log_batch_error"       // 批量写日志失败.
-	RunnerLogBatchSuccess     I18nKey = "runner.log_batch_success"     // 批量写日志成功.
-	RunnerLogUploadError      I18nKey = "runner.log_upload_error"      // 上传日志失败.
-	RunnerLogUploadSuccess    I18nKey = "runner.log_upload_success"    // 上传日志成功.
 
 	// ScanTask 相关常量
 	ScanTaskBodyParamError      I18nKey = "scanTask.body_param_error"      // 请求体参数解析失败.

@@ -263,7 +263,6 @@ func (c *Controller) Create(ctx *gin.Context) {
 
 	executionOutput, err := c.triggerer.Trigger(ctx, reqBody.PipelineID, hook)
 	if err != nil {
-		err = errors.WithI18nKey(err, i18n.ExecutionTriggerError)
 		resp.InternalError(ctx, err)
 		return
 	}
