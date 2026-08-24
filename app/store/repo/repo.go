@@ -242,7 +242,7 @@ func (s *Store) List(ctx context.Context, filter repoModel.ReqFilter) (*database
 // 查询迁移的历史代码库
 func (s *Store) GetMigrate(ctx context.Context) ([]*repoModel.Repo, error) {
 	var repos []*Repository
-	err := s.db.WithContext(ctx).Where("gitUID like ?", fmt.Sprintf("%s%%", constant.MigrateRepoGitUID)).Find(&repos).Error
+	err := s.db.WithContext(ctx).Where("gitUID like ? AND deleted = 0", fmt.Sprintf("%s%%", constant.MigrateRepoGitUID)).Find(&repos).Error
 	if err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
