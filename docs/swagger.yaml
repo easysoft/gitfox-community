@@ -1717,6 +1717,9 @@ definitions:
         type: integer
       query:
         type: string
+      space:
+        description: 空间标识
+        type: integer
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.ReqForDiff:
     properties:
@@ -3885,6 +3888,14 @@ paths:
         in: formData
         name: group
         type: string
+      - description: 同名文件是否直接覆盖（true/1 开启；缺省 false 走原逻辑：同内容跳过、异内容追加 (n) 后缀）
+        in: formData
+        name: overwrite
+        type: boolean
+      - description: 同名文件是否自动追加 (n) 后缀保留两份（true/1 开启；缺省 false 重名报已存在）
+        in: formData
+        name: rename
+        type: boolean
       - description: 制品文件
         in: formData
         name: file

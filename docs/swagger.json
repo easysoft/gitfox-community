@@ -602,6 +602,18 @@
                         "in": "formData"
                     },
                     {
+                        "type": "boolean",
+                        "description": "同名文件是否直接覆盖（true/1 开启；缺省 false 走原逻辑：同内容跳过、异内容追加 (n) 后缀）",
+                        "name": "overwrite",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "同名文件是否自动追加 (n) 后缀保留两份（true/1 开启；缺省 false 重名报已存在）",
+                        "name": "rename",
+                        "in": "formData"
+                    },
+                    {
                         "type": "file",
                         "description": "制品文件",
                         "name": "file",
@@ -13715,6 +13727,10 @@
                 },
                 "query": {
                     "type": "string"
+                },
+                "space": {
+                    "description": "空间标识",
+                    "type": "integer"
                 }
             }
         },

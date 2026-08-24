@@ -76,6 +76,9 @@ func (h *uploader) Serve(ctx context.Context, req *http.Request) (int64, error) 
 	if fileName == "" {
 		fileName = fh.Filename
 	}
+	h.descriptor.Overwrite, _ = strconv.ParseBool(req.FormValue("overwrite"))
+	h.descriptor.Rename, _ = strconv.ParseBool(req.FormValue("rename"))
+
 	h.descriptor.MainAsset.Path = fileName
 	h.descriptor.MainAsset.Size = size
 	h.descriptor.MainAsset.Hash = hash
@@ -84,7 +87,6 @@ func (h *uploader) Serve(ctx context.Context, req *http.Request) (int64, error) 
 	h.descriptor.MainAsset.Rank = model.AssetRankMain
 	h.descriptor.MainAsset.Attr = adapter.AttrAssetNormal
 	h.descriptor.MainAsset.Format = model.ArtifactFileFormat
-
 	h.descriptor.Format = model.ArtifactFileFormat
 	return size, err
 }
