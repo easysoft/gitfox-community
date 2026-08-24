@@ -201,8 +201,8 @@ func (s *Store) ResetMergeCheckStatus(
 		"mergeConflicts":    nil,
 		"rebaseCheckStatus": repoModel.MergeCheckStatusUnchecked,
 		"rebaseConflicts":   nil,
-		"commitCount":       nil,
-		"fileCount":         nil,
+		"commitCount":       0,
+		"fileCount":         0,
 	}
 
 	err := s.db.WithContext(ctx).
