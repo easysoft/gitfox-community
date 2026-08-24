@@ -44,6 +44,8 @@ type PackageDescriptor struct {
 	Format          model.ArtifactFormat
 	MainAsset       *AssetDescriptor
 	SubAssets       []*AssetDescriptor
+	Overwrite       bool
+	Rename          bool
 }
 
 func NewEmptyPackageDescriptor() *PackageDescriptor {
