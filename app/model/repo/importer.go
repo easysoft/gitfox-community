@@ -61,6 +61,7 @@ type Progress struct {
 	Result       string          `json:"result,omitempty"`
 	Failure      string          `json:"failure,omitempty"`
 	LastExecuted *datetime.Local `json:"lastExecuted,omitempty"`
+	NextExecuted *datetime.Local `json:"nextExecuted,omitempty"`
 }
 
 type GitConnectInfo struct {

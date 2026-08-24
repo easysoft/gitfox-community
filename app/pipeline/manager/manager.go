@@ -15,6 +15,7 @@ import (
 	stageModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/stage"
 	stepModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/step"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/scheduler"
+
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/execution"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/pipeline"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/pullrequest"
@@ -25,6 +26,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/livelog"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	urlprovider "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/url"
+	"github.com/drone/runner-go/client"
 )
 
 var noContext = context.Background()
@@ -197,7 +199,16 @@ func (m *Manager) Accept(_ context.Context, id int64, machine string) (*stageMod
 	}
 	if stage.Host != "" {
 		log.Debug("manager: stage already assigned. abort.")
-		return nil, fmt.Errorf("stage already assigned, abort")
+		return nil, client.ErrOptimisticLock
+	}
+	// do not accept a stage that is no longer pending. The stage may
+	// have been dispatched in-memory by the queue before the canceler
+	// marked it skipped/killed, in which case it must not start.
+	if stage.Status != constant.CIStatusPending {
+		log.Debugw("manager: stage is no longer pending. abort.",
+			"stage.status", string(stage.Status),
+		)
+		return nil, client.ErrOptimisticLock
 	}
 
 	//TODO: 成功解析前先对machine不赋值
@@ -417,35 +428,27 @@ func (m *Manager) AfterStage(_ context.Context, stage *stageModel.StageWithSteps
 
 // Watch watches for build cancellation requests.
 func (m *Manager) Watch(ctx context.Context, executionID int64) (bool, error) {
-	ok, err := m.Scheduler.Cancelled(ctx, executionID)
-	// we expect a context cancel error here which
-	// indicates a polling timeout. The subscribing
-	// client should look for the context cancel error
-	// and resume polling.
-	if err != nil {
-		return ok, err
-	}
-
-	// // TODO: we should be able to return
-	// // immediately if Cancelled returns true. This requires
-	// // some more testing but would avoid the extra database
-	// // call.
-	// if ok {
-	// 	return ok, err
-	// }
-
-	// if no error is returned we should check
-	// the database to see if the build is complete. If
-	// complete, return true.
+	// check the database first. If the execution is already in a done
+	// state (e.g. killed), return immediately. This makes cancellation
+	// detection robust against missed in-memory signals (server restart,
+	// cancel before the runner started watching, multi-instance setup).
 	execution, err := m.ExecutionSvc.GetByID(ctx, uint(executionID))
 	if err != nil {
 		log := logger.GetLogger(ctx).With(
 			"execution.id", executionID,
 		)
 		log.Warn("manager: cannot find build")
-		return ok, fmt.Errorf("could not find build for cancellation: %w", err)
+		return false, fmt.Errorf("could not find build for cancellation: %w", err)
 	}
-	return execution.Status.IsDone(), nil
+	if execution.Status.IsDone() {
+		return true, nil
+	}
+
+	// the execution is still running: block and wait for the in-memory
+	// cancel signal. We expect a context cancel error here which
+	// indicates a polling timeout. The subscribing client should look
+	// for the context cancel error and resume polling.
+	return m.Scheduler.Cancelled(ctx, executionID)
 }
 
 func (m *Manager) createNetrc(ctx context.Context) (*Netrc, error) {

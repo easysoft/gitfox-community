@@ -141,6 +141,7 @@ func (r *Repository) GetMirrorSyncProgress(ctx context.Context, repoID int64) (r
 	recentProgress := pickRecentProgress(progress, progressErr, cronProgress, cronErr)
 
 	lastExecuted, _ := recentProgress["lastExecuted"].(*datetime.Local)
+	nextExecuted, _ := recentProgress["nextExecuted"].(*datetime.Local)
 	status, _ := recentProgress["state"].(simpleJob.State)
 	result, _ := recentProgress["result"].(string)
 	failure, _ := recentProgress["failure"].(string)
@@ -149,6 +150,7 @@ func (r *Repository) GetMirrorSyncProgress(ctx context.Context, repoID int64) (r
 		Result:       result,
 		Failure:      failure,
 		LastExecuted: lastExecuted,
+		NextExecuted: nextExecuted,
 	}, nil
 }
 

@@ -879,11 +879,24 @@ func mapToProgressMany(jobs []*jobModel.ScheduleJob) []map[string]interface{} {
 }
 
 func mapToProgress(job *jobModel.ScheduleJob) map[string]interface{} {
-	return map[string]interface{}{
+	progress := map[string]interface{}{
 		"state":        job.State,
 		"progress":     job.RunProgress,
 		"result":       job.Result,
 		"failure":      job.LastFailureError,
 		"lastExecuted": job.LastExecuted,
 	}
+
+	// for recurring jobs, compute the next execution time from the
+	// cron expression. keep the same CST timezone handling as
+	// AddRecurringWithData.
+	if job.IsRecurring && job.RecurringCron != "" {
+		if exp, err := cronexpr.Parse(job.RecurringCron); err == nil {
+			next := exp.Next(time.Now().In(datetime.CST))
+			nextLocal := datetime.Local(next)
+			progress["nextExecuted"] = &nextLocal
+		}
+	}
+
+	return progress
 }

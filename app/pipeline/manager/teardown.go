@@ -29,6 +29,13 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 )
 
+// ErrStageTerminal is returned when a stage update is refused because the
+// stage is already in a terminal state (e.g. a state written by the
+// canceler). The API layer maps this sentinel to an HTTP 409 so the agent
+// stops updating the stage instead of overwriting the server's terminal
+// state.
+var ErrStageTerminal = errors.New("stage already in terminal state")
+
 type teardown struct {
 	PipelineSvc  pipeline.Interface
 	ExecutionSvc execution.Interface
@@ -53,6 +60,31 @@ func (t *teardown) do(ctx context.Context, stage *stageModel.StageWithSteps) err
 	if err != nil {
 		log.Errorw("manager: cannot find the execution", "error", err)
 		return err
+	}
+
+	// The canceler may have already written a terminal state (killed/
+	// skipped) for this stage while it was executing — or the execution
+	// was cancelled while the canceler's stage write was in flight. In
+	// both cases the agent's completion report is stale and must not
+	// overwrite the server's state: refuse with a conflict error so the
+	// agent abandons silently. Check the authoritative DB state, not the
+	// agent's request payload.
+	existing, err := t.StageSvc.GetByID(noContext, stage.ID)
+	if err != nil {
+		log.Errorw("manager: cannot find stage", "error", err)
+		return err
+	}
+	if existing.Status.IsDone() || execution.Status == constant.CIStatusKilled {
+		// still release the log streams for the steps the agent ran;
+		// the terminal stage would otherwise keep them in memory until
+		// the server restarts.
+		for _, step := range stage.Steps {
+			if err := t.Logz.Delete(noContext, int64(step.ID)); err != nil && !errors.Is(err, livelog.ErrStreamNotFound) {
+				log.Warnw("manager: cannot delete log stream for terminal stage step",
+					"step.id", step.ID, "error", err)
+			}
+		}
+		return fmt.Errorf("%w: stage %d status %s", ErrStageTerminal, stage.ID, existing.Status)
 	}
 
 	pipeline, err := t.PipelineSvc.GetPipelineByID(ctx, int64(execution.PipelineID))

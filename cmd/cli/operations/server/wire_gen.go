@@ -189,7 +189,7 @@ func NewApp(mode string) (*App, func(), error) {
 	serverConfig := provider.NewServerConfig(config)
 	triggererTriggerer := triggerer.New(pipelineService, executionStore, stageStore, schedulerScheduler, txRunnerImpl, serverConfig)
 	stepStore := step.NewStepStore(db)
-	cancelerCanceler := canceler.New(executionStore, pipelineStore, stageStore, stepStore)
+	cancelerCanceler := canceler.New(executionStore, pipelineStore, stageStore, stepStore, schedulerScheduler)
 	executionService := execution2.NewExecutionService(executionStore, stageStore)
 	executionController := execution3.NewController(triggererTriggerer, cancelerCanceler, executionService, pipelineService, repoService, gitService)
 	runnerService := runner2.NewService(runnerStore)
