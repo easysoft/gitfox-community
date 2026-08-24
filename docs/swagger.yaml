@@ -1717,6 +1717,9 @@ definitions:
         type: integer
       query:
         type: string
+      space:
+        description: 空间标识
+        type: integer
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.ReqForDiff:
     properties:

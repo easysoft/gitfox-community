@@ -13721,6 +13721,10 @@ const docTemplate = `{
                 },
                 "query": {
                     "type": "string"
+                },
+                "space": {
+                    "description": "空间标识",
+                    "type": "integer"
                 }
             }
         },

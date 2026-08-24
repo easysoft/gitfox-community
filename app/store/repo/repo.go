@@ -211,15 +211,10 @@ func (s *Store) List(ctx context.Context, filter repoModel.ReqFilter) (*database
 	}
 
 	// 执行分页查询（按 ID 降序排序，使用表限定列避免联查后字段歧义）
+	tx = tx.Order("ops_repo.id DESC")
 
 	var repos []*Repository
-	pageResult, err := database.Paginate(ctx, tx, database.PageParam{
-		Page:      filter.Page,
-		PageSize:  filter.PageSize,
-		Sort:      "ops_repo.id",
-		Order:     "desc",
-		NeedTotal: true,
-	}, &repos)
+	pageResult, err := database.PaginateDefault(ctx, tx, filter.Page, filter.PageSize, &repos)
 	if err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}

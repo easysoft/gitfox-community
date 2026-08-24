@@ -451,11 +451,11 @@ func (s *Service) Delete(ctx context.Context, session *auth.Session, id uint) er
 }
 
 // List 分页查询仓库列表
-func (s *Service) List(ctx context.Context, session *auth.Session, filter repoModel.ReqFilter) ([]*repoModel.Repo, int64, bool, error) {
+func (s *Service) List(ctx context.Context, session *auth.Session, filter repoModel.ReqFilter) ([]*repoModel.Repo, bool, error) {
 	// 调用 store 层查询
 	pageResult, err := s.repoStore.List(ctx, filter)
 	if err != nil {
-		return nil, 0, false, err
+		return nil, false, err
 	}
 
 	// 为每个仓库填充 Git URL
@@ -466,5 +466,5 @@ func (s *Service) List(ctx context.Context, session *auth.Session, filter repoMo
 	// 计算是否为最后一页
 	isLast := pageResult.Page*pageResult.PageSize >= int(pageResult.Total)
 
-	return pageResult.Data, pageResult.Total, isLast, nil
+	return pageResult.Data, isLast, nil
 }

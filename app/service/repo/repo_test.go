@@ -134,7 +134,6 @@ type ListRepoTestCase struct {
 	inputSession      *auth.Session                 // 入参session
 	expectedRepos     []*repoModel.Repo             // 预期仓库列表
 	expectedIsLast    bool                          // 预期是否最后一页
-	expectedTotal     int64                         // 预期总数
 	expectedErr       error                         // 预期错误
 }
 
@@ -173,7 +172,6 @@ func TestList(t *testing.T) {
 				{ID: 2, Path: "team1/project2", GitSSHURL: "git@gitfox:team1/project2.git", GitURL: "https://gitfox/team1/project2.git"},
 			},
 			expectedIsLast: false,
-			expectedTotal:  20,
 			expectedErr:    nil,
 		},
 		{
@@ -201,7 +199,6 @@ func TestList(t *testing.T) {
 				{ID: 3, Path: "team2/project3", GitSSHURL: "git@gitfox:team2/project3.git", GitURL: "https://gitfox/team2/project3.git"},
 			},
 			expectedIsLast: true,
-			expectedTotal:  15,
 			expectedErr:    nil,
 		},
 		{
@@ -218,7 +215,6 @@ func TestList(t *testing.T) {
 			inputSession:   &auth.Session{},
 			expectedRepos:  nil,
 			expectedIsLast: false,
-			expectedTotal:  0,
 			expectedErr:    assert.AnError,
 		},
 		{
@@ -240,7 +236,6 @@ func TestList(t *testing.T) {
 			inputSession:   &auth.Session{},
 			expectedRepos:  []*repoModel.Repo{},
 			expectedIsLast: true,
-			expectedTotal:  0,
 			expectedErr:    nil,
 		},
 	}
@@ -271,7 +266,7 @@ func TestList(t *testing.T) {
 
 			// ========== 执行待测试方法 ==========
 			ctx := context.Background()
-			actualRepos, actualTotal, actualIsLast, actualErr := service.List(ctx, tc.inputSession, tc.inputFilter)
+			actualRepos, actualIsLast, actualErr := service.List(ctx, tc.inputSession, tc.inputFilter)
 
 			// ========== 核心断言（精确验证所有结果） ==========
 			// 1. 验证错误一致性
@@ -279,7 +274,6 @@ func TestList(t *testing.T) {
 
 			// 2. 验证是否为最后一页
 			assert.Equal(t, tc.expectedIsLast, actualIsLast)
-			assert.Equal(t, tc.expectedTotal, actualTotal)
 
 			// 3. 验证仓库列表长度一致
 			assert.Equal(t, len(tc.expectedRepos), len(actualRepos))

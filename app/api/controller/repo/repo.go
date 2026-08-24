@@ -118,7 +118,7 @@ func (ctl *Controller) Create(c *gin.Context) {
 // @Accept application/json
 // @Produce application/json
 // @Param request body repoModel.ReqFilter true "查询仓库请求参数"
-// @Success 200 {object} resp.ListResponse{data=[]repoModel.Repo} "查询成功，listArgs 包含 total/isLast/page/pageSize"
+// @Success 200 {object} resp.ListResponse{data=[]repoModel.Repo,listArgs=resp.ListNoTotalArgs} "查询成功"
 // @Failure 400 {object} resp.ListResponse "参数错误"
 // @Failure 500 {object} resp.ListResponse "服务器错误"
 // @Router /repos/list [post]
@@ -140,20 +140,14 @@ func (c *Controller) List(ctx *gin.Context) {
 		return
 	}
 
-	respData, total, isLast, err := c.repoSvc.List(ctx.Request.Context(), session, reqQuery)
+	respData, isLast, err := c.repoSvc.List(ctx.Request.Context(), session, reqQuery)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return
 	}
 
 	resp.ListSuccess(ctx, respData,
-		struct {
-			Total    int64 `json:"total"`
-			IsLast   bool  `json:"isLast"`
-			Page     int64 `json:"page"`
-			PageSize int64 `json:"pageSize"`
-		}{
-			Total:    total,
+		resp.ListNoTotalArgs{
 			IsLast:   isLast,
 			Page:     int64(reqQuery.Page),
 			PageSize: int64(reqQuery.PageSize),
