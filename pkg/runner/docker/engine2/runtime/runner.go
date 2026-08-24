@@ -106,11 +106,12 @@ func (s *Runner) Run(ctx context.Context, stage *drone.Stage) (err error) {
 		}
 		// The server has already written a terminal state for this stage
 		// (killed/skipped) — either the execution was cancelled while the
-		// stage was in flight (BeforeStage refused) or the canceler marked
-		// the step terminal mid-execution (step update refused). Reporting
-		// StatusError here would overwrite the server's terminal state, so
-		// skip the report for both sentinels.
-		if errors.Is(err, manager.ErrStageCancelled) || errors.Is(err, manager.ErrStepTerminal) {
+		// stage was in flight (BeforeStage refused), the canceler marked
+		// the step terminal mid-execution (step update refused), or the
+		// stage completion report itself was refused (AfterStage refused).
+		// Reporting StatusError here would overwrite the server's terminal
+		// state, so skip the report for all three sentinels.
+		if errors.Is(err, manager.ErrStageCancelled) || errors.Is(err, manager.ErrStepTerminal) || errors.Is(err, manager.ErrStageTerminal) {
 			logger.GetLogger(ctx).Infof("[pipeline]: stage already terminal on server, skip error report, %s, err=%v", stageInfo, err)
 			return
 		}

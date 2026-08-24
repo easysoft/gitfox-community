@@ -20,6 +20,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/livelog"
 	urlprovider "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/url"
+	"github.com/drone/runner-go/client"
 	"github.com/gin-gonic/gin"
 )
 
@@ -514,6 +515,16 @@ func (ctl *Controller) AcceptStage(c *gin.Context) {
 
 	stage, err := ctl.execManager.Accept(c.Request.Context(), stageID, reqData.Machine)
 	if err != nil {
+		// the stage could not be accepted because it was already
+		// claimed by another runner or the canceler marked it
+		// terminal (killed/skipped) while it was in-flight. Signal
+		// the agent with 409 (mapped to client.ErrOptimisticLock)
+		// instead of a generic 500 — the stage is no longer ours,
+		// the agent must abandon it silently and keep polling.
+		if errors.Is(err, client.ErrOptimisticLock) {
+			resp.Error(c, errors.WithHttpStatus(err, http.StatusConflict))
+			return
+		}
 		err = errors.WithI18nKey(err, i18n.RunnerStageAcceptError)
 		resp.InternalError(c, err)
 		return
@@ -568,12 +579,12 @@ func (ctl *Controller) UpdateStage(c *gin.Context) {
 	}
 	if err != nil {
 		// the stage was refused because the execution was cancelled
-		// (setup.do). The canceler already wrote a terminal state for
-		// the stage, so signal the agent with 409 (mapped to
-		// client.ErrOptimisticLock) instead of a generic 500 — the
-		// agent must not overwrite the cancelled stage with an error
-		// status.
-		if errors.Is(err, manager.ErrStageCancelled) {
+		// (setup.do) or the stage is already terminal (teardown.do,
+		// a state written by the canceler). Signal the agent with 409
+		// (mapped to client.ErrOptimisticLock) instead of a generic
+		// 500 — the agent must not overwrite the cancelled stage with
+		// an error status.
+		if errors.Is(err, manager.ErrStageCancelled) || errors.Is(err, manager.ErrStageTerminal) {
 			resp.Error(c, errors.WithHttpStatus(err, http.StatusConflict))
 			return
 		}
