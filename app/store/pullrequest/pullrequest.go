@@ -343,6 +343,26 @@ func (s *Store) CountByStatus(ctx context.Context, targetRepoID uint, status rep
 	return count, nil
 }
 
+// ListReviewerAccountsByRequestID 根据请求ID（ppmID）查询评审人账号列表
+func (s *Store) ListReviewerAccountsByRequestID(ctx context.Context, requestID uint) ([]string, error) {
+	var reviewers []RequestReviewer
+	if err := s.db.WithContext(ctx).
+		Model(&RequestReviewer{}).
+		Select("account").
+		Where("requestID = ?", requestID).
+		Find(&reviewers).Error; err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
+	}
+
+	accounts := make([]string, 0, len(reviewers))
+	for _, r := range reviewers {
+		if r.Account != "" {
+			accounts = append(accounts, r.Account)
+		}
+	}
+	return accounts, nil
+}
+
 // mapPullRequestToModel 将 store 模型转换为 API 模型
 func mapPullRequestToModel(data PullRequest) *repoModel.PullRequest {
 	return &repoModel.PullRequest{

@@ -10,6 +10,7 @@ type User struct {
 	Password string `db:"password" gorm:"column:password"`
 	Role     string `db:"role" gorm:"column:role"`
 	Email    string `db:"email" gorm:"column:email"`
+	RealName string `db:"realname" gorm:"column:realname"`
 }
 
 func (p *User) TableName() string {
@@ -18,10 +19,11 @@ func (p *User) TableName() string {
 
 func (p *User) toUser() *principal.User {
 	return &principal.User{
-		ID:       p.ID,
-		Account:  p.Account,
-		Email:    p.Email,
-		Password: p.Password,
-		IsAdmin:  p.Role == "admin",
+		ID:          p.ID,
+		Account:     p.Account,
+		DisplayName: p.RealName,
+		Email:       p.Email,
+		Password:    p.Password,
+		IsAdmin:     p.Role == "admin",
 	}
 }

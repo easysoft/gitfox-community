@@ -101,9 +101,10 @@ func (r *TriggerResult) Skipped() bool {
 
 // BaseSegment contains base info of all payloads for webhooks.
 type BaseSegment struct {
-	Trigger   string         `json:"trigger"`
-	Repo      RepositoryInfo `json:"repo"`
-	Principal string         `json:"principal"`
+	Trigger              string         `json:"trigger"`
+	Repo                 RepositoryInfo `json:"repo"`
+	Principal            string         `json:"principal"`
+	PrincipalDisplayName string         `json:"principalDisplayName"`
 }
 
 // ReferenceSegment contains the reference info for webhooks.
