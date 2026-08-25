@@ -6,6 +6,7 @@ import (
 
 	"gorm.io/driver/gaussdb"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 	"gorm.io/gorm/logger"
 	"gorm.io/gorm/schema"
 
@@ -41,6 +42,18 @@ func NewGaussDB(dbConf config.DatabaseConfig, logConf config.LoggingConfig) (*Ga
 			Colorful:                  false, // 禁用彩色打印
 			IgnoreRecordNotFoundError: false, // 忽略ErrRecordNotFound（记录未找到）错误
 		}),
+		// 覆盖 gorm.io/driver/gaussdb 的 ON CONFLICT 实现 bug：
+		// 该驱动将 clause.OnConflict 错误地生成为 MySQL 的
+		// "ON DUPLICATE KEY UPDATE ... VALUES(...)" 语法，GaussDB 不支持，
+		// 报 "RETURNING clause is not yet supported within INSERT ON DUPLICATE KEY UPDATE"。
+		// 这里走 GORM 内置实现，生成标准 GaussDB 语法
+		// "ON CONFLICT (...) DO UPDATE SET ... EXCLUDED ..."。
+		// 驱动 Initialize 仅在 ClauseBuilders 无对应 key 时注册，故此处预设可覆盖之。
+		ClauseBuilders: map[string]clause.ClauseBuilder{
+			"ON CONFLICT": func(c clause.Clause, builder clause.Builder) {
+				c.Build(builder)
+			},
+		},
 	})
 
 	if err != nil {
