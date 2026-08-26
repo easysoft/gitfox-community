@@ -194,9 +194,6 @@ func parseV1Stages(
 	if config.Kind != "pipeline" {
 		return nil, fmt.Errorf("cannot support non-pipeline kinds in v1 at the moment: %w", err)
 	}
-	if config.Version == 0 {
-		return nil, fmt.Errorf("check 'version' key in yaml")
-	}
 
 	inputParams := map[string]interface{}{}
 	inputParams["build"] = inputs.Build(manager.ConvertToDroneBuild(execution))
@@ -347,14 +344,6 @@ func validateV1Stage(stage *v1yaml.Stage) error {
 // validateV1Step 校验 step 的 spec 完整性
 func validateV1Step(step *v1yaml.Step) error {
 	switch spec := step.Spec.(type) {
-	case *v1yaml.StepRun:
-		if spec.Container == nil || spec.Container.Image == "" {
-			return fmt.Errorf("check 'spec.container.image' key in step %q", step.Id)
-		}
-	case *v1yaml.StepScript:
-		if spec.Image == "" {
-			return fmt.Errorf("check 'spec.image' key in step %q", step.Id)
-		}
 	case *v1yaml.StepGroup:
 		if len(spec.Steps) == 0 {
 			return fmt.Errorf("check 'steps' key in step %q", step.Id)
