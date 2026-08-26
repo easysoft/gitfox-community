@@ -139,10 +139,8 @@ func (t *triggerer) Trigger(
 	// For V1 YAML - for now we can just parse the stages and create them sequentially.
 	stages, err := parseV1Stages(ctx, file.Data, execution, base, t.pipelineService)
 	if err != nil {
-		return nil, errors.WithI18nKey(
-			fmt.Errorf("could not parse v1 YAML into stages: %w", err),
-			i18n.PipelineTriggerV1ParseError,
-		)
+		// 具体错误信息通过 i18n 模板的 %s 透传给用户（如缺少 stages/steps 关键字的校验错误）
+		return nil, errors.WithI18nKey(err, i18n.PipelineTriggerV1ParseError)
 	}
 
 	if err := t.createExecutionWithStagesWithTx(ctx, execution, stages); err != nil {
@@ -196,6 +194,9 @@ func parseV1Stages(
 	if config.Kind != "pipeline" {
 		return nil, fmt.Errorf("cannot support non-pipeline kinds in v1 at the moment: %w", err)
 	}
+	if config.Version == 0 {
+		return nil, fmt.Errorf("yaml version is required, check the 'version' key")
+	}
 
 	inputParams := map[string]interface{}{}
 	inputParams["build"] = inputs.Build(manager.ConvertToDroneBuild(execution))
@@ -220,6 +221,11 @@ func parseV1Stages(
 
 	switch v := config.Spec.(type) {
 	case *v1yaml.Pipeline:
+		// 校验 yaml 关键字完整性，避免关键字拼写错误导致静默生成空流水线
+		if err := validateV1PipelineSpec(v); err != nil {
+			return nil, err
+		}
+
 		// Expand expressions in strings and matrices
 		script.ExpandConfig(config, inputParams)
 
@@ -304,6 +310,71 @@ func parseV1Stages(
 		return nil, fmt.Errorf("unknown yaml: %w", err)
 	}
 	return stages, nil
+}
+
+// validateV1PipelineSpec 校验 v1 yaml 解析结果的完整性，
+// 避免 stages/steps 等关键字拼写错误导致静默生成空流水线。
+func validateV1PipelineSpec(pipeline *v1yaml.Pipeline) error {
+	if len(pipeline.Stages) == 0 {
+		return fmt.Errorf("pipeline spec has no stages, check the 'stages' key in yaml")
+	}
+	for _, stage := range pipeline.Stages {
+		if err := validateV1Stage(stage); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// validateV1Stage 校验 stage 的 spec 与 steps 存在
+func validateV1Stage(stage *v1yaml.Stage) error {
+	stageCI, ok := stage.Spec.(*v1yaml.StageCI)
+	if !ok {
+		// 非 CI 类型 stage 会在后续解析时报错，这里不重复校验
+		return nil
+	}
+	if len(stageCI.Steps) == 0 {
+		return fmt.Errorf("stage %q has no steps, check the 'steps' key under its spec", stage.Id)
+	}
+	for _, step := range stageCI.Steps {
+		if err := validateV1Step(step); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// validateV1Step 校验 step 的 spec 完整性
+func validateV1Step(step *v1yaml.Step) error {
+	switch spec := step.Spec.(type) {
+	case *v1yaml.StepRun:
+		if spec.Container == nil || spec.Container.Image == "" {
+			return fmt.Errorf("step %q (type: run) has no container.image, check the 'spec.container.image' key", step.Id)
+		}
+	case *v1yaml.StepScript:
+		if spec.Image == "" {
+			return fmt.Errorf("step %q (type: script) has no image, check the 'spec.image' key", step.Id)
+		}
+	case *v1yaml.StepGroup:
+		if len(spec.Steps) == 0 {
+			return fmt.Errorf("step %q (type: group) has no steps, check the 'steps' key", step.Id)
+		}
+		for _, s := range spec.Steps {
+			if err := validateV1Step(s); err != nil {
+				return err
+			}
+		}
+	case *v1yaml.StepParallel:
+		if len(spec.Steps) == 0 {
+			return fmt.Errorf("step %q (type: parallel) has no steps, check the 'steps' key", step.Id)
+		}
+		for _, s := range spec.Steps {
+			if err := validateV1Step(s); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 // convertToV1Config converts pipelineModel.Yaml to v1yaml.Config via JSON serialization.

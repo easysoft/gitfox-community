@@ -17,5 +17,5 @@ pipeline:
   trigger_list_error: "Failed to list triggers."
   trigger_update_success: "Trigger updated successfully."
   trigger_update_error: "Failed to update trigger."
-  trigger_v1_parse_error: "Failed to parse pipeline YAML."
+  trigger_v1_parse_error: "Failed to parse pipeline YAML: %s"
   c_sharp_not_support_error: "Currently, C# scanning is not supported."
