@@ -17,5 +17,5 @@ pipeline:
   trigger_list_error: "触发列表获取失败。"
   trigger_update_success: "触发更新成功。"
   trigger_update_error: "触发更新失败。"
-  trigger_v1_parse_error: "流水线 YAML 解析失败: %s"
+  trigger_v1_parse_error: "流水线yaml解析失败，详细信息：%s"
   c_sharp_not_support_error: "目前暂不支持C#扫描。"

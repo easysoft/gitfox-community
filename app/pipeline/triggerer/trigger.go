@@ -195,7 +195,7 @@ func parseV1Stages(
 		return nil, fmt.Errorf("cannot support non-pipeline kinds in v1 at the moment: %w", err)
 	}
 	if config.Version == 0 {
-		return nil, fmt.Errorf("yaml version is required, check the 'version' key")
+		return nil, fmt.Errorf("check 'version' key in yaml")
 	}
 
 	inputParams := map[string]interface{}{}
@@ -316,7 +316,7 @@ func parseV1Stages(
 // 避免 stages/steps 等关键字拼写错误导致静默生成空流水线。
 func validateV1PipelineSpec(pipeline *v1yaml.Pipeline) error {
 	if len(pipeline.Stages) == 0 {
-		return fmt.Errorf("pipeline spec has no stages, check the 'stages' key in yaml")
+		return fmt.Errorf("check 'stages' key in yaml")
 	}
 	for _, stage := range pipeline.Stages {
 		if err := validateV1Stage(stage); err != nil {
@@ -334,7 +334,7 @@ func validateV1Stage(stage *v1yaml.Stage) error {
 		return nil
 	}
 	if len(stageCI.Steps) == 0 {
-		return fmt.Errorf("stage %q has no steps, check the 'steps' key under its spec", stage.Id)
+		return fmt.Errorf("check 'steps' key in stage %q", stage.Id)
 	}
 	for _, step := range stageCI.Steps {
 		if err := validateV1Step(step); err != nil {
@@ -349,15 +349,15 @@ func validateV1Step(step *v1yaml.Step) error {
 	switch spec := step.Spec.(type) {
 	case *v1yaml.StepRun:
 		if spec.Container == nil || spec.Container.Image == "" {
-			return fmt.Errorf("step %q (type: run) has no container.image, check the 'spec.container.image' key", step.Id)
+			return fmt.Errorf("check 'spec.container.image' key in step %q", step.Id)
 		}
 	case *v1yaml.StepScript:
 		if spec.Image == "" {
-			return fmt.Errorf("step %q (type: script) has no image, check the 'spec.image' key", step.Id)
+			return fmt.Errorf("check 'spec.image' key in step %q", step.Id)
 		}
 	case *v1yaml.StepGroup:
 		if len(spec.Steps) == 0 {
-			return fmt.Errorf("step %q (type: group) has no steps, check the 'steps' key", step.Id)
+			return fmt.Errorf("check 'steps' key in step %q", step.Id)
 		}
 		for _, s := range spec.Steps {
 			if err := validateV1Step(s); err != nil {
@@ -366,7 +366,7 @@ func validateV1Step(step *v1yaml.Step) error {
 		}
 	case *v1yaml.StepParallel:
 		if len(spec.Steps) == 0 {
-			return fmt.Errorf("step %q (type: parallel) has no steps, check the 'steps' key", step.Id)
+			return fmt.Errorf("check 'steps' key in step %q", step.Id)
 		}
 		for _, s := range spec.Steps {
 			if err := validateV1Step(s); err != nil {
