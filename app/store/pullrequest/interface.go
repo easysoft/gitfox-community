@@ -22,4 +22,8 @@ type Interface interface {
 	UpdateMergeAfterSafe(ctx context.Context, repoID uint, pr *repoModel.PullRequest, mergeAfter *repoModel.MergeAfter) error
 	CountByTargetRepoID(ctx context.Context, targetRepoID uint) (int64, error)
 	CountByStatus(ctx context.Context, targetRepoID uint, status repoModel.PullRequestStatus) (int64, error)
+	// GetReviewersByRequestID 根据请求ID（ppmID）查询 ppm 表（ops_ppm）的 reviewers 字段
+	GetReviewersByRequestID(ctx context.Context, requestID uint) ([]string, error)
+	// ListReviewerAccountsByRequestID 根据请求ID（ppmID）查询评审人账号列表
+	ListReviewerAccountsByRequestID(ctx context.Context, requestID uint) ([]string, error)
 }
