@@ -115,7 +115,7 @@ type IScanTask interface {
 	ListIssueInfosByIDs(ctx context.Context, ids []int64) ([]*scanModel.ScanIssueInfo, error)
 	UpdateIssuesStatus(ctx context.Context, ids []int64, status constant.ScanIssueStatus) error
 	SetIssuesStatus(ctx context.Context, in scanModel.ScanIssueUpdateStatusReq) error
-	GetIssueFileTree(ctx context.Context, repoID, taskID int64) (*scanModel.TreeNode, error)
+	GetIssueFileTree(ctx context.Context, filter scanModel.IssueTreeFilter) (*scanModel.TreeNode, error)
 	GetIssueRuleTree(ctx context.Context, repoID, taskID int64) (*scanModel.TreeNode, error)
 }
 

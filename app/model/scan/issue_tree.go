@@ -16,8 +16,9 @@ type TreeNode struct {
 
 // IssueTreeFilter issue 树查询过滤条件
 type IssueTreeFilter struct {
-	RepoID int64 `json:"repoID" form:"repoID"`
-	TaskID int64 `json:"taskID" form:"taskID"`
+	RepoID      int64                 `json:"repoID" form:"repoID"`
+	TaskID      int64                 `json:"taskID" form:"taskID"`
+	ScanMethods []constant.ScanMethod `json:"scanMethods,omitempty" form:"scanMethods"`
 }
 
 // IssueTaskFilter 任务维度过滤（用于 store 层查询）

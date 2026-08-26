@@ -2295,6 +2295,8 @@ definitions:
         type: string
       ppmID:
         type: integer
+      ppmTitle:
+        type: string
       repoBranch:
         type: string
       repoID:
@@ -2388,8 +2390,10 @@ definitions:
         type: string
       ruleType:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleType'
-      scanMethod:
-        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanMethod'
+      scanMethods:
+        items:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanMethod'
+        type: array
       severity:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.AiScanIssueSeverity'
       sort:
@@ -2747,8 +2751,10 @@ definitions:
         type: string
       ruleType:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleType'
-      scanMethod:
-        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanMethod'
+      scanMethods:
+        items:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanMethod'
+        type: array
       severity:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.AiScanIssueSeverity'
       sort:
@@ -3299,6 +3305,8 @@ definitions:
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_user.User:
     properties:
       account:
+        type: string
+      display_name:
         type: string
       email:
         type: string
@@ -7279,6 +7287,45 @@ paths:
       summary: 生成 Runner Token
       tags:
       - runners
+  /scan/aicodereview/{repoID}/{ppmID}/report:
+    post:
+      consumes:
+      - multipart/form-data
+      description: 上传评审任务的报告文件，解析 issues
+      parameters:
+      - description: 合并请求 ID
+        in: path
+        name: ppmID
+        required: true
+        type: integer
+      - description: 报告文件
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 上传成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanIssueReport'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 上传评审任务报告
+      tags:
+      - scan
   /scan/issues/{id}:
     get:
       consumes:
@@ -7366,6 +7413,13 @@ paths:
         in: query
         name: taskID
         type: integer
+      - collectionFormat: csv
+        description: 扫描方式，可多选
+        in: query
+        items:
+          type: string
+        name: scanMethods
+        type: array
       produces:
       - application/json
       responses:

@@ -5814,6 +5814,69 @@
                 }
             }
         },
+        "/scan/aicodereview/{repoID}/{ppmID}/report": {
+            "post": {
+                "description": "上传评审任务的报告文件，解析 issues",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scan"
+                ],
+                "summary": "上传评审任务报告",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "合并请求 ID",
+                        "name": "ppmID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "报告文件",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "上传成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanIssueReport"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/scan/issues/batch": {
             "post": {
                 "description": "根据扫描问题 ID 列表批量查询扫描问题详情",
@@ -5901,6 +5964,16 @@
                         "format": "int64",
                         "description": "任务 ID",
                         "name": "taskID",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "description": "扫描方式，可多选",
+                        "name": "scanMethods",
                         "in": "query"
                     }
                 ],
@@ -14557,6 +14630,9 @@
                 "ppmID": {
                     "type": "integer"
                 },
+                "ppmTitle": {
+                    "type": "string"
+                },
                 "repoBranch": {
                     "type": "string"
                 },
@@ -14696,8 +14772,11 @@
                 "ruleType": {
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleType"
                 },
-                "scanMethod": {
-                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanMethod"
+                "scanMethods": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanMethod"
+                    }
                 },
                 "severity": {
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.AiScanIssueSeverity"
@@ -15236,8 +15315,11 @@
                 "ruleType": {
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleType"
                 },
-                "scanMethod": {
-                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanMethod"
+                "scanMethods": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanMethod"
+                    }
                 },
                 "severity": {
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.AiScanIssueSeverity"
@@ -16051,6 +16133,9 @@
             "type": "object",
             "properties": {
                 "account": {
+                    "type": "string"
+                },
+                "display_name": {
                     "type": "string"
                 },
                 "email": {
