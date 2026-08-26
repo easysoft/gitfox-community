@@ -130,7 +130,7 @@ type IScanIssue interface {
 	CreateIssueBindByTaskID(ctx context.Context, taskID uint, issueKeys []string) error
 	ListByTaskForResult(ctx context.Context, taskID uint, planID int64) ([]*scanModel.Rule, error)
 	ListByTaskID(ctx context.Context, taskID uint, filter scanModel.ScanTaskIssueReqFilter) (*database.PageResult[*scanModel.ScanIssueInfo], error)
-	ListDistinctFilesByRepo(ctx context.Context, repoID int64, taskFilter *scanModel.IssueTaskFilter) ([]*scanModel.IssueFileRaw, error)
+	ListDistinctFilesByRepo(ctx context.Context, repoID int64, scanMethods []constant.ScanMethod, taskFilter *scanModel.IssueTaskFilter) ([]*scanModel.IssueFileRaw, error)
 	ListDistinctRulesByRepo(ctx context.Context, repoID int64, taskFilter *scanModel.IssueTaskFilter) ([]*scanModel.IssueRuleRaw, error)
 }
 

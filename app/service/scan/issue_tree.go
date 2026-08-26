@@ -11,13 +11,13 @@ import (
 )
 
 // GetIssueFileTree 获取 issue 文件树
-func (s *ScanTaskService) GetIssueFileTree(ctx context.Context, repoID, taskID int64) (*scanModel.TreeNode, error) {
-	taskFilter, err := s.buildIssueTaskFilter(ctx, taskID)
+func (s *ScanTaskService) GetIssueFileTree(ctx context.Context, filter scanModel.IssueTreeFilter) (*scanModel.TreeNode, error) {
+	taskFilter, err := s.buildIssueTaskFilter(ctx, filter.TaskID)
 	if err != nil {
 		return nil, err
 	}
 
-	res, err := s.issueStore.ListDistinctFilesByRepo(ctx, repoID, taskFilter)
+	res, err := s.issueStore.ListDistinctFilesByRepo(ctx, filter.RepoID, filter.ScanMethods, taskFilter)
 	if err != nil {
 		return nil, err
 	}
