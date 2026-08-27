@@ -27,12 +27,8 @@ func Envs(stage *drone.Stage, repo *drone.Repo) map[string]string {
 	environ["GITFOX_EXECUTION_ID"] = fmt.Sprintf("%d", stage.BuildID)
 	environ["GITFOX_STAGE_ID"] = fmt.Sprintf("%d", stage.ID)
 
-	// TODO: gitfox 接口地址和服务器地址，后续可以考虑放在其他配置中读取
-	// u, err := url.Parse(repo.HTTPURL)
-	// if err == nil {
-	// 	environ["GITFOX_API_ENDPOINT"] = fmt.Sprintf("%s://%s/api/v1", u.Scheme, u.Host)
-	// 	environ["GITFOX_SERVER"] = fmt.Sprintf("%s", u.Host)
-	// }
+	// GITFOX_API_ENDPOINT / PLUGIN_TOKEN 在触发时由 triggerer 统一注入
+	// （见 app/pipeline/triggerer/trigger.go），此处不再拼接，避免覆盖正确值。
 
 	return environ
 }

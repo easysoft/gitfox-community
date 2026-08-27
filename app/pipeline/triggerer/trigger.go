@@ -2,7 +2,6 @@ package triggerer
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"runtime/debug"
 	"slices"
@@ -10,7 +9,6 @@ import (
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	executionModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/execution"
-	pipelineModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/pipeline"
 	stageModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/stage"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/manager"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/scheduler"
@@ -70,10 +68,10 @@ type triggerer struct {
 	stageStore      stageStore.Interface
 	scheduler       scheduler.Scheduler
 	tx              dbtx.TxRunner
-	config          config.ServerConfig
+	config          *config.Config
 }
 
-func New(pipelineService pipelineSvc.Interface, executionStore executionStore.Interface, stageStore stageStore.Interface, scheduler scheduler.Scheduler, tx dbtx.TxRunner, cfg config.ServerConfig) Triggerer {
+func New(pipelineService pipelineSvc.Interface, executionStore executionStore.Interface, stageStore stageStore.Interface, scheduler scheduler.Scheduler, tx dbtx.TxRunner, cfg *config.Config) Triggerer {
 	return &triggerer{
 		pipelineService: pipelineService,
 		executionStore:  executionStore,
@@ -116,9 +114,12 @@ func (t *triggerer) Trigger(
 	if base.Params == nil {
 		base.Params = make(map[string]string)
 	}
-	base.Params["PLUGIN_GITFOX_SERVER_HOST"] = t.config.ServerHost
-	base.Params["PLUGIN_GITFOX_SERVER_PORT"] = fmt.Sprintf("%d", t.config.Port)
-	base.Params["PLUGIN_GITFOX_SERVER_PROTO"] = t.config.Proto
+	base.Params["PLUGIN_GITFOX_SERVER_HOST"] = t.config.Server.ServerHost
+	base.Params["PLUGIN_GITFOX_SERVER_PORT"] = fmt.Sprintf("%d", t.config.Server.Port)
+	base.Params["PLUGIN_GITFOX_SERVER_PROTO"] = t.config.Server.Proto
+	// 注入插件调用 gitfox API 所需的环境变量（与 scan pipeline 注入保持一致）
+	base.Params["PLUGIN_TOKEN"] = t.config.PipelineAuth.Password
+	base.Params["GITFOX_API_ENDPOINT"] = t.config.URL.Base + "/api/v2"
 
 	tigger := string(base.Action)
 	if tigger == "" {
@@ -211,7 +212,7 @@ func parseV1Stages(
 			return nil, err
 		}
 		// Convert pipelineModel.Yaml to v1yaml.Config via JSON
-		return ConvertToV1Config(yamlConfig)
+		return manager.ConvertToV1Config(yamlConfig)
 	}
 
 	if err := specresolver.Resolve(config, lookupFunc); err != nil {
@@ -304,24 +305,6 @@ func parseV1Stages(
 		return nil, fmt.Errorf("unknown yaml: %w", err)
 	}
 	return stages, nil
-}
-
-// convertToV1Config converts pipelineModel.Yaml to v1yaml.Config via JSON serialization.
-func ConvertToV1Config(src *pipelineModel.Yaml) (*v1yaml.Config, error) {
-	if src == nil {
-		return nil, fmt.Errorf("source yaml config is nil")
-	}
-	// Marshal pipelineModel.Yaml to JSON
-	data, err := json.Marshal(src)
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal yaml config: %w", err)
-	}
-	// Unmarshal JSON to v1yaml.Config
-	dst := &v1yaml.Config{}
-	if err := json.Unmarshal(data, dst); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal to v1yaml.Config: %w", err)
-	}
-	return dst, nil
 }
 
 // createExecutionWithStages writes an execution along with its stages in a single transaction.

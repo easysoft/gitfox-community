@@ -3,8 +3,8 @@ package resolver
 import (
 	"context"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/manager"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/pipeline"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/triggerer"
 
 	v1yaml "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pipeline/spec"
 
@@ -34,6 +34,6 @@ func (m *Manager) GetLookupFn() LookupFunc {
         if err != nil {
             return nil, err
         }
-        return triggerer.ConvertToV1Config(config)
+        return manager.ConvertToV1Config(config)
     }
 }
