@@ -632,7 +632,7 @@ func (s *Service) renameArtifactInner(ctx context.Context, tx *gorm.DB, artifact
 	}
 
 	// 1.1 名称合法性校验（复用 CreateView 的规则）
-	trimmed, err := model.ValidateViewName(newName, view.Format)
+	trimmed, err := model.ValidateLibName(newName, view.Format)
 	if err != nil {
 		return err
 	}
@@ -647,7 +647,7 @@ func (s *Service) renameArtifactInner(ctx context.Context, tx *gorm.DB, artifact
 		if v.Deleted == 0 && v.ID != artifactID {
 			return pkgErrors.WithI18nKey(
 				fmt.Errorf("artifact view %q already exists", newName),
-				i18n.ArtifactViewNameDuplicate,
+				i18n.ArtifactLibNameDuplicate,
 			)
 		}
 	}

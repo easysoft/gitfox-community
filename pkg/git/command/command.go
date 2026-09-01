@@ -23,9 +23,10 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+	"strings"
 	"sync"
 
-	"github.com/rs/zerolog/log"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 )
 
 var (
@@ -186,7 +187,7 @@ func (c *Command) Run(ctx context.Context, opts ...RunOptionFunc) (err error) {
 	cmd.Stdin = options.Stdin
 	cmd.Stdout = options.Stdout
 	cmd.Stderr = options.Stderr
-	log.Ctx(ctx).Debug().Str("execute_dir", options.Dir).Msgf("args: %q, envs: %q", cmd.Args, cmd.Env)
+	logger.GetLogger(ctx).Debugw(fmt.Sprintf("git command: %s", strings.Join(cmd.Args, " ")), "execute_dir", options.Dir)
 	if err = cmd.Start(); err != nil {
 		return err
 	}

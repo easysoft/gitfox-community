@@ -1,26 +1,42 @@
 package runner
 
 import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"net/http"
+	"time"
+
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	runnerModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/runner"
+	stageModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/stage"
+	stepModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/step"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/manager"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/runner"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/livelog"
+	urlprovider "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/url"
 	"github.com/gin-gonic/gin"
 )
 
 type Controller struct {
-	runnerSvc runner.Interface
-	urlConfig config.URL
+	runnerSvc   runner.Interface
+	urlConfig   config.URL
+	urlProvider urlprovider.Provider
+	execManager manager.ExecutionManager
 }
 
 // NewController 创建 runner 管理控制器
-func NewController(runnerSvc runner.Interface, urlConfig config.URL) *Controller {
+func NewController(runnerSvc runner.Interface, urlConfig config.URL, urlProvider urlprovider.Provider, execManager manager.ExecutionManager) *Controller {
 	return &Controller{
-		runnerSvc: runnerSvc,
-		urlConfig: urlConfig,
+		runnerSvc:   runnerSvc,
+		urlConfig:   urlConfig,
+		urlProvider: urlProvider,
+		execManager: execManager,
 	}
 }
 
@@ -151,8 +167,13 @@ func (ctl *Controller) UpdateBasicInfo(c *gin.Context) {
 
 	err = ctl.runnerSvc.Update(c.Request.Context(), runner)
 	if err != nil {
-		err = errors.WithI18nKey(err, i18n.RunnerUpdateError)
-		resp.InternalError(c, err)
+		if errors.GetType(err) == errors.BadRequest {
+			err = errors.WithI18nKey(err, i18n.RunnerDefaultOperateError)
+			resp.BadRequest(c, err)
+		} else {
+			err = errors.WithI18nKey(err, i18n.RunnerUpdateError)
+			resp.InternalError(c, err)
+		}
 		return
 	}
 
@@ -213,8 +234,13 @@ func (ctl *Controller) UpdateStatus(c *gin.Context) {
 
 	err = ctl.runnerSvc.Update(c.Request.Context(), runner)
 	if err != nil {
-		err = errors.WithI18nKey(err, i18n.RunnerUpdateError)
-		resp.InternalError(c, err)
+		if errors.GetType(err) == errors.BadRequest {
+			err = errors.WithI18nKey(err, i18n.RunnerDefaultOperateError)
+			resp.BadRequest(c, err)
+		} else {
+			err = errors.WithI18nKey(err, i18n.RunnerUpdateError)
+			resp.InternalError(c, err)
+		}
 		return
 	}
 
@@ -246,6 +272,11 @@ func (ctl *Controller) Delete(c *gin.Context) {
 		if errors.IsNotFound(err) {
 			err = errors.WithI18nKey(err, i18n.RunnerQueryError)
 			resp.NotFound(c, err)
+			return
+		}
+		if errors.GetType(err) == errors.BadRequest {
+			err = errors.WithI18nKey(err, i18n.RunnerDefaultOperateError)
+			resp.BadRequest(c, err)
 			return
 		}
 		err = errors.WithI18nKey(err, i18n.RunnerDeleteError)
@@ -306,6 +337,14 @@ func (ctl *Controller) Register(c *gin.Context) {
 		resp.Unauthorized(c, errors.WithI18nKey(nil, i18n.RunnerInvalidToken))
 		return
 	}
+
+	// 如果该 runner token 已注册过，且该 runner 没有被软删除，无需重复注册（应对 runner 重启的情况）
+	registedrunner, err := ctl.runnerSvc.ValidateRunnerToken(c.Request.Context(), runnerToken)
+	if err == nil && registedrunner.Token == runnerToken {
+		resp.OK(c, i18n.RunnerRegisterSuccess, registedrunner)
+		return
+	}
+
 	// 验证临时 token，获取对应的 account 信息
 	account, err := ctl.runnerSvc.ValidateTempRunnerToken(c.Request.Context(), runnerToken)
 	if err != nil {
@@ -324,6 +363,10 @@ func (ctl *Controller) Register(c *gin.Context) {
 	}
 
 	// 构建 runner 模型
+	var labels []string
+	for k := range reqData.Labels {
+		labels = append(labels, k)
+	}
 	runner := &runnerModel.Runner{
 		Name:      reqData.Name,
 		Desc:      reqData.Desc,
@@ -332,7 +375,8 @@ func (ctl *Controller) Register(c *gin.Context) {
 		IP:        reqData.IP,
 		OS:        reqData.OS,
 		Arch:      reqData.Arch,
-		Labels:    reqData.Labels,
+		Runtime:   reqData.Runtime,
+		Labels:    labels,
 		CreatedBy: account,
 		EditedBy:  account,
 	}
@@ -379,10 +423,289 @@ func (ctl *Controller) UpdateHeartBeat(c *gin.Context) {
 	// 更新心跳
 	err = ctl.runnerSvc.UpdateRunnerHeartbeat(c.Request.Context(), runner.ID)
 	if err != nil {
-		err = errors.WithI18nKey(err, i18n.RunnerUpdateHeartBeatError)
+		if errors.GetType(err) == errors.BadRequest {
+			err = errors.WithI18nKey(err, i18n.RunnerDefaultOperateError)
+			resp.BadRequest(c, err)
+		} else {
+			err = errors.WithI18nKey(err, i18n.RunnerUpdateHeartBeatError)
+			resp.InternalError(c, err)
+		}
+		return
+	}
+
+	resp.Accepted(c, i18n.RunnerUpdateHeartBeatSuccess, runner)
+}
+
+// validateRunnerToken 从请求头中验证 X-Runner-Token 并返回对应的 runner
+func (ctl *Controller) validateRunnerToken(c *gin.Context) (*runnerModel.Runner, error) {
+	runnerToken := c.GetHeader("X-Runner-Token")
+	if runnerToken == "" {
+		return nil, errors.WithI18nKey(nil, i18n.RunnerInvalidToken)
+	}
+	return ctl.runnerSvc.ValidateRunnerToken(c.Request.Context(), runnerToken)
+}
+
+// Ping runner 连通性检查
+func (ctl *Controller) Ping(c *gin.Context) {
+	resp.OK(c, i18n.RunnerUpdateHeartBeatSuccess, gin.H{"status": "ok"})
+}
+
+// RequestStage 拉取下一个待执行的 stage
+func (ctl *Controller) RequestStage(c *gin.Context) {
+	runner, err := ctl.validateRunnerToken(c)
+	if err != nil {
+		resp.Unauthorized(c, err)
+		return
+	}
+
+	var reqData runnerModel.ReqStageRequest
+	if err := c.ShouldBindJSON(&reqData); err != nil {
+		err = errors.WithI18nKey(err, i18n.RunnerBodyParamError)
+		resp.BadRequest(c, err)
+		return
+	}
+
+	ctxTimeout, cancel := context.WithTimeout(c.Request.Context(), 15*time.Second)
+	defer cancel()
+
+	stage, err := ctl.execManager.Request(ctxTimeout, &manager.Request{
+		Token:  runner.Token,
+		Type:   reqData.Type,
+		OS:     reqData.OS,
+		Arch:   reqData.Arch,
+		Labels: reqData.Labels,
+	})
+	if err != nil {
+		// context deadline exceeded is normal long-polling behavior —
+		// no stage was available within the timeout window.
+		// Return 204 to signal the runner should retry.
+		if errors.Is(err, context.DeadlineExceeded) {
+			c.Status(http.StatusNoContent)
+			return
+		}
+		err = errors.WithI18nKey(err, i18n.RunnerStageRequestError)
 		resp.InternalError(c, err)
 		return
 	}
 
-	resp.OK(c, i18n.RunnerUpdateHeartBeatSuccess, runner)
+	resp.OK(c, i18n.RunnerStageRequestSuccess, stage)
+}
+
+// AcceptStage 接受 stage 并标记为已分配
+func (ctl *Controller) AcceptStage(c *gin.Context) {
+	if _, err := ctl.validateRunnerToken(c); err != nil {
+		resp.Unauthorized(c, err)
+		return
+	}
+
+	stageID, err := req.PathParamAsPositiveInt64(c, "stageID")
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RunnerPathParamError)
+		resp.BadRequest(c, err)
+		return
+	}
+
+	var reqData runnerModel.ReqStageAccept
+	if err := c.ShouldBindJSON(&reqData); err != nil {
+		err = errors.WithI18nKey(err, i18n.RunnerBodyParamError)
+		resp.BadRequest(c, err)
+		return
+	}
+
+	stage, err := ctl.execManager.Accept(c.Request.Context(), stageID, reqData.Machine)
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RunnerStageAcceptError)
+		resp.InternalError(c, err)
+		return
+	}
+
+	resp.OK(c, i18n.RunnerStageAcceptSuccess, stage)
+}
+
+// DetailStage 获取 stage 执行详情
+func (ctl *Controller) DetailStage(c *gin.Context) {
+	if _, err := ctl.validateRunnerToken(c); err != nil {
+		resp.Unauthorized(c, err)
+		return
+	}
+
+	stageID, err := req.PathParamAsPositiveInt64(c, "stageID")
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RunnerPathParamError)
+		resp.BadRequest(c, err)
+		return
+	}
+
+	details, err := ctl.execManager.Details(c.Request.Context(), stageID)
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RunnerStageDetailError)
+		resp.InternalError(c, err)
+		return
+	}
+
+	resp.OK(c, i18n.RunnerStageDetailSuccess, details)
+}
+
+// UpdateStage 更新 stage 状态
+func (ctl *Controller) UpdateStage(c *gin.Context) {
+	if _, err := ctl.validateRunnerToken(c); err != nil {
+		resp.Unauthorized(c, err)
+		return
+	}
+
+	var reqData stageModel.StageWithSteps
+	if err := c.ShouldBindJSON(&reqData); err != nil {
+		err = errors.WithI18nKey(err, i18n.RunnerBodyParamError)
+		resp.BadRequest(c, err)
+		return
+	}
+
+	var err error
+	if reqData.Status == constant.CIStatusPending || reqData.Status == constant.CIStatusRunning {
+		err = ctl.execManager.BeforeStage(c.Request.Context(), &reqData)
+	} else {
+		err = ctl.execManager.AfterStage(c.Request.Context(), &reqData)
+	}
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RunnerStageUpdateError)
+		resp.InternalError(c, err)
+		return
+	}
+
+	resp.OK(c, i18n.RunnerStageUpdateSuccess, &reqData)
+}
+
+// UpdateStep 更新 step 状态
+func (ctl *Controller) UpdateStep(c *gin.Context) {
+	if _, err := ctl.validateRunnerToken(c); err != nil {
+		resp.Unauthorized(c, err)
+		return
+	}
+
+	var reqData stepModel.Step
+	if err := c.ShouldBindJSON(&reqData); err != nil {
+		err = errors.WithI18nKey(err, i18n.RunnerBodyParamError)
+		resp.BadRequest(c, err)
+		return
+	}
+
+	var err error
+	if reqData.Status == constant.CIStatusPending || reqData.Status == constant.CIStatusRunning {
+		err = ctl.execManager.BeforeStep(c.Request.Context(), &reqData)
+	} else {
+		err = ctl.execManager.AfterStep(c.Request.Context(), &reqData)
+	}
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RunnerStepUpdateError)
+		resp.InternalError(c, err)
+		return
+	}
+
+	resp.OK(c, i18n.RunnerStepUpdateSuccess, &reqData)
+}
+
+// WatchBuild 监听 build 取消请求
+func (ctl *Controller) WatchBuild(c *gin.Context) {
+	if _, err := ctl.validateRunnerToken(c); err != nil {
+		resp.Unauthorized(c, err)
+		return
+	}
+
+	buildID, err := req.PathParamAsPositiveInt64(c, "buildID")
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RunnerPathParamError)
+		resp.BadRequest(c, err)
+		return
+	}
+
+	canceled, err := ctl.execManager.Watch(c.Request.Context(), buildID)
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RunnerBuildWatchError)
+		resp.InternalError(c, err)
+		return
+	}
+
+	resp.OK(c, i18n.RunnerBuildWatchSuccess, gin.H{"canceled": canceled})
+}
+
+// BatchLogs 批量写流水线日志
+func (ctl *Controller) BatchLogs(c *gin.Context) {
+	if _, err := ctl.validateRunnerToken(c); err != nil {
+		resp.Unauthorized(c, err)
+		return
+	}
+
+	stepID, err := req.PathParamAsPositiveInt64(c, "stepID")
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RunnerPathParamError)
+		resp.BadRequest(c, err)
+		return
+	}
+
+	var lines []*livelog.Line
+	if err := c.ShouldBindJSON(&lines); err != nil {
+		err = errors.WithI18nKey(err, i18n.RunnerBodyParamError)
+		resp.BadRequest(c, err)
+		return
+	}
+
+	for _, l := range lines {
+		if err := ctl.execManager.Write(c.Request.Context(), stepID, l); err != nil {
+			err = errors.WithI18nKey(err, i18n.RunnerLogBatchError)
+			resp.InternalError(c, err)
+			return
+		}
+	}
+
+	resp.OK(c, i18n.RunnerLogBatchSuccess, nil)
+}
+
+// UploadLogs 上传完整流水线日志
+func (ctl *Controller) UploadLogs(c *gin.Context) {
+	if _, err := ctl.validateRunnerToken(c); err != nil {
+		resp.Unauthorized(c, err)
+		return
+	}
+
+	stepID, err := req.PathParamAsPositiveInt64(c, "stepID")
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RunnerPathParamError)
+		resp.BadRequest(c, err)
+		return
+	}
+
+	var lines []*livelog.Line
+	if err := c.ShouldBindJSON(&lines); err != nil {
+		err = errors.WithI18nKey(err, i18n.RunnerBodyParamError)
+		resp.BadRequest(c, err)
+		return
+	}
+
+	logLines := make([]livelog.Line, len(lines))
+	for i, l := range lines {
+		if l != nil {
+			logLines[i] = *l
+		}
+	}
+
+	var buffer bytes.Buffer
+	out, err := json.Marshal(logLines)
+	if err != nil {
+		err = errors.WithI18nKey(err, i18n.RunnerLogUploadError)
+		resp.InternalError(c, err)
+		return
+	}
+	if _, err = buffer.Write(out); err != nil {
+		err = errors.WithI18nKey(err, i18n.RunnerLogUploadError)
+		resp.InternalError(c, err)
+		return
+	}
+
+	if err := ctl.execManager.UploadLogs(c.Request.Context(), stepID, &buffer); err != nil {
+		err = errors.WithI18nKey(err, i18n.RunnerLogUploadError)
+		resp.InternalError(c, err)
+		return
+	}
+
+	resp.OK(c, i18n.RunnerLogUploadSuccess, nil)
 }

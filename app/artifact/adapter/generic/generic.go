@@ -11,6 +11,7 @@ import (
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/adapter"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/adapter/request"
+	artModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/model"
 	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
 	artifactStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/artifact"
 	pkgErrors "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
@@ -126,64 +127,80 @@ func (h *uploader) validateForm(_ context.Context, req *http.Request) error {
 		if err := validateGenericGroupName(group); err != nil {
 			return err
 		}
-		g, err := h.artStore.Groups().GetEndpointByNames(req.Context(), artifactID, strings.Split(strings.Trim(strings.ReplaceAll(group, "/", "."), "."), "."), model.ArtifactFileFormat)
+		names := strings.Split(strings.Trim(group, "/"), "/")
+		ge, err := h.artStore.Groups().GetEndpointByNames(req.Context(), artifactID, names, model.ArtifactFileFormat)
 		if err != nil {
-			return badRequest(
-				fmt.Errorf("%w: group=%q not found under artifactID=%d: %v", adapter.ErrInvalidGroupName, group, artifactID, err),
-				i18n.ArtifactUploadGroupPathNotFound,
-			)
+			// 目录路径不存在 → 递归创建目录并同步树节点，支持上传时按需建目录。
+			// 仅当"不存在"（not found）时降级创建；其余错误保持原报错口径。
+			if !pkgErrors.Is(err, pkgErrors.ErrResourceNotFound) {
+				return badRequest(
+					fmt.Errorf("%w: group=%q query failed under artifactID=%d: %v", adapter.ErrInvalidGroupName, group, artifactID, err),
+					i18n.ArtifactGroupQueryError,
+				)
+			}
+			ge, err = h.artStore.Groups().RecursiveCreate(req.Context(), artifactID, names, model.ArtifactFileFormat, h.uploadReq.LoadCreator(req.Context()).UID)
+			if err != nil {
+				return badRequest(
+					fmt.Errorf("%w: group=%q create failed under artifactID=%d: %v", adapter.ErrInvalidGroupName, group, artifactID, err),
+					i18n.ArtifactGroupCreateError,
+				)
+			}
+			// 同步新建目录的树节点，供树形浏览展示；未显式同步则目录不出现在树中。
+			if _, err = artModel.NewSyncer(h.artStore).SyncTreeNodeForGroup(req.Context(), ge.ArtifactGroup); err != nil {
+				return badRequest(
+					fmt.Errorf("%w: group=%q tree node sync failed: %v", adapter.ErrInvalidGroupName, group, err),
+					i18n.ArtifactGroupCreateError,
+				)
+			}
 		}
-		if g.ArtifactGroup == nil || g.ArtifactGroup.ArtifactID != artifactID {
+		if ge.ArtifactGroup == nil || ge.ArtifactGroup.ArtifactID != artifactID {
 			return badRequest(
 				fmt.Errorf("%w: group=%q does not belong to artifactID=%d", adapter.ErrInvalidGroupName, group, artifactID),
 				i18n.ArtifactUploadGroupArtifactMismatch,
 			)
 		}
-		h.descriptor.GroupID = g.ID
+		h.descriptor.GroupID = ge.ArtifactGroup.ID
 	}
 
 	return nil
 }
 
 // validateGenericGroupName 校验 generic 上传时传入的 group 字符串。
-// 约束（与 CreateArtifactViewReq 对 generic/raw 放行中文的口径一致）：
-//  1. 以 `.` 拆分后每一段都不能为空（不允许前导 / 尾随 / 连续 `.`）；
+// 约束（与 CreateArtifactLibReq 对 generic/raw 放行中文的口径一致）：
 //  2. 每段 rune 数不得超过 maxGenericGroupSegmentLen；
 //  3. 禁止空白字符（含全角空格等），禁止控制字符；
 //  4. 禁止路径分隔与 Windows 保留字符：`/ \ : * ? " < > |`；
-//  5. 允许中文、字母、数字、中划线、下划线及其他非保留 Unicode。
+//  5. 允许中文、字母、数字、中划线、下划线、英文点及其他非保留 Unicode。
 func validateGenericGroupName(group string) error {
 	if group == "" {
 		return badRequest(adapter.ErrInvalidGroupName, i18n.ArtifactUploadGroupNameInvalid)
 	}
-	parts := strings.Split(group, ".")
-	for _, seg := range parts {
-		if seg == "" {
+
+	if group == "" {
+		return badRequest(
+			fmt.Errorf("%w: empty segment in group=%q", adapter.ErrInvalidGroupName, group),
+			i18n.ArtifactUploadGroupNameInvalid,
+		)
+	}
+	if len([]rune(group)) > maxGenericGroupSegmentLen {
+		return badRequest(
+			fmt.Errorf("%w: segment too long in group=%q", adapter.ErrInvalidGroupName, group),
+			i18n.ArtifactUploadGroupNameInvalid,
+		)
+	}
+	for _, rn := range group {
+		if unicode.IsSpace(rn) || unicode.IsControl(rn) {
 			return badRequest(
-				fmt.Errorf("%w: empty segment in group=%q", adapter.ErrInvalidGroupName, group),
+				fmt.Errorf("%w: group segment contains whitespace or control char: %q", adapter.ErrInvalidGroupName, group),
 				i18n.ArtifactUploadGroupNameInvalid,
 			)
 		}
-		if len([]rune(seg)) > maxGenericGroupSegmentLen {
-			return badRequest(
-				fmt.Errorf("%w: segment too long in group=%q", adapter.ErrInvalidGroupName, group),
-				i18n.ArtifactUploadGroupNameInvalid,
-			)
-		}
-		for _, rn := range seg {
-			if unicode.IsSpace(rn) || unicode.IsControl(rn) {
+		for _, bad := range genericGroupForbiddenChars {
+			if rn == bad {
 				return badRequest(
-					fmt.Errorf("%w: group segment contains whitespace or control char: %q", adapter.ErrInvalidGroupName, seg),
+					fmt.Errorf("%w: group segment contains forbidden char %q: %q", adapter.ErrInvalidGroupName, bad, group),
 					i18n.ArtifactUploadGroupNameInvalid,
 				)
-			}
-			for _, bad := range genericGroupForbiddenChars {
-				if rn == bad {
-					return badRequest(
-						fmt.Errorf("%w: group segment contains forbidden char %q: %q", adapter.ErrInvalidGroupName, bad, seg),
-						i18n.ArtifactUploadGroupNameInvalid,
-					)
-				}
 			}
 		}
 	}

@@ -3,9 +3,9 @@ package events
 import (
 	"context"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/events"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 
-	"github.com/rs/zerolog/log"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/events"
 )
 
 const CreatedEvent events.EventType = "created"
@@ -17,11 +17,11 @@ type CreatedPayload struct {
 func (r *Reporter) Created(ctx context.Context, payload *CreatedPayload) {
 	eventID, err := events.ReporterSendEvent(r.innerReporter, ctx, CreatedEvent, payload)
 	if err != nil {
-		log.Ctx(ctx).Err(err).Msgf("failed to send pipeline created event")
+		logger.GetLogger(ctx).Errorw("failed to send pipeline created event", "error", err)
 		return
 	}
 
-	log.Ctx(ctx).Debug().Msgf("reported pipeline created event with id '%s'", eventID)
+	logger.GetLogger(ctx).Debugf("reported pipeline created event with id '%s'", eventID)
 }
 
 func (r *Reader) RegisterCreated(fn events.HandlerFunc[*CreatedPayload],

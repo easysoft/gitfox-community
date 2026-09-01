@@ -558,7 +558,7 @@ definitions:
       spaceID:
         type: integer
     type: object
-  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.CreateArtifactViewReq:
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.CreateArtifactLibReq:
     properties:
       artifactID:
         type: integer
@@ -1782,6 +1782,9 @@ definitions:
         type: integer
       query:
         type: string
+      space:
+        description: 空间标识
+        type: integer
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_repo.ReqForDiff:
     properties:
@@ -1879,6 +1882,8 @@ definitions:
         type: string
       os:
         type: string
+      runtime:
+        type: string
       version:
         type: string
     required:
@@ -1949,15 +1954,19 @@ definitions:
         type: integer
       ip:
         type: string
+      isDefault:
+        type: boolean
       labels:
-        additionalProperties:
+        items:
           type: string
-        type: object
+        type: array
       name:
         type: string
       online:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.RunnerStatus'
       os:
+        type: string
+      runtime:
         type: string
       status:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.RunnerActiveStatus'
@@ -3629,7 +3638,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.CreateArtifactViewReq'
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.CreateArtifactLibReq'
       produces:
       - application/json
       responses:
@@ -3981,6 +3990,10 @@ paths:
       - description: raw 包名（raw 上传必传）
         in: formData
         name: packageName
+        type: string
+      - description: 上传目录路径（支持多级 a/b/c，不存在时自动递归创建；与 groupID 二选一）
+        in: formData
+        name: group
         type: string
       - description: 制品文件
         in: formData

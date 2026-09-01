@@ -20,6 +20,8 @@ import (
 	stageStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/stage"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database/dbtx"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	v1yaml "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pipeline/spec"
 	normalize "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pipeline/spec/parse/normalize"
@@ -47,7 +49,8 @@ type Hook struct {
 	// 用于匹配 scan trigger 的字段，与 Ref 可能不同
 	// 比如对于 branch 事件，Ref 是 refs/heads/main，而 Match 是 main；对于 tag 事件，Ref 是 refs/tags/v1.0，而 Match 是 v1.0
 	// 比如对于 pull request 事件，Ref 是 refs/pullreq/123/head，而 Match 根据 action 的不同而不同
-	Match string `json:"match"`
+	Match       string `json:"match"`
+	CommitMatch string `json:"commitMatch"`
 	// 重试相关字段
 	RetrySourceID     *int64 `json:"retry_source_id,omitempty"`
 	RetryCount        int    `json:"retry_count,omitempty"`
@@ -136,11 +139,15 @@ func (t *triggerer) Trigger(
 	// For V1 YAML - for now we can just parse the stages and create them sequentially.
 	stages, err := parseV1Stages(ctx, file.Data, execution, base, t.pipelineService)
 	if err != nil {
-		return nil, fmt.Errorf("could not parse v1 YAML into stages: %w", err)
+		// 具体错误信息通过 i18n 模板的 %s 透传给用户（如缺少 stages/steps 关键字的校验错误）
+		return nil, errors.WithI18nKey(err, i18n.PipelineTriggerV1ParseError)
 	}
 
 	if err := t.createExecutionWithStagesWithTx(ctx, execution, stages); err != nil {
-		return nil, fmt.Errorf("could not create execution: %w", err)
+		return nil, errors.WithI18nKey(
+			fmt.Errorf("could not create execution: %w", err),
+			i18n.ExecutionTriggerError,
+		)
 	}
 
 	for _, stage := range stages {
@@ -211,6 +218,11 @@ func parseV1Stages(
 
 	switch v := config.Spec.(type) {
 	case *v1yaml.Pipeline:
+		// 校验 yaml 关键字完整性，避免关键字拼写错误导致静默生成空流水线
+		if err := validateV1PipelineSpec(v); err != nil {
+			return nil, err
+		}
+
 		// Expand expressions in strings and matrices
 		script.ExpandConfig(config, inputParams)
 
@@ -295,6 +307,63 @@ func parseV1Stages(
 		return nil, fmt.Errorf("unknown yaml: %w", err)
 	}
 	return stages, nil
+}
+
+// validateV1PipelineSpec 校验 v1 yaml 解析结果的完整性，
+// 避免 stages/steps 等关键字拼写错误导致静默生成空流水线。
+func validateV1PipelineSpec(pipeline *v1yaml.Pipeline) error {
+	if len(pipeline.Stages) == 0 {
+		return fmt.Errorf("check 'stages' key in yaml")
+	}
+	for _, stage := range pipeline.Stages {
+		if err := validateV1Stage(stage); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// validateV1Stage 校验 stage 的 spec 与 steps 存在
+func validateV1Stage(stage *v1yaml.Stage) error {
+	stageCI, ok := stage.Spec.(*v1yaml.StageCI)
+	if !ok {
+		// 非 CI 类型 stage 会在后续解析时报错，这里不重复校验
+		return nil
+	}
+	if len(stageCI.Steps) == 0 {
+		return fmt.Errorf("check 'steps' key in stage %q", stage.Id)
+	}
+	for _, step := range stageCI.Steps {
+		if err := validateV1Step(step); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// validateV1Step 校验 step 的 spec 完整性
+func validateV1Step(step *v1yaml.Step) error {
+	switch spec := step.Spec.(type) {
+	case *v1yaml.StepGroup:
+		if len(spec.Steps) == 0 {
+			return fmt.Errorf("check 'steps' key in step %q", step.Id)
+		}
+		for _, s := range spec.Steps {
+			if err := validateV1Step(s); err != nil {
+				return err
+			}
+		}
+	case *v1yaml.StepParallel:
+		if len(spec.Steps) == 0 {
+			return fmt.Errorf("check 'steps' key in step %q", step.Id)
+		}
+		for _, s := range spec.Steps {
+			if err := validateV1Step(s); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 // convertToV1Config converts pipelineModel.Yaml to v1yaml.Config via JSON serialization.

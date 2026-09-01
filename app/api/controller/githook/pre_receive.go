@@ -38,7 +38,6 @@ import (
 	// "github.com/easysoft/gitfox/types/enum"
 
 	"github.com/gotidy/ptr"
-	"github.com/rs/zerolog"
 	"golang.org/x/exp/slices"
 )
 
@@ -165,11 +164,13 @@ func (c *Controller) checkProtectionRules(
 		branches        []string
 		actionType      constant.GitOperationType
 		getAllowedUsers func(*utils.BranchPermissionResult) []string
+		// enforceReview 表示该操作受强制评审(forceReview)限制
+		enforceReview bool
 	}{
-		{refUpdates.branches.deleted, constant.GitOperationDelete, func(r *utils.BranchPermissionResult) []string { return r.DeleteUser }},
-		{refUpdates.branches.created, constant.GitOperationCreate, func(r *utils.BranchPermissionResult) []string { return r.CreateUser }},
-		{refUpdates.branches.updated, constant.GitOperationUpdate, func(r *utils.BranchPermissionResult) []string { return r.UpdateUser }},
-		{refUpdates.branches.forced, constant.GitOperationForcePush, func(r *utils.BranchPermissionResult) []string { return r.ForcePushUser }},
+		{refUpdates.branches.deleted, constant.GitOperationDelete, func(r *utils.BranchPermissionResult) []string { return r.DeleteUser }, false},
+		{refUpdates.branches.created, constant.GitOperationCreate, func(r *utils.BranchPermissionResult) []string { return r.CreateUser }, false},
+		{refUpdates.branches.updated, constant.GitOperationUpdate, func(r *utils.BranchPermissionResult) []string { return r.UpdateUser }, true},
+		{refUpdates.branches.forced, constant.GitOperationForcePush, func(r *utils.BranchPermissionResult) []string { return r.ForcePushUser }, true},
 	}
 
 	for _, check := range checks {
@@ -187,6 +188,14 @@ func (c *Controller) checkProtectionRules(
 			rule, err := utils.GetBranchPermission(ctx, c.devopsConfig.URL, int64(repo.ID), branchName, entry.Key)
 			if err != nil {
 				return errors.Wrapf(err, "failed to get branch rule for %s", branchName)
+			}
+
+			// 强制评审开启时，禁止直接更新/强推该分支，必须通过 fit 提交
+			if check.enforceReview && rule.ForceReview != 0 {
+				output.Error = ptr.String(fmt.Sprintf(
+					"branch %s must be use fit to Push",
+					branchName))
+				return nil
 			}
 
 			allowedUsers := check.getAllowedUsers(rule)
@@ -257,10 +266,4 @@ func groupRefsByAction(refUpdates []hook.ReferenceUpdate, forced []bool) (c chan
 		}
 	}
 	return
-}
-
-func loggingWithRefUpdate(refUpdate hook.ReferenceUpdate) func(c zerolog.Context) zerolog.Context {
-	return func(c zerolog.Context) zerolog.Context {
-		return c.Str("ref", refUpdate.Ref).Str("old_sha", refUpdate.Old.String()).Str("new_sha", refUpdate.New.String())
-	}
 }

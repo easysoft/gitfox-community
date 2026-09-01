@@ -28,7 +28,7 @@ import (
 	legacy "github.com/drone/runner-go/pipeline/runtime"
 	"github.com/drone/runner-go/secret"
 
-	gitfoxLogger "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 )
 
 var noContext = context.Background()
@@ -64,35 +64,59 @@ type Runner struct {
 }
 
 // Run runs the pipeline stage.
-func (s *Runner) Run(ctx context.Context, stage *drone.Stage) error {
+func (s *Runner) Run(ctx context.Context, stage *drone.Stage) (err error) {
 	stageInfo := fmt.Sprintf("stage.id=%d, stage.name=%s, stage.number=%d", stage.ID, stage.Name, stage.Number)
-	logger := gitfoxLogger.GetLogger(ctx)
-	logger.Infof("[pipeline]: stage received, %s", stageInfo)
+	logger.GetLogger(ctx).Infof("[pipeline]: stage received, %s", stageInfo)
 
 	// delivery to a single agent is not guaranteed, which means
 	// we need confirm receipt. The first agent that confirms
 	// receipt of the stage can assume ownership.
 
 	stage.Machine = s.Machine
-	err := s.Client.Accept(ctx, stage)
+	err = s.Client.Accept(ctx, stage)
 	if err != nil && err == client.ErrOptimisticLock {
-		logger.Infof("[pipeline]: stage accepted by another runner, %s", stageInfo)
+		logger.GetLogger(ctx).Infof("[pipeline]: stage accepted by another runner, %s", stageInfo)
 		return nil
 	}
 	if err != nil {
-		logger.Infof("[pipeline]: cannot accept stage, %s, err=%v", stageInfo, err)
+		logger.GetLogger(ctx).Infof("[pipeline]: cannot accept stage, %s, err=%v", stageInfo, err)
 		return err
 	}
 
-	logger.Infof("[pipeline]: stage accepted, %s", stageInfo)
+	logger.GetLogger(ctx).Infof("[pipeline]: stage accepted, %s", stageInfo)
+
+	// The stage is now claimed by this runner (host assigned, status pending).
+	// Any failure from here on — including a panic — must be reported back as
+	// a terminal status; otherwise the stage stays pending with host assigned
+	// forever, is never re-dispatched and blocks the pipeline queue.
+	defer func() {
+		var panicked interface{}
+		if r := recover(); r != nil {
+			panicked = r
+			err = fmt.Errorf("panic received: %v", r)
+		}
+		if err == nil {
+			return
+		}
+		stage.Status = drone.StatusError
+		stage.Error = err.Error()
+		stage.Stopped = time.Now().Unix()
+		if upErr := s.Client.Update(ctx, stage); upErr != nil {
+			logger.GetLogger(ctx).Errorf("[pipeline]: cannot report stage failure, %s, err=%v", stageInfo, upErr)
+		}
+		if panicked != nil {
+			// re-panic so the caller (poller runWithRecovery) still logs the stack
+			panic(panicked)
+		}
+	}()
 
 	data, err := s.Client.Detail(ctx, stage)
 	if err != nil {
-		logger.Infof("[pipeline]: cannot get stage details, %s, err=%v", stageInfo, err)
+		logger.GetLogger(ctx).Infof("[pipeline]: cannot get stage details, %s, err=%v", stageInfo, err)
 		return err
 	}
 
-	logger.Infof("[pipeline]: stage details fetched, %s", stageInfo)
+	logger.GetLogger(ctx).Infof("[pipeline]: stage details fetched, %s", stageInfo)
 
 	// if we are dealing with the legacy drone yaml, use
 	// the legacy drone engine.
@@ -105,8 +129,7 @@ func (s *Runner) Run(ctx context.Context, stage *drone.Stage) error {
 
 func (s *Runner) run(ctx context.Context, stage *drone.Stage, data *client.Context) error {
 	stageInfo := fmt.Sprintf("stage.id=%d, stage.name=%s, stage.number=%d", stage.ID, stage.Name, stage.Number)
-	logger := gitfoxLogger.GetLogger(ctx)
-	logger.Infof("[pipeline]: run started, %s", stageInfo)
+	logger.GetLogger(ctx).Infof("[pipeline]: run started, %s", stageInfo)
 
 	ctxdone, cancel := context.WithCancel(ctx)
 	defer cancel()
@@ -125,9 +148,9 @@ func (s *Runner) run(ctx context.Context, stage *drone.Stage, data *client.Conte
 		done, _ := s.Client.Watch(ctxdone, data.Build.ID)
 		if done {
 			cancel()
-			logger.Infof("[pipeline]: received cancellation, %s", stageInfo)
+			logger.GetLogger(ctx).Infof("[pipeline]: received cancellation, %s", stageInfo)
 		} else {
-			logger.Infof("[pipeline]: done listening for cancellations, %s", stageInfo)
+			logger.GetLogger(ctx).Infof("[pipeline]: done listening for cancellations, %s", stageInfo)
 		}
 	}()
 
@@ -166,7 +189,7 @@ func (s *Runner) run(ctx context.Context, stage *drone.Stage, data *client.Conte
 
 	config, err := harness.ParseBytes(data.Config.Data)
 	if err != nil {
-		logger.Infof("[pipeline]: cannot parse configuration file, %s, err=%v", stageInfo, err)
+		logger.GetLogger(ctx).Infof("[pipeline]: cannot parse configuration file, %s, err=%v", stageInfo, err)
 		state.FailAll(err)
 		return s.Reporter.ReportStage(noContext, state)
 	}
@@ -181,7 +204,7 @@ func (s *Runner) run(ctx context.Context, stage *drone.Stage, data *client.Conte
 
 	// expand templates and plugins
 	if err := resolver.Resolve(config, lookupFunc); err != nil {
-		logger.Infof("[pipeline]: cannot load template or plugin, %s, err=%v", stageInfo, err)
+		logger.GetLogger(ctx).Infof("[pipeline]: cannot load template or plugin, %s, err=%v", stageInfo, err)
 		state.FailAll(err)
 		return s.Reporter.ReportStage(noContext, state)
 	}
@@ -251,7 +274,7 @@ func (s *Runner) run(ctx context.Context, stage *drone.Stage, data *client.Conte
 
 	spec, err := s.Compiler.Compile(ctx, args)
 	if err != nil {
-		logger.Infof("[pipeline]: cannot find pipeline or stage resource in yaml, %s, err=%v", stageInfo, err)
+		logger.GetLogger(ctx).Infof("[pipeline]: cannot find pipeline or stage resource in yaml, %s, err=%v", stageInfo, err)
 		state.FailAll(err)
 		return s.Reporter.ReportStage(noContext, state)
 	}
@@ -278,18 +301,18 @@ func (s *Runner) run(ctx context.Context, stage *drone.Stage, data *client.Conte
 	stage.Started = time.Now().Unix()
 	stage.Status = drone.StatusRunning
 	if err := s.Client.Update(ctx, stage); err != nil {
-		logger.Infof("[pipeline]: cannot update stage, %s, err=%v", stageInfo, err)
+		logger.GetLogger(ctx).Infof("[pipeline]: cannot update stage, %s, err=%v", stageInfo, err)
 		return err
 	}
 
-	logger.Infof("[pipeline]: updated stage to running, %s", stageInfo)
+	logger.GetLogger(ctx).Infof("[pipeline]: updated stage to running, %s", stageInfo)
 
-	ctxlogger := gitfoxLogger.WithContext(ctxcancel, gitfoxLogger.FromContext(ctx).Named("pipeline"))
+	ctxlogger := logger.WithContext(ctxcancel, logger.FromContext(ctx).Named("pipeline"))
 	ctxExec := extend.WithSecretContext(ctxlogger, usedSecrets)
 	if err := s.Exec(ctxExec, spec, state); err != nil {
-		logger.Infof("[pipeline]: stage failed, duration=%d, %s, err=%v", stage.Stopped-stage.Started, stageInfo, err)
+		logger.GetLogger(ctx).Infof("[pipeline]: stage failed, duration=%d, %s, err=%v", stage.Stopped-stage.Started, stageInfo, err)
 		return err
 	}
-	logger.Infof("[pipeline]: updated stage to complete, duration=%d, %s", stage.Stopped-stage.Started, stageInfo)
+	logger.GetLogger(ctx).Infof("[pipeline]: updated stage to complete, duration=%d, %s", stage.Stopped-stage.Started, stageInfo)
 	return nil
 }

@@ -51,6 +51,7 @@ func (a *BasicAuthenticator) Authenticate(r *gin.Context) (*auth.Session, error)
 		}
 		userInfo := principal.User{
 			Account: a.pipelineAuth.UserName,
+			Email:   HeaderAdminEmail,
 		}
 		return &auth.Session{User: &userInfo}, nil
 	}

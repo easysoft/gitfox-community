@@ -18,7 +18,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/rs/zerolog/log"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 )
 
 // TreeNodeType specifies the different types of nodes in a git tree.
@@ -98,7 +98,7 @@ func (s *Service) GetTreeNode(ctx context.Context, params *GetTreeNodeParams) (*
 			Node: node,
 		}, nil
 	}
-	log.Ctx(ctx).Debug().Msgf("getting latest commit for repo.path [%s], param.ref [%s], param.path [%s]", repoPath, params.GitREF, params.Path)
+	logger.GetLogger(ctx).Debugf("getting latest commit for repo.path [%s], param.ref [%s], param.path [%s]", repoPath, params.GitREF, params.Path)
 	pathDetails, err := s.git.PathsDetails(ctx, repoPath, params.GitREF, []string{params.Path})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get path details for '%s' in '%s': %w", params.Path, params.GitREF, err)

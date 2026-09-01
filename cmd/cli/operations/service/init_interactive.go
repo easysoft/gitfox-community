@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"net"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -23,6 +22,7 @@ import (
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/configs"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/netutil"
 	clii18n "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n/cli"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/common"
 )
@@ -119,7 +119,7 @@ func runInit(_ *kingpin.ParseContext) error {
 	}
 
 	// ========== 第四步：自动获取本机 IP 并拼接服务地址 ==========
-	localIP := getLocalIP()
+	localIP := netutil.LocalIP()
 
 	gitfoxPort := existingEnv["GITFOX_HTTP_PORT"]
 	if gitfoxPort == "" {
@@ -506,26 +506,6 @@ func parsePHPConfig(path string) (*dbConfig, error) {
 	}
 
 	return db, nil
-}
-
-// getLocalIP 获取本机非回环 IPv4 地址。
-// 遍历所有网络接口，返回第一个非 loopback 的 IPv4 地址。
-// 如果获取失败，返回 127.0.0.1 作为兜底。
-func getLocalIP() string {
-	addrs, err := net.InterfaceAddrs()
-	if err != nil {
-		return "127.0.0.1"
-	}
-
-	for _, addr := range addrs {
-		if ipNet, ok := addr.(*net.IPNet); ok && !ipNet.IP.IsLoopback() {
-			if ipNet.IP.To4() != nil {
-				return ipNet.IP.String()
-			}
-		}
-	}
-
-	return "127.0.0.1"
 }
 
 // loadExistingEnv 从当前二进制所在目录加载已有的 local.env 文件。

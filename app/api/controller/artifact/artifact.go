@@ -1,13 +1,4 @@
 // Package artifact 汇聚制品库相关的 HTTP 入口。
-//
-// 控制器按资源域拆成多个文件，便于阅读与维护：
-//
-//	artifact.go    - Controller 基座、构造、Service()
-//	asset.go       - GetAsset / DownloadAsset / ListAssetPage
-//	group.go       - CreateGroup  / ArchiveGroup
-//	tree.go        - ListTree / RefreshTree
-//	upload.go      - Upload
-//	admin.go       - SoftRemoveByEntity
 package artifact
 
 import (
@@ -40,13 +31,13 @@ func (c *Controller) Service() artifactSvc.Interface {
 // @Tags artifacts
 // @Accept application/json
 // @Produce application/json
-// @Param body body model.CreateArtifactViewReq true "创建参数"
+// @Param body body model.CreateArtifactLibReq true "创建参数"
 // @Success 200 {object} resp.ObjectResponse "成功"
 // @Failure 400 {object} resp.ObjectResponse "参数错误"
 // @Failure 500 {object} resp.ObjectResponse "服务器错误"
 // @Router /artifacts [post]
 func (c *Controller) CreateArtifact(ctx *gin.Context) {
-	var reqBody model.CreateArtifactViewReq
+	var reqBody model.CreateArtifactLibReq
 	if err := ctx.ShouldBindBodyWithJSON(&reqBody); err != nil {
 		err = errors.WithI18nKey(err, i18n.ArtifactBodyParamError)
 		resp.BadRequest(ctx, err)
@@ -59,12 +50,12 @@ func (c *Controller) CreateArtifact(ctx *gin.Context) {
 		return
 	}
 
-	view, err := c.artSvc.CreateView(ctx.Request.Context(), &reqBody)
+	lib, err := c.artSvc.CreateLib(ctx.Request.Context(), &reqBody)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return
 	}
-	resp.OK(ctx, i18n.ArtifactCreateViewSuccess, view)
+	resp.OK(ctx, i18n.ArtifactCreateViewSuccess, lib)
 }
 
 // @Summary 移动并/或重命名制品实体

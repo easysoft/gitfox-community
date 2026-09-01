@@ -15,16 +15,18 @@ type Runner struct {
 	IP          string          `gorm:"column:ip;not null;default:''"`
 	OS          string          `gorm:"column:os;not null;default:''"`
 	Arch        string          `gorm:"column:arch;not null;default:''"`
-	Labels      string          `gorm:"column:labels;type:text"`
+	Runtime     string          `gorm:"column:runtime;not null;default:''"`
+	Labels      string          `gorm:"column:labels;not null;default:''"`
 	Token       string          `gorm:"column:token;not null"`
-	HeartBeat   *int            `gorm:"column:heartBeat"`
+	HeartBeat   int             `gorm:"column:heartBeat"`
 	Online      string          `gorm:"column:online;not null;default:'offline'"`
 	Status      string          `gorm:"column:status;not null;default:'disable'"`
+	IsDefault   bool            `gorm:"column:isDefault;not null;default:false"`
 	CreatedBy   string          `gorm:"column:createdBy"`
 	CreatedDate *datetime.Local `gorm:"column:createdDate"`
 	EditedBy    string          `gorm:"column:editedBy"`
 	EditedDate  *datetime.Local `gorm:"column:editedDate"`
-	Deleted     int8            `gorm:"column:deleted;not null;default:0"`
+	Deleted     uint8           `gorm:"column:deleted;comment:'删除标识（0=未删除，1=已删除）'"`
 }
 
 func (r *Runner) TableName() string {

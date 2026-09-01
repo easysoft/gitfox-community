@@ -10,10 +10,9 @@ import (
 	"time"
 
 	pipelineModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/pipeline"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/storage"
 	storagedriver "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/storage/driver"
-
-	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -122,13 +121,13 @@ func (s *pipelineStorage) getCacheMetadata(ctx context.Context, key string) (*pi
 
 	metaBody, err := s.base.Get(ctx, metadataPath)
 	if err != nil {
-		log.Ctx(ctx).Error().Err(err).Str("key", key).Msgf("get cache file metadata failed")
+		logger.GetLogger(ctx).Errorw("get cache file metadata failed", "error", err, "key", key)
 		return nil, err
 	}
 
 	var meta pipelineModel.CiCacheMetadata
 	if err = json.Unmarshal(metaBody, &meta); err != nil {
-		log.Ctx(ctx).Error().Err(err).Str("key", key).Msg("unmarshal cache metadata failed")
+		logger.GetLogger(ctx).Errorw("unmarshal cache metadata failed", "error", err, "key", key)
 		return nil, err
 	}
 

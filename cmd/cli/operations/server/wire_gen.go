@@ -194,7 +194,51 @@ func NewApp(mode string) (*App, func(), error) {
 	executionController := execution3.NewController(triggererTriggerer, cancelerCanceler, executionService, pipelineService, repoService, gitService)
 	runnerService := runner2.NewService(runnerStore)
 	url := provider.NewURLConfig(config)
-	runnerController := runner3.NewController(runnerService, url)
+	stageService := stage2.NewStageService(stageStore)
+	stepService := step2.NewStepService(stepStore)
+	eventsConfig := provider.NewEventConfig()
+	universalClient := provider.NewEventRedisClient()
+	system, err := provider.ProvideEventSystem(eventsConfig, universalClient)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	reporter, err := provider.ProvidePipelineEventReporter(system)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	eventsReporter, err := provider.ProvidePullReqReporter(system)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	eventContext := provider.NewEventContext()
+	readerFactory, err := provider.ProvideGitEventReaderFactory(system)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	eventsReaderFactory, err := provider.ProvidePullReqReaderFactory(system)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	lockerLocker := locker.NewLocker(mutexManager)
+	pullrequestStore := pullrequest.NewPullRequestStore(db)
+	pullrequestService, err := provider.ProvidePullRequestSvc(eventContext, readerFactory, eventsReaderFactory, eventsReporter, config, gitService, repoService, store, lockerLocker, pullrequestStore, streamer, pubSub, urlProvider)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	managerManager := manager.New(config, executionService, pipelineService, urlProvider, streamer, schedulerScheduler, stageService, stepService, reporter, eventsReporter, pullrequestService, logStream)
+	runnerController := runner3.NewController(runnerService, url, urlProvider, managerManager)
 	svnController := svn2.NewController(repoService)
 	tagService := tag.NewService(urlProvider, gitService)
 	tagController := tag2.NewController(tagService, repoService)
@@ -209,41 +253,6 @@ func NewApp(mode string) (*App, func(), error) {
 	}
 	webhookStore := webhook.NewWebhookStore(db)
 	repository := importer.NewRepoImporterSvc(mode, urlProvider, gitService, svnInterface, store, providerStore, notifyStore, encrypter, jobsScheduler, streamer, devopsConfig, webhookStore)
-	eventContext := provider.NewEventContext()
-	eventsConfig := provider.NewEventConfig()
-	universalClient := provider.NewEventRedisClient()
-	system, err := provider.ProvideEventSystem(eventsConfig, universalClient)
-	if err != nil {
-		cleanup2()
-		cleanup()
-		return nil, nil, err
-	}
-	readerFactory, err := provider.ProvideGitEventReaderFactory(system)
-	if err != nil {
-		cleanup2()
-		cleanup()
-		return nil, nil, err
-	}
-	eventsReaderFactory, err := provider.ProvidePullReqReaderFactory(system)
-	if err != nil {
-		cleanup2()
-		cleanup()
-		return nil, nil, err
-	}
-	reporter, err := provider.ProvidePullReqReporter(system)
-	if err != nil {
-		cleanup2()
-		cleanup()
-		return nil, nil, err
-	}
-	lockerLocker := locker.NewLocker(mutexManager)
-	pullrequestStore := pullrequest.NewPullRequestStore(db)
-	pullrequestService, err := provider.ProvidePullRequestSvc(eventContext, readerFactory, eventsReaderFactory, reporter, config, gitService, repoService, store, lockerLocker, pullrequestStore, streamer, pubSub, urlProvider)
-	if err != nil {
-		cleanup2()
-		cleanup()
-		return nil, nil, err
-	}
 	artifactStore := artifact.NewStore(db)
 	userStore := user.NewUserStore(db)
 	jobScheduler := provider.ProvideArtifactJobScheduler(jobsScheduler)
@@ -262,13 +271,13 @@ func NewApp(mode string) (*App, func(), error) {
 	service2 := provider.NewGitService(gitService, urlProvider)
 	settingsInterface := settings.NewSettingStore(db)
 	settingsService := provider.NewSettingsService(settingsInterface)
-	eventsReporter, err := provider.ProvideGitEventReporter(system)
+	reporter2, err := provider.ProvideGitEventReporter(system)
 	if err != nil {
 		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
-	githookController := provider.NewGitHookController(userStore, store, pullrequestStore, tokenInterface, gitService, urlProvider, clientFactory, config, reporter, eventsReporter)
+	githookController := provider.NewGitHookController(userStore, store, pullrequestStore, tokenInterface, gitService, urlProvider, clientFactory, config, eventsReporter, reporter2)
 	gitController := provider.NewGitController(service2, service, repoService, settingsService, githookController, gitService)
 	ruleSetStore := scan.NewRuleSetStore(db)
 	ruleStore := scan.NewRuleStore(db)
@@ -317,15 +326,6 @@ func NewApp(mode string) (*App, func(), error) {
 		return nil, nil, err
 	}
 	authenticator := authn.ProvideAuthenticators(config, userStore, tokenInterface)
-	stageService := stage2.NewStageService(stageStore)
-	stepService := step2.NewStepService(stepStore)
-	reporter2, err := provider.ProvidePipelineEventReporter(system)
-	if err != nil {
-		cleanup2()
-		cleanup()
-		return nil, nil, err
-	}
-	managerManager := manager.New(config, executionService, pipelineService, urlProvider, streamer, schedulerScheduler, stageService, stepService, reporter2, reporter, pullrequestService, logStream)
 	client := manager.NewEmbeddedClient(managerManager, urlProvider, config)
 	resolverManager := provider.ProvideResolverManager(pipelineService)
 	pipelineStorage, err := provider.ProvidePipelineCIStorage(config)
@@ -341,7 +341,7 @@ func NewApp(mode string) (*App, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	poller := provider.ProvideExecutionPoller(runnerRunner, client)
+	poller := provider.ProvideExecutionPoller(runnerRunner, client, runnerStore, config)
 	containerController := provider.ProvideContainerController(artifactStore, artifactService, urlProvider, membershipAuthorizer)
 	containerHandler := provider.ProvideContainerHandler(containerController, artifactService, artifactStore, spaceStore)
 	app := &App{

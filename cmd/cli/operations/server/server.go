@@ -7,18 +7,20 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 	"time"
 
 	"github.com/quicklyon/kingpin/v2"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/router"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/logger"
+	pipelineLogger "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/logger"
 
 	artifactSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/artifact"
 	cronSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/cron"
 	importerSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/importer"
 	pipelineSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/pipeline"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	clii18n "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n/cli"
@@ -43,7 +45,13 @@ func (c *command) run(*kingpin.ParseContext) error {
 		cancel()
 	}()
 
-	return RunServerWithContext(ctx, c.mode, c.enableCI, nil)
+	mode := c.mode
+	if filepath.IsAbs(c.mode) {
+		config.SetConfigDir(filepath.Dir(c.mode))
+		mode = filepath.Base(c.mode)
+	}
+
+	return RunServerWithContext(ctx, mode, c.enableCI, nil)
 }
 
 // RunServerWithContext 是 GitFox 的通用启动引擎。
@@ -138,7 +146,7 @@ func RunServerWithContext(ctx context.Context, mode string, enableCI bool, onRea
 	if enableCI {
 		// start poller for CI build executions (non-critical for API)
 		go app.Poller.Poll(
-			logger.WithWrappedZerolog(pollerCtx),
+			pipelineLogger.WithWrappedLogger(pollerCtx),
 			int(app.SystemConfig.Ci.ParallelWorkers),
 		)
 	}
@@ -210,44 +218,45 @@ func RunServerWithContext(ctx context.Context, mode string, enableCI bool, onRea
 
 // runMigrations 执行启动时的数据迁移任务。
 func (app *App) runMigrations() {
-	if err := app.ScanRuleSvc.Migrate(context.Background()); err != nil {
+	migrateCtx := context.Background()
+
+	if err := app.ScanRuleSvc.Migrate(migrateCtx); err != nil {
 		app.SystemLog.Errorw("[Server] Failed to migrate scan rules", "error", err)
 		panic(err)
 	}
 
-	if err := app.PipelineService.Migrate(context.Background(), app.SystemConfig.Ci.PluginsZipUrl); err != nil {
+	if err := app.PipelineService.Migrate(migrateCtx, app.SystemConfig.Ci.PluginsZipUrl); err != nil {
 		app.SystemLog.Errorw("[Server] Failed to migrate plugins", "error", err)
 		panic(err)
 	}
 
-	if err := app.TokenStore.SetDevopsToken(context.Background()); err != nil {
+	if err := app.TokenStore.SetDevopsToken(migrateCtx); err != nil {
 		app.SystemLog.Errorw("[Server] Failed to set devops token", "error", err)
 		panic(err)
 	}
 
 	// 迁移过来的代码库导入
-	if err := app.RepoImporterSvc.Migrate(context.Background()); err != nil {
-		app.SystemLog.Errorw("[Server] Failed to migrate repo", "error", err)
-		panic(err)
+	if err := app.RepoImporterSvc.Migrate(migrateCtx); err != nil {
+		app.SystemLog.Errorw("[Server] Failed to migrate repo, please check the default.log for the specific reason for the failure.", "error", err)
 	}
 }
 
 // registerJobHandlers 注册后台任务处理器（Pipeline Cron、Scan Cron、Artifact GC）。
 func (app *App) registerJobHandlers() {
 	if err := cronSvc.RegisterPipelineHandler(
-		app.JobScheduler, app.Triggerer, app.PipelineService); err != nil {
+		app.JobScheduler, app.Triggerer, app.PipelineService, app.RepoService); err != nil {
 		app.SystemLog.Errorw("[Server] Failed to register pipeline cron handler", "error", err)
 		panic(err)
 	}
 
 	if err := cronSvc.RegisterGitlabPipelineHandler(
-		app.JobScheduler, app.Triggerer, app.PipelineService, app.SystemConfig.Devops, app.TokenStore); err != nil {
+		app.JobScheduler, app.Triggerer, app.PipelineService, app.RepoService, app.SystemConfig.Devops, app.TokenStore); err != nil {
 		app.SystemLog.Errorw("[Server] Failed to register GitLab pipeline cron handler", "error", err)
 		panic(err)
 	}
 
 	if err := cronSvc.RegisterJenkinsPipelineHandler(
-		app.JobScheduler, app.Triggerer, app.PipelineService, app.SystemConfig.Devops, app.TokenStore); err != nil {
+		app.JobScheduler, app.Triggerer, app.PipelineService, app.RepoService, app.SystemConfig.Devops, app.TokenStore); err != nil {
 		app.SystemLog.Errorw("[Server] Failed to register Jenkins pipeline cron handler", "error", err)
 		panic(err)
 	}

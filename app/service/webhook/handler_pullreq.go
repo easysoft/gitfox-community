@@ -46,9 +46,16 @@ func (s *Service) handleEventPullReqCreated(ctx context.Context,
 			if err != nil {
 				return nil, err
 			}
+			// 优先查询评审人表（ops_request_reviewers）
 			reviewers, err := s.pullreqStore.ListReviewerAccountsByRequestID(ctx, uint(pr.ID))
 			if err != nil {
 				return nil, err
+			}
+			if len(reviewers) == 0 {
+				reviewers, err = s.pullreqStore.GetReviewersByRequestID(ctx, uint(pr.ID))
+				if err != nil {
+					return nil, err
+				}
 			}
 			targetRepoInfo := repositoryInfoFrom(targetRepo)
 			sourceRepoInfo := repositoryInfoFrom(sourceRepo)

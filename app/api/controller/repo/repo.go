@@ -99,7 +99,7 @@ func (ctl *Controller) Create(c *gin.Context) {
 		if viewName == "" {
 			viewName = artifactModel.DefaultArtifactLibName
 		}
-		_, _ = ctl.artSvc.CreateView(c.Request.Context(), &artifactModel.CreateArtifactViewReq{
+		_, _ = ctl.artSvc.CreateLib(c.Request.Context(), &artifactModel.CreateArtifactLibReq{
 			SpaceRepoReq: artifactModel.SpaceRepoReq{SpaceID: int64(reqData.SpaceID), RepoID: int64(data.ID)},
 			Name:         viewName,
 			Code:         artifactModel.DefaultArtifactLibCode,

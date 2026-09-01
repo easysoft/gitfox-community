@@ -20,6 +20,7 @@ import (
 // @Param artifactID formData int true "视图ID（必传，> 0）"
 // @Param name formData string true "文件名（覆盖 asset.path）"
 // @Param packageName formData string false "raw 包名（raw 上传必传）"
+// @Param group formData string false "上传目录路径（支持多级 a/b/c，不存在时自动递归创建；与 groupID 二选一）"
 // @Param file formData file true "制品文件"
 // @Success 200 {object} resp.ObjectResponse "成功"
 // @Failure 400 {object} resp.ObjectResponse "参数错误"
@@ -37,7 +38,7 @@ func (c *Controller) Upload(ctx *gin.Context) {
 		return
 	}
 
-	view, err := c.artSvc.ParseSpaceView(ctx.Request.Context(), &model.SpaceRepoReq{
+	lib, err := c.artSvc.ParseSpaceLib(ctx.Request.Context(), &model.SpaceRepoReq{
 		ArtifactID: reqBody.ArtifactID,
 	})
 	if err != nil {
@@ -48,7 +49,7 @@ func (c *Controller) Upload(ctx *gin.Context) {
 	formatStr := ctx.Param("format")
 	format := model.ArtifactFormat(formatStr)
 
-	assets, err := c.artSvc.Upload(ctx.Request.Context(), view, format, ctx.Request)
+	assets, err := c.artSvc.Upload(ctx.Request.Context(), lib, format, ctx.Request)
 	if err != nil {
 		if errors.GetHttpStatus(err) == http.StatusOK {
 			resp.InternalError(ctx, err)

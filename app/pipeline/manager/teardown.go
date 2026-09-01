@@ -3,12 +3,12 @@ package manager
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 
 	// "github.com/easysoft/gitfox/livelog"
 
 	"github.com/hashicorp/go-multierror"
-	"github.com/rs/zerolog/log"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	events "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/events/pipeline"
@@ -26,6 +26,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/sse"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/stage"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/step"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 )
 
 type teardown struct {
@@ -43,27 +44,27 @@ type teardown struct {
 
 //nolint:gocognit // refactor if needed.
 func (t *teardown) do(ctx context.Context, stage *stageModel.StageWithSteps) error {
-	log := log.With().
-		Uint("stage.id", stage.ID).
-		Logger()
-	log.Debug().Msg("manager: stage is complete. teardown")
+	log := logger.GetLogger(ctx).With(
+		"stage.id", stage.ID,
+	)
+	log.Debug("manager: stage is complete. teardown")
 
 	execution, err := t.ExecutionSvc.GetByID(noContext, stage.ExecutionID)
 	if err != nil {
-		log.Error().Err(err).Msg("manager: cannot find the execution")
+		log.Errorw("manager: cannot find the execution", "error", err)
 		return err
 	}
 
 	pipeline, err := t.PipelineSvc.GetPipelineByID(ctx, int64(execution.PipelineID))
 	if err != nil {
-		log.Error().Err(err).Msg("manager: cannot find pipeline")
+		log.Errorw("manager: cannot find pipeline", "error", err)
 		return err
 	}
 
-	log = log.With().
-		Uint("execution.id", execution.ID).
-		Str("stage.status", string(stage.Status)).
-		Logger()
+	log = log.With(
+		"execution.id", execution.ID,
+		"stage.status", string(stage.Status),
+	)
 
 	for _, step := range stage.Steps {
 		if len(step.ErrorLog) > 500 {
@@ -71,13 +72,13 @@ func (t *teardown) do(ctx context.Context, stage *stageModel.StageWithSteps) err
 		}
 		err := t.StepSvc.Update(noContext, step)
 		if err != nil {
-			log = log.With().
-				Str("step.name", step.Name).
-				Uint("step.id", step.ID).
-				Err(err).
-				Logger()
+			log = log.With(
+				"step.name", step.Name,
+				"step.id", step.ID,
+				"error", err,
+			)
 
-			log.Error().Msg("manager: cannot persist the step")
+			log.Error("manager: cannot persist the step")
 			return err
 		}
 	}
@@ -88,8 +89,9 @@ func (t *teardown) do(ctx context.Context, stage *stageModel.StageWithSteps) err
 
 	err = t.StageSvc.Update(noContext, &stage.Stage)
 	if err != nil {
-		log.Error().Err(err).
-			Msg("manager: cannot update the stage")
+		log.Errorw("manager: cannot update the stage",
+			"error", err,
+		)
 		return err
 	}
 
@@ -97,38 +99,42 @@ func (t *teardown) do(ctx context.Context, stage *stageModel.StageWithSteps) err
 	for _, step := range stage.Steps {
 		err = t.Logz.Delete(noContext, int64(step.ID))
 		if err != nil && !errors.Is(err, livelog.ErrStreamNotFound) {
-			log.Warn().Err(err).Msgf("failed to delete log stream for step %d", step.ID)
+			log.Warnw(fmt.Sprintf("failed to delete log stream for step %d", step.ID), "error", err)
 		}
 	}
 
 	stages, err := t.StageSvc.ListWithSteps(noContext, execution.ID)
 	if err != nil {
-		log.Warn().Err(err).
-			Msg("manager: cannot get stages")
+		log.Warnw("manager: cannot get stages",
+			"error", err,
+		)
 		return err
 	}
 
 	err = t.cancelDownstream(ctx, stages)
 	if err != nil {
-		log.Error().Err(err).
-			Msg("manager: cannot cancel downstream builds")
+		log.Errorw("manager: cannot cancel downstream builds",
+			"error", err,
+		)
 		return err
 	}
 
 	err = t.scheduleDownstream(ctx, stages)
 	if err != nil {
-		log.Error().Err(err).
-			Msg("manager: cannot schedule downstream builds")
+		log.Errorw("manager: cannot schedule downstream builds",
+			"error", err,
+		)
 		return err
 	}
 
 	if !isexecutionComplete(stages) {
-		log.Warn().Err(err).
-			Msg("manager: execution pending completion of additional stages")
+		log.Warnw("manager: execution pending completion of additional stages",
+			"error", err,
+		)
 		return nil
 	}
 
-	log.Info().Msg("manager: execution is finished, teardown")
+	log.Info("manager: execution is finished, teardown")
 
 	execution.Status = constant.CIStatusSuccess
 	execution.FinishedDate = datetime.NowLocalTime()
@@ -152,8 +158,9 @@ func (t *teardown) do(ctx context.Context, stage *stageModel.StageWithSteps) err
 
 	err = t.ExecutionSvc.Update(noContext, execution)
 	if err != nil {
-		log.Warn().Err(err).
-			Msg("manager: cannot update the execution")
+		log.Warnw("manager: cannot update the execution",
+			"error", err,
+		)
 		return err
 	}
 
@@ -161,8 +168,9 @@ func (t *teardown) do(ctx context.Context, stage *stageModel.StageWithSteps) err
 	pipeline.LastResult = string(execution.Status)
 	err = t.PipelineSvc.UpdatePipeline(noContext, pipeline)
 	if err != nil {
-		log.Warn().Err(err).
-			Msg("manager: cannot update the pipeline")
+		log.Warnw("manager: cannot update the pipeline",
+			"error", err,
+		)
 	}
 
 	executionDetail := executionModel.ExecutionWithStages{
@@ -171,8 +179,9 @@ func (t *teardown) do(ctx context.Context, stage *stageModel.StageWithSteps) err
 	}
 	err = t.SSEStreamer.Publish(noContext, pipeline.SpaceID, eventModel.SSETypeExecutionCompleted, executionDetail)
 	if err != nil {
-		log.Warn().Err(err).
-			Msg("manager: could not publish execution completed event")
+		log.Warnw("manager: could not publish execution completed event",
+			"error", err,
+		)
 	}
 
 	// send pipeline execution status
@@ -219,22 +228,23 @@ func (t *teardown) cancelDownstream(
 			continue
 		}
 
-		log := log.With().
-			Uint("stage.id", s.ID).
-			Str("stage.run_policy", s.RunPolicy).
-			Bool("failed", failed).
-			Str("stage.depends_on", strings.Join(s.Depends, ",")).
-			Logger()
+		log := logger.GetLogger(ctx).With(
+			"stage.id", s.ID,
+			"stage.run_policy", s.RunPolicy,
+			"failed", failed,
+			"stage.depends_on", strings.Join(s.Depends, ","),
+		)
 
-		log.Debug().Msg("manager: skipping step")
+		log.Debug("manager: skipping step")
 
 		s.Status = constant.CIStatusSkipped
 		s.Started = datetime.NowLocalTime()
 		s.Finished = datetime.NowLocalTime()
 		err := t.StageSvc.Update(noContext, &s.Stage)
 		if err != nil {
-			log.Error().Err(err).
-				Msg("manager: cannot update stage status")
+			log.Errorw("manager: cannot update stage status",
+				"error", err,
+			)
 			errs = multierror.Append(errs, err)
 		}
 	}
@@ -299,27 +309,29 @@ func (t *teardown) scheduleDownstream(
 		// 	continue
 		// }
 
-		log := log.With().
-			Uint("stage.id", sibling.ID).
-			Str("stage.name", sibling.Name).
-			Str("stage.code", sibling.Code).
-			Str("stage.depends_on", strings.Join(sibling.Depends, ",")).
-			Logger()
+		log := logger.GetLogger(ctx).With(
+			"stage.id", sibling.ID,
+			"stage.name", sibling.Name,
+			"stage.code", sibling.Code,
+			"stage.depends_on", strings.Join(sibling.Depends, ","),
+		)
 
-		log.Debug().Msg("manager: schedule next stage")
+		log.Debug("manager: schedule next stage")
 
 		sibling.Status = constant.CIStatusPending
 		err := t.StageSvc.Update(noContext, &sibling.Stage)
 		if err != nil {
-			log.Error().Err(err).
-				Msg("manager: cannot update stage status")
+			log.Errorw("manager: cannot update stage status",
+				"error", err,
+			)
 			errs = multierror.Append(errs, err)
 		}
 
 		err = t.Scheduler.Schedule()
 		if err != nil {
-			log.Error().Err(err).
-				Msg("manager: cannot schedule stage")
+			log.Errorw("manager: cannot schedule stage",
+				"error", err,
+			)
 			errs = multierror.Append(errs, err)
 		}
 	}

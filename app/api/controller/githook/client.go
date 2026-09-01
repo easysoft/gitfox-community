@@ -23,8 +23,6 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/hook"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
-
-	"github.com/rs/zerolog/log"
 )
 
 var _ hook.ClientFactory = (*ControllerClientFactory)(nil)
@@ -92,7 +90,7 @@ func (c *ControllerClient) Update(
 	ctx context.Context,
 	in hook.UpdateInput,
 ) (hook.Output, error) {
-	log.Ctx(ctx).Debug().Int64("repo_id", c.baseInput.RepoID).Msg("calling update")
+	logger.GetLogger(ctx).Debugw("calling update", "repo_id", c.baseInput.RepoID)
 
 	out, err := c.githookCtrl.Update(
 		ctx,
@@ -113,7 +111,7 @@ func (c *ControllerClient) PostReceive(
 	ctx context.Context,
 	in hook.PostReceiveInput,
 ) (hook.Output, error) {
-	log.Ctx(ctx).Debug().Int64("repo_id", c.baseInput.RepoID).Msg("calling post-receive")
+	logger.GetLogger(ctx).Debugw("calling post-receive", "repo_id", c.baseInput.RepoID)
 
 	out, err := c.githookCtrl.PostReceive(
 		ctx,

@@ -28,9 +28,8 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/command"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/parser"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/sha"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	"github.com/easysoft/gitfox/errors"
-
-	"github.com/rs/zerolog/log"
 )
 
 type TreeNodeWithCommit struct {
@@ -177,18 +176,21 @@ func lsTree(
 
 		columns := regexpLsTreeColumns.FindStringSubmatch(line)
 		if columns == nil {
-			log.Ctx(ctx).Error().
-				Str("ls-tree", output.String()). // logs the whole directory listing for the additional context
-				Str("line", line).
-				Msg("unrecognized format of git directory listing")
+			logger.GetLogger(ctx).Errorw(
+				"unrecognized format of git directory listing",
+				"ls-tree", output.String(), // logs the whole directory listing for the additional context
+				"line", line,
+			)
 			return nil, fmt.Errorf("unrecognized format of git directory listing: %q", line)
 		}
 
 		nodeType, nodeMode, err := parseTreeNodeMode(columns[1])
 		if err != nil {
-			log.Ctx(ctx).Err(err).
-				Str("line", line).
-				Msg("failed to parse git mode")
+			logger.GetLogger(ctx).Errorw(
+				"failed to parse git mode",
+				"error", err,
+				"line", line,
+			)
 			return nil, fmt.Errorf("failed to parse git node type and file mode: %w", err)
 		}
 
@@ -198,9 +200,10 @@ func lsTree(
 		if columns[4] != "" && columns[4] != "-" {
 			size, err = strconv.ParseInt(columns[4], 10, 64)
 			if err != nil {
-				log.Ctx(ctx).Error().
-					Str("line", line).
-					Msg("failed to parse file size")
+				logger.GetLogger(ctx).Errorw(
+					"failed to parse file size",
+					"line", line,
+				)
 				return nil, fmt.Errorf("failed to parse file size in the git directory listing: %q", line)
 			}
 		}

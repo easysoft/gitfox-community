@@ -14,18 +14,18 @@ import (
 // maxArtifactViewNameLen 制品库视图名称的最大长度（与 DB 字段保持一致的冗余保护）。
 const maxArtifactViewNameLen = 128
 
-func ValidateViewName(name string, format ArtifactFormat) (string, error) {
+func ValidateLibName(name string, format ArtifactFormat) (string, error) {
 	name = strings.TrimSpace(name)
 	if name == "" {
 		return "", errors.WithI18nKey(
-			fmt.Errorf("artifact view name is required"),
-			i18n.ArtifactViewNameRequired,
+			fmt.Errorf("artifact lib name is required"),
+			i18n.ArtifactLibNameRequired,
 		)
 	}
 	if len([]rune(name)) > maxArtifactViewNameLen {
 		return "", errors.WithI18nKey(
-			fmt.Errorf("artifact view name too long: %d runes", len([]rune(name))),
-			i18n.ArtifactViewNameTooLong,
+			fmt.Errorf("artifact lib name too long: %d runes", len([]rune(name))),
+			i18n.ArtifactLibNameTooLong,
 		)
 	}
 
@@ -39,8 +39,8 @@ func ValidateViewName(name string, format ArtifactFormat) (string, error) {
 
 	if !valid {
 		return "", errors.WithI18nKey(
-			fmt.Errorf("artifact view name contains invalid characters: %q", name),
-			i18n.ArtifactViewNameInvalidChars,
+			fmt.Errorf("artifact lib name contains invalid characters: %q", name),
+			i18n.ArtifactLibNameInvalidChars,
 		)
 	}
 
@@ -117,7 +117,7 @@ type ListNodeInfoReq struct {
 	EntityIDs []string `json:"entityIDs,omitempty"`
 }
 
-type CreateArtifactViewReq struct {
+type CreateArtifactLibReq struct {
 	SpaceRepoReq
 	Name        string `json:"name"`
 	Code        string `json:"code"`
@@ -125,18 +125,12 @@ type CreateArtifactViewReq struct {
 	Format      string `json:"format"`
 }
 
-// Validate 对 CreateArtifactViewReq 进行业务规则校验，返回携带 i18n key 的错误。
-// 校验规则：
-//  1. Format 必须通过 enum.ArtifactFormat.Sanitize() 校验
-//  2. Name 必填且不能超过 maxArtifactViewNameLen
-//  3. Name 不得包含空白字符或路径/Windows 保留字符
-//  4. 版本化 format（container/helm/pypi/npm/maven）的 Name 仅允许 ASCII 字母、数字、中划线、下划线
-//     （generic / raw 允许中文等非 ASCII 字符）
-func (r *CreateArtifactViewReq) Validate() error {
+// Validate 对 CreateArtifactLibReq 进行业务规则校验
+func (r *CreateArtifactLibReq) Validate() error {
 	if strings.TrimSpace(r.Format) == "" {
 		return errors.WithI18nKey(
 			fmt.Errorf("artifact format is required"),
-			i18n.ArtifactViewFormatRequired,
+			i18n.ArtifactLibFormatRequired,
 		)
 	}
 
@@ -145,24 +139,23 @@ func (r *CreateArtifactViewReq) Validate() error {
 	if _, ok := format.Sanitize(); !ok {
 		return errors.WithI18nKey(
 			fmt.Errorf("unsupported format: %s", r.Format),
-			i18n.ArtifactViewFormatInvalid,
+			i18n.ArtifactLibFormatInvalid,
 		)
 	}
 
 	// 3. Name 合法性校验（复用 ValidateViewName）
-	name, err := ValidateViewName(r.Name, ArtifactFormat(r.Format))
+	name, err := ValidateLibName(r.Name, ArtifactFormat(r.Format))
 	if err != nil {
 		return err
 	}
 	r.Name = name
 
 	if !common.IsValidCode(r.Code) {
-		return errors.WithI18nKey(nil, i18n.ArtifactViewCodeInvalid)
+		return errors.WithI18nKey(nil, i18n.ArtifactLibCodeInvalid)
 	}
 
 	return nil
 }
-
 
 // RefreshTreeReq 接收 `/artifacts/tree/refresh` 的请求参数。
 // Format 必填：值必须通过 enum.ArtifactFormat.Sanitize() 校验，或为 ArtifactAllFormat ("all")
@@ -193,12 +186,6 @@ func (r *RefreshTreeReq) Validate() error {
 }
 
 // ArtifactVersionListReq 接收获取版本列表的请求参数。
-//
-// 校验规则：
-//   - ArtifactID 必填且 > 0：版本列表必须落在某个具体制品库视图内查询。
-//   - PackageName 必填且非空白：用于精确定位制品包，缺失时无法返回任何版本。
-//
-// 注意：此处不在 tag 层使用 binding:required，以便控制器统一抛出多语言错误。
 type ArtifactVersionListReq struct {
 	SpaceRepoReq
 	PackageName string `json:"packageName"`
@@ -244,36 +231,21 @@ type ListAssetReq struct {
 }
 
 // CreateGroupReq 创建 group 节点的请求参数。
-// Names 为以 "." 分隔的分组路径，如 "a.b.c" 表示三级分组。
-// ArtifactID 必填：必须大于 0。
-// Format 不必由前端传入：服务端会根据 artifactID 反查对应视图的 format 并回填，
-// 若前端传了也会被覆盖，以保证 group 的 format 与 artifact 绑定一致。
 type CreateGroupReq struct {
 	ArtifactID int64  `json:"artifactID"`
 	Names      string `json:"names" binding:"required"`
 	Format     string `json:"format"`
 }
 
-// ParseNames 将 Names 按 "." 拆分为分组路径段。
-// 调用前应先通过 Validate() 确保合法性。
+// ParseNames 将 Names 按 "/" 拆分为分组路径段。
 func (r *CreateGroupReq) ParseNames() []string {
-	return strings.Split(r.Names, ".")
+	return strings.Split(r.Names, "/")
 }
 
-// Validate 对 CreateGroupReq 进行业务规则校验，返回携带 i18n key 的错误。
-// 校验规则：
-//  1. ArtifactID 必须 > 0
-//  2. 若 Format 非空，必须通过 enum.ArtifactFormat.Sanitize() 校验（调用方回填 view.Format 后满足）
-//  3. Names 按 "." 拆分后不能有空段
-//  4. 每段不得包含空白字符（含 Tab/换行/回车/全角空格等 Unicode 空白）或 \\ : * ? " < > | 等保留字符
-//  5. 每段首尾不得为空白字符
-//  6. container 格式不支持嵌套（Names 中不能包含 "."）
-//
-// 注：Format 在控制器阶段会被 view.Format 覆盖，因此这里不再要求前端必传；
-// 若调用方直接走 service 入口也可以显式设置 Format 后再调用此方法。
+// Validate 对 CreateGroupReq 进行业务规则校验
 func (r *CreateGroupReq) Validate() error {
-	// 0. 兼容 "/" 分隔符：统一替换为 "."
-	r.Names = strings.Trim(strings.ReplaceAll(r.Names, "/", "."), ".")
+	// 0. 规范化分隔符：统一使用 "/" 作为路径分隔符，去除首尾 "/"
+	r.Names = strings.Trim(r.Names, "/")
 
 	// 1. ArtifactID 校验
 	if r.ArtifactID <= 0 {
@@ -284,7 +256,7 @@ func (r *CreateGroupReq) Validate() error {
 	}
 
 	// 3. Names 合法性校验：先拒空段，再校验每段字符集与首尾空白。
-	parts := strings.Split(r.Names, ".")
+	parts := strings.Split(r.Names, "/")
 	for _, part := range parts {
 		if strings.TrimSpace(part) == "" {
 			return errors.WithI18nKey(
@@ -309,15 +281,9 @@ func (r *CreateGroupReq) Validate() error {
 }
 
 // groupNameForbiddenChars 任何 format 下都禁止在 group 单段名称中出现的字符。
-// 覆盖 Windows 与跨平台保留字符。注意：path 分隔符 `/` 与 `.` 在外层已作为段间分隔被剥离，
-// 不应再出现在单段中，因此不重复列入此表。
 var groupNameForbiddenChars = []rune{'\\', ':', '*', '?', '"', '<', '>', '|'}
 
 // validateGroupSegment 校验 group 单段名称的合法性。
-//  1. 非空；
-//  2. 首尾不允许任何 Unicode 空白字符（空格、Tab、换行、回车、全角空格等）；
-//  3. 段内不允许任何 Unicode 空白字符；
-//  4. 段内不得包含 \\ : * ? " < > | 等保留字符。
 func validateGroupSegment(seg string) error {
 	if seg == "" {
 		return errors.WithI18nKey(

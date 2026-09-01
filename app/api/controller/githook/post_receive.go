@@ -152,13 +152,31 @@ func (c *Controller) reportBranchEvent(
 			log.Warnf("failed to check ancestor for ref %s: %v", branchUpdate.Ref, err)
 		}
 		log.Debugf("branch %q updated, force push: %v", ref, forced)
+
+		// best effort: fetch the commit message of the new head, an error here must not
+		// block the event from being reported.
+		var commitMessage string
+		commitOut, err := rgit.GetCommit(ctx, &git.GetCommitParams{
+			ReadParams: git.ReadParams{
+				RepoUID:             repo.GitUID,
+				AlternateObjectDirs: env.AlternateObjectDirs,
+			},
+			Revision: branchUpdate.New.String(),
+		})
+		if err != nil {
+			log.Warnf("failed to get commit %s for ref %s: %v", branchUpdate.New.String(), branchUpdate.Ref, err)
+		} else {
+			commitMessage = commitOut.Commit.Message
+		}
+
 		c.gitReporter.BranchUpdated(ctx, &gitevents.BranchUpdatedPayload{
-			RepoID:  int64(repo.ID),
-			Account: principalAccount,
-			Ref:     ref,
-			OldSHA:  branchUpdate.Old.String(),
-			NewSHA:  branchUpdate.New.String(),
-			Forced:  forced,
+			RepoID:        int64(repo.ID),
+			Account:       principalAccount,
+			Ref:           ref,
+			OldSHA:        branchUpdate.Old.String(),
+			NewSHA:        branchUpdate.New.String(),
+			Forced:        forced,
+			CommitMessage: commitMessage,
 		})
 	}
 }
@@ -335,6 +353,9 @@ func (c *Controller) suggestPullRequest(
 		if err := c.pullreqStore.Create(ctx, pr); err != nil {
 			out.Error = strPtr("failed to create a new pull request")
 			return
+		}
+		if err := utils.SubmitCodeReview(ctx, c.devopsConfig.URL, int64(pr.ID), string(pr.CreatedBy), entry.Key); err != nil {
+			log.Errorf("failed to submit code review for PPM %d: %v", pr.ID, err)
 		}
 		c.prReporter.Created(ctx, &pullreqevents.CreatedPayload{
 			Base:         eventBase(pr, principalAccount),

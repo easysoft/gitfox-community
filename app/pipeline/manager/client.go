@@ -21,9 +21,41 @@ type embedded struct {
 	config      *config.Config
 	urlProvider urlprovider.Provider
 	manager     ExecutionManager
+	tokenPool   chan string // pre-generated tokens for default runners (nil until InitTokens called)
 }
 
 var _ client.Client = (*embedded)(nil)
+
+// TokenInitializer allows runtime injection of pre-generated runner tokens.
+type TokenInitializer interface {
+	InitTokens(tokens []string)
+}
+
+// InitTokens fills the token pool with pre-generated tokens.
+// Once initialized, Request() will draw from this pool instead of generating random tokens.
+func (e *embedded) InitTokens(tokens []string) {
+	pool := make(chan string, len(tokens))
+	for _, t := range tokens {
+		pool <- t
+	}
+	e.tokenPool = pool
+}
+
+// getToken returns a token from the pool, or generates a random one as fallback.
+// When the pool is initialized, the caller must return the token after use.
+func (e *embedded) getToken() string {
+	if e.tokenPool != nil {
+		return <-e.tokenPool
+	}
+	return generateInternalToken()
+}
+
+// returnToken returns a token to the pool. Safe to call when pool is nil (no-op).
+func (e *embedded) returnToken(token string) {
+	if e.tokenPool != nil {
+		e.tokenPool <- token
+	}
+}
 
 func NewEmbeddedClient(
 	manager ExecutionManager,
@@ -67,8 +99,11 @@ func (e *embedded) Ping(_ context.Context, _ string) error {
 
 // Request requests the next available build stage for execution.
 func (e *embedded) Request(ctx context.Context, args *client.Filter) (*drone.Stage, error) {
+	token := e.getToken()
+	defer e.returnToken(token)
+
 	request := &Request{
-		Token:  generateInternalToken(),
+		Token:  token,
 		Type:   args.Type,
 		OS:     args.OS,
 		Arch:   args.Arch,
@@ -113,6 +148,11 @@ func (e *embedded) Detail(ctx context.Context, stage *drone.Stage) (*client.Cont
 			Proto: e.urlProvider.GetAPIProto(ctx),
 			Host:  e.urlProvider.GetAPIHostname(ctx),
 		},
+		// Repo: 临时兼容。legacy runner（runner-go pipeline/runtime）会直接解引用
+		// data.Repo（日志、timeout、environ），nil 会 panic。当前 Detail 未提供仓库
+		// 信息，给一个默认值兜底；Timeout 单位是分钟，0 会导致 legacy run 的
+		// context.WithTimeout 立即超时，所以必须给一个非 0 的超时时间。
+		Repo: &drone.Repo{Timeout: int64((10 * time.Hour).Minutes())},
 		// Secrets: ConvertToDroneSecrets(details.Secrets),
 	}, nil
 }

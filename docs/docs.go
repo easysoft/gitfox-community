@@ -81,7 +81,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.CreateArtifactViewReq"
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.CreateArtifactLibReq"
                         }
                     }
                 ],
@@ -599,6 +599,12 @@ const docTemplate = `{
                         "type": "string",
                         "description": "raw 包名（raw 上传必传）",
                         "name": "packageName",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "上传目录路径（支持多级 a/b/c，不存在时自动递归创建；与 groupID 二选一）",
+                        "name": "group",
                         "in": "formData"
                     },
                     {
@@ -12078,7 +12084,7 @@ const docTemplate = `{
                 }
             }
         },
-        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.CreateArtifactViewReq": {
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.CreateArtifactLibReq": {
             "type": "object",
             "properties": {
                 "artifactID": {
@@ -13863,6 +13869,10 @@ const docTemplate = `{
                 },
                 "query": {
                     "type": "string"
+                },
+                "space": {
+                    "description": "空间标识",
+                    "type": "integer"
                 }
             }
         },
@@ -14010,6 +14020,9 @@ const docTemplate = `{
                 "os": {
                     "type": "string"
                 },
+                "runtime": {
+                    "type": "string"
+                },
                 "version": {
                     "type": "string"
                 }
@@ -14115,9 +14128,12 @@ const docTemplate = `{
                 "ip": {
                     "type": "string"
                 },
+                "isDefault": {
+                    "type": "boolean"
+                },
                 "labels": {
-                    "type": "object",
-                    "additionalProperties": {
+                    "type": "array",
+                    "items": {
                         "type": "string"
                     }
                 },
@@ -14128,6 +14144,9 @@ const docTemplate = `{
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.RunnerStatus"
                 },
                 "os": {
+                    "type": "string"
+                },
+                "runtime": {
                     "type": "string"
                 },
                 "status": {

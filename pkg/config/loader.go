@@ -6,11 +6,11 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"unicode"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/file"
 
 	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
@@ -33,7 +33,6 @@ const (
 	schemeSSH     = "ssh"
 	gitfoxHomeDir = "git"
 	svnHomeDir    = "svn"
-	blobDir       = "blob"
 )
 
 // LoadConfig loads the configuration based on the provided mode.
@@ -50,6 +49,11 @@ func LoadConfig(mode string) (*Config, error) {
 	err = loadFromEnvVars(mode, config)
 	if err != nil {
 		return nil, err
+	}
+
+	// Datasource 为空时从拆分字段组合 DSN
+	if config.Database.Datasource == "" {
+		config.Database.Datasource = composeDatasource(config)
 	}
 
 	// 使用默认值覆盖配置
@@ -113,11 +117,11 @@ func LoadConfig(mode string) (*Config, error) {
 
 // loadFromYaml loads the configuration from a YAML file based on the mode.
 func loadFromYaml(mode string, config *Config) error {
-	configPaths, err := findConfigFilePaths(mode, "yaml")
+	configPath, err := findConfigFilePaths(mode, "yaml")
 	if err != nil {
 		return err
 	}
-	err = loadFromFile(configPaths[0], config)
+	err = loadFromFile(configPath, config)
 	if err != nil {
 		return err
 	}
@@ -138,14 +142,23 @@ func loadFromFile(filePath string, config *Config) error {
 	return nil
 }
 
+var getenvHookRe = regexp.MustCompile(`Getenv\(("([^"]*)"|'([^']*)')\)`)
+
 // loadFromEnvVars 从gitfox.env文件中加载并设置为环境变量
 func loadFromEnvVars(mode string, config *Config) error {
-	configPaths, err := findConfigFilePaths(mode, "env")
+	configPath, err := findConfigFilePaths(mode, "env")
 	if err != nil {
 		return err
 	}
+
+	tempFile, cleanup, err := preprocessEnvFile(configPath)
+	if err != nil {
+		return errors.SystemErr.Wrapf(err, "failed to preprocess env file")
+	}
+	defer cleanup()
+
 	//加载.env文件中配置至环境变量，若环境变量已存在则不覆盖
-	err = godotenv.Load(configPaths[0])
+	err = godotenv.Load(tempFile)
 	if err != nil {
 		return errors.SystemErr.Wrapf(err, "failed to load env file")
 	}
@@ -155,7 +168,42 @@ func loadFromEnvVars(mode string, config *Config) error {
 		return err
 	}
 	return nil
+}
 
+func preprocessEnvFile(filePath string) (string, func(), error) {
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		return "", nil, err
+	}
+
+	content := getenvHookRe.ReplaceAllStringFunc(string(data), func(match string) string {
+		submatch := getenvHookRe.FindStringSubmatch(match)
+		if submatch == nil {
+			return match
+		}
+		varName := submatch[2]
+		if varName == "" {
+			varName = submatch[3]
+		}
+		return os.Getenv(varName)
+	})
+
+	tmpFile, err := os.CreateTemp("", "gitfox-env-*")
+	if err != nil {
+		return "", nil, err
+	}
+
+	if _, err := tmpFile.WriteString(content); err != nil {
+		tmpFile.Close()
+		os.Remove(tmpFile.Name())
+		return "", nil, err
+	}
+	if err := tmpFile.Close(); err != nil {
+		os.Remove(tmpFile.Name())
+		return "", nil, err
+	}
+
+	return tmpFile.Name(), func() { os.Remove(tmpFile.Name()) }, nil
 }
 
 // getSanitizedMachineName gets the name of the machine and returns it in sanitized format.
@@ -292,7 +340,7 @@ func backfillURLs(config *Config) error {
 	}
 
 	// create base URL object
-	baseURLRaw := combineToRawURL(scheme, host, port, basePath)
+	baseURLRaw := combineToRawURL(scheme, host, clonePort, basePath)
 	baseURL, err := url.Parse(baseURLRaw)
 	if err != nil {
 		return errors.Newf("failed to parse derived base url '%s': %v", baseURLRaw, err)
@@ -362,31 +410,50 @@ func combineToRawURL(scheme, host, port, path string) string {
 	return urlRAW
 }
 
+var configDir string
+
+// SetConfigDir 设置配置文件所在目录，覆盖默认的二进制同目录行为。
+func SetConfigDir(dir string) {
+	configDir = dir
+}
+
 // findConfigFilePaths finds configuration file paths based on the mode and extension.
-func findConfigFilePaths(mode, ext string) ([]string, error) {
-	// 获取当前可执行文件的绝对路径
+func findConfigFilePaths(mode, ext string) (string, error) {
 	exePath, err := os.Executable()
 	if err != nil {
-		return nil, errors.New("获取可执行文件路径失败: " + err.Error())
+		return "", errors.New("获取可执行文件路径失败: " + err.Error())
 	}
 
-	// 获取可执行文件所在目录（配置文件与二进制同目录）
-	exeDir := filepath.Dir(exePath)
+	exeDir := configDir
+	if exeDir == "" {
+		exeDir = filepath.Dir(exePath)
+	}
+
 	var fileName string
-	// 根据模式确定配置文件名
 	if mode == Debug {
-		exeDir = filepath.Join(filepath.Dir(filepath.Dir(exeDir)), "configs")
+		if configDir == "" {
+			exeDir = filepath.Join(filepath.Dir(filepath.Dir(exeDir)), "configs")
+		}
 		fileName = fmt.Sprintf("%s.%s", Local, ext)
 	} else {
 		fileName = fmt.Sprintf("%s.%s", mode, ext)
 	}
 
-	configPaths, err := file.FindFilesRecursive(exeDir, fileName)
-	if err != nil {
-		return nil, errors.ConfigNotFoundError.Wrapf(err, "查找 %s 配置文件失败", fileName)
+	configPath := filepath.Join(exeDir, fileName)
+	if _, err := os.Stat(configPath); err != nil {
+		return "", errors.ConfigNotFoundError.Newf("未找到配置文件: %s", configPath)
 	}
-	if len(configPaths) == 0 {
-		return nil, errors.ConfigNotFoundError.Newf("未找到配置文件: %s", fileName)
-	}
-	return configPaths, nil
+
+	return configPath, nil
 }
+
+func composeDatasource(config *Config) string {
+	return fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true&loc=%s",
+		config.Database.User,
+		config.Database.Password,
+		config.Database.Host,
+		config.Database.Port,
+		config.Database.Name,
+		config.Database.Timezone)
+}
+
