@@ -188,7 +188,7 @@ func (c *ScanController) ScanTaskUploadReport(ctx *gin.Context) {
 		return
 	}
 
-	report, err := c.taskSvc.AnalyzeTaskUploadReport(ctx.Request.Context(), taskID, method, content)
+	report, err := c.taskSvc.AnalyzeTaskUploadReport(ctx.Request.Context(), 0, taskID, method, content)
 	if err != nil {
 		resp.InternalError(ctx, errors.WithI18nKey(err, i18n.ScanTaskReportUploadError))
 		return

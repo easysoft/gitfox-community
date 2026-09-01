@@ -42,6 +42,69 @@ definitions:
       traceID:
         type: string
     type: object
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.AiScanIssueCategory:
+    enum:
+    - critical
+    - high
+    - medium
+    - low
+    - ""
+    type: string
+    x-enum-comments:
+      AiScanIssueCategoryCritical: 严重
+      AiScanIssueCategoryHigh: 高
+      AiScanIssueCategoryLow: 低
+      AiScanIssueCategoryMedium: 中等
+    x-enum-descriptions:
+    - 严重
+    - 高
+    - 中等
+    - 低
+    - ""
+    x-enum-varnames:
+    - AiScanIssueCategoryCritical
+    - AiScanIssueCategoryHigh
+    - AiScanIssueCategoryMedium
+    - AiScanIssueCategoryLow
+    - AiScanIssueCategoryNone
+  gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.AiScanIssueSeverity:
+    enum:
+    - bug
+    - security
+    - performance
+    - maintainability
+    - test
+    - style
+    - documentation
+    - other
+    type: string
+    x-enum-comments:
+      AiScanIssueSeverityBug: 缺陷
+      AiScanIssueSeverityDocumentation: 文档
+      AiScanIssueSeverityMaintainability: 可维护性
+      AiScanIssueSeverityOther: 其他
+      AiScanIssueSeverityPerformance: 性能
+      AiScanIssueSeveritySecurity: 安全
+      AiScanIssueSeverityStyle: 代码异味
+      AiScanIssueSeverityTest: 测试
+    x-enum-descriptions:
+    - 缺陷
+    - 安全
+    - 性能
+    - 可维护性
+    - 测试
+    - 代码异味
+    - 文档
+    - 其他
+    x-enum-varnames:
+    - AiScanIssueSeverityBug
+    - AiScanIssueSeveritySecurity
+    - AiScanIssueSeverityPerformance
+    - AiScanIssueSeverityMaintainability
+    - AiScanIssueSeverityTest
+    - AiScanIssueSeverityStyle
+    - AiScanIssueSeverityDocumentation
+    - AiScanIssueSeverityOther
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.CIStatus:
     enum:
     - skipped
@@ -226,10 +289,12 @@ definitions:
     enum:
     - check
     - smell
+    - ai
     type: string
     x-enum-varnames:
     - ScanMethodCheck
     - ScanMethodSmell
+    - ScanMethodAI
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanPlanTriggerType:
     enum:
     - manual
@@ -2201,21 +2266,31 @@ definitions:
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanIssueInfo:
     properties:
-      closed:
+      category:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.AiScanIssueCategory'
+      closedDate:
+        type: string
+      content:
+        type: string
+      createdBy:
         type: string
       createdByTaskID:
         type: integer
       createdDate:
         type: string
+      editedBy:
+        type: string
+      endLine:
+        type: integer
       id:
         type: integer
-      ignored:
+      ignoredDate:
         type: integer
       key:
         type: string
-      line:
-        type: integer
-      message:
+      newCode:
+        type: string
+      oldCode:
         type: string
       path:
         type: string
@@ -2227,13 +2302,17 @@ definitions:
         type: integer
       planName:
         type: string
+      ppmID:
+        type: integer
+      ppmTitle:
+        type: string
       repoBranch:
         type: string
       repoID:
         type: integer
       resolution:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanIssueResolution'
-      resolved:
+      resolvedDate:
         type: string
       ruleID:
         type: integer
@@ -2247,8 +2326,14 @@ definitions:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleType'
       scanMethod:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanMethod'
+      severity:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.AiScanIssueSeverity'
+      startLine:
+        type: integer
       status:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanIssueStatus'
+      title:
+        type: string
       trigger:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTaskTrigger'
       updatedByTaskID:
@@ -2275,18 +2360,18 @@ definitions:
     properties:
       branch:
         type: string
+      category:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.AiScanIssueCategory'
+      content:
+        type: string
       createDate:
         type: string
       createdGt:
         type: string
       createdLt:
         type: string
-      file:
-        type: string
       id:
         type: integer
-      message:
-        type: string
       order:
         default: desc
         type: string
@@ -2296,7 +2381,11 @@ definitions:
       pageSize:
         default: 20
         type: integer
+      path:
+        type: string
       planID:
+        type: integer
+      ppmID:
         type: integer
       repoID:
         type: integer
@@ -2310,13 +2399,19 @@ definitions:
         type: string
       ruleType:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleType'
-      scanMethod:
-        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanMethod'
+      scanMethods:
+        items:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanMethod'
+        type: array
+      severity:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.AiScanIssueSeverity'
       sort:
         default: id
         type: string
       status:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanIssueStatus'
+      title:
+        type: string
       tool:
         type: string
       updatedGt:
@@ -2632,16 +2727,16 @@ definitions:
     properties:
       branch:
         type: string
+      category:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.AiScanIssueCategory'
+      content:
+        type: string
       createDate:
         type: string
       detectionStatus:
         type: string
-      file:
-        type: string
       id:
         type: integer
-      message:
-        type: string
       order:
         default: desc
         type: string
@@ -2651,7 +2746,11 @@ definitions:
       pageSize:
         default: 20
         type: integer
+      path:
+        type: string
       planID:
+        type: integer
+      ppmID:
         type: integer
       repoID:
         type: integer
@@ -2661,8 +2760,12 @@ definitions:
         type: string
       ruleType:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleType'
-      scanMethod:
-        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanMethod'
+      scanMethods:
+        items:
+          $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanMethod'
+        type: array
+      severity:
+        $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.AiScanIssueSeverity'
       sort:
         default: id
         type: string
@@ -2670,6 +2773,8 @@ definitions:
         $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanIssueStatus'
       taskID:
         type: integer
+      title:
+        type: string
       tool:
         type: string
     type: object
@@ -3209,6 +3314,8 @@ definitions:
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_user.User:
     properties:
       account:
+        type: string
+      display_name:
         type: string
       email:
         type: string
@@ -7193,6 +7300,45 @@ paths:
       summary: 生成 Runner Token
       tags:
       - runners
+  /scan/aicodereview/{repoID}/{ppmID}/report:
+    post:
+      consumes:
+      - multipart/form-data
+      description: 上传评审任务的报告文件，解析 issues
+      parameters:
+      - description: 合并请求 ID
+        in: path
+        name: ppmID
+        required: true
+        type: integer
+      - description: 报告文件
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 上传成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanIssueReport'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 上传评审任务报告
+      tags:
+      - scan
   /scan/issues/{id}:
     get:
       consumes:
@@ -7280,6 +7426,13 @@ paths:
         in: query
         name: taskID
         type: integer
+      - collectionFormat: csv
+        description: 扫描方式，可多选
+        in: query
+        items:
+          type: string
+        name: scanMethods
+        type: array
       produces:
       - application/json
       responses:

@@ -75,12 +75,16 @@ func (s *ScanIssueStore) Get(ctx context.Context, id uint) (*scanModel.ScanIssue
 		Table("ops_scan_issues AS i").
 		Select("i.id, i.issueKey, i.ruleID, r.name AS ruleName, r.ruleKey AS ruleKey, "+
 			"r.priority AS rulePriority, r.type AS ruleType, "+
-			"i.message, i.path, i.line, i.repoID, i.repoBranch, "+
-			"i.status, i.scanMethod, i.resolution, i.payload, i.createdByTaskID, i.updatedByTaskID, t.planID, p.name AS planName, i.createdDate, i.resolved, i.closed, i.ignored, "+
+			"i.title, i.content, i.path, i.startLine, i.endLine, i.oldCode, i.newCode, i.category, i.severity, "+
+			"i.ppmID, i.repoID, i.repoBranch, "+
+			"i.status, i.scanMethod, i.resolution, i.payload, i.createdByTaskID, i.updatedByTaskID, "+
+			"i.createdBy, i.editedBy, pp.title AS ppmTitle, "+
+			"t.planID, p.name AS planName, i.createdDate, i.resolvedDate, i.closedDate, i.ignoredDate, "+
 			"t.triggerID, t.triggerType").
-		Joins("INNER JOIN ops_scan_rules AS r ON i.ruleID = r.id").
+		Joins("LEFT JOIN ops_scan_rules AS r ON i.ruleID = r.id").
 		Joins("LEFT JOIN ops_scan_tasks AS t ON i.updatedByTaskID = t.id").
 		Joins("LEFT JOIN ops_scan_plans AS p ON t.planID = p.id").
+		Joins("LEFT JOIN ops_ppm AS pp ON i.ppmID = pp.id").
 		Where("i.id = ? AND i.deleted = ?", id, false).
 		First(&item).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
@@ -94,12 +98,16 @@ func (s *ScanIssueStore) List(ctx context.Context, filter scanModel.ScanIssueReq
 		Table("ops_scan_issues AS i").
 		Select("i.id, i.issueKey, i.ruleID, r.name AS ruleName, r.ruleKey AS ruleKey, "+
 			"r.priority AS rulePriority, r.type AS ruleType, "+
-			"i.message, i.path, i.line, i.repoID, i.repoBranch, "+
-			"i.status, i.scanMethod, i.resolution, i.payload, i.createdByTaskID, i.updatedByTaskID, t.planID, p.name AS planName, i.createdDate, i.resolved, i.closed, i.ignored,"+
+			"i.title, i.content, i.path, i.startLine, i.endLine, i.oldCode, i.newCode, i.category, i.severity, "+
+			"i.ppmID, i.repoID, i.repoBranch, "+
+			"i.status, i.scanMethod, i.resolution, i.payload, i.createdByTaskID, i.updatedByTaskID, "+
+			"i.createdBy, i.editedBy, pp.title AS ppmTitle, "+
+			"t.planID, p.name AS planName, i.createdDate, i.resolvedDate, i.closedDate, i.ignoredDate, "+
 			"t.triggerID, t.triggerType").
-		Joins("INNER JOIN ops_scan_rules AS r ON i.ruleID = r.id").
+		Joins("LEFT JOIN ops_scan_rules AS r ON i.ruleID = r.id").
 		Joins("LEFT JOIN ops_scan_tasks AS t ON i.updatedByTaskID = t.id").
 		Joins("LEFT JOIN ops_scan_plans AS p ON t.planID = p.id").
+		Joins("LEFT JOIN ops_ppm AS pp ON i.ppmID = pp.id").
 		Where("i.deleted = ?", false)
 
 	if filter.ID != 0 {
@@ -107,6 +115,9 @@ func (s *ScanIssueStore) List(ctx context.Context, filter scanModel.ScanIssueReq
 	}
 	if filter.RepoID != 0 {
 		stmt = stmt.Where("i.repoID = ?", filter.RepoID)
+	}
+	if filter.PpmID != 0 {
+		stmt = stmt.Where("i.ppmID = ?", filter.PpmID)
 	}
 	if filter.Branch != "" {
 		stmt = stmt.Where("i.repoBranch = ?", filter.Branch)
@@ -117,20 +128,29 @@ func (s *ScanIssueStore) List(ctx context.Context, filter scanModel.ScanIssueReq
 	if filter.Status != "" {
 		stmt = stmt.Where("i.status = ?", filter.Status)
 	}
-	if filter.ScanMethod != "" {
-		stmt = stmt.Where("i.scanMethod = ?", filter.ScanMethod)
+	if filter.ScanMethods != nil {
+		stmt = stmt.Where("i.scanMethod IN ?", filter.ScanMethods)
 	}
-	if filter.File != "" {
-		stmt = stmt.Where("i.path = ?", filter.File)
+	if filter.Path != "" {
+		stmt = stmt.Where("i.path = ?", filter.Path)
 	}
-	if filter.Message != "" {
-		stmt = stmt.Where("i.message LIKE ?", "%"+filter.Message+"%")
+	if filter.Title != "" {
+		stmt = stmt.Where("i.title LIKE ?", "%"+filter.Title+"%")
+	}
+	if filter.Content != "" {
+		stmt = stmt.Where("i.content LIKE ?", "%"+filter.Content+"%")
 	}
 	if filter.RulePriority != "" {
 		stmt = stmt.Where("r.priority IN ?", strings.Split(filter.RulePriority, ","))
 	}
 	if filter.RuleType != "" {
 		stmt = stmt.Where("r.type = ?", filter.RuleType)
+	}
+	if filter.Category != "" {
+		stmt = stmt.Where("i.category = ?", filter.Category)
+	}
+	if filter.Severity != "" {
+		stmt = stmt.Where("i.severity = ?", filter.Severity)
 	}
 	if filter.Tool != "" {
 		stmt = stmt.Where("r.plugin = ?", filter.Tool)
@@ -154,10 +174,10 @@ func (s *ScanIssueStore) List(ctx context.Context, filter scanModel.ScanIssueReq
 		stmt = stmt.Where("i.editedDate < ?", filter.UpdatedLt)
 	}
 	if filter.ResolvedGt != "" {
-		stmt = stmt.Where("i.resolved >= ?", filter.ResolvedGt)
+		stmt = stmt.Where("i.resolvedDate >= ?", filter.ResolvedGt)
 	}
 	if filter.ResolvedLt != "" {
-		stmt = stmt.Where("i.resolved < ?", filter.ResolvedLt)
+		stmt = stmt.Where("i.resolvedDate < ?", filter.ResolvedLt)
 	}
 	var issues []*issueJoin
 	pageResult, err := database.Paginate(ctx, stmt, database.PageParam{
@@ -193,11 +213,14 @@ func (s *ScanIssueStore) ListByIDs(ctx context.Context, ids []int64) ([]*scanMod
 		Table("ops_scan_issues AS i").
 		Select("i.id, i.issueKey, i.ruleID, r.name AS ruleName, r.ruleKey AS ruleKey, "+
 			"r.priority AS rulePriority, r.type AS ruleType, "+
-			"i.message, i.path, i.line, i.repoID, i.repoBranch, "+
-			"i.status, i.scanMethod, i.resolution, i.payload, i.createdByTaskID, i.updatedByTaskID, i.resolved, i.closed, i.ignored, "+
+			"i.title, i.content, i.path, i.startLine, i.endLine, i.oldCode, i.newCode, i.category, i.severity, "+
+			"i.ppmID, i.repoID, i.repoBranch, "+
+			"i.status, i.scanMethod, i.resolution, i.payload, i.createdByTaskID, i.updatedByTaskID, "+
+			"i.createdBy, i.editedBy, pp.title AS ppmTitle, i.resolvedDate, i.closedDate, i.ignoredDate, "+
 			"t.triggerID, t.triggerType").
-		Joins("INNER JOIN ops_scan_rules AS r ON i.ruleID = r.id").
+		Joins("LEFT JOIN ops_scan_rules AS r ON i.ruleID = r.id").
 		Joins("LEFT JOIN ops_scan_tasks AS t ON i.updatedByTaskID = t.id").
+		Joins("LEFT JOIN ops_ppm AS pp ON i.ppmID = pp.id").
 		Where("i.id IN ? AND i.deleted = ?", ids, false).
 		Find(&issues).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
@@ -210,33 +233,41 @@ func (s *ScanIssueStore) ListByIDs(ctx context.Context, ids []int64) ([]*scanMod
 }
 
 // UpdateResolution 批量更新 issue resolution
-func (s *ScanIssueStore) UpdateResolution(ctx context.Context, ids []int64, resolution *constant.ScanIssueResolution) error {
+func (s *ScanIssueStore) UpdateResolution(ctx context.Context, ids []int64, resolution *constant.ScanIssueResolution, operator string) error {
 	if len(ids) == 0 {
 		return nil
 	}
+	updates := map[string]any{"resolution": resolution}
+	if operator != "" {
+		updates["editedBy"] = operator
+	}
 	if err := s.db.WithContext(ctx).Model(&ScanIssue{}).
 		Where("id IN ? AND deleted = ?", ids, false).
-		Updates(map[string]any{"resolution": resolution}).Error; err != nil {
+		Updates(updates).Error; err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
 	}
 	return nil
 }
 
 // UpdateStatus 批量更新 issue 状态
-func (s *ScanIssueStore) UpdateStatus(ctx context.Context, ids []int64, status constant.ScanIssueStatus) error {
+func (s *ScanIssueStore) UpdateStatus(ctx context.Context, ids []int64, status constant.ScanIssueStatus, operator string) error {
 	if len(ids) == 0 {
 		return nil
 	}
+	updates := map[string]any{"status": status}
+	if operator != "" {
+		updates["editedBy"] = operator
+	}
 	if err := s.db.WithContext(ctx).Model(&ScanIssue{}).
 		Where("id IN ? AND deleted = ?", ids, false).
-		Update("status", status).Error; err != nil {
+		Updates(updates).Error; err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
 	}
 	return nil
 }
 
 // UpdateTimestamps 按状态写对应时间戳字段
-func (s *ScanIssueStore) UpdateTimestamps(ctx context.Context, in scanModel.ScanIssueUpdateStatusReq) error {
+func (s *ScanIssueStore) UpdateTimestamps(ctx context.Context, in scanModel.ScanIssueUpdateStatusReq, operator string) error {
 	if len(in.IDs) == 0 {
 		return nil
 	}
@@ -244,15 +275,18 @@ func (s *ScanIssueStore) UpdateTimestamps(ctx context.Context, in scanModel.Scan
 	if in.Status != nil {
 		switch *in.Status {
 		case constant.ScanIssueStatusSolved:
-			fields["resolved"] = in.Resolved
+			fields["resolvedDate"] = in.Resolved
 		case constant.ScanIssueStatusClosed:
-			fields["closed"] = datetime.NowLocalTime()
+			fields["closedDate"] = datetime.NowLocalTime()
 		case constant.ScanIssueStatusIgnore:
-			fields["ignored"] = in.Ignored
+			fields["ignoredDate"] = in.Ignored
 		}
 	}
 	if len(fields) == 0 {
 		return nil
+	}
+	if operator != "" {
+		fields["editedBy"] = operator
 	}
 	if err := s.db.WithContext(ctx).Model(&ScanIssue{}).
 		Where("id IN ? AND deleted = ?", in.IDs, false).
@@ -262,18 +296,22 @@ func (s *ScanIssueStore) UpdateTimestamps(ctx context.Context, in scanModel.Scan
 	return nil
 }
 
-// ResetExpiredIgnore 将过期的 ignore 问题重置为 wait 状态，清空 resolution 和 ignored
-func (s *ScanIssueStore) ResetExpiredIgnore(ctx context.Context, ids []int64) error {
+// ResetExpiredIgnore 将过期的 ignore 问题重置为 wait 状态，清空 resolution 和 ignoredDate
+func (s *ScanIssueStore) ResetExpiredIgnore(ctx context.Context, ids []int64, operator string) error {
 	if len(ids) == 0 {
 		return nil
 	}
+	updates := map[string]any{
+		"status":      constant.ScanIssueStatusWait,
+		"resolution":  nil,
+		"ignoredDate": nil,
+	}
+	if operator != "" {
+		updates["editedBy"] = operator
+	}
 	if err := s.db.WithContext(ctx).Model(&ScanIssue{}).
 		Where("id IN ? AND deleted = ?", ids, false).
-		Updates(map[string]any{
-			"status":     constant.ScanIssueStatusWait,
-			"resolution": nil,
-			"ignored":    nil,
-		}).Error; err != nil {
+		Updates(updates).Error; err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
 	}
 	return nil
@@ -284,7 +322,7 @@ func (s *ScanIssueStore) ListKeysByTask(
 ) ([]*scanModel.ScanIssueKey, error) {
 	var issues []*ScanIssue
 	if err := s.db.WithContext(ctx).
-		Select("id, issueKey, createdByTaskID, updatedByTaskID, status, ignored").
+		Select("id, issueKey, createdByTaskID, updatedByTaskID, status, ignoredDate").
 		Where("repoID = ? AND repoBranch = ? AND scanMethod = ? AND deleted = ?", repoID, branch, method, false).
 		Find(&issues).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
@@ -298,36 +336,59 @@ func (s *ScanIssueStore) ListKeysByTask(
 			CreatedByTaskID: item.CreatedByTaskID,
 			UpdatedByTaskID: item.UpdatedByTaskID,
 			Status:          item.Status,
-			Ignored:         item.Ignored,
+			IgnoredDate:     item.IgnoredDate,
 		})
 	}
 	return result, nil
 }
 
+// ListExistingKeys 查询指定 issueKey 集合中已存在的 key
+func (s *ScanIssueStore) ListExistingKeys(ctx context.Context, keys []string) ([]string, error) {
+	if len(keys) == 0 {
+		return nil, nil
+	}
+	var issueKeys []string
+	if err := s.db.WithContext(ctx).
+		Model(&ScanIssue{}).
+		Where("issueKey IN ?", keys).
+		Pluck("issueKey", &issueKeys).Error; err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
+	}
+	return issueKeys, nil
+}
+
 // UpdateByTaskID 批量更新 issue 的 updatedByTaskID
-func (s *ScanIssueStore) UpdateByTaskID(ctx context.Context, taskID uint, issueIDs []int64) error {
+func (s *ScanIssueStore) UpdateByTaskID(ctx context.Context, taskID uint, issueIDs []int64, operator string) error {
 	if len(issueIDs) == 0 {
 		return nil
 	}
+	updates := map[string]any{"updatedByTaskID": taskID}
+	if operator != "" {
+		updates["editedBy"] = operator
+	}
 	if err := s.db.WithContext(ctx).Model(&ScanIssue{}).
 		Where("id IN ?", issueIDs).
-		Update("updatedByTaskID", taskID).Error; err != nil {
+		Updates(updates).Error; err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
 	}
 	return nil
 }
 
 // DisappearedByTask 标记 issue 为已消失
-func (s *ScanIssueStore) DisappearedByTask(ctx context.Context, taskID uint, issueIDs []int64) error {
+func (s *ScanIssueStore) DisappearedByTask(ctx context.Context, taskID uint, issueIDs []int64, operator string) error {
 	if len(issueIDs) == 0 {
 		return nil
 	}
+	updates := map[string]any{
+		"updatedByTaskID": taskID,
+		"status":          constant.ScanIssueStatusClosed,
+	}
+	if operator != "" {
+		updates["editedBy"] = operator
+	}
 	if err := s.db.WithContext(ctx).Model(&ScanIssue{}).
 		Where("id IN ? AND deleted = ?", issueIDs, false).
-		Updates(map[string]any{
-			"updatedByTaskID": taskID,
-			"status":          constant.ScanIssueStatusClosed,
-		}).Error; err != nil {
+		Updates(updates).Error; err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
 	}
 	return nil
@@ -372,14 +433,17 @@ func (s *ScanIssueStore) ListByTaskID(ctx context.Context, taskID uint, filter s
 		Table("ops_scan_issue_task_binds AS bind").
 		Select("i.id, i.issueKey, i.ruleID, r.name AS ruleName, r.ruleKey AS ruleKey, "+
 			"r.priority AS rulePriority, r.type AS ruleType, "+
-			"i.message, i.path, i.line, i.repoID, i.repoBranch, "+
+			"i.title, i.content, i.path,  i.startLine, i.endLine, i.oldCode, i.newCode, i.category, i.severity, "+
+			"i.ppmID, i.repoID, i.repoBranch, "+
 			"i.status, i.scanMethod, i.resolution, i.payload, i.createdByTaskID, i.updatedByTaskID, "+
-			"t.planID, p.name AS planName, i.createdDate, i.resolved, i.closed, i.ignored, "+
+			"i.createdBy, i.editedBy, pp.title AS ppmTitle, "+
+			"t.planID, p.name AS planName, i.createdDate, i.resolvedDate, i.closedDate, i.ignoredDate, "+
 			"t.triggerID, t.triggerType").
 		Joins("INNER JOIN ops_scan_issues AS i ON bind.issueID = i.id").
 		Joins("INNER JOIN ops_scan_rules AS r ON i.ruleID = r.id").
 		Joins("LEFT JOIN ops_scan_tasks AS t ON i.updatedByTaskID = t.id").
 		Joins("LEFT JOIN ops_scan_plans AS p ON t.planID = p.id").
+		Joins("LEFT JOIN ops_ppm AS pp ON i.ppmID = pp.id").
 		Where("bind.taskID = ? AND i.deleted = ?", taskID, false)
 
 	if filter.ID != 0 {
@@ -388,17 +452,29 @@ func (s *ScanIssueStore) ListByTaskID(ctx context.Context, taskID uint, filter s
 	if filter.RuleID != 0 {
 		stmt = stmt.Where("i.ruleID = ?", filter.RuleID)
 	}
+	if filter.PpmID != 0 {
+		stmt = stmt.Where("i.ppmID = ?", filter.PpmID)
+	}
 	if filter.Status != "" {
 		stmt = stmt.Where("i.status = ?", filter.Status)
 	}
-	if filter.ScanMethod != "" {
-		stmt = stmt.Where("i.scanMethod = ?", filter.ScanMethod)
+	if filter.ScanMethods != nil {
+		stmt = stmt.Where("i.scanMethod IN ?", filter.ScanMethods)
 	}
-	if filter.File != "" {
-		stmt = stmt.Where("i.path = ?", filter.File)
+	if filter.Path != "" {
+		stmt = stmt.Where("i.path = ?", filter.Path)
 	}
-	if filter.Message != "" {
-		stmt = stmt.Where("i.message LIKE ?", "%"+filter.Message+"%")
+	if filter.Title != "" {
+		stmt = stmt.Where("i.title LIKE ?", "%"+filter.Title+"%")
+	}
+	if filter.Content != "" {
+		stmt = stmt.Where("i.content LIKE ?", "%"+filter.Content+"%")
+	}
+	if filter.Category != "" {
+		stmt = stmt.Where("i.category = ?", filter.Category)
+	}
+	if filter.Severity != "" {
+		stmt = stmt.Where("i.severity = ?", filter.Severity)
 	}
 	if filter.RulePriority != "" {
 		stmt = stmt.Where("r.priority IN ?", strings.Split(filter.RulePriority, ","))

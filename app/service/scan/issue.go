@@ -9,10 +9,13 @@ import (
 	"strconv"
 	"time"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
+	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 	scanModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
 	scanStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/scan"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 )
 
 // typecheckSubErrorRe 匹配 typecheck 消息中的子错误，格式：./path:line:col: message
@@ -44,12 +47,22 @@ func expandTypecheckIssue(check *scanModel.IssueInputCheck) []*scanModel.IssueIn
 }
 
 // AnalyzeTaskUploadReport 分析上传的扫描报告
-func (s *ScanTaskService) AnalyzeTaskUploadReport(
-	ctx context.Context, taskID uint, method string, content []byte,
-) (*scanModel.ScanIssueReport, error) {
-	task, err := s.taskStore.GetTaskInfo(ctx, taskID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get task info: %w", err)
+func (s *ScanTaskService) AnalyzeTaskUploadReport(ctx context.Context, repoID uint, taskID uint, method string, content []byte) (*scanModel.ScanIssueReport, error) {
+
+	var err error
+	task := &scanModel.ScanTaskInfo{}
+	ppm := &repoModel.PullRequest{}
+
+	if method == "ai" {
+		ppm, err = s.pullRequestStore.GetByID(ctx, repoID, taskID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get pull request: %w", err)
+		}
+	} else {
+		task, err = s.taskStore.GetTaskInfo(ctx, taskID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get task info: %w", err)
+		}
 	}
 
 	report := &scanModel.ScanIssueReport{}
@@ -61,11 +74,23 @@ func (s *ScanTaskService) AnalyzeTaskUploadReport(
 		inputIssues, err = s.analyzeCheckIssues(ctx, content, task, report)
 	case constant.ScanMethodSmell:
 		inputIssues, err = s.analyzeSmellIssues(ctx, content, task, report)
+	case constant.ScanMethodAI:
+		inputIssues, err = s.analyzeAIIssues(content, repoID, int64(ppm.ID), report)
 	default:
 		return nil, fmt.Errorf("unsupported scan method: %s", method)
 	}
 	if err != nil {
 		return nil, err
+	}
+
+	if scanMethod == constant.ScanMethodAI {
+		// AI 类型的 issues 直接批量插入
+		if err := s.saveAIIssues(ctx, inputIssues, ppm); err != nil {
+			return nil, err
+		}
+		report.Add = len(inputIssues)
+		report.Total = len(inputIssues)
+		return report, nil
 	}
 
 	compData, err := s.compareIssues(ctx, task, scanMethod, inputIssues, report)
@@ -129,9 +154,9 @@ func (s *ScanTaskService) analyzeCheckIssues(
 	var issues []*scanModel.ScanIssue
 	for _, check := range expanded {
 		inIssue := &scanModel.ScanIssue{
-			Message:    check.Message,
+			Title:      check.Message,
 			Path:       check.Location.Path,
-			Line:       check.Location.Range.StartLine,
+			StartLine:  check.Location.Range.StartLine,
 			ScanMethod: constant.ScanMethodCheck,
 		}
 		ruleID, ok := ruleKeyMap.GetByTool(check.Tool, check.RuleKey)
@@ -168,9 +193,9 @@ func (s *ScanTaskService) analyzeSmellIssues(
 	var issues []*scanModel.ScanIssue
 	for _, smell := range smells {
 		inIssue := &scanModel.ScanIssue{
-			Message:    smell.Message,
+			Title:      smell.Message,
 			Path:       smell.Location.Path,
-			Line:       smell.Location.Range.StartLine,
+			StartLine:  smell.Location.Range.StartLine,
 			ScanMethod: constant.ScanMethodSmell,
 		}
 		ruleID, ok := ruleKeyMap.GetByTool(smell.Tool, smell.RuleKey)
@@ -181,6 +206,50 @@ func (s *ScanTaskService) analyzeSmellIssues(
 		inIssue.RuleID = ruleID
 		inIssue.Key = scanModel.GenerateIssueKey(task.RepoID, task.ExecutionRef, smell.UniqueKey())
 		if err := inIssue.SetPayload(smell.IssuePayloadSmell); err != nil {
+			return nil, err
+		}
+		issues = append(issues, inIssue)
+	}
+	return issues, nil
+}
+
+// analyzeAIIssues 解析 ai 类型的 issues
+func (s *ScanTaskService) analyzeAIIssues(content []byte, repoID uint, ppmID int64, report *scanModel.ScanIssueReport) ([]*scanModel.ScanIssue, error) {
+	var aiReport scanModel.AIReportResponse
+	if err := json.Unmarshal(content, &aiReport); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal AI report: %w", err)
+	}
+
+	if aiReport.Status != "complete" || len(aiReport.Comments) == 0 {
+		return nil, nil
+	}
+
+	report.Total = len(aiReport.Comments)
+
+	var issues []*scanModel.ScanIssue
+	for _, comment := range aiReport.Comments {
+		comment.PpmID = ppmID
+		title := comment.Content
+		if runes := []rune(title); len(runes) > 30 {
+			title = string(runes[:30])
+		}
+		inIssue := &scanModel.ScanIssue{
+			Title:      title,
+			Content:    comment.Content,
+			Path:       comment.Path,
+			StartLine:  comment.StartLine,
+			EndLine:    comment.EndLine,
+			ScanMethod: constant.ScanMethodAI,
+			OldCode:    comment.ExistingCode,
+			NewCode:    comment.SuggestionCode,
+			Category:   constant.AiScanIssueCategory(comment.Category),
+			Severity:   constant.AiScanIssueSeverity(comment.Severity),
+		}
+		inIssue.Key = scanModel.GenerateIssueKey(int64(repoID), "", comment.UniqueKey())
+		if err := inIssue.SetPayload(scanModel.IssuePayloadAI{
+			SuggestionCode: comment.SuggestionCode,
+			ExistingCode:   comment.ExistingCode,
+		}); err != nil {
 			return nil, err
 		}
 		issues = append(issues, inIssue)
@@ -287,11 +356,7 @@ func (s *ScanTaskService) compareIssues(
 		if _, exist := listBMap[item.Key]; exist {
 			// ignore 状态：永久忽略（-1）直接跳过；未过期跳过；过期则重置
 			if item.Status == constant.ScanIssueStatusIgnore {
-				if item.Ignored != nil && *item.Ignored == -1 {
-					report.Skip++
-					continue
-				}
-				if item.Ignored != nil && now <= *item.Ignored {
+				if item.IgnoredDate != nil && (now <= *item.IgnoredDate || *item.IgnoredDate == -1) {
 					report.Skip++
 					continue
 				}
@@ -312,7 +377,7 @@ func (s *ScanTaskService) compareIssues(
 	}
 
 	if len(expiredIgnoreIDs) > 0 {
-		if err := s.issueStore.ResetExpiredIgnore(ctx, expiredIgnoreIDs); err != nil {
+		if err := s.issueStore.ResetExpiredIgnore(ctx, expiredIgnoreIDs, req.GetOperator(ctx)); err != nil {
 			return nil, err
 		}
 	}
@@ -332,7 +397,7 @@ func (s *ScanTaskService) saveIssues(ctx context.Context, comp *scanModel.ScanIs
 	if len(comp.Updated) > 0 {
 		pages := paginateIndex(len(comp.Updated), 1000)
 		for _, p := range pages {
-			if err := s.issueStore.UpdateByTaskID(ctx, uint(task.ID), comp.Updated[p[0]:p[1]]); err != nil {
+			if err := s.issueStore.UpdateByTaskID(ctx, uint(task.ID), comp.Updated[p[0]:p[1]], req.GetOperator(ctx)); err != nil {
 				return err
 			}
 		}
@@ -349,9 +414,9 @@ func (s *ScanTaskService) saveIssues(ctx context.Context, comp *scanModel.ScanIs
 			storeIssues = append(storeIssues, &scanStore.ScanIssue{
 				Key:             item.Key,
 				RuleID:          item.RuleID,
-				Message:         item.Message,
+				Title:           item.Title,
 				Path:            item.Path,
-				Line:            item.Line,
+				StartLine:       item.StartLine,
 				RepoID:          item.RepoID,
 				RepoBranch:      item.RepoBranch,
 				CreatedByTaskID: item.CreatedByTaskID,
@@ -359,7 +424,10 @@ func (s *ScanTaskService) saveIssues(ctx context.Context, comp *scanModel.ScanIs
 				Status:          item.Status,
 				ScanMethod:      item.ScanMethod,
 				Resolution:      item.Resolution,
+				Category:        item.Category.String(),
+				Severity:        item.Severity.String(),
 				Payload:         item.Payload,
+				CreatedBy:       task.CreatedBy,
 			})
 		}
 		pages := paginateIndex(len(storeIssues), 1000)
@@ -367,6 +435,84 @@ func (s *ScanTaskService) saveIssues(ctx context.Context, comp *scanModel.ScanIs
 			if err := s.issueStore.BatchCreate(ctx, storeIssues[p[0]:p[1]]); err != nil {
 				return err
 			}
+		}
+	}
+	return nil
+}
+
+// saveAIIssues 直接批量插入 AI 类型的 issues
+func (s *ScanTaskService) saveAIIssues(ctx context.Context, issues []*scanModel.ScanIssue, ppm *repoModel.PullRequest) error {
+	if len(issues) == 0 {
+		return nil
+	}
+
+	rawIssues := make([]*scanStore.ScanIssue, 0, len(issues))
+	emptyResolution := constant.ScanIssueResolutionNull
+	emptyIgnoredDate := int64(0)
+	for _, item := range issues {
+		item.PpmID = int64(ppm.ID)
+		item.RepoID = int64(ppm.RepoID)
+		item.RepoBranch = ppm.SourceBranch
+		item.Status = constant.ScanIssueStatusWait
+		item.ScanMethod = constant.ScanMethodAI
+		rawIssues = append(rawIssues, &scanStore.ScanIssue{
+			Key:         item.Key,
+			Title:       item.Title,
+			Content:     item.Content,
+			Path:        item.Path,
+			StartLine:   item.StartLine,
+			EndLine:     item.EndLine,
+			OldCode:     item.OldCode,
+			NewCode:     item.NewCode,
+			PpmID:       item.PpmID,
+			RepoID:      item.RepoID,
+			Status:      item.Status,
+			ScanMethod:  item.ScanMethod,
+			Resolution:  &emptyResolution,
+			IgnoredDate: &emptyIgnoredDate,
+			Payload:     item.Payload,
+			CreatedBy:   ppm.CreatedBy,
+			Category:    string(item.Category),
+			Severity:    string(item.Severity),
+		})
+	}
+
+	// 预校验：已存在的 issue 不重复插入
+	keys := make([]string, 0, len(rawIssues))
+	for _, item := range rawIssues {
+		keys = append(keys, item.Key)
+	}
+	existingKeys, err := s.issueStore.ListExistingKeys(ctx, keys)
+	if err != nil {
+		return err
+	}
+
+	storeIssues := rawIssues
+	if len(existingKeys) > 0 {
+		existingSet := make(map[string]struct{}, len(existingKeys))
+		for _, k := range existingKeys {
+			existingSet[k] = struct{}{}
+		}
+		filterIssues := rawIssues[:0]
+		for _, item := range rawIssues {
+			if _, ok := existingSet[item.Key]; !ok {
+				filterIssues = append(filterIssues, item)
+			}
+		}
+		storeIssues = filterIssues
+	}
+	if len(storeIssues) == 0 {
+		return nil
+	}
+
+	pages := paginateIndex(len(storeIssues), 1000)
+	for _, p := range pages {
+		if err := s.issueStore.BatchCreate(ctx, storeIssues[p[0]:p[1]]); err != nil {
+			// 并发插入仍可能冲突，已存在的 issue 不重复插入，跳过本批继续
+			if errors.Is(err, errors.ErrDuplicate) {
+				continue
+			}
+			return err
 		}
 	}
 	return nil
@@ -479,17 +625,17 @@ func (s *ScanTaskService) ListIssueInfosByIDs(ctx context.Context, ids []int64) 
 
 // UpdateIssuesStatus 批量更新扫描问题状态
 func (s *ScanTaskService) UpdateIssuesStatus(ctx context.Context, ids []int64, status constant.ScanIssueStatus) error {
-	return s.issueStore.UpdateStatus(ctx, ids, status)
+	return s.issueStore.UpdateStatus(ctx, ids, status, req.GetOperator(ctx))
 }
 
 // SetIssuesStatus 批量更新扫描问题状态和/或解决方案（事务）
 func (s *ScanTaskService) SetIssuesStatus(ctx context.Context, in scanModel.ScanIssueUpdateStatusReq) error {
 	return s.tx.WithTx(ctx, func(ctx context.Context) error {
 		if in.Status != nil {
-			if err := s.issueStore.UpdateStatus(ctx, in.IDs, *in.Status); err != nil {
+			if err := s.issueStore.UpdateStatus(ctx, in.IDs, *in.Status, req.GetOperator(ctx)); err != nil {
 				return err
 			}
-			if err := s.issueStore.UpdateTimestamps(ctx, in); err != nil {
+			if err := s.issueStore.UpdateTimestamps(ctx, in, req.GetOperator(ctx)); err != nil {
 				return err
 			}
 		}
@@ -498,7 +644,7 @@ func (s *ScanTaskService) SetIssuesStatus(ctx context.Context, in scanModel.Scan
 			if *in.Resolution != constant.ScanIssueResolutionNull {
 				resolution = in.Resolution
 			}
-			if err := s.issueStore.UpdateResolution(ctx, in.IDs, resolution); err != nil {
+			if err := s.issueStore.UpdateResolution(ctx, in.IDs, resolution, req.GetOperator(ctx)); err != nil {
 				return err
 			}
 		}

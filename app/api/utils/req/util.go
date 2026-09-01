@@ -25,6 +25,14 @@ func GetAuthSession(ctx context.Context) (*auth.Session, bool) {
 	return v, ok && v != nil
 }
 
+func GetOperator(ctx context.Context) string {
+	var operator string
+	if session, ok := GetAuthSession(ctx); ok && session != nil && session.User != nil {
+		operator = session.User.Account
+	}
+	return operator
+}
+
 func GetAuthSessionWithEmail(ctx context.Context) (*auth.Session, bool) {
 	v, ok := ctx.Value(authSessionKey).(*auth.Session)
 	if ok && v != nil && v.User.Email != "" {

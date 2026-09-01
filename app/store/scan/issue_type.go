@@ -14,9 +14,14 @@ type ScanIssue struct {
 	ID              uint64                        `gorm:"column:id;primaryKey"`
 	Key             string                        `gorm:"column:issueKey"`
 	RuleID          int64                         `gorm:"column:ruleID"`
-	Message         string                        `gorm:"column:message"`
+	Title           string                        `gorm:"column:title"`
+	Content         string                        `gorm:"column:content"`
 	Path            string                        `gorm:"column:path"`
-	Line            int64                         `gorm:"column:line"`
+	StartLine       int64                         `gorm:"column:startLine"`
+	EndLine         int64                         `gorm:"column:endLine"`
+	OldCode         string                        `gorm:"column:oldCode"`
+	NewCode         string                        `gorm:"column:newCode"`
+	PpmID           int64                         `gorm:"column:ppmID"`
 	RepoID          int64                         `gorm:"column:repoID"`
 	RepoBranch      string                        `gorm:"column:repoBranch"`
 	CreatedByTaskID int64                         `gorm:"column:createdByTaskID"`
@@ -28,9 +33,13 @@ type ScanIssue struct {
 	CreatedDate     *datetime.Local               `gorm:"column:createdDate"`
 	EditedDate      *datetime.Local               `gorm:"column:editedDate"`
 	Deleted         bool                          `gorm:"column:deleted"`
-	Resolved        *datetime.Local               `gorm:"column:resolved"`
-	Closed          *datetime.Local               `gorm:"column:closed"`
-	Ignored         *int64                        `gorm:"column:ignored;default:0"`
+	ResolvedDate    *datetime.Local               `gorm:"column:resolvedDate"`
+	ClosedDate      *datetime.Local               `gorm:"column:closedDate"`
+	IgnoredDate     *int64                        `gorm:"column:ignoredDate"`
+	Category        string                        `gorm:"column:category"`
+	Severity        string                        `gorm:"column:severity"`
+	CreatedBy       string                        `gorm:"column:createdBy"`
+	EditedBy        string                        `gorm:"column:editedBy"`
 }
 
 func (r *ScanIssue) TableName() string { return "ops_scan_issues" }
@@ -66,9 +75,15 @@ type issueJoin struct {
 	RuleKey         string                        `gorm:"column:ruleKey"`
 	RulePriority    constant.ScanRulePriority     `gorm:"column:rulePriority"`
 	RuleType        constant.ScanRuleType         `gorm:"column:ruleType"`
-	Message         string                        `gorm:"column:message"`
+	Title           string                        `gorm:"column:title"`
+	Content         string                        `gorm:"column:content"`
 	Path            string                        `gorm:"column:path"`
-	Line            int64                         `gorm:"column:line"`
+	StartLine       int64                         `gorm:"column:startLine"`
+	EndLine         int64                         `gorm:"column:endLine"`
+	OldCode         string                        `gorm:"column:oldCode"`
+	NewCode         string                        `gorm:"column:newCode"`
+	PpmID           int64                         `gorm:"column:ppmID"`
+	PpmTitle        string                        `gorm:"column:ppmTitle"`
 	RepoID          int64                         `gorm:"column:repoID"`
 	RepoBranch      string                        `gorm:"column:repoBranch"`
 	Status          constant.ScanIssueStatus      `gorm:"column:status"`
@@ -80,9 +95,13 @@ type issueJoin struct {
 	PlanID          int64                         `gorm:"column:planID"`
 	PlanName        string                        `gorm:"column:planName"`
 	CreatedDate     *datetime.Local               `gorm:"column:createdDate"`
-	Resolved        *datetime.Local               `gorm:"column:resolved"`
-	Closed          *datetime.Local               `gorm:"column:closed"`
-	Ignored         *int64                        `gorm:"column:ignored"`
+	ResolvedDate    *datetime.Local               `gorm:"column:resolvedDate"`
+	ClosedDate      *datetime.Local               `gorm:"column:closedDate"`
+	IgnoredDate     *int64                        `gorm:"column:ignoredDate"`
+	Category        string                        `gorm:"column:category"`
+	Severity        string                        `gorm:"column:severity"`
+	CreatedBy       string                        `gorm:"column:createdBy"`
+	EditedBy        string                        `gorm:"column:editedBy"`
 	TriggerID       int64                         `gorm:"column:triggerID"`
 	TriggerType     constant.ScanPlanTriggerType  `gorm:"column:triggerType"`
 }
@@ -103,9 +122,15 @@ func mapIssueJoinToModel(in *issueJoin) *scanModel.ScanIssueInfo {
 		RuleKey:         in.RuleKey,
 		RulePriority:    in.RulePriority,
 		RuleType:        in.RuleType,
-		Message:         in.Message,
+		Title:           in.Title,
+		Content:         in.Content,
 		Path:            in.Path,
-		Line:            in.Line,
+		StartLine:       in.StartLine,
+		EndLine:         in.EndLine,
+		OldCode:         in.OldCode,
+		NewCode:         in.NewCode,
+		PpmID:           in.PpmID,
+		PpmTitle:        in.PpmTitle,
 		RepoID:          in.RepoID,
 		RepoBranch:      in.RepoBranch,
 		Status:          in.Status,
@@ -117,9 +142,13 @@ func mapIssueJoinToModel(in *issueJoin) *scanModel.ScanIssueInfo {
 		PlanID:          in.PlanID,
 		PlanName:        in.PlanName,
 		CreatedDate:     in.CreatedDate,
-		Resolved:        in.Resolved,
-		Closed:          in.Closed,
-		Ignored:         in.Ignored,
+		ResolvedDate:    in.ResolvedDate,
+		ClosedDate:      in.ClosedDate,
+		IgnoredDate:     in.IgnoredDate,
+		Category:        constant.AiScanIssueCategory(in.Category),
+		Severity:        constant.AiScanIssueSeverity(in.Severity),
+		CreatedBy:       in.CreatedBy,
+		EditedBy:        in.EditedBy,
 		Trigger:         trigger,
 	}
 }
