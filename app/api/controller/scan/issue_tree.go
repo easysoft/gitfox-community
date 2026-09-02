@@ -18,6 +18,7 @@ import (
 // @Produce application/json
 // @Param repoID query int64 false "仓库 ID"
 // @Param taskID query int64 false "任务 ID"
+// @Param scanMethods query []string false "扫描方式，可多选"
 // @Success 200 {object} resp.ObjectResponse{data=scanModel.TreeNode} "查询成功"
 // @Failure 400 {object} resp.ObjectResponse "参数错误"
 // @Failure 500 {object} resp.ObjectResponse "服务器内部错误"
@@ -35,7 +36,7 @@ func (c *ScanController) ScanIssueFileTree(ctx *gin.Context) {
 		return
 	}
 
-	data, err := c.taskSvc.GetIssueFileTree(ctx.Request.Context(), filter.RepoID, filter.TaskID)
+	data, err := c.taskSvc.GetIssueFileTree(ctx.Request.Context(), filter)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return

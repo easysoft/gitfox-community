@@ -100,6 +100,21 @@ func (mr *MockInterfaceMockRecorder) GetByID(ctx, targetRepoID, id any) *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByID", reflect.TypeOf((*MockInterface)(nil).GetByID), ctx, targetRepoID, id)
 }
 
+// GetReviewersByRequestID mocks base method.
+func (m *MockInterface) GetReviewersByRequestID(ctx context.Context, requestID uint) ([]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetReviewersByRequestID", ctx, requestID)
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetReviewersByRequestID indicates an expected call of GetReviewersByRequestID.
+func (mr *MockInterfaceMockRecorder) GetReviewersByRequestID(ctx, requestID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetReviewersByRequestID", reflect.TypeOf((*MockInterface)(nil).GetReviewersByRequestID), ctx, requestID)
+}
+
 // List mocks base method.
 func (m *MockInterface) List(ctx context.Context, filter *repo.PullRequestFilter) ([]*repo.PullRequest, error) {
 	m.ctrl.T.Helper()
@@ -113,6 +128,21 @@ func (m *MockInterface) List(ctx context.Context, filter *repo.PullRequestFilter
 func (mr *MockInterfaceMockRecorder) List(ctx, filter any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockInterface)(nil).List), ctx, filter)
+}
+
+// ListReviewerAccountsByRequestID mocks base method.
+func (m *MockInterface) ListReviewerAccountsByRequestID(ctx context.Context, requestID uint) ([]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListReviewerAccountsByRequestID", ctx, requestID)
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListReviewerAccountsByRequestID indicates an expected call of ListReviewerAccountsByRequestID.
+func (mr *MockInterfaceMockRecorder) ListReviewerAccountsByRequestID(ctx, requestID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListReviewerAccountsByRequestID", reflect.TypeOf((*MockInterface)(nil).ListReviewerAccountsByRequestID), ctx, requestID)
 }
 
 // ResetMergeCheckStatus mocks base method.

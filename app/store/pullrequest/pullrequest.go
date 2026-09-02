@@ -3,6 +3,7 @@ package pullrequest
 import (
 	"context"
 	"errors"
+	"strings"
 
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
@@ -201,8 +202,8 @@ func (s *Store) ResetMergeCheckStatus(
 		"mergeConflicts":    nil,
 		"rebaseCheckStatus": repoModel.MergeCheckStatusUnchecked,
 		"rebaseConflicts":   nil,
-		"commitCount":       nil,
-		"fileCount":         nil,
+		"commitCount":       0,
+		"fileCount":         0,
 	}
 
 	err := s.db.WithContext(ctx).
@@ -341,6 +342,50 @@ func (s *Store) CountByStatus(ctx context.Context, targetRepoID uint, status rep
 		return 0, database.ProcessSQLErrorf(ctx, err)
 	}
 	return count, nil
+}
+
+// GetReviewersByRequestID 根据请求ID（ppmID）查询 ppm 表（ops_ppm）的 reviewers 字段，
+// reviewers 为逗号分隔的评审人账号列表，无记录或为空时返回空切片
+func (s *Store) GetReviewersByRequestID(ctx context.Context, requestID uint) ([]string, error) {
+	var reviewers string
+	if err := s.db.WithContext(ctx).
+		Model(&PullRequest{}).
+		Select("reviewers").
+		Where("id = ?", requestID).
+		Scan(&reviewers).Error; err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
+	}
+
+	accounts := make([]string, 0)
+	if reviewers == "" {
+		return accounts, nil
+	}
+	for _, r := range strings.Split(reviewers, ",") {
+		if r = strings.TrimSpace(r); r != "" {
+			accounts = append(accounts, r)
+		}
+	}
+	return accounts, nil
+}
+
+// ListReviewerAccountsByRequestID 根据请求ID（ppmID）查询评审人账号列表
+func (s *Store) ListReviewerAccountsByRequestID(ctx context.Context, requestID uint) ([]string, error) {
+	var reviewers []RequestReviewer
+	if err := s.db.WithContext(ctx).
+		Model(&RequestReviewer{}).
+		Select("account").
+		Where("requestID = ?", requestID).
+		Find(&reviewers).Error; err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
+	}
+
+	accounts := make([]string, 0, len(reviewers))
+	for _, r := range reviewers {
+		if r.Account != "" {
+			accounts = append(accounts, r.Account)
+		}
+	}
+	return accounts, nil
 }
 
 // mapPullRequestToModel 将 store 模型转换为 API 模型

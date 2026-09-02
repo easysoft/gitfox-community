@@ -537,6 +537,13 @@ const (
 	CliVersionVersion                    I18nKey = "cli.version_version"                       // 版本
 	CliVersionWelcome                    I18nKey = "cli.version_welcome"                       // gitfox版本信息
 
+	// CodeReview 相关常量
+	CodeReviewBodyParamError      I18nKey = "codeReview.body_param_error"      // 请求体参数解析失败.
+	CodeReviewPathParamError      I18nKey = "codeReview.path_param_error"      // 路径参数解析失败.
+	CodeReviewReportUploadError   I18nKey = "codeReview.report_upload_error"   // 代码评审报告上传失败.
+	CodeReviewReportUploadSuccess I18nKey = "codeReview.report_upload_success" // 代码评审报告上传成功.
+	CodeReviewRuleListSuccess     I18nKey = "codeReview.rule_list_success"     // AI代码评审规则列表查询成功.
+
 	// Commit 相关常量
 	CommitActionDecodeError    I18nKey = "commit.action_decode_error"    // 解码提交文件内容时失败.
 	CommitBodyParamError       I18nKey = "commit.body_param_error"       // Body 参数解析失败.

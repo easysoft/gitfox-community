@@ -29,6 +29,7 @@ func ProvideTriggerService(
 	scanTriggerSvc scanSvc.IScanTrigger,
 	planSvc scanSvc.IScanPlan,
 	taskSvc scanSvc.IScanTask,
+	codeReviewSvc scanSvc.IAIReview,
 	gitReaderFactory *events.ReaderFactory[*gitevents.Reader],
 	pullReqEvFactory *events.ReaderFactory[*pullreqevents.Reader],
 ) (*triggerSvc.Service, error) {
@@ -47,6 +48,7 @@ func ProvideTriggerService(
 		scanTriggerSvc,
 		planSvc,
 		taskSvc,
+		codeReviewSvc,
 		gitReaderFactory,
 		pullReqEvFactory,
 	)

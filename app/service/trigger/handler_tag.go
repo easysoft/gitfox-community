@@ -20,7 +20,7 @@ func (s *Service) handleEventTagCreated(ctx context.Context,
 		Commit:       event.Payload.SHA,
 		CommitBefore: event.Payload.SHA,
 	}
-	return s.trigger(ctx, event.Payload.RepoID, hook)
+	return s.trigger(ctx, event.Payload.RepoID, 0, hook)
 }
 
 func (s *Service) handleEventTagUpdated(ctx context.Context,
@@ -32,5 +32,5 @@ func (s *Service) handleEventTagUpdated(ctx context.Context,
 		Match:   strings.TrimPrefix(event.Payload.Ref, "refs/tags/"),
 		Commit:  event.Payload.NewSHA,
 	}
-	return s.trigger(ctx, event.Payload.RepoID, hook)
+	return s.trigger(ctx, event.Payload.RepoID, 0, hook)
 }

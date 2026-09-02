@@ -6,6 +6,7 @@ import (
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	authModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
+	executionModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/execution"
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 	scanModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/triggerer"
@@ -108,12 +109,17 @@ type IScanTask interface {
 	Delete(ctx context.Context, id uint) error
 	SetupCron(ctx context.Context, trigger *scanModel.ScanTrigger) error
 	RecycleCron(ctx context.Context, trigger *scanModel.ScanTrigger) error
-	AnalyzeTaskUploadReport(ctx context.Context, taskID uint, method string, content []byte) (*scanModel.ScanIssueReport, error)
+	AnalyzeTaskUploadReport(ctx context.Context, repoID uint, taskID uint, method string, content []byte) (*scanModel.ScanIssueReport, error)
 	GetIssueInfo(ctx context.Context, issueID uint) (*scanModel.ScanIssueInfo, error)
 	ListIssueInfos(ctx context.Context, filter scanModel.ScanIssueReqFilter) (*database.PageResult[*scanModel.ScanIssueInfo], error)
 	ListIssueInfosByIDs(ctx context.Context, ids []int64) ([]*scanModel.ScanIssueInfo, error)
 	UpdateIssuesStatus(ctx context.Context, ids []int64, status constant.ScanIssueStatus) error
 	SetIssuesStatus(ctx context.Context, in scanModel.ScanIssueUpdateStatusReq) error
-	GetIssueFileTree(ctx context.Context, repoID, taskID int64) (*scanModel.TreeNode, error)
+	GetIssueFileTree(ctx context.Context, filter scanModel.IssueTreeFilter) (*scanModel.TreeNode, error)
 	GetIssueRuleTree(ctx context.Context, repoID, taskID int64) (*scanModel.TreeNode, error)
+}
+
+type IAIReview interface {
+	GetAIReviewRules(ctx context.Context) ([]*scanModel.AIReviewRule, error)
+	TriggerCodeReview(ctx context.Context, in *CodeReviewInput) (*executionModel.Execution, error)
 }

@@ -187,3 +187,10 @@ issue:
   update_error: "扫描问题更新失败。"
   tree_query_success: "扫描问题树查询成功。"
   tree_query_error: "扫描问题树查询失败。"
+
+codeReview:
+  path_param_error: "路径参数解析失败。"
+  body_param_error: "请求体参数解析失败。"
+  report_upload_success: "代码评审报告上传成功。"
+  report_upload_error: "代码评审报告上传失败。"
+  rule_list_success: "AI代码评审规则列表查询成功。"

@@ -49,6 +49,10 @@ var ScanRuleSetWireSet = wire.NewSet(
 	scanStore.NewScanTaskStore,
 	wire.Bind(new(scanStore.IScanIssue), new(*scanStore.ScanIssueStore)),
 	scanStore.NewScanIssueStore,
+	wire.Bind(new(scanSvc.IAIReview), new(*scanSvc.AIReviewService)),
+	scanSvc.NewService,
+	wire.Bind(new(scanStore.IAIReview), new(*scanStore.Store)),
+	scanStore.NewAICodeReviewStore,
 )
 
 var ScanRuleWireSet = wire.NewSet(
