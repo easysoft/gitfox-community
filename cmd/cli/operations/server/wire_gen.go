@@ -289,17 +289,19 @@ func NewApp(mode string) (*App, func(), error) {
 	scanIssueStore := scan.NewScanIssueStore(db)
 	scanConditionStore := scan.NewScanConditionStore(db)
 	cronScheduler := provider.ProvideScanCronScheduler(jobsScheduler)
-	scanTaskService := scan2.NewScanTaskService(config, scanTaskStore, scanPlanStore, solutionStore, scanIssueStore, scanConditionStore, ruleSetStore, ruleStore, store, pipelineStore, triggererTriggerer, cronScheduler, txRunnerImpl)
+	scanTaskService := scan2.NewScanTaskService(config, scanTaskStore, scanPlanStore, solutionStore, scanIssueStore, scanConditionStore, ruleSetStore, ruleStore, store, pipelineStore, pullrequestStore, pipelineService, triggererTriggerer, cronScheduler, txRunnerImpl)
 	scanTriggerStore := scan.NewScanTriggerStore(db)
 	scanPlanService := scan2.NewScanPlanService(scanPlanStore, store, solutionStore, ruleSetStore, ruleStore, scanTriggerStore, scanConditionStore)
 	scanTriggerSolutionStore := scan.NewScanTriggerSolutionStore(db)
 	scanTriggerService := scan2.NewScanTriggerService(scanTriggerStore, scanTriggerSolutionStore, store, scanPlanStore, solutionStore, cronScheduler)
 	scanConditionService := scan2.NewScanConditionService(scanConditionStore, store, scanPlanStore, scanTriggerStore, cronScheduler)
 	scanPlanConditionService := scan2.NewScanPlanConditionService(store, scanPlanStore, scanConditionStore)
-	scanController := scan3.NewScanController(ruleSetService, ruleService, solutionService, scanTaskService, scanPlanService, scanTriggerService, scanConditionService, scanPlanConditionService, repoService, gitService)
+	scanStore := scan.NewAICodeReviewStore(db)
+	aiReviewService := scan2.NewService(scanStore, config, pipelineStore, pipelineService, triggererTriggerer, tokenInterface)
+	scanController := scan3.NewScanController(ruleSetService, ruleService, solutionService, scanTaskService, scanPlanService, scanTriggerService, scanConditionService, scanPlanConditionService, repoService, gitService, aiReviewService)
 	fitService := fit.NewService(tokenInterface, devopsConfig)
 	fitController := fit2.NewController(fitService, repoService, service)
-	webhookService, err := provider.ProvideWebhookService(eventContext, gitService, readerFactory, eventsReaderFactory, webhookStore, store, repoService, pullrequestStore, urlProvider)
+	webhookService, err := provider.ProvideWebhookService(eventContext, gitService, readerFactory, eventsReaderFactory, webhookStore, store, repoService, pullrequestStore, userStore, urlProvider)
 	if err != nil {
 		cleanup2()
 		cleanup()
@@ -316,7 +318,7 @@ func NewApp(mode string) (*App, func(), error) {
 		return nil, nil, err
 	}
 	server := provider.ProvideSSHServer(config, interface2, gitController)
-	triggerService, err := provider.ProvideTriggerService(eventContext, pipelineService, triggererTriggerer, store, urlProvider, scanTriggerService, scanPlanService, scanTaskService, readerFactory, eventsReaderFactory)
+	triggerService, err := provider.ProvideTriggerService(eventContext, pipelineService, triggererTriggerer, store, urlProvider, scanTriggerService, scanPlanService, scanTaskService, aiReviewService, readerFactory, eventsReaderFactory)
 	if err != nil {
 		cleanup2()
 		cleanup()

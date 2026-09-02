@@ -15,6 +15,16 @@ const (
 	gitReferenceNamePrefixBranch = "refs/heads/"
 )
 
+// principalDisplayName 根据 principal(用户账号) 查询用户表 zt_user 的 realname 作为显示名，
+// 查询不到或查询失败时回退为 principal 本身，避免影响 webhook 触发。
+func (s *Service) principalDisplayName(ctx context.Context, principal string) string {
+	user, err := s.userStore.FindByAccount(ctx, principal)
+	if err != nil || user == nil || user.DisplayName == "" {
+		return principal
+	}
+	return user.DisplayName
+}
+
 // PullReqCreatedPayload describes the body of the pullreq created trigger.
 // TODO: move in separate package for small import?
 type PullReqCreatedPayload struct {
@@ -23,6 +33,7 @@ type PullReqCreatedPayload struct {
 	webhookModel.PullReqTargetReferenceSegment
 	webhookModel.ReferenceSegment
 	webhookModel.ReferenceDetailsSegment
+	Reviewers []string `json:"reviewers"`
 }
 
 // handleEventPullReqCreated handles created events for pull requests
@@ -35,13 +46,25 @@ func (s *Service) handleEventPullReqCreated(ctx context.Context,
 			if err != nil {
 				return nil, err
 			}
+			// 优先查询评审人表（ops_request_reviewers）
+			reviewers, err := s.pullreqStore.ListReviewerAccountsByRequestID(ctx, uint(pr.ID))
+			if err != nil {
+				return nil, err
+			}
+			if len(reviewers) == 0 {
+				reviewers, err = s.pullreqStore.GetReviewersByRequestID(ctx, uint(pr.ID))
+				if err != nil {
+					return nil, err
+				}
+			}
 			targetRepoInfo := repositoryInfoFrom(targetRepo)
 			sourceRepoInfo := repositoryInfoFrom(sourceRepo)
 			return &PullReqCreatedPayload{
 				BaseSegment: webhookModel.BaseSegment{
-					Trigger:   string(constant.WebhookTriggerPullReqCreated),
-					Repo:      targetRepoInfo,
-					Principal: principal,
+					Trigger:              string(constant.WebhookTriggerPullReqCreated),
+					Repo:                 targetRepoInfo,
+					Principal:            principal,
+					PrincipalDisplayName: s.principalDisplayName(ctx, principal),
 				},
 				PullReqSegment: webhookModel.PullReqSegment{
 					PullReq: pullReqInfoFrom(pr),
@@ -63,6 +86,7 @@ func (s *Service) handleEventPullReqCreated(ctx context.Context,
 					Commit:     &commitInfo,
 					HeadCommit: &commitInfo,
 				},
+				Reviewers: reviewers,
 			}, nil
 		})
 }
@@ -86,9 +110,10 @@ func (s *Service) handleEventPullReqReopened(ctx context.Context,
 
 			return &PullReqReopenedPayload{
 				BaseSegment: webhookModel.BaseSegment{
-					Trigger:   string(constant.WebhookTriggerPullReqReopened),
-					Repo:      targetRepoInfo,
-					Principal: principal,
+					Trigger:              string(constant.WebhookTriggerPullReqReopened),
+					Repo:                 targetRepoInfo,
+					Principal:            principal,
+					PrincipalDisplayName: s.principalDisplayName(ctx, principal),
 				},
 				PullReqSegment: webhookModel.PullReqSegment{
 					PullReq: pullReqInfoFrom(pr),
@@ -144,9 +169,10 @@ func (s *Service) handleEventPullReqBranchUpdated(ctx context.Context,
 
 			return &PullReqBranchUpdatedPayload{
 				BaseSegment: webhookModel.BaseSegment{
-					Trigger:   string(constant.WebhookTriggerPullReqBranchUpdated),
-					Repo:      targetRepoInfo,
-					Principal: principal,
+					Trigger:              string(constant.WebhookTriggerPullReqBranchUpdated),
+					Repo:                 targetRepoInfo,
+					Principal:            principal,
+					PrincipalDisplayName: s.principalDisplayName(ctx, principal),
 				},
 				PullReqSegment: webhookModel.PullReqSegment{
 					PullReq: pullReqInfoFrom(pr),
@@ -202,9 +228,10 @@ func (s *Service) handleEventPullReqClosed(ctx context.Context,
 
 			return &PullReqClosedPayload{
 				BaseSegment: webhookModel.BaseSegment{
-					Trigger:   string(constant.WebhookTriggerPullReqClosed),
-					Repo:      targetRepoInfo,
-					Principal: principal,
+					Trigger:              string(constant.WebhookTriggerPullReqClosed),
+					Repo:                 targetRepoInfo,
+					Principal:            principal,
+					PrincipalDisplayName: s.principalDisplayName(ctx, principal),
 				},
 				PullReqSegment: webhookModel.PullReqSegment{
 					PullReq: pullReqInfoFrom(pr),
@@ -254,9 +281,10 @@ func (s *Service) handleEventPullReqMerged(ctx context.Context,
 
 			return &PullReqMergedPayload{
 				BaseSegment: webhookModel.BaseSegment{
-					Trigger:   string(constant.WebhookTriggerPullReqMerged),
-					Repo:      targetRepoInfo,
-					Principal: principal,
+					Trigger:              string(constant.WebhookTriggerPullReqMerged),
+					Repo:                 targetRepoInfo,
+					Principal:            principal,
+					PrincipalDisplayName: s.principalDisplayName(ctx, principal),
 				},
 				PullReqSegment: webhookModel.PullReqSegment{
 					PullReq: pullReqInfoFrom(pr),

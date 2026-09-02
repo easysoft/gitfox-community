@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+	"os"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	clii18n "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n/cli"
@@ -28,7 +29,7 @@ func runStatus(_ *kingpin.ParseContext) error {
 	headerStyle := lipgloss.NewStyle().Bold(true)
 
 	// ========== 阶段 0：环境依赖检查 ==========
-	_ = Check(headerStyle, okStyle, errStyle, warnStyle)
+	missing := Check(headerStyle, okStyle, errStyle, warnStyle)
 
 	// ========== 阶段 1：GitFox 服务状态检查（端到端聚合） ==========
 	fmt.Println()
@@ -50,6 +51,11 @@ func runStatus(_ *kingpin.ParseContext) error {
 	default:
 		// 兜底：未知状态当未运行
 		fmt.Println(errStyle.Render(t(i18n.CliStatusServiceNotRunning)))
+	}
+
+	// 阻塞性依赖（Git / Docker）缺失时以非零退出码结束，便于脚本判断
+	if missing {
+		os.Exit(1)
 	}
 	return nil
 }

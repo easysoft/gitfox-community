@@ -2,7 +2,6 @@ package scan
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -13,7 +12,9 @@ import (
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 	scanModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/triggerer"
+	pipelineService "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/pipeline"
 	pipelineStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/pipeline"
+	pullRequestStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/pullrequest"
 	repoStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
 	scanStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/scan"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
@@ -21,7 +22,6 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database/dbtx"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/resources"
 )
 
 const (
@@ -56,19 +56,21 @@ func (j *JobCodeScanIdentifier) String() string {
 var _ IScanTask = (*ScanTaskService)(nil)
 
 type ScanTaskService struct {
-	config         *config.Config
-	taskStore      scanStore.IScanTask
-	planStore      scanStore.IScanPlan
-	solutionStore  scanStore.ISolution
-	issueStore     scanStore.IScanIssue
-	conditionStore scanStore.IScanCondition
-	ruleSetStore   scanStore.IRuleSet
-	ruleStore      scanStore.IRule
-	repoStore      repoStore.Interface
-	pipelineStore  pipelineStore.Interface
-	triggerSvc     triggerer.Triggerer
-	cronScheduler  CronScheduler
-	tx             dbtx.TxRunner
+	config           *config.Config
+	taskStore        scanStore.IScanTask
+	planStore        scanStore.IScanPlan
+	solutionStore    scanStore.ISolution
+	issueStore       scanStore.IScanIssue
+	conditionStore   scanStore.IScanCondition
+	ruleSetStore     scanStore.IRuleSet
+	ruleStore        scanStore.IRule
+	repoStore        repoStore.Interface
+	pipelineStore    pipelineStore.Interface
+	pullRequestStore pullRequestStore.Interface
+	pipelineSvc      pipelineService.Interface
+	triggerSvc       triggerer.Triggerer
+	cronScheduler    CronScheduler
+	tx               dbtx.TxRunner
 }
 
 func NewScanTaskService(
@@ -82,24 +84,28 @@ func NewScanTaskService(
 	ruleStore scanStore.IRule,
 	repoStore repoStore.Interface,
 	pipelineStore pipelineStore.Interface,
+	pullRequestStore pullRequestStore.Interface,
+	pipelineService pipelineService.Interface,
 	triggerSvc triggerer.Triggerer,
 	cronScheduler CronScheduler,
 	tx dbtx.TxRunner,
 ) *ScanTaskService {
 	return &ScanTaskService{
-		config:         config,
-		taskStore:      taskStore,
-		planStore:      planStore,
-		solutionStore:  solutionStore,
-		issueStore:     issueStore,
-		conditionStore: conditionStore,
-		ruleSetStore:   ruleSetStore,
-		ruleStore:      ruleStore,
-		repoStore:      repoStore,
-		pipelineStore:  pipelineStore,
-		triggerSvc:     triggerSvc,
-		cronScheduler:  cronScheduler,
-		tx:             tx,
+		config:           config,
+		taskStore:        taskStore,
+		planStore:        planStore,
+		solutionStore:    solutionStore,
+		issueStore:       issueStore,
+		conditionStore:   conditionStore,
+		ruleSetStore:     ruleSetStore,
+		ruleStore:        ruleStore,
+		repoStore:        repoStore,
+		pipelineStore:    pipelineStore,
+		pullRequestStore: pullRequestStore,
+		pipelineSvc:      pipelineService,
+		triggerSvc:       triggerSvc,
+		cronScheduler:    cronScheduler,
+		tx:               tx,
 	}
 }
 
@@ -357,13 +363,6 @@ func (s *ScanTaskService) createPipeline(ctx context.Context, repoID int64, in *
 	if s.containsLangCsharp(ctx, in.Plan.ID) {
 		return nil, errors.WithI18nKey(nil, i18n.PipelineCSharpNotSupportError)
 	}
-	yamlFile := "pipeline/" + _codeScanLabel + ".yaml"
-
-	// 读取 embed 的流水线配置
-	data, err := resources.EmbeddedPipelines.ReadFile(yamlFile)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read embedded pipeline config %s: %w", yamlFile, err)
-	}
 
 	// 创建流水线
 	pipelineType := "repo"
@@ -379,22 +378,9 @@ func (s *ScanTaskService) createPipeline(ctx context.Context, repoID int64, in *
 		DefaultBranch: in.Hook.Ref,
 		CreatedBy:     in.Hook.Sender,
 	}
-	pipeline, err := s.pipelineStore.CreatePipeline(ctx, p)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create pipeline: %w", err)
-	}
 
-	// 创建流水线内容（base64 编码后存入）
-	content := &pipelineModel.PipelineContent{
-		PipelineID: pipeline.ID,
-		Data:       []byte(base64.StdEncoding.EncodeToString(data)),
-		CreatedBy:  in.Hook.Sender,
-	}
-	if _, err = s.pipelineStore.CreatePipelineContent(ctx, content); err != nil {
-		return nil, fmt.Errorf("failed to create pipeline content: %w", err)
-	}
-
-	return pipeline, nil
+	// 使用公共方法创建内置流水线
+	return s.pipelineSvc.CreateEmbeddedPipeline(ctx, _codeScanLabel, p)
 }
 
 // updatePipelineContent 更新代码扫描流水线内容
@@ -402,19 +388,9 @@ func (s *ScanTaskService) updatePipelineContent(ctx context.Context, pipelineID 
 	if s.containsLangCsharp(ctx, in.Plan.ID) {
 		return errors.WithI18nKey(nil, i18n.PipelineCSharpNotSupportError)
 	}
-	yamlFile := "pipeline/" + _codeScanLabel + ".yaml"
 
-	// 读取 embed 的流水线配置
-	data, err := resources.EmbeddedPipelines.ReadFile(yamlFile)
-	if err != nil {
-		return fmt.Errorf("failed to read embedded pipeline config %s: %w", yamlFile, err)
-	}
-	// 创建流水线内容（base64 编码后存入）
-	content := &pipelineModel.PipelineContent{
-		PipelineID: pipelineID,
-		Data:       []byte(base64.StdEncoding.EncodeToString(data)),
-	}
-	return s.pipelineStore.UpdatePipelineContent(ctx, content)
+	// 使用公共方法更新内置流水线内容
+	return s.pipelineSvc.UpdateEmbeddedPipelineContent(ctx, _codeScanLabel, pipelineID)
 }
 
 // containsLangCsharp 检查扫描计划关联的方案是否包含 C# 语言
