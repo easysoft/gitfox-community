@@ -5,6 +5,7 @@ import (
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
+	scanModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	"github.com/gin-gonic/gin"
@@ -63,7 +64,8 @@ func (c *ScanController) ReviewTaskUploadReport(ctx *gin.Context) {
 		return
 	}
 
-	report, err := c.taskSvc.AnalyzeTaskUploadReport(ctx.Request.Context(), repoID, ppmID, method, content)
+	var report *scanModel.ScanIssueReport
+	report, err = c.taskSvc.AnalyzeTaskUploadReport(ctx.Request.Context(), repoID, ppmID, method, content)
 	if err != nil {
 		resp.InternalError(ctx, errors.WithI18nKey(err, i18n.CodeReviewReportUploadError))
 		return
