@@ -2,35 +2,14 @@ package manager
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 
-	pipelineModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/pipeline"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	v1yaml "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pipeline/spec"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pipeline/spec/parse"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pipeline/spec/parse/walk"
 
 	"github.com/ghodss/yaml"
 )
-
-// ConvertToV1Config converts a stored pipelineModel.Yaml into a
-// v1yaml.Config by round-tripping through JSON.
-func ConvertToV1Config(src *pipelineModel.Yaml) (*v1yaml.Config, error) {
-	if src == nil {
-		return nil, fmt.Errorf("source yaml config is nil")
-	}
-	// Marshal pipelineModel.Yaml to JSON
-	data, err := json.Marshal(src)
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal yaml config: %w", err)
-	}
-	// Unmarshal JSON to v1yaml.Config
-	dst := &v1yaml.Config{}
-	if err := json.Unmarshal(data, dst); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal to v1yaml.Config: %w", err)
-	}
-	return dst, nil
-}
 
 // collectPlugins walks the pipeline config, resolves every referenced
 // step plugin and returns a map of plugin name -> definition (YAML string).
@@ -75,7 +54,7 @@ func (m *Manager) collectPlugins(ctx context.Context, data []byte) map[string]st
 			logger.GetLogger(ctx).Warnw("collectPlugins: cannot resolve plugin", "plugin", name, "error", err)
 			continue
 		}
-		v1, err := ConvertToV1Config(yamlCfg)
+		v1, err := parse.ToConfig(yamlCfg)
 		if err != nil {
 			logger.GetLogger(ctx).Warnw("collectPlugins: cannot convert plugin", "plugin", name, "error", err)
 			continue

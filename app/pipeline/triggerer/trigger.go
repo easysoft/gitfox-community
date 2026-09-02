@@ -22,6 +22,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 	v1yaml "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pipeline/spec"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pipeline/spec/parse"
 	normalize "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pipeline/spec/parse/normalize"
 	specresolver "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pipeline/spec/parse/resolver"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/runner/docker/engine2/inputs"
@@ -212,7 +213,7 @@ func parseV1Stages(
 			return nil, err
 		}
 		// Convert pipelineModel.Yaml to v1yaml.Config via JSON
-		return manager.ConvertToV1Config(yamlConfig)
+		return parse.ToConfig(yamlConfig)
 	}
 
 	if err := specresolver.Resolve(config, lookupFunc); err != nil {
