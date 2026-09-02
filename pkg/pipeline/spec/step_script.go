@@ -9,6 +9,7 @@ type StepScript struct {
 	Shell      string            `json:"shell,omitempty"`
 	Envs       map[string]string `json:"envs,omitempty"`
 	Run        string            `json:"run,omitempty"`
+	Entry      string            `json:"entry,omitempty"`
 	Entrypoint string            `json:"entrypoint,omitempty"`
 	Args       []string          `json:"args,omitempty"`
 	Privileged bool              `json:"privileged,omitempty"`

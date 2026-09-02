@@ -4,10 +4,9 @@ import (
 	"context"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/pipeline"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/triggerer"
 
 	v1yaml "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pipeline/spec"
-
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pipeline/spec/parse"
 )
 
 type Manager struct {
@@ -34,6 +33,6 @@ func (m *Manager) GetLookupFn() LookupFunc {
         if err != nil {
             return nil, err
         }
-        return triggerer.ConvertToV1Config(config)
+        return parse.ToConfig(config)
     }
 }

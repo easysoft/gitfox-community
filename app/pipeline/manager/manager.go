@@ -66,6 +66,7 @@ type (
 		Stage     *stageModel.StageWithSteps          `json:"stage"`
 		Config    *pipelineModel.PipelineFile         `json:"config"`
 		Netrc     *Netrc                              `json:"netrc"`
+		Plugins   map[string]string                   `json:"plugins,omitempty"`
 		// Secrets   []*types.Secret           `json:"secrets"`
 	}
 
@@ -338,6 +339,7 @@ func (m *Manager) Details(ctx context.Context, stageID int64) (*ExecutionContext
 		Stage:     stage,
 		Config:    file,
 		Netrc:     netrc,
+		Plugins:   m.collectPlugins(noContext, file.Data),
 		// Secrets:   secrets,
 	}, nil
 }
