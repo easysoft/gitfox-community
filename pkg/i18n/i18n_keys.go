@@ -479,6 +479,7 @@ const (
 	CliStopStepWindowsSysSignal          I18nKey = "cli.stop_step_windows_sys_signal"          // [Service] 收到系统终止信号,开始优雅关闭...
 	CliStopSuccess                       I18nKey = "cli.stop_success"                          // GitFox 守护进程服务已成功停止.
 	CliStopSuccessWindowsServiceStopped  I18nKey = "cli.stop_success_windows_service_stopped"  // [Service] GitFox 服务已完全停止
+	CliSystemctlMissing                  I18nKey = "cli.systemctl_missing"                     // 执行失败:系统中未找到 systemctl 工具,当前环境可能非 systemd 支持体系.
 	CliUninstallConfirm                  I18nKey = "cli.uninstall_confirm"                     // 即将停止服务并从系统中完全移除,是否继续?
 	CliUninstallConfirmCancel            I18nKey = "cli.uninstall_confirm_cancel"              // 卸载已取消,未做任何更改.
 	CliUninstallConfirmNo                I18nKey = "cli.uninstall_confirm_no"                  // 取消
@@ -695,7 +696,7 @@ const (
 	PipelineTriggerParamError          I18nKey = "pipeline.trigger_param_error"            // 触发参数解析失败.
 	PipelineTriggerUpdateError         I18nKey = "pipeline.trigger_update_error"           // 触发更新失败.
 	PipelineTriggerUpdateSuccess       I18nKey = "pipeline.trigger_update_success"         // 触发更新成功.
-	PipelineTriggerV1ParseError        I18nKey = "pipeline.trigger_v1_parse_error"         // 流水线 YAML 解析失败.
+	PipelineTriggerV1ParseError        I18nKey = "pipeline.trigger_v1_parse_error"         // 流水线yaml解析失败,详细信息:%s
 
 	// Plan 相关常量
 	PlanAlreadyExists            I18nKey = "plan.already_exists"              // 扫描计划名称已存在.

@@ -100,7 +100,7 @@ func uninstallLinux() error {
 	t := clii18n.T
 
 	if _, err := exec.LookPath("systemctl"); err != nil {
-		return errors.New(t(i18n.CliStartErrSystemctlMissing))
+		return errors.New(t(i18n.CliSystemctlMissing))
 	}
 
 	servicePath := "/etc/systemd/system/gitfox.service"
