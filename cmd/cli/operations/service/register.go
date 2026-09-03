@@ -116,7 +116,7 @@ func registerLinux(exePath, workDir string) error {
 
 	// 1. 前置依赖断言：探测到 systemctl 工具
 	if _, err := exec.LookPath("systemctl"); err != nil {
-		return errors.New(t(i18n.CliStartErrSystemctlMissing))
+		return fmt.Errorf(t(i18n.CliStartErrSystemctlMissing), workDir)
 	}
 
 	// 2. 动态生成符合当前系统的 service definition
