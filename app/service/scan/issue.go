@@ -404,6 +404,7 @@ func (s *ScanTaskService) saveIssues(ctx context.Context, comp *scanModel.ScanIs
 	}
 
 	if len(comp.Added) > 0 {
+		emptyIgnoredDate := int64(0)
 		storeIssues := make([]*scanStore.ScanIssue, 0, len(comp.Added))
 		for _, item := range comp.Added {
 			item.RepoID = task.RepoID
@@ -428,6 +429,7 @@ func (s *ScanTaskService) saveIssues(ctx context.Context, comp *scanModel.ScanIs
 				Severity:        item.Severity.String(),
 				Payload:         item.Payload,
 				CreatedBy:       task.CreatedBy,
+				IgnoredDate:     &emptyIgnoredDate,
 			})
 		}
 		pages := paginateIndex(len(storeIssues), 1000)
