@@ -230,3 +230,8 @@ func GetType(err error) ErrorType {
 func IsNotFound(err error) bool {
 	return GetType(err) == NotFound
 }
+
+// IsConflict 检查错误是否为冲突类型错误
+func IsConflict(err error) bool {
+	return GetType(err) == Conflict
+}

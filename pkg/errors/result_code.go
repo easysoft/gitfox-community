@@ -16,6 +16,7 @@ const (
 	InternalError
 	InvalidArgument
 	ConfigNotFoundError
+	Conflict
 )
 
 const defaultI18nKey = i18n.ErrorDefault

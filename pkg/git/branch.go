@@ -19,12 +19,12 @@ import (
 	"fmt"
 	"strings"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/api"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/check"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/hook"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/sha"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
-	"github.com/easysoft/gitfox/errors"
 )
 
 type BranchSortOption int
@@ -98,7 +98,7 @@ func (s *Service) CreateBranch(ctx context.Context, params *CreateBranchParams) 
 		return nil, err
 	}
 	if err := check.BranchName(params.BranchName); err != nil {
-		return nil, errors.InvalidArgument("invalid branch name: %s", err.Error())
+		return nil, errors.InvalidArgument.Newf("invalid branch name: %s", err.Error())
 	}
 
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
@@ -116,7 +116,7 @@ func (s *Service) CreateBranch(ctx context.Context, params *CreateBranchParams) 
 
 	err = refUpdater.Do(ctx, sha.Nil, targetCommit.SHA)
 	if errors.IsConflict(err) {
-		return nil, errors.Conflict("branch %q already exists", params.BranchName)
+		return nil, errors.Conflict.Newf("branch %q already exists", params.BranchName)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("failed to create branch reference: %w", err)
@@ -176,7 +176,7 @@ func (s *Service) DeleteBranch(ctx context.Context, params *DeleteBranchParams) 
 
 	err = refUpdater.Do(ctx, commitSha, sha.Nil)
 	if errors.IsNotFound(err) {
-		return errors.NotFound("branch %q does not exist", params.BranchName)
+		return errors.NotFound.Newf("branch %q does not exist", params.BranchName)
 	}
 	if err != nil {
 		return fmt.Errorf("failed to delete branch reference: %w", err)
@@ -253,7 +253,7 @@ func (s *Service) listBranchesLoadReferenceData(
 		filter.PageSize,
 	)
 	if err != nil {
-		return nil, errors.InvalidArgument("invalid pagination details: %v", err)
+		return nil, errors.InvalidArgument.Newf("invalid pagination details: %v", err)
 	}
 
 	opts := &api.WalkReferencesOptions{

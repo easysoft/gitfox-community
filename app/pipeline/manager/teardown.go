@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"strings"
 
-	// "github.com/easysoft/gitfox/livelog"
-
 	"github.com/hashicorp/go-multierror"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
