@@ -268,9 +268,19 @@ func (s *Service) GetDiffStats(ctx context.Context, session *auth.Session, repoi
 		return nil, gitUtil.ProcessGitErrorf(ctx, err)
 	}
 
+	mergeBaseResult, err := s.gitSvc.MergeBase(ctx, git.MergeBaseParams{
+		ReadParams: git.ReadParams{RepoUID: repo.GitUID},
+		Ref1:       info.BaseRef,
+		Ref2:       info.HeadRef,
+	})
+	if err != nil {
+		return nil, gitUtil.ProcessGitErrorf(ctx, err)
+	}
+
 	re := &repoModel.DiffStats{
 		MergeSHA:     ptr.String(""),
 		Commits:      uint(output.Commits),
+		MergeBaseSHA: mergeBaseResult.MergeBaseSHA.String(),
 		FilesChanged: uint(output.FilesChanged),
 		Additions:    uint(output.Additions),
 		Deletions:    uint(output.Deletions),
