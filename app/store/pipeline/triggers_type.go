@@ -17,7 +17,7 @@ type Trigger struct {
 	CreatedDate *datetime.Local `gorm:"column:createdDate;comment:'创建时间'"`
 	EditedBy    string          `gorm:"column:editedBy;not null;default:'';comment:'更新人'"`
 	EditedDate  *datetime.Local `gorm:"column:editedDate;comment:'更新时间'"`
-	Deleted     int8            `gorm:"column:deleted;not null;default:0;comment:'删除标识，0-未删除，1-已删除'"`
+	Deleted     uint8           `gorm:"column:deleted;not null;default:0;comment:'删除标识，0-未删除，1-已删除'"`
 }
 
 // TableName 指定数据库表名

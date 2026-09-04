@@ -102,7 +102,7 @@ func (s *SpaceStore) List(ctx context.Context, filter spaceModel.ListSpaceFilter
 		tx = tx.Where("id IN ?", ids)
 	}
 
-	tx = tx.Distinct().Order("FIELD(acl, 'private', 'open'), id DESC")
+	tx = tx.Distinct().Order("CASE acl WHEN 'private' THEN 0 WHEN 'open' THEN 1 ELSE 2 END, id DESC")
 
 	// 2. 调用通用分页工具（NeedTotal默认true，自动统计总条数）
 	var spaces []*Space

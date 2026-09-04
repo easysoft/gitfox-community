@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	stderr "errors"
 
+	"github.com/HuaweiCloudDeveloper/gaussdb-go/gaussdbconn"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"github.com/go-sql-driver/mysql"
 	"gorm.io/gorm"
@@ -126,7 +127,9 @@ func isSQLUniqueConstraintError(original error) bool {
 	if stderr.As(original, &mysqlErr) {
 		return mysqlErr.Number == 1062
 	}
-	return false
+
+	// GaussDB: SQLSTATE 23505 表示唯一约束冲突
+	return gaussdbErrorCodeMatches(original, "23505")
 }
 
 // isSQLForeignKeyViolationError 检查是否是外键约束错误
@@ -142,7 +145,9 @@ func isSQLForeignKeyViolationError(original error) bool {
 		// 1452: Cannot add or update a child row
 		return mysqlErr.Number == 1451 || mysqlErr.Number == 1452
 	}
-	return false
+
+	// GaussDB: SQLSTATE 23503 表示外键约束冲突
+	return gaussdbErrorCodeMatches(original, "23503")
 }
 
 // isSQLNotNullViolation 检查是否是非空约束错误
@@ -156,7 +161,9 @@ func isSQLNotNullViolation(original error) bool {
 	if stderr.As(original, &mysqlErr) {
 		return mysqlErr.Number == 1048
 	}
-	return false
+
+	// GaussDB: SQLSTATE 23502 表示非空约束冲突
+	return gaussdbErrorCodeMatches(original, "23502")
 }
 
 // isSQLCheckConstraintViolation 检查是否是检查约束错误
@@ -170,7 +177,9 @@ func isSQLCheckConstraintViolation(original error) bool {
 	if stderr.As(original, &mysqlErr) {
 		return mysqlErr.Number == 3819
 	}
-	return false
+
+	// GaussDB: SQLSTATE 23514 表示检查约束冲突
+	return gaussdbErrorCodeMatches(original, "23514")
 }
 
 // isSQLDataTooLong 检查是否是数据过长错误
@@ -185,7 +194,8 @@ func isSQLDataTooLong(original error) bool {
 		return mysqlErr.Number == 1406
 	}
 
-	return false
+	// GaussDB: SQLSTATE 22001 表示字符串数据过长
+	return gaussdbErrorCodeMatches(original, "22001")
 }
 
 // isSQLInvalidDataType 检查是否是数据类型不匹配错误
@@ -200,7 +210,8 @@ func isSQLInvalidDataType(original error) bool {
 		return mysqlErr.Number == 1366
 	}
 
-	return false
+	// GaussDB: SQLSTATE 22P02 表示无效文本表示（数据类型不匹配）
+	return gaussdbErrorCodeMatches(original, "22P02")
 }
 
 // isSQLDeadlock 检查是否是死锁错误
@@ -215,7 +226,8 @@ func isSQLDeadlock(original error) bool {
 		return mysqlErr.Number == 1213
 	}
 
-	return false
+	// GaussDB: SQLSTATE 40P01 表示检测到死锁
+	return gaussdbErrorCodeMatches(original, "40P01")
 }
 
 // isSQLLockWaitTimeout 检查是否是锁等待超时错误
@@ -230,7 +242,8 @@ func isSQLLockWaitTimeout(original error) bool {
 		return mysqlErr.Number == 1205
 	}
 
-	return false
+	// GaussDB: SQLSTATE 55P03 表示锁不可用（锁等待超时）
+	return gaussdbErrorCodeMatches(original, "55P03")
 }
 
 // isSQLDatabaseNotFound 检查是否是数据库不存在错误
@@ -245,7 +258,8 @@ func isSQLDatabaseNotFound(original error) bool {
 		return mysqlErr.Number == 1049
 	}
 
-	return false
+	// GaussDB: SQLSTATE 3D000 表示数据库不存在
+	return gaussdbErrorCodeMatches(original, "3D000")
 }
 
 // isSQLTableNotFound 检查是否是表不存在错误
@@ -260,5 +274,15 @@ func isSQLTableNotFound(original error) bool {
 		return mysqlErr.Number == 1146
 	}
 
+	// GaussDB: SQLSTATE 42P01 表示表不存在
+	return gaussdbErrorCodeMatches(original, "42P01")
+}
+
+// gaussdbErrorCodeMatches 检查错误是否为指定 SQLSTATE 的 GaussDB 错误
+func gaussdbErrorCodeMatches(original error, code string) bool {
+	var gaussdbErr *gaussdbconn.GaussdbError
+	if stderr.As(original, &gaussdbErr) {
+		return gaussdbErr.Code == code
+	}
 	return false
 }

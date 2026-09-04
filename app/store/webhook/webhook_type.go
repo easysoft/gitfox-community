@@ -14,13 +14,13 @@ type Webhook struct {
 	Desc             string          `gorm:"column:desc"`
 	URL              string          `gorm:"column:url"`
 	Secret           string          `gorm:"column:secret"`
-	IsSSL            bool            `gorm:"column:isSSL"`
+	IsSSL            uint8           `gorm:"column:isSSL"`
 	Triggers         string          `gorm:"column:triggers"`
-	Internal         bool            `gorm:"column:internal"`
+	Internal         uint8           `gorm:"column:internal"`
 	AuthMethod       string          `gorm:"column:authMethod"`
 	AuthHeader       string          `gorm:"column:authHeader"`
 	LatestExecResult string          `gorm:"column:latestExecResult"`
-	Enabled          bool            `gorm:"column:enabled"`
+	Enabled          uint8           `gorm:"column:enabled"`
 	CreatedBy        string          `gorm:"column:createdBy"`
 	CreatedDate      *datetime.Local `gorm:"column:createdDate"`
 	EditedBy         string          `gorm:"column:editedBy"`
@@ -61,7 +61,7 @@ type Execution struct {
 	RespHeaders    string          `gorm:"column:respHeaders"`
 	RespBody       string          `gorm:"column:respBody"`
 	RetriggerID    uint            `gorm:"column:retriggerID"`
-	Retriggerable  bool            `gorm:"column:retriggerable"`
+	Retriggerable  uint8           `gorm:"column:retriggerable"`
 	CreatedDate    *datetime.Local `gorm:"column:createdDate"`
 	EditedDate     *datetime.Local `gorm:"column:editedDate"`
 }

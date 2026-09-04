@@ -29,7 +29,7 @@ func (s *ScanTriggerStore) Create(ctx context.Context, trigger *ScanPlanTrigger)
 
 func (s *ScanTriggerStore) GetByID(ctx context.Context, id uint) (*scanModel.ScanTrigger, error) {
 	var trigger ScanPlanTrigger
-	if err := s.db.WithContext(ctx).Where("id = ? AND deleted = ?", id, false).First(&trigger).Error; err != nil {
+	if err := s.db.WithContext(ctx).Where("id = ? AND deleted = ?", id, 0).First(&trigger).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
 	return s.enrichTrigger(ctx, trigger), nil
@@ -37,7 +37,7 @@ func (s *ScanTriggerStore) GetByID(ctx context.Context, id uint) (*scanModel.Sca
 
 func (s *ScanTriggerStore) GetByRepoPlanAndID(ctx context.Context, repoID uint, planID uint, id uint) (*scanModel.ScanTrigger, error) {
 	var trigger ScanPlanTrigger
-	if err := s.db.WithContext(ctx).Where("repoID = ? AND planID = ? AND id = ? AND deleted = ?", repoID, planID, id, false).First(&trigger).Error; err != nil {
+	if err := s.db.WithContext(ctx).Where("repoID = ? AND planID = ? AND id = ? AND deleted = ?", repoID, planID, id, 0).First(&trigger).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
 	return s.enrichTrigger(ctx, trigger), nil
@@ -52,7 +52,7 @@ func (s *ScanTriggerStore) Update(ctx context.Context, trigger *ScanPlanTrigger)
 
 func (s *ScanTriggerStore) Delete(ctx context.Context, id uint) error {
 	if err := s.db.WithContext(ctx).Model(&ScanPlanTrigger{}).
-		Where("id = ?", id).Update("deleted", true).Error; err != nil {
+		Where("id = ?", id).Update("deleted", 1).Error; err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
 	}
 	return nil
@@ -60,7 +60,7 @@ func (s *ScanTriggerStore) Delete(ctx context.Context, id uint) error {
 
 func (s *ScanTriggerStore) List(ctx context.Context, repoID uint, planID uint, filter scanModel.ScanTriggerReqFilter) (*database.PageResult[*scanModel.ScanTrigger], error) {
 	tx := s.db.WithContext(ctx).Model(&ScanPlanTrigger{}).
-		Where("repoID = ? AND planID = ? AND deleted = ?", repoID, planID, false)
+		Where("repoID = ? AND planID = ? AND deleted = ?", repoID, planID, 0)
 
 	var triggers []*ScanPlanTrigger
 	pageResult, err := database.Paginate(ctx, tx, database.PageParam{
@@ -129,7 +129,7 @@ func (s *ScanTriggerStore) List(ctx context.Context, repoID uint, planID uint, f
 func (s *ScanTriggerStore) Count(ctx context.Context, repoID uint, planID uint) (int64, error) {
 	var count int64
 	if err := s.db.WithContext(ctx).Model(&ScanPlanTrigger{}).
-		Where("repoID = ? AND planID = ? AND deleted = ?", repoID, planID, false).
+		Where("repoID = ? AND planID = ? AND deleted = ?", repoID, planID, 0).
 		Count(&count).Error; err != nil {
 		return 0, database.ProcessSQLErrorf(ctx, err)
 	}
@@ -140,7 +140,7 @@ func (s *ScanTriggerStore) Count(ctx context.Context, repoID uint, planID uint) 
 func (s *ScanTriggerStore) FindByRepoIDAndActions(ctx context.Context, repoID uint, actions []constant.TriggerAction) ([]*scanModel.ScanTrigger, error) {
 	var rows []ScanPlanTrigger
 	if err := s.db.WithContext(ctx).
-		Where("repoID = ? AND deleted = ? AND disabled = ?", repoID, false, false).
+		Where("repoID = ? AND deleted = ? AND disabled = ?", repoID, 0, 0).
 		Find(&rows).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
@@ -175,12 +175,12 @@ func mapScanTriggerToModel(data ScanPlanTrigger) *scanModel.ScanTrigger {
 		CronBranch:  data.CronBranch,
 		Keywords:    data.Keywords,
 		Actions:     parseActions(data.Actions),
-		Disabled:    data.Disabled,
+		Disabled:    data.Disabled != 0,
 		CreatedBy:   data.CreatedBy,
 		CreatedDate: data.CreatedDate,
 		EditedBy:    data.EditedBy,
 		EditedDate:  data.EditedDate,
-		Deleted:     data.Deleted,
+		Deleted:     data.Deleted != 0,
 	}
 }
 

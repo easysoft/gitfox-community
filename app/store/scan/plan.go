@@ -30,7 +30,7 @@ func (s *ScanPlanStore) Create(ctx context.Context, plan *ScanPlan) (*scanModel.
 
 func (s *ScanPlanStore) GetByID(ctx context.Context, id uint) (*scanModel.ScanPlan, error) {
 	var plan ScanPlan
-	if err := s.db.WithContext(ctx).Where("id = ? AND deleted = ?", id, false).First(&plan).Error; err != nil {
+	if err := s.db.WithContext(ctx).Where("id = ? AND deleted = ?", id, 0).First(&plan).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
 	m := mapScanPlanToModel(plan)
@@ -54,7 +54,7 @@ func (s *ScanPlanStore) GetByID(ctx context.Context, id uint) (*scanModel.ScanPl
 
 func (s *ScanPlanStore) GetByRepoIDAndID(ctx context.Context, repoID uint, id uint) (*scanModel.ScanPlan, error) {
 	var plan ScanPlan
-	tx := s.db.WithContext(ctx).Where("id = ? AND deleted = ?", id, false)
+	tx := s.db.WithContext(ctx).Where("id = ? AND deleted = ?", id, 0)
 	if repoID != 0 {
 		tx = tx.Where("repoID = ?", repoID)
 	}
@@ -82,7 +82,7 @@ func (s *ScanPlanStore) GetByRepoIDAndID(ctx context.Context, repoID uint, id ui
 
 func (s *ScanPlanStore) FindByName(ctx context.Context, repoID uint, name string) (*scanModel.ScanPlan, error) {
 	var plan ScanPlan
-	err := s.db.WithContext(ctx).Where("repoID = ? AND name = ? AND deleted = ?", repoID, name, false).First(&plan).Error
+	err := s.db.WithContext(ctx).Where("repoID = ? AND name = ? AND deleted = ?", repoID, name, 0).First(&plan).Error
 	if err == gorm.ErrRecordNotFound {
 		return nil, nil
 	}
@@ -102,10 +102,10 @@ func (s *ScanPlanStore) Update(ctx context.Context, plan *ScanPlan) error {
 // Delete 软删除扫描计划及其关联的方案绑定关系
 func (s *ScanPlanStore) Delete(ctx context.Context, id uint) error {
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if err := tx.Model(&ScanPlan{}).Where("id = ?", id).Update("deleted", true).Error; err != nil {
+		if err := tx.Model(&ScanPlan{}).Where("id = ?", id).Update("deleted", 1).Error; err != nil {
 			return database.ProcessSQLErrorf(ctx, err)
 		}
-		if err := tx.Model(&ScanPlanSolution{}).Where("planID = ?", id).Update("deleted", true).Error; err != nil {
+		if err := tx.Model(&ScanPlanSolution{}).Where("planID = ?", id).Update("deleted", 1).Error; err != nil {
 			return database.ProcessSQLErrorf(ctx, err)
 		}
 		return nil
@@ -143,9 +143,9 @@ func (s *ScanPlanStore) List(ctx context.Context, repoID uint, filter scanModel.
 				WHERE deleted = ?
 				GROUP BY planID
 			) t2 ON t1.id = t2.max_id
-		) latest_task ON ops_scan_plans.id = latest_task.planID`, false).
+		) latest_task ON ops_scan_plans.id = latest_task.planID`, 0).
 		Joins("LEFT JOIN ops_pipeline_executions e ON latest_task.executionID = e.id").
-		Where("ops_scan_plans.deleted = ?", false)
+		Where("ops_scan_plans.deleted = ?", 0)
 
 	if filter.Name != "" {
 		tx = tx.Where("ops_scan_plans.name LIKE ?", "%"+filter.Name+"%")
@@ -300,7 +300,7 @@ func normalizeScanPlanSortField(sort string) string {
 func (s *ScanPlanStore) GetSolutionIDList(ctx context.Context, planID uint) ([]int64, error) {
 	var ids []int64
 	err := s.db.WithContext(ctx).Model(&ScanPlanSolution{}).
-		Where("planID = ? AND deleted = ?", planID, false).
+		Where("planID = ? AND deleted = ?", planID, 0).
 		Pluck("solutionID", &ids).Error
 	if err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
@@ -313,7 +313,7 @@ func (s *ScanPlanStore) BindSolutions(ctx context.Context, planID uint, solution
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		var validSolutionIDs []uint
 		if err := tx.Model(&SolutionRules{}).
-			Where("id IN ? AND deleted = ?", solutionIDs, false).
+			Where("id IN ? AND deleted = ?", solutionIDs, 0).
 			Pluck("id", &validSolutionIDs).Error; err != nil {
 			return database.ProcessSQLErrorf(ctx, err)
 		}
@@ -332,10 +332,10 @@ func (s *ScanPlanStore) BindSolutions(ctx context.Context, planID uint, solution
 				}
 			} else if err != nil {
 				return database.ProcessSQLErrorf(ctx, err)
-			} else if existing.Deleted {
+			} else if existing.Deleted != 0 {
 				if err := tx.Model(&ScanPlanSolution{}).
 					Where("planID = ? AND solutionID = ?", planID, solutionID).
-					Update("deleted", false).Error; err != nil {
+					Update("deleted", 0).Error; err != nil {
 					return database.ProcessSQLErrorf(ctx, err)
 				}
 			}
@@ -348,7 +348,7 @@ func (s *ScanPlanStore) BindSolutions(ctx context.Context, planID uint, solution
 func (s *ScanPlanStore) UnbindSolutions(ctx context.Context, planID uint, solutionIDs []uint) error {
 	if err := s.db.WithContext(ctx).Model(&ScanPlanSolution{}).
 		Where("planID = ? AND solutionID IN ?", planID, solutionIDs).
-		Update("deleted", true).Error; err != nil {
+		Update("deleted", 1).Error; err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
 	}
 	return nil
@@ -361,7 +361,7 @@ func (s *ScanPlanStore) ListUnbindSolutions(ctx context.Context, planID uint) ([
 		return nil, err
 	}
 
-	tx := s.db.WithContext(ctx).Where("deleted = ?", false)
+	tx := s.db.WithContext(ctx).Where("deleted = ?", 0)
 	if len(boundIDs) > 0 {
 		tx = tx.Where("id NOT IN ?", boundIDs)
 	}
@@ -400,6 +400,6 @@ func mapScanPlanToModel(data ScanPlan) *scanModel.ScanPlan {
 		CreatedDate: data.CreatedDate,
 		EditedBy:    data.EditedBy,
 		EditedDate:  data.EditedDate,
-		Deleted:     data.Deleted,
+		Deleted:     data.Deleted != 0,
 	}
 }

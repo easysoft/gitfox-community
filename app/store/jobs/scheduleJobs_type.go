@@ -24,7 +24,7 @@ type ScheduleJob struct {
 	RunDeadline         *datetime.Local `gorm:"column:runDeadline"`
 	RunProgress         int             `gorm:"column:runProgress"`
 	LastExecuted        *datetime.Local `gorm:"column:lastExecuted"`
-	IsRecurring         bool            `gorm:"column:isRecurring"`
+	IsRecurring         uint8           `gorm:"column:isRecurring"`
 	RecurringCron       string          `gorm:"column:recurringCron"`
 	ConsecutiveFailures int             `gorm:"column:consecutiveFailures"`
 	LastFailureError    sql.NullString  `gorm:"column:lastFailureError"`

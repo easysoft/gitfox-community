@@ -29,7 +29,7 @@ func (s *SolutionStore) Create(ctx context.Context, solution *SolutionRules) (*s
 
 func (s *SolutionStore) GetByID(ctx context.Context, id uint) (*scanModel.Solution, error) {
 	var solution SolutionRules
-	if err := s.db.WithContext(ctx).Where("id = ? AND deleted = ?", id, false).First(&solution).Error; err != nil {
+	if err := s.db.WithContext(ctx).Where("id = ? AND deleted = ?", id, 0).First(&solution).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
 	return mapSolutionToModel(solution), nil
@@ -37,7 +37,7 @@ func (s *SolutionStore) GetByID(ctx context.Context, id uint) (*scanModel.Soluti
 
 func (s *SolutionStore) Find(ctx context.Context, name string) (*scanModel.Solution, error) {
 	var solution SolutionRules
-	err := s.db.WithContext(ctx).Where("name = ? AND deleted = ?", name, false).First(&solution).Error
+	err := s.db.WithContext(ctx).Where("name = ? AND deleted = ?", name, 0).First(&solution).Error
 	if err == gorm.ErrRecordNotFound {
 		return nil, nil
 	}
@@ -57,10 +57,10 @@ func (s *SolutionStore) Update(ctx context.Context, id uint, updates map[string]
 // Delete 软删除扫描方案及其关联的规则集记录
 func (s *SolutionStore) Delete(ctx context.Context, id uint) error {
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if err := tx.Model(&SolutionRules{}).Where("id = ?", id).Update("deleted", true).Error; err != nil {
+		if err := tx.Model(&SolutionRules{}).Where("id = ?", id).Update("deleted", 1).Error; err != nil {
 			return database.ProcessSQLErrorf(ctx, err)
 		}
-		if err := tx.Model(&SolutionRuleSets{}).Where("solutionID = ?", id).Update("deleted", true).Error; err != nil {
+		if err := tx.Model(&SolutionRuleSets{}).Where("solutionID = ?", id).Update("deleted", 1).Error; err != nil {
 			return database.ProcessSQLErrorf(ctx, err)
 		}
 		return nil
@@ -80,9 +80,9 @@ func (s *SolutionStore) List(ctx context.Context, filter scanModel.SolutionReqFi
 		Select(`s.*,
 			(SELECT COUNT(*) FROM ops_scan_solution_rulesets WHERE solutionID = s.id AND deleted = ?) AS rulesets_count,
 			(SELECT COUNT(*) FROM ops_scan_solution_rulesets AS ssr
-				JOIN ops_scan_ruleset_rules AS srr ON srr.rulesetID = ssr.ruleSetID AND srr.deleted = ?
-				WHERE ssr.solutionID = s.id AND ssr.deleted = ?) AS rules_count`, false, false, false).
-		Where("s.deleted = ?", false)
+				JOIN ops_scan_ruleset_rules AS srr ON srr.rulesetID = ssr.rulesetID AND srr.deleted = ?
+				WHERE ssr.solutionID = s.id AND ssr.deleted = ?) AS rules_count`, 0, 0, 0).
+		Where("s.deleted = ?", 0)
 
 	if filter.ID > 0 {
 		tx = tx.Where("s.id = ?", filter.ID)
@@ -160,8 +160,8 @@ func normalizeSolutionSortField(sort string) string {
 func (s *SolutionStore) GetRulesetIDList(ctx context.Context, solutionID uint) ([]int64, error) {
 	var rulesetIDs []int64
 	err := s.db.WithContext(ctx).Model(&SolutionRuleSets{}).
-		Where("solutionID = ? AND deleted = ?", solutionID, false).
-		Pluck("ruleSetID", &rulesetIDs).Error
+		Where("solutionID = ? AND deleted = ?", solutionID, 0).
+		Pluck("rulesetID", &rulesetIDs).Error
 	if err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
@@ -178,9 +178,9 @@ func (s *SolutionStore) ListRulesets(ctx context.Context, solutionID uint) ([]*s
 	var rulesetsWithCount []rulesetWithCount
 	err := s.db.WithContext(ctx).
 		Table("ops_scan_solution_rulesets AS ssr").
-		Select("r.*, (SELECT COUNT(*) FROM ops_scan_ruleset_rules WHERE rulesetID = r.id AND deleted = ?) as rules_count", false).
-		Joins("LEFT JOIN ops_scan_rulesets AS r ON ssr.ruleSetID = r.id").
-		Where("ssr.solutionID = ? AND ssr.deleted = ?", solutionID, false).
+		Select("r.*, (SELECT COUNT(*) FROM ops_scan_ruleset_rules WHERE rulesetID = r.id AND deleted = ?) as rules_count", 0).
+		Joins("LEFT JOIN ops_scan_rulesets AS r ON ssr.rulesetID = r.id").
+		Where("ssr.solutionID = ? AND ssr.deleted = ?", solutionID, 0).
 		Find(&rulesetsWithCount).Error
 	if err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
@@ -209,8 +209,8 @@ func (s *SolutionStore) ListUnbindRulesets(ctx context.Context, solutionID uint)
 
 	tx := s.db.WithContext(ctx).
 		Table("ops_scan_rulesets AS r").
-		Select("r.*, (SELECT COUNT(*) FROM ops_scan_ruleset_rules WHERE rulesetID = r.id AND deleted = ?) as rules_count", false).
-		Where("r.deleted = ?", false)
+		Select("r.*, (SELECT COUNT(*) FROM ops_scan_ruleset_rules WHERE rulesetID = r.id AND deleted = ?) as rules_count", 0).
+		Where("r.deleted = ?", 0)
 
 	if len(rulesetIDs) > 0 {
 		tx = tx.Where("r.id NOT IN ?", rulesetIDs)
@@ -237,7 +237,7 @@ func (s *SolutionStore) BindRulesets(ctx context.Context, solutionID uint, rules
 		var existingIDs []uint
 		var rulesetModel RuleSet
 		if err := tx.Table(rulesetModel.TableName()).
-			Where("id IN ? AND deleted = ?", rulesetIDs, false).
+			Where("id IN ? AND deleted = ?", rulesetIDs, 0).
 			Pluck("id", &existingIDs).Error; err != nil {
 			return database.ProcessSQLErrorf(ctx, err)
 		}
@@ -247,23 +247,23 @@ func (s *SolutionStore) BindRulesets(ctx context.Context, solutionID uint, rules
 
 		for _, rulesetID := range rulesetIDs {
 			var existing SolutionRuleSets
-			err := tx.Where("solutionID = ? AND ruleSetID = ?", solutionID, rulesetID).First(&existing).Error
+			err := tx.Where("solutionID = ? AND rulesetID = ?", solutionID, rulesetID).First(&existing).Error
 
 			if err == gorm.ErrRecordNotFound {
 				newRecord := SolutionRuleSets{
 					SolutionID: uint64(solutionID),
 					RuleSetID:  uint64(rulesetID),
-					Deleted:    false,
+					Deleted:    0,
 				}
 				if err := tx.Create(&newRecord).Error; err != nil {
 					return database.ProcessSQLErrorf(ctx, err)
 				}
 			} else if err != nil {
 				return database.ProcessSQLErrorf(ctx, err)
-			} else if existing.Deleted {
+			} else if existing.Deleted != 0 {
 				if err := tx.Model(&SolutionRuleSets{}).
-					Where("solutionID = ? AND ruleSetID = ?", solutionID, rulesetID).
-					Update("deleted", false).Error; err != nil {
+					Where("solutionID = ? AND rulesetID = ?", solutionID, rulesetID).
+					Update("deleted", 0).Error; err != nil {
 					return database.ProcessSQLErrorf(ctx, err)
 				}
 			}
@@ -275,8 +275,8 @@ func (s *SolutionStore) BindRulesets(ctx context.Context, solutionID uint, rules
 // UnbindRulesets 解除扫描方案与规则集的绑定
 func (s *SolutionStore) UnbindRulesets(ctx context.Context, solutionID uint, rulesetIDs []uint) error {
 	if err := s.db.WithContext(ctx).Model(&SolutionRuleSets{}).
-		Where("solutionID = ? AND ruleSetID IN ?", solutionID, rulesetIDs).
-		Update("deleted", true).Error; err != nil {
+		Where("solutionID = ? AND rulesetID IN ?", solutionID, rulesetIDs).
+		Update("deleted", 1).Error; err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
 	}
 	return nil
@@ -290,8 +290,8 @@ func (s *SolutionStore) GetSolutionsByPlanID(ctx context.Context, planID uint) (
 		Table("ops_scan_plan_solutions AS ps").
 		Select("sol.*").
 		Joins("LEFT JOIN ops_scan_solutions AS sol ON sol.id = ps.solutionID").
-		Where("ps.planID = ? AND ps.deleted = ?", planID, false).
-		Where("sol.deleted = ?", false).
+		Where("ps.planID = ? AND ps.deleted = ?", planID, 0).
+		Where("sol.deleted = ?", 0).
 		Find(&results).Error
 	if err != nil {
 		return nil, nil, database.ProcessSQLErrorf(ctx, err)
@@ -310,7 +310,7 @@ func (s *SolutionStore) GetSolutionsByPlanID(ctx context.Context, planID uint) (
 func (s *SolutionStore) IsUsedByPlan(ctx context.Context, solutionID uint) (bool, error) {
 	var count int64
 	err := s.db.WithContext(ctx).Model(&ScanPlanSolution{}).
-		Where("solutionID = ? AND deleted = ?", solutionID, false).
+		Where("solutionID = ? AND deleted = ?", solutionID, 0).
 		Count(&count).Error
 	if err != nil {
 		return false, database.ProcessSQLErrorf(ctx, err)
@@ -325,12 +325,12 @@ func mapSolutionToModel(data SolutionRules) *scanModel.Solution {
 		Desc:        data.Desc,
 		DescEn:      data.DescEn,
 		Tag:         data.Tag,
-		IsCustom:    data.IsCustom,
+		IsCustom:    data.IsCustom != 0,
 		Status:      data.Status,
 		CreatedBy:   data.CreatedBy,
 		CreatedDate: data.CreatedDate,
 		EditedBy:    data.EditedBy,
 		EditedDate:  data.EditedDate,
-		Deleted:     data.Deleted,
+		Deleted:     data.Deleted != 0,
 	}
 }

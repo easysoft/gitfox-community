@@ -32,7 +32,7 @@ func (s *RuleStore) ListByRuleSetID(
 ) (*database.PageResult[*scanModel.Rule], error) {
 
 	tx := s.db.WithContext(ctx).Model(&Rule{}).
-		Where("id IN ? AND deleted = ?", ruleIDs, false)
+		Where("id IN ? AND deleted = ?", ruleIDs, 0)
 
 	// 分页查询
 	var rules []*Rule
@@ -70,7 +70,7 @@ func (s *RuleStore) ListByIDs(ctx context.Context, ruleIDs []int64) ([]*scanMode
 	var rules []*Rule
 	if err := s.db.WithContext(ctx).
 		Model(&Rule{}).
-		Where("id IN ? AND deleted = ?", ruleIDs, false).
+		Where("id IN ? AND deleted = ?", ruleIDs, 0).
 		Order("id ASC").
 		Find(&rules).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
@@ -101,13 +101,13 @@ func mapRuleToModel(data *Rule) *scanModel.Rule {
 		Type:        data.Type,
 		Content:     data.Content.String,
 		ContentEn:   data.ContentEn.String,
-		IsCustom:    data.IsCustom,
+		IsCustom:    data.IsCustom != 0,
 		Status:      data.Status,
 		CreatedBy:   data.CreatedBy,
 		CreatedDate: data.CreatedDate,
 		EditedBy:    data.EditedBy,
 		EditedDate:  data.EditedDate,
-		Deleted:     data.Deleted,
+		Deleted:     data.Deleted != 0,
 	}
 }
 
@@ -117,7 +117,7 @@ func (s *RuleStore) ExcludeByRuleSetID(
 	excludeIDs []int64,
 	filter scanModel.RuleReqFilter,
 ) (*database.PageResult[*scanModel.Rule], error) {
-	tx := s.db.WithContext(ctx).Model(&Rule{}).Where("deleted = ?", false)
+	tx := s.db.WithContext(ctx).Model(&Rule{}).Where("deleted = ?", 0)
 
 	if filter.ID > 0 {
 		tx = tx.Where("id = ?", filter.ID)
@@ -186,7 +186,7 @@ func (s *RuleStore) ExcludeByRuleSetID(
 // GetByID 根据ID查询规则
 func (s *RuleStore) GetByID(ctx context.Context, id uint) (*scanModel.Rule, error) {
 	var rule Rule
-	err := s.db.WithContext(ctx).Where("deleted = ?", false).First(&rule, id).Error
+	err := s.db.WithContext(ctx).Where("deleted = ?", 0).First(&rule, id).Error
 	if err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
@@ -195,18 +195,18 @@ func (s *RuleStore) GetByID(ctx context.Context, id uint) (*scanModel.Rule, erro
 
 // List 查询规则列表
 func (s *RuleStore) List(ctx context.Context, filter scanModel.RuleListReqFilter) (*database.PageResult[*scanModel.Rule], error) {
-	tx := s.db.WithContext(ctx).Model(&Rule{}).Where("deleted = ?", false)
+	tx := s.db.WithContext(ctx).Model(&Rule{}).Where("deleted = ?", 0)
 
 	if filter.Bind == constant.ScanRuleBindBind {
 		if filter.RuleSetID > 0 {
 			subQuery := s.db.Model(&RuleSetRules{}).
 				Select("ruleID").
-				Where("rulesetID = ? AND deleted = ?", filter.RuleSetID, false)
+				Where("rulesetID = ? AND deleted = ?", filter.RuleSetID, 0)
 			tx = tx.Where("id IN (?)", subQuery)
 		} else {
 			subQuery := s.db.Model(&RuleSetRules{}).
 				Distinct("ruleID").
-				Where("deleted = ?", false)
+				Where("deleted = ?", 0)
 			tx = tx.Where("id IN (?)", subQuery)
 		}
 	}
@@ -317,7 +317,7 @@ func normalizeSortOrder(order string, defaultOrder string) string {
 func (s *RuleStore) UpdateStatus(ctx context.Context, id uint) error {
 	var rule Rule
 	// 查询规则
-	err := s.db.WithContext(ctx).Where("deleted = ?", false).First(&rule, id).Error
+	err := s.db.WithContext(ctx).Where("deleted = ?", 0).First(&rule, id).Error
 	if err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
 	}
@@ -334,7 +334,7 @@ func (s *RuleStore) AllScanBaseByField(ctx context.Context, field string) ([]sca
 	err := s.db.WithContext(ctx).
 		Model(&Rule{}).
 		Select(fmt.Sprintf("%s, COUNT(*) as count", field)).
-		Where("deleted = ?", false).
+		Where("deleted = ?", 0).
 		Group(field).
 		Order("count DESC, " + field + " ASC").
 		Find(&rules).Error

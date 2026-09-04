@@ -134,7 +134,7 @@ func loadTriggerIDsByPlanIDs(ctx context.Context, db *gorm.DB, planIDs []uint64)
 
 	var triggers []ScanPlanTrigger
 	if err := db.WithContext(ctx).
-		Where("planID IN ? AND deleted = ?", planIDs, false).
+		Where("planID IN ? AND deleted = ?", planIDs, 0).
 		Find(&triggers).Error; err != nil {
 		return nil, err
 	}
@@ -153,7 +153,7 @@ func loadPlanConditionsByPlanIDs(ctx context.Context, db *gorm.DB, planIDs []uin
 
 	var conditions []ScanPlanCondition
 	if err := db.WithContext(ctx).
-		Where("planID IN ? AND triggerID = 0 AND deleted = ?", planIDs, false).
+		Where("planID IN ? AND triggerID = 0 AND deleted = ?", planIDs, 0).
 		Find(&conditions).Error; err != nil {
 		return nil, err
 	}
@@ -172,7 +172,7 @@ func loadSolutionModelMap(ctx context.Context, db *gorm.DB, solutionIDs []uint64
 
 	var solutions []SolutionRules
 	if err := db.WithContext(ctx).
-		Where("id IN ? AND deleted = ?", solutionIDs, false).
+		Where("id IN ? AND deleted = ?", solutionIDs, 0).
 		Find(&solutions).Error; err != nil {
 		return nil, err
 	}
@@ -192,7 +192,7 @@ func loadSolutionIDsByPlanIDs(ctx context.Context, db *gorm.DB, planIDs []uint64
 
 	var bindings []ScanPlanSolution
 	if err := db.WithContext(ctx).
-		Where("planID IN ? AND deleted = ?", planIDs, false).
+		Where("planID IN ? AND deleted = ?", planIDs, 0).
 		Find(&bindings).Error; err != nil {
 		return nil, err
 	}
@@ -211,7 +211,7 @@ func loadLatestTasksByPlanIDs(ctx context.Context, db *gorm.DB, planIDs []uint64
 
 	subQuery := db.Model(&ScanTask{}).
 		Select("MAX(id) as id").
-		Where("planID IN ? AND deleted = ?", planIDs, false).
+		Where("planID IN ? AND deleted = ?", planIDs, 0).
 		Group("planID")
 
 	var tasks []latestTaskJoin
@@ -240,7 +240,7 @@ func loadTriggerConditionsByTriggerIDs(ctx context.Context, db *gorm.DB, trigger
 
 	var conditions []ScanPlanCondition
 	if err := db.WithContext(ctx).
-		Where("triggerID IN ? AND deleted = ?", triggerIDs, false).
+		Where("triggerID IN ? AND deleted = ?", triggerIDs, 0).
 		Find(&conditions).Error; err != nil {
 		return nil, nil, err
 	}
@@ -260,7 +260,7 @@ func loadLatestTasksByTriggerIDs(ctx context.Context, db *gorm.DB, triggerIDs []
 
 	subQuery := db.Model(&ScanTask{}).
 		Select("MAX(id) as id").
-		Where("triggerID IN ? AND deleted = ?", triggerIDs, false).
+		Where("triggerID IN ? AND deleted = ?", triggerIDs, 0).
 		Group("triggerID")
 
 	var tasks []latestTaskJoin

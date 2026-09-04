@@ -32,7 +32,7 @@ func (s *ScanTaskStore) Create(ctx context.Context, task *ScanTask) (*scanModel.
 // GetByID 根据ID查询扫描任务
 func (s *ScanTaskStore) GetByID(ctx context.Context, id uint) (*scanModel.ScanTask, error) {
 	var task ScanTask
-	if err := s.db.WithContext(ctx).Where("id = ? AND deleted = ?", id, false).First(&task).Error; err != nil {
+	if err := s.db.WithContext(ctx).Where("id = ? AND deleted = ?", id, 0).First(&task).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
 	return mapScanTaskToModel(task), nil
@@ -41,7 +41,7 @@ func (s *ScanTaskStore) GetByID(ctx context.Context, id uint) (*scanModel.ScanTa
 // FindByExecID 根据执行ID查询扫描任务
 func (s *ScanTaskStore) FindByExecID(ctx context.Context, execID uint) (*scanModel.ScanTask, error) {
 	var task ScanTask
-	err := s.db.WithContext(ctx).Where("executionID = ? AND deleted = ?", execID, false).First(&task).Error
+	err := s.db.WithContext(ctx).Where("executionID = ? AND deleted = ?", execID, 0).First(&task).Error
 	if err == gorm.ErrRecordNotFound {
 		return nil, nil
 	}
@@ -63,7 +63,7 @@ func (s *ScanTaskStore) baseTaskInfoQuery(ctx context.Context) *gorm.DB {
 		Joins("INNER JOIN ops_repo ON ops_scan_plans.repoID = ops_repo.id").
 		Joins("INNER JOIN ops_pipeline_executions e ON ops_scan_tasks.executionID = e.id").
 		Joins("LEFT JOIN ops_scan_triggers t ON ops_scan_tasks.triggerID = t.id").
-		Where("ops_scan_tasks.deleted = ?", false)
+		Where("ops_scan_tasks.deleted = ?", 0)
 }
 
 // GetTaskInfo 查询扫描任务详情（含关联信息）
@@ -79,7 +79,7 @@ func (s *ScanTaskStore) GetTaskInfo(ctx context.Context, taskID uint) (*scanMode
 func (s *ScanTaskStore) List(ctx context.Context, planID uint) ([]*scanModel.ScanTask, error) {
 	var tasks []*ScanTask
 	if err := s.db.WithContext(ctx).
-		Where("planID = ? AND deleted = ?", planID, false).
+		Where("planID = ? AND deleted = ?", planID, 0).
 		Order("createdDate DESC").
 		Find(&tasks).Error; err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
@@ -181,7 +181,7 @@ func (s *ScanTaskStore) UpdateIssueNumber(ctx context.Context, taskID uint, issu
 // Delete 软删除扫描任务
 func (s *ScanTaskStore) Delete(ctx context.Context, id uint) error {
 	if err := s.db.WithContext(ctx).Model(&ScanTask{}).
-		Where("id = ?", id).Update("deleted", true).Error; err != nil {
+		Where("id = ?", id).Update("deleted", 1).Error; err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
 	}
 	return nil
@@ -191,7 +191,7 @@ func (s *ScanTaskStore) Delete(ctx context.Context, id uint) error {
 func (s *ScanTaskStore) NextPlanNumber(ctx context.Context, planID uint64) (int64, error) {
 	var maxNum *int64
 	if err := s.db.WithContext(ctx).Model(&ScanTask{}).
-		Where("planID = ? AND deleted = ?", planID, false).
+		Where("planID = ? AND deleted = ?", planID, 0).
 		Select("COALESCE(MAX(planNumber), 0)").Scan(&maxNum).Error; err != nil {
 		return 0, database.ProcessSQLErrorf(ctx, err)
 	}
@@ -206,7 +206,7 @@ func (s *ScanTaskStore) NextRepoNumber(ctx context.Context, repoID int64) (int64
 	var maxNum *int64
 	if err := s.db.WithContext(ctx).Table("ops_scan_tasks").
 		Joins("INNER JOIN ops_scan_plans ON ops_scan_tasks.planID = ops_scan_plans.id").
-		Where("ops_scan_plans.repoID = ? AND ops_scan_tasks.deleted = ?", repoID, false).
+		Where("ops_scan_plans.repoID = ? AND ops_scan_tasks.deleted = ?", repoID, 0).
 		Select("COALESCE(MAX(ops_scan_tasks.repoNumber), 0)").Scan(&maxNum).Error; err != nil {
 		return 0, database.ProcessSQLErrorf(ctx, err)
 	}

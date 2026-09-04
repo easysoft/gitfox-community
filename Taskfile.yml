@@ -35,6 +35,7 @@ vars:
     arches: [amd64]       # Windows支持的架构
 
 
+
 tasks:
   # 默认任务
   default:
@@ -268,6 +269,38 @@ tasks:
             echo "完成: $GOOS-$GOARCH.zip"
           {{end}}
     parallel: true
+
+  docker:push:
+    desc: 构建多架构 Docker 镜像并推送至 hub.zentao.net
+    deps: [cross-build]
+    vars:
+      IMAGE: 'hub.zentao.net/app/gitfox-community'
+      DOCKER_TAG_DATE:
+        sh: date '+%Y%m%d'
+      TAG:
+        sh: echo "{{.BUILD_RELEASE}}-{{.DOCKER_TAG_DATE}}" | tr '/' '-'
+      PLATFORMS: 'linux/amd64,linux/arm64'
+      DOCKERFILE: 'deploy/Dockerfile'
+      BUILDER: 'multiarch'
+    cmds:
+      - docker buildx build --builder {{.BUILDER}} --platform {{.PLATFORMS}} -t {{.IMAGE}}:{{.TAG}} --push -f {{.DOCKERFILE}} .
+      - echo "已推送 {{.IMAGE}}:{{.TAG}} ({{.PLATFORMS}})"
+
+  docker:build:local:
+    desc: 本地构建 Docker 镜像（不推送，默认当前主机架构）
+    deps: [cross-build]
+    vars:
+      IMAGE: 'gitfox-community'
+      DOCKER_TAG_DATE:
+        sh: date '+%Y%m%d'
+      TAG:
+        sh: echo "{{.BUILD_RELEASE}}-{{.DOCKER_TAG_DATE}}" | tr '/' '-'
+      PLATFORM: 'linux/amd64'
+      DOCKERFILE: 'deploy/Dockerfile'
+      BUILDER: 'multiarch'
+    cmds:
+      - docker buildx build --builder {{.BUILDER}} --platform {{.PLATFORM}} -t {{.IMAGE}}:{{.TAG}} --load -f {{.DOCKERFILE}} .
+      - echo "已构建本地镜像 {{.IMAGE}}:{{.TAG}} ({{.PLATFORM}})"
 
   # 代码生成任务
   wire:
