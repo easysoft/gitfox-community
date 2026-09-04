@@ -26,13 +26,13 @@ VOLUME /data
 ENV GITFOX_WORKSPACE_ROOT_DIR=/data/gitfox-community
 # 数据库连接
 ENV GITFOX_DB_HOST=127.0.0.1
-ENV GITFOX_DB_PORT=8000
+ENV GITFOX_DB_PORT=3306
 ENV GITFOX_DB_USER=root
-ENV GITFOX_DB_PASSWORD=gaussdb
+ENV GITFOX_DB_PASSWORD=123456
 ENV GITFOX_DB_NAME=zentao
 ENV GITFOX_DB_TIMEZONE=Asia/Shanghai
 # GaussDB 连接示例（openGauss 兼容 PostgreSQL 协议）
-ENV GITFOX_DB_DRIVER=gaussdb
+ENV GITFOX_DB_DRIVER=mysql
 #ENV GITFOX_DB_DATASOURCE=host=127.0.0.1 port=8000 user=gaussdb password=gaussdb dbname=gitfox-community sslmode=disable
 
 #ENV GITFOX_SERVER_PROTO=http
