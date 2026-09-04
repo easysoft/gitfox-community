@@ -32,14 +32,6 @@ func NewService(runnerStore runner.Interface) *Service {
 // Create creates a new runner
 func (s *Service) Create(ctx context.Context, runner *runnerModel.Runner, runnerToken, runnerIP string) error {
 
-	// 如果该 runner token 已注册过，且该 runner 没有被软删除，无需重复注册(应对 runner 重启的情况）
-	runnerInfoOld, err := s.runnerStore.GetByToken(ctx, runnerToken)
-	if err == nil {
-		if runnerInfoOld.Token == runnerToken {
-			return nil
-		}
-	}
-
 	// Set default data
 	now := int(time.Now().Unix())
 	runner.Token = runnerToken
@@ -47,7 +39,7 @@ func (s *Service) Create(ctx context.Context, runner *runnerModel.Runner, runner
 	runner.IP = runnerIP
 	runner.Online = "online"
 	runner.Status = "enable"
-	runner.HeartBeat = &now
+	runner.HeartBeat = now
 
 	return s.runnerStore.Create(ctx, runner)
 }
@@ -55,9 +47,14 @@ func (s *Service) Create(ctx context.Context, runner *runnerModel.Runner, runner
 // Update 更新 runner
 func (s *Service) Update(ctx context.Context, runner *runnerModel.Runner) error {
 	// Check if runner exists
-	_, err := s.runnerStore.GetByID(ctx, runner.ID)
+	existing, err := s.runnerStore.GetByID(ctx, runner.ID)
 	if err != nil {
 		return errors.NotFound.Newf("runner not found: %d", runner.ID)
+	}
+
+	// 内置 runner 不允许通过 API 修改
+	if existing.IsDefault {
+		return errors.BadRequest.Newf("cannot modify default runner")
 	}
 
 	return s.runnerStore.Update(ctx, runner)
@@ -66,14 +63,20 @@ func (s *Service) Update(ctx context.Context, runner *runnerModel.Runner) error 
 // UpdateRunnerHeartbeat 更新 runner 心跳
 func (s *Service) UpdateRunnerHeartbeat(ctx context.Context, runnerID uint) error {
 	// Check if runner exists
-	_, err := s.runnerStore.GetByID(ctx, runnerID)
+	existing, err := s.runnerStore.GetByID(ctx, runnerID)
 	if err != nil {
 		return errors.NotFound.Newf("runner not found: %d", runnerID)
 	}
+
+	// 内置 runner 不需要外部心跳更新
+	if existing.IsDefault {
+		return errors.BadRequest.Newf("cannot update heartbeat for default runner")
+	}
+
 	now := int(time.Now().Unix())
 	runnerInfo := &runnerModel.Runner{
 		ID:        runnerID,
-		HeartBeat: &now,
+		HeartBeat: now,
 		Online:    "online", // 心跳更新时设置为在线
 	}
 	return s.runnerStore.Update(ctx, runnerInfo)
@@ -106,9 +109,14 @@ func (s *Service) List(ctx context.Context, filter *runnerModel.ReqFilter) (*dat
 // Delete soft deletes a runner by ID
 func (s *Service) Delete(ctx context.Context, id uint) error {
 	// Check if runner exists
-	_, err := s.runnerStore.GetByID(ctx, id)
+	existing, err := s.runnerStore.GetByID(ctx, id)
 	if err != nil {
 		return errors.NotFound.Newf("runner not found: %d", id)
+	}
+
+	// 内置 runner 不允许删除
+	if existing.IsDefault {
+		return errors.BadRequest.Newf("cannot delete default runner")
 	}
 
 	return s.runnerStore.Delete(ctx, id)

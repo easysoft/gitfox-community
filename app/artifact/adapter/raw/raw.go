@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/adapter"
@@ -66,6 +67,9 @@ func (h *uploader) Serve(ctx context.Context, req *http.Request) (int64, error) 
 	if fileName == "" {
 		fileName = fh.Filename
 	}
+	h.descriptor.Overwrite, _ = strconv.ParseBool(req.FormValue("overwrite"))
+	h.descriptor.Rename, _ = strconv.ParseBool(req.FormValue("rename"))
+
 	h.descriptor.MainAsset.Path = fileName
 	h.descriptor.MainAsset.Size = size
 	h.descriptor.MainAsset.Hash = hash

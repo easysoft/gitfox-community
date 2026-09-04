@@ -15,11 +15,13 @@ type Runner struct {
 	IP          string                      `json:"ip"`
 	OS          string                      `json:"os"`
 	Arch        string                      `json:"arch"`
-	Labels      map[string]string           `json:"labels"`
+	Runtime     string                      `json:"runtime"`
+	Labels      []string                    `json:"labels"`
 	Token       string                      `json:"token,omitempty"`
-	HeartBeat   *int                        `json:"heartBeat"`
+	HeartBeat   int                         `json:"heartBeat"`
 	Online      constant.RunnerStatus       `json:"online"`
 	Status      constant.RunnerActiveStatus `json:"status"`
+	IsDefault   bool                        `json:"isDefault"`
 	CreatedBy   string                      `json:"createdBy"`
 	CreatedDate *datetime.Local             `json:"createdDate"`
 	EditedBy    string                      `json:"editedBy"`
@@ -59,7 +61,21 @@ type RegisterRunnerReq struct {
 	IP       string            `json:"ip"`
 	OS       string            `json:"os"`
 	Arch     string            `json:"arch"`
+	Runtime  string            `json:"runtime"`
 	Labels   map[string]string `json:"labels"`
+}
+
+// ReqStageRequest 拉取 stage 请求体
+type ReqStageRequest struct {
+	Type   string            `json:"type"`
+	OS     string            `json:"os"`
+	Arch   string            `json:"arch"`
+	Labels map[string]string `json:"labels,omitempty"`
+}
+
+// ReqStageAccept 接受 stage 请求体
+type ReqStageAccept struct {
+	Machine string `json:"machine"`
 }
 
 // GenerateTokenResponse 生成 token 响应

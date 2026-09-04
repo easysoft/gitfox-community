@@ -123,5 +123,10 @@ func registerScanRoutes(r *gin.RouterGroup, controller *Controller) {
 				}
 			}
 		}
+		// AI 代码评审相关路由
+		aicodereview := rule.Group("/aicodereview")
+		{
+			aicodereview.POST("/:repoID/:ppmID/report", controller.Scan.ReviewTaskUploadReport)
+		}
 	}
 }

@@ -195,20 +195,24 @@ func (s *Store) GetBySpaceAndIdentifier(ctx context.Context, spaceID uint, ident
 
 // List 分页查询仓库列表
 func (s *Store) List(ctx context.Context, filter repoModel.ReqFilter) (*database.PageResult[*repoModel.Repo], error) {
-	tx := s.db.WithContext(ctx).Model(&Repository{})
+	tx := s.db.WithContext(ctx).
+		Model(&Repository{}).
+		Select("ops_repo.*, ops_space.code AS spaceCode").
+		Joins("LEFT JOIN ops_space ON ops_space.id = ops_repo.spaceID")
 
 	// 默认只查询未删除的仓库
-	tx = tx.Where("deleted = ?", 0)
-
+	tx = tx.Where("ops_repo.deleted = ?", 0)
 	// 如果有 query 参数，模糊搜索 identifier
 	if filter.Query != "" {
-		tx = tx.Where("name LIKE ?", "%"+filter.Query+"%")
+		tx = tx.Where("ops_repo.name LIKE ?", "%"+filter.Query+"%")
+	}
+	if filter.SpaceID != 0 {
+		tx = tx.Where("ops_repo.spaceID = ?", filter.SpaceID)
 	}
 
-	// 按 ID 降序排序
-	tx = tx.Order("id DESC")
+	// 执行分页查询（按 ID 降序排序，使用表限定列避免联查后字段歧义）
+	tx = tx.Order("ops_repo.id DESC")
 
-	// 执行分页查询
 	var repos []*Repository
 	pageResult, err := database.PaginateDefault(ctx, tx, filter.Page, filter.PageSize, &repos)
 	if err != nil {
@@ -233,7 +237,7 @@ func (s *Store) List(ctx context.Context, filter repoModel.ReqFilter) (*database
 // 查询迁移的历史代码库
 func (s *Store) GetMigrate(ctx context.Context) ([]*repoModel.Repo, error) {
 	var repos []*Repository
-	err := s.db.WithContext(ctx).Where("gitUID like ?", fmt.Sprintf("%s%%", constant.MigrateRepoGitUID)).Find(&repos).Error
+	err := s.db.WithContext(ctx).Where("gitUID like ? AND deleted = 0", fmt.Sprintf("%s%%", constant.MigrateRepoGitUID)).Find(&repos).Error
 	if err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}

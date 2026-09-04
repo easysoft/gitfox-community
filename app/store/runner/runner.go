@@ -3,6 +3,7 @@ package runner
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"strings"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
@@ -15,14 +16,10 @@ import (
 func (s *Store) Create(ctx context.Context, runner *runnerModel.Runner) error {
 	db := dbtx.GetOrmAccessor(ctx, s.db)
 
-	// Convert labels map to JSON string
-	var labelsJSON string
-	if runner.Labels != nil {
-		bytes, err := json.Marshal(runner.Labels)
-		if err != nil {
-			return err
-		}
-		labelsJSON = string(bytes)
+	// Convert labels slice to string
+	var labels string
+	if len(runner.Labels) > 0 {
+		labels = fmt.Sprintf(",%s,", strings.Join(runner.Labels, ","))
 	}
 
 	dbRunner := &Runner{
@@ -33,13 +30,15 @@ func (s *Store) Create(ctx context.Context, runner *runnerModel.Runner) error {
 		IP:        runner.IP,
 		OS:        runner.OS,
 		Arch:      runner.Arch,
-		Labels:    labelsJSON,
+		Runtime:   runner.Runtime,
+		Labels:    labels,
 		Token:     runner.Token,
 		HeartBeat: runner.HeartBeat,
 		Online:    string(runner.Online),
 		Status:    string(runner.Status),
 		CreatedBy: runner.CreatedBy,
 		EditedBy:  runner.EditedBy,
+		IsDefault: runner.IsDefault,
 	}
 
 	if err := db.Create(dbRunner).Error; err != nil {
@@ -73,6 +72,7 @@ func (s *Store) Update(ctx context.Context, runner *runnerModel.Runner) error {
 		IP:        runner.IP,
 		OS:        runner.OS,
 		Arch:      runner.Arch,
+		Runtime:   runner.Runtime,
 		Labels:    labelsJSON,
 		Token:     runner.Token,
 		HeartBeat: runner.HeartBeat,
@@ -193,9 +193,9 @@ func (s *Store) Delete(ctx context.Context, id uint) error {
 
 // mapToModel converts database model to business model
 func mapToModel(r *Runner) *runnerModel.Runner {
-	var labels map[string]string
+	var labels []string
 	if r.Labels != "" {
-		_ = json.Unmarshal([]byte(r.Labels), &labels)
+		labels = strings.Split(strings.Trim(r.Labels, ","), ",")
 	}
 
 	return &runnerModel.Runner{
@@ -208,10 +208,12 @@ func mapToModel(r *Runner) *runnerModel.Runner {
 		OS:          r.OS,
 		Arch:        r.Arch,
 		Labels:      labels,
+		Runtime:     r.Runtime,
 		Token:       r.Token,
 		HeartBeat:   r.HeartBeat,
 		Online:      constant.RunnerStatus(r.Online),
 		Status:      constant.RunnerActiveStatus(r.Status),
+		IsDefault:   r.IsDefault,
 		CreatedBy:   r.CreatedBy,
 		CreatedDate: r.CreatedDate,
 		EditedBy:    r.EditedBy,

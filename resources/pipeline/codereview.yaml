@@ -1,0 +1,26 @@
+version: 1
+kind: pipeline
+spec:
+  options:
+    clone:
+      disabled: true
+  stages:
+    - name: codereview
+      type: ci
+      spec:
+        steps:
+          - name: git clone
+            type: plugin
+            spec:
+              name: scm_git_clone
+              inputs:
+                repository: ${{parameters.gitURL}}
+                gitRef: ${{parameters.gitRef}}
+                cloneDepth: 50
+                cloneDir: ""
+          - name: codereview
+            type: run
+            spec:
+              container:
+                image: hub.zentao.net/ci/gitfox-plugin:ai-codereview
+                pull: always

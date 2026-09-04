@@ -15,9 +15,14 @@ import (
 type ScanIssue struct {
 	Key             string                        `json:"key"`
 	RuleID          int64                         `json:"ruleID"`
-	Message         string                        `json:"message"`
+	PpmID           int64                         `json:"ppmID,omitempty"`
+	Title           string                        `json:"title"`
+	Content         string                        `json:"content,omitempty"`
 	Path            string                        `json:"path"`
-	Line            int64                         `json:"line"`
+	StartLine       int64                         `json:"startLine"`
+	EndLine         int64                         `json:"endLine"`
+	OldCode         string                        `json:"oldCode,omitempty"`
+	NewCode         string                        `json:"newCode,omitempty"`
 	RepoID          int64                         `json:"repoID"`
 	RepoBranch      string                        `json:"repoBranch"`
 	CreatedByTaskID int64                         `json:"createdByTaskID"`
@@ -25,7 +30,11 @@ type ScanIssue struct {
 	Status          constant.ScanIssueStatus      `json:"status"`
 	ScanMethod      constant.ScanMethod           `json:"scanMethod"`
 	Resolution      *constant.ScanIssueResolution `json:"resolution"`
+	Category        constant.AiScanIssueCategory  `json:"category,omitempty"`
+	Severity        constant.AiScanIssueSeverity  `json:"severity,omitempty"`
 	Payload         json.RawMessage               `json:"payload"`
+	CreatedBy       string                        `json:"createdBy,omitempty"`
+	EditedBy        string                        `json:"editedBy,omitempty"`
 }
 
 // SetPayload 设置扩展数据
@@ -48,7 +57,7 @@ type ScanIssueKey struct {
 	CreatedByTaskID int64                    `json:"createdByTaskID"`
 	UpdatedByTaskID int64                    `json:"updatedByTaskID"`
 	Status          constant.ScanIssueStatus `json:"status"`
-	Ignored         *int64                   `json:"ignored"`
+	IgnoredDate     *int64                   `json:"ignoredDate"`
 }
 
 // ScanIssueReport 扫描报告统计
@@ -144,6 +153,47 @@ func (t IssueInputSmell) UniqueKey() string {
 	return fmt.Sprintf("%s/%s/%d/%d,'%s',`%s`", t.RuleKey, t.Location.Path, t.Location.Range.StartLine, t.Location.Range.EndLine, t.Message, t.Snippet)
 }
 
+// AIReportResponse AI 审查报告顶层结构
+type AIReportResponse struct {
+	Status   string           `json:"status"`
+	Summary  *AIReportSummary `json:"summary"`
+	Comments []*IssueInputAI  `json:"comments"`
+}
+
+// AIReportSummary AI 审查报告摘要
+type AIReportSummary struct {
+	FilesReviewed int    `json:"files_reviewed"`
+	Comments      int    `json:"comments"`
+	TotalTokens   int64  `json:"total_tokens"`
+	InputTokens   int64  `json:"input_tokens"`
+	OutputTokens  int64  `json:"output_tokens"`
+	Elapsed       string `json:"elapsed"`
+}
+
+// IssueInputAI AI 类型的 issue 输入
+type IssueInputAI struct {
+	PpmID          int64  `json:"ppmID,omitempty"`
+	Path           string `json:"path"`
+	Content        string `json:"content"`
+	SuggestionCode string `json:"suggestion_code"`
+	ExistingCode   string `json:"existing_code"`
+	StartLine      int64  `json:"start_line"`
+	EndLine        int64  `json:"end_line"`
+	Category       string `json:"category"`
+	Severity       string `json:"severity"`
+}
+
+// IssuePayloadAI AI 类型 issue 的扩展数据
+type IssuePayloadAI struct {
+	SuggestionCode string `json:"suggestion_code"`
+	ExistingCode   string `json:"existing_code"`
+}
+
+// UniqueKey 生成唯一标识
+func (t IssueInputAI) UniqueKey() string {
+	return fmt.Sprintf("ai/%d/%s/%d/%d", t.PpmID, t.Path, t.StartLine, t.EndLine)
+}
+
 // GenerateIssueKey 根据任务信息生成 issue 唯一 key
 func GenerateIssueKey(repoID int64, executionTarget, part string) string {
 	in := []byte(fmt.Sprintf("%s,%d,%s", part, repoID, executionTarget))
@@ -220,41 +270,49 @@ type ScanTaskUploadReportReq struct {
 
 // ScanTaskIssueReqFilter 任务问题列表查询过滤条件
 type ScanTaskIssueReqFilter struct {
-	ID              int64                    `json:"id,omitempty" form:"id"`
-	Message         string                   `json:"message,omitempty" form:"message"`
-	File            string                   `json:"file,omitempty" form:"file"`
-	RuleType        constant.ScanRuleType    `json:"ruleType,omitempty" form:"ruleType"`
-	Tool            string                   `json:"tool,omitempty" form:"tool"`
-	RulePriority    string                   `json:"rulePriority,omitempty" form:"rulePriority"`
-	CreateDate      string                   `json:"createDate,omitempty" form:"createDate"`
-	TaskID          int64                    `json:"taskID" form:"taskID"`
-	RepoID          int64                    `json:"repoID,omitempty" form:"repoID"`
-	Branch          string                   `json:"branch,omitempty" form:"branch"`
-	RuleID          int64                    `json:"ruleID,omitempty" form:"ruleID"`
-	Status          constant.ScanIssueStatus `json:"status,omitempty" form:"status"`
-	ScanMethod      constant.ScanMethod      `json:"scanMethod,omitempty" form:"scanMethod"`
-	PlanID          int64                    `json:"planID,omitempty" form:"planID"`
-	DetectionStatus string                   `json:"detectionStatus,omitempty" form:"detectionStatus"`
-	Sort            string                   `json:"sort,omitempty" form:"sort" default:"id"`
-	Order           string                   `json:"order,omitempty" form:"order" default:"desc"`
-	Page            int                      `json:"page" form:"page" default:"1"`
-	PageSize        int                      `json:"pageSize" form:"pageSize" default:"20"`
+	ID              int64                        `json:"id,omitempty" form:"id"`
+	Title           string                       `json:"title,omitempty" form:"title"`
+	Content         string                       `json:"content,omitempty" form:"content"`
+	Path            string                       `json:"path,omitempty" form:"path"`
+	RuleType        constant.ScanRuleType        `json:"ruleType,omitempty" form:"ruleType"`
+	Tool            string                       `json:"tool,omitempty" form:"tool"`
+	RulePriority    string                       `json:"rulePriority,omitempty" form:"rulePriority"`
+	CreateDate      string                       `json:"createDate,omitempty" form:"createDate"`
+	TaskID          int64                        `json:"taskID" form:"taskID"`
+	RepoID          int64                        `json:"repoID,omitempty" form:"repoID"`
+	PpmID           int64                        `json:"ppmID,omitempty" form:"ppmID"`
+	Category        constant.AiScanIssueCategory `json:"category,omitempty" form:"category"`
+	Severity        constant.AiScanIssueSeverity `json:"severity,omitempty" form:"severity"`
+	Branch          string                       `json:"branch,omitempty" form:"branch"`
+	RuleID          int64                        `json:"ruleID,omitempty" form:"ruleID"`
+	Status          constant.ScanIssueStatus     `json:"status,omitempty" form:"status"`
+	ScanMethods     []constant.ScanMethod        `json:"scanMethods,omitempty" form:"scanMethods"`
+	PlanID          int64                        `json:"planID,omitempty" form:"planID"`
+	DetectionStatus string                       `json:"detectionStatus,omitempty" form:"detectionStatus"`
+	Sort            string                       `json:"sort,omitempty" form:"sort" default:"id"`
+	Order           string                       `json:"order,omitempty" form:"order" default:"desc"`
+	Page            int                          `json:"page" form:"page" default:"1"`
+	PageSize        int                          `json:"pageSize" form:"pageSize" default:"20"`
 }
 
 // ScanIssueReqFilter 任务问题列表查询过滤条件
 type ScanIssueReqFilter struct {
-	ID           int64                    `json:"id,omitempty" form:"id"`
-	RepoID       int64                    `json:"repoID,omitempty" form:"repoID"`
-	Branch       string                   `json:"branch,omitempty" form:"branch"`
-	File         string                   `json:"file,omitempty" form:"file"`
-	Message      string                   `json:"message,omitempty" form:"message"`
-	RuleID       int64                    `json:"ruleID,omitempty" form:"ruleID"`
-	RulePriority string                   `json:"rulePriority,omitempty" form:"rulePriority"`
-	RuleType     constant.ScanRuleType    `json:"ruleType,omitempty" form:"ruleType"`
-	Tool         string                   `json:"tool,omitempty" form:"tool"`
-	Status       constant.ScanIssueStatus `json:"status,omitempty" form:"status"`
-	ScanMethod   constant.ScanMethod      `json:"scanMethod,omitempty" form:"scanMethod"`
-	CreateDate   string                   `json:"createDate,omitempty" form:"createDate"`
+	ID           int64                        `json:"id,omitempty" form:"id"`
+	RepoID       int64                        `json:"repoID,omitempty" form:"repoID"`
+	PpmID        int64                        `json:"ppmID,omitempty" form:"ppmID"`
+	Category     constant.AiScanIssueCategory `json:"category,omitempty" form:"category"`
+	Severity     constant.AiScanIssueSeverity `json:"severity,omitempty" form:"severity"`
+	Branch       string                       `json:"branch,omitempty" form:"branch"`
+	Path         string                       `json:"path,omitempty" form:"path"`
+	Title        string                       `json:"title,omitempty" form:"title"`
+	Content      string                       `json:"content,omitempty" form:"content"`
+	RuleID       int64                        `json:"ruleID,omitempty" form:"ruleID"`
+	RulePriority string                       `json:"rulePriority,omitempty" form:"rulePriority"`
+	RuleType     constant.ScanRuleType        `json:"ruleType,omitempty" form:"ruleType"`
+	Tool         string                       `json:"tool,omitempty" form:"tool"`
+	Status       constant.ScanIssueStatus     `json:"status,omitempty" form:"status"`
+	ScanMethods  []constant.ScanMethod        `json:"scanMethods,omitempty" form:"scanMethods"`
+	CreateDate   string                       `json:"createDate,omitempty" form:"createDate"`
 	CreatedFilter
 	UpdatedFilter
 	ResolvedFilter
@@ -303,9 +361,17 @@ type ScanIssueInfo struct {
 	RuleKey         string                        `json:"ruleKey"`
 	RulePriority    constant.ScanRulePriority     `json:"rulePriority"`
 	RuleType        constant.ScanRuleType         `json:"ruleType"`
-	Message         string                        `json:"message"`
+	Title           string                        `json:"title"`
+	Content         string                        `json:"content,omitempty"`
 	Path            string                        `json:"path"`
-	Line            int64                         `json:"line"`
+	StartLine       int64                         `json:"startLine"`
+	EndLine         int64                         `json:"endLine"`
+	OldCode         string                        `json:"oldCode,omitempty"`
+	NewCode         string                        `json:"newCode,omitempty"`
+	Category        constant.AiScanIssueCategory  `json:"category,omitempty"`
+	Severity        constant.AiScanIssueSeverity  `json:"severity,omitempty"`
+	PpmID           int64                         `json:"ppmID,omitempty"`
+	PpmTitle        string                        `json:"ppmTitle,omitempty"`
 	RepoID          int64                         `json:"repoID"`
 	RepoBranch      string                        `json:"repoBranch"`
 	Status          constant.ScanIssueStatus      `json:"status"`
@@ -317,8 +383,10 @@ type ScanIssueInfo struct {
 	PlanID          int64                         `json:"planID"`
 	PlanName        string                        `json:"planName"`
 	CreatedDate     *datetime.Local               `json:"createdDate"`
-	Resolved        *datetime.Local               `json:"resolved"`
-	Closed          *datetime.Local               `json:"closed"`
-	Ignored         *int64                        `json:"ignored"`
+	ResolvedDate    *datetime.Local               `json:"resolvedDate"`
+	ClosedDate      *datetime.Local               `json:"closedDate"`
+	IgnoredDate     *int64                        `json:"ignoredDate"`
+	CreatedBy       string                        `json:"createdBy,omitempty"`
+	EditedBy        string                        `json:"editedBy,omitempty"`
 	Trigger         *ScanTaskTrigger              `json:"trigger"`
 }

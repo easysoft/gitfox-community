@@ -155,11 +155,9 @@ func (mm *ModelManager) createExclusiveAsset(ctx context.Context, ver *model.Art
 // createNormalAsset 创建普通资产
 //
 // raw 上传语义（用户面）：同 version 下若已存在同名资产：
-//  1. md5/sha1/sha256 三摘要全等 → 视为同文件已存在，直接复用旧 asset，
-//     标 alreadyExists=true，由 controller 渲染"文件已存在"成功提示，不报错；
-//  2. 任一摘要不同 → 自动追加 `(n)` 后缀（n=1 起递增至空位）保留两份，descriptor.Path 同步改写。
-//
-// 不再走旧的"覆盖更新"分支，避免老 blob 被悄悄替换、用户失去原文件。
+//  1. Overwrite 开启 → 直接覆盖：用新 blob 替换同名 asset；
+//  2. Rename 开启 → 自动追加 `(n)` 后缀建新 asset，保留两份；
+//  3. 否则视为重名，标 alreadyExists=true，由 controller 渲染"文件已存在"提示，不落新数据。
 func (mm *ModelManager) createNormalAsset(ctx context.Context, ver *model.ArtifactVersion, descriptor *AssetDescriptor) (*model.ArtifactAsset, bool, error) {
 	currAsset, assetExist, err := mm.getExistAsset(func() (*model.ArtifactAsset, error) {
 		return mm.store.Assets().GetVersionAsset(ctx, descriptor.Path, ver.ID)
@@ -167,19 +165,27 @@ func (mm *ModelManager) createNormalAsset(ctx context.Context, ver *model.Artifa
 	if err != nil {
 		return nil, false, err
 	}
-	// 如果资产存在，判断是否为重复。
+	// 同名三分支：overwrite 覆盖 / rename 加 (n) / 默认已存在。
 	if assetExist {
-		if isSameContent(currAsset, descriptor) {
+		if mm.pkgDescriptor.Overwrite {
+			if _, err = mm.overwriteAsset(ctx, currAsset, descriptor); err != nil {
+				return nil, false, err
+			}
+			return currAsset, true, nil
+		}
+		if mm.pkgDescriptor.Rename {
+			newPath, e := mm.resolveAssetPath(descriptor.Path, func(p string) (bool, error) {
+				return mm.versionAssetExists(ctx, p, ver.ID)
+			})
+			if e != nil {
+				return nil, false, e
+			}
+			descriptor.Path = newPath
+			// rename 成功后落入下方新建分支，创建带 (n) 后缀的新 asset。
+		} else {
 			mm.alreadyExists = true
 			return currAsset, false, nil
 		}
-		newPath, e := mm.resolveAssetPath(descriptor.Path, func(p string) (bool, error) {
-			return mm.versionAssetExists(ctx, p, ver.ID)
-		})
-		if e != nil {
-			return nil, false, e
-		}
-		descriptor.Path = newPath
 	}
 	newAsset := &model.ArtifactAsset{
 		GroupID:    null.IntFrom(0),
@@ -197,9 +203,9 @@ func (mm *ModelManager) createNormalAsset(ctx context.Context, ver *model.Artifa
 // createNormalAssetToGroup 创建普通资产到 group
 //
 // generic/file 上传语义（用户面）：同 group 下若已存在同名资产：
-//  1. md5/sha1/sha256 三摘要全等 → 视为同文件已存在，直接复用旧 asset，
-//     标 alreadyExists=true，由 controller 渲染"文件已存在"成功提示，不报错；
-//  2. 任一摘要不同 → 自动追加 `(n)` 后缀直至空位，并用新名建一份新的 asset。
+//  1. Overwrite 开启 → 直接覆盖：用新 blob 替换同名 asset；
+//  2. Rename 开启 → 自动追加 `(n)` 后缀建新 asset，保留两份；
+//  3. 否则视为重名，标 alreadyExists=true，由 controller 渲染"文件已存在"提示，不落新数据。
 func (mm *ModelManager) createNormalAssetToGroup(ctx context.Context, descriptor *AssetDescriptor) (*model.ArtifactAsset, bool, error) {
 	groupID := mm.pkgDescriptor.GroupID
 	if groupID == 0 {
@@ -211,20 +217,27 @@ func (mm *ModelManager) createNormalAssetToGroup(ctx context.Context, descriptor
 	if err != nil {
 		return nil, false, err
 	}
+	// 同名三分支：overwrite 覆盖 / rename 加 (n) / 默认已存在。
 	if assetExist {
-		// 内容相同 → 复用旧 asset，由上层渲染"文件已存在"成功提示。
-		if isSameContent(currAsset, descriptor) {
+		if mm.pkgDescriptor.Overwrite {
+			if _, err = mm.overwriteAsset(ctx, currAsset, descriptor); err != nil {
+				return nil, false, err
+			}
+			return currAsset, true, nil
+		}
+		if mm.pkgDescriptor.Rename {
+			newPath, e := mm.resolveAssetPath(descriptor.Path, func(p string) (bool, error) {
+				return mm.groupAssetExists(ctx, p, groupID)
+			})
+			if e != nil {
+				return nil, false, e
+			}
+			descriptor.Path = newPath
+			// rename 成功后落入下方新建分支，创建带 (n) 后缀的新 asset。
+		} else {
 			mm.alreadyExists = true
 			return currAsset, false, nil
 		}
-		// 内容不同 → 追加 (n) 后缀建新 asset。
-		newPath, e := mm.resolveAssetPath(descriptor.Path, func(p string) (bool, error) {
-			return mm.groupAssetExists(ctx, p, groupID)
-		})
-		if e != nil {
-			return nil, false, e
-		}
-		descriptor.Path = newPath
 	}
 	newAsset := &model.ArtifactAsset{
 		VersionID:  null.IntFrom(0),
@@ -235,25 +248,6 @@ func (mm *ModelManager) createNormalAssetToGroup(ctx context.Context, descriptor
 		return nil, false, err
 	}
 	return newAsset, false, nil
-}
-
-// isSameContent 比对已落库 asset 与新上传 descriptor 是否为同一份内容。
-// 仅当 md5/sha1/sha256 三摘要全部解析成功且全部相等时返回 true，
-// 任一字段缺失或解析失败一律按"内容不同"处理（让重命名分支接管）。
-func isSameContent(asset *model.ArtifactAsset, descriptor *AssetDescriptor) bool {
-	if asset == nil || descriptor == nil || descriptor.Hash == nil {
-		return false
-	}
-	var h Hash
-	if err := json.Unmarshal([]byte(asset.CheckSum), &h); err != nil {
-		return false
-	}
-	if h.Md5 == "" || h.Sha1 == "" || h.Sha256 == "" {
-		return false
-	}
-	return h.Md5 == descriptor.Hash.Md5 &&
-		h.Sha1 == descriptor.Hash.Sha1 &&
-		h.Sha256 == descriptor.Hash.Sha256
 }
 
 // resolveAssetPath 在 basePath 基础上追加 `(n)` 后缀直至命中空位。
@@ -364,29 +358,60 @@ func (mm *ModelManager) getExistAsset(mutateFunc func() (*model.ArtifactAsset, e
 	return nil, false, err
 }
 
-// updateAsset 更新资产
-func (mm *ModelManager) updateAsset(ctx context.Context, current *model.ArtifactAsset, descriptor *AssetDescriptor) (*model.ArtifactAsset, error) {
-	// 更新资产时会新建 blob 并回链，旧 blob 仅做软删以保留历史引用痕迹。
+// replaceAssetBlob 为 asset 绑定新 blob：createBlob → 回链 → 更新引用 → 软删旧 blob。
+// 同摘要覆盖时 createBlob 复用当前 asset 已在用的 blob，直接提前返回，避免冗余写。
+// 软删旧 blob 前做引用保护：旧 blob 仍被其它 active asset 引用时跳过，仅在无引用时才软删。
+func (mm *ModelManager) replaceAssetBlob(ctx context.Context, current *model.ArtifactAsset, descriptor *AssetDescriptor) error {
 	now := time.Now()
-	if err := mm.validateAsset(ctx, current, descriptor); err != nil {
-		return nil, err
-	}
 	newBlob, err := mm.createBlob(ctx, descriptor, &now)
 	if err != nil {
-		return nil, err
+		return err
+	}
+	// 同摘要覆盖：复用了当前 asset 已在用的 blob，内容未变，无需回链与软删。
+	if current.BlobID == newBlob.ID {
+		return nil
 	}
 	if err = mm.linkAssetToBlob(ctx, current.ID, newBlob); err != nil {
-		return nil, err
+		return err
 	}
-	previousBlobId := current.BlobID
+	previousBlobID := current.BlobID
 	current.BlobID = newBlob.ID
 	if descriptor.Hash != nil {
 		current.CheckSum = descriptor.Hash.String()
 	}
 	if err = mm.store.Assets().Update(ctx, current); err != nil {
+		return err
+	}
+	// 旧 blob 仅在无其它 active asset 引用时才软删，避免误删仍被引用的 blob。
+	refs, err := mm.store.Assets().Search(ctx,
+		artifactStore.BlobAssetsOption{BlobID: previousBlobID},
+		artifactStore.AssetExcludeDeletedOption{},
+	)
+	if err != nil {
+		return err
+	}
+	if len(refs) == 0 {
+		return mm.store.Blobs().SoftDeleteById(ctx, previousBlobID, mm.creator.UID)
+	}
+	return nil
+}
+
+// updateAsset 更新资产：先校验内容是否变化（同 sha256 拒绝重复写），再替换 blob 引用。
+func (mm *ModelManager) updateAsset(ctx context.Context, current *model.ArtifactAsset, descriptor *AssetDescriptor) (*model.ArtifactAsset, error) {
+	// 更新资产时会新建 blob 并回链，旧 blob 仅做软删以保留历史引用痕迹。
+	if err := mm.validateAsset(ctx, current, descriptor); err != nil {
 		return nil, err
 	}
-	if err = mm.store.Blobs().SoftDeleteById(ctx, previousBlobId, mm.creator.UID); err != nil {
+	if err := mm.replaceAssetBlob(ctx, current, descriptor); err != nil {
+		return nil, err
+	}
+	return current, nil
+}
+
+// overwriteAsset 覆盖更新：强制替换同名 asset 的 blob 引用，不做摘要比对。
+// Overwrite 开启且存在同名资产时调用；与 updateAsset 的区别是不校验"内容未变化"。
+func (mm *ModelManager) overwriteAsset(ctx context.Context, current *model.ArtifactAsset, descriptor *AssetDescriptor) (*model.ArtifactAsset, error) {
+	if err := mm.replaceAssetBlob(ctx, current, descriptor); err != nil {
 		return nil, err
 	}
 	return current, nil
@@ -475,7 +500,7 @@ func (mm *ModelManager) validateAsset(ctx context.Context, asset *model.Artifact
 		log.Errorf("unmarshal checksum failed: %v", err)
 		return nil
 	}
-	if h.Sha256 == descriptor.Hash.Sha256 {
+	if descriptor.Hash != nil && h.Sha256 == descriptor.Hash.Sha256 {
 		return ErrStorageFileNotChanged
 	}
 	return nil

@@ -20,6 +20,7 @@ import (
 	repoSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
 	pullreqStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/pullrequest"
 	repoStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
+	userStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/user"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/events"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/stream"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/url"
@@ -67,6 +68,7 @@ type Service struct {
 	repoStore    repoStore.Interface
 	repoSvc      repoSvc.Interface
 	pullreqStore pullreqStore.Interface
+	userStore    userStore.Interface
 	urlProvider  url.Provider
 	git          git.Interface
 	config       Config
@@ -87,6 +89,7 @@ func NewWebhookSvc(
 	repoStore repoStore.Interface,
 	repoSvc repoSvc.Interface,
 	pullreqStore pullreqStore.Interface,
+	userStore userStore.Interface,
 	urlProvider url.Provider,
 ) (*Service, error) {
 	if err := config.Prepare(); err != nil {
@@ -100,6 +103,7 @@ func NewWebhookSvc(
 		repoStore:                  repoStore,
 		repoSvc:                    repoSvc,
 		pullreqStore:               pullreqStore,
+		userStore:                  userStore,
 		urlProvider:                urlProvider,
 		secureHTTPClient:           newHTTPClient(config.AllowLoopback, config.AllowPrivateNetwork, false),
 		insecureHTTPClient:         newHTTPClient(config.AllowLoopback, config.AllowPrivateNetwork, true),

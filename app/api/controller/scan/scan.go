@@ -22,6 +22,7 @@ type ScanController struct {
 	taskSvc          scanService.IScanTask
 	repoSvc          repoService.Interface
 	gitPkg           git.Interface
+	aicodereviewSvc  scanService.IAIReview
 }
 
 // NewScanController 创建扫描处理器实例
@@ -36,6 +37,7 @@ func NewScanController(
 	planConditionSvc scanService.IScanPlanCondition,
 	repoSvc repoService.Interface,
 	gitPkg git.Interface,
+	aicodereviewSvc scanService.IAIReview,
 ) *ScanController {
 	return &ScanController{
 		ruleSetSvc:       ruleSetSvc,
@@ -48,6 +50,7 @@ func NewScanController(
 		repoSvc:          repoSvc,
 		taskSvc:          taskSvc,
 		gitPkg:           gitPkg,
+		aicodereviewSvc:  aicodereviewSvc,
 	}
 }
 

@@ -24,16 +24,16 @@ type JobScheduler interface {
 type Interface interface {
 	// ---- 视图管理 ----
 
-	// CreateView 创建制品库视图，支持全局/空间/仓库三级作用域。
-	CreateView(ctx context.Context, req *model.CreateArtifactViewReq) (*model.ArtifactView, error)
+	// CreateLib 创建制品库视图，支持全局/空间/仓库三级作用域。
+	CreateLib(ctx context.Context, req *model.CreateArtifactLibReq) (*model.ArtifactView, error)
 
-	// ResolveView 按请求中的 artifactID 或默认视图规则解析实际视图。
+	// ResolveLib 按请求中的 artifactID 或默认视图规则解析实际视图。
 	// 规则：
 	//  1. artifactID > 0：优先按 ID 精确取库
-	ResolveView(ctx context.Context, req *model.SpaceRepoReq) (*model.ArtifactView, error)
+	ResolveLib(ctx context.Context, req *model.SpaceRepoReq) (*model.ArtifactView, error)
 
-	// ParseSpaceView 解析空间+仓库参数，返回视图描述符（包含 artifactID 和路由信息）。
-	ParseSpaceView(ctx context.Context, req *model.SpaceRepoReq) (*adapter.ViewDescriptor, error)
+	// ParseSpaceLib 解析空间+仓库参数，返回视图描述符（包含 artifactID 和路由信息）。
+	ParseSpaceLib(ctx context.Context, req *model.SpaceRepoReq) (*adapter.ViewDescriptor, error)
 
 	// ---- 制品查询 ----
 

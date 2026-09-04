@@ -37,7 +37,7 @@ func StopService() error {
 
 func stopLinux() error {
 	if _, err := exec.LookPath("systemctl"); err != nil {
-		return errors.New(clii18n.T(i18n.CliStartErrSystemctlMissing))
+		return errors.New(clii18n.T(i18n.CliSystemctlMissing))
 	}
 
 	// 检查服务是否存在

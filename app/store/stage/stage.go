@@ -114,7 +114,11 @@ func (s *Store) Update(ctx context.Context, stage *stageModel.Stage) error {
 		ErrorLog:     database.NullIfEmpty(stage.ErrorLog),
 	}
 
-	if err := db.Model(&Stage{}).Where("id = ?", stage.ID).Updates(dbStage).Error; err != nil {
+	// Omit scheduling metadata fields that are set once at creation time.
+	// Runners must not overwrite these via UpdateStage/UpdateStep callbacks.
+	if err := db.Model(&Stage{}).Where("id = ?", stage.ID).
+		Omit("code", "type", "labels", "depends", "run_policy", "custom_policy", "fail_policy").
+		Updates(dbStage).Error; err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
 	}
 

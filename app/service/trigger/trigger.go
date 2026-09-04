@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
+	"slices"
 	"time"
 
 	"github.com/bmatcuk/doublestar/v4"
@@ -60,6 +62,7 @@ type Service struct {
 	scanTriggerSvc scanSvc.IScanTrigger
 	planSvc        scanSvc.IScanPlan
 	taskSvc        scanSvc.IScanTask
+	reviewSvc      scanSvc.IAIReview
 }
 
 func New(
@@ -72,6 +75,7 @@ func New(
 	scanTriggerSvc scanSvc.IScanTrigger,
 	planSvc scanSvc.IScanPlan,
 	taskSvc scanSvc.IScanTask,
+	reviewSvc scanSvc.IAIReview,
 	gitReaderFactory *events.ReaderFactory[*gitevents.Reader],
 	pullreqEvReaderFactory *events.ReaderFactory[*pullreqevents.Reader],
 ) (*Service, error) {
@@ -87,6 +91,7 @@ func New(
 		scanTriggerSvc: scanTriggerSvc,
 		planSvc:        planSvc,
 		taskSvc:        taskSvc,
+		reviewSvc:      reviewSvc,
 	}
 
 	_, err := gitReaderFactory.Launch(ctx, eventsReaderGroupName, config.EventReaderName,
@@ -137,13 +142,24 @@ func New(
 	return service, nil
 }
 
-func (s *Service) trigger(ctx context.Context, repoID int64, hook *triggerer.Hook) error {
+func (s *Service) trigger(ctx context.Context, repoID, ppmID int64, hook *triggerer.Hook) error {
 	var errs error
 	if err := s.triggerPipeline(ctx, repoID, hook); err != nil {
 		errs = multierror.Append(errs, err)
 	}
 	if err := s.triggerScanPipeline(ctx, repoID, hook); err != nil {
 		errs = multierror.Append(errs, err)
+	}
+
+	reviewActions := []constant.TriggerAction{
+		constant.TriggerActionPullReqCreated,
+		constant.TriggerActionPullReqBranchUpdated,
+		constant.TriggerActionPullReqReopened,
+	}
+	if slices.Contains(reviewActions, hook.Action) {
+		if err := s.triggerReviewPipeline(ctx, repoID, ppmID, hook); err != nil {
+			errs = multierror.Append(errs, err)
+		}
 	}
 	return errs
 }
@@ -174,6 +190,11 @@ func (s *Service) triggerPipeline(ctx context.Context, repoID int64, hook *trigg
 
 	var errs error
 	for _, t := range triggers {
+		if hook.Action == constant.TriggerActionBranchUpdated {
+			if !s.isCommentMatch(hook.CommitMatch, t.Comment) {
+				continue
+			}
+		}
 		pipelineInfo, err := s.pipelineSvc.GetPipelineByID(ctx, t.PipelineID)
 		if err != nil {
 			errs = multierror.Append(errs, fmt.Errorf("failed to get pipeline info %d: %w", t.PipelineID, err))
@@ -251,6 +272,42 @@ func (s *Service) triggerScanPipeline(ctx context.Context, repoID int64, hook *t
 	return errs
 }
 
+func (s *Service) triggerReviewPipeline(ctx context.Context, repoID, ppmID int64, hook *triggerer.Hook) error {
+
+	log := logger.GetLogger(ctx)
+	log.Infof("[pipeline-trigger-review] trigger called: repoID=%d, action=%s, ref=%s", repoID, hook.Action, hook.Ref)
+
+	// 根据 repoID 查询 repo 的 gitURL
+	repo, err := s.repoStore.GetByID(ctx, uint(repoID))
+	if err != nil {
+		return fmt.Errorf("failed to get repo by ID %d: %w", repoID, err)
+	}
+	gitURL := s.urlProvider.GenerateGITCloneURL(ctx, repo.Path)
+	log.Infof("[pipeline-trigger-review] repo gitURL=%s", gitURL)
+	repo.GitURL = gitURL
+
+	var errs error
+	if hook.Params == nil {
+		hook.Params = make(map[string]string)
+	}
+
+	// 创建 or 获取 review pipeline
+	hook.Params["gitURL"] = gitURL
+	hook.Params["gitRef"] = hook.Ref
+	hook.Parent = int64(repo.SpaceID)
+
+	if _, err := s.reviewSvc.TriggerCodeReview(ctx, &scanSvc.CodeReviewInput{
+		PullReqID: ppmID,
+		Repo:      repo,
+		Hook:      hook,
+	}); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("failed to get review pipeline for repo %d: %w", repoID, err))
+		return errs
+	}
+
+	return errs
+}
+
 // isBranchMatch checks whether ref matches any of the include patterns in branches.
 // Returns true if at least one pattern matches, false if none match.
 // If branches is nil or has no include patterns, it returns true (no filter).
@@ -260,6 +317,19 @@ func (s *Service) isBranchMatch(branches *scanModel.Pattern, ref string) bool {
 	}
 	for _, pattern := range branches.Include {
 		if ok, _ := doublestar.Match(pattern, ref); ok {
+			return true
+		}
+	}
+	return false
+}
+
+func (s *Service) isCommentMatch(commitMessage, comment string) bool {
+	if comment == "" {
+		return true
+	}
+	commentList := strings.Split(comment, ",")
+	for _, c := range commentList {
+		if strings.Contains(commitMessage, c) {
 			return true
 		}
 	}

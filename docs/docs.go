@@ -81,7 +81,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.CreateArtifactViewReq"
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.CreateArtifactLibReq"
                         }
                     }
                 ],
@@ -599,6 +599,24 @@ const docTemplate = `{
                         "type": "string",
                         "description": "raw 包名（raw 上传必传）",
                         "name": "packageName",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "上传目录路径（支持多级 a/b/c，不存在时自动递归创建；与 groupID 二选一）",
+                        "name": "group",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "同名文件是否直接覆盖（true/1 开启；缺省 false 走原逻辑：同内容跳过、异内容追加 (n) 后缀）",
+                        "name": "overwrite",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "同名文件是否自动追加 (n) 后缀保留两份（true/1 开启；缺省 false 重名报已存在）",
+                        "name": "rename",
                         "in": "formData"
                     },
                     {
@@ -5820,6 +5838,69 @@ const docTemplate = `{
                 }
             }
         },
+        "/scan/aicodereview/{repoID}/{ppmID}/report": {
+            "post": {
+                "description": "上传评审任务的报告文件，解析 issues",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scan"
+                ],
+                "summary": "上传评审任务报告",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "合并请求 ID",
+                        "name": "ppmID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "报告文件",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "上传成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanIssueReport"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/scan/issues/batch": {
             "post": {
                 "description": "根据扫描问题 ID 列表批量查询扫描问题详情",
@@ -5907,6 +5988,16 @@ const docTemplate = `{
                         "format": "int64",
                         "description": "任务 ID",
                         "name": "taskID",
+                        "in": "query"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "description": "扫描方式，可多选",
+                        "name": "scanMethods",
                         "in": "query"
                     }
                 ],
@@ -11384,6 +11475,79 @@ const docTemplate = `{
                 }
             }
         },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.AiScanIssueCategory": {
+            "type": "string",
+            "enum": [
+                "critical",
+                "high",
+                "medium",
+                "low",
+                ""
+            ],
+            "x-enum-comments": {
+                "AiScanIssueCategoryCritical": "严重",
+                "AiScanIssueCategoryHigh": "高",
+                "AiScanIssueCategoryLow": "低",
+                "AiScanIssueCategoryMedium": "中等"
+            },
+            "x-enum-descriptions": [
+                "严重",
+                "高",
+                "中等",
+                "低",
+                ""
+            ],
+            "x-enum-varnames": [
+                "AiScanIssueCategoryCritical",
+                "AiScanIssueCategoryHigh",
+                "AiScanIssueCategoryMedium",
+                "AiScanIssueCategoryLow",
+                "AiScanIssueCategoryNone"
+            ]
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.AiScanIssueSeverity": {
+            "type": "string",
+            "enum": [
+                "bug",
+                "security",
+                "performance",
+                "maintainability",
+                "test",
+                "style",
+                "documentation",
+                "other"
+            ],
+            "x-enum-comments": {
+                "AiScanIssueSeverityBug": "缺陷",
+                "AiScanIssueSeverityDocumentation": "文档",
+                "AiScanIssueSeverityMaintainability": "可维护性",
+                "AiScanIssueSeverityOther": "其他",
+                "AiScanIssueSeverityPerformance": "性能",
+                "AiScanIssueSeveritySecurity": "安全",
+                "AiScanIssueSeverityStyle": "代码异味",
+                "AiScanIssueSeverityTest": "测试"
+            },
+            "x-enum-descriptions": [
+                "缺陷",
+                "安全",
+                "性能",
+                "可维护性",
+                "测试",
+                "代码异味",
+                "文档",
+                "其他"
+            ],
+            "x-enum-varnames": [
+                "AiScanIssueSeverityBug",
+                "AiScanIssueSeveritySecurity",
+                "AiScanIssueSeverityPerformance",
+                "AiScanIssueSeverityMaintainability",
+                "AiScanIssueSeverityTest",
+                "AiScanIssueSeverityStyle",
+                "AiScanIssueSeverityDocumentation",
+                "AiScanIssueSeverityOther"
+            ]
+        },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.CIStatus": {
             "type": "string",
             "enum": [
@@ -11601,11 +11765,13 @@ const docTemplate = `{
             "type": "string",
             "enum": [
                 "check",
-                "smell"
+                "smell",
+                "ai"
             ],
             "x-enum-varnames": [
                 "ScanMethodCheck",
-                "ScanMethodSmell"
+                "ScanMethodSmell",
+                "ScanMethodAI"
             ]
         },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanPlanTriggerType": {
@@ -11930,7 +12096,7 @@ const docTemplate = `{
                 }
             }
         },
-        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.CreateArtifactViewReq": {
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_artifact.CreateArtifactLibReq": {
             "type": "object",
             "properties": {
                 "artifactID": {
@@ -13715,6 +13881,10 @@ const docTemplate = `{
                 },
                 "query": {
                     "type": "string"
+                },
+                "space": {
+                    "description": "空间标识",
+                    "type": "integer"
                 }
             }
         },
@@ -13862,6 +14032,9 @@ const docTemplate = `{
                 "os": {
                     "type": "string"
                 },
+                "runtime": {
+                    "type": "string"
+                },
                 "version": {
                     "type": "string"
                 }
@@ -13967,9 +14140,12 @@ const docTemplate = `{
                 "ip": {
                     "type": "string"
                 },
+                "isDefault": {
+                    "type": "boolean"
+                },
                 "labels": {
-                    "type": "object",
-                    "additionalProperties": {
+                    "type": "array",
+                    "items": {
                         "type": "string"
                     }
                 },
@@ -13980,6 +14156,9 @@ const docTemplate = `{
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.RunnerStatus"
                 },
                 "os": {
+                    "type": "string"
+                },
+                "runtime": {
                     "type": "string"
                 },
                 "status": {
@@ -14431,7 +14610,16 @@ const docTemplate = `{
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanIssueInfo": {
             "type": "object",
             "properties": {
-                "closed": {
+                "category": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.AiScanIssueCategory"
+                },
+                "closedDate": {
+                    "type": "string"
+                },
+                "content": {
+                    "type": "string"
+                },
+                "createdBy": {
                     "type": "string"
                 },
                 "createdByTaskID": {
@@ -14440,19 +14628,25 @@ const docTemplate = `{
                 "createdDate": {
                     "type": "string"
                 },
+                "editedBy": {
+                    "type": "string"
+                },
+                "endLine": {
+                    "type": "integer"
+                },
                 "id": {
                     "type": "integer"
                 },
-                "ignored": {
+                "ignoredDate": {
                     "type": "integer"
                 },
                 "key": {
                     "type": "string"
                 },
-                "line": {
-                    "type": "integer"
+                "newCode": {
+                    "type": "string"
                 },
-                "message": {
+                "oldCode": {
                     "type": "string"
                 },
                 "path": {
@@ -14470,6 +14664,12 @@ const docTemplate = `{
                 "planName": {
                     "type": "string"
                 },
+                "ppmID": {
+                    "type": "integer"
+                },
+                "ppmTitle": {
+                    "type": "string"
+                },
                 "repoBranch": {
                     "type": "string"
                 },
@@ -14479,7 +14679,7 @@ const docTemplate = `{
                 "resolution": {
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanIssueResolution"
                 },
-                "resolved": {
+                "resolvedDate": {
                     "type": "string"
                 },
                 "ruleID": {
@@ -14500,8 +14700,17 @@ const docTemplate = `{
                 "scanMethod": {
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanMethod"
                 },
+                "severity": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.AiScanIssueSeverity"
+                },
+                "startLine": {
+                    "type": "integer"
+                },
                 "status": {
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanIssueStatus"
+                },
+                "title": {
+                    "type": "string"
                 },
                 "trigger": {
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTaskTrigger"
@@ -14543,6 +14752,12 @@ const docTemplate = `{
                 "branch": {
                     "type": "string"
                 },
+                "category": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.AiScanIssueCategory"
+                },
+                "content": {
+                    "type": "string"
+                },
                 "createDate": {
                     "type": "string"
                 },
@@ -14552,14 +14767,8 @@ const docTemplate = `{
                 "createdLt": {
                     "type": "string"
                 },
-                "file": {
-                    "type": "string"
-                },
                 "id": {
                     "type": "integer"
-                },
-                "message": {
-                    "type": "string"
                 },
                 "order": {
                     "type": "string",
@@ -14573,7 +14782,13 @@ const docTemplate = `{
                     "type": "integer",
                     "default": 20
                 },
+                "path": {
+                    "type": "string"
+                },
                 "planID": {
+                    "type": "integer"
+                },
+                "ppmID": {
                     "type": "integer"
                 },
                 "repoID": {
@@ -14594,8 +14809,14 @@ const docTemplate = `{
                 "ruleType": {
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleType"
                 },
-                "scanMethod": {
-                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanMethod"
+                "scanMethods": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanMethod"
+                    }
+                },
+                "severity": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.AiScanIssueSeverity"
                 },
                 "sort": {
                     "type": "string",
@@ -14603,6 +14824,9 @@ const docTemplate = `{
                 },
                 "status": {
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanIssueStatus"
+                },
+                "title": {
+                    "type": "string"
                 },
                 "tool": {
                     "type": "string"
@@ -15080,20 +15304,20 @@ const docTemplate = `{
                 "branch": {
                     "type": "string"
                 },
+                "category": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.AiScanIssueCategory"
+                },
+                "content": {
+                    "type": "string"
+                },
                 "createDate": {
                     "type": "string"
                 },
                 "detectionStatus": {
                     "type": "string"
                 },
-                "file": {
-                    "type": "string"
-                },
                 "id": {
                     "type": "integer"
-                },
-                "message": {
-                    "type": "string"
                 },
                 "order": {
                     "type": "string",
@@ -15107,7 +15331,13 @@ const docTemplate = `{
                     "type": "integer",
                     "default": 20
                 },
+                "path": {
+                    "type": "string"
+                },
                 "planID": {
+                    "type": "integer"
+                },
+                "ppmID": {
                     "type": "integer"
                 },
                 "repoID": {
@@ -15122,8 +15352,14 @@ const docTemplate = `{
                 "ruleType": {
                     "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanRuleType"
                 },
-                "scanMethod": {
-                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanMethod"
+                "scanMethods": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.ScanMethod"
+                    }
+                },
+                "severity": {
+                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_constant.AiScanIssueSeverity"
                 },
                 "sort": {
                     "type": "string",
@@ -15134,6 +15370,9 @@ const docTemplate = `{
                 },
                 "taskID": {
                     "type": "integer"
+                },
+                "title": {
+                    "type": "string"
                 },
                 "tool": {
                     "type": "string"
@@ -15931,6 +16170,9 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "account": {
+                    "type": "string"
+                },
+                "display_name": {
                     "type": "string"
                 },
                 "email": {

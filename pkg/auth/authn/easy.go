@@ -79,6 +79,7 @@ func (a *EasyAuthenticator) Authenticate(r *gin.Context) (*auth.Session, error) 
 				Email:       HeaderAdminEmail,
 			}, User: &principal.User{
 				Account: a.config.PipelineAuth.UserName,
+				Email:   HeaderAdminEmail,
 			},
 		}, nil
 	}

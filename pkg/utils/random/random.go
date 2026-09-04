@@ -5,7 +5,7 @@ import (
 	"errors"
 	"math"
 	"math/rand"
-	"os"
+	"sync"
 	"time"
 	"unsafe"
 )
@@ -20,10 +20,11 @@ const (
 	AllChars        = Numeral + LowwerLetters + UpperLetters + SymbolChars
 )
 
-var rn = rand.NewSource(time.Now().UnixNano())
-
-func init() {
-	rand.Seed(time.Now().UnixNano())
+// randPool 每个 goroutine 从池中取独立的 *rand.Rand，避免并发共享同一 Source 导致数据竞争。
+var randPool = sync.Pool{
+	New: func() any {
+		return rand.New(rand.NewSource(time.Now().UnixNano()))
+	},
 }
 
 // RandInt generate random int between [min, max).
@@ -124,10 +125,9 @@ func UID(l UIDLength) (string, error) {
 // random generate a random string based on given string range.
 // 基于给定的字符串范围生成随机字符串。
 func random(s string, length int) string {
-	// 确保随机数生成器的种子是动态的
-	pid := os.Getpid()
-	timestamp := time.Now().UnixNano()
-	rand.Seed(int64(pid) + timestamp)
+	// 从池中取独立的 rand.Rand，用完归还，避免并发竞态
+	rn := randPool.Get().(*rand.Rand)
+	defer randPool.Put(rn)
 
 	// 仿照strings.Builder
 	// 创建一个长度为 length 的字节切片

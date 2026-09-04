@@ -22,6 +22,18 @@ func registerRunnerRoutes(r *gin.RouterGroup, controller *Controller) {
 
 // registerRunnerClientRoutes 注册 Runner 客户端相关路由
 func registerRunnerClientRoutes(runner *gin.RouterGroup, controller *Controller) {
+	// 启动阶段
+	runner.POST("/ping", controller.Runner.Ping)
 	runner.POST("/register", controller.Runner.Register)
 	runner.POST("/keep-alive", controller.Runner.UpdateHeartBeat)
+
+	// 拉取执行
+	runner.POST("/stage", controller.Runner.RequestStage)
+	runner.POST("/stage/:stageID", controller.Runner.AcceptStage)
+	runner.GET("/stage/:stageID", controller.Runner.DetailStage)
+	runner.PUT("/stage/:stageID", controller.Runner.UpdateStage)
+	runner.PUT("/step/:stepID", controller.Runner.UpdateStep)
+	runner.POST("/build/:buildID/watch", controller.Runner.WatchBuild)
+	runner.POST("/step/:stepID/logs/batch", controller.Runner.BatchLogs)
+	runner.POST("/step/:stepID/logs/upload", controller.Runner.UploadLogs)
 }

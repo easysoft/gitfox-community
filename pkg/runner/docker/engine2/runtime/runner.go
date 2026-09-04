@@ -6,10 +6,12 @@ package runtime
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"regexp"
 	"time"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/manager"
 	harness "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pipeline/spec"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pipeline/spec/parse/expand"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pipeline/spec/parse/normalize"
@@ -32,6 +34,10 @@ import (
 )
 
 var noContext = context.Background()
+
+// watchRetryInterval is the delay between Watch attempts when the
+// cancellation watch is interrupted by a transient error.
+const watchRetryInterval = 3 * time.Second
 
 // Runner runs the pipeline.
 type Runner struct {
@@ -64,7 +70,7 @@ type Runner struct {
 }
 
 // Run runs the pipeline stage.
-func (s *Runner) Run(ctx context.Context, stage *drone.Stage) error {
+func (s *Runner) Run(ctx context.Context, stage *drone.Stage) (err error) {
 	stageInfo := fmt.Sprintf("stage.id=%d, stage.name=%s, stage.number=%d", stage.ID, stage.Name, stage.Number)
 	logger.GetLogger(ctx).Infof("[pipeline]: stage received, %s", stageInfo)
 
@@ -73,7 +79,7 @@ func (s *Runner) Run(ctx context.Context, stage *drone.Stage) error {
 	// receipt of the stage can assume ownership.
 
 	stage.Machine = s.Machine
-	err := s.Client.Accept(ctx, stage)
+	err = s.Client.Accept(ctx, stage)
 	if err != nil && err == client.ErrOptimisticLock {
 		logger.GetLogger(ctx).Infof("[pipeline]: stage accepted by another runner, %s", stageInfo)
 		return nil
@@ -84,6 +90,42 @@ func (s *Runner) Run(ctx context.Context, stage *drone.Stage) error {
 	}
 
 	logger.GetLogger(ctx).Infof("[pipeline]: stage accepted, %s", stageInfo)
+
+	// The stage is now claimed by this runner (host assigned, status pending).
+	// Any failure from here on — including a panic — must be reported back as
+	// a terminal status; otherwise the stage stays pending with host assigned
+	// forever, is never re-dispatched and blocks the pipeline queue.
+	defer func() {
+		var panicked interface{}
+		if r := recover(); r != nil {
+			panicked = r
+			err = fmt.Errorf("panic received: %v", r)
+		}
+		if err == nil {
+			return
+		}
+		// The server has already written a terminal state for this stage
+		// (killed/skipped) — either the execution was cancelled while the
+		// stage was in flight (BeforeStage refused), the canceler marked
+		// the step terminal mid-execution (step update refused), or the
+		// stage completion report itself was refused (AfterStage refused).
+		// Reporting StatusError here would overwrite the server's terminal
+		// state, so skip the report for all three sentinels.
+		if errors.Is(err, manager.ErrStageCancelled) || errors.Is(err, manager.ErrStepTerminal) || errors.Is(err, manager.ErrStageTerminal) {
+			logger.GetLogger(ctx).Infof("[pipeline]: stage already terminal on server, skip error report, %s, err=%v", stageInfo, err)
+			return
+		}
+		stage.Status = drone.StatusError
+		stage.Error = err.Error()
+		stage.Stopped = time.Now().Unix()
+		if upErr := s.Client.Update(ctx, stage); upErr != nil {
+			logger.GetLogger(ctx).Errorf("[pipeline]: cannot report stage failure, %s, err=%v", stageInfo, upErr)
+		}
+		if panicked != nil {
+			// re-panic so the caller (poller runWithRecovery) still logs the stack
+			panic(panicked)
+		}
+	}()
 
 	data, err := s.Client.Detail(ctx, stage)
 	if err != nil {
@@ -120,12 +162,28 @@ func (s *Runner) run(ctx context.Context, stage *drone.Stage, data *client.Conte
 	// cancellation requests. If a build is cancelled the running
 	// stage should also be cancelled.
 	go func() {
-		done, _ := s.Client.Watch(ctxdone, data.Build.ID)
-		if done {
-			cancel()
-			logger.GetLogger(ctx).Infof("[pipeline]: received cancellation, %s", stageInfo)
-		} else {
-			logger.GetLogger(ctx).Infof("[pipeline]: done listening for cancellations, %s", stageInfo)
+		for {
+			done, err := s.Client.Watch(ctxdone, data.Build.ID)
+			if done {
+				cancel()
+				logger.GetLogger(ctx).Infof("[pipeline]: received cancellation, %s", stageInfo)
+				return
+			}
+			if ctxdone.Err() != nil {
+				// the stage finished or the parent context was
+				// cancelled, nothing more to listen for.
+				logger.GetLogger(ctx).Infof("[pipeline]: done listening for cancellations, %s", stageInfo)
+				return
+			}
+			// Watch returned without a cancel signal (e.g. a transient
+			// error). Retry after a short delay so the stage does not
+			// permanently lose the cancellation notification.
+			logger.GetLogger(ctx).Warnf("[pipeline]: watch interrupted unexpectedly, err=%v, retrying, %s", err, stageInfo)
+			select {
+			case <-ctxdone.Done():
+				return
+			case <-time.After(watchRetryInterval):
+			}
 		}
 	}()
 

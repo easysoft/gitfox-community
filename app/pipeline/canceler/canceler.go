@@ -6,6 +6,7 @@ import (
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/scheduler"
 	executionStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/execution"
 	pipelineStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/pipeline"
 	stageStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/stage"
@@ -19,7 +20,7 @@ type service struct {
 	pipelineStore  pipelineStore.Interface
 	stageStore     stageStore.Interface
 	stepStore      stepStore.Interface
-	// scheduler      scheduler.Scheduler
+	scheduler      scheduler.Scheduler
 }
 
 // Canceler cancels a build.
@@ -35,13 +36,14 @@ func New(
 	pipelineStore pipelineStore.Interface,
 	stageStore stageStore.Interface,
 	stepStore stepStore.Interface,
-	// scheduler scheduler.Scheduler,
+	scheduler scheduler.Scheduler,
 ) Canceler {
 	return &service{
 		executionStore: executionStore,
 		pipelineStore:  pipelineStore,
 		stageStore:     stageStore,
 		stepStore:      stepStore,
+		scheduler:      scheduler,
 	}
 }
 
@@ -129,6 +131,14 @@ func (s *service) Cancel(ctx context.Context, executionID uint, account string) 
 				log.Errorf("[canceler]: could not update step %d status: %v", step.ID, err)
 			}
 		}
+	}
+
+	// notify the scheduler so any runner watching for cancellation
+	// requests (via Watch) is woken up immediately and kills the
+	// running containers. Without this, the in-memory cancel signal
+	// is never delivered and the runner keeps running to completion.
+	if err := s.scheduler.Cancel(ctx, int64(execution.ID)); err != nil {
+		log.Errorf("[canceler]: could not notify scheduler: %v", err)
 	}
 
 	log.Infof("[canceler]: cancelled execution %d successfully", execution.ID)

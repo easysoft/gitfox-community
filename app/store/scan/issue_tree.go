@@ -3,36 +3,40 @@ package scan
 import (
 	"context"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	scanModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
 )
 
 // ListDistinctFilesByRepo 按仓库或任务维度聚合 issue 文件路径
-func (s *ScanIssueStore) ListDistinctFilesByRepo(ctx context.Context, repoID int64, taskFilter *scanModel.IssueTaskFilter) ([]*scanModel.IssueFileRaw, error) {
+func (s *ScanIssueStore) ListDistinctFilesByRepo(ctx context.Context, repoID int64, scanMethods []constant.ScanMethod, taskFilter *scanModel.IssueTaskFilter) ([]*scanModel.IssueFileRaw, error) {
 	if taskFilter != nil {
-		return s.listDistinctFilesByTask(ctx, taskFilter)
+		return s.listDistinctFilesByTask(ctx, taskFilter, scanMethods)
 	}
-	return s.listDistinctFilesByRepo(ctx, repoID)
+	return s.listDistinctFilesByRepo(ctx, repoID, scanMethods)
 }
 
-func (s *ScanIssueStore) listDistinctFilesByRepo(ctx context.Context, repoID int64) ([]*scanModel.IssueFileRaw, error) {
+func (s *ScanIssueStore) listDistinctFilesByRepo(ctx context.Context, repoID int64, scanMethods []constant.ScanMethod) ([]*scanModel.IssueFileRaw, error) {
 	var dst []*scanModel.IssueFileRaw
-	err := s.db.WithContext(ctx).
+	stmt := s.db.WithContext(ctx).
 		Table("ops_scan_issues").
 		Select("repoBranch, path, COUNT(*) AS totalCount").
 		Where("repoID = ? AND deleted = ?", repoID, 0).
 		Group("repoBranch, path").
-		Order("totalCount DESC").
-		Find(&dst).Error
+		Order("totalCount DESC")
+	if len(scanMethods) > 0 {
+		stmt = stmt.Where("scanMethod IN ?", scanMethods)
+	}
+	err := stmt.Find(&dst).Error
 	if err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
 	return dst, nil
 }
 
-func (s *ScanIssueStore) listDistinctFilesByTask(ctx context.Context, filter *scanModel.IssueTaskFilter) ([]*scanModel.IssueFileRaw, error) {
+func (s *ScanIssueStore) listDistinctFilesByTask(ctx context.Context, filter *scanModel.IssueTaskFilter, scanMethods []constant.ScanMethod) ([]*scanModel.IssueFileRaw, error) {
 	var dst []*scanModel.IssueFileRaw
-	err := s.db.WithContext(ctx).
+	stmt := s.db.WithContext(ctx).
 		Table("ops_scan_issues AS i").
 		Select("i.repoBranch, i.path, COUNT(*) AS totalCount").
 		Joins("LEFT JOIN ops_scan_tasks AS t ON i.updatedByTaskID = t.id").
@@ -40,8 +44,11 @@ func (s *ScanIssueStore) listDistinctFilesByTask(ctx context.Context, filter *sc
 		Where("p.id = ? AND i.repoID = ? AND i.repoBranch = ? AND i.createdByTaskID <= ? AND i.deleted = ?",
 			filter.PlanID, filter.RepoID, filter.Branch, filter.TaskID, false).
 		Group("i.repoBranch, i.path").
-		Order("totalCount DESC").
-		Find(&dst).Error
+		Order("totalCount DESC")
+	if len(scanMethods) > 0 {
+		stmt = stmt.Where("i.scanMethod IN ?", scanMethods)
+	}
+	err := stmt.Find(&dst).Error
 	if err != nil {
 		return nil, database.ProcessSQLErrorf(ctx, err)
 	}
