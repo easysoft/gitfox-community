@@ -237,7 +237,11 @@ func (s *ScanIssueStore) UpdateResolution(ctx context.Context, ids []int64, reso
 	if len(ids) == 0 {
 		return nil
 	}
-	updates := map[string]any{"resolution": resolution}
+	// resolution 为 nil 表示清空解决方案，写入空串而非 NULL（列 NOT NULL）
+	updates := map[string]any{"resolution": constant.ScanIssueResolutionNull}
+	if resolution != nil {
+		updates["resolution"] = resolution
+	}
 	if operator != "" {
 		updates["editedBy"] = operator
 	}
@@ -303,8 +307,8 @@ func (s *ScanIssueStore) ResetExpiredIgnore(ctx context.Context, ids []int64, op
 	}
 	updates := map[string]any{
 		"status":      constant.ScanIssueStatusWait,
-		"resolution":  nil,
-		"ignoredDate": nil,
+		"resolution":  constant.ScanIssueResolutionNull,
+		"ignoredDate": int64(0),
 	}
 	if operator != "" {
 		updates["editedBy"] = operator
