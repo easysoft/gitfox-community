@@ -12,6 +12,7 @@ import (
 	repoStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
 	userStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/user"
 	webhookStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/webhook"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/events"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/url"
@@ -27,6 +28,7 @@ var WebhookWireSet = wire.NewSet(
 
 func ProvideWebhookService(
 	eventCtx *EventContext,
+	devopsConfig config.DevopsConfig,
 	git git.Interface,
 	gitReaderFactory *events.ReaderFactory[*gitevents.Reader],
 	prReaderFactory *events.ReaderFactory[*pullreqevents.Reader],
@@ -46,6 +48,7 @@ func ProvideWebhookService(
 	return webhookSvc.NewWebhookSvc(
 		eventCtx.Ctx,
 		cfg,
+		devopsConfig,
 		git,
 		gitReaderFactory,
 		prReaderFactory,
