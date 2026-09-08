@@ -447,13 +447,7 @@ func findConfigFilePaths(mode, ext string) (string, error) {
 	return configPath, nil
 }
 
+// composeDatasource 根据数据库驱动拼接 DSN。Datasource 已显式配置时不会被调用。
 func composeDatasource(config *Config) string {
-	return fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true&loc=%s",
-		config.Database.User,
-		config.Database.Password,
-		config.Database.Host,
-		config.Database.Port,
-		config.Database.Name,
-		url.QueryEscape(config.Database.Timezone))
+	return composerFor(config.Database.Driver).Compose(config.Database)
 }
-

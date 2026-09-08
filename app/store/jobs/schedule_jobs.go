@@ -9,7 +9,6 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 )
 
 var _ Interface = (*Store)(nil)
@@ -80,20 +79,45 @@ func (s *Store) Upsert(ctx context.Context, job *jobModel.ScheduleJob) error {
 	storeJob := mapJobToStore(job)
 	storeJob.EditedDate = datetime.NowLocalTime()
 
-	// 使用 ON DUPLICATE KEY UPDATE 进行 upsert
-	// 只有当定义字段有变化时才更新
-	if err := s.db.WithContext(ctx).Clauses(clause.OnConflict{
-		Columns: []clause.Column{{Name: "name"}},
-		DoUpdates: clause.AssignmentColumns([]string{
-			"editedDate", "type", "priority", "data", "result",
-			"maxDurationSeconds", "maxRetries", "state",
-			"scheduled", "isRecurring", "recurringCron",
-		}),
-	}).Create(storeJob).Error; err != nil {
+	// 改为事务内“先查后写”，并兼容并发插入（创建失败时重查转更新）。
+	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var existing ScheduleJob
+		err := tx.Where("name = ?", storeJob.Name).First(&existing).Error
+		switch {
+		case err == gorm.ErrRecordNotFound:
+			if createErr := tx.Create(storeJob).Error; createErr != nil {
+				// 并发下另一事务已插入同名记录：重查命中则转更新，否则返回原错误
+				if retryErr := tx.Where("name = ?", storeJob.Name).First(&existing).Error; retryErr != nil {
+					return createErr
+				}
+			} else {
+				job.ID = uint(storeJob.ID)
+				return nil
+			}
+		case err != nil:
+			return err
+		}
+
+		if err := tx.Model(&ScheduleJob{}).
+			Where("name = ?", storeJob.Name).
+			Select(upsertUpdateColumns).
+			Updates(storeJob).Error; err != nil {
+			return err
+		}
+		job.ID = uint(existing.ID)
+		return nil
+	})
+	if err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
 	}
-	job.ID = uint(storeJob.ID)
 	return nil
+}
+
+// upsertUpdateColumns 与旧 ON DUPLICATE KEY UPDATE / MERGE 的更新列保持一致。
+var upsertUpdateColumns = []string{
+	"editedDate", "type", "priority", "data", "result",
+	"maxDurationSeconds", "maxRetries", "state",
+	"scheduled", "isRecurring", "recurringCron",
 }
 
 // UpdateDefinition is used to update a job definition.
