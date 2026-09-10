@@ -358,6 +358,7 @@ func (r *Repository) createDefaultWebhook(ctx context.Context, repo *repoModel.R
 		RepoID:      int64(repo.ID),
 		DisplayName: displayName,
 		URL:         fmt.Sprintf("%s/gitfox/webhook?repoID=%d", r.devopsConfig.URL, repo.ID),
+		Secret:      repo.GitUID,
 		IsSSL:       false,
 		Internal:    false,
 		AuthMethod:  constant.DefaultAuthMethod,
