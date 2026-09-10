@@ -19,7 +19,7 @@ func TestSubmitCodeReview(t *testing.T) {
 	}))
 	defer server.Close()
 
-	err := SubmitCodeReview(context.Background(), server.URL+"/", 123, "devops-token")
+	err := SubmitCodeReview(context.Background(), server.URL+"/", 123, "admin", "devops-token")
 	if err != nil {
 		t.Fatalf("SubmitCodeReview() error = %v", err)
 	}
