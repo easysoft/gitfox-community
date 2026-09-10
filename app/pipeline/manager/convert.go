@@ -234,10 +234,34 @@ func ConvertFromDroneStage(stage *drone.Stage) *stageModel.StageWithSteps {
 	}
 }
 
-func ConvertFromDroneLine(l *drone.Line) *livelog.Line {
+// absoluteTimestampThreshold 用于区分 runner 上报的时间戳是相对值还是绝对值：
+// runner-go 原生的 livelog.Writer 写入的是“相对该 step 日志流起点的秒数”，
+// 而部分 runner（如 gitfox-runner-exec）为兼容旧服务端会替换成绝对 Unix 秒。
+// 相对秒数不可能达到该阈值（约 31 年），因此用它来区分是安全的。
+const absoluteTimestampThreshold = 1_000_000_000
+
+// ResolveLineTimestamp 把 runner 上报的日志时间戳统一换算成绝对 Unix 秒。
+// base 是该 step 日志流的起始时间（step.Started）：
+//   - 相对时间戳换算为 base + 相对秒数；
+//   - 已是绝对时间的原样保留；
+//   - base 取不到（零值）时退回当前时间。
+func ResolveLineTimestamp(ts int64, base time.Time) int64 {
+	if ts >= absoluteTimestampThreshold {
+		return ts
+	}
+	if base.IsZero() {
+		return time.Now().Unix()
+	}
+	return base.Unix() + ts
+}
+
+// ConvertFromDroneLine 把 runner 上报的日志行转换为内部日志行。
+// runner 上报的时间是相对 step 日志流起点的秒数，必须用 base（step 开始时间）
+// 换算成绝对时间；否则一次性上传全部日志时每行都会取到同一个 time.Now()。
+func ConvertFromDroneLine(l *drone.Line, base time.Time) *livelog.Line {
 	return &livelog.Line{
 		Number:    l.Number,
 		Message:   l.Message,
-		Timestamp: time.Now().Unix(),
+		Timestamp: ResolveLineTimestamp(l.Timestamp, base),
 	}
 }
