@@ -54,7 +54,6 @@ ENV GITFOX_SSH_PORT=3322
 # 日志输出的最低级别  -1~5：debug,info,warn,error,dpanic,panic,fatal
 ENV GITFOX_LOG_LEVEL=0
 ENV GITFOX_DOCKER_HOST=unix:///var/run/docker.sock
-ENV GITFOX_DOCKER_API_VERSION=1.41
 
 ENV GITFOX_CI_PLUGINS_ZIP_URL=https://pkg.zentao.net/gitfox/2.0_beta1/plugins.tar.gz
 
