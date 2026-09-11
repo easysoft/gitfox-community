@@ -301,7 +301,7 @@ func NewApp(mode string) (*App, func(), error) {
 	scanController := scan3.NewScanController(ruleSetService, ruleService, solutionService, scanTaskService, scanPlanService, scanTriggerService, scanConditionService, scanPlanConditionService, repoService, gitService, aiReviewService)
 	fitService := fit.NewService(tokenInterface, devopsConfig)
 	fitController := fit2.NewController(fitService, repoService, service)
-	webhookService, err := provider.ProvideWebhookService(eventContext, gitService, readerFactory, eventsReaderFactory, webhookStore, store, repoService, pullrequestStore, userStore, urlProvider)
+	webhookService, err := provider.ProvideWebhookService(eventContext, devopsConfig, gitService, readerFactory, eventsReaderFactory, webhookStore, store, repoService, pullrequestStore, userStore, urlProvider)
 	if err != nil {
 		cleanup2()
 		cleanup()

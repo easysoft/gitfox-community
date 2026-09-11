@@ -678,7 +678,12 @@ func (ctl *Controller) BatchLogs(c *gin.Context) {
 		return
 	}
 
+	// runner 上报的时间是相对该 step 日志流起点的秒数，需要以 step 开始时间为基准换算成绝对时间
+	base := ctl.execManager.StepStartTime(c.Request.Context(), stepID)
 	for _, l := range lines {
+		if l != nil {
+			l.Timestamp = manager.ResolveLineTimestamp(l.Timestamp, base)
+		}
 		if err := ctl.execManager.Write(c.Request.Context(), stepID, l); err != nil {
 			err = errors.WithI18nKey(err, i18n.RunnerLogBatchError)
 			resp.InternalError(c, err)
@@ -710,9 +715,12 @@ func (ctl *Controller) UploadLogs(c *gin.Context) {
 		return
 	}
 
+	// runner 上报的时间是相对该 step 日志流起点的秒数，需要以 step 开始时间为基准换算成绝对时间
+	base := ctl.execManager.StepStartTime(c.Request.Context(), stepID)
 	logLines := make([]livelog.Line, len(lines))
 	for i, l := range lines {
 		if l != nil {
+			l.Timestamp = manager.ResolveLineTimestamp(l.Timestamp, base)
 			logLines[i] = *l
 		}
 	}

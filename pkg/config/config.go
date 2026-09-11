@@ -145,7 +145,7 @@ type MetricConfig struct {
 type CiConfig struct {
 	PluginsZipUrl     string   `envconfig:"GITFOX_CI_PLUGINS_ZIP_URL"`
 	Runner            string   `envconfig:"GITFOX_CI_RUNNER"`
-	ParallelWorkers   uint     `envconfig:"GITFOX_CI_ParallelWorkers" default:"2"`
+	ParallelWorkers   uint     `envconfig:"GITFOX_CI_PARALLELWORKERS" default:"2"`
 	ContainerNetworks []string `envconfig:"GITFOX_CI_CONTAINER_NETWORKS"`
 	ContainerVolume   string   `envconfig:"GITFOX_CI_CONTAINER_VOLUME"`
 }
