@@ -12,6 +12,7 @@ import (
 	pipelineService "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/pipeline"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/utils"
 	pipelineStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/pipeline"
+	repoStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
 	scanStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/scan"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/token"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
@@ -31,6 +32,8 @@ type AIReviewService struct {
 	pipelineSvc   pipelineService.Interface
 	triggerSvc    triggerer.Triggerer
 	tokenStore    token.Interface
+	repoStore     repoStore.Interface
+	commitLister  CommitLister
 }
 
 var _ IAIReview = (*AIReviewService)(nil)
@@ -42,6 +45,8 @@ func NewService(
 	pipelineService pipelineService.Interface,
 	triggerSvc triggerer.Triggerer,
 	tokenStore token.Interface,
+	repoStore repoStore.Interface,
+	commitLister CommitLister,
 ) *AIReviewService {
 	return &AIReviewService{
 		aireviewStore: aireviewStore,
@@ -50,7 +55,63 @@ func NewService(
 		pipelineSvc:   pipelineService,
 		triggerSvc:    triggerSvc,
 		tokenStore:    tokenStore,
+		repoStore:     repoStore,
+		commitLister:  commitLister,
 	}
+}
+
+// GetReviewRange 解析指定分支的评审范围，供 aireview 插件在非内嵌流水线
+// （INNER_PIPELINE 非 "true"）中调用 GET /scan/aicodereview/review-range 获取。
+// 口径与该插件在事件触发（内嵌流水线）下的评审范围一致：取分支最新两笔提交，
+// 次新为起点、最新为终点（即评审最新那一笔的改动）；分支只有一笔提交时两者相同，
+// ocr 会返回 skipped 空报告，不上报 issue。分支无提交或不存在时报错。
+func (s *AIReviewService) GetReviewRange(ctx context.Context, repoID uint, branch string) (*model.AIReviewRange, error) {
+	if branch == "" {
+		return nil, fmt.Errorf("评审分支为空，无法确定评审范围")
+	}
+	repo, err := s.repoStore.GetByID(ctx, repoID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get repo by ID %d: %w", repoID, err)
+	}
+
+	shas, err := listLatestCommits(ctx, s.commitLister, repo.GitUID, branch)
+	if err != nil {
+		return nil, err
+	}
+	commitBefore, commitAfter, err := buildLatestTwoCommitRange(branch, shas)
+	if err != nil {
+		return nil, err
+	}
+	return &model.AIReviewRange{CommitBefore: commitBefore, CommitAfter: commitAfter}, nil
+}
+
+// GetAIReviewConfig 获取 AI 评审（OCR LLM）配置。
+// aireview 插件在非内嵌流水线（INNER_PIPELINE 非 "true"）中不再由 gitfox 直传 OCR_LLM_*，
+// 改由插件通过 GET /scan/aicodereview/ai-config 拉取。取值口径与 TriggerCodeReview 中
+// 注入 OCR_LLM_* 环境变量保持一致。
+func (s *AIReviewService) GetAIReviewConfig(ctx context.Context) (*model.AIReviewConfig, error) {
+	// 从 DevOps 平台获取 AI 模型设置
+	entry, err := s.tokenStore.GetDevopsToken(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get devops token: %w", err)
+	}
+	aiSetting, err := utils.GetAIModelSetting(ctx, s.config.Devops.URL, entry.Key)
+	if err != nil || !aiSetting.Enable {
+		return nil, fmt.Errorf("failed to get AI model setting: %w", err)
+	}
+
+	language := "English"
+	if aiSetting.ZaiLanguage == "chinese" {
+		language = "中文"
+	}
+	return &model.AIReviewConfig{
+		LLMProvider: "zai",
+		LLMUrl:      aiSetting.ZaiURL,
+		LLMProtocol: "openai",
+		LLMApiKey:   aiSetting.ZaiToken,
+		LLMModel:    aiSetting.Model,
+		LLMLanguage: language,
+	}, nil
 }
 
 func (s *AIReviewService) GetAIReviewRules(ctx context.Context) ([]*model.AIReviewRule, error) {
@@ -72,13 +133,10 @@ type CodeReviewInput struct {
 // TriggerCodeReview 触发代码审查流水线
 func (s *AIReviewService) TriggerCodeReview(ctx context.Context, in *CodeReviewInput) (*executionModel.Execution, error) {
 	// 注入代码审查参数到 Hook.Params，随流水线传递到容器环境变量
+	in.Hook.Params["INNER_PIPELINE"] = "true"
 	in.Hook.Params["PPM_ID"] = fmt.Sprintf("%d", in.PullReqID)
-	in.Hook.Params["REPO_ID"] = fmt.Sprintf("%d", in.Repo.ID)
-	// 注入 git clone 需要的参数
-	in.Hook.Params["PLUGIN_CLONE_DIR"] = in.Repo.Identifier // 供流水线中插件使用，表示代码 clone 的目录
-	// 注入 gitfox 调用接口时需要的参数
-	in.Hook.Params["GITFOX_API_ENDPOINT"] = s.config.URL.Base + "/api/v2"
-	in.Hook.Params["PLUGIN_TOKEN"] = s.config.PipelineAuth.Password
+	in.Hook.Params["SCAN_REPO_ID"] = fmt.Sprintf("%d", in.Repo.ID)
+	in.Hook.Params["PLUGIN_WORKSPACE"] = in.Repo.Identifier // 供流水线中插件使用，表示代码 clone 的目录
 	// 注入评审所需参数（OCR LLM 配置），从 DevOps 平台获取 AI 模型设置
 	entry, err := s.tokenStore.GetDevopsToken(ctx)
 	if err != nil {

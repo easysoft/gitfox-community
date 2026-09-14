@@ -540,7 +540,10 @@ const (
 
 	// CodeReview 相关常量
 	CodeReviewBodyParamError      I18nKey = "codeReview.body_param_error"      // 请求体参数解析失败.
+	CodeReviewConfigSuccess       I18nKey = "codeReview.config_success"        // AI 评审配置查询成功.
 	CodeReviewPathParamError      I18nKey = "codeReview.path_param_error"      // 路径参数解析失败.
+	CodeReviewQueryParamError     I18nKey = "codeReview.query_param_error"     // 查询参数解析失败.
+	CodeReviewRangeSuccess        I18nKey = "codeReview.range_success"         // AI 评审范围查询成功.
 	CodeReviewReportUploadError   I18nKey = "codeReview.report_upload_error"   // 代码评审报告上传失败.
 	CodeReviewReportUploadSuccess I18nKey = "codeReview.report_upload_success" // 代码评审报告上传成功.
 	CodeReviewRuleListSuccess     I18nKey = "codeReview.rule_list_success"     // AI代码评审规则列表查询成功.

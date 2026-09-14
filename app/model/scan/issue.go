@@ -16,6 +16,7 @@ type ScanIssue struct {
 	Key             string                        `json:"key"`
 	RuleID          int64                         `json:"ruleID"`
 	PpmID           int64                         `json:"ppmID,omitempty"`
+	ExecutionID     int64                         `json:"executionID"`
 	Title           string                        `json:"title"`
 	Content         string                        `json:"content,omitempty"`
 	Path            string                        `json:"path"`
@@ -190,8 +191,8 @@ type IssuePayloadAI struct {
 }
 
 // UniqueKey 生成唯一标识
-func (t IssueInputAI) UniqueKey() string {
-	return fmt.Sprintf("ai/%d/%s/%d/%d", t.PpmID, t.Path, t.StartLine, t.EndLine)
+func (t IssueInputAI) UniqueKey(scopeID int64) string {
+	return fmt.Sprintf("ai/%d/%s/%d/%d", scopeID, t.Path, t.StartLine, t.EndLine)
 }
 
 // GenerateIssueKey 根据任务信息生成 issue 唯一 key
@@ -371,6 +372,7 @@ type ScanIssueInfo struct {
 	Category        constant.AiScanIssueCategory  `json:"category,omitempty"`
 	Severity        constant.AiScanIssueSeverity  `json:"severity,omitempty"`
 	PpmID           int64                         `json:"ppmID,omitempty"`
+	ExecutionID     int64                         `json:"executionID"`
 	PpmTitle        string                        `json:"ppmTitle,omitempty"`
 	RepoID          int64                         `json:"repoID"`
 	RepoBranch      string                        `json:"repoBranch"`

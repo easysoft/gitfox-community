@@ -10,12 +10,15 @@ import (
 	"strings"
 	"time"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/githook"
+	artifactModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
 	simpleJob "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/jobs"
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 	principal "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/user"
+	artifactSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/artifact"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/encrypt"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/jobs"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/sse"
@@ -58,6 +61,7 @@ type Repository struct {
 	sseStreamer   sse.Streamer
 	devopsConfig  config.DevopsConfig
 	webhookStore  webhookStore.Interface
+	artSvc        artifactSvc.Interface
 }
 
 var _ Interface = (*Repository)(nil)
@@ -76,6 +80,7 @@ func NewRepoImporterSvc(
 	sseStreamer sse.Streamer,
 	devopsConfig config.DevopsConfig,
 	webhookStore webhookStore.Interface,
+	artSvc artifactSvc.Interface,
 ) *Repository {
 	return &Repository{
 		defaultBranch: defaultBranch,
@@ -90,6 +95,7 @@ func NewRepoImporterSvc(
 		sseStreamer:   sseStreamer,
 		devopsConfig:  devopsConfig,
 		webhookStore:  webhookStore,
+		artSvc:        artSvc,
 	}
 }
 
@@ -337,6 +343,9 @@ func (r *Repository) Handle(ctx context.Context, data string, reportFn pkgJobs.P
 		if err = r.createDefaultWebhook(ctx, repo, log); err != nil {
 			return "", fmt.Errorf("completed repository import, but failed to create webhook: %w", err)
 		}
+		if err = r.createDefaultArtifactLib(ctx, repo, log); err != nil {
+			return "", fmt.Errorf("completed repository import, but failed to create default artifact lib: %w", err)
+		}
 	}
 
 	return "", nil
@@ -369,6 +378,38 @@ func (r *Repository) createDefaultWebhook(ctx context.Context, repo *repoModel.R
 	}
 	if _, err = r.webhookStore.Create(ctx, wh); err != nil {
 		log.Errorf("failed to create webhook: %v", err)
+		return err
+	}
+	return nil
+}
+
+// createDefaultArtifactLib 创建默认制品库（空库），与普通建仓时自动创建的默认库保持一致。
+// CreateLib 非幂等，同 scope 下已存在同名库时返回 ArtifactLibNameDuplicate，视为已创建跳过。
+func (r *Repository) createDefaultArtifactLib(ctx context.Context, repo *repoModel.Repo, log *logger.SugaredMateLogger) error {
+	// 后台任务 ctx 无鉴权会话，CreateLib 内部会从 ctx 读取 session 写入 CreatedBy/EditedBy，
+	// 这里以应用管理员身份注入，与 firstSyncGitRepo 中 accountInfo 的口径一致。
+	ctx = req.SetAuthSession(ctx, &auth.Session{
+		User: &principal.User{
+			Account: authn.HeaderAppAdmin,
+			Email:   authn.HeaderAdminEmail,
+		},
+	})
+
+	_, err := r.artSvc.CreateLib(ctx, &artifactModel.CreateArtifactLibReq{
+		SpaceRepoReq: artifactModel.SpaceRepoReq{
+			SpaceID: int64(repo.SpaceID),
+			RepoID:  int64(repo.ID),
+		},
+		Name:   artifactModel.DefaultArtifactLibName,
+		Code:   artifactModel.DefaultArtifactLibCode,
+		Format: string(artifactModel.ArtifactFileFormat),
+	})
+	if err != nil {
+		if errors.GetI18nKey(err) == i18n.ArtifactLibNameDuplicate {
+			log.Infof("default artifact lib already exists, skipping creation")
+			return nil
+		}
+		log.Errorf("failed to create default artifact lib: %v", err)
 		return err
 	}
 	return nil

@@ -1,15 +1,14 @@
 package scan
 
 import (
-	"fmt"
 	"io"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	scanModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/scan"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	"github.com/gin-gonic/gin"
 )
@@ -52,27 +51,11 @@ func (c *ScanController) ScanTaskCreate(ctx *gin.Context) {
 		return
 	}
 
-	// 获取分支信息以取得当前 SHA 和上一次 SHA
-	shas, err := c.gitPkg.ListCommitSHAs(ctx, &git.ListCommitsParams{
-		ReadParams: git.ReadParams{RepoUID: repo.GitUID},
-		GitREF:     body.Branch,
-		Page:       1,
-		Limit:      2,
-	})
+	// 按扫描计划的 scanType 解析提交范围：增量取最新两笔、全量取同一笔
+	sha, beforeSha, err := c.taskSvc.ResolveCommitRange(ctx.Request.Context(), repo.GitUID, constant.ScanType(plan.ScanType), body.Branch)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return
-	}
-	if len(shas) == 0 {
-		resp.InternalError(ctx, fmt.Errorf("no commits found on branch %s", body.Branch))
-		return
-	}
-	var sha, beforeSha string
-	sha = shas[0]
-	if len(shas) > 1 {
-		beforeSha = shas[1]
-	} else {
-		beforeSha = shas[0]
 	}
 
 	hook, err := c.taskSvc.CreateBranchHook(ctx.Request.Context(), repo, body.Branch, sha, beforeSha, session)
@@ -92,6 +75,32 @@ func (c *ScanController) ScanTaskCreate(ctx *gin.Context) {
 		return
 	}
 	resp.OK(ctx, i18n.ScanTaskCreateSuccess, data)
+}
+
+// ScanTaskCreateByRunner 流水线 runner 回调创建扫描任务
+// @Summary 创建扫描任务（流水线 runner 回调）
+// @Description codescan 插件在非内嵌流水线（INNER_PIPELINE 非 "true"）中扫描前回调本接口，创建扫描任务记录并返回 taskID 与 branch 分支的提交范围（commitBefore/commitAfter），插件据此写入 GITFOX_COMMIT_BEFORE/AFTER 判定扫描范围：两者相同为全量，不同为增量（按 git diff commitBefore 过滤报告行）
+// @Tags scan
+// @Accept application/json
+// @Produce application/json
+// @Param taskInfo body scanModel.ScanTaskRunnerCreateReq true "扫描任务信息"
+// @Success 200 {object} resp.ObjectResponse{data=scanModel.ScanTaskRunnerCreateResp} "创建成功"
+// @Failure 400 {object} resp.ObjectResponse "参数错误"
+// @Failure 500 {object} resp.ObjectResponse "服务器内部错误"
+// @Router /scan/tasks/create-by-runner [post]
+func (c *ScanController) ScanTaskCreateByRunner(ctx *gin.Context) {
+	var body scanModel.ScanTaskRunnerCreateReq
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.ScanTaskBodyParamError))
+		return
+	}
+
+	res, err := c.taskSvc.CreateRunnerTask(ctx.Request.Context(), &body)
+	if err != nil {
+		resp.InternalError(ctx, err)
+		return
+	}
+	resp.OK(ctx, i18n.ScanTaskCreateSuccess, res)
 }
 
 // ScanTaskList 查询扫描任务列表
@@ -188,7 +197,7 @@ func (c *ScanController) ScanTaskUploadReport(ctx *gin.Context) {
 		return
 	}
 
-	report, err := c.taskSvc.AnalyzeTaskUploadReport(ctx.Request.Context(), 0, taskID, method, content)
+	report, err := c.taskSvc.AnalyzeTaskUploadReport(ctx.Request.Context(), 0, taskID, 0, method, content)
 	if err != nil {
 		resp.InternalError(ctx, errors.WithI18nKey(err, i18n.ScanTaskReportUploadError))
 		return

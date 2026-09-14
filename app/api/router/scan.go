@@ -41,6 +41,8 @@ func registerScanRoutes(r *gin.RouterGroup, controller *Controller) {
 		// 扫描任务相关路由
 		tasks := rule.Group("/tasks")
 		tasks.POST("", controller.Scan.ScanTaskCreate)
+		// 流水线 runner 回调创建扫描任务（非内嵌流水线场景，无用户会话）
+		tasks.POST("/create-by-runner", controller.Scan.ScanTaskCreateByRunner)
 		tasks.POST("/list", controller.Scan.ScanTaskList)
 		tasks.GET("/:id", controller.Scan.ScanTaskGet)
 		tasks.POST("/:id/report", controller.Scan.ScanTaskUploadReport)
@@ -126,6 +128,10 @@ func registerScanRoutes(r *gin.RouterGroup, controller *Controller) {
 		// AI 代码评审相关路由
 		aicodereview := rule.Group("/aicodereview")
 		{
+			// aireview 插件拉取 AI 评审（OCR LLM）配置（非内嵌流水线场景，无用户会话）
+			aicodereview.GET("/ai-config", controller.Scan.GetAIReviewConfig)
+			// aireview 插件拉取评审范围（非内嵌流水线场景，按分支解析最新两笔提交）
+			aicodereview.GET("/review-range", controller.Scan.GetAIReviewRange)
 			aicodereview.POST("/:repoID/:ppmID/report", controller.Scan.ReviewTaskUploadReport)
 		}
 	}

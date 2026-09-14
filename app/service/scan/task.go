@@ -13,6 +13,7 @@ import (
 	scanModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/triggerer"
 	pipelineService "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/pipeline"
+	executionStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/execution"
 	pipelineStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/pipeline"
 	pullRequestStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/pullrequest"
 	repoStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
@@ -21,6 +22,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database/dbtx"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 )
 
@@ -67,9 +69,11 @@ type ScanTaskService struct {
 	repoStore        repoStore.Interface
 	pipelineStore    pipelineStore.Interface
 	pullRequestStore pullRequestStore.Interface
+	executionStore   executionStore.Interface
 	pipelineSvc      pipelineService.Interface
 	triggerSvc       triggerer.Triggerer
 	cronScheduler    CronScheduler
+	commitLister     CommitLister
 	tx               dbtx.TxRunner
 }
 
@@ -85,9 +89,11 @@ func NewScanTaskService(
 	repoStore repoStore.Interface,
 	pipelineStore pipelineStore.Interface,
 	pullRequestStore pullRequestStore.Interface,
+	executionStore executionStore.Interface,
 	pipelineService pipelineService.Interface,
 	triggerSvc triggerer.Triggerer,
 	cronScheduler CronScheduler,
+	commitLister CommitLister,
 	tx dbtx.TxRunner,
 ) *ScanTaskService {
 	return &ScanTaskService{
@@ -102,9 +108,11 @@ func NewScanTaskService(
 		repoStore:        repoStore,
 		pipelineStore:    pipelineStore,
 		pullRequestStore: pullRequestStore,
+		executionStore:   executionStore,
 		pipelineSvc:      pipelineService,
 		triggerSvc:       triggerSvc,
 		cronScheduler:    cronScheduler,
+		commitLister:     commitLister,
 		tx:               tx,
 	}
 }
@@ -149,6 +157,7 @@ func (s *ScanTaskService) Create(ctx context.Context, in *ScanTaskInput) (*scanM
 	if in.Trigger != nil {
 		triggerID = in.Trigger.ID
 	}
+	in.Hook.Params["INNER_PIPELINE"] = "true"
 	in.Hook.Params["SCAN_PLAN_ID"] = fmt.Sprintf("%d", in.Plan.ID)
 	in.Hook.Params["SCAN_TASK_ID"] = fmt.Sprintf("%d", created.ID)
 	in.Hook.Params["SCAN_TRIGGER_ID"] = fmt.Sprintf("%d", triggerID)
@@ -157,9 +166,6 @@ func (s *ScanTaskService) Create(ctx context.Context, in *ScanTaskInput) (*scanM
 	in.Hook.Params["gitURL"] = in.Repo.GitURL
 	in.Hook.Params["gitRef"] = in.Hook.Ref
 	in.Hook.Params["PLUGIN_WORKSPACE"] = in.Repo.Identifier // 供流水线中插件使用，表示代码 clone 的目录
-	// 注入 gitfoxscan 调用接口时需要的参数
-	in.Hook.Params["GITFOX_API_ENDPOINT"] = s.config.URL.Base + "/api/v2"
-	in.Hook.Params["PLUGIN_TOKEN"] = s.config.PipelineAuth.Password
 
 	// 获取或创建代码扫描流水线
 	pipeline, err := s.getOrCreatePipeline(ctx, in.Plan.RepoID, in)
@@ -183,6 +189,138 @@ func (s *ScanTaskService) Create(ctx context.Context, in *ScanTaskInput) (*scanM
 	created.ExecutionID = int64(execution.ID)
 
 	return created, nil
+}
+
+// CreateRunnerTask 创建流水线 runner 回调的扫描任务（非内嵌流水线场景）。
+// codescan 插件以普通插件方式运行于流水线（gitfox 未注入 SCAN_TASK_ID，INNER_PIPELINE 非
+// "true"）时，由插件在扫描前调用本方法创建任务记录、换取 taskID 与该分支的提交范围
+// （commitBefore/commitAfter，供插件判定增量/全量，见 resolveRunnerCommitRange）。
+// 与 Create 不同：流水线已在执行中，这里不创建/触发代码扫描流水线，只按 body 透传的
+// executionID/triggerType 落任务记录（triggerID 不落库，见函数内注释）。
+func (s *ScanTaskService) CreateRunnerTask(ctx context.Context, in *scanModel.ScanTaskRunnerCreateReq) (*scanModel.ScanTaskRunnerCreateResp, error) {
+	// 根据 body 中的 repoID/planID 查询 repo 和 plan，并校验 plan 归属
+	repo, err := s.repoStore.GetByID(ctx, uint(in.RepoID))
+	if err != nil {
+		return nil, fmt.Errorf("failed to get repo by ID %d: %w", in.RepoID, err)
+	}
+	plan, err := s.planStore.GetByID(ctx, uint(in.PlanID))
+	if err != nil {
+		return nil, fmt.Errorf("failed to get scan plan by ID %d: %w", in.PlanID, err)
+	}
+	if plan.RepoID != int64(repo.ID) {
+		return nil, fmt.Errorf("scan plan %d does not belong to repo %d", in.PlanID, in.RepoID)
+	}
+
+	// 解析提交范围：按计划的 scanType 取 body.Branch 的最新两笔（增量）或同一笔（全量）。
+	// 放在序号分配之前，查询失败时不留任何副作用（不烧计数、不留孤儿任务行）
+	commitBefore, commitAfter, err := s.ResolveCommitRange(ctx, repo.GitUID, constant.ScanType(plan.ScanType), in.Branch)
+	if err != nil {
+		return nil, err
+	}
+
+	// 计算序号
+	planNumber, err := s.taskStore.NextPlanNumber(ctx, uint64(plan.ID))
+	if err != nil {
+		return nil, fmt.Errorf("failed to get next plan number: %w", err)
+	}
+	repoNumber, err := s.taskStore.NextRepoNumber(ctx, plan.RepoID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get next repo number: %w", err)
+	}
+
+	// 创建扫描任务记录，ExecutionID 直接取流水线执行 ID
+	task := &scanStore.ScanTask{
+		PlanID:      uint64(plan.ID),
+		ExecutionID: uint64(in.ExecutionID),
+		RepoNumber:  repoNumber,
+		PlanNumber:  planNumber,
+		ScanType:    constant.ScanType(plan.ScanType),
+		Status:      constant.ScanTaskStatusInProgress,
+	}
+	// 插件透传的是 GITFOX_BUILD_TRIGGER（TriggerAction 原值），归一为任务表记录的 manual/cron/action
+	task.TriggerType = normalizeScanTriggerType(in.TriggerType)
+	// 不落 triggerID：这类任务由普通流水线触发，其触发器与 scan 触发器不同表，
+	// triggerID 只由内置 scan 流水线（Create/Retry）写入
+
+	created, err := s.taskStore.Create(ctx, task)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create scan task: %w", err)
+	}
+	return &scanModel.ScanTaskRunnerCreateResp{
+		TaskID:       int64(created.ID),
+		CommitBefore: commitBefore,
+		CommitAfter:  commitAfter,
+	}, nil
+}
+
+// listLatestCommits 取 branch 最新两笔提交（倒序：[最新, 次新]）。
+// 包级函数：扫描任务（ScanTaskService）与 AI 评审（AIReviewService）共用。
+func listLatestCommits(ctx context.Context, lister CommitLister, repoUID, branch string) ([]string, error) {
+	shas, err := lister.ListCommitSHAs(ctx, &git.ListCommitsParams{
+		ReadParams: git.ReadParams{RepoUID: repoUID},
+		GitREF:     branch,
+		Page:       1,
+		Limit:      2,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to list commit SHAs for branch %s: %w", branch, err)
+	}
+	return shas, nil
+}
+
+// ResolveCommitRange 按扫描计划的 scanType 解析 branch 的提交范围，供内嵌流水线
+// （手动/定时/重试）与插件 create-by-runner（普通流水线）四条路径共用：
+// 增量取最新两笔（次新为 before、最新为 after，插件按 git diff 过滤报告行），
+// 全量取同一笔（before = after = 最新，插件走全量扫描）。scanType 为空或未知按全量。
+func (s *ScanTaskService) ResolveCommitRange(ctx context.Context, repoUID string, scanType constant.ScanType, branch string) (commitBefore, commitAfter string, err error) {
+	if branch == "" {
+		return "", "", fmt.Errorf("扫描分支为空，无法确定扫描范围")
+	}
+	shas, err := listLatestCommits(ctx, s.commitLister, repoUID, branch)
+	if err != nil {
+		return "", "", err
+	}
+	return buildCommitRange(scanType, branch, shas)
+}
+
+// buildCommitRange 是 ResolveCommitRange 的纯函数核心，便于单测。
+// 增量（scanType=incremental）→ 次新/最新；其余（full、scanType 为空或未知）→ 最新/最新。
+func buildCommitRange(scanType constant.ScanType, branch string, shas []string) (commitBefore, commitAfter string, err error) {
+	if scanType == constant.ScanTypeIncremental {
+		return buildLatestTwoCommitRange(branch, shas)
+	}
+	if len(shas) == 0 {
+		return "", "", fmt.Errorf("no commits found on branch %s", branch)
+	}
+	return shas[0], shas[0], nil
+}
+
+// buildLatestTwoCommitRange 是增量口径的纯函数核心：最新为 after、次新为 before；
+// 分支只有一笔提交时两者相同（增量无从谈起，插件按全量处理）。
+// shas 为 ListCommitSHAs(ref, page=1, limit=2) 的结果，按时间倒序：[最新, 次新]。
+func buildLatestTwoCommitRange(branch string, shas []string) (commitBefore, commitAfter string, err error) {
+	if len(shas) == 0 {
+		return "", "", fmt.Errorf("no commits found on branch %s", branch)
+	}
+	if len(shas) == 1 {
+		return shas[0], shas[0], nil
+	}
+	return shas[1], shas[0], nil
+}
+
+// normalizeScanTriggerType 把插件透传的 GITFOX_BUILD_TRIGGER 归一为扫描任务表
+// 记录的 manual/cron/action。该值取自 execution.Trigger（即 Hook.Action，为空时
+// triggerer 兜底为 "manual"），可能是 branch_updated/pullreq_created 等 TriggerAction
+// 原值，也可能是非枚举的 "manual"。
+func normalizeScanTriggerType(triggerType string) constant.ScanPlanTriggerType {
+	switch triggerType {
+	case "", string(constant.TriggerEventManual):
+		return constant.ScanPlanTriggerTypeManual
+	case string(constant.TriggerActionCron):
+		return constant.ScanPlanTriggerTypeCron
+	default:
+		return constant.ScanPlanTriggerTypeAction
+	}
 }
 
 func (s *ScanTaskService) CreateBranchHook(ctx context.Context, repo *repoModel.Repo, branch string, sha, beforeSha string, principal *authModel.Session) (*triggerer.Hook, error) {
@@ -219,15 +357,22 @@ func (s *ScanTaskService) Retry(ctx context.Context, session *authModel.Session,
 		return nil, errors.WithI18nKey(fmt.Errorf("failed to get scan plan: %w", err), i18n.ScanTaskRetryError)
 	}
 
-	// 构建重试 Hook
-	hook := &triggerer.Hook{
-		Trigger:     session.User.Account,
-		TriggeredBy: session.User.ID,
-		Ref:         taskInfo.ExecutionRef,
-		Sender:      session.User.Account,
-		Params:      map[string]string{},
-		Timestamp:   time.Now().UnixMilli(),
+	// 解析重试的扫描范围：复用原执行的分支（手动扫描为用户当时选择的分支，见
+	// ExecutionRef 的来源 ops_pipeline_executions.ref），按当时扫描计划的 scanType
+	// 取该分支的提交范围。ref 已不存在（分支被删、PR ref 被清理）时直接失败——今天
+	// 这种重试也会失败在 git clone 阶段，提前失败文案更清楚
+	commitBefore, commitAfter, err := s.ResolveCommitRange(ctx, repo.GitUID, constant.ScanType(plan.ScanType), taskInfo.ExecutionRef)
+	if err != nil {
+		return nil, errors.WithI18nKey(fmt.Errorf("failed to resolve commit range for retry: %w", err), i18n.ScanTaskRetryError)
 	}
+
+	// 构建重试 Hook：与手动扫描共用 CreateBranchHook（其形参为 sha=最新、beforeSha=次新），
+	// 保证提交范围口径一致
+	hook, err := s.CreateBranchHook(ctx, repo, taskInfo.ExecutionRef, commitAfter, commitBefore, session)
+	if err != nil {
+		return nil, errors.WithI18nKey(fmt.Errorf("failed to create retry hook: %w", err), i18n.ScanTaskRetryError)
+	}
+	hook.Timestamp = time.Now().UnixMilli()
 
 	// 注入扫描参数到 Hook.Params
 	var triggerID int64
@@ -235,6 +380,7 @@ func (s *ScanTaskService) Retry(ctx context.Context, session *authModel.Session,
 		triggerID = taskInfo.Trigger.ID
 	}
 
+	hook.Params["INNER_PIPELINE"] = "true"
 	hook.Params["SCAN_PLAN_ID"] = fmt.Sprintf("%d", taskInfo.PlanID)
 	hook.Params["SCAN_TASK_ID"] = fmt.Sprintf("%d", taskID)
 	hook.Params["SCAN_TRIGGER_ID"] = fmt.Sprintf("%d", triggerID)

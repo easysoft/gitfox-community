@@ -11,6 +11,7 @@ import (
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
+	executionModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/execution"
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 	scanModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
 	scanStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/scan"
@@ -47,16 +48,30 @@ func expandTypecheckIssue(check *scanModel.IssueInputCheck) []*scanModel.IssueIn
 }
 
 // AnalyzeTaskUploadReport 分析上传的扫描报告
-func (s *ScanTaskService) AnalyzeTaskUploadReport(ctx context.Context, repoID uint, taskID uint, method string, content []byte) (*scanModel.ScanIssueReport, error) {
+// taskID：codescan 场景为扫描任务 ID；AI 评审场景语义为 ppmID，可为 0（无 MR，由 executionID 归属执行）
+func (s *ScanTaskService) AnalyzeTaskUploadReport(ctx context.Context, repoID uint, taskID uint, executionID int64, method string, content []byte) (*scanModel.ScanIssueReport, error) {
 
 	var err error
 	task := &scanModel.ScanTaskInfo{}
 	ppm := &repoModel.PullRequest{}
+	var exec *executionModel.Execution
 
 	if method == "ai" {
-		ppm, err = s.pullRequestStore.GetByID(ctx, repoID, taskID)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get pull request: %w", err)
+		if taskID == 0 {
+			// ppmID=0 表示无 MR（推送/内嵌流水线触发）：报告归属到 executionID 对应的执行，
+			// 与 codescan create-by-runner 共用同一条执行 ID 链路
+			if executionID <= 0 {
+				return nil, fmt.Errorf("executionID is required when ppmID is 0")
+			}
+			exec, err = s.executionStore.GetByID(ctx, uint(executionID))
+			if err != nil {
+				return nil, fmt.Errorf("failed to get execution by ID %d: %w", executionID, err)
+			}
+		} else {
+			ppm, err = s.pullRequestStore.GetByID(ctx, repoID, taskID)
+			if err != nil {
+				return nil, fmt.Errorf("failed to get pull request: %w", err)
+			}
 		}
 	} else {
 		task, err = s.taskStore.GetTaskInfo(ctx, taskID)
@@ -75,7 +90,12 @@ func (s *ScanTaskService) AnalyzeTaskUploadReport(ctx context.Context, repoID ui
 	case constant.ScanMethodSmell:
 		inputIssues, err = s.analyzeSmellIssues(ctx, content, task, report)
 	case constant.ScanMethodAI:
-		inputIssues, err = s.analyzeAIIssues(content, repoID, int64(ppm.ID), report)
+		// 唯一键作用域：有 MR 用 ppmID，无 MR 用 executionID（key = ai/{scopeID}/{path}/{startLine}/{endLine}）
+		scopeID := int64(ppm.ID)
+		if exec != nil {
+			scopeID = int64(exec.ID)
+		}
+		inputIssues, err = s.analyzeAIIssues(content, repoID, scopeID, report)
 	default:
 		return nil, fmt.Errorf("unsupported scan method: %s", method)
 	}
@@ -85,8 +105,15 @@ func (s *ScanTaskService) AnalyzeTaskUploadReport(ctx context.Context, repoID ui
 
 	if scanMethod == constant.ScanMethodAI {
 		// AI 类型的 issues 直接批量插入
-		if err := s.saveAIIssues(ctx, inputIssues, ppm); err != nil {
-			return nil, err
+		var saveErr error
+		if exec != nil {
+			// 无 MR 场景：以 executionID 查出的执行数据填充（createdBy/ref 等）
+			saveErr = s.saveAIIssuesForExecution(ctx, inputIssues, exec, int64(repoID))
+		} else {
+			saveErr = s.saveAIIssues(ctx, inputIssues, ppm)
+		}
+		if saveErr != nil {
+			return nil, saveErr
 		}
 		report.Add = len(inputIssues)
 		report.Total = len(inputIssues)
@@ -214,7 +241,8 @@ func (s *ScanTaskService) analyzeSmellIssues(
 }
 
 // analyzeAIIssues 解析 ai 类型的 issues
-func (s *ScanTaskService) analyzeAIIssues(content []byte, repoID uint, ppmID int64, report *scanModel.ScanIssueReport) ([]*scanModel.ScanIssue, error) {
+// scopeID 为 issue 唯一键的作用域：有 MR 场景传 ppmID，无 MR（ppmID=0）场景传 executionID
+func (s *ScanTaskService) analyzeAIIssues(content []byte, repoID uint, scopeID int64, report *scanModel.ScanIssueReport) ([]*scanModel.ScanIssue, error) {
 	var aiReport scanModel.AIReportResponse
 	if err := json.Unmarshal(content, &aiReport); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal AI report: %w", err)
@@ -228,7 +256,6 @@ func (s *ScanTaskService) analyzeAIIssues(content []byte, repoID uint, ppmID int
 
 	var issues []*scanModel.ScanIssue
 	for _, comment := range aiReport.Comments {
-		comment.PpmID = ppmID
 		title := comment.Content
 		if runes := []rune(title); len(runes) > 30 {
 			title = string(runes[:30])
@@ -245,7 +272,7 @@ func (s *ScanTaskService) analyzeAIIssues(content []byte, repoID uint, ppmID int
 			Category:   constant.AiScanIssueCategory(comment.Category),
 			Severity:   constant.AiScanIssueSeverity(comment.Severity),
 		}
-		inIssue.Key = scanModel.GenerateIssueKey(int64(repoID), "", comment.UniqueKey())
+		inIssue.Key = scanModel.GenerateIssueKey(int64(repoID), "", comment.UniqueKey(scopeID))
 		if err := inIssue.SetPayload(scanModel.IssuePayloadAI{
 			SuggestionCode: comment.SuggestionCode,
 			ExistingCode:   comment.ExistingCode,
@@ -442,8 +469,36 @@ func (s *ScanTaskService) saveIssues(ctx context.Context, comp *scanModel.ScanIs
 	return nil
 }
 
-// saveAIIssues 直接批量插入 AI 类型的 issues
+// saveAIIssues 有 MR（ppmID>0）场景：AI issues 归属到合并请求
 func (s *ScanTaskService) saveAIIssues(ctx context.Context, issues []*scanModel.ScanIssue, ppm *repoModel.PullRequest) error {
+	if len(issues) == 0 {
+		return nil
+	}
+	for _, item := range issues {
+		item.PpmID = int64(ppm.ID)
+		item.RepoID = int64(ppm.RepoID)
+		item.RepoBranch = ppm.SourceBranch
+	}
+	return s.insertAIIssues(ctx, issues, ppm.CreatedBy)
+}
+
+// saveAIIssuesForExecution 无 MR（ppmID=0）场景：AI issues 归属到 executionID 对应的执行，
+// 归属数据（createdBy/ref/repoID）由 execution 记录填充，与 ppm 关联的字段全部置 0/留空
+func (s *ScanTaskService) saveAIIssuesForExecution(ctx context.Context, issues []*scanModel.ScanIssue, exec *executionModel.Execution, repoID int64) error {
+	if len(issues) == 0 {
+		return nil
+	}
+	for _, item := range issues {
+		item.PpmID = 0
+		item.ExecutionID = int64(exec.ID)
+		item.RepoID = repoID
+		item.RepoBranch = exec.Ref
+	}
+	return s.insertAIIssues(ctx, issues, exec.CreatedBy)
+}
+
+// insertAIIssues 直接批量插入 AI 类型的 issues（按 key 去重）
+func (s *ScanTaskService) insertAIIssues(ctx context.Context, issues []*scanModel.ScanIssue, createdBy string) error {
 	if len(issues) == 0 {
 		return nil
 	}
@@ -452,9 +507,6 @@ func (s *ScanTaskService) saveAIIssues(ctx context.Context, issues []*scanModel.
 	emptyResolution := constant.ScanIssueResolutionNull
 	emptyIgnoredDate := int64(0)
 	for _, item := range issues {
-		item.PpmID = int64(ppm.ID)
-		item.RepoID = int64(ppm.RepoID)
-		item.RepoBranch = ppm.SourceBranch
 		item.Status = constant.ScanIssueStatusWait
 		item.ScanMethod = constant.ScanMethodAI
 		rawIssues = append(rawIssues, &scanStore.ScanIssue{
@@ -467,13 +519,15 @@ func (s *ScanTaskService) saveAIIssues(ctx context.Context, issues []*scanModel.
 			OldCode:     item.OldCode,
 			NewCode:     item.NewCode,
 			PpmID:       item.PpmID,
+			ExecutionID: item.ExecutionID,
 			RepoID:      item.RepoID,
+			RepoBranch:  item.RepoBranch,
 			Status:      item.Status,
 			ScanMethod:  item.ScanMethod,
 			Resolution:  &emptyResolution,
 			IgnoredDate: &emptyIgnoredDate,
 			Payload:     item.Payload,
-			CreatedBy:   ppm.CreatedBy,
+			CreatedBy:   createdBy,
 			Category:    string(item.Category),
 			Severity:    string(item.Severity),
 		})
