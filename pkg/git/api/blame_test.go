@@ -22,8 +22,8 @@ import (
 	"testing/iotest"
 	"time"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/sha"
-	"github.com/easysoft/gitfox/errors"
 
 	"github.com/google/go-cmp/cmp"
 )
@@ -150,7 +150,7 @@ filename file_name.go
 	}
 
 	if diff := cmp.Diff(got, want); diff != "" {
-		t.Errorf(diff)
+		t.Errorf("%s", diff)
 	}
 }
 
@@ -162,7 +162,7 @@ func TestBlameReader_NextPart_UserError(t *testing.T) {
 	}
 
 	_, err := reader.NextPart()
-	if s := errors.AsStatus(err); s != errors.StatusNotFound {
+	if errors.GetType(err) != errors.NotFound {
 		t.Errorf("expected NotFound error but got: %v", err)
 	}
 }
@@ -175,7 +175,7 @@ func TestBlameReader_NextPart_CmdError(t *testing.T) {
 	}
 
 	_, err := reader.NextPart()
-	if s := errors.AsError(err); s.Status != errors.StatusInternal || s.Message != "failed to start git blame command" {
-		t.Errorf("expected %v, but got: %v", s.Message, err)
+	if errors.GetType(err) != errors.InternalError || !strings.Contains(err.Error(), "failed to start git blame command") {
+		t.Errorf("expected internal error, but got: %v", err)
 	}
 }

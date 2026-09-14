@@ -20,10 +20,10 @@ import (
 	"strconv"
 	"strings"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/command"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/sharedrepo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
-	"github.com/easysoft/gitfox/errors"
 )
 
 // FindConflicts checks if two git revisions are mergeable and returns list of conflict files if they are not.
@@ -47,7 +47,7 @@ func FindConflicts(
 		command.WithStdout(stdout))
 
 	if err != nil {
-		return false, "", nil, errors.Internal(err, "Failed to find conflicts between %s and %s", base, head)
+		return false, "", nil, errors.InternalError.Wrapf(err, "Failed to find conflicts between %s and %s", base, head)
 	}
 
 	output := strings.TrimSpace(stdout.String())
@@ -56,19 +56,19 @@ func FindConflicts(
 	lines := strings.Split(output, "\000")
 	if len(lines) < 2 {
 		logger.GetLogger(ctx).Errorw("Unexpected merge-tree output", "output", output)
-		return false, "", nil, errors.Internal(nil,
+		return false, "", nil, errors.InternalError.Newf(
 			"Failed to find conflicts between %s and %s: Unexpected git output", base, head)
 	}
 
 	status, err := strconv.Atoi(lines[0])
 	if err != nil {
 		logger.GetLogger(ctx).Errorw("Unexpected merge status", "error", err, "output", output)
-		return false, "", nil, errors.Internal(nil,
+		return false, "", nil, errors.InternalError.Newf(
 			"Failed to find conflicts between %s and %s: Unexpected merge status", base, head)
 	}
 
 	if status < 0 {
-		return false, "", nil, errors.Internal(nil,
+		return false, "", nil, errors.InternalError.Newf(
 			"Failed to find conflicts between %s and %s: Operation blocked. Status=%d", base, head, status)
 	}
 
@@ -97,12 +97,12 @@ func CommitCount(
 	stdout := bytes.NewBuffer(nil)
 
 	if err := cmd.Run(ctx, command.WithDir(repoPath), command.WithStdout(stdout)); err != nil {
-		return 0, errors.Internal(err, "failed to rev-list in shared repo")
+		return 0, errors.InternalError.Wrapf(err, "failed to rev-list in shared repo")
 	}
 
 	commitCount, err := strconv.Atoi(strings.TrimSpace(stdout.String()))
 	if err != nil {
-		return 0, errors.Internal(err, "failed to parse commit count from rev-list output in shared repo")
+		return 0, errors.InternalError.Wrapf(err, "failed to parse commit count from rev-list output in shared repo")
 	}
 
 	return commitCount, nil

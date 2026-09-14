@@ -18,7 +18,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/easysoft/gitfox/errors"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 )
 
 // Signature represents the Author or Committer information.
@@ -52,11 +52,11 @@ func (i Identity) String() string {
 
 func (i Identity) Validate() error {
 	if i.Name == "" {
-		return errors.InvalidArgument("identity name is mandatory")
+		return errors.InvalidArgument.Newf("identity name is mandatory")
 	}
 
 	if i.Email == "" {
-		return errors.InvalidArgument("identity email is mandatory")
+		return errors.InvalidArgument.Newf("identity email is mandatory")
 	}
 
 	return nil

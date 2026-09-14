@@ -21,9 +21,9 @@ import (
 	"path/filepath"
 	"time"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/api"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
-	"github.com/easysoft/gitfox/errors"
 )
 
 const (
@@ -51,7 +51,7 @@ func (s *Service) addFilesAndPush(
 	message string,
 ) error {
 	if author == nil || committer == nil {
-		return errors.InvalidArgument("both author and committer have to be provided")
+		return errors.InvalidArgument.Newf("both author and committer have to be provided")
 	}
 
 	err := s.git.AddFiles(ctx, repoPath, false, filePaths...)
@@ -105,7 +105,7 @@ func (s *Service) handleFileUploadIfAvailable(
 	log.Infof("saving file at path %s", fullPath)
 	_, err := s.store.Save(fullPath, bytes.NewReader(file.Content))
 	if err != nil {
-		return "", errors.Internal(err, "cannot save file to the store: %s", fullPath)
+		return "", errors.InternalError.Wrapf(err, "cannot save file to the store: %s", fullPath)
 	}
 
 	return fullPath, nil

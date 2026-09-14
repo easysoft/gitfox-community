@@ -19,8 +19,8 @@ import (
 	"fmt"
 	"io"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/sha"
-	"github.com/easysoft/gitfox/errors"
 )
 
 type BlameParams struct {
@@ -47,19 +47,19 @@ func (params *BlameParams) Validate() error {
 	}
 
 	if params.GitRef == "" {
-		return errors.InvalidArgument("git ref needs to be provided")
+		return errors.InvalidArgument.New("git ref needs to be provided")
 	}
 
 	if params.Path == "" {
-		return errors.InvalidArgument("file path needs to be provided")
+		return errors.InvalidArgument.New("file path needs to be provided")
 	}
 
 	if params.LineFrom < 0 || params.LineTo < 0 {
-		return errors.InvalidArgument("line from and line to can't be negative")
+		return errors.InvalidArgument.New("line from and line to can't be negative")
 	}
 
 	if params.LineTo > 0 && params.LineFrom > params.LineTo {
-		return errors.InvalidArgument("line from can't be after line after")
+		return errors.InvalidArgument.New("line from can't be after line after")
 	}
 
 	return nil

@@ -4,7 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 
-	"github.com/easysoft/gitfox/errors"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 
 	"github.com/gliderlabs/ssh"
 	gossh "golang.org/x/crypto/ssh"
@@ -45,12 +45,12 @@ func Parse(keyData []byte) (KeyInfo, string, error) {
 
 	// explicitly disallowed
 	if slices.Contains(DisallowedTypes, keyType) {
-		return KeyInfo{}, "", errors.InvalidArgument("keys of type %s are not allowed", keyType)
+		return KeyInfo{}, "", errors.InvalidArgument.Newf("keys of type %s are not allowed", keyType)
 	}
 
 	// only allowed
 	if !slices.Contains(AllowedTypes, keyType) {
-		return KeyInfo{}, "", errors.InvalidArgument("allowed key types are %v", AllowedTypes)
+		return KeyInfo{}, "", errors.InvalidArgument.Newf("allowed key types are %v", AllowedTypes)
 	}
 
 	return KeyInfo{

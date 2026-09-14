@@ -19,8 +19,8 @@ import (
 	"fmt"
 	"strings"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/command"
-	"github.com/easysoft/gitfox/errors"
 )
 
 // Config set local git key and value configuration.
@@ -34,7 +34,7 @@ func (g *Git) Config(
 		return ErrRepositoryPathEmpty
 	}
 	if key == "" {
-		return errors.InvalidArgument("key cannot be empty")
+		return errors.InvalidArgument.Newf("key cannot be empty")
 	}
 	var outbuf, errbuf strings.Builder
 	cmd := command.New("config",

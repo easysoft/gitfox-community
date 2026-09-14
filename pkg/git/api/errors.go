@@ -18,15 +18,15 @@ import (
 	"fmt"
 	"strings"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
-	"github.com/easysoft/gitfox/errors"
 )
 
 var (
 	ErrInvalidPath         = errors.New("path is invalid")
-	ErrRepositoryPathEmpty = errors.InvalidArgument("repository path cannot be empty")
-	ErrBranchNameEmpty     = errors.InvalidArgument("branch name cannot be empty")
-	ErrParseDiffHunkHeader = errors.Internal(nil, "failed to parse diff hunk header")
+	ErrRepositoryPathEmpty = errors.InvalidArgument.Newf("repository path cannot be empty")
+	ErrBranchNameEmpty     = errors.InvalidArgument.Newf("branch name cannot be empty")
+	ErrParseDiffHunkHeader = errors.InternalError.Newf("failed to parse diff hunk header")
 	ErrNoDefaultBranch     = errors.New("no default branch")
 	ErrInvalidSignature    = errors.New("invalid signature")
 )
@@ -121,16 +121,16 @@ func (err *MoreThanOneError) Error() string {
 // Note: git errors should be processed in command package, this will probably be removed in the future.
 func processGitErrorf(err error, format string, args ...interface{}) error {
 	// create fallback error returned if we can't map it
-	fallbackErr := errors.Internal(err, format, args...)
+	fallbackErr := errors.InternalError.Wrapf(err, format, args...)
 
 	// always log internal error together with message.
 	logger.Warnf("%v: [GIT] %v", fallbackErr, err)
 
 	switch {
 	case strings.Contains(err.Error(), "no such file or directory"):
-		return errors.NotFound("repository not found")
+		return errors.NotFound.Newf("repository not found")
 	case strings.Contains(err.Error(), "reference already exists"):
-		return errors.Conflict("reference already exists")
+		return errors.Conflict.Newf("reference already exists")
 	case strings.Contains(err.Error(), "no merge base"):
 		if len(args) >= 2 {
 			return &UnrelatedHistoriesError{

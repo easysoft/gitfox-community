@@ -18,12 +18,12 @@ import (
 	"context"
 	"fmt"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/api"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/hook"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/sha"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/sharedrepo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
-	"github.com/easysoft/gitfox/errors"
 )
 
 var (
@@ -226,7 +226,7 @@ func FastForward(
 ) (mergeSHA sha.SHA, conflicts []string, err error) {
 	if targetSHA != mergeBaseSHA {
 		return sha.None, nil,
-			errors.Conflict("target branch has diverged from the source branch, fast-forward not possible")
+			errors.Conflict.Newf("target branch has diverged from the source branch, fast-forward not possible")
 	}
 
 	err = sharedrepo.Run(ctx, refUpdater, tmpDir, repoPath, func(*sharedrepo.SharedRepo) error {

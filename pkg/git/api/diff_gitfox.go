@@ -13,8 +13,8 @@ import (
 	"strconv"
 	"strings"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/command"
-	"github.com/easysoft/gitfox/errors"
 )
 
 type CommitChangeLines struct {
@@ -34,7 +34,7 @@ func (g *Git) ReceiveCommitNumStat(
 		return nil, ErrRepositoryPathEmpty
 	}
 	if rev == "" {
-		return nil, errors.InvalidArgument("git revision cannot be empty")
+		return nil, errors.InvalidArgument.Newf("git revision cannot be empty")
 	}
 
 	cmd := command.New("show",
