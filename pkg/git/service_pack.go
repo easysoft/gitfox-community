@@ -20,9 +20,9 @@ import (
 	"io"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/api"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
-	"github.com/easysoft/gitfox/errors"
 )
 
 type InfoRefsParams struct {
@@ -59,7 +59,7 @@ type ServicePackParams struct {
 
 func (p *ServicePackParams) Validate() error {
 	if p.Service == "" {
-		return errors.InvalidArgument("service is mandatory field")
+		return errors.InvalidArgument.Newf("service is mandatory field")
 	}
 	return nil
 }
@@ -72,23 +72,23 @@ func (s *Service) ServicePack(ctx context.Context, params *ServicePackParams) er
 	switch params.Service {
 	case constant.GitServiceTypeUploadPack:
 		if params.ReadParams == nil {
-			return errors.InvalidArgument("upload-pack requires ReadParams")
+			return errors.InvalidArgument.Newf("upload-pack requires ReadParams")
 		}
 		if err := params.ReadParams.Validate(); err != nil {
-			return errors.InvalidArgument("upload-pack requires ReadParams: %v", err)
+			return errors.InvalidArgument.Newf("upload-pack requires ReadParams: %v", err)
 		}
 		repoPath = getFullPathForRepo(s.reposRoot, params.ReadParams.RepoUID)
 	case constant.GitServiceTypeReceivePack:
 		if params.WriteParams == nil {
-			return errors.InvalidArgument("receive-pack requires WriteParams")
+			return errors.InvalidArgument.Newf("receive-pack requires WriteParams")
 		}
 		if err := params.WriteParams.Validate(); err != nil {
-			return errors.InvalidArgument("receive-pack requires WriteParams: %v", err)
+			return errors.InvalidArgument.Newf("receive-pack requires WriteParams: %v", err)
 		}
 		params.Env = append(params.Env, CreateEnvironmentForPush(ctx, *params.WriteParams)...)
 		repoPath = getFullPathForRepo(s.reposRoot, params.WriteParams.RepoUID)
 	default:
-		return errors.InvalidArgument("unsupported service provided: %s", params.Service)
+		return errors.InvalidArgument.Newf("unsupported service provided: %s", params.Service)
 	}
 
 	err := s.git.ServicePack(ctx, repoPath, params.ServicePackOptions)

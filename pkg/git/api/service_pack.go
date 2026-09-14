@@ -24,9 +24,9 @@ import (
 	"strings"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/command"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
-	"github.com/easysoft/gitfox/errors"
 )
 
 var safeGitProtocolHeader = regexp.MustCompile(`^[0-9a-zA-Z]+=[0-9a-zA-Z]+(:[0-9a-zA-Z]+=[0-9a-zA-Z]+)*$`)
@@ -49,18 +49,18 @@ func (g *Git) InfoRefs(
 		command.WithStdout(stdout),
 		command.WithEnvs(env...),
 	); err != nil {
-		return errors.Internal(err, "InfoRefs service %s failed", service)
+		return errors.InternalError.Wrapf(err, "InfoRefs service %s failed", service)
 	}
 	if _, err := w.Write(packetWrite("# service=git-" + service + "\n")); err != nil {
-		return errors.Internal(err, "failed to write pktLine in InfoRefs %s service", service)
+		return errors.InternalError.Wrapf(err, "failed to write pktLine in InfoRefs %s service", service)
 	}
 
 	if _, err := w.Write([]byte("0000")); err != nil {
-		return errors.Internal(err, "failed to flush data in InfoRefs %s service", service)
+		return errors.InternalError.Wrapf(err, "failed to flush data in InfoRefs %s service", service)
 	}
 	logger.GetLogger(ctx).Debug(stdout.String())
 	if _, err := io.Copy(w, stdout); err != nil {
-		return errors.Internal(err, "streaming InfoRefs %s service failed", service)
+		return errors.InternalError.Wrapf(err, "streaming InfoRefs %s service failed", service)
 	}
 	return nil
 }

@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"time"
 
-	pkgerror "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/api"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/enum"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/hook"
@@ -27,7 +27,6 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/parser"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/sha"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
-	"github.com/easysoft/gitfox/errors"
 )
 
 // MergeParams is input structure object for merging operation.
@@ -77,15 +76,15 @@ func (p *MergeParams) Validate() error {
 	}
 
 	if p.BaseBranch == "" && p.BaseSHA.IsEmpty() {
-		return pkgerror.ErrGitMergeCheckBaseBranchNotFound
+		return errors.ErrGitMergeCheckBaseBranchNotFound
 	}
 
 	if p.HeadBranch == "" {
-		return pkgerror.ErrGitMergeCheckHeadBranchNotFound
+		return errors.ErrGitMergeCheckHeadBranchNotFound
 	}
 
 	if p.RefType != enum.RefTypeUndefined && p.RefName == "" {
-		return pkgerror.ErrGitMergeCheckRefTypeNotFound
+		return errors.ErrGitMergeCheckRefTypeNotFound
 	}
 	return nil
 }
@@ -137,7 +136,7 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 
 	mergeMethod, ok := params.Method.Sanitize()
 	if !ok && params.Method != "" {
-		return MergeOutput{}, pkgerror.ErrGitMergeMethodUnsupported
+		return MergeOutput{}, errors.ErrGitMergeMethodUnsupported
 	}
 
 	var mergeFunc merge.Func
@@ -193,7 +192,7 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 	}
 
 	if !params.HeadExpectedSHA.IsEmpty() && !params.HeadExpectedSHA.Equal(headCommitSHA) {
-		return MergeOutput{}, errors.PreconditionFailed(
+		return MergeOutput{}, errors.PreconditionFailed.Newf(
 			"head branch '%s' is on SHA '%s' which doesn't match expected SHA '%s'.",
 			params.HeadBranch,
 			headCommitSHA,
@@ -207,7 +206,7 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 	}
 
 	if headCommitSHA.Equal(mergeBaseCommitSHA) {
-		err = pkgerror.ErrGitMergeCheckNoCommits
+		err = errors.ErrGitMergeCheckNoCommits
 		return MergeOutput{}, err
 	}
 
@@ -215,7 +214,7 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 
 	shortStat, err := s.git.DiffShortStat(ctx, repoPath, baseCommitSHA.String(), headCommitSHA.String(), true)
 	if err != nil {
-		return MergeOutput{}, errors.Internal(err,
+		return MergeOutput{}, errors.InternalError.Wrapf(err,
 			"failed to find short stat between %s and %s", baseCommitSHA, headCommitSHA)
 	}
 
@@ -263,11 +262,11 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 	if params.RefType != enum.RefTypeUndefined {
 		refUpdater, err = hook.CreateRefUpdater(s.hookClientFactory, params.EnvVars, repoPath, refPath)
 		if err != nil {
-			return MergeOutput{}, errors.Internal(err, "failed to create ref updater object")
+			return MergeOutput{}, errors.InternalError.Wrapf(err, "failed to create ref updater object")
 		}
 
 		if err := refUpdater.InitOld(ctx, refOldValue); err != nil {
-			return MergeOutput{}, errors.Internal(err, "failed to set old reference value for ref updater")
+			return MergeOutput{}, errors.InternalError.Wrapf(err, "failed to set old reference value for ref updater")
 		}
 	}
 
@@ -283,7 +282,7 @@ func (s *Service) Merge(ctx context.Context, params *MergeParams) (MergeOutput, 
 			params.HeadBranch, params.BaseBranch, params.RepoUID, mergeMethod, err)
 	}
 	if err != nil {
-		return MergeOutput{}, errors.Internal(err, "failed to merge %q to %q in %q using the %q merge method",
+		return MergeOutput{}, errors.InternalError.Wrapf(err, "failed to merge %q to %q in %q using the %q merge method",
 			params.HeadBranch, params.BaseBranch, params.RepoUID, mergeMethod)
 	}
 	if len(conflicts) > 0 {
@@ -326,12 +325,12 @@ func (p *MergeBaseParams) Validate() error {
 
 	if p.Ref1 == "" {
 		// needs better naming
-		return pkgerror.ErrGitRefFirstNotFound
+		return errors.ErrGitRefFirstNotFound
 	}
 
 	if p.Ref2 == "" {
 		// needs better naming
-		return pkgerror.ErrGitRefSecondNotFound
+		return errors.ErrGitRefSecondNotFound
 	}
 
 	return nil

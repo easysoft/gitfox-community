@@ -19,13 +19,6 @@ import (
 	"fmt"
 	"strings"
 
-	// apiauth "github.com/easysoft/gitfox/app/api/auth"
-	// "github.com/easysoft/gitfox/app/api/controller/limiter"
-	// "github.com/easysoft/gitfox/app/api/usererror"
-	// "github.com/easysoft/gitfox/app/auth"
-	// "github.com/easysoft/gitfox/app/services/protection"
-	// "github.com/easysoft/gitfox/app/api/controller/limiter"
-	// "github.com/easysoft/gitfox/app/api/usererror"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/githook"
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
@@ -33,9 +26,6 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/hook"
 	gitutil "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/util"
-
-	// "github.com/easysoft/gitfox/types"
-	// "github.com/easysoft/gitfox/types/enum"
 
 	"github.com/gotidy/ptr"
 	"golang.org/x/exp/slices"

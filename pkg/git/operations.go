@@ -20,13 +20,13 @@ import (
 	"strings"
 	"time"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/api"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/hook"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/parser"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/sha"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/sharedrepo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
-	"github.com/easysoft/gitfox/errors"
 )
 
 const (
@@ -190,7 +190,7 @@ func (s *Service) CommitFiles(ctx context.Context, params *CommitFilesParams) (C
 		}
 
 		if oldTreeSHA.Equal(treeSHA) {
-			return errors.InvalidArgument("no effective changes")
+			return errors.InvalidArgument.New("no effective changes")
 		}
 
 		authorSig := &api.Signature{
@@ -274,7 +274,7 @@ func (s *Service) prepareTree(
 		}
 
 		if modifiedPaths[modifiedPath] {
-			return errors.InvalidArgument("more than one conflicting actions are modifying file %q", modifiedPath)
+			return errors.InvalidArgument.Newf("more than one conflicting actions are modifying file %q", modifiedPath)
 		}
 		modifiedPaths[modifiedPath] = true
 	}
@@ -292,7 +292,7 @@ func (s *Service) prepareTree(
 
 			// there can only be one file sha for a given path and commit.
 			if !act.SHA.IsEmpty() && !fileSHA.Equal(act.SHA) {
-				return errors.InvalidArgument(
+				return errors.InvalidArgument.Newf(
 					"patch text actions for %q contain different SHAs %q and %q",
 					filePath,
 					act.SHA,
@@ -306,7 +306,7 @@ func (s *Service) prepareTree(
 		}
 
 		if modifiedPaths[filePath] {
-			return errors.InvalidArgument("more than one conflicting action are modifying file %q", filePath)
+			return errors.InvalidArgument.Newf("more than one conflicting action are modifying file %q", filePath)
 		}
 		modifiedPaths[filePath] = true
 	}
@@ -321,16 +321,16 @@ func (s *Service) prepareTreeEmptyRepo(
 ) error {
 	for _, action := range actions {
 		if action.Action != CreateAction {
-			return errors.PreconditionFailed("action not allowed on empty repository")
+			return errors.PreconditionFailed.New("action not allowed on empty repository")
 		}
 
 		filePath := api.CleanUploadFileName(action.Path)
 		if filePath == "" {
-			return errors.InvalidArgument("invalid path")
+			return errors.InvalidArgument.New("invalid path")
 		}
 
 		if err := r.CreateFile(ctx, sha.None, filePath, filePermissionDefault, action.Payload); err != nil {
-			return errors.Internal(err, "failed to create file '%s'", action.Path)
+			return errors.InternalError.Wrapf(err, "failed to create file '%s'", action.Path)
 		}
 	}
 
@@ -374,7 +374,7 @@ func (s *Service) validateAndPrepareCommitFilesHeader(
 	if params.Branch != params.NewBranch {
 		existingBranch, err := s.git.GetBranch(ctx, repoPath, params.NewBranch)
 		if existingBranch != nil {
-			return nil, errors.Conflict("branch %s already exists", existingBranch.Name)
+			return nil, errors.Conflict.Newf("branch %s already exists", existingBranch.Name)
 		}
 		if err != nil && !errors.IsNotFound(err) {
 			return nil, fmt.Errorf("failed to create new branch '%s': %w", params.NewBranch, err)
@@ -392,7 +392,7 @@ func (s *Service) processAction(
 ) (modifiedPath string, err error) {
 	filePath := api.CleanUploadFileName(action.Path)
 	if filePath == "" {
-		return "", errors.InvalidArgument("path cannot be empty")
+		return "", errors.InvalidArgument.New("path cannot be empty")
 	}
 	modifiedPath = filePath
 	switch action.Action {

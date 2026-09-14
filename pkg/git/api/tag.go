@@ -23,9 +23,9 @@ import (
 	"strings"
 	"time"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/command"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/sha"
-	"github.com/easysoft/gitfox/errors"
 )
 
 const (

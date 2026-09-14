@@ -9,7 +9,8 @@ package helm
 import (
 	"encoding/json"
 
-	"github.com/easysoft/gitfox/app/services/protection"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/jsonutil"
+
 	"helm.sh/helm/v3/pkg/chart"
 )
 
@@ -18,5 +19,5 @@ type AssetMetadata struct {
 }
 
 func (am AssetMetadata) ToJSON() (json.RawMessage, error) {
-	return protection.ToJSON(am.data)
+	return jsonutil.ToJSON(am.data)
 }

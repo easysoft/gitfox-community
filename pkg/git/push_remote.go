@@ -18,8 +18,8 @@ import (
 	"context"
 	"fmt"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/api"
-	"github.com/easysoft/gitfox/errors"
 )
 
 type PushRemoteParams struct {
@@ -37,7 +37,7 @@ func (p *PushRemoteParams) Validate() error {
 	}
 
 	if p.RemoteURL == "" {
-		return errors.InvalidArgument("remote url cannot be empty")
+		return errors.InvalidArgument.Newf("remote url cannot be empty")
 	}
 	return nil
 }
@@ -50,10 +50,10 @@ func (s *Service) PushRemote(ctx context.Context, params *PushRemoteParams) erro
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)
 	isEmpty, err := s.git.HasBranches(ctx, repoPath)
 	if err != nil {
-		return errors.Internal(err, "push to repo failed")
+		return errors.InternalError.Wrapf(err, "push to repo failed")
 	}
 	if isEmpty {
-		return errors.InvalidArgument("cannot push empty repo")
+		return errors.InvalidArgument.Newf("cannot push empty repo")
 	}
 
 	err = s.git.Push(ctx, repoPath, api.PushOptions{

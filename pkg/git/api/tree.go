@@ -25,11 +25,11 @@ import (
 	"strconv"
 	"strings"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/command"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/parser"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/sha"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
-	"github.com/easysoft/gitfox/errors"
 )
 
 type TreeNodeWithCommit struct {
@@ -154,16 +154,16 @@ func lsTree(
 	)
 	if err != nil {
 		if strings.Contains(err.Error(), "fatal: not a tree object") {
-			return nil, errors.InvalidArgument("revision %q does not point to a commit", rev)
+			return nil, errors.InvalidArgument.Newf("revision %q does not point to a commit", rev)
 		}
 		if strings.Contains(err.Error(), "fatal: Not a valid object name") {
-			return nil, errors.NotFound("revision %q not found", rev)
+			return nil, errors.NotFound.Newf("revision %q not found", rev)
 		}
 		return nil, fmt.Errorf("failed to run git ls-tree: %w", err)
 	}
 
 	if output.Len() == 0 {
-		return nil, errors.NotFound("path '%s' wasn't found in the repo", treePath)
+		return nil, errors.NotFound.Newf("path '%s' wasn't found in the repo", treePath)
 	}
 
 	n := bytes.Count(output.Bytes(), []byte{'\x00'})
@@ -344,10 +344,10 @@ func GetTreeNode(ctx context.Context, repoPath, rev, treePath string, fetchSize 
 	err := cmd.Run(ctx, command.WithDir(repoPath), command.WithStdout(output))
 	if err != nil {
 		if strings.Contains(err.Error(), "expected commit type") {
-			return nil, errors.InvalidArgument("revision %q does not point to a commit", rev)
+			return nil, errors.InvalidArgument.Newf("revision %q does not point to a commit", rev)
 		}
 		if strings.Contains(err.Error(), "unknown revision") {
-			return nil, errors.NotFound("revision %q not found", rev)
+			return nil, errors.NotFound.Newf("revision %q not found", rev)
 		}
 		return nil, fmt.Errorf("failed to get root tree node: %w", err)
 	}
@@ -439,10 +439,10 @@ func (g *Git) ListPaths(
 	)
 	if err != nil {
 		if strings.Contains(err.Error(), "expected commit type") {
-			return nil, nil, errors.InvalidArgument("revision %q does not point to a commit", rev)
+			return nil, nil, errors.InvalidArgument.Newf("revision %q does not point to a commit", rev)
 		}
 		if strings.Contains(err.Error(), "fatal: Not a valid object name") {
-			return nil, nil, errors.NotFound("revision %q not found", rev)
+			return nil, nil, errors.NotFound.Newf("revision %q not found", rev)
 		}
 		return nil, nil, fmt.Errorf("failed to run git ls-tree: %w", err)
 	}

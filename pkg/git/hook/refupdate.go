@@ -20,10 +20,10 @@ import (
 	"fmt"
 	"strings"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/command"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/sha"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
-	"github.com/easysoft/gitfox/errors"
 )
 
 // CreateRefUpdater creates new RefUpdater object using the provided git hook ClientFactory.
@@ -34,7 +34,7 @@ func CreateRefUpdater(
 	ref string,
 ) (*RefUpdater, error) {
 	if repoPath == "" {
-		return nil, errors.Internal(nil, "repo path can't be empty")
+		return nil, errors.InternalError.Newf("repo path can't be empty")
 	}
 
 	client, err := hookClientFactory.NewClient(envVars)
@@ -186,7 +186,7 @@ func (u *RefUpdater) Pre(ctx context.Context, alternateDirs ...string) error {
 
 	// fail in case someone tries to delete a reference that doesn't exist.
 	if u.oldValue.IsEmpty() && u.newValue.IsNil() {
-		return errors.NotFound("reference %q not found", u.ref)
+		return errors.NotFound.Newf("reference %q not found", u.ref)
 	}
 
 	if u.oldValue.IsNil() && u.newValue.IsNil() {
@@ -210,7 +210,7 @@ func (u *RefUpdater) Pre(ctx context.Context, alternateDirs ...string) error {
 	}
 	if out.Error != nil {
 		logger.GetLogger(ctx).Debugw(fmt.Sprintf("Pre-receive blocked ref update\nMessages\n%v", out.Messages), "err", *out.Error)
-		return errors.PreconditionFailed("pre-receive hook blocked reference update: %q", *out.Error)
+		return errors.PreconditionFailed.Newf("pre-receive hook blocked reference update: %q", *out.Error)
 	}
 
 	u.state = stateUpdate
@@ -237,7 +237,7 @@ func (u *RefUpdater) UpdateRef(ctx context.Context) error {
 	if err := cmd.Run(ctx, command.WithDir(u.repoPath)); err != nil {
 		msg := err.Error()
 		if strings.Contains(msg, "reference already exists") {
-			return errors.Conflict("reference already exists")
+			return errors.Conflict.Newf("reference already exists")
 		}
 
 		return fmt.Errorf("update of ref %q from %q to %q failed: %w", u.ref, u.oldValue, u.newValue, err)
@@ -289,7 +289,7 @@ func (u *RefUpdater) getRef(ctx context.Context) (sha.SHA, error) {
 	err := cmd.Run(ctx, command.WithDir(u.repoPath), command.WithStdout(output))
 	if cErr := command.AsError(err); cErr != nil {
 		if cErr.IsExitCode(128) && cErr.IsInvalidRefErr() {
-			return sha.None, errors.NotFound("reference %q not found", u.ref)
+			return sha.None, errors.NotFound.Newf("reference %q not found", u.ref)
 		}
 		return sha.None, err
 	}

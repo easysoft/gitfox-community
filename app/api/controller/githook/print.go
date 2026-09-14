@@ -18,7 +18,6 @@ import (
 	"fmt"
 	"time"
 
-	// "github.com/easysoft/gitfox/app/services/codeowners"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/hook"
 
