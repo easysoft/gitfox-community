@@ -121,8 +121,33 @@ func (c *Controller) reportBranchEvent(
 		return
 	}
 
+	// AGit (refs/for) pushes always target a fresh pseudo-ref (branchUpdate.Old is empty), so every
+	// push would otherwise be reported as "created". Decide real create/update semantics from the
+	// derived refs/heads/ztflow-* branch that actually carries the review commits: if it exists this
+	// is an update of an existing review, otherwise it is a brand-new one. It is a reliable signal
+	// because it is only deleted together with the merge of that PR itself, unlike refs/for which is
+	// purged for every topic of a target branch once any of them is merged.
+	effOld := branchUpdate.Old
+	if flow == PullRequestFlowZentao && !branchUpdate.New.IsNil() {
+		headsBranch := strings.TrimPrefix(ref, gitReferenceNamePrefixBranch)
+		headsOut, headsErr := rgit.GetBranch(ctx, &git.GetBranchParams{
+			ReadParams: git.ReadParams{
+				RepoUID:             repo.GitUID,
+				AlternateObjectDirs: env.AlternateObjectDirs,
+			},
+			BranchName: headsBranch,
+		})
+		switch {
+		case headsErr == nil:
+			effOld = headsOut.Branch.SHA
+		case !errors.IsNotFound(headsErr):
+			// Unresolved: keep the empty refs/for old value, i.e. report a created event.
+			log.Warnf("failed to resolve ztflow branch %q: %v", headsBranch, headsErr)
+		}
+	}
+
 	switch {
-	case branchUpdate.Old.IsNil():
+	case effOld.IsNil():
 		// Branch created
 		log.Debugf("branch %q created", ref)
 		c.gitReporter.BranchCreated(ctx, &gitevents.BranchCreatedPayload{
@@ -173,7 +198,7 @@ func (c *Controller) reportBranchEvent(
 			RepoID:        int64(repo.ID),
 			Account:       principalAccount,
 			Ref:           ref,
-			OldSHA:        branchUpdate.Old.String(),
+			OldSHA:        effOld.String(),
 			NewSHA:        branchUpdate.New.String(),
 			Forced:        forced,
 			CommitMessage: commitMessage,

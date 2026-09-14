@@ -55,7 +55,12 @@ type Service struct {
 	pubsub             pubsub.PubSub
 }
 
-const fastForwardNotPossibleMessage = "target branch has diverged from the source branch, fast-forward not possible"
+const (
+	fastForwardNotPossibleMessage = "target branch has diverged from the source branch, fast-forward not possible"
+	// sourceOutOfDateMessage matches the precondition failure raised when the recorded source SHA no
+	// longer equals the head branch tip (e.g. new commits were pushed after the merge check ran).
+	sourceOutOfDateMessage = "which doesn't match expected SHA"
+)
 
 var _ Interface = (*Service)(nil)
 
@@ -191,6 +196,13 @@ func processPullRequestMergeError(ctx context.Context, method repoModel.MergeMet
 	if method == repoModel.MergeMethodFastForward &&
 		strings.Contains(err.Error(), fastForwardNotPossibleMessage) {
 		return errors.WithI18nKey(errors.New("target branch latest commit is not an ancestor of source branch"), i18n.GitFastForwardTargetNotAncestor)
+	}
+
+	// The recorded source SHA no longer matches the head branch tip (new commits were pushed after
+	// the merge check, or the review branch was rewritten). Surface an actionable message instead
+	// of the raw "git command failed" fallback, which gives the user no way to recover.
+	if strings.Contains(err.Error(), sourceOutOfDateMessage) {
+		return errors.WithI18nKey(errors.New("source branch is out of date, please refresh and retry"), i18n.GitMergeSourceOutOfDate)
 	}
 
 	return util.ProcessGitErrorf(ctx, err)

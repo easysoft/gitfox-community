@@ -23,6 +23,7 @@ git:
   push_out_of_date: "推送过期，需要先拉取。"
   merge_conflict: "合并冲突。"
   fast_forward_target_not_ancestor: "目标分支的最新提交不是源分支的祖先。"
+  merge_source_out_of_date: "源分支已有新提交，当前记录的提交版本已过期，请刷新后重试。"
   merge_check_base_branch_not_found: "合并检查基础分支不能为空。"
   merge_check_head_branch_not_found: "合并检查头分支不能为空。"
   merge_check_ref_type_not_found: "合并检查引用类型不能为空。"
