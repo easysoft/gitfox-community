@@ -3,6 +3,8 @@ package parse
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"io"
 	"os"
 
@@ -84,4 +86,23 @@ func ParseMultiFile(p string) ([]*schema.Config, error) {
 	}
 	defer f.Close()
 	return ParseMulti(f)
+}
+
+// ToConfig converts any config-like value into a *schema.Config by
+// round-tripping through JSON.
+func ToConfig(src any) (*schema.Config, error) {
+	if src == nil {
+		return nil, errors.New("source config is nil")
+	}
+	// Marshal src to JSON
+	data, err := json.Marshal(src)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal config: %w", err)
+	}
+	// Unmarshal JSON to schema.Config
+	dst := new(schema.Config)
+	if err := json.Unmarshal(data, dst); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal to schema.Config: %w", err)
+	}
+	return dst, nil
 }

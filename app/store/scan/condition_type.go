@@ -20,7 +20,7 @@ type ScanPlanCondition struct {
 	CreatedDate *datetime.Local           `gorm:"column:createdDate"`
 	EditedBy    string                    `gorm:"column:editedBy"`
 	EditedDate  *datetime.Local           `gorm:"column:editedDate"`
-	Deleted     bool                      `gorm:"column:deleted"`
+	Deleted     uint8                     `gorm:"column:deleted"`
 }
 
 func (r *ScanPlanCondition) TableName() string { return "ops_scan_plan_conditions" }

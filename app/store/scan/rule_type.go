@@ -22,13 +22,13 @@ type Rule struct {
 	Type        constant.ScanRuleType     `gorm:"column:type"`
 	Content     sql.NullString            `gorm:"column:content"`
 	ContentEn   sql.NullString            `gorm:"column:contentEn"`
-	IsCustom    bool                      `gorm:"column:isCustom"`
+	IsCustom    uint8                     `gorm:"column:isCustom"`
 	Status      constant.ScanRuleStatus   `gorm:"column:status"`
 	CreatedBy   string                    `gorm:"column:createdBy"`
 	CreatedDate *datetime.Local           `gorm:"column:createdDate"`
 	EditedBy    string                    `gorm:"column:editedBy"`
 	EditedDate  *datetime.Local           `gorm:"column:editedDate"`
-	Deleted     bool                      `gorm:"column:deleted"`
+	Deleted     uint8                     `gorm:"column:deleted"`
 }
 
 // TableName 指定数据库表名

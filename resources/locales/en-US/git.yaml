@@ -23,6 +23,7 @@ git:
   push_out_of_date: "Push out of date, need to pull first."
   merge_conflict: "Merge conflict."
   fast_forward_target_not_ancestor: "The latest commit on the target branch is not an ancestor of the source branch."
+  merge_source_out_of_date: "The source branch has new commits. The recorded revision is out of date. Please refresh and try again."
   merge_check_base_branch_not_found: "Either base branch or commit SHA is mandatory."
   merge_check_head_branch_not_found: "Head branch is mandatory."
   merge_check_ref_type_not_found: "Ref name has to be provided if type is defined."

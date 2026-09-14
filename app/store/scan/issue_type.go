@@ -32,7 +32,7 @@ type ScanIssue struct {
 	Payload         []byte                        `gorm:"column:payload"`
 	CreatedDate     *datetime.Local               `gorm:"column:createdDate"`
 	EditedDate      *datetime.Local               `gorm:"column:editedDate"`
-	Deleted         bool                          `gorm:"column:deleted"`
+	Deleted         uint8                         `gorm:"column:deleted"`
 	ResolvedDate    *datetime.Local               `gorm:"column:resolvedDate"`
 	ClosedDate      *datetime.Local               `gorm:"column:closedDate"`
 	IgnoredDate     *int64                        `gorm:"column:ignoredDate"`

@@ -22,7 +22,7 @@ type ScanTask struct {
 	EditedDate  *datetime.Local              `gorm:"column:editedDate"`
 	ScanType    constant.ScanType            `gorm:"column:scanType"`
 	IssueNumber int64                        `gorm:"column:issueNumber"`
-	Deleted     bool                         `gorm:"column:deleted"`
+	Deleted     uint8                        `gorm:"column:deleted"`
 }
 
 func (r *ScanTask) TableName() string { return "ops_scan_tasks" }

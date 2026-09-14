@@ -37,7 +37,7 @@ func (s *SolutionService) Create(ctx context.Context, session *authModel.Session
 		Desc:      req.Desc,
 		DescEn:    req.DescEn,
 		Tag:       req.Tag,
-		IsCustom:  true,
+		IsCustom:  database.BoolToUint8(true),
 		Status:    req.Status,
 		CreatedBy: session.User.Account,
 		EditedBy:  session.User.Account,

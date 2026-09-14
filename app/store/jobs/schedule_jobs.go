@@ -9,7 +9,6 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 )
 
 var _ Interface = (*Store)(nil)
@@ -76,23 +75,54 @@ func (s *Store) Create(ctx context.Context, job *jobModel.ScheduleJob) error {
 
 // Upsert will insert the job in the database if the job didn't already exist,
 // or it will update the existing one but only if its definition has changed.
+//
+// 采用"先查询、再插入或更新"的两段式实现，避免依赖 clause.OnConflict：
+// gorm.io/driver/gaussdb 将 OnConflict 生成为 MySQL 的 ON DUPLICATE KEY UPDATE，
+// 在 GaussDB 不同兼容格式（PG/B）下支持情况不一致，容易报错。改用标准
+// SELECT + INSERT/UPDATE 可同时兼容两种格式。
 func (s *Store) Upsert(ctx context.Context, job *jobModel.ScheduleJob) error {
 	storeJob := mapJobToStore(job)
 	storeJob.EditedDate = datetime.NowLocalTime()
 
-	// 使用 ON DUPLICATE KEY UPDATE 进行 upsert
-	// 只有当定义字段有变化时才更新
-	if err := s.db.WithContext(ctx).Clauses(clause.OnConflict{
-		Columns: []clause.Column{{Name: "name"}},
-		DoUpdates: clause.AssignmentColumns([]string{
-			"editedDate", "type", "priority", "data", "result",
-			"maxDurationSeconds", "maxRetries", "state",
-			"scheduled", "isRecurring", "recurringCron",
-		}),
-	}).Create(storeJob).Error; err != nil {
+	// 1. 先按 name 查询是否已存在
+	var existing ScheduleJob
+	err := s.db.WithContext(ctx).
+		Where("name = ?", storeJob.Name).
+		First(&existing).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
 		return database.ProcessSQLErrorf(ctx, err)
 	}
-	job.ID = uint(storeJob.ID)
+
+	// 2. 不存在则插入新记录
+	if err == gorm.ErrRecordNotFound {
+		if err := s.db.WithContext(ctx).Create(storeJob).Error; err != nil {
+			return database.ProcessSQLErrorf(ctx, err)
+		}
+		job.ID = uint(storeJob.ID)
+		return nil
+	}
+
+	// 3. 已存在则更新定义字段（仅在定义变化时更新由上层保证）
+	updates := map[string]any{
+		"editedDate":         storeJob.EditedDate,
+		"type":               storeJob.Type,
+		"priority":           storeJob.Priority,
+		"data":               storeJob.Data,
+		"result":             storeJob.Result,
+		"maxDurationSeconds": storeJob.MaxDurationSeconds,
+		"maxRetries":         storeJob.MaxRetries,
+		"state":              storeJob.State,
+		"scheduled":          storeJob.Scheduled,
+		"isRecurring":        storeJob.IsRecurring,
+		"recurringCron":      storeJob.RecurringCron,
+	}
+	if err := s.db.WithContext(ctx).
+		Model(&ScheduleJob{}).
+		Where("id = ?", existing.ID).
+		Updates(updates).Error; err != nil {
+		return database.ProcessSQLErrorf(ctx, err)
+	}
+	job.ID = uint(existing.ID)
 	return nil
 }
 
@@ -269,7 +299,7 @@ func (s *Store) DeleteOld(ctx context.Context, olderThan time.Time) (int64, erro
 
 	result := s.db.WithContext(ctx).
 		Where("isRecurring = ? AND state IN (?, ?, ?) AND lastExecuted < ?",
-			false, jobModel.StateFinished, jobModel.StateFailed, jobModel.StateCanceled, olderThanLocal).
+			0, jobModel.StateFinished, jobModel.StateFailed, jobModel.StateCanceled, olderThanLocal).
 		Delete(&ScheduleJob{})
 
 	if result.Error != nil {
@@ -308,7 +338,7 @@ func mapJobToModel(j ScheduleJob) *jobModel.ScheduleJob {
 		RunDeadline:         j.RunDeadline,
 		RunProgress:         j.RunProgress,
 		LastExecuted:        j.LastExecuted,
-		IsRecurring:         j.IsRecurring,
+		IsRecurring:         j.IsRecurring != 0,
 		RecurringCron:       j.RecurringCron,
 		ConsecutiveFailures: j.ConsecutiveFailures,
 		LastFailureError:    j.LastFailureError.String,
@@ -338,7 +368,7 @@ func mapJobToStore(j *jobModel.ScheduleJob) *ScheduleJob {
 		RunDeadline:         j.RunDeadline,
 		RunProgress:         j.RunProgress,
 		LastExecuted:        j.LastExecuted,
-		IsRecurring:         j.IsRecurring,
+		IsRecurring:         database.BoolToUint8(j.IsRecurring),
 		RecurringCron:       j.RecurringCron,
 		ConsecutiveFailures: j.ConsecutiveFailures,
 		LastFailureError:    database.NoNull(j.LastFailureError),

@@ -25,6 +25,7 @@ import (
 	webhookStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/webhook"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/auth/authn"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
@@ -104,7 +105,7 @@ func (r *Repository) Create(ctx context.Context, session *auth.Session, req *rep
 		DefaultBranch: req.DefaultBranch,
 		Status:        req.Status,
 		ACL:           req.ACL,
-		Mirror:        req.Mirror,
+		Mirror:        database.BoolToUint8(req.Mirror),
 		ProviderID:    req.ProviderID,
 		Connector:     req.Connector,
 	}
@@ -359,11 +360,11 @@ func (r *Repository) createDefaultWebhook(ctx context.Context, repo *repoModel.R
 		DisplayName: displayName,
 		URL:         fmt.Sprintf("%s/gitfox/webhook?repoID=%d", r.devopsConfig.URL, repo.ID),
 		Secret:      repo.GitUID,
-		IsSSL:       false,
-		Internal:    false,
+		IsSSL:       0,
+		Internal:    0,
 		AuthMethod:  constant.DefaultAuthMethod,
 		AuthHeader:  constant.DefaultAuthHeader,
-		Enabled:     true,
+		Enabled:     1,
 		CreatedBy:   repo.CreatedBy,
 		EditedBy:    repo.CreatedBy,
 	}

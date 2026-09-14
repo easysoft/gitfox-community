@@ -20,7 +20,7 @@ type Plugin struct {
 	CreatedDate *datetime.Local `gorm:"column:createdDate"`
 	EditedBy    string          `gorm:"column:editedBy"`
 	EditedDate  *datetime.Local `gorm:"column:editedDate"`
-	Deleted     int8            `gorm:"column:deleted"`
+	Deleted     uint8           `gorm:"column:deleted"`
 }
 
 // TableName 指定数据库表名
@@ -47,7 +47,7 @@ type PluginGroup struct {
 	ID      int64  `gorm:"column:id;primaryKey;autoIncrement;comment:'插件分组ID，自增主键'"`
 	Name    string `gorm:"column:name;not null;comment:'插件分组名称（唯一标识符）'"`
 	Desc    string `gorm:"column:desc;not null;default:'';comment:'插件分组描述信息'"`
-	Deleted int8   `gorm:"column:deleted;not null;default:0;comment:'删除标识，0-未删除，1-已删除'"`
+	Deleted uint8  `gorm:"column:deleted;not null;default:0;comment:'删除标识，0-未删除，1-已删除'"`
 }
 
 // TableName 指定数据库表名

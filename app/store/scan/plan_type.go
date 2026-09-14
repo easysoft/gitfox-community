@@ -18,7 +18,7 @@ type ScanPlan struct {
 	CreatedDate *datetime.Local `gorm:"column:createdDate"`
 	EditedBy    string          `gorm:"column:editedBy"`
 	EditedDate  *datetime.Local `gorm:"column:editedDate"`
-	Deleted     bool            `gorm:"column:deleted"`
+	Deleted     uint8           `gorm:"column:deleted"`
 }
 
 func (r *ScanPlan) TableName() string { return "ops_scan_plans" }
@@ -45,7 +45,7 @@ type ScanPlanSolution struct {
 	CreatedDate *datetime.Local `gorm:"column:createdDate"`
 	EditedBy    string          `gorm:"column:editedBy"`
 	EditedDate  *datetime.Local `gorm:"column:editedDate"`
-	Deleted     bool            `gorm:"column:deleted"`
+	Deleted     uint8           `gorm:"column:deleted"`
 }
 
 func (r *ScanPlanSolution) TableName() string { return "ops_scan_plan_solutions" }

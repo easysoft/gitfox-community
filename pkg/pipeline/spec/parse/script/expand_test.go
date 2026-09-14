@@ -14,7 +14,11 @@
 
 package script
 
-import "testing"
+import (
+	"testing"
+
+	schema "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pipeline/spec"
+)
 
 func TestExpand(t *testing.T) {
 	inputs := map[string]interface{}{
@@ -25,5 +29,23 @@ func TestExpand(t *testing.T) {
 	s := Expand("golang:1.0.0-build.${{pipeline.number}}", inputs)
 	if got, want := s, "golang:1.0.0-build.13213"; got != want {
 		t.Errorf("want expanded variable %s, got %s", want, got)
+	}
+}
+
+func TestExpandStepEntry(t *testing.T) {
+	inputs := map[string]interface{}{
+		"inputs": map[string]interface{}{
+			"repository": "https://example.com/repo.git",
+		},
+	}
+	step := &schema.Step{
+		Spec: &schema.StepScript{
+			Entry: "gffox clone --depth 1 ${{ inputs.repository }}",
+		},
+	}
+	ExpandStep(step, inputs)
+	got := step.Spec.(*schema.StepScript).Entry
+	if want := "gffox clone --depth 1 https://example.com/repo.git"; got != want {
+		t.Errorf("want expanded entry %q, got %q", want, got)
 	}
 }

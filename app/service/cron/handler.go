@@ -124,10 +124,7 @@ func (h *pipelineTriggerHandler) resolveGitRef(ctx context.Context, pipelineID i
 	}
 	ref, ok := vars["gitRef"]
 	if !ok {
-		return "", fmt.Errorf("pipeline %d: gitRef variable not found in variables, please configure it", pipelineID)
-	}
-	if ref == "" {
-		return "", fmt.Errorf("pipeline %d: gitRef variable is not set", pipelineID)
+		return "", nil
 	}
 	return ref, nil
 }

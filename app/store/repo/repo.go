@@ -141,7 +141,7 @@ func mapToModel(data Repository) *repoModel.Repo {
 		ForkID:        data.ForkID,
 		Path:          path,
 		ACL:           data.ACL,
-		Mirror:        data.Mirror,
+		Mirror:        data.Mirror != 0,
 		ProviderID:    data.ProviderID,
 		Connector:     data.Connector,
 		Status:        data.Status,

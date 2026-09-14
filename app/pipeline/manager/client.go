@@ -192,8 +192,9 @@ func (e *embedded) Watch(ctx context.Context, executionID int64) (bool, error) {
 
 // Batch batch writes logs to the streaming logs.
 func (e *embedded) Batch(ctx context.Context, stepID int64, lines []*drone.Line) error {
+	base := e.manager.StepStartTime(ctx, stepID)
 	for _, l := range lines {
-		line := ConvertFromDroneLine(l)
+		line := ConvertFromDroneLine(l, base)
 		err := e.manager.Write(ctx, stepID, line)
 		if err != nil {
 			return err
@@ -204,10 +205,11 @@ func (e *embedded) Batch(ctx context.Context, stepID int64, lines []*drone.Line)
 
 // Upload uploads the full logs to the server.
 func (e *embedded) Upload(ctx context.Context, stepID int64, l []*drone.Line) error {
+	base := e.manager.StepStartTime(ctx, stepID)
 	var buffer bytes.Buffer
 	lines := []livelog.Line{}
 	for _, line := range l {
-		lines = append(lines, *ConvertFromDroneLine(line))
+		lines = append(lines, *ConvertFromDroneLine(line, base))
 	}
 	out, err := json.Marshal(lines)
 	if err != nil {
