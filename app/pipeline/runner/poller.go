@@ -87,7 +87,9 @@ func registerDefaultRunners(
 	ctx := context.Background()
 
 	for i := 1; i <= n; i++ {
-		token := fmt.Sprintf("internal.default.%s.%d", hostname, i)
+		// 不包含 hostname：容器重建/机器改名后 hostname 变化会导致幂等检查失效，
+		// 每次启动都重新插入一组默认 runner。固定为 internal.default.<i> 保证跨实例稳定。
+		token := fmt.Sprintf("internal.default.%d", i)
 
 		// Idempotency: if the token already exists, reuse it (restart scenario).
 		// Ensure the built-in runner stays online and enabled.

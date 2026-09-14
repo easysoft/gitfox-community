@@ -463,5 +463,5 @@ func composeDatasource(config *Config) string {
 		config.Database.Host,
 		config.Database.Port,
 		config.Database.Name,
-		config.Database.Timezone)
+		url.QueryEscape(config.Database.Timezone))
 }

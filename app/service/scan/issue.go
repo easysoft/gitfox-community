@@ -17,6 +17,7 @@ import (
 	scanStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/scan"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 )
 
 // typecheckSubErrorRe 匹配 typecheck 消息中的子错误，格式：./path:line:col: message
@@ -49,12 +50,12 @@ func expandTypecheckIssue(check *scanModel.IssueInputCheck) []*scanModel.IssueIn
 
 // AnalyzeTaskUploadReport 分析上传的扫描报告
 // taskID：codescan 场景为扫描任务 ID；AI 评审场景语义为 ppmID，可为 0（无 MR，由 executionID 归属执行）
-func (s *ScanTaskService) AnalyzeTaskUploadReport(ctx context.Context, repoID uint, taskID uint, executionID int64, method string, content []byte) (*scanModel.ScanIssueReport, error) {
+func (s *ScanTaskService) AnalyzeTaskUploadReport(ctx context.Context, repoID, taskID uint, executionID int64, method string, content []byte) (*scanModel.ScanIssueReport, error) {
 
 	var err error
 	task := &scanModel.ScanTaskInfo{}
 	ppm := &repoModel.PullRequest{}
-	var exec *executionModel.Execution
+	var execution *executionModel.Execution
 
 	if method == "ai" {
 		if taskID == 0 {
@@ -63,7 +64,7 @@ func (s *ScanTaskService) AnalyzeTaskUploadReport(ctx context.Context, repoID ui
 			if executionID <= 0 {
 				return nil, fmt.Errorf("executionID is required when ppmID is 0")
 			}
-			exec, err = s.executionStore.GetByID(ctx, uint(executionID))
+			execution, err = s.executionStore.GetByID(ctx, uint(executionID))
 			if err != nil {
 				return nil, fmt.Errorf("failed to get execution by ID %d: %w", executionID, err)
 			}
@@ -92,10 +93,10 @@ func (s *ScanTaskService) AnalyzeTaskUploadReport(ctx context.Context, repoID ui
 	case constant.ScanMethodAI:
 		// 唯一键作用域：有 MR 用 ppmID，无 MR 用 executionID（key = ai/{scopeID}/{path}/{startLine}/{endLine}）
 		scopeID := int64(ppm.ID)
-		if exec != nil {
-			scopeID = int64(exec.ID)
+		if execution != nil {
+			scopeID = int64(execution.ID)
 		}
-		inputIssues, err = s.analyzeAIIssues(content, repoID, scopeID, report)
+		inputIssues, err = s.analyzeAIIssues(ctx, content, repoID, scopeID, report)
 	default:
 		return nil, fmt.Errorf("unsupported scan method: %s", method)
 	}
@@ -106,17 +107,21 @@ func (s *ScanTaskService) AnalyzeTaskUploadReport(ctx context.Context, repoID ui
 	if scanMethod == constant.ScanMethodAI {
 		// AI 类型的 issues 直接批量插入
 		var saveErr error
-		if exec != nil {
+		var added, skipped int
+		if execution != nil {
 			// 无 MR 场景：以 executionID 查出的执行数据填充（createdBy/ref 等）
-			saveErr = s.saveAIIssuesForExecution(ctx, inputIssues, exec, int64(repoID))
+			added, skipped, saveErr = s.saveAIIssuesForExecution(ctx, inputIssues, execution, int64(repoID))
 		} else {
-			saveErr = s.saveAIIssues(ctx, inputIssues, ppm)
+			added, skipped, saveErr = s.saveAIIssues(ctx, inputIssues, ppm)
 		}
 		if saveErr != nil {
 			return nil, saveErr
 		}
-		report.Add = len(inputIssues)
+
+		// Total 为本次解析出的条数，Add/Skip 为实际入库与跳过的条数
 		report.Total = len(inputIssues)
+		report.Add = added
+		report.Skip = skipped
 		return report, nil
 	}
 
@@ -242,13 +247,19 @@ func (s *ScanTaskService) analyzeSmellIssues(
 
 // analyzeAIIssues 解析 ai 类型的 issues
 // scopeID 为 issue 唯一键的作用域：有 MR 场景传 ppmID，无 MR（ppmID=0）场景传 executionID
-func (s *ScanTaskService) analyzeAIIssues(content []byte, repoID uint, scopeID int64, report *scanModel.ScanIssueReport) ([]*scanModel.ScanIssue, error) {
+func (s *ScanTaskService) analyzeAIIssues(
+	ctx context.Context, content []byte, repoID uint, scopeID int64, report *scanModel.ScanIssueReport,
+) ([]*scanModel.ScanIssue, error) {
 	var aiReport scanModel.AIReportResponse
 	if err := json.Unmarshal(content, &aiReport); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal AI report: %w", err)
 	}
 
-	if aiReport.Status != "complete" || len(aiReport.Comments) == 0 {
+	// ocr 上报的 status 有 complete/partial/skipped/failed 等取值，其中 partial 表示部分
+	// 文件评审失败但仍有可用意见（ocr 退出码为 0）。这里只以意见数量为准，避免上游新增
+	// 状态值时整份报告被静默丢弃。
+	if len(aiReport.Comments) == 0 {
+		logger.GetLogger(ctx).Infof("[ai-review] no comments in report, skip: status=%s", aiReport.Status)
 		return nil, nil
 	}
 
@@ -469,10 +480,10 @@ func (s *ScanTaskService) saveIssues(ctx context.Context, comp *scanModel.ScanIs
 	return nil
 }
 
-// saveAIIssues 有 MR（ppmID>0）场景：AI issues 归属到合并请求
-func (s *ScanTaskService) saveAIIssues(ctx context.Context, issues []*scanModel.ScanIssue, ppm *repoModel.PullRequest) error {
+// saveAIIssues 直接批量插入 AI 类型的 issues，返回实际插入与跳过的条数（跳过的 key 已存在）
+func (s *ScanTaskService) saveAIIssues(ctx context.Context, issues []*scanModel.ScanIssue, ppm *repoModel.PullRequest) (int, int, error) {
 	if len(issues) == 0 {
-		return nil
+		return 0, 0, nil
 	}
 	for _, item := range issues {
 		item.PpmID = int64(ppm.ID)
@@ -484,23 +495,24 @@ func (s *ScanTaskService) saveAIIssues(ctx context.Context, issues []*scanModel.
 
 // saveAIIssuesForExecution 无 MR（ppmID=0）场景：AI issues 归属到 executionID 对应的执行，
 // 归属数据（createdBy/ref/repoID）由 execution 记录填充，与 ppm 关联的字段全部置 0/留空
-func (s *ScanTaskService) saveAIIssuesForExecution(ctx context.Context, issues []*scanModel.ScanIssue, exec *executionModel.Execution, repoID int64) error {
+func (s *ScanTaskService) saveAIIssuesForExecution(ctx context.Context, issues []*scanModel.ScanIssue, execution *executionModel.Execution, repoID int64) (int, int, error) {
 	if len(issues) == 0 {
-		return nil
+		return 0, 0, nil
 	}
 	for _, item := range issues {
 		item.PpmID = 0
-		item.ExecutionID = int64(exec.ID)
+		item.ExecutionID = int64(execution.ID)
 		item.RepoID = repoID
-		item.RepoBranch = exec.Ref
+		item.RepoBranch = execution.Ref
 	}
-	return s.insertAIIssues(ctx, issues, exec.CreatedBy)
+	return s.insertAIIssues(ctx, issues, execution.CreatedBy)
 }
 
 // insertAIIssues 直接批量插入 AI 类型的 issues（按 key 去重）
-func (s *ScanTaskService) insertAIIssues(ctx context.Context, issues []*scanModel.ScanIssue, createdBy string) error {
+// 返回实际插入与跳过的条数（跳过的 key 已存在）
+func (s *ScanTaskService) insertAIIssues(ctx context.Context, issues []*scanModel.ScanIssue, createdBy string) (int, int, error) {
 	if len(issues) == 0 {
-		return nil
+		return 0, 0, nil
 	}
 
 	rawIssues := make([]*scanStore.ScanIssue, 0, len(issues))
@@ -533,45 +545,74 @@ func (s *ScanTaskService) insertAIIssues(ctx context.Context, issues []*scanMode
 		})
 	}
 
-	// 预校验：已存在的 issue 不重复插入
+	// 批内去重：同一份报告里可能存在 path/startLine/endLine 相同的 comment，key 会重复，
+	// 不去重会导致整批插入触发唯一键冲突
 	keys := make([]string, 0, len(rawIssues))
+	seen := make(map[string]struct{}, len(rawIssues))
+	deduped := make([]*scanStore.ScanIssue, 0, len(rawIssues))
+	skipped := 0
 	for _, item := range rawIssues {
+		if _, ok := seen[item.Key]; ok {
+			skipped++
+			continue
+		}
+		seen[item.Key] = struct{}{}
 		keys = append(keys, item.Key)
-	}
-	existingKeys, err := s.issueStore.ListExistingKeys(ctx, keys)
-	if err != nil {
-		return err
+		deduped = append(deduped, item)
 	}
 
-	storeIssues := rawIssues
+	// 预校验：已存在的 issue 不重复插入
+	existingKeys, err := s.issueStore.ListExistingKeys(ctx, keys)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	storeIssues := deduped
 	if len(existingKeys) > 0 {
 		existingSet := make(map[string]struct{}, len(existingKeys))
 		for _, k := range existingKeys {
 			existingSet[k] = struct{}{}
 		}
-		filterIssues := rawIssues[:0]
-		for _, item := range rawIssues {
-			if _, ok := existingSet[item.Key]; !ok {
-				filterIssues = append(filterIssues, item)
+		filterIssues := deduped[:0]
+		for _, item := range deduped {
+			if _, ok := existingSet[item.Key]; ok {
+				skipped++
+				continue
 			}
+			filterIssues = append(filterIssues, item)
 		}
 		storeIssues = filterIssues
 	}
 	if len(storeIssues) == 0 {
-		return nil
+		return 0, skipped, nil
 	}
 
+	added := 0
 	pages := paginateIndex(len(storeIssues), 1000)
 	for _, p := range pages {
-		if err := s.issueStore.BatchCreate(ctx, storeIssues[p[0]:p[1]]); err != nil {
-			// 并发插入仍可能冲突，已存在的 issue 不重复插入，跳过本批继续
-			if errors.Is(err, errors.ErrDuplicate) {
+		page := storeIssues[p[0]:p[1]]
+		if err := s.issueStore.BatchCreate(ctx, page); err == nil {
+			added += len(page)
+			continue
+		} else if !errors.Is(err, errors.ErrDuplicate) {
+			return 0, 0, err
+		}
+
+		// 并发插入仍可能冲突：降级为逐条插入，只忽略重复的 issue，整批不再丢弃
+		for _, item := range page {
+			err := s.issueStore.Create(ctx, item)
+			if err == nil {
+				added++
 				continue
 			}
-			return err
+			if errors.Is(err, errors.ErrDuplicate) {
+				skipped++
+				continue
+			}
+			return 0, 0, err
 		}
 	}
-	return nil
+	return added, skipped, nil
 }
 
 // bindIssuesByTaskID 绑定 issues 到 task，并更新 task 的 issue 数量

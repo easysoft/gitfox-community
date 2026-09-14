@@ -652,6 +652,7 @@ const (
 	GitMergeCheckNoCommits          I18nKey = "git.merge_check_no_commits"            // 合并检查头分支没有新提交.
 	GitMergeCheckRefTypeNotFound    I18nKey = "git.merge_check_ref_type_not_found"    // 合并检查引用类型不能为空.
 	GitMergeConflict                I18nKey = "git.merge_conflict"                    // 合并冲突.
+	GitMergeSourceOutOfDate         I18nKey = "git.merge_source_out_of_date"          // 源分支已有新提交,当前记录的提交版本已过期,请刷新后重试.
 	GitObjectNotFound               I18nKey = "git.object_not_found"                  // 对象不存在.
 	GitPathNotFound                 I18nKey = "git.path_not_found"                    // 路径不存在.
 	GitPushOutOfDate                I18nKey = "git.push_out_of_date"                  // 推送过期,需要先拉取.

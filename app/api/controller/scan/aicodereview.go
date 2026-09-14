@@ -113,21 +113,19 @@ func (c *ScanController) ReviewTaskUploadReport(ctx *gin.Context) {
 	}
 
 	method := ctx.Request.FormValue("method")
-	if method == "" {
+	if method == "" || (method != string(constant.ScanMethodAI)) {
 		resp.BadRequest(ctx, errors.WithI18nKey(nil, i18n.CodeReviewBodyParamError))
 		return
 	}
 
 	// executionID（GITFOX_EXECUTION_ID）为数字字符串；ppmID=0（无 MR）时必须携带非 0 值
 	var executionID int64
-	if method == string(constant.ScanMethodAI) {
-		if executionID, err = strconv.ParseInt(ctx.Request.FormValue("executionID"), 10, 64); err != nil {
-			executionID = 0
-		}
-		if ppmID == 0 && executionID <= 0 {
-			resp.BadRequest(ctx, errors.WithI18nKey(nil, i18n.CodeReviewBodyParamError))
-			return
-		}
+	if executionID, err = strconv.ParseInt(ctx.Request.FormValue("executionID"), 10, 64); err != nil {
+		executionID = 0
+	}
+	if ppmID == 0 && executionID <= 0 {
+		resp.BadRequest(ctx, errors.WithI18nKey(nil, i18n.CodeReviewBodyParamError))
+		return
 	}
 
 	var report *scanModel.ScanIssueReport
