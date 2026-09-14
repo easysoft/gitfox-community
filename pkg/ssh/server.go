@@ -28,9 +28,8 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
 	principal "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/user"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/publickey"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/api"
-
-	"github.com/easysoft/gitfox/errors"
 
 	"github.com/gliderlabs/ssh"
 	gossh "golang.org/x/crypto/ssh"
@@ -84,7 +83,7 @@ func (s *Server) sanitize() error {
 	}
 
 	if s.GitCtrl == nil {
-		return errors.InvalidArgument("git controller is needed to run git service pack commands")
+		return errors.InvalidArgument.New("git controller is needed to run git service pack commands")
 	}
 
 	return nil
