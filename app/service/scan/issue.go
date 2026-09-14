@@ -4,9 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"path/filepath"
 	"regexp"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
@@ -20,29 +22,72 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 )
 
-// typecheckSubErrorRe 匹配 typecheck 消息中的子错误，格式：./path:line:col: message
-var typecheckSubErrorRe = regexp.MustCompile(`\./([^:]+):(\d+):(\d+):\s*([^./][^\n]*)`)
+// typecheckSubErrorRe 匹配 typecheck 消息中的一条子错误（<文件>:<行>:<列>: <错误>）。
+// 由调用方逐行匹配：golangci-lint 对 root 包的文件输出 `./main.go:1:2:`、对子目录包
+// 输出 `pkg/a.go:1:2:`（无 ./ 前缀），两种形态都要认；逐行匹配也避免单条大正则把
+// 下一行的文件路径吞进 message。
+var typecheckSubErrorRe = regexp.MustCompile(`^([^:\s]+):(\d+):(\d+):\s*(.*)$`)
 
-// expandTypecheckIssue 将 golangci-lint typecheck 的捆绑消息拆分为多条独立 issue
+// expandTypecheckIssue 将 golangci-lint typecheck 的捆绑消息拆分为多条独立 issue。
+//
+// typecheck 把同一个包内的多个编译错误塞进一条 message（首行 `# 包名`，其后每行
+// `<文件>:<行>:<列>: <错误>`），location 却只锚在包内首个文件的第 1 行。不拆开的话
+// 整包错误只算一条 issue 且位置错误——按行号做增量过滤时（codescan 插件按 git diff
+// 新增行过滤）还会因为锚点行不在改动范围内而整条丢失。
+//
+// 子错误沿用原 issue 的 tool/ruleKey/等级/类别，位置改写为自身的路径/行/列；
+// snippet、snippetWithContext 与 location.commit 属于锚点位置，一并清空避免张冠李戴。
+// codescan 插件上报前已展开的报告不会再命中 typecheckSubErrorRe，不会被二次拆分。
 func expandTypecheckIssue(check *scanModel.IssueInputCheck) []*scanModel.IssueInputCheck {
 	if check.Tool != "golangci-lint" || check.RuleKey != "typecheck" {
 		return []*scanModel.IssueInputCheck{check}
 	}
-	matches := typecheckSubErrorRe.FindAllStringSubmatch(check.Message, -1)
-	if len(matches) <= 1 {
+
+	type subError struct {
+		path    string
+		line    int64
+		col     int64
+		message string
+	}
+	var subs []subError
+	for _, line := range strings.Split(check.Message, "\n") {
+		m := typecheckSubErrorRe.FindStringSubmatch(line)
+		if m == nil {
+			continue
+		}
+		lineNo, lineErr := strconv.ParseInt(m[2], 10, 64)
+		col, colErr := strconv.ParseInt(m[3], 10, 64)
+		if lineErr != nil || colErr != nil || lineNo <= 0 {
+			continue
+		}
+		path := strings.TrimPrefix(m[1], "./")
+		// 绝对路径（仓库自带 .golangci.yml 配 path-mode: abs）与库内相对路径口径
+		// 不一致：跳过该子错误，整条 issue 保持原样
+		if filepath.IsAbs(path) {
+			continue
+		}
+		subs = append(subs, subError{
+			path:    path,
+			line:    lineNo,
+			col:     col,
+			message: strings.TrimSpace(m[4]),
+		})
+	}
+	if len(subs) == 0 {
 		return []*scanModel.IssueInputCheck{check}
 	}
-	result := make([]*scanModel.IssueInputCheck, 0, len(matches))
-	for _, m := range matches {
-		line, _ := strconv.ParseInt(m[2], 10, 64)
-		col, _ := strconv.ParseInt(m[3], 10, 64)
-		msg := m[4]
-		item := *check
-		item.Message = msg
-		item.Location.Path = m[1]
-		item.Location.Range.StartLine = line
-		item.Location.Range.EndLine = line
-		item.Location.Range.StartByte = col
+
+	result := make([]*scanModel.IssueInputCheck, 0, len(subs))
+	for _, s := range subs {
+		item := *check // 值拷贝，&item 各条独立
+		item.Message = s.message
+		item.Snippet = ""
+		item.SnippetWithContext = ""
+		// 重建 location：锚点的 range 与 commit 一律清空，只留子错误自身的位置
+		item.Location = scanModel.IssueLocation{Path: s.path}
+		item.Location.Range.StartLine = s.line
+		item.Location.Range.EndLine = s.line
+		item.Location.Range.StartColumn = s.col
 		result = append(result, &item)
 	}
 	return result
@@ -170,18 +215,19 @@ func (s *ScanTaskService) analyzeCheckIssues(
 		return nil, fmt.Errorf("failed to unmarshal check issues: %w", err)
 	}
 
-	report.Total = len(checks)
-
 	ruleKeyMap, err := s.buildRuleKeyMapByTask(ctx, task)
 	if err != nil {
 		return nil, err
 	}
 
-	// 展开 golangci-lint typecheck 捆绑消息
+	// 展开 golangci-lint typecheck 捆绑消息（一条 message 里含多个子错误）
 	expanded := make([]*scanModel.IssueInputCheck, 0, len(checks))
 	for _, check := range checks {
 		expanded = append(expanded, expandTypecheckIssue(check)...)
 	}
+
+	// Total 取展开后的条数：展开出的子错误各自入库，与 MissingRule 等统计口径一致
+	report.Total = len(expanded)
 
 	var issues []*scanModel.ScanIssue
 	for _, check := range expanded {

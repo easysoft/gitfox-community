@@ -84,10 +84,12 @@ type ScanIssueComparedData struct {
 type IssueLocation struct {
 	Path  string `json:"path"`
 	Range struct {
-		StartLine int64 `json:"startLine"`
-		EndLine   int64 `json:"endLine"`
-		StartByte int64 `json:"startByte,omitempty"`
-		EndByte   int64 `json:"endByte,omitempty"`
+		StartLine   int64 `json:"startLine"`
+		EndLine     int64 `json:"endLine"`
+		StartColumn int64 `json:"startColumn,omitempty"`
+		EndColumn   int64 `json:"endColumn,omitempty"`
+		StartByte   int64 `json:"startByte,omitempty"`
+		EndByte     int64 `json:"endByte,omitempty"`
 	} `json:"range"`
 	Commit struct {
 		CommitID       string `json:"commit_id"`
