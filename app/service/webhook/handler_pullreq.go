@@ -2,6 +2,8 @@ package webhook
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	pullreqevents "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/events/pullreq"
@@ -34,6 +36,7 @@ type PullReqCreatedPayload struct {
 	webhookModel.ReferenceSegment
 	webhookModel.ReferenceDetailsSegment
 	Reviewers []string `json:"reviewers"`
+	PrURL     string   `json:"pr_url"`
 }
 
 // handleEventPullReqCreated handles created events for pull requests
@@ -66,6 +69,7 @@ func (s *Service) handleEventPullReqCreated(ctx context.Context,
 					Principal:            principal,
 					PrincipalDisplayName: s.principalDisplayName(ctx, principal),
 				},
+				PrURL: ppmViewURL(s.devopsConfig.URL, pr.ID),
 				PullReqSegment: webhookModel.PullReqSegment{
 					PullReq: pullReqInfoFrom(pr),
 				},
@@ -336,4 +340,15 @@ func pullReqInfoFrom(pr *repoModel.PullRequest) webhookModel.PullReqInfo {
 		MergeStrategy: &mergeMethod,
 		Author:        pr.CreatedBy,
 	}
+}
+
+// ppmViewURL 拼接 PPM 合并请求详情页地址，例如 https://back.zcorp.cc/ipd/ppm-view-1560.html。
+// devopsConfig.URL 是禅道 API 地址（如 https://xxx/api.php/v1），PPM 页面在其上层目录，故拼接前先去除 /api.php/v1 后缀。
+// devopsConfig.URL 为空时返回空串，避免产出无意义的相对地址。
+func ppmViewURL(devopsURL string, prID uint) string {
+	if devopsURL == "" {
+		return ""
+	}
+	baseURL := strings.TrimSuffix(strings.TrimRight(devopsURL, "/"), "/api.php/v1")
+	return fmt.Sprintf("%s/ppm-view-%d.html", baseURL, prID)
 }

@@ -9,6 +9,7 @@ import (
 
 	webhookModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/webhook"
 	webhookStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/webhook"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
@@ -72,6 +73,7 @@ type Service struct {
 	urlProvider  url.Provider
 	git          git.Interface
 	config       Config
+	devopsConfig config.DevopsConfig
 
 	secureHTTPClient           *http.Client
 	insecureHTTPClient         *http.Client
@@ -82,6 +84,7 @@ type Service struct {
 func NewWebhookSvc(
 	ctx context.Context,
 	config Config,
+	devopsConfig config.DevopsConfig,
 	git git.Interface,
 	gitReaderFactory *events.ReaderFactory[*gitevents.Reader],
 	prReaderFactory *events.ReaderFactory[*pullreqevents.Reader],
@@ -98,6 +101,7 @@ func NewWebhookSvc(
 
 	service := &Service{
 		config:                     config,
+		devopsConfig:               devopsConfig,
 		git:                        git,
 		webhookStore:               webhookStore,
 		repoStore:                  repoStore,

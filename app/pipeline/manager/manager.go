@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"time"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	events "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/events/pipeline"
@@ -84,6 +85,11 @@ type (
 
 		// Write writes a line to the build logs.
 		Write(ctx context.Context, step int64, line *livelog.Line) error
+
+		// StepStartTime returns the time the step started, used as the base for
+		// converting the relative log timestamps reported by runners.
+		// It returns the zero time when the base is unavailable.
+		StepStartTime(ctx context.Context, stepID int64) time.Time
 
 		// Details returns details about stage.
 		Details(ctx context.Context, stageID int64) (*ExecutionContext, error)
@@ -234,6 +240,25 @@ func (m *Manager) Write(ctx context.Context, step int64, line *livelog.Line) err
 		return err
 	}
 	return nil
+}
+
+// StepStartTime returns the time the step started, used as the base for
+// converting the relative log timestamps reported by runners.
+// 取不到时（step 不存在、开始时间未知或查询失败）返回零值时间，
+// 由 ResolveLineTimestamp 退回当前时间，不影响日志写入本身。
+func (m *Manager) StepStartTime(ctx context.Context, stepID int64) time.Time {
+	step, err := m.StepSvc.GetByID(ctx, uint(stepID))
+	if err != nil {
+		logger.Warnw("manager: cannot resolve step start time",
+			"step-id", stepID,
+			"error", err,
+		)
+		return time.Time{}
+	}
+	if step.Started == nil {
+		return time.Time{}
+	}
+	return time.Unix(toUnix(step.Started), 0)
 }
 
 // UploadLogs uploads the full logs.
