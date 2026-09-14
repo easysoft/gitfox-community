@@ -21,12 +21,12 @@ import (
 	"io"
 	"sync"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/api"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/diff"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/enum"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/parser"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/sha"
-	"github.com/easysoft/gitfox/errors"
 
 	"golang.org/x/sync/errgroup"
 )
@@ -45,7 +45,7 @@ func (p DiffParams) Validate() error {
 	}
 
 	if p.HeadRef == "" {
-		return errors.InvalidArgument("head ref cannot be empty")
+		return errors.InvalidArgument.New("head ref cannot be empty")
 	}
 	return nil
 }
@@ -275,7 +275,7 @@ type DiffFilesParams struct {
 // The snippet is from the diff between the specified commit SHAs.
 func (s *Service) DiffCut(ctx context.Context, params *DiffCutParams) (DiffCutOutput, error) {
 	if params.SourceCommitSHA == params.TargetCommitSHA {
-		return DiffCutOutput{}, errors.InvalidArgument("source and target SHA cannot be the same")
+		return DiffCutOutput{}, errors.InvalidArgument.New("source and target SHA cannot be the same")
 	}
 
 	repoPath := getFullPathForRepo(s.reposRoot, params.RepoUID)

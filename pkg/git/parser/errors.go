@@ -14,11 +14,11 @@
 
 package parser
 
-import "github.com/easysoft/gitfox/errors"
+import "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 
 var (
-	ErrSHADoesNotMatch    = errors.InvalidArgument("sha does not match")
-	ErrHunkNotFound       = errors.NotFound("hunk not found")
-	ErrBinaryFile         = errors.InvalidArgument("can't handle a binary file")
-	ErrPeekedMoreThanOnce = errors.PreconditionFailed("peeking more than once in a row is not supported")
+	ErrSHADoesNotMatch    = errors.InvalidArgument.Newf("sha does not match")
+	ErrHunkNotFound       = errors.NotFound.Newf("hunk not found")
+	ErrBinaryFile         = errors.InvalidArgument.Newf("can't handle a binary file")
+	ErrPeekedMoreThanOnce = errors.PreconditionFailed.Newf("peeking more than once in a row is not supported")
 )

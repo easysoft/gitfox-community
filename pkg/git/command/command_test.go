@@ -23,7 +23,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/easysoft/gitfox/errors"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 )

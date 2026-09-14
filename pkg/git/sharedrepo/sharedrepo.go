@@ -30,13 +30,13 @@ import (
 	"sort"
 	"strings"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/api"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/command"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/parser"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/sha"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/tempdir"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
-	"github.com/easysoft/gitfox/errors"
 
 	"golang.org/x/exp/slices"
 )
@@ -241,7 +241,7 @@ func (r *SharedRepo) GetTreeSHA(
 	if err != nil {
 		cmdErr := command.AsError(err)
 		if cmdErr != nil && cmdErr.IsAmbiguousArgErr() {
-			return sha.None, errors.NotFound("could not resolve git revision %q", rev)
+			return sha.None, errors.NotFound.Newf("could not resolve git revision %q", rev)
 		}
 		return sha.None, fmt.Errorf("failed to get tree sha: %w", err)
 	}
@@ -281,7 +281,7 @@ func (r *SharedRepo) AddObjectToIndex(
 
 	if err := cmd.Run(ctx, command.WithDir(r.repoPath)); err != nil {
 		if matched, _ := regexp.MatchString(".*Invalid path '.*", err.Error()); matched {
-			return errors.InvalidArgument("invalid path '%s'", objectPath)
+			return errors.InvalidArgument.Newf("invalid path '%s'", objectPath)
 		}
 		return fmt.Errorf("failed to add object to index in shared repo (path=%s): %w", objectPath, err)
 	}
@@ -581,7 +581,7 @@ func (r *SharedRepo) DeleteFile(ctx context.Context, filePath string) error {
 		return fmt.Errorf("deleteFile: listing files error: %w", err)
 	}
 	if !slices.Contains(filesInIndex, filePath) {
-		return errors.NotFound("file path %s not found", filePath)
+		return errors.NotFound.Newf("file path %s not found", filePath)
 	}
 
 	if err = r.RemoveFilesFromIndex(ctx, filePath); err != nil {
@@ -662,7 +662,7 @@ func patchTextFileWritePatchedFile(
 			break
 		}
 		if replacements[i].OmitFrom < replacements[i-1].ContinueFrom {
-			return errors.InvalidArgument(
+			return errors.InvalidArgument.Newf(
 				"Patch actions have conflicting ranges [%s,%s)x[%s,%s)",
 				replacements[i-1].OmitFrom, replacements[i-1].ContinueFrom,
 				replacements[i].OmitFrom, replacements[i].ContinueFrom,
@@ -774,7 +774,7 @@ func patchTextFileWritePatchedFile(
 
 		// ensure replacement range isn't out of bounds
 		if replacements[i].OmitFrom > ln || replacements[i].ContinueFrom > ln {
-			return errors.InvalidArgument(
+			return errors.InvalidArgument.Newf(
 				"Patch action for [%s,%s) is exceeding end of file with %d line(s).",
 				originalOmitFrom, originalContinueFrom, ln-1,
 			)
@@ -783,7 +783,7 @@ func patchTextFileWritePatchedFile(
 		// ensure no overlap with next element
 		if i+1 < len(replacements) &&
 			replacements[i+1].OmitFrom < replacements[i].ContinueFrom {
-			return errors.InvalidArgument(
+			return errors.InvalidArgument.Newf(
 				"Patch actions have conflicting ranges [%s,%s)x[%s,%s) for file with %d line(s).",
 				originalOmitFrom, originalContinueFrom,
 				replacements[i+1].OmitFrom, replacements[i+1].ContinueFrom,
@@ -816,7 +816,7 @@ func (r *SharedRepo) getFileEntry(
 ) (*api.TreeNode, error) {
 	entry, err := api.GetTreeNode(ctx, r.repoPath, treeishSHA.String(), path, false)
 	if errors.IsNotFound(err) {
-		return nil, errors.NotFound("path %s not found", path)
+		return nil, errors.NotFound.Newf("path %s not found", path)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("getFileEntry: failed to get tree for path %s: %w", path, err)
@@ -824,7 +824,7 @@ func (r *SharedRepo) getFileEntry(
 
 	// If a SHA was given and the SHA given doesn't match the SHA of the fromTreePath, throw error
 	if !objectSHA.IsEmpty() && !objectSHA.Equal(entry.SHA) {
-		return nil, errors.InvalidArgument("sha does not match for path %s [given: %s, expected: %s]",
+		return nil, errors.InvalidArgument.Newf("sha does not match for path %s [given: %s, expected: %s]",
 			path, objectSHA, entry.SHA)
 	}
 
@@ -860,17 +860,17 @@ func (r *SharedRepo) checkPathAvailability(
 		switch {
 		case index < len(parts)-1:
 			if !entry.IsDir() {
-				return errors.Conflict("a file already exists where you're trying to create a subdirectory [path: %s]",
+				return errors.Conflict.Newf("a file already exists where you're trying to create a subdirectory [path: %s]",
 					subTreePath)
 			}
 		case entry.IsLink():
-			return errors.Conflict("a symbolic link already exist where you're trying to create a subdirectory [path: %s]",
+			return errors.Conflict.Newf("a symbolic link already exist where you're trying to create a subdirectory [path: %s]",
 				subTreePath)
 		case entry.IsDir():
-			return errors.Conflict("a directory already exists where you're trying to create a subdirectory [path: %s]",
+			return errors.Conflict.Newf("a directory already exists where you're trying to create a subdirectory [path: %s]",
 				subTreePath)
 		case filePath != "" || isNewFile:
-			return errors.Conflict("file path %s already exists", filePath)
+			return errors.Conflict.Newf("file path %s already exists", filePath)
 		}
 	}
 	return nil
@@ -1050,26 +1050,26 @@ func parsePatchTextFilePayloads(payloadsRaw [][]byte) ([]patchTextFileReplacemen
 func parsePatchTextFilePayload(payloadRaw []byte) (patchTextFileReplacement, error) {
 	lineInfo, replacement, ok := bytes.Cut(payloadRaw, []byte{0})
 	if !ok {
-		return patchTextFileReplacement{}, errors.InvalidArgument("payload format is missing the content separator")
+		return patchTextFileReplacement{}, errors.InvalidArgument.Newf("payload format is missing the content separator")
 	}
 
 	startBytes, endBytes, ok := bytes.Cut(lineInfo, []byte{':'})
 	if !ok {
-		return patchTextFileReplacement{}, errors.InvalidArgument(
+		return patchTextFileReplacement{}, errors.InvalidArgument.Newf(
 			"payload is missing the line number separator")
 	}
 
 	start, err := parseLineNumber(startBytes)
 	if err != nil {
-		return patchTextFileReplacement{}, errors.InvalidArgument("payload start line number is invalid: %s", err)
+		return patchTextFileReplacement{}, errors.InvalidArgument.Newf("payload start line number is invalid: %s", err)
 	}
 	end, err := parseLineNumber(endBytes)
 	if err != nil {
-		return patchTextFileReplacement{}, errors.InvalidArgument("payload end line number is invalid: %s", err)
+		return patchTextFileReplacement{}, errors.InvalidArgument.Newf("payload end line number is invalid: %s", err)
 	}
 
 	if end < start {
-		return patchTextFileReplacement{}, errors.InvalidArgument("payload end line has to be at least as big as start line")
+		return patchTextFileReplacement{}, errors.InvalidArgument.Newf("payload end line has to be at least as big as start line")
 	}
 
 	return patchTextFileReplacement{

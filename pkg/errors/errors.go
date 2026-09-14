@@ -25,6 +25,9 @@ type errorContext struct {
 
 func Is(err, target error) bool { return errors.Is(err, target) }
 
+// As 查找 err 链中是否有与 target 匹配的错误
+func As(err error, target any) bool { return errors.As(err, target) }
+
 // New 创建一个新的customError
 func (errorType ErrorType) New(msg string) error {
 	return customError{errorType: errorType, originalError: errors.New(msg)}

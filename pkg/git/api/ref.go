@@ -23,10 +23,10 @@ import (
 	"strconv"
 	"strings"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/api/foreachref"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/command"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/sha"
-	"github.com/easysoft/gitfox/errors"
 )
 
 // GitReferenceField represents the different fields available When listing references.
@@ -242,7 +242,7 @@ func (g *Git) GetRef(
 	err := cmd.Run(ctx, command.WithDir(repoPath), command.WithStdout(output))
 	if cErr := command.AsError(err); cErr != nil {
 		if cErr.IsExitCode(128) && cErr.IsInvalidRefErr() {
-			return sha.None, errors.NotFound("reference %q not found", ref)
+			return sha.None, errors.NotFound.Newf("reference %q not found", ref)
 		}
 		return sha.None, err
 	}

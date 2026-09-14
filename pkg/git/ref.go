@@ -20,11 +20,11 @@ import (
 	"math"
 	"strings"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/api"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/enum"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/hook"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/sha"
-	"github.com/easysoft/gitfox/errors"
 )
 
 type GetRefParams struct {
@@ -41,7 +41,7 @@ func (p *GetRefParams) Validate() error {
 		return err
 	}
 	if p.Name == "" {
-		return errors.InvalidArgument("ref name cannot be empty")
+		return errors.InvalidArgument.Newf("ref name cannot be empty")
 	}
 	return nil
 }
@@ -82,7 +82,7 @@ func (p *DeleteRefParams) Validate() error {
 		return err
 	}
 	if p.Name == "" {
-		return errors.InvalidArgument("ref name cannot be empty")
+		return errors.InvalidArgument.Newf("ref name cannot be empty")
 	}
 	return nil
 }
@@ -172,7 +172,7 @@ func GetRefPath(refName string, refType enum.RefType) (string, error) {
 	case enum.RefTypeUndefined:
 		fallthrough
 	default:
-		return "", errors.InvalidArgument("provided reference type '%s' is invalid", refType)
+		return "", errors.InvalidArgument.Newf("provided reference type '%s' is invalid", refType)
 	}
 }
 

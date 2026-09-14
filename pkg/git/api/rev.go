@@ -19,9 +19,9 @@ import (
 	"context"
 	"fmt"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/command"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/sha"
-	"github.com/easysoft/gitfox/errors"
 )
 
 func (g *Git) ResolveRev(ctx context.Context,
@@ -34,7 +34,7 @@ func (g *Git) ResolveRev(ctx context.Context,
 	if err != nil {
 		cmdErr := command.AsError(err)
 		if cmdErr != nil && cmdErr.IsAmbiguousArgErr() {
-			return sha.None, errors.InvalidArgument("could not resolve git revision: %s", rev)
+			return sha.None, errors.InvalidArgument.Newf("could not resolve git revision: %s", rev)
 		}
 		return sha.None, fmt.Errorf("failed to resolve git revision: %w", err)
 	}

@@ -22,7 +22,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/easysoft/gitfox/errors"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 
 	"github.com/swaggest/jsonschema-go"
 )
@@ -50,7 +50,7 @@ func New(value string) (SHA, error) {
 	value = strings.TrimSpace(value)
 	value = strings.ToLower(value)
 	if !regex.MatchString(value) {
-		return SHA{}, errors.InvalidArgument("the provided commit sha '%s' is of invalid format.", value)
+		return SHA{}, errors.InvalidArgument.Newf("the provided commit sha '%s' is of invalid format.", value)
 	}
 	return SHA{
 		Str: value,

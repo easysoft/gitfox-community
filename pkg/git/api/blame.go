@@ -25,9 +25,9 @@ import (
 	"strings"
 	"time"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/command"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/sha"
-	"github.com/easysoft/gitfox/errors"
 
 	"github.com/gotidy/ptr"
 )
@@ -225,19 +225,19 @@ func (r *BlameReader) NextPart() (*BlamePart, error) {
 
 		switch {
 		case strings.Contains(line, "no such path"):
-			return nil, errors.NotFound(line)
+			return nil, errors.NotFound.New(line)
 		case strings.Contains(line, "bad revision"):
-			return nil, errors.NotFound(line)
+			return nil, errors.NotFound.New(line)
 		case blamePorcelainOutOfRangeErrorRE.MatchString(line):
-			return nil, errors.InvalidArgument(line)
+			return nil, errors.InvalidArgument.New(line)
 		default:
-			return nil, errors.Internal(nil, "failed to get next part: %s", line)
+			return nil, errors.InternalError.Newf("failed to get next part: %s", line)
 		}
 	}
 
 	// This error can happen if the command git failed to start. Triggered by pipe writer's CloseWithError call.
 	if !errors.Is(err, io.EOF) {
-		return nil, errors.Internal(err, "failed to start git blame command")
+		return nil, errors.InternalError.Wrapf(err, "failed to start git blame command")
 	}
 
 	var part *BlamePart
@@ -333,13 +333,13 @@ func (g *Git) RawBlame(
 	lineTo int,
 ) error {
 	if repoPath == "" {
-		return errors.InvalidArgument("repository path cannot be empty")
+		return errors.InvalidArgument.Newf("repository path cannot be empty")
 	}
 	if rev == "" {
-		return errors.InvalidArgument("revision cannot be empty")
+		return errors.InvalidArgument.Newf("revision cannot be empty")
 	}
 	if file == "" {
-		return errors.InvalidArgument("file path cannot be empty")
+		return errors.InvalidArgument.Newf("file path cannot be empty")
 	}
 
 	reader := g.Blame(ctx, repoPath, rev, file, lineFrom, lineTo)
@@ -350,7 +350,7 @@ func (g *Git) RawBlame(
 			// Write each BlamePart as a JSON object followed by newline
 			encoder := json.NewEncoder(w)
 			if encErr := encoder.Encode(part); encErr != nil {
-				return errors.Internal(encErr, "failed to encode blame part")
+				return errors.InternalError.Wrapf(encErr, "failed to encode blame part")
 			}
 		}
 

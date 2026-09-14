@@ -24,9 +24,9 @@ import (
 	"strings"
 	"time"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/command"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
-	"github.com/easysoft/gitfox/errors"
 )
 
 type CloneRepoOptions struct {
@@ -111,7 +111,7 @@ func (g *Git) SetDefaultBranch(
 			return fmt.Errorf("failed to check if branch exists: %w", err)
 		}
 		if !exist {
-			return errors.NotFound("branch %q does not exist", defaultBranch)
+			return errors.NotFound.Newf("branch %q does not exist", defaultBranch)
 		}
 	}
 

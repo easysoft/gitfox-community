@@ -15,7 +15,7 @@
 package git
 
 import (
-	"github.com/easysoft/gitfox/errors"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 )
 
 // ReadParams contains the base parameters for read operations.
@@ -26,7 +26,7 @@ type ReadParams struct {
 
 func (p ReadParams) Validate() error {
 	if p.RepoUID == "" {
-		return errors.InvalidArgument("repository id cannot be empty")
+		return errors.InvalidArgument.New("repository id cannot be empty")
 	}
 	return nil
 }
@@ -41,7 +41,7 @@ type WriteParams struct {
 
 func (p *WriteParams) Validate() error {
 	if p.RepoUID == "" {
-		return errors.InvalidArgument("repoUID is mandatory field")
+		return errors.InvalidArgument.New("repoUID is mandatory field")
 	}
 
 	return p.Actor.Validate()

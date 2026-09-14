@@ -21,8 +21,8 @@ import (
 	"strings"
 	"time"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/command"
-	"github.com/easysoft/gitfox/errors"
 )
 
 type ArchiveFormat string
@@ -52,7 +52,7 @@ func ParseArchiveFormat(format string) (ArchiveFormat, error) {
 	case "tgz":
 		return ArchiveFormatTgz, nil
 	default:
-		return "", errors.InvalidArgument("failed to parse file format '%s' is invalid", format)
+		return "", errors.InvalidArgument.Newf("failed to parse file format '%s' is invalid", format)
 	}
 }
 
@@ -61,7 +61,7 @@ func (f ArchiveFormat) Validate() error {
 	case ArchiveFormatTar, ArchiveFormatZip, ArchiveFormatTarGz, ArchiveFormatTgz:
 		return nil
 	default:
-		return errors.InvalidArgument("git archive flag format '%s' is invalid", f)
+		return errors.InvalidArgument.Newf("git archive flag format '%s' is invalid", f)
 	}
 }
 
@@ -123,7 +123,7 @@ type ArchiveParams struct {
 
 func (p *ArchiveParams) Validate() error {
 	if p.Treeish == "" {
-		return errors.InvalidArgument("treeish field cannot be empty")
+		return errors.InvalidArgument.Newf("treeish field cannot be empty")
 	}
 	//nolint:revive
 	if err := p.Format.Validate(); err != nil {
@@ -143,7 +143,7 @@ func (g *Git) Archive(ctx context.Context, repoPath string, params ArchiveParams
 	verifyCmd.Add(command.WithArg(params.Treeish))
 
 	if err := verifyCmd.Run(ctx, command.WithDir(repoPath)); err != nil {
-		return errors.NotFound("branch or commit '%s' not found", params.Treeish)
+		return errors.NotFound.Newf("branch or commit '%s' not found", params.Treeish)
 	}
 
 	cmd := command.New("archive",
@@ -184,7 +184,7 @@ func (g *Git) Archive(ctx context.Context, repoPath string, params ArchiveParams
 		case ArchiveFormatZip:
 			// zip accepts values digit 0-9
 			if *params.Compression < 0 || *params.Compression > 9 {
-				return errors.InvalidArgument("compression level argument '%d' not supported for format 'zip'",
+				return errors.InvalidArgument.Newf("compression level argument '%d' not supported for format 'zip'",
 					*params.Compression)
 			}
 			cmd.Add(command.WithArg(fmt.Sprintf("-%d", *params.Compression)))

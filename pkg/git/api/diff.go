@@ -26,10 +26,10 @@ import (
 	"strconv"
 	"strings"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/command"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/parser"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/sha"
-	"github.com/easysoft/gitfox/errors"
 	"github.com/easysoft/gitfox/types"
 )
 
@@ -269,7 +269,7 @@ func (g *Git) CommitDiff(
 		return ErrRepositoryPathEmpty
 	}
 	if rev == "" {
-		return errors.InvalidArgument("git revision cannot be empty")
+		return errors.InvalidArgument.Newf("git revision cannot be empty")
 	}
 
 	cmd := command.New("show",
@@ -422,11 +422,11 @@ func (g *Git) DiffCut(
 
 			if params.LineStartNew && path == entry.OldPath {
 				msg := "for renamed files provide the new file name if commenting the changed lines"
-				return parser.HunkHeader{}, parser.Hunk{}, errors.InvalidArgument(msg)
+				return parser.HunkHeader{}, parser.Hunk{}, errors.InvalidArgument.New(msg)
 			}
 			if !params.LineStartNew && path == entry.Path {
 				msg := "for renamed files provide the old file name if commenting the old lines"
-				return parser.HunkHeader{}, parser.Hunk{}, errors.InvalidArgument(msg)
+				return parser.HunkHeader{}, parser.Hunk{}, errors.InvalidArgument.New(msg)
 			}
 		} else if entry.Path != path {
 			// All other statuses output just one path: If the path doesn't match it, proceed with the next entry.
@@ -446,13 +446,13 @@ func (g *Git) DiffCut(
 
 		switch fileType {
 		default:
-			return parser.HunkHeader{}, parser.Hunk{}, errors.Internal(nil, "unrecognized object type")
+			return parser.HunkHeader{}, parser.Hunk{}, errors.InternalError.Newf("unrecognized object type")
 		case TreeNodeTypeCommit:
 			msg := "code comment is not allowed on a submodule"
-			return parser.HunkHeader{}, parser.Hunk{}, errors.InvalidArgument(msg)
+			return parser.HunkHeader{}, parser.Hunk{}, errors.InvalidArgument.New(msg)
 		case TreeNodeTypeTree:
 			msg := "code comment is not allowed on a directory"
-			return parser.HunkHeader{}, parser.Hunk{}, errors.InvalidArgument(msg)
+			return parser.HunkHeader{}, parser.Hunk{}, errors.InvalidArgument.New(msg)
 		case TreeNodeTypeBlob:
 			// a blob is what we want
 		}
@@ -490,7 +490,7 @@ func (g *Git) DiffCut(
 		return hunkHeader, hunk, nil
 	}
 
-	return parser.HunkHeader{}, parser.Hunk{}, errors.NotFound("path not found")
+	return parser.HunkHeader{}, parser.Hunk{}, errors.NotFound.Newf("path not found")
 }
 
 func (g *Git) diffCutFromHunk(

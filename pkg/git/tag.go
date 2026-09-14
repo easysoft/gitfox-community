@@ -19,12 +19,12 @@ import (
 	"fmt"
 	"time"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/api"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/hook"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/sha"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/sharedrepo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
-	"github.com/easysoft/gitfox/errors"
 )
 
 var (
@@ -265,7 +265,7 @@ func (s *Service) CreateCommitTag(ctx context.Context, params *CreateCommitTagPa
 
 	targetCommit, err := s.git.GetCommit(ctx, repoPath, params.Target)
 	if errors.IsNotFound(err) {
-		return nil, errors.NotFound("target '%s' doesn't exist", params.Target)
+		return nil, errors.NotFound.Newf("target '%s' doesn't exist", params.Target)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("CreateCommitTag: failed to get commit id for target '%s': %w", params.Target, err)
@@ -281,7 +281,7 @@ func (s *Service) CreateCommitTag(ctx context.Context, params *CreateCommitTagPa
 		return nil, fmt.Errorf("CreateCommitTag: failed to verify tag existence: %w", err)
 	}
 	if err == nil && !commitSHA.IsEmpty() {
-		return nil, errors.Conflict("tag '%s' already exists", tagName)
+		return nil, errors.Conflict.Newf("tag '%s' already exists", tagName)
 	}
 
 	// create tag request
@@ -377,7 +377,7 @@ func (s *Service) DeleteTag(ctx context.Context, params *DeleteTagParams) error 
 
 	err = refUpdater.Do(ctx, sha.None, sha.Nil) // delete whatever is there
 	if errors.IsNotFound(err) {
-		return errors.NotFound("tag %q does not exist", params.Name)
+		return errors.NotFound.Newf("tag %q does not exist", params.Name)
 	}
 	if err != nil {
 		return fmt.Errorf("failed to init ref updater: %w", err)
@@ -400,7 +400,7 @@ func (s *Service) listCommitTagsLoadReferenceData(
 		params.PageSize,
 	)
 	if err != nil {
-		return nil, errors.InvalidArgument("invalid pagination details: %v", err)
+		return nil, errors.InvalidArgument.Newf("invalid pagination details: %v", err)
 	}
 
 	opts := &api.WalkReferencesOptions{

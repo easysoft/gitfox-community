@@ -22,9 +22,9 @@ import (
 	"strconv"
 	"strings"
 
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/command"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/sha"
-	"github.com/easysoft/gitfox/errors"
 
 	"github.com/djherbis/buffer"
 	"github.com/djherbis/nio/v3"
@@ -134,14 +134,14 @@ func ReadBatchHeaderLine(rd *bufio.Reader) (*BatchHeaderResponse, error) {
 	}
 	idx := strings.IndexByte(line, ' ')
 	if idx < 0 {
-		return nil, errors.NotFound("missing space char for: %s", line)
+		return nil, errors.NotFound.Newf("missing space char for: %s", line)
 	}
 	id := line[:idx]
 	objType := line[idx+1:]
 
 	idx = strings.IndexByte(objType, ' ')
 	if idx < 0 {
-		return nil, errors.NotFound("sha '%s' not found", id)
+		return nil, errors.NotFound.Newf("sha '%s' not found", id)
 	}
 
 	sizeStr := objType[idx+1 : len(objType)-1]
