@@ -343,7 +343,7 @@ func (r *Repository) Handle(ctx context.Context, data string, reportFn pkgJobs.P
 		if err = r.createDefaultWebhook(ctx, repo, log); err != nil {
 			return "", fmt.Errorf("completed repository import, but failed to create webhook: %w", err)
 		}
-		if err = r.createDefaultArtifactLib(ctx, repo, log); err != nil {
+		if err = r.createDefaultArtifactLib(ctx, repo, input.NoticeLang, log); err != nil {
 			return "", fmt.Errorf("completed repository import, but failed to create default artifact lib: %w", err)
 		}
 	}
@@ -384,9 +384,12 @@ func (r *Repository) createDefaultWebhook(ctx context.Context, repo *repoModel.R
 	return nil
 }
 
-// createDefaultArtifactLib 创建默认制品库（空库），与普通建仓时自动创建的默认库保持一致。
+// createDefaultArtifactLib 创建默认制品库（空库），与普通建仓时自动创建的默认库保持一致：
+// 名称同样走 DefaultArtifactLibViewName 按语言取本地化名称（noticeLang 取自发起导入的
+// 请求语言，随 job input 传入），否则中文环境下导入的仓库会出现 "Default" 与
+// "默认制品库" 两种展示名。
 // CreateLib 非幂等，同 scope 下已存在同名库时返回 ArtifactLibNameDuplicate，视为已创建跳过。
-func (r *Repository) createDefaultArtifactLib(ctx context.Context, repo *repoModel.Repo, log *logger.SugaredMateLogger) error {
+func (r *Repository) createDefaultArtifactLib(ctx context.Context, repo *repoModel.Repo, noticeLang string, log *logger.SugaredMateLogger) error {
 	// 后台任务 ctx 无鉴权会话，CreateLib 内部会从 ctx 读取 session 写入 CreatedBy/EditedBy，
 	// 这里以应用管理员身份注入，与 firstSyncGitRepo 中 accountInfo 的口径一致。
 	ctx = req.SetAuthSession(ctx, &auth.Session{
@@ -401,7 +404,7 @@ func (r *Repository) createDefaultArtifactLib(ctx context.Context, repo *repoMod
 			SpaceID: int64(repo.SpaceID),
 			RepoID:  int64(repo.ID),
 		},
-		Name:   artifactModel.DefaultArtifactLibName,
+		Name:   artifactModel.DefaultArtifactLibViewName(noticeLang),
 		Code:   artifactModel.DefaultArtifactLibCode,
 		Format: string(artifactModel.ArtifactFileFormat),
 	})

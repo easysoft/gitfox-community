@@ -192,9 +192,22 @@ type IssuePayloadAI struct {
 	ExistingCode   string `json:"existing_code"`
 }
 
-// UniqueKey 生成唯一标识
-func (t IssueInputAI) UniqueKey(scopeID int64) string {
-	return fmt.Sprintf("ai/%d/%s/%d/%d", scopeID, t.Path, t.StartLine, t.EndLine)
+// AIScopePPM / AIScopeExecution 构造 AI issue 唯一键的作用域前缀。
+// ppmID 取自 ops_ppm.id、executionID 取自 ops_pipeline_executions.id，两者是互相独立的
+// 自增序列，同一仓库内极易取值相同（如都为 1）。两个作用域必须带前缀区分，否则 path 与
+// 行号一致时会算出同一个 key，后写入的 issue 被 insertAIIssues 的去重逻辑静默丢弃。
+func AIScopePPM(ppmID int64) string {
+	return fmt.Sprintf("ppm/%d", ppmID)
+}
+
+// AIScopeExecution 见 AIScopePPM
+func AIScopeExecution(executionID int64) string {
+	return fmt.Sprintf("exec/%d", executionID)
+}
+
+// UniqueKey 生成唯一标识；scope 为作用域标识，由 AIScopePPM/AIScopeExecution 构造
+func (t IssueInputAI) UniqueKey(scope string) string {
+	return fmt.Sprintf("ai/%s/%s/%d/%d", scope, t.Path, t.StartLine, t.EndLine)
 }
 
 // GenerateIssueKey 根据任务信息生成 issue 唯一 key

@@ -179,12 +179,14 @@ func (h *scanTriggerHandler) Handle(ctx context.Context, input string, _ pkgJobs
 	}
 
 	// 按扫描计划的 scanType 解析提交范围：增量取最新两笔、全量取同一笔
-	sha, beforeSha, err := h.taskSvc.ResolveCommitRange(ctx, repo.GitUID, constant.ScanType(plan.ScanType), trigger.CronBranch)
+	commitBefore, commitAfter, err := h.taskSvc.ResolveCommitRange(ctx, repo.GitUID, constant.ScanType(plan.ScanType), trigger.CronBranch)
 	if err != nil {
 		return "", err
 	}
 
-	hook, err := h.taskSvc.CreateBranchHook(ctx, repo, trigger.CronBranch, sha, beforeSha, session)
+	// CreateBranchHook 的形参为 sha=最新、beforeSha=次新，与 ResolveCommitRange 的
+	// 返回顺序（before 次新、after 最新）相反，故交换传入（同 Retry）
+	hook, err := h.taskSvc.CreateBranchHook(ctx, repo, trigger.CronBranch, commitAfter, commitBefore, session)
 	if err != nil {
 		return "", err
 	}

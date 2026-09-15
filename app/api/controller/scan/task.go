@@ -52,13 +52,15 @@ func (c *ScanController) ScanTaskCreate(ctx *gin.Context) {
 	}
 
 	// 按扫描计划的 scanType 解析提交范围：增量取最新两笔、全量取同一笔
-	sha, beforeSha, err := c.taskSvc.ResolveCommitRange(ctx.Request.Context(), repo.GitUID, constant.ScanType(plan.ScanType), body.Branch)
+	commitBefore, commitAfter, err := c.taskSvc.ResolveCommitRange(ctx.Request.Context(), repo.GitUID, constant.ScanType(plan.ScanType), body.Branch)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return
 	}
 
-	hook, err := c.taskSvc.CreateBranchHook(ctx.Request.Context(), repo, body.Branch, sha, beforeSha, session)
+	// CreateBranchHook 的形参为 sha=最新、beforeSha=次新，与 ResolveCommitRange 的
+	// 返回顺序（before 次新、after 最新）相反，故交换传入（同 Retry）
+	hook, err := c.taskSvc.CreateBranchHook(ctx.Request.Context(), repo, body.Branch, commitAfter, commitBefore, session)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return

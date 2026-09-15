@@ -18,6 +18,7 @@ import (
 	scanModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
 	scanStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/scan"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
+	gitAPI "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/api"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 )
@@ -136,12 +137,14 @@ func (s *ScanTaskService) AnalyzeTaskUploadReport(ctx context.Context, repoID, t
 	case constant.ScanMethodSmell:
 		inputIssues, err = s.analyzeSmellIssues(ctx, content, task, report)
 	case constant.ScanMethodAI:
-		// 唯一键作用域：有 MR 用 ppmID，无 MR 用 executionID（key = ai/{scopeID}/{path}/{startLine}/{endLine}）
-		scopeID := int64(ppm.ID)
+		// 唯一键作用域：有 MR 用 ppmID、无 MR 用 executionID。两者来自互相独立的自增表
+		// （ops_ppm.id / ops_pipeline_executions.id），同一仓库内 ID 可能相同，故带前缀区分
+		// （key = ai/{ppm|exec}/{scopeID}/{path}/{startLine}/{endLine}）
+		scope := scanModel.AIScopePPM(int64(ppm.ID))
 		if execution != nil {
-			scopeID = int64(execution.ID)
+			scope = scanModel.AIScopeExecution(int64(execution.ID))
 		}
-		inputIssues, err = s.analyzeAIIssues(ctx, content, repoID, scopeID, report)
+		inputIssues, err = s.analyzeAIIssues(ctx, content, repoID, scope, report)
 	default:
 		return nil, fmt.Errorf("unsupported scan method: %s", method)
 	}
@@ -292,9 +295,10 @@ func (s *ScanTaskService) analyzeSmellIssues(
 }
 
 // analyzeAIIssues 解析 ai 类型的 issues
-// scopeID 为 issue 唯一键的作用域：有 MR 场景传 ppmID，无 MR（ppmID=0）场景传 executionID
+// scope 为 issue 唯一键的作用域标识，由 scanModel.AIScopePPM（有 MR）/ AIScopeExecution
+// （无 MR）构造，两者 ID 空间独立、不可混用
 func (s *ScanTaskService) analyzeAIIssues(
-	ctx context.Context, content []byte, repoID uint, scopeID int64, report *scanModel.ScanIssueReport,
+	ctx context.Context, content []byte, repoID uint, scope string, report *scanModel.ScanIssueReport,
 ) ([]*scanModel.ScanIssue, error) {
 	var aiReport scanModel.AIReportResponse
 	if err := json.Unmarshal(content, &aiReport); err != nil {
@@ -329,7 +333,7 @@ func (s *ScanTaskService) analyzeAIIssues(
 			Category:   constant.AiScanIssueCategory(comment.Category),
 			Severity:   constant.AiScanIssueSeverity(comment.Severity),
 		}
-		inIssue.Key = scanModel.GenerateIssueKey(int64(repoID), "", comment.UniqueKey(scopeID))
+		inIssue.Key = scanModel.GenerateIssueKey(int64(repoID), "", comment.UniqueKey(scope))
 		if err := inIssue.SetPayload(scanModel.IssuePayloadAI{
 			SuggestionCode: comment.SuggestionCode,
 			ExistingCode:   comment.ExistingCode,
@@ -534,13 +538,19 @@ func (s *ScanTaskService) saveAIIssues(ctx context.Context, issues []*scanModel.
 	for _, item := range issues {
 		item.PpmID = int64(ppm.ID)
 		item.RepoID = int64(ppm.RepoID)
-		item.RepoBranch = ppm.SourceBranch
+		// repoBranch 与另外两个写入点（codescan 的 task.ExecutionRef、无 MR 的 execution.Ref）
+		// 统一为完整 ref：ppm.SourceBranch 是短分支名，直接落库会让同一列的两种格式并存，
+		// 按分支等值过滤（store/scan/issue.go 的 ListKeysByTask、issue_tree.go 的分支过滤）
+		// 和按 repoBranch 分组时命中不到
+		item.RepoBranch = gitAPI.GetReferenceFromBranchName(ppm.SourceBranch)
 	}
 	return s.insertAIIssues(ctx, issues, ppm.CreatedBy)
 }
 
 // saveAIIssuesForExecution 无 MR（ppmID=0）场景：AI issues 归属到 executionID 对应的执行，
-// 归属数据（createdBy/ref/repoID）由 execution 记录填充，与 ppm 关联的字段全部置 0/留空
+// 归属数据（createdBy/ref/repoID）由 execution 记录填充，与 ppm 关联的字段全部置 0/留空。
+// execution.Ref 本身即完整 ref（refs/heads/xxx、refs/pullreq/N/head），与 saveAIIssues 的
+// 归一化口径一致，这里不做转换
 func (s *ScanTaskService) saveAIIssuesForExecution(ctx context.Context, issues []*scanModel.ScanIssue, execution *executionModel.Execution, repoID int64) (int, int, error) {
 	if len(issues) == 0 {
 		return 0, 0, nil
