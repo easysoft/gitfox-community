@@ -23,9 +23,9 @@ import (
 	"strconv"
 	"strings"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/commit"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/command"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/common"
+	"github.com/easysoft/gitfox-community/app/model/commit"
+	"github.com/easysoft/gitfox-community/pkg/git/command"
+	"github.com/easysoft/gitfox-community/pkg/utils/common"
 	"github.com/golang-module/carbon/v2"
 )
 

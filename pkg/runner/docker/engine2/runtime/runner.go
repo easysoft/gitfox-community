@@ -11,17 +11,17 @@ import (
 	"regexp"
 	"time"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/manager"
-	harness "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pipeline/spec"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pipeline/spec/parse/expand"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pipeline/spec/parse/normalize"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pipeline/spec/parse/resolver"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pipeline/spec/parse/walk"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/runner/docker/engine2/compiler"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/runner/docker/engine2/engine"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/runner/docker/engine2/inputs"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/runner/docker/engine2/script"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/runner/extend"
+	"github.com/easysoft/gitfox-community/app/pipeline/manager"
+	harness "github.com/easysoft/gitfox-community/pkg/pipeline/spec"
+	"github.com/easysoft/gitfox-community/pkg/pipeline/spec/parse/expand"
+	"github.com/easysoft/gitfox-community/pkg/pipeline/spec/parse/normalize"
+	"github.com/easysoft/gitfox-community/pkg/pipeline/spec/parse/resolver"
+	"github.com/easysoft/gitfox-community/pkg/pipeline/spec/parse/walk"
+	"github.com/easysoft/gitfox-community/pkg/runner/docker/engine2/compiler"
+	"github.com/easysoft/gitfox-community/pkg/runner/docker/engine2/engine"
+	"github.com/easysoft/gitfox-community/pkg/runner/docker/engine2/inputs"
+	"github.com/easysoft/gitfox-community/pkg/runner/docker/engine2/script"
+	"github.com/easysoft/gitfox-community/pkg/runner/extend"
 
 	"github.com/drone/drone-go/drone"
 	"github.com/drone/runner-go/client"
@@ -30,7 +30,7 @@ import (
 	legacy "github.com/drone/runner-go/pipeline/runtime"
 	"github.com/drone/runner-go/secret"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
+	"github.com/easysoft/gitfox-community/pkg/logger"
 )
 
 var noContext = context.Background()

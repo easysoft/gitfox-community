@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	jobModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/jobs"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
+	jobModel "github.com/easysoft/gitfox-community/app/model/jobs"
+	"github.com/easysoft/gitfox-community/pkg/utils/datetime"
 	"github.com/gorhill/cronexpr"
 )
 

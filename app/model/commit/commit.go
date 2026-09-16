@@ -3,8 +3,8 @@ package commit
 import (
 	"time"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
-	gitenum "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/enum"
+	"github.com/easysoft/gitfox-community/app/constant"
+	gitenum "github.com/easysoft/gitfox-community/pkg/git/enum"
 )
 
 const NilSHA = "0000000000000000000000000000000000000000"

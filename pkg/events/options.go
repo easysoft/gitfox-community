@@ -3,7 +3,7 @@ package events
 import (
 	"time"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/stream"
+	"github.com/easysoft/gitfox-community/pkg/stream"
 )
 
 /*

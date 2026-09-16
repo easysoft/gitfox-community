@@ -4,8 +4,8 @@ import (
 	"io"
 	"os"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
+	"github.com/easysoft/gitfox-community/pkg/config"
+	"github.com/easysoft/gitfox-community/pkg/logger"
 )
 
 // buildGormWriter 构建 GORM 日志输出 writer。

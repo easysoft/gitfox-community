@@ -1,10 +1,10 @@
 package hooks
 
 import (
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/githook"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/hook"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
-	clii18n "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n/cli"
+	"github.com/easysoft/gitfox-community/app/githook"
+	"github.com/easysoft/gitfox-community/pkg/git/hook"
+	"github.com/easysoft/gitfox-community/pkg/i18n"
+	clii18n "github.com/easysoft/gitfox-community/pkg/i18n/cli"
 	"github.com/quicklyon/kingpin/v2"
 )
 

@@ -5,11 +5,11 @@ import (
 
 	"strings"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
-	pipelineModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/pipeline"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/file"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/resources"
+	"github.com/easysoft/gitfox-community/app/constant"
+	pipelineModel "github.com/easysoft/gitfox-community/app/model/pipeline"
+	"github.com/easysoft/gitfox-community/pkg/logger"
+	"github.com/easysoft/gitfox-community/pkg/utils/file"
+	"github.com/easysoft/gitfox-community/resources"
 	"github.com/pkg/errors"
 )
 

@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"time"
 
-	jobsStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/jobs"
-	pkgJobs "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/jobs"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/lock"
+	jobsStore "github.com/easysoft/gitfox-community/app/store/jobs"
+	pkgJobs "github.com/easysoft/gitfox-community/pkg/jobs"
+	"github.com/easysoft/gitfox-community/pkg/lock"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
+	"github.com/easysoft/gitfox-community/pkg/logger"
 )
 
 const (

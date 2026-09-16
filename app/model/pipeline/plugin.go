@@ -6,7 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
+	"github.com/easysoft/gitfox-community/pkg/utils/datetime"
 	"github.com/ghodss/yaml"
 )
 

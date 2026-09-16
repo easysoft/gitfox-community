@@ -3,10 +3,10 @@ package provider
 import (
 	"github.com/google/wire"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/git"
-	publickeyService "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/publickey"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/ssh"
+	"github.com/easysoft/gitfox-community/app/api/controller/git"
+	publickeyService "github.com/easysoft/gitfox-community/app/service/publickey"
+	"github.com/easysoft/gitfox-community/pkg/config"
+	"github.com/easysoft/gitfox-community/pkg/ssh"
 )
 
 var SSHWireSet = wire.NewSet(

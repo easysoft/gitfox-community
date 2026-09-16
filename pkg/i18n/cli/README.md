@@ -88,8 +88,8 @@ task i18n:generate
 
 ```go
 import (
-    "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
-    clii18n "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n/cli"
+    "github.com/easysoft/gitfox-community/pkg/i18n"
+    clii18n "github.com/easysoft/gitfox-community/pkg/i18n/cli"
 )
 
 func Register(app *kingpin.Application) {

@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"time"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/sse"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
+	"github.com/easysoft/gitfox-community/app/service/sse"
+	"github.com/easysoft/gitfox-community/pkg/logger"
 )
 
 func StreamSSE(

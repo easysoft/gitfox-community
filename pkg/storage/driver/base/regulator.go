@@ -15,7 +15,7 @@ import (
 	"strconv"
 	"sync"
 
-	storagedriver "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/storage/driver"
+	storagedriver "github.com/easysoft/gitfox-community/pkg/storage/driver"
 )
 
 type regulator struct {

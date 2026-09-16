@@ -10,7 +10,7 @@ import (
 	"context"
 	"fmt"
 
-	storagedriver "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/storage/driver"
+	storagedriver "github.com/easysoft/gitfox-community/pkg/storage/driver"
 )
 
 // driverFactories stores an internal mapping between storage driver names and their respective

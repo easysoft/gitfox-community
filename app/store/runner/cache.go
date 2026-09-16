@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+	"github.com/easysoft/gitfox-community/pkg/errors"
 )
 
 // TokenCache stores temporary tokens for runner registration

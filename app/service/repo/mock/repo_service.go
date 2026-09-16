@@ -14,11 +14,11 @@ import (
 	io "io"
 	reflect "reflect"
 
-	constant "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
-	auth "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
-	repo "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
-	svn "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/svn"
-	api "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/api"
+	constant "github.com/easysoft/gitfox-community/app/constant"
+	auth "github.com/easysoft/gitfox-community/app/model/auth"
+	repo "github.com/easysoft/gitfox-community/app/model/repo"
+	svn "github.com/easysoft/gitfox-community/app/model/svn"
+	api "github.com/easysoft/gitfox-community/pkg/git/api"
 	gomock "go.uber.org/mock/gomock"
 )
 

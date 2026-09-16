@@ -3,7 +3,7 @@ package execution
 import (
 	"context"
 
-	executionModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/execution"
+	executionModel "github.com/easysoft/gitfox-community/app/model/execution"
 )
 
 // Create creates a new execution

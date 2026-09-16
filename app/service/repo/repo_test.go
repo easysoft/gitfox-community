@@ -4,13 +4,13 @@ import (
 	"context"
 	"testing"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
-	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
-	principal "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/user"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo/mock"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
-	urlMock "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/url/mock"
+	"github.com/easysoft/gitfox-community/app/model/auth"
+	repoModel "github.com/easysoft/gitfox-community/app/model/repo"
+	principal "github.com/easysoft/gitfox-community/app/model/user"
+	"github.com/easysoft/gitfox-community/app/store/repo/mock"
+	"github.com/easysoft/gitfox-community/pkg/database"
+	"github.com/easysoft/gitfox-community/pkg/errors"
+	urlMock "github.com/easysoft/gitfox-community/pkg/utils/url/mock"
 
 	"github.com/stretchr/testify/assert" // 推荐使用 testify 断言，更简洁
 	"go.uber.org/mock/gomock"

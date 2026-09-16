@@ -18,7 +18,7 @@ import (
 	"context"
 	"fmt"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/api"
+	"github.com/easysoft/gitfox-community/pkg/git/api"
 )
 
 type MatchFilesParams struct {

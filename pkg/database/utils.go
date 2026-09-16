@@ -6,7 +6,7 @@ import (
 	stderr "errors"
 
 	"github.com/HuaweiCloudDeveloper/gaussdb-go/gaussdbconn"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+	"github.com/easysoft/gitfox-community/pkg/errors"
 	"github.com/go-sql-driver/mysql"
 	"gorm.io/gorm"
 )

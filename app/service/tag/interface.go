@@ -3,9 +3,9 @@ package tag
 import (
 	"context"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
-	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
-	tagModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/tag"
+	"github.com/easysoft/gitfox-community/app/model/auth"
+	repoModel "github.com/easysoft/gitfox-community/app/model/repo"
+	tagModel "github.com/easysoft/gitfox-community/app/model/tag"
 )
 
 type Interface interface {

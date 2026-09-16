@@ -19,8 +19,8 @@ import (
 	"fmt"
 	"strings"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/api"
+	"github.com/easysoft/gitfox-community/app/constant"
+	"github.com/easysoft/gitfox-community/pkg/git/api"
 )
 
 func (s *Service) ListBranchesV2(ctx context.Context, params *ListBranchesParams) (*ListBranchesOutput, bool, error) {

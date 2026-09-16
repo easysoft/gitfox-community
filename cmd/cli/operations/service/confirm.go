@@ -7,7 +7,7 @@ import (
 	"strings"
 	"syscall"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
+	"github.com/easysoft/gitfox-community/pkg/i18n"
 	"github.com/charmbracelet/huh"
 	"golang.org/x/term"
 )

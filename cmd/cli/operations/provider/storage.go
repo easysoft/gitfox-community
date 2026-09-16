@@ -3,7 +3,7 @@ package provider
 import (
 	"github.com/google/wire"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/storage"
+	"github.com/easysoft/gitfox-community/pkg/storage"
 )
 
 var StorageWireSet = wire.NewSet(

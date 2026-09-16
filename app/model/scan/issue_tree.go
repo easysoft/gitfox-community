@@ -1,7 +1,7 @@
 package scan
 
 import (
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
+	"github.com/easysoft/gitfox-community/app/constant"
 )
 
 // TreeNode 树节点

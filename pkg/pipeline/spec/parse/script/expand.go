@@ -18,7 +18,7 @@ import (
 	"regexp"
 	"strings"
 
-	schema "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pipeline/spec"
+	schema "github.com/easysoft/gitfox-community/pkg/pipeline/spec"
 )
 
 var pattern = regexp.MustCompile(`\${{(.*)}}`)

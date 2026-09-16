@@ -7,7 +7,7 @@ import (
 	"path"
 	"testing"
 
-	storagedriver "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/storage/driver"
+	storagedriver "github.com/easysoft/gitfox-community/pkg/storage/driver"
 
 	"github.com/mailru/easyjson/buffer"
 	"github.com/stretchr/testify/assert"

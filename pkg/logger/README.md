@@ -45,7 +45,7 @@ package main
 import (
 	"time"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
+	"github.com/easysoft/gitfox-community/pkg/logger"
 	"go.uber.org/zap"
 )
 

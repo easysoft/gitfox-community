@@ -15,9 +15,9 @@
 package api
 
 import (
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/cache"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/hook"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/types"
+	"github.com/easysoft/gitfox-community/pkg/cache"
+	"github.com/easysoft/gitfox-community/pkg/git/hook"
+	"github.com/easysoft/gitfox-community/pkg/git/types"
 )
 
 type Git struct {

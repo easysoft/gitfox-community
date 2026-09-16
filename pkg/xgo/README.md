@@ -21,7 +21,7 @@ package main
 import (
     "fmt"
     "time"
-    "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/xgo"
+    "github.com/easysoft/gitfox-community/pkg/xgo"
 )
 
 func main() {

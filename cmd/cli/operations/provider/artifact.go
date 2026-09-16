@@ -3,16 +3,16 @@ package provider
 import (
 	"github.com/google/wire"
 
-	artifactController "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/artifact"
-	ctnCtrl "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/controller/container"
-	ctnHandler "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/handler"
-	artifactSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/artifact"
-	jobsSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/jobs"
-	artifactStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/artifact"
-	spaceStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/space"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/auth/authz"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
-	urlPkg "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/url"
+	artifactController "github.com/easysoft/gitfox-community/app/api/controller/artifact"
+	ctnCtrl "github.com/easysoft/gitfox-community/app/artifact/controller/container"
+	ctnHandler "github.com/easysoft/gitfox-community/app/artifact/handler"
+	artifactSvc "github.com/easysoft/gitfox-community/app/service/artifact"
+	jobsSvc "github.com/easysoft/gitfox-community/app/service/jobs"
+	artifactStore "github.com/easysoft/gitfox-community/app/store/artifact"
+	spaceStore "github.com/easysoft/gitfox-community/app/store/space"
+	"github.com/easysoft/gitfox-community/pkg/auth/authz"
+	"github.com/easysoft/gitfox-community/pkg/config"
+	urlPkg "github.com/easysoft/gitfox-community/pkg/utils/url"
 )
 
 var ArtifactWireSet = wire.NewSet(

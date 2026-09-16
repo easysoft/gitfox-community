@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pubsub"
+	"github.com/easysoft/gitfox-community/pkg/pubsub"
 )
 
 // mockPublisher is a mock implementation of pubsub.Publisher for testing

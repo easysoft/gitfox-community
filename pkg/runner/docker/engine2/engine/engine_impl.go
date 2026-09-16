@@ -10,10 +10,10 @@ import (
 	"os"
 	"time"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/runner/docker/internal/docker/errors"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/runner/docker/internal/docker/image"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/runner/docker/internal/docker/jsonmessage"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/runner/docker/internal/docker/stdcopy"
+	"github.com/easysoft/gitfox-community/pkg/runner/docker/internal/docker/errors"
+	"github.com/easysoft/gitfox-community/pkg/runner/docker/internal/docker/image"
+	"github.com/easysoft/gitfox-community/pkg/runner/docker/internal/docker/jsonmessage"
+	"github.com/easysoft/gitfox-community/pkg/runner/docker/internal/docker/stdcopy"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -21,7 +21,7 @@ import (
 	"github.com/docker/docker/api/types/volume"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/errdefs"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
+	"github.com/easysoft/gitfox-community/pkg/logger"
 	"github.com/drone/runner-go/registry/auths"
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 )

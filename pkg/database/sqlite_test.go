@@ -8,7 +8,7 @@ import (
 
 	"gorm.io/gorm"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
+	"github.com/easysoft/gitfox-community/pkg/config"
 )
 
 // TestUser 测试用的用户模型

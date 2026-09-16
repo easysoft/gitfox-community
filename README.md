@@ -327,7 +327,7 @@ app/store/repo/mock/repo_store.go //mockgen自动生成
 # 目录结构
 以下是基于需求设计的完整代码目录结构，包含各目录职责边界及分支创建功能在不同版本的实现示例：
 ```plaintext
-gitfox.zcorp.cc/git/Pangu/gitfox-community/
+github.com/easysoft/gitfox-community/
 ├─app                       # 按模块区分各业务实现              
 │  ├─api
 │  │  ├─controller

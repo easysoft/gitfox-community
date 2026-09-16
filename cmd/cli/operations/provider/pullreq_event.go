@@ -1,8 +1,8 @@
 package provider
 
 import (
-	pullreqevents "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/events/pullreq"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/events"
+	pullreqevents "github.com/easysoft/gitfox-community/app/events/pullreq"
+	"github.com/easysoft/gitfox-community/pkg/events"
 
 	"github.com/google/wire"
 )

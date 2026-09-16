@@ -1,9 +1,9 @@
 package pipeline
 
 import (
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/pipeline"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
+	"github.com/easysoft/gitfox-community/app/service/pipeline"
+	"github.com/easysoft/gitfox-community/app/service/repo"
+	"github.com/easysoft/gitfox-community/pkg/config"
 )
 
 // Controller 处理与 pipeline 相关的 HTTP 请求

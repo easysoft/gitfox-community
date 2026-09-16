@@ -19,13 +19,12 @@ import (
 	"fmt"
 	"strings"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/githook"
-	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/utils"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/hook"
-	gitutil "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/util"
+	"github.com/easysoft/gitfox-community/app/constant"
+	"github.com/easysoft/gitfox-community/app/model/githook"
+	repoModel "github.com/easysoft/gitfox-community/app/model/repo"
+	"github.com/easysoft/gitfox-community/app/service/utils"
+	"github.com/easysoft/gitfox-community/pkg/errors"
+	"github.com/easysoft/gitfox-community/pkg/git/hook"
 
 	"github.com/gotidy/ptr"
 	"golang.org/x/exp/slices"
@@ -65,7 +64,7 @@ func (c *Controller) PreReceive(
 		}
 	}
 
-	refUpdates := groupRefsByAction(in.RefUpdates, forced)
+	refUpdates := c.groupRefsByAction(in.RefUpdates, forced)
 
 	if slices.Contains(refUpdates.branches.deleted, repo.DefaultBranch) {
 		// Default branch mustn't be deleted.
@@ -180,12 +179,12 @@ func (c *Controller) checkProtectionRules(
 				return errors.Wrapf(err, "failed to get branch rule for %s", branchName)
 			}
 
-			// 强制评审开启时，禁止直接更新/强推该分支，必须通过 fit 提交
-			if check.enforceReview && rule.ForceReview != 0 {
-				output.Error = ptr.String(fmt.Sprintf(
-					"branch %s must be use fit to Push",
-					branchName))
-				return nil
+			// 强制评审开启时，禁止直接更新/强推该分支，必须通过 fit 提交（付费流程判定）
+			if check.enforceReview && c.pushRequest != nil {
+				if blocked, msg := c.pushRequest.CheckForceReview(ctx, repo, branchName, rule); blocked {
+					output.Error = ptr.String(msg)
+					return nil
+				}
 			}
 
 			allowedUsers := check.getAllowedUsers(rule)
@@ -235,24 +234,26 @@ type changedRefs struct {
 	other    changes
 }
 
-func groupRefsByAction(refUpdates []hook.ReferenceUpdate, forced []bool) (c changedRefs) {
+func (c *Controller) groupRefsByAction(refUpdates []hook.ReferenceUpdate, forced []bool) (out changedRefs) {
 	for i, refUpdate := range refUpdates {
 		switch {
 		// Branches refs/heads
 		case strings.HasPrefix(refUpdate.Ref, gitReferenceNamePrefixBranch):
 			branchName := refUpdate.Ref[len(gitReferenceNamePrefixBranch):]
-			c.branches.groupByAction(refUpdate, branchName, forced[i])
+			out.branches.groupByAction(refUpdate, branchName, forced[i])
 		// Tags refs/tags
 		case strings.HasPrefix(refUpdate.Ref, gitReferenceNamePrefixTag):
 			tagName := refUpdate.Ref[len(gitReferenceNamePrefixTag):]
-			c.tags.groupByAction(refUpdate, tagName, false)
-		// AGit Pull requests refs/for/
-		case gitutil.SupportProcReceive() && strings.HasPrefix(refUpdate.Ref, gitReferenceNameAgitPullReq):
-			branchName := refUpdate.Ref[len(gitReferenceNameAgitPullReq):]
-			branchName = fmt.Sprintf("ztflow-%s", branchName)
-			c.branches.groupByAction(refUpdate, branchName, forced[i])
+			out.tags.groupByAction(refUpdate, tagName, false)
+		// Push requests (AGit refs/for/), handled by the paid PushRequestFlow.
+		case c.pushRequest != nil && c.pushRequest.IsPushRequestRef(refUpdate.Ref):
+			if branchName, ok := c.pushRequest.GroupRef(refUpdate.Ref); ok {
+				out.branches.groupByAction(refUpdate, branchName, forced[i])
+			} else {
+				out.other.groupByAction(refUpdate, refUpdate.Ref, false)
+			}
 		default:
-			c.other.groupByAction(refUpdate, refUpdate.Ref, false)
+			out.other.groupByAction(refUpdate, refUpdate.Ref, false)
 		}
 	}
 	return

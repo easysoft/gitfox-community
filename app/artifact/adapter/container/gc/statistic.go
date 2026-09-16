@@ -7,12 +7,12 @@ import (
 
 	// Register Docker schema2 and OCI manifest decoders for standalone GC use
 	// and tests that do not import the container controller package.
-	_ "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/adapter/container/schema/ocischema"
-	_ "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/adapter/container/schema/schema2"
-	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
-	artifactStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/artifact"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/storage"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
+	_ "github.com/easysoft/gitfox-community/app/artifact/adapter/container/schema/ocischema"
+	_ "github.com/easysoft/gitfox-community/app/artifact/adapter/container/schema/schema2"
+	model "github.com/easysoft/gitfox-community/app/model/artifact"
+	artifactStore "github.com/easysoft/gitfox-community/app/store/artifact"
+	"github.com/easysoft/gitfox-community/pkg/storage"
+	"github.com/easysoft/gitfox-community/pkg/utils/datetime"
 
 	"github.com/opencontainers/go-digest"
 )

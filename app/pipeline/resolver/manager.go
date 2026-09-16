@@ -3,10 +3,10 @@ package resolver
 import (
 	"context"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/pipeline"
+	"github.com/easysoft/gitfox-community/app/service/pipeline"
 
-	v1yaml "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pipeline/spec"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pipeline/spec/parse"
+	v1yaml "github.com/easysoft/gitfox-community/pkg/pipeline/spec"
+	"github.com/easysoft/gitfox-community/pkg/pipeline/spec/parse"
 )
 
 type Manager struct {

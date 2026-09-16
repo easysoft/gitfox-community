@@ -1,8 +1,8 @@
 package provider
 
 import (
-	pipelineevents "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/events/pipeline"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/events"
+	pipelineevents "github.com/easysoft/gitfox-community/app/events/pipeline"
+	"github.com/easysoft/gitfox-community/pkg/events"
 
 	"github.com/google/wire"
 )

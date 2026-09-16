@@ -6,7 +6,7 @@
 
 package stepbuild
 
-import "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pipeline/step/base"
+import "github.com/easysoft/gitfox-community/pkg/pipeline/step/base"
 
 func init() {
 	base.Register()

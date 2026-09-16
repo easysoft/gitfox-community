@@ -14,19 +14,19 @@ import (
 	"github.com/drone/runner-go/registry"
 	"github.com/drone/runner-go/secret"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/pipeline"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/resolver"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/runner/docker/engine"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/runner/docker/engine/compiler"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/runner/docker/engine/linter"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/runner/docker/engine/resource"
+	"github.com/easysoft/gitfox-community/app/service/pipeline"
+	"github.com/easysoft/gitfox-community/pkg/config"
+	"github.com/easysoft/gitfox-community/app/pipeline/resolver"
+	"github.com/easysoft/gitfox-community/pkg/runner/docker/engine"
+	"github.com/easysoft/gitfox-community/pkg/runner/docker/engine/compiler"
+	"github.com/easysoft/gitfox-community/pkg/runner/docker/engine/linter"
+	"github.com/easysoft/gitfox-community/pkg/runner/docker/engine/resource"
 
-	compiler2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/runner/docker/engine2/compiler"
-	engine2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/runner/docker/engine2/engine"
+	compiler2 "github.com/easysoft/gitfox-community/pkg/runner/docker/engine2/compiler"
+	engine2 "github.com/easysoft/gitfox-community/pkg/runner/docker/engine2/engine"
 
-	runtime2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/runner/docker/engine2/runtime"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/runner/extend"
+	runtime2 "github.com/easysoft/gitfox-community/pkg/runner/docker/engine2/runtime"
+	"github.com/easysoft/gitfox-community/pkg/runner/extend"
 )
 
 // Privileged provides a list of plugins that execute

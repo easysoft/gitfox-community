@@ -9,8 +9,8 @@ package inmemory
 import (
 	"testing"
 
-	storagedriver "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/storage/driver"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/storage/driver/testsuites"
+	storagedriver "github.com/easysoft/gitfox-community/pkg/storage/driver"
+	"github.com/easysoft/gitfox-community/pkg/storage/driver/testsuites"
 )
 
 func newDriverConstructor() (storagedriver.StorageDriver, error) {

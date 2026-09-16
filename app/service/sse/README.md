@@ -26,8 +26,8 @@
 
 ```go
 import (
-    "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pubsub"
-    "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/sse"
+    "github.com/easysoft/gitfox-community/pkg/pubsub"
+    "github.com/easysoft/gitfox-community/app/service/sse"
 )
 
 // 假设已有一个 pubsub 实例
@@ -42,7 +42,7 @@ sseSvc := sse.NewSSE(ps, "gitfox-sse")
 在业务逻辑中（例如创建 Pull Request 后），调用 `Publish` 推送事件。
 
 ```go
-import "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/event"
+import "github.com/easysoft/gitfox-community/app/model/event"
 
 func (s *PullRequestService) CreatePR(ctx context.Context, req CreatePRReq) error {
     // ... 业务逻辑 ...

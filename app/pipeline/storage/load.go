@@ -3,8 +3,8 @@ package storage
 import (
 	"context"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/storage"
+	"github.com/easysoft/gitfox-community/app/constant"
+	"github.com/easysoft/gitfox-community/pkg/storage"
 )
 
 func LoadPipelineStorage(ctx context.Context, storageConfig storage.Config) (PipelineStorage, error) {

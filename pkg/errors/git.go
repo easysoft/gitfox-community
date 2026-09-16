@@ -1,6 +1,6 @@
 package errors
 
-import "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
+import "github.com/easysoft/gitfox-community/pkg/i18n"
 
 // Git related errors
 var (

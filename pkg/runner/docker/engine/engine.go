@@ -11,10 +11,10 @@ import (
 	"os"
 	"time"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/runner/docker/internal/docker/errors"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/runner/docker/internal/docker/image"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/runner/docker/internal/docker/jsonmessage"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/runner/docker/internal/docker/stdcopy"
+	"github.com/easysoft/gitfox-community/pkg/runner/docker/internal/docker/errors"
+	"github.com/easysoft/gitfox-community/pkg/runner/docker/internal/docker/image"
+	"github.com/easysoft/gitfox-community/pkg/runner/docker/internal/docker/jsonmessage"
+	"github.com/easysoft/gitfox-community/pkg/runner/docker/internal/docker/stdcopy"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"

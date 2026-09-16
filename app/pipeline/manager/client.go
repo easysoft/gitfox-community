@@ -8,10 +8,10 @@ import (
 	"math/rand"
 	"time"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/livelog"
-	urlprovider "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/url"
+	"github.com/easysoft/gitfox-community/app/constant"
+	"github.com/easysoft/gitfox-community/pkg/config"
+	"github.com/easysoft/gitfox-community/pkg/livelog"
+	urlprovider "github.com/easysoft/gitfox-community/pkg/utils/url"
 
 	"github.com/drone/drone-go/drone"
 	"github.com/drone/runner-go/client"

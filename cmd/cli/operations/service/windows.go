@@ -19,8 +19,8 @@ import (
 	"os/exec"
 	"strings"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
-	clii18n "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n/cli"
+	"github.com/easysoft/gitfox-community/pkg/i18n"
+	clii18n "github.com/easysoft/gitfox-community/pkg/i18n/cli"
 )
 
 // ─────────────────────────────────────────────

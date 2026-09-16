@@ -6,8 +6,8 @@ import (
 	"reflect"
 	"strconv"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+	"github.com/easysoft/gitfox-community/app/model/auth"
+	"github.com/easysoft/gitfox-community/pkg/errors"
 
 	"github.com/gin-gonic/gin"
 )

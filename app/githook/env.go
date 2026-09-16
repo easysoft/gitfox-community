@@ -20,7 +20,7 @@ import (
 	"strings"
 	"time"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/hook"
+	"github.com/easysoft/gitfox-community/pkg/git/hook"
 )
 
 var (

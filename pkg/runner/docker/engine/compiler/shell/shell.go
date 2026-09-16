@@ -11,7 +11,7 @@ import (
 	"fmt"
 	"strings"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/runner/extend"
+	"github.com/easysoft/gitfox-community/pkg/runner/extend"
 )
 
 // Script converts a slice of individual shell commands to

@@ -5,8 +5,8 @@ package repo
 import (
 	"context"
 
-	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
+	repoModel "github.com/easysoft/gitfox-community/app/model/repo"
+	"github.com/easysoft/gitfox-community/pkg/database"
 )
 
 type RepoPageResult = *database.PageResult[*repoModel.Repo]

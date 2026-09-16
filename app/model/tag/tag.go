@@ -1,7 +1,7 @@
 package tag
 
 import (
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/commit"
+	"github.com/easysoft/gitfox-community/app/model/commit"
 )
 
 // ReqForCreate used for tag creation apis.

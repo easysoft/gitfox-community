@@ -4,10 +4,10 @@ import (
 	"context"
 	"strings"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
-	gitevents "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/events/git"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/triggerer"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/events"
+	"github.com/easysoft/gitfox-community/app/constant"
+	gitevents "github.com/easysoft/gitfox-community/app/events/git"
+	"github.com/easysoft/gitfox-community/app/pipeline/triggerer"
+	"github.com/easysoft/gitfox-community/pkg/events"
 )
 
 func (s *Service) handleEventBranchCreated(ctx context.Context, event *events.Event[*gitevents.BranchCreatedPayload]) error {

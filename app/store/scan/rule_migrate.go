@@ -7,10 +7,10 @@ import (
 	"strconv"
 	"strings"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/resources"
+	"github.com/easysoft/gitfox-community/app/constant"
+	"github.com/easysoft/gitfox-community/pkg/database"
+	"github.com/easysoft/gitfox-community/pkg/utils/datetime"
+	"github.com/easysoft/gitfox-community/resources"
 	"gorm.io/gorm"
 )
 

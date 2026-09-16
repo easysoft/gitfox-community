@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	principal "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/user"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/cache"
+	principal "github.com/easysoft/gitfox-community/app/model/user"
+	"github.com/easysoft/gitfox-community/pkg/cache"
 )
 
 type (

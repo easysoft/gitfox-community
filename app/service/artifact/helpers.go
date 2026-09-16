@@ -6,11 +6,11 @@ import (
 	"strconv"
 	"strings"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/adapter"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/adapter/container"
-	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
-	pkgErrors "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
+	"github.com/easysoft/gitfox-community/app/artifact/adapter"
+	"github.com/easysoft/gitfox-community/app/artifact/adapter/container"
+	model "github.com/easysoft/gitfox-community/app/model/artifact"
+	pkgErrors "github.com/easysoft/gitfox-community/pkg/errors"
+	"github.com/easysoft/gitfox-community/pkg/i18n"
 )
 
 // --- 制品相关 ---

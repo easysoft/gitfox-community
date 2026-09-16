@@ -3,7 +3,7 @@ package provider
 import (
 	"github.com/google/wire"
 
-	notifyStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/notify"
+	notifyStore "github.com/easysoft/gitfox-community/app/store/notify"
 )
 
 var NotifyWireSet = wire.NewSet(

@@ -11,8 +11,8 @@ import (
 
 	"github.com/google/wire"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/storage/driver"
+	"github.com/easysoft/gitfox-community/pkg/config"
+	"github.com/easysoft/gitfox-community/pkg/storage/driver"
 )
 
 // WireSet 提供 storage 模块的依赖注入集合

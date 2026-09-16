@@ -22,8 +22,8 @@ import (
 	"testing/iotest"
 	"time"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/sha"
+	"github.com/easysoft/gitfox-community/pkg/errors"
+	"github.com/easysoft/gitfox-community/pkg/git/sha"
 
 	"github.com/google/go-cmp/cmp"
 )

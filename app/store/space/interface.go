@@ -3,8 +3,8 @@ package space
 import (
 	"context"
 
-	spaceModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/space"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
+	spaceModel "github.com/easysoft/gitfox-community/app/model/space"
+	"github.com/easysoft/gitfox-community/pkg/database"
 )
 
 // Interface 空间数据存储接口

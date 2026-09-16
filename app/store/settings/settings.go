@@ -3,8 +3,8 @@ package settings
 import (
 	"context"
 
-	SettingsModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/settings"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
+	SettingsModel "github.com/easysoft/gitfox-community/app/model/settings"
+	"github.com/easysoft/gitfox-community/pkg/database"
 	"gorm.io/gorm"
 )
 

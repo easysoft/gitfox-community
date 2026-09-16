@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"time"
 
-	scanModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+	scanModel "github.com/easysoft/gitfox-community/app/model/scan"
+	"github.com/easysoft/gitfox-community/pkg/errors"
 	"github.com/gorhill/cronexpr"
 )
 

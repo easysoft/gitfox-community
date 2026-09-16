@@ -5,16 +5,16 @@ import (
 	"github.com/drone/runner-go/poller"
 	"github.com/google/wire"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/runner"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/resolver"
-	dockerRunner "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/runner"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/storage"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/pipeline"
-	runnerSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/runner"
-	runnerStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/runner"
-	stageStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/stage"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/runner/extend"
+	"github.com/easysoft/gitfox-community/app/api/controller/runner"
+	"github.com/easysoft/gitfox-community/app/pipeline/resolver"
+	dockerRunner "github.com/easysoft/gitfox-community/app/pipeline/runner"
+	"github.com/easysoft/gitfox-community/app/pipeline/storage"
+	"github.com/easysoft/gitfox-community/app/service/pipeline"
+	runnerSvc "github.com/easysoft/gitfox-community/app/service/runner"
+	runnerStore "github.com/easysoft/gitfox-community/app/store/runner"
+	stageStore "github.com/easysoft/gitfox-community/app/store/stage"
+	"github.com/easysoft/gitfox-community/pkg/config"
+	"github.com/easysoft/gitfox-community/pkg/runner/extend"
 )
 
 var RunnerWireSet = wire.NewSet(

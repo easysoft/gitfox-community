@@ -114,7 +114,7 @@ package main
 
 import (
     "fmt"
-    "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
+    "github.com/easysoft/gitfox-community/pkg/i18n"
 )
 
 func main() {
@@ -280,7 +280,7 @@ package main
 import (
     "fmt"
     "log"
-    "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
+    "github.com/easysoft/gitfox-community/pkg/i18n"
 )
 
 func main() {
@@ -317,7 +317,7 @@ package main
 
 import (
     "log"
-    "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
+    "github.com/easysoft/gitfox-community/pkg/i18n"
 )
 
 func main() {
@@ -369,7 +369,7 @@ func main() {
 module your-project
 
 require (
-    gitfox.zcorp.cc/git/Pangu/gitfox-community v0.1.0
+    github.com/easysoft/gitfox-community v0.1.0
 )
 ```
 
@@ -379,7 +379,7 @@ require (
 package main
 
 import (
-    "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
+    "github.com/easysoft/gitfox-community/pkg/i18n"
 )
 
 func init() {
@@ -407,7 +407,7 @@ func init() {
 package service
 
 import (
-    "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
+    "github.com/easysoft/gitfox-community/pkg/i18n"
 )
 
 type UserService struct{}
@@ -465,7 +465,7 @@ package main
 
 import (
     "fmt"
-    "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
+    "github.com/easysoft/gitfox-community/pkg/i18n"
 )
 
 func validateTranslations() {
@@ -514,7 +514,7 @@ package main
 
 import (
     "github.com/gin-gonic/gin"
-    "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
+    "github.com/easysoft/gitfox-community/pkg/i18n"
 )
 
 func main() {
@@ -557,7 +557,7 @@ package main
 
 import (
     "net/http"
-    "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
+    "github.com/easysoft/gitfox-community/pkg/i18n"
 )
 
 func main() {

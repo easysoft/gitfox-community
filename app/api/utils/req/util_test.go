@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	commitModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/commit"
+	commitModel "github.com/easysoft/gitfox-community/app/model/commit"
 )
 
 func TestSetDefaults(t *testing.T) {

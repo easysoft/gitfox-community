@@ -21,8 +21,8 @@
 
 ```go
 import (
-    "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/locker"
-    "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/lock"
+    "github.com/easysoft/gitfox-community/app/service/locker"
+    "github.com/easysoft/gitfox-community/pkg/lock"
 )
 
 func NewService(mtxManager lock.MutexManager) *MyService {

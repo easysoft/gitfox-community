@@ -4,9 +4,9 @@ import (
 	"context"
 	"strings"
 
-	spaceModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/space"
+	spaceModel "github.com/easysoft/gitfox-community/app/model/space"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
+	"github.com/easysoft/gitfox-community/pkg/database"
 	"gorm.io/gorm"
 )
 

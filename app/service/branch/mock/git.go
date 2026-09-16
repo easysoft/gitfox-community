@@ -14,8 +14,8 @@ import (
 	io "io"
 	reflect "reflect"
 
-	git "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
-	api "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/api"
+	git "github.com/easysoft/gitfox-community/pkg/git"
+	api "github.com/easysoft/gitfox-community/pkg/git/api"
 	gomock "go.uber.org/mock/gomock"
 )
 

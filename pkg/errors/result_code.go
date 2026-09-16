@@ -3,7 +3,7 @@ package errors
 import (
 	"net/http"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
+	"github.com/easysoft/gitfox-community/pkg/i18n"
 )
 
 const (

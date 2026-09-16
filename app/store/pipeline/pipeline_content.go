@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/base64"
 
-	pipelineModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/pipeline"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
+	pipelineModel "github.com/easysoft/gitfox-community/app/model/pipeline"
+	"github.com/easysoft/gitfox-community/pkg/database"
 )
 
 // CreatePipelineContent 创建流水线内容

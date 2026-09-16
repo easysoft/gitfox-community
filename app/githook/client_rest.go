@@ -24,8 +24,8 @@ import (
 	"net/http"
 	"strings"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/githook"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/hook"
+	"github.com/easysoft/gitfox-community/app/model/githook"
+	"github.com/easysoft/gitfox-community/pkg/git/hook"
 )
 
 const (

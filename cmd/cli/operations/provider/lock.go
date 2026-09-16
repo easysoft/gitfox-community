@@ -3,8 +3,8 @@ package provider
 import (
 	"github.com/google/wire"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/locker"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/lock"
+	"github.com/easysoft/gitfox-community/app/service/locker"
+	"github.com/easysoft/gitfox-community/pkg/lock"
 )
 
 var LockWireSet = wire.NewSet(

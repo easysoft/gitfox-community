@@ -9,13 +9,13 @@ import (
 	"strings"
 	"time"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
-	artifactModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/model"
-	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
-	artifactStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/artifact"
-	pkgErrors "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+	"github.com/easysoft/gitfox-community/app/api/utils/req"
+	artifactModel "github.com/easysoft/gitfox-community/app/artifact/model"
+	model "github.com/easysoft/gitfox-community/app/model/artifact"
+	artifactStore "github.com/easysoft/gitfox-community/app/store/artifact"
+	pkgErrors "github.com/easysoft/gitfox-community/pkg/errors"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
+	"github.com/easysoft/gitfox-community/pkg/logger"
 	"github.com/guregu/null"
 )
 

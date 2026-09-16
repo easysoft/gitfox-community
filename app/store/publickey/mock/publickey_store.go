@@ -13,10 +13,10 @@ import (
 	context "context"
 	reflect "reflect"
 
-	req "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
-	publickey "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/publickey"
-	publickey0 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/publickey"
-	database "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
+	req "github.com/easysoft/gitfox-community/app/api/utils/req"
+	publickey "github.com/easysoft/gitfox-community/app/model/publickey"
+	publickey0 "github.com/easysoft/gitfox-community/app/store/publickey"
+	database "github.com/easysoft/gitfox-community/pkg/database"
 	gomock "go.uber.org/mock/gomock"
 )
 

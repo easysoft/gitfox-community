@@ -7,7 +7,7 @@
 package compiler
 
 import (
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/runner/docker/engine2/engine"
+	"github.com/easysoft/gitfox-community/pkg/runner/docker/engine2/engine"
 )
 
 const cleanStepName = "clean"

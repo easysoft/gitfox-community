@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	jobModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/jobs"
+	jobModel "github.com/easysoft/gitfox-community/app/model/jobs"
 )
 
 //go:generate go run go.uber.org/mock/mockgen@v0.6.0 -source=$GOFILE -destination=mock/scheduleJob_store.go -package=mock

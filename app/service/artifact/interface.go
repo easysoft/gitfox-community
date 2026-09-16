@@ -6,12 +6,12 @@ import (
 	"net/http"
 	"time"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/adapter"
-	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
-	authModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
-	artifactStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/artifact"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/storage"
+	"github.com/easysoft/gitfox-community/app/artifact/adapter"
+	model "github.com/easysoft/gitfox-community/app/model/artifact"
+	authModel "github.com/easysoft/gitfox-community/app/model/auth"
+	artifactStore "github.com/easysoft/gitfox-community/app/store/artifact"
+	"github.com/easysoft/gitfox-community/pkg/database"
+	"github.com/easysoft/gitfox-community/pkg/storage"
 )
 
 // JobScheduler 是后台任务调度器接口，用于触发异步 GC 等任务。

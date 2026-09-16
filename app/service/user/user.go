@@ -3,9 +3,9 @@ package user
 import (
 	"context"
 
-	principal "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/user"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/token"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/user"
+	principal "github.com/easysoft/gitfox-community/app/model/user"
+	"github.com/easysoft/gitfox-community/app/store/token"
+	"github.com/easysoft/gitfox-community/app/store/user"
 
 	"golang.org/x/crypto/bcrypt"
 )

@@ -1,4 +1,4 @@
-module gitfox.zcorp.cc/git/Pangu/gitfox-community
+module github.com/easysoft/gitfox-community
 
 go 1.25.1
 

@@ -10,7 +10,7 @@ import (
 
 	gormlogger "gorm.io/gorm/logger"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
+	"github.com/easysoft/gitfox-community/pkg/logger"
 )
 
 // gormLogger 是自定义的 GORM 日志器。

@@ -17,8 +17,8 @@ package expand
 import (
 	"encoding/json"
 
-	schema "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pipeline/spec"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pipeline/spec/parse/expand/matrix"
+	schema "github.com/easysoft/gitfox-community/pkg/pipeline/spec"
+	"github.com/easysoft/gitfox-community/pkg/pipeline/spec/parse/expand/matrix"
 )
 
 // Expand expands the matrix strategies.

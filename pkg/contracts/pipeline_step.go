@@ -6,7 +6,7 @@
 
 package contracts
 
-import harness "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pipeline/spec"
+import harness "github.com/easysoft/gitfox-community/pkg/pipeline/spec"
 
 type PipelineStepBuildConverter interface {
 	Convert(src *harness.Step) (*harness.StepBuild, error)

@@ -3,7 +3,7 @@ package stage
 import (
 	"database/sql"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
+	"github.com/easysoft/gitfox-community/pkg/utils/datetime"
 )
 
 type Stage struct {

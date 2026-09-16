@@ -1,6 +1,6 @@
 package auth
 
-import "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
+import "github.com/easysoft/gitfox-community/app/constant"
 
 type Metadata interface {
 	ImpactsAuthorization() bool

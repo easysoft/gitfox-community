@@ -10,10 +10,10 @@ import (
 	"strings"
 	"time"
 
-	runnerModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/runner"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/runner"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+	runnerModel "github.com/easysoft/gitfox-community/app/model/runner"
+	"github.com/easysoft/gitfox-community/app/store/runner"
+	"github.com/easysoft/gitfox-community/pkg/database"
+	"github.com/easysoft/gitfox-community/pkg/errors"
 )
 
 type Service struct {

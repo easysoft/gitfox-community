@@ -1,8 +1,8 @@
 package provider
 
 import (
-	gitevents "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/events/git"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/events"
+	gitevents "github.com/easysoft/gitfox-community/app/events/git"
+	"github.com/easysoft/gitfox-community/pkg/events"
 
 	"github.com/google/wire"
 )

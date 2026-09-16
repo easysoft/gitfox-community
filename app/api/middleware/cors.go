@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/slice"
+	"github.com/easysoft/gitfox-community/pkg/utils/slice"
 	"github.com/gin-gonic/gin"
 )
 

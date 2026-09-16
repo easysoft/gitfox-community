@@ -3,8 +3,8 @@ package authz
 import (
 	"context"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+	"github.com/easysoft/gitfox-community/app/constant"
+	"github.com/easysoft/gitfox-community/pkg/errors"
 )
 
 // CheckPublicAccess checks if the requested permission is public for the provided scope and resource.

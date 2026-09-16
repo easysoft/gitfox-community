@@ -1,7 +1,7 @@
 package authn
 
 import (
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
+	"github.com/easysoft/gitfox-community/app/model/auth"
 	"github.com/gin-gonic/gin"
 )
 

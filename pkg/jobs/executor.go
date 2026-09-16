@@ -4,8 +4,8 @@ import (
 	"context"
 	"runtime/debug"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pubsub"
+	"github.com/easysoft/gitfox-community/pkg/errors"
+	"github.com/easysoft/gitfox-community/pkg/pubsub"
 )
 
 // Executor holds map of Handler objects per each job type registered.

@@ -1,9 +1,9 @@
 package execution
 
 import (
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
-	stageModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/stage"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
+	"github.com/easysoft/gitfox-community/app/constant"
+	stageModel "github.com/easysoft/gitfox-community/app/model/stage"
+	"github.com/easysoft/gitfox-community/pkg/utils/datetime"
 )
 
 type ReqForCreate struct {

@@ -7,13 +7,13 @@ import (
 
 	"go.uber.org/mock/gomock"
 
-	jobModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/jobs"
-	mockStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/jobs/mock"
-	pkgErrors "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/lock"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pubsub"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
+	jobModel "github.com/easysoft/gitfox-community/app/model/jobs"
+	mockStore "github.com/easysoft/gitfox-community/app/store/jobs/mock"
+	pkgErrors "github.com/easysoft/gitfox-community/pkg/errors"
+	"github.com/easysoft/gitfox-community/pkg/lock"
+	"github.com/easysoft/gitfox-community/pkg/logger"
+	"github.com/easysoft/gitfox-community/pkg/pubsub"
+	"github.com/easysoft/gitfox-community/pkg/utils/datetime"
 )
 
 // mockPubSub is a minimal mock implementation of pubsub.PubSub for testing

@@ -10,14 +10,14 @@ import (
 	"context"
 	"errors"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/adapter"
-	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
+	"github.com/easysoft/gitfox-community/app/api/utils/req"
+	"github.com/easysoft/gitfox-community/app/artifact/adapter"
+	model "github.com/easysoft/gitfox-community/app/model/artifact"
 
-	artifactStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/artifact"
-	storagedriver "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/storage/driver"
+	artifactStore "github.com/easysoft/gitfox-community/app/store/artifact"
+	storagedriver "github.com/easysoft/gitfox-community/pkg/storage/driver"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
+	"github.com/easysoft/gitfox-community/pkg/logger"
 )
 
 type ArtifactIndexRequest struct {

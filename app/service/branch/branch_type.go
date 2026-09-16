@@ -3,13 +3,13 @@ package branch
 import (
 	"context"
 
-	authModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
-	branchModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/branch"
-	branchStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/branch"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/slice"
+	authModel "github.com/easysoft/gitfox-community/app/model/auth"
+	branchModel "github.com/easysoft/gitfox-community/app/model/branch"
+	branchStore "github.com/easysoft/gitfox-community/app/store/branch"
+	"github.com/easysoft/gitfox-community/pkg/database"
+	"github.com/easysoft/gitfox-community/pkg/errors"
+	"github.com/easysoft/gitfox-community/pkg/i18n"
+	"github.com/easysoft/gitfox-community/pkg/utils/slice"
 )
 
 // ***** BranchType(zt_ops_branch_type) 表在devops 库中 *****

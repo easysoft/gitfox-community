@@ -9,7 +9,7 @@ import (
 	"gorm.io/gorm/schema"
 
 	dm "gitfox.zcorp.cc/git/Pangu/dm-gorm"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
+	"github.com/easysoft/gitfox-community/pkg/config"
 )
 
 // DaMengDB 是 gorm.DB 的命名类型，用于达梦数据库

@@ -3,8 +3,8 @@ package artifact
 import (
 	"context"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/storage"
-	storagedriver "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/storage/driver"
+	"github.com/easysoft/gitfox-community/pkg/storage"
+	storagedriver "github.com/easysoft/gitfox-community/pkg/storage/driver"
 )
 
 // Config 保存 artifact 模块的配置。

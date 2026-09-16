@@ -6,7 +6,7 @@ import (
 
 	dronelogger "github.com/drone/runner-go/logger"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
+	"github.com/easysoft/gitfox-community/pkg/logger"
 )
 
 // WithWrappedLogger adds a wrapped copy of the app logger to the context,

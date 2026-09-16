@@ -19,7 +19,7 @@
 ```go
 import (
     "time"
-    "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/lock"
+    "github.com/easysoft/gitfox-community/pkg/lock"
 )
 
 func main() {

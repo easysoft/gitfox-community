@@ -21,7 +21,7 @@ package main
 
 import (
     "fmt"
-    pkg_errors "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+    pkg_errors "github.com/easysoft/gitfox-community/pkg/errors"
 )
 
 func main() {
@@ -144,7 +144,7 @@ import (
     "fmt"
     "net/http"
     
-    pkg_errors "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+    pkg_errors "github.com/easysoft/gitfox-community/pkg/errors"
 )
 
 type UserService struct {

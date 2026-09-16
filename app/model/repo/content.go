@@ -1,9 +1,9 @@
 package repo
 
 import (
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/commit"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
+	"github.com/easysoft/gitfox-community/app/constant"
+	"github.com/easysoft/gitfox-community/app/model/commit"
+	"github.com/easysoft/gitfox-community/pkg/git"
 )
 
 const (

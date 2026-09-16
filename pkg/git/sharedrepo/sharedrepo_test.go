@@ -19,7 +19,7 @@ import (
 	"reflect"
 	"testing"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/parser"
+	"github.com/easysoft/gitfox-community/pkg/git/parser"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

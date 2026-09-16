@@ -3,10 +3,10 @@ package space
 import (
 	"strings"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
-	common "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/common"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
+	"github.com/easysoft/gitfox-community/pkg/errors"
+	"github.com/easysoft/gitfox-community/pkg/i18n"
+	common "github.com/easysoft/gitfox-community/pkg/utils/common"
+	"github.com/easysoft/gitfox-community/pkg/utils/datetime"
 )
 
 type CreateSpaceRequest struct {

@@ -4,15 +4,15 @@ import (
 	"context"
 	"fmt"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
+	"github.com/easysoft/gitfox-community/app/constant"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/scheduler"
-	executionStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/execution"
-	pipelineStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/pipeline"
-	stageStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/stage"
-	stepStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/step"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
+	"github.com/easysoft/gitfox-community/app/pipeline/scheduler"
+	executionStore "github.com/easysoft/gitfox-community/app/store/execution"
+	pipelineStore "github.com/easysoft/gitfox-community/app/store/pipeline"
+	stageStore "github.com/easysoft/gitfox-community/app/store/stage"
+	stepStore "github.com/easysoft/gitfox-community/app/store/step"
+	"github.com/easysoft/gitfox-community/pkg/logger"
+	"github.com/easysoft/gitfox-community/pkg/utils/datetime"
 )
 
 type service struct {

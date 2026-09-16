@@ -9,7 +9,7 @@ package util
 import (
 	"fmt"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/enum"
+	"github.com/easysoft/gitfox-community/pkg/git/enum"
 )
 
 func GetHookTemplates() (hookNames, hookTpls, giteaHookTpls []string) {
@@ -103,33 +103,12 @@ else
 fi
 
 case "$refname","$newrev_type" in
-	refs/for/*,commit)
-		# branch
-		if [ "$oldrev" = "$zero" -a "$denycreatebranch" = "true" ]; then
-			echo "*** Creating a branch is not allowed in this repository" >&2
-			exit 1
-		fi
-		branch_number=$(echo $refname | sed 's!refs/for/!!')
-		# branch_number=$(echo $branch_number | tr '/' '-')
-		new_branch="refs/heads/ztflow-$branch_number"
-		mail=$(get_mail)
-		[ ! -z "$mail" ] && new_branch="refs/heads/ztflow-$mail-$branch_number"
-		# if git show-ref --verify --quiet $new_branch; then
-		# echo "Error: Branch $new_branch already exists."
-		# exit 1
-		# fi
-		git update-ref $new_branch $newrev
-		if [ $? -ne 0 ]; then
-				echo "Error: Failed to create branch $new_branch."
-				exit 1
-		fi
-		;;
-		*)
-			exit 0
-		;;
+%s	*)
+		exit 0
+	;;
 esac
 exit 0
-`, enum.ScriptType),
+`, enum.ScriptType, pushRequestHookCase),
 
 		// for post-receive
 		fmt.Sprintf(`#!/usr/bin/env %s

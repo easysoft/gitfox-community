@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 
-	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
+	model "github.com/easysoft/gitfox-community/app/model/artifact"
+	"github.com/easysoft/gitfox-community/pkg/database"
 
 	"github.com/guregu/null"
 	"gorm.io/gorm"

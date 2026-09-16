@@ -1,6 +1,6 @@
 package pipeline
 
-import "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
+import "github.com/easysoft/gitfox-community/pkg/utils/datetime"
 
 type PipelineConfigSource string
 

@@ -7,86 +7,79 @@
 package server
 
 import (
-	artifact3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/artifact"
-	branch3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/branch"
-	commit2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/commit"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/cron"
-	execution3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/execution"
-	fit2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/fit"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/githook"
-	pipeline3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/pipeline"
-	repo3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/repo"
-	runner3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/runner"
-	scan3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/scan"
-	space3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/space"
-	svn2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/svn"
-	tag2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/tag"
-	user3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/user"
-	webhook2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/webhook"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/router"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/handler"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/canceler"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/manager"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/scheduler"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/triggerer"
-	artifact2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/artifact"
-	branch2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/branch"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/commit"
-	execution2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/execution"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/fit"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/importer"
-	jobs2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/jobs"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/locker"
-	pipeline2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/pipeline"
-	publickey2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/publickey"
-	repo2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
-	runner2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/runner"
-	scan2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/scan"
-	space2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/space"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/sse"
-	stage2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/stage"
-	step2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/step"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/tag"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/trigger"
-	user2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/user"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/artifact"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/branch"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/execution"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/jobs"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/notify"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/pipeline"
-	provider2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/provider"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/publickey"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/pullrequest"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/runner"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/scan"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/settings"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/space"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/stage"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/step"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/token"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/user"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/webhook"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/cmd/cli/operations/provider"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/auth/authn"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/auth/authz"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database/dbtx"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/events"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/livelog"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/lock"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pubsub"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/ssh"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/storage"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/svn"
-	"github.com/drone/runner-go/poller"
-	"gorm.io/gorm"
+	artifact3 "github.com/easysoft/gitfox-community/app/api/controller/artifact"
+	branch3 "github.com/easysoft/gitfox-community/app/api/controller/branch"
+	commit2 "github.com/easysoft/gitfox-community/app/api/controller/commit"
+	"github.com/easysoft/gitfox-community/app/api/controller/cron"
+	execution3 "github.com/easysoft/gitfox-community/app/api/controller/execution"
+	fit2 "github.com/easysoft/gitfox-community/app/api/controller/fit"
+	"github.com/easysoft/gitfox-community/app/api/controller/githook"
+	pipeline3 "github.com/easysoft/gitfox-community/app/api/controller/pipeline"
+	repo3 "github.com/easysoft/gitfox-community/app/api/controller/repo"
+	runner3 "github.com/easysoft/gitfox-community/app/api/controller/runner"
+	scan3 "github.com/easysoft/gitfox-community/app/api/controller/scan"
+	space3 "github.com/easysoft/gitfox-community/app/api/controller/space"
+	svn2 "github.com/easysoft/gitfox-community/app/api/controller/svn"
+	tag2 "github.com/easysoft/gitfox-community/app/api/controller/tag"
+	user3 "github.com/easysoft/gitfox-community/app/api/controller/user"
+	webhook2 "github.com/easysoft/gitfox-community/app/api/controller/webhook"
+	"github.com/easysoft/gitfox-community/app/pipeline/canceler"
+	"github.com/easysoft/gitfox-community/app/pipeline/manager"
+	"github.com/easysoft/gitfox-community/app/pipeline/scheduler"
+	"github.com/easysoft/gitfox-community/app/pipeline/triggerer"
+	artifact2 "github.com/easysoft/gitfox-community/app/service/artifact"
+	branch2 "github.com/easysoft/gitfox-community/app/service/branch"
+	"github.com/easysoft/gitfox-community/app/service/commit"
+	execution2 "github.com/easysoft/gitfox-community/app/service/execution"
+	"github.com/easysoft/gitfox-community/app/service/fit"
+	"github.com/easysoft/gitfox-community/app/service/importer"
+	"github.com/easysoft/gitfox-community/app/service/locker"
+	pipeline2 "github.com/easysoft/gitfox-community/app/service/pipeline"
+	publickey2 "github.com/easysoft/gitfox-community/app/service/publickey"
+	pullrequest2 "github.com/easysoft/gitfox-community/app/service/pullrequest"
+	repo2 "github.com/easysoft/gitfox-community/app/service/repo"
+	runner2 "github.com/easysoft/gitfox-community/app/service/runner"
+	scan2 "github.com/easysoft/gitfox-community/app/service/scan"
+	space2 "github.com/easysoft/gitfox-community/app/service/space"
+	"github.com/easysoft/gitfox-community/app/service/sse"
+	stage2 "github.com/easysoft/gitfox-community/app/service/stage"
+	step2 "github.com/easysoft/gitfox-community/app/service/step"
+	"github.com/easysoft/gitfox-community/app/service/tag"
+	user2 "github.com/easysoft/gitfox-community/app/service/user"
+	"github.com/easysoft/gitfox-community/app/store/artifact"
+	"github.com/easysoft/gitfox-community/app/store/branch"
+	"github.com/easysoft/gitfox-community/app/store/execution"
+	"github.com/easysoft/gitfox-community/app/store/jobs"
+	"github.com/easysoft/gitfox-community/app/store/notify"
+	"github.com/easysoft/gitfox-community/app/store/pipeline"
+	provider2 "github.com/easysoft/gitfox-community/app/store/provider"
+	"github.com/easysoft/gitfox-community/app/store/publickey"
+	"github.com/easysoft/gitfox-community/app/store/pullrequest"
+	"github.com/easysoft/gitfox-community/app/store/repo"
+	"github.com/easysoft/gitfox-community/app/store/runner"
+	"github.com/easysoft/gitfox-community/app/store/scan"
+	"github.com/easysoft/gitfox-community/app/store/settings"
+	"github.com/easysoft/gitfox-community/app/store/space"
+	"github.com/easysoft/gitfox-community/app/store/stage"
+	"github.com/easysoft/gitfox-community/app/store/step"
+	"github.com/easysoft/gitfox-community/app/store/user"
+	"github.com/easysoft/gitfox-community/app/store/webhook"
+	"github.com/easysoft/gitfox-community/cmd/cli/operations/provider"
+	"github.com/easysoft/gitfox-community/pkg/auth/authn"
+	"github.com/easysoft/gitfox-community/pkg/auth/authz"
+	"github.com/easysoft/gitfox-community/pkg/database/dbtx"
+	"github.com/easysoft/gitfox-community/pkg/livelog"
+	"github.com/easysoft/gitfox-community/pkg/lock"
+	"github.com/easysoft/gitfox-community/pkg/pubsub"
+	"github.com/easysoft/gitfox-community/pkg/storage"
+	"github.com/easysoft/gitfox-community/pkg/svn"
 )
 
 // Injectors from wire.go:
 
+// NewApp assembles the community edition application dependency graph.
+// Overlay editions provide their own injector and reuse the exported wire sets
+// from the provider package together with their own bindings.
 func NewApp(mode string) (*App, func(), error) {
 	modeName := provider.NewSystemMode(mode)
 	config, err := provider.NewSystemConfig(modeName)
@@ -136,6 +129,7 @@ func NewApp(mode string) (*App, func(), error) {
 	}
 	branchStore := branch.NewBranchStore(db)
 	branchService := branch2.NewService(urlProvider, gitService, branchStore)
+	noopArchiveService := branch2.NewNoopArchiveService()
 	svnInterface, err := svn.ProvideSVN(config)
 	if err != nil {
 		cleanup()
@@ -143,7 +137,7 @@ func NewApp(mode string) (*App, func(), error) {
 	}
 	providerStore := provider2.NewProviderStore(db)
 	repoService := repo2.NewRepoSvc(gitService, svnInterface, store, spaceStore, urlProvider, membershipAuthorizer, providerStore)
-	controller := branch3.NewController(branchService, repoService)
+	controller := branch3.NewController(branchService, noopArchiveService, repoService)
 	ciConfig := provider.NewCiConfig(config)
 	pipelineStore := pipeline.NewPipelineStore(db)
 	s3Store, err := provider.ProvidePipelineS3Store(config)
@@ -230,7 +224,8 @@ func NewApp(mode string) (*App, func(), error) {
 	}
 	lockerLocker := locker.NewLocker(mutexManager)
 	pullrequestStore := pullrequest.NewPullRequestStore(db)
-	pullrequestService, err := provider.ProvidePullRequestSvc(eventContext, readerFactory, eventsReaderFactory, eventsReporter, config, gitService, repoService, store, lockerLocker, pullrequestStore, streamer, pubSub, urlProvider)
+	noopPushRequestCleaner := pullrequest2.NewNoopPushRequestCleaner()
+	pullrequestService, err := provider.ProvidePullRequestSvc(eventContext, readerFactory, eventsReaderFactory, eventsReporter, config, gitService, repoService, store, lockerLocker, pullrequestStore, streamer, pubSub, urlProvider, noopPushRequestCleaner)
 	if err != nil {
 		cleanup2()
 		cleanup()
@@ -276,7 +271,8 @@ func NewApp(mode string) (*App, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	githookController := provider.NewGitHookController(userStore, store, pullrequestStore, tokenInterface, gitService, urlProvider, clientFactory, config, eventsReporter, reporter2)
+	noopPushRequestFlow := githook.NewNoopPushRequestFlow()
+	githookController := provider.NewGitHookController(userStore, store, pullrequestStore, tokenInterface, gitService, urlProvider, clientFactory, config, eventsReporter, reporter2, noopPushRequestFlow)
 	gitController := provider.NewGitController(service2, service, repoService, settingsService, githookController, gitService)
 	ruleSetStore := scan.NewRuleSetStore(db)
 	ruleStore := scan.NewRuleStore(db)
@@ -296,9 +292,8 @@ func NewApp(mode string) (*App, func(), error) {
 	scanTriggerService := scan2.NewScanTriggerService(scanTriggerStore, scanTriggerSolutionStore, store, scanPlanStore, solutionStore, cronScheduler)
 	scanConditionService := scan2.NewScanConditionService(scanConditionStore, store, scanPlanStore, scanTriggerStore, cronScheduler)
 	scanPlanConditionService := scan2.NewScanPlanConditionService(store, scanPlanStore, scanConditionStore)
-	scanStore := scan.NewAICodeReviewStore(db)
-	aiReviewService := scan2.NewService(scanStore, config, pipelineStore, pipelineService, triggererTriggerer, tokenInterface)
-	scanController := scan3.NewScanController(ruleSetService, ruleService, solutionService, scanTaskService, scanPlanService, scanTriggerService, scanConditionService, scanPlanConditionService, repoService, gitService, aiReviewService)
+	noopAIReview := scan2.NewNoopAIReview()
+	scanController := scan3.NewScanController(ruleSetService, ruleService, solutionService, scanTaskService, scanPlanService, scanTriggerService, scanConditionService, scanPlanConditionService, repoService, gitService, noopAIReview)
 	fitService := fit.NewService(tokenInterface, devopsConfig)
 	fitController := fit2.NewController(fitService, repoService, service)
 	webhookService, err := provider.ProvideWebhookService(eventContext, devopsConfig, gitService, readerFactory, eventsReaderFactory, webhookStore, store, repoService, pullrequestStore, userStore, urlProvider)
@@ -318,7 +313,7 @@ func NewApp(mode string) (*App, func(), error) {
 		return nil, nil, err
 	}
 	server := provider.ProvideSSHServer(config, interface2, gitController)
-	triggerService, err := provider.ProvideTriggerService(eventContext, pipelineService, triggererTriggerer, store, urlProvider, scanTriggerService, scanPlanService, scanTaskService, aiReviewService, readerFactory, eventsReaderFactory)
+	triggerService, err := provider.ProvideTriggerService(eventContext, pipelineService, triggererTriggerer, store, urlProvider, scanTriggerService, scanPlanService, scanTaskService, noopAIReview, readerFactory, eventsReaderFactory)
 	if err != nil {
 		cleanup2()
 		cleanup()
@@ -379,39 +374,4 @@ func NewApp(mode string) (*App, func(), error) {
 		cleanup2()
 		cleanup()
 	}, nil
-}
-
-// wire.go:
-
-type App struct {
-	SystemConfig     *config.Config
-	SystemLog        *provider.SystemLog
-	APILog           *provider.APILog
-	DB               *gorm.DB
-	Controller       *router.Controller
-	I18nManager      *provider.I18nManager
-	GithookCtrl      *githook.Controller
-	SSHServer        *ssh.Server
-	UserService      user2.Interface
-	PipelineService  pipeline2.Interface
-	TriggerService   *trigger.Service
-	Authenticator    authn.Authenticator
-	EventSystem      *events.System
-	EventContext     *provider.EventContext
-	JobScheduler     *jobs2.Scheduler
-	Triggerer        triggerer.Triggerer
-	Poller           *poller.Poller
-	ScanRuleSvc      scan2.IRule
-	ScanTaskSvc      scan2.IScanTask
-	ScanPlanSvc      scan2.IScanPlan
-	ScanPlanStore    scan.IScanPlan
-	ScanTriggerStore scan.IScanTrigger
-	RepoStore        repo.Interface
-	RepoService      repo2.Interface
-	RepoImporterSvc  *importer.Repository
-	TokenStore       token.Interface
-	ArtifactService  artifact2.Interface
-	ContainerHandler *handler.ContainerHandler
-	GitService       git.Interface
-	SvnService       svn.Interface
 }

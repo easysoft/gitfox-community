@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 
-	pipelineModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/pipeline"
+	pipelineModel "github.com/easysoft/gitfox-community/app/model/pipeline"
 )
 
 // GetPipelineByID 根据流水线ID获取流水线（deleted=0）

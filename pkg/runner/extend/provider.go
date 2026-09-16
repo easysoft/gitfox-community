@@ -5,13 +5,13 @@ import (
 	"context"
 	"errors"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/storage"
-	stageStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/stage"
-	schema "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pipeline/spec"
+	"github.com/easysoft/gitfox-community/app/pipeline/storage"
+	stageStore "github.com/easysoft/gitfox-community/app/store/stage"
+	schema "github.com/easysoft/gitfox-community/pkg/pipeline/spec"
 
 	"github.com/drone/runner-go/environ/provider"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
+	"github.com/easysoft/gitfox-community/pkg/logger"
 )
 
 type StageDynamicEnvProvider struct {

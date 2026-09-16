@@ -3,7 +3,7 @@ package pipeline
 import (
 	"context"
 
-	pipelineModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/pipeline"
+	pipelineModel "github.com/easysoft/gitfox-community/app/model/pipeline"
 )
 
 // GetGroupedPlugins 获取按分组归类的插件列表

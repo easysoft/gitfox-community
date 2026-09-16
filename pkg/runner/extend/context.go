@@ -9,7 +9,7 @@ package extend
 import (
 	"context"
 
-	schema "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pipeline/spec"
+	schema "github.com/easysoft/gitfox-community/pkg/pipeline/spec"
 )
 
 type stageContext struct {

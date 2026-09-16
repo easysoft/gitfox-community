@@ -3,9 +3,9 @@ package artifact
 import (
 	"context"
 
-	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
-	pkgErrors "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+	model "github.com/easysoft/gitfox-community/app/model/artifact"
+	"github.com/easysoft/gitfox-community/pkg/database"
+	pkgErrors "github.com/easysoft/gitfox-community/pkg/errors"
 
 	"github.com/guregu/null"
 	"gorm.io/gorm"

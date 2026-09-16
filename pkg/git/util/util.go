@@ -16,8 +16,8 @@ import (
 	"syscall"
 	"time"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/command"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/enum"
+	"github.com/easysoft/gitfox-community/pkg/git/command"
+	"github.com/easysoft/gitfox-community/pkg/git/enum"
 
 	"github.com/hashicorp/go-version"
 )

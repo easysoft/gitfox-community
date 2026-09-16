@@ -14,9 +14,9 @@ import (
 	"sync"
 	"time"
 
-	storagedriver "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/storage/driver"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/storage/driver/base"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/storage/driver/factory"
+	storagedriver "github.com/easysoft/gitfox-community/pkg/storage/driver"
+	"github.com/easysoft/gitfox-community/pkg/storage/driver/base"
+	"github.com/easysoft/gitfox-community/pkg/storage/driver/factory"
 )
 
 const driverName = "inmemory"

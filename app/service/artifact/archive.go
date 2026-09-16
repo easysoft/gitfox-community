@@ -10,11 +10,11 @@ import (
 	"path/filepath"
 	"time"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/adapter"
-	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
-	authModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
-	storagedriver "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/storage/driver"
+	"github.com/easysoft/gitfox-community/app/artifact/adapter"
+	model "github.com/easysoft/gitfox-community/app/model/artifact"
+	authModel "github.com/easysoft/gitfox-community/app/model/auth"
+	"github.com/easysoft/gitfox-community/pkg/logger"
+	storagedriver "github.com/easysoft/gitfox-community/pkg/storage/driver"
 )
 
 type ArchiveGroup struct {

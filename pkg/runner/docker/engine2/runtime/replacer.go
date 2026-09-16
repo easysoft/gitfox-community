@@ -8,7 +8,7 @@ import (
 	"io"
 	"strings"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/runner/docker/engine2/engine"
+	"github.com/easysoft/gitfox-community/pkg/runner/docker/engine2/engine"
 )
 
 // replacer is an io.Writer that finds and masks sensitive data.

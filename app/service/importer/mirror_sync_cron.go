@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	cronUtil "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/cron"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
+	cronUtil "github.com/easysoft/gitfox-community/pkg/utils/cron"
+	"github.com/easysoft/gitfox-community/pkg/logger"
 )
 
 const (

@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
-	principal "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/user"
+	"github.com/easysoft/gitfox-community/app/model/auth"
+	principal "github.com/easysoft/gitfox-community/app/model/user"
 )
 
 type Interface interface {

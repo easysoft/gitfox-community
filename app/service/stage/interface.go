@@ -3,8 +3,8 @@ package stage
 import (
 	"context"
 
-	stageModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/stage"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/stage"
+	stageModel "github.com/easysoft/gitfox-community/app/model/stage"
+	"github.com/easysoft/gitfox-community/app/store/stage"
 )
 
 var _ Interface = (*Service)(nil)

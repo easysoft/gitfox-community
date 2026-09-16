@@ -6,10 +6,10 @@ import (
 	"math"
 	"time"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
-	executionModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/execution"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database/dbtx"
+	"github.com/easysoft/gitfox-community/app/constant"
+	executionModel "github.com/easysoft/gitfox-community/app/model/execution"
+	"github.com/easysoft/gitfox-community/pkg/database"
+	"github.com/easysoft/gitfox-community/pkg/database/dbtx"
 )
 
 // Create creates a new execution

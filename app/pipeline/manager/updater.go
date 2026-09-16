@@ -5,18 +5,18 @@ import (
 	"errors"
 	"fmt"
 
-	eventModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/event"
-	executionModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/execution"
-	stepModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/step"
+	eventModel "github.com/easysoft/gitfox-community/app/model/event"
+	executionModel "github.com/easysoft/gitfox-community/app/model/execution"
+	stepModel "github.com/easysoft/gitfox-community/app/model/step"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/execution"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/pipeline"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/sse"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/stage"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/step"
+	"github.com/easysoft/gitfox-community/app/service/execution"
+	"github.com/easysoft/gitfox-community/app/service/pipeline"
+	"github.com/easysoft/gitfox-community/app/service/sse"
+	"github.com/easysoft/gitfox-community/app/service/stage"
+	"github.com/easysoft/gitfox-community/app/service/step"
 
-	appErrors "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
+	appErrors "github.com/easysoft/gitfox-community/pkg/errors"
+	"github.com/easysoft/gitfox-community/pkg/logger"
 )
 
 // ErrStepTerminal is returned when a step update is refused because the

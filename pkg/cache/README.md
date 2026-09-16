@@ -81,7 +81,7 @@ import (
     "fmt"
     "time"
     
-    "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/cache"
+    "github.com/easysoft/gitfox-community/pkg/cache"
 )
 
 // 定义数据结构
@@ -142,7 +142,7 @@ import (
     "time"
     
     "github.com/go-redis/redis/v8"
-    "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/cache"
+    "github.com/easysoft/gitfox-community/pkg/cache"
 )
 
 // JSON 编解码器
@@ -195,7 +195,7 @@ import (
     "context"
     "time"
     
-    "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/cache"
+    "github.com/easysoft/gitfox-community/pkg/cache"
 )
 
 // 实现 ExtendedGetter 接口
@@ -241,7 +241,7 @@ import (
     "context"
     "fmt"
     
-    "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/cache"
+    "github.com/easysoft/gitfox-community/pkg/cache"
 )
 
 func main() {

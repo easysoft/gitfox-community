@@ -3,7 +3,7 @@ package fit
 import (
 	"context"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/utils"
+	"github.com/easysoft/gitfox-community/app/service/utils"
 )
 
 // Interface fit 服务接口

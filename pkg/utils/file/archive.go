@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+	"github.com/easysoft/gitfox-community/pkg/errors"
 )
 
 const (

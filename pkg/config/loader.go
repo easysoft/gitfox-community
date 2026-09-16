@@ -10,7 +10,7 @@ import (
 	"strings"
 	"unicode"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+	"github.com/easysoft/gitfox-community/pkg/errors"
 
 	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"

@@ -1,8 +1,8 @@
 package provider
 
 import (
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/sse"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pubsub"
+	"github.com/easysoft/gitfox-community/app/service/sse"
+	"github.com/easysoft/gitfox-community/pkg/pubsub"
 	"github.com/google/wire"
 )
 

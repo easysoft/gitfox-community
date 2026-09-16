@@ -1,6 +1,6 @@
 package jobs
 
-import "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
+import "github.com/easysoft/gitfox-community/pkg/utils/datetime"
 
 // State represents state of a background job.
 type State string

@@ -5,10 +5,10 @@
 package compiler
 
 import (
-	schema "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pipeline/spec"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/runner/docker/engine/compiler/shell"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/runner/docker/engine/compiler/shell/powershell"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/runner/docker/engine2/engine"
+	schema "github.com/easysoft/gitfox-community/pkg/pipeline/spec"
+	"github.com/easysoft/gitfox-community/pkg/runner/docker/engine/compiler/shell"
+	"github.com/easysoft/gitfox-community/pkg/runner/docker/engine/compiler/shell/powershell"
+	"github.com/easysoft/gitfox-community/pkg/runner/docker/engine2/engine"
 )
 
 // helper function configures the pipeline script for the

@@ -3,8 +3,8 @@ package artifact
 import (
 	"context"
 
-	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
+	model "github.com/easysoft/gitfox-community/app/model/artifact"
+	"github.com/easysoft/gitfox-community/pkg/database"
 
 	"gorm.io/gorm"
 )

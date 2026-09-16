@@ -3,8 +3,8 @@ package runner
 import (
 	"context"
 
-	runnerModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/runner"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
+	runnerModel "github.com/easysoft/gitfox-community/app/model/runner"
+	"github.com/easysoft/gitfox-community/pkg/database"
 	"gorm.io/gorm"
 )
 

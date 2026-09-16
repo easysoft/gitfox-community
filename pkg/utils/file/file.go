@@ -8,7 +8,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+	"github.com/easysoft/gitfox-community/pkg/errors"
 )
 
 // FindFilesRecursive 递归查找目录下所有指定文件名的文件路径

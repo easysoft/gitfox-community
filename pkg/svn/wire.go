@@ -1,7 +1,7 @@
 package svn
 
 import (
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
+	"github.com/easysoft/gitfox-community/pkg/config"
 	"github.com/google/wire"
 )
 

@@ -17,7 +17,7 @@ package script
 import (
 	"testing"
 
-	schema "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pipeline/spec"
+	schema "github.com/easysoft/gitfox-community/pkg/pipeline/spec"
 )
 
 func TestExpand(t *testing.T) {

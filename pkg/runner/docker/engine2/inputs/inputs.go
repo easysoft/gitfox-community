@@ -7,7 +7,7 @@
 package inputs
 
 import (
-	harness "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pipeline/spec"
+	harness "github.com/easysoft/gitfox-community/pkg/pipeline/spec"
 
 	"github.com/drone/drone-go/drone"
 )

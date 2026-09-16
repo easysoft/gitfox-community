@@ -17,7 +17,7 @@ package types
 import (
 	"time"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/enum"
+	"github.com/easysoft/gitfox-community/pkg/git/enum"
 )
 
 // Config defines the configuration for the git package.
