@@ -5,7 +5,6 @@ import (
 
 	statisticsCtrl "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/statistics"
 	statisticsSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/statistics"
-	statisticsStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/statistics"
 	userStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/user"
 	gitPkg "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
 )
@@ -16,8 +15,6 @@ var StatisticsWireSet = wire.NewSet(
 	statisticsSvc.NewService,
 	NewStatisticsCommitCounter,
 	NewStatisticsUserFinder,
-	wire.Bind(new(statisticsStore.Interface), new(*statisticsStore.Store)),
-	statisticsStore.NewStore,
 )
 
 // NewStatisticsCommitCounter 将git服务适配为统计服务需要的提交统计接口。

@@ -19,7 +19,7 @@ import (
 	runner3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/runner"
 	scan3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/scan"
 	space3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/space"
-	statistics3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/statistics"
+	statistics2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/statistics"
 	svn2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/svn"
 	tag2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/tag"
 	user3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/user"
@@ -46,7 +46,7 @@ import (
 	space2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/space"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/sse"
 	stage2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/stage"
-	statistics2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/statistics"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/statistics"
 	step2 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/step"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/tag"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/trigger"
@@ -66,7 +66,6 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/settings"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/space"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/stage"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/statistics"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/step"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/token"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/user"
@@ -313,11 +312,10 @@ func NewApp(mode string) (*App, func(), error) {
 	webhookController := webhook2.NewController(webhookService)
 	artifactController := artifact3.NewController(artifactService)
 	cronController := cron.NewController(jobsScheduler)
-	statisticsStore := statistics.NewStore(db)
 	commitCounter := provider.NewStatisticsCommitCounter(gitService)
 	userFinder := provider.NewStatisticsUserFinder(userStore)
-	statisticsService := statistics2.NewService(statisticsStore, commitCounter, userFinder)
-	statisticsController := statistics3.NewController(statisticsService)
+	statisticsService := statistics.NewService(store, commitCounter, userFinder)
+	statisticsController := statistics2.NewController(statisticsService)
 	routerController := provider.NewControllers(spaceController, controller, pipelineController, executionController, runnerController, svnController, tagController, commitController, repoController, userController, gitController, scanController, fitController, webhookController, artifactController, cronController, statisticsController)
 	i18nManager, err := provider.NewI18nManager(config)
 	if err != nil {
