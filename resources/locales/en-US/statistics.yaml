@@ -1,0 +1,8 @@
+# Statistics related translations
+statistics:
+  query_param_error: "Query param parsing failed."
+  time_required: "The start time and end time of the statistics are required."
+  time_format_invalid: "Invalid time format, the correct format is yyyy-mm-dd."
+  time_range_invalid: "The end time cannot be earlier than the start time."
+  range_too_large: "The time range of statistics cannot exceed one year."
+  commit_success: "Query commit statistics successfully."
