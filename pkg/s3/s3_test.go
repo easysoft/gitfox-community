@@ -11,13 +11,13 @@ import (
 )
 
 const (
-	testBucket    = "pangu"                            // TODO: fill in your S3 bucket name
-	testPrefix    = "gitgox/test/"                     // TODO: fill in your key prefix
-	testEndpoint  = "http://cdn.zcorp.cc:9000"         // TODO: fill in your S3 endpoint, e.g. "https://s3.amazonaws.com"
-	testRegion    = "cn-qingdao"                       // TODO: fill in your S3 region
-	testAccessKey = "aoYt0DH7e8yBVz32"                 // TODO: fill in your access key
-	testSecretKey = "WLvoz7tqjMGD9GJBaT3xCyEwg4qeEo6O" // TODO: fill in your secret key
-	testPathStyle = true                               // TODO: set to true if using path-style access (e.g. MinIO)
+	testBucket    = ""   // TODO: fill in your S3 bucket name
+	testPrefix    = ""   // TODO: fill in your key prefix
+	testEndpoint  = ""   // TODO: fill in your S3 endpoint, e.g. "https://s3.amazonaws.com"
+	testRegion    = ""   // TODO: fill in your S3 region
+	testAccessKey = ""   // TODO: fill in your access key
+	testSecretKey = ""   // TODO: fill in your secret key
+	testPathStyle = true // TODO: set to true if using path-style access (e.g. MinIO)
 )
 
 func newTestStore(t *testing.T) *Store {

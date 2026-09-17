@@ -24,8 +24,8 @@ const (
 // @description     GitFox 平台 API 文档
 // @termsOfService  http://swagger.io/terms/
 
-// @license.name  Apache 2.0
-// @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
+// @license.name  ZPL 1.2 / AGPL 3.0
+// @license.url   http://zpl.pub/page/zplv12.html
 
 // @host      localhost:3000
 // @BasePath  /api/v2

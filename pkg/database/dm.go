@@ -8,7 +8,7 @@ import (
 	"gorm.io/gorm/logger"
 	"gorm.io/gorm/schema"
 
-	dm "gitfox.zcorp.cc/git/Pangu/dm-gorm"
+	dameng "github.com/godoes/gorm-dameng"
 	"github.com/easysoft/gitfox-community/pkg/config"
 )
 
@@ -27,7 +27,7 @@ func NewDaMengDB(dbConf config.DatabaseConfig, logConf config.LoggingConfig) (*D
 	if slowThreshold <= 0 {
 		slowThreshold = 500 * time.Millisecond
 	}
-	db, err := gorm.Open(dm.Open("dm://SYSDBA:0831will.DB@127.0.0.1:9906"), &gorm.Config{
+	db, err := gorm.Open(dameng.Open("dm://SYSDBA:please_change@127.0.0.1:9906"), &gorm.Config{
 		NamingStrategy: schema.NamingStrategy{
 			TablePrefix:   "ops_", // 表名前缀，"repo" 的表应为 "ops_repo"
 			SingularTable: true,   // 使用单数表名，启用此选项时，"repo" 的表将为 "repo"

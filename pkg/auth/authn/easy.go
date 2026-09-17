@@ -33,7 +33,7 @@ var _ Authenticator = (*EasyAuthenticator)(nil)
 //
 // 请求示例：
 // curl --location --request DELETE 'http://example.com/api/v2/repos/2' \
-// --header 'Authorization: 7f18226c955beb483985aed5c581d0ba' \
+// --header 'Authorization: 0123456789abcdef0123456789abcdef' \
 // --header 'App: zentao' \
 // --header 'Operator: zhangsan'
 type EasyAuthenticator struct {

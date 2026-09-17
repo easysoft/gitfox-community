@@ -263,6 +263,9 @@ type GetDiffStatsTestCase struct {
 	expectedErr    error
 }
 
+// testMergeBaseSHA is the merge base SHA returned by the git mock in GetDiffStats tests.
+const testMergeBaseSHA = "aabbccddee0011223344556677889900aabbccdd"
+
 // TestGetDiffStats GetDiffStats 单测入口
 func TestGetDiffStats(t *testing.T) {
 	t.Parallel()
@@ -290,6 +293,8 @@ func TestGetDiffStats(t *testing.T) {
 					Deletions:    50,
 				}
 				m.EXPECT().DiffStats(gomock.Any(), gomock.Any()).Return(mockOutput, nil)
+				m.EXPECT().MergeBase(gomock.Any(), gomock.Any()).Return(
+					git.MergeBaseOutput{MergeBaseSHA: sha.Must(testMergeBaseSHA)}, nil)
 			},
 			inputRepoID:     100,
 			inputPathToPath: "main...feature",
@@ -298,6 +303,7 @@ func TestGetDiffStats(t *testing.T) {
 			},
 			expectedResult: &repoModel.DiffStats{
 				MergeSHA:     ptr.String(""),
+				MergeBaseSHA: testMergeBaseSHA,
 				Commits:      5,
 				FilesChanged: 10,
 				Additions:    100,
@@ -327,6 +333,8 @@ func TestGetDiffStats(t *testing.T) {
 					Deletions:    10,
 				}
 				m.EXPECT().DiffStats(gomock.Any(), gomock.Any()).Return(mockOutput, nil)
+				m.EXPECT().MergeBase(gomock.Any(), gomock.Any()).Return(
+					git.MergeBaseOutput{MergeBaseSHA: sha.Must(testMergeBaseSHA)}, nil)
 			},
 			inputRepoID:     100,
 			inputPathToPath: "main..feature",
@@ -335,6 +343,7 @@ func TestGetDiffStats(t *testing.T) {
 			},
 			expectedResult: &repoModel.DiffStats{
 				MergeSHA:     ptr.String(""),
+				MergeBaseSHA: testMergeBaseSHA,
 				Commits:      3,
 				FilesChanged: 5,
 				Additions:    30,

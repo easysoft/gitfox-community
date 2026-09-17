@@ -2,13 +2,9 @@ module github.com/easysoft/gitfox-community
 
 go 1.25.1
 
-replace (
-	gitfox.zcorp.cc/git/Pangu/dm-gorm v1.0.0 => gitfox.zcorp.cc/git/Pangu/dm-gorm.git v1.0.0
-	github.com/drone/runner-go => gitfox.zcorp.cc/git/Pangu/runner-go.git v1.12.6
-)
+replace github.com/drone/runner-go => gitfox.zcorp.cc/git/Pangu/runner-go.git v1.12.6
 
 require (
-	gitfox.zcorp.cc/git/Pangu/dm-gorm v1.0.0
 	github.com/HuaweiCloudDeveloper/gaussdb-go v1.0.0-rc1
 	github.com/Masterminds/semver/v3 v3.4.0
 	github.com/Microsoft/go-winio v0.6.1
@@ -38,6 +34,7 @@ require (
 	github.com/gin-gonic/gin v1.11.0
 	github.com/gliderlabs/ssh v0.3.7
 	github.com/go-redis/redis/v8 v8.11.5
+	github.com/godoes/gorm-dameng v0.7.2
 	github.com/golang-module/carbon/v2 v2.3.10
 	github.com/google/go-cmp v0.7.0
 	github.com/google/uuid v1.6.0
@@ -81,7 +78,6 @@ require (
 
 require (
 	aead.dev/minisign v0.2.0 // indirect
-	gitee.com/chunanyong/dm v1.8.20 // indirect
 	github.com/99designs/httpsignatures-go v0.0.0-20170731043157-88528bf4ca7e // indirect
 	github.com/BobuSumisu/aho-corasick v1.0.3 // indirect
 	github.com/KyleBanks/depth v1.2.1 // indirect
