@@ -130,8 +130,6 @@ func registerScanRoutes(r *gin.RouterGroup, controller *Controller) {
 		{
 			// aireview 插件拉取 AI 评审（OCR LLM）配置（非内嵌流水线场景，无用户会话）
 			aicodereview.GET("/ai-config", controller.Scan.GetAIReviewConfig)
-			// aireview 插件拉取评审范围（非内嵌流水线场景，按分支解析最新两笔提交）
-			aicodereview.GET("/review-range", controller.Scan.GetAIReviewRange)
 			aicodereview.POST("/:repoID/:ppmID/report", controller.Scan.ReviewTaskUploadReport)
 		}
 	}

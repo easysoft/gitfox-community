@@ -134,8 +134,5 @@ type IScanTask interface {
 type IAIReview interface {
 	GetAIReviewConfig(ctx context.Context) (*scanModel.AIReviewConfig, error)
 	GetAIReviewRules(ctx context.Context) ([]*scanModel.AIReviewRule, error)
-	// GetReviewRange 解析指定分支的评审范围（最新两笔提交）：
-	// commitBefore 为次新、commitAfter 为最新；分支只有一笔时两者相同。
-	GetReviewRange(ctx context.Context, repoID uint, branch string) (*scanModel.AIReviewRange, error)
 	TriggerCodeReview(ctx context.Context, in *CodeReviewInput) (*executionModel.Execution, error)
 }

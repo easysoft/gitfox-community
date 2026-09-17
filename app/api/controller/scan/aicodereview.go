@@ -30,37 +30,6 @@ func (c *ScanController) GetAIReviewConfig(ctx *gin.Context) {
 	resp.OK(ctx, i18n.CodeReviewConfigSuccess, config)
 }
 
-// GetAIReviewRange 获取 AI 评审范围（提交区间）
-// @Summary 获取 AI 评审范围
-// @Description aireview 插件在非内嵌流水线（INNER_PIPELINE 非 "true"）中拉取指定分支的评审范围：取该分支最新两笔提交，commitBefore 为次新、commitAfter 为最新（即评审最新一笔的改动）；分支只有一笔提交时两者相同，插件侧会得到 skipped 空报告。插件据此写入 GITFOX_COMMIT_BEFORE/GITFOX_COMMIT_AFTER
-// @Tags scan
-// @Produce application/json
-// @Param repoID query uint true "仓库 ID"
-// @Param branch query string true "评审分支（如 main）"
-// @Success 200 {object} resp.ObjectResponse{data=scanModel.AIReviewRange} "查询成功"
-// @Failure 400 {object} resp.ObjectResponse "参数错误"
-// @Failure 500 {object} resp.ObjectResponse "服务器内部错误"
-// @Router /scan/aicodereview/review-range [get]
-func (c *ScanController) GetAIReviewRange(ctx *gin.Context) {
-	repoID, err := req.QueryParamAsPositiveInt64OrError(ctx, "repoID")
-	if err != nil {
-		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.CodeReviewQueryParamError))
-		return
-	}
-	branch, err := req.QueryParamOrError(ctx, "branch")
-	if err != nil {
-		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.CodeReviewQueryParamError))
-		return
-	}
-
-	result, err := c.aicodereviewSvc.GetReviewRange(ctx.Request.Context(), uint(repoID), branch)
-	if err != nil {
-		resp.InternalError(ctx, err)
-		return
-	}
-	resp.OK(ctx, i18n.CodeReviewRangeSuccess, result)
-}
-
 func (c *ScanController) GetAIReviewRules(ctx *gin.Context) {
 	result, err := c.aicodereviewSvc.GetAIReviewRules(ctx.Request.Context())
 	if err != nil {

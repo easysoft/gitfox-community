@@ -190,10 +190,8 @@ issue:
 
 codeReview:
   path_param_error: "Path param parsing failed."
-  query_param_error: "Query param parsing failed."
   body_param_error: "Body param parsing failed."
   report_upload_success: "Code review report uploaded successfully."
   report_upload_error: "Failed to upload code review report."
   rule_list_success: "AI code review rules queried successfully."
   config_success: "AI review config queried successfully."
-  range_success: "AI review range queried successfully."

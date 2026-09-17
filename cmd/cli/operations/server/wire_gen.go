@@ -298,7 +298,7 @@ func NewApp(mode string) (*App, func(), error) {
 	scanConditionService := scan2.NewScanConditionService(scanConditionStore, store, scanPlanStore, scanTriggerStore, cronScheduler)
 	scanPlanConditionService := scan2.NewScanPlanConditionService(store, scanPlanStore, scanConditionStore)
 	scanStore := scan.NewAICodeReviewStore(db)
-	aiReviewService := scan2.NewService(scanStore, config, pipelineStore, pipelineService, triggererTriggerer, tokenInterface, store, commitLister)
+	aiReviewService := scan2.NewService(scanStore, config, pipelineStore, pipelineService, triggererTriggerer, tokenInterface)
 	scanController := scan3.NewScanController(ruleSetService, ruleService, solutionService, scanTaskService, scanPlanService, scanTriggerService, scanConditionService, scanPlanConditionService, repoService, gitService, aiReviewService)
 	fitService := fit.NewService(tokenInterface, devopsConfig)
 	fitController := fit2.NewController(fitService, repoService, service)

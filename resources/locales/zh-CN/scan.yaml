@@ -190,10 +190,8 @@ issue:
 
 codeReview:
   path_param_error: "路径参数解析失败。"
-  query_param_error: "查询参数解析失败。"
   body_param_error: "请求体参数解析失败。"
   report_upload_success: "代码评审报告上传成功。"
   report_upload_error: "代码评审报告上传失败。"
   rule_list_success: "AI代码评审规则列表查询成功。"
   config_success: "AI 评审配置查询成功。"
-  range_success: "AI 评审范围查询成功。"
