@@ -88,6 +88,7 @@ func NewApp(mode string) (*App, func(), error) {
 		provider.CommitWireSet,
 		provider.WebhookWireSet,
 		provider.CronWireSet,
+		provider.StatisticsWireSet,
 		provider.ControllersWireSet,
 		provider.URLWireSet,
 		provider.I18nWireSet,

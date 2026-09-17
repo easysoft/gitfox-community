@@ -249,3 +249,24 @@ func (s *Store) GetMigrate(ctx context.Context) ([]*repoModel.Repo, error) {
 
 	return repoModels, nil
 }
+
+// ListGitRepos 一次性查询所有未删除的git代码库。
+func (s *Store) ListGitRepos(ctx context.Context) ([]*repoModel.Repo, error) {
+	var repos []*Repository
+	err := s.db.WithContext(ctx).
+		Where("deleted = ?", 0).
+		Where("scmType = ?", "git").
+		Order("id ASC").
+		Find(&repos).Error
+	if err != nil {
+		return nil, database.ProcessSQLErrorf(ctx, err)
+	}
+
+	// 转换为 model 类型
+	repoModels := make([]*repoModel.Repo, len(repos))
+	for i, repo := range repos {
+		repoModels[i] = mapToModel(*repo)
+	}
+
+	return repoModels, nil
+}

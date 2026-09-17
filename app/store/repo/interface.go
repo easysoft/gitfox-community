@@ -20,5 +20,6 @@ type Interface interface {
 	HardDelete(ctx context.Context, id uint) error
 	GetBySpaceAndIdentifier(ctx context.Context, spaceID uint, identifier string) (*repoModel.Repo, error)
 	List(ctx context.Context, filter repoModel.ReqFilter) (RepoPageResult, error)
+	ListGitRepos(ctx context.Context) ([]*repoModel.Repo, error)
 	GetMigrate(ctx context.Context) ([]*repoModel.Repo, error)
 }

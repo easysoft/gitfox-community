@@ -160,6 +160,21 @@ func (mr *MockInterfaceMockRecorder) List(ctx, filter any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockInterface)(nil).List), ctx, filter)
 }
 
+// ListGitRepos mocks base method.
+func (m *MockInterface) ListGitRepos(ctx context.Context) ([]*repo.Repo, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListGitRepos", ctx)
+	ret0, _ := ret[0].([]*repo.Repo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListGitRepos indicates an expected call of ListGitRepos.
+func (mr *MockInterfaceMockRecorder) ListGitRepos(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListGitRepos", reflect.TypeOf((*MockInterface)(nil).ListGitRepos), ctx)
+}
+
 // Update mocks base method.
 func (m *MockInterface) Update(ctx context.Context, arg1 *repo0.Repository, id uint) (*repo.Repo, error) {
 	m.ctrl.T.Helper()

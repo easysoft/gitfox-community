@@ -1004,6 +1004,14 @@ const (
 	SpaceUpdateError             I18nKey = "space.update_error"              // 空间更新失败.
 	SpaceUpdateSuccess           I18nKey = "space.update_success"            // 空间更新成功.
 
+	// Statistics 相关常量
+	StatisticsCommitSuccess     I18nKey = "statistics.commit_success"      // 查询代码提交统计成功.
+	StatisticsQueryParamError   I18nKey = "statistics.query_param_error"   // Query 参数解析失败.
+	StatisticsRangeTooLarge     I18nKey = "statistics.range_too_large"     // 统计的时间范围不能超过一年.
+	StatisticsTimeFormatInvalid I18nKey = "statistics.time_format_invalid" // 时间格式不正确,正确格式为 yyyy-mm-dd.
+	StatisticsTimeRangeInvalid  I18nKey = "statistics.time_range_invalid"  // 统计的结束时间不能早于开始时间.
+	StatisticsTimeRequired      I18nKey = "statistics.time_required"       // 请传入统计的开始时间和结束时间.
+
 	// Svn 相关常量
 	SvnBlameFailed         I18nKey = "svn.blame_failed"          // SVN blame 命令执行失败.
 	SvnBodyParamError      I18nKey = "svn.body_param_error"      // Body 参数解析失败.

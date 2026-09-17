@@ -1,0 +1,8 @@
+# 统计相关翻译
+statistics:
+  query_param_error: "Query 参数解析失败。"
+  time_required: "请传入统计的开始时间和结束时间。"
+  time_format_invalid: "时间格式不正确，正确格式为 yyyy-mm-dd。"
+  time_range_invalid: "统计的结束时间不能早于开始时间。"
+  range_too_large: "统计的时间范围不能超过一年。"
+  commit_success: "查询代码提交统计成功。"
