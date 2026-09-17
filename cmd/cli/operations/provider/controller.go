@@ -15,6 +15,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/runner"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/scan"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/space"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/statistics"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/svn"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/tag"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/user"
@@ -44,23 +45,25 @@ func NewControllers(
 	webhookController *webhook.Controller,
 	artifactController *artifact.Controller,
 	cronController *cron.Controller,
+	statisticsController *statistics.Controller,
 ) *router.Controller {
 	return &router.Controller{
-		Space:     spaceController,
-		Branch:    branchController,
-		Tag:       tagController,
-		Commit:    commitController,
-		Repo:      repoController,
-		User:      userController,
-		Git:       gitController,
-		Scan:      scanController,
-		Pipeline:  pipelineController,
-		Execution: executionController,
-		Runner:    runnerController,
-		Svn:       svnController,
-		Fit:       fitController,
-		Webhook:   webhookController,
-		Artifact:  artifactController,
-		Cron:      cronController,
+		Space:      spaceController,
+		Branch:     branchController,
+		Tag:        tagController,
+		Commit:     commitController,
+		Repo:       repoController,
+		User:       userController,
+		Git:        gitController,
+		Scan:       scanController,
+		Pipeline:   pipelineController,
+		Execution:  executionController,
+		Runner:     runnerController,
+		Svn:        svnController,
+		Fit:        fitController,
+		Webhook:    webhookController,
+		Artifact:   artifactController,
+		Cron:       cronController,
+		Statistics: statisticsController,
 	}
 }
