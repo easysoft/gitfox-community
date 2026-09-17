@@ -2,8 +2,6 @@ package scan
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"testing"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
@@ -59,29 +57,23 @@ func newRunnerTaskFixture(t *testing.T, scanType string, repo *repoModel.Repo, l
 	return svc, planStore, taskStore
 }
 
-// TestCreateRunnerTaskCommitRange 覆盖非内嵌流水线创建扫描任务时的提交范围解析：
-// 增量返回 次新/最新，全量返回 最新/最新，git 失败或分支无提交时不落任务记录。
-func TestCreateRunnerTaskCommitRange(t *testing.T) {
+// TestCreateRunnerTask 覆盖非内嵌流水线创建扫描任务：只按 body 落任务记录并回
+// taskID，提交范围不再解析（由插件的 SCAN_METHOD + SCAN_REF_RANGE 声明）。
+func TestCreateRunnerTask(t *testing.T) {
 	t.Parallel()
 
-	const (
-		latest = "sha-latest"
-		second = "sha-second"
-		branch = "main"
-	)
 	repo := &repoModel.Repo{ID: 1, GitUID: "uid-1"}
 	req := &scanModel.ScanTaskRunnerCreateReq{
 		RepoID:      1,
 		PlanID:      456,
 		ExecutionID: 789,
 		TriggerType: string(constant.TriggerActionBranchUpdated),
-		Branch:      branch,
 	}
 
-	t.Run("增量计划返回最新与次新并透传查询参数", func(t *testing.T) {
+	t.Run("回 taskID 且不查提交范围", func(t *testing.T) {
 		t.Parallel()
 
-		lister := &fakeCommitLister{shas: []string{latest, second}}
+		lister := &fakeCommitLister{}
 		svc, _, taskStore := newRunnerTaskFixture(t, string(constant.ScanTypeIncremental), repo, lister)
 		taskStore.EXPECT().NextPlanNumber(gomock.Any(), uint64(456)).Return(int64(1), nil)
 		taskStore.EXPECT().NextRepoNumber(gomock.Any(), int64(1)).Return(int64(1), nil)
@@ -90,57 +82,14 @@ func TestCreateRunnerTaskCommitRange(t *testing.T) {
 		res, err := svc.CreateRunnerTask(context.Background(), req)
 		require.NoError(t, err)
 		assert.Equal(t, int64(9001), res.TaskID)
-		assert.Equal(t, second, res.CommitBefore)
-		assert.Equal(t, latest, res.CommitAfter)
-		assert.Equal(t, 1, lister.calls)
-		assert.Equal(t, branch, lister.lastGitREF)
-		assert.Equal(t, "uid-1", lister.lastRepoUID)
-		assert.Equal(t, int32(1), lister.lastPage)
-		assert.Equal(t, int32(2), lister.lastLimit)
+		// 范围不再由服务端解析：不应触发任何 git 查询（git 不可用时也能建任务）
+		assert.Equal(t, 0, lister.calls)
 	})
 
-	t.Run("全量计划两值相同", func(t *testing.T) {
-		t.Parallel()
-
-		lister := &fakeCommitLister{shas: []string{latest, second}}
-		svc, _, taskStore := newRunnerTaskFixture(t, string(constant.ScanTypeFull), repo, lister)
-		taskStore.EXPECT().NextPlanNumber(gomock.Any(), uint64(456)).Return(int64(1), nil)
-		taskStore.EXPECT().NextRepoNumber(gomock.Any(), int64(1)).Return(int64(1), nil)
-		taskStore.EXPECT().Create(gomock.Any(), gomock.Any()).Return(&scanModel.ScanTask{ID: 9002}, nil)
-
-		res, err := svc.CreateRunnerTask(context.Background(), req)
-		require.NoError(t, err)
-		assert.Equal(t, int64(9002), res.TaskID)
-		assert.Equal(t, latest, res.CommitBefore)
-		assert.Equal(t, latest, res.CommitAfter)
-	})
-
-	t.Run("git 查询失败时不落任务记录", func(t *testing.T) {
-		t.Parallel()
-
-		lister := &fakeCommitLister{err: errors.New("boom")}
-		svc, _, _ := newRunnerTaskFixture(t, string(constant.ScanTypeIncremental), repo, lister)
-
-		_, err := svc.CreateRunnerTask(context.Background(), req)
-		require.Error(t, err)
-		assert.ErrorContains(t, err, fmt.Sprintf("failed to list commit SHAs for branch %s", branch))
-	})
-
-	t.Run("分支无提交时不落任务记录", func(t *testing.T) {
+	t.Run("计划不属于该仓库时不落任务记录", func(t *testing.T) {
 		t.Parallel()
 
 		lister := &fakeCommitLister{}
-		svc, _, _ := newRunnerTaskFixture(t, string(constant.ScanTypeIncremental), repo, lister)
-
-		_, err := svc.CreateRunnerTask(context.Background(), req)
-		require.Error(t, err)
-		assert.ErrorContains(t, err, fmt.Sprintf("no commits found on branch %s", branch))
-	})
-
-	t.Run("计划不属于该仓库时不查提交", func(t *testing.T) {
-		t.Parallel()
-
-		lister := &fakeCommitLister{shas: []string{latest}}
 		ctrl := gomock.NewController(t)
 		planStore := scanStoreMock.NewMockIScanPlan(ctrl)
 		taskStore := scanStoreMock.NewMockIScanTask(ctrl)

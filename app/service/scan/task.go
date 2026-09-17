@@ -193,8 +193,8 @@ func (s *ScanTaskService) Create(ctx context.Context, in *ScanTaskInput) (*scanM
 
 // CreateRunnerTask 创建流水线 runner 回调的扫描任务（非内嵌流水线场景）。
 // codescan 插件以普通插件方式运行于流水线（gitfox 未注入 SCAN_TASK_ID，INNER_PIPELINE 非
-// "true"）时，由插件在扫描前调用本方法创建任务记录、换取 taskID 与该分支的提交范围
-// （commitBefore/commitAfter，供插件判定增量/全量，见 resolveRunnerCommitRange）。
+// "true"）时，由插件在扫描前调用本方法创建任务记录、换取上报报告所需的 taskID。
+// 提交范围不在这里解析：已改由插件的 SCAN_METHOD + SCAN_REF_RANGE 声明。
 // 与 Create 不同：流水线已在执行中，这里不创建/触发代码扫描流水线，只按 body 透传的
 // executionID/triggerType 落任务记录（triggerID 不落库，见函数内注释）。
 func (s *ScanTaskService) CreateRunnerTask(ctx context.Context, in *scanModel.ScanTaskRunnerCreateReq) (*scanModel.ScanTaskRunnerCreateResp, error) {
@@ -209,13 +209,6 @@ func (s *ScanTaskService) CreateRunnerTask(ctx context.Context, in *scanModel.Sc
 	}
 	if plan.RepoID != int64(repo.ID) {
 		return nil, fmt.Errorf("scan plan %d does not belong to repo %d", in.PlanID, in.RepoID)
-	}
-
-	// 解析提交范围：按计划的 scanType 取 body.Branch 的最新两笔（增量）或同一笔（全量）。
-	// 放在序号分配之前，查询失败时不留任何副作用（不烧计数、不留孤儿任务行）
-	commitBefore, commitAfter, err := s.ResolveCommitRange(ctx, repo.GitUID, constant.ScanType(plan.ScanType), in.Branch)
-	if err != nil {
-		return nil, err
 	}
 
 	// 计算序号
@@ -246,11 +239,7 @@ func (s *ScanTaskService) CreateRunnerTask(ctx context.Context, in *scanModel.Sc
 	if err != nil {
 		return nil, fmt.Errorf("failed to create scan task: %w", err)
 	}
-	return &scanModel.ScanTaskRunnerCreateResp{
-		TaskID:       int64(created.ID),
-		CommitBefore: commitBefore,
-		CommitAfter:  commitAfter,
-	}, nil
+	return &scanModel.ScanTaskRunnerCreateResp{TaskID: int64(created.ID)}, nil
 }
 
 // listLatestCommits 取 branch 最新两笔提交（倒序：[最新, 次新]）。
@@ -268,10 +257,13 @@ func listLatestCommits(ctx context.Context, lister CommitLister, repoUID, branch
 	return shas, nil
 }
 
-// ResolveCommitRange 按扫描计划的 scanType 解析 branch 的提交范围，供内嵌流水线
-// （手动/定时/重试）与插件 create-by-runner（普通流水线）四条路径共用：
+// ResolveCommitRange 按扫描计划的 scanType 解析 branch 的提交范围，供内嵌扫描流水线
+// 的两条路径共用：定时触发（cron handler 的 scanTriggerHandler）与任务重试（Retry）。
 // 增量取最新两笔（次新为 before、最新为 after，插件按 git diff 过滤报告行），
 // 全量取同一笔（before = after = 最新，插件走全量扫描）。scanType 为空或未知按全量。
+//
+// 普通流水线（codescan 插件的 create-by-runner）不再走这里：提交范围由插件的
+// SCAN_METHOD + SCAN_REF_RANGE 声明。
 func (s *ScanTaskService) ResolveCommitRange(ctx context.Context, repoUID string, scanType constant.ScanType, branch string) (commitBefore, commitAfter string, err error) {
 	if branch == "" {
 		return "", "", fmt.Errorf("扫描分支为空，无法确定扫描范围")

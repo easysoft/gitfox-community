@@ -88,26 +88,20 @@ type ScanTaskReqForCreate struct {
 
 // ScanTaskRunnerCreateReq 流水线插件回调创建扫描任务的请求体。
 // codescan 插件在非内嵌流水线（INNER_PIPELINE 非 "true"）中扫描前调用
-// POST /scan/tasks/create-by-runner 换取任务 ID 与该分支的提交范围。triggerType 键恒存在、
-// 值可为空字符串，传 GITFOX_BUILD_TRIGGER 原值（branch_updated/pullreq_created/…），
-// 服务端归一为任务表的 manual/cron/action 后落库；不带 triggerID —— 这类任务由普通流水线
-// 触发，其触发器与 scan 触发器不同表，triggerID 只由内置 scan 流水线写入。
+// POST /scan/tasks/create-by-runner 换取上报报告所需的任务 ID —— 提交范围不再由服务端
+// 解析下发，改由插件的 SCAN_METHOD + SCAN_REF_RANGE 声明（见插件仓库
+// plugins/scan/codescan）。triggerType 键恒存在、值可为空字符串，传 GITFOX_BUILD_TRIGGER
+// 原值（branch_updated/pullreq_created/…），服务端归一为任务表的 manual/cron/action 后落库；
+// 不带 triggerID —— 这类任务由普通流水线触发，其触发器与 scan 触发器不同表，triggerID
+// 只由内置 scan 流水线写入。
 type ScanTaskRunnerCreateReq struct {
 	RepoID      int64  `json:"repoID" binding:"required"`
 	PlanID      int64  `json:"planID" binding:"required"`
 	ExecutionID int64  `json:"executionID" binding:"required"`
 	TriggerType string `json:"triggerType"`
-	// Branch 是插件声明的扫描分支（SCAN_BRANCH），服务端据此解析提交范围。
-	// 必填：普通流水线必须显式声明扫描分支，缺失或为空直接拒绝。
-	Branch string `json:"branch" binding:"required"`
 }
 
-// ScanTaskRunnerCreateResp create-by-runner 的响应体。commitBefore/commitAfter 供插件写入
-// GITFOX_COMMIT_BEFORE/GITFOX_COMMIT_AFTER 判定扫描范围：两者相同 → 全量；不同 → 增量
-// （按 git diff commitBefore 过滤报告行）。取值由扫描计划的 scanType 决定，见
-// resolveRunnerCommitRange。
+// ScanTaskRunnerCreateResp create-by-runner 的响应体：只回服务端分配的任务 ID。
 type ScanTaskRunnerCreateResp struct {
-	TaskID       int64  `json:"taskID"`
-	CommitBefore string `json:"commitBefore"`
-	CommitAfter  string `json:"commitAfter"`
+	TaskID int64 `json:"taskID"`
 }

@@ -2812,11 +2812,6 @@ definitions:
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTaskRunnerCreateReq:
     properties:
-      branch:
-        description: |-
-          Branch 是插件声明的扫描分支（SCAN_BRANCH），服务端据此解析提交范围。
-          必填：普通流水线必须显式声明扫描分支，缺失或为空直接拒绝。
-        type: string
       executionID:
         type: integer
       planID:
@@ -2826,17 +2821,12 @@ definitions:
       triggerType:
         type: string
     required:
-    - branch
     - executionID
     - planID
     - repoID
     type: object
   gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTaskRunnerCreateResp:
     properties:
-      commitAfter:
-        type: string
-      commitBefore:
-        type: string
       taskID:
         type: integer
     type: object
@@ -9837,9 +9827,8 @@ paths:
     post:
       consumes:
       - application/json
-      description: codescan 插件在非内嵌流水线（INNER_PIPELINE 非 "true"）中扫描前回调本接口，创建扫描任务记录并返回
-        taskID 与 branch 分支的提交范围（commitBefore/commitAfter），插件据此写入 GITFOX_COMMIT_BEFORE/AFTER
-        判定扫描范围：两者相同为全量，不同为增量（按 git diff commitBefore 过滤报告行）
+      description: codescan 插件在非内嵌流水线（INNER_PIPELINE 非 "true"）中扫描前回调本接口，创建扫描任务记录并返回上报报告所需的
+        taskID（扫描范围由插件的 SCAN_METHOD + SCAN_REF_RANGE 声明，不由本接口解析）
       parameters:
       - description: 扫描任务信息
         in: body

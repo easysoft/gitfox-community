@@ -81,7 +81,7 @@ func (c *ScanController) ScanTaskCreate(ctx *gin.Context) {
 
 // ScanTaskCreateByRunner 流水线 runner 回调创建扫描任务
 // @Summary 创建扫描任务（流水线 runner 回调）
-// @Description codescan 插件在非内嵌流水线（INNER_PIPELINE 非 "true"）中扫描前回调本接口，创建扫描任务记录并返回 taskID 与 branch 分支的提交范围（commitBefore/commitAfter），插件据此写入 GITFOX_COMMIT_BEFORE/AFTER 判定扫描范围：两者相同为全量，不同为增量（按 git diff commitBefore 过滤报告行）
+// @Description codescan 插件在非内嵌流水线（INNER_PIPELINE 非 "true"）中扫描前回调本接口，创建扫描任务记录并返回上报报告所需的 taskID（扫描范围由插件的 SCAN_METHOD + SCAN_REF_RANGE 声明，不由本接口解析）
 // @Tags scan
 // @Accept application/json
 // @Produce application/json
