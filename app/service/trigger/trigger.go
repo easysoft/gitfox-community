@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 	"slices"
+	"strings"
 	"time"
 
 	"github.com/bmatcuk/doublestar/v4"

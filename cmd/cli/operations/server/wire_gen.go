@@ -253,7 +253,6 @@ func NewApp(mode string) (*App, func(), error) {
 		return nil, nil, err
 	}
 	webhookStore := webhook.NewWebhookStore(db)
-	repository := importer.NewRepoImporterSvc(mode, urlProvider, gitService, svnInterface, store, providerStore, notifyStore, encrypter, jobsScheduler, streamer, devopsConfig, webhookStore)
 	artifactStore := artifact.NewStore(db)
 	userStore := user.NewUserStore(db)
 	jobScheduler := provider.ProvideArtifactJobScheduler(jobsScheduler)
@@ -264,6 +263,7 @@ func NewApp(mode string) (*App, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
+	repository := importer.NewRepoImporterSvc(mode, urlProvider, gitService, svnInterface, store, providerStore, notifyStore, encrypter, jobsScheduler, streamer, devopsConfig, webhookStore, artifactService)
 	repoController := repo3.NewRepoController(repoService, repository, pullrequestService, urlProvider, gitService, artifactService)
 	userService := user2.NewService(userStore, tokenInterface)
 	publickeyInterface := publickey.NewPublicKeyStore(db)
@@ -291,7 +291,8 @@ func NewApp(mode string) (*App, func(), error) {
 	scanIssueStore := scan.NewScanIssueStore(db)
 	scanConditionStore := scan.NewScanConditionStore(db)
 	cronScheduler := provider.ProvideScanCronScheduler(jobsScheduler)
-	scanTaskService := scan2.NewScanTaskService(config, scanTaskStore, scanPlanStore, solutionStore, scanIssueStore, scanConditionStore, ruleSetStore, ruleStore, store, pipelineStore, pullrequestStore, pipelineService, triggererTriggerer, cronScheduler, txRunnerImpl)
+	commitLister := provider.ProvideScanCommitLister(gitService)
+	scanTaskService := scan2.NewScanTaskService(config, scanTaskStore, scanPlanStore, solutionStore, scanIssueStore, scanConditionStore, ruleSetStore, ruleStore, store, pipelineStore, pullrequestStore, executionStore, pipelineService, triggererTriggerer, cronScheduler, commitLister, txRunnerImpl)
 	scanTriggerStore := scan.NewScanTriggerStore(db)
 	scanPlanService := scan2.NewScanPlanService(scanPlanStore, store, solutionStore, ruleSetStore, ruleStore, scanTriggerStore, scanConditionStore)
 	scanTriggerSolutionStore := scan.NewScanTriggerSolutionStore(db)

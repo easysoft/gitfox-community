@@ -53,6 +53,35 @@ func NewService(
 	}
 }
 
+// GetAIReviewConfig 获取 AI 评审（OCR LLM）配置。
+// aireview 插件在非内嵌流水线（INNER_PIPELINE 非 "true"）中不再由 gitfox 直传 OCR_LLM_*，
+// 改由插件通过 GET /scan/aicodereview/ai-config 拉取。取值口径与 TriggerCodeReview 中
+// 注入 OCR_LLM_* 环境变量保持一致。
+func (s *AIReviewService) GetAIReviewConfig(ctx context.Context) (*model.AIReviewConfig, error) {
+	// 从 DevOps 平台获取 AI 模型设置
+	entry, err := s.tokenStore.GetDevopsToken(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get devops token: %w", err)
+	}
+	aiSetting, err := utils.GetAIModelSetting(ctx, s.config.Devops.URL, entry.Key)
+	if err != nil || !aiSetting.Enable {
+		return nil, fmt.Errorf("failed to get AI model setting: %w", err)
+	}
+
+	language := "English"
+	if aiSetting.ZaiLanguage == "chinese" {
+		language = "中文"
+	}
+	return &model.AIReviewConfig{
+		LLMProvider: "zai",
+		LLMUrl:      aiSetting.ZaiURL,
+		LLMProtocol: "openai",
+		LLMApiKey:   aiSetting.ZaiToken,
+		LLMModel:    aiSetting.Model,
+		LLMLanguage: language,
+	}, nil
+}
+
 func (s *AIReviewService) GetAIReviewRules(ctx context.Context) ([]*model.AIReviewRule, error) {
 	rules, err := s.aireviewStore.GetRules(ctx)
 	if err != nil {
@@ -72,13 +101,10 @@ type CodeReviewInput struct {
 // TriggerCodeReview 触发代码审查流水线
 func (s *AIReviewService) TriggerCodeReview(ctx context.Context, in *CodeReviewInput) (*executionModel.Execution, error) {
 	// 注入代码审查参数到 Hook.Params，随流水线传递到容器环境变量
+	in.Hook.Params["INNER_PIPELINE"] = "true"
 	in.Hook.Params["PPM_ID"] = fmt.Sprintf("%d", in.PullReqID)
-	in.Hook.Params["REPO_ID"] = fmt.Sprintf("%d", in.Repo.ID)
-	// 注入 git clone 需要的参数
-	in.Hook.Params["PLUGIN_CLONE_DIR"] = in.Repo.Identifier // 供流水线中插件使用，表示代码 clone 的目录
-	// 注入 gitfox 调用接口时需要的参数
-	in.Hook.Params["GITFOX_API_ENDPOINT"] = s.config.URL.Base + "/api/v2"
-	in.Hook.Params["PLUGIN_TOKEN"] = s.config.PipelineAuth.Password
+	in.Hook.Params["SCAN_REPO_ID"] = fmt.Sprintf("%d", in.Repo.ID)
+	in.Hook.Params["PLUGIN_WORKSPACE"] = in.Repo.Identifier // 供流水线中插件使用，表示代码 clone 的目录
 	// 注入评审所需参数（OCR LLM 配置），从 DevOps 平台获取 AI 模型设置
 	entry, err := s.tokenStore.GetDevopsToken(ctx)
 	if err != nil {

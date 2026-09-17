@@ -11,6 +11,7 @@ import (
 	scanModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/triggerer"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
 )
 
 // CronScheduler is the interface used by the scan service to manage
@@ -19,6 +20,13 @@ import (
 type CronScheduler interface {
 	AddRecurringWithData(ctx context.Context, jobName, jobType, jobData, cronDef string, maxDur time.Duration) error
 	RemoveRecurring(ctx context.Context, jobName string) error
+}
+
+// CommitLister 提交查询能力：只暴露扫描任务解析提交范围所需的一个方法，
+// 由 pkg/git 的 Service 实现（wire.Bind 见 cmd/cli/operations/provider/scan.go）。
+// 定义为窄接口，避免把整个 git 接口带进本包。
+type CommitLister interface {
+	ListCommitSHAs(ctx context.Context, params *git.ListCommitsParams) ([]string, error)
 }
 
 type IRule interface {
@@ -100,6 +108,10 @@ type IScanPlanCondition interface {
 // IScanTask 扫描任务 service 接口
 type IScanTask interface {
 	Create(ctx context.Context, in *ScanTaskInput) (*scanModel.ScanTask, error)
+	CreateRunnerTask(ctx context.Context, in *scanModel.ScanTaskRunnerCreateReq) (*scanModel.ScanTaskRunnerCreateResp, error)
+	// ResolveCommitRange 按扫描计划的 scanType 解析分支的提交范围：
+	// 增量 → 最新两笔（次新为 before、最新为 after）；全量 → 同一笔（before = after）。
+	ResolveCommitRange(ctx context.Context, repoUID string, scanType constant.ScanType, branch string) (commitBefore, commitAfter string, err error)
 	CreateBranchHook(ctx context.Context, repo *repoModel.Repo, branch string, sha, beforeSha string, principal *authModel.Session) (*triggerer.Hook, error)
 	Retry(ctx context.Context, session *authModel.Session, taskID uint, repo *repoModel.Repo) (*scanModel.ScanTask, error)
 	GetTaskInfo(ctx context.Context, taskID uint) (*scanModel.ScanTaskInfo, error)
@@ -109,7 +121,7 @@ type IScanTask interface {
 	Delete(ctx context.Context, id uint) error
 	SetupCron(ctx context.Context, trigger *scanModel.ScanTrigger) error
 	RecycleCron(ctx context.Context, trigger *scanModel.ScanTrigger) error
-	AnalyzeTaskUploadReport(ctx context.Context, repoID uint, taskID uint, method string, content []byte) (*scanModel.ScanIssueReport, error)
+	AnalyzeTaskUploadReport(ctx context.Context, repoID uint, taskID uint, executionID int64, method string, content []byte) (*scanModel.ScanIssueReport, error)
 	GetIssueInfo(ctx context.Context, issueID uint) (*scanModel.ScanIssueInfo, error)
 	ListIssueInfos(ctx context.Context, filter scanModel.ScanIssueReqFilter) (*database.PageResult[*scanModel.ScanIssueInfo], error)
 	ListIssueInfosByIDs(ctx context.Context, ids []int64) ([]*scanModel.ScanIssueInfo, error)
@@ -120,6 +132,7 @@ type IScanTask interface {
 }
 
 type IAIReview interface {
+	GetAIReviewConfig(ctx context.Context) (*scanModel.AIReviewConfig, error)
 	GetAIReviewRules(ctx context.Context) ([]*scanModel.AIReviewRule, error)
 	TriggerCodeReview(ctx context.Context, in *CodeReviewInput) (*executionModel.Execution, error)
 }

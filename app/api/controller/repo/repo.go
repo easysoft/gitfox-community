@@ -95,13 +95,9 @@ func (ctl *Controller) Create(c *gin.Context) {
 
 	// 创建仓库时自动创建默认 generic 制品库
 	if ctl.artSvc != nil {
-		viewName := i18n.TGin(c, i18n.ArtifactDefaultViewName)
-		if viewName == "" {
-			viewName = artifactModel.DefaultArtifactLibName
-		}
 		_, _ = ctl.artSvc.CreateLib(c.Request.Context(), &artifactModel.CreateArtifactLibReq{
 			SpaceRepoReq: artifactModel.SpaceRepoReq{SpaceID: int64(reqData.SpaceID), RepoID: int64(data.ID)},
-			Name:         viewName,
+			Name:         artifactModel.DefaultArtifactLibViewName(i18n.GetLocaleFromGin(c)),
 			Code:         artifactModel.DefaultArtifactLibCode,
 			Format:       string(artifactModel.ArtifactFileFormat),
 		})
