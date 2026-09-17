@@ -10268,6 +10268,91 @@ const docTemplate = `{
                 }
             }
         },
+        "/statistics/commits": {
+            "get": {
+                "description": "遍历未删除的代码库执行git命令统计提交次数，支持按时间统计，支持通过 user 参数按人筛选，支持通过 byUser 参数返回每个提交者的提交次数",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "statistics"
+                ],
+                "summary": "查询代码提交统计",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "example": "2026-09-15",
+                        "description": "统计开始日期，格式 yyyy-mm-dd",
+                        "name": "beginTime",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "example": "2026-09-16",
+                        "description": "统计结束日期，格式 yyyy-mm-dd",
+                        "name": "endTime",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "example": "admin",
+                        "description": "提交人账号或邮箱，为空时统计全部用户",
+                        "name": "user",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "example": false,
+                        "description": "是否返回每个提交者的提交次数",
+                        "name": "byUser",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "查询成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/github_com_easysoft_gitfox-community_app_api_utils_resp.ObjectResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/github_com_easysoft_gitfox-community_app_model_statistics.RespForCommitStatistics"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_easysoft_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "未认证",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_easysoft_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_easysoft_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/user/keys": {
             "get": {
                 "description": "查询当前登录用户的 SSH 公钥列表（按创建时间倒序）",
@@ -15995,6 +16080,65 @@ const docTemplate = `{
                 },
                 "type": {
                     "type": "string"
+                }
+            }
+        },
+        "github_com_easysoft_gitfox-community_app_model_statistics.AuthorCount": {
+            "type": "object",
+            "properties": {
+                "account": {
+                    "description": "提交者账号。",
+                    "type": "string",
+                    "example": "admin"
+                },
+                "count": {
+                    "description": "提交次数。",
+                    "type": "integer",
+                    "example": 3
+                },
+                "email": {
+                    "description": "提交者邮箱。",
+                    "type": "string",
+                    "example": "admin@example.com"
+                },
+                "name": {
+                    "description": "提交者姓名。",
+                    "type": "string",
+                    "example": "张三"
+                }
+            }
+        },
+        "github_com_easysoft_gitfox-community_app_model_statistics.DailyCount": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "description": "当日提交次数。",
+                    "type": "integer",
+                    "example": 3
+                },
+                "date": {
+                    "description": "统计日期。",
+                    "type": "string",
+                    "example": "2026-09-16"
+                }
+            }
+        },
+        "github_com_easysoft_gitfox-community_app_model_statistics.RespForCommitStatistics": {
+            "type": "object",
+            "properties": {
+                "authors": {
+                    "description": "按提交者统计的结果，仅当 byUser 为 true 时返回。",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_easysoft_gitfox-community_app_model_statistics.AuthorCount"
+                    }
+                },
+                "stats": {
+                    "description": "按日期升序排列的统计结果。",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_easysoft_gitfox-community_app_model_statistics.DailyCount"
+                    }
                 }
             }
         },

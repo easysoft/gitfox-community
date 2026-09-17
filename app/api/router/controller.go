@@ -13,6 +13,7 @@ import (
 	"github.com/easysoft/gitfox-community/app/api/controller/runner"
 	"github.com/easysoft/gitfox-community/app/api/controller/scan"
 	"github.com/easysoft/gitfox-community/app/api/controller/space"
+	"github.com/easysoft/gitfox-community/app/api/controller/statistics"
 	"github.com/easysoft/gitfox-community/app/api/controller/svn"
 	"github.com/easysoft/gitfox-community/app/api/controller/tag"
 	"github.com/easysoft/gitfox-community/app/api/controller/test"
@@ -22,21 +23,22 @@ import (
 
 // Controller 聚合所有的 HTTP 处理器
 type Controller struct {
-	User      *user.Controller
-	Commit    *commit.Controller
-	Tag       *tag.Controller
-	Branch    *branch.Controller
-	Space     *space.SpaceController
-	Svn       *svn.Controller
-	Webhook   *webhook.Controller
-	Git       *git.GitController
-	Repo      *repo.Controller
-	Scan      *scan.ScanController
-	Pipeline  *pipeline.Controller
-	Runner    *runner.Controller
-	Execution *execution.Controller
-	Test      *test.TestController
-	Fit       *fit.Controller
-	Cron      *cron.Controller
-	Artifact  *artifact.Controller
+	User       *user.Controller
+	Commit     *commit.Controller
+	Tag        *tag.Controller
+	Branch     *branch.Controller
+	Space      *space.SpaceController
+	Svn        *svn.Controller
+	Webhook    *webhook.Controller
+	Git        *git.GitController
+	Repo       *repo.Controller
+	Scan       *scan.ScanController
+	Pipeline   *pipeline.Controller
+	Runner     *runner.Controller
+	Execution  *execution.Controller
+	Test       *test.TestController
+	Fit        *fit.Controller
+	Cron       *cron.Controller
+	Artifact   *artifact.Controller
+	Statistics *statistics.Controller
 }

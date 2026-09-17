@@ -3196,6 +3196,49 @@ definitions:
       type:
         type: string
     type: object
+  github_com_easysoft_gitfox-community_app_model_statistics.AuthorCount:
+    properties:
+      account:
+        description: 提交者账号。
+        example: admin
+        type: string
+      count:
+        description: 提交次数。
+        example: 3
+        type: integer
+      email:
+        description: 提交者邮箱。
+        example: admin@example.com
+        type: string
+      name:
+        description: 提交者姓名。
+        example: 张三
+        type: string
+    type: object
+  github_com_easysoft_gitfox-community_app_model_statistics.DailyCount:
+    properties:
+      count:
+        description: 当日提交次数。
+        example: 3
+        type: integer
+      date:
+        description: 统计日期。
+        example: "2026-09-16"
+        type: string
+    type: object
+  github_com_easysoft_gitfox-community_app_model_statistics.RespForCommitStatistics:
+    properties:
+      authors:
+        description: 按提交者统计的结果，仅当 byUser 为 true 时返回。
+        items:
+          $ref: '#/definitions/github_com_easysoft_gitfox-community_app_model_statistics.AuthorCount'
+        type: array
+      stats:
+        description: 按日期升序排列的统计结果。
+        items:
+          $ref: '#/definitions/github_com_easysoft_gitfox-community_app_model_statistics.DailyCount'
+        type: array
+    type: object
   github_com_easysoft_gitfox-community_app_model_step.Step:
     properties:
       code:
@@ -10102,6 +10145,61 @@ paths:
       summary: 恢复已删除空间
       tags:
       - spaces
+  /statistics/commits:
+    get:
+      consumes:
+      - application/json
+      description: 遍历未删除的代码库执行git命令统计提交次数，支持按时间统计，支持通过 user 参数按人筛选，支持通过 byUser 参数返回每个提交者的提交次数
+      parameters:
+      - description: 统计开始日期，格式 yyyy-mm-dd
+        example: "2026-09-15"
+        in: query
+        name: beginTime
+        required: true
+        type: string
+      - description: 统计结束日期，格式 yyyy-mm-dd
+        example: "2026-09-16"
+        in: query
+        name: endTime
+        required: true
+        type: string
+      - description: 提交人账号或邮箱，为空时统计全部用户
+        example: admin
+        in: query
+        name: user
+        type: string
+      - description: 是否返回每个提交者的提交次数
+        example: false
+        in: query
+        name: byUser
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 查询成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_easysoft_gitfox-community_app_api_utils_resp.ObjectResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_easysoft_gitfox-community_app_model_statistics.RespForCommitStatistics'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_easysoft_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "401":
+          description: 未认证
+          schema:
+            $ref: '#/definitions/github_com_easysoft_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/github_com_easysoft_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 查询代码提交统计
+      tags:
+      - statistics
   /user/keys:
     get:
       consumes:

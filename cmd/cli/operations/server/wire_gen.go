@@ -19,6 +19,7 @@ import (
 	runner3 "github.com/easysoft/gitfox-community/app/api/controller/runner"
 	scan3 "github.com/easysoft/gitfox-community/app/api/controller/scan"
 	space3 "github.com/easysoft/gitfox-community/app/api/controller/space"
+	statistics2 "github.com/easysoft/gitfox-community/app/api/controller/statistics"
 	svn2 "github.com/easysoft/gitfox-community/app/api/controller/svn"
 	tag2 "github.com/easysoft/gitfox-community/app/api/controller/tag"
 	user3 "github.com/easysoft/gitfox-community/app/api/controller/user"
@@ -43,6 +44,7 @@ import (
 	space2 "github.com/easysoft/gitfox-community/app/service/space"
 	"github.com/easysoft/gitfox-community/app/service/sse"
 	stage2 "github.com/easysoft/gitfox-community/app/service/stage"
+	"github.com/easysoft/gitfox-community/app/service/statistics"
 	step2 "github.com/easysoft/gitfox-community/app/service/step"
 	"github.com/easysoft/gitfox-community/app/service/tag"
 	user2 "github.com/easysoft/gitfox-community/app/service/user"
@@ -305,7 +307,11 @@ func NewApp(mode string) (*App, func(), error) {
 	webhookController := webhook2.NewController(webhookService)
 	artifactController := artifact3.NewController(artifactService)
 	cronController := cron.NewController(jobsScheduler)
-	routerController := provider.NewControllers(spaceController, controller, pipelineController, executionController, runnerController, svnController, tagController, commitController, repoController, userController, gitController, scanController, fitController, webhookController, artifactController, cronController)
+	commitCounter := provider.NewStatisticsCommitCounter(gitService)
+	userFinder := provider.NewStatisticsUserFinder(userStore)
+	statisticsService := statistics.NewService(store, commitCounter, userFinder)
+	statisticsController := statistics2.NewController(statisticsService)
+	routerController := provider.NewControllers(spaceController, controller, pipelineController, executionController, runnerController, svnController, tagController, commitController, repoController, userController, gitController, scanController, fitController, webhookController, artifactController, cronController, statisticsController)
 	i18nManager, err := provider.NewI18nManager(config)
 	if err != nil {
 		cleanup2()

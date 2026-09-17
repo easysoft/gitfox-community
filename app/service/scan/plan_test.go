@@ -70,6 +70,10 @@ func (f *fakeRepoStore) List(ctx context.Context, filter repoModel.ReqFilter) (*
 	return nil, nil
 }
 
+func (f *fakeRepoStore) ListGitRepos(ctx context.Context) ([]*repoModel.Repo, error) {
+	return nil, nil
+}
+
 func newScanPlanServiceForTest(
 	planStore scanStore.IScanPlan,
 	solutionStore scanStore.ISolution,

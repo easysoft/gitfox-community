@@ -56,19 +56,20 @@ func NewRouter(mode string, logger *logger.SugaredMateLogger, controller *Contro
 	// 创建需要 JWT 认证的路由组
 	authGroup := r.Group("/api/v2")
 	authGroup.Use(middleware.Attempt(authn.Get(authn.AuthKindEasy)))
-	registerSpaceRoutes(authGroup, controller)    // 空间相关路由
-	registerBranchRoutes(authGroup, controller)   // 分支相关路由
-	registerTagRoutes(authGroup, controller)      // 标签相关路由
-	registerSvnRoutes(authGroup, controller)      // SVN 相关路由
-	registerCommitRoutes(authGroup, controller)   // 提交相关路由
-	registerRepoRoutes(authGroup, controller)     // 仓库相关路由
-	registerScanRoutes(authGroup, controller)     // 扫描相关路由
-	registerPipelineRoutes(authGroup, controller) // 流水线相关路由
-	registerRunnerRoutes(authGroup, controller)   // Runner 管理相关路由
-	registerUserRoutes(authGroup, controller)     // 用户相关路由
-	registerWebhookRoutes(authGroup, controller)  // Webhook 相关路由
-	registerArtifactRoutes(authGroup, controller) // 制品库相关路由
-	registerCronRoutes(authGroup, controller)     // 定时任务相关路由
+	registerSpaceRoutes(authGroup, controller)      // 空间相关路由
+	registerBranchRoutes(authGroup, controller)     // 分支相关路由
+	registerTagRoutes(authGroup, controller)        // 标签相关路由
+	registerSvnRoutes(authGroup, controller)        // SVN 相关路由
+	registerCommitRoutes(authGroup, controller)     // 提交相关路由
+	registerRepoRoutes(authGroup, controller)       // 仓库相关路由
+	registerScanRoutes(authGroup, controller)       // 扫描相关路由
+	registerPipelineRoutes(authGroup, controller)   // 流水线相关路由
+	registerRunnerRoutes(authGroup, controller)     // Runner 管理相关路由
+	registerUserRoutes(authGroup, controller)       // 用户相关路由
+	registerWebhookRoutes(authGroup, controller)    // Webhook 相关路由
+	registerArtifactRoutes(authGroup, controller)   // 制品库相关路由
+	registerCronRoutes(authGroup, controller)       // 定时任务相关路由
+	registerStatisticsRoutes(authGroup, controller) // 统计相关路由
 
 	// 创建需要 Basic 认证的路由组（用于 Git 操作）
 	basicAuthGroup := r.Group("")
