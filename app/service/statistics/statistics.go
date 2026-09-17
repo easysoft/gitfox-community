@@ -7,7 +7,7 @@ import (
 
 	statisticsModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/statistics"
 	userModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/user"
-	statisticsStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/statistics"
+	repoStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
 )
@@ -24,27 +24,23 @@ type UserFinder interface {
 }
 
 type Service struct {
-	statisticsStore statisticsStore.Interface
-	commitCounter   CommitCounter
-	userFinder      UserFinder
+	repoStore     repoStore.Interface
+	commitCounter CommitCounter
+	userFinder    UserFinder
 }
 
 // NewService 创建统计服务实例。
-func NewService(store statisticsStore.Interface, commitCounter CommitCounter, userFinder UserFinder) *Service {
+func NewService(store repoStore.Interface, commitCounter CommitCounter, userFinder UserFinder) *Service {
 	return &Service{
-		statisticsStore: store,
-		commitCounter:   commitCounter,
-		userFinder:      userFinder,
+		repoStore:     store,
+		commitCounter: commitCounter,
+		userFinder:    userFinder,
 	}
 }
 
 // GetCommitStatistics 遍历未删除的代码库执行git命令统计提交次数，支持按时间统计和按提交者统计。
 func (s *Service) GetCommitStatistics(ctx context.Context, req statisticsModel.ReqForCommitStatistics) (*statisticsModel.RespForCommitStatistics, error) {
-	if err := req.Validate(); err != nil {
-		return nil, err
-	}
-
-	repos, err := s.statisticsStore.ListGitRepos(ctx)
+	repos, err := s.repoStore.ListGitRepos(ctx)
 	if err != nil {
 		return nil, err
 	}

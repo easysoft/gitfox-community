@@ -9,17 +9,10 @@ import (
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 	statisticsModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/statistics"
 	userModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/user"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo/mock"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
+	"go.uber.org/mock/gomock"
 )
-
-type fakeStatisticsStore struct {
-	repos []*repoModel.Repo
-	err   error
-}
-
-func (f *fakeStatisticsStore) ListGitRepos(ctx context.Context) ([]*repoModel.Repo, error) {
-	return f.repos, f.err
-}
 
 type fakeCommitCounter struct {
 	outputs  map[string]*git.CountCommitsOutput
@@ -64,10 +57,11 @@ func commitCount(date, author string, commits int) commitModel.CommitCount {
 
 // TestGetCommitStatistics 验证按时间汇总多个代码库的提交次数。
 func TestGetCommitStatistics(t *testing.T) {
-	store := &fakeStatisticsStore{repos: []*repoModel.Repo{
+	store := mock.NewMockInterface(gomock.NewController(t))
+	store.EXPECT().ListGitRepos(gomock.Any()).Return([]*repoModel.Repo{
 		{ID: 1, Identifier: "repo1", GitUID: "uid1"},
 		{ID: 2, Identifier: "repo2", GitUID: "uid2"},
-	}}
+	}, nil)
 	counter := &fakeCommitCounter{
 		outputs: map[string]*git.CountCommitsOutput{
 			"uid1": newCommitStats("uid1", commitCount("2026-09-15", "admin@example.com", 2), commitCount("2026-09-16", "dev@example.com", 1)),
@@ -104,7 +98,8 @@ func TestGetCommitStatistics(t *testing.T) {
 
 // TestGetCommitStatisticsByUser 验证按提交者统计时返回每个提交者的信息。
 func TestGetCommitStatisticsByUser(t *testing.T) {
-	store := &fakeStatisticsStore{repos: []*repoModel.Repo{{ID: 1, Identifier: "repo1", GitUID: "uid1"}}}
+	store := mock.NewMockInterface(gomock.NewController(t))
+	store.EXPECT().ListGitRepos(gomock.Any()).Return([]*repoModel.Repo{{ID: 1, Identifier: "repo1", GitUID: "uid1"}}, nil)
 	counter := &fakeCommitCounter{
 		outputs: map[string]*git.CountCommitsOutput{
 			"uid1": newCommitStats("uid1", commitCount("2026-09-15", "admin@example.com", 1), commitCount("2026-09-15", "dev@example.com", 4)),
@@ -138,7 +133,8 @@ func TestGetCommitStatisticsByUser(t *testing.T) {
 
 // TestGetCommitStatisticsWithUserFilter 验证按人筛选时账号会转换为邮箱下发到git命令。
 func TestGetCommitStatisticsWithUserFilter(t *testing.T) {
-	store := &fakeStatisticsStore{repos: []*repoModel.Repo{{ID: 1, Identifier: "repo1", GitUID: "uid1"}}}
+	store := mock.NewMockInterface(gomock.NewController(t))
+	store.EXPECT().ListGitRepos(gomock.Any()).Return([]*repoModel.Repo{{ID: 1, Identifier: "repo1", GitUID: "uid1"}}, nil)
 	counter := &fakeCommitCounter{outputs: map[string]*git.CountCommitsOutput{}, errs: map[string]error{}}
 	userFinder := &fakeUserFinder{byAccount: map[string]*userModel.User{
 		"admin": {Account: "admin", DisplayName: "管理员", Email: "admin@example.com"},
@@ -160,10 +156,11 @@ func TestGetCommitStatisticsWithUserFilter(t *testing.T) {
 
 // TestGetCommitStatisticsSkipErrorRepo 验证单个代码库统计失败时不影响其他代码库。
 func TestGetCommitStatisticsSkipErrorRepo(t *testing.T) {
-	store := &fakeStatisticsStore{repos: []*repoModel.Repo{
+	store := mock.NewMockInterface(gomock.NewController(t))
+	store.EXPECT().ListGitRepos(gomock.Any()).Return([]*repoModel.Repo{
 		{ID: 1, Identifier: "repo1", GitUID: "uid1"},
 		{ID: 2, Identifier: "repo2", GitUID: "uid2"},
-	}}
+	}, nil)
 	counter := &fakeCommitCounter{
 		outputs: map[string]*git.CountCommitsOutput{
 			"uid2": newCommitStats("uid2", commitCount("2026-09-16", "dev@example.com", 2)),
@@ -184,17 +181,16 @@ func TestGetCommitStatisticsSkipErrorRepo(t *testing.T) {
 	}
 }
 
-// TestGetCommitStatisticsValidate 验证统计参数校验。
-func TestGetCommitStatisticsValidate(t *testing.T) {
-	svc := NewService(&fakeStatisticsStore{}, &fakeCommitCounter{}, &fakeUserFinder{})
+// TestGetCommitStatisticsListReposError 验证查询代码库失败时直接返回错误。
+func TestGetCommitStatisticsListReposError(t *testing.T) {
+	store := mock.NewMockInterface(gomock.NewController(t))
+	store.EXPECT().ListGitRepos(gomock.Any()).Return(nil, errors.New("query repos failed"))
+	svc := NewService(store, &fakeCommitCounter{}, &fakeUserFinder{})
 
-	if _, err := svc.GetCommitStatistics(context.Background(), statisticsModel.ReqForCommitStatistics{}); err == nil {
-		t.Error("expected error for empty time, got nil")
-	}
-	if _, err := svc.GetCommitStatistics(context.Background(), statisticsModel.ReqForCommitStatistics{BeginTime: "2026-09-16", EndTime: "2026-09-15"}); err == nil {
-		t.Error("expected error for reversed time range, got nil")
-	}
-	if _, err := svc.GetCommitStatistics(context.Background(), statisticsModel.ReqForCommitStatistics{BeginTime: "2025-01-01", EndTime: "2026-09-16"}); err == nil {
-		t.Error("expected error for too large range, got nil")
+	if _, err := svc.GetCommitStatistics(context.Background(), statisticsModel.ReqForCommitStatistics{
+		BeginTime: "2026-09-15",
+		EndTime:   "2026-09-16",
+	}); err == nil {
+		t.Error("expected error when listing repos failed, got nil")
 	}
 }

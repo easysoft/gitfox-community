@@ -62,3 +62,36 @@ func TestStoreListJoinsOpsSpace(t *testing.T) {
 		t.Fatalf("expected path %q, got %q", "team1/repo1", got.Path)
 	}
 }
+
+// TestStoreListGitRepos 验证一次性查询只返回未删除的git代码库，且按 ID 升序排列。
+func TestStoreListGitRepos(t *testing.T) {
+	store := newTestStore(t)
+	ctx := context.Background()
+
+	repos := []Repository{
+		{Identifier: "repo1", SCMType: "git", GitUID: "uid1", Status: "active", Deleted: 0},
+		{Identifier: "repo2", SCMType: "svn", GitUID: "uid2", Status: "active", Deleted: 0},
+		{Identifier: "repo3", SCMType: "git", GitUID: "uid3", Status: "active", Deleted: 1},
+		{Identifier: "repo4", SCMType: "git", GitUID: "uid4", Status: "active", Deleted: 0},
+	}
+	if err := store.db.WithContext(ctx).Create(&repos).Error; err != nil {
+		t.Fatalf("seed repos failed: %v", err)
+	}
+
+	got, err := store.ListGitRepos(ctx)
+	if err != nil {
+		t.Fatalf("ListGitRepos returned error: %v", err)
+	}
+	if len(got) != 2 {
+		t.Fatalf("expected 2 repos, got %d(%+v)", len(got), got)
+	}
+	if got[0].Identifier != "repo1" || got[1].Identifier != "repo4" {
+		t.Errorf("unexpected repos: %s, %s", got[0].Identifier, got[1].Identifier)
+	}
+	if got[0].GitUID != "uid1" || got[1].GitUID != "uid4" {
+		t.Errorf("unexpected git uids: %s, %s", got[0].GitUID, got[1].GitUID)
+	}
+	if got[0].ID >= got[1].ID {
+		t.Errorf("expected repos ordered by id asc, got %d, %d", got[0].ID, got[1].ID)
+	}
+}
