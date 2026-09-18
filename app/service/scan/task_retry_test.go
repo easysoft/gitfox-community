@@ -86,7 +86,7 @@ func TestRetryCommitRange(t *testing.T) {
 			},
 			taskStore, planStore,
 			nil, nil, nil, nil, nil,
-			&fakeRepoStore{repo: repo},
+			newRepoStoreWithRepoMock(ctrl, repo),
 			pipelineStore, nil, nil,
 			&fakeEmbeddedPipelineSvc{}, // 内置流水线内容更新
 			triggerSvc,

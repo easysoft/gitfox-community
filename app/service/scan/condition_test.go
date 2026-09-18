@@ -38,7 +38,7 @@ func TestScanConditionService(t *testing.T) {
 			CronBranch: "main",
 		}, nil)
 
-		svc := NewScanConditionService(conditionStore, &fakeRepoStore{}, planStore, triggerStore, cronScheduler)
+		svc := NewScanConditionService(conditionStore, newRepoStoreMock(ctrl), planStore, triggerStore, cronScheduler)
 		err := svc.BatchCreate(context.Background(), newTestSession("tester"), 1, 2, 3, scanModel.ScanConditionReqForBatchCreate{
 			Conditions: []scanModel.ScanConditionItem{{Priority: constant.ScanRulePriorityLow, Type: constant.ScanRuleTypeDefect, Unit: constant.ScanRuleUnitCount, Threshold: 10}},
 		})
@@ -68,7 +68,7 @@ func TestScanConditionService(t *testing.T) {
 			CronBranch: "main",
 		}, nil)
 
-		svc := NewScanConditionService(conditionStore, &fakeRepoStore{}, planStore, triggerStore, cronScheduler)
+		svc := NewScanConditionService(conditionStore, newRepoStoreMock(ctrl), planStore, triggerStore, cronScheduler)
 		err := svc.BatchDelete(context.Background(), 1, 10, 99, scanModel.ScanConditionReqForBatchDelete{IDs: []uint{7, 8}})
 		require.NoError(t, err)
 		require.Len(t, cronScheduler.addCalls, 1)
@@ -85,7 +85,7 @@ func TestScanConditionService(t *testing.T) {
 		planStore.EXPECT().GetByRepoIDAndID(gomock.Any(), uint(3), uint(1)).Return(&scanModel.ScanPlan{ID: 1, RepoID: 3}, nil)
 		triggerStore.EXPECT().GetByRepoPlanAndID(gomock.Any(), uint(3), uint(1), uint(2)).Return(nil, pkgErrors.ErrResourceNotFound)
 
-		svc := NewScanConditionService(conditionStore, &fakeRepoStore{}, planStore, triggerStore, nil)
+		svc := NewScanConditionService(conditionStore, newRepoStoreMock(ctrl), planStore, triggerStore, nil)
 		err := svc.BatchCreate(context.Background(), newTestSession("tester"), 1, 2, 3, scanModel.ScanConditionReqForBatchCreate{})
 		require.Error(t, err)
 		assert.Equal(t, i18n.TriggerNotFound, pkgErrors.GetI18nKey(err))
@@ -110,7 +110,7 @@ func TestScanConditionService(t *testing.T) {
 		})
 		triggerStore.EXPECT().GetByRepoPlanAndID(gomock.Any(), uint(3), uint(1), uint(2)).Return(&scanModel.ScanTrigger{ID: 2, RepoID: 3, PlanID: 1}, nil)
 
-		svc := NewScanConditionService(conditionStore, &fakeRepoStore{}, planStore, triggerStore, nil)
+		svc := NewScanConditionService(conditionStore, newRepoStoreMock(ctrl), planStore, triggerStore, nil)
 		err := svc.BatchCreate(context.Background(), newTestSession("tester"), 1, 2, 3, scanModel.ScanConditionReqForBatchCreate{
 			Conditions: []scanModel.ScanConditionItem{{Priority: constant.ScanRulePriorityLow, Type: constant.ScanRuleTypeDefect, Unit: constant.ScanRuleUnitCount, Threshold: 10}},
 		})
@@ -132,7 +132,7 @@ func TestScanConditionService(t *testing.T) {
 			{ID: 3, RepoID: 1, PlanID: 11, TriggerID: 99},
 		}, nil)
 
-		svc := NewScanConditionService(conditionStore, &fakeRepoStore{}, planStore, triggerStore, nil)
+		svc := NewScanConditionService(conditionStore, newRepoStoreMock(ctrl), planStore, triggerStore, nil)
 		got, err := svc.List(context.Background(), 1, 10, 99)
 		require.NoError(t, err)
 		require.Len(t, got, 1)
@@ -150,7 +150,7 @@ func TestScanConditionService(t *testing.T) {
 		triggerStore.EXPECT().GetByRepoPlanAndID(gomock.Any(), uint(1), uint(10), uint(99)).Return(&scanModel.ScanTrigger{ID: 99, RepoID: 1, PlanID: 10}, nil)
 		conditionStore.EXPECT().List(gomock.Any(), uint(99)).Return([]*scanModel.ScanCondition{{ID: 7, RepoID: 1, PlanID: 10, TriggerID: 99}}, nil)
 
-		svc := NewScanConditionService(conditionStore, &fakeRepoStore{}, planStore, triggerStore, nil)
+		svc := NewScanConditionService(conditionStore, newRepoStoreMock(ctrl), planStore, triggerStore, nil)
 		err := svc.BatchDelete(context.Background(), 1, 10, 99, scanModel.ScanConditionReqForBatchDelete{IDs: []uint{7, 8}})
 		require.Error(t, err)
 		assert.Equal(t, i18n.ConditionNotFound, pkgErrors.GetI18nKey(err))
@@ -169,7 +169,7 @@ func TestScanConditionService(t *testing.T) {
 		conditionStore.EXPECT().BatchDelete(gomock.Any(), uint(1), uint(10), uint(99), []uint{7, 8}).Return(nil)
 		triggerStore.EXPECT().GetByRepoPlanAndID(gomock.Any(), uint(1), uint(10), uint(99)).Return(&scanModel.ScanTrigger{ID: 99, RepoID: 1, PlanID: 10}, nil)
 
-		svc := NewScanConditionService(conditionStore, &fakeRepoStore{}, planStore, triggerStore, nil)
+		svc := NewScanConditionService(conditionStore, newRepoStoreMock(ctrl), planStore, triggerStore, nil)
 		err := svc.BatchDelete(context.Background(), 1, 10, 99, scanModel.ScanConditionReqForBatchDelete{IDs: []uint{7, 8}})
 		require.NoError(t, err)
 	})
