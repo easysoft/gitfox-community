@@ -8,14 +8,14 @@ import (
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/middleware"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
-	ctnHandler "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/handler"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/auth/authn"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/common"
+	"github.com/easysoft/gitfox-community/app/api/middleware"
+	"github.com/easysoft/gitfox-community/app/api/utils/req"
+	ctnHandler "github.com/easysoft/gitfox-community/app/artifact/handler"
+	"github.com/easysoft/gitfox-community/pkg/auth/authn"
+	"github.com/easysoft/gitfox-community/pkg/config"
+	"github.com/easysoft/gitfox-community/pkg/i18n"
+	"github.com/easysoft/gitfox-community/pkg/logger"
+	"github.com/easysoft/gitfox-community/pkg/utils/common"
 )
 
 // NewRouter 创建路由实例并注册所有业务模块的路由

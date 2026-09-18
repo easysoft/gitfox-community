@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"net/http"
 
-	requtil "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
-	ctnAdapter "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/adapter/container"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
-	pkgErrors "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
+	requtil "github.com/easysoft/gitfox-community/app/api/utils/req"
+	ctnAdapter "github.com/easysoft/gitfox-community/app/artifact/adapter/container"
+	"github.com/easysoft/gitfox-community/app/constant"
+	pkgErrors "github.com/easysoft/gitfox-community/pkg/errors"
+	"github.com/easysoft/gitfox-community/pkg/logger"
 	"github.com/gin-gonic/gin"
 )
 

@@ -24,8 +24,8 @@ import (
 	"strings"
 	"time"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/command"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/sha"
+	"github.com/easysoft/gitfox-community/pkg/git/command"
+	"github.com/easysoft/gitfox-community/pkg/git/sha"
 )
 
 // CLICore implements the core of a githook cli. It uses the client and execution timeout

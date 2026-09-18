@@ -3,7 +3,7 @@ package auth
 import (
 	"time"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
+	"github.com/easysoft/gitfox-community/app/constant"
 )
 
 type Token struct {

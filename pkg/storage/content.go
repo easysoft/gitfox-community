@@ -7,7 +7,7 @@ import (
 	"sort"
 	"strings"
 
-	storagedriver "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/storage/driver"
+	storagedriver "github.com/easysoft/gitfox-community/pkg/storage/driver"
 )
 
 type ContentStorage interface {

@@ -4,14 +4,14 @@ import (
 	"context"
 	"strings"
 
-	gitevents "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/events/git"
-	pullreqevents "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/events/pullreq"
-	eventModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/event"
-	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/events"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
+	gitevents "github.com/easysoft/gitfox-community/app/events/git"
+	pullreqevents "github.com/easysoft/gitfox-community/app/events/pullreq"
+	eventModel "github.com/easysoft/gitfox-community/app/model/event"
+	repoModel "github.com/easysoft/gitfox-community/app/model/repo"
+	"github.com/easysoft/gitfox-community/pkg/errors"
+	"github.com/easysoft/gitfox-community/pkg/events"
+	"github.com/easysoft/gitfox-community/pkg/git"
+	"github.com/easysoft/gitfox-community/pkg/logger"
 )
 
 var (

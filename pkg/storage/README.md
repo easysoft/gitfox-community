@@ -151,7 +151,7 @@ type regulator struct {
 ```go
 import (
     "context"
-    "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/storage"
+    "github.com/easysoft/gitfox-community/pkg/storage"
 )
 
 func main() {
@@ -197,7 +197,7 @@ func main() {
 
 ```go
 import (
-    "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/storage/driver/inmemory"
+    "github.com/easysoft/gitfox-community/pkg/storage/driver/inmemory"
 )
 
 func TestStorage(t *testing.T) {
@@ -330,8 +330,8 @@ go test -v ./pkg/storage/driver/inmemory/...
 package mydriver
 
 import (
-    "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/storage/driver"
-    "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/storage/driver/factory"
+    "github.com/easysoft/gitfox-community/pkg/storage/driver"
+    "github.com/easysoft/gitfox-community/pkg/storage/driver/factory"
 )
 
 func init() {

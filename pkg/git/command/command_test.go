@@ -23,9 +23,9 @@ import (
 	"testing"
 	"time"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+	"github.com/easysoft/gitfox-community/pkg/errors"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
+	"github.com/easysoft/gitfox-community/pkg/logger"
 )
 
 func TestCreateBareRepository(t *testing.T) {

@@ -7,6 +7,6 @@
 package container
 
 import (
-	_ "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/adapter/container/schema/ocischema"
-	_ "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/adapter/container/schema/schema2"
+	_ "github.com/easysoft/gitfox-community/app/artifact/adapter/container/schema/ocischema"
+	_ "github.com/easysoft/gitfox-community/app/artifact/adapter/container/schema/schema2"
 )

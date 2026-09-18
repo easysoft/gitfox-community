@@ -3,8 +3,8 @@ package step
 import (
 	"context"
 
-	stepModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/step"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/step"
+	stepModel "github.com/easysoft/gitfox-community/app/model/step"
+	"github.com/easysoft/gitfox-community/app/store/step"
 )
 
 var _ Interface = (*Service)(nil)

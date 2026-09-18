@@ -3,8 +3,8 @@ package provider
 import (
 	"github.com/google/wire"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/commit"
-	commitSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/commit"
+	"github.com/easysoft/gitfox-community/app/api/controller/commit"
+	commitSvc "github.com/easysoft/gitfox-community/app/service/commit"
 )
 
 var CommitWireSet = wire.NewSet(

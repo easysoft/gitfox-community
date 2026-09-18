@@ -18,11 +18,11 @@ import (
 	"context"
 	"fmt"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/githook"
-	githookModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/githook"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/hook"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
+	"github.com/easysoft/gitfox-community/app/githook"
+	githookModel "github.com/easysoft/gitfox-community/app/model/githook"
+	"github.com/easysoft/gitfox-community/pkg/git"
+	"github.com/easysoft/gitfox-community/pkg/git/hook"
+	"github.com/easysoft/gitfox-community/pkg/logger"
 )
 
 var _ hook.ClientFactory = (*ControllerClientFactory)(nil)

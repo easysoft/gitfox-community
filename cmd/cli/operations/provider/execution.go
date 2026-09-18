@@ -3,18 +3,18 @@ package provider
 import (
 	"github.com/google/wire"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/execution"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/canceler"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/manager"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/scheduler"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/triggerer"
-	executionSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/execution"
-	stageSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/stage"
-	stepSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/step"
-	executionStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/execution"
-	stageStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/stage"
-	stepStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/step"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database/dbtx"
+	"github.com/easysoft/gitfox-community/app/api/controller/execution"
+	"github.com/easysoft/gitfox-community/app/pipeline/canceler"
+	"github.com/easysoft/gitfox-community/app/pipeline/manager"
+	"github.com/easysoft/gitfox-community/app/pipeline/scheduler"
+	"github.com/easysoft/gitfox-community/app/pipeline/triggerer"
+	executionSvc "github.com/easysoft/gitfox-community/app/service/execution"
+	stageSvc "github.com/easysoft/gitfox-community/app/service/stage"
+	stepSvc "github.com/easysoft/gitfox-community/app/service/step"
+	executionStore "github.com/easysoft/gitfox-community/app/store/execution"
+	stageStore "github.com/easysoft/gitfox-community/app/store/stage"
+	stepStore "github.com/easysoft/gitfox-community/app/store/step"
+	"github.com/easysoft/gitfox-community/pkg/database/dbtx"
 )
 
 var ExecutionWireSet = wire.NewSet(

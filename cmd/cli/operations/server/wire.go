@@ -4,67 +4,14 @@
 package server
 
 import (
-	"github.com/drone/runner-go/poller"
 	"github.com/google/wire"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/githook"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/router"
-	ctnHandler "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/handler"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/triggerer"
-	artifactSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/artifact"
-	importerSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/importer"
-	jobsSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/jobs"
-	pipelineSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/pipeline"
-	repoSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
-	scanSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/scan"
-	triggerSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/trigger"
-	userSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/user"
-	repoStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
-	scanStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/scan"
-	tokenStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/token"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/cmd/cli/operations/provider"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/auth/authn"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/events"
-	gitPkg "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/ssh"
-	svnPkg "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/svn"
-	"gorm.io/gorm"
+	"github.com/easysoft/gitfox-community/cmd/cli/operations/provider"
 )
 
-type App struct {
-	SystemConfig       *config.Config
-	SystemLog          *provider.SystemLog
-	APILog             *provider.APILog
-	DB                 *gorm.DB
-	Controller         *router.Controller
-	I18nManager        *provider.I18nManager
-	GithookCtrl        *githook.Controller
-	SSHServer          *ssh.Server
-	UserService        userSvc.Interface
-	PipelineService    pipelineSvc.Interface
-	TriggerService     *triggerSvc.Service
-	Authenticator      authn.Authenticator
-	EventSystem        *events.System
-	EventContext       *provider.EventContext
-	JobScheduler       *jobsSvc.Scheduler
-	Triggerer          triggerer.Triggerer
-	Poller             *poller.Poller
-	ScanRuleSvc        scanSvc.IRule
-	ScanTaskSvc        scanSvc.IScanTask
-	ScanPlanSvc        scanSvc.IScanPlan
-	ScanPlanStore      scanStore.IScanPlan
-	ScanTriggerStore   scanStore.IScanTrigger
-	RepoStore          repoStore.Interface
-	RepoService        repoSvc.Interface
-	RepoImporterSvc    *importerSvc.Repository
-	TokenStore         tokenStore.Interface
-	ArtifactService    artifactSvc.Interface
-	ContainerHandler   *ctnHandler.ContainerHandler
-	GitService         gitPkg.Interface
-	SvnService         svnPkg.Interface
-}
-
+// NewApp assembles the community edition application dependency graph.
+// Overlay editions provide their own injector and reuse the exported wire sets
+// from the provider package together with their own bindings.
 func NewApp(mode string) (*App, func(), error) {
 	panic(wire.Build(
 		provider.ConfigWireSet,
@@ -72,10 +19,13 @@ func NewApp(mode string) (*App, func(), error) {
 		provider.DBWireSet,
 		provider.PrincipalWireSet,
 		provider.GitWireSet,
+		provider.CommunityZtflowWireSet,
 		provider.SpaceWireSet,
 		provider.RepoWireSet,
+		provider.CommunityPushRequestCleanerWireSet,
 		provider.ProviderWireSet,
 		provider.BranchWireSet,
+		provider.CommunityArchiveWireSet,
 		provider.TagWireSet,
 		provider.SvnWireSet,
 		provider.PipelineWireSet,
@@ -84,6 +34,7 @@ func NewApp(mode string) (*App, func(), error) {
 		provider.DockerRunnerWireSet,
 		provider.ScanRuleSetWireSet,
 		provider.ScanRuleWireSet,
+		provider.CommunityAIReviewWireSet,
 		provider.FitWireSet,
 		provider.CommitWireSet,
 		provider.WebhookWireSet,

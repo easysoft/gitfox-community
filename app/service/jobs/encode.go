@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"encoding/gob"
 
-	jobModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/jobs"
-	pkgJob "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/jobs"
+	jobModel "github.com/easysoft/gitfox-community/app/model/jobs"
+	pkgJob "github.com/easysoft/gitfox-community/pkg/jobs"
 )
 
 // encodeStateChange encodes a ScheduleJob into a StateChange message.

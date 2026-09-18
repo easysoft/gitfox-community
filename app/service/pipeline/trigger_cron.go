@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"time"
 
-	pipelineModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/pipeline"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+	pipelineModel "github.com/easysoft/gitfox-community/app/model/pipeline"
+	"github.com/easysoft/gitfox-community/pkg/errors"
 	"github.com/gorhill/cronexpr"
 )
 

@@ -6,10 +6,10 @@ import (
 	"math"
 	"time"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
-	stepModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/step"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database/dbtx"
+	"github.com/easysoft/gitfox-community/app/constant"
+	stepModel "github.com/easysoft/gitfox-community/app/model/step"
+	"github.com/easysoft/gitfox-community/pkg/database"
+	"github.com/easysoft/gitfox-community/pkg/database/dbtx"
 )
 
 // Create creates a new step

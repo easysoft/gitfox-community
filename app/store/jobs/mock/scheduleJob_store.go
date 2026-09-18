@@ -14,7 +14,7 @@ import (
 	reflect "reflect"
 	time "time"
 
-	jobs "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/jobs"
+	jobs "github.com/easysoft/gitfox-community/app/model/jobs"
 	gomock "go.uber.org/mock/gomock"
 )
 

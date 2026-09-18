@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
+	"github.com/easysoft/gitfox-community/pkg/errors"
+	"github.com/easysoft/gitfox-community/pkg/i18n"
 )
 
 // CopyEmbeddedDir 从嵌入文件系统复制整个目录

@@ -11,8 +11,8 @@ import (
 	"context"
 	"strings"
 
-	giturl "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/api/url"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/command"
+	giturl "github.com/easysoft/gitfox-community/pkg/git/api/url"
+	"github.com/easysoft/gitfox-community/pkg/git/command"
 )
 
 // GetRemoteAddress returns remote url of git repository in the repoPath with special remote name

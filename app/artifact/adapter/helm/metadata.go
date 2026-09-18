@@ -9,7 +9,7 @@ package helm
 import (
 	"encoding/json"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/jsonutil"
+	"github.com/easysoft/gitfox-community/pkg/utils/jsonutil"
 
 	"helm.sh/helm/v3/pkg/chart"
 )

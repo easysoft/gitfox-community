@@ -3,23 +3,23 @@ package provider
 import (
 	"github.com/google/wire"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/repo"
-	gitevents "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/events/git"
-	pullreqevents "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/events/pullreq"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/encrypt"
-	importerSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/importer"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/locker"
-	pullrequestSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/pullrequest"
-	repoSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/sse"
-	pullrequestStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/pullrequest"
-	repoStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/events"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pubsub"
-	svnPkg "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/svn"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/url"
+	"github.com/easysoft/gitfox-community/app/api/controller/repo"
+	gitevents "github.com/easysoft/gitfox-community/app/events/git"
+	pullreqevents "github.com/easysoft/gitfox-community/app/events/pullreq"
+	"github.com/easysoft/gitfox-community/app/service/encrypt"
+	importerSvc "github.com/easysoft/gitfox-community/app/service/importer"
+	"github.com/easysoft/gitfox-community/app/service/locker"
+	pullrequestSvc "github.com/easysoft/gitfox-community/app/service/pullrequest"
+	repoSvc "github.com/easysoft/gitfox-community/app/service/repo"
+	"github.com/easysoft/gitfox-community/app/service/sse"
+	pullrequestStore "github.com/easysoft/gitfox-community/app/store/pullrequest"
+	repoStore "github.com/easysoft/gitfox-community/app/store/repo"
+	"github.com/easysoft/gitfox-community/pkg/config"
+	"github.com/easysoft/gitfox-community/pkg/events"
+	"github.com/easysoft/gitfox-community/pkg/git"
+	"github.com/easysoft/gitfox-community/pkg/pubsub"
+	svnPkg "github.com/easysoft/gitfox-community/pkg/svn"
+	"github.com/easysoft/gitfox-community/pkg/utils/url"
 )
 
 var RepoWireSet = wire.NewSet(
@@ -60,6 +60,7 @@ func ProvidePullRequestSvc(
 	sseStreamer sse.Streamer,
 	bus pubsub.PubSub,
 	urlProvider url.Provider,
+	pushReqCleaner pullrequestSvc.PushRequestCleaner,
 ) (*pullrequestSvc.Service, error) {
 	return pullrequestSvc.NewPullRequestSvc(
 		eventCtx.Ctx,
@@ -75,5 +76,13 @@ func ProvidePullRequestSvc(
 		sseStreamer,
 		bus,
 		urlProvider,
+		pushReqCleaner,
 	)
 }
+
+// CommunityPushRequestCleanerWireSet binds the community-edition no-op push
+// request cleaner. The paid edition replaces this with its own wire set.
+var CommunityPushRequestCleanerWireSet = wire.NewSet(
+	wire.Bind(new(pullrequestSvc.PushRequestCleaner), new(*pullrequestSvc.NoopPushRequestCleaner)),
+	pullrequestSvc.NewNoopPushRequestCleaner,
+)

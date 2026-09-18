@@ -6,9 +6,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/svn/command"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/file"
+	"github.com/easysoft/gitfox-community/pkg/errors"
+	"github.com/easysoft/gitfox-community/pkg/svn/command"
+	"github.com/easysoft/gitfox-community/pkg/utils/file"
 )
 
 // ExportParams contains the parameters for exporting an SVN repository.

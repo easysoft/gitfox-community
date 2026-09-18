@@ -13,8 +13,8 @@ import (
 	context "context"
 	reflect "reflect"
 
-	repo "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
-	repo0 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
+	repo "github.com/easysoft/gitfox-community/app/model/repo"
+	repo0 "github.com/easysoft/gitfox-community/app/store/repo"
 	gomock "go.uber.org/mock/gomock"
 )
 

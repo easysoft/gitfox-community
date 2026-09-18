@@ -7,9 +7,9 @@ package compiler
 import (
 	"testing"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/runner/docker/engine"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/runner/docker/engine/resource"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/common"
+	"github.com/easysoft/gitfox-community/pkg/runner/docker/engine"
+	"github.com/easysoft/gitfox-community/pkg/runner/docker/engine/resource"
+	"github.com/easysoft/gitfox-community/pkg/utils/common"
 
 	"github.com/dchest/uniuri"
 	"github.com/drone/drone-go/drone"
@@ -61,7 +61,7 @@ func TestClone(t *testing.T) {
 	got := c.Compile(nocontext, args).(*engine.Spec)
 	ignore := cmpopts.IgnoreFields(engine.Step{}, "Envs", "Labels")
 	if diff := cmp.Diff(got.Steps, want, ignore); len(diff) != 0 {
-		t.Errorf(diff)
+		t.Errorf("%s", diff)
 	}
 }
 
@@ -96,7 +96,7 @@ func TestCloneCreate(t *testing.T) {
 	src := &resource.Pipeline{Clone: manifest.Clone{Depth: 50}}
 	got := createClone(src)
 	if diff := cmp.Diff(got, want); len(diff) != 0 {
-		t.Errorf(diff)
+		t.Errorf("%s", diff)
 	}
 }
 

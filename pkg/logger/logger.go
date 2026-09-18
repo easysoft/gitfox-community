@@ -5,7 +5,7 @@ import (
 
 	"go.uber.org/zap"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
+	"github.com/easysoft/gitfox-community/pkg/config"
 )
 
 type ZapMateLogger struct {

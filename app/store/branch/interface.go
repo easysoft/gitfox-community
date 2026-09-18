@@ -3,8 +3,8 @@ package branch
 import (
 	"context"
 
-	branchModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/branch"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
+	branchModel "github.com/easysoft/gitfox-community/app/model/branch"
+	"github.com/easysoft/gitfox-community/pkg/database"
 	"gorm.io/gorm"
 )
 

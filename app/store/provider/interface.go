@@ -5,7 +5,7 @@ package provider
 import (
 	"context"
 
-	providerModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/provider"
+	providerModel "github.com/easysoft/gitfox-community/app/model/provider"
 )
 
 // Interface defines the provider store operations.

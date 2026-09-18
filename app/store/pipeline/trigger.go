@@ -4,9 +4,9 @@ import (
 	"context"
 	"strings"
 
-	pipelineModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/pipeline"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/slice"
+	pipelineModel "github.com/easysoft/gitfox-community/app/model/pipeline"
+	"github.com/easysoft/gitfox-community/pkg/database"
+	"github.com/easysoft/gitfox-community/pkg/utils/slice"
 )
 
 // CreateTrigger 创建触发

@@ -11,9 +11,9 @@ import (
 	stderr "errors"
 	"strings"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/command"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
+	"github.com/easysoft/gitfox-community/pkg/errors"
+	"github.com/easysoft/gitfox-community/pkg/git/command"
+	"github.com/easysoft/gitfox-community/pkg/logger"
 )
 
 // ProcessGitErrorf 处理 Git 错误并转换为应用层 GitError 类型错误

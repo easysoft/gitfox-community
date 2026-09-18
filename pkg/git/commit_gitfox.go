@@ -9,7 +9,7 @@ package git
 import (
 	"context"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/api"
+	"github.com/easysoft/gitfox-community/pkg/git/api"
 )
 
 func (s *Service) ListCommitSHAs(ctx context.Context, params *ListCommitsParams) ([]string, error) {

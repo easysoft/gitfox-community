@@ -3,7 +3,7 @@ package stage
 import (
 	"context"
 
-	stageModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/stage"
+	stageModel "github.com/easysoft/gitfox-community/app/model/stage"
 	"gorm.io/gorm"
 )
 

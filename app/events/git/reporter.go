@@ -17,7 +17,7 @@ package events
 import (
 	"errors"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/events"
+	"github.com/easysoft/gitfox-community/pkg/events"
 )
 
 // Reporter is the event reporter for this package.

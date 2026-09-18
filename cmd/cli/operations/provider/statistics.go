@@ -3,10 +3,10 @@ package provider
 import (
 	"github.com/google/wire"
 
-	statisticsCtrl "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/statistics"
-	statisticsSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/statistics"
-	userStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/user"
-	gitPkg "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
+	statisticsCtrl "github.com/easysoft/gitfox-community/app/api/controller/statistics"
+	statisticsSvc "github.com/easysoft/gitfox-community/app/service/statistics"
+	userStore "github.com/easysoft/gitfox-community/app/store/user"
+	gitPkg "github.com/easysoft/gitfox-community/pkg/git"
 )
 
 var StatisticsWireSet = wire.NewSet(

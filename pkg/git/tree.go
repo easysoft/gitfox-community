@@ -18,7 +18,7 @@ import (
 	"context"
 	"fmt"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
+	"github.com/easysoft/gitfox-community/pkg/logger"
 )
 
 // TreeNodeType specifies the different types of nodes in a git tree.

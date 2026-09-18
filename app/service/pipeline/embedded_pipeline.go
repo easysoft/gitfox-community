@@ -5,8 +5,8 @@ import (
 	"encoding/base64"
 	"fmt"
 
-	pipelineModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/pipeline"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/resources"
+	pipelineModel "github.com/easysoft/gitfox-community/app/model/pipeline"
+	"github.com/easysoft/gitfox-community/resources"
 )
 
 // CreateEmbeddedPipeline 创建内置流水线（从 embedded 资源读取 YAML 配置）

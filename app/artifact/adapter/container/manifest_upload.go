@@ -13,13 +13,13 @@ import (
 	"io"
 	"net/http"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/adapter"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/adapter/request"
-	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
-	artifactStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/artifact"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/storage"
+	"github.com/easysoft/gitfox-community/app/artifact/adapter"
+	"github.com/easysoft/gitfox-community/app/artifact/adapter/request"
+	model "github.com/easysoft/gitfox-community/app/model/artifact"
+	artifactStore "github.com/easysoft/gitfox-community/app/store/artifact"
+	"github.com/easysoft/gitfox-community/pkg/storage"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
+	"github.com/easysoft/gitfox-community/pkg/logger"
 )
 
 type manifestUploader struct {

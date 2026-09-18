@@ -15,7 +15,7 @@
 package normalize
 
 import (
-	schema "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pipeline/spec"
+	schema "github.com/easysoft/gitfox-community/pkg/pipeline/spec"
 )
 
 // Normalize normalizes the yaml to ensure all stages and

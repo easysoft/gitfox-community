@@ -3,7 +3,7 @@ package settings
 import (
 	"time"
 
-	SettingsModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/settings"
+	SettingsModel "github.com/easysoft/gitfox-community/app/model/settings"
 )
 
 type Settings struct {

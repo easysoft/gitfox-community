@@ -9,7 +9,7 @@ import (
 	"os/exec"
 	"sync"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
+	"github.com/easysoft/gitfox-community/pkg/logger"
 )
 
 var (

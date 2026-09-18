@@ -4,10 +4,10 @@ import (
 	"context"
 	"time"
 
-	jobModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/jobs"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
+	jobModel "github.com/easysoft/gitfox-community/app/model/jobs"
+	"github.com/easysoft/gitfox-community/pkg/database"
+	"github.com/easysoft/gitfox-community/pkg/errors"
+	"github.com/easysoft/gitfox-community/pkg/utils/datetime"
 	"gorm.io/gorm"
 )
 

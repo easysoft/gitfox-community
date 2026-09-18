@@ -5,13 +5,13 @@ import (
 
 	"github.com/google/wire"
 
-	jobsSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/jobs"
-	jobsStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/jobs"
-	pipelineSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/pipeline"
-	runnerStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/runner"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/lock"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pubsub"
+	jobsSvc "github.com/easysoft/gitfox-community/app/service/jobs"
+	jobsStore "github.com/easysoft/gitfox-community/app/store/jobs"
+	pipelineSvc "github.com/easysoft/gitfox-community/app/service/pipeline"
+	runnerStore "github.com/easysoft/gitfox-community/app/store/runner"
+	"github.com/easysoft/gitfox-community/pkg/config"
+	"github.com/easysoft/gitfox-community/pkg/lock"
+	"github.com/easysoft/gitfox-community/pkg/pubsub"
 )
 
 // JobWireSet provides the wire set for job service.

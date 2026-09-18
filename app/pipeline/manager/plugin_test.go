@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	pipelineModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/pipeline"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/pipeline"
+	pipelineModel "github.com/easysoft/gitfox-community/app/model/pipeline"
+	"github.com/easysoft/gitfox-community/app/service/pipeline"
 )
 
 // fakePipelineSvc implements pipeline.Interface via embedding; only

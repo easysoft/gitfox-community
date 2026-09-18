@@ -46,3 +46,8 @@ cmd/cli/gitfox/*
 unit/*
 resources/ciPlugins/plugins.tar.gz
 .opencodereview/*
+
+# 本地构建/工具产物
+coscli
+coscli_output/
+configs/version.yaml

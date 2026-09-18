@@ -8,9 +8,9 @@ import (
 	"strconv"
 	"time"
 
-	eventModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/event"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/sse"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pubsub"
+	eventModel "github.com/easysoft/gitfox-community/app/model/event"
+	"github.com/easysoft/gitfox-community/app/service/sse"
+	"github.com/easysoft/gitfox-community/pkg/pubsub"
 )
 
 // 这个示例演示了 Go 服务端如何通过 HTTP 暴露 SSE 接口

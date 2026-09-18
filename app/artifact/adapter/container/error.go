@@ -13,7 +13,7 @@ import (
 	"fmt"
 	"net/http"
 
-	pkgErrors "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+	pkgErrors "github.com/easysoft/gitfox-community/pkg/errors"
 )
 
 type RegistryErr struct {

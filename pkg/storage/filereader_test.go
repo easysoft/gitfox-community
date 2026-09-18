@@ -8,7 +8,7 @@ import (
 	mrand "math/rand"
 	"testing"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/storage/driver/inmemory"
+	"github.com/easysoft/gitfox-community/pkg/storage/driver/inmemory"
 
 	digest "github.com/opencontainers/go-digest"
 )

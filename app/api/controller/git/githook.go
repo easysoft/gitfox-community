@@ -3,8 +3,8 @@ package git
 import (
 	"fmt"
 
-	githookModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/githook"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/hook"
+	githookModel "github.com/easysoft/gitfox-community/app/model/githook"
+	"github.com/easysoft/gitfox-community/pkg/git/hook"
 
 	"github.com/gin-gonic/gin"
 )

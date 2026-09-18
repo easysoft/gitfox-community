@@ -6,13 +6,13 @@ import (
 	"sync"
 	"time"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
-	runnerModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/runner"
-	stageModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/stage"
-	runnerStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/runner"
-	stageStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/stage"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/lock"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
+	"github.com/easysoft/gitfox-community/app/constant"
+	runnerModel "github.com/easysoft/gitfox-community/app/model/runner"
+	stageModel "github.com/easysoft/gitfox-community/app/model/stage"
+	runnerStore "github.com/easysoft/gitfox-community/app/store/runner"
+	stageStore "github.com/easysoft/gitfox-community/app/store/stage"
+	"github.com/easysoft/gitfox-community/pkg/lock"
+	"github.com/easysoft/gitfox-community/pkg/logger"
 )
 
 type queue struct {

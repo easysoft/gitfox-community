@@ -3,14 +3,14 @@ package scan
 import (
 	"context"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
-	authModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
-	scanModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
-	scanStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/scan"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/auth/authz"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/resources"
+	"github.com/easysoft/gitfox-community/app/constant"
+	authModel "github.com/easysoft/gitfox-community/app/model/auth"
+	scanModel "github.com/easysoft/gitfox-community/app/model/scan"
+	scanStore "github.com/easysoft/gitfox-community/app/store/scan"
+	"github.com/easysoft/gitfox-community/pkg/auth/authz"
+	"github.com/easysoft/gitfox-community/pkg/database"
+	"github.com/easysoft/gitfox-community/pkg/errors"
+	"github.com/easysoft/gitfox-community/resources"
 )
 
 var _ IRule = (*RuleService)(nil)

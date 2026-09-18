@@ -3,11 +3,11 @@ package container
 import (
 	"context"
 
-	requtil "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
-	ctnAdapter "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/adapter/container"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
+	requtil "github.com/easysoft/gitfox-community/app/api/utils/req"
+	ctnAdapter "github.com/easysoft/gitfox-community/app/artifact/adapter/container"
+	"github.com/easysoft/gitfox-community/app/constant"
+	"github.com/easysoft/gitfox-community/pkg/i18n"
+	"github.com/easysoft/gitfox-community/pkg/logger"
 )
 
 // authorize 校验当前 session 对指定制品库的某项权限。

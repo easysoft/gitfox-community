@@ -1,6 +1,6 @@
 package provider
 
-import "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
+import "github.com/easysoft/gitfox-community/pkg/utils/datetime"
 
 // Provider 外部服务模型。
 type Provider struct {

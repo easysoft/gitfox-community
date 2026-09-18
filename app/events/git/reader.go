@@ -1,7 +1,7 @@
 package events
 
 import (
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/events"
+	"github.com/easysoft/gitfox-community/pkg/events"
 )
 
 func NewReaderFactory(eventsSystem *events.System) (*events.ReaderFactory[*Reader], error) {

@@ -3,8 +3,8 @@ package webhook
 import (
 	"context"
 
-	webhookModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/webhook"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
+	webhookModel "github.com/easysoft/gitfox-community/app/model/webhook"
+	"github.com/easysoft/gitfox-community/pkg/database"
 )
 
 type Interface interface {

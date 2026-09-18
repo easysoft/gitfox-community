@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"strings"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/httpclient"
+	"github.com/easysoft/gitfox-community/pkg/httpclient"
 )
 
 // BranchPermissionResult 分支权限返回体

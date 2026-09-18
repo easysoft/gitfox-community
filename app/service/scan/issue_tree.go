@@ -7,7 +7,7 @@ import (
 	"sort"
 	"strings"
 
-	scanModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
+	scanModel "github.com/easysoft/gitfox-community/app/model/scan"
 )
 
 // GetIssueFileTree 获取 issue 文件树

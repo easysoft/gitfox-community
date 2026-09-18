@@ -14,7 +14,7 @@
 
 package parser
 
-import "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+import "github.com/easysoft/gitfox-community/pkg/errors"
 
 var (
 	ErrSHADoesNotMatch    = errors.InvalidArgument.Newf("sha does not match")

@@ -40,7 +40,7 @@ package main
 import (
 	"context"
 	"time"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pubsub"
+	"github.com/easysoft/gitfox-community/pkg/pubsub"
 )
 
 func main() {

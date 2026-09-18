@@ -15,13 +15,13 @@ import (
 	"strings"
 	"time"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
-	webhookModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/webhook"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
+	"github.com/easysoft/gitfox-community/app/constant"
+	webhookModel "github.com/easysoft/gitfox-community/app/model/webhook"
+	"github.com/easysoft/gitfox-community/app/store"
+	"github.com/easysoft/gitfox-community/pkg/errors"
+	"github.com/easysoft/gitfox-community/pkg/i18n"
+	"github.com/easysoft/gitfox-community/pkg/logger"
+	"github.com/easysoft/gitfox-community/pkg/utils/datetime"
 )
 
 const (

@@ -3,7 +3,7 @@ package settings
 import (
 	"context"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/settings"
+	"github.com/easysoft/gitfox-community/app/model/settings"
 )
 
 type Interface interface {

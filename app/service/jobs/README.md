@@ -257,7 +257,7 @@ import (
     "context"
     "encoding/json"
 
-    pkgJobs "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/jobs"
+    pkgJobs "github.com/easysoft/gitfox-community/pkg/jobs"
 )
 
 type MyJobHandler struct {

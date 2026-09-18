@@ -19,9 +19,9 @@ import (
 	"context"
 	"fmt"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/command"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/sha"
+	"github.com/easysoft/gitfox-community/pkg/errors"
+	"github.com/easysoft/gitfox-community/pkg/git/command"
+	"github.com/easysoft/gitfox-community/pkg/git/sha"
 )
 
 func (g *Git) ResolveRev(ctx context.Context,

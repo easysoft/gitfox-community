@@ -1,31 +1,31 @@
 services:
   gitfox:
     image: hub.zentao.net/app/gitfox-community:2.1-20260904
-    container_name: zentao-gitfox
+    container_name: gitfox
     restart: unless-stopped
     ports:
       - "3000:3000"
       - "3322:3322"
     environment:
       GITFOX_SERVER_PROTO: http
-      GITFOX_SERVER_HOST: cy.oop.cc
+      GITFOX_SERVER_HOST: example.com
       GITFOX_REPO_URL_EXPOSE_PORT: true
       GITFOX_HTTP_PORT: 3000
       GITFOX_SSH_PORT: 3322
-      GITFOX_DEVOPS_URL: http://ipd.cy.oop.cc/api.php/v1
-      # GITFOX_DB_DATASOURCE: root:123456@tcp(cy.oop.cc:13306)/zentaoipd?parseTime=true&loc=Local
+      GITFOX_DEVOPS_URL: http://example.com/api.php/v1
+      # GITFOX_DB_DATASOURCE: user:password@tcp(mysql:3306)/gitfox-community?parseTime=true&loc=Local
 
       GITFOX_DB_DRIVER: mysql
-      GITFOX_DB_HOST: cy.oop.cc
-      GITFOX_DB_PORT: 13306
-      GITFOX_DB_USER: root
-      GITFOX_DB_PASSWORD: 123456
-      GITFOX_DB_NAME: zentaoipd
+      GITFOX_DB_HOST: mysql
+      GITFOX_DB_PORT: 3306
+      GITFOX_DB_USER: gitfox
+      GITFOX_DB_PASSWORD: please_change
+      GITFOX_DB_NAME: gitfox
       GITFOX_DB_TIMEZONE: Asia/Shanghai
     volumes:
       - gitfox-data:/data
     healthcheck:
-      test: ["CMD", "curl", "-fsS", "http://cy.oop.cc:3000/public/health"]
+      test: ["CMD", "curl", "-fsS", "http://localhost:3000/public/health"]
       interval: 5s
       timeout: 1s
       retries: 1

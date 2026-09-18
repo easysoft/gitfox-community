@@ -8,36 +8,36 @@ import (
 	"sync"
 	"time"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
-	gitevents "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/events/git"
-	pullreqevents "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/events/pullreq"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/githook"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/commit"
-	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/locker"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/sse"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/utils"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/pullrequest"
-	repoStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/auth/authn"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/events"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/api"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/enum"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/sha"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/util"
-	gitUtil "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/util"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pubsub"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/stream"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/url"
+	"github.com/easysoft/gitfox-community/app/api/utils/resp"
+	"github.com/easysoft/gitfox-community/app/constant"
+	gitevents "github.com/easysoft/gitfox-community/app/events/git"
+	pullreqevents "github.com/easysoft/gitfox-community/app/events/pullreq"
+	"github.com/easysoft/gitfox-community/app/githook"
+	"github.com/easysoft/gitfox-community/app/model/auth"
+	"github.com/easysoft/gitfox-community/app/model/commit"
+	repoModel "github.com/easysoft/gitfox-community/app/model/repo"
+	"github.com/easysoft/gitfox-community/app/service/locker"
+	"github.com/easysoft/gitfox-community/app/service/repo"
+	"github.com/easysoft/gitfox-community/app/service/sse"
+	"github.com/easysoft/gitfox-community/app/service/utils"
+	"github.com/easysoft/gitfox-community/app/store/pullrequest"
+	repoStore "github.com/easysoft/gitfox-community/app/store/repo"
+	"github.com/easysoft/gitfox-community/pkg/auth/authn"
+	"github.com/easysoft/gitfox-community/pkg/config"
+	"github.com/easysoft/gitfox-community/pkg/errors"
+	"github.com/easysoft/gitfox-community/pkg/events"
+	"github.com/easysoft/gitfox-community/pkg/git"
+	"github.com/easysoft/gitfox-community/pkg/git/api"
+	"github.com/easysoft/gitfox-community/pkg/git/enum"
+	"github.com/easysoft/gitfox-community/pkg/git/sha"
+	"github.com/easysoft/gitfox-community/pkg/git/util"
+	gitUtil "github.com/easysoft/gitfox-community/pkg/git/util"
+	"github.com/easysoft/gitfox-community/pkg/i18n"
+	"github.com/easysoft/gitfox-community/pkg/logger"
+	"github.com/easysoft/gitfox-community/pkg/pubsub"
+	"github.com/easysoft/gitfox-community/pkg/stream"
+	"github.com/easysoft/gitfox-community/pkg/utils/datetime"
+	"github.com/easysoft/gitfox-community/pkg/utils/url"
 	"github.com/gotidy/ptr"
 )
 
@@ -53,6 +53,7 @@ type Service struct {
 	cancelMutex        sync.Mutex
 	cancelMergeability map[string]context.CancelFunc
 	pubsub             pubsub.PubSub
+	pushReqCleaner     PushRequestCleaner
 }
 
 const (
@@ -79,6 +80,7 @@ func NewPullRequestSvc(
 	sseStreamer sse.Streamer,
 	bus pubsub.PubSub,
 	urlProvider url.Provider,
+	pushReqCleaner PushRequestCleaner,
 ) (*Service, error) {
 	service := Service{
 		pullreqEvReporter:  pullReqEvReporter,
@@ -91,6 +93,7 @@ func NewPullRequestSvc(
 		cancelMergeability: make(map[string]context.CancelFunc),
 		pubsub:             bus,
 		urlProvider:        urlProvider,
+		pushReqCleaner:     pushReqCleaner,
 	}
 
 	var err error
@@ -753,10 +756,10 @@ func (s *Service) Merge(ctx context.Context, session *auth.Session, repoid uint,
 		SourceSHA:    mergeOutput.HeadSHA.String(),
 	})
 
-	// 清理 ztflow 临时分支和 agit 引用
+	// 清理代码推送请求（付费功能）产生的临时分支和引用
 	var branchDeleted bool
-	if pr.Flow == repoModel.PullRequestFlowZentao {
-		branchDeleted = s.cleanupZtflowAgitRefs(ctx, repo, writeParams, pr.SourceBranch)
+	if s.pushReqCleaner != nil {
+		branchDeleted = s.pushReqCleaner.Cleanup(ctx, pr)
 	}
 
 	// 返回结果
@@ -766,77 +769,6 @@ func (s *Service) Merge(ctx context.Context, session *auth.Session, repoid uint,
 	}, nil
 }
 
-func (s *Service) deleteRef(ctx context.Context, repo *repoModel.Repo, sourceBranch, ref string) {
-	logger := logger.GetLogger(ctx)
-	err := s.gitSvc.DeleteRef(ctx, git.DeleteRefParams{
-		ReadParams: git.ReadParams{
-			RepoUID: repo.GitUID,
-		},
-		Name: ref,
-	})
-	if err != nil {
-		logger.Warnf("repo uid %s failed to delete force review flow branch %s(source: %s)", repo.GitUID, ref, sourceBranch)
-	} else {
-		logger.Infof("repo uid %s delete force review flow branch %s(source: %s)", repo.GitUID, ref, sourceBranch)
-	}
-}
-
-// cleanupZtflowAgitRefs 清理 ztflow PR 的临时分支和 AGit 引用（refs/for/*）
-// 返回是否成功删除了 ztflow 源分支
-func (s *Service) cleanupZtflowAgitRefs(ctx context.Context, repo *repoModel.Repo, writeParams git.WriteParams, sourceBranch string) bool {
-	logger := logger.GetLogger(ctx)
-	var branchDeleted bool
-
-	// 删除 ztflow 临时分支
-	errDelete := s.gitSvc.DeleteBranch(ctx, &git.DeleteBranchParams{
-		WriteParams: writeParams,
-		BranchName:  sourceBranch,
-	})
-	if errDelete != nil {
-		logger.Warnf("failed to delete ztflow source branch %s: %v", sourceBranch, errDelete)
-	} else {
-		branchDeleted = true
-		logger.Infof("deleted ztflow source branch %s", sourceBranch)
-	}
-
-	// 清理 AGit refs/for/* 引用
-	branchPre := strings.Join(strings.Split(sourceBranch, "-")[:2], "-")
-	branchOrigin := strings.TrimPrefix(sourceBranch, branchPre+"-")
-	branchOrigin = fmt.Sprintf("refs/for/%s", branchOrigin)
-	pattern, err := toAgitRefPattern(branchOrigin)
-	if err != nil || pattern == "" {
-		logger.Warnf("repo uid %s failed to convert ref %s to pattern: %v", repo.GitUID, branchOrigin, err)
-		s.deleteRef(ctx, repo, sourceBranch, branchOrigin)
-		return branchDeleted
-	}
-
-	refs, err := s.gitSvc.WalkReferences(ctx, repo.GitUID, pattern)
-	if err != nil || len(refs) == 0 {
-		logger.Warnf("repo uid %s failed to walk references %s(source: %s)", repo.GitUID, pattern, sourceBranch)
-		s.deleteRef(ctx, repo, sourceBranch, branchOrigin)
-		return branchDeleted
-	}
-
-	for _, ref := range refs {
-		s.deleteRef(ctx, repo, sourceBranch, ref)
-	}
-
-	return branchDeleted
-}
-
-// refs/for/main#xiaoli -> refs/for/main#*
-func toAgitRefPattern(ref string) (string, error) {
-	if !strings.HasPrefix(ref, "refs/for/") {
-		return "", fmt.Errorf("invalid AGit ref: %q", ref)
-	}
-
-	base, _, found := strings.Cut(ref, "#")
-	if !found || base == "refs/for/" {
-		return "", fmt.Errorf("invalid AGit ref format: %q", ref)
-	}
-
-	return base + "#*", nil
-}
 
 type CompareInfo struct {
 	BaseRef   string
@@ -861,9 +793,9 @@ func parseDiffPath(path string) (CompareInfo, error) {
 	}, nil
 }
 
-// createSystemRPCWriteParams creates base write parameters for system internal write operations.
+// CreateSystemRPCWriteParams creates base write parameters for system internal write operations.
 // It uses the admin user for system-level git operations.
-func createSystemRPCWriteParams(
+func CreateSystemRPCWriteParams(
 	ctx context.Context,
 	urlProvider url.Provider,
 	repoID int64,
@@ -941,19 +873,9 @@ func (s *Service) TriggerEvent(
 			SourceSHA:    pr.SourceSHA,
 		})
 
-		// 清理 ztflow 临时分支和 AGit 引用
-		if pr.Flow == repoModel.PullRequestFlowZentao {
-			sourceRepo, err := s.repoStore.GetByID(ctx, pr.SourceRepoID)
-			if err != nil {
-				logger.GetLogger(ctx).Warnf("failed to load source repo %d for agit cleanup: %v", pr.SourceRepoID, err)
-			} else {
-				writeParams, err := createSystemRPCWriteParams(ctx, s.urlProvider, int64(sourceRepo.ID), sourceRepo.GitUID)
-				if err != nil {
-					logger.GetLogger(ctx).Warnf("failed to create write params for repo %s: %v", sourceRepo.GitUID, err)
-				} else {
-					s.cleanupZtflowAgitRefs(ctx, sourceRepo, writeParams, pr.SourceBranch)
-				}
-			}
+		// 清理代码推送请求（付费功能）产生的临时分支和引用
+		if s.pushReqCleaner != nil {
+			s.pushReqCleaner.Cleanup(ctx, pr)
 		}
 	case repoModel.EventTriggerTypeReopen:
 		s.pullreqEvReporter.Reopened(ctx, &pullreqevents.ReopenedPayload{

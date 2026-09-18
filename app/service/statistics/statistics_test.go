@@ -5,12 +5,12 @@ import (
 	"errors"
 	"testing"
 
-	commitModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/commit"
-	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
-	statisticsModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/statistics"
-	userModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/user"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo/mock"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
+	commitModel "github.com/easysoft/gitfox-community/app/model/commit"
+	repoModel "github.com/easysoft/gitfox-community/app/model/repo"
+	statisticsModel "github.com/easysoft/gitfox-community/app/model/statistics"
+	userModel "github.com/easysoft/gitfox-community/app/model/user"
+	"github.com/easysoft/gitfox-community/app/store/repo/mock"
+	"github.com/easysoft/gitfox-community/pkg/git"
 	"go.uber.org/mock/gomock"
 )
 

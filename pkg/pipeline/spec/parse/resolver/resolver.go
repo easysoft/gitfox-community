@@ -17,7 +17,7 @@ package resolver
 import (
 	"errors"
 
-	schema "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pipeline/spec"
+	schema "github.com/easysoft/gitfox-community/pkg/pipeline/spec"
 )
 
 // Lookup returns a resource by name, kind and type.

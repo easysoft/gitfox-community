@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
-	pullreqevents "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/events/pullreq"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/triggerer"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/events"
+	"github.com/easysoft/gitfox-community/app/constant"
+	pullreqevents "github.com/easysoft/gitfox-community/app/events/pullreq"
+	"github.com/easysoft/gitfox-community/app/pipeline/triggerer"
+	"github.com/easysoft/gitfox-community/pkg/events"
 )
 
 func (s *Service) handleEventPullReqCreated(ctx context.Context, event *events.Event[*pullreqevents.CreatedPayload]) error {

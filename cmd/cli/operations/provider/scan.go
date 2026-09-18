@@ -3,11 +3,11 @@ package provider
 import (
 	"github.com/google/wire"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/scan"
-	jobsSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/jobs"
-	scanSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/scan"
-	scanStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/scan"
-	gitPkg "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
+	"github.com/easysoft/gitfox-community/app/api/controller/scan"
+	jobsSvc "github.com/easysoft/gitfox-community/app/service/jobs"
+	scanSvc "github.com/easysoft/gitfox-community/app/service/scan"
+	scanStore "github.com/easysoft/gitfox-community/app/store/scan"
+	gitPkg "github.com/easysoft/gitfox-community/pkg/git"
 )
 
 func ProvideScanCronScheduler(scheduler *jobsSvc.Scheduler) scanSvc.CronScheduler {
@@ -56,10 +56,17 @@ var ScanRuleSetWireSet = wire.NewSet(
 	scanStore.NewScanTaskStore,
 	wire.Bind(new(scanStore.IScanIssue), new(*scanStore.ScanIssueStore)),
 	scanStore.NewScanIssueStore,
-	wire.Bind(new(scanSvc.IAIReview), new(*scanSvc.AIReviewService)),
-	scanSvc.NewService,
-	wire.Bind(new(scanStore.IAIReview), new(*scanStore.Store)),
-	scanStore.NewAICodeReviewStore,
+	// NOTE: The AI code review feature is a paid capability. Its service/store
+	// bindings are provided by the overlay edition (ProAIReviewWireSet). The
+	// community edition binds the no-op implementation via
+	// CommunityAIReviewWireSet.
+)
+
+// CommunityAIReviewWireSet binds the community-edition no-op AI code review
+// implementation. The paid edition replaces this with its own wire set.
+var CommunityAIReviewWireSet = wire.NewSet(
+	wire.Bind(new(scanSvc.IAIReview), new(*scanSvc.NoopAIReview)),
+	scanSvc.NewNoopAIReview,
 )
 
 var ScanRuleWireSet = wire.NewSet(

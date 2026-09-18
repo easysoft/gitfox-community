@@ -17,7 +17,7 @@ package parser
 import (
 	"regexp"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/enum"
+	"github.com/easysoft/gitfox-community/pkg/git/enum"
 )
 
 var regExpDiffExtHeader = regexp.MustCompile(

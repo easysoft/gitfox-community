@@ -6,12 +6,12 @@ import (
 	"math"
 	"time"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
-	stageModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/stage"
-	stepModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/step"
-	stepStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/step"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database/dbtx"
+	"github.com/easysoft/gitfox-community/app/constant"
+	stageModel "github.com/easysoft/gitfox-community/app/model/stage"
+	stepModel "github.com/easysoft/gitfox-community/app/model/step"
+	stepStore "github.com/easysoft/gitfox-community/app/store/step"
+	"github.com/easysoft/gitfox-community/pkg/database"
+	"github.com/easysoft/gitfox-community/pkg/database/dbtx"
 )
 
 // Create creates a new stage

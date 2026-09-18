@@ -1,11 +1,11 @@
 package branch
 
 import (
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
-	branchModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/branch"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
+	"github.com/easysoft/gitfox-community/app/api/utils/req"
+	"github.com/easysoft/gitfox-community/app/api/utils/resp"
+	branchModel "github.com/easysoft/gitfox-community/app/model/branch"
+	"github.com/easysoft/gitfox-community/pkg/errors"
+	"github.com/easysoft/gitfox-community/pkg/i18n"
 	"github.com/gin-gonic/gin"
 )
 

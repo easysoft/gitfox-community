@@ -11,7 +11,7 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
+	"github.com/easysoft/gitfox-community/pkg/config"
 )
 
 const (

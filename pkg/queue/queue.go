@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"time"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
+	"github.com/easysoft/gitfox-community/pkg/database"
 )
 
 // 使用给定选项创建新队列。

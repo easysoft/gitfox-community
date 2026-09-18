@@ -4,7 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+	"github.com/easysoft/gitfox-community/pkg/errors"
 
 	"github.com/gliderlabs/ssh"
 	gossh "golang.org/x/crypto/ssh"

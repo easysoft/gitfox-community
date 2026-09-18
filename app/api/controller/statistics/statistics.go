@@ -1,11 +1,11 @@
 package statistics
 
 import (
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
-	statisticsModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/statistics"
-	statisticsSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/statistics"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
+	"github.com/easysoft/gitfox-community/app/api/utils/resp"
+	statisticsModel "github.com/easysoft/gitfox-community/app/model/statistics"
+	statisticsSvc "github.com/easysoft/gitfox-community/app/service/statistics"
+	"github.com/easysoft/gitfox-community/pkg/errors"
+	"github.com/easysoft/gitfox-community/pkg/i18n"
 	"github.com/gin-gonic/gin"
 )
 

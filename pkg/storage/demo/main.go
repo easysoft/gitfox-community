@@ -7,7 +7,7 @@ import (
 	"io"
 	"os"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/storage"
+	"github.com/easysoft/gitfox-community/pkg/storage"
 )
 
 func main() {

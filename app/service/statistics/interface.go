@@ -3,7 +3,7 @@ package statistics
 import (
 	"context"
 
-	statisticsModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/statistics"
+	statisticsModel "github.com/easysoft/gitfox-community/app/model/statistics"
 )
 
 type Interface interface {

@@ -8,13 +8,13 @@ import (
 	"context"
 	"sync"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/runner/docker/engine2/engine"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/runner/extend"
+	"github.com/easysoft/gitfox-community/pkg/runner/docker/engine2/engine"
+	"github.com/easysoft/gitfox-community/pkg/runner/extend"
 
 	"github.com/drone/drone-go/drone"
 	"github.com/drone/runner-go/environ"
 	"github.com/drone/runner-go/livelog/extractor"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
+	"github.com/easysoft/gitfox-community/pkg/logger"
 	"github.com/drone/runner-go/pipeline"
 	"github.com/hashicorp/go-multierror"
 	"github.com/natessilva/dag"

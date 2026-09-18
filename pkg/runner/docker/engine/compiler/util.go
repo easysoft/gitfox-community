@@ -7,8 +7,8 @@ package compiler
 import (
 	"strings"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/runner/docker/engine"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/runner/docker/engine/resource"
+	"github.com/easysoft/gitfox-community/pkg/runner/docker/engine"
+	"github.com/easysoft/gitfox-community/pkg/runner/docker/engine/resource"
 
 	"github.com/drone/drone-go/drone"
 	"github.com/drone/runner-go/manifest"

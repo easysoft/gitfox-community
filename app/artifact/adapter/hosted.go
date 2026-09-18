@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
+	model "github.com/easysoft/gitfox-community/app/model/artifact"
 )
 
 type CommitWriter interface {

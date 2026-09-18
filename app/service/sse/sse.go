@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"strconv"
 
-	eventModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/event"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pubsub"
+	eventModel "github.com/easysoft/gitfox-community/app/model/event"
+	"github.com/easysoft/gitfox-community/pkg/errors"
+	"github.com/easysoft/gitfox-community/pkg/pubsub"
 )
 
 // Event is a server sent event.

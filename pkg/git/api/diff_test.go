@@ -21,7 +21,7 @@ import (
 	"strings"
 	"testing"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/parser"
+	"github.com/easysoft/gitfox-community/pkg/git/parser"
 
 	"github.com/google/go-cmp/cmp"
 )

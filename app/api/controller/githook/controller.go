@@ -18,20 +18,20 @@ import (
 	"context"
 	"fmt"
 
-	gitevents "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/events/git"
-	pullreqevents "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/events/pullreq"
-	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/pullrequest"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/token"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/user"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/api"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/hook"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/sha"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/url"
+	gitevents "github.com/easysoft/gitfox-community/app/events/git"
+	pullreqevents "github.com/easysoft/gitfox-community/app/events/pullreq"
+	repoModel "github.com/easysoft/gitfox-community/app/model/repo"
+	"github.com/easysoft/gitfox-community/app/store/pullrequest"
+	"github.com/easysoft/gitfox-community/app/store/repo"
+	"github.com/easysoft/gitfox-community/app/store/token"
+	"github.com/easysoft/gitfox-community/app/store/user"
+	"github.com/easysoft/gitfox-community/pkg/config"
+	"github.com/easysoft/gitfox-community/pkg/errors"
+	"github.com/easysoft/gitfox-community/pkg/git"
+	"github.com/easysoft/gitfox-community/pkg/git/api"
+	"github.com/easysoft/gitfox-community/pkg/git/hook"
+	"github.com/easysoft/gitfox-community/pkg/git/sha"
+	"github.com/easysoft/gitfox-community/pkg/utils/url"
 )
 
 type Controller struct {
@@ -44,6 +44,7 @@ type Controller struct {
 	devopsConfig  config.DevopsConfig
 	prReporter    *pullreqevents.Reporter
 	gitReporter   *gitevents.Reporter
+	pushRequest   PushRequestFlow
 }
 
 func NewController(
@@ -56,6 +57,7 @@ func NewController(
 	devopsConfig config.DevopsConfig,
 	prReporter *pullreqevents.Reporter,
 	gitReporter *gitevents.Reporter,
+	pushRequest PushRequestFlow,
 ) *Controller {
 	return &Controller{
 		userStore:     userStore,
@@ -67,6 +69,7 @@ func NewController(
 		devopsConfig:  devopsConfig,
 		prReporter:    prReporter,
 		gitReporter:   gitReporter,
+		pushRequest:   pushRequest,
 	}
 }
 

@@ -18,9 +18,9 @@ import (
 	"fmt"
 	"time"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/cache"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/enum"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/types"
+	"github.com/easysoft/gitfox-community/pkg/cache"
+	"github.com/easysoft/gitfox-community/pkg/git/enum"
+	"github.com/easysoft/gitfox-community/pkg/git/types"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/google/wire"

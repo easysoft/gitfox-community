@@ -3,12 +3,12 @@ package branch
 import (
 	"context"
 
-	branchModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/branch"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/slice"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/str"
+	branchModel "github.com/easysoft/gitfox-community/app/model/branch"
+	"github.com/easysoft/gitfox-community/pkg/database"
+	"github.com/easysoft/gitfox-community/pkg/errors"
+	"github.com/easysoft/gitfox-community/pkg/i18n"
+	"github.com/easysoft/gitfox-community/pkg/utils/slice"
+	"github.com/easysoft/gitfox-community/pkg/utils/str"
 	"gorm.io/gorm"
 )
 

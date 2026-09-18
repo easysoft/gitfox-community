@@ -1,6 +1,6 @@
 package git
 
-import "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+import "github.com/easysoft/gitfox-community/pkg/errors"
 
 // ReadParams contains the base parameters for read operations.
 // 读取操作的基本参数

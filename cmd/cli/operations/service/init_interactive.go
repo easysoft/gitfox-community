@@ -20,11 +20,11 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/quicklyon/kingpin/v2"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/configs"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/netutil"
-	clii18n "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n/cli"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/common"
+	"github.com/easysoft/gitfox-community/configs"
+	"github.com/easysoft/gitfox-community/pkg/i18n"
+	"github.com/easysoft/gitfox-community/pkg/utils/netutil"
+	clii18n "github.com/easysoft/gitfox-community/pkg/i18n/cli"
+	"github.com/easysoft/gitfox-community/pkg/utils/common"
 )
 
 // t 是 clii18n.T 的简写，用于在代码中简洁地调用翻译函数。

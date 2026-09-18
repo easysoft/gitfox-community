@@ -10,7 +10,7 @@ import (
 	"gorm.io/gorm/logger"
 	"gorm.io/gorm/schema"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
+	"github.com/easysoft/gitfox-community/pkg/config"
 )
 
 // MysqlDB 是 gorm.DB 的命名类型，用于 MySQL 数据库

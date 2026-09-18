@@ -3,7 +3,7 @@ package step
 import (
 	"context"
 
-	stepModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/step"
+	stepModel "github.com/easysoft/gitfox-community/app/model/step"
 )
 
 // Create creates a new step

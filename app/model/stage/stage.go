@@ -1,9 +1,9 @@
 package stage
 
 import (
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
-	stepModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/step"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
+	"github.com/easysoft/gitfox-community/app/constant"
+	stepModel "github.com/easysoft/gitfox-community/app/model/step"
+	"github.com/easysoft/gitfox-community/pkg/utils/datetime"
 )
 
 // Stage 流水线执行阶段

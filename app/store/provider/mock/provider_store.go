@@ -13,7 +13,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	provider "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/provider"
+	provider "github.com/easysoft/gitfox-community/app/model/provider"
 	gomock "go.uber.org/mock/gomock"
 )
 

@@ -5,11 +5,11 @@ import (
 	"sort"
 	"strings"
 
-	statisticsModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/statistics"
-	userModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/user"
-	repoStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
+	statisticsModel "github.com/easysoft/gitfox-community/app/model/statistics"
+	userModel "github.com/easysoft/gitfox-community/app/model/user"
+	repoStore "github.com/easysoft/gitfox-community/app/store/repo"
+	"github.com/easysoft/gitfox-community/pkg/git"
+	"github.com/easysoft/gitfox-community/pkg/logger"
 )
 
 // CommitCounter 统计代码库的提交次数。

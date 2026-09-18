@@ -3,7 +3,7 @@ package user
 import (
 	"context"
 
-	principal "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/user"
+	principal "github.com/easysoft/gitfox-community/app/model/user"
 )
 
 type Interface interface {

@@ -3,7 +3,7 @@ package scan
 import (
 	"testing"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
+	"github.com/easysoft/gitfox-community/app/constant"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

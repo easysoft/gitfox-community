@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"io/fs"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/migrate"
+	"github.com/easysoft/gitfox-community/pkg/logger"
+	"github.com/easysoft/gitfox-community/pkg/migrate"
 )
 
 //go:embed sqlite/*.sql

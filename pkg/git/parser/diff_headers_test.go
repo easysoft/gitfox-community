@@ -20,7 +20,7 @@ import (
 	"strings"
 	"testing"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/enum"
+	"github.com/easysoft/gitfox-community/pkg/git/enum"
 
 	"github.com/google/go-cmp/cmp"
 )
@@ -105,7 +105,7 @@ index f043b93..0000000
 	}
 
 	if diff := cmp.Diff(got, want); diff != "" {
-		t.Errorf(diff)
+		t.Errorf("%s", diff)
 	}
 }
 

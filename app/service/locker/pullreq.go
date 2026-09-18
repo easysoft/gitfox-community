@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"time"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+	"github.com/easysoft/gitfox-community/pkg/errors"
 )
 
 func (l Locker) LockPR(ctx context.Context, repoID int64, prNum int64, expiry time.Duration) (func(), error) {

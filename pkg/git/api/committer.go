@@ -13,8 +13,8 @@ import (
 	"fmt"
 	"strings"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/command"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/common"
+	"github.com/easysoft/gitfox-community/pkg/git/command"
+	"github.com/easysoft/gitfox-community/pkg/utils/common"
 
 	"github.com/golang-module/carbon/v2"
 	"golang.org/x/exp/slices"

@@ -3,9 +3,9 @@ package execution
 import (
 	"context"
 
-	executionModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/execution"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/execution"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/stage"
+	executionModel "github.com/easysoft/gitfox-community/app/model/execution"
+	"github.com/easysoft/gitfox-community/app/store/execution"
+	"github.com/easysoft/gitfox-community/app/store/stage"
 )
 
 var _ Interface = (*Service)(nil)

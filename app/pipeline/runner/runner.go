@@ -3,10 +3,10 @@ package runner
 import (
 	"context"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/resolver"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/pipeline"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/runner/extend"
+	"github.com/easysoft/gitfox-community/app/pipeline/resolver"
+	"github.com/easysoft/gitfox-community/app/service/pipeline"
+	"github.com/easysoft/gitfox-community/pkg/config"
+	"github.com/easysoft/gitfox-community/pkg/runner/extend"
 	"github.com/drone/drone-go/drone"
 	runnerclient "github.com/drone/runner-go/client"
 )

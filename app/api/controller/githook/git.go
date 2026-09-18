@@ -17,8 +17,8 @@ package githook
 import (
 	"context"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/api"
+	"github.com/easysoft/gitfox-community/pkg/git"
+	"github.com/easysoft/gitfox-community/pkg/git/api"
 )
 
 // RestrictedGIT is a git client that is restricted to a subset of operations of git.Interface

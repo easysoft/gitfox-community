@@ -22,14 +22,14 @@ import (
 	"os"
 	"time"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/commit"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/api"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/command"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/enum"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/parser"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/sha"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
+	"github.com/easysoft/gitfox-community/app/model/commit"
+	"github.com/easysoft/gitfox-community/pkg/errors"
+	"github.com/easysoft/gitfox-community/pkg/git/api"
+	"github.com/easysoft/gitfox-community/pkg/git/command"
+	"github.com/easysoft/gitfox-community/pkg/git/enum"
+	"github.com/easysoft/gitfox-community/pkg/git/parser"
+	"github.com/easysoft/gitfox-community/pkg/git/sha"
+	"github.com/easysoft/gitfox-community/pkg/i18n"
 )
 
 func CommitMessage(subject, body string) string {

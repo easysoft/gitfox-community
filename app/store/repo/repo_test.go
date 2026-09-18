@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
-	spaceStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/space"
+	repoModel "github.com/easysoft/gitfox-community/app/model/repo"
+	spaceStore "github.com/easysoft/gitfox-community/app/store/space"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )

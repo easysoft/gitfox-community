@@ -17,7 +17,7 @@ package githook
 import (
 	"errors"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/githook"
+	"github.com/easysoft/gitfox-community/app/model/githook"
 )
 
 // Payload defines the payload that's send to git via environment variables.

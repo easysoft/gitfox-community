@@ -1,7 +1,7 @@
 package constant
 
 import (
-	gitenum "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/enum"
+	gitenum "github.com/easysoft/gitfox-community/pkg/git/enum"
 )
 
 // PullReqState defines pull request state.

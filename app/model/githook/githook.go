@@ -1,7 +1,7 @@
 package githook
 
 import (
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/hook"
+	"github.com/easysoft/gitfox-community/pkg/git/hook"
 )
 
 // GithookInputBase contains the base input of the githook apis.

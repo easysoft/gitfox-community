@@ -3,7 +3,7 @@ package jobs
 import (
 	"context"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/lock"
+	"github.com/easysoft/gitfox-community/pkg/lock"
 )
 
 // globalLock 获取一个全局分布式锁

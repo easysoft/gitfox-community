@@ -5,16 +5,16 @@ import (
 
 	"github.com/google/wire"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/pipeline"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
-	ciStorage "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/storage"
-	pipelineSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/pipeline"
-	pipelineStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/pipeline"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/livelog"
-	pkgS3 "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/s3"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/storage"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/storage/driver"
+	"github.com/easysoft/gitfox-community/app/api/controller/pipeline"
+	"github.com/easysoft/gitfox-community/app/constant"
+	ciStorage "github.com/easysoft/gitfox-community/app/pipeline/storage"
+	pipelineSvc "github.com/easysoft/gitfox-community/app/service/pipeline"
+	pipelineStore "github.com/easysoft/gitfox-community/app/store/pipeline"
+	"github.com/easysoft/gitfox-community/pkg/config"
+	"github.com/easysoft/gitfox-community/pkg/livelog"
+	pkgS3 "github.com/easysoft/gitfox-community/pkg/s3"
+	"github.com/easysoft/gitfox-community/pkg/storage"
+	"github.com/easysoft/gitfox-community/pkg/storage/driver"
 )
 
 var PipelineWireSet = wire.NewSet(

@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"time"
 
-	runnerModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/runner"
-	runnerStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/runner"
-	pkgJobs "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/jobs"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/lock"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
+	runnerModel "github.com/easysoft/gitfox-community/app/model/runner"
+	runnerStore "github.com/easysoft/gitfox-community/app/store/runner"
+	pkgJobs "github.com/easysoft/gitfox-community/pkg/jobs"
+	"github.com/easysoft/gitfox-community/pkg/lock"
+	"github.com/easysoft/gitfox-community/pkg/logger"
 )
 
 const (

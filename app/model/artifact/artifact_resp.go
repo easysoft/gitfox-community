@@ -3,7 +3,7 @@ package artifact
 import (
 	"fmt"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
+	"github.com/easysoft/gitfox-community/pkg/utils/datetime"
 )
 
 // ==================== 查询过滤条件 ====================

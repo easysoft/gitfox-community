@@ -7,9 +7,9 @@ package compiler
 import (
 	"fmt"
 
-	harness "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pipeline/spec"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/runner/docker/engine2/engine"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/common"
+	harness "github.com/easysoft/gitfox-community/pkg/pipeline/spec"
+	"github.com/easysoft/gitfox-community/pkg/runner/docker/engine2/engine"
+	"github.com/easysoft/gitfox-community/pkg/utils/common"
 )
 
 // default name of the clone step.

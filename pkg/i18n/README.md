@@ -28,7 +28,7 @@ package main
 
 import (
     "fmt"
-    "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
+    "github.com/easysoft/gitfox-community/pkg/i18n"
 )
 
 func main() {
@@ -90,7 +90,7 @@ package main
 import (
     "fmt"
     "log"
-    "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
+    "github.com/easysoft/gitfox-community/pkg/i18n"
 )
 
 func main() {
@@ -398,7 +398,7 @@ if err != nil {
 
 1.  **导入包**：
     ```go
-    import "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
+    import "github.com/easysoft/gitfox-community/pkg/i18n"
     ```
 
 2.  **获取翻译数据**：

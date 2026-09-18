@@ -6,7 +6,7 @@
 
 package base
 
-import "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pipeline/step/factory"
+import "github.com/easysoft/gitfox-community/pkg/pipeline/step/factory"
 
 func Register() {
 	factory.RegisterConverter("build_go", &buildGoStep{})

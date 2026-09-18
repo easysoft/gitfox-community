@@ -3,9 +3,9 @@ package settings
 import (
 	"context"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
-	settingsModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/settings"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/settings"
+	"github.com/easysoft/gitfox-community/app/constant"
+	settingsModel "github.com/easysoft/gitfox-community/app/model/settings"
+	"github.com/easysoft/gitfox-community/app/store/settings"
 	"gorm.io/gorm"
 )
 

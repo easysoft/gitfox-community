@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
-	pkgErrors "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+	"github.com/easysoft/gitfox-community/pkg/database"
+	pkgErrors "github.com/easysoft/gitfox-community/pkg/errors"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )

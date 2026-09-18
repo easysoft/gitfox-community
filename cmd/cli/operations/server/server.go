@@ -13,18 +13,18 @@ import (
 
 	"github.com/quicklyon/kingpin/v2"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/router"
-	pipelineLogger "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/logger"
+	"github.com/easysoft/gitfox-community/app/api/router"
+	pipelineLogger "github.com/easysoft/gitfox-community/app/pipeline/logger"
 
-	artifactSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/artifact"
-	cronSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/cron"
-	importerSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/importer"
-	pipelineSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/pipeline"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
-	clii18n "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n/cli"
-	pkgserver "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/server"
+	artifactSvc "github.com/easysoft/gitfox-community/app/service/artifact"
+	cronSvc "github.com/easysoft/gitfox-community/app/service/cron"
+	importerSvc "github.com/easysoft/gitfox-community/app/service/importer"
+	pipelineSvc "github.com/easysoft/gitfox-community/app/service/pipeline"
+	"github.com/easysoft/gitfox-community/pkg/config"
+	"github.com/easysoft/gitfox-community/pkg/errors"
+	"github.com/easysoft/gitfox-community/pkg/i18n"
+	clii18n "github.com/easysoft/gitfox-community/pkg/i18n/cli"
+	pkgserver "github.com/easysoft/gitfox-community/pkg/server"
 )
 
 type command struct {
@@ -54,7 +54,7 @@ func (c *command) run(*kingpin.ParseContext) error {
 	return RunServerWithContext(ctx, mode, c.enableCI, nil)
 }
 
-// RunServerWithContext 是 GitFox 的通用启动引擎。
+// RunServerWithContext 是社区版 GitFox 的启动入口。
 // 它通过 ctx 控制生命周期：当 ctx 被 cancel 时，执行优雅关机。
 // onReady 是一个可选的回调函数，当网络端口挂载完毕、正式开始监听时触发。
 func RunServerWithContext(ctx context.Context, mode string, enableCI bool, onReady func()) error {
@@ -69,6 +69,14 @@ func RunServerWithContext(ctx context.Context, mode string, enableCI bool, onRea
 		fmt.Printf("[Server] Failed to initialize app server: %v\n", err)
 		panic(err)
 	}
+	return RunWithApp(ctx, app, cleanup, mode, enableCI, onReady)
+}
+
+// RunWithApp 是 GitFox 的通用启动引擎，接收一个已装配好的 App。
+// 社区版通过 NewApp 装配，overlay 版本（企业版）可通过自己的注入器装配后复用此函数。
+// 它通过 ctx 控制生命周期：当 ctx 被 cancel 时，执行优雅关机。
+// onReady 是一个可选的回调函数，当网络端口挂载完毕、正式开始监听时触发。
+func RunWithApp(ctx context.Context, app *App, cleanup func(), mode string, enableCI bool, onReady func()) error {
 	defer func() {
 		app.SystemLog.Info("[Server] Cleaning up resources...")
 		cleanup()

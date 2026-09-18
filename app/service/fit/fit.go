@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/utils"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/token"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
+	"github.com/easysoft/gitfox-community/app/service/utils"
+	"github.com/easysoft/gitfox-community/app/store/token"
+	"github.com/easysoft/gitfox-community/pkg/config"
 )
 
 // Service fit 服务实现

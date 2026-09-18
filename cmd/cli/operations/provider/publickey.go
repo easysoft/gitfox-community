@@ -1,8 +1,8 @@
 package provider
 
 import (
-	publickeySvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/publickey"
-	publickeyStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/publickey"
+	publickeySvc "github.com/easysoft/gitfox-community/app/service/publickey"
+	publickeyStore "github.com/easysoft/gitfox-community/app/store/publickey"
 	"github.com/google/wire"
 )
 

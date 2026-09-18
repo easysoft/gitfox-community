@@ -1,13 +1,13 @@
 package scan
 
 import (
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
-	repoService "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
-	scanService "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/scan"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
+	"github.com/easysoft/gitfox-community/app/api/utils/req"
+	"github.com/easysoft/gitfox-community/app/api/utils/resp"
+	repoService "github.com/easysoft/gitfox-community/app/service/repo"
+	scanService "github.com/easysoft/gitfox-community/app/service/scan"
+	"github.com/easysoft/gitfox-community/pkg/errors"
+	"github.com/easysoft/gitfox-community/pkg/git"
+	"github.com/easysoft/gitfox-community/pkg/i18n"
 	"github.com/gin-gonic/gin"
 )
 

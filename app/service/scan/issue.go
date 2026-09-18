@@ -11,16 +11,16 @@ import (
 	"strings"
 	"time"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
-	executionModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/execution"
-	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
-	scanModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
-	scanStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/scan"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
-	gitAPI "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/api"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
+	"github.com/easysoft/gitfox-community/app/api/utils/req"
+	"github.com/easysoft/gitfox-community/app/constant"
+	executionModel "github.com/easysoft/gitfox-community/app/model/execution"
+	repoModel "github.com/easysoft/gitfox-community/app/model/repo"
+	scanModel "github.com/easysoft/gitfox-community/app/model/scan"
+	scanStore "github.com/easysoft/gitfox-community/app/store/scan"
+	"github.com/easysoft/gitfox-community/pkg/database"
+	gitAPI "github.com/easysoft/gitfox-community/pkg/git/api"
+	"github.com/easysoft/gitfox-community/pkg/errors"
+	"github.com/easysoft/gitfox-community/pkg/logger"
 )
 
 // typecheckSubErrorRe 匹配 typecheck 消息中的一条子错误（<文件>:<行>:<列>: <错误>）。

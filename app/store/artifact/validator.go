@@ -3,7 +3,7 @@ package artifact
 import (
 	"reflect"
 
-	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
+	model "github.com/easysoft/gitfox-community/app/model/artifact"
 )
 
 func validatorEmpty(args ...any) error {

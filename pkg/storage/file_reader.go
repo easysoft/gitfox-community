@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"io"
 
-	storagedriver "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/storage/driver"
+	storagedriver "github.com/easysoft/gitfox-community/pkg/storage/driver"
 )
 
 // TODO(stevvooe): Set an optimal buffer size here. We'll have to

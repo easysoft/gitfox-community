@@ -9,9 +9,9 @@ package rbac
 import (
 	"fmt"
 
-	enum "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
+	enum "github.com/easysoft/gitfox-community/app/constant"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
+	"github.com/easysoft/gitfox-community/pkg/logger"
 )
 
 type Request struct {

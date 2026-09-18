@@ -4,9 +4,9 @@ import (
 	"context"
 	"io"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/commit"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
+	"github.com/easysoft/gitfox-community/app/model/auth"
+	"github.com/easysoft/gitfox-community/app/model/commit"
+	"github.com/easysoft/gitfox-community/app/model/repo"
 )
 
 type Interface interface {

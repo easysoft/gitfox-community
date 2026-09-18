@@ -5,8 +5,8 @@ import (
 	"io"
 	"time"
 
-	pipelineModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/pipeline"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/livelog"
+	pipelineModel "github.com/easysoft/gitfox-community/app/model/pipeline"
+	"github.com/easysoft/gitfox-community/pkg/livelog"
 )
 
 func (s *Service) CreateLogs(ctx context.Context, param *pipelineModel.S3Logs, r io.Reader) error {

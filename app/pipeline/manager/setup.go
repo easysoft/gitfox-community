@@ -5,17 +5,17 @@ import (
 	"errors"
 	"fmt"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
-	eventModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/event"
-	executionModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/execution"
-	stageModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/stage"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/execution"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/pipeline"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/sse"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/stage"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/step"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
+	"github.com/easysoft/gitfox-community/app/constant"
+	eventModel "github.com/easysoft/gitfox-community/app/model/event"
+	executionModel "github.com/easysoft/gitfox-community/app/model/execution"
+	stageModel "github.com/easysoft/gitfox-community/app/model/stage"
+	"github.com/easysoft/gitfox-community/app/service/execution"
+	"github.com/easysoft/gitfox-community/app/service/pipeline"
+	"github.com/easysoft/gitfox-community/app/service/sse"
+	"github.com/easysoft/gitfox-community/app/service/stage"
+	"github.com/easysoft/gitfox-community/app/service/step"
+	"github.com/easysoft/gitfox-community/pkg/logger"
+	"github.com/easysoft/gitfox-community/pkg/utils/datetime"
 )
 
 // ErrStageCancelled is returned when a stage is refused to start because

@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"strings"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
-	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
+	"github.com/easysoft/gitfox-community/app/api/utils/resp"
+	"github.com/easysoft/gitfox-community/app/constant"
+	model "github.com/easysoft/gitfox-community/app/model/artifact"
+	"github.com/easysoft/gitfox-community/pkg/errors"
+	"github.com/easysoft/gitfox-community/pkg/i18n"
 
 	"github.com/gin-gonic/gin"
 )

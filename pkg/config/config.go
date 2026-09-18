@@ -45,7 +45,8 @@ type EncryptionConfig struct {
 // PipelineAuthConfig 流水线内部认证配置
 type PipelineAuthConfig struct {
 	UserName string `envconfig:"GITFOX_PIPELINE_AUTH_USERNAME" default:"pipeline"`
-	Password string `envconfig:"GITFOX_PIPELINE_AUTH_PASSWORD" default:"cd65d97989fcb1fdb0d82471c3238a3c"`
+	// Password 必须由部署方显式配置（GITFOX_PIPELINE_AUTH_PASSWORD），不再提供内置默认值。
+	Password string `envconfig:"GITFOX_PIPELINE_AUTH_PASSWORD"`
 }
 
 type WorkSpace struct {

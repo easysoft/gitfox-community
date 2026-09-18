@@ -7,7 +7,7 @@
 package base
 
 import (
-	harness "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pipeline/spec"
+	harness "github.com/easysoft/gitfox-community/pkg/pipeline/spec"
 )
 
 type buildGoStep struct {

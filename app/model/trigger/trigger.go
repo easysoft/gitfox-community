@@ -1,6 +1,6 @@
 package trigger
 
-import "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
+import "github.com/easysoft/gitfox-community/app/constant"
 
 type Trigger struct {
 	ID          int64                  `json:"-"`

@@ -21,7 +21,7 @@ import (
 	"regexp"
 	"strconv"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/sha"
+	"github.com/easysoft/gitfox-community/pkg/git/sha"
 )
 
 type DiffStatus byte

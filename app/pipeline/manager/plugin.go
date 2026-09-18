@@ -3,10 +3,10 @@ package manager
 import (
 	"context"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
-	v1yaml "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pipeline/spec"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pipeline/spec/parse"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pipeline/spec/parse/walk"
+	"github.com/easysoft/gitfox-community/pkg/logger"
+	v1yaml "github.com/easysoft/gitfox-community/pkg/pipeline/spec"
+	"github.com/easysoft/gitfox-community/pkg/pipeline/spec/parse"
+	"github.com/easysoft/gitfox-community/pkg/pipeline/spec/parse/walk"
 
 	"github.com/ghodss/yaml"
 )

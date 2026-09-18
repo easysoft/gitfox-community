@@ -9,7 +9,7 @@ package ocischema
 import (
 	"encoding/json"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/adapter/container/schema"
+	"github.com/easysoft/gitfox-community/app/artifact/adapter/container/schema"
 
 	"github.com/opencontainers/image-spec/specs-go"
 	v1 "github.com/opencontainers/image-spec/specs-go/v1"

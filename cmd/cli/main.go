@@ -3,15 +3,15 @@ package main
 import (
 	"os"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/cmd/cli/operations/hooks"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/cmd/cli/operations/server"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/cmd/cli/operations/service"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/hook"
-	clii18n "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n/cli"
+	"github.com/easysoft/gitfox-community/cmd/cli/operations/hooks"
+	"github.com/easysoft/gitfox-community/cmd/cli/operations/server"
+	"github.com/easysoft/gitfox-community/cmd/cli/operations/service"
+	"github.com/easysoft/gitfox-community/pkg/git/hook"
+	clii18n "github.com/easysoft/gitfox-community/pkg/i18n/cli"
 
 	"github.com/quicklyon/kingpin/v2"
 
-	_ "gitfox.zcorp.cc/git/Pangu/gitfox-community/docs" // 导入生成的 Swagger 文档
+	_ "github.com/easysoft/gitfox-community/docs" // 导入生成的 Swagger 文档
 )
 
 const (
@@ -24,8 +24,8 @@ const (
 // @description     GitFox 平台 API 文档
 // @termsOfService  http://swagger.io/terms/
 
-// @license.name  Apache 2.0
-// @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
+// @license.name  ZPL 1.2 / AGPL 3.0
+// @license.url   http://zpl.pub/page/zplv12.html
 
 // @host      localhost:3000
 // @BasePath  /api/v2

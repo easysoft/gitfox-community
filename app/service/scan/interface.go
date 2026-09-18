@@ -4,14 +4,14 @@ import (
 	"context"
 	"time"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
-	authModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
-	executionModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/execution"
-	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
-	scanModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/pipeline/triggerer"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
+	"github.com/easysoft/gitfox-community/app/constant"
+	authModel "github.com/easysoft/gitfox-community/app/model/auth"
+	executionModel "github.com/easysoft/gitfox-community/app/model/execution"
+	repoModel "github.com/easysoft/gitfox-community/app/model/repo"
+	scanModel "github.com/easysoft/gitfox-community/app/model/scan"
+	"github.com/easysoft/gitfox-community/app/pipeline/triggerer"
+	"github.com/easysoft/gitfox-community/pkg/database"
+	"github.com/easysoft/gitfox-community/pkg/git"
 )
 
 // CronScheduler is the interface used by the scan service to manage
@@ -135,4 +135,13 @@ type IAIReview interface {
 	GetAIReviewConfig(ctx context.Context) (*scanModel.AIReviewConfig, error)
 	GetAIReviewRules(ctx context.Context) ([]*scanModel.AIReviewRule, error)
 	TriggerCodeReview(ctx context.Context, in *CodeReviewInput) (*executionModel.Execution, error)
+}
+
+// CodeReviewInput 代码审查输入参数。
+// 该类型属于公开契约的一部分：trigger 服务与 overlay 版本的 IAIReview
+// 实现共同使用它。
+type CodeReviewInput struct {
+	Repo      *repoModel.Repo
+	PullReqID int64
+	Hook      *triggerer.Hook
 }

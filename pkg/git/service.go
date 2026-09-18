@@ -19,11 +19,11 @@ import (
 	"os"
 	"path/filepath"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/api"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/hook"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/storage"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/types"
+	"github.com/easysoft/gitfox-community/pkg/errors"
+	"github.com/easysoft/gitfox-community/pkg/git/api"
+	"github.com/easysoft/gitfox-community/pkg/git/hook"
+	"github.com/easysoft/gitfox-community/pkg/git/storage"
+	"github.com/easysoft/gitfox-community/pkg/git/types"
 )
 
 const (

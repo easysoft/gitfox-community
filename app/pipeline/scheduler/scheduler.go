@@ -3,10 +3,10 @@ package scheduler
 import (
 	"context"
 
-	stageModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/stage"
-	runnerStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/runner"
-	stageStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/stage"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/lock"
+	stageModel "github.com/easysoft/gitfox-community/app/model/stage"
+	runnerStore "github.com/easysoft/gitfox-community/app/store/runner"
+	stageStore "github.com/easysoft/gitfox-community/app/store/stage"
+	"github.com/easysoft/gitfox-community/pkg/lock"
 )
 
 // Filter provides filter criteria to limit stages requested

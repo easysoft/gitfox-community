@@ -3,7 +3,7 @@ package gc
 import (
 	"time"
 
-	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
+	model "github.com/easysoft/gitfox-community/app/model/artifact"
 
 	"gorm.io/gorm"
 )

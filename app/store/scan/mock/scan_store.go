@@ -13,11 +13,11 @@ import (
 	context "context"
 	reflect "reflect"
 
-	constant "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
-	scan "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
-	scan0 "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/scan"
-	database "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
-	resources "gitfox.zcorp.cc/git/Pangu/gitfox-community/resources"
+	constant "github.com/easysoft/gitfox-community/app/constant"
+	scan "github.com/easysoft/gitfox-community/app/model/scan"
+	scan0 "github.com/easysoft/gitfox-community/app/store/scan"
+	database "github.com/easysoft/gitfox-community/pkg/database"
+	resources "github.com/easysoft/gitfox-community/resources"
 	gomock "go.uber.org/mock/gomock"
 )
 

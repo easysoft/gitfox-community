@@ -3,8 +3,8 @@ package provider
 import (
 	"github.com/google/wire"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/fit"
-	fitSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/fit"
+	"github.com/easysoft/gitfox-community/app/api/controller/fit"
+	fitSvc "github.com/easysoft/gitfox-community/app/service/fit"
 )
 
 var FitWireSet = wire.NewSet(

@@ -9,7 +9,7 @@ package factory
 import (
 	"fmt"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/contracts"
+	"github.com/easysoft/gitfox-community/pkg/contracts"
 )
 
 var _factory = map[string]contracts.PipelineStepBuildConverter{}

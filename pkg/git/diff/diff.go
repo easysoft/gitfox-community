@@ -23,7 +23,7 @@ import (
 	"strconv"
 	"strings"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/enum"
+	"github.com/easysoft/gitfox-community/pkg/git/enum"
 )
 
 // Predefine []byte variables to avoid runtime allocations.

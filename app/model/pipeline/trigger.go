@@ -1,10 +1,10 @@
 package pipeline
 
 import (
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/datetime"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/slice"
+	"github.com/easysoft/gitfox-community/pkg/errors"
+	"github.com/easysoft/gitfox-community/pkg/i18n"
+	"github.com/easysoft/gitfox-community/pkg/utils/datetime"
+	"github.com/easysoft/gitfox-community/pkg/utils/slice"
 
 	"github.com/gorhill/cronexpr"
 )

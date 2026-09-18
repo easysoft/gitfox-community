@@ -19,7 +19,7 @@ import (
 	"testing"
 	"time"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/sha"
+	"github.com/easysoft/gitfox-community/pkg/git/sha"
 
 	"github.com/stretchr/testify/require"
 )

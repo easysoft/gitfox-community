@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/hook"
+	"github.com/easysoft/gitfox-community/pkg/git/hook"
 )
 
 // Run is helper function used to run the provided function inside a shared repository.

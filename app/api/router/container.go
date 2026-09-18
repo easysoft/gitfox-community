@@ -1,8 +1,8 @@
 package router
 
 import (
-	ctnHandler "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/handler"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/auth/authn"
+	ctnHandler "github.com/easysoft/gitfox-community/app/artifact/handler"
+	"github.com/easysoft/gitfox-community/pkg/auth/authn"
 
 	"github.com/gin-gonic/gin"
 )

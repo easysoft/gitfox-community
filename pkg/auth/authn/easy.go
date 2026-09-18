@@ -3,16 +3,16 @@ package authn
 import (
 	"strings"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
-	principal "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/user"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/token"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/user"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/cryptor"
+	"github.com/easysoft/gitfox-community/app/api/utils/req"
+	"github.com/easysoft/gitfox-community/app/constant"
+	"github.com/easysoft/gitfox-community/app/model/auth"
+	principal "github.com/easysoft/gitfox-community/app/model/user"
+	"github.com/easysoft/gitfox-community/app/store/token"
+	"github.com/easysoft/gitfox-community/app/store/user"
+	"github.com/easysoft/gitfox-community/pkg/config"
+	"github.com/easysoft/gitfox-community/pkg/errors"
+	"github.com/easysoft/gitfox-community/pkg/logger"
+	"github.com/easysoft/gitfox-community/pkg/utils/cryptor"
 	"github.com/gin-gonic/gin"
 )
 
@@ -33,7 +33,7 @@ var _ Authenticator = (*EasyAuthenticator)(nil)
 //
 // 请求示例：
 // curl --location --request DELETE 'http://example.com/api/v2/repos/2' \
-// --header 'Authorization: 7f18226c955beb483985aed5c581d0ba' \
+// --header 'Authorization: 0123456789abcdef0123456789abcdef' \
 // --header 'App: zentao' \
 // --header 'Operator: zhangsan'
 type EasyAuthenticator struct {

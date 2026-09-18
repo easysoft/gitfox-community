@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"strings"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
-	runnerModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/runner"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database/dbtx"
+	"github.com/easysoft/gitfox-community/app/constant"
+	runnerModel "github.com/easysoft/gitfox-community/app/model/runner"
+	"github.com/easysoft/gitfox-community/pkg/database"
+	"github.com/easysoft/gitfox-community/pkg/database/dbtx"
 )
 
 // Create creates a new runner

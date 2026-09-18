@@ -1,16 +1,16 @@
 package fit
 
 import (
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
-	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
-	fitSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/fit"
-	repoSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
-	spaceSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/space"
-	svcUtils "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/utils"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
+	"github.com/easysoft/gitfox-community/app/api/utils/req"
+	"github.com/easysoft/gitfox-community/app/api/utils/resp"
+	"github.com/easysoft/gitfox-community/app/constant"
+	repoModel "github.com/easysoft/gitfox-community/app/model/repo"
+	fitSvc "github.com/easysoft/gitfox-community/app/service/fit"
+	repoSvc "github.com/easysoft/gitfox-community/app/service/repo"
+	spaceSvc "github.com/easysoft/gitfox-community/app/service/space"
+	svcUtils "github.com/easysoft/gitfox-community/app/service/utils"
+	"github.com/easysoft/gitfox-community/pkg/errors"
+	"github.com/easysoft/gitfox-community/pkg/i18n"
 	"github.com/gin-gonic/gin"
 )
 

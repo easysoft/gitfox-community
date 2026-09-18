@@ -13,8 +13,8 @@ import (
 	context "context"
 	reflect "reflect"
 
-	pipeline "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/pipeline"
-	database "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
+	pipeline "github.com/easysoft/gitfox-community/app/model/pipeline"
+	database "github.com/easysoft/gitfox-community/pkg/database"
 	gomock "go.uber.org/mock/gomock"
 )
 

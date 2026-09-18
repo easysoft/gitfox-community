@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
+	"github.com/easysoft/gitfox-community/pkg/config"
 )
 
 func TestE2ERotateByDate(t *testing.T) {

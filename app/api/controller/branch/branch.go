@@ -1,27 +1,29 @@
 package branch
 
 import (
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
-	branchModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/branch"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/branch"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
+	"github.com/easysoft/gitfox-community/app/api/utils/req"
+	"github.com/easysoft/gitfox-community/app/api/utils/resp"
+	branchModel "github.com/easysoft/gitfox-community/app/model/branch"
+	"github.com/easysoft/gitfox-community/app/service/branch"
+	"github.com/easysoft/gitfox-community/app/service/repo"
+	"github.com/easysoft/gitfox-community/pkg/errors"
+	"github.com/easysoft/gitfox-community/pkg/i18n"
 	"github.com/gin-gonic/gin"
 )
 
 // Controller 处理与分支相关的 HTTP 请求
 type Controller struct {
-	branchSvc branch.Interface
-	repoSvc   repo.Interface
+	branchSvc  branch.Interface
+	archiveSvc branch.IArchiveService
+	repoSvc    repo.Interface
 }
 
 // NewController 创建分支处理器实例
-func NewController(branchService branch.Interface, repoService repo.Interface) *Controller {
+func NewController(branchService branch.Interface, archiveService branch.IArchiveService, repoService repo.Interface) *Controller {
 	return &Controller{
-		branchSvc: branchService,
-		repoSvc:   repoService,
+		branchSvc:  branchService,
+		archiveSvc: archiveService,
+		repoSvc:    repoService,
 	}
 }
 
@@ -302,7 +304,7 @@ func (c *Controller) Archive(ctx *gin.Context) {
 		return
 	}
 
-	results := c.branchSvc.BatchArchive(ctx, ctx.Request.Context(), reqBody, session, repoOut)
+	results := c.archiveSvc.BatchArchive(ctx, ctx.Request.Context(), reqBody, session, repoOut)
 	for _, result := range results {
 		if !result.Status {
 			err = errors.WithI18nKey(err, i18n.BranchArchiveError)
@@ -359,6 +361,6 @@ func (c *Controller) Activate(ctx *gin.Context) {
 		return
 	}
 
-	results := c.branchSvc.BatchActivate(ctx, ctx.Request.Context(), reqBody, session, repoOut)
+	results := c.archiveSvc.BatchActivate(ctx, ctx.Request.Context(), reqBody, session, repoOut)
 	resp.OK(ctx, i18n.BranchActivateSuccess, results)
 }

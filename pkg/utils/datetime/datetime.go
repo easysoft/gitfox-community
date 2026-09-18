@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils"
+	"github.com/easysoft/gitfox-community/pkg/utils"
 )
 
 var timeFormat map[string]string

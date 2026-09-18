@@ -1,9 +1,9 @@
 package authn
 
 import (
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/token"
-	principal "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/user"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
+	"github.com/easysoft/gitfox-community/app/store/token"
+	principal "github.com/easysoft/gitfox-community/app/store/user"
+	"github.com/easysoft/gitfox-community/pkg/config"
 	"github.com/google/wire"
 )
 

@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/HuaweiCloudDeveloper/gaussdb-go/gaussdbconn"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
+	"github.com/easysoft/gitfox-community/pkg/errors"
 )
 
 func gaussdbError(code string) error {

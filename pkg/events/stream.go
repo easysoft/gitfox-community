@@ -3,7 +3,7 @@ package events
 import (
 	"context"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/stream"
+	"github.com/easysoft/gitfox-community/pkg/stream"
 )
 
 // StreamProducer is an abstraction of a producer from the streams package.

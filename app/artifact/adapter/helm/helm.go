@@ -14,16 +14,16 @@ import (
 	"net/http"
 	"regexp"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/adapter"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/artifact/adapter/request"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/artifact"
-	artifactStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/artifact"
+	"github.com/easysoft/gitfox-community/app/artifact/adapter"
+	"github.com/easysoft/gitfox-community/app/artifact/adapter/request"
+	"github.com/easysoft/gitfox-community/app/store/artifact"
+	artifactStore "github.com/easysoft/gitfox-community/app/store/artifact"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/storage"
+	"github.com/easysoft/gitfox-community/pkg/storage"
 
-	model "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/artifact"
+	model "github.com/easysoft/gitfox-community/app/model/artifact"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
+	"github.com/easysoft/gitfox-community/pkg/logger"
 )
 
 const (

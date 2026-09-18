@@ -3,8 +3,8 @@ package provider
 import (
 	"context"
 
-	providerModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/provider"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
+	providerModel "github.com/easysoft/gitfox-community/app/model/provider"
+	"github.com/easysoft/gitfox-community/pkg/database"
 	"gorm.io/gorm"
 )
 

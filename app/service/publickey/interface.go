@@ -3,12 +3,12 @@ package publickey
 import (
 	"context"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/auth"
-	principal "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/user"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
+	"github.com/easysoft/gitfox-community/app/api/utils/req"
+	"github.com/easysoft/gitfox-community/app/model/auth"
+	principal "github.com/easysoft/gitfox-community/app/model/user"
+	"github.com/easysoft/gitfox-community/pkg/database"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/publickey"
+	"github.com/easysoft/gitfox-community/app/model/publickey"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gliderlabs/ssh"

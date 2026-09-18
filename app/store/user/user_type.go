@@ -1,7 +1,7 @@
 package user
 
 import (
-	principal "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/user"
+	principal "github.com/easysoft/gitfox-community/app/model/user"
 )
 
 type User struct {

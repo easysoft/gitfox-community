@@ -3,9 +3,9 @@ package provider
 import (
 	"github.com/google/wire"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/space"
-	spaceSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/space"
-	spaceStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/space"
+	"github.com/easysoft/gitfox-community/app/api/controller/space"
+	spaceSvc "github.com/easysoft/gitfox-community/app/service/space"
+	spaceStore "github.com/easysoft/gitfox-community/app/store/space"
 )
 
 var SpaceWireSet = wire.NewSet(

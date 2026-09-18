@@ -7,7 +7,7 @@ import (
 	"errors"
 	"fmt"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/logger"
+	"github.com/easysoft/gitfox-community/pkg/logger"
 )
 
 // ReaderFactoryFunc is an abstraction of a factory method that creates customized Reader implementations (type [R]).

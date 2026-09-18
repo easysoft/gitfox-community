@@ -5,8 +5,8 @@
 package compiler
 
 import (
-	harness "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/pipeline/spec"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/runner/docker/engine2/engine"
+	harness "github.com/easysoft/gitfox-community/pkg/pipeline/spec"
+	"github.com/easysoft/gitfox-community/pkg/runner/docker/engine2/engine"
 )
 
 func createStepTemplate(src *harness.Step, spec *harness.StepTemplate) *engine.Step {

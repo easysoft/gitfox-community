@@ -23,7 +23,7 @@ import (
 	"testing"
 	"time"
 
-	storagedriver "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/storage/driver"
+	storagedriver "github.com/easysoft/gitfox-community/pkg/storage/driver"
 
 	"github.com/stretchr/testify/suite"
 )

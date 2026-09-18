@@ -3,7 +3,7 @@ package router
 import (
 	"fmt"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
+	"github.com/easysoft/gitfox-community/app/api/utils/req"
 	"github.com/gin-gonic/gin"
 )
 

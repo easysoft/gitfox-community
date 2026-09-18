@@ -18,7 +18,7 @@ import (
 	"context"
 	"strings"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/api"
+	"github.com/easysoft/gitfox-community/pkg/git/api"
 )
 
 type Label struct {

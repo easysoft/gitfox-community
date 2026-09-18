@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/events"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/stream"
+	"github.com/easysoft/gitfox-community/pkg/events"
+	"github.com/easysoft/gitfox-community/pkg/stream"
 	"github.com/go-redis/redis/v8"
 	"github.com/google/wire"
 )

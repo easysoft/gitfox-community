@@ -1,6 +1,6 @@
 package auth
 
-import principal "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/user"
+import principal "github.com/easysoft/gitfox-community/app/model/user"
 
 // Session contains information of the authenticated principal and auth related metadata.
 type Session struct {

@@ -14,7 +14,7 @@
 
 package hook
 
-import "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git/sha"
+import "github.com/easysoft/gitfox-community/pkg/git/sha"
 
 // GitPushOptions is a wrapper around a map[string]string
 type GitPushOptions map[string]string

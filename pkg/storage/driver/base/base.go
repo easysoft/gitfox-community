@@ -48,7 +48,7 @@ import (
 	"io"
 	"net/http"
 
-	storagedriver "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/storage/driver"
+	storagedriver "github.com/easysoft/gitfox-community/pkg/storage/driver"
 )
 
 // Base provides a wrapper around a storagedriver implementation that provides

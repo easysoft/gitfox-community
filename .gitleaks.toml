@@ -1,0 +1,38 @@
+# gitleaks configuration for the GitFox community repository.
+#
+# Extends the default rule set and only allowlists known false positives /
+# non-published local files. Do not add broad allowlists here.
+
+[extend]
+useDefault = true
+
+# Local, git-ignored developer configuration (not part of the repository).
+[[allowlists]]
+description = "Local developer env files are git-ignored and never published"
+paths = [
+  '''configs/local\.env''',
+  '''configs/local\.yaml''',
+]
+
+# Test fixtures that intentionally contain PEM keys / tokens to exercise the
+# secret-masking logic.
+[[allowlists]]
+description = "Secret-masking test fixtures"
+paths = [
+  '''pkg/runner/docker/engine2/runtime/replacer_test\.go''',
+]
+
+# Go comparisons on i18n keys are matched by the generic-api-key rule but are
+# not credentials.
+[[allowlists]]
+description = "i18n key comparisons are not secrets"
+regexes = [
+  '''^i18n\.[A-Za-z0-9_]+$''',
+]
+
+# Documentation example token in the Easy authn doc comment.
+[[allowlists]]
+description = "Documentation example token"
+regexes = [
+  '''^0123456789abcdef0123456789abcdef$''',
+]

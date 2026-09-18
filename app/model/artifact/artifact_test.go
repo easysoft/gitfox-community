@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
+	"github.com/easysoft/gitfox-community/pkg/i18n"
 	"github.com/stretchr/testify/assert"
 )
 

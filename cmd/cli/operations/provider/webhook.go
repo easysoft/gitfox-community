@@ -3,19 +3,19 @@ package provider
 import (
 	"github.com/google/wire"
 
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/controller/webhook"
-	gitevents "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/events/git"
-	pullreqevents "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/events/pullreq"
-	repoSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/repo"
-	webhookSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/webhook"
-	pullreqStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/pullrequest"
-	repoStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
-	userStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/user"
-	webhookStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/webhook"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/config"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/events"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
-	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/utils/url"
+	"github.com/easysoft/gitfox-community/app/api/controller/webhook"
+	gitevents "github.com/easysoft/gitfox-community/app/events/git"
+	pullreqevents "github.com/easysoft/gitfox-community/app/events/pullreq"
+	repoSvc "github.com/easysoft/gitfox-community/app/service/repo"
+	webhookSvc "github.com/easysoft/gitfox-community/app/service/webhook"
+	pullreqStore "github.com/easysoft/gitfox-community/app/store/pullrequest"
+	repoStore "github.com/easysoft/gitfox-community/app/store/repo"
+	userStore "github.com/easysoft/gitfox-community/app/store/user"
+	webhookStore "github.com/easysoft/gitfox-community/app/store/webhook"
+	"github.com/easysoft/gitfox-community/pkg/config"
+	"github.com/easysoft/gitfox-community/pkg/events"
+	"github.com/easysoft/gitfox-community/pkg/git"
+	"github.com/easysoft/gitfox-community/pkg/utils/url"
 )
 
 var WebhookWireSet = wire.NewSet(
