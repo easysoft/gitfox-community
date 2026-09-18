@@ -10,6 +10,7 @@ import (
 
 	"github.com/easysoft/gitfox-community/app/constant"
 	enum "github.com/easysoft/gitfox-community/app/constant"
+	"github.com/easysoft/gitfox-community/pkg/i18n"
 	"github.com/easysoft/gitfox-community/pkg/utils/datetime"
 
 	"github.com/guregu/null"
@@ -20,6 +21,20 @@ const (
 	DefaultArtifactLibName string = "Default"
 	DefaultArtifactLibCode string = "default"
 )
+
+// DefaultArtifactLibViewName 返回默认制品库的展示名：按 locale 取本地化名称。
+// 普通建仓（app/api/controller/repo/repo.go）与导入建仓（app/service/importer）共用本函数，
+// 避免同一功能出现两种展示名。
+// 翻译缺失时 i18n 返回的是 key 本身或 "[locale:key]" 占位串，都不能作为库名落库，
+// 统一回退到 DefaultArtifactLibName（与 en-US 的取值一致）。
+func DefaultArtifactLibViewName(locale string) string {
+	key := string(i18n.ArtifactDefaultViewName)
+	name := i18n.TWithLocale(locale, key)
+	if name == "" || name == key || strings.HasPrefix(name, "[") {
+		return DefaultArtifactLibName
+	}
+	return name
+}
 
 // ==================== 格式与资产类型 ====================
 // ==================== Format & Rank ====================

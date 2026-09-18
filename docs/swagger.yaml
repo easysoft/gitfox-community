@@ -1627,6 +1627,8 @@ definitions:
         type: string
       lastExecuted:
         type: string
+      nextExecuted:
+        type: string
       result:
         type: string
       status:
@@ -1975,6 +1977,21 @@ definitions:
       version:
         type: string
     type: object
+  github_com_easysoft_gitfox-community_app_model_scan.AIReviewConfig:
+    properties:
+      llmApiKey:
+        type: string
+      llmLanguage:
+        type: string
+      llmModel:
+        type: string
+      llmProtocol:
+        type: string
+      llmProvider:
+        type: string
+      llmUrl:
+        type: string
+    type: object
   github_com_easysoft_gitfox-community_app_model_scan.Pattern:
     properties:
       default:
@@ -2281,6 +2298,8 @@ definitions:
       editedBy:
         type: string
       endLine:
+        type: integer
+      executionID:
         type: integer
       id:
         type: integer
@@ -2790,6 +2809,26 @@ definitions:
     - branch
     - planID
     - repoID
+    type: object
+  github_com_easysoft_gitfox-community_app_model_scan.ScanTaskRunnerCreateReq:
+    properties:
+      executionID:
+        type: integer
+      planID:
+        type: integer
+      repoID:
+        type: integer
+      triggerType:
+        type: string
+    required:
+    - executionID
+    - planID
+    - repoID
+    type: object
+  github_com_easysoft_gitfox-community_app_model_scan.ScanTaskRunnerCreateResp:
+    properties:
+      taskID:
+        type: integer
     type: object
   github_com_easysoft_gitfox-community_app_model_scan.ScanTaskTrigger:
     properties:
@@ -3637,8 +3676,8 @@ info:
   contact: {}
   description: GitFox 平台 API 文档
   license:
-    name: Apache 2.0
-    url: http://www.apache.org/licenses/LICENSE-2.0.html
+    name: ZPL 1.2 / AGPL 3.0
+    url: http://zpl.pub/page/zplv12.html
   termsOfService: http://swagger.io/terms/
   title: GitFox API
   version: "1.0"
@@ -7355,9 +7394,15 @@ paths:
     post:
       consumes:
       - multipart/form-data
-      description: 上传评审任务的报告文件，解析 issues
+      description: 上传评审任务的报告文件，解析 issues。ppmID 可为 0（无 MR，推送/内嵌流水线触发），此时报告按表单 executionID
+        归属到对应执行
       parameters:
-      - description: 合并请求 ID
+      - description: 仓库 ID
+        in: path
+        name: repoID
+        required: true
+        type: integer
+      - description: 合并请求 ID，可为 0（无 MR）
         in: path
         name: ppmID
         required: true
@@ -7367,6 +7412,16 @@ paths:
         name: file
         required: true
         type: file
+      - description: 扫描方法（ai）
+        in: formData
+        name: method
+        required: true
+        type: string
+      - description: 流水线执行 ID（ppmID 为 0 时必填）
+        in: formData
+        name: executionID
+        required: true
+        type: integer
       produces:
       - application/json
       responses:
@@ -7388,6 +7443,28 @@ paths:
           schema:
             $ref: '#/definitions/github_com_easysoft_gitfox-community_app_api_utils_resp.ObjectResponse'
       summary: 上传评审任务报告
+      tags:
+      - scan
+  /scan/aicodereview/ai-config:
+    get:
+      description: aireview 插件在非内嵌流水线（INNER_PIPELINE 非 "true"）中拉取 AI 评审所需的 LLM 配置（供应商/地址/协议/密钥/模型/语言）
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 查询成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_easysoft_gitfox-community_app_api_utils_resp.ObjectResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_easysoft_gitfox-community_app_model_scan.AIReviewConfig'
+              type: object
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/github_com_easysoft_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 获取 AI 评审配置
       tags:
       - scan
   /scan/issues/{id}:
@@ -9787,6 +9864,42 @@ paths:
           schema:
             $ref: '#/definitions/github_com_easysoft_gitfox-community_app_api_utils_resp.ObjectResponse'
       summary: 获取扫描任务详情
+      tags:
+      - scan
+  /scan/tasks/create-by-runner:
+    post:
+      consumes:
+      - application/json
+      description: codescan 插件在非内嵌流水线（INNER_PIPELINE 非 "true"）中扫描前回调本接口，创建扫描任务记录并返回上报报告所需的
+        taskID（扫描范围由插件的 SCAN_METHOD + SCAN_REF_RANGE 声明，不由本接口解析）
+      parameters:
+      - description: 扫描任务信息
+        in: body
+        name: taskInfo
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_easysoft_gitfox-community_app_model_scan.ScanTaskRunnerCreateReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 创建成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/github_com_easysoft_gitfox-community_app_api_utils_resp.ObjectResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/github_com_easysoft_gitfox-community_app_model_scan.ScanTaskRunnerCreateResp'
+              type: object
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_easysoft_gitfox-community_app_api_utils_resp.ObjectResponse'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/github_com_easysoft_gitfox-community_app_api_utils_resp.ObjectResponse'
+      summary: 创建扫描任务（流水线 runner 回调）
       tags:
       - scan
   /scan/tasks/list:

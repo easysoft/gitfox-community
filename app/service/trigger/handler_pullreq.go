@@ -67,6 +67,8 @@ func (s *Service) handleEventPullReqMerged(
 		Ref:     fmt.Sprintf("refs/heads/%s", event.Payload.TargetBranch),
 		Match:   event.Payload.TargetBranch,
 		Commit:  event.Payload.MergeSHA,
+		// TargetSHA 是合并前目标分支的最新提交（pkg/git 的 MergeOutput.BaseSHA）
+		CommitBefore: event.Payload.TargetSHA,
 	}
 	return s.trigger(ctx, event.Payload.SourceRepoID, event.Payload.PullReqID, hook)
 }

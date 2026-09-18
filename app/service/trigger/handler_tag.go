@@ -26,11 +26,12 @@ func (s *Service) handleEventTagCreated(ctx context.Context,
 func (s *Service) handleEventTagUpdated(ctx context.Context,
 	event *events.Event[*gitevents.TagUpdatedPayload]) error {
 	hook := &triggerer.Hook{
-		Trigger: event.Payload.Account,
-		Action:  constant.TriggerActionTagUpdated,
-		Ref:     event.Payload.Ref,
-		Match:   strings.TrimPrefix(event.Payload.Ref, "refs/tags/"),
-		Commit:  event.Payload.NewSHA,
+		Trigger:      event.Payload.Account,
+		Action:       constant.TriggerActionTagUpdated,
+		Ref:          event.Payload.Ref,
+		Match:        strings.TrimPrefix(event.Payload.Ref, "refs/tags/"),
+		Commit:       event.Payload.NewSHA,
+		CommitBefore: event.Payload.OldSHA,
 	}
 	return s.trigger(ctx, event.Payload.RepoID, 0, hook)
 }

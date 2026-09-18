@@ -23,6 +23,11 @@ func NewNoopAIReview() *NoopAIReview {
 	return &NoopAIReview{}
 }
 
+// GetAIReviewConfig always reports that the feature is unavailable.
+func (s *NoopAIReview) GetAIReviewConfig(_ context.Context) (*scanModel.AIReviewConfig, error) {
+	return nil, errors.BadRequest.New("AI code review is a paid feature and is not available in this edition")
+}
+
 // GetAIReviewRules always reports that the feature is unavailable.
 func (s *NoopAIReview) GetAIReviewRules(_ context.Context) ([]*scanModel.AIReviewRule, error) {
 	return nil, errors.BadRequest.New("AI code review is a paid feature and is not available in this edition")

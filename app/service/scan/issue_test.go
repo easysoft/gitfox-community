@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/easysoft/gitfox-community/app/constant"
+	executionModel "github.com/easysoft/gitfox-community/app/model/execution"
 	repoModel "github.com/easysoft/gitfox-community/app/model/repo"
 	scanModel "github.com/easysoft/gitfox-community/app/model/scan"
 	scanStore "github.com/easysoft/gitfox-community/app/store/scan"
@@ -29,6 +30,7 @@ type fakeIssueStore struct {
 	createCalls int
 
 	created []string // 实际写入的 issue key
+	branches []string // 实际写入的 repoBranch
 }
 
 func (f *fakeIssueStore) ListExistingKeys(_ context.Context, _ []string) ([]string, error) {
@@ -42,6 +44,7 @@ func (f *fakeIssueStore) BatchCreate(_ context.Context, issues []*scanStore.Scan
 	}
 	for _, item := range issues {
 		f.created = append(f.created, item.Key)
+		f.branches = append(f.branches, item.RepoBranch)
 	}
 	return nil
 }
@@ -52,6 +55,7 @@ func (f *fakeIssueStore) Create(_ context.Context, issue *scanStore.ScanIssue) e
 		return errors.ErrDuplicate
 	}
 	f.created = append(f.created, issue.Key)
+	f.branches = append(f.branches, issue.RepoBranch)
 	return nil
 }
 
@@ -82,7 +86,7 @@ func TestAnalyzeAIIssuesAcceptsNonCompleteStatus(t *testing.T) {
 		`"start_line":3,"end_line":4,"category":"bug","severity":"high"}]}`)
 
 	report := &scanModel.ScanIssueReport{}
-	issues, err := svc.analyzeAIIssues(testAIContext(), content, 9, 7, report)
+	issues, err := svc.analyzeAIIssues(testAIContext(), content, 9, scanModel.AIScopePPM(7), report)
 
 	require.NoError(t, err)
 	require.Len(t, issues, 1)
@@ -91,8 +95,30 @@ func TestAnalyzeAIIssuesAcceptsNonCompleteStatus(t *testing.T) {
 	assert.Equal(t, int64(3), issues[0].StartLine)
 	assert.Equal(t, int64(4), issues[0].EndLine)
 	// key 里带着 ppmID，确保同一 PR 的意见能稳定去重
-	assert.Equal(t, scanModel.GenerateIssueKey(9, "", "ai/7/a.go/3/4"), issues[0].Key)
+	assert.Equal(t, scanModel.GenerateIssueKey(9, "", "ai/ppm/7/a.go/3/4"), issues[0].Key)
 	assert.Equal(t, 1, report.Total)
+}
+
+// MR（ppmID）与无 MR（executionID）来自两张互相独立的自增表，同一仓库内取值可能相同。
+// 两者作用域不同，即便 path 与行号完全一致也必须落在不同的 key 上，否则后者会被
+// insertAIIssues 的去重逻辑静默丢弃。
+func TestAnalyzeAIIssuesScopeSpacesDoNotCollide(t *testing.T) {
+	svc := &ScanTaskService{}
+	content := []byte(`{"status":"complete","comments":[` +
+		`{"path":"a.go","content":"c1","start_line":3,"end_line":4,` +
+		`"category":"bug","severity":"high"}]}`)
+
+	ppmReport := &scanModel.ScanIssueReport{}
+	ppmIssues, err := svc.analyzeAIIssues(testAIContext(), content, 9, scanModel.AIScopePPM(1), ppmReport)
+	require.NoError(t, err)
+	require.Len(t, ppmIssues, 1)
+
+	execReport := &scanModel.ScanIssueReport{}
+	execIssues, err := svc.analyzeAIIssues(testAIContext(), content, 9, scanModel.AIScopeExecution(1), execReport)
+	require.NoError(t, err)
+	require.Len(t, execIssues, 1)
+
+	assert.NotEqual(t, ppmIssues[0].Key, execIssues[0].Key)
 }
 
 func TestAnalyzeAIIssuesSkipsEmptyComments(t *testing.T) {
@@ -102,10 +128,52 @@ func TestAnalyzeAIIssuesSkipsEmptyComments(t *testing.T) {
 		[]byte(`{"status":"skipped"}`),
 	} {
 		report := &scanModel.ScanIssueReport{}
-		issues, err := svc.analyzeAIIssues(testAIContext(), content, 9, 7, report)
+		issues, err := svc.analyzeAIIssues(testAIContext(), content, 9, scanModel.AIScopePPM(7), report)
 		require.NoError(t, err)
 		assert.Empty(t, issues)
 	}
+}
+
+// repoBranch 一列只有一种格式：有 MR 时 ppm.SourceBranch 是短分支名，落库前要补成
+// 完整 ref，与 codescan 的 ExecutionRef、无 MR 的 execution.Ref 对齐；已经带前缀的
+// 输入不得重复叠加。
+func TestSaveAIIssuesNormalizesRepoBranch(t *testing.T) {
+	cases := []struct {
+		name         string
+		sourceBranch string
+		want         string
+	}{
+		{name: "短分支名补全", sourceBranch: "dev", want: "refs/heads/dev"},
+		{name: "带斜杠的分支名", sourceBranch: "feature/scan", want: "refs/heads/feature/scan"},
+		{name: "已是完整 ref 不重复叠加", sourceBranch: "refs/heads/dev", want: "refs/heads/dev"},
+	}
+
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			store := &fakeIssueStore{}
+			svc := &ScanTaskService{issueStore: store}
+			ppm := testAIPullRequest()
+			ppm.SourceBranch = tt.sourceBranch
+
+			_, _, err := svc.saveAIIssues(testAIContext(), []*scanModel.ScanIssue{testAIIssue("k1")}, ppm)
+
+			require.NoError(t, err)
+			assert.Equal(t, []string{tt.want}, store.branches)
+		})
+	}
+}
+
+// 无 MR 场景 execution.Ref 本身即完整 ref，原样落库
+func TestSaveAIIssuesForExecutionKeepsFullRef(t *testing.T) {
+	store := &fakeIssueStore{}
+	svc := &ScanTaskService{issueStore: store}
+
+	_, _, err := svc.saveAIIssuesForExecution(testAIContext(),
+		[]*scanModel.ScanIssue{testAIIssue("k1")},
+		&executionModel.Execution{ID: 3, Ref: "refs/heads/main", CreatedBy: "tester"}, 9)
+
+	require.NoError(t, err)
+	assert.Equal(t, []string{"refs/heads/main"}, store.branches)
 }
 
 // saveAIIssues 返回实际插入/跳过的条数，而不是输入条数

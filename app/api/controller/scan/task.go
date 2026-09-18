@@ -1,15 +1,14 @@
 package scan
 
 import (
-	"fmt"
 	"io"
 
 	"github.com/easysoft/gitfox-community/app/api/utils/req"
 	"github.com/easysoft/gitfox-community/app/api/utils/resp"
+	"github.com/easysoft/gitfox-community/app/constant"
 	scanModel "github.com/easysoft/gitfox-community/app/model/scan"
 	"github.com/easysoft/gitfox-community/app/service/scan"
 	"github.com/easysoft/gitfox-community/pkg/errors"
-	"github.com/easysoft/gitfox-community/pkg/git"
 	"github.com/easysoft/gitfox-community/pkg/i18n"
 	"github.com/gin-gonic/gin"
 )
@@ -52,30 +51,16 @@ func (c *ScanController) ScanTaskCreate(ctx *gin.Context) {
 		return
 	}
 
-	// 获取分支信息以取得当前 SHA 和上一次 SHA
-	shas, err := c.gitPkg.ListCommitSHAs(ctx, &git.ListCommitsParams{
-		ReadParams: git.ReadParams{RepoUID: repo.GitUID},
-		GitREF:     body.Branch,
-		Page:       1,
-		Limit:      2,
-	})
+	// 按扫描计划的 scanType 解析提交范围：增量取最新两笔、全量取同一笔
+	commitBefore, commitAfter, err := c.taskSvc.ResolveCommitRange(ctx.Request.Context(), repo.GitUID, constant.ScanType(plan.ScanType), body.Branch)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return
 	}
-	if len(shas) == 0 {
-		resp.InternalError(ctx, fmt.Errorf("no commits found on branch %s", body.Branch))
-		return
-	}
-	var sha, beforeSha string
-	sha = shas[0]
-	if len(shas) > 1 {
-		beforeSha = shas[1]
-	} else {
-		beforeSha = shas[0]
-	}
 
-	hook, err := c.taskSvc.CreateBranchHook(ctx.Request.Context(), repo, body.Branch, sha, beforeSha, session)
+	// CreateBranchHook 的形参为 sha=最新、beforeSha=次新，与 ResolveCommitRange 的
+	// 返回顺序（before 次新、after 最新）相反，故交换传入（同 Retry）
+	hook, err := c.taskSvc.CreateBranchHook(ctx.Request.Context(), repo, body.Branch, commitAfter, commitBefore, session)
 	if err != nil {
 		resp.InternalError(ctx, err)
 		return
@@ -92,6 +77,32 @@ func (c *ScanController) ScanTaskCreate(ctx *gin.Context) {
 		return
 	}
 	resp.OK(ctx, i18n.ScanTaskCreateSuccess, data)
+}
+
+// ScanTaskCreateByRunner 流水线 runner 回调创建扫描任务
+// @Summary 创建扫描任务（流水线 runner 回调）
+// @Description codescan 插件在非内嵌流水线（INNER_PIPELINE 非 "true"）中扫描前回调本接口，创建扫描任务记录并返回上报报告所需的 taskID（扫描范围由插件的 SCAN_METHOD + SCAN_REF_RANGE 声明，不由本接口解析）
+// @Tags scan
+// @Accept application/json
+// @Produce application/json
+// @Param taskInfo body scanModel.ScanTaskRunnerCreateReq true "扫描任务信息"
+// @Success 200 {object} resp.ObjectResponse{data=scanModel.ScanTaskRunnerCreateResp} "创建成功"
+// @Failure 400 {object} resp.ObjectResponse "参数错误"
+// @Failure 500 {object} resp.ObjectResponse "服务器内部错误"
+// @Router /scan/tasks/create-by-runner [post]
+func (c *ScanController) ScanTaskCreateByRunner(ctx *gin.Context) {
+	var body scanModel.ScanTaskRunnerCreateReq
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.ScanTaskBodyParamError))
+		return
+	}
+
+	res, err := c.taskSvc.CreateRunnerTask(ctx.Request.Context(), &body)
+	if err != nil {
+		resp.InternalError(ctx, err)
+		return
+	}
+	resp.OK(ctx, i18n.ScanTaskCreateSuccess, res)
 }
 
 // ScanTaskList 查询扫描任务列表
@@ -188,7 +199,7 @@ func (c *ScanController) ScanTaskUploadReport(ctx *gin.Context) {
 		return
 	}
 
-	report, err := c.taskSvc.AnalyzeTaskUploadReport(ctx.Request.Context(), 0, taskID, method, content)
+	report, err := c.taskSvc.AnalyzeTaskUploadReport(ctx.Request.Context(), 0, taskID, 0, method, content)
 	if err != nil {
 		resp.InternalError(ctx, errors.WithI18nKey(err, i18n.ScanTaskReportUploadError))
 		return

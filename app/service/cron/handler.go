@@ -19,7 +19,6 @@ import (
 	scanStore "github.com/easysoft/gitfox-community/app/store/scan"
 	"github.com/easysoft/gitfox-community/app/store/token"
 	"github.com/easysoft/gitfox-community/pkg/config"
-	"github.com/easysoft/gitfox-community/pkg/git"
 	"github.com/easysoft/gitfox-community/pkg/httpclient"
 	pkgJobs "github.com/easysoft/gitfox-community/pkg/jobs"
 	"github.com/easysoft/gitfox-community/pkg/logger"
@@ -81,16 +80,25 @@ func (h *pipelineTriggerHandler) triggerExternalPipeline(ctx context.Context, pi
 
 // triggerPipeline 通过内部 triggerer 触发流水线
 func (h *pipelineTriggerHandler) triggerPipeline(ctx context.Context, pipeline *pipelineModel.Pipeline) (string, error) {
-	gitRef, err := h.resolveGitRef(ctx, pipeline.ID)
+	// 流水线变量整体作为运行参数注入（与事件触发保持一致）
+	vars, err := h.pipelineSvc.GetPipelineVariables(ctx, pipeline.ID)
 	if err != nil {
-		return "", fmt.Errorf("failed to resolve gitRef for pipeline %d: %w", pipeline.ID, err)
+		return "", fmt.Errorf("failed to get pipeline variables for pipeline %d: %w", pipeline.ID, err)
 	}
+	// gitRef 未配置时为空串，不报错
+	gitRef := vars["gitRef"]
+
+	params := make(map[string]string, len(vars)+2)
+	for k, v := range vars {
+		params[k] = v
+	}
+	params["gitRef"] = gitRef
 
 	hook := &triggerer.Hook{
 		Action:  constant.TriggerActionCron,
 		Ref:     gitRef,
 		Trigger: "system",
-		Params:  map[string]string{"gitRef": gitRef},
+		Params:  params,
 	}
 
 	if pipeline.RepoID != 0 {
@@ -117,24 +125,11 @@ func (h *pipelineTriggerHandler) triggerPipeline(ctx context.Context, pipeline *
 	return "", nil
 }
 
-func (h *pipelineTriggerHandler) resolveGitRef(ctx context.Context, pipelineID int64) (string, error) {
-	vars, err := h.pipelineSvc.GetPipelineVariables(ctx, pipelineID)
-	if err != nil {
-		return "", fmt.Errorf("pipeline %d: failed to get pipeline variables: %w", pipelineID, err)
-	}
-	ref, ok := vars["gitRef"]
-	if !ok {
-		return "", nil
-	}
-	return ref, nil
-}
-
 type scanTriggerHandler struct {
 	taskSvc      scanSvc.IScanTask
 	planSvc      scanSvc.IScanPlan
 	triggerStore scanStore.IScanTrigger
 	repoSvc      repoSvc.Interface
-	gitSvc       git.Interface
 }
 
 type scanJobInput struct {
@@ -183,27 +178,15 @@ func (h *scanTriggerHandler) Handle(ctx context.Context, input string, _ pkgJobs
 		return "", fmt.Errorf("invalid scan trigger cron branch: %s", trigger.CronBranch)
 	}
 
-	shas, err := h.gitSvc.ListCommitSHAs(ctx, &git.ListCommitsParams{
-		ReadParams: git.ReadParams{RepoUID: repo.GitUID},
-		GitREF:     trigger.CronBranch,
-		Page:       1,
-		Limit:      2,
-	})
+	// 按扫描计划的 scanType 解析提交范围：增量取最新两笔、全量取同一笔
+	commitBefore, commitAfter, err := h.taskSvc.ResolveCommitRange(ctx, repo.GitUID, constant.ScanType(plan.ScanType), trigger.CronBranch)
 	if err != nil {
-		return "", fmt.Errorf("failed to list commit SHAs for branch %s: %w", trigger.CronBranch, err)
-	}
-	if len(shas) == 0 {
-		return "", fmt.Errorf("no commits found on branch %s", trigger.CronBranch)
-	}
-	var sha, beforeSha string
-	sha = shas[0]
-	if len(shas) > 1 {
-		beforeSha = shas[1]
-	} else {
-		beforeSha = shas[0]
+		return "", err
 	}
 
-	hook, err := h.taskSvc.CreateBranchHook(ctx, repo, trigger.CronBranch, sha, beforeSha, session)
+	// CreateBranchHook 的形参为 sha=最新、beforeSha=次新，与 ResolveCommitRange 的
+	// 返回顺序（before 次新、after 最新）相反，故交换传入（同 Retry）
+	hook, err := h.taskSvc.CreateBranchHook(ctx, repo, trigger.CronBranch, commitAfter, commitBefore, session)
 	if err != nil {
 		return "", err
 	}
@@ -307,8 +290,7 @@ func RegisterScanHandler(
 	planSvc scanSvc.IScanPlan,
 	triggerStore scanStore.IScanTrigger,
 	rs repoSvc.Interface,
-	gitSvc git.Interface,
 ) error {
-	handler := &scanTriggerHandler{taskSvc: taskSvc, planSvc: planSvc, triggerStore: triggerStore, repoSvc: rs, gitSvc: gitSvc}
+	handler := &scanTriggerHandler{taskSvc: taskSvc, planSvc: planSvc, triggerStore: triggerStore, repoSvc: rs}
 	return scheduler.RegisterHandler(scanSvc.JobTypeScanCron, handler)
 }

@@ -4,60 +4,121 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"path/filepath"
 	"regexp"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/easysoft/gitfox-community/app/api/utils/req"
 	"github.com/easysoft/gitfox-community/app/constant"
+	executionModel "github.com/easysoft/gitfox-community/app/model/execution"
 	repoModel "github.com/easysoft/gitfox-community/app/model/repo"
 	scanModel "github.com/easysoft/gitfox-community/app/model/scan"
 	scanStore "github.com/easysoft/gitfox-community/app/store/scan"
 	"github.com/easysoft/gitfox-community/pkg/database"
+	gitAPI "github.com/easysoft/gitfox-community/pkg/git/api"
 	"github.com/easysoft/gitfox-community/pkg/errors"
 	"github.com/easysoft/gitfox-community/pkg/logger"
 )
 
-// typecheckSubErrorRe 匹配 typecheck 消息中的子错误，格式：./path:line:col: message
-var typecheckSubErrorRe = regexp.MustCompile(`\./([^:]+):(\d+):(\d+):\s*([^./][^\n]*)`)
+// typecheckSubErrorRe 匹配 typecheck 消息中的一条子错误（<文件>:<行>:<列>: <错误>）。
+// 由调用方逐行匹配：golangci-lint 对 root 包的文件输出 `./main.go:1:2:`、对子目录包
+// 输出 `pkg/a.go:1:2:`（无 ./ 前缀），两种形态都要认；逐行匹配也避免单条大正则把
+// 下一行的文件路径吞进 message。
+var typecheckSubErrorRe = regexp.MustCompile(`^([^:\s]+):(\d+):(\d+):\s*(.*)$`)
 
-// expandTypecheckIssue 将 golangci-lint typecheck 的捆绑消息拆分为多条独立 issue
+// expandTypecheckIssue 将 golangci-lint typecheck 的捆绑消息拆分为多条独立 issue。
+//
+// typecheck 把同一个包内的多个编译错误塞进一条 message（首行 `# 包名`，其后每行
+// `<文件>:<行>:<列>: <错误>`），location 却只锚在包内首个文件的第 1 行。不拆开的话
+// 整包错误只算一条 issue 且位置错误——按行号做增量过滤时（codescan 插件按 git diff
+// 新增行过滤）还会因为锚点行不在改动范围内而整条丢失。
+//
+// 子错误沿用原 issue 的 tool/ruleKey/等级/类别，位置改写为自身的路径/行/列；
+// snippet、snippetWithContext 与 location.commit 属于锚点位置，一并清空避免张冠李戴。
+// codescan 插件上报前已展开的报告不会再命中 typecheckSubErrorRe，不会被二次拆分。
 func expandTypecheckIssue(check *scanModel.IssueInputCheck) []*scanModel.IssueInputCheck {
 	if check.Tool != "golangci-lint" || check.RuleKey != "typecheck" {
 		return []*scanModel.IssueInputCheck{check}
 	}
-	matches := typecheckSubErrorRe.FindAllStringSubmatch(check.Message, -1)
-	if len(matches) <= 1 {
+
+	type subError struct {
+		path    string
+		line    int64
+		col     int64
+		message string
+	}
+	var subs []subError
+	for _, line := range strings.Split(check.Message, "\n") {
+		m := typecheckSubErrorRe.FindStringSubmatch(line)
+		if m == nil {
+			continue
+		}
+		lineNo, lineErr := strconv.ParseInt(m[2], 10, 64)
+		col, colErr := strconv.ParseInt(m[3], 10, 64)
+		if lineErr != nil || colErr != nil || lineNo <= 0 {
+			continue
+		}
+		path := strings.TrimPrefix(m[1], "./")
+		// 绝对路径（仓库自带 .golangci.yml 配 path-mode: abs）与库内相对路径口径
+		// 不一致：跳过该子错误，整条 issue 保持原样
+		if filepath.IsAbs(path) {
+			continue
+		}
+		subs = append(subs, subError{
+			path:    path,
+			line:    lineNo,
+			col:     col,
+			message: strings.TrimSpace(m[4]),
+		})
+	}
+	if len(subs) == 0 {
 		return []*scanModel.IssueInputCheck{check}
 	}
-	result := make([]*scanModel.IssueInputCheck, 0, len(matches))
-	for _, m := range matches {
-		line, _ := strconv.ParseInt(m[2], 10, 64)
-		col, _ := strconv.ParseInt(m[3], 10, 64)
-		msg := m[4]
-		item := *check
-		item.Message = msg
-		item.Location.Path = m[1]
-		item.Location.Range.StartLine = line
-		item.Location.Range.EndLine = line
-		item.Location.Range.StartByte = col
+
+	result := make([]*scanModel.IssueInputCheck, 0, len(subs))
+	for _, s := range subs {
+		item := *check // 值拷贝，&item 各条独立
+		item.Message = s.message
+		item.Snippet = ""
+		item.SnippetWithContext = ""
+		// 重建 location：锚点的 range 与 commit 一律清空，只留子错误自身的位置
+		item.Location = scanModel.IssueLocation{Path: s.path}
+		item.Location.Range.StartLine = s.line
+		item.Location.Range.EndLine = s.line
+		item.Location.Range.StartColumn = s.col
 		result = append(result, &item)
 	}
 	return result
 }
 
 // AnalyzeTaskUploadReport 分析上传的扫描报告
-func (s *ScanTaskService) AnalyzeTaskUploadReport(ctx context.Context, repoID uint, taskID uint, method string, content []byte) (*scanModel.ScanIssueReport, error) {
+// taskID：codescan 场景为扫描任务 ID；AI 评审场景语义为 ppmID，可为 0（无 MR，由 executionID 归属执行）
+func (s *ScanTaskService) AnalyzeTaskUploadReport(ctx context.Context, repoID, taskID uint, executionID int64, method string, content []byte) (*scanModel.ScanIssueReport, error) {
 
 	var err error
 	task := &scanModel.ScanTaskInfo{}
 	ppm := &repoModel.PullRequest{}
+	var execution *executionModel.Execution
 
 	if method == "ai" {
-		ppm, err = s.pullRequestStore.GetByID(ctx, repoID, taskID)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get pull request: %w", err)
+		if taskID == 0 {
+			// ppmID=0 表示无 MR（推送/内嵌流水线触发）：报告归属到 executionID 对应的执行，
+			// 与 codescan create-by-runner 共用同一条执行 ID 链路
+			if executionID <= 0 {
+				return nil, fmt.Errorf("executionID is required when ppmID is 0")
+			}
+			execution, err = s.executionStore.GetByID(ctx, uint(executionID))
+			if err != nil {
+				return nil, fmt.Errorf("failed to get execution by ID %d: %w", executionID, err)
+			}
+		} else {
+			ppm, err = s.pullRequestStore.GetByID(ctx, repoID, taskID)
+			if err != nil {
+				return nil, fmt.Errorf("failed to get pull request: %w", err)
+			}
 		}
 	} else {
 		task, err = s.taskStore.GetTaskInfo(ctx, taskID)
@@ -76,7 +137,14 @@ func (s *ScanTaskService) AnalyzeTaskUploadReport(ctx context.Context, repoID ui
 	case constant.ScanMethodSmell:
 		inputIssues, err = s.analyzeSmellIssues(ctx, content, task, report)
 	case constant.ScanMethodAI:
-		inputIssues, err = s.analyzeAIIssues(ctx, content, repoID, int64(ppm.ID), report)
+		// 唯一键作用域：有 MR 用 ppmID、无 MR 用 executionID。两者来自互相独立的自增表
+		// （ops_ppm.id / ops_pipeline_executions.id），同一仓库内 ID 可能相同，故带前缀区分
+		// （key = ai/{ppm|exec}/{scopeID}/{path}/{startLine}/{endLine}）
+		scope := scanModel.AIScopePPM(int64(ppm.ID))
+		if execution != nil {
+			scope = scanModel.AIScopeExecution(int64(execution.ID))
+		}
+		inputIssues, err = s.analyzeAIIssues(ctx, content, repoID, scope, report)
 	default:
 		return nil, fmt.Errorf("unsupported scan method: %s", method)
 	}
@@ -86,10 +154,18 @@ func (s *ScanTaskService) AnalyzeTaskUploadReport(ctx context.Context, repoID ui
 
 	if scanMethod == constant.ScanMethodAI {
 		// AI 类型的 issues 直接批量插入
-		added, skipped, err := s.saveAIIssues(ctx, inputIssues, ppm)
-		if err != nil {
-			return nil, err
+		var saveErr error
+		var added, skipped int
+		if execution != nil {
+			// 无 MR 场景：以 executionID 查出的执行数据填充（createdBy/ref 等）
+			added, skipped, saveErr = s.saveAIIssuesForExecution(ctx, inputIssues, execution, int64(repoID))
+		} else {
+			added, skipped, saveErr = s.saveAIIssues(ctx, inputIssues, ppm)
 		}
+		if saveErr != nil {
+			return nil, saveErr
+		}
+
 		// Total 为本次解析出的条数，Add/Skip 为实际入库与跳过的条数
 		report.Total = len(inputIssues)
 		report.Add = added
@@ -142,18 +218,19 @@ func (s *ScanTaskService) analyzeCheckIssues(
 		return nil, fmt.Errorf("failed to unmarshal check issues: %w", err)
 	}
 
-	report.Total = len(checks)
-
 	ruleKeyMap, err := s.buildRuleKeyMapByTask(ctx, task)
 	if err != nil {
 		return nil, err
 	}
 
-	// 展开 golangci-lint typecheck 捆绑消息
+	// 展开 golangci-lint typecheck 捆绑消息（一条 message 里含多个子错误）
 	expanded := make([]*scanModel.IssueInputCheck, 0, len(checks))
 	for _, check := range checks {
 		expanded = append(expanded, expandTypecheckIssue(check)...)
 	}
+
+	// Total 取展开后的条数：展开出的子错误各自入库，与 MissingRule 等统计口径一致
+	report.Total = len(expanded)
 
 	var issues []*scanModel.ScanIssue
 	for _, check := range expanded {
@@ -218,8 +295,10 @@ func (s *ScanTaskService) analyzeSmellIssues(
 }
 
 // analyzeAIIssues 解析 ai 类型的 issues
+// scope 为 issue 唯一键的作用域标识，由 scanModel.AIScopePPM（有 MR）/ AIScopeExecution
+// （无 MR）构造，两者 ID 空间独立、不可混用
 func (s *ScanTaskService) analyzeAIIssues(
-	ctx context.Context, content []byte, repoID uint, ppmID int64, report *scanModel.ScanIssueReport,
+	ctx context.Context, content []byte, repoID uint, scope string, report *scanModel.ScanIssueReport,
 ) ([]*scanModel.ScanIssue, error) {
 	var aiReport scanModel.AIReportResponse
 	if err := json.Unmarshal(content, &aiReport); err != nil {
@@ -238,7 +317,6 @@ func (s *ScanTaskService) analyzeAIIssues(
 
 	var issues []*scanModel.ScanIssue
 	for _, comment := range aiReport.Comments {
-		comment.PpmID = ppmID
 		title := comment.Content
 		if runes := []rune(title); len(runes) > 30 {
 			title = string(runes[:30])
@@ -255,7 +333,7 @@ func (s *ScanTaskService) analyzeAIIssues(
 			Category:   constant.AiScanIssueCategory(comment.Category),
 			Severity:   constant.AiScanIssueSeverity(comment.Severity),
 		}
-		inIssue.Key = scanModel.GenerateIssueKey(int64(repoID), "", comment.UniqueKey())
+		inIssue.Key = scanModel.GenerateIssueKey(int64(repoID), "", comment.UniqueKey(scope))
 		if err := inIssue.SetPayload(scanModel.IssuePayloadAI{
 			SuggestionCode: comment.SuggestionCode,
 			ExistingCode:   comment.ExistingCode,
@@ -457,14 +535,46 @@ func (s *ScanTaskService) saveAIIssues(ctx context.Context, issues []*scanModel.
 	if len(issues) == 0 {
 		return 0, 0, nil
 	}
+	for _, item := range issues {
+		item.PpmID = int64(ppm.ID)
+		item.RepoID = int64(ppm.RepoID)
+		// repoBranch 与另外两个写入点（codescan 的 task.ExecutionRef、无 MR 的 execution.Ref）
+		// 统一为完整 ref：ppm.SourceBranch 是短分支名，直接落库会让同一列的两种格式并存，
+		// 按分支等值过滤（store/scan/issue.go 的 ListKeysByTask、issue_tree.go 的分支过滤）
+		// 和按 repoBranch 分组时命中不到
+		item.RepoBranch = gitAPI.GetReferenceFromBranchName(ppm.SourceBranch)
+	}
+	return s.insertAIIssues(ctx, issues, ppm.CreatedBy)
+}
+
+// saveAIIssuesForExecution 无 MR（ppmID=0）场景：AI issues 归属到 executionID 对应的执行，
+// 归属数据（createdBy/ref/repoID）由 execution 记录填充，与 ppm 关联的字段全部置 0/留空。
+// execution.Ref 本身即完整 ref（refs/heads/xxx、refs/pullreq/N/head），与 saveAIIssues 的
+// 归一化口径一致，这里不做转换
+func (s *ScanTaskService) saveAIIssuesForExecution(ctx context.Context, issues []*scanModel.ScanIssue, execution *executionModel.Execution, repoID int64) (int, int, error) {
+	if len(issues) == 0 {
+		return 0, 0, nil
+	}
+	for _, item := range issues {
+		item.PpmID = 0
+		item.ExecutionID = int64(execution.ID)
+		item.RepoID = repoID
+		item.RepoBranch = execution.Ref
+	}
+	return s.insertAIIssues(ctx, issues, execution.CreatedBy)
+}
+
+// insertAIIssues 直接批量插入 AI 类型的 issues（按 key 去重）
+// 返回实际插入与跳过的条数（跳过的 key 已存在）
+func (s *ScanTaskService) insertAIIssues(ctx context.Context, issues []*scanModel.ScanIssue, createdBy string) (int, int, error) {
+	if len(issues) == 0 {
+		return 0, 0, nil
+	}
 
 	rawIssues := make([]*scanStore.ScanIssue, 0, len(issues))
 	emptyResolution := constant.ScanIssueResolutionNull
 	emptyIgnoredDate := int64(0)
 	for _, item := range issues {
-		item.PpmID = int64(ppm.ID)
-		item.RepoID = int64(ppm.RepoID)
-		item.RepoBranch = ppm.SourceBranch
 		item.Status = constant.ScanIssueStatusWait
 		item.ScanMethod = constant.ScanMethodAI
 		rawIssues = append(rawIssues, &scanStore.ScanIssue{
@@ -477,13 +587,15 @@ func (s *ScanTaskService) saveAIIssues(ctx context.Context, issues []*scanModel.
 			OldCode:     item.OldCode,
 			NewCode:     item.NewCode,
 			PpmID:       item.PpmID,
+			ExecutionID: item.ExecutionID,
 			RepoID:      item.RepoID,
+			RepoBranch:  item.RepoBranch,
 			Status:      item.Status,
 			ScanMethod:  item.ScanMethod,
 			Resolution:  &emptyResolution,
 			IgnoredDate: &emptyIgnoredDate,
 			Payload:     item.Payload,
-			CreatedBy:   ppm.CreatedBy,
+			CreatedBy:   createdBy,
 			Category:    string(item.Category),
 			Severity:    string(item.Severity),
 		})
