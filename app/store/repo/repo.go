@@ -250,8 +250,8 @@ func (s *Store) GetMigrate(ctx context.Context) ([]*repoModel.Repo, error) {
 	return repoModels, nil
 }
 
-// ListGitRepos 一次性查询所有未删除的git代码库。
-func (s *Store) ListGitRepos(ctx context.Context) ([]*repoModel.Repo, error) {
+// ListAllGitRepos 一次性查询所有未删除的git代码库。
+func (s *Store) ListAllGitRepos(ctx context.Context) ([]*repoModel.Repo, error) {
 	var repos []*Repository
 	err := s.db.WithContext(ctx).
 		Where("deleted = ?", 0).
