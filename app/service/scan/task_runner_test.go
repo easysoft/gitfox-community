@@ -49,7 +49,7 @@ func newRunnerTaskFixture(t *testing.T, scanType string, repo *repoModel.Repo, l
 		nil, // config
 		taskStore, planStore,
 		nil, nil, nil, nil, nil, // solution / issue / condition / ruleSet / rule
-		&fakeRepoStore{repo: repo},
+		newRepoStoreWithRepoMock(ctrl, repo),
 		nil, nil, nil, nil, nil, nil, // pipeline / pullRequest / execution / pipelineService / triggerSvc / cronScheduler
 		lister,
 		nil, // tx
@@ -98,7 +98,7 @@ func TestCreateRunnerTask(t *testing.T) {
 		svc := NewScanTaskService(
 			nil, taskStore, planStore,
 			nil, nil, nil, nil, nil,
-			&fakeRepoStore{repo: repo},
+			newRepoStoreWithRepoMock(ctrl, repo),
 			nil, nil, nil, nil, nil, nil,
 			lister,
 			nil,

@@ -35,7 +35,7 @@ func TestScanPlanConditionService(t *testing.T) {
 			return &scanModel.ScanCondition{ID: 10, RepoID: 2, PlanID: 1, TriggerID: 0, Unit: constant.ScanRuleUnitCount, Threshold: 1}, nil
 		})
 
-		svc := NewScanPlanConditionService(&fakeRepoStore{}, planStore, conditionStore)
+		svc := NewScanPlanConditionService(newRepoStoreMock(ctrl), planStore, conditionStore)
 		got, err := svc.Create(context.Background(), newTestSession("tester"), 2, 1, scanModel.ScanPlanConditionReqForCreate{
 			Priority:  constant.ScanRulePriorityLow,
 			Type:      constant.ScanRuleTypeDefect,
@@ -56,7 +56,7 @@ func TestScanPlanConditionService(t *testing.T) {
 
 		planStore.EXPECT().GetByRepoIDAndID(gomock.Any(), uint(2), uint(1)).Return(&scanModel.ScanPlan{ID: 1, RepoID: 2}, nil)
 
-		svc := NewScanPlanConditionService(&fakeRepoStore{}, planStore, conditionStore)
+		svc := NewScanPlanConditionService(newRepoStoreMock(ctrl), planStore, conditionStore)
 		_, err := svc.Create(context.Background(), newTestSession("tester"), 2, 1, scanModel.ScanPlanConditionReqForCreate{
 			Priority:  constant.ScanRulePriorityLow,
 			Type:      constant.ScanRuleTypeDefect,
@@ -76,7 +76,7 @@ func TestScanPlanConditionService(t *testing.T) {
 
 		planStore.EXPECT().GetByRepoIDAndID(gomock.Any(), uint(2), uint(1)).Return(&scanModel.ScanPlan{ID: 1, RepoID: 2}, nil)
 
-		svc := NewScanPlanConditionService(&fakeRepoStore{}, planStore, conditionStore)
+		svc := NewScanPlanConditionService(newRepoStoreMock(ctrl), planStore, conditionStore)
 		_, err := svc.Create(context.Background(), newTestSession("tester"), 2, 1, scanModel.ScanPlanConditionReqForCreate{
 			Priority:  constant.ScanRulePriorityLow,
 			Type:      constant.ScanRuleTypeDefect,
@@ -99,7 +99,7 @@ func TestScanPlanConditionService(t *testing.T) {
 			{ID: 1, RepoID: 2, PlanID: 1, TriggerID: 0},
 		}, nil)
 
-		svc := NewScanPlanConditionService(&fakeRepoStore{}, planStore, conditionStore)
+		svc := NewScanPlanConditionService(newRepoStoreMock(ctrl), planStore, conditionStore)
 		got, err := svc.List(context.Background(), 2, 1)
 		require.NoError(t, err)
 		require.Len(t, got, 1)
@@ -116,7 +116,7 @@ func TestScanPlanConditionService(t *testing.T) {
 		planStore.EXPECT().GetByRepoIDAndID(gomock.Any(), uint(2), uint(1)).Return(&scanModel.ScanPlan{ID: 1, RepoID: 2}, nil)
 		conditionStore.EXPECT().GetByID(gomock.Any(), uint(9)).Return(&scanModel.ScanCondition{ID: 9, RepoID: 2, PlanID: 999, TriggerID: 0}, nil)
 
-		svc := NewScanPlanConditionService(&fakeRepoStore{}, planStore, conditionStore)
+		svc := NewScanPlanConditionService(newRepoStoreMock(ctrl), planStore, conditionStore)
 		_, err := svc.Find(context.Background(), 2, 1, 9)
 		require.Error(t, err)
 		assert.Equal(t, i18n.PlanConditionNotFound, pkgErrors.GetI18nKey(err))
@@ -142,7 +142,7 @@ func TestScanPlanConditionService(t *testing.T) {
 			return nil
 		})
 
-		svc := NewScanPlanConditionService(&fakeRepoStore{}, planStore, conditionStore)
+		svc := NewScanPlanConditionService(newRepoStoreMock(ctrl), planStore, conditionStore)
 		got, err := svc.Update(context.Background(), newTestSession("tester"), 2, 1, 9, scanModel.ScanPlanConditionReqForUpdate{
 			Unit:      &unit,
 			Threshold: &threshold,
@@ -165,7 +165,7 @@ func TestScanPlanConditionService(t *testing.T) {
 		planStore.EXPECT().GetByRepoIDAndID(gomock.Any(), uint(2), uint(1)).Return(&scanModel.ScanPlan{ID: 1, RepoID: 2}, nil)
 		conditionStore.EXPECT().GetByID(gomock.Any(), uint(9)).Return(&scanModel.ScanCondition{ID: 9, RepoID: 2, PlanID: 1, TriggerID: 0, Unit: constant.ScanRuleUnitCount, Threshold: 10}, nil)
 
-		svc := NewScanPlanConditionService(&fakeRepoStore{}, planStore, conditionStore)
+		svc := NewScanPlanConditionService(newRepoStoreMock(ctrl), planStore, conditionStore)
 		_, err := svc.Update(context.Background(), newTestSession("tester"), 2, 1, 9, scanModel.ScanPlanConditionReqForUpdate{
 			Unit:      &unit,
 			Threshold: &threshold,
@@ -184,7 +184,7 @@ func TestScanPlanConditionService(t *testing.T) {
 		planStore.EXPECT().GetByRepoIDAndID(gomock.Any(), uint(2), uint(1)).Return(&scanModel.ScanPlan{ID: 1, RepoID: 2}, nil)
 		conditionStore.EXPECT().GetByID(gomock.Any(), uint(9)).Return(&scanModel.ScanCondition{ID: 9, RepoID: 999, PlanID: 1, TriggerID: 0}, nil)
 
-		svc := NewScanPlanConditionService(&fakeRepoStore{}, planStore, conditionStore)
+		svc := NewScanPlanConditionService(newRepoStoreMock(ctrl), planStore, conditionStore)
 		err := svc.Delete(context.Background(), 2, 1, 9)
 		require.Error(t, err)
 		assert.Equal(t, i18n.PlanConditionNotFound, pkgErrors.GetI18nKey(err))
@@ -199,7 +199,7 @@ func TestScanPlanConditionService(t *testing.T) {
 
 		planStore.EXPECT().GetByRepoIDAndID(gomock.Any(), uint(2), uint(1)).Return(&scanModel.ScanPlan{ID: 1, RepoID: 2}, nil)
 
-		svc := NewScanPlanConditionService(&fakeRepoStore{}, planStore, conditionStore)
+		svc := NewScanPlanConditionService(newRepoStoreMock(ctrl), planStore, conditionStore)
 		err := svc.BatchCreate(context.Background(), newTestSession("tester"), 2, 1, scanModel.ScanPlanConditionReqForBatchCreate{})
 		require.Error(t, err)
 		assert.Equal(t, i18n.PlanConditionBodyParamError, pkgErrors.GetI18nKey(err))
@@ -215,7 +215,7 @@ func TestScanPlanConditionService(t *testing.T) {
 		planStore.EXPECT().GetByRepoIDAndID(gomock.Any(), uint(2), uint(1)).Return(&scanModel.ScanPlan{ID: 1, RepoID: 2}, nil)
 		conditionStore.EXPECT().ListByPlan(gomock.Any(), uint(2), uint(1)).Return([]*scanModel.ScanCondition{{ID: 7, RepoID: 2, PlanID: 1, TriggerID: 0}}, nil)
 
-		svc := NewScanPlanConditionService(&fakeRepoStore{}, planStore, conditionStore)
+		svc := NewScanPlanConditionService(newRepoStoreMock(ctrl), planStore, conditionStore)
 		err := svc.BatchDelete(context.Background(), 2, 1, scanModel.ScanPlanConditionReqForBatchDelete{IDs: []uint{7, 8}})
 		require.Error(t, err)
 		assert.Equal(t, i18n.PlanConditionNotFound, pkgErrors.GetI18nKey(err))
@@ -232,7 +232,7 @@ func TestScanPlanConditionService(t *testing.T) {
 		conditionStore.EXPECT().ListByPlan(gomock.Any(), uint(2), uint(1)).Return([]*scanModel.ScanCondition{{ID: 7, RepoID: 2, PlanID: 1, TriggerID: 0}}, nil)
 		conditionStore.EXPECT().BatchDeleteByIDs(gomock.Any(), uint(2), uint(1), []uint{7}).Return(nil)
 
-		svc := NewScanPlanConditionService(&fakeRepoStore{}, planStore, conditionStore)
+		svc := NewScanPlanConditionService(newRepoStoreMock(ctrl), planStore, conditionStore)
 		err := svc.BatchDelete(context.Background(), 2, 1, scanModel.ScanPlanConditionReqForBatchDelete{IDs: []uint{7}})
 		require.NoError(t, err)
 	})
@@ -246,7 +246,7 @@ func TestScanPlanConditionService(t *testing.T) {
 
 		planStore.EXPECT().GetByRepoIDAndID(gomock.Any(), uint(2), uint(1)).Return(nil, pkgErrors.ErrResourceNotFound)
 
-		svc := NewScanPlanConditionService(&fakeRepoStore{}, planStore, conditionStore)
+		svc := NewScanPlanConditionService(newRepoStoreMock(ctrl), planStore, conditionStore)
 		_, err := svc.Create(context.Background(), newTestSession("tester"), 2, 1, scanModel.ScanPlanConditionReqForCreate{Threshold: 1})
 		require.Error(t, err)
 		assert.Equal(t, i18n.PlanNotFound, pkgErrors.GetI18nKey(err))

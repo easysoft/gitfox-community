@@ -40,7 +40,7 @@ func NewService(store repoStore.Interface, commitCounter CommitCounter, userFind
 
 // GetCommitStatistics 遍历未删除的代码库执行git命令统计提交次数，支持按时间统计和按提交者统计。
 func (s *Service) GetCommitStatistics(ctx context.Context, req statisticsModel.ReqForCommitStatistics) (*statisticsModel.RespForCommitStatistics, error) {
-	repos, err := s.repoStore.ListGitRepos(ctx)
+	repos, err := s.repoStore.ListAllGitRepos(ctx)
 	if err != nil {
 		return nil, err
 	}

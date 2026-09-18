@@ -63,8 +63,8 @@ func TestStoreListJoinsOpsSpace(t *testing.T) {
 	}
 }
 
-// TestStoreListGitRepos 验证一次性查询只返回未删除的git代码库，且按 ID 升序排列。
-func TestStoreListGitRepos(t *testing.T) {
+// TestStoreListAllGitRepos 验证一次性查询只返回未删除的git代码库，且按 ID 升序排列。
+func TestStoreListAllGitRepos(t *testing.T) {
 	store := newTestStore(t)
 	ctx := context.Background()
 
@@ -78,9 +78,9 @@ func TestStoreListGitRepos(t *testing.T) {
 		t.Fatalf("seed repos failed: %v", err)
 	}
 
-	got, err := store.ListGitRepos(ctx)
+	got, err := store.ListAllGitRepos(ctx)
 	if err != nil {
-		t.Fatalf("ListGitRepos returned error: %v", err)
+		t.Fatalf("ListAllGitRepos returned error: %v", err)
 	}
 	if len(got) != 2 {
 		t.Fatalf("expected 2 repos, got %d(%+v)", len(got), got)
