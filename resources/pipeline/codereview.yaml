@@ -12,15 +12,13 @@ spec:
           - name: git clone
             type: plugin
             spec:
-              name: scm_git_clone
+              name: git_clone
               inputs:
                 repository: ${{parameters.gitURL}}
                 gitRef: ${{parameters.gitRef}}
                 cloneDepth: 50
                 cloneDir: ""
-          - name: codereview
-            type: run
+          - name: aireview
+            type: plugin
             spec:
-              container:
-                image: hub.zentao.net/ci/gitfox-plugin:ai-codereview
-                pull: always
+              name: aireview

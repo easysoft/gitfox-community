@@ -5838,9 +5838,47 @@ const docTemplate = `{
                 }
             }
         },
+        "/scan/aicodereview/ai-config": {
+            "get": {
+                "description": "aireview 插件在非内嵌流水线（INNER_PIPELINE 非 \"true\"）中拉取 AI 评审所需的 LLM 配置（供应商/地址/协议/密钥/模型/语言）",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scan"
+                ],
+                "summary": "获取 AI 评审配置",
+                "responses": {
+                    "200": {
+                        "description": "查询成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.AIReviewConfig"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/scan/aicodereview/{repoID}/{ppmID}/report": {
             "post": {
-                "description": "上传评审任务的报告文件，解析 issues",
+                "description": "上传评审任务的报告文件，解析 issues。ppmID 可为 0（无 MR，推送/内嵌流水线触发），此时报告按表单 executionID 归属到对应执行",
                 "consumes": [
                     "multipart/form-data"
                 ],
@@ -5854,7 +5892,14 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "合并请求 ID",
+                        "description": "仓库 ID",
+                        "name": "repoID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "合并请求 ID，可为 0（无 MR）",
                         "name": "ppmID",
                         "in": "path",
                         "required": true
@@ -5863,6 +5908,20 @@ const docTemplate = `{
                         "type": "file",
                         "description": "报告文件",
                         "name": "file",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "扫描方法（ai）",
+                        "name": "method",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "流水线执行 ID（ppmID 为 0 时必填）",
+                        "name": "executionID",
                         "in": "formData",
                         "required": true
                     }
@@ -9436,6 +9495,64 @@ const docTemplate = `{
                     },
                     "401": {
                         "description": "未授权（会话不存在或已过期）",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/scan/tasks/create-by-runner": {
+            "post": {
+                "description": "codescan 插件在非内嵌流水线（INNER_PIPELINE 非 \"true\"）中扫描前回调本接口，创建扫描任务记录并返回上报报告所需的 taskID（扫描范围由插件的 SCAN_METHOD + SCAN_REF_RANGE 声明，不由本接口解析）",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "scan"
+                ],
+                "summary": "创建扫描任务（流水线 runner 回调）",
+                "parameters": [
+                    {
+                        "description": "扫描任务信息",
+                        "name": "taskInfo",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTaskRunnerCreateReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "创建成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTaskRunnerCreateResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "参数错误",
                         "schema": {
                             "$ref": "#/definitions/gitfox_zcorp_cc_git_Pangu_gitfox-community_app_api_utils_resp.ObjectResponse"
                         }
@@ -13738,6 +13855,9 @@ const docTemplate = `{
                 "lastExecuted": {
                     "type": "string"
                 },
+                "nextExecuted": {
+                    "type": "string"
+                },
                 "result": {
                     "type": "string"
                 },
@@ -14257,6 +14377,29 @@ const docTemplate = `{
                 }
             }
         },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.AIReviewConfig": {
+            "type": "object",
+            "properties": {
+                "llmApiKey": {
+                    "type": "string"
+                },
+                "llmLanguage": {
+                    "type": "string"
+                },
+                "llmModel": {
+                    "type": "string"
+                },
+                "llmProtocol": {
+                    "type": "string"
+                },
+                "llmProvider": {
+                    "type": "string"
+                },
+                "llmUrl": {
+                    "type": "string"
+                }
+            }
+        },
         "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.Pattern": {
             "type": "object",
             "properties": {
@@ -14717,6 +14860,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "endLine": {
+                    "type": "integer"
+                },
+                "executionID": {
                     "type": "integer"
                 },
                 "id": {
@@ -15479,6 +15625,36 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "repoID": {
+                    "type": "integer"
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTaskRunnerCreateReq": {
+            "type": "object",
+            "required": [
+                "executionID",
+                "planID",
+                "repoID"
+            ],
+            "properties": {
+                "executionID": {
+                    "type": "integer"
+                },
+                "planID": {
+                    "type": "integer"
+                },
+                "repoID": {
+                    "type": "integer"
+                },
+                "triggerType": {
+                    "type": "string"
+                }
+            }
+        },
+        "gitfox_zcorp_cc_git_Pangu_gitfox-community_app_model_scan.ScanTaskRunnerCreateResp": {
+            "type": "object",
+            "properties": {
+                "taskID": {
                     "type": "integer"
                 }
             }

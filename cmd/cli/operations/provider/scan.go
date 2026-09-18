@@ -7,10 +7,16 @@ import (
 	jobsSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/jobs"
 	scanSvc "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/service/scan"
 	scanStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/scan"
+	gitPkg "gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/git"
 )
 
 func ProvideScanCronScheduler(scheduler *jobsSvc.Scheduler) scanSvc.CronScheduler {
 	return scheduler
+}
+
+// ProvideScanCommitLister 把 pkg/git 的 Service 适配为扫描任务解析提交范围所需的窄接口
+func ProvideScanCommitLister(gitSvc *gitPkg.Service) scanSvc.CommitLister {
+	return gitSvc
 }
 
 var ScanRuleSetWireSet = wire.NewSet(
@@ -44,6 +50,7 @@ var ScanRuleSetWireSet = wire.NewSet(
 	scanSvc.NewScanPlanConditionService,
 	wire.Bind(new(scanStore.IScanPlanCondition), new(*scanStore.ScanConditionStore)),
 	wire.Bind(new(scanSvc.IScanTask), new(*scanSvc.ScanTaskService)),
+	ProvideScanCommitLister,
 	scanSvc.NewScanTaskService,
 	wire.Bind(new(scanStore.IScanTask), new(*scanStore.ScanTaskStore)),
 	scanStore.NewScanTaskStore,
