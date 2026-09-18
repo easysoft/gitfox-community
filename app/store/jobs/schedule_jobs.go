@@ -84,46 +84,45 @@ func (s *Store) Upsert(ctx context.Context, job *jobModel.ScheduleJob) error {
 	storeJob := mapJobToStore(job)
 	storeJob.EditedDate = datetime.NowLocalTime()
 
-	// 1. 先按 name 查询是否已存在
-	var existing ScheduleJob
-	err := s.db.WithContext(ctx).
-		Where("name = ?", storeJob.Name).
-		First(&existing).Error
-	if err != nil && err != gorm.ErrRecordNotFound {
-		return database.ProcessSQLErrorf(ctx, err)
-	}
-
-	// 2. 不存在则插入新记录
-	if err == gorm.ErrRecordNotFound {
-		if err := s.db.WithContext(ctx).Create(storeJob).Error; err != nil {
-			return database.ProcessSQLErrorf(ctx, err)
+	// 改为事务内“先查后写”，并兼容并发插入（创建失败时重查转更新）。
+	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var existing ScheduleJob
+		err := tx.Where("name = ?", storeJob.Name).First(&existing).Error
+		switch {
+		case err == gorm.ErrRecordNotFound:
+			if createErr := tx.Create(storeJob).Error; createErr != nil {
+				// 并发下另一事务已插入同名记录：重查命中则转更新，否则返回原错误
+				if retryErr := tx.Where("name = ?", storeJob.Name).First(&existing).Error; retryErr != nil {
+					return createErr
+				}
+			} else {
+				job.ID = uint(storeJob.ID)
+				return nil
+			}
+		case err != nil:
+			return err
 		}
-		job.ID = uint(storeJob.ID)
-		return nil
-	}
 
-	// 3. 已存在则更新定义字段（仅在定义变化时更新由上层保证）
-	updates := map[string]any{
-		"editedDate":         storeJob.EditedDate,
-		"type":               storeJob.Type,
-		"priority":           storeJob.Priority,
-		"data":               storeJob.Data,
-		"result":             storeJob.Result,
-		"maxDurationSeconds": storeJob.MaxDurationSeconds,
-		"maxRetries":         storeJob.MaxRetries,
-		"state":              storeJob.State,
-		"scheduled":          storeJob.Scheduled,
-		"isRecurring":        storeJob.IsRecurring,
-		"recurringCron":      storeJob.RecurringCron,
-	}
-	if err := s.db.WithContext(ctx).
-		Model(&ScheduleJob{}).
-		Where("id = ?", existing.ID).
-		Updates(updates).Error; err != nil {
+		if err := tx.Model(&ScheduleJob{}).
+			Where("name = ?", storeJob.Name).
+			Select(upsertUpdateColumns).
+			Updates(storeJob).Error; err != nil {
+			return err
+		}
+		job.ID = uint(existing.ID)
+		return nil
+	})
+	if err != nil {
 		return database.ProcessSQLErrorf(ctx, err)
 	}
-	job.ID = uint(existing.ID)
 	return nil
+}
+
+// upsertUpdateColumns 与旧 ON DUPLICATE KEY UPDATE / MERGE 的更新列保持一致。
+var upsertUpdateColumns = []string{
+	"editedDate", "type", "priority", "data", "result",
+	"maxDurationSeconds", "maxRetries", "state",
+	"scheduled", "isRecurring", "recurringCron",
 }
 
 // UpdateDefinition is used to update a job definition.
