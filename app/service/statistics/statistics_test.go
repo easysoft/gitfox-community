@@ -58,7 +58,7 @@ func commitCount(date, author string, commits int) commitModel.CommitCount {
 // TestGetCommitStatistics 验证按时间汇总多个代码库的提交次数。
 func TestGetCommitStatistics(t *testing.T) {
 	store := mock.NewMockInterface(gomock.NewController(t))
-	store.EXPECT().ListGitRepos(gomock.Any()).Return([]*repoModel.Repo{
+	store.EXPECT().ListAllGitRepos(gomock.Any()).Return([]*repoModel.Repo{
 		{ID: 1, Identifier: "repo1", GitUID: "uid1"},
 		{ID: 2, Identifier: "repo2", GitUID: "uid2"},
 	}, nil)
@@ -99,7 +99,7 @@ func TestGetCommitStatistics(t *testing.T) {
 // TestGetCommitStatisticsByUser 验证按提交者统计时返回每个提交者的信息。
 func TestGetCommitStatisticsByUser(t *testing.T) {
 	store := mock.NewMockInterface(gomock.NewController(t))
-	store.EXPECT().ListGitRepos(gomock.Any()).Return([]*repoModel.Repo{{ID: 1, Identifier: "repo1", GitUID: "uid1"}}, nil)
+	store.EXPECT().ListAllGitRepos(gomock.Any()).Return([]*repoModel.Repo{{ID: 1, Identifier: "repo1", GitUID: "uid1"}}, nil)
 	counter := &fakeCommitCounter{
 		outputs: map[string]*git.CountCommitsOutput{
 			"uid1": newCommitStats("uid1", commitCount("2026-09-15", "admin@example.com", 1), commitCount("2026-09-15", "dev@example.com", 4)),
@@ -134,7 +134,7 @@ func TestGetCommitStatisticsByUser(t *testing.T) {
 // TestGetCommitStatisticsWithUserFilter 验证按人筛选时账号会转换为邮箱下发到git命令。
 func TestGetCommitStatisticsWithUserFilter(t *testing.T) {
 	store := mock.NewMockInterface(gomock.NewController(t))
-	store.EXPECT().ListGitRepos(gomock.Any()).Return([]*repoModel.Repo{{ID: 1, Identifier: "repo1", GitUID: "uid1"}}, nil)
+	store.EXPECT().ListAllGitRepos(gomock.Any()).Return([]*repoModel.Repo{{ID: 1, Identifier: "repo1", GitUID: "uid1"}}, nil)
 	counter := &fakeCommitCounter{outputs: map[string]*git.CountCommitsOutput{}, errs: map[string]error{}}
 	userFinder := &fakeUserFinder{byAccount: map[string]*userModel.User{
 		"admin": {Account: "admin", DisplayName: "管理员", Email: "admin@example.com"},
@@ -157,7 +157,7 @@ func TestGetCommitStatisticsWithUserFilter(t *testing.T) {
 // TestGetCommitStatisticsSkipErrorRepo 验证单个代码库统计失败时不影响其他代码库。
 func TestGetCommitStatisticsSkipErrorRepo(t *testing.T) {
 	store := mock.NewMockInterface(gomock.NewController(t))
-	store.EXPECT().ListGitRepos(gomock.Any()).Return([]*repoModel.Repo{
+	store.EXPECT().ListAllGitRepos(gomock.Any()).Return([]*repoModel.Repo{
 		{ID: 1, Identifier: "repo1", GitUID: "uid1"},
 		{ID: 2, Identifier: "repo2", GitUID: "uid2"},
 	}, nil)
@@ -184,7 +184,7 @@ func TestGetCommitStatisticsSkipErrorRepo(t *testing.T) {
 // TestGetCommitStatisticsListReposError 验证查询代码库失败时直接返回错误。
 func TestGetCommitStatisticsListReposError(t *testing.T) {
 	store := mock.NewMockInterface(gomock.NewController(t))
-	store.EXPECT().ListGitRepos(gomock.Any()).Return(nil, errors.New("query repos failed"))
+	store.EXPECT().ListAllGitRepos(gomock.Any()).Return(nil, errors.New("query repos failed"))
 	svc := NewService(store, &fakeCommitCounter{}, &fakeUserFinder{})
 
 	if _, err := svc.GetCommitStatistics(context.Background(), statisticsModel.ReqForCommitStatistics{

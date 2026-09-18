@@ -40,10 +40,6 @@ func (f *fakeRepoStore) UpdateOptLock(ctx context.Context, repo *repoModel.Repo,
 	return nil, nil
 }
 
-func (f *fakeRepoStore) FindByRef(ctx context.Context, ref string) (*repoModel.Repo, error) {
-	return nil, nil
-}
-
 func (f *fakeRepoStore) GetByID(ctx context.Context, id uint) (*repoModel.Repo, error) {
 	if f.err != nil {
 		return nil, f.err
@@ -67,6 +63,10 @@ func (f *fakeRepoStore) GetBySpaceAndIdentifier(ctx context.Context, spaceID uin
 }
 
 func (f *fakeRepoStore) List(ctx context.Context, filter repoModel.ReqFilter) (*database.PageResult[*repoModel.Repo], error) {
+	return nil, nil
+}
+
+func (f *fakeRepoStore) ListAllGitRepos(ctx context.Context) ([]*repoModel.Repo, error) {
 	return nil, nil
 }
 
