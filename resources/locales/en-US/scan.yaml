@@ -194,3 +194,4 @@ codeReview:
   report_upload_success: "Code review report uploaded successfully."
   report_upload_error: "Failed to upload code review report."
   rule_list_success: "AI code review rules queried successfully."
+  config_success: "AI review config queried successfully."

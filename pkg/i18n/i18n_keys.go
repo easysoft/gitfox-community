@@ -540,6 +540,7 @@ const (
 
 	// CodeReview 相关常量
 	CodeReviewBodyParamError      I18nKey = "codeReview.body_param_error"      // 请求体参数解析失败.
+	CodeReviewConfigSuccess       I18nKey = "codeReview.config_success"        // AI 评审配置查询成功.
 	CodeReviewPathParamError      I18nKey = "codeReview.path_param_error"      // 路径参数解析失败.
 	CodeReviewReportUploadError   I18nKey = "codeReview.report_upload_error"   // 代码评审报告上传失败.
 	CodeReviewReportUploadSuccess I18nKey = "codeReview.report_upload_success" // 代码评审报告上传成功.

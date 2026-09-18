@@ -2,14 +2,33 @@ package scan
 
 import (
 	"io"
+	"strconv"
 
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/req"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/api/utils/resp"
+	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	scanModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/errors"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/i18n"
 	"github.com/gin-gonic/gin"
 )
+
+// GetAIReviewConfig 获取 AI 评审（OCR LLM）配置
+// @Summary 获取 AI 评审配置
+// @Description aireview 插件在非内嵌流水线（INNER_PIPELINE 非 "true"）中拉取 AI 评审所需的 LLM 配置（供应商/地址/协议/密钥/模型/语言）
+// @Tags scan
+// @Produce application/json
+// @Success 200 {object} resp.ObjectResponse{data=scanModel.AIReviewConfig} "查询成功"
+// @Failure 500 {object} resp.ObjectResponse "服务器内部错误"
+// @Router /scan/aicodereview/ai-config [get]
+func (c *ScanController) GetAIReviewConfig(ctx *gin.Context) {
+	config, err := c.aicodereviewSvc.GetAIReviewConfig(ctx.Request.Context())
+	if err != nil {
+		resp.InternalError(ctx, err)
+		return
+	}
+	resp.OK(ctx, i18n.CodeReviewConfigSuccess, config)
+}
 
 func (c *ScanController) GetAIReviewRules(ctx *gin.Context) {
 	result, err := c.aicodereviewSvc.GetAIReviewRules(ctx.Request.Context())
@@ -22,12 +41,15 @@ func (c *ScanController) GetAIReviewRules(ctx *gin.Context) {
 
 // ReviewTaskUploadReport 上传评审任务报告
 // @Summary 上传评审任务报告
-// @Description 上传评审任务的报告文件，解析 issues
+// @Description 上传评审任务的报告文件，解析 issues。ppmID 可为 0（无 MR，推送/内嵌流水线触发），此时报告按表单 executionID 归属到对应执行
 // @Tags scan
 // @Accept multipart/form-data
 // @Produce application/json
-// @Param ppmID path uint true "合并请求 ID"
+// @Param repoID path uint true "仓库 ID"
+// @Param ppmID path uint true "合并请求 ID，可为 0（无 MR）"
 // @Param file formData file true "报告文件"
+// @Param method formData string true "扫描方法（ai）"
+// @Param executionID formData int true "流水线执行 ID（ppmID 为 0 时必填）"
 // @Success 200 {object} resp.ObjectResponse{data=scanModel.ScanIssueReport} "上传成功"
 // @Failure 400 {object} resp.ObjectResponse "参数错误"
 // @Failure 500 {object} resp.ObjectResponse "服务器内部错误"
@@ -39,7 +61,8 @@ func (c *ScanController) ReviewTaskUploadReport(ctx *gin.Context) {
 		return
 	}
 
-	ppmID, err := req.PathParamAsPositiveUint(ctx, "ppmID")
+	// ppmID 允许为 0：语义为无 MR（推送/内嵌流水线触发），报告归属由 executionID 决定
+	ppmID, err := req.PathParamAsNaturalNum(ctx, "ppmID")
 	if err != nil {
 		resp.BadRequest(ctx, errors.WithI18nKey(err, i18n.CodeReviewPathParamError))
 		return
@@ -59,13 +82,23 @@ func (c *ScanController) ReviewTaskUploadReport(ctx *gin.Context) {
 	}
 
 	method := ctx.Request.FormValue("method")
-	if method == "" {
+	if method == "" || (method != string(constant.ScanMethodAI)) {
+		resp.BadRequest(ctx, errors.WithI18nKey(nil, i18n.CodeReviewBodyParamError))
+		return
+	}
+
+	// executionID（GITFOX_EXECUTION_ID）为数字字符串；ppmID=0（无 MR）时必须携带非 0 值
+	var executionID int64
+	if executionID, err = strconv.ParseInt(ctx.Request.FormValue("executionID"), 10, 64); err != nil {
+		executionID = 0
+	}
+	if ppmID == 0 && executionID <= 0 {
 		resp.BadRequest(ctx, errors.WithI18nKey(nil, i18n.CodeReviewBodyParamError))
 		return
 	}
 
 	var report *scanModel.ScanIssueReport
-	report, err = c.taskSvc.AnalyzeTaskUploadReport(ctx.Request.Context(), repoID, ppmID, method, content)
+	report, err = c.taskSvc.AnalyzeTaskUploadReport(ctx.Request.Context(), repoID, ppmID, executionID, method, content)
 	if err != nil {
 		resp.InternalError(ctx, errors.WithI18nKey(err, i18n.CodeReviewReportUploadError))
 		return

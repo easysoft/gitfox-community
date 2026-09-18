@@ -12,15 +12,13 @@ spec:
           - name: git clone
             type: plugin
             spec:
-              name: scm_git_clone
+              name: git_clone
               inputs:
                 repository: ${{parameters.gitURL}}
                 gitRef: ${{parameters.gitRef}}
                 cloneDepth: 50
                 cloneDir: ""
           - name: codescan
-            type: run
+            type: plugin
             spec:
-              container:
-                image: hub.zentao.net/ci/gitfoxscan:gitfox-community
-                pull: always
+              name: codescan
