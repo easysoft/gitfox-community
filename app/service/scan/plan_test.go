@@ -7,7 +7,7 @@ import (
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/app/constant"
 	repoModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/repo"
 	scanModel "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/model/scan"
-	repoStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo"
+	repoStoreMock "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/repo/mock"
 	scanStore "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/scan"
 	scanStoreMock "gitfox.zcorp.cc/git/Pangu/gitfox-community/app/store/scan/mock"
 	"gitfox.zcorp.cc/git/Pangu/gitfox-community/pkg/database"
@@ -18,59 +18,32 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-type fakeRepoStore struct {
-	repo *repoModel.Repo
-	err  error
+// newRepoStoreMock 构造 repo store mock：GetByID 至少命中一次，返回一个存在的 repo。
+// scan 各 service 方法入口都会先做 repo 存在性校验，个别路径会二次校验（如 Create 内部
+// 再走一遍 GetByID），故用 MinTimes 而非固定次数。
+func newRepoStoreMock(ctrl *gomock.Controller) *repoStoreMock.MockInterface {
+	m := repoStoreMock.NewMockInterface(ctrl)
+	m.EXPECT().GetByID(gomock.Any(), gomock.Any()).Return(&repoModel.Repo{}, nil).MinTimes(1)
+	return m
 }
 
-// GetMigrate implements [repo.Interface].
-func (f *fakeRepoStore) GetMigrate(ctx context.Context) ([]*repoModel.Repo, error) {
-	return nil, nil
+// newRepoStoreErrMock 同 newRepoStoreMock，但 GetByID 返回 err，用于覆盖 repo 不存在的分支。
+func newRepoStoreErrMock(ctrl *gomock.Controller, err error) *repoStoreMock.MockInterface {
+	m := repoStoreMock.NewMockInterface(ctrl)
+	m.EXPECT().GetByID(gomock.Any(), gomock.Any()).Return(nil, err)
+	return m
 }
 
-func (f *fakeRepoStore) Create(ctx context.Context, repo *repoStore.Repository) (*repoModel.Repo, error) {
-	return nil, nil
-}
-
-func (f *fakeRepoStore) Update(ctx context.Context, repo *repoStore.Repository, id uint) (*repoModel.Repo, error) {
-	return nil, nil
-}
-
-func (f *fakeRepoStore) UpdateOptLock(ctx context.Context, repo *repoModel.Repo, mutateFn func(repo *repoModel.Repo) error) (*repoModel.Repo, error) {
-	return nil, nil
-}
-
-func (f *fakeRepoStore) GetByID(ctx context.Context, id uint) (*repoModel.Repo, error) {
-	if f.err != nil {
-		return nil, f.err
-	}
-	if f.repo != nil {
-		return f.repo, nil
-	}
-	return &repoModel.Repo{ID: id}, nil
-}
-
-func (f *fakeRepoStore) Delete(ctx context.Context, id uint) error {
-	return nil
-}
-
-func (f *fakeRepoStore) HardDelete(ctx context.Context, id uint) error {
-	return nil
-}
-
-func (f *fakeRepoStore) GetBySpaceAndIdentifier(ctx context.Context, spaceID uint, identifier string) (*repoModel.Repo, error) {
-	return nil, nil
-}
-
-func (f *fakeRepoStore) List(ctx context.Context, filter repoModel.ReqFilter) (*database.PageResult[*repoModel.Repo], error) {
-	return nil, nil
-}
-
-func (f *fakeRepoStore) ListAllGitRepos(ctx context.Context) ([]*repoModel.Repo, error) {
-	return nil, nil
+// newRepoStoreWithRepoMock 同上，但 GetByID 返回指定的 repo；调用次数不限，
+// 用于 repoStore 只是装配依赖、不是被测关注点的场景。
+func newRepoStoreWithRepoMock(ctrl *gomock.Controller, repo *repoModel.Repo) *repoStoreMock.MockInterface {
+	m := repoStoreMock.NewMockInterface(ctrl)
+	m.EXPECT().GetByID(gomock.Any(), gomock.Any()).Return(repo, nil).AnyTimes()
+	return m
 }
 
 func newScanPlanServiceForTest(
+	repoStore *repoStoreMock.MockInterface,
 	planStore scanStore.IScanPlan,
 	solutionStore scanStore.ISolution,
 	ruleSetStore scanStore.IRuleSet,
@@ -78,27 +51,36 @@ func newScanPlanServiceForTest(
 	triggerStore scanStore.IScanTrigger,
 	conditionStore scanStore.IScanPlanCondition,
 ) *ScanPlanService {
-	return NewScanPlanService(planStore, &fakeRepoStore{}, solutionStore, ruleSetStore, ruleStore, triggerStore, conditionStore)
+	return NewScanPlanService(planStore, repoStore, solutionStore, ruleSetStore, ruleStore, triggerStore, conditionStore)
 }
 
 func TestScanPlanServiceCreate(t *testing.T) {
 	t.Parallel()
 
 	t.Run("repo not found", func(t *testing.T) {
-		svc := NewScanPlanService(nil, &fakeRepoStore{err: errors.ErrResourceNotFound}, nil, nil, nil, nil, nil)
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		svc := NewScanPlanService(nil, newRepoStoreErrMock(ctrl, errors.ErrResourceNotFound), nil, nil, nil, nil, nil)
 		_, err := svc.Create(context.Background(), newTestSession("tester"), 1, scanModel.ScanPlanReqForCreate{Name: "plan-a", SolutionIDs: []uint{1}})
 		require.Error(t, err)
 		assert.Equal(t, i18n.RepoNotFound, errors.GetI18nKey(err))
 	})
 
 	t.Run("solutionIDs required", func(t *testing.T) {
-		svc := NewScanPlanService(nil, &fakeRepoStore{}, nil, nil, nil, nil, nil)
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		svc := NewScanPlanService(nil, newRepoStoreMock(ctrl), nil, nil, nil, nil, nil)
 		_, err := svc.Create(context.Background(), newTestSession("tester"), 1, scanModel.ScanPlanReqForCreate{Name: "plan-a"})
 		require.Error(t, err)
 	})
 
 	t.Run("invalid branches pattern json", func(t *testing.T) {
-		svc := NewScanPlanService(nil, &fakeRepoStore{}, nil, nil, nil, nil, nil)
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		svc := NewScanPlanService(nil, newRepoStoreMock(ctrl), nil, nil, nil, nil, nil)
 		_, err := svc.Create(context.Background(), newTestSession("tester"), 1, scanModel.ScanPlanReqForCreate{
 			Name:        "plan-a",
 			SolutionIDs: []uint{1},
@@ -111,7 +93,10 @@ func TestScanPlanServiceCreate(t *testing.T) {
 	})
 
 	t.Run("invalid scan type", func(t *testing.T) {
-		svc := NewScanPlanService(nil, &fakeRepoStore{}, nil, nil, nil, nil, nil)
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		svc := NewScanPlanService(nil, newRepoStoreMock(ctrl), nil, nil, nil, nil, nil)
 		_, err := svc.Create(context.Background(), newTestSession("tester"), 1, scanModel.ScanPlanReqForCreate{
 			Name:        "plan-a",
 			SolutionIDs: []uint{1},
@@ -129,7 +114,7 @@ func TestScanPlanServiceCreate(t *testing.T) {
 		solutionStore := scanStoreMock.NewMockISolution(ctrl)
 		solutionStore.EXPECT().GetByID(gomock.Any(), uint(1)).Return(nil, errors.ErrResourceNotFound)
 
-		svc := NewScanPlanService(planStore, &fakeRepoStore{}, solutionStore, nil, nil, nil, nil)
+		svc := NewScanPlanService(planStore, newRepoStoreMock(ctrl), solutionStore, nil, nil, nil, nil)
 		_, err := svc.Create(context.Background(), newTestSession("tester"), 1, scanModel.ScanPlanReqForCreate{Name: "plan-a", SolutionIDs: []uint{1}})
 		require.Error(t, err)
 		assert.Equal(t, i18n.SolutionNotFound, errors.GetI18nKey(err))
@@ -144,7 +129,7 @@ func TestScanPlanServiceCreate(t *testing.T) {
 		solutionStore.EXPECT().GetByID(gomock.Any(), uint(1)).Return(&scanModel.Solution{ID: 1}, nil)
 		planStore.EXPECT().FindByName(gomock.Any(), uint(1), "plan-a").Return(&scanModel.ScanPlan{ID: 9}, nil)
 
-		svc := NewScanPlanService(planStore, &fakeRepoStore{}, solutionStore, nil, nil, nil, nil)
+		svc := NewScanPlanService(planStore, newRepoStoreMock(ctrl), solutionStore, nil, nil, nil, nil)
 		_, err := svc.Create(context.Background(), newTestSession("tester"), 1, scanModel.ScanPlanReqForCreate{Name: "plan-a", SolutionIDs: []uint{1}})
 		require.Error(t, err)
 	})
@@ -181,7 +166,7 @@ func TestScanPlanServiceCreate(t *testing.T) {
 		triggerStore.EXPECT().List(gomock.Any(), uint(1), uint(11), scanModel.ScanTriggerReqFilter{Page: 1, PageSize: 1000}).Return(&database.PageResult[*scanModel.ScanTrigger]{Data: nil}, nil)
 		conditionStore.EXPECT().ListByPlan(gomock.Any(), uint(1), uint(11)).Return(nil, nil)
 
-		svc := NewScanPlanService(planStore, &fakeRepoStore{}, solutionStore, nil, nil, triggerStore, conditionStore)
+		svc := NewScanPlanService(planStore, newRepoStoreMock(ctrl), solutionStore, nil, nil, triggerStore, conditionStore)
 		got, err := svc.Create(context.Background(), newTestSession("tester"), 1, scanModel.ScanPlanReqForCreate{
 			Name:        "plan-a",
 			SolutionIDs: []uint{2, 3},
@@ -232,7 +217,7 @@ func TestScanPlanServiceGetByIDEnrichesCounts(t *testing.T) {
 	triggerStore.EXPECT().List(gomock.Any(), uint(2), uint(11), scanModel.ScanTriggerReqFilter{Page: 1, PageSize: 1000}).Return(&database.PageResult[*scanModel.ScanTrigger]{Data: []*scanModel.ScanTrigger{{ID: 21}, {ID: 22}}}, nil)
 	conditionStore.EXPECT().ListByPlan(gomock.Any(), uint(2), uint(11)).Return([]*scanModel.ScanCondition{{ID: 31}, {ID: 32}}, nil)
 
-	svc := NewScanPlanService(planStore, &fakeRepoStore{}, solutionStore, nil, nil, triggerStore, conditionStore)
+	svc := NewScanPlanService(planStore, newRepoStoreMock(ctrl), solutionStore, nil, nil, triggerStore, conditionStore)
 	got, err := svc.GetByID(context.Background(), 2, 11)
 	require.NoError(t, err)
 	require.NotNil(t, got)
@@ -259,7 +244,7 @@ func TestScanPlanServiceUpdateDuplicateName(t *testing.T) {
 	planStore.EXPECT().GetByRepoIDAndID(gomock.Any(), uint(1), uint(1)).Return(&scanModel.ScanPlan{ID: 1, RepoID: 1, Name: "plan-a"}, nil)
 	planStore.EXPECT().FindByName(gomock.Any(), uint(1), "plan-b").Return(&scanModel.ScanPlan{ID: 2, RepoID: 1, Name: "plan-b"}, nil)
 
-	svc := NewScanPlanService(planStore, &fakeRepoStore{}, nil, nil, nil, nil, nil)
+	svc := NewScanPlanService(planStore, newRepoStoreMock(ctrl), nil, nil, nil, nil, nil)
 	_, err := svc.Update(context.Background(), newTestSession("tester"), 1, 1, scanModel.ScanPlanReqForUpdate{
 		Name: "plan-b",
 	})
@@ -270,7 +255,10 @@ func TestScanPlanServiceUpdateDuplicateName(t *testing.T) {
 func TestScanPlanServiceUpdateValidatePatterns(t *testing.T) {
 	t.Parallel()
 
-	svc := NewScanPlanService(nil, &fakeRepoStore{}, nil, nil, nil, nil, nil)
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	svc := NewScanPlanService(nil, newRepoStoreMock(ctrl), nil, nil, nil, nil, nil)
 	_, err := svc.Update(context.Background(), newTestSession("tester"), 1, 1, scanModel.ScanPlanReqForUpdate{
 		Branches: &scanModel.Pattern{
 			Include: []string{""},
@@ -283,7 +271,10 @@ func TestScanPlanServiceUpdateValidatePatterns(t *testing.T) {
 func TestScanPlanServiceUpdateInvalidScanType(t *testing.T) {
 	t.Parallel()
 
-	svc := NewScanPlanService(nil, &fakeRepoStore{}, nil, nil, nil, nil, nil)
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	svc := NewScanPlanService(nil, newRepoStoreMock(ctrl), nil, nil, nil, nil, nil)
 	_, err := svc.Update(context.Background(), newTestSession("tester"), 1, 1, scanModel.ScanPlanReqForUpdate{
 		ScanType: "delta",
 	})
@@ -295,8 +286,10 @@ func TestScanPlanServiceListRules(t *testing.T) {
 	t.Parallel()
 
 	t.Run("repo not found", func(t *testing.T) {
-		svc := newScanPlanServiceForTest(nil, nil, nil, nil, nil, nil)
-		svc.repoStore = &fakeRepoStore{err: errors.ErrResourceNotFound}
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		svc := newScanPlanServiceForTest(newRepoStoreErrMock(ctrl, errors.ErrResourceNotFound), nil, nil, nil, nil, nil, nil)
 
 		_, _, err := svc.ListRules(context.Background(), 1, 2, 0)
 		require.Error(t, err)
@@ -310,7 +303,7 @@ func TestScanPlanServiceListRules(t *testing.T) {
 		planStore := scanStoreMock.NewMockIScanPlan(ctrl)
 		planStore.EXPECT().GetByRepoIDAndID(gomock.Any(), uint(1), uint(2)).Return(nil, errors.ErrResourceNotFound)
 
-		svc := newScanPlanServiceForTest(planStore, nil, nil, nil, nil, nil)
+		svc := newScanPlanServiceForTest(newRepoStoreMock(ctrl), planStore, nil, nil, nil, nil, nil)
 		_, _, err := svc.ListRules(context.Background(), 1, 2, 0)
 		require.Error(t, err)
 		assert.Equal(t, i18n.PlanNotFound, errors.GetI18nKey(err))
@@ -325,7 +318,7 @@ func TestScanPlanServiceListRules(t *testing.T) {
 		planStore.EXPECT().GetByRepoIDAndID(gomock.Any(), uint(1), uint(2)).Return(&scanModel.ScanPlan{ID: 2, RepoID: 1}, nil)
 		triggerStore.EXPECT().GetByRepoPlanAndID(gomock.Any(), uint(1), uint(2), uint(9)).Return(nil, errors.ErrResourceNotFound)
 
-		svc := newScanPlanServiceForTest(planStore, nil, nil, nil, triggerStore, nil)
+		svc := newScanPlanServiceForTest(newRepoStoreMock(ctrl), planStore, nil, nil, nil, triggerStore, nil)
 		_, _, err := svc.ListRules(context.Background(), 1, 2, 9)
 		require.Error(t, err)
 		assert.Equal(t, i18n.TriggerNotFound, errors.GetI18nKey(err))
@@ -339,7 +332,7 @@ func TestScanPlanServiceListRules(t *testing.T) {
 		planStore.EXPECT().GetByRepoIDAndID(gomock.Any(), uint(1), uint(2)).Return(&scanModel.ScanPlan{ID: 2, RepoID: 1}, nil)
 		planStore.EXPECT().GetSolutionIDList(gomock.Any(), uint(2)).Return([]int64{}, nil)
 
-		svc := newScanPlanServiceForTest(planStore, nil, nil, nil, nil, nil)
+		svc := newScanPlanServiceForTest(newRepoStoreMock(ctrl), planStore, nil, nil, nil, nil, nil)
 		_, got, err := svc.ListRules(context.Background(), 1, 2, 0)
 		require.NoError(t, err)
 		assert.Empty(t, got)
@@ -365,7 +358,7 @@ func TestScanPlanServiceListRules(t *testing.T) {
 		ruleSetStore.EXPECT().GetRuleIDList(gomock.Any(), uint(103)).Return([]int64{1001, 1003}, nil)
 		ruleStore.EXPECT().ListByIDs(gomock.Any(), []int64{1001, 1002, 1003}).Return([]*scanModel.Rule{{ID: 1001, Status: constant.ScanRuleStatusEnabled, Name: "r1"}, {ID: 1002, Status: constant.ScanRuleStatusDisabled, Name: "r2"}, {ID: 1003, Status: constant.ScanRuleStatusEnabled, Name: "r3"}}, nil)
 
-		svc := newScanPlanServiceForTest(planStore, solutionStore, ruleSetStore, ruleStore, nil, nil)
+		svc := newScanPlanServiceForTest(newRepoStoreMock(ctrl), planStore, solutionStore, ruleSetStore, ruleStore, nil, nil)
 		_, got, err := svc.ListRules(context.Background(), 1, 2, 0)
 		require.NoError(t, err)
 		require.Len(t, got, 2)
@@ -391,7 +384,7 @@ func TestScanPlanServiceListRules(t *testing.T) {
 		ruleSetStore.EXPECT().GetRuleIDList(gomock.Any(), uint(101)).Return([]int64{1001}, nil)
 		ruleStore.EXPECT().ListByIDs(gomock.Any(), []int64{1001}).Return([]*scanModel.Rule{{ID: 1001, Status: constant.ScanRuleStatusEnabled}}, nil)
 
-		svc := newScanPlanServiceForTest(planStore, solutionStore, ruleSetStore, ruleStore, triggerStore, nil)
+		svc := newScanPlanServiceForTest(newRepoStoreMock(ctrl), planStore, solutionStore, ruleSetStore, ruleStore, triggerStore, nil)
 		_, got, err := svc.ListRules(context.Background(), 1, 2, 8)
 		require.NoError(t, err)
 		require.Len(t, got, 1)
