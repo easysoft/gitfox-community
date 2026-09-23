@@ -102,7 +102,7 @@ go vet ./...          # 静态检查
 
 本项目采用 **ZPL 1.2 / AGPL 3.0 双许可**，你可任选其一。详见 [LICENSE](./LICENSE)。
 
-Copyright 2009-2026 禅道软件（青岛）有限公司(ZenTao Software (Qingdao) Co., Ltd. www.zentao.net)
+Copyright 2009-2026 渠成极客软件（青岛）有限公司(Qucheng Geek Software (Qingdao) Co., Ltd. www.gitfox.net)
 
 ### 第三方开源代码
 
