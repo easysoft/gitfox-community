@@ -102,7 +102,19 @@ go vet ./...          # 静态检查
 
 本项目采用 **ZPL 1.2 / AGPL 3.0 双许可**，你可任选其一。详见 [LICENSE](./LICENSE)。
 
-Copyright 2009-2026 禅道软件（青岛）有限公司 (ZenTao Software (Qingdao) Co., Ltd.)
+Copyright 2009-2026 禅道软件（青岛）有限公司(ZenTao Software (Qingdao) Co., Ltd. www.zentao.net)
+
+### 第三方开源代码
+
+本项目部分代码派生自其他开源项目，相关文件**保留其原始版权与许可头**，具体如下：
+
+| 来源 | 许可 | 主要位置 |
+| --- | --- | --- |
+| Harness, Inc. | Apache License 2.0 | `pkg/git/`、`pkg/livelog/`、`pkg/stream/`、`pkg/ssh/` 等 |
+| Drone.IO Inc. | Polyform License（以源文件头为准） | `pkg/runner/docker/engine2/`、`pkg/pipeline/spec/parse/` 等 |
+| Docker, Inc. | Apache License 2.0 | `pkg/runner/docker/internal/docker/stdcopy/` |
+
+本项目还依赖 `go.mod` 中列出的第三方 Go 模块，各模块遵循其各自的许可协议。分发本项目时，请一并遵守上述第三方许可条款。
 
 ## 贡献
 
