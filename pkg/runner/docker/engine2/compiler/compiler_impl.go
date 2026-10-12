@@ -87,6 +87,11 @@ type CompilerImpl struct {
 	// mounted to each pipeline container.
 	Volumes map[string]string
 
+	// DockerSocket lists image name patterns (substring match) whose step
+	// containers additionally get the host docker socket mounted at
+	// /var/run/docker.sock. Empty means the socket is never mounted.
+	DockerSocket []string
+
 	// ExtraHosts provides a set of hostname mappings that
 	// should be setup for each pipeline container.
 	ExtraHosts []string
@@ -560,6 +565,29 @@ func (c *CompilerImpl) Compile(ctx context.Context, args Args) (*engine.Spec, er
 				Labels:    stageLabels,
 			}
 			spec.Volumes = append(spec.Volumes, src)
+		}
+	}
+
+	// mount the host docker socket into matching step containers only.
+	// This grants the container host-root-equivalent access to the docker
+	// daemon, so it is scoped to an explicit image list.
+	if len(c.DockerSocket) > 0 {
+		id := random()
+		spec.Volumes = append(spec.Volumes, &engine.Volume{
+			HostPath: &engine.VolumeHostPath{
+				ID:   id,
+				Name: "_docker_socket",
+				Path: "/var/run/docker.sock",
+			},
+		})
+		for _, step := range spec.Steps {
+			if !image.MatchAny(step.Image, c.DockerSocket) {
+				continue
+			}
+			step.Volumes = append(step.Volumes, &engine.VolumeMount{
+				Name: "_docker_socket",
+				Path: "/var/run/docker.sock",
+			})
 		}
 	}
 
