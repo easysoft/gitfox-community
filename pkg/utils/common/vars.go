@@ -15,6 +15,15 @@ var (
 	GitBranch     string
 )
 
+// edition 表示当前发行版本，社区版默认为 "community"，付费版启动时通过 SetEdition 设置为 "pro"。
+var edition = "community"
+
+// Edition 返回当前发行版本标识。
+func Edition() string { return edition }
+
+// SetEdition 设置当前发行版本标识，供付费版启动时调用。
+func SetEdition(e string) { edition = e }
+
 // VersionInfo 是 `gitfox version` 命令对外暴露的结构化版本信息。
 //
 // 该结构体被两处共用：
