@@ -104,6 +104,7 @@ func registerPublicRoutes(r *gin.Engine, controller *Controller) {
 		public.GET("/health", func(c *gin.Context) {
 			c.JSON(200, gin.H{
 				"status":    "healthy",
+				"edition":   common.Edition(),
 				"version":   common.Version,
 				"gitCommit": common.GitCommitHash,
 				"gitBranch": common.GitBranch,
