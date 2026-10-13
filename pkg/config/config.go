@@ -5,6 +5,7 @@
 package config
 
 import (
+	"strings"
 	"time"
 )
 
@@ -92,6 +93,15 @@ type SQLiteConfig struct {
 // DockerConfig Docker配置
 type DockerConfig struct {
 	ApiVersion string `envconfig:"GITFOX_DOCKER_API_VERSION" yaml:"apiVersion" default:"1.44"` // 用string类型兼容版本号格式
+	Host       string `envconfig:"DOCKER_HOST" yaml:"host"`                                    // daemon 地址，如 unix:///var/run/docker.sock
+}
+
+// SocketPath 从 unix host 解析宿主机 socket 路径，非 unix host 返回空。
+func (c DockerConfig) SocketPath() string {
+	if !strings.HasPrefix(c.Host, "unix://") {
+		return ""
+	}
+	return strings.TrimPrefix(c.Host, "unix://")
 }
 
 // GitConfig Git配置

@@ -88,9 +88,13 @@ type CompilerImpl struct {
 	Volumes map[string]string
 
 	// DockerSocket lists image name patterns (substring match) whose step
-	// containers additionally get the host docker socket mounted at
-	// /var/run/docker.sock. Empty means the socket is never mounted.
+	// containers additionally get the host docker socket mounted.
+	// Empty means the socket is never mounted.
 	DockerSocket []string
+
+	// DockerSocketPath is the host path of the docker socket mounted into
+	// matching containers. Empty falls back to /var/run/docker.sock.
+	DockerSocketPath string
 
 	// ExtraHosts provides a set of hostname mappings that
 	// should be setup for each pipeline container.
@@ -572,12 +576,16 @@ func (c *CompilerImpl) Compile(ctx context.Context, args Args) (*engine.Spec, er
 	// This grants the container host-root-equivalent access to the docker
 	// daemon, so it is scoped to an explicit image list.
 	if len(c.DockerSocket) > 0 {
+		socketPath := c.DockerSocketPath
+		if socketPath == "" {
+			socketPath = "/var/run/docker.sock"
+		}
 		id := random()
 		spec.Volumes = append(spec.Volumes, &engine.Volume{
 			HostPath: &engine.VolumeHostPath{
 				ID:   id,
 				Name: "_docker_socket",
-				Path: "/var/run/docker.sock",
+				Path: socketPath,
 			},
 		})
 		for _, step := range spec.Steps {
@@ -586,7 +594,7 @@ func (c *CompilerImpl) Compile(ctx context.Context, args Args) (*engine.Spec, er
 			}
 			step.Volumes = append(step.Volumes, &engine.VolumeMount{
 				Name: "_docker_socket",
-				Path: "/var/run/docker.sock",
+				Path: socketPath,
 			})
 		}
 	}

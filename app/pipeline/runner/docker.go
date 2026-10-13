@@ -109,14 +109,15 @@ func newDockerRunner(
 	exec2 := runtime2.NewExecer(tracer, remote, upload, engine2, int64(config.Ci.ParallelWorkers))
 
 	compiler2 := &compiler2.CompilerImpl{
-		Environ:      provider.Combine(provider.Static(map[string]string{}), stageEnvProvider),
-		PipelineSvc:  pipelineSvc,
-		Secret:       secret.Encrypted(),
-		ExtraHosts:   extraHosts,
-		Privileged:   Privileged,
-		Networks:     config.Ci.ContainerNetworks,
-		Mount:        config.Ci.ContainerVolume,
-		DockerSocket: []string{"build_docker"},
+		Environ:          provider.Combine(provider.Static(map[string]string{}), stageEnvProvider),
+		PipelineSvc:      pipelineSvc,
+		Secret:           secret.Encrypted(),
+		ExtraHosts:       extraHosts,
+		Privileged:       Privileged,
+		Networks:         config.Ci.ContainerNetworks,
+		Mount:            config.Ci.ContainerVolume,
+		DockerSocket:     []string{"build_docker"},
+		DockerSocketPath: config.Docker.SocketPath(),
 	}
 
 	runner := &runtime2.Runner{
