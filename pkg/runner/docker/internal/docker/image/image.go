@@ -52,6 +52,19 @@ func Match(from string, to ...string) bool {
 	return false
 }
 
+// MatchAny reports whether the image name contains any of the given
+// patterns. Patterns are matched as plain substrings (no tag trimming),
+// which lets a caller scope an image by registry/repository/tag prefix,
+// e.g. "gitfox-plugin:build_docker". An empty pattern list never matches.
+func MatchAny(image string, patterns []string) bool {
+	for _, p := range patterns {
+		if p != "" && strings.Contains(image, p) {
+			return true
+		}
+	}
+	return false
+}
+
 // MatchTag returns true if the image name matches
 // an image in the list, including the tag.
 func MatchTag(a, b string) bool {

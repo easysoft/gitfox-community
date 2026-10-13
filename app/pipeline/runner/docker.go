@@ -18,9 +18,9 @@ import (
 	"github.com/drone/runner-go/registry"
 	"github.com/drone/runner-go/secret"
 
+	"github.com/easysoft/gitfox-community/app/pipeline/resolver"
 	"github.com/easysoft/gitfox-community/app/service/pipeline"
 	"github.com/easysoft/gitfox-community/pkg/config"
-	"github.com/easysoft/gitfox-community/app/pipeline/resolver"
 	"github.com/easysoft/gitfox-community/pkg/runner/docker/engine"
 	"github.com/easysoft/gitfox-community/pkg/runner/docker/engine/compiler"
 	"github.com/easysoft/gitfox-community/pkg/runner/docker/engine/linter"
@@ -109,13 +109,15 @@ func newDockerRunner(
 	exec2 := runtime2.NewExecer(tracer, remote, upload, engine2, int64(config.Ci.ParallelWorkers))
 
 	compiler2 := &compiler2.CompilerImpl{
-		Environ:     provider.Combine(provider.Static(map[string]string{}), stageEnvProvider),
-		PipelineSvc: pipelineSvc,
-		Secret:      secret.Encrypted(),
-		ExtraHosts:  extraHosts,
-		Privileged:  Privileged,
-		Networks:    config.Ci.ContainerNetworks,
-		Mount:       config.Ci.ContainerVolume,
+		Environ:          provider.Combine(provider.Static(map[string]string{}), stageEnvProvider),
+		PipelineSvc:      pipelineSvc,
+		Secret:           secret.Encrypted(),
+		ExtraHosts:       extraHosts,
+		Privileged:       Privileged,
+		Networks:         config.Ci.ContainerNetworks,
+		Mount:            config.Ci.ContainerVolume,
+		DockerSocket:     []string{"build_docker"},
+		DockerSocketPath: config.Docker.SocketPath(),
 	}
 
 	runner := &runtime2.Runner{
