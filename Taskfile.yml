@@ -362,4 +362,4 @@ tasks:
     desc: download ci plugin
     cmds:
       - mkdir -p resources/ciPlugins
-      - wget -O resources/ciPlugins/plugins.tar.gz https://pkg.zentao.net/qucheng/gitfox/pro/4.3/plugin.tar.gz
+      - wget -O resources/ciPlugins/plugins.tar.gz https://pkg.zentao.net/qucheng/gitfox/community/4.3/plugin.tar.gz
