@@ -55,7 +55,7 @@ ENV GITFOX_SSH_PORT=3322
 ENV GITFOX_LOG_LEVEL=0
 ENV GITFOX_DOCKER_HOST=unix:///var/run/docker.sock
 
-ENV GITFOX_CI_PLUGINS_ZIP_URL=https://pkg.zentao.net/gitfox/2.0_beta1/plugins.tar.gz
+ENV GITFOX_CI_PLUGINS_ZIP_URL=/app/ciPlugins/plugins.tar.gz
 
 COPY bin/linux-${TARGETARCH}/gitfox /app/gitfox
 COPY configs/prod.env /app/prod.env
