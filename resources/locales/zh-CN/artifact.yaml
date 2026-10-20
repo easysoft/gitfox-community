@@ -139,7 +139,7 @@ artifact:
   move_source_deleted: "源实体已软删除或不存在."
   move_target_invalid: "目标位置无效（制品库或目标组不存在）."
   rename_entity_type_invalid: "不支持的重命名实体类型."
-  rename_container_not_supported: "container 格式制品不支持重命名；镜像名称是推拉地址的一部分，重命名会导致客户端地址失效。"
+  rename_container_not_supported: "container 格式的镜像包/版本不支持重命名；镜像名称是推拉地址的一部分，重命名会导致客户端地址失效。"
   rename_versioned_not_supported: "不支持重命名版本化包或包含版本化包的组."
   rename_sibling_conflict: "同级已存在同名实体."
   rename_source_deleted: "源实体已软删除或不存在."

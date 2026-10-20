@@ -138,7 +138,7 @@ artifact:
   move_source_deleted: "Source entity is soft-deleted or not found."
   move_target_invalid: "Target artifact or group is invalid."
   rename_entity_type_invalid: "Unsupported entity type for rename."
-  rename_container_not_supported: "Container artifacts cannot be renamed. The image name is part of the push/pull address, and renaming it would break client references."
+  rename_container_not_supported: "Container image packages/versions cannot be renamed. The image name is part of the push/pull address, and renaming it would break client references."
   rename_versioned_not_supported: "Rename is not allowed on versioned packages or groups containing them."
   rename_sibling_conflict: "Sibling with the same name already exists."
   rename_source_deleted: "Source entity is soft-deleted or not found."
