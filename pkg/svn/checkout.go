@@ -53,6 +53,7 @@ func (s *Service) Checkout(ctx context.Context, params *CheckoutParams) error {
 	}
 
 	cmd := command.New("checkout",
+		command.WithFlag("--non-interactive"),
 		command.WithArg(sourceURL),
 		command.WithArg(targetPath),
 		withCheckoutAuth(params.Username, params.Password),

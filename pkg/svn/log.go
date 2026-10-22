@@ -82,6 +82,7 @@ func (s *Service) Log(ctx context.Context, params *LogParams) (string, error) {
 	}
 
 	cmd := command.New("log",
+		command.WithFlag("--non-interactive"),
 		command.WithArg(target),
 		withLogAuth(params.Username, params.Password),
 	)

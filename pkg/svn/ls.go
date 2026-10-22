@@ -64,6 +64,7 @@ func (s *Service) Ls(ctx context.Context, params *LsParams) (string, error) {
 	}
 
 	cmd := command.New("ls",
+		command.WithFlag("--non-interactive"),
 		command.WithArg(target),
 		withLsAuth(params.Username, params.Password),
 	)

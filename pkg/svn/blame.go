@@ -64,6 +64,7 @@ func (s *Service) Blame(ctx context.Context, params *BlameParams) (string, error
 	}
 
 	cmd := command.New("blame",
+		command.WithFlag("--non-interactive"),
 		command.WithArg(target),
 		withBlameAuth(params.Username, params.Password),
 	)

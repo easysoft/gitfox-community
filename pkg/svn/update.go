@@ -36,6 +36,7 @@ func (s *Service) Update(ctx context.Context, params *UpdateParams) error {
 	}
 
 	cmd := command.New("update",
+		command.WithFlag("--non-interactive"),
 		command.WithArg(s.workingCopyPath(params.SvnUID)),
 	)
 	if err := cmd.Run(ctx); err != nil {

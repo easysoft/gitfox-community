@@ -61,6 +61,7 @@ func (s *Service) Cat(ctx context.Context, params *CatParams) (string, error) {
 	}
 
 	cmd := command.New("cat",
+		command.WithFlag("--non-interactive"),
 		command.WithArg(target),
 		withCatAuth(params.Username, params.Password),
 	)

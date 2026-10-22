@@ -7,6 +7,9 @@ package svn
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/pem"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -15,6 +18,7 @@ import (
 
 	"github.com/easysoft/gitfox-community/pkg/config"
 	"github.com/easysoft/gitfox-community/pkg/errors"
+	"github.com/easysoft/gitfox-community/pkg/logger"
 	"github.com/easysoft/gitfox-community/pkg/svn/command"
 	"github.com/hashicorp/go-version"
 )
@@ -32,6 +36,8 @@ const (
 	reposDir = "repos"
 	// wcSuffix is appended to the repository directory name for working copies.
 	wcSuffix = "-wc"
+	// caDir is the subdirectory under svnRoot holding split CA certificates.
+	caDir = "ca"
 )
 
 // repoPath returns the filesystem path for a repository: {svnRoot}/repos/{svnUID}
@@ -49,9 +55,153 @@ func (s *Service) FileURL(svnUID string) string {
 	return "file://" + s.repoPath(svnUID)
 }
 
-// New creates a new SVN Service. It verifies that the svn binary is available on PATH.
+// New creates a new SVN Service. It applies the optional TLS trust settings from
+// config and prepares the configured CA bundle for svn/svnsync.
 func New(cfg *config.Config) (*Service, error) {
+	command.SSLAuthorityFiles = ""
+	command.TrustServerCertFailures = ""
+
+	// 显式 CA 文件与全局 TLS 降级不能同时使用，避免安全兜底掩盖真实问题。
+	if cfg.SVN.SSLAuthorityFile != "" && cfg.SVN.TrustServerCertFailures != "" {
+		return nil, errors.New("svn ssl authority file and trust-server-cert-failures cannot be configured together")
+	}
+
+	if cfg.SVN.TrustServerCertFailures != "" {
+		failures, err := normalizeTrustServerCertFailures(cfg.SVN.TrustServerCertFailures)
+		if err != nil {
+			return nil, err
+		}
+		command.TrustServerCertFailures = failures
+		logger.Warnf("SVN TLS certificate verification is relaxed (trust-server-cert-failures=%s): "+
+			"all SVN HTTPS connections will accept certificates with these failures; "+
+			"use only for temporary troubleshooting", failures)
+	}
+
+	if cfg.SVN.SSLAuthorityFile != "" {
+		authorityFiles, err := splitAuthorityFile(cfg.SVN.SSLAuthorityFile, filepath.Join(cfg.SVN.Root, caDir))
+		if err != nil {
+			return nil, err
+		}
+		command.SSLAuthorityFiles = authorityFiles
+	}
+
 	return &Service{svnRoot: cfg.SVN.Root}, nil
+}
+
+var allowedTrustServerCertFailures = map[string]struct{}{
+	"unknown-ca":    {},
+	"cn-mismatch":   {},
+	"expired":       {},
+	"not-yet-valid": {},
+	"other":         {},
+}
+
+// normalizeTrustServerCertFailures 校验并规范化 svn 的 trust-server-cert-failures 配置。
+func normalizeTrustServerCertFailures(raw string) (string, error) {
+	var values []string
+	seen := make(map[string]struct{})
+	for part := range strings.SplitSeq(raw, ",") {
+		v := strings.ToLower(strings.TrimSpace(part))
+		if v == "" {
+			continue
+		}
+		if _, ok := allowedTrustServerCertFailures[v]; !ok {
+			return "", errors.Newf(
+				"invalid svn trust-server-cert-failures value %q (allowed: unknown-ca, cn-mismatch, expired, not-yet-valid, other)", v)
+		}
+		if _, ok := seen[v]; ok {
+			continue
+		}
+		seen[v] = struct{}{}
+		values = append(values, v)
+	}
+	if len(values) == 0 {
+		return "", errors.New("svn trust-server-cert-failures must contain at least one value")
+	}
+	return strings.Join(values, ","), nil
+}
+
+// splitAuthorityFile 把 PEM bundle 拆成单证书文件，返回以分号分隔的文件列表。
+// svn 的 ssl-authority-files 每个文件只读取第一张证书，直接把系统大 bundle
+// 传给它会导致只有第一张证书生效，因此这里先拆分。
+func splitAuthorityFile(src, dstDir string) (string, error) {
+	info, err := os.Stat(src)
+	if err != nil {
+		return "", errors.Wrapf(err, "failed to read svn ssl authority file %q", src)
+	}
+	if runtime.GOOS != "windows" && info.Mode().Perm()&0o022 != 0 {
+		logger.Warnf("SVN ssl authority file %q is writable by group/others and could be replaced to inject a CA", src)
+	}
+
+	data, err := os.ReadFile(src)
+	if err != nil {
+		return "", errors.Wrapf(err, "failed to read svn ssl authority file %q", src)
+	}
+
+	// 目录必须存在且不是符号链接，权限收紧到 0700，避免拆分文件被他人替换。
+	if info, err := os.Lstat(dstDir); err == nil && info.Mode()&os.ModeSymlink != 0 {
+		return "", errors.Newf("svn ssl authority dir %q must not be a symlink", dstDir)
+	}
+	if err := os.MkdirAll(dstDir, 0o700); err != nil {
+		return "", errors.Wrapf(err, "failed to create svn ssl authority dir %q", dstDir)
+	}
+	if err := os.Chmod(dstDir, 0o700); err != nil {
+		return "", errors.Wrapf(err, "failed to secure svn ssl authority dir %q", dstDir)
+	}
+
+	var paths []string
+	seen := make(map[string]struct{})
+	for {
+		var block *pem.Block
+		block, data = pem.Decode(data)
+		if block == nil {
+			break
+		}
+		if block.Type != "CERTIFICATE" {
+			continue
+		}
+
+		sum := sha256.Sum256(block.Bytes)
+		path := filepath.Join(dstDir, hex.EncodeToString(sum[:16])+".pem")
+		if _, ok := seen[path]; ok {
+			continue
+		}
+		seen[path] = struct{}{}
+
+		if err := writeFileAtomic(path, pem.EncodeToMemory(block), 0o600); err != nil {
+			return "", errors.Wrapf(err, "failed to write svn ssl authority file %q", path)
+		}
+		paths = append(paths, path)
+	}
+
+	if len(paths) == 0 {
+		return "", errors.Newf("no certificate found in svn ssl authority file %q", src)
+	}
+	return strings.Join(paths, ";"), nil
+}
+
+// writeFileAtomic 通过临时文件 + rename 写入，避免跟随目标路径上已存在的符号链接。
+func writeFileAtomic(path string, data []byte, perm os.FileMode) error {
+	dir := filepath.Dir(path)
+	tmp, err := os.CreateTemp(dir, ".tmp-ca-*")
+	if err != nil {
+		return err
+	}
+	tmpName := tmp.Name()
+	defer os.Remove(tmpName)
+
+	if _, err := tmp.Write(data); err != nil {
+		tmp.Close()
+		return err
+	}
+	if err := tmp.Chmod(perm); err != nil {
+		tmp.Close()
+		return err
+	}
+	if err := tmp.Close(); err != nil {
+		return err
+	}
+	return os.Rename(tmpName, path)
 }
 
 // Version returns the parsed SVN version from running `svn --version`.
