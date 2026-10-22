@@ -136,7 +136,13 @@ func (r *Repository) LoadRepositoryFromProvider(
 ) (RepositoryInfo, repoModel.Provider, error) {
 
 	if provider.Type == constant.RepoProviderTypeSVN {
-		cloneURL := fmt.Sprintf("%s/%s", provider.Host, provider.Slug)
+		cloneURL, err := buildSVNCloneURL(provider.Host, provider.Slug)
+		if err != nil {
+			return RepositoryInfo{}, provider, errors.WithI18nKey(
+				errors.BadRequest.Wrap(err, "invalid svn repository url"),
+				i18n.RepoImportSvnNotFoundOrUnreachable,
+			)
+		}
 
 		// 保证远端代码库可用
 		if _, err := r.svn.InfoRevision(ctx, cloneURL, provider.Username, provider.Password); err != nil {
@@ -190,6 +196,17 @@ func (r *Repository) LoadRepositoryFromProvider(
 		DefaultBranch: scmRepo.Branch,
 		IsPublic:      !scmRepo.Private,
 	}, provider, nil
+}
+
+// buildSVNCloneURL joins the provider host and repository slug into a canonical
+// SVN URL. url.JoinPath collapses duplicate slashes, drops trailing slashes and
+// resolves "." / "..", matching the svn client's own URI canonicalization.
+func buildSVNCloneURL(host, slug string) (string, error) {
+	u, err := url.Parse(host)
+	if err != nil {
+		return "", err
+	}
+	return u.JoinPath(strings.Trim(slug, "/")).String(), nil
 }
 
 func (r *Repository) Run(ctx context.Context, provider repoModel.Provider, repo *repoModel.Repo, cloneURL string, mirror bool, noticeLang string) error {

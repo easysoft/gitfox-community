@@ -48,6 +48,17 @@ func WithEnv(keyValPairs ...string) CmdOptionFunc {
 	}
 }
 
+// WithTLS sets the TLS trust settings injected into svn/svnsync commands.
+// authorityFiles is a semicolon-separated list of single-certificate CA files;
+// trustServerCertFailures is a comma-separated list of certificate failure types
+// to ignore. Only svn and svnsync consume these settings; svnadmin ignores them.
+func WithTLS(authorityFiles, trustServerCertFailures string) CmdOptionFunc {
+	return func(c *Command) {
+		c.SSLAuthorityFiles = authorityFiles
+		c.TrustServerCertFailures = trustServerCertFailures
+	}
+}
+
 // RunOption contains option for running a command.
 type RunOption struct {
 	// Dir is location of repo.

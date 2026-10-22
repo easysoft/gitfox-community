@@ -63,7 +63,8 @@ func (s *Service) Blame(ctx context.Context, params *BlameParams) (string, error
 		target = filepath.Join(target, params.Subpath)
 	}
 
-	cmd := command.New("blame",
+	cmd := s.newCommand("blame",
+		command.WithFlag("--non-interactive"),
 		command.WithArg(target),
 		withBlameAuth(params.Username, params.Password),
 	)
