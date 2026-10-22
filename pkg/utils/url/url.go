@@ -262,9 +262,24 @@ func (p *provider) GenerateMirrorGITCloneSSHURL(_ context.Context, providerURL, 
 }
 
 func (p *provider) GenerateMirrorSVNCloneURL(_ context.Context, providerURL, slug string) string {
-	u, err := url.Parse(providerURL)
+	cloneURL, err := JoinSVNURL(providerURL, slug)
 	if err != nil {
 		return ""
+	}
+	return cloneURL
+}
+
+// JoinSVNURL joins a provider URL and repository slug into a canonical SVN URL.
+//
+// Besides the normal "providerURL + slug" form, it tolerates legacy provider
+// data where the host has no authority separator, e.g. providerURL "svn:/" with
+// slug "host/path", or providerURL "svn:/host/path" with an empty slug. svn only
+// recognizes "scheme://host/path" as a remote URL; "scheme:/host/path" is treated
+// as a local path, so the first slug segment is promoted to the host when missing.
+func JoinSVNURL(providerURL, slug string) (string, error) {
+	u, err := url.Parse(providerURL)
+	if err != nil {
+		return "", err
 	}
 
 	// Normalize "scheme:///path" → "scheme://host/path".
@@ -290,24 +305,36 @@ func (p *provider) GenerateMirrorSVNCloneURL(_ context.Context, providerURL, slu
 			hostAndPath += "/" + p
 		}
 		if hostAndPath == trimmedSlug {
-			return u.String()
+			return u.String(), nil
 		}
 	}
 
 	// Dedup: slug = path only — providerURL's path already matches.
 	if trimmedPath := strings.Trim(u.Path, "/"); trimmedPath != "" && trimmedPath == trimmedSlug {
-		return u.String()
+		return u.String(), nil
+	}
+
+	// Dedup: slug repeats the host — legacy data may store the host in both
+	// fields, e.g. providerURL "svn://host/" with slug "host//repo".
+	if u.Host != "" {
+		if slugHost, slugPath, ok := strings.Cut(trimmedSlug, "/"); ok && strings.EqualFold(slugHost, u.Host) {
+			slugPath = strings.TrimLeft(slugPath, "/")
+			if slugPath == "" {
+				return u.String(), nil
+			}
+			return u.JoinPath(slugPath).String(), nil
+		}
 	}
 
 	// Build: no host in providerURL — the slug provides the host.
 	if u.Host == "" {
 		if idx := strings.Index(trimmedSlug, "/"); idx > 0 {
-			return u.Scheme + "://" + trimmedSlug[:idx] + "/" + trimmedSlug[idx+1:]
+			return u.Scheme + "://" + trimmedSlug[:idx] + "/" + trimmedSlug[idx+1:], nil
 		}
-		return u.Scheme + "://" + trimmedSlug
+		return u.Scheme + "://" + trimmedSlug, nil
 	}
 
-	return u.JoinPath(slug).String()
+	return u.JoinPath(trimmedSlug).String(), nil
 }
 
 func (p *provider) GenerateUIBuildURL(_ context.Context, repoPath, pipelineIdentifier string, seqNumber int64) string {
