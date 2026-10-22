@@ -35,7 +35,7 @@ func (s *Service) Update(ctx context.Context, params *UpdateParams) error {
 		return err
 	}
 
-	cmd := command.New("update",
+	cmd := s.newCommand("update",
 		command.WithFlag("--non-interactive"),
 		command.WithArg(s.workingCopyPath(params.SvnUID)),
 	)

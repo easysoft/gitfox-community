@@ -52,7 +52,7 @@ func (s *Service) Checkout(ctx context.Context, params *CheckoutParams) error {
 		return errors.Wrapf(ErrCheckout, "failed to create target directory %s: %v", targetPath, err)
 	}
 
-	cmd := command.New("checkout",
+	cmd := s.newCommand("checkout",
 		command.WithFlag("--non-interactive"),
 		command.WithArg(sourceURL),
 		command.WithArg(targetPath),

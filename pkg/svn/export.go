@@ -64,7 +64,7 @@ func (s *Service) Export(ctx context.Context, params *ExportParams, w io.Writer)
 	}()
 
 	exportDir := filepath.Join(tempDir, "repository")
-	cmd := command.New("export",
+	cmd := s.newCommand("export",
 		command.WithFlag("--non-interactive", "--no-auth-cache"),
 		command.WithArg(s.FileURL(params.SvnUID)),
 		command.WithArg(exportDir),

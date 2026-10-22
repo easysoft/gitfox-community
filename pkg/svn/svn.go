@@ -29,6 +29,12 @@ type Service struct {
 	traceSvn bool
 	// svnRoot is the root directory for SVN repository storage.
 	svnRoot string
+	// sslAuthorityFiles holds the semicolon-separated single-certificate CA files
+	// injected into every svn/svnsync command run by this service.
+	sslAuthorityFiles string
+	// trustServerCertFailures holds the certificate failure types ignored by
+	// svn/svnsync commands run by this service.
+	trustServerCertFailures string
 }
 
 const (
@@ -57,35 +63,51 @@ func (s *Service) FileURL(svnUID string) string {
 
 // New creates a new SVN Service. It applies the optional TLS trust settings from
 // config and prepares the configured CA bundle for svn/svnsync.
+//
+// TLS trust settings are stored on the Service (not in package-level state), so
+// multiple Services with different configurations can coexist in one process.
+// All validation and preparation happens before the Service is constructed: on
+// error, no partially applied configuration is left behind.
 func New(cfg *config.Config) (*Service, error) {
-	command.SSLAuthorityFiles = ""
-	command.TrustServerCertFailures = ""
-
 	// 显式 CA 文件与全局 TLS 降级不能同时使用，避免安全兜底掩盖真实问题。
 	if cfg.SVN.SSLAuthorityFile != "" && cfg.SVN.TrustServerCertFailures != "" {
 		return nil, errors.New("svn ssl authority file and trust-server-cert-failures cannot be configured together")
 	}
 
+	var trustServerCertFailures string
 	if cfg.SVN.TrustServerCertFailures != "" {
 		failures, err := normalizeTrustServerCertFailures(cfg.SVN.TrustServerCertFailures)
 		if err != nil {
 			return nil, err
 		}
-		command.TrustServerCertFailures = failures
+		trustServerCertFailures = failures
 		logger.Warnf("SVN TLS certificate verification is relaxed (trust-server-cert-failures=%s): "+
 			"all SVN HTTPS connections will accept certificates with these failures; "+
 			"use only for temporary troubleshooting", failures)
 	}
 
+	var sslAuthorityFiles string
 	if cfg.SVN.SSLAuthorityFile != "" {
 		authorityFiles, err := splitAuthorityFile(cfg.SVN.SSLAuthorityFile, filepath.Join(cfg.SVN.Root, caDir))
 		if err != nil {
 			return nil, err
 		}
-		command.SSLAuthorityFiles = authorityFiles
+		sslAuthorityFiles = authorityFiles
 	}
 
-	return &Service{svnRoot: cfg.SVN.Root}, nil
+	return &Service{
+		svnRoot:                 cfg.SVN.Root,
+		sslAuthorityFiles:       sslAuthorityFiles,
+		trustServerCertFailures: trustServerCertFailures,
+	}, nil
+}
+
+// newCommand creates an SVN command carrying this Service's TLS trust settings.
+// Passing the settings explicitly per command keeps them scoped to the Service
+// instance instead of shared process-wide state.
+func (s *Service) newCommand(name string, options ...command.CmdOptionFunc) *command.Command {
+	options = append(options, command.WithTLS(s.sslAuthorityFiles, s.trustServerCertFailures))
+	return command.New(name, options...)
 }
 
 var allowedTrustServerCertFailures = map[string]struct{}{
@@ -210,7 +232,7 @@ func writeFileAtomic(path string, data []byte, perm os.FileMode) error {
 //	svn, version 1.14.2 (r1899510)
 //	   compiled Feb 13 2023, 22:39:16 on x86_64-unknown-linux-gnu
 func (s *Service) Version(ctx context.Context) (*version.Version, error) {
-	cmd := command.New("", command.WithFlag("--version"))
+	cmd := s.newCommand("", command.WithFlag("--version"))
 	output := &bytes.Buffer{}
 	if err := cmd.Run(ctx, command.WithStdout(output)); err != nil {
 		return nil, errors.Wrapf(ErrFailedToGetVersion, "%v", err)
@@ -251,7 +273,7 @@ func (s *Service) CreateRepository(ctx context.Context, svnUID string) error {
 		return errors.Wrapf(ErrCreateRepository, "failed to create parent directory %s: %v", parentDir, err)
 	}
 
-	cmd := command.New("create",
+	cmd := s.newCommand("create",
 		command.WithExecutable(command.SvnadminExecutable),
 		command.WithArg(path),
 	)

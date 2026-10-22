@@ -14,7 +14,6 @@ import (
 	"testing"
 
 	"github.com/easysoft/gitfox-community/pkg/config"
-	"github.com/easysoft/gitfox-community/pkg/svn/command"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -174,17 +173,44 @@ func TestNormalizeTrustServerCertFailures(t *testing.T) {
 }
 
 func TestNewRejectsAuthorityFileWithTrustFailures(t *testing.T) {
-	oldAuthorityFiles, oldFailures := command.SSLAuthorityFiles, command.TrustServerCertFailures
-	t.Cleanup(func() {
-		command.SSLAuthorityFiles, command.TrustServerCertFailures = oldAuthorityFiles, oldFailures
-	})
-
 	_, err := New(&config.Config{SVN: config.SvnConfig{
 		SSLAuthorityFile:        "/tmp/ca.pem",
 		TrustServerCertFailures: "unknown-ca",
 	}})
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "cannot be configured together")
+}
+
+// TestNewTLSConfigIsPerService 验证 TLS 配置挂在 Service 实例上：
+// 创建/失败构造新的 Service 都不会改写已有实例的配置。
+func TestNewTLSConfigIsPerService(t *testing.T) {
+	dir := t.TempDir()
+	src := filepath.Join(dir, "bundle.pem")
+	cert := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: []byte("cert-one")})
+	require.NoError(t, os.WriteFile(src, cert, 0o600))
+
+	withCA, err := New(&config.Config{SVN: config.SvnConfig{
+		Root:             dir,
+		SSLAuthorityFile: src,
+	}})
+	require.NoError(t, err)
+	require.NotEmpty(t, withCA.sslAuthorityFiles)
+
+	// 再创建一个不带 TLS 配置的 Service，不能影响已有实例。
+	plain, err := New(&config.Config{SVN: config.SvnConfig{Root: dir}})
+	require.NoError(t, err)
+	assert.Empty(t, plain.sslAuthorityFiles)
+	assert.Empty(t, plain.trustServerCertFailures)
+	assert.NotEmpty(t, withCA.sslAuthorityFiles)
+
+	// 构造失败也不能留下半初始化状态或改写已有实例。
+	_, err = New(&config.Config{SVN: config.SvnConfig{
+		Root:                    dir,
+		TrustServerCertFailures: "bogus",
+	}})
+	require.Error(t, err)
+	assert.NotEmpty(t, withCA.sslAuthorityFiles)
+	assert.Empty(t, withCA.trustServerCertFailures)
 }
 
 func TestSplitAuthorityFileNoCertificate(t *testing.T) {

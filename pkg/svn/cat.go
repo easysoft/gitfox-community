@@ -60,7 +60,7 @@ func (s *Service) Cat(ctx context.Context, params *CatParams) (string, error) {
 		target = filepath.Join(target, params.Subpath)
 	}
 
-	cmd := command.New("cat",
+	cmd := s.newCommand("cat",
 		command.WithFlag("--non-interactive"),
 		command.WithArg(target),
 		withCatAuth(params.Username, params.Password),

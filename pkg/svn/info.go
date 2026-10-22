@@ -71,7 +71,7 @@ func (s *Service) Info(ctx context.Context, params *InfoParams) (string, error) 
 		target = strings.TrimRight(target, "/") + "/" + strings.TrimLeft(params.Subpath, "/")
 	}
 
-	cmd := command.New("info",
+	cmd := s.newCommand("info",
 		command.WithFlag("--non-interactive"),
 		command.WithArg(target),
 		withInfoAuth(params.Username, params.Password),

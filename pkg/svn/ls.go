@@ -63,7 +63,7 @@ func (s *Service) Ls(ctx context.Context, params *LsParams) (string, error) {
 		target = filepath.Join(target, params.Subpath)
 	}
 
-	cmd := command.New("ls",
+	cmd := s.newCommand("ls",
 		command.WithFlag("--non-interactive"),
 		command.WithArg(target),
 		withLsAuth(params.Username, params.Password),

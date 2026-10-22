@@ -42,15 +42,9 @@ func TestRunInheritsEnv(t *testing.T) {
 }
 
 func TestSSLArgs(t *testing.T) {
-	oldAuthorityFile, oldFailures := SSLAuthorityFiles, TrustServerCertFailures
-	t.Cleanup(func() {
-		SSLAuthorityFiles, TrustServerCertFailures = oldAuthorityFile, oldFailures
-	})
-
-	SSLAuthorityFiles = "/etc/ssl/certs/ca-certificates.crt"
-	TrustServerCertFailures = "unknown-ca"
-
-	const authorityArg = "servers:global:ssl-authority-files=/etc/ssl/certs/ca-certificates.crt"
+	const authorityFiles = "/etc/ssl/certs/ca-certificates.crt"
+	const trustFailures = "unknown-ca"
+	const authorityArg = "servers:global:ssl-authority-files=" + authorityFiles
 
 	tests := []struct {
 		name       string
@@ -62,13 +56,13 @@ func TestSSLArgs(t *testing.T) {
 			name:       "svn uses trust-server-cert-failures",
 			executable: SvnExecutable,
 			subcommand: "info",
-			want:       []string{"--config-option", authorityArg, "--trust-server-cert-failures=unknown-ca"},
+			want:       []string{"--config-option", authorityArg, "--trust-server-cert-failures=" + trustFailures},
 		},
 		{
 			name:       "svnsync uses source-trust-server-cert-failures",
 			executable: SvnsyncExecutable,
 			subcommand: "init",
-			want:       []string{"--config-option", authorityArg, "--source-trust-server-cert-failures=unknown-ca"},
+			want:       []string{"--config-option", authorityArg, "--source-trust-server-cert-failures=" + trustFailures},
 		},
 		{
 			name:       "svnadmin is not injected",
@@ -86,7 +80,13 @@ func TestSSLArgs(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := sslArgs(tt.executable, tt.subcommand); !reflect.DeepEqual(got, tt.want) {
+			cmd := &Command{
+				Executable:              tt.executable,
+				Name:                    tt.subcommand,
+				SSLAuthorityFiles:       authorityFiles,
+				TrustServerCertFailures: trustFailures,
+			}
+			if got := cmd.sslArgs(); !reflect.DeepEqual(got, tt.want) {
 				t.Fatalf("sslArgs() = %v, want %v", got, tt.want)
 			}
 		})
@@ -131,15 +131,10 @@ func TestEnvKeys(t *testing.T) {
 }
 
 func TestMakeArgsInjectsSSLArgs(t *testing.T) {
-	oldAuthorityFile, oldFailures := SSLAuthorityFiles, TrustServerCertFailures
-	t.Cleanup(func() {
-		SSLAuthorityFiles, TrustServerCertFailures = oldAuthorityFile, oldFailures
-	})
-
-	SSLAuthorityFiles = "/etc/ssl/certs/ca-certificates.crt"
-	TrustServerCertFailures = "unknown-ca"
-
-	cmd := New("info", WithArg("https://repo.example.com/svn/repo"))
+	cmd := New("info",
+		WithArg("https://repo.example.com/svn/repo"),
+		WithTLS("/etc/ssl/certs/ca-certificates.crt", "unknown-ca"),
+	)
 	args, err := cmd.makeArgs()
 	if err != nil {
 		t.Fatalf("makeArgs() error = %v", err)
@@ -152,5 +147,32 @@ func TestMakeArgsInjectsSSLArgs(t *testing.T) {
 	}
 	if !reflect.DeepEqual(args, want) {
 		t.Fatalf("makeArgs() = %v, want %v", args, want)
+	}
+}
+
+// TestTLSSettingsArePerCommand 验证 TLS 配置只作用于显式设置它的命令，
+// 不会通过包级状态影响其他 Command。
+func TestTLSSettingsArePerCommand(t *testing.T) {
+	trusted := New("info",
+		WithArg("https://repo.example.com/svn/repo"),
+		WithTLS("/etc/ssl/certs/ca-certificates.crt", "unknown-ca"),
+	)
+	plain := New("info", WithArg("https://repo.example.com/svn/repo"))
+
+	trustedArgs, err := trusted.makeArgs()
+	if err != nil {
+		t.Fatalf("trusted.makeArgs() error = %v", err)
+	}
+	if len(trustedArgs) == 0 || trustedArgs[0] != "--config-option" {
+		t.Fatalf("trusted.makeArgs() = %v, want TLS args injected", trustedArgs)
+	}
+
+	plainArgs, err := plain.makeArgs()
+	if err != nil {
+		t.Fatalf("plain.makeArgs() error = %v", err)
+	}
+	want := []string{"info", "https://repo.example.com/svn/repo"}
+	if !reflect.DeepEqual(plainArgs, want) {
+		t.Fatalf("plain.makeArgs() = %v, want %v (TLS args must not leak)", plainArgs, want)
 	}
 }

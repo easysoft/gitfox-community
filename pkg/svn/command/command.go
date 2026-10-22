@@ -23,16 +23,6 @@ var (
 	SvnadminExecutable = "svnadmin"
 	SvnsyncExecutable  = "svnsync"
 
-	// SSLAuthorityFiles 非空时，svn/svnsync 会通过
-	// --config-option servers:global:ssl-authority-files=<paths> 显式信任这些 CA 文件。
-	// 多个路径以分号分隔；svn 每个文件只读取第一张证书，因此这里应放单证书文件。
-	SSLAuthorityFiles = ""
-
-	// TrustServerCertFailures 非空时，svn 会带上 --trust-server-cert-failures，
-	// svnsync 会带上 --source-trust-server-cert-failures，忽略指定类型的证书校验失败。
-	// 仅在显式配置时生效，会降低 TLS 安全性。
-	TrustServerCertFailures = ""
-
 	// inheritedEnvAllowlist 列出允许从父进程透传给 svn 子进程的环境变量。
 	// 这些变量不属于业务敏感数据，但对 svn 走网络/读用户配置非常关键：
 	//   - HTTP(S)_PROXY / NO_PROXY / ALL_PROXY：serf 识别的代理配置，
@@ -45,6 +35,7 @@ var (
 		"http_proxy", "https_proxy", "no_proxy", "all_proxy",
 		"SSL_CERT_FILE", "SSL_CERT_DIR",
 		"HOME", "USERPROFILE", "APPDATA",
+		"PATH", "TMP", "TEMP", "TMPDIR", "SSH_AUTH_SOCK",
 	}
 )
 
@@ -83,6 +74,16 @@ type Command struct {
 
 	// Envs holds environment variables for the command.
 	Envs Envs
+
+	// SSLAuthorityFiles 非空时，svn/svnsync 会通过
+	// --config-option servers:global:ssl-authority-files=<paths> 显式信任这些 CA 文件。
+	// 多个路径以分号分隔；svn 每个文件只读取第一张证书，因此这里应放单证书文件。
+	SSLAuthorityFiles string
+
+	// TrustServerCertFailures 非空时，svn 会带上 --trust-server-cert-failures，
+	// svnsync 会带上 --source-trust-server-cert-failures，忽略指定类型的证书校验失败。
+	// 仅在显式配置时生效，会降低 TLS 安全性。
+	TrustServerCertFailures string
 
 	mux sync.RWMutex
 }
@@ -189,7 +190,7 @@ func (c *Command) makeArgs() ([]string, error) {
 	}
 
 	// add configured TLS trust options before the sub-command
-	safeArgs = append(safeArgs, sslArgs(c.Executable, c.Name)...)
+	safeArgs = append(safeArgs, c.sslArgs()...)
 
 	// add sub-command name if present
 	if c.Name != "" {
@@ -215,28 +216,28 @@ func (c *Command) makeArgs() ([]string, error) {
 
 // sslArgs 返回需要注入 svn/svnsync 的 TLS 信任参数。
 // 参数必须放在子命令之前；svnadmin 不支持这些选项，且无子命令（如 --version）时无需注入。
-func sslArgs(executable, name string) []string {
-	if name == "" {
+func (c *Command) sslArgs() []string {
+	if c.Name == "" {
 		return nil
 	}
 
-	switch executable {
+	switch c.Executable {
 	case SvnExecutable:
 		var args []string
-		if SSLAuthorityFiles != "" {
-			args = append(args, "--config-option", "servers:global:ssl-authority-files="+SSLAuthorityFiles)
+		if c.SSLAuthorityFiles != "" {
+			args = append(args, "--config-option", "servers:global:ssl-authority-files="+c.SSLAuthorityFiles)
 		}
-		if TrustServerCertFailures != "" {
-			args = append(args, "--trust-server-cert-failures="+TrustServerCertFailures)
+		if c.TrustServerCertFailures != "" {
+			args = append(args, "--trust-server-cert-failures="+c.TrustServerCertFailures)
 		}
 		return args
 	case SvnsyncExecutable:
 		var args []string
-		if SSLAuthorityFiles != "" {
-			args = append(args, "--config-option", "servers:global:ssl-authority-files="+SSLAuthorityFiles)
+		if c.SSLAuthorityFiles != "" {
+			args = append(args, "--config-option", "servers:global:ssl-authority-files="+c.SSLAuthorityFiles)
 		}
-		if TrustServerCertFailures != "" {
-			args = append(args, "--source-trust-server-cert-failures="+TrustServerCertFailures)
+		if c.TrustServerCertFailures != "" {
+			args = append(args, "--source-trust-server-cert-failures="+c.TrustServerCertFailures)
 		}
 		return args
 	default:

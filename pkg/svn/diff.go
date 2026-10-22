@@ -58,7 +58,7 @@ func (s *Service) Diff(ctx context.Context, params *DiffParams) (string, error) 
 		target = filepath.Join(target, params.Subpath)
 	}
 
-	cmd := command.New("diff",
+	cmd := s.newCommand("diff",
 		command.WithFlag("--non-interactive"),
 		command.WithArg(target),
 		withDiffAuth(params.Username, params.Password),
