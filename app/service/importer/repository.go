@@ -199,14 +199,11 @@ func (r *Repository) LoadRepositoryFromProvider(
 }
 
 // buildSVNCloneURL joins the provider host and repository slug into a canonical
-// SVN URL. url.JoinPath collapses duplicate slashes, drops trailing slashes and
-// resolves "." / "..", matching the svn client's own URI canonicalization.
+// SVN URL. It delegates to urlUtil.JoinSVNURL so import/migration and the repo
+// detail page share the same normalization, including legacy provider data where
+// the host part lacks the "//" authority separator.
 func buildSVNCloneURL(host, slug string) (string, error) {
-	u, err := url.Parse(host)
-	if err != nil {
-		return "", err
-	}
-	return u.JoinPath(strings.Trim(slug, "/")).String(), nil
+	return urlUtil.JoinSVNURL(host, slug)
 }
 
 func (r *Repository) Run(ctx context.Context, provider repoModel.Provider, repo *repoModel.Repo, cloneURL string, mirror bool, noticeLang string) error {
