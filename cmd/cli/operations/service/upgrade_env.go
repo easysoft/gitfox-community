@@ -7,6 +7,7 @@ package service
 import (
 	"bytes"
 	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -26,12 +27,12 @@ type envFileChange struct {
 	backupPath string
 }
 
-// preparePluginsZipURLDefault 检查当前生效的插件包地址。当地址以 http 开头时，只注释 prod.env 中的赋值行，让 envconfig 使用字段默认值。
+// preparePluginsZipURLDefault 检查当前生效的插件包地址。解析 URL 并校验 scheme 为 http/https 且 host 非空时，只注释 prod.env 中的赋值行，让 envconfig 使用字段默认值。
 func preparePluginsZipURLDefault(workDir string) (*envFileChange, error) {
 	envPath := filepath.Join(workDir, ProdEnvFileName)
-	info, err := os.Stat(envPath)
-	if err != nil {
-		return nil, fmt.Errorf("stat %s: %w", ProdEnvFileName, err)
+	info, err := os.Lstat(envPath)
+	if err == nil && info.Mode()&os.ModeSymlink != 0 {
+		return nil, fmt.Errorf("%s is a symbolic link, refusing to replace it", ProdEnvFileName)
 	}
 	if !info.Mode().IsRegular() {
 		return nil, fmt.Errorf("%s is not a regular file", ProdEnvFileName)
@@ -47,7 +48,11 @@ func preparePluginsZipURLDefault(workDir string) (*envFileChange, error) {
 	}
 
 	value, ok := envMap[pluginsZipURLEnvKey]
-	if !ok || !strings.HasPrefix(strings.ToLower(strings.TrimSpace(value)), "http") {
+	if !ok {
+		return nil, nil
+	}
+	u, perr := url.Parse(strings.TrimSpace(value))
+	if perr != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" {
 		return nil, nil
 	}
 

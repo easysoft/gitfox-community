@@ -196,6 +196,11 @@ func runUpgrade(_ *kingpin.ParseContext) error {
 	if pluginsURLChange != nil {
 		if err := pluginsURLChange.apply(); err != nil {
 			fmt.Println(errStyle.Render(fmt.Sprintf(t(i18n.CliUpgradeErrApplyEnv), err)))
+			if wasRunning {
+				if serr := startServiceForUpgrade(); serr != nil {
+					fmt.Println(warnStyle.Render(fmt.Sprintf(t(i18n.CliUpgradeErrStart), serr)))
+				}
+			}
 			return nil
 		}
 		fmt.Println(doneStyle.Render("✓ " + fmt.Sprintf(t(i18n.CliUpgradeInfoPluginsURLDefaulted), pluginsURLChange.backupPath)))
