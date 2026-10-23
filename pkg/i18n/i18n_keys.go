@@ -500,6 +500,7 @@ const (
 	CliUpgradeDescription                I18nKey = "cli.upgrade_description"                   // 升级 GitFox:备份当前注册的旧版本,再用本进程二进制替换之
 	CliUpgradeDowngradeNotSupported      I18nKey = "cli.upgrade_downgrade_not_supported"       // 本进程版本 (%s @ %s) 低于已安装版本 (%s @ %s),暂不支持降级,已跳过.
 	CliUpgradeErrApply                   I18nKey = "cli.upgrade_err_apply"                     // 替换二进制失败: %v
+	CliUpgradeErrApplyEnv                I18nKey = "cli.upgrade_err_apply_env"                 // 更新 prod.env 失败: %v
 	CliUpgradeErrApplyRollback           I18nKey = "cli.upgrade_err_apply_rollback"            // 替换失败且回滚失败,文件系统处于不一致状态: %v / 回滚: %v
 	CliUpgradeErrBackup                  I18nKey = "cli.upgrade_err_backup"                    // 备份失败: %v
 	CliUpgradeErrChmod                   I18nKey = "cli.upgrade_err_chmod"                     // 为新二进制设置可执行权限失败: %v
@@ -508,12 +509,15 @@ const (
 	CliUpgradeErrGetOldVersion           I18nKey = "cli.upgrade_err_get_old_version"           // 执行旧二进制 version 命令失败: %v
 	CliUpgradeErrNotRegistered           I18nKey = "cli.upgrade_err_not_registered"            // 未检测到 GitFox 系统服务注册,请先执行 install 完成首次部署.
 	CliUpgradeErrParseVersion            I18nKey = "cli.upgrade_err_parse_version"             // 解析旧二进制版本信息失败: %v
+	CliUpgradeErrPrepareEnv              I18nKey = "cli.upgrade_err_prepare_env"               // 准备 prod.env 升级配置失败: %v
+	CliUpgradeErrRestoreEnv              I18nKey = "cli.upgrade_err_restore_env"               // 恢复 prod.env 失败: %v
 	CliUpgradeErrSelfOverwrite           I18nKey = "cli.upgrade_err_self_overwrite"            // 当前进程二进制 (%s) 已是系统注册位置,无需升级.
 	CliUpgradeErrStart                   I18nKey = "cli.upgrade_err_start"                     // 启动新版服务失败: %v
 	CliUpgradeErrStop                    I18nKey = "cli.upgrade_err_stop"                      // 停止服务失败: %v
 	CliUpgradeErrStopTimeout             I18nKey = "cli.upgrade_err_stop_timeout"              // 等待服务停止超时(30 秒),端口仍有响应.
 	CliUpgradeInfoNew                    I18nKey = "cli.upgrade_info_new"                      // 本进程版本: %s (构建于 %s)
 	CliUpgradeInfoOld                    I18nKey = "cli.upgrade_info_old"                      // 已安装版本: %s (构建于 %s)
+	CliUpgradeInfoPluginsURLDefaulted    I18nKey = "cli.upgrade_info_plugins_url_defaulted"    // 已备份原配置到 %s,并注释 GITFOX_CI_PLUGINS_ZIP_URL 以使用内置默认值.
 	CliUpgradeSameVersion                I18nKey = "cli.upgrade_same_version"                  // 新旧版本一致 (%s @ %s),无需升级.
 	CliUpgradeServiceNotRunning          I18nKey = "cli.upgrade_service_not_running"           // 服务未运行,跳过停止步骤.
 	CliUpgradeStepApply                  I18nKey = "cli.upgrade_step_apply"                    // 正在替换二进制文件...
