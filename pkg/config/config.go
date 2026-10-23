@@ -116,6 +116,18 @@ type GitConfig struct {
 // SvnConfig SVN 配置
 type SvnConfig struct {
 	Root string `envconfig:"GITFOX_SVN_ROOT_DIR" yaml:"root"`
+
+	// SSLAuthorityFile 显式指定 svn/svnsync 信任的 CA 文件或 PEM bundle 路径（可选）。
+	// 启动时会按证书拆分，再通过 --config-option servers:global:ssl-authority-files 传入，
+	// 用于 svn 未使用系统信任库或使用私有 CA 的场景。
+	// 该文件应仅 root 可写，否则可能被替换以注入 CA；不能与 TrustServerCertFailures 同时配置。
+	SSLAuthorityFile string `envconfig:"GITFOX_SVN_SSL_AUTHORITY_FILE" yaml:"sslAuthorityFile"`
+
+	// TrustServerCertFailures 指定允许忽略的证书校验失败类型，逗号分隔（可选），
+	// 例如 "unknown-ca"。svn 使用 --trust-server-cert-failures，svnsync 使用
+	// --source-trust-server-cert-failures。全局生效且会降低所有 SVN HTTPS 连接的
+	// TLS 安全性，仅用于临时排障；不能与 SSLAuthorityFile 同时配置。
+	TrustServerCertFailures string `envconfig:"GITFOX_SVN_TRUST_SERVER_CERT_FAILURES" yaml:"trustServerCertFailures"`
 }
 
 // JobConfig holds configuration for job scheduler.
