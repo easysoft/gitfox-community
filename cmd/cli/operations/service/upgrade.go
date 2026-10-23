@@ -203,7 +203,6 @@ func runUpgrade(_ *kingpin.ParseContext) error {
 			}
 			return nil
 		}
-		fmt.Println(doneStyle.Render("✓ " + fmt.Sprintf(t(i18n.CliUpgradeInfoPluginsURLDefaulted), pluginsURLChange.backupPath)))
 	}
 
 	// OldSavePath 让 selfupdate 把旧二进制保留到 <oldExe>.old，作为兜底
@@ -223,6 +222,9 @@ func runUpgrade(_ *kingpin.ParseContext) error {
 		}
 		fmt.Println(errStyle.Render(fmt.Sprintf(t(i18n.CliUpgradeErrApply), err)))
 		return nil
+	}
+	if pluginsURLChange != nil {
+		fmt.Println(doneStyle.Render("✓ " + fmt.Sprintf(t(i18n.CliUpgradeInfoPluginsURLDefaulted), pluginsURLChange.backupPath)))
 	}
 
 	// 双保险：显式 chmod +x，防御异常 umask

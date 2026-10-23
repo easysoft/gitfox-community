@@ -31,7 +31,10 @@ type envFileChange struct {
 func preparePluginsZipURLDefault(workDir string) (*envFileChange, error) {
 	envPath := filepath.Join(workDir, ProdEnvFileName)
 	info, err := os.Lstat(envPath)
-	if err == nil && info.Mode()&os.ModeSymlink != 0 {
+	if err != nil {
+		return nil, fmt.Errorf("stat %s: %w", ProdEnvFileName, err)
+	}
+	if info.Mode()&os.ModeSymlink != 0 {
 		return nil, fmt.Errorf("%s is a symbolic link, refusing to replace it", ProdEnvFileName)
 	}
 	if !info.Mode().IsRegular() {
