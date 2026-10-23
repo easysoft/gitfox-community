@@ -15,11 +15,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/charmbracelet/lipgloss"
 	"github.com/easysoft/gitfox-community/pkg/i18n"
 	clii18n "github.com/easysoft/gitfox-community/pkg/i18n/cli"
 	"github.com/easysoft/gitfox-community/pkg/utils/common"
 	"github.com/easysoft/gitfox-community/pkg/utils/datetime"
-	"github.com/charmbracelet/lipgloss"
 	"github.com/hashicorp/go-version"
 	"github.com/minio/selfupdate"
 	"github.com/quicklyon/kingpin/v2"
@@ -149,6 +149,13 @@ func runUpgrade(_ *kingpin.ParseContext) error {
 	fmt.Println(doneStyle.Render("✓ " + fmt.Sprintf(t(i18n.CliUpgradeBackupSuccess), backupDir)))
 	fmt.Println()
 
+	// 在停止服务前完成配置预检和变更内容生成；真正的写回在打开新二进制之后执行，避免读取文件失败时提前改变运行配置。
+	pluginsURLChange, err := preparePluginsZipURLDefault(oldWorkDir)
+	if err != nil {
+		fmt.Println(errStyle.Render(fmt.Sprintf(t(i18n.CliUpgradeErrPrepareEnv), err)))
+		return nil
+	}
+
 	// ========== 阶段 5：若服务正在运行则停止 ==========
 	// prod.env 是端口下线确认与启动后健康探针的必需输入：
 	// 缺失则后续 selfupdate 与 systemctl restart 仍会执行，但无法验证应用层是否真停 / 真起。
@@ -186,6 +193,14 @@ func runUpgrade(_ *kingpin.ParseContext) error {
 	}
 	defer src.Close()
 
+	if pluginsURLChange != nil {
+		if err := pluginsURLChange.apply(); err != nil {
+			fmt.Println(errStyle.Render(fmt.Sprintf(t(i18n.CliUpgradeErrApplyEnv), err)))
+			return nil
+		}
+		fmt.Println(doneStyle.Render("✓ " + fmt.Sprintf(t(i18n.CliUpgradeInfoPluginsURLDefaulted), pluginsURLChange.backupPath)))
+	}
+
 	// OldSavePath 让 selfupdate 把旧二进制保留到 <oldExe>.old，作为兜底
 	oldSavePath := oldExePath + ".old"
 	applyOpts := selfupdate.Options{
@@ -194,6 +209,9 @@ func runUpgrade(_ *kingpin.ParseContext) error {
 		OldSavePath: oldSavePath,
 	}
 	if err := selfupdate.Apply(src, applyOpts); err != nil {
+		if rerr := pluginsURLChange.restore(); rerr != nil {
+			fmt.Println(errStyle.Render(fmt.Sprintf(t(i18n.CliUpgradeErrRestoreEnv), rerr)))
+		}
 		if rerr := selfupdate.RollbackError(err); rerr != nil {
 			fmt.Println(errStyle.Render(fmt.Sprintf(t(i18n.CliUpgradeErrApplyRollback), err, rerr)))
 			return nil
