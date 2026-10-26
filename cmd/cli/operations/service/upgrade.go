@@ -119,13 +119,19 @@ func runUpgrade(_ *kingpin.ParseContext) error {
 		}
 		skipCompare = true
 	}
+	if !skipCompare {
+		oldInfo.Edition = strings.ToLower(strings.TrimSpace(oldInfo.Edition))
+		if oldInfo.Edition == "" {
+			oldInfo.Edition = "community"
+		}
+	}
 
 	fmt.Println(fmt.Sprintf(t(i18n.CliUpgradeInfoOld), oldInfo.Version, oldInfo.BuildDate))
 	fmt.Println(fmt.Sprintf(t(i18n.CliUpgradeInfoNew), newInfo.Version, newInfo.BuildDate))
 	fmt.Println()
 
 	if !skipCompare {
-		cmp := compareVersionAndDate(oldInfo.Version, oldInfo.BuildDate, newInfo.Version, newInfo.BuildDate)
+		cmp := compareVersionAndDate(oldInfo, newInfo)
 		switch cmp {
 		case 0:
 			fmt.Println(doneStyle.Render(fmt.Sprintf(t(i18n.CliUpgradeSameVersion), oldInfo.Version, oldInfo.BuildDate)))
@@ -319,13 +325,25 @@ func readBinaryVersion(binPath string) (common.VersionInfo, error) {
 	return info, nil
 }
 
-// compareVersionAndDate 先按 SemVer 比较 version，再按 BuildDate 时间比较。
+// compareVersionAndDate 先比较语义版本；版本相同时优先处理发行版迁移，最后比较 BuildDate。
 // 返回值：-1 表示 a < b（应升级）；0 完全相同；1 表示 a > b（降级）。
-func compareVersionAndDate(aVer, aDate, bVer, bDate string) int {
-	if c := compareSemver(aVer, bVer); c != 0 {
+func compareVersionAndDate(a, b common.VersionInfo) int {
+	if c := compareSemver(a.Version, b.Version); c != 0 {
 		return c
 	}
-	return compareBuildDate(aDate, bDate)
+
+	aEdition := strings.ToLower(strings.TrimSpace(a.Edition))
+	bEdition := strings.ToLower(strings.TrimSpace(b.Edition))
+	if aEdition != "" && bEdition != "" && aEdition != bEdition {
+		if aEdition == "community" && bEdition == "pro" {
+			return -1
+		}
+		if aEdition == "pro" && bEdition == "community" {
+			return 1
+		}
+	}
+
+	return compareBuildDate(a.BuildDate, b.BuildDate)
 }
 
 // compareSemver 先剥掉项目惯用的 "cli-" 前缀，再交给 hashicorp/go-version。
