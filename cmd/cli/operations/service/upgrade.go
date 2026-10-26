@@ -119,13 +119,6 @@ func runUpgrade(_ *kingpin.ParseContext) error {
 		}
 		skipCompare = true
 	}
-	if !skipCompare {
-		oldInfo.Edition = strings.ToLower(strings.TrimSpace(oldInfo.Edition))
-		if oldInfo.Edition == "" {
-			oldInfo.Edition = "community"
-		}
-	}
-
 	fmt.Println(fmt.Sprintf(t(i18n.CliUpgradeInfoOld), oldInfo.Version, oldInfo.BuildDate))
 	fmt.Println(fmt.Sprintf(t(i18n.CliUpgradeInfoNew), newInfo.Version, newInfo.BuildDate))
 	fmt.Println()
@@ -326,6 +319,7 @@ func readBinaryVersion(binPath string) (common.VersionInfo, error) {
 }
 
 // compareVersionAndDate 先比较语义版本；版本相同时优先处理发行版迁移，最后比较 BuildDate。
+// edition 为空表示未知，不参与发行版比较，退回 BuildDate，避免把旧 Pro 误判为 Community。
 // 返回值：-1 表示 a < b（应升级）；0 完全相同；1 表示 a > b（降级）。
 func compareVersionAndDate(a, b common.VersionInfo) int {
 	if c := compareSemver(a.Version, b.Version); c != 0 {
