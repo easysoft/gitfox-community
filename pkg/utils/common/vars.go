@@ -33,6 +33,7 @@ func SetEdition(e string) { edition = e }
 // 字段未填充时（编译注入失败）返回兜底字符串而非空串，避免下游做 nil 判断。
 type VersionInfo struct {
 	Version       string `json:"version"`
+	Edition       string `json:"edition"`
 	BuildDate     string `json:"buildDate"`
 	GitBranch     string `json:"gitBranch"`
 	GitCommitHash string `json:"gitCommitHash"`
@@ -58,6 +59,7 @@ func GetVersionInfo() VersionInfo {
 	}
 	return VersionInfo{
 		Version:       v,
+		Edition:       Edition(),
 		BuildDate:     bd,
 		GitBranch:     br,
 		GitCommitHash: gc,
