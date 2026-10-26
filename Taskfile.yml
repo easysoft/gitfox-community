@@ -271,14 +271,20 @@ tasks:
     parallel: true
 
   docker:push:
-    desc: 构建多架构 Docker 镜像并推送至 hub.zentao.net
+    desc: 构建多架构 Docker 镜像并推送至 hub.zentao.net（正式包传 FORMAL=true，tag 不带日期）
     deps: [cross-build]
     vars:
       IMAGE: 'hub.zentao.net/app/gitfox-community'
       DOCKER_TAG_DATE:
         sh: date '+%Y%m%d'
       TAG:
-        sh: echo "{{.BUILD_RELEASE}}-{{.DOCKER_TAG_DATE}}" | tr '/' '-'
+        sh: |
+          FORMAL="{{default "false" .FORMAL}}"
+          if [ "$FORMAL" = "true" ]; then
+            echo "{{.BUILD_RELEASE}}" | tr '/' '-'
+          else
+            echo "{{.BUILD_RELEASE}}-{{.DOCKER_TAG_DATE}}" | tr '/' '-'
+          fi
       PLATFORMS: 'linux/amd64,linux/arm64'
       DOCKERFILE: 'deploy/Dockerfile'
       BUILDER: 'multiarch'
