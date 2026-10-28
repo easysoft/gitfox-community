@@ -1,8 +1,14 @@
-# GitFox Community
+<p align="center"><a href="https://www.gitfox.net" target="_blank" rel="noopener noreferrer"><img src="docs/gitfox.svg" width="300" alt="GitFox Logo"></a></p>
+
+<p align="center">
+  <a href="https://github.com/easysoft/gitfox-server/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-AGPL%20or%20ZPL-blue" alt="GitFox License"></a>
+  <a href="https://www.gitfox.net"><img src="https://img.shields.io/badge/Website-www.gitfox.net-blue" alt="GitFox Website"></a>
+</p>
+
+# 介绍
 
 GitFox 是一个用 Go 编写的一体化代码托管与 DevOps 平台，提供 Git 仓库托管、代码评审、CI/CD 流水线、制品库、代码扫描等能力，可与禅道（ZenTao）等项目管理/研发流程系统集成。
 
-> 本仓库为 **社区版（Community）**。AI 代码评审、分支归档、基于 ztflow 的代码推送请求属于商业版功能，不在本仓库中；社区版保留其接口与空实现。
 
 ## 功能特性
 
